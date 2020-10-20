@@ -14517,8 +14517,6 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
     return NS_ERROR_ABORT;
   }
 
-  nsresult rv;
-
   // First do a full integrity_check. Scope statements tightly here because
   // later operations require zero live statements.
   {
@@ -14526,61 +14524,42 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
                     CreateAndExecuteSingleStepStatement(
                         aConnection, "PRAGMA integrity_check(1);"_ns));
 
-    nsString result;
-    rv = stmt->GetString(0, result);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const auto& result,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, stmt, GetString, 0));
 
-    if (NS_WARN_IF(!result.EqualsLiteral("ok"))) {
-      *aOk = false;
-      return NS_OK;
-    }
+    IDB_TRY(OkIf(result.EqualsLiteral("ok")), NS_OK,
+            [&aOk](const auto) { *aOk = false; });
   }
 
   // Now enable and check for foreign key constraints.
   {
-    int32_t foreignKeysWereEnabled;
-    {
-      IDB_TRY_INSPECT(const auto& stmt,
-                      CreateAndExecuteSingleStepStatement(
-                          aConnection, "PRAGMA foreign_keys;"_ns));
+    IDB_TRY_INSPECT(const int32_t& foreignKeysWereEnabled,
+                    ([&aConnection]() -> Result<int32_t, nsresult> {
+                      IDB_TRY_INSPECT(
+                          const auto& stmt,
+                          CreateAndExecuteSingleStepStatement(
+                              aConnection, "PRAGMA foreign_keys;"_ns));
 
-      rv = stmt->GetInt32(0, &foreignKeysWereEnabled);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+                      IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
+                    }()));
 
     if (!foreignKeysWereEnabled) {
-      rv = aConnection.ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(aConnection.ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns));
     }
 
-    bool foreignKeyError;
-    {
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = aConnection.CreateStatement("PRAGMA foreign_key_check;"_ns,
-                                       getter_AddRefs(stmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    IDB_TRY_INSPECT(const bool& foreignKeyError,
+                    ([&aConnection]() -> Result<bool, nsresult> {
+                      IDB_TRY_INSPECT(
+                          const auto& stmt,
+                          MOZ_TO_RESULT_INVOKE_TYPED(
+                              nsCOMPtr<mozIStorageStatement>, aConnection,
+                              CreateStatement, "PRAGMA foreign_key_check;"_ns));
 
-      IDB_TRY_UNWRAP(foreignKeyError, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-    }
+                      IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+                    }()));
 
     if (!foreignKeysWereEnabled) {
-      nsAutoCString stmtSQL;
-      stmtSQL.AssignLiteral("PRAGMA foreign_keys = ");
-      stmtSQL.AppendLiteral("OFF");
-      stmtSQL.Append(';');
-
-      rv = aConnection.ExecuteSimpleSQL(stmtSQL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(aConnection.ExecuteSimpleSQL("PRAGMA foreign_keys = OFF;"_ns));
     }
 
     if (foreignKeyError) {
