@@ -1562,9 +1562,9 @@ void nsPresContext::MediaFeatureValuesChangedAllDocuments(
   }
 }
 
-void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
+bool nsPresContext::FlushPendingMediaFeatureValuesChanged() {
   if (!mPendingMediaFeatureValuesChange) {
-    return;
+    return false;
   }
 
   MediaFeatureChange change = *mPendingMediaFeatureValuesChange;
@@ -1576,13 +1576,14 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
         mPresShell->StyleSet()->MediumFeaturesChanged(change.mReason);
   }
 
-  if (change.mRestyleHint || change.mChangeHint) {
+  const bool changedStyle = change.mRestyleHint || change.mChangeHint;
+  if (changedStyle) {
     RebuildAllStyleData(change.mChangeHint, change.mRestyleHint);
   }
 
   if (mDocument->IsBeingUsedAsImage()) {
     MOZ_ASSERT(mDocument->MediaQueryLists().isEmpty());
-    return;
+    return changedStyle;
   }
 
   mDocument->NotifyMediaFeatureValuesChanged();
@@ -1600,7 +1601,7 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
   // style sheets has been computed.
 
   if (mDocument->MediaQueryLists().isEmpty()) {
-    return;
+    return changedStyle;
   }
 
   // We build a list of all the notifications we're going to send
@@ -1613,14 +1614,18 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
     }
   }
 
-  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-      "nsPresContext::FlushPendingMediaFeatureValuesChanged",
-      [list = std::move(listsToNotify)] {
-        for (const auto& mql : list) {
-          nsAutoMicroTask mt;
-          mql->FireChangeEvent();
-        }
-      }));
+  if (!listsToNotify.IsEmpty()) {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "nsPresContext::FlushPendingMediaFeatureValuesChanged",
+        [list = std::move(listsToNotify)] {
+          for (const auto& mql : list) {
+            nsAutoMicroTask mt;
+            mql->FireChangeEvent();
+          }
+        }));
+  }
+
+  return changedStyle;
 }
 
 void nsPresContext::SizeModeChanged(nsSizeMode aSizeMode) {

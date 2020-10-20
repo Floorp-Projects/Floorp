@@ -290,7 +290,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    */
   void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange);
 
-  void FlushPendingMediaFeatureValuesChanged();
+  /** Returns whether any media query changed. */
+  bool FlushPendingMediaFeatureValuesChanged();
 
   /**
    * Calls MediaFeatureValuesChanged for this pres context and all descendant
