@@ -6,7 +6,6 @@
 const { BrowserUsageTelemetry } = ChromeUtils.import(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
@@ -16,12 +15,9 @@ const PROFILE_COUNT_SCALAR = "browser.engagement.profile_count";
 // Largest possible uint32_t value represents an error.
 const SCALAR_ERROR_VALUE = 0;
 
-// The three constants below are used to construct instances of OS.File.Error
-// that are pretty close to the ones we would really get if a file open failed.
 const FILE_OPEN_OPERATION = "open";
-// These are Windows Error codes returned by GetLastError().
-const ERROR_FILE_NOT_FOUND = 2;
-const ERROR_ACCESS_DENIED = 5;
+const ERROR_FILE_NOT_FOUND = "NotFoundError";
+const ERROR_ACCESS_DENIED = "NotAllowedError";
 
 // We will redirect I/O to/from the profile counter file to read/write this
 // variable instead. That makes it easier for us to:
@@ -37,8 +33,7 @@ var gProfileCounterFilePath = null;
 
 // Storing a value here lets us test the behavior when we encounter an error
 // reading or writing to the file. A null value means that no error will
-// be simulated (other than possibly a FILE_NOT_FOUND error). Otherwise, these
-// should be set to a Windows error code (ex: ERROR_ACCESS_DENIED).
+// be simulated (other than possibly a NotFoundError).
 var gNextReadExceptionReason = null;
 var gNextWriteExceptionReason = null;
 
@@ -116,14 +111,14 @@ function setup() {
     }
     // Strict equality to ensure distinguish properly between null and 0.
     if (gNextReadExceptionReason !== null) {
-      let ex = new OS.File.Error(FILE_OPEN_OPERATION, gNextReadExceptionReason);
+      let ex = new DOMException(FILE_OPEN_OPERATION, gNextReadExceptionReason);
       gNextReadExceptionReason = null;
       throw ex;
     }
     // Strict equality to ensure distinguish properly between a non-existent
     // file and an empty one.
     if (gFakeProfileCounterFile === null) {
-      throw new OS.File.Error(FILE_OPEN_OPERATION, ERROR_FILE_NOT_FOUND);
+      throw new DOMException(FILE_OPEN_OPERATION, ERROR_FILE_NOT_FOUND);
     }
     return gFakeProfileCounterFile;
   };
@@ -141,10 +136,7 @@ function setup() {
     }
     // Strict equality to ensure distinguish properly between null and 0.
     if (gNextWriteExceptionReason !== null) {
-      let ex = new OS.File.Error(
-        FILE_OPEN_OPERATION,
-        gNextWriteExceptionReason
-      );
+      let ex = new DOMException(FILE_OPEN_OPERATION, gNextWriteExceptionReason);
       gNextWriteExceptionReason = null;
       throw ex;
     }
