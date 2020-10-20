@@ -63,6 +63,9 @@ class UserInteractionStopwatch {
   static bool Start(const GlobalObject& aGlobal,
                     const nsAString& aUserInteraction, const nsACString& aValue,
                     JS::Handle<JSObject*> aObj);
+  static bool Running(const GlobalObject& aGlobal,
+                      const nsAString& aUserInteraction,
+                      JS::Handle<JSObject*> aObj);
   static bool Update(const GlobalObject& aGlobal,
                      const nsAString& aUserInteraction,
                      const nsACString& aValue, JS::Handle<JSObject*> aObj);

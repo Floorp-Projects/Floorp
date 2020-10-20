@@ -71,8 +71,22 @@ namespace UserInteraction {
    *
    * @returns True if the timer was successfully stopped.
    */
-  boolean cancel(DOMString id,
-                 optional object? obj = null);
+  boolean cancel(DOMString id, optional object? obj = null);
+
+  /**
+   * Returns whether a UserInteraction timer is currently running.
+   *
+   * @param id - the ID of the interaction to check, as declared in
+   * UserInteractions.yaml.
+   *
+   * @param obj - Optional parameter which checks for a timer associated
+   * with this particular object. If you're checking for a running timer
+   * that was started with an object, you'll need to pass in that same
+   * object here to check its running state.
+   *
+   * @returns True if the timer exists and is currently running.
+   */
+  boolean running(DOMString id, optional object? obj = null);
 
   /**
    * Stops the timer associated with the given UserInteraction ID
