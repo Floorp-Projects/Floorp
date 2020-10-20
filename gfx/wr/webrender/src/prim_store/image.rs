@@ -288,6 +288,7 @@ impl Internable for Image {
     type Key = ImageKey;
     type StoreData = ImageTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_IMAGES;
 }
 
 impl InternablePrimitive for Image {
@@ -460,6 +461,7 @@ impl Internable for YuvImage {
     type Key = YuvImageKey;
     type StoreData = YuvImageTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_YUV_IMAGES;
 }
 
 impl InternablePrimitive for YuvImage {

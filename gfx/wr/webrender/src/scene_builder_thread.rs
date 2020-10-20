@@ -26,6 +26,7 @@ use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::LineDecoration;
 use crate::prim_store::picture::Picture;
 use crate::prim_store::text_run::TextRun;
+use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::SceneView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
@@ -40,19 +41,6 @@ use std::time::Duration;
 use crate::debug_server;
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, DisplayItem};
-
-/// Various timing information that will be turned into
-/// TransactionProfileCounters later down the pipeline.
-#[derive(Clone, Debug)]
-pub struct TransactionTimings {
-    pub builder_start_time_ns: u64,
-    pub builder_end_time_ns: u64,
-    pub send_time_ns: u64,
-    pub scene_build_start_time_ns: u64,
-    pub scene_build_end_time_ns: u64,
-    pub blob_rasterization_end_time_ns: u64,
-    pub display_list_len: usize,
-}
 
 fn rasterize_blobs(txn: &mut TransactionMsg, is_low_priority: bool) {
     profile_scope!("rasterize_blobs");
@@ -81,12 +69,10 @@ pub struct BuiltTransaction {
     pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
     pub notifications: Vec<NotificationRequest>,
     pub interner_updates: Option<InternerUpdates>,
-    pub scene_build_start_time: u64,
-    pub scene_build_end_time: u64,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
     pub discard_frame_state_for_pipelines: Vec<PipelineId>,
-    pub timings: Option<TransactionTimings>,
+    pub profile: TransactionProfile,
 }
 
 #[cfg(feature = "replay")]
@@ -427,8 +413,6 @@ impl SceneBuilderThread {
         for mut item in scenes {
             self.config = item.config;
 
-            let scene_build_start_time = precise_time_ns();
-
             let mut built_scene = None;
             let mut interner_updates = None;
 
@@ -470,10 +454,8 @@ impl SceneBuilderThread {
                 removed_pipelines: Vec::new(),
                 discard_frame_state_for_pipelines: Vec::new(),
                 notifications: Vec::new(),
-                scene_build_start_time,
-                scene_build_end_time: precise_time_ns(),
                 interner_updates,
-                timings: None,
+                profile: TransactionProfile::new(),
             })];
 
             self.forward_built_transactions(txns);
@@ -580,12 +562,12 @@ impl SceneBuilderThread {
             hooks.pre_scene_build();
         }
 
-        let scene_build_start_time = precise_time_ns();
-
         let doc = self.documents.get_mut(&txn.document_id).unwrap();
         let scene = &mut doc.scene;
 
-        let mut timings = None;
+        let mut profile = txn.profile.take();
+
+        profile.start_time(profiler::SCENE_BUILD_TIME);
 
         let mut discard_frame_state_for_pipelines = Vec::new();
         let mut removed_pipelines = Vec::new();
@@ -613,10 +595,14 @@ impl SceneBuilderThread {
                     display_list,
                     preserve_frame_state,
                 } => {
-                    let display_list_len = display_list.data().len();
-
                     let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
                         display_list.times();
+
+                    let content_send_time = profiler::ns_to_ms(precise_time_ns() - send_time_ns);
+                    let dl_build_time = profiler::ns_to_ms(builder_end_time_ns - builder_start_time_ns);
+                    profile.set(profiler::CONTENT_SEND_TIME, content_send_time);
+                    profile.set(profiler::DISPLAY_LIST_BUILD_TIME, dl_build_time);
+                    profile.set(profiler::DISPLAY_LIST_MEM, profiler::bytes_to_mb(display_list.data().len()));
 
                     if self.removed_pipelines.contains(&pipeline_id) {
                         continue;
@@ -634,16 +620,6 @@ impl SceneBuilderThread {
                         background,
                         viewport_size,
                     );
-
-                    timings = Some(TransactionTimings {
-                        builder_start_time_ns,
-                        builder_end_time_ns,
-                        send_time_ns,
-                        scene_build_start_time_ns: 0,
-                        scene_build_end_time_ns: 0,
-                        blob_rasterization_end_time_ns: 0,
-                        display_list_len,
-                    });
 
                     if !preserve_frame_state {
                         discard_frame_state_for_pipelines.push(pipeline_id);
@@ -689,15 +665,16 @@ impl SceneBuilderThread {
             built_scene = Some(built);
         }
 
-        let scene_build_end_time = precise_time_ns();
+        profile.end_time(profiler::SCENE_BUILD_TIME);
 
-        let is_low_priority = false;
-        rasterize_blobs(txn, is_low_priority);
 
-        if let Some(timings) = timings.as_mut() {
-            timings.blob_rasterization_end_time_ns = precise_time_ns();
-            timings.scene_build_start_time_ns = scene_build_start_time;
-            timings.scene_build_end_time_ns = scene_build_end_time;
+        if !txn.blob_requests.is_empty() {
+            profile.start_time(profiler::BLOB_RASTERIZATION_TIME);
+
+            let is_low_priority = false;
+            rasterize_blobs(txn, is_low_priority);
+
+            profile.end_time(profiler::BLOB_RASTERIZATION_TIME);
         }
 
         drain_filter(
@@ -724,9 +701,7 @@ impl SceneBuilderThread {
             discard_frame_state_for_pipelines,
             notifications: replace(&mut txn.notifications, Vec::new()),
             interner_updates,
-            scene_build_start_time,
-            scene_build_end_time,
-            timings,
+            profile,
         })
     }
 
@@ -751,7 +726,7 @@ impl SceneBuilderThread {
 
                     let (tx, rx) = single_msg_channel();
                     let txn = txns.iter().find(|txn| txn.built_scene.is_some()).unwrap();
-                    hooks.pre_scene_swap(txn.scene_build_end_time - txn.scene_build_start_time);
+                    hooks.pre_scene_swap((txn.profile.get(profiler::SCENE_BUILD_TIME).unwrap() * 1000000.0) as u64);
 
                     (Some(info), Some(tx), Some(rx))
                 } else {
