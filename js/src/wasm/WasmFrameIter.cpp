@@ -920,6 +920,34 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
          (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
 }
 
+TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
+  while (true) {
+    if (fp->callerIsExitOrJitEntryFP()) {
+      // It is a direct call from JIT.
+      MOZ_ASSERT(!LookupCode(fp->returnAddress()));
+      return ExtractCalleeTlsFromFrameWithTls(fp);
+    }
+
+    uint8_t* returnAddress = fp->returnAddress();
+    const CodeRange* codeRange = nullptr;
+    const Code* code = LookupCode(returnAddress, &codeRange);
+    MOZ_ASSERT(codeRange);
+
+    if (codeRange->isEntry()) {
+      return ExtractCalleeTlsFromFrameWithTls(fp);
+    }
+
+    MOZ_ASSERT(codeRange->kind() == CodeRange::Function);
+    MOZ_ASSERT(code);
+    const CallSite* callsite = code->lookupCallSite(returnAddress);
+    if (callsite->mightBeCrossInstance()) {
+      return ExtractCalleeTlsFromFrameWithTls(fp);
+    }
+
+    fp = fp->wasmCaller();
+  }
+}
+
 bool js::wasm::StartUnwinding(const RegisterState& registers,
                               UnwindState* unwindState, bool* unwoundCaller) {
   // Shorthands.
