@@ -12,8 +12,6 @@
   %brandDTD;
   <!ENTITY % uctDTD SYSTEM "chrome://mozapps/locale/downloads/unknownContentType.dtd" >
   %uctDTD;
-  <!ENTITY % scDTD SYSTEM "chrome://mozapps/locale/downloads/settingsChange.dtd" >
-  %scDTD;
 ]>
 
 <window id="unknownContentTypeWindow"
@@ -104,11 +102,9 @@
       </hbox>
 
       <separator/>
-#ifdef XP_UNIX
-      <description id="settingsChange" hidden="true">&settingsChangePreferences.label;</description>
-#else
-      <description id="settingsChange" hidden="true">&settingsChangeOptions.label;</description>
-#endif
+
+      <description id="settingsChange" hidden="true" data-l10n-id="unknowncontenttype-settingschange"/>
+
       <separator class="thin"/>
     </vbox>
   </vbox>

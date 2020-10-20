@@ -48,7 +48,6 @@
 # the following files are browser-specific overrides
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
-    locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
     locale/browser/newInstall.dtd                  (%chrome/browser/newInstall.dtd)
     locale/browser/brandings.dtd                   (%chrome/browser/brandings.dtd)
     locale/browser/fxmonitor.properties            (%chrome/browser/fxmonitor.properties)
