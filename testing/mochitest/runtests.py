@@ -844,7 +844,7 @@ def findTestMediaDevices(log):
         log.error('Could not list currently loaded modules')
         return None
 
-    null_sink = [x for x in o.splitlines() if 'module-null-sink' in x]
+    null_sink = [x for x in o.splitlines() if b'module-null-sink' in x]
 
     if not null_sink:
         try:
