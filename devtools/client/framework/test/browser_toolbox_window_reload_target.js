@@ -105,29 +105,6 @@ async function testOneTool(toolbox, toolID) {
 async function testReload(shortcut, toolbox) {
   info(`Reload with ${shortcut}`);
 
-  // If we have a jsdebugger panel, wait for it to complete its reload
-  const reloadedEvents = [];
-  const jsdebugger = toolbox.getPanel("jsdebugger");
-  if (jsdebugger) {
-    reloadedEvents.push(jsdebugger.once("reloaded"));
-  }
-
-  const inspector = toolbox.getPanel("inspector");
-  if (inspector) {
-    reloadedEvents.push(
-      inspector.once("reloaded"),
-      inspector.once("inspector-updated")
-    );
-  }
-
-  const loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
-  toolbox.win.focus();
-  synthesizeKeyShortcut(L10N.getStr(shortcut), toolbox.win);
+  await sendToolboxReloadShortcut(L10N.getStr(shortcut), toolbox);
   reloadsSent++;
-
-  await loadPromise;
-
-  info("Wait for reloaded events");
-  await Promise.all(reloadedEvents);
 }
