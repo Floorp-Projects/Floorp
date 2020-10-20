@@ -12,6 +12,7 @@ The uninstaller may be the most straightforward of the installer components. The
 * If the application directory is empty after that, then it is removed, but it's left alone if any files are still present.
 * If the copy of Firefox that was just uninstalled is the only one that was using the maintenance service, the maintenance service uninstaller is also run.
 * Any BITS jobs from this installation of Firefox are cancelled.
+* The first :ref:`"uninstall" ping` found is uploaded, and all uninstall pings are deleted (for this installation).
 
 Note that profiles and any other user-generated files (e.g., crash reports) are specifically not uninstalled.
 

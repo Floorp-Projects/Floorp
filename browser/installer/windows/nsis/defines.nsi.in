@@ -165,3 +165,6 @@ VIAddVersionKey "ProductVersion"  "${AppVersion}"
 !define TELEMETRY_NAMESPACE firefox-installer
 !define TELEMETRY_INSTALL_PING_VERSION 1
 !define TELEMETRY_INSTALL_PING_DOCTYPE install
+
+!define TELEMETRY_UNINSTALL_PING_NAMESPACE telemetry
+!define TELEMETRY_UNINSTALL_PING_DOCTYPE uninstall

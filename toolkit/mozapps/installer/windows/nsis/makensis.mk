@@ -36,6 +36,7 @@ CUSTOM_NSIS_PLUGINS = \
 	CertCheck.dll \
 	CityHash.dll \
 	ExecInExplorer.dll \
+	HttpPostFile.dll \
 	InetBgDL.dll \
 	InvokeShellVerb.dll \
 	liteFirewallW.dll \
