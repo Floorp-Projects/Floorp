@@ -14,6 +14,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
 });
 
+// This test takes a long time on the OS X 10.14 machines, so request a longer
+// timeout.  See bug 1671045.  This may also fix a different failure on Linux in
+// bug 1671087, but it's not clear.  Regardless, a longer timeout won't hurt.
+requestLongerTimeout(5);
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
