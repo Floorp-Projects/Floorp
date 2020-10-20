@@ -6829,6 +6829,19 @@
   value: false
 #endif
 
+# Whether or not to pass AUDCLNT_STREAMOPTIONS_RAW when initializing audio
+# streams when using WASAPI.
+# 0 - don't use RAW streams
+# 1 - use RAW streams for input streams only
+# 2 - use RAW streams for output streams only
+# 3 - use RAW streams for input and output streams
+#if defined (XP_WIN)
+- name: media.cubeb.wasapi-raw
+  type: RelaxedAtomicUint32
+  mirror: always
+  value: 1
+#endif // XP_WIN
+
 # ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
   type: int32_t
