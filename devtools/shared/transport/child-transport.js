@@ -118,12 +118,6 @@ ChildDebuggerTransport.prototype = {
   startBulkSend: function() {
     throw new Error("Can't send bulk data to child processes.");
   },
-
-  swapBrowser(mm) {
-    this._removeListener();
-    this._mm = mm;
-    this._addListener();
-  },
 };
 
 exports.ChildDebuggerTransport = ChildDebuggerTransport;
