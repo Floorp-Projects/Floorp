@@ -16312,31 +16312,31 @@ nsresult FactoryOp::OpenDirectory() {
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
 
-  // Need to get database file path in advance.
-  const nsString& databaseName = mCommonParams.metadata().name();
-  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
+  const PersistenceType persistenceType =
+      mCommonParams.metadata().persistenceType();
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  IDB_TRY_UNWRAP(auto dbFile, quotaManager->GetDirectoryForOrigin(
-                                  persistenceType, mQuotaInfo.mOrigin));
+  // Need to get database file path before opening the directory.
+  // XXX: For what reason?
+  IDB_TRY_UNWRAP(
+      mDatabaseFilePath,
+      ([this, quotaManager,
+        persistenceType]() -> mozilla::Result<nsString, nsresult> {
+        IDB_TRY_INSPECT(const auto& dbFile,
+                        quotaManager->GetDirectoryForOrigin(
+                            persistenceType, mQuotaInfo.mOrigin));
 
-  nsresult rv =
-      dbFile->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        IDB_TRY(
+            dbFile->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
 
-  rv = dbFile->Append(GetDatabaseFilenameBase(databaseName) + kSQLiteSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        IDB_TRY(dbFile->Append(
+            GetDatabaseFilenameBase(mCommonParams.metadata().name()) +
+            kSQLiteSuffix));
 
-  rv = dbFile->GetPath(mDatabaseFilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsString, dbFile, GetPath));
+      }()));
 
   mState = State::DirectoryOpenPending;
 
