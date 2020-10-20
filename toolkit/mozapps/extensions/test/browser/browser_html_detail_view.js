@@ -1080,69 +1080,6 @@ add_task(async function testPrivateBrowsingAllowedListView() {
   await closeView(win);
 });
 
-add_task(async function testPermissions() {
-  async function runTest(id, permissions) {
-    let win = await loadInitialView("extension");
-    let doc = win.document;
-
-    let card = getAddonCard(doc, id);
-    ok(!card.hasAttribute("expanded"), "The list card is not expanded");
-    let loaded = waitForViewLoad(win);
-    card.querySelector('[action="expand"]').click();
-    await loaded;
-
-    card = getAddonCard(doc, id);
-    let { deck, tabGroup } = card.details;
-
-    // Check all the deck buttons are hidden.
-    assertDeckHeadingButtons(tabGroup, ["details", "permissions"]);
-
-    let permsBtn = tabGroup.querySelector('[name="permissions"]');
-    let permsShown = BrowserTestUtils.waitForEvent(deck, "view-changed");
-    permsBtn.click();
-    await permsShown;
-
-    let permsSection = card.querySelector("addon-permissions-list");
-    let rows = Array.from(permsSection.querySelectorAll(".addon-detail-row"));
-
-    info("Check displayed permissions");
-    if (permissions) {
-      for (let name in permissions) {
-        // Check the permission-info class to make sure it's for a permission.
-        let row = rows.shift();
-        ok(
-          row.classList.contains("permission-info"),
-          `There's a row for ${name}`
-        );
-      }
-    } else {
-      let row = rows.shift();
-      is(
-        doc.l10n.getAttributes(row).id,
-        "addon-permissions-empty",
-        "There's a message when no permissions are shown"
-      );
-    }
-
-    info("Check learn more link");
-    let row = rows.shift();
-    is(row.children.length, 1, "There's one child for learn more");
-    let link = row.firstElementChild;
-    let rootUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    let url = rootUrl + "extension-permissions";
-    is(link.href, url, "The URL is set");
-    is(link.getAttribute("target"), "_blank", "The link opens in a new tab");
-
-    await closeView(win);
-  }
-
-  info("Check permissions for add-on with permission message");
-  await runTest("addon1@mochi.test", ["<all_urls>", "tabs", "webNavigation"]);
-
-  info("Check permissions for add-on without permission messages");
-  await runTest("addon2@mochi.test");
-});
-
 // When the back button is used, its disabled state will be updated. If it
 // isn't updated when showing a view, then it will be disabled on the next
 // use (bug 1551213) if the last use caused it to become disabled.
