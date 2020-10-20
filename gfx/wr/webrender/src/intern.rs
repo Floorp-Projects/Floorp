@@ -35,12 +35,12 @@
 
 use crate::internal_types::FastHashMap;
 use malloc_size_of::MallocSizeOf;
-use crate::profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
-use std::{mem, ops, u64};
+use std::{ops, u64};
 use crate::util::VecHelper;
+use crate::profiler::TransactionProfile;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -166,7 +166,7 @@ impl<I: Internable> DataStore<I> {
     pub fn apply_updates(
         &mut self,
         update_list: UpdateList<I::Key>,
-        profile_counter: &mut ResourceProfileCounter,
+        profile: &mut TransactionProfile,
     ) {
         for insertion in update_list.insertions {
             self.items
@@ -178,8 +178,7 @@ impl<I: Internable> DataStore<I> {
             self.items[removal.index] = None;
         }
 
-        let per_item_size = mem::size_of::<I::Key>() + mem::size_of::<I::StoreData>();
-        profile_counter.set(self.items.len(), per_item_size * self.items.len());
+        profile.set(I::PROFILE_COUNTER, self.items.len());
     }
 }
 
@@ -460,4 +459,7 @@ pub trait Internable: MallocSizeOf {
     type Key: Eq + Hash + Clone + Debug + MallocSizeOf + InternDebug + InternSerialize + for<'a> InternDeserialize<'a>;
     type StoreData: From<Self::Key> + MallocSizeOf + InternSerialize + for<'a> InternDeserialize<'a>;
     type InternData: MallocSizeOf + InternSerialize + for<'a> InternDeserialize<'a>;
+
+    // Profile counter indices, see the list in profiler.rs
+    const PROFILE_COUNTER: usize;
 }

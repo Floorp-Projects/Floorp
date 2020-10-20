@@ -570,6 +570,14 @@ void RecordingPrefChanged(const char* aPrefName, void* aClosure) {
 
 #define WR_DEBUG_PREF "gfx.webrender.debug"
 
+static void WebRendeProfilerUIPrefChangeCallback(const char* aPrefName, void*) {
+  nsCString uiString;
+  if (NS_SUCCEEDED(Preferences::GetCString("gfx.webrender.debug.profiler-ui",
+                                           uiString))) {
+    gfxVars::SetWebRenderProfilerUI(uiString);
+  }
+}
+
 static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   wr::DebugFlags flags{0};
 #define GFX_WEBRENDER_DEBUG(suffix, bit)                   \
@@ -584,18 +592,11 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".gpu-sample-queries", wr::DebugFlags::GPU_SAMPLE_QUERIES)
   GFX_WEBRENDER_DEBUG(".disable-batching", wr::DebugFlags::DISABLE_BATCHING)
   GFX_WEBRENDER_DEBUG(".epochs", wr::DebugFlags::EPOCHS)
-  GFX_WEBRENDER_DEBUG(".compact-profiler", wr::DebugFlags::COMPACT_PROFILER)
   GFX_WEBRENDER_DEBUG(".smart-profiler", wr::DebugFlags::SMART_PROFILER)
   GFX_WEBRENDER_DEBUG(".echo-driver-messages",
                       wr::DebugFlags::ECHO_DRIVER_MESSAGES)
-  GFX_WEBRENDER_DEBUG(".new-frame-indicator",
-                      wr::DebugFlags::NEW_FRAME_INDICATOR)
-  GFX_WEBRENDER_DEBUG(".new-scene-indicator",
-                      wr::DebugFlags::NEW_SCENE_INDICATOR)
   GFX_WEBRENDER_DEBUG(".show-overdraw", wr::DebugFlags::SHOW_OVERDRAW)
   GFX_WEBRENDER_DEBUG(".gpu-cache", wr::DebugFlags::GPU_CACHE_DBG)
-  GFX_WEBRENDER_DEBUG(".slow-frame-indicator",
-                      wr::DebugFlags::SLOW_FRAME_INDICATOR)
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
                       wr::DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED)
   GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags::PICTURE_CACHING_DBG)
@@ -1385,6 +1386,8 @@ void gfxPlatform::ShutdownLayersIPC() {
 
       Preferences::UnregisterCallback(WebRenderDebugPrefChangeCallback,
                                       WR_DEBUG_PREF);
+      Preferences::UnregisterCallback(WebRendeProfilerUIPrefChangeCallback,
+                                      "gfx.webrender.debug.profiler-ui");
     }
 
   } else {
@@ -2796,6 +2799,9 @@ void gfxPlatform::InitWebRenderConfig() {
 
     Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
                                                WR_DEBUG_PREF);
+    Preferences::RegisterPrefixCallbackAndCall(
+        WebRendeProfilerUIPrefChangeCallback,
+        "gfx.webrender.debug.profiler-ui");
     Preferences::RegisterCallback(
         WebRenderQualityPrefChangeCallback,
         nsDependentCString(

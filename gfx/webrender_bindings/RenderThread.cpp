@@ -394,6 +394,24 @@ void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
   }
 }
 
+void RenderThread::SetProfilerUI(wr::WindowId aWindowId, nsCString aUI) {
+  if (mHasShutdown) {
+    return;
+  }
+
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, nsCString>(
+        "wr::RenderThread::SetProfilerUI", this, &RenderThread::SetProfilerUI,
+        aWindowId, aUI));
+    return;
+  }
+
+  auto it = mRenderers.find(aWindowId);
+  if (it != mRenderers.end()) {
+    it->second->SetProfilerUI(aUI);
+  }
+}
+
 void RenderThread::RunEvent(wr::WindowId aWindowId,
                             UniquePtr<RendererEvent> aEvent) {
   if (!IsInRenderThread()) {

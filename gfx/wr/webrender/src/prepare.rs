@@ -128,7 +128,7 @@ pub fn prepare_primitives(
                 tile_cache_log,
                 tile_caches,
             ) {
-                frame_state.profile_counters.visible_primitives.inc();
+                frame_state.num_visible_primitives += 1;
             } else {
                 prim_instance.clear_visibility();
             }

@@ -258,6 +258,7 @@ class WebRenderAPI final {
   void SetBatchingLookback(uint32_t aCount);
 
   void SetClearColor(const gfx::DeviceColor& aColor);
+  void SetProfilerUI(const nsCString& aUIString);
 
   void Pause();
   bool Resume();

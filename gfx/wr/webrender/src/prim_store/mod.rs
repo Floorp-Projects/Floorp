@@ -577,6 +577,7 @@ impl intern::Internable for PrimitiveKeyKind {
     type Key = PrimitiveKey;
     type StoreData = PrimitiveTemplate;
     type InternData = ();
+    const PROFILE_COUNTER: usize = crate::profiler::INTERNED_PRIMITIVES;
 }
 
 impl InternablePrimitive for PrimitiveKeyKind {

@@ -30,7 +30,7 @@ use api::IdNamespace;
 use api::units::*;
 use euclid::{HomogeneousVector, Rect};
 use crate::internal_types::{FastHashMap, FastHashSet};
-use crate::profiler::GpuCacheProfileCounters;
+use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{FrameStamp, FrameId};
 use crate::prim_store::VECS_PER_SEGMENT;
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
@@ -865,18 +865,12 @@ impl GpuCache {
     /// device specific cache texture.
     pub fn end_frame(
         &mut self,
-        profile_counters: &mut GpuCacheProfileCounters,
+        profile: &mut TransactionProfile,
     ) -> FrameStamp {
         profile_scope!("end_frame");
-        profile_counters
-            .allocated_rows
-            .set(self.texture.rows.len());
-        profile_counters
-            .allocated_blocks
-            .set(self.texture.allocated_block_count);
-        profile_counters
-            .saved_blocks
-            .set(self.saved_block_count);
+        profile.set(profiler::GPU_CACHE_ROWS_TOTAL, self.texture.rows.len());
+        profile.set(profiler::GPU_CACHE_BLOCKS_TOTAL, self.texture.allocated_block_count);
+        profile.set(profiler::GPU_CACHE_BLOCKS_SAVED, self.saved_block_count);
 
         let reached_threshold =
             self.texture.rows.len() > (GPU_CACHE_INITIAL_HEIGHT as usize) &&

@@ -736,6 +736,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void UpdateWebRenderBatchingParameters();
 
   /**
+   * Notify the compositor webrender profiler UI string has been updated.
+   */
+  static void UpdateWebRenderProfilerUI();
+
+  /**
    * Wrap the data structure to be sent over IPC.
    */
   Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);

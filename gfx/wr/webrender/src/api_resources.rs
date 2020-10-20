@@ -10,6 +10,7 @@ use crate::api::SharedFontInstanceMap;
 use crate::api::units::*;
 use crate::render_api::{ResourceUpdate, TransactionMsg, AddFont};
 use crate::image_tiling::*;
+use crate::profiler;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -164,6 +165,8 @@ impl ApiResources {
         }
 
         let (rasterizer, requests) = self.create_blob_scene_builder_requests(&blobs_to_rasterize);
+        transaction.profile.set(profiler::RASTERIZED_BLOBS, blobs_to_rasterize.len());
+        transaction.profile.set(profiler::RASTERIZED_BLOB_TILES, requests.len());
         transaction.use_scene_builder_thread |= !requests.is_empty();
         transaction.use_scene_builder_thread |= !transaction.scene_ops.is_empty();
         transaction.blob_rasterizer = rasterizer;

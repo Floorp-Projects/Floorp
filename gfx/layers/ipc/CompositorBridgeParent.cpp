@@ -2044,6 +2044,7 @@ void CompositorBridgeParent::InitializeStatics() {
       &UpdateWebRenderMultithreading);
   gfxVars::SetWebRenderBatchingLookbackListener(
       &UpdateWebRenderBatchingParameters);
+  gfxVars::SetWebRenderProfilerUIListener(&UpdateWebRenderProfilerUI);
 }
 
 /*static*/
@@ -2119,6 +2120,17 @@ void CompositorBridgeParent::UpdateWebRenderBatchingParameters() {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachWebRenderBridgeParent([&](WebRenderBridgeParent* wrBridge) -> void {
     wrBridge->UpdateBatchingParameters();
+  });
+}
+
+/*static*/
+void CompositorBridgeParent::UpdateWebRenderProfilerUI() {
+  if (!sIndirectLayerTreesLock) {
+    return;
+  }
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachWebRenderBridgeParent([&](WebRenderBridgeParent* wrBridge) -> void {
+    wrBridge->UpdateProfilerUI();
   });
 }
 
