@@ -445,6 +445,7 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
   RefPtr<DataTextureSourceD3D11> mTextureSources[3];
 
   gfx::IntSize mSize;
+  gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
   WindowsHandle mHandles[3];
   bool mIsLocked;

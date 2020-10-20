@@ -7,11 +7,11 @@
 #ifndef MOZILLA_LAYERS_BUFFERETEXTURE
 #define MOZILLA_LAYERS_BUFFERETEXTURE
 
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/gfx/Types.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 namespace layers {
@@ -34,10 +34,12 @@ class BufferTextureData : public TextureData {
                                    ShmemAllocator aAllocator);
 
   static BufferTextureData* CreateForYCbCr(
-      KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
-      gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-      gfx::ColorRange aColorRange, TextureFlags aTextureFlags);
+      KnowsCompositor* aAllocator, const gfx::IntRect& aDisplay,
+      const gfx::IntSize& aYSize, uint32_t aYStride,
+      const gfx::IntSize& aCbCrSize, uint32_t aCbCrStride,
+      StereoMode aStereoMode, gfx::ColorDepth aColorDepth,
+      gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+      TextureFlags aTextureFlags);
 
   bool Lock(OpenMode aMode) override { return true; }
 
@@ -73,6 +75,7 @@ class BufferTextureData : public TextureData {
 
  protected:
   gfx::IntSize GetSize() const;
+  gfx::IntRect GetPictureRect() const;
 
   gfx::SurfaceFormat GetFormat() const;
 

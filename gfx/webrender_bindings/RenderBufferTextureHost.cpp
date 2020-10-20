@@ -26,7 +26,7 @@ RenderBufferTextureHost::RenderBufferTextureHost(
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor: {
       const layers::YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
-      mSize = ycbcr.ySize();
+      mSize = ycbcr.display().Size();
       mFormat = gfx::SurfaceFormat::YUV;
       break;
     }

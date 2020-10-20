@@ -7,8 +7,8 @@
 #ifndef MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 #define MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 
-#include "RenderTextureHost.h"
 #include "GLTypes.h"
+#include "RenderTextureHost.h"
 
 struct ID3D11Texture2D;
 struct IDXGIKeyedMutex;
@@ -77,7 +77,7 @@ class RenderDXGITextureHost final : public RenderTextureHost {
 class RenderDXGIYCbCrTextureHost final : public RenderTextureHost {
  public:
   explicit RenderDXGIYCbCrTextureHost(WindowsHandle (&aHandles)[3],
-                                      gfx::IntSize aSize,
+                                      gfx::IntSize aSizeY,
                                       gfx::IntSize aSizeCbCr);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
@@ -109,7 +109,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHost {
   // The gl handles for Y, Cb and Cr data.
   GLuint mTextureHandles[3];
 
-  gfx::IntSize mSize;
+  gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
 
   bool mLocked;

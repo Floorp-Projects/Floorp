@@ -6,10 +6,10 @@
 
 #include "D3D11YCbCrImage.h"
 
-#include "gfx2DGlue.h"
 #include "YCbCrUtils.h"
-#include "mozilla/gfx/gfxVars.h"
+#include "gfx2DGlue.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/TextureD3D11.h"
@@ -320,7 +320,7 @@ class AutoCheckLockD3D11Texture final {
 DXGIYCbCrTextureAllocationHelper::DXGIYCbCrTextureAllocationHelper(
     const PlanarYCbCrData& aData, TextureFlags aTextureFlags,
     ID3D11Device* aDevice)
-    : ITextureClientAllocationHelper(gfx::SurfaceFormat::YUV, aData.mYSize,
+    : ITextureClientAllocationHelper(gfx::SurfaceFormat::YUV, aData.mPicSize,
                                      BackendSelector::Content, aTextureFlags,
                                      ALLOC_DEFAULT),
       mData(aData),
@@ -332,7 +332,7 @@ bool DXGIYCbCrTextureAllocationHelper::IsCompatible(
 
   DXGIYCbCrTextureData* dxgiData =
       aTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
-  if (!dxgiData || aTextureClient->GetSize() != mData.mYSize ||
+  if (!dxgiData || aTextureClient->GetSize() != mData.mPicSize ||
       dxgiData->GetYSize() != mData.mYSize ||
       dxgiData->GetCbCrSize() != mData.mCbCrSize ||
       dxgiData->GetColorDepth() != mData.mColorDepth ||
@@ -412,10 +412,10 @@ already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr;
 
   return TextureClient::CreateWithData(
-      DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr, mData.mYSize,
-                                   mData.mYSize, mData.mCbCrSize,
-                                   mData.mColorDepth, mData.mYUVColorSpace,
-                                   mData.mColorRange),
+      DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr,
+                                   mData.mPicSize, mData.mYSize,
+                                   mData.mCbCrSize, mData.mColorDepth,
+                                   mData.mYUVColorSpace, mData.mColorRange),
       mTextureFlags, forwarder);
 }
 

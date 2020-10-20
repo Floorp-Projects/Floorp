@@ -8,11 +8,11 @@
 
 #include <d3d11.h>
 
-#include "GLLibraryEGL.h"
 #include "GLContextEGL.h"
+#include "GLLibraryEGL.h"
+#include "ScopedGLHelpers.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/Logging.h"
-#include "ScopedGLHelpers.h"
 
 namespace mozilla {
 namespace wr {
@@ -312,20 +312,20 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
-    WindowsHandle (&aHandles)[3], gfx::IntSize aSize, gfx::IntSize aSizeCbCr)
+    WindowsHandle (&aHandles)[3], gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
     : mHandles{aHandles[0], aHandles[1], aHandles[2]},
       mSurfaces{0},
       mStreams{0},
       mTextureHandles{0},
-      mSize(aSize),
+      mSizeY(aSizeY),
       mSizeCbCr(aSizeCbCr),
       mLocked(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHost, RenderTextureHost);
   // Assume the chroma planes are rounded up if the luma plane is odd sized.
-  MOZ_ASSERT((mSizeCbCr.width == mSize.width ||
-              mSizeCbCr.width == (mSize.width + 1) >> 1) &&
-             (mSizeCbCr.height == mSize.height ||
-              mSizeCbCr.height == (mSize.height + 1) >> 1));
+  MOZ_ASSERT((mSizeCbCr.width == mSizeY.width ||
+              mSizeCbCr.width == (mSizeY.width + 1) >> 1) &&
+             (mSizeCbCr.height == mSizeY.height ||
+              mSizeCbCr.height == (mSizeY.height + 1) >> 1));
   MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
 }
 
@@ -500,7 +500,7 @@ gfx::IntSize RenderDXGIYCbCrTextureHost::GetSize(uint8_t aChannelIndex) const {
   MOZ_ASSERT(aChannelIndex < 3);
 
   if (aChannelIndex == 0) {
-    return mSize;
+    return mSizeY;
   } else {
     return mSizeCbCr;
   }

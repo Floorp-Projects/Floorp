@@ -7,16 +7,19 @@
 #ifndef MOZILLA_GFX_TEXTURECLIENT_H
 #define MOZILLA_GFX_TEXTURECLIENT_H
 
-#include <stddef.h>              // for size_t
-#include <stdint.h>              // for uint32_t, uint8_t, uint64_t
-#include "GLTextureImage.h"      // for TextureImage
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint32_t, uint8_t, uint64_t
+
+#include "GLTextureImage.h"  // for TextureImage
+#include "GfxTexturesReporter.h"
 #include "ImageTypes.h"          // for StereoMode
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/DebugOnly.h"
-#include "mozilla/RefPtr.h"     // for RefPtr, RefCounted
-#include "mozilla/gfx/2D.h"     // for DrawTarget
+#include "mozilla/RefPtr.h"  // for RefPtr, RefCounted
+#include "mozilla/gfx/2D.h"  // for DrawTarget
+#include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/gfx/Types.h"  // for SurfaceFormat
 #include "mozilla/ipc/FileDescriptor.h"
@@ -24,16 +27,14 @@
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/mozalloc.h"               // for operator delete
-#include "mozilla/gfx/CriticalSection.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/mozalloc.h"  // for operator delete
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsISupportsImpl.h"  // for TextureImage::AddRef, etc
-#include "GfxTexturesReporter.h"
-#include "pratom.h"
 #include "nsThreadUtils.h"
+#include "pratom.h"
 
 class gfxImageSurface;
 struct ID3D11Device;
@@ -381,10 +382,12 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
 
   // Creates and allocates a TextureClient supporting the YCbCr format.
   static already_AddRefed<TextureClient> CreateForYCbCr(
-      KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
-      gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-      gfx::ColorRange aColorRange, TextureFlags aTextureFlags);
+      KnowsCompositor* aAllocator, const gfx::IntRect& aDisplay,
+      const gfx::IntSize& aYSize, uint32_t aYStride,
+      const gfx::IntSize& aCbCrSize, uint32_t aCbCrStride,
+      StereoMode aStereoMode, gfx::ColorDepth aColorDepth,
+      gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+      TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient (can be accessed through raw
   // pointers).
@@ -893,7 +896,7 @@ class MOZ_RAII DualTextureClientAutoLock {
 
   bool Succeeded() const { return !!mTarget; }
 
-  operator gfx::DrawTarget*() const { return mTarget; }
+  operator gfx::DrawTarget *() const { return mTarget; }
   gfx::DrawTarget* operator->() const { return mTarget; }
 
   RefPtr<gfx::DrawTarget> mTarget;
