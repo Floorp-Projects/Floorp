@@ -10,9 +10,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -973,12 +970,7 @@ var E10SUtils = {
     // If we are using DocumentChannel or remote subframes (fission), we
     // can start the load in the current process, and then perform the
     // switch later-on using the DocumentLoadListener mechanism.
-    // This mechanism isn't available on Android/GeckoView at present (see bug
-    // 1640019).
-    if (
-      AppConstants.MOZ_WIDGET_TOOLKIT != "android" &&
-      documentChannelPermittedForURI(aURI)
-    ) {
+    if (documentChannelPermittedForURI(aURI)) {
       return true;
     }
 
