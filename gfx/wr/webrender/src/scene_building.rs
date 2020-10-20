@@ -1515,11 +1515,6 @@ impl<'a> SceneBuilder<'a> {
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
-        let clip_chain_id = match clip_id {
-            Some(clip_id) => self.clip_store.get_or_build_clip_chain_id(clip_id),
-            None => ClipChainId::NONE,
-        };
-
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
         // an intermediate surface for plane splitting purposes.
@@ -1590,27 +1585,17 @@ impl<'a> SceneBuilder<'a> {
         // prepare step to skip the intermediate surface if the
         // clip node doesn't affect the stacking context rect.
         let mut blit_reason = BlitReason::empty();
-        let mut current_clip_chain_id = clip_chain_id;
 
         if flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) {
             blit_reason |= BlitReason::ISOLATE;
         }
 
-        // Walk each clip in this chain, to see whether any of the clips
-        // require that we draw this to an intermediate surface.
-        while current_clip_chain_id != ClipChainId::NONE {
-            let clip_chain_node = &self
-                .clip_store
-                .clip_chain_nodes[current_clip_chain_id.0 as usize];
-
-            let clip_node_data = &self.interners.clip[clip_chain_node.handle];
-
-            if let ClipNodeKind::Complex = clip_node_data.clip_node_kind {
-                blit_reason = BlitReason::CLIP;
-                break;
+        // If this stacking context has any complex clips, we need to draw it
+        // to an off-screen surface.
+        if let Some(clip_id) = clip_id {
+            if self.clip_store.has_complex_clips(clip_id) {
+                blit_reason |= BlitReason::CLIP;
             }
-
-            current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
         let is_redundant = FlattenedStackingContext::is_redundant(
@@ -1634,6 +1619,12 @@ impl<'a> SceneBuilder<'a> {
             sc_info.pop_containing_block = true;
             self.containing_block_stack.push(spatial_node_index);
         }
+
+        // This muct be built before the push_clip_root logic below
+        let clip_chain_id = match clip_id {
+            Some(clip_id) => self.clip_store.get_or_build_clip_chain_id(clip_id),
+            None => ClipChainId::NONE,
+        };
 
         // If this has a valid clip, it will create a new clip root
         if let Some(clip_id) = clip_id {
