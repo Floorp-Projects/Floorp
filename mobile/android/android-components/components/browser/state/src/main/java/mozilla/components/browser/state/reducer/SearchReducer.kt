@@ -14,9 +14,8 @@ internal object SearchReducer {
      */
     fun reduce(state: BrowserState, action: SearchAction): BrowserState {
         return when (action) {
+            is SearchAction.SetSearchEnginesAction -> state.setSearchEngines(action)
             is SearchAction.SetRegionAction -> state.setRegion(action)
-            is SearchAction.SetRegionSearchEngines -> state.setRegionSearchEngines(action)
-            is SearchAction.SetCustomSearchEngines -> state.setCustomSearchEngines(action)
             is SearchAction.UpdateCustomSearchEngineAction -> state.updateCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> state.removeSearchEngine(action)
             is SearchAction.SetDefaultSearchEngineAction -> state.setDefaultSearchEngineAction(action)
@@ -24,20 +23,15 @@ internal object SearchReducer {
     }
 }
 
-private fun BrowserState.setRegionSearchEngines(
-    action: SearchAction.SetRegionSearchEngines
+private fun BrowserState.setSearchEngines(
+    action: SearchAction.SetSearchEnginesAction
 ): BrowserState {
     return copy(search = search.copy(
-        regionSearchEngines = action.searchEngines,
-        regionDefaultSearchEngineId = action.regionDefaultSearchEngineId
-    ))
-}
-
-private fun BrowserState.setCustomSearchEngines(
-    action: SearchAction.SetCustomSearchEngines
-): BrowserState {
-    return copy(search = search.copy(
-        customSearchEngines = action.searchEngines
+        regionSearchEngines = action.regionSearchEngines,
+        customSearchEngines = action.customSearchEngines,
+        defaultSearchEngineId = action.defaultSearchEngineId,
+        regionDefaultSearchEngineId = action.regionDefaultSearchEngineId,
+        complete = true
     ))
 }
 

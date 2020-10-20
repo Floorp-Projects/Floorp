@@ -969,18 +969,13 @@ sealed class SearchAction : BrowserAction() {
     data class SetRegionAction(val regionState: RegionState) : SearchAction()
 
     /**
-     * Sets the list of [SearchEngine]s for the current "home" region of the user.
+     * Sets the list of search engines and default search engine IDs.
      */
-    data class SetRegionSearchEngines(
-        val searchEngines: List<SearchEngine>,
+    data class SetSearchEnginesAction(
+        val regionSearchEngines: List<SearchEngine>,
+        val customSearchEngines: List<SearchEngine>,
+        val defaultSearchEngineId: String?,
         val regionDefaultSearchEngineId: String
-    ) : SearchAction()
-
-    /**
-     * Sets the list of custom [SearchEngine]s for this user.
-     */
-    data class SetCustomSearchEngines(
-        val searchEngines: List<SearchEngine>
     ) : SearchAction()
 
     /**

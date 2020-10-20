@@ -20,7 +20,7 @@ import org.junit.Test
 
 class SearchActionTest {
     @Test
-    fun `SetRegionSearchEngines sets region search engines in state`() {
+    fun `SetSearchEnginesAction - Set sets region search engines in state`() {
         val engine1 = SearchEngine(
             id = "id1",
             name = "search1",
@@ -38,7 +38,12 @@ class SearchActionTest {
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(store.state.search.regionSearchEngines.isEmpty())
 
-        store.dispatch(SearchAction.SetRegionSearchEngines(searchEngineList, "id2")).joinBlocking()
+        store.dispatch(SearchAction.SetSearchEnginesAction(
+            regionSearchEngines = searchEngineList,
+            regionDefaultSearchEngineId = "id2",
+            customSearchEngines = emptyList(),
+            defaultSearchEngineId = null
+        )).joinBlocking()
 
         val searchEngines = store.state.search.regionSearchEngines
         assertFalse(searchEngines.isEmpty())
@@ -48,7 +53,7 @@ class SearchActionTest {
     }
 
     @Test
-    fun `SetCustomSearchEngines sets custom search engines in state`() {
+    fun `SetSearchEnginesAction - sets custom search engines in state`() {
         val engine1 = SearchEngine(
             id = "id1",
             name = "search1",
@@ -66,7 +71,12 @@ class SearchActionTest {
         val searchEngineList = listOf(engine1, engine2)
         assertTrue(store.state.search.customSearchEngines.isEmpty())
 
-        store.dispatch(SearchAction.SetCustomSearchEngines(searchEngineList)).joinBlocking()
+        store.dispatch(SearchAction.SetSearchEnginesAction(
+            customSearchEngines = searchEngineList,
+            regionSearchEngines = emptyList(),
+            regionDefaultSearchEngineId = "default",
+            defaultSearchEngineId = null
+        )).joinBlocking()
 
         val searchEngines = store.state.search.customSearchEngines
         assertFalse(searchEngines.isEmpty())

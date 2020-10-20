@@ -16,13 +16,16 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property defaultSearchEngineId The ID of default [SearchEngine]
  * @property regionDefaultSearchEngineId The ID of the default [SearchEngine] of the "home" region
  * of the user.
+ * @property complete Flag that indicates whether loading the list of search engines has completed.
+ * This can be used for waiting for specific values (e.g. the default search engine) to be available.
  */
 data class SearchState(
     val region: RegionState? = null,
     val regionSearchEngines: List<SearchEngine> = emptyList(),
     val customSearchEngines: List<SearchEngine> = emptyList(),
     val defaultSearchEngineId: String? = null,
-    val regionDefaultSearchEngineId: String? = null
+    val regionDefaultSearchEngineId: String? = null,
+    val complete: Boolean = false
 )
 
 /**
