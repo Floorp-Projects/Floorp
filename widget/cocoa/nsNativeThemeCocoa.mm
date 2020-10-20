@@ -2559,7 +2559,7 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(nsco
   return result;
 }
 
-void nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext, const CGRect& inBoxRect,
+void nsNativeThemeCocoa::DrawScrollbarTrack(DrawTarget& aDT, const gfx::Rect& aRect,
                                             ScrollbarParams aParams) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a track. Draw nothing.
@@ -2578,14 +2578,14 @@ void nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext, const CGRect
     }
   }
 
-  CGFloat thickness = aParams.horizontal ? inBoxRect.size.height : inBoxRect.size.width;
+  float thickness = aParams.horizontal ? aRect.height : aRect.width;
 
   // The scrollbar track is drawn as multiple non-overlapping segments, which make up lines of
   // different widths and with slightly different shading.
   ScrollbarTrackDecorationColors colors = ComputeScrollbarTrackDecorationColors(trackColor);
   struct {
     nscolor color;
-    CGFloat thickness;
+    float thickness;
   } segments[] = {
       {colors.mInnerColor, 1.0f},
       {colors.mShadowColor, 1.0f},
@@ -2596,28 +2596,22 @@ void nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext, const CGRect
   // Iterate over the segments "from inside to outside" and fill each segment.
   // For horizontal scrollbars, iterate top to bottom.
   // For vertical scrollbars, iterate left to right or right to left based on aParams.rtl.
-  CGRect segmentRect = inBoxRect;
+  float accumulatedThickness = 0.0f;
   for (const auto& segment : segments) {
+    gfx::Rect segmentRect = aRect;
+    float startThickness = accumulatedThickness;
+    float endThickness = startThickness + segment.thickness;
     if (aParams.horizontal) {
-      segmentRect.size.height = segment.thickness;
+      segmentRect.SetBoxY(aRect.Y() + startThickness, aRect.Y() + endThickness);
     } else {
       if (aParams.rtl) {
-        CGFloat rightEdge = segmentRect.origin.x + segmentRect.size.width;
-        segmentRect.origin.x = rightEdge - segment.thickness;
-      }
-      segmentRect.size.width = segment.thickness;
-    }
-    SetCGContextFillColor(cgContext, segment.color);
-    CGContextFillRect(cgContext, segmentRect);
-    if (aParams.horizontal) {
-      segmentRect.origin.y += segment.thickness;
-    } else {
-      if (aParams.rtl) {
-        segmentRect.origin.x -= segment.thickness;
+        segmentRect.SetBoxX(aRect.XMost() - endThickness, aRect.XMost() - startThickness);
       } else {
-        segmentRect.origin.x += segment.thickness;
+        segmentRect.SetBoxX(aRect.X() + startThickness, aRect.X() + endThickness);
       }
     }
+    aDT.FillRect(segmentRect, ColorPattern(ToDeviceColor(segment.color)));
+    accumulatedThickness = endThickness;
   }
 }
 
@@ -3183,6 +3177,11 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
       aDrawTarget.FillRect(widgetRect, ColorPattern(ToDeviceColor(color)));
       break;
     }
+    case Widget::eScrollbarTrack: {
+      ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
+      DrawScrollbarTrack(aDrawTarget, widgetRect, params);
+      break;
+    }
     default: {
       // The remaining widgets require a CGContext.
       CGRect macRect =
@@ -3203,7 +3202,8 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
       CGContextSetBaseCTM(cgContext, CGAffineTransformMakeScale(aScale, aScale));
 
       switch (widget) {
-        case Widget::eColorFill: {
+        case Widget::eColorFill:
+        case Widget::eScrollbarTrack: {
           MOZ_CRASH("already handled in outer switch");
           break;
         }
@@ -3339,11 +3339,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         case Widget::eScrollbarThumb: {
           ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
           DrawScrollbarThumb(cgContext, macRect, params);
-          break;
-        }
-        case Widget::eScrollbarTrack: {
-          ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-          DrawScrollbarTrack(cgContext, macRect, params);
           break;
         }
         case Widget::eScrollCorner: {
