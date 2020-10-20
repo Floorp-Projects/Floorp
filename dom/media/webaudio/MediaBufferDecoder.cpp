@@ -537,6 +537,10 @@ void MediaDecodeTask::FinishDecode() {
   uint32_t writeIndex = 0;
   RefPtr<AudioData> audioData;
   while ((audioData = mAudioQueue.PopFront())) {
+    if (!audioData->Frames()) {
+      // The packet contains no audio frames, skip it.
+      continue;
+    }
     audioData->EnsureAudioBuffer();  // could lead to a copy :(
     const AudioDataValue* bufferData =
         static_cast<AudioDataValue*>(audioData->mAudioBuffer->Data());
