@@ -7069,6 +7069,13 @@
   value: 5000
   mirror: always
 
+#ifdef MOZ_FFMPEG
+- name: media.rdd-ffmpeg.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
+
 #ifdef MOZ_FFVPX
 - name: media.rdd-ffvpx.enabled
   type: RelaxedAtomicBool
