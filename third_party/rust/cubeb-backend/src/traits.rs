@@ -50,6 +50,7 @@ pub trait StreamOps {
     fn latency(&mut self) -> Result<u32>;
     fn input_latency(&mut self) -> Result<u32>;
     fn set_volume(&mut self, volume: f32) -> Result<()>;
+    fn set_name(&mut self, name: &CStr) -> Result<()>;
     fn current_device(&mut self) -> Result<&DeviceRef>;
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()>;
     fn register_device_changed_callback(

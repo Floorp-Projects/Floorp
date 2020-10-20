@@ -1061,3 +1061,21 @@ TEST(cubeb, passthrough_resampler_fill_input_left) {
   ASSERT_EQ(input_frame_count, output_frame_count - 8);
 }
 
+TEST(cubeb, individual_methods) {
+  const uint32_t channels = 2;
+  const uint32_t sample_rate = 44100;
+  const uint32_t frames = 256;
+
+  delay_line<float> dl(10, channels, sample_rate);
+  uint32_t frames_needed1 = dl.input_needed_for_output(0);
+  ASSERT_EQ(frames_needed1, 0u);
+
+  cubeb_resampler_speex_one_way<float> one_way(channels, sample_rate, sample_rate, CUBEB_RESAMPLER_QUALITY_DEFAULT);
+  float buffer[channels * frames] = {0.0};
+  // Add all frames in the resampler's internal buffer.
+  one_way.input(buffer, frames);
+  // Ask for less than the existing frames, this would create a uint overlflow without the fix.
+  uint32_t frames_needed2 = one_way.input_needed_for_output(0);
+  ASSERT_EQ(frames_needed2, 0u);
+}
+
