@@ -359,6 +359,14 @@ class Mitmproxy(Playback):
             return False
 
     def confidence(self):
+        """Extract confidence metrics from the netlocs file
+        and convert them to perftest results
+        """
+        if len(self.recordings) == 0:
+            LOG.warning("Proxy service did not load a recording file. "
+                        "Confidence metrics will nt be generated")
+            return
+
         file_name = "mitm_netlocs_%s.json" % os.path.splitext(
             os.path.basename(
                 self.recordings[0].recording_path
