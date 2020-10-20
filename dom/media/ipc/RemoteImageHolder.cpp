@@ -64,9 +64,10 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
   pData.mCbCrStride = descriptor.cbCrStride();
   // default mYSkip, mCbSkip, mCrSkip because not held in YCbCrDescriptor
   pData.mYSkip = pData.mCbSkip = pData.mCrSkip = 0;
-  // default mPicX, mPicY because not held in YCbCrDescriptor
-  pData.mPicX = pData.mPicY = 0;
-  pData.mPicSize = mSize;
+  gfx::IntRect display = descriptor.display();
+  pData.mPicX = display.X();
+  pData.mPicY = display.Y();
+  pData.mPicSize = display.Size();
   pData.mStereoMode = descriptor.stereoMode();
   pData.mColorDepth = descriptor.colorDepth();
   pData.mYUVColorSpace = descriptor.yUVColorSpace();

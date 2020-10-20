@@ -5,13 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageContainer.h"
-#include <string.h>    // for memcpy, memset
-#include "GLImages.h"  // for SurfaceTextureImage
+
+#include <string.h>  // for memcpy, memset
+
+#include "GLImages.h"    // for SurfaceTextureImage
+#include "YCbCrUtils.h"  // for YCbCr conversions
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"  // for gfxPlatform
 #include "gfxUtils.h"     // for gfxUtils
 #include "libyuv.h"
-#include "mozilla/RefPtr.h"                 // for already_AddRefed
+#include "mozilla/CheckedInt.h"
+#include "mozilla/RefPtr.h"  // for already_AddRefed
+#include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"     // for ImageBridgeChild
@@ -19,25 +26,20 @@
 #include "mozilla/layers/ImageDataSerializer.h"  // for SurfaceDescriptorBuffer
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
-#include "mozilla/layers/SharedSurfacesChild.h"  // for SharedSurfacesAnimation
 #include "mozilla/layers/SharedRGBImage.h"
+#include "mozilla/layers/SharedSurfacesChild.h"  // for SharedSurfacesAnimation
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "nsISupportsUtils.h"  // for NS_IF_ADDREF
-#include "YCbCrUtils.h"        // for YCbCr conversions
-#include "gfx2DGlue.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/CheckedInt.h"
 
 #ifdef XP_MACOSX
-#  include "mozilla/gfx/QuartzSupport.h"
 #  include "MacIOSurfaceImage.h"
+#  include "mozilla/gfx/QuartzSupport.h"
 #endif
 
 #ifdef XP_WIN
-#  include "gfxWindowsPlatform.h"
 #  include <d3d10_1.h>
+
+#  include "gfxWindowsPlatform.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
@@ -479,8 +481,6 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
   MOZ_ASSERT(pdata, "must have PlanarYCbCrData");
   MOZ_ASSERT(pdata->mYSkip == 0 && pdata->mCbSkip == 0 && pdata->mCrSkip == 0,
              "YCbCrDescriptor doesn't hold skip values");
-  MOZ_ASSERT(pdata->mPicX == 0 && pdata->mPicY == 0,
-             "YCbCrDescriptor doesn't hold picx or picy");
 
   uint32_t yOffset;
   uint32_t cbOffset;
@@ -490,9 +490,9 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
       pdata->mCbCrSize.height, yOffset, cbOffset, crOffset);
 
   aSdBuffer.desc() = YCbCrDescriptor(
-      pdata->mYSize, pdata->mYStride, pdata->mCbCrSize, pdata->mCbCrStride,
-      yOffset, cbOffset, crOffset, pdata->mStereoMode, pdata->mColorDepth,
-      pdata->mYUVColorSpace, pdata->mColorRange,
+      pdata->GetPictureRect(), pdata->mYSize, pdata->mYStride, pdata->mCbCrSize,
+      pdata->mCbCrStride, yOffset, cbOffset, crOffset, pdata->mStereoMode,
+      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange,
       /*hasIntermediateBuffer*/ false);
 
   uint8_t* buffer = nullptr;

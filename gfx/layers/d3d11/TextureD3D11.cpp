@@ -592,7 +592,7 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
 
   aTextureY->SetPrivateDataInterface(
       sD3D11TextureUsage,
-      new TextureMemoryMeasurer(aSize.width * aSize.height));
+      new TextureMemoryMeasurer(aSizeY.width * aSizeY.height));
   aTextureCb->SetPrivateDataInterface(
       sD3D11TextureUsage,
       new TextureMemoryMeasurer(aSizeCbCr.width * aSizeCbCr.height));
@@ -1107,6 +1107,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorDXGIYCbCr& aDescriptor)
     : TextureHost(aFlags),
       mSize(aDescriptor.size()),
+      mSizeY(aDescriptor.sizeY()),
       mSizeCbCr(aDescriptor.sizeCbCr()),
       mIsLocked(false),
       mColorDepth(aDescriptor.colorDepth()),
@@ -1256,7 +1257,7 @@ bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDXGIYCbCrTextureHost(mHandles, mSize, mSizeCbCr);
+      new wr::RenderDXGIYCbCrTextureHost(mHandles, mSizeY, mSizeCbCr);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
@@ -1284,10 +1285,10 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
   // Assume the chroma planes are rounded up if the luma plane is odd sized.
-  MOZ_ASSERT((mSizeCbCr.width == mSize.width ||
-              mSizeCbCr.width == (mSize.width + 1) >> 1) &&
-             (mSizeCbCr.height == mSize.height ||
-              mSizeCbCr.height == (mSize.height + 1) >> 1));
+  MOZ_ASSERT((mSizeCbCr.width == mSizeY.width ||
+              mSizeCbCr.width == (mSizeY.width + 1) >> 1) &&
+             (mSizeCbCr.height == mSizeY.height ||
+              mSizeCbCr.height == (mSizeY.height + 1) >> 1));
 
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
@@ -1296,7 +1297,7 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
       wr::ExternalImageType::TextureHandle(wr::TextureTarget::External);
 
   // y
-  wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
+  wr::ImageDescriptor descriptor0(mSizeY, gfx::SurfaceFormat::A8);
   // cb and cr
   wr::ImageDescriptor descriptor1(mSizeCbCr, gfx::SurfaceFormat::A8);
   (aResources.*method)(aImageKeys[0], descriptor0, aExtID, imageType, 0);

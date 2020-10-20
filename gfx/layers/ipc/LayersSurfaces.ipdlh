@@ -138,6 +138,7 @@ comparable struct RGBDescriptor {
 };
 
 comparable struct YCbCrDescriptor {
+  IntRect display;
   IntSize ySize;
   uint32_t yStride;
   IntSize cbCrSize;
