@@ -60,6 +60,7 @@ class KnowsCompositor {
 
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
+  // The sync object for the global content device.
   SyncObjectClient* GetSyncObject() { return mSyncObject; }
 
   /// And by "thread-safe" here we merely mean "okay to hold strong references
