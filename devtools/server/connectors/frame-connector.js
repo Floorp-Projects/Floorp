@@ -60,7 +60,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       if (!actor) {
         mm.addMessageListener("debug:actor", onActorCreated);
       }
-      DevToolsServer._childMessageManagers.add(mm);
     };
 
     const untrackMessageManager = () => {
@@ -72,7 +71,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       if (!actor) {
         mm.removeMessageListener("debug:actor", onActorCreated);
       }
-      DevToolsServer._childMessageManagers.delete(mm);
     };
 
     let actor, childTransport;
