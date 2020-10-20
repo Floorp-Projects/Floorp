@@ -15,6 +15,8 @@
 #include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "nsIObserver.h"
@@ -80,27 +82,22 @@ void RemoteDecoderManagerChild::Init() {
     // manager thread, should more than 4 concurrent videos being instantiated
     // at the same time, we could end up in a deadlock.
     RefPtr<nsIThread> childThread;
-    nsresult rv = NS_NewNamedThread("RemVidChild", getter_AddRefs(childThread));
+    nsresult rv = NS_NewNamedThread(
+        "RemVidChild", getter_AddRefs(childThread),
+        NS_NewRunnableFunction(
+            "RemoteDecoderManagerChild::InitPBackground", []() {
+              ipc::PBackgroundChild* bgActor =
+                  ipc::BackgroundChild::GetOrCreateForCurrentThread();
+              NS_ASSERTION(bgActor, "Failed to start Background channel");
+              Unused << bgActor;
+            }));
+
     NS_ENSURE_SUCCESS_VOID(rv);
     *remoteDecoderManagerThread = childThread;
     sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
     sObserver = new ShutdownObserver();
     nsContentUtils::RegisterShutdownObserver(sObserver);
   }
-}
-
-/* static */
-void RemoteDecoderManagerChild::InitForRDDProcess(
-    Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Init();
-
-  auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
-  MOZ_ALWAYS_SUCCEEDS((*remoteDecoderManagerThread)
-                          ->Dispatch(NewRunnableFunction(
-                              "InitForContentRunnable", &OpenForRDDProcess,
-                              std::move(aVideoManager))));
 }
 
 /* static */
@@ -144,6 +141,7 @@ void RemoteDecoderManagerChild::Shutdown() {
             sRemoteDecoderManagerChildForGPUProcess->Close();
           }
           sRemoteDecoderManagerChildForGPUProcess = nullptr;
+          ipc::BackgroundChild::CloseForCurrentThread();
         })));
     childThread->Shutdown();
     sRecreateTasks = nullptr;
@@ -329,6 +327,12 @@ void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(
     return;
   }
 
+  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
+  if (!managerThread) {
+    // We got shutdown.
+    return;
+  }
+
   StaticMutexAutoLock lock(sLaunchMutex);
 
   // We have a couple possible states here.  We are in a content process
@@ -344,19 +348,32 @@ void RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded(
   // then no work is necessary.  If we can't send, then we call
   // LaunchRDDProcess which will launch RDD if necessary, and setup the
   // IPC connections between *this* content process and the RDD process.
+
   bool needsLaunch = true;
-  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
-  if (managerThread) {
-    RefPtr<Runnable> task = NS_NewRunnableFunction(
-        "RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded-CheckSend", [&]() {
-          auto* rps = GetSingleton(RemoteDecodeIn::RddProcess);
-          needsLaunch = rps ? !rps->CanSend() : true;
-        });
-    SyncRunnable::DispatchToThread(managerThread, task);
-  }
+  RefPtr<Runnable> task = NS_NewRunnableFunction(
+      "RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded-CheckSend", [&]() {
+        auto* rps = GetSingleton(RemoteDecodeIn::RddProcess);
+        needsLaunch = rps ? !rps->CanSend() : true;
+      });
+  if (NS_FAILED(SyncRunnable::DispatchToThread(managerThread, task))) {
+    return;
+  };
 
   if (needsLaunch) {
-    dom::ContentChild::GetSingleton()->LaunchRDDProcess();
+    managerThread->Dispatch(NS_NewRunnableFunction(
+        "RemoteDecoderManagerChild::LaunchRDDProcess", [&]() {
+          ipc::PBackgroundChild* bgActor =
+              ipc::BackgroundChild::GetForCurrentThread();
+          if (NS_WARN_IF(!bgActor)) {
+            return;
+          }
+          nsresult rv;
+          Endpoint<PRemoteDecoderManagerChild> endpoint;
+          Unused << bgActor->SendLaunchRDDProcess(&rv, &endpoint);
+          if (NS_SUCCEEDED(rv)) {
+            OpenForRDDProcess(std::move(endpoint));
+          }
+        }));
   }
 }
 

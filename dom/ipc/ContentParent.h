@@ -339,9 +339,6 @@ class ContentParent final
       const uint32_t& aPluginId, nsresult* aRv,
       Endpoint<PPluginModuleParent>* aEndpoint);
 
-  mozilla::ipc::IPCResult RecvLaunchRDDProcess(
-      nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint);
-
   mozilla::ipc::IPCResult RecvUngrabPointer(const uint32_t& aTime);
 
   mozilla::ipc::IPCResult RecvRemovePermission(const IPC::Principal& aPrincipal,

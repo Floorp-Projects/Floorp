@@ -66,7 +66,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
-#include "mozilla/RDDProcessManager.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Services.h"
@@ -1297,31 +1296,6 @@ mozilla::ipc::IPCResult ContentParent::RecvConnectPluginBridge(
   if (!mozilla::plugins::SetupBridge(aPluginId, this, aRv, &dummy, aEndpoint)) {
     return IPC_FAIL(this, "SetupBridge failed");
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
-    nsresult* aRv, Endpoint<PRemoteDecoderManagerChild>* aEndpoint) {
-  *aRv = NS_OK;
-
-  if (XRE_IsParentProcess() &&
-      BrowserTabsRemoteAutostart() &&  // only do rdd process if e10s on
-      Preferences::GetBool("media.rdd-process.enabled", false)) {
-    RDDProcessManager* rdd = RDDProcessManager::Get();
-    if (rdd) {
-      bool rddOpened = rdd->LaunchRDDProcess();
-      if (rddOpened) {
-        rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
-      }
-
-      if (NS_WARN_IF(!rddOpened)) {
-        *aRv = NS_ERROR_NOT_AVAILABLE;
-      }
-    } else {
-      *aRv = NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
   return IPC_OK();
 }
 

@@ -49,6 +49,7 @@ include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
 include protocol PVerifySSLServerCert;
 include protocol PVsync;
+include protocol PRemoteDecoderManager;
 
 include DOMTypes;
 include IPCBlob;
@@ -261,6 +262,10 @@ parent:
                              DelegatedCredentialInfoArg? aDcInfo,
                              uint32_t aProviderFlags,
                              uint32_t aCertVerifierFlags);
+
+  // See Bug 1518344 - Investigate using async for PBackground::LaunchRDDProcess
+  sync LaunchRDDProcess()
+      returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
 child:
   async PCache();

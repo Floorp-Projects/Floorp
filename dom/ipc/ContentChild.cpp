@@ -41,7 +41,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/SyncRunnable.h"  // for LaunchRDDProcess
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WebBrowserPersistDocumentChild.h"
@@ -1178,18 +1177,6 @@ nsresult ContentChild::ProvideWindowCommon(
   return rv;
 }
 
-void ContentChild::LaunchRDDProcess() {
-  RefPtr<Runnable> task = NS_NewRunnableFunction("LaunchRDDProcess", [&] {
-    nsresult rv;
-    Endpoint<PRemoteDecoderManagerChild> endpoint;
-    Unused << SendLaunchRDDProcess(&rv, &endpoint);
-    if (rv == NS_OK) {
-      RemoteDecoderManagerChild::InitForRDDProcess(std::move(endpoint));
-    }
-  });
-  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), task);
-}
-
 bool ContentChild::IsAlive() const { return mIsAlive; }
 
 bool ContentChild::IsShuttingDown() const { return mShuttingDown; }
@@ -1318,6 +1305,10 @@ void ContentChild::InitXPCOM(
   GfxInfoBase::SetFeatureStatus(std::move(aXPCOMInit.gfxFeatureStatus()));
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
+
+  // Initialize the RemoteDecoderManager thread and its associated PBackground
+  // channel.
+  RemoteDecoderManagerChild::Init();
 
   // Set the dynamic scalar definitions for this process.
   TelemetryIPC::AddDynamicScalarDefinitions(aXPCOMInit.dynamicScalarDefs());

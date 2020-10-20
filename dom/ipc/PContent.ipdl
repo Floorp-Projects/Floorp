@@ -978,10 +978,6 @@ parent:
     sync ConnectPluginBridge(uint32_t aPluginId)
         returns (nsresult rv, Endpoint<PPluginModuleParent> aEndpoint);
 
-    // See Bug 1518344 - Investigate using async for PContent::LaunchRDDProcess
-    sync LaunchRDDProcess()
-        returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
-
     async PRemoteSpellcheckEngine();
 
     async InitCrashReporter(NativeThreadId tid);
