@@ -508,8 +508,10 @@ either Raptor or browsertime."""
             {
                 "playback_tool": test.get("playback"),
                 "playback_version": test.get("playback_version", "4.0.4"),
-                "playback_pageset_manifest":  os.path.join(playback_dir,
-                                                           test.get("playback_pageset_manifest")),
+                "playback_files":  [os.path.join(
+                    playback_dir,
+                    test.get("playback_pageset_manifest")
+                )],
             }
         )
 

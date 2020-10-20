@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--record", help="generate a proxy recording")
     parser.add_argument("--tool", default="mitmproxy",
                         help="the playback tool to use (default: %(default)s)")
+    parser.add_argument("--tool-version", default="4.0.4",
+                        help="the playback tool version to use (default: %(default)s)")
     parser.add_argument("--host", default="localhost",
                         help="the host to use for the proxy server")
     parser.add_argument("--binary", required=True,
@@ -37,7 +39,10 @@ def main():
                         help="the object directory for this build")
     parser.add_argument("--app", default="firefox",
                         help="the app being tested (default: %(default)s)")
-    parser.add_argument("playback", nargs="*", help="the playback file to use")
+    parser.add_argument("playback", nargs="*",
+                        help="The playback files to use. "
+                             "It can be any combination of the following: zip file, manifest file,"
+                             "or a URL to zip/manifest file.")
 
     mozlog.commandline.add_logging_group(parser)
 
@@ -60,12 +65,13 @@ def main():
     try:
         playback = get_playback({
             "run_local": args.local,
-            "playback_tool": args.tool,
-            "playback_record": args.record,
             "host": args.host,
             "binary": args.binary,
             "obj_path": args.objdir,
             "platform": mozinfo.os,
+            "playback_record": args.record,
+            "playback_tool": args.tool,
+            "playback_version": args.tool_version,
             "playback_files": args.playback,
             "app": args.app
         })
