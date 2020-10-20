@@ -72,17 +72,6 @@ Emacs
 Mozilla-specific packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-dxr.el
-^^^^^^
-
-dxr.el is an elisp package that enables searching of DXR Code Indexer results
-from within emacs. Using this can sometimes be easier than doing localized code
-indexing with rtags, as rtags processing of code trees can be very processing
-intensive.
-
-dxr.el is available via `github repo <https://github.com/tromey/dxr.el>`__, or
-via the Marmalade package manager.
-
 ESLint
 ~~~~~~
 
