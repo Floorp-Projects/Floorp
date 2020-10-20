@@ -288,6 +288,16 @@ var ExtensionPermissions = {
     return this._getCached(extensionId);
   },
 
+  _fixupAllUrlsPerms(perms) {
+    // Unfortunately, we treat <all_urls> as an API permission as well.
+    // If it is added to either, ensure it is added to both.
+    if (perms.origins.includes("<all_urls>")) {
+      perms.permissions.push("<all_urls>");
+    } else if (perms.permissions.includes("<all_urls>")) {
+      perms.origins.push("<all_urls>");
+    }
+  },
+
   /**
    * Add new permissions for the given extension.  `permissions` is
    * in the format that is passed to browser.permissions.request().
@@ -300,6 +310,8 @@ var ExtensionPermissions = {
     let { permissions, origins } = await this._get(extensionId);
 
     let added = emptyPermissions();
+
+    this._fixupAllUrlsPerms(perms);
 
     for (let perm of perms.permissions) {
       if (!permissions.includes(perm)) {
@@ -337,6 +349,8 @@ var ExtensionPermissions = {
     let { permissions, origins } = await this._get(extensionId);
 
     let removed = emptyPermissions();
+
+    this._fixupAllUrlsPerms(perms);
 
     for (let perm of perms.permissions) {
       let i = permissions.indexOf(perm);
@@ -393,5 +407,14 @@ var ExtensionPermissions = {
   async _uninit() {
     await store.uninitForTest();
     store = createStore(!this._useLegacyStorageBackend);
+  },
+
+  // Convenience listener members for all permission changes.
+  addListener(listener) {
+    Management.on("change-permissions", listener);
+  },
+
+  removeListener(listener) {
+    Management.off("change-permissions", listener);
   },
 };

@@ -197,12 +197,19 @@ const AddonManagerListenerHandler = {
     AddonManager.addAddonListener(this._listener);
     AddonManager.addInstallListener(this._listener);
     AddonManager.addManagerListener(this._listener);
+    this._permissionHandler = (type, data) => {
+      if (type == "change-permissions") {
+        this.delegateEvent("onChangePermissions", [data]);
+      }
+    };
+    ExtensionPermissions.addListener(this._permissionHandler);
   },
 
   shutdown() {
     AddonManager.removeAddonListener(this._listener);
     AddonManager.removeInstallListener(this._listener);
     AddonManager.removeManagerListener(this._listener);
+    ExtensionPermissions.removeListener(this._permissionHandler);
   },
 };
 
@@ -218,18 +225,22 @@ const AddonCardListenerHandler = new Proxy(
     get(_, name) {
       return (...args) => {
         let elements = [];
-        let addon;
+        let addonId;
 
         // We expect args[0] to be of type:
         // - AddonInstall, on AddonManager install events
         // - AddonWrapper, on AddonManager addon events
         // - undefined, on AddonManager manage events
         if (args[0]) {
-          addon = args[0].addon || args[0].existingAddon || args[0];
+          addonId =
+            args[0].addon?.id ||
+            args[0].existingAddon?.id ||
+            args[0].extensionId ||
+            args[0].id;
         }
 
-        if (addon && addon.id) {
-          let cardSelector = `addon-card[addon-id="${addon.id}"]`;
+        if (addonId) {
+          let cardSelector = `addon-card[addon-id="${addonId}"]`;
           elements = document.querySelectorAll(
             `${cardSelector}, ${cardSelector} addon-details`
           );
@@ -2469,43 +2480,80 @@ class AddonPermissionsList extends HTMLElement {
     this.render();
   }
 
-  render() {
+  async render() {
     let appName = brandBundle.GetStringFromName("brandShortName");
-    let { msgs } = Extension.formatPermissionStrings(
+    let permissions = Extension.formatPermissionStrings(
       {
         permissions: this.addon.userPermissions,
+        optionalPermissions: this.addon.optionalPermissions,
         appName,
       },
       browserBundle
     );
+    let optionalEntries = [
+      ...Object.entries(permissions.optionalPermissions),
+      ...Object.entries(permissions.optionalOrigins),
+    ];
+    let perms = await ExtensionPermissions.get(this.addon.id);
 
     this.textContent = "";
+    let frag = importTemplate("addon-permissions-list");
 
-    if (msgs.length) {
-      // Add a row for each permission message.
-      for (let msg of msgs) {
-        let row = document.createElement("div");
-        row.classList.add("addon-detail-row", "permission-info");
-        row.textContent = msg;
-        this.appendChild(row);
+    if (permissions.msgs.length) {
+      let section = frag.querySelector(".addon-permissions-required");
+      section.hidden = false;
+      let list = section.querySelector(".addon-permissions-list");
+
+      for (let msg of permissions.msgs) {
+        let item = document.createElement("li");
+        item.classList.add("permission-info", "permission-checked");
+        item.appendChild(document.createTextNode(msg));
+        list.appendChild(item);
       }
-    } else {
-      let emptyMessage = document.createElement("div");
-      emptyMessage.classList.add("addon-detail-row");
-      document.l10n.setAttributes(emptyMessage, "addon-permissions-empty");
-      this.appendChild(emptyMessage);
+    }
+    if (optionalEntries.length) {
+      let section = frag.querySelector(".addon-permissions-optional");
+      section.hidden = false;
+      let list = section.querySelector(".addon-permissions-list");
+
+      for (let id = 0; id < optionalEntries.length; id++) {
+        let [perm, msg] = optionalEntries[id];
+
+        let type = "permission";
+        if (permissions.optionalOrigins[perm]) {
+          type = "origin";
+        }
+        let item = document.createElement("li");
+        item.classList.add("permission-info");
+
+        let label = document.createElement("label");
+        label.textContent = msg;
+
+        let toggle = document.createElement("input");
+        toggle.id = `permission-${id}`;
+
+        label.setAttribute("for", toggle.id);
+        item.appendChild(label);
+
+        toggle.setAttribute("permission-type", type);
+        toggle.setAttribute("type", "checkbox");
+        if (perms.permissions.includes(perm) || perms.origins.includes(perm)) {
+          toggle.checked = true;
+          item.classList.add("permission-checked");
+        }
+        toggle.setAttribute("permission-key", perm);
+        toggle.setAttribute("action", "toggle-permission");
+        toggle.classList.add("toggle-button");
+        label.appendChild(toggle);
+        list.appendChild(item);
+      }
+    }
+    if (!permissions.msgs.length && !optionalEntries.length) {
+      let row = frag.querySelector(".addon-permissions-empty");
+      row.hidden = false;
     }
 
-    // Add a learn more link.
-    let learnMoreRow = document.createElement("div");
-    learnMoreRow.classList.add("addon-detail-row");
-    let learnMoreLink = document.createElement("a", { is: "support-link" });
-    learnMoreLink.setAttribute("support-page", "extension-permissions");
-    learnMoreLink.textContent = browserBundle.GetStringFromName(
-      "webextPerms.learnMore"
-    );
-    learnMoreRow.appendChild(learnMoreLink);
-    this.appendChild(learnMoreRow);
+    this.appendChild(frag);
   }
 }
 customElements.define("addon-permissions-list", AddonPermissionsList);
@@ -2847,12 +2895,52 @@ class AddonCard extends HTMLElement {
     }
   }
 
+  async setAddonPermission(permission, type, action) {
+    let { addon } = this;
+    let origins = [],
+      permissions = [];
+    if (!["add", "remove"].includes(action)) {
+      throw new Error("invalid action for permission change");
+    }
+    if (type == "permission") {
+      if (
+        action == "add" &&
+        !addon.optionalPermissions.permissions.includes(permission)
+      ) {
+        throw new Error("permission missing from manifest");
+      }
+      permissions = [permission];
+    } else if (type == "origin") {
+      if (
+        action == "add" &&
+        !addon.optionalPermissions.origins.includes(permission)
+      ) {
+        throw new Error("origin missing from manifest");
+      }
+      origins = [permission];
+    } else {
+      throw new Error("unknown permission type changed");
+    }
+    let policy = WebExtensionPolicy.getByID(addon.id);
+    ExtensionPermissions[action](
+      addon.id,
+      { origins, permissions },
+      policy?.extension
+    );
+  }
+
   async handleEvent(e) {
     let { addon } = this;
     let action = e.target.getAttribute("action");
 
     if (e.type == "click") {
       switch (action) {
+        case "toggle-permission":
+          let permission = e.target.getAttribute("permission-key");
+          let type = e.target.getAttribute("permission-type");
+          let fname = e.target.checked ? "add" : "remove";
+          this.setAddonPermission(permission, type, fname);
+          break;
         case "toggle-disabled":
           this.recordActionEvent(addon.userDisabled ? "enable" : "disable");
           // Keep the checked state the same until the add-on's state changes.
@@ -3368,6 +3456,19 @@ class AddonCard extends HTMLElement {
       this.details.update();
     } else if (addon.type == "plugin" && changed.includes("userDisabled")) {
       this.update();
+    }
+  }
+
+  /* Extension Permission change listener */
+  onChangePermissions(data) {
+    let perms = data.added || data.removed;
+    let fname = data.added ? "add" : "remove";
+    for (let permission of perms.permissions.concat(perms.origins)) {
+      let target = document.querySelector(`[permission-key="${permission}"]`);
+      if (target) {
+        target.parentNode.parentNode.classList[fname]("permission-checked");
+        target.checked = !data.removed;
+      }
     }
   }
 }
