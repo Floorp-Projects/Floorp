@@ -7,7 +7,7 @@ package org.mozilla.fenix.browser.readermode
 import android.view.View
 import android.widget.Button
 import android.widget.RadioButton
-import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
@@ -54,7 +54,7 @@ class DefaultReaderModeController(
             findViewById<Button>(it)
         }.forEach {
             it.setTextColor(
-                ContextCompat.getColorStateList(
+                AppCompatResources.getColorStateList(
                     context,
                     R.color.readerview_private_button_color
                 )
@@ -68,7 +68,7 @@ class DefaultReaderModeController(
             findViewById<RadioButton>(it)
         }.forEach {
             it.setTextColor(
-                ContextCompat.getColorStateList(
+                AppCompatResources.getColorStateList(
                     context,
                     R.color.readerview_private_radio_color
                 )

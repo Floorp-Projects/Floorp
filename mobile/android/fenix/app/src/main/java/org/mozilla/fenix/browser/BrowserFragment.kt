@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -86,7 +85,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
             val readerModeAction =
                 BrowserToolbar.ToggleButton(
-                    image = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
+                    image = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
                     imageSelected =
                         AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
                     contentDescription = requireContext().getString(R.string.browser_menu_read),

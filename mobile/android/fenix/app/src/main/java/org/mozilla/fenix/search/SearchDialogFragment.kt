@@ -21,11 +21,11 @@ import android.view.ViewStub
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -431,7 +431,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun addSearchButton(toolbarView: ToolbarView) {
         toolbarView.view.addEditAction(
             BrowserToolbar.Button(
-                ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
                 visible = {
                     store.state.searchEngineSource.searchEngine.identifier.contains("google") &&

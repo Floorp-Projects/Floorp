@@ -21,6 +21,7 @@ dependencies {
     testImplementation Deps.kotlin_reflect
     testImplementation "com.android.tools.lint:lint:${Versions.android_lint_api}"
     testImplementation "com.android.tools.lint:lint-tests:${Versions.android_lint_api}"
+    testImplementation Deps.junitApi
 }
 
 jar {

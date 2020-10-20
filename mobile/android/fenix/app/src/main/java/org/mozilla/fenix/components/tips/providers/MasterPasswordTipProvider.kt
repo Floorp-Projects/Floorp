@@ -9,7 +9,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -73,7 +73,7 @@ class MasterPasswordTipProvider(
             title = context.getString(R.string.mp_homescreen_tip_title),
             description = context.getString(R.string.mp_homescreen_tip_message),
             learnMoreURL = null,
-            titleDrawable = ContextCompat.getDrawable(context, R.drawable.ic_login)
+            titleDrawable = AppCompatResources.getDrawable(context, R.drawable.ic_login)
         )
 
     private fun showMasterPasswordMigration() {
