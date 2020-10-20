@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -1424,7 +1425,32 @@ var PlacesUIUtils = {
         CustomizableUI.AREA_BOOKMARKS,
         0
       );
+      Services.prefs.setBoolPref("browser.bookmarks.addedImportButton", true);
     }
+  },
+
+  removeImportButtonWhenImportSucceeds() {
+    // If the user (re)moved the button, clear the pref and stop worrying about
+    // moving the item.
+    let placement = CustomizableUI.getPlacementOfWidget("import-button");
+    if (placement?.area != CustomizableUI.AREA_BOOKMARKS) {
+      Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
+      return;
+    }
+    // Otherwise, wait for a successful migration:
+    let obs = (subject, topic, data) => {
+      if (
+        data == Ci.nsIBrowserProfileMigrator.BOOKMARKS &&
+        MigrationUtils.getImportedCount("bookmarks") > 0
+      ) {
+        CustomizableUI.removeWidgetFromArea("import-button");
+        Services.prefs.clearUserPref("browser.bookmarks.addedImportButton");
+        Services.obs.removeObserver(obs, "Migration:ItemAfterMigrate");
+        Services.obs.removeObserver(obs, "Migration:ItemError");
+      }
+    };
+    Services.obs.addObserver(obs, "Migration:ItemAfterMigrate");
+    Services.obs.addObserver(obs, "Migration:ItemError");
   },
 };
 

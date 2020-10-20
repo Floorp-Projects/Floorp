@@ -1108,6 +1108,15 @@ var MigrationUtils = Object.seal({
     history: 0,
   },
 
+  getImportedCount(type) {
+    if (!this._importQuantities.hasOwnProperty(type)) {
+      throw new Error(
+        `Unknown import data type "${type}" passed to getImportedCount`
+      );
+    }
+    return this._importQuantities[type];
+  },
+
   insertBookmarkWrapper(bookmark) {
     this._importQuantities.bookmarks++;
     let insertionPromise = PlacesUtils.bookmarks.insert(bookmark);
