@@ -377,10 +377,14 @@ void ScriptPreloader::FinishContentStartup() {
 #ifdef XP_WIN
   // Record the amount of USS at startup. This is Windows-only for now,
   // we could turn it on for Linux relatively cheaply. On macOS it can have
-  // a perf impact.
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::MEMORY_UNIQUE_CONTENT_STARTUP,
-      nsMemoryReporterManager::ResidentUnique() / 1024);
+  // a perf impact. Only record this for non-privileged processes because
+  // privileged processes record this value at a different time, leading to
+  // a higher value which skews the telemetry.
+  if (sProcessType != ProcessType::PrivilegedAbout) {
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::MEMORY_UNIQUE_CONTENT_STARTUP,
+        nsMemoryReporterManager::ResidentUnique() / 1024);
+  }
 #endif
 }
 
