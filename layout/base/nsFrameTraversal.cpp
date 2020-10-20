@@ -204,7 +204,7 @@ bool nsFrameIterator::IsDone() { return mOffEdge != 0; }
 void nsFrameIterator::First() { mCurrent = mStart; }
 
 static bool IsRootFrame(nsIFrame* aFrame) {
-  return aFrame->IsCanvasFrame() || aFrame->IsRootFrame();
+  return aFrame->IsCanvasFrame() || aFrame->IsXULRootFrame();
 }
 
 void nsFrameIterator::Last() {
