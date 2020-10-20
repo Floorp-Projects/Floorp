@@ -26,6 +26,7 @@ class RemoteDecoderManagerChild final
 
   // Can be called from any thread.
   static nsISerialEventTarget* GetManagerThread();
+  static void LaunchRDDProcessIfNeeded();
 
   // Can be called from any thread, dispatches the request to the IPDL thread
   // internally and will be ignored if the IPDL actor has been destroyed.
@@ -88,6 +89,8 @@ class RemoteDecoderManagerChild final
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static void OpenForGPUProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+
+  static StaticMutex sLaunchMonitor;
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
 

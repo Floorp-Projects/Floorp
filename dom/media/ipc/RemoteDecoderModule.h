@@ -29,12 +29,8 @@ class RemoteDecoderModule : public PlatformDecoderModule {
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override;
 
- protected:
-  void LaunchRDDProcessIfNeeded() const;
-
  private:
   const nsCOMPtr<nsISerialEventTarget> mManagerThread;
-  static StaticMutex sLaunchMonitor;
 };
 
 }  // namespace mozilla
