@@ -528,6 +528,16 @@ uint32_t HashName(const nsAString& aName) {
                          });
 }
 
+Result<Ok, nsresult> AssertExists(const nsCOMPtr<nsIFile>& aDirectory) {
+#ifdef DEBUG
+  IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+
+  MOZ_ASSERT(exists);
+#endif
+
+  return Ok{};
+};
+
 nsresult ClampResultCode(nsresult aResultCode) {
   if (NS_SUCCEEDED(aResultCode) ||
       NS_ERROR_GET_MODULE(aResultCode) == NS_ERROR_MODULE_DOM_INDEXEDDB) {
@@ -13955,47 +13965,39 @@ nsresult Maintenance::DirectoryWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsresult rv = quotaManager->EnsureStorageIsInitialized();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool initTemporaryStorageFailed = false;
+  IDB_TRY(quotaManager->EnsureStorageIsInitialized());
 
   // Since idle maintenance may occur before temporary storage is initialized,
   // make sure it's initialized here (all non-persistent origins need to be
   // cleaned up and quota info needs to be loaded for them).
-  rv = quotaManager->EnsureTemporaryStorageIsInitialized();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Don't fail whole idle maintenance, the persistent repository can still
-    // be processed.
-    initTemporaryStorageFailed = true;
-  }
+
+  // Don't fail whole idle maintenance in case of an error, the persistent
+  // repository can still
+  // be processed.
+  const bool initTemporaryStorageFailed = [&quotaManager] {
+    IDB_TRY(quotaManager->EnsureTemporaryStorageIsInitialized(), true);
+    return false;
+  }();
 
   const nsCOMPtr<nsIFile> storageDir =
       GetFileForPath(quotaManager->GetStoragePath());
-  if (NS_WARN_IF(!storageDir)) {
-    return NS_ERROR_FAILURE;
+  IDB_TRY(OkIf(storageDir), NS_ERROR_FAILURE);
+
+  {
+    IDB_TRY_INSPECT(const bool& exists,
+                    MOZ_TO_RESULT_INVOKE(storageDir, Exists));
+
+    // XXX No warning here?
+    if (!exists) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
-  bool exists;
-  rv = storageDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    IDB_TRY_INSPECT(const bool& isDirectory,
+                    MOZ_TO_RESULT_INVOKE(storageDir, IsDirectory));
 
-  if (!exists) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  bool isDirectory;
-  rv = storageDir->IsDirectory(&isDirectory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!isDirectory)) {
-    return NS_ERROR_FAILURE;
+    IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
   }
 
   // There are currently only 3 persistence types, and we want to iterate them
@@ -14004,9 +14006,9 @@ nsresult Maintenance::DirectoryWork() {
       PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_DEFAULT,
       PERSISTENCE_TYPE_TEMPORARY};
 
-  static_assert((sizeof(kPersistenceTypes) / sizeof(kPersistenceTypes[0])) ==
-                    size_t(PERSISTENCE_TYPE_INVALID),
-                "Something changed with available persistence types!");
+  static_assert(
+      ArrayLength(kPersistenceTypes) == size_t(PERSISTENCE_TYPE_INVALID),
+      "Something changed with available persistence types!");
 
   constexpr auto idbDirName =
       NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME);
@@ -14026,217 +14028,182 @@ nsresult Maintenance::DirectoryWork() {
       continue;
     }
 
-    nsAutoCString persistenceTypeString;
-    if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-      // XXX This shouldn't be a special case...
-      persistenceTypeString.AssignLiteral("permanent");
-    } else {
-      persistenceTypeString.Assign(PersistenceTypeToString(persistenceType));
-    }
+    // XXX persistenceType == PERSISTENCE_TYPE_PERSISTENT shouldn't be a special
+    // case...
+    const auto persistenceTypeString =
+        persistenceType == PERSISTENCE_TYPE_PERSISTENT
+            ? "permanent"_ns
+            : PersistenceTypeToString(persistenceType);
 
-    nsCOMPtr<nsIFile> persistenceDir;
-    rv = storageDir->Clone(getter_AddRefs(persistenceDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(
+        const auto& persistenceDir,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, storageDir, Clone));
 
-    rv = persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString)));
 
-    rv = persistenceDir->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!exists) {
-      continue;
-    }
-
-    rv = persistenceDir->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!isDirectory)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDirectoryEnumerator> persistenceDirEntries;
-    rv = persistenceDir->GetDirectoryEntries(
-        getter_AddRefs(persistenceDirEntries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (!persistenceDirEntries) {
-      continue;
-    }
-
-    while (true) {
-      // Loop over "<origin>/idb" directories.
-      if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-          IsAborted()) {
-        return NS_ERROR_ABORT;
-      }
-
-      nsCOMPtr<nsIFile> originDir;
-      rv = persistenceDirEntries->GetNextFile(getter_AddRefs(originDir));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (!originDir) {
-        break;
-      }
-
-      rv = originDir->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(exists);
-
-      rv = originDir->IsDirectory(&isDirectory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (!isDirectory) {
-        continue;
-      }
-
-      // Get the necessary information about the origin
-      // (GetDirectoryMetadata2WithRestore also checks if it's a valid origin).
-
-      int64_t timestamp;
-      bool persisted;
-      QuotaInfo quotaInfo;
-      rv = quotaManager->GetDirectoryMetadata2WithRestore(
-          originDir, persistent, &timestamp, &persisted, quotaInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        // Not much we can do here...
-        continue;
-      }
-
-      if (persistent) {
-        // We have to check that all persistent origins are cleaned up, but
-        // there's no way to do that by one call, we need to initialize (and
-        // possibly clean up) them one by one
-        // (EnsureTemporaryStorageIsInitialized cleans up only non-persistent
-        // origins).
-
-        nsCOMPtr<nsIFile> directory;
-        bool created;
-        rv = quotaManager->EnsurePersistentOriginIsInitialized(
-            quotaInfo, getter_AddRefs(directory), &created);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          continue;
-        }
-
-        // We found this origin directory by traversing the repository, so
-        // EnsurePersistentOriginIsInitialized shouldn't report that a new
-        // directory has been created.
-        MOZ_ASSERT(!created);
-      }
-
-      nsCOMPtr<nsIFile> idbDir;
-      rv = originDir->Clone(getter_AddRefs(idbDir));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = idbDir->Append(idbDirName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = idbDir->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    {
+      IDB_TRY_INSPECT(const bool& exists,
+                      MOZ_TO_RESULT_INVOKE(persistenceDir, Exists));
 
       if (!exists) {
         continue;
       }
 
-      rv = idbDir->IsDirectory(&isDirectory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY_INSPECT(const bool& isDirectory,
+                      MOZ_TO_RESULT_INVOKE(persistenceDir, IsDirectory));
 
       if (NS_WARN_IF(!isDirectory)) {
         continue;
       }
-
-      nsCOMPtr<nsIDirectoryEnumerator> idbDirEntries;
-      rv = idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (!idbDirEntries) {
-        continue;
-      }
-
-      nsTArray<nsString> databasePaths;
-
-      while (true) {
-        // Loop over files in the "idb" directory.
-        if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-            IsAborted()) {
-          return NS_ERROR_ABORT;
-        }
-
-        nsCOMPtr<nsIFile> idbDirFile;
-        rv = idbDirEntries->GetNextFile(getter_AddRefs(idbDirFile));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (!idbDirFile) {
-          break;
-        }
-
-        nsString idbFilePath;
-        rv = idbDirFile->GetPath(idbFilePath);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (!StringEndsWith(idbFilePath, kSQLiteSuffix)) {
-          continue;
-        }
-
-        rv = idbDirFile->Exists(&exists);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        MOZ_ASSERT(exists);
-
-        rv = idbDirFile->IsDirectory(&isDirectory);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (isDirectory) {
-          continue;
-        }
-
-        // Found a database.
-
-        MOZ_ASSERT(!databasePaths.Contains(idbFilePath));
-
-        databasePaths.AppendElement(idbFilePath);
-      }
-
-      if (!databasePaths.IsEmpty()) {
-        mDirectoryInfos.EmplaceBack(persistenceType, quotaInfo,
-                                    std::move(databasePaths));
-      }
     }
+
+    IDB_TRY_INSPECT(
+        const auto& persistenceDirEntries,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                   persistenceDir, GetDirectoryEntries));
+
+    if (!persistenceDirEntries) {
+      continue;
+    }
+
+    // Loop over "<origin>/idb" directories.
+    IDB_TRY(CollectEach(
+        [&persistenceDirEntries] {
+          IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+              nsCOMPtr<nsIFile>, persistenceDirEntries, GetNextFile));
+        },
+        [this, &quotaManager, persistent, persistenceType, &idbDirName](
+            const nsCOMPtr<nsIFile>& originDir) -> Result<Ok, nsresult> {
+          if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+              IsAborted()) {
+            return Err(NS_ERROR_ABORT);
+          }
+
+          // XXX This looks an unfortunate combination of error propagation and
+          // asserting... Can't we better assert also in case of an error?
+          IDB_TRY(AssertExists(originDir));
+
+          {
+            IDB_TRY_INSPECT(const bool& isDirectory,
+                            MOZ_TO_RESULT_INVOKE(originDir, IsDirectory));
+
+            if (!isDirectory) {
+              return Ok{};
+            }
+          }
+
+          // Get the necessary information about the origin
+          // (GetDirectoryMetadata2WithRestore also checks if it's a valid
+          // origin).
+
+          int64_t timestamp;
+          bool persisted;
+          QuotaInfo quotaInfo;
+          IDB_TRY(quotaManager->GetDirectoryMetadata2WithRestore(
+                      originDir, persistent, &timestamp, &persisted, quotaInfo),
+                  // Not much we can do here...
+                  Ok{});
+
+          if (persistent) {
+            // We have to check that all persistent origins are cleaned up, but
+            // there's no way to do that by one call, we need to initialize (and
+            // possibly clean up) them one by one
+            // (EnsureTemporaryStorageIsInitialized cleans up only
+            // non-persistent origins).
+
+            nsCOMPtr<nsIFile> directory;
+            bool created;
+            IDB_TRY(quotaManager->EnsurePersistentOriginIsInitialized(
+                        quotaInfo, getter_AddRefs(directory), &created),
+                    // Not much we can do here...
+                    Ok{});
+
+            // We found this origin directory by traversing the repository, so
+            // EnsurePersistentOriginIsInitialized shouldn't report that a new
+            // directory has been created.
+            MOZ_ASSERT(!created);
+          }
+
+          IDB_TRY_INSPECT(
+              const auto& idbDir,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, originDir, Clone));
+
+          IDB_TRY(idbDir->Append(idbDirName));
+
+          IDB_TRY_INSPECT(const bool& exists,
+                          MOZ_TO_RESULT_INVOKE(idbDir, Exists));
+
+          if (!exists) {
+            return Ok{};
+          }
+
+          IDB_TRY_INSPECT(const bool& isDirectory,
+                          MOZ_TO_RESULT_INVOKE(idbDir, IsDirectory));
+
+          IDB_TRY(OkIf(isDirectory), Ok{});
+
+          IDB_TRY_INSPECT(
+              const auto& idbDirEntries,
+              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                         idbDir, GetDirectoryEntries));
+
+          if (!idbDirEntries) {
+            return Ok{};
+          }
+
+          nsTArray<nsString> databasePaths;
+
+          // Loop over files in the "idb" directory.
+          IDB_TRY(CollectEach(
+              [&idbDirEntries] {
+                IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
+                    nsCOMPtr<nsIFile>, idbDirEntries, GetNextFile));
+              },
+              [this, &databasePaths](
+                  const nsCOMPtr<nsIFile>& idbDirFile) -> Result<Ok, nsresult> {
+                if (NS_WARN_IF(
+                        QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+                    IsAborted()) {
+                  return Err(NS_ERROR_ABORT);
+                }
+
+                IDB_TRY_UNWRAP(
+                    auto idbFilePath,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, idbDirFile, GetPath));
+
+                if (!StringEndsWith(idbFilePath, kSQLiteSuffix)) {
+                  return Ok{};
+                }
+
+                // XXX This looks an unfortunate combination of error
+                // propagation and asserting... Can't we better assert also in
+                // case of an error?
+                IDB_TRY(AssertExists(idbDirFile));
+
+                IDB_TRY_INSPECT(const bool& isDirectory,
+                                MOZ_TO_RESULT_INVOKE(idbDirFile, IsDirectory));
+
+                if (isDirectory) {
+                  return Ok{};
+                }
+
+                // Found a database.
+
+                MOZ_ASSERT(!databasePaths.Contains(idbFilePath));
+
+                databasePaths.AppendElement(std::move(idbFilePath));
+
+                return Ok{};
+              }));
+
+          if (!databasePaths.IsEmpty()) {
+            mDirectoryInfos.EmplaceBack(persistenceType, quotaInfo,
+                                        std::move(databasePaths));
+          }
+
+          return Ok{};
+        }));
   }
 
   mState = State::BeginDatabaseMaintenance;
