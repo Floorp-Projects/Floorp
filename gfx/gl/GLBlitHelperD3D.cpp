@@ -165,56 +165,6 @@ ID3D11Device* GLBlitHelper::GetD3D11() const {
 
 // -------------------------------------
 
-bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
-                             const gfx::IntSize& destSize,
-                             const OriginPos destOrigin) const {
-  const auto& data = srcImage->GetData();
-  if (!data) return false;
-
-  const auto& desc = data->SD();
-
-  if (desc.type() ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorPlugin) {
-    MOZ_ASSERT_UNREACHABLE(
-        "BlitImage does not support plugin surface descriptors");
-    return false;
-  }
-
-  MOZ_ASSERT(
-      desc.type() ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder);
-  const auto& subdescUnion =
-      desc.get_SurfaceDescriptorRemoteDecoder().subdesc();
-
-  switch (subdescUnion.type()) {
-    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
-      const auto& subdesc = subdescUnion.get_SurfaceDescriptorD3D10();
-      return BlitDescriptor(subdesc, destSize, destOrigin);
-    }
-    case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDXGIYCbCr: {
-      const auto& subdesc = subdescUnion.get_SurfaceDescriptorDXGIYCbCr();
-
-      const auto& clipSize = subdesc.size();
-      const auto& ySize = subdesc.sizeY();
-      const auto& uvSize = subdesc.sizeCbCr();
-      const auto& colorSpace = subdesc.yUVColorSpace();
-
-      const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
-
-      const WindowsHandle handles[3] = {subdesc.handleY(), subdesc.handleCb(),
-                                        subdesc.handleCr()};
-      return BlitAngleYCbCr(handles, clipRect, ySize, uvSize, colorSpace,
-                            destSize, destOrigin);
-    }
-    default:
-      gfxCriticalError() << "Unhandled subdesc type: "
-                         << uint32_t(subdescUnion.type());
-      return false;
-  }
-}
-
-// -------------------------------------
-
 bool GLBlitHelper::BlitImage(layers::D3D11ShareHandleImage* const srcImage,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
@@ -306,6 +256,22 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_NV12});
   prog->Draw(baseArgs, &yuvArgs);
   return true;
+}
+
+bool GLBlitHelper::BlitDescriptor(
+    const layers::SurfaceDescriptorDXGIYCbCr& desc,
+    const gfx::IntSize& destSize, const OriginPos destOrigin) const {
+  const auto& clipSize = desc.size();
+  const auto& ySize = desc.sizeY();
+  const auto& uvSize = desc.sizeCbCr();
+  const auto& colorSpace = desc.yUVColorSpace();
+
+  const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
+
+  const WindowsHandle handles[3] = {desc.handleY(), desc.handleCb(),
+                                    desc.handleCr()};
+  return BlitAngleYCbCr(handles, clipRect, ySize, uvSize, colorSpace, destSize,
+                        destOrigin);
 }
 
 // --

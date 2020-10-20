@@ -186,10 +186,10 @@ class GLBlitHelper final {
                               OriginPos destOrigin);
 
  private:
-#ifdef XP_WIN
-  // GLBlitHelperD3D.cpp:
   bool BlitImage(layers::GPUVideoImage* srcImage, const gfx::IntSize& destSize,
                  OriginPos destOrigin) const;
+#ifdef XP_WIN
+  // GLBlitHelperD3D.cpp:
   bool BlitImage(layers::D3D11ShareHandleImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
   bool BlitImage(layers::D3D11YCbCrImage* srcImage,
@@ -197,7 +197,9 @@ class GLBlitHelper final {
 
   bool BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
                       const gfx::IntSize& destSize, OriginPos destOrigin) const;
-
+  bool BlitDescriptor(const layers::SurfaceDescriptorDXGIYCbCr& desc,
+                      const gfx::IntSize& destSize,
+                      const OriginPos destOrigin) const;
   bool BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
                       const gfx::IntRect& clipRect, const gfx::IntSize& ySize,
                       const gfx::IntSize& uvSize,
