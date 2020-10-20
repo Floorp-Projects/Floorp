@@ -80,6 +80,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
   EcosystemTelemetry: "resource://gre/modules/EcosystemTelemetry.jsm",
   TelemetryPrioPing: "resource://gre/modules/PrioPing.jsm",
+  UninstallPing: "resource://gre/modules/UninstallPing.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 
@@ -703,11 +704,6 @@ var Impl = {
     return TelemetryStorage.removeAbortedSessionPing();
   },
 
-  _countOtherInstalls() {
-    // TODO
-    throw new Error("_countOtherInstalls - not implemented");
-  },
-
   async saveUninstallPing() {
     if (AppConstants.platform != "win") {
       return undefined;
@@ -717,9 +713,13 @@ var Impl = {
 
     let payload = {};
     try {
-      payload.otherInstalls = this._countOtherInstalls();
+      payload.otherInstalls = UninstallPing.getOtherInstallsCount();
+      this._log.info(
+        "saveUninstallPing - otherInstalls",
+        payload.otherInstalls
+      );
     } catch (e) {
-      this._log.warn("saveUninstallPing - _countOtherInstalls failed", e);
+      this._log.warn("saveUninstallPing - getOtherInstallCount failed", e);
     }
     const options = { addClientId: true, addEnvironment: true };
     const pingData = this.assemblePing(PING_TYPE_UNINSTALL, payload, options);
