@@ -25,3 +25,8 @@
 #
 # Precise documentation for UserInteractions can be found at
 # https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/user-interactions.html
+
+testing:
+  interaction:
+    description: A user interaction just for testing.
+    bug_numbers: [1661304]
