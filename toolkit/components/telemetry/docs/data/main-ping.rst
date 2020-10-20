@@ -408,7 +408,7 @@ Structure:
 
 addonDetails
 ------------
-This section contains per add-on telemetry details, as reported by each add-on provider. The XPI provider is the only one reporting at the time of writing (`see DXR <https://searchfox.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
+This section contains per add-on telemetry details, as reported by each add-on provider. The XPI provider is the only one reporting at the time of writing (`see Searchfox <https://searchfox.org/mozilla-central/search?q=setTelemetryDetails&case=true>`_). Telemetry does not manipulate or enforce a specific format for the supplied provider's data.
 
 Structure:
 

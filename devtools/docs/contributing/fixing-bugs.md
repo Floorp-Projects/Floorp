@@ -14,7 +14,7 @@ If you know what you're looking for (e.g. a string that has a typo and needs cor
 
 * [Searchfox](http://searchfox.org/mozilla-central/source)
 
-It is a good idea to [add smart keyword searches](https://support.mozilla.org/en-US/kb/how-search-from-address-bar) for Searchfox or DXR to search faster.
+It is a good idea to [add smart keyword searches](https://support.mozilla.org/en-US/kb/how-search-from-address-bar) for DXR to search faster.
 
 You can also use your operating system's command line. For example, let's search for occurrences of `TODO` in the code base.
 
