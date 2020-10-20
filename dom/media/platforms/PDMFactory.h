@@ -7,6 +7,7 @@
 #if !defined(PDMFactory_h_)
 #  define PDMFactory_h_
 
+#  include "DecoderDoctorDiagnostics.h"
 #  include "PlatformDecoderModule.h"
 #  include "mozilla/StaticMutex.h"
 
@@ -14,7 +15,6 @@ class CDMProxy;
 
 namespace mozilla {
 
-class DecoderDoctorDiagnostics;
 class PDMFactoryImpl;
 template <class T>
 class StaticAutoPtr;
@@ -78,9 +78,7 @@ class PDMFactory final {
   RefPtr<PlatformDecoderModule> mEMEPDM;
   RefPtr<PlatformDecoderModule> mNullPDM;
 
-  bool mWMFFailedToLoad = false;
-  bool mFFmpegFailedToLoad = false;
-  bool mGMPPDMFailedToStartup = false;
+  DecoderDoctorDiagnostics::FlagsSet mFailureFlags;
 
   friend class RemoteVideoDecoderParent;
   static void EnsureInit();

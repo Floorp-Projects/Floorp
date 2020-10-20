@@ -209,15 +209,7 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoder(
       if (diagnostics) {
         // If libraries failed to load, the following loop over mCurrentPDMs
         // will not even try to use them. So we record failures now.
-        if (mWMFFailedToLoad) {
-          diagnostics->SetWMFFailedToLoad();
-        }
-        if (mFFmpegFailedToLoad) {
-          diagnostics->SetFFmpegFailedToLoad();
-        }
-        if (mGMPPDMFailedToStartup) {
-          diagnostics->SetGMPPDMFailedToStartup();
-        }
+        diagnostics->SetFailureFlags(mFailureFlags);
       }
 
       for (auto& current : mCurrentPDMs) {
@@ -376,12 +368,15 @@ void PDMFactory::CreateDefaultPDMs() {
 
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
-    RefPtr<PlatformDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
+    RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
     StartupPDM(MakeAndAddRef<GpuDecoderModule>(m));
-    mWMFFailedToLoad = !StartupPDM(m.forget());
+    if (!StartupPDM(m.forget())) {
+      mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+    }
   } else {
-    mWMFFailedToLoad =
-        StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure();
+    if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
+      mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+    }
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
@@ -398,9 +393,10 @@ void PDMFactory::CreateDefaultPDMs() {
   }
 #endif
 #ifdef MOZ_FFMPEG
-  mFFmpegFailedToLoad = StaticPrefs::media_ffmpeg_enabled()
-                            ? !CreateAndStartupPDM<FFmpegRuntimeLinker>()
-                            : false;
+  if (StaticPrefs::media_ffmpeg_enabled() &&
+      !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
+  }
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if (StaticPrefs::media_android_media_codec_enabled()) {
@@ -411,9 +407,10 @@ void PDMFactory::CreateDefaultPDMs() {
 
   CreateAndStartupPDM<AgnosticDecoderModule>();
 
-  mGMPPDMFailedToStartup = StaticPrefs::media_gmp_decoder_enabled()
-                               ? !CreateAndStartupPDM<GMPDecoderModule>()
-                               : false;
+  if (StaticPrefs::media_gmp_decoder_enabled() &&
+      !CreateAndStartupPDM<GMPDecoderModule>()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::GMPPDMFailedToStartup;
+  }
 }
 
 void PDMFactory::CreateNullPDM() {
@@ -441,15 +438,7 @@ already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoderModule(
   if (aDiagnostics) {
     // If libraries failed to load, the following loop over mCurrentPDMs
     // will not even try to use them. So we record failures now.
-    if (mWMFFailedToLoad) {
-      aDiagnostics->SetWMFFailedToLoad();
-    }
-    if (mFFmpegFailedToLoad) {
-      aDiagnostics->SetFFmpegFailedToLoad();
-    }
-    if (mGMPPDMFailedToStartup) {
-      aDiagnostics->SetGMPPDMFailedToStartup();
-    }
+    aDiagnostics->SetFailureFlags(mFailureFlags);
   }
 
   RefPtr<PlatformDecoderModule> pdm;

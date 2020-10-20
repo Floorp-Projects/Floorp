@@ -12,6 +12,7 @@ using VideoInfo from "MediaInfo.h";
 using AudioInfo from "MediaInfo.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
+using mozilla::DecoderDoctorDiagnostics from "DecoderDoctorDiagnostics.h";
 
 namespace mozilla {
 
@@ -32,6 +33,11 @@ sync protocol PRemoteDecoderManager
   manages PRemoteDecoder;
 
 parent:
+  sync Supports(RemoteDecoderInfoIPDL info,
+                TextureFactoryIdentifier? identifier)
+         returns (bool success,
+                  DecoderDoctorDiagnostics diagnostics);
+
   sync PRemoteDecoder(RemoteDecoderInfoIPDL info,
                       OptionSet options,
                       TextureFactoryIdentifier? identifier)
