@@ -6,19 +6,19 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
-#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
+#include "VideoUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
+#include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsITimer.h"
 #include "nsPluginHost.h"
 #include "nsPrintfCString.h"
-#include "VideoUtils.h"
 
 #if defined(MOZ_FFMPEG)
 #  include "FFmpegRuntimeLinker.h"
@@ -878,7 +878,11 @@ void DecoderDoctorDiagnostics::StoreFormatDiagnostics(dom::Document* aDocument,
   }
 
   mFormat = aFormat;
-  mCanPlay = aCanPlay;
+  if (aCanPlay) {
+    mFlags -= Flags::CanPlay;
+  } else {
+    mFlags += Flags::CanPlay;
+  }
 
   // StoreDiagnostics should only be called once, after all data is available,
   // so it is safe to std::move() from this object.
@@ -1101,20 +1105,20 @@ nsCString DecoderDoctorDiagnostics::GetDescription() const {
     case eFormatSupportCheck:
       s = "format='";
       s += NS_ConvertUTF16toUTF8(mFormat).get();
-      s += mCanPlay ? "', can play" : "', cannot play";
-      if (mVideoNotSupported) {
+      s += mFlags.contains(Flags::CanPlay) ? "', can play" : "', cannot play";
+      if (mFlags.contains(Flags::VideoNotSupported)) {
         s += ", but video format not supported";
       }
-      if (mAudioNotSupported) {
+      if (mFlags.contains(Flags::AudioNotSupported)) {
         s += ", but audio format not supported";
       }
-      if (mWMFFailedToLoad) {
+      if (mFlags.contains(Flags::WMFFailedToLoad)) {
         s += ", Windows platform decoder failed to load";
       }
-      if (mFFmpegFailedToLoad) {
+      if (mFlags.contains(Flags::FFmpegFailedToLoad)) {
         s += ", Linux platform decoder failed to load";
       }
-      if (mGMPPDMFailedToStartup) {
+      if (mFlags.contains(Flags::GMPPDMFailedToStartup)) {
         s += ", GMP PDM failed to startup";
       } else if (!mGMP.IsEmpty()) {
         s += ", Using GMP '";
