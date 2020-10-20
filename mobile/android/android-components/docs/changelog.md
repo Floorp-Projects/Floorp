@@ -11,6 +11,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 82.0
+    * `browser-engine-gecko-beta`: GeckoView 83.0
+    * `browser-engine-gecko-nightly`: GeckoView 84.0
+
 * **feature-addons**
   * 🚒 Bug fixed [issue #8681](https://github.com/mozilla-mobile/android-components/issues/8681) Fenix was consuming a lot of extra space on disk, when an add-on update requires a new permission, more info can be found [here](https://github.com/mozilla-mobile/android-components/issues/8681)
   ```
