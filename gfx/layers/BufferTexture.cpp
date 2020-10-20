@@ -154,8 +154,9 @@ BufferTextureData* BufferTextureData::CreateInternal(
 }
 
 BufferTextureData* BufferTextureData::CreateForYCbCr(
-    KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
-    gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
+    KnowsCompositor* aAllocator, const gfx::IntRect& aDisplay,
+    const gfx::IntSize& aYSize, uint32_t aYStride,
+    const gfx::IntSize& aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
     gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
     gfx::ColorRange aColorRange, TextureFlags aTextureFlags) {
   uint32_t bufSize = ImageDataSerializer::ComputeYCbCrBufferSize(
@@ -186,8 +187,8 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
           : true;
 
   YCbCrDescriptor descriptor =
-      YCbCrDescriptor(aYSize, aYStride, aCbCrSize, aCbCrStride, yOffset,
-                      cbOffset, crOffset, aStereoMode, aColorDepth,
+      YCbCrDescriptor(aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride,
+                      yOffset, cbOffset, crOffset, aStereoMode, aColorDepth,
                       aYUVColorSpace, aColorRange, hasIntermediateBuffer);
 
   // extra SIMD padding needed for SWGL
@@ -224,6 +225,10 @@ void BufferTextureData::FillInfo(TextureData::Info& aInfo) const {
 
 gfx::IntSize BufferTextureData::GetSize() const {
   return ImageDataSerializer::SizeFromBufferDescriptor(mDescriptor);
+}
+
+gfx::IntRect BufferTextureData::GetPictureRect() const {
+  return ImageDataSerializer::RectFromBufferDescriptor(mDescriptor);
 }
 
 Maybe<gfx::IntSize> BufferTextureData::GetCbCrSize() const {

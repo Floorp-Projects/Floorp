@@ -9,12 +9,12 @@
 #include "Types.h"
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/RefPtr.h"
 #ifdef XP_WIN
 #  include "IMFYCbCrImage.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
@@ -66,10 +66,10 @@ static already_AddRefed<TextureClient> CreateYCbCrTextureClientWithBackend(
   // Create YCbCrTexture for basic backend.
   if (aLayersBackend == LayersBackend::LAYERS_BASIC) {
     return TextureClient::CreateForYCbCr(
-        nullptr, clientData.mYSize, clientData.mYStride, clientData.mCbCrSize,
-        clientData.mCbCrStride, StereoMode::MONO, gfx::ColorDepth::COLOR_8,
-        gfx::YUVColorSpace::BT601, gfx::ColorRange::LIMITED,
-        TextureFlags::DEALLOCATE_CLIENT);
+        nullptr, clientData.GetPictureRect(), clientData.mYSize,
+        clientData.mYStride, clientData.mCbCrSize, clientData.mCbCrStride,
+        StereoMode::MONO, gfx::ColorDepth::COLOR_8, gfx::YUVColorSpace::BT601,
+        gfx::ColorRange::LIMITED, TextureFlags::DEALLOCATE_CLIENT);
   }
 
 #ifdef XP_WIN
