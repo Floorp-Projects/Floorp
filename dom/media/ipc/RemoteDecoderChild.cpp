@@ -11,8 +11,13 @@ namespace mozilla {
 
 RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
     : ShmemRecycleAllocator(this),
-      mThread(RemoteDecoderManagerChild::GetManagerThread()),
-      mRecreatedOnCrash(aRecreatedOnCrash) {}
+      mThread(GetCurrentSerialEventTarget()),
+      mRecreatedOnCrash(aRecreatedOnCrash) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      RemoteDecoderManagerChild::GetManagerThread() &&
+          RemoteDecoderManagerChild::GetManagerThread()->IsOnCurrentThread(),
+      "Must be created on the manager thread");
+}
 
 void RemoteDecoderChild::HandleRejectionError(
     const ipc::ResponseRejectReason& aReason,
