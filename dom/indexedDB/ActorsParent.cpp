@@ -14606,11 +14606,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
     return NS_ERROR_ABORT;
   }
 
-  int32_t schemaVersion;
-  nsresult rv = aConnection.GetSchemaVersion(&schemaVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const int32_t& schemaVersion,
+                  MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
 
   // Don't do anything if the schema version is less than 18; before that
   // version no databases had |auto_vacuum == INCREMENTAL| set and we didn't
@@ -14632,17 +14629,11 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
                       "SELECT last_vacuum_time, last_vacuum_size "
                       "FROM database;"_ns));
 
-  PRTime lastVacuumTime;
-  rv = stmt->GetInt64(0, &lastVacuumTime);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const PRTime& lastVacuumTime,
+                  MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
-  int64_t lastVacuumSize;
-  rv = stmt->GetInt64(1, &lastVacuumSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const int64_t& lastVacuumSize,
+                  MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
   NS_ASSERTION(lastVacuumSize > 0,
                "Thy last vacuum size shall be greater than zero, less than "
@@ -14666,16 +14657,12 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
 
   // Create a temporary copy of the dbstat table to speed up the queries that
   // come later.
-  rv = aConnection.ExecuteSimpleSQL(
+  IDB_TRY(aConnection.ExecuteSimpleSQL(
       "CREATE VIRTUAL TABLE __stats__ USING dbstat;"
-      "CREATE TEMP TABLE __temp_stats__ AS SELECT * FROM __stats__;"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      "CREATE TEMP TABLE __temp_stats__ AS SELECT * FROM __stats__;"_ns));
 
   {  // Calculate the percentage of the database pages that are not in
-     // contiguous
-    // order.
+     // contiguous order.
     IDB_TRY_INSPECT(
         const auto& stmt,
         CreateAndExecuteSingleStepStatement(
@@ -14686,11 +14673,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
             "WHERE __ts1__.name = __ts2__.name "
             "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns));
 
-    int32_t percentUnordered;
-    rv = stmt->GetInt32(0, &percentUnordered);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const int32_t& percentUnordered,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 
     MOZ_ASSERT(percentUnordered >= 0);
     MOZ_ASSERT(percentUnordered <= 100);
@@ -14702,11 +14686,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
   }
 
   // Don't try a full vacuum if the file hasn't grown by 10%.
-  int64_t currentFileSize;
-  rv = aDatabaseFile->GetFileSize(&currentFileSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const int64_t& currentFileSize,
+                  MOZ_TO_RESULT_INVOKE(aDatabaseFile, GetFileSize));
 
   if (currentFileSize <= lastVacuumSize ||
       (((currentFileSize - lastVacuumSize) * 100 / currentFileSize) <
@@ -14720,11 +14701,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
                     CreateAndExecuteSingleStepStatement(
                         aConnection, "PRAGMA freelist_count;"_ns));
 
-    int32_t freelistCount;
-    rv = stmt->GetInt32(0, &freelistCount);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const int32_t& freelistCount,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 
     MOZ_ASSERT(freelistCount >= 0);
 
@@ -14744,11 +14722,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
             aConnection,
             "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns));
 
-    int32_t percentUnused;
-    rv = stmt->GetInt32(0, &percentUnused);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const int32_t& percentUnused,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 
     MOZ_ASSERT(percentUnused >= 0);
     MOZ_ASSERT(percentUnused <= 100);
