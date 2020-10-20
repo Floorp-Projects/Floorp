@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef __ARM_FEATURE_CRYPTO
+#ifdef USE_HW_SHA1
+
+#ifndef __ARM_FEATURE_CRYPTO
+#error "Compiler option is invalid"
+#endif
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -257,4 +261,4 @@ shaCompress(SHA_HW_t *X, const PRUint32 *inbuf)
     XH(4) = e;
 }
 
-#endif /* __ARM_FEATURE_CRYPTO */
+#endif /* USE_HW_SHA1 */
