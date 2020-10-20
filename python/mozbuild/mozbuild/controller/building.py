@@ -31,6 +31,7 @@ except Exception:
     psutil = None
 
 from mach.mixin.logging import LoggingMixin
+from mozboot.util import get_mach_virtualenv_binary
 import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
@@ -52,9 +53,6 @@ from ..testing import (
 from ..compilation.warnings import (
     WarningsCollector,
     WarningsDatabase,
-)
-from ..shellutil import (
-    quote as shell_quote,
 )
 from ..util import (
     FileAvoidWrite,
@@ -1407,19 +1405,43 @@ class BuildDriver(MozbuildObject):
 
         line_handler = line_handler or on_line
 
-        options = ' '.join(shell_quote(o) for o in options or ())
         append_env = dict(append_env or {})
-        append_env['CONFIGURE_ARGS'] = options
+        append_env['MAKE'] = self._make_path()
 
-        # Only print build status messages when we have an active
-        # monitor.
-        if not buildstatus_messages:
-            append_env['NO_BUILDSTATUS_MESSAGES'] = '1'
-        status = self._run_client_mk(target='configure',
-                                     line_handler=line_handler,
-                                     append_env=append_env)
+        # Back when client.mk was used, `mk_add_options "export ..."` lines
+        # from the mozconfig would spill into the configure environment, so
+        # add that for backwards compatibility.
+        for line in self.mozconfig['make_extra'] or []:
+            if line.startswith('export '):
+                k, eq, v = line[len('export '):].partition('=')
+                if eq == '=':
+                    append_env[k] = v
 
-        if not status:
+        if six.PY3:
+            python = sys.executable
+        else:
+            # Try to get the mach virtualenv Python if we can.
+            python = get_mach_virtualenv_binary()
+            if not os.path.exists(python):
+                python = 'python3'
+
+        command = [python, os.path.join(self.topsrcdir, 'configure.py')]
+        if options:
+            command.extend(options)
+
+        if buildstatus_messages:
+            line_handler('BUILDSTATUS TIERS configure')
+            line_handler('BUILDSTATUS TIER_START configure')
+        status = self._run_command_in_objdir(
+            args=command,
+            line_handler=line_handler,
+            append_env=append_env,
+        )
+        if buildstatus_messages:
+            line_handler('BUILDSTATUS TIER_FINISH configure')
+        if status:
+            print('*** Fix above errors and then restart with "./mach build"')
+        else:
             print('Configure complete!')
             print('Be sure to run |mach build| to pick up any changes')
 
