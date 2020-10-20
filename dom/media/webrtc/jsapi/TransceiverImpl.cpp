@@ -712,8 +712,13 @@ static nsresult JsepCodecDescToVideoCodecConfig(
   (*aConfig)->mFECFbSet = desc.mFECEnabled;
   (*aConfig)->mTransportCCFbSet = desc.RtcpFbTransportCCIsSet();
   if (desc.mFECEnabled) {
-    (*aConfig)->mREDPayloadType = desc.mREDPayloadType;
-    (*aConfig)->mULPFECPayloadType = desc.mULPFECPayloadType;
+    uint16_t pt;
+    if (SdpHelper::GetPtAsInt(desc.mREDPayloadType, &pt)) {
+      (*aConfig)->mREDPayloadType = pt;
+    }
+    if (SdpHelper::GetPtAsInt(desc.mULPFECPayloadType, &pt)) {
+      (*aConfig)->mULPFECPayloadType = pt;
+    }
   }
   if (desc.mRtxEnabled) {
     uint16_t pt;

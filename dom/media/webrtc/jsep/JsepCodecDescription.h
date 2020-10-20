@@ -241,8 +241,6 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         mFECEnabled(false),
         mTransportCCEnabled(false),
         mRtxEnabled(false),
-        mREDPayloadType(0),
-        mULPFECPayloadType(0),
         mProfileLevelId(0),
         mPacketizationMode(0) {
     // Add supported rtcp-fb types
@@ -286,8 +284,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     }
 
     mFECEnabled = true;
-    mREDPayloadType = redPt;
-    mULPFECPayloadType = ulpfecPt;
+    mREDPayloadType = redPayloadType;
+    mULPFECPayloadType = ulpfecPayloadType;
   }
 
   virtual void EnableTransportCC() {
@@ -800,8 +798,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   bool mFECEnabled;
   bool mTransportCCEnabled;
   bool mRtxEnabled;
-  uint8_t mREDPayloadType;
-  uint8_t mULPFECPayloadType;
+  std::string mREDPayloadType;
+  std::string mULPFECPayloadType;
   std::string mRtxPayloadType;
   std::vector<uint8_t> mRedundantEncodings;
 
