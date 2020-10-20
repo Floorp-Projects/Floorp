@@ -1149,16 +1149,6 @@ function getDefaultExtension(aFilename, aURI, aContentType) {
     return "";
   } // temporary fix for bug 120327
 
-  // For images, rely solely on the mime type if known.
-  // All the extension is going to do is lie to us.
-  if (aContentType?.startsWith("image/")) {
-    let mimeInfo = getMIMEInfoForType(aContentType, "");
-    let exts = Array.from(mimeInfo.getFileExtensions());
-    if (exts.length) {
-      return exts[0];
-    }
-  }
-
   // First try the extension from the filename
   var url = Cc["@mozilla.org/network/standard-url-mutator;1"]
     .createInstance(Ci.nsIURIMutator)
