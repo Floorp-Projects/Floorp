@@ -4,7 +4,7 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
-#define _WIN32_WINNT 0x0600
+#define _WIN32_WINNT 0x0603
 #define NOMINMAX
 
 #include <initguid.h>
@@ -1813,6 +1813,28 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
 }
 
 static bool
+initialize_iaudioclient2(com_ptr<IAudioClient> & audio_client)
+{
+  com_ptr<IAudioClient2> audio_client2;
+  audio_client->QueryInterface<IAudioClient2>(audio_client2.receive());
+  if (!audio_client2) {
+    LOG("Could not get IAudioClient2 interface, not setting AUDCLNT_STREAMOPTIONS_RAW.");
+    return CUBEB_OK;
+  }
+  AudioClientProperties properties = { 0 };
+  properties.cbSize = sizeof(AudioClientProperties);
+#ifndef __MINGW32__
+  properties.Options |= AUDCLNT_STREAMOPTIONS_RAW;
+#endif
+  HRESULT hr = audio_client2->SetClientProperties(&properties);
+  if (FAILED(hr)) {
+    LOG("IAudioClient2::SetClientProperties error: %lx", GetLastError());
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
+}
+
+static bool
 initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
                          cubeb_stream * stm,
                          const com_heap_ptr<WAVEFORMATEX> & mix_format,
@@ -1835,7 +1857,7 @@ initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
 
   // IAudioClient3 doesn't support AUDCLNT_STREAMFLAGS_NOPERSIST, and will return
   // AUDCLNT_E_INVALID_STREAM_FLAG. This is undocumented.
-  flags = flags ^ AUDCLNT_STREAMFLAGS_NOPERSIST;
+  flags = flags & ~AUDCLNT_STREAMFLAGS_NOPERSIST;
 
   // Some people have reported glitches with capture streams:
   // http://blog.nirbheek.in/2018/03/low-latency-audio-on-windows-with.html
@@ -2032,7 +2054,13 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
       mix_params->format, mix_params->rate, mix_params->channels,
       mix_params->layout);
 
-  DWORD flags = AUDCLNT_STREAMFLAGS_NOPERSIST;
+
+  DWORD flags = 0;
+
+  bool is_persist = stream_params->prefs & CUBEB_STREAM_PREF_PERSIST;
+  if (!is_persist) {
+    flags |= AUDCLNT_STREAMFLAGS_NOPERSIST;
+  }
 
   // Check if a loopback device should be requested. Note that event callbacks
   // do not work with loopback devices, so only request these if not looping.
@@ -2080,6 +2108,13 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     stm->input_bluetooth_handsfree = false;
     latency_hns = frames_to_hns(mix_params->rate, latency_frames);
     LOG("Could not get cubeb_device_info.");
+  }
+
+  if (stream_params->prefs & CUBEB_STREAM_PREF_RAW) {
+    if (initialize_iaudioclient2(audio_client) != CUBEB_OK) {
+      LOG("Can't initialize an IAudioClient2, error: %lx", GetLastError());
+      // This is not fatal.
+    }
   }
 
 #if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
@@ -3211,6 +3246,7 @@ cubeb_ops const wasapi_ops = {
   /*.stream_get_latency =*/ wasapi_stream_get_latency,
   /*.stream_get_input_latency =*/ wasapi_stream_get_input_latency,
   /*.stream_set_volume =*/ wasapi_stream_set_volume,
+  /*.stream_set_name =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback =*/ NULL,

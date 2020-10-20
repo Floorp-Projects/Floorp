@@ -943,7 +943,6 @@ opensl_configure_capture(cubeb_stream * stm, cubeb_stream_params * params)
     }
   }
 
-
   if (get_android_version() > ANDROID_VERSION_JELLY_BEAN) {
     SLAndroidConfigurationItf recorderConfig;
     res = (*stm->recorderObj)
@@ -1756,6 +1755,7 @@ static struct cubeb_ops const opensl_ops = {
   .stream_get_latency = opensl_stream_get_latency,
   .stream_get_input_latency = NULL,
   .stream_set_volume = opensl_stream_set_volume,
+  .stream_set_name = NULL,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
   .stream_register_device_changed_callback = NULL,

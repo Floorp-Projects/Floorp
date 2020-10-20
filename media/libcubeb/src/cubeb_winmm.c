@@ -1061,6 +1061,7 @@ static struct cubeb_ops const winmm_ops = {
   /*.stream_get_latency = */ winmm_stream_get_latency,
   /*.stream_get_input_latency = */ NULL,
   /*.stream_set_volume =*/ winmm_stream_set_volume,
+  /*.stream_set_name =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback=*/ NULL,
