@@ -220,6 +220,7 @@ sndio_mainloop(void *arg)
 
       /* was this last call-back invocation (aka end-of-stream) ? */
       if (nfr < s->nfr) {
+
         if (!(s->mode & SIO_PLAY) || nfr == 0) {
           state = CUBEB_STATE_DRAINED;
           break;
@@ -661,7 +662,6 @@ static struct cubeb_ops const sndio_ops = {
   .stream_get_position = sndio_stream_get_position,
   .stream_get_latency = sndio_stream_get_latency,
   .stream_set_volume = sndio_stream_set_volume,
-  .stream_set_name = NULL,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
   .stream_register_device_changed_callback = NULL,

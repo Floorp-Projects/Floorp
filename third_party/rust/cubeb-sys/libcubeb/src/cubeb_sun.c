@@ -362,8 +362,8 @@ sun_stream_stop(cubeb_stream * s)
 static void
 sun_stream_destroy(cubeb_stream * s)
 {
-  sun_stream_stop(s);
   pthread_mutex_destroy(&s->mutex);
+  sun_stream_stop(s);
   if (s->play.fd != -1) {
     close(s->play.fd);
   }
@@ -473,7 +473,7 @@ sun_io_routine(void * arg)
 
       if (to_write > 0) {
         bytes = to_write * s->play.frame_size;
-        if ((n = write(s->play.fd, (uint8_t *)s->play.buf + write_ofs, bytes)) < 0) {
+        if ((n = write(s->play.fd, s->play.buf + write_ofs, bytes)) < 0) {
           state = CUBEB_STATE_ERROR;
           break;
         }
@@ -482,17 +482,17 @@ sun_io_routine(void * arg)
         s->frames_written += frames;
         pthread_mutex_unlock(&s->mutex);
         to_write -= frames;
-        write_ofs += n;
+        write_ofs += frames;
       }
       if (to_read > 0) {
         bytes = to_read * s->record.frame_size;
-        if ((n = read(s->record.fd, (uint8_t *)s->record.buf + read_ofs, bytes)) < 0) {
+        if ((n = read(s->record.fd, s->record.buf + read_ofs, bytes)) < 0) {
           state = CUBEB_STATE_ERROR;
           break;
         }
         frames = n / s->record.frame_size;
         to_read -= frames;
-        read_ofs += n;
+        read_ofs += frames;
       }
     }
     if (drain && state != CUBEB_STATE_ERROR) {
@@ -666,7 +666,7 @@ sun_stream_get_latency(cubeb_stream * s, uint32_t * latency)
 #else
   cubeb_stream_params params;
 
-  params.rate = s->play.info.play.sample_rate;
+  params.rate = stream->play.info.play.sample_rate;
 
   return sun_get_min_latency(NULL, params, latency);
 #endif
@@ -723,7 +723,6 @@ static struct cubeb_ops const sun_ops = {
   .stream_get_latency = sun_stream_get_latency,
   .stream_get_input_latency = NULL,
   .stream_set_volume = sun_stream_set_volume,
-  .stream_set_name = NULL,
   .stream_get_current_device = sun_get_current_device,
   .stream_device_destroy = sun_stream_device_destroy,
   .stream_register_device_changed_callback = NULL,

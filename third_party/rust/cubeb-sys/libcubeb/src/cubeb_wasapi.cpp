@@ -193,10 +193,6 @@ int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
 ERole pref_to_role(cubeb_stream_prefs param);
-int wasapi_create_device(cubeb * ctx, cubeb_device_info& ret, IMMDeviceEnumerator * enumerator, IMMDevice * dev);
-void wasapi_destroy_device(cubeb_device_info * device_info);
-static int wasapi_enumerate_devices(cubeb * context, cubeb_device_type type, cubeb_device_collection * out);
-static int wasapi_device_collection_destroy(cubeb * ctx, cubeb_device_collection * collection);
 static char const * wstr_to_utf8(wchar_t const * str);
 static std::unique_ptr<wchar_t const []> utf8_to_wstr(char const * str);
 
@@ -249,15 +245,9 @@ struct cubeb_stream {
   cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
   /* A MMDevice role for this stream: either communication or console here. */
   ERole role;
-  /* True if this stream will transport voice-data. */
-  bool voice;
-  /* True if the input device of this stream is using bluetooth handsfree. */
-  bool input_bluetooth_handsfree;
   /* The input and output device, or NULL for default. */
-  std::unique_ptr<const wchar_t[]> input_device_id;
-  std::unique_ptr<const wchar_t[]> output_device_id;
-  com_ptr<IMMDevice> input_device;
-  com_ptr<IMMDevice> output_device;
+  std::unique_ptr<const wchar_t[]> input_device;
+  std::unique_ptr<const wchar_t[]> output_device;
   /* The latency initially requested for this stream, in frames. */
   unsigned latency = 0;
   cubeb_state_callback state_callback = nullptr;
@@ -711,9 +701,8 @@ intern_device_id(cubeb * ctx, wchar_t const * id)
   XASSERT(id);
 
   char const * tmp = wstr_to_utf8(id);
-  if (!tmp) {
+  if (!tmp)
     return nullptr;
-  }
 
   char const * interned = cubeb_strings_intern(ctx->device_ids, tmp);
 
@@ -782,12 +771,6 @@ REFERENCE_TIME
 frames_to_hns(cubeb_stream * stm, uint32_t frames)
 {
   return std::ceil(frames * 10000000.0 / get_rate(stm));
-}
-
-REFERENCE_TIME
-frames_to_hns(uint32_t rate, uint32_t frames)
-{
-  return std::ceil(frames * 10000000.0 / rate);
 }
 
 /* This returns the size of a frame in the stream, before the eventual upmix
@@ -1054,6 +1037,9 @@ refill_callback_duplex(cubeb_stream * stm)
   }
 
   input_frames = stm->linear_input_buffer->length() / stm->input_stream_params.channels;
+  if (!input_frames) {
+    return true;
+  }
 
   rv = get_output_buffer(stm, output_buffer, output_frames);
   if (!rv) {
@@ -1346,11 +1332,17 @@ void wasapi_destroy(cubeb * context);
 
 HRESULT register_notification_client(cubeb_stream * stm)
 {
-  assert(stm->device_enumerator);
+  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+                                NULL, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(stm->device_enumerator.receive()));
+  if (FAILED(hr)) {
+    LOG("Could not get device enumerator: %lx", hr);
+    return hr;
+  }
 
   stm->notification_client.reset(new wasapi_endpoint_notification_client(stm->reconfigure_event, stm->role));
 
-  HRESULT hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client.get());
+  hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client.get());
   if (FAILED(hr)) {
     LOG("Could not register endpoint notification callback: %lx", hr);
     stm->notification_client = nullptr;
@@ -1378,6 +1370,7 @@ HRESULT unregister_notification_client(cubeb_stream * stm)
   }
 
   stm->notification_client = nullptr;
+  stm->device_enumerator = nullptr;
 
   return S_OK;
 }
@@ -1486,7 +1479,8 @@ current_stream_delay(cubeb_stream * stm)
 
   double cur_pos = static_cast<double>(pos) / freq;
   double max_pos = static_cast<double>(stm->frames_written)  / stm->output_mix_params.rate;
-  double delay = std::max(max_pos - cur_pos, 0.0);
+  double delay = max_pos - cur_pos;
+  XASSERT(delay >= 0);
 
   return delay;
 }
@@ -1555,10 +1549,10 @@ int wasapi_init(cubeb ** context, char const * context_name)
 
   LARGE_INTEGER frequency;
   if (QueryPerformanceFrequency(&frequency)) {
-    ctx->performance_counter_frequency = frequency.QuadPart;
-  } else {
     LOG("Failed getting performance counter frequency, latency reporting will be inacurate");
     ctx->performance_counter_frequency = 0;
+  } else {
+    ctx->performance_counter_frequency = frequency.QuadPart;
   }
 
   *context = ctx;
@@ -1784,18 +1778,17 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
   waveformatex_update_derived_properties(mix_format.get());
 
   /* Check if wasapi will accept our channel layout request. */
-  WAVEFORMATEX * tmp = nullptr;
+  WAVEFORMATEX * closest;
   HRESULT hr = audio_client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
                                                mix_format.get(),
-                                               &tmp);
-  com_heap_ptr<WAVEFORMATEX> closest(tmp);
+                                               &closest);
   if (hr == S_FALSE) {
     /* Channel layout not supported, but WASAPI gives us a suggestion. Use it,
        and handle the eventual upmix/downmix ourselves. Ignore the subformat of
        the suggestion, since it seems to always be IEEE_FLOAT. */
     LOG("Using WASAPI suggested format: channels: %d", closest->nChannels);
     XASSERT(closest->wFormatTag == WAVE_FORMAT_EXTENSIBLE);
-    WAVEFORMATEXTENSIBLE * closest_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(closest.get());
+    WAVEFORMATEXTENSIBLE * closest_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(closest);
     format_pcm->dwChannelMask = closest_pcm->dwChannelMask;
     mix_format->nChannels = closest->nChannels;
     waveformatex_update_derived_properties(mix_format.get());
@@ -1927,9 +1920,9 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
                                  uint32_t * buffer_frame_count,
                                  HANDLE & event,
                                  T & render_or_capture_client,
-                                 cubeb_stream_params * mix_params,
-                                 com_ptr<IMMDevice>& device)
+                                 cubeb_stream_params * mix_params)
 {
+  com_ptr<IMMDevice> device;
   HRESULT hr;
   bool is_loopback = stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK;
   if (is_loopback && direction != eCapture) {
@@ -2042,46 +2035,6 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   }
 
-  // Sanity check the latency, it may be that the device doesn't support it.
-  REFERENCE_TIME minimum_period;
-  REFERENCE_TIME default_period;
-  hr = audio_client->GetDevicePeriod(&default_period, &minimum_period);
-  if (FAILED(hr)) {
-    LOG("Could not get device period: %lx", hr);
-    return CUBEB_ERROR;
-  }
-
-  REFERENCE_TIME latency_hns;
-
-  uint32_t latency_frames = stm->latency;
-  cubeb_device_info device_info;
-  int rv = wasapi_create_device(stm->context, device_info, stm->device_enumerator.get(), device.get());
-  if (rv == CUBEB_OK) {
-    const char* HANDSFREE_TAG = "BTHHFEENUM";
-    size_t len = sizeof(HANDSFREE_TAG);
-    if (direction == eCapture && strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
-      // Rather high-latency to prevent constant under-runs in this particular
-      // case of an input device using bluetooth handsfree.
-      uint32_t default_period_frames = hns_to_frames(device_info.default_rate, default_period);
-      latency_frames = default_period_frames * 4;
-      stm->input_bluetooth_handsfree = true;
-      LOG("Input is a bluetooth device in handsfree, latency increased to %u frames from a default of %u", latency_frames, default_period_frames);
-    } else {
-      uint32_t minimum_period_frames = hns_to_frames(device_info.default_rate, minimum_period);
-      latency_frames = std::max(latency_frames, minimum_period_frames);
-      stm->input_bluetooth_handsfree = false;
-      LOG("Input is a not bluetooth handsfree, latency %s to %u frames (minimum %u)", latency_frames < minimum_period_frames ? "increased" : "set", latency_frames, minimum_period_frames);
-    }
-
-    latency_hns = frames_to_hns(device_info.default_rate, latency_frames);
-
-    wasapi_destroy_device(&device_info);
-  } else {
-    stm->input_bluetooth_handsfree = false;
-    latency_hns = frames_to_hns(mix_params->rate, latency_frames);
-    LOG("Could not get cubeb_device_info.");
-  }
-
 #if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
   if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
     LOG("Initialized with IAudioClient3");
@@ -2089,7 +2042,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 #endif
     hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                   flags,
-                                  latency_hns,
+                                  frames_to_hns(stm, stm->latency),
                                   0,
                                   mix_format.get(),
                                   NULL);
@@ -2129,54 +2082,6 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
 #undef DIRECTION_NAME
 
-void wasapi_find_matching_output_device(cubeb_stream * stm) {
-  HRESULT hr;
-  cubeb_device_info * input_device;
-  cubeb_device_collection collection;
-
-  // Only try to match to an output device if the input device is a bluetooth
-  // device that is using the handsfree protocol
-  if (!stm->input_bluetooth_handsfree) {
-    return;
-  }
-
-  wchar_t * tmp = nullptr;
-  hr = stm->input_device->GetId(&tmp);
-  if (FAILED(hr)) {
-    LOG("Couldn't get input device id in wasapi_find_matching_output_device");
-    return;
-  }
-  com_heap_ptr<wchar_t> device_id(tmp);
-  cubeb_devid input_device_id = intern_device_id(stm->context, device_id.get());
-  if (!input_device_id) {
-    return;
-  }
-
-  int rv = wasapi_enumerate_devices(stm->context, (cubeb_device_type)(CUBEB_DEVICE_TYPE_INPUT|CUBEB_DEVICE_TYPE_OUTPUT), &collection);
-
-  // Find the input device, and then find the output device with the same group
-  // id and the same rate.
-  for (uint32_t i = 0; i < collection.count; i++) {
-    cubeb_device_info dev = collection.device[i];
-    if (dev.devid == input_device_id) {
-      input_device = &dev;
-      break;
-    }
-  }
-
-  for (uint32_t i = 0; i < collection.count; i++) {
-    cubeb_device_info dev = collection.device[i];
-    if (dev.type == CUBEB_DEVICE_TYPE_OUTPUT &&
-        dev.group_id && !strcmp(dev.group_id, input_device->group_id) &&
-        dev.default_rate == input_device->default_rate) {
-      LOG("Found matching device for %s: %s", input_device->friendly_name, dev.friendly_name);
-      stm->output_device_id = utf8_to_wstr(reinterpret_cast<char const *>(dev.devid));
-    }
-  }
-
-  wasapi_device_collection_destroy(stm->context, &collection);
-}
-
 int setup_wasapi_stream(cubeb_stream * stm)
 {
   int rv;
@@ -2186,18 +2091,17 @@ int setup_wasapi_stream(cubeb_stream * stm)
   XASSERT((!stm->output_client || !stm->input_client) && "WASAPI stream already setup, close it first.");
 
   if (has_input(stm)) {
-    LOG("(%p) Setup capture: device=%p", stm, stm->input_device_id.get());
+    LOG("(%p) Setup capture: device=%p", stm, stm->input_device.get());
     rv = setup_wasapi_stream_one_side(stm,
                                       &stm->input_stream_params,
-                                      stm->input_device_id.get(),
+                                      stm->input_device.get(),
                                       eCapture,
                                       __uuidof(IAudioCaptureClient),
                                       stm->input_client,
                                       &stm->input_buffer_frame_count,
                                       stm->input_available_event,
                                       stm->capture_client,
-                                      &stm->input_mix_params,
-                                      stm->input_device);
+                                      &stm->input_mix_params);
     if (rv != CUBEB_OK) {
       LOG("Failure to open the input side.");
       return rv;
@@ -2216,14 +2120,6 @@ int setup_wasapi_stream(cubeb_stream * stm)
     stm->linear_input_buffer->push_silence(stm->input_buffer_frame_count *
                                            stm->input_stream_params.channels *
                                            silent_buffer_count);
-
-    // If this is a bluetooth device, and the output device is the default
-    // device, and the default device is the same bluetooth device, pick the
-    // right output device, running at the same rate and with the same protocol
-    // as the input.
-    if (!stm->output_device_id) {
-      wasapi_find_matching_output_device(stm);
-    }
   }
 
   // If we don't have an output device but are requesting a loopback device,
@@ -2234,32 +2130,31 @@ int setup_wasapi_stream(cubeb_stream * stm)
     stm->output_stream_params.rate = stm->input_stream_params.rate;
     stm->output_stream_params.channels = stm->input_stream_params.channels;
     stm->output_stream_params.layout = stm->input_stream_params.layout;
-    if (stm->input_device_id) {
-      size_t len = wcslen(stm->input_device_id.get());
+    if (stm->input_device) {
+      size_t len = wcslen(stm->input_device.get());
       std::unique_ptr<wchar_t[]> tmp(new wchar_t[len + 1]);
-      if (wcsncpy_s(tmp.get(), len + 1, stm->input_device_id.get(), len) != 0) {
+      if (wcsncpy_s(tmp.get(), len + 1, stm->input_device.get(), len) != 0) {
         LOG("Failed to copy device identifier while copying input stream"
             " configuration to output stream configuration to drive loopback.");
         return CUBEB_ERROR;
       }
-      stm->output_device_id = move(tmp);
+      stm->output_device = move(tmp);
     }
     stm->has_dummy_output = true;
   }
 
   if (has_output(stm)) {
-    LOG("(%p) Setup render: device=%p", stm, stm->output_device_id.get());
+    LOG("(%p) Setup render: device=%p", stm, stm->output_device.get());
     rv = setup_wasapi_stream_one_side(stm,
                                       &stm->output_stream_params,
-                                      stm->output_device_id.get(),
+                                      stm->output_device.get(),
                                       eRender,
                                       __uuidof(IAudioRenderClient),
                                       stm->output_client,
                                       &stm->output_buffer_frame_count,
                                       stm->refill_event,
                                       stm->render_client,
-                                      &stm->output_mix_params,
-                                      stm->output_device);
+                                      &stm->output_mix_params);
     if (rv != CUBEB_OK) {
       LOG("Failure to open the output side.");
       return rv;
@@ -2318,7 +2213,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
                            target_sample_rate,
                            stm->data_callback,
                            stm->user_ptr,
-                           stm->voice ? CUBEB_RESAMPLER_QUALITY_VOIP : CUBEB_RESAMPLER_QUALITY_DESKTOP));
+                           CUBEB_RESAMPLER_QUALITY_DESKTOP));
   if (!stm->resampler) {
     LOG("Could not get a resampler");
     return CUBEB_ERROR;
@@ -2405,31 +2300,21 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
-  stm->role = eConsole;
-  stm->input_bluetooth_handsfree = false;
 
-  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-                                NULL, CLSCTX_INPROC_SERVER,
-                                IID_PPV_ARGS(stm->device_enumerator.receive()));
-  if (FAILED(hr)) {
-    LOG("Could not get device enumerator: %lx", hr);
-    return hr;
+  if (stm->output_stream_params.prefs & CUBEB_STREAM_PREF_VOICE ||
+      stm->input_stream_params.prefs & CUBEB_STREAM_PREF_VOICE) {
+    stm->role = eCommunications;
+  } else {
+    stm->role = eConsole;
   }
 
   if (input_stream_params) {
     stm->input_stream_params = *input_stream_params;
-    stm->input_device_id = utf8_to_wstr(reinterpret_cast<char const *>(input_device));
+    stm->input_device = utf8_to_wstr(reinterpret_cast<char const *>(input_device));
   }
   if (output_stream_params) {
     stm->output_stream_params = *output_stream_params;
-    stm->output_device_id = utf8_to_wstr(reinterpret_cast<char const *>(output_device));
-  }
-
-  if (stm->output_stream_params.prefs & CUBEB_STREAM_PREF_VOICE ||
-      stm->input_stream_params.prefs & CUBEB_STREAM_PREF_VOICE) {
-    stm->voice = true;
-  } else {
-    stm->voice = false;
+    stm->output_device = utf8_to_wstr(reinterpret_cast<char const *>(output_device));
   }
 
   switch (output_stream_params ? output_stream_params->format : input_stream_params->format) {
@@ -2509,9 +2394,6 @@ void close_wasapi_stream(cubeb_stream * stm)
   stm->input_client = nullptr;
   stm->capture_client = nullptr;
 
-  stm->output_device = nullptr;
-  stm->input_device = nullptr;
-
   stm->audio_stream_volume = nullptr;
 
   stm->audio_clock = nullptr;
@@ -2548,8 +2430,6 @@ void wasapi_stream_destroy(cubeb_stream * stm)
   // The variables intialized in wasapi_stream_init,
   // must be destroyed in wasapi_stream_destroy.
   stm->linear_input_buffer.reset();
-
-  stm->device_enumerator = nullptr;
 
   {
     auto_lock lock(stm->stream_reset_lock);
@@ -2749,27 +2629,15 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   /* The GetStreamLatency method only works if the
      AudioClient has been initialized. */
   if (!stm->output_client) {
-    LOG("get_latency: No output_client.");
     return CUBEB_ERROR;
   }
 
   REFERENCE_TIME latency_hns;
   HRESULT hr = stm->output_client->GetStreamLatency(&latency_hns);
   if (FAILED(hr)) {
-    LOG("GetStreamLatency failed %lx.", hr);
     return CUBEB_ERROR;
   }
-  // This happens on windows 10: no error, but always 0 for latency.
-  if (latency_hns == 0) {
-    LOG("GetStreamLatency returned 0, using workaround.");
-     double delay_s = current_stream_delay(stm);
-     // convert to sample-frames
-     *latency = delay_s * stm->output_stream_params.rate;
-  } else {
-     *latency = hns_to_frames(stm, latency_hns);
-  }
-
-  LOG("Output latency %u frames.", *latency);
+  *latency = hns_to_frames(stm, latency_hns);
 
   return CUBEB_OK;
 }
@@ -2780,14 +2648,12 @@ int wasapi_stream_get_input_latency(cubeb_stream * stm, uint32_t * latency)
   XASSERT(stm && latency);
 
   if (!has_input(stm)) {
-    LOG("Input latency queried on an output-only stream.");
     return CUBEB_ERROR;
   }
 
   auto_lock lock(stm->stream_reset_lock);
 
   if (stm->input_latency_hns == LATENCY_NOT_AVAILABLE_YET) {
-    LOG("Input latency not available yet.");
     return CUBEB_ERROR;
   }
 
@@ -2879,8 +2745,6 @@ wasapi_is_default_device(EDataFlow flow, ERole role, LPCWSTR device_id,
   return ret;
 }
 
-/* `ret` must be deallocated with `wasapi_destroy_device`, iff the return value
- * of this function is `CUBEB_OK`. */
 int
 wasapi_create_device(cubeb * ctx, cubeb_device_info& ret, IMMDeviceEnumerator * enumerator, IMMDevice * dev)
 {
@@ -2893,10 +2757,6 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info& ret, IMMDeviceEnumerator * 
   REFERENCE_TIME def_period, min_period;
   HRESULT hr;
 
-  // zero-out to be able to safely delete the pointers to friendly_name and
-  // group_id at all time in this function.
-  PodZero(&ret, 1);
-
   struct prop_variant : public PROPVARIANT {
     prop_variant() { PropVariantInit(this); }
     ~prop_variant() { PropVariantClear(this); }
@@ -2905,97 +2765,57 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info& ret, IMMDeviceEnumerator * 
   };
 
   hr = dev->QueryInterface(IID_PPV_ARGS(endpoint.receive()));
-  if (FAILED(hr)) {
-    wasapi_destroy_device(&ret);
-    return CUBEB_ERROR;
-  }
+  if (FAILED(hr)) return CUBEB_ERROR;
 
   hr = endpoint->GetDataFlow(&flow);
-  if (FAILED(hr)) {
-    wasapi_destroy_device(&ret);
-    return CUBEB_ERROR;
-  }
+  if (FAILED(hr)) return CUBEB_ERROR;
 
   wchar_t * tmp = nullptr;
   hr = dev->GetId(&tmp);
-  if (FAILED(hr)) {
-    wasapi_destroy_device(&ret);
-    return CUBEB_ERROR;
-  }
+  if (FAILED(hr)) return CUBEB_ERROR;
   com_heap_ptr<wchar_t> device_id(tmp);
 
   char const * device_id_intern = intern_device_id(ctx, device_id.get());
   if (!device_id_intern) {
-    wasapi_destroy_device(&ret);
     return CUBEB_ERROR;
   }
 
   hr = dev->OpenPropertyStore(STGM_READ, propstore.receive());
-  if (FAILED(hr)) {
-    wasapi_destroy_device(&ret);
-    return CUBEB_ERROR;
-  }
+  if (FAILED(hr)) return CUBEB_ERROR;
 
   hr = dev->GetState(&state);
-  if (FAILED(hr)) {
-    wasapi_destroy_device(&ret);
-    return CUBEB_ERROR;
-  }
+  if (FAILED(hr)) return CUBEB_ERROR;
 
   ret.device_id = device_id_intern;
   ret.devid = reinterpret_cast<cubeb_devid>(ret.device_id);
   prop_variant namevar;
   hr = propstore->GetValue(PKEY_Device_FriendlyName, &namevar);
-  if (SUCCEEDED(hr) && namevar.vt == VT_LPWSTR) {
+  if (SUCCEEDED(hr))
     ret.friendly_name = wstr_to_utf8(namevar.pwszVal);
-  }
-  if (!ret.friendly_name) {
-    // This is not fatal, but a valid string is expected in all cases.
-    char* empty = new char[1];
-    empty[0] = '\0';
-    ret.friendly_name = empty;
-  }
 
   devnode = wasapi_get_device_node(enumerator, dev);
   if (devnode) {
     com_ptr<IPropertyStore> ps;
     hr = devnode->OpenPropertyStore(STGM_READ, ps.receive());
-    if (FAILED(hr)) {
-      wasapi_destroy_device(&ret);
-      return CUBEB_ERROR;
-    }
+    if (FAILED(hr)) return CUBEB_ERROR;
 
     prop_variant instancevar;
     hr = ps->GetValue(PKEY_Device_InstanceId, &instancevar);
-    if (SUCCEEDED(hr) && instancevar.vt == VT_LPWSTR) {
+    if (SUCCEEDED(hr)) {
       ret.group_id = wstr_to_utf8(instancevar.pwszVal);
     }
   }
 
-  if (!ret.group_id) {
-    // This is not fatal, but a valid string is expected in all cases.
-    char* empty = new char[1];
-    empty[0] = '\0';
-    ret.group_id = empty;
-  }
-
   ret.preferred = CUBEB_DEVICE_PREF_NONE;
-  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator)) {
+  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator))
     ret.preferred = (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_MULTIMEDIA);
-  }
-  if (wasapi_is_default_device(flow, eCommunications, device_id.get(), enumerator)) {
+  if (wasapi_is_default_device(flow, eCommunications, device_id.get(), enumerator))
     ret.preferred = (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_VOICE);
-  }
-  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator)) {
+  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator))
     ret.preferred = (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_NOTIFICATION);
-  }
 
-  if (flow == eRender) {
-    ret.type = CUBEB_DEVICE_TYPE_OUTPUT;
-  } else if (flow == eCapture) {
-    ret.type = CUBEB_DEVICE_TYPE_INPUT;
-  }
-
+  if (flow == eRender) ret.type = CUBEB_DEVICE_TYPE_OUTPUT;
+  else if (flow == eCapture) ret.type = CUBEB_DEVICE_TYPE_INPUT;
   switch (state) {
     case DEVICE_STATE_ACTIVE:
       ret.state = CUBEB_DEVICE_STATE_ENABLED;
@@ -3038,16 +2858,7 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info& ret, IMMDeviceEnumerator * 
     ret.latency_hi = 0;
   }
 
-  XASSERT(ret.friendly_name && ret.group_id);
-
   return CUBEB_OK;
-}
-
-void
-wasapi_destroy_device(cubeb_device_info * device)
-{
-  delete [] device->friendly_name;
-  delete [] device->group_id;
 }
 
 static int
@@ -3113,7 +2924,8 @@ wasapi_device_collection_destroy(cubeb * /*ctx*/, cubeb_device_collection * coll
 
   for (size_t n = 0; n < collection->count; n++) {
     cubeb_device_info& dev = collection->device[n];
-    wasapi_destroy_device(&dev);
+    delete [] dev.friendly_name;
+    delete [] dev.group_id;
   }
 
   delete [] collection->device;
@@ -3211,7 +3023,6 @@ cubeb_ops const wasapi_ops = {
   /*.stream_get_latency =*/ wasapi_stream_get_latency,
   /*.stream_get_input_latency =*/ wasapi_stream_get_input_latency,
   /*.stream_set_volume =*/ wasapi_stream_set_volume,
-  /*.stream_set_name =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback =*/ NULL,

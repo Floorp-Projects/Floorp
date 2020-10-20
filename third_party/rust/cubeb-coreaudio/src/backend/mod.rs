@@ -3539,9 +3539,6 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         set_volume(self.core_stream_data.output_unit, volume)
     }
-    fn set_name(&mut self, _: &CStr) -> Result<()> {
-        Err(Error::not_supported())
-    }
     #[cfg(target_os = "ios")]
     fn current_device(&mut self) -> Result<&DeviceRef> {
         Err(not_supported())

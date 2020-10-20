@@ -487,17 +487,11 @@ CUBEB_EXPORT void cubeb_destroy(cubeb * context);
                   cubeb stream.
     @param stream_name A name for this stream.
     @param input_device Device for the input side of the stream. If NULL the
-                        default input device is used. Passing a valid cubeb_devid
-                        means the stream only ever uses that device. Passing a NULL
-                        cubeb_devid allows the stream to follow that device type's
-                        OS default.
+                        default input device is used.
     @param input_stream_params Parameters for the input side of the stream, or
                                NULL if this stream is output only.
     @param output_device Device for the output side of the stream. If NULL the
-                         default output device is used. Passing a valid cubeb_devid
-                         means the stream only ever uses that device. Passing a NULL
-                         cubeb_devid allows the stream to follow that device type's
-                         OS default.
+                         default output device is used.
     @param output_stream_params Parameters for the output side of the stream, or
                                 NULL if this stream is input only.
     @param latency_frames Stream latency in frames.  Valid range
@@ -583,14 +577,6 @@ CUBEB_EXPORT int cubeb_stream_get_input_latency(cubeb_stream * stream, uint32_t 
             stream is an invalid pointer
     @retval CUBEB_ERROR_NOT_SUPPORTED */
 CUBEB_EXPORT int cubeb_stream_set_volume(cubeb_stream * stream, float volume);
-
-/** Change a stream's name.
-    @param stream the stream for which to set the name.
-    @param stream_name the new name for the stream
-    @retval CUBEB_OK
-    @retval CUBEB_ERROR_INVALID_PARAMETER if any pointer is invalid
-    @retval CUBEB_ERROR_NOT_SUPPORTED */
-CUBEB_EXPORT int cubeb_stream_set_name(cubeb_stream * stream, char const * stream_name);
 
 /** Get the current output device for this stream.
     @param stm the stream for which to query the current output device

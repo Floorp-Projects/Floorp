@@ -134,7 +134,6 @@ static struct cubeb_ops const cbjack_ops = {
   .stream_get_latency = cbjack_get_latency,
   .stream_get_input_latency = NULL,
   .stream_set_volume = cbjack_stream_set_volume,
-  .stream_set_name = NULL,
   .stream_get_current_device = cbjack_stream_get_current_device,
   .stream_device_destroy = cbjack_stream_device_destroy,
   .stream_register_device_changed_callback = NULL,
@@ -239,22 +238,6 @@ load_jack_lib(cubeb * context)
   return CUBEB_OK;
 }
 
-static void
-cbjack_connect_port_out (cubeb_stream * stream, const size_t out_port, const char * const phys_in_port)
-{
-  const char *src_port = api_jack_port_name (stream->output_ports[out_port]);
-
-  api_jack_connect (stream->context->jack_client, src_port, phys_in_port);
-}
-
-static void
-cbjack_connect_port_in (cubeb_stream * stream, const char * const phys_out_port, size_t in_port)
-{
-  const char *src_port = api_jack_port_name (stream->input_ports[in_port]);
-
-  api_jack_connect (stream->context->jack_client, phys_out_port, src_port);
-}
-
 static int
 cbjack_connect_ports (cubeb_stream * stream)
 {
@@ -274,14 +257,10 @@ cbjack_connect_ports (cubeb_stream * stream)
 
   // Connect outputs to playback
   for (unsigned int c = 0; c < stream->out_params.channels && phys_in_ports[c] != NULL; c++) {
-    cbjack_connect_port_out(stream, c, phys_in_ports[c]);
-  }
+    const char *src_port = api_jack_port_name (stream->output_ports[c]);
 
-  // Special case playing mono source in stereo
-  if (stream->out_params.channels == 1 && phys_in_ports[1] != NULL) {
-    cbjack_connect_port_out(stream, 0, phys_in_ports[1]);
+    api_jack_connect (stream->context->jack_client, src_port, phys_in_ports[c]);
   }
-
   r = CUBEB_OK;
 
 skipplayback:
@@ -290,7 +269,9 @@ skipplayback:
   }
   // Connect inputs to capture
   for (unsigned int c = 0; c < stream->in_params.channels && phys_out_ports[c] != NULL; c++) {
-    cbjack_connect_port_in(stream, phys_out_ports[c], c);
+    const char *src_port = api_jack_port_name (stream->input_ports[c]);
+
+    api_jack_connect (stream->context->jack_client, phys_out_ports[c], src_port);
   }
   r = CUBEB_OK;
 end:
@@ -400,6 +381,7 @@ cbjack_process(jack_nframes_t nframes, void * arg)
         }
       }
     } else {
+
       // try to lock stream mutex
       if (pthread_mutex_trylock(&stm->mutex) == 0) {
 
