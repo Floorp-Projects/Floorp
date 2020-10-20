@@ -41,44 +41,9 @@ void JsepTrack::GetPayloadTypes(
 
 void JsepTrack::EnsureNoDuplicatePayloadTypes(
     std::vector<UniquePtr<JsepCodecDescription>>* codecs) {
-  std::set<uint16_t> uniquePayloadTypes;
-
+  std::set<std::string> uniquePayloadTypes;
   for (auto& codec : *codecs) {
-    // We assume there are no dupes in negotiated codecs; unnegotiated codecs
-    // need to change if there is a clash.
-    if (!codec->mEnabled ||
-        // We only support one datachannel per m-section
-        !codec->mName.compare("webrtc-datachannel")) {
-      continue;
-    }
-
-    // Disable, and only re-enable if we can ensure it has a unique pt.
-    codec->mEnabled = false;
-
-    uint16_t currentPt;
-    if (!codec->GetPtAsInt(&currentPt)) {
-      MOZ_ASSERT(false);
-      continue;
-    }
-
-    if (!uniquePayloadTypes.count(currentPt)) {
-      codec->mEnabled = true;
-      uniquePayloadTypes.insert(currentPt);
-      continue;
-    }
-
-    // |codec| cannot use its current payload type. Try to find another.
-    for (uint16_t freePt = 96; freePt <= 127; ++freePt) {
-      // Not super efficient, but readability is probably more important.
-      if (!uniquePayloadTypes.count(freePt)) {
-        uniquePayloadTypes.insert(freePt);
-        codec->mEnabled = true;
-        std::ostringstream os;
-        os << freePt;
-        codec->mDefaultPt = os.str();
-        break;
-      }
-    }
+    codec->EnsureNoDuplicatePayloadTypes(uniquePayloadTypes);
   }
 }
 
