@@ -184,18 +184,7 @@ registerCleanupFunction(() => {
 
 // Spawn an instance of the test actor for the given toolbox
 async function getTestActor(toolbox) {
-  // Loading the Inspector panel in order to overwrite the TestActor getter for the
-  // highlighter instance with a method that points to the currently visible
-  // Box Model Highlighter managed by the Inspector panel.
-  const inspector = await toolbox.loadTool("inspector");
-  const testActor = await toolbox.target.getFront("test");
-  // Override the highligher getter with a method to return the active box model
-  // highlighter. Adaptation for multi-process scenarios where there can be multiple
-  // highlighters, one per process.
-  testActor.highlighter = () => {
-    return inspector.highlighters.getActiveHighlighter("BoxModelHighlighter");
-  };
-  return testActor;
+  return toolbox.target.getFront("test");
 }
 
 // Sometimes, we need the test actor before opening or without a toolbox then just

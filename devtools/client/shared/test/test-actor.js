@@ -845,9 +845,13 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this.formAttributeName = "testActor";
-    // The currently active highlighter is obtained by calling a custom getter
-    // provided manually after requesting TestFront. See `getTestActor(toolbox)`
-    this._highlighter = null;
+  }
+
+  async initialize() {
+    // TODO: Remove reference to highlighter from top-level target after
+    // updating all non-Inspector consumers for the highlighter. Bug 1623667
+    const inspectorFront = await this.targetFront.getFront("inspector");
+    this._highlighter = inspectorFront.highlighter;
   }
 
   /**
@@ -857,7 +861,12 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
    * @param {Function|Highlighter} _customHighlighterGetter
    */
   set highlighter(_customHighlighterGetter) {
-    this._highlighter = _customHighlighterGetter;
+    if (typeof _customHighlighterGetter === "function") {
+      this._customHighlighterGetter = _customHighlighterGetter;
+    } else {
+      this._customHighlighterGetter = null;
+      this._highlighter = _customHighlighterGetter;
+    }
   }
 
   /**
@@ -867,9 +876,10 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
    * @return {Highlighter|null}
    */
   get highlighter() {
-    return typeof this._highlighter === "function"
-      ? this._highlighter()
-      : this._highlighter;
+    if (this._customHighlighterGetter) {
+      return this._customHighlighterGetter();
+    }
+    return this._highlighter;
   }
 
   /**
