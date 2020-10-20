@@ -331,7 +331,7 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    *
    */
-  AString downloadUpdate(in nsIUpdate update, in boolean background);
+  bool downloadUpdate(in nsIUpdate update, in boolean background);
 
   /**
    * Get the Active Updates directory
