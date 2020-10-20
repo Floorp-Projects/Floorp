@@ -5,16 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_GTK
-#  include <gtk/gtk.h>
 #  include <gdk/gdkx.h>
+#  include <gtk/gtk.h>
 #endif
 
-#include "ContentChild.h"
-
-#include "GeckoProfiler.h"
 #include "BrowserChild.h"
+#include "ContentChild.h"
+#include "GeckoProfiler.h"
 #include "HandlerServiceChild.h"
-
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
@@ -22,37 +20,48 @@
 #ifdef MOZ_GLEAN
 #  include "mozilla/FOGIPC.h"
 #endif
+#include "GMPServiceChild.h"
+#include "Geolocation.h"
+#include "imgLoader.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/HangDetails.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/PerfStats.h"
+#include "mozilla/PerformanceMetricsCollector.h"
+#include "mozilla/PerformanceUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
-#include "mozilla/Unused.h"
+#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/SharedStyleSheetCache.h"
+#include "mozilla/SyncRunnable.h"  // for LaunchRDDProcess
 #include "mozilla/TelemetryIPC.h"
-#include "mozilla/RemoteDecoderManagerChild.h"
+#include "mozilla/Unused.h"
+#include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/BrowserBridgeHost.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
-#include "mozilla/dom/BrowserBridgeHost.h"
-#include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ChildProcessChannelListener.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
-#include "mozilla/dom/ContentProcessMessageManager.h"
+#include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentPlaybackController.h"
+#include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/GetFilesHelper.h"
-#include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSProcessActorBinding.h"
 #include "mozilla/dom/JSProcessActorChild.h"
@@ -60,7 +69,6 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
 #include "mozilla/dom/PSessionStorageObserverChild.h"
-#include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -73,54 +81,42 @@
 #include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/extensions/StreamFilterParent.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/LibrarySandboxPreload.h"
-#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
-#include "mozilla/intl/LocaleService.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SynchronousTask.h"  // for LaunchRDDProcess
 #include "mozilla/loader/ScriptCacheActors.h"
-#include "mozilla/net/NeckoChild.h"
-#include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
-#include "mozilla/PerformanceMetricsCollector.h"
-#include "mozilla/PerformanceUtils.h"
+#include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/net/HttpChannelChild.h"
+#include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
-#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "nsBaseDragService.h"
-#include "mozilla/media/MediaChild.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/WebBrowserPersistDocumentChild.h"
-#include "mozilla/HangDetails.h"
-#include "mozilla/LoadInfo.h"
-#include "mozilla/net/HttpChannelChild.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsFocusManager.h"
-#include "nsQueryObject.h"
-#include "imgLoader.h"
-#include "GMPServiceChild.h"
-#include "nsIStringBundle.h"
-#include "Geolocation.h"
 #include "nsIConsoleService.h"
-#include "nsIURIMutator.h"
 #include "nsIInputStreamChannel.h"
-#include "nsFocusManager.h"
 #include "nsIOpenWindowInfo.h"
+#include "nsIStringBundle.h"
+#include "nsIURIMutator.h"
+#include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 
 #if !defined(XP_WIN)
@@ -136,88 +132,83 @@
 #  if defined(XP_WIN)
 #    include "mozilla/sandboxTarget.h"
 #  elif defined(XP_LINUX)
+#    include "CubebUtils.h"
 #    include "mozilla/Sandbox.h"
 #    include "mozilla/SandboxInfo.h"
-#    include "CubebUtils.h"
 #  elif defined(XP_MACOSX)
 #    include "mozilla/Sandbox.h"
 #  elif defined(__OpenBSD__)
-#    include <unistd.h>
-#    include <sys/stat.h>
 #    include <err.h>
+#    include <sys/stat.h>
+#    include <unistd.h>
+
 #    include <fstream>
-#    include "nsILineInputStream.h"
+
 #    include "SpecialSystemDirectory.h"
+#    include "nsILineInputStream.h"
 #  endif
 #  if defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 #    include "mozilla/SandboxTestingChild.h"
 #  endif
 #endif
 
-#include "mozilla/Unused.h"
-
-#include "mozInlineSpellChecker.h"
-#include "nsDocShell.h"
-#include "nsDocShellLoadState.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIConsoleListener.h"
-#include "nsIContentViewer.h"
-#include "nsICycleCollectorListener.h"
-#include "nsIDragService.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIMemoryReporter.h"
-#include "nsIMemoryInfoDumper.h"
-#include "nsIObserverService.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsMemoryInfoDumper.h"
-#include "nsServiceManagerUtils.h"
-#include "nsStyleSheetService.h"
-#include "nsVariant.h"
-#include "nsXULAppAPI.h"
-#include "nsIScriptError.h"
-#include "nsIConsoleService.h"
-#include "nsJSEnvironment.h"
 #include "SandboxHal.h"
-#include "nsDebugImpl.h"
-#include "nsHashPropertyBag.h"
+#include "mozInlineSpellChecker.h"
 #include "mozilla/GlobalStyleSheetCache.h"
-#include "nsThreadManager.h"
+#include "mozilla/Unused.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsClipboardProxy.h"
-#include "nsDirectoryService.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsContentPermissionHelper.h"
+#include "nsDebugImpl.h"
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDocShell.h"
+#include "nsDocShellLoadState.h"
+#include "nsHashPropertyBag.h"
+#include "nsIConsoleListener.h"
+#include "nsIConsoleService.h"
+#include "nsIContentViewer.h"
+#include "nsICycleCollectorListener.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDragService.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIMemoryInfoDumper.h"
+#include "nsIMemoryReporter.h"
+#include "nsIObserverService.h"
+#include "nsIScriptError.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsJSEnvironment.h"
+#include "nsMemoryInfoDumper.h"
 #include "nsPluginHost.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStyleSheetService.h"
+#include "nsThreadManager.h"
+#include "nsVariant.h"
+#include "nsXULAppAPI.h"
 #ifdef NS_PRINTING
 #  include "nsPrintingProxy.h"
 #endif
-#include "nsWindowMemoryReporter.h"
-#include "ReferrerInfo.h"
-
 #include "IHistory.h"
-#include "nsNetUtil.h"
-
+#include "ReferrerInfo.h"
 #include "base/message_loop.h"
 #include "base/process_util.h"
 #include "base/task.h"
-
+#include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/dom/PCycleCollectWithLogsChild.h"
 #include "nsChromeRegistryContent.h"
 #include "nsFrameMessageManager.h"
-
-#include "mozilla/dom/PCycleCollectWithLogsChild.h"
-
 #include "nsIScriptSecurityManager.h"
-#include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "nsNetUtil.h"
+#include "nsWindowMemoryReporter.h"
 
 #ifdef MOZ_WEBRTC
 #  include "jsapi/WebrtcGlobalChild.h"
 #endif
 
+#include "PermissionMessageUtils.h"
 #include "mozilla/Permission.h"
 #include "mozilla/PermissionManager.h"
-
-#include "PermissionMessageUtils.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "APKOpen.h"
@@ -226,10 +217,10 @@
 #ifdef XP_WIN
 #  include <process.h>
 #  define getpid _getpid
+#  include "mozilla/WinDllServices.h"
+#  include "mozilla/audio/AudioNotificationReceiver.h"
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/widget/WinContentSystemParameters.h"
-#  include "mozilla/audio/AudioNotificationReceiver.h"
-#  include "mozilla/WinDllServices.h"
 #endif
 
 #if defined(XP_MACOSX)
@@ -263,26 +254,26 @@
 #endif
 
 #include "ClearOnShutdown.h"
+#include "DomainPolicy.h"
+#include "GMPServiceChild.h"
+#include "GfxInfoBase.h"
+#include "MMPrinter.h"
 #include "ProcessUtils.h"
 #include "URIUtils.h"
-#include "nsContentUtils.h"
-#include "nsIPrincipal.h"
-#include "DomainPolicy.h"
-#include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "VRManagerChild.h"
+#include "gfxPlatform.h"
+#include "gfxPlatformFontList.h"
+#include "mozilla/RemoteSpellCheckEngineChild.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/widget/PuppetBidiKeyboard.h"
-#include "mozilla/RemoteSpellCheckEngineChild.h"
-#include "GMPServiceChild.h"
-#include "GfxInfoBase.h"
-#include "gfxPlatform.h"
-#include "gfxPlatformFontList.h"
-#include "nscore.h"  // for NS_FREE_PERMANENT_DATA
-#include "VRManagerChild.h"
-#include "private/pprio.h"
+#include "nsContentUtils.h"
+#include "nsIPrincipal.h"
 #include "nsString.h"
-#include "MMPrinter.h"
+#include "nscore.h"  // for NS_FREE_PERMANENT_DATA
+#include "private/pprio.h"
 
 #ifdef MOZ_WIDGET_GTK
 #  include "nsAppRunner.h"
@@ -1188,19 +1179,15 @@ nsresult ContentChild::ProvideWindowCommon(
 }
 
 void ContentChild::LaunchRDDProcess() {
-  SynchronousTask task("LaunchRDDProcess");
-  SchedulerGroup::Dispatch(
-      TaskCategory::Other,
-      NS_NewRunnableFunction("LaunchRDDProcess", [&task, this] {
-        AutoCompleteTask complete(&task);
-        nsresult rv;
-        Endpoint<PRemoteDecoderManagerChild> endpoint;
-        Unused << SendLaunchRDDProcess(&rv, &endpoint);
-        if (rv == NS_OK) {
-          RemoteDecoderManagerChild::InitForRDDProcess(std::move(endpoint));
-        }
-      }));
-  task.Wait();
+  RefPtr<Runnable> task = NS_NewRunnableFunction("LaunchRDDProcess", [&] {
+    nsresult rv;
+    Endpoint<PRemoteDecoderManagerChild> endpoint;
+    Unused << SendLaunchRDDProcess(&rv, &endpoint);
+    if (rv == NS_OK) {
+      RemoteDecoderManagerChild::InitForRDDProcess(std::move(endpoint));
+    }
+  });
+  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), task);
 }
 
 bool ContentChild::IsAlive() const { return mIsAlive; }
