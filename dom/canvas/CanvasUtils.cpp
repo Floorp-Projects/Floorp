@@ -45,7 +45,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace CanvasUtils {
 
-bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
+bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
   if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
@@ -85,7 +85,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     return true;
   }
 
-  Document* topLevelDocument = aDocument->GetTopLevelContentDocument();
+  dom::Document* topLevelDocument = aDocument->GetTopLevelContentDocument();
   nsIURI* topLevelDocURI =
       topLevelDocument ? topLevelDocument->GetDocumentURI() : nullptr;
   nsCString topLevelDocURISpec;
@@ -139,7 +139,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   bool isAutoBlockCanvas =
       StaticPrefs::
           privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts() &&
-      !UserActivation::IsHandlingUserInput();
+      !dom::UserActivation::IsHandlingUserInput();
 
   if (isAutoBlockCanvas) {
     nsAutoString message;
@@ -166,7 +166,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, false);
 
   if (XRE_IsContentProcess()) {
-    BrowserChild* browserChild = BrowserChild::GetFrom(win);
+    dom::BrowserChild* browserChild = dom::BrowserChild::GetFrom(win);
     if (browserChild) {
       browserChild->SendShowCanvasPermissionPrompt(origin, isAutoBlockCanvas);
     }

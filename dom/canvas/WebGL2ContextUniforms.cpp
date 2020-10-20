@@ -12,6 +12,7 @@
 #include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLProgram.h"
+#include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
 
 namespace mozilla {

@@ -17,6 +17,7 @@
 #include "CanvasUtils.h"
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
+#include "ImageBitmap.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,7 +132,7 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
   return result.forget();
 }
 
-ImageContainer* OffscreenCanvas::GetImageContainer() {
+layers::ImageContainer* OffscreenCanvas::GetImageContainer() {
   if (!mCanvasRenderer) {
     return nullptr;
   }
