@@ -9,6 +9,7 @@
 #include <inttypes.h>
 
 #include "Adts.h"
+#include "BlankDecoderModule.h"
 #include "ChromiumCDMVideoDecoder.h"
 #include "DecryptThroughputLimit.h"
 #include "GMPDecoderModule.h"
@@ -26,7 +27,6 @@
 namespace mozilla {
 
 typedef MozPromiseRequestHolder<DecryptPromise> DecryptPromiseRequestHolder;
-extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
 DDLoggedTypeDeclNameAndBase(EMEDecryptor, MediaDataDecoder);
 
@@ -378,7 +378,7 @@ already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateVideoDecoder(
 
   if (StaticPrefs::media_eme_video_blank()) {
     EME_LOG("EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
-    RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
+    RefPtr<PlatformDecoderModule> m(BlankDecoderModule::Create());
     return m->CreateVideoDecoder(aParams);
   }
 
@@ -410,7 +410,7 @@ already_AddRefed<MediaDataDecoder> EMEDecoderModule::CreateAudioDecoder(
 
   if (StaticPrefs::media_eme_audio_blank()) {
     EME_LOG("EMEDecoderModule::CreateAudioDecoder() creating a blank decoder.");
-    RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
+    RefPtr<PlatformDecoderModule> m(BlankDecoderModule::Create());
     return m->CreateAudioDecoder(aParams);
   }
 

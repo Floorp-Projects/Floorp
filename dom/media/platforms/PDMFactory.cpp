@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PDMFactory.h"
+
 #include "AgnosticDecoderModule.h"
 #include "AudioTrimmer.h"
+#include "BlankDecoderModule.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "EMEDecoderModule.h"
 #include "GMPDecoderModule.h"
@@ -15,7 +17,6 @@
 #include "MediaChangeMonitor.h"
 #include "MediaInfo.h"
 #include "VPXDecoder.h"
-#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GpuDecoderModule.h"
@@ -26,6 +27,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
@@ -51,7 +53,6 @@
 
 namespace mozilla {
 
-extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
 class PDMFactoryImpl final {
@@ -156,8 +157,6 @@ PDMFactory::PDMFactory() {
   CreateNullPDM();
 }
 
-PDMFactory::~PDMFactory() = default;
-
 /* static */
 void PDMFactory::EnsureInit() {
   {
@@ -174,6 +173,8 @@ void PDMFactory::EnsureInit() {
     if (!sInstance) {
       // Ensure that all system variables are initialized.
       gfx::gfxVars::Initialize();
+      // Prime the preferences system from the main thread.
+      Unused << BrowserTabsRemoteAutostart();
       // On the main thread and holding the lock -> Create instance.
       sInstance = new PDMFactoryImpl();
       ClearOnShutdown(&sInstance);
@@ -333,74 +334,84 @@ bool PDMFactory::Supports(const TrackInfo& aTrackInfo,
 }
 
 void PDMFactory::CreatePDMs() {
-  RefPtr<PlatformDecoderModule> m;
-
   if (StaticPrefs::media_use_blank_decoder()) {
-    m = CreateBlankDecoderModule();
-    StartupPDM(m);
+    CreateAndStartupPDM<BlankDecoderModule>();
     // The Blank PDM SupportsMimeType reports true for all codecs; the creation
     // of its decoder is infallible. As such it will be used for all media, we
     // can stop creating more PDM from this point.
     return;
   }
 
+  if (XRE_IsGPUProcess()) {
+    CreateGpuPDMs();
+  } else if (XRE_IsRDDProcess()) {
+    CreateRddPDMs();
+  } else {
+    CreateDefaultPDMs();
+  }
+}
+
+void PDMFactory::CreateGpuPDMs() {
+  MOZ_ASSERT(XRE_IsGPUProcess());
+#ifdef XP_WIN
+  if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
+    CreateAndStartupPDM<WMFDecoderModule>();
+  }
+#endif
+}
+
+void PDMFactory::CreateRddPDMs() {
+  MOZ_ASSERT(XRE_IsRDDProcess());
+  CreateAndStartupPDM<AgnosticDecoderModule>();
+}
+
+void PDMFactory::CreateDefaultPDMs() {
+  MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess());
   if (StaticPrefs::media_rdd_process_enabled() &&
       BrowserTabsRemoteAutostart()) {
-    m = new RemoteDecoderModule;
-    StartupPDM(m);
+    CreateAndStartupPDM<RemoteDecoderModule>();
   }
 
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
-    m = new WMFDecoderModule();
-    RefPtr<PlatformDecoderModule> remote = new GpuDecoderModule(m);
-    StartupPDM(remote);
-    mWMFFailedToLoad = !StartupPDM(m);
+    RefPtr<PlatformDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
+    StartupPDM(MakeAndAddRef<GpuDecoderModule>(m));
+    mWMFFailedToLoad = !StartupPDM(m.forget());
   } else {
     mWMFFailedToLoad =
         StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure();
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  m = new AppleDecoderModule();
-  StartupPDM(m);
+  CreateAndStartupPDM<AppleDecoderModule>();
 #endif
 #ifdef MOZ_OMX
   if (StaticPrefs::media_omx_enabled()) {
-    m = OmxDecoderModule::Create();
-    StartupPDM(m);
+    CreateAndStartupPDM<OmxDecoderModule>();
   }
 #endif
 #ifdef MOZ_FFVPX
   if (StaticPrefs::media_ffvpx_enabled()) {
-    m = FFVPXRuntimeLinker::CreateDecoderModule();
-    StartupPDM(m);
+    CreateAndStartupPDM<FFVPXRuntimeLinker>();
   }
 #endif
 #ifdef MOZ_FFMPEG
-  if (StaticPrefs::media_ffmpeg_enabled()) {
-    m = FFmpegRuntimeLinker::CreateDecoderModule();
-    mFFmpegFailedToLoad = !StartupPDM(m);
-  } else {
-    mFFmpegFailedToLoad = false;
-  }
+  mFFmpegFailedToLoad = StaticPrefs::media_ffmpeg_enabled()
+                            ? !CreateAndStartupPDM<FFmpegRuntimeLinker>()
+                            : false;
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if (StaticPrefs::media_android_media_codec_enabled()) {
-    m = new AndroidDecoderModule();
-    StartupPDM(m, StaticPrefs::media_android_media_codec_preferred());
+    StartupPDM(AndroidDecoderModule::Create(),
+               StaticPrefs::media_android_media_codec_preferred());
   }
 #endif
 
-  m = new AgnosticDecoderModule();
-  StartupPDM(m);
+  CreateAndStartupPDM<AgnosticDecoderModule>();
 
-  if (StaticPrefs::media_gmp_decoder_enabled()) {
-    m = new GMPDecoderModule();
-    mGMPPDMFailedToStartup = !StartupPDM(m);
-  } else {
-    mGMPPDMFailedToStartup = false;
-  }
+  mGMPPDMFailedToStartup = StaticPrefs::media_gmp_decoder_enabled()
+                               ? !CreateAndStartupPDM<GMPDecoderModule>()
+                               : false;
 }
 
 void PDMFactory::CreateNullPDM() {
@@ -408,13 +419,14 @@ void PDMFactory::CreateNullPDM() {
   MOZ_ASSERT(mNullPDM && NS_SUCCEEDED(mNullPDM->Startup()));
 }
 
-bool PDMFactory::StartupPDM(PlatformDecoderModule* aPDM,
+bool PDMFactory::StartupPDM(already_AddRefed<PlatformDecoderModule> aPDM,
                             bool aInsertAtBeginning) {
-  if (aPDM && NS_SUCCEEDED(aPDM->Startup())) {
+  RefPtr<PlatformDecoderModule> pdm = aPDM;
+  if (pdm && NS_SUCCEEDED(pdm->Startup())) {
     if (aInsertAtBeginning) {
-      mCurrentPDMs.InsertElementAt(0, aPDM);
+      mCurrentPDMs.InsertElementAt(0, pdm);
     } else {
-      mCurrentPDMs.AppendElement(aPDM);
+      mCurrentPDMs.AppendElement(pdm);
     }
     return true;
   }
@@ -452,12 +464,12 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
 
 #ifdef MOZ_WIDGET_ANDROID
   if (IsWidevineKeySystem(aProxy->KeySystem())) {
-    mEMEPDM = new AndroidDecoderModule(aProxy);
+    mEMEPDM = AndroidDecoderModule::Create(aProxy);
     return;
   }
 #endif
-  RefPtr<PDMFactory> m = new PDMFactory();
-  mEMEPDM = new EMEDecoderModule(aProxy, m);
+  auto m = MakeRefPtr<PDMFactory>();
+  mEMEPDM = MakeRefPtr<EMEDecoderModule>(aProxy, m);
 }
 
 }  // namespace mozilla

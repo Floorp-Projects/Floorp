@@ -33,10 +33,20 @@ using namespace layers;
 void RemoteDecoderModule::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!BrowserTabsRemoteAutostart()) {
-    return;
+  if (BrowserTabsRemoteAutostart()) {
+    RemoteDecoderManagerChild::InitializeThread();
   }
-  RemoteDecoderManagerChild::InitializeThread();
+}
+
+already_AddRefed<PlatformDecoderModule> RemoteDecoderModule::Create() {
+  MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess(),
+             "Should not be created in GPU or RDD process.");
+  if (!XRE_IsContentProcess()) {
+    // For now, the RemoteDecoderModule is only available in the content
+    // process.
+    return nullptr;
+  }
+  return MakeAndAddRef<RemoteDecoderModule>();
 }
 
 bool RemoteDecoderModule::SupportsMimeType(
