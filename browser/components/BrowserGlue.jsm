@@ -2426,7 +2426,6 @@ BrowserGlue.prototype = {
    * to the other ones scheduled together.
    */
   _scheduleStartupIdleTasks() {
-    let isNewProfile = this._isNewProfile;
     const idleTasks = [
       // It's important that SafeBrowsing is initialized reasonably
       // early, so we use a maximum timeout for it.
@@ -2639,9 +2638,9 @@ BrowserGlue.prototype = {
 
       // Add the import button if this is the first startup.
       {
-        task: () => {
+        task: async () => {
           if (
-            isNewProfile &&
+            this._isNewProfile &&
             Services.prefs.getBoolPref(
               "browser.toolbars.bookmarks.2h2020",
               false
@@ -2649,7 +2648,16 @@ BrowserGlue.prototype = {
             // Not in automation: the button changes CUI state, breaking tests
             !Cu.isInAutomation
           ) {
-            PlacesUIUtils.maybeAddImportButton();
+            await PlacesUIUtils.maybeAddImportButton();
+          }
+
+          if (
+            Services.prefs.getBoolPref(
+              "browser.bookmarks.addedImportButton",
+              false
+            )
+          ) {
+            PlacesUIUtils.removeImportButtonWhenImportSucceeds();
           }
         },
       },
