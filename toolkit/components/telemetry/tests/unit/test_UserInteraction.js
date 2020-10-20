@@ -25,24 +25,24 @@ function run_test() {
   Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
   Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
 
-  // Same UserInteraction can't be re-started before being stopped
-  Assert.ok(!UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1));
+  // Unlike TelemetryStopwatch, we can clobber UserInteractions.
+  Assert.ok(UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1));
   Assert.ok(
-    !UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj1)
+    UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj1)
   );
   Assert.ok(
-    !UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj2)
+    UserInteraction.start(TEST_USER_INTERACTION_ID, TEST_VALUE_1, obj2)
   );
 
-  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID));
-  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
-  Assert.ok(!UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(UserInteraction.running(TEST_USER_INTERACTION_ID, obj2));
 
-  // Ensure that we can't finish a UserInteraction that was accidentally started
+  // Ensure that we can finish a UserInteraction that was accidentally started
   // twice
-  Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID));
-  Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID, obj1));
-  Assert.ok(!UserInteraction.finish(TEST_USER_INTERACTION_ID, obj2));
+  Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID));
+  Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID, obj1));
+  Assert.ok(UserInteraction.finish(TEST_USER_INTERACTION_ID, obj2));
 
   // Make sure we can't start or finish non-existent UserInteractions.
   Assert.ok(!UserInteraction.start("non-existent.interaction", TEST_VALUE_1));
