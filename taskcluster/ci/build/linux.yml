@@ -242,6 +242,7 @@ linux64/codeql-cpp:
                 mozilla-release: ["tom@mozilla.com", "freddy@mozilla.com"]
                 try: ["{config[params][owner]}"]
                 default: []
+    optimization: null
 
 
 linux64-plain/debug:
