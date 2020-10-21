@@ -9,17 +9,24 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TrackingProtectionPolicyFactoryTest {
+
+    @Before
+    fun setup() {
+        mockkObject(Config)
+        every { Config.channel } returns ReleaseChannel.Nightly
+    }
 
     @Test
     fun `WHEN useStrictMode is true then SHOULD return strict mode`() {
