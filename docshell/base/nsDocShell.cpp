@@ -9338,7 +9338,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       nsID historyID = {};
       aLoadState->SHEntry()->GetDocshellID(historyID);
 
-      MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHistoryID(historyID));
+      Unused << mBrowsingContext->SetHistoryID(historyID);
     }
   }
 
