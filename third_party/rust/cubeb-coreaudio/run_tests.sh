@@ -50,6 +50,5 @@ sh run_device_tests.sh
 
 # Manual Tests
 # cargo test test_switch_output_device -- --ignored --nocapture
-# cargo test test_add_then_remove_listeners -- --ignored --nocapture
 # cargo test test_device_collection_change -- --ignored --nocapture
 # cargo test test_stream_tester -- --ignored --nocapture
