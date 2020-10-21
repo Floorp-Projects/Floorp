@@ -195,7 +195,7 @@ TEST_SUITES = {
         'build_flavor': 'reftest',
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
-        'task_regex': ['(opt|debug)-reftest($|.*(-1|[^0-9])$)',
+        'task_regex': ['(opt|debug)(-geckoview)?-reftest($|.*(-1|[^0-9])$)',
                        'test-verify-gpu($|.*(-1|[^0-9])$)'],
     },
     'reftest-qr': {
@@ -203,7 +203,7 @@ TEST_SUITES = {
         'build_flavor': 'reftest',
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
-        'task_regex': ['(opt|debug)-reftest-qr($|.*(-1|[^0-9])$)',
+        'task_regex': ['(opt|debug)(-geckoview)?-reftest-qr($|.*(-1|[^0-9])$)',
                        'test-verify-gpu($|.*(-1|[^0-9])$)'],
     },
     'robocop': {
