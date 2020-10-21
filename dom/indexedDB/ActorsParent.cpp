@@ -2270,6 +2270,16 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   // the transaction to be aborted.
   virtual bool SendFailureResult(nsresult aResultCode) = 0;
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  auto MakeAutoSavepointCleanupHandler(DatabaseConnection& aConnection) {
+    return [this, &aConnection](const auto) {
+      if (!aConnection.GetUpdateRefcountFunction()) {
+        mAssumingPreviousOperationFail = true;
+      }
+    };
+  }
+#endif
+
  private:
   void SendToConnectionPool();
 
@@ -18697,11 +18707,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
               ,
-          QM_PROPAGATE, ([this, aConnection](const auto) {
-            if (!aConnection->GetUpdateRefcountFunction()) {
-              mAssumingPreviousOperationFail = true;
-            }
-          })
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
   );
 
@@ -18787,11 +18793,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
               ,
-          QM_PROPAGATE, ([this, aConnection](const auto) {
-            if (!aConnection->GetUpdateRefcountFunction()) {
-              mAssumingPreviousOperationFail = true;
-            }
-          })
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
   );
 
@@ -18898,19 +18900,16 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  nsresult rv = aConnection->ExecuteCachedStatement(
       "UPDATE object_store "
       "SET name = :name "
       "WHERE id = :id;"_ns,
@@ -19077,19 +19076,16 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  nsresult rv = aConnection->ExecuteCachedStatement(
       "INSERT INTO object_store_index (id, name, key_path, unique_index, "
       "multientry, object_store_id, locale, "
       "is_auto_locale) "
@@ -19474,15 +19470,12 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   AUTO_PROFILER_LABEL("DeleteIndexOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   // mozStorage warns that these statements trigger a sort operation but we
   // don't care because this is a very rare call and we expect it to be slow.
@@ -19532,7 +19525,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                            kStmtParamNameObjectStoreId +
                            " ORDER BY index_data.object_data_key ASC;"_ns)));
 
-  rv = selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
+  nsresult rv = selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -19715,19 +19708,16 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  nsresult rv = aConnection->ExecuteCachedStatement(
       "UPDATE object_store_index "
       "SET name = :name "
       "WHERE id = :id;"_ns,
@@ -20097,11 +20087,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
               ,
-          QM_PROPAGATE, ([this, aConnection](const auto) {
-            if (!aConnection->GetUpdateRefcountFunction()) {
-              mAssumingPreviousOperationFail = true;
-            }
-          })
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
   );
 
@@ -20713,20 +20699,18 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreDeleteRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
                   ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
                                         mObjectStoreMayHaveIndexes));
 
+  nsresult rv;
   if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(
         aConnection, mParams.objectStoreId(), Some(mParams.keyRange()));
@@ -20791,15 +20775,12 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
   AUTO_PROFILER_LABEL("ObjectStoreClearRequestOp::DoDatabaseWork", DOM);
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, MakeAutoSavepointCleanupHandler(*aConnection)
 #endif
-    return rv;
-  }
+  );
 
   IDB_TRY_INSPECT(const bool& objectStoreHasIndexes,
                   ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
@@ -20807,21 +20788,21 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = objectStoreHasIndexes
-           ? DeleteObjectStoreDataTableRowsWithIndexes(
-                 aConnection, mParams.objectStoreId(), Nothing())
-           : aConnection->ExecuteCachedStatement(
-                 "DELETE FROM object_data "
-                 "WHERE object_store_id = :object_store_id;"_ns,
-                 [this](mozIStorageStatement& stmt) {
-                   nsresult rv =
-                       stmt.BindInt64ByIndex(0, mParams.objectStoreId());
-                   if (NS_WARN_IF(NS_FAILED(rv))) {
-                     return rv;
-                   }
+  nsresult rv = objectStoreHasIndexes
+                    ? DeleteObjectStoreDataTableRowsWithIndexes(
+                          aConnection, mParams.objectStoreId(), Nothing())
+                    : aConnection->ExecuteCachedStatement(
+                          "DELETE FROM object_data "
+                          "WHERE object_store_id = :object_store_id;"_ns,
+                          [this](mozIStorageStatement& stmt) {
+                            nsresult rv = stmt.BindInt64ByIndex(
+                                0, mParams.objectStoreId());
+                            if (NS_WARN_IF(NS_FAILED(rv))) {
+                              return rv;
+                            }
 
-                   return NS_OK;
-                 });
+                            return NS_OK;
+                          });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
