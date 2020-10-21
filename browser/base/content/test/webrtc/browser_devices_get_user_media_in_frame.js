@@ -636,3 +636,18 @@ add_task(async function test_outofprocess() {
     subFrames: { frame1: { observe }, frame2: { observe } },
   });
 });
+
+add_task(async function test_inprocess_in_outofprocess() {
+  const oopOrigin = encodeURI("https://www.mozilla.org");
+  const sameOrigin = encodeURI("https://example.com");
+  const query = `origin=${oopOrigin}&nested=${sameOrigin}&nested=${sameOrigin}`;
+  await runTests(gTests, {
+    relativeURI: `get_user_media_in_frame.html?${query}`,
+    subFrames: {
+      frame1: {
+        noTest: true,
+        children: { frame1: {}, frame2: {} },
+      },
+    },
+  });
+});
