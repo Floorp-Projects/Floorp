@@ -1785,7 +1785,8 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
   }
 
-  assert.open(this.getBrowsingContext({ top: id == null && el == null }));
+  const top = id == null && el == null;
+  assert.open(this.getBrowsingContext({ top }));
   await this._handleUserPrompts();
 
   // Bug 1495063: Elements should be passed as WebElement reference
@@ -1797,7 +1798,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   }
 
   if (MarionettePrefs.useActors) {
-    const { browsingContext } = await this.getActor().switchToFrame(
+    const { browsingContext } = await this.getActor({ top }).switchToFrame(
       byFrame || id
     );
 
