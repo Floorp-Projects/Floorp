@@ -12,3 +12,4 @@ dom/clients/
 dom/commandhandler/
 dom/console/
 dom/credentialmanagement/
+dom/crypto/
