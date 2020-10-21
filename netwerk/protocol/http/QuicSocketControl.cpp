@@ -67,7 +67,7 @@ void QuicSocketControl::HandshakeCompleted() {
   uint32_t state = nsIWebProgressListener::STATE_IS_SECURE;
 
   bool distrustImminent;
-
+  MutexAutoLock lock(mMutex);
   nsresult rv =
       IsCertificateDistrustImminent(mSucceededCertChain, distrustImminent);
 
