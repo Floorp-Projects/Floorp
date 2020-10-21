@@ -22,6 +22,25 @@ add_task(async function testUpdateSoundIndicatorWhenMediaPlaybackChanges() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testUpdateSoundIndicatorWhenMediaBecomeSilent() {
+  info("create a tab loading media document");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    gEMPTY_PAGE_URL
+  );
+  await initMediaPlaybackDocument(tab, "audioEndedDuringPlaying.webm");
+
+  info(`sound indicator should appear when audible audio starts playing`);
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info(`sound indicator should disappear when audio becomes silent`);
+  await waitForTabSoundIndicatorDisappears(tab);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
