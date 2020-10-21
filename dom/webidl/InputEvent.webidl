@@ -16,7 +16,7 @@ interface InputEvent : UIEvent
 
   readonly attribute DOMString inputType;
 
-  [NeedsCallerType, Pref="dom.inputevent.data.enabled"]
+  [NeedsCallerType]
   readonly attribute DOMString? data;
 };
 
