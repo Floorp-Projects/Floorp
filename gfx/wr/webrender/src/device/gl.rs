@@ -3790,7 +3790,8 @@ impl Device {
         match format {
             ImageFormat::R8 => gl::R8,
             ImageFormat::R16 => gl::R16UI,
-            ImageFormat::BGRA8 => panic!("Unable to render to BGRA format!"),
+            // BGRA8 renderbuffers are not supported, so use RGBA8.
+            ImageFormat::BGRA8 => gl::RGBA8,
             ImageFormat::RGBAF32 => gl::RGBA32F,
             ImageFormat::RG8 => gl::RG8,
             ImageFormat::RG16 => gl::RG16,
