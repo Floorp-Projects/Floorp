@@ -16,7 +16,6 @@ py2commands="
     awsy-test
     check-spidermonkey
     crashtest
-    devtools-css-db
     firefox-ui-functional
     geckodriver
     geckodriver-test
