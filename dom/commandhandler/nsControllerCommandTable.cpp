@@ -199,28 +199,28 @@ CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar) {
 already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateEditorCommandTable() {
   return CreateCommandTableWithCommands(
-      EditorController::RegisterEditorCommands);
+      mozilla::EditorController::RegisterEditorCommands);
 }
 
 // static
 already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateEditingCommandTable() {
   return CreateCommandTableWithCommands(
-      EditorController::RegisterEditingCommands);
+      mozilla::EditorController::RegisterEditingCommands);
 }
 
 // static
 already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorCommandTable() {
   return CreateCommandTableWithCommands(
-      HTMLEditorController::RegisterHTMLEditorCommands);
+      mozilla::HTMLEditorController::RegisterHTMLEditorCommands);
 }
 
 // static
 already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable() {
   return CreateCommandTableWithCommands(
-      HTMLEditorController::RegisterEditorDocStateCommands);
+      mozilla::HTMLEditorController::RegisterEditorDocStateCommands);
 }
 
 // static
