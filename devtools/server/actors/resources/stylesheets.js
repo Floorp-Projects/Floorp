@@ -572,7 +572,7 @@ class StyleSheetWatcher {
       sourceMapBaseURL: this._getSourcemapBaseURL(styleSheet),
       sourceMapURL: styleSheet.sourceMapURL,
       styleSheetIndex: this._getStyleSheetIndex(styleSheet),
-      system: !CssLogic.isAuthorStylesheet(styleSheet),
+      system: CssLogic.isAgentStylesheet(styleSheet),
       title: styleSheet.title,
     };
 
