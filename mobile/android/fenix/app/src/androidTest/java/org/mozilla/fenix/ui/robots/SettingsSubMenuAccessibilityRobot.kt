@@ -6,30 +6,32 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import android.view.KeyEvent
-import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
-import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.ACTION_DOWN
+import android.view.KeyEvent.KEYCODE_DPAD_LEFT
+import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
-import org.hamcrest.CoreMatchers.allOf
-import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.helpers.assertIsEnabled
+import org.mozilla.fenix.helpers.isEnabled
 import org.mozilla.fenix.ui.robots.SettingsSubMenuAccessibilityRobot.Companion.DECIMAL_CONVERSION
 import org.mozilla.fenix.ui.robots.SettingsSubMenuAccessibilityRobot.Companion.MIN_VALUE
 import org.mozilla.fenix.ui.robots.SettingsSubMenuAccessibilityRobot.Companion.STEP_SIZE
@@ -48,7 +50,13 @@ class SettingsSubMenuAccessibilityRobot {
         const val TEXT_SIZE = 16f
     }
 
-    fun verifyMenuItems() = assertMenuItems()
+    fun verifyAutomaticFontSizingMenuItems() = assertAutomaticFontSizingMenuItems()
+
+    fun clickFontSizingSwitch() = toggleFontSizingSwitch()
+
+    fun verifyEnabledMenuItems() = assertEnabledMenuItems()
+
+    fun verifyMenuItemsAreDisabled() = assertMenuItemsAreDisabled()
 
     fun changeTextSizeSlider(seekBarPercentage: Int) = adjustTextSizeSlider(seekBarPercentage)
 
@@ -69,7 +77,22 @@ class SettingsSubMenuAccessibilityRobot {
 
 val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-private fun assertMenuItems() {
+private fun assertAutomaticFontSizingMenuItems() {
+    onView(withText("Automatic font sizing"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    val strFont = "Font size will match your Android settings. Disable to manage font size here."
+    onView(withText(strFont))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun toggleFontSizingSwitch() {
+    // Toggle font size to off
+    onView(withText("Automatic font sizing"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .perform(click())
+}
+
+private fun assertEnabledMenuItems() {
     assertFontSize()
     assertSliderBar()
 }
@@ -77,9 +100,11 @@ private fun assertMenuItems() {
 private fun assertFontSize() {
     val view = onView(withText("Font Size"))
     view.check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(true)))
     val strFont = "Make text on websites larger or smaller"
     onView(withText(strFont))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(true)))
 }
 
 private fun assertSliderBar() {
@@ -101,6 +126,20 @@ private fun adjustTextSizeSlider(seekBarPercentage: Int) {
 private fun assertTextSizePercentage(textSize: Int) {
     onView(withId(org.mozilla.fenix.R.id.sampleText))
         .check(textSizePercentageEquals(textSize))
+}
+
+private fun assertMenuItemsAreDisabled() {
+    onView(withText("Font Size")).assertIsEnabled(false)
+
+    val strFont = "Make text on websites larger or smaller"
+
+    onView(withText(strFont)).assertIsEnabled(false)
+
+    onView(withId(org.mozilla.fenix.R.id.sampleText)).assertIsEnabled(false)
+
+    onView(withId(org.mozilla.fenix.R.id.seekbar_value)).assertIsEnabled(false)
+
+    onView(withId(org.mozilla.fenix.R.id.seekbar)).assertIsEnabled(false)
 }
 
 private fun goBackButton() =

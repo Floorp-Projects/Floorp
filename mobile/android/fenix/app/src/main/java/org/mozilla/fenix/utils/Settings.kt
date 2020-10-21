@@ -315,11 +315,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val shouldShowSecurityPinWarning: Boolean
         get() = loginsSecureWarningCount.underMaxCount()
 
-    fun shouldUseAutoSize() = fontSizeFactor == 1F
-
     var shouldUseLightTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_light_theme),
         default = false
+    )
+
+    var shouldUseAutoSize by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_accessibility_auto_size),
+        default = true
     )
 
     var fontSizeFactor by floatPreference(

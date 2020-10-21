@@ -259,6 +259,19 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldUseAutoSize() {
+        // When just created
+        // Then
+        assertTrue(settings.shouldUseAutoSize)
+
+        // When
+        settings.shouldUseAutoSize = false
+
+        // Then
+        assertFalse(settings.shouldUseAutoSize)
+    }
+
+    @Test
     fun shouldAutofill() {
         // When just created
         // Then

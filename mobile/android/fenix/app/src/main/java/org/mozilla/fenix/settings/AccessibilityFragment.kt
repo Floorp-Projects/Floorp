@@ -48,17 +48,34 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             val newTextScale =
                 ((newTextSize * STEP_SIZE) + MIN_SCALE_VALUE).toFloat() / PERCENT_TO_DECIMAL
 
+            // Save new text scale value. We assume auto sizing is off if this change listener was called.
             settings.fontSizeFactor = newTextScale
+            components.core.engine.settings.fontSizeFactor = newTextScale
 
-            // If scale is 100%, use the automatic font size adjustment
-            val useAutoSize = newTextScale == 1F
+            // Reload the current session to reflect the new text scale
+            components.useCases.sessionUseCases.reload()
+            true
+        }
+        textSizePreference.isEnabled = !requireContext().settings().shouldUseAutoSize
+
+        val useAutoSizePreference =
+            requirePreference<SwitchPreference>(R.string.pref_key_accessibility_auto_size)
+        useAutoSizePreference.setOnPreferenceChangeListener<Boolean> { preference, useAutoSize ->
+            val settings = preference.context.settings()
+            val components = preference.context.components
+
+            // Save the new setting value
+            settings.shouldUseAutoSize = useAutoSize
             components.core.engine.settings.automaticFontSizeAdjustment = useAutoSize
             components.core.engine.settings.fontInflationEnabled = useAutoSize
 
-            // If using manual sizing, update the engine settings with the new scale
+            // If using manual sizing, update the engine settings with the local saved setting
             if (!useAutoSize) {
-                components.core.engine.settings.fontSizeFactor = newTextScale
+                components.core.engine.settings.fontSizeFactor = settings.fontSizeFactor
             }
+
+            // Enable the manual sizing controls if automatic sizing is turned off.
+            textSizePreference.isEnabled = !useAutoSize
 
             // Reload the current session to reflect the new text scale
             components.useCases.sessionUseCases.reload()

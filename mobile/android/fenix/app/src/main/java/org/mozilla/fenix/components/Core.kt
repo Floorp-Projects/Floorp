@@ -97,8 +97,8 @@ class Core(
             trackingProtectionPolicy = trackingProtectionPolicyFactory.createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage),
             preferredColorScheme = getPreferredColorScheme(),
-            automaticFontSizeAdjustment = context.settings().shouldUseAutoSize(),
-            fontInflationEnabled = context.settings().shouldUseAutoSize(),
+            automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
+            fontInflationEnabled = context.settings().shouldUseAutoSize,
             suspendMediaWhenInactive = false,
             forceUserScalableContent = context.settings().forceEnableZoom,
             loginAutofillEnabled = context.settings().shouldAutofillLogins

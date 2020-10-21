@@ -11,6 +11,7 @@
     <string name="pref_key_site_permissions" translatable="false">pref_key_site_permissions</string>
     <string name="pref_key_add_private_browsing_shortcut" translatable="false">pref_key_add_private_browsing_shortcut</string>
     <string name="pref_key_accessibility" translatable="false">pref_key_accessibility</string>
+    <string name="pref_key_accessibility_auto_size" translatable="false">pref_key_accessibility_auto_size</string>
     <string name="pref_key_accessibility_font_scale" translatable="false">pref_key_accessibility_font_scale</string>
     <string name="pref_key_accessibility_force_enable_zoom" translatable="false">pref_key_accessibility_force_enable_zoom</string>
     <string name="pref_key_advanced" translatable="false">pref_key_advanced</string>

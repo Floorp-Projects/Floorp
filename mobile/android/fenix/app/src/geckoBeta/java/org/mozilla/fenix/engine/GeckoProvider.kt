@@ -47,7 +47,7 @@ object GeckoProvider {
             .build()
 
         val settings = context.components.settings
-        if (!settings.shouldUseAutoSize()) {
+        if (!settings.shouldUseAutoSize) {
             runtimeSettings.automaticFontSizeAdjustment = false
             val fontSize = settings.fontSizeFactor
             runtimeSettings.fontSizeFactor = fontSize

@@ -10,9 +10,9 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Ignore
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -85,7 +85,7 @@ class SettingsBasicsTest {
             verifyThemes()
         }.goBack {
         }.openAccessibilitySubMenu {
-            verifyMenuItems()
+            verifyAutomaticFontSizingMenuItems()
         }.goBack {
             // drill down to submenu
         }
@@ -181,7 +181,7 @@ class SettingsBasicsTest {
     }
 
     @Test
-    fun changeAccessibilitySettings() {
+    fun changeAccessibiltySettings() {
         // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
         val webpage = getLoremIpsumAsset(mockWebServer).url
@@ -193,7 +193,8 @@ class SettingsBasicsTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openAccessibilitySubMenu {
-            verifyMenuItems()
+            clickFontSizingSwitch()
+            verifyEnabledMenuItems()
             changeTextSizeSlider(textSizePercentage)
             verifyTextSizePercentage(textSizePercentage)
         }.goBack {
@@ -201,6 +202,14 @@ class SettingsBasicsTest {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(webpage) {
             checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
+        }.openTabDrawer {
+        }.openNewTab {
+        }.dismiss {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAccessibilitySubMenu {
+            clickFontSizingSwitch()
+            verifyMenuItemsAreDisabled()
         }
     }
 
