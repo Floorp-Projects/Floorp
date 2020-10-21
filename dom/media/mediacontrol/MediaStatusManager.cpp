@@ -455,5 +455,21 @@ bool MediaStatusManager::IsAnyMediaBeingControlled() const {
   return mPlaybackStatusDelegate.IsAnyMediaBeingControlled();
 }
 
+void MediaStatusManager::NotifyPageTitleChanged() {
+  // If active media session has set non-empty metadata, then we would use that
+  // instead of using default metadata.
+  if (mActiveMediaSessionContextId &&
+      mMediaSessionInfoMap.GetValue(*mActiveMediaSessionContextId)->mMetadata) {
+    return;
+  }
+  // In private browsing mode, we won't show page title on default metadata so
+  // we don't need to update that.
+  if (IsInPrivateBrowsing()) {
+    return;
+  }
+  LOG("page title changed, update default metadata");
+  mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
+}
+
 }  // namespace dom
 }  // namespace mozilla

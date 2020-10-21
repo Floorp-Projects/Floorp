@@ -192,6 +192,10 @@ class MediaStatusManager : public IMediaInfoUpdater {
   // Return the actual playback state.
   MediaSessionPlaybackState PlaybackState() const;
 
+  // When page title changes, we might need to update it on the default
+  // metadata as well.
+  void NotifyPageTitleChanged();
+
  protected:
   ~MediaStatusManager() = default;
   virtual void HandleActualPlaybackStateChanged() = 0;
