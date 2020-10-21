@@ -46,6 +46,10 @@ add_task(async function test_main() {
     { url: httpURL("helper_fission_animation_styling_in_oopif.html") },
     { url: httpURL("helper_fission_force_empty_hit_region.html") },
     { url: httpURL("helper_fission_touch.html") },
+    {
+      url: httpURL("helper_fission_tap.html"),
+      prefs: [["apz.max_tap_time", 10000]],
+    },
     // add additional tests here
   ];
   if (isWebRender) {
