@@ -18,6 +18,7 @@
     const { BrowserTestUtils } = ChromeUtils.import(
       "resource://testing-common/BrowserTestUtils.jsm");
     const ABOUT_MOZILLA_URL = "about:mozilla";
+    const ABOUT_LICENSE_URL = "about:license";
 
     SimpleTest.waitForExplicitFinish();
 
@@ -30,14 +31,18 @@
       const winFocused = SimpleTest.promiseFocus(win);
       const loaded = BrowserTestUtils.browserLoaded(
         win.gBrowser.selectedBrowser);
+      let docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
+        event.accessible.QueryInterface(nsIAccessibleDocument).URL === ABOUT_LICENSE_URL,
+        `Loaded tab: ${ABOUT_LICENSE_URL}`);
       await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser,
-        "about:license");
+        ABOUT_LICENSE_URL);
       await loaded;
+      await docLoaded;
       await winFocused;
 
       info(`Loading a new tab: ${ABOUT_MOZILLA_URL}.`);
-      const docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
-        event.DOMNode === win.gBrowser.getBrowserAtIndex(1).contentDocument,
+      docLoaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, event =>
+        event.accessible.QueryInterface(nsIAccessibleDocument).URL === ABOUT_MOZILLA_URL,
         `Added tab: ${ABOUT_MOZILLA_URL}`);
       const tab = win.gBrowser.addTrustedTab(ABOUT_MOZILLA_URL);
       await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
