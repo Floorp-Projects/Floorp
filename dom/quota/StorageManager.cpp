@@ -6,17 +6,56 @@
 
 #include "StorageManager.h"
 
-#include "mozilla/dom/PromiseWorkerProxy.h"
-#include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/dom/StorageManagerBinding.h"
-#include "mozilla/dom/WorkerPrivate.h"
+#include <cstdint>
+#include <cstdlib>
+#include <utility>
+#include "ErrorList.h"
+#include "MainThreadUtils.h"
+#include "js/CallArgs.h"
+#include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/EventStateManager.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryScalarEnums.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/StorageManagerBinding.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/dom/quota/QuotaManagerService.h"
 #include "nsContentPermissionHelper.h"
+#include "nsContentUtils.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsIGlobalObject.h"
+#include "nsIPrincipal.h"
 #include "nsIQuotaCallbacks.h"
+#include "nsIQuotaManagerService.h"
 #include "nsIQuotaRequests.h"
+#include "nsIQuotaResults.h"
+#include "nsIVariant.h"
+#include "nsLiteralString.h"
 #include "nsPIDOMWindow.h"
+#include "nsString.h"
+#include "nsStringFlags.h"
+#include "nsTLiteralString.h"
+#include "nscore.h"
+
+class JSObject;
+struct JSContext;
+struct nsID;
+
+namespace mozilla {
+class Runnable;
+}
 
 using namespace mozilla::dom::quota;
 

@@ -6,6 +6,10 @@
 
 #include "PersistenceType.h"
 
+#include <utility>
+#include "nsLiteralString.h"
+#include "nsString.h"
+
 namespace mozilla {
 namespace dom {
 namespace quota {

@@ -7,6 +7,7 @@
 #ifndef dom_quota_quotainfo_h__
 #define dom_quota_quotainfo_h__
 
+#include <utility>
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsString.h"
 

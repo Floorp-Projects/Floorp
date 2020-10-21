@@ -7,12 +7,31 @@
 #ifndef mozilla_dom_quota_quotacommon_h__
 #define mozilla_dom_quota_quotacommon_h__
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <type_traits>
+#include <utility>
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
+#include "mozilla/MacroArgs.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsError.h"
+#include "nsIEventTarget.h"
+#include "nsLiteralString.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "nsTArray.h"
+#include "nsStringFwd.h"
+#include "nsTLiteralString.h"
+#include "nsXULAppAPI.h"
 
 // Proper use of unique variable names can be tricky (especially if nesting of
 // the final macro is required).
@@ -719,7 +738,6 @@
 #  define RETURN_STATUS_OR_RESULT(_status, _rv) return _rv
 #endif
 
-class nsIEventTarget;
 class nsIFile;
 
 namespace mozilla {

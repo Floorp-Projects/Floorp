@@ -6,17 +6,23 @@
 
 #include "QuotaCommon.h"
 
-#include "mozilla/Logging.h"  // LazyLogModule
+#include "mozilla/Logging.h"
+#include "mozilla/TextUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
+#include "nsServiceManagerUtils.h"
+#include "nsStringFlags.h"
+#include "nsTStringRepr.h"
+#include "nsUnicharUtils.h"
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
+
 #ifdef XP_WIN
+#  include "mozilla/Atomics.h"
 #  include "mozilla/ipc/BackgroundParent.h"
 #  include "mozilla/StaticPrefs_dom.h"
 #  include "nsILocalFileWin.h"
 #endif
-#include "nsXPCOM.h"
 
 namespace mozilla {
 namespace dom {

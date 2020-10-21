@@ -4,8 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+
+#include "gtest/gtest.h"
+
+#include <cstdint>
+#include <memory>
+#include <ostream>
+#include <utility>
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/fallible.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;

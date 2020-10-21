@@ -7,9 +7,11 @@
 #ifndef mozilla_dom_quota_usageinfo_h__
 #define mozilla_dom_quota_usageinfo_h__
 
-#include "mozilla/dom/quota/QuotaCommon.h"
-
+#include <cstdint>
+#include <utility>
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 
 BEGIN_QUOTA_NAMESPACE
 

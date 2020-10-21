@@ -6,7 +6,17 @@
 
 #include "FileStreams.h"
 
+// Local includes
+#include "QuotaCommon.h"
 #include "QuotaManager.h"
+#include "QuotaObject.h"
+
+// Global includes
+#include <utility>
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Result.h"
+#include "nsDebug.h"
 #include "prio.h"
 
 BEGIN_QUOTA_NAMESPACE

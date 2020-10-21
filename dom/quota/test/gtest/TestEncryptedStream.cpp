@@ -6,18 +6,44 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+#include <new>
+#include <numeric>
+#include <ostream>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/DummyCipherStrategy.h"
+#include "mozilla/dom/quota/EncryptedBlock.h"
 #include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
+#include "nsError.h"
+#include "nsICloneableInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISeekableStream.h"
+#include "nsISupports.h"
+#include "nsITellableStream.h"
+#include "nsStreamUtils.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "mozilla/UniquePtr.h"
-
-#include <numeric>
+#include "nscore.h"
 
 namespace mozilla::dom::quota {
 

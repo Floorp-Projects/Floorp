@@ -6,6 +6,11 @@
 
 #include "QuotaResults.h"
 
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/MacroForEach.h"
+#include "nscore.h"
+
 namespace mozilla {
 namespace dom {
 namespace quota {
