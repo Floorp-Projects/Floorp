@@ -364,13 +364,6 @@ abstract class EngineSession(
              */
             SCRIPTS_AND_SUB_RESOURCES(1 shl 31),
 
-            /**
-             * Indicates that content that would have been blocked has instead been replaced with a shim.
-             * This category is only used for categorization purposes ie. for checking the state of blocked content.
-             * It can not be used to actively configure a tracking protection policy.
-             */
-            SHIMMED(NONE.id),
-
             RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
                 CRYPTOMINING.id + FINGERPRINTING.id),
 

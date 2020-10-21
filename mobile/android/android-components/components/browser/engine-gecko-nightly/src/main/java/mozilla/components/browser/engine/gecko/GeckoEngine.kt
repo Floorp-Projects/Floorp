@@ -654,6 +654,9 @@ class GeckoEngine(
         }
     }
 
+    private fun isCategoryActive(category: TrackingCategory) = settings.trackingProtectionPolicy?.contains(category)
+        ?: false
+
     /**
      * Mimics the behavior for categorizing trackers from desktop, they should be kept in sync,
      * as differences will result in improper categorization for trackers.
@@ -661,14 +664,57 @@ class GeckoEngine(
      */
     internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
         val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
+        val blockedCategories = blockingData.map { it.getBlockedCategory() }
+            .filterNot { it == TrackingCategory.NONE }
+            .distinct()
+        val loadedCategories = blockingData.map { it.getLoadedCategory() }
+            .filterNot { it == TrackingCategory.NONE }
+            .distinct()
+        /**
+         *  When a resource is shimmed we'll received a [REPLACED_UNSAFE_CONTENT] event with
+         *  the quantity [BlockingData.count] of categories that were shimmed, but it doesn't
+         *  specify which ones, it only tells us how many. For example:
+         *     {
+         *      "category": REPLACED_TRACKING_CONTENT,
+         *      "count": 2
+         *     }
+         *
+         *  This indicates that there are 2 categories that were shimmed, as a result
+         *  we have to infer based on the categories that are active vs the amount of
+         *  shimmed categories, for example:
+         *
+         *     "blockData": [
+         *      {
+         *          "category": LOADED_LEVEL_1_TRACKING_CONTENT,
+         *          "count": 1
+         *      },
+         *      {
+         *          "category": LOADED_SOCIALTRACKING_CONTENT,
+         *          "count": 1
+         *      },
+         *      {
+         *          "category": REPLACED_TRACKING_CONTENT,
+         *          "count": 2
+         *      }
+         *     ]
+         *  This indicates that categories [LOADED_LEVEL_1_TRACKING_CONTENT] and
+         *  [LOADED_SOCIALTRACKING_CONTENT] were loaded but shimmed and we should display them
+         *  as blocked instead of loaded.
+         */
+        val shimmedCount = blockingData.find {
+            it.category == Event.REPLACED_TRACKING_CONTENT
+        }?.count ?: 0
+
+        // If we find blocked categories that are loaded it means they were shimmed.
+        val shimmedCategories = loadedCategories.filter { isCategoryActive(it) }
+            .take(shimmedCount)
+
+        // We have to remove the categories that are shimmed from the loaded list and
+        // put them back in the blocked list.
         return TrackerLog(
             url = origin,
-            loadedCategories = blockingData.map { it.getLoadedCategory() }
-                .filterNot { it == TrackingCategory.NONE }
-                .distinct(),
-            blockedCategories = blockingData.map { it.getBlockedCategory() }
-                .filterNot { it == TrackingCategory.NONE }
-                .distinct(),
+            loadedCategories = loadedCategories.filterNot { it in shimmedCategories },
+            blockedCategories = (blockedCategories + shimmedCategories).distinct(),
             cookiesHasBeenBlocked = cookiesHasBeenBlocked
         )
     }
@@ -700,7 +746,6 @@ internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(
         Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
         Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
-        Event.REPLACED_TRACKING_CONTENT -> TrackingCategory.SHIMMED
         else -> TrackingCategory.NONE
     }
 }

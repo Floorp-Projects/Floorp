@@ -14,10 +14,10 @@ import mozilla.components.browser.engine.gecko.util.SpeculativeEngineSession
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionObserver
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
@@ -1792,8 +1792,6 @@ class GeckoEngineTest {
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
-        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SHIMMED))
-
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.CRYPTOMINING))
@@ -1816,6 +1814,39 @@ class GeckoEngineTest {
         )
 
         assertTrue(onErrorCalled)
+    }
+
+    @Test
+    fun `shimmed content MUST be categorized as blocked`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = spy(GeckoEngine(context, runtime = runtime))
+        val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        val logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        val engineSetting = DefaultSettings()
+        engineSetting.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        whenever(engine.settings).thenReturn(engineSetting)
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(mockSession, onSuccess = { trackersLog = it })
+
+        logEntriesResult.complete(createShimmedEntryList())
+
+        val trackerLog = trackersLog!!.first()
+        assertEquals("www.tracker.com", trackerLog.url)
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+        assertTrue(trackerLog.loadedCategories.isEmpty())
     }
 
     @Test
@@ -1970,7 +2001,6 @@ class GeckoEngineTest {
         val blockedFingerprintingContent = createBlockingData(Event.BLOCKED_FINGERPRINTING_CONTENT)
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
-        val shimmedContent = createBlockingData(Event.REPLACED_TRACKING_CONTENT)
 
         val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
         val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
@@ -1990,8 +2020,7 @@ class GeckoEngineTest {
             blockedSocialContent,
             loadedSocialContent,
             loadedCookieSocialTracker,
-            blockedCookieSocialTracker,
-            shimmedContent
+            blockedCookieSocialTracker
         )
 
         val addLogSecondEntry = object : ContentBlockingController.LogEntry() {}
@@ -2004,9 +2033,29 @@ class GeckoEngineTest {
         return listOf(addLogEntry, addLogSecondEntry)
     }
 
-    private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {
+    private fun createShimmedEntryList(): List<ContentBlockingController.LogEntry> {
+        val addLogEntry = object : ContentBlockingController.LogEntry() {}
+
+        ReflectionUtils.setField(addLogEntry, "origin", "www.tracker.com")
+        val shimmedContent = createBlockingData(Event.REPLACED_TRACKING_CONTENT, 2)
+        val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
+        val loadedSocialContent = createBlockingData(Event.LOADED_SOCIALTRACKING_CONTENT)
+
+        val contentBlockingList = listOf(
+            loadedTrackingLevel1Content,
+            loadedSocialContent,
+            shimmedContent
+        )
+
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+
+        return listOf(addLogEntry)
+    }
+
+    private fun createBlockingData(category: Int, count: Int = 0): ContentBlockingController.LogEntry.BlockingData {
         val blockingData = object : ContentBlockingController.LogEntry.BlockingData() {}
         ReflectionUtils.setField(blockingData, "category", category)
+        ReflectionUtils.setField(blockingData, "count", count)
         return blockingData
     }
 

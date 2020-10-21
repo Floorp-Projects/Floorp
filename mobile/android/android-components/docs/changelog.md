@@ -14,6 +14,9 @@ permalink: /changelog/
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Exposes GeckoView `CompositorController#ClearColor` as Setting
 
+* **concept-engine**
+  * ⚠️ Removed `TrackingCategory`.`SHIMMED`, for user usability reasons, we are going to mark SHIMMED categories as blocked, to follow the same pattern as Firefox desktop for more information see [#8769](https://github.com/mozilla-mobile/android-components/issues/8769)
+
 # 63.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v62.0.0...v63.0.0)
