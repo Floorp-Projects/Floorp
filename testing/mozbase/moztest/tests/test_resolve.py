@@ -430,6 +430,7 @@ def test_task_regexes():
         'test-linux64/opt-mochitest-media-e10s-11',
         'test-linux64/opt-mochitest-screenshots-1',
         'test-linux64/opt-reftest',
+        'test-linux64/opt-geckoview-reftest',
         'test-linux64/debug-reftest-e10s-1',
         'test-linux64/debug-reftest-e10s-11',
         'test-linux64/opt-robocop',
@@ -475,6 +476,7 @@ def test_task_regexes():
         ],
         'reftest': [
             'test-linux64/opt-reftest',
+            'test-linux64/opt-geckoview-reftest',
             'test-linux64/debug-reftest-e10s-1',
         ],
         'robocop': [
