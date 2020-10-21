@@ -13,8 +13,8 @@ transforms:
 jobs-from:
     - benchmarks.yml
     - browsertime.yml
-    - toolchains.yml
-    - toolchain-clang-tidy-external.yml
     - chromium-fetch.yml
-    - visual-metrics.yml
     - resource-monitor.yml
+    - toolchain-clang-tidy-external.yml
+    - toolchains.yml
+    - visual-metrics.yml
