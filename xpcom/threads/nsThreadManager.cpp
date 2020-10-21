@@ -656,9 +656,16 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
 
   PROFILER_MARKER_TEXT(
       "NewThread", OTHER,
-      MarkerOptions({MarkerStack::Capture(),
-                     MarkerTiming::IntervalUntilNowFrom(startTime)}),
+      MarkerOptions(MarkerStack::Capture(),
+                    MarkerTiming::IntervalUntilNowFrom(startTime)),
       aName);
+  if (!NS_IsMainThread()) {
+    PROFILER_MARKER_TEXT(
+        "NewThread (non-main thread)", OTHER,
+        MarkerOptions(MarkerStack::Capture(), MarkerThreadId::MainThread(),
+                      MarkerTiming::IntervalUntilNowFrom(startTime)),
+        aName);
+  }
 
   thr.forget(aResult);
   return NS_OK;
