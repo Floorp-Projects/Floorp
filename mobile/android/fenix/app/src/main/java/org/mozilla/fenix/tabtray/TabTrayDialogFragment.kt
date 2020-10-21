@@ -161,14 +161,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
         if (newConfig.orientation != currentOrientation) {
             tabTrayView.dismissMenu()
-            tabTrayView.expand()
+            tabTrayView.updateBottomSheetBehavior()
 
             if (requireContext().settings().gridTabView) {
                 // Update the number of columns to use in the grid view when the screen
                 // orientation changes.
                 tabTrayView.updateTabsTrayLayout()
             }
-
             currentOrientation = newConfig.orientation
         }
     }
@@ -205,8 +204,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             ),
             store = tabTrayDialogStore,
             isPrivate = isPrivate,
-            startingInLandscape = requireContext().resources.configuration.orientation ==
-                    Configuration.ORIENTATION_LANDSCAPE,
+            isInLandscape = ::isInLandscape,
             lifecycleOwner = viewLifecycleOwner
         ) { private ->
             val filter: (TabSessionState) -> Boolean = { state -> private == state.content.private }
@@ -448,6 +446,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     collectionNameEditText.showKeyboard()
                 }
         }
+    }
+
+    private fun isInLandscape(): Boolean {
+        return requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
 
     companion object {
