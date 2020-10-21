@@ -6,6 +6,7 @@
 
 #include "ClientManagerParent.h"
 
+#include "BackgroundParent.h"
 #include "ClientHandleParent.h"
 #include "ClientManagerOpParent.h"
 #include "ClientManagerService.h"
@@ -78,7 +79,7 @@ PClientSourceParent* ClientManagerParent::AllocPClientSourceParent(
     const ClientSourceConstructorArgs& aArgs) {
   Maybe<ContentParentId> contentParentId;
 
-  uint64_t childID = BackgroundParent::GetChildID(Manager());
+  uint64_t childID = ::mozilla::ipc::BackgroundParent::GetChildID(Manager());
   if (childID) {
     contentParentId = Some(ContentParentId(childID));
   }

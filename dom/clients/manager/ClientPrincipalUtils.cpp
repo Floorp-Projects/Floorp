@@ -6,6 +6,8 @@
 
 #include "ClientPrincipalUtils.h"
 
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+
 namespace mozilla {
 namespace dom {
 

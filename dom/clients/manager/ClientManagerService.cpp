@@ -6,6 +6,7 @@
 
 #include "ClientManagerService.h"
 
+#include "ClientHandleParent.h"
 #include "ClientManagerParent.h"
 #include "ClientNavigateOpParent.h"
 #include "ClientOpenWindowUtils.h"
