@@ -108,6 +108,23 @@ add_task(async function testPerformPlayOnMediaLoadingNewSource() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testSoundIndicatorShouldDisappearWhenAbortingMedia() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab();
+  await initMediaPlaybackDocument(tab, "audio.ogg");
+
+  info(`sound indicator should appear when audible audio starts playing`);
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info(`sound indicator should disappear when aborting audio source`);
+  await assignNewSourceForAudio(tab, "");
+  await waitForTabSoundIndicatorDisappears(tab);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
