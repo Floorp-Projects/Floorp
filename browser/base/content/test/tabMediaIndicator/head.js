@@ -1,4 +1,9 @@
 /**
+ * Global variables for testing.
+ */
+const gEMPTY_PAGE_URL = GetTestWebBasedURL("file_empty.html");
+
+/**
  * Return a web-based URL for a given file based on the testing directory.
  * @param {String} fileName
  *        file that caller wants its web-based url
