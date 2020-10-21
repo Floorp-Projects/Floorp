@@ -5,4 +5,6 @@
 #ifndef mozilla_Glean_MetricTypes_h
 #define mozilla_Glean_MetricTypes_h
 
+#include "mozilla/glean/Counter.h"
+
 #endif  // mozilla_Glean_MetricTypes_h

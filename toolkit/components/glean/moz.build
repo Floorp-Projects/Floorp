@@ -22,17 +22,21 @@ if CONFIG['MOZ_GLEAN']:
         'bindings/Category.h',
         'bindings/Glean.h',
         'bindings/MetricTypes.h',
+        'bindings/private/Counter.h',
     ]
 
     UNIFIED_SOURCES += [
         'bindings/Category.cpp',
         'bindings/Glean.cpp',
+        'bindings/private/Counter.cpp',
         'ipc/FOGIPC.cpp',
     ]
 
     TEST_DIRS += [
         'gtest',
     ]
+
+    XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']
 
     PYTHON_UNITTEST_MANIFESTS += [
         'pytest/python.ini',
