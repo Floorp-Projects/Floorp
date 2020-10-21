@@ -2036,12 +2036,6 @@
   value: false
   mirror: always
 
-# Is support for InputEvent.data enabled?
-- name: dom.inputevent.data.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for InputEvent.dataTransfer enabled?
 - name: dom.inputevent.datatransfer.enabled
   type: bool
