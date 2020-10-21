@@ -57,3 +57,10 @@ async function waitForTabSoundIndicatorDisappears(tab) {
   }
   ok(!tab.soundPlaying, "Tab sound indicator disappears");
 }
+
+/**
+ * Return a new foreground tab loading with an empty file.
+ */
+function createBlankForegroundTab() {
+  return BrowserTestUtils.openNewForegroundTab(gBrowser, gEMPTY_PAGE_URL);
+}

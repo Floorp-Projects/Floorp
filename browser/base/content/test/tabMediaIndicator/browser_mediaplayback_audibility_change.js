@@ -4,10 +4,7 @@
  */
 add_task(async function testUpdateSoundIndicatorWhenMediaPlaybackChanges() {
   info("create a tab loading media document");
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    gEMPTY_PAGE_URL
-  );
+  const tab = await createBlankForegroundTab();
   await initMediaPlaybackDocument(tab, "audio.ogg");
 
   info(`sound indicator should appear when audible audio starts playing`);
@@ -24,10 +21,7 @@ add_task(async function testUpdateSoundIndicatorWhenMediaPlaybackChanges() {
 
 add_task(async function testUpdateSoundIndicatorWhenMediaBecomeSilent() {
   info("create a tab loading media document");
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    gEMPTY_PAGE_URL
-  );
+  const tab = await createBlankForegroundTab();
   await initMediaPlaybackDocument(tab, "audioEndedDuringPlaying.webm");
 
   info(`sound indicator should appear when audible audio starts playing`);
@@ -43,10 +37,7 @@ add_task(async function testUpdateSoundIndicatorWhenMediaBecomeSilent() {
 
 add_task(async function testSoundIndicatorWouldWorkForMediaWithoutPreload() {
   info("create a tab loading media document");
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    gEMPTY_PAGE_URL
-  );
+  const tab = await createBlankForegroundTab();
   await initMediaPlaybackDocument(tab, "audio.ogg", { preload: "none" });
 
   info(`sound indicator should appear when audible audio starts playing`);
@@ -55,6 +46,23 @@ add_task(async function testSoundIndicatorWouldWorkForMediaWithoutPreload() {
 
   info(`sound indicator should disappear when audio stops playing`);
   await pauseAudio(tab);
+  await waitForTabSoundIndicatorDisappears(tab);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab();
+  await initMediaPlaybackDocument(tab, "audio.ogg");
+
+  info(`sound indicator should appear when audible audio starts playing`);
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info(`sound indicator should disappear after navigating tab to blank page`);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank");
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("remove tab");
