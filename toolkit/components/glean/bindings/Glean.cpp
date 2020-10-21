@@ -9,6 +9,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/glean/Glean.h"
 #include "mozilla/glean/Category.h"
+#include "mozilla/glean/GleanJSMetricsLookup.h"
 
 namespace mozilla::glean {
 
@@ -49,12 +50,25 @@ bool Glean::DefineGlean(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
 
 already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
                                               bool& aFound) {
-  aFound = false;
-  return nullptr;
+  Maybe<uint32_t> categoryIdx =
+      CategoryByNameLookup(NS_ConvertUTF16toUTF8(aName));
+  if (categoryIdx.isNothing()) {
+    aFound = false;
+    return nullptr;
+  }
+
+  aFound = true;
+  uint32_t length = strlen(&gCategoryStringTable[categoryIdx.value()]);
+  return MakeAndAddRef<Category>(categoryIdx.value(), length);
 }
 
 bool Glean::NameIsEnumerable(const nsAString& aName) { return false; }
 
-void Glean::GetSupportedNames(nsTArray<nsString>& aNames) {}
+void Glean::GetSupportedNames(nsTArray<nsString>& aNames) {
+  for (category_entry_t entry : sCategoryByNameLookupEntries) {
+    const char* categoryName = GetCategoryName(entry);
+    aNames.AppendElement()->AssignASCII(categoryName);
+  }
+}
 
 }  // namespace mozilla::glean
