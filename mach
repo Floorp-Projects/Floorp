@@ -32,7 +32,6 @@ py2commands="
     talos-test
     telemetry-tests-client
     test
-    tps-build
     visualmetrics
     web-platform-tests
     web-platform-tests-update
