@@ -6,9 +6,15 @@
 
 #include "ConsoleUtils.h"
 #include "ConsoleCommon.h"
+#include "nsContentUtils.h"
+#include "nsIConsoleAPIStorage.h"
+#include "nsIXPConnect.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/dom/ConsoleBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 namespace dom {

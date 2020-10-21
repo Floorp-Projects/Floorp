@@ -5,3 +5,4 @@ dom/cache/
 dom/canvas/
 dom/clients/
 dom/commandhandler/
+dom/console/

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ConsoleCommon_h
 #define mozilla_dom_ConsoleCommon_h
 
+#include "jsapi.h"
 #include "nsString.h"
 
 namespace mozilla {
