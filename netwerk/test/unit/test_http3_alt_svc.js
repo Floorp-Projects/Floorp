@@ -36,6 +36,9 @@ function run_test() {
 
   prefs.setBoolPref("network.http.http3.enabled", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+  // We always resolve elements of localDomains as it's hardcoded without the
+  // following pref:
+  prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
   // The certificate for the http3server server is for foo.example.com and
   // is signed by http2-ca.pem so add that cert to the trust list as a
@@ -121,5 +124,6 @@ function test_https_alt_svc() {
 function testsDone() {
   prefs.clearUserPref("network.http.http3.enabled");
   prefs.clearUserPref("network.dns.localDomains");
+  prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
   dump("testDone\n");
 }
