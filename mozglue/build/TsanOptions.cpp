@@ -224,9 +224,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1506910
          "race:gMozillaPoisonValue\n"
 
-         // Bug 1587510
-         "race:SystemGroupImpl::sSingleton\n"
-
          // Bug 1600594
          "race:nsThread::SizeOfEventQueues\n"
 
