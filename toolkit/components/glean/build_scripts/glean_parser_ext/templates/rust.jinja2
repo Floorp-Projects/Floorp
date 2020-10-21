@@ -41,6 +41,8 @@ pub mod {{ category_name|snake_case }} {
 {{ generate_extra_keys(obj) }}
     {%- endif %}
     #[allow(non_upper_case_globals)]
+    /// generated from {{ category_name }}.{{ obj.name }}
+    ///
     /// {{ obj.description|wordwrap() | replace('\n', '\n    /// ') }}
     pub static {{ obj.name|snake_case }}: Lazy<{{ obj|type_name }}> = Lazy::new(|| {
         {{ obj|ctor }}(CommonMetricData {
@@ -65,3 +67,24 @@ pub mod {{ category_name|snake_case }} {
     {% endfor %}
 }
 {% endfor %}
+
+{% if metric_by_type|length > 0 %}
+#[allow(dead_code)]
+pub(crate) mod __glean_metric_maps {
+    use std::collections::HashMap;
+
+    use crate::private::*;
+    use once_cell::sync::Lazy;
+
+{% for typ, metrics in metric_by_type.items() %}
+    pub static {{typ.0}}: Lazy<HashMap<u32, &Lazy<{{typ.1}}>>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity({{metrics|length}});
+        {% for metric in metrics %}
+        map.insert({{metric.0}}, &super::{{metric.1}});
+        {% endfor %}
+        map
+    });
+
+{% endfor %}
+}
+{% endif %}
