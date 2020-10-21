@@ -13,6 +13,7 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property region The region of the user.
  * @property regionSearchEngines The list of [SearchEngine]s for the "home" region of the user.
  * @property customSearchEngines The list of custom [SearchEngine]s of the user.
+ * @property hiddenSearchEngines The list of [SearchEngine]s the user has explicitly hidden.
  * @property defaultSearchEngineId The ID of default [SearchEngine]
  * @property regionDefaultSearchEngineId The ID of the default [SearchEngine] of the "home" region
  * of the user.
@@ -23,6 +24,7 @@ data class SearchState(
     val region: RegionState? = null,
     val regionSearchEngines: List<SearchEngine> = emptyList(),
     val customSearchEngines: List<SearchEngine> = emptyList(),
+    val hiddenSearchEngines: List<SearchEngine> = emptyList(),
     val defaultSearchEngineId: String? = null,
     val regionDefaultSearchEngineId: String? = null,
     val complete: Boolean = false

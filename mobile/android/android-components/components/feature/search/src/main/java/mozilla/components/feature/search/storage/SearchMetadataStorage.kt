@@ -12,6 +12,7 @@ import mozilla.components.feature.search.middleware.SearchMiddleware
 private const val PREFERENCE_FILE = "mozac_feature_search_metadata"
 
 private const val PREFERENCE_KEY_DEFAULT_SEARCH_ENGINE_ID = "default_search_engine"
+private const val PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES = "hidden_search_engines"
 
 /**
  * Storage for saving additional search related metadata.
@@ -40,5 +41,23 @@ internal class SearchMetadataStorage(
         preferences.value.edit()
             .putString(PREFERENCE_KEY_DEFAULT_SEARCH_ENGINE_ID, id)
             .apply()
+    }
+
+    /**
+     * Sets the list of IDs of hidden search engines.
+     */
+    override suspend fun setHiddenSearchEngines(ids: List<String>) {
+        preferences.value.edit()
+            .putStringSet(PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES, ids.toSet())
+            .apply()
+    }
+
+    /**
+     * Gets the list of IDs of hidden search engines.
+     */
+    override suspend fun getHiddenSearchEngines(): List<String> {
+        return preferences.value
+            .getStringSet(PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES, emptySet())!!
+            .toList()
     }
 }

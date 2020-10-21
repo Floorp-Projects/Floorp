@@ -19,6 +19,8 @@ internal object SearchReducer {
             is SearchAction.UpdateCustomSearchEngineAction -> state.updateCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> state.removeSearchEngine(action)
             is SearchAction.SetDefaultSearchEngineAction -> state.setDefaultSearchEngineAction(action)
+            is SearchAction.ShowSearchEngineAction -> state.showSearchEngine(action)
+            is SearchAction.HideSearchEngineAction -> state.hideSearchEngine(action)
         }
     }
 }
@@ -31,6 +33,7 @@ private fun BrowserState.setSearchEngines(
         customSearchEngines = action.customSearchEngines,
         defaultSearchEngineId = action.defaultSearchEngineId,
         regionDefaultSearchEngineId = action.regionDefaultSearchEngineId,
+        hiddenSearchEngines = action.hiddenSearchEngines,
         complete = true
     ))
 }
@@ -76,4 +79,34 @@ private fun BrowserState.setDefaultSearchEngineAction(
     return copy(search = search.copy(
         defaultSearchEngineId = action.searchEngineId
     ))
+}
+
+private fun BrowserState.showSearchEngine(
+    action: SearchAction.ShowSearchEngineAction
+): BrowserState {
+    val searchEngine = search.hiddenSearchEngines.find { searchEngine -> searchEngine.id == action.searchEngineId }
+
+    return if (searchEngine != null) {
+        copy(search = search.copy(
+            hiddenSearchEngines = search.hiddenSearchEngines - searchEngine,
+            regionSearchEngines = search.regionSearchEngines + searchEngine
+        ))
+    } else {
+        this
+    }
+}
+
+private fun BrowserState.hideSearchEngine(
+    action: SearchAction.HideSearchEngineAction
+): BrowserState {
+    val searchEngine = search.regionSearchEngines.find { searchEngine -> searchEngine.id == action.searchEngineId }
+
+    return if (searchEngine != null) {
+        copy(search = search.copy(
+            regionSearchEngines = search.regionSearchEngines - searchEngine,
+            hiddenSearchEngines = search.hiddenSearchEngines + searchEngine
+        ))
+    } else {
+        this
+    }
 }

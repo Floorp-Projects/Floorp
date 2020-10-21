@@ -49,6 +49,11 @@ class SearchMiddleware(
         }
 
         next(action)
+
+        when (action) {
+            is SearchAction.ShowSearchEngineAction, is SearchAction.HideSearchEngineAction ->
+                updateHiddenSearchEngines(context.state.search.hiddenSearchEngines)
+        }
     }
 
     private fun loadSearchEngines(
@@ -58,12 +63,24 @@ class SearchMiddleware(
         val regionBundle = async(ioDispatcher) { bundleStorage.load(region, coroutineContext = ioDispatcher) }
         val defaultSearchEngineId = async(ioDispatcher) { metadataStorage.getDefaultSearchEngineId() }
         val customSearchEngines = async(ioDispatcher) { customStorage.loadSearchEngineList() }
+        val hiddenSearchEngineIds = async(ioDispatcher) { metadataStorage.getHiddenSearchEngines() }
+
+        val hiddenSearchEngines = mutableListOf<SearchEngine>()
+        val filteredRegionSearchEngines = regionBundle.await().list.filter { searchEngine ->
+            if (hiddenSearchEngineIds.await().contains(searchEngine.id)) {
+                hiddenSearchEngines.add(searchEngine)
+                false
+            } else {
+                true
+            }
+        }
 
         val action = SearchAction.SetSearchEnginesAction(
-            regionSearchEngines = regionBundle.await().list,
+            regionSearchEngines = filteredRegionSearchEngines,
             regionDefaultSearchEngineId = regionBundle.await().defaultSearchEngineId,
             defaultSearchEngineId = defaultSearchEngineId.await(),
-            customSearchEngines = customSearchEngines.await()
+            customSearchEngines = customSearchEngines.await(),
+            hiddenSearchEngines = hiddenSearchEngines
         )
 
         store.dispatch(action)
@@ -85,6 +102,14 @@ class SearchMiddleware(
         action: SearchAction.UpdateCustomSearchEngineAction
     ) = scope.launch {
         customStorage.saveSearchEngine(action.searchEngine)
+    }
+
+    private fun updateHiddenSearchEngines(
+        hiddenSearchEngines: List<SearchEngine>
+    ) = scope.launch {
+        metadataStorage.setHiddenSearchEngines(
+            hiddenSearchEngines.map { searchEngine -> searchEngine.id }
+        )
     }
 
     /**
@@ -145,5 +170,15 @@ class SearchMiddleware(
          * Sets the ID of the default search engine the user has picked.
          */
         suspend fun setDefaultSearchEngineId(id: String)
+
+        /**
+         * Sets the list of IDs of hidden search engines.
+         */
+        suspend fun setHiddenSearchEngines(ids: List<String>)
+
+        /**
+         * Gets the list of IDs of hidden search engines.
+         */
+        suspend fun getHiddenSearchEngines(): List<String>
     }
 }
