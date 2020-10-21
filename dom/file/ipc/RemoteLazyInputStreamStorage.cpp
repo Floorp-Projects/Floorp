@@ -10,6 +10,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIPropertyBag2.h"
 #include "nsStreamUtils.h"
+#include "RemoteLazyInputStreamParent.h"
 #include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
