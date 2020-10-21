@@ -274,6 +274,10 @@ var tests = [
     [ 'bug1637476-1.html' , 'bug1637476-1-ref.html' ] ,
     [ 'bug1637476-2.html' , 'bug1637476-2-ref.html' ] ,
     [ 'bug1637476-3.html' , 'bug1637476-3-ref.html' ] ,
+    // shift+arrow key should select non-editable only
+    [ 'bug1670531-1.html' , 'bug1670531-2.html' ] ,
+    [ 'bug1670531-3.html' , 'bug1670531-3-ref.html' ] ,
+    [ 'bug1670531-4.html' , 'bug1670531-3-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
     function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
     [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,

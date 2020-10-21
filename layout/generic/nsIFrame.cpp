@@ -8448,6 +8448,7 @@ nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
       }
       next.mJumpedLine |= current.mJumpedLine;
       next.mMovedOverNonSelectableText |= current.mMovedOverNonSelectableText;
+      next.mHasSelectableFrame |= current.mHasSelectableFrame;
       current = next;
     }
 
@@ -8455,7 +8456,7 @@ nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
     // the offset to be at the frame edge. Note that if we are extending the
     // selection, this doesn't matter.
     if (peekSearchState == FOUND && current.mMovedOverNonSelectableText &&
-        !aPos->mExtend) {
+        (!aPos->mExtend || current.mHasSelectableFrame)) {
       int32_t start, end;
       current.mFrame->GetOffsets(start, end);
       current.mOffset = aPos->mDirection == eDirNext ? 0 : end - start;
@@ -9017,6 +9018,9 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
 
     selectable = IsSelectable(traversedFrame);
     if (!selectable) {
+      if (traversedFrame->IsSelectable(nullptr)) {
+        result.mHasSelectableFrame = true;
+      }
       result.mMovedOverNonSelectableText = true;
     }
   }  // while (!selectable)
