@@ -21,3 +21,4 @@ dom/fetch/
 dom/indexedDB/
 dom/localstorage/
 dom/quota/
+dom/simpledb/
