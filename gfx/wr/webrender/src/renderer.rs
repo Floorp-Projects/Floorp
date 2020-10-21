@@ -3782,11 +3782,11 @@ impl Renderer {
 
         if thread_is_being_profiled() {
             let duration = Duration::new(0,0);
-            let message = (self.profiler.get(profiler::DRAW_CALLS).unwrap_or(0.0) as usize).to_string();
+            let message = (self.profile.get_or(profiler::DRAW_CALLS, 0.0) as usize).to_string();
             add_text_marker(cstr!("NumDrawCalls"), &message, duration);
         }
 
-        results.stats.texture_upload_kb = self.profile.get(profiler::TEXTURE_UPLOADS_MEM).unwrap_or(0.0) as usize;
+        results.stats.texture_upload_mb = self.profile.get_or(profiler::TEXTURE_UPLOADS_MEM, 0.0);
         self.frame_counter += 1;
         results.stats.resource_upload_time = self.resource_upload_time;
         self.resource_upload_time = 0.0;
@@ -4143,7 +4143,8 @@ impl Renderer {
                             0
                         }
                     };
-                    self.profile.add(profiler::TEXTURE_UPLOADS, bytes_uploaded as f64 * 1.0e-6);
+                    self.profile.inc(profiler::TEXTURE_UPLOADS);
+                    self.profile.add(profiler::TEXTURE_UPLOADS_MEM, profiler::bytes_to_mb(bytes_uploaded));
                 }
             }
 
@@ -7304,7 +7305,7 @@ pub struct RendererStats {
     pub total_draw_calls: usize,
     pub alpha_target_count: usize,
     pub color_target_count: usize,
-    pub texture_upload_kb: usize,
+    pub texture_upload_mb: f64,
     pub resource_upload_time: f64,
     pub gpu_cache_upload_time: f64,
 }
