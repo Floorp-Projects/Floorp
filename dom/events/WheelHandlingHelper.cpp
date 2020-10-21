@@ -659,7 +659,7 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
     // current document is an HTML document.
     dom::Document* document = aScrollFrame.PresShell()->GetDocument();
     if (document) {
-      Element* bodyElement = document->GetBodyElement();
+      dom::Element* bodyElement = document->GetBodyElement();
       if (bodyElement) {
         honouredFrame = bodyElement->GetPrimaryFrame();
       }

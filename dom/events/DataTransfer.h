@@ -34,6 +34,7 @@ class EventStateManager;
 namespace dom {
 
 class DataTransferItem;
+class DataTransferItemList;
 class DOMStringList;
 class Element;
 class FileList;

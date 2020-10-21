@@ -16,3 +16,4 @@ dom/crypto/
 dom/debugger/
 dom/docs/
 dom/encoding/
+dom/events/
