@@ -2036,12 +2036,6 @@
   value: false
   mirror: always
 
-# Is support for InputEvent.dataTransfer enabled?
-- name: dom.inputevent.datatransfer.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to allow or disallow web apps to cancel `beforeinput` events caused
 # by MozEditableElement#setUserInput() which is used by autocomplete, autofill
 # and password manager.
