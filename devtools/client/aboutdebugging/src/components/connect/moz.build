@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'ConnectPage.js',
-    'ConnectSection.js',
-    'ConnectSteps.js',
-    'NetworkLocationsForm.js',
-    'NetworkLocationsList.js',
+    "ConnectPage.js",
+    "ConnectSection.js",
+    "ConnectSteps.js",
+    "NetworkLocationsForm.js",
+    "NetworkLocationsList.js",
 )

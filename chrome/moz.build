@@ -4,44 +4,44 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]
 
 XPIDL_SOURCES += [
-    'nsIChromeRegistry.idl',
-    'nsIToolkitChromeRegistry.idl',
+    "nsIChromeRegistry.idl",
+    "nsIToolkitChromeRegistry.idl",
 ]
 
-XPIDL_MODULE = 'chrome'
+XPIDL_MODULE = "chrome"
 
 EXPORTS += [
-    'nsChromeProtocolHandler.h',
+    "nsChromeProtocolHandler.h",
 ]
 
 EXPORTS.mozilla.chrome += [
-    'RegistryMessageUtils.h',
+    "RegistryMessageUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsChromeProtocolHandler.cpp',
-    'nsChromeRegistry.cpp',
-    'nsChromeRegistryChrome.cpp',
-    'nsChromeRegistryContent.cpp',
+    "nsChromeProtocolHandler.cpp",
+    "nsChromeRegistry.cpp",
+    "nsChromeRegistryChrome.cpp",
+    "nsChromeRegistryContent.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '!/xpcom',
-    '/dom/base',
-    '/netwerk/base',
-    '/netwerk/protocol/res',
-    '/xpcom/components'
+    "!/xpcom",
+    "/dom/base",
+    "/netwerk/base",
+    "/netwerk/protocol/res",
+    "/xpcom/components",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    CXXFLAGS += CONFIG['TK_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Startup and Profile System")

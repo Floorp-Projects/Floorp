@@ -42,8 +42,7 @@ def mock_command_output(monkeypatch):
         print(str(cmd))
         return str(cmd)
 
-    monkeypatch.setattr(mozdevice.ADBDevice,
-                        'command_output', command_output_wrapper)
+    monkeypatch.setattr(mozdevice.ADBDevice, "command_output", command_output_wrapper)
 
 
 @pytest.fixture(autouse=True)
@@ -57,8 +56,9 @@ def mock_shell_output(monkeypatch):
     :param object monkeypatch: pytest provided fixture for mocking.
     """
 
-    def shell_output_wrapper(object, cmd, env=None, cwd=None, timeout=None,
-                             enable_run_as=False):
+    def shell_output_wrapper(
+        object, cmd, env=None, cwd=None, timeout=None, enable_run_as=False
+    ):
         """Actual monkeypatch implementation of the shell_output method call.
 
         :param object object: placeholder object representing ADBDevice
@@ -71,18 +71,18 @@ def mock_shell_output(monkeypatch):
         :param enable_run_as: bool determining if run_as <app> is to be used
         :returns: string - string representation of a simulated call to adb
         """
-        if 'pm list package error' in cmd:
-            return 'Error: Could not access the Package Manager'
-        elif 'pm list package none' in cmd:
-            return ''
-        elif 'pm list package' in cmd:
+        if "pm list package error" in cmd:
+            return "Error: Could not access the Package Manager"
+        elif "pm list package none" in cmd:
+            return ""
+        elif "pm list package" in cmd:
             apps = ["org.mozilla.fennec", "org.mozilla.geckoview_example"]
-            return ('package:{}\n' * len(apps)).format(*apps)
+            return ("package:{}\n" * len(apps)).format(*apps)
         else:
             print(str(cmd))
             return str(cmd)
 
-    monkeypatch.setattr(mozdevice.ADBDevice, 'shell_output', shell_output_wrapper)
+    monkeypatch.setattr(mozdevice.ADBDevice, "shell_output", shell_output_wrapper)
 
 
 @pytest.fixture(autouse=True)
@@ -109,12 +109,15 @@ def mock_is_path_internal_storage(monkeypatch):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        if 'internal_storage' in path:
+        if "internal_storage" in path:
             return True
         return False
 
-    monkeypatch.setattr(mozdevice.ADBDevice,
-                        'is_path_internal_storage', is_path_internal_storage_wrapper)
+    monkeypatch.setattr(
+        mozdevice.ADBDevice,
+        "is_path_internal_storage",
+        is_path_internal_storage_wrapper,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -134,8 +137,9 @@ def mock_enable_run_as_for_path(monkeypatch):
         """
         return True
 
-    monkeypatch.setattr(mozdevice.ADBDevice,
-                        'enable_run_as_for_path', enable_run_as_for_path_wrapper)
+    monkeypatch.setattr(
+        mozdevice.ADBDevice, "enable_run_as_for_path", enable_run_as_for_path_wrapper
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -149,8 +153,9 @@ def mock_shell_bool(monkeypatch):
     :param object monkeypatch: pytest provided fixture for mocking.
     """
 
-    def shell_bool_wrapper(object, cmd, env=None, cwd=None, timeout=None,
-                           enable_run_as=False):
+    def shell_bool_wrapper(
+        object, cmd, env=None, cwd=None, timeout=None, enable_run_as=False
+    ):
         """Actual monkeypatch implementation of the shell_bool method call.
 
         :param object object: placeholder object representing ADBDevice
@@ -166,7 +171,7 @@ def mock_shell_bool(monkeypatch):
         print(cmd)
         return str(cmd)
 
-    monkeypatch.setattr(mozdevice.ADBDevice, 'shell_bool', shell_bool_wrapper)
+    monkeypatch.setattr(mozdevice.ADBDevice, "shell_bool", shell_bool_wrapper)
 
 
 @pytest.fixture(autouse=True)
@@ -183,7 +188,7 @@ def mock_adb_object():
 
     :yields: ADBDevice - mock instance of ADBDevice object
     """
-    with patch.object(mozdevice.ADBDevice, '__init__', lambda self: None):
+    with patch.object(mozdevice.ADBDevice, "__init__", lambda self: None):
         yield mozdevice.ADBDevice()
 
 
@@ -217,7 +222,7 @@ def redirect_stdout_and_assert():
         """
         original_stdout = sys.stdout
         sys.stdout = testing_stdout = StringIO()
-        expected_text = kwargs.pop('text')
+        expected_text = kwargs.pop("text")
         func(**kwargs)
         sys.stdout = original_stdout
         assert expected_text in testing_stdout.getvalue().rstrip()

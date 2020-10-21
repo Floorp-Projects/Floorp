@@ -15,23 +15,29 @@ class TestObject(object):
 
 
 class TestPythonPath(unittest.TestCase):
-
     def test_find_object_no_such_module(self):
         """find_object raises ImportError for a nonexistent module"""
-        self.assertRaises(ImportError, python_path.find_object, "no_such_module:someobj")
+        self.assertRaises(
+            ImportError, python_path.find_object, "no_such_module:someobj"
+        )
 
     def test_find_object_no_such_object(self):
         """find_object raises AttributeError for a nonexistent object"""
-        self.assertRaises(AttributeError, python_path.find_object,
-                          "taskgraph.test.test_util_python_path:NoSuchObject")
+        self.assertRaises(
+            AttributeError,
+            python_path.find_object,
+            "taskgraph.test.test_util_python_path:NoSuchObject",
+        )
 
     def test_find_object_exists(self):
         """find_object finds an existing object"""
         from taskgraph.test.test_util_python_path import TestObject
+
         obj = python_path.find_object(
-            "taskgraph.test.test_util_python_path:TestObject.testClassProperty")
+            "taskgraph.test.test_util_python_path:TestObject.testClassProperty"
+        )
         self.assertIs(obj, TestObject.testClassProperty)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

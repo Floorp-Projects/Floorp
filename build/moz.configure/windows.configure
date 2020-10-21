@@ -4,16 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option('--with-windows-version', nargs=1, default='603',
-       help='Windows SDK version to target. Win 8.1 (603) is currently'
-            'the minimum supported version.')
+option(
+    "--with-windows-version",
+    nargs=1,
+    default="603",
+    help="Windows SDK version to target. Win 8.1 (603) is currently"
+    "the minimum supported version.",
+)
 
 
-@depends('--with-windows-version')
-@imports(_from='__builtin__', _import='ValueError')
+@depends("--with-windows-version")
+@imports(_from="__builtin__", _import="ValueError")
 def valid_windows_version(value):
     if not value:
-        die('Cannot build with --without-windows-version')
+        die("Cannot build with --without-windows-version")
     try:
         version = int(value[0], 16)
         if version in (0x603,):
@@ -21,25 +25,30 @@ def valid_windows_version(value):
     except ValueError:
         pass
 
-    die('Invalid value for --with-windows-version (%s)', value[0])
+    die("Invalid value for --with-windows-version (%s)", value[0])
 
 
-option(env='WINDOWSSDKDIR', nargs=1,
-       help='Directory containing the Windows SDK')
+option(env="WINDOWSSDKDIR", nargs=1, help="Directory containing the Windows SDK")
 
 
-@depends('WINDOWSSDKDIR', host, c_compiler)
+@depends("WINDOWSSDKDIR", host, c_compiler)
 def windows_sdk_dir(value, host, compiler):
     if value:
         return value
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if host.kernel != 'WINNT' or compiler.type != 'clang-cl':
+    if host.kernel != "WINNT" or compiler.type != "clang-cl":
         return ()
 
-    return set(x[1] for x in get_registry_values(
-        r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots'
-        r'\KitsRoot*', get_32_and_64_bit=True))
+    return set(
+        x[1]
+        for x in get_registry_values(
+            r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
+            r"\KitsRoot*",
+            get_32_and_64_bit=True,
+        )
+    )
+
 
 # The Windows SDK 8.1 and 10 have different layouts. The former has
 # $SDK/include/$subdir, while the latter has $SDK/include/$version/$subdir.
@@ -50,16 +59,17 @@ def windows_sdk_dir(value, host, compiler):
 # 8.1.
 
 
-@imports('os')
-@imports('re')
-@imports(_from='__builtin__', _import='sorted')
-@imports(_from='__builtin__', _import='Exception')
+@imports("os")
+@imports("re")
+@imports(_from="__builtin__", _import="sorted")
+@imports(_from="__builtin__", _import="Exception")
 def get_sdk_dirs(sdk, subdir):
     def get_dirs_containing(sdk, stem, subdir):
         base = os.path.join(sdk, stem)
         try:
-            subdirs = [d for d in os.listdir(base)
-                       if os.path.isdir(os.path.join(base, d))]
+            subdirs = [
+                d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d))
+            ]
         except Exception:
             subdirs = []
         if not subdirs:
@@ -68,18 +78,21 @@ def get_sdk_dirs(sdk, subdir):
             return (base,)
         # At this point, either we have an incomplete or invalid SDK directory,
         # or we exclusively have version numbers in subdirs.
-        return tuple(os.path.join(base, s) for s in subdirs
-                     if os.path.isdir(os.path.join(base, s, subdir)))
+        return tuple(
+            os.path.join(base, s)
+            for s in subdirs
+            if os.path.isdir(os.path.join(base, s, subdir))
+        )
 
     def categorize(dirs):
         return {os.path.basename(d): d for d in dirs}
 
-    include_dirs = categorize(get_dirs_containing(sdk, 'include', subdir))
-    lib_dirs = categorize(get_dirs_containing(sdk, 'lib', subdir))
+    include_dirs = categorize(get_dirs_containing(sdk, "include", subdir))
+    lib_dirs = categorize(get_dirs_containing(sdk, "lib", subdir))
 
-    if 'include' in include_dirs:
-        include_dirs['winv6.3'] = include_dirs['include']
-        del include_dirs['include']
+    if "include" in include_dirs:
+        include_dirs["winv6.3"] = include_dirs["include"]
+        del include_dirs["include"]
 
     valid_versions = sorted(set(include_dirs) & set(lib_dirs), reverse=True)
     if valid_versions:
@@ -90,39 +103,47 @@ def get_sdk_dirs(sdk, subdir):
         )
 
 
-@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from="mozbuild.shellutil", _import="quote")
 def valid_windows_sdk_dir_result(value):
     if value:
-        return '0x%04x in %s' % (value.version, quote(value.path))
+        return "0x%04x in %s" % (value.version, quote(value.path))
 
 
-@depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR')
-@checking('for Windows SDK', valid_windows_sdk_dir_result)
-@imports(_from='__builtin__', _import='sorted')
-@imports(_from='__builtin__', _import='Exception')
-@imports(_from='textwrap', _import='dedent')
-def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
-                          windows_sdk_dir_env):
+@depends(c_compiler, windows_sdk_dir, valid_windows_version, "WINDOWSSDKDIR")
+@checking("for Windows SDK", valid_windows_sdk_dir_result)
+@imports(_from="__builtin__", _import="sorted")
+@imports(_from="__builtin__", _import="Exception")
+@imports(_from="textwrap", _import="dedent")
+def valid_windows_sdk_dir(
+    compiler, windows_sdk_dir, target_version, windows_sdk_dir_env
+):
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if compiler.type != 'clang-cl':
+    if compiler.type != "clang-cl":
         return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
     for d in windows_sdk_dir:
-        sdk = get_sdk_dirs(d, 'um')
+        sdk = get_sdk_dirs(d, "um")
         if sdk:
-            check = dedent('''\
+            check = dedent(
+                """\
             #include <winsdkver.h>
             WINVER_MAXVER
-            ''')
-            um_dir = os.path.join(sdk.include, 'um')
-            shared_dir = os.path.join(sdk.include, 'shared')
-            result = try_preprocess(compiler.wrapper + [compiler.compiler] +
-                                    compiler.flags +
-                                    ['-X', '-I', um_dir, '-I', shared_dir], 'C',
-                                    check, onerror=lambda: '')
+            """
+            )
+            um_dir = os.path.join(sdk.include, "um")
+            shared_dir = os.path.join(sdk.include, "shared")
+            result = try_preprocess(
+                compiler.wrapper
+                + [compiler.compiler]
+                + compiler.flags
+                + ["-X", "-I", um_dir, "-I", shared_dir],
+                "C",
+                check,
+                onerror=lambda: "",
+            )
             if result:
                 maxver = result.splitlines()[-1]
                 try:
@@ -134,9 +155,10 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
                     continue
         if d == windows_sdk_dir_env:
             raise FatalCheckError(
-                'Error while checking the version of the SDK in '
-                'WINDOWSSDKDIR (%s). Please verify it contains a valid and '
-                'complete SDK installation.' % windows_sdk_dir_env)
+                "Error while checking the version of the SDK in "
+                "WINDOWSSDKDIR (%s). Please verify it contains a valid and "
+                "complete SDK installation." % windows_sdk_dir_env
+            )
 
     valid_sdks = sorted(sdks, key=lambda x: sdks[x][0], reverse=True)
     if valid_sdks:
@@ -144,16 +166,18 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
     if not valid_sdks or biggest_version < target_version:
         if windows_sdk_dir_env:
             raise FatalCheckError(
-                'You are targeting Windows version 0x%04x, but your SDK only '
-                'supports up to version 0x%04x. Install and use an updated SDK, '
-                'or target a lower version using --with-windows-version. '
-                'Alternatively, try running the Windows SDK Configuration Tool '
-                'and selecting a newer SDK. See '
-                'https://developer.mozilla.org/En/Windows_SDK_versions for '
-                'details on fixing this.' % (target_version, biggest_version))
+                "You are targeting Windows version 0x%04x, but your SDK only "
+                "supports up to version 0x%04x. Install and use an updated SDK, "
+                "or target a lower version using --with-windows-version. "
+                "Alternatively, try running the Windows SDK Configuration Tool "
+                "and selecting a newer SDK. See "
+                "https://developer.mozilla.org/En/Windows_SDK_versions for "
+                "details on fixing this." % (target_version, biggest_version)
+            )
 
         raise FatalCheckError(
-            'Cannot find a Windows SDK for version >= 0x%04x.' % target_version)
+            "Cannot find a Windows SDK for version >= 0x%04x." % target_version
+        )
 
     return namespace(
         path=sdk.path,
@@ -163,27 +187,27 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
     )
 
 
-@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from="mozbuild.shellutil", _import="quote")
 def valid_ucrt_sdk_dir_result(value):
     if value:
-        return '%s in %s' % (value.version, quote(value.path))
+        return "%s in %s" % (value.version, quote(value.path))
 
 
-@depends(windows_sdk_dir, 'WINDOWSSDKDIR', c_compiler)
-@checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
-@imports('os')
-@imports(_from='__builtin__', _import='sorted')
-@imports(_import='mozpack.path', _as='mozpath')
+@depends(windows_sdk_dir, "WINDOWSSDKDIR", c_compiler)
+@checking("for Universal CRT SDK", valid_ucrt_sdk_dir_result)
+@imports("os")
+@imports(_from="__builtin__", _import="sorted")
+@imports(_import="mozpack.path", _as="mozpath")
 def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if compiler.type != 'clang-cl':
+    if compiler.type != "clang-cl":
         return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
     for d in windows_sdk_dir:
-        sdk = get_sdk_dirs(d, 'ucrt')
+        sdk = get_sdk_dirs(d, "ucrt")
         if sdk:
             version = os.path.basename(sdk.include)
             # We're supposed to always find a version in the directory, because
@@ -191,7 +215,7 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
             # contain the Universal CRT SDK. When the main SDK is 8.1, there
             # is, however, supposed to be a reduced install of the SDK 10
             # with the UCRT.
-            if version != 'include':
+            if version != "include":
                 sdks[d] = Version(version), sdk
                 continue
         if d == windows_sdk_dir_env:
@@ -199,12 +223,14 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
             # Universal CRT SDK, chances are this is a start-shell-msvc*.bat
             # setup, where INCLUDE and LIB already contain the UCRT paths.
             ucrt_includes = [
-                p for p in os.environ.get('INCLUDE', '').split(';')
-                if os.path.basename(p).lower() == 'ucrt'
+                p
+                for p in os.environ.get("INCLUDE", "").split(";")
+                if os.path.basename(p).lower() == "ucrt"
             ]
             ucrt_libs = [
-                p for p in os.environ.get('LIB', '').split(';')
-                if os.path.basename(os.path.dirname(p)).lower() == 'ucrt'
+                p
+                for p in os.environ.get("LIB", "").split(";")
+                if os.path.basename(os.path.dirname(p)).lower() == "ucrt"
             ]
             if ucrt_includes and ucrt_libs:
                 # Pick the first of each, since they are the ones that the
@@ -213,30 +239,36 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
                 lib = os.path.dirname(os.path.dirname(ucrt_libs[0]))
                 path = os.path.dirname(os.path.dirname(include))
                 version = os.path.basename(include)
-                if version != 'include' and mozpath.basedir(lib, [path]):
-                    sdks[d] = Version(version), namespace(
-                        path=path,
-                        include=include,
-                        lib=lib,
+                if version != "include" and mozpath.basedir(lib, [path]):
+                    sdks[d] = (
+                        Version(version),
+                        namespace(
+                            path=path,
+                            include=include,
+                            lib=lib,
+                        ),
                     )
                     continue
             raise FatalCheckError(
-                'The SDK in WINDOWSSDKDIR (%s) does not contain the Universal '
-                'CRT.' % windows_sdk_dir_env)
+                "The SDK in WINDOWSSDKDIR (%s) does not contain the Universal "
+                "CRT." % windows_sdk_dir_env
+            )
 
     valid_sdks = sorted(sdks, key=lambda x: sdks[x][0], reverse=True)
     if not valid_sdks:
-        raise FatalCheckError('Cannot find the Universal CRT SDK. '
-                              'Please install it.')
+        raise FatalCheckError(
+            "Cannot find the Universal CRT SDK. " "Please install it."
+        )
 
     version, sdk = sdks[valid_sdks[0]]
-    minimum_ucrt_version = Version('10.0.17134.0')
+    minimum_ucrt_version = Version("10.0.17134.0")
     if version < minimum_ucrt_version:
-        raise FatalCheckError('Latest Universal CRT SDK version found %s'
-                              ' and minimum required is %s. This or a later'
-                              ' version can be installed using the Visual'
-                              ' Studio installer.'
-                              % (version, minimum_ucrt_version))
+        raise FatalCheckError(
+            "Latest Universal CRT SDK version found %s"
+            " and minimum required is %s. This or a later"
+            " version can be installed using the Visual"
+            " Studio installer." % (version, minimum_ucrt_version)
+        )
 
     return namespace(
         path=sdk.path,
@@ -247,35 +279,36 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
 
 
 @depends(c_compiler, host_c_compiler, toolchain_search_path)
-@imports('os')
+@imports("os")
 def vc_path(c_compiler, host_c_compiler, toolchain_search_path):
-    if c_compiler.type != 'clang-cl' and host_c_compiler.type != 'clang-cl':
+    if c_compiler.type != "clang-cl" and host_c_compiler.type != "clang-cl":
         return
 
     # In clang-cl builds, we need the headers and libraries from an MSVC installation.
-    vc_program = find_program('cl.exe', paths=toolchain_search_path)
+    vc_program = find_program("cl.exe", paths=toolchain_search_path)
     if not vc_program:
-        die('Cannot find a Visual C++ install for e.g. ATL headers.')
+        die("Cannot find a Visual C++ install for e.g. ATL headers.")
 
     result = os.path.dirname(vc_program)
     while True:
         next, p = os.path.split(result)
         if next == result:
-            die('Cannot determine the Visual C++ directory the compiler (%s) '
-                'is in' % vc_program)
+            die(
+                "Cannot determine the Visual C++ directory the compiler (%s) "
+                "is in" % vc_program
+            )
         result = next
-        if p.lower() == 'bin':
+        if p.lower() == "bin":
             break
     return os.path.normpath(result)
 
 
-option(env='DIA_SDK_PATH', nargs=1,
-       help='Path to the Debug Interface Access SDK')
+option(env="DIA_SDK_PATH", nargs=1, help="Path to the Debug Interface Access SDK")
 
 
-@depends(vc_path, 'DIA_SDK_PATH')
-@checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
-@imports('os')
+@depends(vc_path, "DIA_SDK_PATH")
+@checking("for the Debug Interface Access SDK", lambda x: x or "not found")
+@imports("os")
 def dia_sdk_dir(vc_path, dia_sdk_path):
     if dia_sdk_path:
         path = os.path.normpath(dia_sdk_path[0])
@@ -283,51 +316,58 @@ def dia_sdk_dir(vc_path, dia_sdk_path):
     elif vc_path:
         # This would be easier if we had the installationPath that
         # get_vc_paths works with, since 'DIA SDK' is relative to that.
-        path = os.path.normpath(os.path.join(
-            vc_path, '..', '..', '..', '..', 'DIA SDK'))
+        path = os.path.normpath(
+            os.path.join(vc_path, "..", "..", "..", "..", "DIA SDK")
+        )
     else:
         return
 
-    if os.path.exists(os.path.join(path, 'include', 'dia2.h')):
+    if os.path.exists(os.path.join(path, "include", "dia2.h")):
         return path
 
 
 @depends(vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
-@imports('os')
+@imports("os")
 def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if not vc_path:
         return
-    atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'include')
+    atlmfc_dir = os.path.join(vc_path, "atlmfc", "include")
     if not os.path.isdir(atlmfc_dir):
-        die('Cannot find the ATL/MFC headers in the Visual C++ directory (%s). '
-            'Please install them.' % vc_path)
+        die(
+            "Cannot find the ATL/MFC headers in the Visual C++ directory (%s). "
+            "Please install them." % vc_path
+        )
 
-    winrt_dir = os.path.join(windows_sdk_dir.include, 'winrt')
+    winrt_dir = os.path.join(windows_sdk_dir.include, "winrt")
     if not os.path.isdir(winrt_dir):
-        die('Cannot find the WinRT headers in the Windows SDK directory (%s). '
-            'Please install them.' % windows_sdk_dir.path)
+        die(
+            "Cannot find the WinRT headers in the Windows SDK directory (%s). "
+            "Please install them." % windows_sdk_dir.path
+        )
 
     includes = []
-    include_env = os.environ.get('INCLUDE')
+    include_env = os.environ.get("INCLUDE")
     if include_env:
         includes.append(include_env)
-    includes.extend((
-        os.path.join(vc_path, 'include'),
-        atlmfc_dir,
-        os.path.join(windows_sdk_dir.include, 'shared'),
-        os.path.join(windows_sdk_dir.include, 'um'),
-        winrt_dir,
-        os.path.join(ucrt_sdk_dir.include, 'ucrt'),
-    ))
+    includes.extend(
+        (
+            os.path.join(vc_path, "include"),
+            atlmfc_dir,
+            os.path.join(windows_sdk_dir.include, "shared"),
+            os.path.join(windows_sdk_dir.include, "um"),
+            winrt_dir,
+            os.path.join(ucrt_sdk_dir.include, "ucrt"),
+        )
+    )
     if dia_sdk_dir:
-        includes.append(os.path.join(dia_sdk_dir, 'include'))
+        includes.append(os.path.join(dia_sdk_dir, "include"))
     # Set in the environment for old-configure
-    includes = ';'.join(includes)
-    os.environ['INCLUDE'] = includes
+    includes = ";".join(includes)
+    os.environ["INCLUDE"] = includes
     return includes
 
 
-set_config('INCLUDE', include_path)
+set_config("INCLUDE", include_path)
 
 
 @template
@@ -339,10 +379,10 @@ def dia_sdk_subdir(host_or_target, subdir):
         # For some reason the DIA SDK still uses the old-style targets
         # even in a newer MSVC.
         old_target = {
-            'x86': '',
-            'x86_64': 'amd64',
-            'arm': 'arm',
-            'aarch64': 'arm64'
+            "x86": "",
+            "x86_64": "amd64",
+            "arm": "arm",
+            "aarch64": "arm64",
         }.get(target.cpu)
         if old_target is None:
             return
@@ -356,40 +396,52 @@ def dia_sdk_subdir(host_or_target, subdir):
     return dia_sdk_subdir
 
 
-set_config('WIN_DIA_SDK_BIN_DIR', dia_sdk_subdir(host, 'bin'))
+set_config("WIN_DIA_SDK_BIN_DIR", dia_sdk_subdir(host, "bin"))
 
 
 @template
 def lib_path_for(host_or_target):
-    @depends(host_or_target, dependable(host_or_target is host), vc_path,
-             valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_subdir(host_or_target, 'lib'))
-    @imports('os')
-    def lib_path(target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_lib_dir):
+    @depends(
+        host_or_target,
+        dependable(host_or_target is host),
+        vc_path,
+        valid_windows_sdk_dir,
+        valid_ucrt_sdk_dir,
+        dia_sdk_subdir(host_or_target, "lib"),
+    )
+    @imports("os")
+    def lib_path(
+        target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_lib_dir
+    ):
         if not vc_path:
             return
         sdk_target = {
-            'x86': 'x86',
-            'x86_64': 'x64',
-            'arm': 'arm',
-            'aarch64': 'arm64',
+            "x86": "x86",
+            "x86_64": "x64",
+            "arm": "arm",
+            "aarch64": "arm64",
         }.get(target.cpu)
 
         # MSVC2017 switched to use the same target naming as the sdk.
-        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', sdk_target)
+        atlmfc_dir = os.path.join(vc_path, "atlmfc", "lib", sdk_target)
         if not os.path.isdir(atlmfc_dir):
-            die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
-                '(%s). Please install them.' % vc_path)
+            die(
+                "Cannot find the ATL/MFC libraries in the Visual C++ directory "
+                "(%s). Please install them." % vc_path
+            )
 
         libs = []
-        lib_env = os.environ.get('LIB')
+        lib_env = os.environ.get("LIB")
         if lib_env and not is_host:
-            libs.extend(lib_env.split(';'))
-        libs.extend((
-            os.path.join(vc_path, 'lib', sdk_target),
-            atlmfc_dir,
-            os.path.join(windows_sdk_dir.lib, 'um', sdk_target),
-            os.path.join(ucrt_sdk_dir.lib, 'ucrt', sdk_target),
-        ))
+            libs.extend(lib_env.split(";"))
+        libs.extend(
+            (
+                os.path.join(vc_path, "lib", sdk_target),
+                atlmfc_dir,
+                os.path.join(windows_sdk_dir.lib, "um", sdk_target),
+                os.path.join(ucrt_sdk_dir.lib, "ucrt", sdk_target),
+            )
+        )
         if dia_sdk_lib_dir:
             libs.append(dia_sdk_lib_dir)
         return libs
@@ -398,27 +450,28 @@ def lib_path_for(host_or_target):
 
 
 @depends_if(lib_path_for(target))
-@imports('os')
+@imports("os")
 def lib_path(libs):
     # Set in the environment for old-configure
-    libs = ';'.join(libs)
-    os.environ['LIB'] = libs
+    libs = ";".join(libs)
+    os.environ["LIB"] = libs
     return libs
 
 
-set_config('LIB', lib_path)
+set_config("LIB", lib_path)
 
 
 lib_path_for_host = lib_path_for(host)
 
+
 @depends_if(lib_path_for_host)
-@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from="mozbuild.shellutil", _import="quote")
 def host_linker_libpaths(libs):
-    return ['-LIBPATH:%s' % quote(l) for l in libs]
+    return ["-LIBPATH:%s" % quote(l) for l in libs]
 
 
 @depends_if(lib_path_for_host)
-@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from="mozbuild.shellutil", _import="quote")
 def host_linker_libpaths_bat(libs):
     # .bat files need a different style of quoting. Batch quoting is actually
     # not defined, and up to applications to handle, so it's not really clear
@@ -429,42 +482,54 @@ def host_linker_libpaths_bat(libs):
     return ['"-LIBPATH:%s"' % l for l in libs]
 
 
-set_config('HOST_LINKER_LIBPATHS', host_linker_libpaths)
-set_config('HOST_LINKER_LIBPATHS_BAT', host_linker_libpaths_bat)
+set_config("HOST_LINKER_LIBPATHS", host_linker_libpaths)
+set_config("HOST_LINKER_LIBPATHS_BAT", host_linker_libpaths_bat)
 
 
 @depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host)
-@imports(_from='os', _import='environ')
+@imports(_from="os", _import="environ")
 def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir, host):
     if not valid_windows_sdk_dir:
         return
 
     vc_host = {
-        'x86': 'x86',
-        'x86_64': 'x64',
+        "x86": "x86",
+        "x86_64": "x64",
     }.get(host.cpu)
 
     # From version 10.0.15063.0 onwards the bin path contains the version number.
-    versioned_bin = ('bin' if valid_ucrt_sdk_dir.version < '10.0.15063.0'
-                     else os.path.join('bin', str(valid_ucrt_sdk_dir.version)))
+    versioned_bin = (
+        "bin"
+        if valid_ucrt_sdk_dir.version < "10.0.15063.0"
+        else os.path.join("bin", str(valid_ucrt_sdk_dir.version))
+    )
     result = [
-        environ['PATH'],
-        os.path.join(valid_windows_sdk_dir.path, versioned_bin, vc_host)
+        environ["PATH"],
+        os.path.join(valid_windows_sdk_dir.path, versioned_bin, vc_host),
     ]
-    if vc_host == 'x64':
-        result.append(
-            os.path.join(valid_windows_sdk_dir.path, versioned_bin, 'x86'))
+    if vc_host == "x64":
+        result.append(os.path.join(valid_windows_sdk_dir.path, versioned_bin, "x86"))
     return result
 
 
-option(env='LINKER', nargs=1, when=target_is_windows, help='Path to the linker')
+option(env="LINKER", nargs=1, when=target_is_windows, help="Path to the linker")
 
-link = check_prog('LINKER', ('lld-link',), input='LINKER',
-                  when=target_is_windows, paths=toolchain_search_path)
+link = check_prog(
+    "LINKER",
+    ("lld-link",),
+    input="LINKER",
+    when=target_is_windows,
+    paths=toolchain_search_path,
+)
 
-option(env='HOST_LINKER', nargs=1, when=host_is_windows, help='Path to the host linker')
+option(env="HOST_LINKER", nargs=1, when=host_is_windows, help="Path to the host linker")
 
-host_link = check_prog('HOST_LINKER', ('lld-link',), input='HOST_LINKER',
-                       when=host_is_windows, paths=host_toolchain_search_path)
+host_link = check_prog(
+    "HOST_LINKER",
+    ("lld-link",),
+    input="HOST_LINKER",
+    when=host_is_windows,
+    paths=host_toolchain_search_path,
+)
 
-add_old_configure_assignment('LINKER', link)
+add_old_configure_assignment("LINKER", link)

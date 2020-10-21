@@ -8,50 +8,50 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 XPIDL_SOURCES += [
-    'nsIConsoleAPIStorage.idl',
+    "nsIConsoleAPIStorage.idl",
 ]
 
-XPIDL_MODULE = 'dom'
+XPIDL_MODULE = "dom"
 
 EXPORTS += [
-    'nsIConsoleReportCollector.h',
+    "nsIConsoleReportCollector.h",
 ]
 
 EXPORTS.mozilla += [
-    'ConsoleReportCollector.h',
+    "ConsoleReportCollector.h",
 ]
 
 EXPORTS.mozilla.dom += [
-    'Console.h',
-    'ConsoleInstance.h',
-    'ConsoleUtils.h',
+    "Console.h",
+    "ConsoleInstance.h",
+    "ConsoleUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Console.cpp',
-    'ConsoleInstance.cpp',
-    'ConsoleReportCollector.cpp',
-    'ConsoleUtils.cpp',
+    "Console.cpp",
+    "ConsoleInstance.cpp",
+    "ConsoleReportCollector.cpp",
+    "ConsoleUtils.cpp",
 ]
 
 EXTRA_JS_MODULES += [
-    'ConsoleAPIStorage.jsm',
+    "ConsoleAPIStorage.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 LOCAL_INCLUDES += [
-    '/docshell/base',
-    '/dom/base',
-    '/js/xpconnect/src',
+    "/docshell/base",
+    "/dom/base",
+    "/js/xpconnect/src",
 ]
 
-MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
-MOCHITEST_CHROME_MANIFESTS += [ 'tests/chrome.ini' ]
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

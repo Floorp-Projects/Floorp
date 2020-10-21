@@ -8,9 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")
 
 SOURCES += [
-    'keysym2ucs.c',
+    "keysym2ucs.c",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["TK_CFLAGS"]

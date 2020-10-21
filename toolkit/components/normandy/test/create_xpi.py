@@ -9,4 +9,4 @@ from mozbuild.action.zip import main as create_zip
 
 def main(output, input_dir):
     output.close()
-    return create_zip(['-C', input_dir, abspath(output.name), '**'])
+    return create_zip(["-C", input_dir, abspath(output.name), "**"])

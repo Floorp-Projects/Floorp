@@ -4,219 +4,236 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 DIRS = [
-    'pingsender',
+    "pingsender",
 ]
 
-DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
+DEFINES["MOZ_APP_VERSION"] = '"%s"' % CONFIG["MOZ_APP_VERSION"]
 
 LOCAL_INCLUDES += [
-    '/xpcom/build',
-    '/xpcom/threads',
+    "/xpcom/build",
+    "/xpcom/threads",
 ]
 
-SPHINX_TREES['/toolkit/components/telemetry'] = 'docs'
+SPHINX_TREES["/toolkit/components/telemetry"] = "docs"
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-if CONFIG['ENABLE_TESTS']:
+if CONFIG["ENABLE_TESTS"]:
     # We used to need GeckoView tests as a separate directory. This
     # is no longer true and we could probably move it to tests/gtest.
-    DIRS += [
-        'geckoview/gtest',
-        'tests/gtest'
-    ]
+    DIRS += ["geckoview/gtest", "tests/gtest"]
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 XPIDL_SOURCES += [
-    'core/nsITelemetry.idl',
+    "core/nsITelemetry.idl",
 ]
 
-XPIDL_MODULE = 'telemetry'
+XPIDL_MODULE = "telemetry"
 
 EXPORTS.mozilla += [
-    '!TelemetryEventEnums.h',
-    '!TelemetryHistogramEnums.h',
-    '!TelemetryProcessEnums.h',
-    '!TelemetryScalarEnums.h',
-    'core/ipc/TelemetryComms.h',
-    'core/ipc/TelemetryIPC.h',
-    'core/Telemetry.h',
-    'other/CombinedStacks.h',
-    'other/ProcessedStack.h',
-    'TelemetryOriginEnums.h',
+    "!TelemetryEventEnums.h",
+    "!TelemetryHistogramEnums.h",
+    "!TelemetryProcessEnums.h",
+    "!TelemetryScalarEnums.h",
+    "core/ipc/TelemetryComms.h",
+    "core/ipc/TelemetryIPC.h",
+    "core/Telemetry.h",
+    "other/CombinedStacks.h",
+    "other/ProcessedStack.h",
+    "TelemetryOriginEnums.h",
 ]
 
 EXPORTS.mozilla.telemetry += [
-    'core/Stopwatch.h',
+    "core/Stopwatch.h",
 ]
 
 SOURCES += [
-    'core/ipc/TelemetryIPC.cpp',
-    'core/ipc/TelemetryIPCAccumulator.cpp',
-    'core/Stopwatch.cpp',
-    'core/Telemetry.cpp',
-    'core/TelemetryCommon.cpp',
-    'core/TelemetryEvent.cpp',
-    'core/TelemetryHistogram.cpp',
-    'core/TelemetryOrigin.cpp',
-    'core/TelemetryScalar.cpp',
-    'core/TelemetryUserInteraction.cpp',
-    'geckoview/streaming/GeckoViewStreamingTelemetry.cpp',
-    'other/CombinedStacks.cpp',
-    'other/ProcessedStack.cpp',
-    'other/TelemetryIOInterposeObserver.cpp',
+    "core/ipc/TelemetryIPC.cpp",
+    "core/ipc/TelemetryIPCAccumulator.cpp",
+    "core/Stopwatch.cpp",
+    "core/Telemetry.cpp",
+    "core/TelemetryCommon.cpp",
+    "core/TelemetryEvent.cpp",
+    "core/TelemetryHistogram.cpp",
+    "core/TelemetryOrigin.cpp",
+    "core/TelemetryScalar.cpp",
+    "core/TelemetryUserInteraction.cpp",
+    "geckoview/streaming/GeckoViewStreamingTelemetry.cpp",
+    "other/CombinedStacks.cpp",
+    "other/ProcessedStack.cpp",
+    "other/TelemetryIOInterposeObserver.cpp",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        'other/UntrustedModules.cpp',
+        "other/UntrustedModules.cpp",
     ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
-    'core/components.conf',
+    "components.conf",
+    "core/components.conf",
 ]
 
-EXTRA_COMPONENTS += [
-    'TelemetryStartup.manifest'
-]
+EXTRA_COMPONENTS += ["TelemetryStartup.manifest"]
 
 EXTRA_JS_MODULES += [
-    'app/ClientID.jsm',
-    'app/TelemetryArchive.jsm',
-    'app/TelemetryController.jsm',
-    'app/TelemetryControllerBase.jsm',
-    'app/TelemetryControllerContent.jsm',
-    'app/TelemetryControllerParent.jsm',
-    'app/TelemetryEnvironment.jsm',
-    'app/TelemetryReportingPolicy.jsm',
-    'app/TelemetryScheduler.jsm',
-    'app/TelemetrySend.jsm',
-    'app/TelemetryStorage.jsm',
-    'app/TelemetryTimestamps.jsm',
-    'app/TelemetryUtils.jsm',
-    'other/UITelemetry.jsm',
-    'pings/CoveragePing.jsm',
-    'pings/EcosystemTelemetry.jsm',
-    'pings/EventPing.jsm',
-    'pings/HealthPing.jsm',
-    'pings/ModulesPing.jsm',
-    'pings/PrioPing.jsm',
-    'pings/TelemetrySession.jsm',
-    'pings/UntrustedModulesPing.jsm',
-    'pings/UpdatePing.jsm',
-    'TelemetryStartup.jsm',
+    "app/ClientID.jsm",
+    "app/TelemetryArchive.jsm",
+    "app/TelemetryController.jsm",
+    "app/TelemetryControllerBase.jsm",
+    "app/TelemetryControllerContent.jsm",
+    "app/TelemetryControllerParent.jsm",
+    "app/TelemetryEnvironment.jsm",
+    "app/TelemetryReportingPolicy.jsm",
+    "app/TelemetryScheduler.jsm",
+    "app/TelemetrySend.jsm",
+    "app/TelemetryStorage.jsm",
+    "app/TelemetryTimestamps.jsm",
+    "app/TelemetryUtils.jsm",
+    "other/UITelemetry.jsm",
+    "pings/CoveragePing.jsm",
+    "pings/EcosystemTelemetry.jsm",
+    "pings/EventPing.jsm",
+    "pings/HealthPing.jsm",
+    "pings/ModulesPing.jsm",
+    "pings/PrioPing.jsm",
+    "pings/TelemetrySession.jsm",
+    "pings/UntrustedModulesPing.jsm",
+    "pings/UpdatePing.jsm",
+    "TelemetryStartup.jsm",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     EXTRA_JS_MODULES += [
-        'pings/UninstallPing.jsm',
+        "pings/UninstallPing.jsm",
     ]
 
 TESTING_JS_MODULES += [
-  'tests/unit/TelemetryArchiveTesting.jsm',
+    "tests/unit/TelemetryArchiveTesting.jsm",
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [
-    'tests/integration/tests/python.ini',
-    'tests/python/python.ini',
+    "tests/integration/tests/python.ini",
+    "tests/python/python.ini",
 ]
 
 # Generate histogram files.
 histogram_files = [
-    'Histograms.json',
-    '/dom/base/UseCounters.conf',
-    '/dom/base/nsDeprecatedOperationList.h',
-    '!/layout/style/ServoCSSPropList.py',
-    '/servo/components/style/properties/counted_unknown_properties.py',
-    '/dom/base/UseCountersWorker.conf',
+    "Histograms.json",
+    "/dom/base/UseCounters.conf",
+    "/dom/base/nsDeprecatedOperationList.h",
+    "!/layout/style/ServoCSSPropList.py",
+    "/servo/components/style/properties/counted_unknown_properties.py",
+    "/dom/base/UseCountersWorker.conf",
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES']:
-    histogram_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES'])
+if CONFIG["MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES"]:
+    histogram_files.extend(CONFIG["MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES"])
 
-GeneratedFile('TelemetryHistogramData.inc',
-              script='build_scripts/gen_histogram_data.py',
-              inputs=histogram_files)
-GeneratedFile('TelemetryHistogramEnums.h',
-              script='build_scripts/gen_histogram_enum.py',
-              inputs=histogram_files)
-GeneratedFile('TelemetryHistogramNameMap.h',
-              script='build_scripts/gen_histogram_phf.py',
-              inputs=histogram_files)
+GeneratedFile(
+    "TelemetryHistogramData.inc",
+    script="build_scripts/gen_histogram_data.py",
+    inputs=histogram_files,
+)
+GeneratedFile(
+    "TelemetryHistogramEnums.h",
+    script="build_scripts/gen_histogram_enum.py",
+    inputs=histogram_files,
+)
+GeneratedFile(
+    "TelemetryHistogramNameMap.h",
+    script="build_scripts/gen_histogram_phf.py",
+    inputs=histogram_files,
+)
 
 # Generate scalar files.
 scalar_files = [
-    'Scalars.yaml',
+    "Scalars.yaml",
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES']:
-    scalar_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES'])
+if CONFIG["MOZ_TELEMETRY_EXTRA_SCALAR_FILES"]:
+    scalar_files.extend(CONFIG["MOZ_TELEMETRY_EXTRA_SCALAR_FILES"])
 
-GeneratedFile('TelemetryScalarData.h',
-              script='build_scripts/gen_scalar_data.py',
-              inputs=scalar_files)
-GeneratedFile('TelemetryScalarEnums.h',
-              script='build_scripts/gen_scalar_enum.py',
-              inputs=scalar_files)
+GeneratedFile(
+    "TelemetryScalarData.h",
+    script="build_scripts/gen_scalar_data.py",
+    inputs=scalar_files,
+)
+GeneratedFile(
+    "TelemetryScalarEnums.h",
+    script="build_scripts/gen_scalar_enum.py",
+    inputs=scalar_files,
+)
 
 # Generate the JSON scalar definitions. They will only be
 # used in artifact or "build faster" builds.
 GeneratedFile(
-    'ScalarArtifactDefinitions.json',
-    script='build_scripts/gen_scalar_data.py',
-    entry_point='generate_JSON_definitions',
-    inputs=scalar_files)
+    "ScalarArtifactDefinitions.json",
+    script="build_scripts/gen_scalar_data.py",
+    entry_point="generate_JSON_definitions",
+    inputs=scalar_files,
+)
 
 # Move the scalars JSON file to the directory where the Firefox binary is.
-FINAL_TARGET_FILES += ['!ScalarArtifactDefinitions.json']
+FINAL_TARGET_FILES += ["!ScalarArtifactDefinitions.json"]
 
 # Generate event files.
 event_files = [
-    'Events.yaml',
+    "Events.yaml",
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES']:
-    event_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES'])
+if CONFIG["MOZ_TELEMETRY_EXTRA_EVENT_FILES"]:
+    event_files.extend(CONFIG["MOZ_TELEMETRY_EXTRA_EVENT_FILES"])
 
-GeneratedFile('TelemetryEventData.h', script='build_scripts/gen_event_data.py',
-              inputs=event_files)
+GeneratedFile(
+    "TelemetryEventData.h", script="build_scripts/gen_event_data.py", inputs=event_files
+)
 
-GeneratedFile('TelemetryEventEnums.h', script='build_scripts/gen_event_enum.py',
-              inputs=event_files)
+GeneratedFile(
+    "TelemetryEventEnums.h",
+    script="build_scripts/gen_event_enum.py",
+    inputs=event_files,
+)
 
 # Generate the JSON event definitions. They will only be
 # used in artifact or "build faster" builds.
-GeneratedFile('EventArtifactDefinitions.json',
-              script='build_scripts/gen_event_data.py',
-              entry_point='generate_JSON_definitions', inputs=event_files)
+GeneratedFile(
+    "EventArtifactDefinitions.json",
+    script="build_scripts/gen_event_data.py",
+    entry_point="generate_JSON_definitions",
+    inputs=event_files,
+)
 
 # Move the events JSON file to the directory where the Firefox binary is.
-FINAL_TARGET_FILES += ['!EventArtifactDefinitions.json']
+FINAL_TARGET_FILES += ["!EventArtifactDefinitions.json"]
 
 # Generate data from Processes.yaml
 processes_files = [
-    'Processes.yaml',
+    "Processes.yaml",
 ]
 
-GeneratedFile('TelemetryProcessEnums.h',
-              script='build_scripts/gen_process_enum.py',
-              inputs=processes_files)
+GeneratedFile(
+    "TelemetryProcessEnums.h",
+    script="build_scripts/gen_process_enum.py",
+    inputs=processes_files,
+)
 
 
-GeneratedFile('TelemetryProcessData.h',
-              script='build_scripts/gen_process_data.py',
-              inputs=processes_files)
+GeneratedFile(
+    "TelemetryProcessData.h",
+    script="build_scripts/gen_process_data.py",
+    inputs=processes_files,
+)
 
 # Ensure that the GeckoView metrics file parses correctly prior to it
 # being released in Android components. This triggers glean_parser by
@@ -225,20 +242,25 @@ GeneratedFile('TelemetryProcessData.h',
 # is going to generate code for Firefox as well (project FOG).
 # Prior art for this was in bug 1063728, within SpiderMonkey tests.
 GeneratedFile(
-    'glean_checks',
-    script='build_scripts/run_glean_parser.py',
-    inputs=['geckoview/streaming/metrics.yaml'])
+    "glean_checks",
+    script="build_scripts/run_glean_parser.py",
+    inputs=["geckoview/streaming/metrics.yaml"],
+)
 
 # Generate UserInteraction file
 userinteraction_files = [
-    'UserInteractions.yaml',
+    "UserInteractions.yaml",
 ]
-GeneratedFile('TelemetryUserInteractionData.h',
-              script='build_scripts/gen_userinteraction_data.py',
-              inputs=userinteraction_files)
-GeneratedFile('TelemetryUserInteractionNameMap.h',
-              script='build_scripts/gen_userinteraction_phf.py',
-              inputs=userinteraction_files)
+GeneratedFile(
+    "TelemetryUserInteractionData.h",
+    script="build_scripts/gen_userinteraction_data.py",
+    inputs=userinteraction_files,
+)
+GeneratedFile(
+    "TelemetryUserInteractionNameMap.h",
+    script="build_scripts/gen_userinteraction_phf.py",
+    inputs=userinteraction_files,
+)
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Telemetry')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")

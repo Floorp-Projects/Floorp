@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'index.js',
-    'manifest-state.js',
-    'page-state.js',
-    'ui-state.js',
-    'workers-state.js',
+    "index.js",
+    "manifest-state.js",
+    "page-state.js",
+    "ui-state.js",
+    "workers-state.js",
 )

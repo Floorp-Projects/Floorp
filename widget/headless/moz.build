@@ -7,43 +7,43 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Headless")
 
-DIRS += ['tests']
+DIRS += ["tests"]
 
 LOCAL_INCLUDES += [
-    '/widget',
-    '/widget/headless',
+    "/widget",
+    "/widget/headless",
 ]
 
-widget_dir = CONFIG['MOZ_WIDGET_TOOLKIT']
+widget_dir = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 LOCAL_INCLUDES += [
-    '/widget/%s' % widget_dir,
+    "/widget/%s" % widget_dir,
 ]
 
 UNIFIED_SOURCES += [
-    'HeadlessClipboard.cpp',
-    'HeadlessClipboardData.cpp',
-    'HeadlessCompositorWidget.cpp',
-    'HeadlessScreenHelper.cpp',
-    'HeadlessSound.cpp',
-    'HeadlessWidget.cpp',
+    "HeadlessClipboard.cpp",
+    "HeadlessClipboardData.cpp",
+    "HeadlessCompositorWidget.cpp",
+    "HeadlessScreenHelper.cpp",
+    "HeadlessSound.cpp",
+    "HeadlessWidget.cpp",
 ]
 
-if widget_dir == 'gtk':
+if widget_dir == "gtk":
     UNIFIED_SOURCES += [
-        'HeadlessLookAndFeelGTK.cpp',
-        'HeadlessThemeGTK.cpp',
+        "HeadlessLookAndFeelGTK.cpp",
+        "HeadlessThemeGTK.cpp",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
-        'HeadlessKeyBindingsCocoa.mm',
+        "HeadlessKeyBindingsCocoa.mm",
     ]
 else:
     UNIFIED_SOURCES += [
-        'HeadlessKeyBindings.cpp',
+        "HeadlessKeyBindings.cpp",
     ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

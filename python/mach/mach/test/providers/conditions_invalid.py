@@ -14,6 +14,6 @@ from mozbuild.base import MachCommandBase
 
 @CommandProvider
 class ConditionsProvider(MachCommandBase):
-    @Command('cmd_foo', category='testing', conditions=["invalid"])
+    @Command("cmd_foo", category="testing", conditions=["invalid"])
     def run_foo(self):
         pass

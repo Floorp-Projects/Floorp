@@ -24,8 +24,9 @@ class TestManifestBackend(PartialBackend):
         self.manifest_defaults = {}
 
         # Add config.status so performing a build will invalidate this backend.
-        self.backend_input_files.add(mozpath.join(
-            self.environment.topobjdir, 'config.status'))
+        self.backend_input_files.add(
+            mozpath.join(self.environment.topobjdir, "config.status")
+        )
 
     def consume_object(self, obj):
         if not isinstance(obj, TestManifest):
@@ -34,8 +35,7 @@ class TestManifestBackend(PartialBackend):
         self.backend_input_files.add(obj.path)
         self.backend_input_files |= obj.context_all_paths
         for source in obj.source_relpaths:
-            self.backend_input_files.add(mozpath.join(obj.topsrcdir,
-                                                      source))
+            self.backend_input_files.add(mozpath.join(obj.topsrcdir, source))
         try:
             from reftest import ReftestManifest
 
@@ -56,48 +56,57 @@ class TestManifestBackend(PartialBackend):
     def consume_finished(self):
         topobjdir = self.environment.topobjdir
 
-        with self._write_file(mozpath.join(topobjdir, 'all-tests.pkl'), readmode='rb') as fh:
+        with self._write_file(
+            mozpath.join(topobjdir, "all-tests.pkl"), readmode="rb"
+        ) as fh:
             pickle.dump(dict(self.tests_by_path), fh, protocol=2)
 
-        with self._write_file(mozpath.join(topobjdir, 'test-defaults.pkl'), readmode='rb') as fh:
+        with self._write_file(
+            mozpath.join(topobjdir, "test-defaults.pkl"), readmode="rb"
+        ) as fh:
             pickle.dump(self.manifest_defaults, fh, protocol=2)
 
-        path = mozpath.join(topobjdir, 'test-installs.pkl')
-        with self._write_file(path, readmode='rb') as fh:
-            pickle.dump({k: v for k, v in self.installs_by_path.items()
-                         if k in self.deferred_installs},
-                        fh,
-                        protocol=2)
+        path = mozpath.join(topobjdir, "test-installs.pkl")
+        with self._write_file(path, readmode="rb") as fh:
+            pickle.dump(
+                {
+                    k: v
+                    for k, v in self.installs_by_path.items()
+                    if k in self.deferred_installs
+                },
+                fh,
+                protocol=2,
+            )
 
     def add(self, t, flavor, topsrcdir):
         t = dict(t)
-        t['flavor'] = flavor
+        t["flavor"] = flavor
 
-        path = mozpath.normpath(t['path'])
-        manifest = mozpath.normpath(t['manifest'])
+        path = mozpath.normpath(t["path"])
+        manifest = mozpath.normpath(t["manifest"])
         assert mozpath.basedir(path, [topsrcdir])
         assert mozpath.basedir(manifest, [topsrcdir])
 
-        key = path[len(topsrcdir)+1:]
-        t['file_relpath'] = key
-        t['dir_relpath'] = mozpath.dirname(key)
-        t['srcdir_relpath'] = key
-        t['manifest_relpath'] = manifest[len(topsrcdir)+1:]
+        key = path[len(topsrcdir) + 1 :]
+        t["file_relpath"] = key
+        t["dir_relpath"] = mozpath.dirname(key)
+        t["srcdir_relpath"] = key
+        t["manifest_relpath"] = manifest[len(topsrcdir) + 1 :]
 
         self.tests_by_path[key].append(t)
 
     def add_defaults(self, manifest):
-        if not hasattr(manifest, 'manifest_defaults'):
+        if not hasattr(manifest, "manifest_defaults"):
             return
         for sub_manifest, defaults in manifest.manifest_defaults.items():
             self.manifest_defaults[sub_manifest] = defaults
 
     def add_installs(self, obj, topsrcdir):
         for src, (dest, _) in six.iteritems(obj.installs):
-            key = src[len(topsrcdir)+1:]
+            key = src[len(topsrcdir) + 1 :]
             self.installs_by_path[key].append((src, dest))
         for src, pat, dest in obj.pattern_installs:
-            key = mozpath.join(src[len(topsrcdir)+1:], pat)
+            key = mozpath.join(src[len(topsrcdir) + 1 :], pat)
             self.installs_by_path[key].append((src, pat, dest))
         for path in obj.deferred_installs:
             self.deferred_installs.add(path[2:])

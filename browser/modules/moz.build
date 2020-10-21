@@ -43,11 +43,11 @@ with Files("AboutNewTab.jsm"):
 with Files("AsanReporter.jsm"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-with Files('AsyncTabSwitcher.jsm'):
-    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
+with Files("AsyncTabSwitcher.jsm"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files('NewTabPagePreloading.jsm'):
-    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
+with Files("NewTabPagePreloading.jsm"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("BrowserWindowTracker.jsm"):
     BUG_COMPONENT = ("Firefox", "General")
@@ -77,7 +77,7 @@ with Files("PartnerLinkAttribution.jsm"):
     BUG_COMPONENT = ("Firefox", "Search")
 
 with Files("PermissionUI.jsm"):
-   BUG_COMPONENT = ("Firefox", "Site Permissions")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
@@ -119,52 +119,52 @@ with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser/browser.ini',
-    'test/browser/formValidation/browser.ini',
+    "test/browser/browser.ini",
+    "test/browser/formValidation/browser.ini",
 ]
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-    'AboutNewTab.jsm',
-    'AppUpdater.jsm',
-    'AsyncTabSwitcher.jsm',
-    'BrowserUsageTelemetry.jsm',
-    'BrowserWindowTracker.jsm',
-    'ContentCrashHandlers.jsm',
-    'Discovery.jsm',
-    'EveryWindow.jsm',
-    'ExtensionsUI.jsm',
-    'FaviconLoader.jsm',
-    'HomePage.jsm',
-    'LaterRun.jsm',
-    'LiveBookmarkMigrator.jsm',
-    'NewTabPagePreloading.jsm',
-    'OpenInTabsUtils.jsm',
-    'PageActions.jsm',
-    'PartnerLinkAttribution.jsm',
-    'PermissionUI.jsm',
-    'PingCentre.jsm',
-    'ProcessHangMonitor.jsm',
-    'Sanitizer.jsm',
-    'SelectionChangedMenulist.jsm',
-    'SiteDataManager.jsm',
-    'SitePermissions.jsm',
-    'TabsList.jsm',
-    'TabUnloader.jsm',
-    'ThemeVariableMap.jsm',
-    'TransientPrefs.jsm',
-    'webrtcUI.jsm',
-    'ZoomUI.jsm',
+    "AboutNewTab.jsm",
+    "AppUpdater.jsm",
+    "AsyncTabSwitcher.jsm",
+    "BrowserUsageTelemetry.jsm",
+    "BrowserWindowTracker.jsm",
+    "ContentCrashHandlers.jsm",
+    "Discovery.jsm",
+    "EveryWindow.jsm",
+    "ExtensionsUI.jsm",
+    "FaviconLoader.jsm",
+    "HomePage.jsm",
+    "LaterRun.jsm",
+    "LiveBookmarkMigrator.jsm",
+    "NewTabPagePreloading.jsm",
+    "OpenInTabsUtils.jsm",
+    "PageActions.jsm",
+    "PartnerLinkAttribution.jsm",
+    "PermissionUI.jsm",
+    "PingCentre.jsm",
+    "ProcessHangMonitor.jsm",
+    "Sanitizer.jsm",
+    "SelectionChangedMenulist.jsm",
+    "SiteDataManager.jsm",
+    "SitePermissions.jsm",
+    "TabsList.jsm",
+    "TabUnloader.jsm",
+    "ThemeVariableMap.jsm",
+    "TransientPrefs.jsm",
+    "webrtcUI.jsm",
+    "ZoomUI.jsm",
 ]
 
-if CONFIG['MOZ_ASAN_REPORTER']:
+if CONFIG["MOZ_ASAN_REPORTER"]:
     EXTRA_JS_MODULES += [
-        'AsanReporter.jsm',
+        "AsanReporter.jsm",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES += [
-        'Windows8WindowFrameColor.jsm',
-        'WindowsJumpLists.jsm',
-        'WindowsPreviewPerTab.jsm',
+        "Windows8WindowFrameColor.jsm",
+        "WindowsJumpLists.jsm",
+        "WindowsPreviewPerTab.jsm",
     ]

@@ -20,19 +20,25 @@ parser = None
 
 
 def run_marionette(context, **kwargs):
-    from marionette.runtests import (
-        MarionetteTestRunner,
-        MarionetteHarness
-    )
+    from marionette.runtests import MarionetteTestRunner, MarionetteHarness
     from mozlog.structured import commandline
 
     args = argparse.Namespace(**kwargs)
     args.binary = args.binary or context.firefox_bin
 
-    test_root = os.path.join(context.package_root, 'marionette', 'tests')
+    test_root = os.path.join(context.package_root, "marionette", "tests")
     if not args.tests:
-        args.tests = [os.path.join(test_root, 'testing', 'marionette', 'harness',
-                                   'marionette_harness', 'tests', 'unit-tests.ini')]
+        args.tests = [
+            os.path.join(
+                test_root,
+                "testing",
+                "marionette",
+                "harness",
+                "marionette_harness",
+                "tests",
+                "unit-tests.ini",
+            )
+        ]
 
     normalize = partial(context.normalize_test_path, test_root)
     args.tests = list(map(normalize, args.tests))
@@ -40,15 +46,16 @@ def run_marionette(context, **kwargs):
     commandline.add_logging_group(parser)
     parser.verify_usage(args)
 
-    args.logger = commandline.setup_logging("Marionette Unit Tests",
-                                            args,
-                                            {"mach": sys.stdout})
+    args.logger = commandline.setup_logging(
+        "Marionette Unit Tests", args, {"mach": sys.stdout}
+    )
     status = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
     return 1 if status else 0
 
 
 def setup_marionette_argument_parser():
     from marionette.runner.base import BaseMarionetteArguments
+
     global parser
     parser = BaseMarionetteArguments()
     return parser
@@ -56,12 +63,13 @@ def setup_marionette_argument_parser():
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-
     @Command(
-        'marionette-test', category='testing',
-        description='Run a Marionette test (Check UI or the internal JavaScript '
-                    'using marionette).',
-        parser=setup_marionette_argument_parser)
+        "marionette-test",
+        category="testing",
+        description="Run a Marionette test (Check UI or the internal JavaScript "
+        "using marionette).",
+        parser=setup_marionette_argument_parser,
+    )
     def run_marionette_test(self, **kwargs):
         self.context.activate_mozharness_venv()
         return run_marionette(self.context, **kwargs)

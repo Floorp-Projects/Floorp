@@ -4,115 +4,117 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Graphics: WebRender')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebRender")
 
 EXPORTS.mozilla.webrender += [
-    'RenderBufferTextureHost.h',
-    'RenderBufferTextureHostSWGL.h',
-    'RenderCompositor.h',
-    'RenderCompositorEGL.h',
-    'RenderCompositorOGL.h',
-    'RenderCompositorSWGL.h',
-    'RenderEGLImageTextureHost.h',
-    'RendererOGL.h',
-    'RendererScreenshotGrabber.h',
-    'RenderExternalTextureHost.h',
-    'RenderSharedSurfaceTextureHost.h',
-    'RenderSharedSurfaceTextureHostSWGL.h',
-    'RenderTextureHost.h',
-    'RenderTextureHostSWGL.h',
-    'RenderTextureHostWrapper.h',
-    'RenderThread.h',
-    'webrender_ffi.h',
-    'WebRenderAPI.h',
-    'WebRenderTypes.h',
+    "RenderBufferTextureHost.h",
+    "RenderBufferTextureHostSWGL.h",
+    "RenderCompositor.h",
+    "RenderCompositorEGL.h",
+    "RenderCompositorOGL.h",
+    "RenderCompositorSWGL.h",
+    "RenderEGLImageTextureHost.h",
+    "RendererOGL.h",
+    "RendererScreenshotGrabber.h",
+    "RenderExternalTextureHost.h",
+    "RenderSharedSurfaceTextureHost.h",
+    "RenderSharedSurfaceTextureHostSWGL.h",
+    "RenderTextureHost.h",
+    "RenderTextureHostSWGL.h",
+    "RenderTextureHostWrapper.h",
+    "RenderThread.h",
+    "webrender_ffi.h",
+    "WebRenderAPI.h",
+    "WebRenderTypes.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Moz2DImageRenderer.cpp',
-    'RenderBufferTextureHost.cpp',
-    'RenderBufferTextureHostSWGL.cpp',
-    'RenderCompositor.cpp',
-    'RenderCompositorEGL.cpp',
-    'RenderCompositorOGL.cpp',
-    'RenderCompositorSWGL.cpp',
-    'RenderEGLImageTextureHost.cpp',
-    'RendererOGL.cpp',
-    'RendererScreenshotGrabber.cpp',
-    'RenderExternalTextureHost.cpp',
-    'RenderSharedSurfaceTextureHost.cpp',
-    'RenderSharedSurfaceTextureHostSWGL.cpp',
-    'RenderTextureHost.cpp',
-    'RenderTextureHostSWGL.cpp',
-    'RenderTextureHostWrapper.cpp',
-    'RenderThread.cpp',
-    'WebRenderAPI.cpp',
-    'WebRenderTypes.cpp',
+    "Moz2DImageRenderer.cpp",
+    "RenderBufferTextureHost.cpp",
+    "RenderBufferTextureHostSWGL.cpp",
+    "RenderCompositor.cpp",
+    "RenderCompositorEGL.cpp",
+    "RenderCompositorOGL.cpp",
+    "RenderCompositorSWGL.cpp",
+    "RenderEGLImageTextureHost.cpp",
+    "RendererOGL.cpp",
+    "RendererScreenshotGrabber.cpp",
+    "RenderExternalTextureHost.cpp",
+    "RenderSharedSurfaceTextureHost.cpp",
+    "RenderSharedSurfaceTextureHostSWGL.cpp",
+    "RenderTextureHost.cpp",
+    "RenderTextureHostSWGL.cpp",
+    "RenderTextureHostWrapper.cpp",
+    "RenderThread.cpp",
+    "WebRenderAPI.cpp",
+    "WebRenderTypes.cpp",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS.mozilla.webrender += [
-        'RenderCompositorNative.h',
-        'RenderMacIOSurfaceTextureHost.h',
+        "RenderCompositorNative.h",
+        "RenderMacIOSurfaceTextureHost.h",
     ]
     UNIFIED_SOURCES += [
-        'RenderCompositorNative.cpp',
-        'RenderMacIOSurfaceTextureHost.cpp',
+        "RenderCompositorNative.cpp",
+        "RenderMacIOSurfaceTextureHost.cpp",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     EXPORTS.mozilla.webrender += [
-        'RenderAndroidHardwareBufferTextureHost.h',
-        'RenderAndroidSurfaceTextureHost.h',
+        "RenderAndroidHardwareBufferTextureHost.h",
+        "RenderAndroidSurfaceTextureHost.h",
     ]
     UNIFIED_SOURCES += [
-        'RenderAndroidHardwareBufferTextureHost.cpp',
-        'RenderAndroidSurfaceTextureHost.cpp',
+        "RenderAndroidHardwareBufferTextureHost.cpp",
+        "RenderAndroidSurfaceTextureHost.cpp",
     ]
 
-if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
-    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
+if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
+    DEFINES["MOZ_ENABLE_D3D10_LAYER"] = True
     EXPORTS.mozilla.webrender += [
-        'DCLayerTree.h',
-        'RenderCompositorANGLE.h',
-        'RenderD3D11TextureHost.h',
+        "DCLayerTree.h",
+        "RenderCompositorANGLE.h",
+        "RenderD3D11TextureHost.h",
     ]
     UNIFIED_SOURCES += [
-        'RenderD3D11TextureHost.cpp',
+        "RenderD3D11TextureHost.cpp",
     ]
     SOURCES += [
-        'DCLayerTree.cpp',
-        'RenderCompositorANGLE.cpp',
+        "DCLayerTree.cpp",
+        "RenderCompositorANGLE.cpp",
     ]
 
-if CONFIG['MOZ_WAYLAND']:
+if CONFIG["MOZ_WAYLAND"]:
     EXPORTS.mozilla.webrender += [
-        'RenderDMABUFTextureHost.h',
+        "RenderDMABUFTextureHost.h",
     ]
     SOURCES += [
-        'RenderDMABUFTextureHost.cpp',
+        "RenderDMABUFTextureHost.cpp",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
-    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-    CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
+    CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+    CXXFLAGS += CONFIG["CAIRO_FT_CFLAGS"]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla.webrender += [
-        '!webrender_ffi_generated.h',
+        "!webrender_ffi_generated.h",
     ]
 
-    CbindgenHeader('webrender_ffi_generated.h',
-                   inputs=[
-                       '/gfx/webrender_bindings',
-                       '/gfx/wr/webrender',
-                       '/gfx/wr/webrender_api',
-                   ])
+    CbindgenHeader(
+        "webrender_ffi_generated.h",
+        inputs=[
+            "/gfx/webrender_bindings",
+            "/gfx/wr/webrender",
+            "/gfx/wr/webrender_api",
+        ],
+    )
 
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["TK_CFLAGS"]

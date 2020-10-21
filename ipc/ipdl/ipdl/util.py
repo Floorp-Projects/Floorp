@@ -9,4 +9,4 @@ import zlib
 # this instead.
 def hash_str(s):
     assert isinstance(s, str)
-    return zlib.adler32(s.encode('utf-8'))
+    return zlib.adler32(s.encode("utf-8"))

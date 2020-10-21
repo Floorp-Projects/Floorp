@@ -21,10 +21,10 @@ from six import string_types
 # The following developers frequently modify mach code, and testing will commonly cause
 # exceptions to be thrown. We don't want these exceptions reported to Sentry.
 _DEVELOPER_BLOCKLIST = [
-    'ahalberstadt@mozilla.com',
-    'mhentges@mozilla.com',
-    'rstewart@mozilla.com',
-    'sledru@mozilla.com'
+    "ahalberstadt@mozilla.com",
+    "mhentges@mozilla.com",
+    "rstewart@mozilla.com",
+    "sledru@mozilla.com",
 ]
 # https://sentry.prod.mozaws.net/operations/mach/
 _SENTRY_DSN = "https://8228c9aff64949c2ba4a2154dc515f55@sentry.prod.mozaws.net/525"
@@ -38,6 +38,7 @@ class ErrorReporter(object):
 
 class SentryErrorReporter(ErrorReporter):
     """Reports errors using Sentry."""
+
     def report_exception(self, exception):
         sentry_sdk.capture_exception(exception)
 
@@ -48,6 +49,7 @@ class NoopErrorReporter(ErrorReporter):
     This is useful in cases where error-reporting is specifically disabled, such as
     when telemetry hasn't been allowed.
     """
+
     def report_exception(self, exception):
         pass
 
@@ -65,8 +67,9 @@ def register_sentry(argv, settings, topsrcdir=None):
         except (InvalidRepoPath, MissingVCSTool):
             pass
 
-    sentry_sdk.init(_SENTRY_DSN,
-                    before_send=lambda event, _: _process_event(event, topsrcdir))
+    sentry_sdk.init(
+        _SENTRY_DSN, before_send=lambda event, _: _process_event(event, topsrcdir)
+    )
     sentry_sdk.add_breadcrumb(message="./mach {}".format(" ".join(argv)))
     return SentryErrorReporter()
 
@@ -90,8 +93,9 @@ def _settle_mach_module_id(sentry_event, _):
         if not module:
             continue
 
-        module = re.sub("mach\\.commands\\.[a-f0-9]{32}", "mach.commands.<generated>",
-                        module)
+        module = re.sub(
+            "mach\\.commands\\.[a-f0-9]{32}", "mach.commands.<generated>", module
+        )
         frame["module"] = module
     return sentry_event
 
@@ -120,15 +124,15 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
             return value
 
     for (needle, replacement) in (
-            (get_state_dir(), "<statedir>"),
-            (topsrcdir, "<topsrcdir>"),
-            (expanduser("~"), "~"),
-            # Sentry converts "vars" to their "representations". When paths are in local
-            # variables on Windows, "C:\Users\MozillaUser\Desktop" becomes
-            # "'C:\\Users\\MozillaUser\\Desktop'". To still catch this case, we "repr"
-            # the home directory and scrub the beginning and end quotes, then
-            # find-and-replace on that.
-            (repr(expanduser("~"))[1:-1], "~"),
+        (get_state_dir(), "<statedir>"),
+        (topsrcdir, "<topsrcdir>"),
+        (expanduser("~"), "~"),
+        # Sentry converts "vars" to their "representations". When paths are in local
+        # variables on Windows, "C:\Users\MozillaUser\Desktop" becomes
+        # "'C:\\Users\\MozillaUser\\Desktop'". To still catch this case, we "repr"
+        # the home directory and scrub the beginning and end quotes, then
+        # find-and-replace on that.
+        (repr(expanduser("~"))[1:-1], "~"),
     ):
         if needle is None:
             continue  # topsrcdir isn't always defined

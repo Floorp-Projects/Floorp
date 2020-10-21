@@ -70,8 +70,9 @@ class ExpectedManifest(base.ManifestItem):
 
     @property
     def url(self):
-        return urlparse.urljoin(self.url_base,
-                                "/".join(self.test_path.split(os.path.sep)))
+        return urlparse.urljoin(
+            self.url_base, "/".join(self.test_path.split(os.path.sep))
+        )
 
 
 class DirectoryManifest(base.ManifestItem):
@@ -134,10 +135,12 @@ def get_manifest(metadata_root, test_path, url_base):
     manifest_path = expected.expected_path(metadata_root, test_path)
     try:
         with open(manifest_path) as f:
-            return compile(f,
-                           data_cls_getter=data_cls_getter,
-                           test_path=test_path,
-                           url_base=url_base)
+            return compile(
+                f,
+                data_cls_getter=data_cls_getter,
+                test_path=test_path,
+                url_base=url_base,
+            )
     except IOError:
         return None
 
@@ -158,17 +161,15 @@ def get_dir_manifest(path):
 
 
 def compile(stream, data_cls_getter=None, **kwargs):
-    return base.compile(Compiler,
-                        stream,
-                        data_cls_getter=data_cls_getter,
-                        **kwargs)
+    return base.compile(Compiler, stream, data_cls_getter=data_cls_getter, **kwargs)
 
 
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-dir", help="Directory to store output files")
-    parser.add_argument("--meta-dir", help="Directory containing wpt-metadata "
-                        "checkout to update.")
+    parser.add_argument(
+        "--meta-dir", help="Directory containing wpt-metadata " "checkout to update."
+    )
     return parser
 
 
@@ -239,16 +240,20 @@ def add_manifest(target, path, metadata):
         key.append("_subtests")
         for subtest_metadata in test_metadata.children:
             key.append(subtest_metadata.name)
-            add_metadata(target,
-                         key,
-                         subtest_metadata)
+            add_metadata(target, key, subtest_metadata)
             key.pop()
         key.pop()
         key.pop()
 
 
-simple_props = ["disabled", "min-asserts", "max-asserts", "lsan-allowed",
-                "leak-allowed", "bug"]
+simple_props = [
+    "disabled",
+    "min-asserts",
+    "max-asserts",
+    "lsan-allowed",
+    "leak-allowed",
+    "bug",
+]
 statuses = set(["CRASH"])
 
 
@@ -262,10 +267,10 @@ def add_metadata(target, key, metadata):
         target = target[part]
 
     for prop in simple_props:
-        if metadata.has_key(prop): # noqa W601
+        if metadata.has_key(prop):  # noqa W601
             target[prop] = get_condition_value_list(metadata, prop)
 
-    if metadata.has_key("expected"): # noqa W601
+    if metadata.has_key("expected"):  # noqa W601
         intermittent = []
         values = metadata.get("expected")
         by_status = defaultdict(list)
@@ -283,11 +288,14 @@ def add_metadata(target, key, metadata):
             by_status[expected_status].append(condition)
         for status in statuses:
             if status in by_status:
-                target["expected_%s" % status] = [serialize(item) if item else None
-                                                  for item in by_status[status]]
+                target["expected_%s" % status] = [
+                    serialize(item) if item else None for item in by_status[status]
+                ]
         if intermittent:
-            target["intermittent"] = [[serialize(cond) if cond else None, intermittent_statuses]
-                                      for cond, intermittent_statuses in intermittent]
+            target["intermittent"] = [
+                [serialize(cond) if cond else None, intermittent_statuses]
+                for cond, intermittent_statuses in intermittent
+            ]
 
 
 def get_condition_value_list(metadata, key):
@@ -302,10 +310,10 @@ def get_condition_value_list(metadata, key):
 
 
 def is_interesting(metadata):
-    if any(metadata.has_key(prop) for prop in simple_props): # noqa W601
+    if any(metadata.has_key(prop) for prop in simple_props):  # noqa W601
         return True
 
-    if metadata.has_key("expected"): # noqa W601
+    if metadata.has_key("expected"):  # noqa W601
         for expected_value in metadata.get("expected"):
             # Include both expected and known intermittent values
             if isinstance(expected_value, tuple):
@@ -330,7 +338,9 @@ def update_wpt_meta(logger, meta_root, data):
             for test, test_data in dir_data.get("_tests", {}).iteritems():
                 add_test_data(logger, wpt_meta, dir_path, test, None, test_data)
                 for subtest, subtest_data in test_data.get("_subtests", {}).iteritems():
-                    add_test_data(logger, wpt_meta, dir_path, test, subtest, subtest_data)
+                    add_test_data(
+                        logger, wpt_meta, dir_path, test, subtest, subtest_data
+                    )
 
 
 def add_test_data(logger, wpt_meta, dir_path, test, subtest, test_data):
@@ -352,10 +362,7 @@ def add_test_data(logger, wpt_meta, dir_path, test, subtest, test_data):
                         logger.info("Could not extract bug: %s" % value)
                         continue
                     meta = wpt_meta.get(dir_path)
-                    meta.set(test,
-                             subtest,
-                             product="firefox",
-                             bug_url=bug_link)
+                    meta.set(test, subtest, product="firefox", bug_url=bug_link)
 
 
 bugzilla_re = re.compile("https://bugzilla\.mozilla\.org/show_bug\.cgi\?id=\d+")
@@ -429,16 +436,20 @@ class WptMeta(object):
                     break
 
         if target_link is None:
-            target_link = {"product": product.encode("utf8"),
-                           "url": bug_url.encode("utf8"),
-                           "results": []}
+            target_link = {
+                "product": product.encode("utf8"),
+                "url": bug_url.encode("utf8"),
+                "results": [],
+            }
             self.data["links"].append(target_link)
 
         if "results" not in target_link:
             target_link["results"] = []
 
-        has_result = any((result["test"] == test and result.get("subtest") == subtest)
-                         for result in target_link["results"])
+        has_result = any(
+            (result["test"] == test and result.get("subtest") == subtest)
+            for result in target_link["results"]
+        )
         if not has_result:
             data = {"test": test.encode("utf8")}
             if subtest:
@@ -451,6 +462,4 @@ class WptMeta(object):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         with open(path, "wb") as f:
-            yaml.safe_dump(self.data, f,
-                           default_flow_style=False,
-                           allow_unicode=True)
+            yaml.safe_dump(self.data, f, default_flow_style=False, allow_unicode=True)

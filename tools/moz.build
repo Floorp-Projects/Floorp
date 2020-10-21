@@ -24,7 +24,7 @@ with Files("lint/**"):
 
 with Files("moztreedocs/**"):
     BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
-    SCHEDULES.exclusive = ['docs']
+    SCHEDULES.exclusive = ["docs"]
 
 with Files("profiler/**"):
     BUG_COMPONENT = ("Core", "Gecko Profiler")
@@ -56,24 +56,24 @@ with Files("update-verify/**"):
 with Files("vcs/**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-SPHINX_TREES['moztreedocs'] = 'moztreedocs/docs'
+SPHINX_TREES["moztreedocs"] = "moztreedocs/docs"
 
-SPHINX_TREES['try'] = 'tryselect/docs'
+SPHINX_TREES["try"] = "tryselect/docs"
 
-SPHINX_TREES['fuzzing'] = 'fuzzing/docs'
+SPHINX_TREES["fuzzing"] = "fuzzing/docs"
 
-SPHINX_TREES['sanitizer'] = 'sanitizer/docs'
+SPHINX_TREES["sanitizer"] = "sanitizer/docs"
 
-SPHINX_TREES['code-coverage'] = 'code-coverage/docs'
+SPHINX_TREES["code-coverage"] = "code-coverage/docs"
 
-with Files('tryselect/docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("tryselect/docs/**"):
+    SCHEDULES.exclusive = ["docs"]
 
 CRAMTEST_MANIFESTS += [
-    'tryselect/test/cram.ini',
+    "tryselect/test/cram.ini",
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [
-    'lint/test/python.ini',
-    'tryselect/test/python.ini',
+    "lint/test/python.ini",
+    "tryselect/test/python.ini",
 ]

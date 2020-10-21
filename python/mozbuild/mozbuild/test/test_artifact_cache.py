@@ -16,12 +16,12 @@ from mozbuild import artifact_cache
 
 
 CONTENTS = {
-    'http://server/foo': b'foo',
-    'http://server/bar': b'bar' * 400,
-    'http://server/qux': b'qux' * 400,
-    'http://server/fuga': b'fuga' * 300,
-    'http://server/hoge': b'hoge' * 300,
-    'http://server/larger': b'larger' * 3000,
+    "http://server/foo": b"foo",
+    "http://server/bar": b"bar" * 400,
+    "http://server/qux": b"qux" * 400,
+    "http://server/fuga": b"fuga" * 300,
+    "http://server/hoge": b"hoge" * 300,
+    "http://server/larger": b"larger" * 3000,
 }
 
 
@@ -31,9 +31,7 @@ class FakeResponse(object):
 
     @property
     def headers(self):
-        return {
-            'Content-length': str(len(self._content))
-        }
+        return {"Content-length": str(len(self._content))}
 
     def iter_content(self, chunk_size):
         content = memoryview(self._content)
@@ -81,28 +79,27 @@ class TestArtifactCache(unittest.TestCase):
         self._real_utime(path, times)
 
     def listtmpdir(self):
-        return [p for p in os.listdir(self.tmpdir)
-                if p != '.metadata_never_index']
+        return [p for p in os.listdir(self.tmpdir) if p != ".metadata_never_index"]
 
     def test_artifact_cache_persistence(self):
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
-        path = cache.fetch('http://server/foo')
+        path = cache.fetch("http://server/foo")
         expected = [os.path.basename(path)]
         self.assertEqual(self.listtmpdir(), expected)
 
-        path = cache.fetch('http://server/bar')
+        path = cache.fetch("http://server/bar")
         expected.append(os.path.basename(path))
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # We're downloading more than the cache allows us, but since it's all
         # in the same session, no purge happens.
-        path = cache.fetch('http://server/qux')
+        path = cache.fetch("http://server/qux")
         expected.append(os.path.basename(path))
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
-        path = cache.fetch('http://server/fuga')
+        path = cache.fetch("http://server/fuga")
         expected.append(os.path.basename(path))
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
@@ -111,7 +108,7 @@ class TestArtifactCache(unittest.TestCase):
 
         # Downloading a new file in a new session purges the oldest files in
         # the cache.
-        path = cache.fetch('http://server/hoge')
+        path = cache.fetch("http://server/hoge")
         expected.append(os.path.basename(path))
         expected = expected[2:]
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
@@ -120,7 +117,7 @@ class TestArtifactCache(unittest.TestCase):
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
-        path = cache.fetch('http://server/qux')
+        path = cache.fetch("http://server/qux")
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # bar was purged earlier, re-downloading it should purge the oldest
@@ -130,9 +127,9 @@ class TestArtifactCache(unittest.TestCase):
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
-        path = cache.fetch('http://server/bar')
+        path = cache.fetch("http://server/bar")
         expected.append(os.path.basename(path))
-        expected = [p for p in expected if 'fuga' not in p]
+        expected = [p for p in expected if "fuga" not in p]
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # Downloading one file larger than the cache size should still leave
@@ -140,11 +137,11 @@ class TestArtifactCache(unittest.TestCase):
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
-        path = cache.fetch('http://server/larger')
+        path = cache.fetch("http://server/larger")
         expected.append(os.path.basename(path))
         expected = expected[-2:]
         self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

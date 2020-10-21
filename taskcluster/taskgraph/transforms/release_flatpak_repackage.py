@@ -14,29 +14,30 @@ transforms = TransformSequence()
 
 @transforms.add
 def format(config, tasks):
-    """ Apply format substitution to worker.env and worker.command.
-    """
+    """Apply format substitution to worker.env and worker.command."""
 
     format_params = {
-        'release_config': get_release_config(config),
-        'config_params': config.params,
+        "release_config": get_release_config(config),
+        "config_params": config.params,
     }
 
     for task in tasks:
-        format_params['task'] = task
+        format_params["task"] = task
 
-        command = task.get('worker', {}).get('command', [])
-        task['worker']['command'] = [x.format(**format_params) for x in command]
+        command = task.get("worker", {}).get("command", [])
+        task["worker"]["command"] = [x.format(**format_params) for x in command]
 
-        env = task.get('worker', {}).get('env', {})
+        env = task.get("worker", {}).get("env", {})
         for k in env.keys():
             resolve_keyed_by(
-                env, k, 'flatpak envs',
+                env,
+                k,
+                "flatpak envs",
                 **{
-                    'release-level': config.params.release_level(),
-                    'project': config.params['project']
+                    "release-level": config.params.release_level(),
+                    "project": config.params["project"],
                 }
             )
-            task['worker']['env'][k] = env[k].format(**format_params)
+            task["worker"]["env"][k] = env[k].format(**format_params)
 
         yield task

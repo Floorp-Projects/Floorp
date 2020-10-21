@@ -9,7 +9,7 @@ import tempfile
 
 
 class IPDLCompile:
-    def __init__(self, specfilename, ipdlargv=['python', 'ipdl.py']):
+    def __init__(self, specfilename, ipdlargv=["python", "ipdl.py"]):
         self.argv = copy.deepcopy(ipdlargv)
         self.specfilename = specfilename
         self.stdout = None
@@ -17,20 +17,20 @@ class IPDLCompile:
         self.returncode = None
 
     def run(self):
-        '''Run |self.specfilename| through the IPDL compiler.'''
+        """Run |self.specfilename| through the IPDL compiler."""
         assert self.returncode is None
 
-        tmpoutdir = tempfile.mkdtemp(prefix='ipdl_unit_test')
+        tmpoutdir = tempfile.mkdtemp(prefix="ipdl_unit_test")
 
         try:
-            self.argv.extend([
-                '-d', tmpoutdir,
-                self.specfilename
-            ])
+            self.argv.extend(["-d", tmpoutdir, self.specfilename])
 
             proc = subprocess.Popen(
-                args=self.argv, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, universal_newlines=True)
+                args=self.argv,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
             self.stdout, self.stderr = proc.communicate()
 
             self.returncode = proc.returncode
@@ -48,30 +48,31 @@ class IPDLCompile:
                 proc.kill()
 
     def completed(self):
-        return (self.returncode is not None
-                and isinstance(self.stdout, str)
-                and isinstance(self.stderr, str))
+        return (
+            self.returncode is not None
+            and isinstance(self.stdout, str)
+            and isinstance(self.stderr, str)
+        )
 
     def error(self, expectedError):
-        '''Return True iff compiling self.specstring resulted in an
-IPDL compiler error.'''
+        """Return True iff compiling self.specstring resulted in an
+        IPDL compiler error."""
         assert self.completed()
 
         errorRe = re.compile(re.escape(expectedError))
         return None is not re.search(errorRe, self.stderr)
 
     def exception(self):
-        '''Return True iff compiling self.specstring resulted in a Python
-exception being raised.'''
+        """Return True iff compiling self.specstring resulted in a Python
+        exception being raised."""
         assert self.completed()
 
-        return None is not re.search(r'Traceback (most recent call last):',
-                                     self.stderr)
+        return None is not re.search(r"Traceback (most recent call last):", self.stderr)
 
     def ok(self):
-        '''Return True iff compiling self.specstring was successful.'''
+        """Return True iff compiling self.specstring was successful."""
         assert self.completed()
 
-        return (not self.exception()
-                and not self.error("error:")
-                and (0 == self.returncode))
+        return (
+            not self.exception() and not self.error("error:") and (0 == self.returncode)
+        )

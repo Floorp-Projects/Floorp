@@ -3,18 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'har-automation.js',
-    'har-builder-utils.js',
-    'har-builder.js',
-    'har-collector.js',
-    'har-exporter.js',
-    'har-importer.js',
-    'har-menu-utils.js',
-    'har-utils.js',
-    'toolbox-overlay.js',
+    "har-automation.js",
+    "har-builder-utils.js",
+    "har-builder.js",
+    "har-collector.js",
+    "har-exporter.js",
+    "har-importer.js",
+    "har-menu-utils.js",
+    "har-utils.js",
+    "toolbox-overlay.js",
 )
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser-harautomation.ini',
-    'test/browser.ini',
+    "test/browser-harautomation.ini",
+    "test/browser.ini",
 ]

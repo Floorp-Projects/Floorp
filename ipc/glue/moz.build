@@ -3,260 +3,256 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
+include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 
 EXPORTS += [
-    'nsIIPCSerializableInputStream.h',
+    "nsIIPCSerializableInputStream.h",
 ]
 
 EXPORTS.mozilla.ipc += [
-    'BackgroundChild.h',
-    'BackgroundParent.h',
-    'BackgroundUtils.h',
-    'BrowserProcessSubThread.h',
-    'ByteBuf.h',
-    'ByteBufUtils.h',
-    'CrashReporterClient.h',
-    'CrashReporterHelper.h',
-    'CrashReporterHost.h',
-    'CrossProcessMutex.h',
-    'CrossProcessSemaphore.h',
-    'EnvironmentMap.h',
-    'FileDescriptor.h',
-    'FileDescriptorSetChild.h',
-    'FileDescriptorSetParent.h',
-    'FileDescriptorUtils.h',
-    'GeckoChildProcessHost.h',
-    'IdleSchedulerChild.h',
-    'IdleSchedulerParent.h',
-    'InputStreamUtils.h',
-    'IOThreadChild.h',
-    'IPCStreamAlloc.h',
-    'IPCStreamDestination.h',
-    'IPCStreamSource.h',
-    'IPCStreamUtils.h',
-    'IPDLParamTraits.h',
-    'LibrarySandboxPreload.h',
-    'MessageChannel.h',
-    'MessageLink.h',
-    'Neutering.h',
-    'ProcessChild.h',
-    'ProtocolUtils.h',
-    'ScopedXREEmbed.h',
-    'SharedMemory.h',
-    'SharedMemoryBasic.h',
-    'Shmem.h',
-    'TaintingIPCUtils.h',
-    'TaskFactory.h',
-    'Transport.h',
-    'TransportSecurityInfoUtils.h',
-    'URIUtils.h',
-    'WindowsMessageLoop.h',
+    "BackgroundChild.h",
+    "BackgroundParent.h",
+    "BackgroundUtils.h",
+    "BrowserProcessSubThread.h",
+    "ByteBuf.h",
+    "ByteBufUtils.h",
+    "CrashReporterClient.h",
+    "CrashReporterHelper.h",
+    "CrashReporterHost.h",
+    "CrossProcessMutex.h",
+    "CrossProcessSemaphore.h",
+    "EnvironmentMap.h",
+    "FileDescriptor.h",
+    "FileDescriptorSetChild.h",
+    "FileDescriptorSetParent.h",
+    "FileDescriptorUtils.h",
+    "GeckoChildProcessHost.h",
+    "IdleSchedulerChild.h",
+    "IdleSchedulerParent.h",
+    "InputStreamUtils.h",
+    "IOThreadChild.h",
+    "IPCStreamAlloc.h",
+    "IPCStreamDestination.h",
+    "IPCStreamSource.h",
+    "IPCStreamUtils.h",
+    "IPDLParamTraits.h",
+    "LibrarySandboxPreload.h",
+    "MessageChannel.h",
+    "MessageLink.h",
+    "Neutering.h",
+    "ProcessChild.h",
+    "ProtocolUtils.h",
+    "ScopedXREEmbed.h",
+    "SharedMemory.h",
+    "SharedMemoryBasic.h",
+    "Shmem.h",
+    "TaintingIPCUtils.h",
+    "TaskFactory.h",
+    "Transport.h",
+    "TransportSecurityInfoUtils.h",
+    "URIUtils.h",
+    "WindowsMessageLoop.h",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS.mozilla.ipc += [
-        'Transport_win.h',
+        "Transport_win.h",
     ]
     SOURCES += [
-        'SharedMemory_windows.cpp',
-        'Transport_win.cpp',
-        'WindowsMessageLoop.cpp',
+        "SharedMemory_windows.cpp",
+        "Transport_win.cpp",
+        "WindowsMessageLoop.cpp",
     ]
 else:
     EXPORTS.mozilla.ipc += [
-        'Transport_posix.h',
+        "Transport_posix.h",
     ]
     UNIFIED_SOURCES += [
-        'SharedMemory_posix.cpp',
-        'Transport_posix.cpp',
+        "SharedMemory_posix.cpp",
+        "Transport_posix.cpp",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        'CrossProcessMutex_windows.cpp',
+        "CrossProcessMutex_windows.cpp",
     ]
-elif not CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD'):
+elif not CONFIG["OS_ARCH"] in ("NetBSD", "OpenBSD"):
     UNIFIED_SOURCES += [
-        'CrossProcessMutex_posix.cpp',
+        "CrossProcessMutex_posix.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'CrossProcessMutex_unimplemented.cpp',
+        "CrossProcessMutex_unimplemented.cpp",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        'CrossProcessSemaphore_windows.cpp',
+        "CrossProcessSemaphore_windows.cpp",
     ]
-elif CONFIG['OS_ARCH'] != 'Darwin':
+elif CONFIG["OS_ARCH"] != "Darwin":
     UNIFIED_SOURCES += [
-        'CrossProcessSemaphore_posix.cpp',
+        "CrossProcessSemaphore_posix.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'CrossProcessSemaphore_unimplemented.cpp',
+        "CrossProcessSemaphore_unimplemented.cpp",
     ]
 
 # Android has its own,
 # almost-but-not-quite-compatible-with-POSIX-or-/dev/shm shared memory
 # impl.
-if CONFIG['OS_TARGET'] == 'Android':
-    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_android.h']
+if CONFIG["OS_TARGET"] == "Android":
+    EXPORTS.mozilla.ipc += ["SharedMemoryBasic_android.h"]
     UNIFIED_SOURCES += [
-        'SharedMemoryBasic_android.cpp',
+        "SharedMemoryBasic_android.cpp",
     ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_mach.h']
+elif CONFIG["OS_ARCH"] == "Darwin":
+    EXPORTS.mozilla.ipc += ["SharedMemoryBasic_mach.h"]
     SOURCES += [
-        'SharedMemoryBasic_mach.mm',
+        "SharedMemoryBasic_mach.mm",
     ]
 else:
-    EXPORTS.mozilla.ipc += ['SharedMemoryBasic_chromium.h']
+    EXPORTS.mozilla.ipc += ["SharedMemoryBasic_chromium.h"]
 
-if CONFIG['OS_ARCH'] == 'Linux':
+if CONFIG["OS_ARCH"] == "Linux":
     UNIFIED_SOURCES += [
-        'ProcessUtils_linux.cpp',
+        "ProcessUtils_linux.cpp",
     ]
-elif CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
-    UNIFIED_SOURCES += [
-        'ProcessUtils_bsd.cpp'
-    ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    UNIFIED_SOURCES += [
-        'ProcessUtils_mac.mm'
-    ]
+elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
+    UNIFIED_SOURCES += ["ProcessUtils_bsd.cpp"]
+elif CONFIG["OS_ARCH"] == "Darwin":
+    UNIFIED_SOURCES += ["ProcessUtils_mac.mm"]
 else:
     UNIFIED_SOURCES += [
-        'ProcessUtils_none.cpp',
+        "ProcessUtils_none.cpp",
     ]
 
-if CONFIG['OS_ARCH'] != 'WINNT':
+if CONFIG["OS_ARCH"] != "WINNT":
     EXPORTS.mozilla.ipc += [
-        'FileDescriptorShuffle.h',
+        "FileDescriptorShuffle.h",
     ]
     UNIFIED_SOURCES += [
-        'FileDescriptorShuffle.cpp',
+        "FileDescriptorShuffle.cpp",
     ]
 
 EXPORTS.ipc += [
-    'IPCMessageUtils.h',
+    "IPCMessageUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'BackgroundImpl.cpp',
-    'BackgroundUtils.cpp',
-    'BrowserProcessSubThread.cpp',
-    'CrashReporterClient.cpp',
-    'CrashReporterHost.cpp',
-    'FileDescriptor.cpp',
-    'FileDescriptorUtils.cpp',
-    'IdleSchedulerChild.cpp',
-    'IdleSchedulerParent.cpp',
-    'InputStreamUtils.cpp',
-    'IPCMessageUtils.cpp',
-    'IPCStreamChild.cpp',
-    'IPCStreamDestination.cpp',
-    'IPCStreamParent.cpp',
-    'IPCStreamSource.cpp',
-    'IPCStreamUtils.cpp',
-    'LibrarySandboxPreload.cpp',
-    'MessageChannel.cpp',
-    'MessageLink.cpp',
-    'MessagePump.cpp',
-    'ProcessChild.cpp',
-    'ProcessUtils_common.cpp',
-    'ProtocolUtils.cpp',
-    'ScopedXREEmbed.cpp',
-    'SharedMemory.cpp',
-    'Shmem.cpp',
-    'StringUtil.cpp',
-    'TransportSecurityInfoUtils.cpp',
-    'URIUtils.cpp',
+    "BackgroundImpl.cpp",
+    "BackgroundUtils.cpp",
+    "BrowserProcessSubThread.cpp",
+    "CrashReporterClient.cpp",
+    "CrashReporterHost.cpp",
+    "FileDescriptor.cpp",
+    "FileDescriptorUtils.cpp",
+    "IdleSchedulerChild.cpp",
+    "IdleSchedulerParent.cpp",
+    "InputStreamUtils.cpp",
+    "IPCMessageUtils.cpp",
+    "IPCStreamChild.cpp",
+    "IPCStreamDestination.cpp",
+    "IPCStreamParent.cpp",
+    "IPCStreamSource.cpp",
+    "IPCStreamUtils.cpp",
+    "LibrarySandboxPreload.cpp",
+    "MessageChannel.cpp",
+    "MessageLink.cpp",
+    "MessagePump.cpp",
+    "ProcessChild.cpp",
+    "ProcessUtils_common.cpp",
+    "ProtocolUtils.cpp",
+    "ScopedXREEmbed.cpp",
+    "SharedMemory.cpp",
+    "Shmem.cpp",
+    "StringUtil.cpp",
+    "TransportSecurityInfoUtils.cpp",
+    "URIUtils.cpp",
 ]
 
 SOURCES += [
-    'BackgroundChildImpl.cpp',
-    'BackgroundParentImpl.cpp',
-    'FileDescriptorSetChild.cpp',
-    'FileDescriptorSetParent.cpp',
+    "BackgroundChildImpl.cpp",
+    "BackgroundParentImpl.cpp",
+    "FileDescriptorSetChild.cpp",
+    "FileDescriptorSetParent.cpp",
 ]
 
-if CONFIG['OS_ARCH'] == 'Darwin':
+if CONFIG["OS_ARCH"] == "Darwin":
     # GeckoChildProcessHost.cpp cannot be built unified due to OSX header
     # clashes with TextRange.
     SOURCES += [
-        'GeckoChildProcessHost.cpp',
+        "GeckoChildProcessHost.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'GeckoChildProcessHost.cpp',
+        "GeckoChildProcessHost.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/caps',
-    '/dom/broadcastchannel',
-    '/dom/indexedDB',
-    '/dom/storage',
-    '/netwerk/base',
-    '/third_party/libwebrtc',
-    '/third_party/libwebrtc/webrtc',
-    '/xpcom/build',
+    "/caps",
+    "/dom/broadcastchannel",
+    "/dom/indexedDB",
+    "/dom/storage",
+    "/netwerk/base",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/webrtc",
+    "/xpcom/build",
 ]
 
 IPDL_SOURCES = [
-    'InputStreamParams.ipdlh',
-    'IPCStream.ipdlh',
-    'PBackground.ipdl',
-    'PBackgroundSharedTypes.ipdlh',
-    'PBackgroundTest.ipdl',
-    'PChildToParentStream.ipdl',
-    'PFileDescriptorSet.ipdl',
-    'PIdleScheduler.ipdl',
-    'PParentToChildStream.ipdl',
-    'ProtocolTypes.ipdlh',
-    'URIParams.ipdlh',
+    "InputStreamParams.ipdlh",
+    "IPCStream.ipdlh",
+    "PBackground.ipdl",
+    "PBackgroundSharedTypes.ipdlh",
+    "PBackgroundTest.ipdl",
+    "PChildToParentStream.ipdl",
+    "PFileDescriptorSet.ipdl",
+    "PIdleScheduler.ipdl",
+    "PParentToChildStream.ipdl",
+    "ProtocolTypes.ipdlh",
+    "URIParams.ipdlh",
 ]
 
-if CONFIG['MOZ_ENABLE_FORKSERVER']:
+if CONFIG["MOZ_ENABLE_FORKSERVER"]:
     EXPORTS.mozilla.ipc += [
-        'ForkServer.h',
-        'ForkServiceChild.h',
-        'MiniTransceiver.h',
+        "ForkServer.h",
+        "ForkServiceChild.h",
+        "MiniTransceiver.h",
     ]
     UNIFIED_SOURCES += [
-        'ForkServer.cpp',
-        'ForkServiceChild.cpp',
-        'MiniTransceiver.cpp',
+        "ForkServer.cpp",
+        "ForkServiceChild.cpp",
+        "MiniTransceiver.cpp",
     ]
     XPCOM_MANIFESTS += [
-        'components.conf',
+        "components.conf",
     ]
 
 LOCAL_INCLUDES += [
-    '/dom/ipc',
-    '/toolkit/crashreporter',
-    '/toolkit/xre',
-    '/xpcom/base',
-    '/xpcom/threads',
+    "/dom/ipc",
+    "/toolkit/crashreporter",
+    "/toolkit/xre",
+    "/xpcom/base",
+    "/xpcom/threads",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-for var in ('MOZ_CHILD_PROCESS_NAME', 'MOZ_CHILD_PROCESS_BUNDLE'):
+for var in ("MOZ_CHILD_PROCESS_NAME", "MOZ_CHILD_PROCESS_BUNDLE"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += [
-        '/security/sandbox/chromium',
-        '/security/sandbox/chromium-shim',
-        '/security/sandbox/win/src/sandboxbroker',
+        "/security/sandbox/chromium",
+        "/security/sandbox/chromium-shim",
+        "/security/sandbox/win/src/sandboxbroker",
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow"]
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

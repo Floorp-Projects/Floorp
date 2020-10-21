@@ -9,13 +9,13 @@ from __future__ import absolute_import
 from gdbpp import GeckoPrettyPrinter
 
 
-@GeckoPrettyPrinter('nsString', '^nsTString<.*>$')
+@GeckoPrettyPrinter("nsString", "^nsTString<.*>$")
 class string_printer(object):
     def __init__(self, value):
         self.value = value
 
     def to_string(self):
-        return self.value['mData']
+        return self.value["mData"]
 
     def display_hint(self):
-        return 'string'
+        return "string"

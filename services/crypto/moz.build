@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Sync')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Sync")
 
-DIRS += ['component']
+DIRS += ["component"]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
-EXTRA_JS_MODULES['services-crypto'] += [
-    'modules/jwcrypto.jsm',
-    'modules/utils.js',
-    'modules/WeaveCrypto.js',
+EXTRA_JS_MODULES["services-crypto"] += [
+    "modules/jwcrypto.jsm",
+    "modules/utils.js",
+    "modules/WeaveCrypto.js",
 ]
 
 EXTRA_COMPONENTS += [
-    'cryptoComponents.manifest',
+    "cryptoComponents.manifest",
 ]

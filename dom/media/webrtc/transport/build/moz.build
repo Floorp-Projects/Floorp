@@ -7,33 +7,33 @@
 include("/ipc/chromium/chromium-config.mozbuild")
 
 EXPORTS.transport += [
-    '../dtlsidentity.h',
-    '../m_cpp_utils.h',
-    '../mediapacket.h',
-    '../nr_socket_proxy_config.h',
-    '../nricectx.h',
-    '../nricemediastream.h',
-    '../nriceresolverfake.h',
-    '../nricestunaddr.h',
-    '../rlogconnector.h',
-    '../runnable_utils.h',
-    '../sigslot.h',
-    '../simpletokenbucket.h',
-    '../SrtpFlow.h',
-    '../stun_socket_filter.h',
-    '../transportflow.h',
-    '../transportlayer.h',
-    '../transportlayerdtls.h',
-    '../transportlayerice.h',
-    '../transportlayerlog.h',
-    '../transportlayerloopback.h',
-    '../transportlayersrtp.h',
+    "../dtlsidentity.h",
+    "../m_cpp_utils.h",
+    "../mediapacket.h",
+    "../nr_socket_proxy_config.h",
+    "../nricectx.h",
+    "../nricemediastream.h",
+    "../nriceresolverfake.h",
+    "../nricestunaddr.h",
+    "../rlogconnector.h",
+    "../runnable_utils.h",
+    "../sigslot.h",
+    "../simpletokenbucket.h",
+    "../SrtpFlow.h",
+    "../stun_socket_filter.h",
+    "../transportflow.h",
+    "../transportlayer.h",
+    "../transportlayerdtls.h",
+    "../transportlayerice.h",
+    "../transportlayerlog.h",
+    "../transportlayerloopback.h",
+    "../transportlayersrtp.h",
 ]
 
-include('../common.build')
+include("../common.build")
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
 # These files cannot be built in unified mode because of the redefinition of
 # getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
@@ -41,4 +41,4 @@ include('/tools/fuzzing/libfuzzer-config.mozbuild')
 # PBrowserOrId and WebrtcTCPSocketChild.
 SOURCES += transport_cppsrcs
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

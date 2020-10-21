@@ -49,8 +49,8 @@ def chunkify(things, this_chunk, chunks):
         raise ChunkingError("this_chunk is greater than total chunks")
 
     dist = split_evenly(len(things), chunks)
-    start = sum(dist[:this_chunk-1])
-    end = start + dist[this_chunk-1]
+    start = sum(dist[: this_chunk - 1])
+    end = start + dist[this_chunk - 1]
 
     try:
         return things[start:end]

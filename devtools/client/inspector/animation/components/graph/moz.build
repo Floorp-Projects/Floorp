@@ -3,15 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'AnimationName.js',
-    'ComputedTimingPath.js',
-    'DelaySign.js',
-    'EffectTimingPath.js',
-    'EndDelaySign.js',
-    'NegativeDelayPath.js',
-    'NegativeEndDelayPath.js',
-    'NegativePath.js',
-    'SummaryGraph.js',
-    'SummaryGraphPath.js',
-    'TimingPath.js'
+    "AnimationName.js",
+    "ComputedTimingPath.js",
+    "DelaySign.js",
+    "EffectTimingPath.js",
+    "EndDelaySign.js",
+    "NegativeDelayPath.js",
+    "NegativeEndDelayPath.js",
+    "NegativePath.js",
+    "SummaryGraph.js",
+    "SummaryGraphPath.js",
+    "TimingPath.js",
 )

@@ -5,20 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Temporarily disabled. See bug 1256495.
-#test_certificates = (
+# test_certificates = (
 #    'test-ca.pem',
 #    'test-int.pem',
 #    'delegated-ee.pem',
 #    'default-ee.pem',
-#)
+# )
 #
-#for test_certificate in test_certificates:
+# for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)
 #
-#test_keys = (
+# test_keys = (
 #    'default-ee.key',
 #    'delegated.key',
-#)
+# )
 #
-#for test_key in test_keys:
+# for test_key in test_keys:
 #    GeneratedTestKey(test_key)

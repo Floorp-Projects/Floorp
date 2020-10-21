@@ -4,22 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['httpserver', 'gtest', 'unit', 'http3server']
+TEST_DIRS += ["httpserver", "gtest", "unit", "http3server"]
 
-BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
-MOCHITEST_MANIFESTS += ['mochitests/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+MOCHITEST_MANIFESTS += ["mochitests/mochitest.ini"]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'unit/xpcshell.ini',
-    'unit_ipc/xpcshell.ini',
+    "unit/xpcshell.ini",
+    "unit_ipc/xpcshell.ini",
 ]
 
-PERFTESTS_MANIFESTS += [
-  'perf/perftest.ini',
-  'unit/perftest.ini'
-]
+PERFTESTS_MANIFESTS += ["perf/perftest.ini", "unit/perftest.ini"]
 
-if CONFIG['FUZZING_INTERFACES']:
-    TEST_DIRS += [
-        'fuzz'
-    ]
+if CONFIG["FUZZING_INTERFACES"]:
+    TEST_DIRS += ["fuzz"]

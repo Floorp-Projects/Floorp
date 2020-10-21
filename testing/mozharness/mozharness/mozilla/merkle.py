@@ -9,11 +9,11 @@ def _round2(n):
 
 
 def _leaf_hash(hash_fn, leaf):
-    return hash_fn(b'\x00' + leaf).digest()
+    return hash_fn(b"\x00" + leaf).digest()
 
 
 def _pair_hash(hash_fn, left, right):
-    return hash_fn(b'\x01' + left + right).digest()
+    return hash_fn(b"\x01" + left + right).digest()
 
 
 class InclusionProof:
@@ -43,7 +43,7 @@ class InclusionProof:
     # Pre-generated 'log ID'.  Not used by Firefox; it is only needed because
     # there's a slot in the RFC 6962-bis format that requires a value at least
     # two bytes long (plus a length byte).
-    LOG_ID = b'\x02\x00\x00'
+    LOG_ID = b"\x02\x00\x00"
 
     def __init__(self, tree_size, leaf_index, path_elements):
         self.tree_size = tree_size
@@ -55,15 +55,17 @@ class InclusionProof:
         start = 0
         read = 1
         if len(serialized) < start + read:
-            raise Exception('Inclusion proof too short for log ID header')
-        log_id_len, = struct.unpack('B', serialized[start:start+read])
+            raise Exception("Inclusion proof too short for log ID header")
+        (log_id_len,) = struct.unpack("B", serialized[start : start + read])
         start += read
         start += log_id_len  # Ignore the log ID itself
 
         read = 8 + 8 + 2
         if len(serialized) < start + read:
-            raise Exception('Inclusion proof too short for middle section')
-        tree_size, leaf_index, path_len = struct.unpack('!QQH', serialized[start:start+read])
+            raise Exception("Inclusion proof too short for middle section")
+        tree_size, leaf_index, path_len = struct.unpack(
+            "!QQH", serialized[start : start + read]
+        )
         start += read
 
         path_elements = []
@@ -71,27 +73,29 @@ class InclusionProof:
         while start < end:
             read = 1
             if len(serialized) < start + read:
-                raise Exception('Inclusion proof too short for middle section')
-            elem_len, = struct.unpack('!B', serialized[start:start+read])
+                raise Exception("Inclusion proof too short for middle section")
+            (elem_len,) = struct.unpack("!B", serialized[start : start + read])
             start += read
 
             read = elem_len
             if len(serialized) < start + read:
-                raise Exception('Inclusion proof too short for middle section')
+                raise Exception("Inclusion proof too short for middle section")
             if end < start + read:
-                raise Exception('Inclusion proof element exceeds declared length')
-            path_elements.append(serialized[start:start+read])
+                raise Exception("Inclusion proof element exceeds declared length")
+            path_elements.append(serialized[start : start + read])
             start += read
 
         return InclusionProof(tree_size, leaf_index, path_elements)
 
     def to_rfc6962_bis(self):
-        inclusion_path = b''
+        inclusion_path = b""
         for step in self.path_elements:
-            step_len = struct.pack('B', len(step))
+            step_len = struct.pack("B", len(step))
             inclusion_path += step_len + step
 
-        middle = struct.pack('!QQH', self.tree_size, self.leaf_index, len(inclusion_path))
+        middle = struct.pack(
+            "!QQH", self.tree_size, self.leaf_index, len(inclusion_path)
+        )
         return self.LOG_ID + middle + inclusion_path
 
     def _expected_head(self, hash_fn, leaf, leaf_index, tree_size):
@@ -111,7 +115,7 @@ class InclusionProof:
                 tree_size = tree_size - k
                 leaf_index = leaf_index - k
 
-        assert(len(lr) == len(self.path_elements))
+        assert len(lr) == len(self.path_elements)
         for i, elem in enumerate(self.path_elements):
             if lr[i]:
                 node = _pair_hash(hash_fn, node, elem)
@@ -145,7 +149,7 @@ class MerkleTree:
         # the head is nodes[0][n].
         self.nodes = {}
         for i in range(self.n):
-            self.nodes[i, i+1] = _leaf_hash(self.hash_fn, data[i])
+            self.nodes[i, i + 1] = _leaf_hash(self.hash_fn, data[i])
 
     def _node(self, start, end):
         if (start, end) in self.nodes:
@@ -169,9 +173,13 @@ class MerkleTree:
         if n == 1:
             return []
         elif target - start < k:
-            return self._relative_proof(target, start, start + k) + [self._node(start + k, end)]
+            return self._relative_proof(target, start, start + k) + [
+                self._node(start + k, end)
+            ]
         elif target - start >= k:
-            return self._relative_proof(target, start + k, end) + [self._node(start, start + k)]
+            return self._relative_proof(target, start + k, end) + [
+                self._node(start, start + k)
+            ]
 
     def inclusion_proof(self, leaf_index):
         path_elements = self._relative_proof(leaf_index, 0, self.n)

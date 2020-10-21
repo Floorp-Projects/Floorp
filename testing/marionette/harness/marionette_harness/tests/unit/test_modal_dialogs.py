@@ -10,7 +10,6 @@ from marionette_harness import MarionetteTestCase, parameterized, WindowManagerM
 
 
 class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
-
     def setUp(self):
         super(BaseAlertTestCase, self).setUp()
         self.new_tab = self.open_tab()
@@ -29,16 +28,18 @@ class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
             return False
 
     def wait_for_alert(self, timeout=None):
-        Wait(self.marionette, timeout=timeout).until(
-            lambda _: self.alert_present)
+        Wait(self.marionette, timeout=timeout).until(lambda _: self.alert_present)
 
 
 class TestTabModalAlerts(BaseAlertTestCase):
-
     def setUp(self):
         super(TestTabModalAlerts, self).setUp()
-        self.assertTrue(self.marionette.get_pref("prompts.tab_modal.enabled",
-                        "Tab modal alerts should be enabled by default."))
+        self.assertTrue(
+            self.marionette.get_pref(
+                "prompts.tab_modal.enabled",
+                "Tab modal alerts should be enabled by default.",
+            )
+        )
 
         self.test_page = self.marionette.absolute_url("test_tab_modal_dialogs.html")
         self.marionette.navigate(self.test_page)
@@ -162,7 +163,6 @@ class TestTabModalAlerts(BaseAlertTestCase):
 
 
 class TestModalAlerts(BaseAlertTestCase):
-
     def setUp(self):
         super(TestModalAlerts, self).setUp()
         self.marionette.set_pref(
@@ -172,7 +172,8 @@ class TestModalAlerts(BaseAlertTestCase):
 
     def tearDown(self):
         self.marionette.clear_pref(
-            "network.auth.non-web-content-triggered-resources-http-auth-allow")
+            "network.auth.non-web-content-triggered-resources-http-auth-allow"
+        )
         super(TestModalAlerts, self).tearDown()
 
     def test_http_auth_dismiss(self):

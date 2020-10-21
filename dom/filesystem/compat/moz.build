@@ -4,27 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]
 
 EXPORTS.mozilla.dom += [
-    'FileSystem.h',
-    'FileSystemDirectoryEntry.h',
-    'FileSystemDirectoryReader.h',
-    'FileSystemEntry.h',
-    'FileSystemFileEntry.h',
+    "FileSystem.h",
+    "FileSystemDirectoryEntry.h",
+    "FileSystemDirectoryReader.h",
+    "FileSystemEntry.h",
+    "FileSystemFileEntry.h",
 ]
 
 UNIFIED_SOURCES += [
-    'CallbackRunnables.cpp',
-    'FileSystem.cpp',
-    'FileSystemDirectoryEntry.cpp',
-    'FileSystemDirectoryReader.cpp',
-    'FileSystemEntry.cpp',
-    'FileSystemFileEntry.cpp',
-    'FileSystemRootDirectoryEntry.cpp',
-    'FileSystemRootDirectoryReader.cpp',
+    "CallbackRunnables.cpp",
+    "FileSystem.cpp",
+    "FileSystemDirectoryEntry.cpp",
+    "FileSystemDirectoryReader.cpp",
+    "FileSystemEntry.cpp",
+    "FileSystemFileEntry.cpp",
+    "FileSystemRootDirectoryEntry.cpp",
+    "FileSystemRootDirectoryReader.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

@@ -47,20 +47,21 @@ class IndexSearch(OptimizationStrategy):
 class SkipUnlessChanged(OptimizationStrategy):
     def should_remove_task(self, task, params, file_patterns):
         # pushlog_id == -1 - this is the case when run from a cron.yml job
-        if params.get('pushlog_id') == -1:
+        if params.get("pushlog_id") == -1:
             return False
 
         changed = files_changed.check(params, file_patterns)
         if not changed:
-            logger.debug('no files found matching a pattern in `skip-unless-changed` for ' +
-                         task.label)
+            logger.debug(
+                "no files found matching a pattern in `skip-unless-changed` for "
+                + task.label
+            )
             return True
         return False
 
 
 @register_strategy("skip-unless-schedules")
 class SkipUnlessSchedules(OptimizationStrategy):
-
     @memoize
     def scheduled_by_push(self, repository, revision):
         changed_files = files_changed.get_changed_files(repository, revision)
@@ -69,19 +70,21 @@ class SkipUnlessSchedules(OptimizationStrategy):
         # the decision task has a sparse checkout, so, mozbuild_reader will use
         # a MercurialRevisionFinder with revision '.', which should be the same
         # as `revision`; in other circumstances, it will use a default reader
-        rdr = mbo.mozbuild_reader(config_mode='empty')
+        rdr = mbo.mozbuild_reader(config_mode="empty")
 
         components = set()
         for p, m in rdr.files_info(changed_files).items():
-            components |= set(m['SCHEDULES'].components)
+            components |= set(m["SCHEDULES"].components)
 
         return components
 
     def should_remove_task(self, task, params, conditions):
-        if params.get('pushlog_id') == -1:
+        if params.get("pushlog_id") == -1:
             return False
 
-        scheduled = self.scheduled_by_push(params['head_repository'], params['head_rev'])
+        scheduled = self.scheduled_by_push(
+            params["head_repository"], params["head_rev"]
+        )
         conditions = set(conditions)
         # if *any* of the condition components are scheduled, do not optimize
         if conditions & scheduled:
@@ -104,13 +107,16 @@ class SkipUnlessHasRelevantTests(OptimizationStrategy):
         return {d for d in changed if d}
 
     def should_remove_task(self, task, params, _):
-        if not task.attributes.get('test_manifests'):
+        if not task.attributes.get("test_manifests"):
             return True
 
-        for d in self.get_changed_dirs(params['head_repository'], params['head_rev']):
-            for t in task.attributes['test_manifests']:
+        for d in self.get_changed_dirs(params["head_repository"], params["head_rev"]):
+            for t in task.attributes["test_manifests"]:
                 if t.startswith(d):
-                    logger.debug('{} runs a test path ({}) contained by a modified file ({})'
-                                 .format(task.label, t, d))
+                    logger.debug(
+                        "{} runs a test path ({}) contained by a modified file ({})".format(
+                            task.label, t, d
+                        )
+                    )
                     return False
         return True

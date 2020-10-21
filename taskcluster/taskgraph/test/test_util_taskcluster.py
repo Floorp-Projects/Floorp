@@ -8,17 +8,14 @@ import datetime
 import unittest
 
 import mozunit
-from taskgraph.util.taskcluster import (
-    parse_time
-)
+from taskgraph.util.taskcluster import parse_time
 
 
 class TestTCUtils(unittest.TestCase):
-
     def test_parse_time(self):
         exp = datetime.datetime(2018, 10, 10, 18, 33, 3, 463000)
-        assert parse_time('2018-10-10T18:33:03.463Z') == exp
+        assert parse_time("2018-10-10T18:33:03.463Z") == exp
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

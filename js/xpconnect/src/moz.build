@@ -5,67 +5,67 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'BackstagePass.h',
-    'XPCJSMemoryReporter.h',
-    'xpcObjectHelper.h',
-    'xpcpublic.h',
+    "BackstagePass.h",
+    "XPCJSMemoryReporter.h",
+    "xpcObjectHelper.h",
+    "xpcpublic.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ExportHelpers.cpp',
-    'JSServices.cpp',
-    'nsXPConnect.cpp',
-    'Sandbox.cpp',
-    'XPCCallContext.cpp',
-    'XPCComponents.cpp',
-    'XPCConvert.cpp',
-    'XPCDebug.cpp',
-    'XPCException.cpp',
-    'XPCJSContext.cpp',
-    'XPCJSID.cpp',
-    'XPCJSRuntime.cpp',
-    'XPCJSWeakReference.cpp',
-    'XPCLocale.cpp',
-    'XPCLog.cpp',
-    'XPCMaps.cpp',
-    'XPCModule.cpp',
-    'XPCRuntimeService.cpp',
-    'XPCShellImpl.cpp',
-    'XPCString.cpp',
-    'XPCThrower.cpp',
-    'XPCVariant.cpp',
-    'XPCWrappedJS.cpp',
-    'XPCWrappedJSClass.cpp',
-    'XPCWrappedJSIterator.cpp',
-    'XPCWrappedNative.cpp',
-    'XPCWrappedNativeInfo.cpp',
-    'XPCWrappedNativeJSOps.cpp',
-    'XPCWrappedNativeProto.cpp',
-    'XPCWrappedNativeScope.cpp',
-    'XPCWrapper.cpp',
+    "ExportHelpers.cpp",
+    "JSServices.cpp",
+    "nsXPConnect.cpp",
+    "Sandbox.cpp",
+    "XPCCallContext.cpp",
+    "XPCComponents.cpp",
+    "XPCConvert.cpp",
+    "XPCDebug.cpp",
+    "XPCException.cpp",
+    "XPCJSContext.cpp",
+    "XPCJSID.cpp",
+    "XPCJSRuntime.cpp",
+    "XPCJSWeakReference.cpp",
+    "XPCLocale.cpp",
+    "XPCLog.cpp",
+    "XPCMaps.cpp",
+    "XPCModule.cpp",
+    "XPCRuntimeService.cpp",
+    "XPCShellImpl.cpp",
+    "XPCString.cpp",
+    "XPCThrower.cpp",
+    "XPCVariant.cpp",
+    "XPCWrappedJS.cpp",
+    "XPCWrappedJSClass.cpp",
+    "XPCWrappedJSIterator.cpp",
+    "XPCWrappedNative.cpp",
+    "XPCWrappedNativeInfo.cpp",
+    "XPCWrappedNativeJSOps.cpp",
+    "XPCWrappedNativeProto.cpp",
+    "XPCWrappedNativeScope.cpp",
+    "XPCWrapper.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '!/xpcom/components',
-    '../loader',
-    '../wrappers',
-    '/caps',
-    '/dom/base',
-    '/dom/bindings',
-    '/dom/html',
-    '/layout/base',
-    '/layout/style',
-    '/netwerk/base',
-    '/xpcom/components',
+    "!/xpcom/components",
+    "../loader",
+    "../wrappers",
+    "/caps",
+    "/dom/base",
+    "/dom/bindings",
+    "/dom/html",
+    "/layout/base",
+    "/layout/style",
+    "/netwerk/base",
+    "/xpcom/components",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow", "-Werror=format"]

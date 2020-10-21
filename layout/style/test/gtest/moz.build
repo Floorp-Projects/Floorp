@@ -4,19 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('style-gtest')
+Library("style-gtest")
 
 UNIFIED_SOURCES = [
-    'ImportScannerTest.cpp',
-    'StyloParsingBench.cpp',
+    "ImportScannerTest.cpp",
+    "StyloParsingBench.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/layout/style',
+    "/layout/style",
 ]
 
-GeneratedFile('ExampleStylesheet.h',
-              script='generate_example_stylesheet.py',
-              inputs=['example.css'])
+GeneratedFile(
+    "ExampleStylesheet.h",
+    script="generate_example_stylesheet.py",
+    inputs=["example.css"],
+)
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

@@ -5,30 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla += [
-    'SandboxReporter.h',
-    'SandboxReporterCommon.h',
+    "SandboxReporter.h",
+    "SandboxReporterCommon.h",
 ]
 
 UNIFIED_SOURCES += [
-    'SandboxReporter.cpp',
-    'SandboxReporterWrappers.cpp',
+    "SandboxReporter.cpp",
+    "SandboxReporterWrappers.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 LOCAL_INCLUDES += [
-    '/security/sandbox/linux', # SandboxLogging.h
+    "/security/sandbox/linux",  # SandboxLogging.h
 ]
 
 # Need this for base::PlatformThread
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 # Need this for safe_sprintf.h used by SandboxLogging.h,
 # but it has to be after ipc/chromium/src.
 LOCAL_INCLUDES += [
-    '/security/sandbox/chromium',
+    "/security/sandbox/chromium",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

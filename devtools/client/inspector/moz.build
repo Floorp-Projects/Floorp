@@ -3,33 +3,33 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'animation',
-    'boxmodel',
-    'changes',
-    'compatibility',
-    'components',
-    'computed',
-    'extensions',
-    'flexbox',
-    'fonts',
-    'grids',
-    'layout',
-    'markup',
-    'rules',
-    'shared'
+    "animation",
+    "boxmodel",
+    "changes",
+    "compatibility",
+    "components",
+    "computed",
+    "extensions",
+    "flexbox",
+    "fonts",
+    "grids",
+    "layout",
+    "markup",
+    "rules",
+    "shared",
 ]
 
 DevToolsModules(
-    'breadcrumbs.js',
-    'inspector-search.js',
-    'inspector.js',
-    'node-picker.js',
-    'panel.js',
-    'store.js',
-    'toolsidebar.js',
+    "breadcrumbs.js",
+    "inspector-search.js",
+    "inspector.js",
+    "node-picker.js",
+    "panel.js",
+    "store.js",
+    "toolsidebar.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Inspector')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Inspector")

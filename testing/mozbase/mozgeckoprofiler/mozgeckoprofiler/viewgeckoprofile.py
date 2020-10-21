@@ -61,9 +61,7 @@ class ViewGeckoProfile(object):
 
         # Temporarily change the directory to the profile directory.
         os.chdir(self.gecko_profile_dir)
-        self.httpd = TCPServer(
-            (self.host, self.port), ProfileServingHTTPRequestHandler
-        )
+        self.httpd = TCPServer((self.host, self.port), ProfileServingHTTPRequestHandler)
 
     def handle_single_request(self):
         self.httpd.handle_request()

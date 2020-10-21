@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -18,18 +19,18 @@ transforms = TransformSequence()
 @transforms.add
 def run_profile_data(config, jobs):
     for job in jobs:
-        build_platform = job['attributes'].get('build_platform')
-        instr = 'instrumented-build-{}'.format(job['name'])
-        if 'android' in build_platform:
-            artifact = 'geckoview-androidTest.apk'
-        elif 'macosx64' in build_platform:
-            artifact = 'target.dmg'
-        elif 'win' in build_platform:
-            artifact = 'target.zip'
+        build_platform = job["attributes"].get("build_platform")
+        instr = "instrumented-build-{}".format(job["name"])
+        if "android" in build_platform:
+            artifact = "geckoview-androidTest.apk"
+        elif "macosx64" in build_platform:
+            artifact = "target.dmg"
+        elif "win" in build_platform:
+            artifact = "target.zip"
         else:
-            artifact = 'target.tar.bz2'
-        job.setdefault('fetches', {})[instr] = [
+            artifact = "target.tar.bz2"
+        job.setdefault("fetches", {})[instr] = [
             artifact,
-            'target.crashreporter-symbols.zip',
+            "target.crashreporter-symbols.zip",
         ]
         yield job

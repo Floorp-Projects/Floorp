@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'autocomplete.js',
-    'filters.js',
-    'history.js',
-    'index.js',
-    'messages.js',
-    'notifications.js',
-    'prefs.js',
-    'ui.js',
+    "autocomplete.js",
+    "filters.js",
+    "history.js",
+    "index.js",
+    "messages.js",
+    "notifications.js",
+    "prefs.js",
+    "ui.js",
 )

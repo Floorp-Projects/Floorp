@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
-    'components',
-    'reducers',
+    "actions",
+    "components",
+    "reducers",
 ]
 
 DevToolsModules(
-    'extension-sidebar.js',
-    'types.js',
+    "extension-sidebar.js",
+    "types.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]

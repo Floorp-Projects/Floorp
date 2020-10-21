@@ -2,6 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SharedLibrary('c_library')
+SharedLibrary("c_library")
 
-SOURCES = ['c-library.c']
+SOURCES = ["c-library.c"]

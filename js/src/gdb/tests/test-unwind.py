@@ -7,9 +7,10 @@ def do_unwinder_test():
     # The unwinder is disabled by default for the moment. Turn it on to check
     # that the unwinder works as expected.
     import gdb
+
     gdb.execute("enable unwinder .* SpiderMonkey")
 
-    run_fragment('unwind.simple', 'Something')
+    run_fragment("unwind.simple", "Something")
 
     first = True
     # The unwinder is a bit flaky still but should at least be able to
@@ -50,10 +51,11 @@ def do_unwinder_test():
 
 
 # Only on the right platforms.
-if platform.machine() == 'x86_64' and platform.system() == 'Linux':
+if platform.machine() == "x86_64" and platform.system() == "Linux":
     # Only test when gdb has the unwinder feature.
     try:
         import gdb.unwinder  # NOQA: F401
+
         do_unwinder_test()
     except Exception:
         pass

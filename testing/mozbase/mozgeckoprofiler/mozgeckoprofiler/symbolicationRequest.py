@@ -24,6 +24,7 @@ if six.PY2:
 else:
     # Import for Python 3
     from urllib.request import urlopen, Request
+
     # Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
     # But for python 3.0 compatibility, 'basestring' isn't defined, but the 'str' type works.
     # So we force 'basestring' to 'str'.

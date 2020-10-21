@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'BoxModel.js',
-    'BoxModelEditable.js',
-    'BoxModelInfo.js',
-    'BoxModelMain.js',
-    'BoxModelProperties.js',
-    'ComputedProperty.js',
+    "BoxModel.js",
+    "BoxModelEditable.js",
+    "BoxModelInfo.js",
+    "BoxModelMain.js",
+    "BoxModelProperties.js",
+    "ComputedProperty.js",
 )

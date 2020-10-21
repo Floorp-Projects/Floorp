@@ -5,15 +5,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import re
 
-_JOINED_SYMBOL_RE = re.compile(r'([^(]*)\(([^)]*)\)$')
+_JOINED_SYMBOL_RE = re.compile(r"([^(]*)\(([^)]*)\)$")
 
 
 def split_symbol(treeherder_symbol):
     """Split a symbol expressed as grp(sym) into its two parts.  If no group is
     given, the returned group is '?'"""
-    groupSymbol = '?'
+    groupSymbol = "?"
     symbol = treeherder_symbol
-    if '(' in symbol:
+    if "(" in symbol:
         match = _JOINED_SYMBOL_RE.match(symbol)
         if match:
             groupSymbol, symbol = match.groups()
@@ -25,9 +25,9 @@ def split_symbol(treeherder_symbol):
 def join_symbol(group, symbol):
     """Perform the reverse of split_symbol, combining the given group and
     symbol.  If the group is '?', then it is omitted."""
-    if group == '?':
+    if group == "?":
         return symbol
-    return '{}({})'.format(group, symbol)
+    return "{}({})".format(group, symbol)
 
 
 def add_suffix(treeherder_symbol, suffix):
@@ -45,18 +45,23 @@ def replace_group(treeherder_symbol, new_group):
 
 def inherit_treeherder_from_dep(job, dep_job):
     """Inherit treeherder defaults from dep_job"""
-    treeherder = job.get('treeherder', {})
+    treeherder = job.get("treeherder", {})
 
-    dep_th_platform = dep_job.task.get('extra', {}).get(
-        'treeherder', {}).get('machine', {}).get('platform', '')
-    dep_th_collection = list(dep_job.task.get('extra', {}).get(
-        'treeherder', {}).get('collection', {}).keys())[0]
-    treeherder.setdefault('platform',
-                          "{}/{}".format(dep_th_platform, dep_th_collection))
+    dep_th_platform = (
+        dep_job.task.get("extra", {})
+        .get("treeherder", {})
+        .get("machine", {})
+        .get("platform", "")
+    )
+    dep_th_collection = list(
+        dep_job.task.get("extra", {}).get("treeherder", {}).get("collection", {}).keys()
+    )[0]
     treeherder.setdefault(
-        'tier',
-        dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
+        "platform", "{}/{}".format(dep_th_platform, dep_th_collection)
+    )
+    treeherder.setdefault(
+        "tier", dep_job.task.get("extra", {}).get("treeherder", {}).get("tier", 1)
     )
     # Does not set symbol
-    treeherder.setdefault('kind', 'build')
+    treeherder.setdefault("kind", "build")
     return treeherder

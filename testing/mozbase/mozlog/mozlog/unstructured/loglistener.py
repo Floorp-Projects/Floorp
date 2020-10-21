@@ -10,7 +10,6 @@ import socket
 
 
 class LogMessageServer(socketserver.TCPServer):
-
     def __init__(self, server_address, logger, message_callback=None, timeout=3):
         socketserver.TCPServer.__init__(self, server_address, LogMessageHandler)
         self._logger = logger
@@ -24,7 +23,7 @@ class LogMessageHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         """Continually listens for log messages."""
-        self._partial_message = ''
+        self._partial_message = ""
         self.request.settimeout(self.server.timeout)
 
         while True:
@@ -39,12 +38,12 @@ class LogMessageHandler(socketserver.BaseRequestHandler):
     def process_message(self, data):
         """Processes data from a connected log source. Messages are assumed
         to be newline delimited, and generally well-formed JSON."""
-        for part in data.split('\n'):
+        for part in data.split("\n"):
             msg_string = self._partial_message + part
             try:
                 msg = json.loads(msg_string)
-                self._partial_message = ''
-                self.server._logger.log_structured(msg.get('action', 'UNKNOWN'), msg)
+                self._partial_message = ""
+                self.server._logger.log_structured(msg.get("action", "UNKNOWN"), msg)
                 if self.server._message_callback:
                     self.server._message_callback()
 

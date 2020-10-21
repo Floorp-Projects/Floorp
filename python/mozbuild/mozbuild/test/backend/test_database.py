@@ -28,22 +28,30 @@ class TestCompileDBBackends(BackendTester):
         expected_db = [
             {
                 "directory": topobjdir,
-                "command": "clang -o /dev/null -c -ferror-limit=0 {}/bar.c".format(topsrcdir),
+                "command": "clang -o /dev/null -c -ferror-limit=0 {}/bar.c".format(
+                    topsrcdir
+                ),
                 "file": "{}/bar.c".format(topsrcdir),
             },
             {
                 "directory": topobjdir,
-                "command": "clang -o /dev/null -c -ferror-limit=0 {}/foo.c".format(topsrcdir),
+                "command": "clang -o /dev/null -c -ferror-limit=0 {}/foo.c".format(
+                    topsrcdir
+                ),
                 "file": "{}/foo.c".format(topsrcdir),
             },
             {
                 "directory": topobjdir,
-                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/bar.cpp".format(topsrcdir),
+                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/bar.cpp".format(
+                    topsrcdir
+                ),
                 "file": "{}/bar.cpp".format(topsrcdir),
             },
             {
                 "directory": topobjdir,
-                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/foo.cpp".format(topsrcdir),
+                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/foo.cpp".format(
+                    topsrcdir
+                ),
                 "file": "{}/foo.cpp".format(topsrcdir),
             },
         ]
@@ -64,7 +72,9 @@ class TestCompileDBBackends(BackendTester):
         in order to be used by ClandBackend"""
 
         env = self._consume("database", ClangdBackend)
-        compile_commands_path = os.path.join(env.topobjdir, "clangd", "compile_commands.json")
+        compile_commands_path = os.path.join(
+            env.topobjdir, "clangd", "compile_commands.json"
+        )
 
         self.perform_check(compile_commands_path, env.topsrcdir, env.topobjdir)
 

@@ -22,7 +22,7 @@ def is_release_promotion_available(parameters):
     title="Merge Day Automation",
     symbol="${input.behavior}",
     description="Merge repository branches.",
-    permission='merge-automation',
+    permission="merge-automation",
     order=500,
     context=[],
     available=is_release_promotion_available,
@@ -43,7 +43,7 @@ def is_release_promotion_available(parameters):
                 "type": "string",
                 "description": "The type of release promotion to perform.",
                 "enum": sorted(graph_config["merge-automation"]["behaviors"].keys()),
-                "default": "central-to-beta"
+                "default": "central-to-beta",
             },
             "from-repo": {
                 "type": "string",
@@ -67,7 +67,7 @@ def is_release_promotion_available(parameters):
             },
             "fetch-version-from": {
                 "type": "string",
-                "description": "Path to file used when querying current version."
+                "description": "Path to file used when querying current version.",
             },
         },
         "required": ["behavior"],
