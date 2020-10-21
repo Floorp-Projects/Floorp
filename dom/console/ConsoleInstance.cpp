@@ -8,6 +8,7 @@
 #include "mozilla/dom/ConsoleBinding.h"
 #include "ConsoleCommon.h"
 #include "ConsoleUtils.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
