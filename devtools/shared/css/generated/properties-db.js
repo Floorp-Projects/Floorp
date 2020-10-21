@@ -3449,6 +3449,20 @@ exports.CSS_PROPERTIES = {
       "window"
     ]
   },
+  "aspect-ratio": {
+    "isInherited": false,
+    "subproperties": [
+      "aspect-ratio"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
   "backface-visibility": {
     "isInherited": false,
     "subproperties": [
