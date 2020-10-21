@@ -366,6 +366,35 @@ impl Stream {
             &*ptr
         }
     }
+
+    pub fn set_name<CB>(&self, name: &CStr, _: CB, userdata: *mut c_void) -> Result<Operation>
+        where CB: Fn(&Stream, i32, *mut c_void) 
+    {
+        assert_eq!(mem::size_of::<CB>(), 0);
+
+        // See: A note about `wrapped` functions
+        unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
+            where F: Fn(&Stream, i32, *mut c_void)
+        {
+            let mut stm = stream::from_raw_ptr(s);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, success, userdata);
+            forget(stm);
+
+            result
+        }
+
+        let r = unsafe { ffi::pa_stream_set_name(self.raw_mut(), name.as_ptr(), Some(wrapped::<CB>), userdata) };
+        if r.is_null() {
+            let err = if let Some(c) = self.get_context() {
+                c.errno()
+            } else {
+                ffi::PA_ERR_UNKNOWN
+            };
+            return Err(ErrorCode::from_error_code(err));
+        }
+        Ok(unsafe { operation::from_raw_ptr(r) })
+    }
 }
 
 #[doc(hidden)]
