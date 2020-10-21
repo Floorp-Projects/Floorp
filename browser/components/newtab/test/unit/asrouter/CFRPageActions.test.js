@@ -1,3 +1,5 @@
+/* eslint max-nested-callbacks: ["error", 100] */
+
 import { CFRPageActions, PageAction } from "lib/CFRPageActions.jsm";
 import { FAKE_RECOMMENDATION } from "./constants";
 import { GlobalOverrider } from "test/unit/utils";
@@ -343,20 +345,20 @@ describe("CFRPageActions", () => {
     });
 
     describe("#dispatchUserAction", () => {
-      it("should call ._dispatchToASRouter with the right action", () => {
+      it("should call ._dispatchCFRAction with the right action", () => {
         const fakeAction = {};
         pageAction.dispatchUserAction(fakeAction);
         assert.calledOnce(dispatchStub);
         assert.calledWith(
           dispatchStub,
           { type: "USER_ACTION", data: fakeAction },
-          { browser: fakeBrowser }
+          fakeBrowser
         );
       });
     });
 
     describe("#_dispatchImpression", () => {
-      it("should call ._dispatchToASRouter with the right action", () => {
+      it("should call ._dispatchCFRAction with the right action", () => {
         pageAction._dispatchImpression("fake impression");
         assert.calledWith(dispatchStub, {
           type: "IMPRESSION",
@@ -366,7 +368,7 @@ describe("CFRPageActions", () => {
     });
 
     describe("#_sendTelemetry", () => {
-      it("should call ._dispatchToASRouter with the right action", () => {
+      it("should call ._dispatchCFRAction with the right action", () => {
         const fakePing = { message_id: 42 };
         pageAction._sendTelemetry(fakePing);
         assert.calledWith(dispatchStub, {
@@ -377,7 +379,7 @@ describe("CFRPageActions", () => {
     });
 
     describe("#_blockMessage", () => {
-      it("should call ._dispatchToASRouter with the right action", () => {
+      it("should call ._dispatchCFRAction with the right action", () => {
         pageAction._blockMessage("fake id");
         assert.calledOnce(dispatchStub);
         assert.calledWith(dispatchStub, {
@@ -656,7 +658,7 @@ describe("CFRPageActions", () => {
             type: "USER_ACTION",
             data: { id: "primary_action", data: { url: "latest-addon.xpi" } },
           },
-          { browser: fakeBrowser }
+          fakeBrowser
         );
         // Should send telemetry
         assert.calledWith(dispatchStub, {
@@ -831,10 +833,11 @@ describe("CFRPageActions", () => {
       });
     });
     describe("#_cfrUrlbarButtonClick/cfr_urlbar_chiclet", () => {
-      const heartbeatRecommendation = CFRMessageProvider.getMessages().find(
-        m => m.template === "cfr_urlbar_chiclet"
-      );
+      let heartbeatRecommendation;
       beforeEach(async () => {
+        heartbeatRecommendation = (await CFRMessageProvider.getMessages()).find(
+          m => m.template === "cfr_urlbar_chiclet"
+        );
         CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
         await CFRPageActions.addRecommendation(
           fakeBrowser,
@@ -985,7 +988,7 @@ describe("CFRPageActions", () => {
       it("should succeed and add an element to the RecommendationMap", async () => {
         assert.isTrue(
           await CFRPageActions.forceRecommendation(
-            { browser: fakeBrowser },
+            fakeBrowser,
             fakeRecommendation,
             dispatchStub
           )
@@ -999,13 +1002,13 @@ describe("CFRPageActions", () => {
         const win = fakeBrowser.ownerGlobal;
         assert.isFalse(CFRPageActions.PageActionMap.has(win));
         await CFRPageActions.forceRecommendation(
-          { browser: fakeBrowser },
+          fakeBrowser,
           fakeRecommendation,
           dispatchStub
         );
         const pageAction = CFRPageActions.PageActionMap.get(win);
         assert.equal(win, pageAction.window);
-        assert.equal(dispatchStub, pageAction._dispatchToASRouter);
+        assert.equal(dispatchStub, pageAction._dispatchCFRAction);
         assert.calledOnce(PageAction.prototype.showAddressBarNotifier);
       });
     });
@@ -1071,7 +1074,7 @@ describe("CFRPageActions", () => {
         );
         const pageAction = CFRPageActions.PageActionMap.get(win);
         assert.equal(win, pageAction.window);
-        assert.equal(dispatchStub, pageAction._dispatchToASRouter);
+        assert.equal(dispatchStub, pageAction._dispatchCFRAction);
         assert.calledOnce(PageAction.prototype.showAddressBarNotifier);
       });
       it("should add the right url if we fetched and addon install URL", async () => {

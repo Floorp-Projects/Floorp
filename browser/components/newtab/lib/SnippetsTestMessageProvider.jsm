@@ -706,7 +706,7 @@ const MESSAGES = () => [
 
 const SnippetsTestMessageProvider = {
   getMessages() {
-    return (
+    return Promise.resolve(
       MESSAGES()
         // Ensures we never actually show test except when triggered by debug tools
         .map(message => ({

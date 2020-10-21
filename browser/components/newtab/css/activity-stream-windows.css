@@ -3383,6 +3383,12 @@ main {
   cursor: pointer; }
   .tall .ASRouterButton {
     margin-inline-start: 20px; }
+  .ASRouterButton.test-only {
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    display: block;
+    visibility: hidden; }
   .ASRouterButton.primary {
     border: 1px solid var(--newtab-button-primary-color);
     background-color: var(--newtab-button-primary-color);

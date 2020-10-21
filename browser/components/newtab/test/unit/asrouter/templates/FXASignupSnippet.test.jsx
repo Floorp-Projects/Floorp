@@ -4,11 +4,8 @@ import React from "react";
 import schema from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet.schema.json";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
-const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(
-  msg => msg.template === "fxa_signup_snippet"
-).content;
-
 describe("FXASignupSnippet", () => {
+  let DEFAULT_CONTENT;
   let sandbox;
 
   function mountAndCheckProps(content = {}) {
@@ -30,8 +27,11 @@ describe("FXASignupSnippet", () => {
     return comp;
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     sandbox = sinon.createSandbox();
+    DEFAULT_CONTENT = (await SnippetsTestMessageProvider.getMessages()).find(
+      msg => msg.template === "fxa_signup_snippet"
+    ).content;
   });
   afterEach(() => {
     sandbox.restore();

@@ -6,17 +6,16 @@ import {
   Personalization,
   ToggleStoryButton,
 } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import { ASRouterUtils } from "content-src/asrouter/asrouter-utils";
 import { GlobalOverrider } from "test/unit/utils";
 import React from "react";
 import { shallow } from "enzyme";
 
 describe("ASRouterAdmin", () => {
-  let globals;
+  let globalOverrider;
   let sandbox;
-  let sendMessageStub;
-  let addListenerStub;
-  let removeListenerStub;
   let wrapper;
+  let globals;
   let FAKE_PROVIDER_PREF = [
     {
       enabled: true,
@@ -35,46 +34,32 @@ describe("ASRouterAdmin", () => {
     },
   ];
   beforeEach(() => {
-    globals = new GlobalOverrider();
+    globalOverrider = new GlobalOverrider();
     sandbox = sinon.createSandbox();
-    sendMessageStub = sandbox.stub();
-    addListenerStub = sandbox.stub();
-    removeListenerStub = sandbox.stub();
-
-    globals.set("RPMSendAsyncMessage", sendMessageStub);
-    globals.set("RPMAddMessageListener", addListenerStub);
-    globals.set("RPMRemoveMessageListener", removeListenerStub);
-
+    sandbox.stub(ASRouterUtils, "getPreviewEndpoint").returns("foo");
+    globals = {
+      ASRouterMessage: sandbox.stub().resolves(),
+      ASRouterAddParentListener: sandbox.stub(),
+      ASRouterRemoveParentListener: sandbox.stub(),
+    };
+    globalOverrider.set(globals);
     wrapper = shallow(
       <ASRouterAdminInner collapsed={false} location={{ routes: [""] }} />
     );
   });
   afterEach(() => {
     sandbox.restore();
-    globals.restore();
+    globalOverrider.restore();
   });
   it("should render ASRouterAdmin component", () => {
     assert.ok(wrapper.exists());
   });
   it("should send ADMIN_CONNECT_STATE on mount", () => {
-    assert.calledOnce(sendMessageStub);
-    assert.propertyVal(
-      sendMessageStub.firstCall.args[1],
-      "type",
-      "ADMIN_CONNECT_STATE"
-    );
-  });
-  it("should set a listener on mount", () => {
-    assert.calledOnce(addListenerStub);
-    assert.calledWithExactly(
-      addListenerStub,
-      sinon.match.string,
-      wrapper.instance().onMessage
-    );
-  });
-  it("should remove listener on unmount", () => {
-    wrapper.unmount();
-    assert.calledOnce(removeListenerStub);
+    assert.calledOnce(globals.ASRouterMessage);
+    assert.calledWith(globals.ASRouterMessage, {
+      type: "ADMIN_CONNECT_STATE",
+      data: { endpoint: "foo" },
+    });
   });
   it("should set a .collapsed class on the outer div if props.collapsed is true", () => {
     wrapper.setProps({ collapsed: true });
@@ -181,6 +166,10 @@ describe("ASRouterAdmin", () => {
     });
     describe("#renderMessages", () => {
       beforeEach(() => {
+        sandbox.stub(ASRouterUtils, "blockById").resolves();
+        sandbox.stub(ASRouterUtils, "unblockById").resolves();
+        sandbox.stub(ASRouterUtils, "overrideMessage").resolves({ foo: "bar" });
+        sandbox.stub(ASRouterUtils, "sendMessage").resolves();
         wrapper.setState({
           messageFilter: "all",
           messageBlockList: [],
@@ -202,17 +191,8 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
         wrapper.find(".message-item button.primary").simulate("click");
-        // first call is ADMIN_CONNECT_STATE
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1],
-          "type",
-          "BLOCK_MESSAGE_BY_ID"
-        );
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1].data,
-          "id",
-          "foo"
-        );
+        assert.calledOnce(ASRouterUtils.blockById);
+        assert.calledWith(ASRouterUtils.blockById, "foo");
       });
       it("should render a blocked message", () => {
         wrapper.setState({
@@ -227,17 +207,8 @@ describe("ASRouterAdmin", () => {
         });
         assert.lengthOf(wrapper.find(".message-item.blocked"), 1);
         wrapper.find(".message-item.blocked button").simulate("click");
-        // first call is ADMIN_CONNECT_STATE
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1],
-          "type",
-          "UNBLOCK_MESSAGE_BY_ID"
-        );
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1].data,
-          "id",
-          "foo"
-        );
+        assert.calledOnce(ASRouterUtils.unblockById);
+        assert.calledWith(ASRouterUtils.unblockById, "foo");
       });
       it("should render a message if provider matches filter", () => {
         wrapper.setState({
@@ -253,7 +224,7 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
       });
-      it("should override with the selected message", () => {
+      it("should override with the selected message", async () => {
         wrapper.setState({
           messageFilter: "messageProvider",
           messages: [
@@ -267,17 +238,10 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
         wrapper.find(".message-item button.show").simulate("click");
-        // first call is ADMIN_CONNECT_STATE
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1],
-          "type",
-          "OVERRIDE_MESSAGE"
-        );
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1].data,
-          "id",
-          "foo"
-        );
+        assert.calledOnce(ASRouterUtils.overrideMessage);
+        assert.calledWith(ASRouterUtils.overrideMessage, "foo");
+        await ASRouterUtils.overrideMessage();
+        assert.equal(wrapper.state().foo, "bar");
       });
       it("should hide message if provider filter changes", () => {
         wrapper.setState({
@@ -336,17 +300,15 @@ describe("ASRouterAdmin", () => {
           ],
         });
         wrapper.find(".messages-reset").simulate("click");
-        assert.propertyVal(
-          sendMessageStub.secondCall.args[1],
-          "type",
-          "DISABLE_PROVIDER"
-        );
-
-        assert.propertyVal(
-          sendMessageStub.thirdCall.args[1],
-          "type",
-          "ENABLE_PROVIDER"
-        );
+        assert.calledTwice(ASRouterUtils.sendMessage);
+        assert.calledWith(ASRouterUtils.sendMessage, {
+          type: "DISABLE_PROVIDER",
+          data: "messageProvider",
+        });
+        assert.calledWith(ASRouterUtils.sendMessage, {
+          type: "ENABLE_PROVIDER",
+          data: "messageProvider",
+        });
       });
     });
   });

@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import { OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME } from "content-src/lib/init-store";
+import { ASRouterUtils } from "./asrouter-utils";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";
 import { LocalizationProvider } from "fluent-react";
@@ -13,95 +14,8 @@ import ReactDOM from "react-dom";
 import { SnippetsTemplates } from "./templates/template-manifest";
 import { FirstRun } from "./templates/FirstRun/FirstRun";
 
-const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
-const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const TEMPLATES_ABOVE_PAGE = ["extended_triplets"];
 const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
-
-export const ASRouterUtils = {
-  addListener(listener) {
-    if (global.RPMAddMessageListener) {
-      global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, listener);
-    }
-  },
-  removeListener(listener) {
-    if (global.RPMRemoveMessageListener) {
-      global.RPMRemoveMessageListener(INCOMING_MESSAGE_NAME, listener);
-    }
-  },
-  sendMessage(action) {
-    if (global.RPMSendAsyncMessage) {
-      global.RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
-    }
-  },
-  blockById(id, options) {
-    ASRouterUtils.sendMessage({
-      type: "BLOCK_MESSAGE_BY_ID",
-      data: { id, ...options },
-    });
-  },
-  modifyMessageJson(content) {
-    ASRouterUtils.sendMessage({
-      type: "MODIFY_MESSAGE_JSON",
-      data: { content },
-    });
-  },
-  dismissById(id) {
-    ASRouterUtils.sendMessage({ type: "DISMISS_MESSAGE_BY_ID", data: { id } });
-  },
-  executeAction(button_action) {
-    ASRouterUtils.sendMessage({
-      type: "USER_ACTION",
-      data: button_action,
-    });
-  },
-  unblockById(id) {
-    ASRouterUtils.sendMessage({ type: "UNBLOCK_MESSAGE_BY_ID", data: { id } });
-  },
-  blockBundle(bundle) {
-    ASRouterUtils.sendMessage({ type: "BLOCK_BUNDLE", data: { bundle } });
-  },
-  unblockBundle(bundle) {
-    ASRouterUtils.sendMessage({ type: "UNBLOCK_BUNDLE", data: { bundle } });
-  },
-  overrideMessage(id) {
-    ASRouterUtils.sendMessage({ type: "OVERRIDE_MESSAGE", data: { id } });
-  },
-  sendTelemetry(ping) {
-    if (global.RPMSendAsyncMessage) {
-      const payload = ac.ASRouterUserEvent(ping);
-      global.RPMSendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
-    }
-  },
-  getPreviewEndpoint() {
-    if (global.location && global.location.href.includes("endpoint")) {
-      const params = new URLSearchParams(
-        global.location.href.slice(global.location.href.indexOf("endpoint"))
-      );
-      try {
-        const endpoint = new URL(params.get("endpoint"));
-        return {
-          url: endpoint.href,
-          snippetId: params.get("snippetId"),
-          theme: this.getPreviewTheme(),
-          dir: this.getPreviewDir(),
-        };
-      } catch (e) {}
-    }
-
-    return null;
-  },
-  getPreviewTheme() {
-    return new URLSearchParams(
-      global.location.href.slice(global.location.href.indexOf("theme"))
-    ).get("theme");
-  },
-  getPreviewDir() {
-    return new URLSearchParams(
-      global.location.href.slice(global.location.href.indexOf("dir"))
-    ).get("dir");
-  },
-};
 
 // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
 function shouldSendImpressionOnUpdate(nextProps, prevProps) {
@@ -114,12 +28,15 @@ function shouldSendImpressionOnUpdate(nextProps, prevProps) {
 export class ASRouterUISurface extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.onMessageFromParent = this.onMessageFromParent.bind(this);
     this.sendClick = this.sendClick.bind(this);
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
     this.onUserAction = this.onUserAction.bind(this);
     this.fetchFlowParams = this.fetchFlowParams.bind(this);
+    this.onBlockSelected = this.onBlockSelected.bind(this);
+    this.onBlockById = this.onBlockById.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
+    this.onMessageFromParent = this.onMessageFromParent.bind(this);
 
     this.state = { message: {} };
     if (props.document) {
@@ -188,11 +105,14 @@ export class ASRouterUISurface extends React.PureComponent {
 
   sendImpression(extraProps) {
     if (this.state.message.provider === "preview") {
-      return;
+      return Promise.resolve();
     }
 
-    ASRouterUtils.sendMessage({ type: "IMPRESSION", data: this.state.message });
     this.sendUserActionTelemetry({ event: "IMPRESSION", ...extraProps });
+    return ASRouterUtils.sendMessage({
+      type: msg.IMPRESSION,
+      data: this.state.message,
+    });
   }
 
   // If link has a `metric` data attribute send it as part of the `event_context`
@@ -225,19 +145,27 @@ export class ASRouterUISurface extends React.PureComponent {
       !this.state.message.content.do_not_autoblock &&
       !dataset.do_not_autoblock
     ) {
-      ASRouterUtils.blockById(this.state.message.id);
+      this.onBlockById(this.state.message.id);
     }
     if (this.state.message.provider !== "preview") {
       this.sendUserActionTelemetry({ event: "CLICK_BUTTON", ...metric });
     }
   }
 
-  onBlockById(id) {
-    return options => ASRouterUtils.blockById(id, options);
+  onBlockSelected(options) {
+    return this.onBlockById(this.state.message.id, options);
   }
 
-  onDismissById(id) {
-    return () => ASRouterUtils.dismissById(id);
+  onBlockById(id, options) {
+    return ASRouterUtils.blockById(id, options).then(clearAll => {
+      if (clearAll) {
+        this.setState({ message: {} });
+      }
+    });
+  }
+
+  onDismiss() {
+    this.clearMessage(this.state.message.id);
   }
 
   clearMessage(id) {
@@ -256,25 +184,13 @@ export class ASRouterUISurface extends React.PureComponent {
     }
   }
 
-  onMessageFromParent({ data: action }) {
-    switch (action.type) {
-      case "SET_MESSAGE":
-        this.setState({ message: action.data });
+  onMessageFromParent({ type, data }) {
+    // These only exists due to onPrefChange events in ASRouter
+    switch (type) {
+      case "ClearMessages": {
+        data.forEach(id => this.clearMessage(id));
         break;
-      case "CLEAR_MESSAGE":
-        this.clearMessage(action.data.id);
-        break;
-      case "CLEAR_PROVIDER":
-        if (action.data.id === this.state.message.provider) {
-          this.setState({ message: {} });
-        }
-        break;
-      case "CLEAR_ALL":
-        this.setState({ message: {} });
-        break;
-      case "AS_ROUTER_TARGETING_UPDATE":
-        action.data.forEach(id => this.clearMessage(id));
-        break;
+      }
     }
   }
 
@@ -282,7 +198,7 @@ export class ASRouterUISurface extends React.PureComponent {
     ASRouterUtils.sendMessage({
       type: "NEWTAB_MESSAGE_REQUEST",
       data: { endpoint },
-    });
+    }).then(state => this.setState(state));
   }
 
   componentWillMount() {
@@ -304,6 +220,22 @@ export class ASRouterUISurface extends React.PureComponent {
 
   componentWillUnmount() {
     ASRouterUtils.removeListener(this.onMessageFromParent);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      prevProps.adminContent &&
+      JSON.stringify(prevProps.adminContent) !==
+        JSON.stringify(this.props.adminContent)
+    ) {
+      this.updateContent();
+    }
+  }
+
+  updateContent() {
+    this.setState({
+      ...this.props.adminContent,
+    });
   }
 
   async getMonitorUrl({ url, flowRequestParams = {} }) {
@@ -353,8 +285,8 @@ export class ASRouterUISurface extends React.PureComponent {
           <SnippetComponent
             {...this.state.message}
             UISurface="NEWTAB_FOOTER_BAR"
-            onBlock={this.onBlockById(this.state.message.id)}
-            onDismiss={this.onDismissById(this.state.message.id)}
+            onBlock={this.onBlockSelected}
+            onDismiss={this.onDismiss}
             onAction={this.onUserAction}
             sendClick={this.sendClick}
             sendUserActionTelemetry={this.sendUserActionTelemetry}
@@ -395,7 +327,7 @@ export class ASRouterUISurface extends React.PureComponent {
             sendUserActionTelemetry={this.sendUserActionTelemetry}
             executeAction={ASRouterUtils.executeAction}
             onBlockById={ASRouterUtils.blockById}
-            onDismiss={this.onDismissById(this.state.message.id)}
+            onDismiss={this.onDismiss}
             fxaEndpoint={this.props.fxaEndpoint}
             appUpdateChannel={this.props.appUpdateChannel}
             fetchFlowParams={this.fetchFlowParams}
