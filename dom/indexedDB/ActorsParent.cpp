@@ -5928,6 +5928,16 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   return NS_OK;
 }
 
+Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
+    nsIFile& aDirectory, const nsAString& aPathElement) {
+  IDB_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_TYPED(
+                                      nsCOMPtr<nsIFile>, aDirectory, Clone));
+
+  IDB_TRY(resultFile->Append(aPathElement));
+
+  return resultFile;
+}
+
 nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
                     QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
@@ -5936,16 +5946,7 @@ nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
   AssertIsOnIOThread();
   MOZ_ASSERT(!aFilename.IsEmpty());
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory.Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Append(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const auto& file, CloneFileAndAppend(aDirectory, aFilename));
 
   return DeleteFile(*file, aQuotaManager, aPersistenceType, aGroupAndOrigin,
                     aIdempotent);
@@ -5962,18 +5963,9 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   DebugOnly<QuotaManager*> quotaManager = QuotaManager::Get();
   MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const auto& file, CloneFileAndAppend(*aDirectory, aFilename));
 
-  rv = file->Append(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Remove(true);
+  nsresult rv = file->Remove(true);
   if (rv == NS_ERROR_FILE_NOT_FOUND ||
       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
     return NS_OK;
@@ -5994,11 +5986,10 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
-  IDB_TRY_UNWRAP(
-      auto markerFile,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
-
-  IDB_TRY(markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
+  IDB_TRY_INSPECT(
+      const auto& markerFile,
+      CloneFileAndAppend(aBaseDirectory,
+                         kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
   IDB_TRY(
       MOZ_TO_RESULT_INVOKE(markerFile, Create, nsIFile::NORMAL_FILE_TYPE, 0644)
@@ -6108,13 +6099,11 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
                      aQuotaManager, aPersistenceType, aGroupAndOrigin,
                      Idempotency::Yes));
 
+  // The files directory counts towards quota.
   IDB_TRY_INSPECT(
       const auto& fmDirectory,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aBaseDirectory, Clone));
-
-  // The files directory counts towards quota.
-  IDB_TRY(fmDirectory->Append(aDatabaseFilenameBase +
-                              kFileManagerDirectoryNameSuffix));
+      CloneFileAndAppend(aBaseDirectory, aDatabaseFilenameBase +
+                                             kFileManagerDirectoryNameSuffix));
 
   IDB_TRY_INSPECT(const bool& exists,
                   MOZ_TO_RESULT_INVOKE(fmDirectory, Exists));
@@ -12545,11 +12534,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     mDirectoryPath.init(std::move(path));
   }
 
-  IDB_TRY_INSPECT(
-      const auto& journalDirectory,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
-
-  IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
+  IDB_TRY_INSPECT(const auto& journalDirectory,
+                  CloneFileAndAppend(*aDirectory, kJournalDirectoryName));
 
   // We don't care if it doesn't exist at all, but if it does exist, make sure
   // it's a directory.
@@ -12665,14 +12651,7 @@ nsCOMPtr<nsIFile> FileManager::GetFileForId(nsIFile* aDirectory, int64_t aId) {
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aId > 0);
 
-  IDB_TRY_UNWRAP(
-      auto file,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone),
-      nullptr);
-
-  IDB_TRY(file->Append(IntToString(aId)), nullptr);
-
-  return file;
+  IDB_TRY_RETURN(CloneFileAndAppend(*aDirectory, IntToString(aId)), nullptr);
 }
 
 // static
@@ -12713,11 +12692,8 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
     IDB_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
   }
 
-  IDB_TRY_INSPECT(
-      const auto& journalDirectory,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
-
-  IDB_TRY(journalDirectory->Append(kJournalDirectoryName));
+  IDB_TRY_INSPECT(const auto& journalDirectory,
+                  CloneFileAndAppend(aDirectory, kJournalDirectoryName));
 
   IDB_TRY_INSPECT(const bool& exists,
                   MOZ_TO_RESULT_INVOKE(journalDirectory, Exists));
@@ -12796,10 +12772,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
             if (!flag) {
               IDB_TRY_INSPECT(const auto& file,
-                              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
-                                                         aDirectory, Clone));
-
-              IDB_TRY(file->Append(name));
+                              CloneFileAndAppend(aDirectory, name));
 
               if (NS_FAILED(file->Remove(false))) {
                 NS_WARNING("Failed to remove orphaned file!");
@@ -12807,10 +12780,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
             }
 
             IDB_TRY_INSPECT(const auto& journalFile,
-                            MOZ_TO_RESULT_INVOKE_TYPED(
-                                nsCOMPtr<nsIFile>, journalDirectory, Clone));
-
-            IDB_TRY(journalFile->Append(name));
+                            CloneFileAndAppend(*journalDirectory, name));
 
             if (NS_FAILED(journalFile->Remove(false))) {
               NS_WARNING("Failed to remove journal file!");
@@ -13056,35 +13026,19 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     }
 
     // We do have a database that uses this subdir so we should rename it now.
-    nsCOMPtr<nsIFile> subdir;
-    nsresult rv = aDirectory->Clone(getter_AddRefs(subdir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = subdir->Append(subdirName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const auto& subdir,
+                    CloneFileAndAppend(*aDirectory, subdirName));
 
     DebugOnly<bool> isDirectory;
     MOZ_ASSERT(NS_SUCCEEDED(subdir->IsDirectory(&isDirectory)));
     MOZ_ASSERT(isDirectory);
 
     // Check if the subdir with suffix already exists before renaming.
-    nsCOMPtr<nsIFile> subdirWithSuffix;
-    rv = aDirectory->Clone(getter_AddRefs(subdirWithSuffix));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = subdirWithSuffix->Append(subdirNameWithSuffix);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const auto& subdirWithSuffix,
+                    CloneFileAndAppend(*aDirectory, subdirNameWithSuffix));
 
     bool exists;
-    rv = subdirWithSuffix->Exists(&exists);
+    nsresult rv = subdirWithSuffix->Exists(&exists);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -13281,16 +13235,12 @@ nsresult QuotaClient::GetUsageForOriginInternal(
 
     IDB_TRY_INSPECT(
         const auto& fmDirectory,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
-
-    IDB_TRY(fmDirectory->Append(databaseFilename +
-                                kFileManagerDirectoryNameSuffix));
+        CloneFileAndAppend(*directory,
+                           databaseFilename + kFileManagerDirectoryNameSuffix));
 
     IDB_TRY_INSPECT(
         const auto& databaseFile,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
-
-    IDB_TRY(databaseFile->Append(databaseFilename + kSQLiteSuffix));
+        CloneFileAndAppend(*directory, databaseFilename + kSQLiteSuffix));
 
     if (aInitializing) {
       IDB_TRY(FileManager::InitDirectory(*fmDirectory, *databaseFile,
@@ -13309,11 +13259,9 @@ nsresult QuotaClient::GetUsageForOriginInternal(
       }
 
       {
-        IDB_TRY_INSPECT(
-            const auto& walFile,
-            MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, directory, Clone));
-
-        IDB_TRY(walFile->Append(databaseFilename + kSQLiteWALSuffix));
+        IDB_TRY_INSPECT(const auto& walFile,
+                        CloneFileAndAppend(
+                            *directory, databaseFilename + kSQLiteWALSuffix));
 
         IDB_TRY_INSPECT(const int64_t& walFileSize,
                         MOZ_TO_RESULT_INVOKE(walFile, GetFileSize)
@@ -14037,10 +13985,8 @@ nsresult Maintenance::DirectoryWork() {
 
     IDB_TRY_INSPECT(
         const auto& persistenceDir,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, storageDir, Clone));
-
-    IDB_TRY(
-        persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString)));
+        CloneFileAndAppend(*storageDir,
+                           NS_ConvertASCIItoUTF16(persistenceTypeString)));
 
     {
       IDB_TRY_INSPECT(const bool& exists,
@@ -14125,11 +14071,8 @@ nsresult Maintenance::DirectoryWork() {
             MOZ_ASSERT(!created);
           }
 
-          IDB_TRY_INSPECT(
-              const auto& idbDir,
-              MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, originDir, Clone));
-
-          IDB_TRY(idbDir->Append(idbDirName));
+          IDB_TRY_INSPECT(const auto& idbDir,
+                          CloneFileAndAppend(*originDir, idbDirName));
 
           IDB_TRY_INSPECT(const bool& exists,
                           MOZ_TO_RESULT_INVOKE(idbDir, Exists));
@@ -16529,10 +16472,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   IDB_TRY_INSPECT(
       const auto& markerFile,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
-
-  IDB_TRY(
-      markerFile->Append(kIdbDeletionMarkerFilePrefix + databaseFilenameBase));
+      CloneFileAndAppend(*dbDirectory,
+                         kIdbDeletionMarkerFilePrefix + databaseFilenameBase));
 
   IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(markerFile, Exists));
 
@@ -16548,9 +16489,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   IDB_TRY_INSPECT(
       const auto& dbFile,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
-
-  IDB_TRY(dbFile->Append(databaseFilenameBase + kSQLiteSuffix));
+      CloneFileAndAppend(*dbDirectory, databaseFilenameBase + kSQLiteSuffix));
 
   mTelemetryId = TelemetryIdForFile(dbFile);
 
@@ -16565,10 +16504,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   IDB_TRY_INSPECT(
       const auto& fmDirectory,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, dbDirectory, Clone));
-
-  IDB_TRY(fmDirectory->Append(databaseFilenameBase +
-                              kFileManagerDirectoryNameSuffix));
+      CloneFileAndAppend(*dbDirectory, databaseFilenameBase +
+                                           kFileManagerDirectoryNameSuffix));
 
   IDB_TRY_UNWRAP(NotNull<nsCOMPtr<mozIStorageConnection>> connection,
                  CreateStorageConnection(*dbFile, *fmDirectory, databaseName,
@@ -17690,16 +17627,9 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
 
   mDatabaseFilenameBase = GetDatabaseFilenameBase(databaseName);
 
-  nsCOMPtr<nsIFile> dbFile;
-  rv = directory->Clone(getter_AddRefs(dbFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = dbFile->Append(mDatabaseFilenameBase + kSQLiteSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& dbFile,
+      CloneFileAndAppend(*directory, mDatabaseFilenameBase + kSQLiteSuffix));
 
 #ifdef DEBUG
   nsString databaseFilePath;
