@@ -399,7 +399,7 @@ uint32_t Http2Session::RegisterStreamID(Http2Stream* stream, uint32_t aNewID) {
   if (aNewID >= kMaxStreamID) mShouldGoAway = true;
 
   // integrity check
-  if (mStreamIDHash.Get(aNewID)) {
+  if (mStreamIDHash.Contains(aNewID)) {
     LOG3(("   New ID already present\n"));
     MOZ_ASSERT(false, "New ID already present in mStreamIDHash");
     mShouldGoAway = true;
@@ -444,7 +444,7 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   // integrity check
-  if (mStreamTransactionHash.Get(aHttpTransaction)) {
+  if (mStreamTransactionHash.Contains(aHttpTransaction)) {
     LOG3(("   New transaction already present\n"));
     MOZ_ASSERT(false, "AddStream duplicate transaction pointer");
     return false;
@@ -559,15 +559,16 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     return true;
   }
 
-  Http2Stream* stream =
+  RefPtr<Http2Stream> refStream =
       new Http2Stream(aHttpTransaction, this, aPriority,
                       mCurrentForegroundTabOuterContentWindowId);
 
   LOG3(("Http2Session::AddStream session=%p stream=%p serial=%" PRIu64 " "
         "NextID=0x%X (tentative)",
-        this, stream, mSerial, mNextStreamID));
+        this, refStream.get(), mSerial, mNextStreamID));
 
-  mStreamTransactionHash.Put(aHttpTransaction, stream);
+  RefPtr<Http2Stream> stream = refStream;
+  mStreamTransactionHash.Put(aHttpTransaction, std::move(refStream));
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
@@ -1159,7 +1160,7 @@ bool Http2Session::VerifyStream(Http2Stream* aStream,
     if (!trans) break;
 
     test++;
-    if (mStreamTransactionHash.Get(trans) != aStream) break;
+    if (mStreamTransactionHash.GetWeak(trans) != aStream) break;
 
     if (aStream->StreamID()) {
       Http2Stream* idStream = mStreamIDHash.Get(aStream->StreamID());
@@ -1931,7 +1932,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   RefPtr<Http2PushTransactionBuffer> transactionBuffer =
       new Http2PushTransactionBuffer();
   transactionBuffer->SetConnection(self);
-  UniquePtr<Http2PushedStream> pushedStream(new Http2PushedStream(
+  RefPtr<Http2PushedStream> pushedStream(new Http2PushedStream(
       transactionBuffer, self, associatedStream, promisedID,
       self->mCurrentForegroundTabOuterContentWindowId));
 
@@ -1958,13 +1959,12 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     return rv;
   }
 
-  WeakPtr<Http2Stream> pushedWeak = pushedStream.release();
-
   // Ownership of the pushed stream is by the transaction hash, just as it
   // is for a client initiated stream. Errors that aren't fatal to the
   // whole session must call cleanupStream() after this point in order
   // to remove the stream from that hash.
-  self->mStreamTransactionHash.Put(transactionBuffer, pushedWeak);
+  WeakPtr<Http2Stream> pushedWeak = pushedStream.get();
+  self->mStreamTransactionHash.Put(transactionBuffer, std::move(pushedStream));
   self->mPushedStreams.AppendElement(
       static_cast<Http2PushedStream*>(pushedWeak.get()));
 
@@ -3774,7 +3774,7 @@ void Http2Session::CloseTransaction(nsAHttpTransaction* aTransaction,
   // Generally this arrives as a cancel event from the connection manager.
 
   // need to find the stream and call CleanupStream() on it.
-  Http2Stream* stream = mStreamTransactionHash.Get(aTransaction);
+  RefPtr<Http2Stream> stream = mStreamTransactionHash.Get(aTransaction);
   if (!stream) {
     LOG3(("Http2Session::CloseTransaction %p %p %" PRIx32 " - not found.", this,
           aTransaction, static_cast<uint32_t>(aResult)));
@@ -3784,7 +3784,7 @@ void Http2Session::CloseTransaction(nsAHttpTransaction* aTransaction,
       ("Http2Session::CloseTransaction probably a cancel. "
        "this=%p, trans=%p, result=%" PRIx32 ", streamID=0x%X stream=%p",
        this, aTransaction, static_cast<uint32_t>(aResult), stream->StreamID(),
-       stream));
+       stream.get()));
   CleanupStream(stream, aResult, CANCEL_ERROR);
   nsresult rv = ResumeRecv();
   if (NS_FAILED(rv)) {
@@ -4056,7 +4056,7 @@ void Http2Session::CreateTunnel(nsHttpTransaction* trans,
       AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false,
                 false, nullptr);
   MOZ_ASSERT(rv);
-  Http2Stream* tunnel = mStreamTransactionHash.Get(connectTrans);
+  RefPtr<Http2Stream> tunnel = mStreamTransactionHash.Get(connectTrans);
   MOZ_ASSERT(tunnel);
   RegisterTunnel(tunnel);
 }
@@ -4139,10 +4139,10 @@ bool Http2Session::MaybeReTunnel(nsAHttpTransaction* aHttpTransaction) {
 
 nsresult Http2Session::BufferOutput(const char* buf, uint32_t count,
                                     uint32_t* countRead) {
-  nsAHttpSegmentReader* old = mSegmentReader;
-  mSegmentReader = nullptr;
+  RefPtr<nsAHttpSegmentReader> old;
+  mSegmentReader.swap(old);  // Make mSegmentReader null
   nsresult rv = OnReadSegment(buf, count, countRead);
-  mSegmentReader = old;
+  mSegmentReader.swap(old);  // Restore the old mSegmentReader
   return rv;
 }
 
@@ -4259,7 +4259,7 @@ void Http2Session::TransactionHasDataToWrite(nsAHttpTransaction* caller) {
   // a trapped signal from the http transaction to the connection that
   // it is no longer blocked on read.
 
-  Http2Stream* stream = mStreamTransactionHash.Get(caller);
+  RefPtr<Http2Stream> stream = mStreamTransactionHash.Get(caller);
   if (!stream || !VerifyStream(stream)) {
     LOG3(("Http2Session::TransactionHasDataToWrite %p caller %p not found",
           this, caller));
@@ -4291,7 +4291,7 @@ void Http2Session::TransactionHasDataToRecv(nsAHttpTransaction* caller) {
 
   // a signal from the http transaction to the connection that it will consume
   // more
-  Http2Stream* stream = mStreamTransactionHash.Get(caller);
+  RefPtr<Http2Stream> stream = mStreamTransactionHash.Get(caller);
   if (!stream || !VerifyStream(stream)) {
     LOG3(("Http2Session::TransactionHasDataToRecv %p caller %p not found", this,
           caller));

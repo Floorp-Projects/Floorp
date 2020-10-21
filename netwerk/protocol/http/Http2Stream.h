@@ -14,6 +14,7 @@
 #include "nsAHttpTransaction.h"
 #include "nsISupportsPriority.h"
 #include "SimpleBuffer.h"
+#include "nsISupportsImpl.h"
 
 class nsIInputStream;
 class nsIOutputStream;
@@ -35,6 +36,7 @@ class Http2Stream : public nsAHttpSegmentReader,
  public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http2Stream, override)
 
   enum stateType {
     IDLE,
@@ -159,8 +161,6 @@ class Http2Stream : public nsAHttpSegmentReader,
   // This is a no-op on pull streams. Pushed streams override this.
   virtual void SetPushComplete(){};
 
-  virtual ~Http2Stream();
-
   Http2Session* Session() { return mSession; }
 
   [[nodiscard]] static nsresult MakeOriginURL(const nsACString& origin,
@@ -181,6 +181,7 @@ class Http2Stream : public nsAHttpSegmentReader,
       uint64_t windowId);  // For use by pushed streams only
 
  protected:
+  virtual ~Http2Stream();
   static void CreatePushHashKey(
       const nsCString& scheme, const nsCString& hostHeader,
       const mozilla::OriginAttributes& originAttributes, uint64_t serial,
