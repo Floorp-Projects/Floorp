@@ -83,6 +83,8 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
                 "--profile",
                 self.remote_profile,
                 "--allow-downgrade",
+                "use_multiprocess",
+                self.config["e10s"],
             ],
             env=dict(
                 LOG_VERBOSE=1,

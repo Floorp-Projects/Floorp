@@ -72,6 +72,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
          "help": "Set log level (debug|info|warning|error|critical|fatal)",
          }
     ], [
+        ['--disable-e10s', ],
+        {"action": "store_false",
+         "dest": "e10s",
+         "default": True,
+         "help": "Run tests without multiple processes (e10s).",
+         }
+    ], [
         ['--enable-webrender'],
         {"action": "store_true",
          "dest": "enable_webrender",
@@ -130,6 +137,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.xre_path = None
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
+        self.e10s = c.get('e10s')
         self.enable_webrender = c.get('enable_webrender')
         self.extra_prefs = c.get('extra_prefs')
 
@@ -240,6 +248,11 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             category = 'reftest'
         else:
             category = self.test_suite
+        if category not in SUITE_NO_E10S:
+            if category in SUITE_DEFAULT_E10S and not self.e10s:
+                cmd.extend(['--disable-e10s'])
+            elif category not in SUITE_DEFAULT_E10S and self.e10s:
+                cmd.extend(['--e10s'])
         if c.get('repeat'):
             if category in SUITE_REPEATABLE:
                 cmd.extend(["--repeat=%s" % c.get('repeat')])
