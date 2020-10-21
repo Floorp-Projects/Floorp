@@ -65,6 +65,7 @@ rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 fluent = { version = "0.13.1", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge", optional=true }
+l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
 
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms" }

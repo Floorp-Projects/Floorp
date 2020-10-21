@@ -34,6 +34,7 @@ extern crate gkrust_utils;
 extern crate http_sfv;
 extern crate jsrust_shared;
 extern crate kvstore;
+extern crate l10nregistry_ffi;
 extern crate mapped_hyph;
 extern crate mozurl;
 extern crate mp4parse_capi;

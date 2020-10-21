@@ -1950,6 +1950,7 @@ dependencies = [
  "fog-gtest",
  "gecko-fuzz-targets",
  "gkrust-shared",
+ "l10nregistry-ffi-gtest",
  "moz_task-gtest",
  "mozglue-static",
  "mp4parse-gtest",
@@ -1989,6 +1990,7 @@ dependencies = [
  "http_sfv",
  "jsrust_shared",
  "kvstore",
+ "l10nregistry-ffi",
  "lmdb-rkv-sys",
  "log",
  "mapped_hyph",
@@ -2604,6 +2606,24 @@ dependencies = [
  "tempfile",
  "thin-vec",
  "xpcom",
+]
+
+[[package]]
+name = "l10nregistry-ffi"
+version = "0.1.0"
+dependencies = [
+ "futures-channel",
+ "libc",
+ "nserror",
+ "nsstring",
+]
+
+[[package]]
+name = "l10nregistry-ffi-gtest"
+version = "0.1.0"
+dependencies = [
+ "l10nregistry-ffi",
+ "moz_task",
 ]
 
 [[package]]
