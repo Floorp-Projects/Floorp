@@ -52,16 +52,28 @@ export class InfoGroup extends HTMLElement {
       return;
     }
 
-    let issuerCommonName = this.shadowRoot
-      .querySelector(".common-name")
-      .shadowRoot.querySelector(".info");
+    let issuerLabelElement =
+      this.shadowRoot.querySelector(".common-name") ||
+      this.shadowRoot.querySelector(".organizational-unit");
+
+    issuerLabelElement = issuerLabelElement?.shadowRoot.querySelector(".info");
+
+    if (!issuerLabelElement) {
+      return;
+    }
 
     let link = document.createElement("a");
-    link.textContent = issuerCommonName.textContent;
+    link.textContent = issuerLabelElement.textContent;
+    if (!link.textContent) {
+      link.setAttribute(
+        "data-l10n-id",
+        "certificate-viewer-unknown-group-label"
+      );
+    }
     link.setAttribute("href", "#");
 
-    issuerCommonName.textContent = "";
-    issuerCommonName.appendChild(link);
+    issuerLabelElement.textContent = "";
+    issuerLabelElement.appendChild(link);
 
     link.addEventListener("click", () => {
       let id = normalizeToKebabCase(link.textContent);
