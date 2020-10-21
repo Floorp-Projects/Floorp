@@ -14,7 +14,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsAHttpConnection.h"
-#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsDeque.h"
 #include "nsHashKeys.h"
@@ -363,7 +363,7 @@ class Http2Session final : public ASpdySession,
   // These are temporary state variables to hold the argument to
   // Read/WriteSegments so it can be accessed by On(read/write)segment
   // further up the stack.
-  nsAHttpSegmentReader* mSegmentReader;
+  RefPtr<nsAHttpSegmentReader> mSegmentReader;
   nsAHttpSegmentWriter* mSegmentWriter;
 
   uint32_t mSendingChunkSize; /* the transmission chunk size */
@@ -378,11 +378,8 @@ class Http2Session final : public ASpdySession,
   // There are also several lists of streams: ready to write, queued due to
   // max parallelism, streams that need to force a read for push, and the full
   // set of pushed streams.
-  // The objects are not ref counted - they get destroyed
-  // by the nsClassHashtable implementation when they are removed from
-  // the transaction hash.
   nsDataHashtable<nsUint32HashKey, Http2Stream*> mStreamIDHash;
-  nsClassHashtable<nsPtrHashKey<nsAHttpTransaction>, Http2Stream>
+  nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http2Stream>
       mStreamTransactionHash;
 
   nsDeque<Http2Stream> mReadyForWrite;
