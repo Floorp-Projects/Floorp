@@ -142,12 +142,16 @@ mochitest-browser-chrome:
             macosx.*64-ccov/.*: 10800
             linux.*/debug: 5400
             windows10-64-qr/debug: 5400
+            linux.*64-tsan/opt: 9000
             default: 3600
     mozharness:
         mochitest-flavor: browser
         chunked: true
     # Bug 1281241: migrating to m3.large instances
-    instance-size: default
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
     allow-software-gl-layers: false
 
 browser-screenshots:
@@ -191,6 +195,10 @@ mochitest-chrome:
     mozharness:
         mochitest-flavor: chrome
         chunked: true
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -205,6 +213,7 @@ mochitest-devtools-chrome:
             windows10-64-ccov/.*: 10800
             macosx.*64-ccov/.*: 9000
             linux.*64-ccov/.*: 7200
+            linux.*64-tsan/opt: 7200
             default: 5400
     chunks:
         by-test-platform:
@@ -248,6 +257,10 @@ mochitest-plain-gpu:
                     - --test-suite=mochitest-plain-gpu
                 default:
                     - --mochitest-suite=mochitest-plain-gpu
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
 
 mochitest-chrome-gpu:
     description: "Mochitest chrome GPU run"
@@ -276,6 +289,10 @@ mochitest-chrome-gpu:
                     - --test-suite=mochitest-chrome-gpu
                 default:
                     - --mochitest-suite=mochitest-chrome-gpu
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: default
 
 mochitest-media:
     description: "Mochitest media run"
@@ -285,6 +302,7 @@ mochitest-media:
         by-test-platform:
             windows10-64-ccov/.*: 7200
             macosx.*64-ccov/.*: 7200
+            linux.*64-tsan/opt: 7200
             default: 5400
     run-on-projects:
         by-test-platform:
@@ -299,7 +317,10 @@ mochitest-media:
             macosx.*64-ccov/.*: []
             default: ['fission', 'socketprocess', 'webgl-ipc']
     loopback-video: true
-    instance-size: large
+    instance-size:
+        by-test-platform:
+            linux.*64-tsan/opt: xlarge  # runs out of memory on default/m3.large
+            default: large
     chunks:
         by-test-platform:
             android-em-7.*: 1
@@ -308,6 +329,7 @@ mochitest-media:
             windows10-aarch64/.*: 1
             windows7-32-shippable/.*: 2
             linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
+            linux.*64-tsan/opt: 4
             default: 3
     mozharness:
         mochitest-flavor: plain
