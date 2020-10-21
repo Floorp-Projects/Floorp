@@ -7955,21 +7955,15 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
   AUTO_PROFILER_LABEL(
       "DatabaseConnection::UpdateRefcountFunction::ProcessValue", DOM);
 
-  int32_t type;
-  nsresult rv = aValues->GetTypeOfIndex(aIndex, &type);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const int32_t& type,
+                  MOZ_TO_RESULT_INVOKE(aValues, GetTypeOfIndex, aIndex));
 
   if (type == mozIStorageValueArray::VALUE_TYPE_NULL) {
     return NS_OK;
   }
 
-  nsString ids;
-  rv = aValues->GetString(aIndex, ids);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const auto& ids, MOZ_TO_RESULT_INVOKE_TYPED(
+                                       nsString, aValues, GetString, aIndex));
 
   IDB_TRY_INSPECT(const auto& files,
                   DeserializeStructuredCloneFiles(mFileManager, ids));
