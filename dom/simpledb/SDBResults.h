@@ -8,6 +8,7 @@
 #define mozilla_dom_simpledb_SDBResults_h
 
 #include "nsISDBResults.h"
+#include "nsISupports.h"
 #include "nsString.h"
 
 namespace mozilla {

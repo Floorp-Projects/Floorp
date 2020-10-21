@@ -7,10 +7,14 @@
 #ifndef mozilla_dom_simpledb_SDBConnection_h
 #define mozilla_dom_simpledb_SDBConnection_h
 
-#include "mozilla/dom/quota/PersistenceType.h"
+#include <cstdint>
+#include "ErrorList.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/quota/PersistenceType.h"
+#include "nsCOMPtr.h"
+#include "nsID.h"
 #include "nsISDBConnection.h"
-#include "nsTArray.h"
+#include "nsISupports.h"
 
 #define NS_SDBCONNECTION_CONTRACTID "@mozilla.org/dom/sdb-connection;1"
 
