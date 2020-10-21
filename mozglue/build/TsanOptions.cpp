@@ -347,6 +347,11 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1652530
          "mutex:XErrorTrap\n"
 
+         // Bug 1671572
+         "race:IdentifyTextureHost\n"
+         "race:GetCompositorBackendType\n"
+         "race:SupportsTextureDirectMapping\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
