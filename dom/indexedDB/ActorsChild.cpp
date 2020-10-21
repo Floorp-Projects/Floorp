@@ -29,7 +29,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
@@ -2791,40 +2790,12 @@ nsresult BackgroundRequestChild::PreprocessHelper::ProcessStream() {
       blobInputStream->GetInternalStream();
   MOZ_ASSERT(internalInputStream);
 
-  RefPtr<SnappyUncompressInputStream> snappyInputStream =
-      new SnappyUncompressInputStream(internalInputStream);
-
-  nsresult rv;
-
-  do {
-    char buffer[kFileCopyBufferSize];
-
-    uint32_t numRead;
-    rv = snappyInputStream->Read(buffer, sizeof(buffer), &numRead);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      break;
-    }
-
-    if (!numRead) {
-      break;
-    }
-
-    if (NS_WARN_IF(!mCloneData->AppendBytes(buffer, numRead))) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      break;
-    }
-  } while (true);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      SnappyUncompressStructuredCloneData(*internalInputStream, *mCloneData));
 
   mState = State::Finishing;
 
-  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }

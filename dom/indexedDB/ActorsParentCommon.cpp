@@ -35,7 +35,6 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
@@ -410,15 +409,14 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
   const StructuredCloneFileParent& file = files[index];
   MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eStructuredClone);
 
-  const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
-  IDB_TRY(OkIf(nativeFile), Err(NS_ERROR_FAILURE));
-
   auto data = JSStructuredCloneData{JS::StructuredCloneScope::DifferentProcess};
 
   {
+    const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
+    IDB_TRY(OkIf(nativeFile), Err(NS_ERROR_FAILURE));
+
     // XXX NS_NewLocalFileInputStream does not follow the convention to place
-    // its
-    // output parameter last (it has optional parameters which makes that
+    // its output parameter last (it has optional parameters which makes that
     // problematic), so we can't use ToResultInvoke, nor
     // IDB_TRY_UNWRAP/IDB_TRY_INSPECT.
     nsCOMPtr<nsIInputStream> fileInputStream;
@@ -432,22 +430,7 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
               kEncryptedStreamBlockSize, *aMaybeKey);
     }
 
-    const auto snappyInputStream =
-        MakeRefPtr<SnappyUncompressInputStream>(fileInputStream);
-
-    char buffer[kFileCopyBufferSize];
-
-    IDB_TRY(CollectEach(
-        [&snappyInputStream = *snappyInputStream, &buffer] {
-          IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer,
-                                              sizeof(buffer)));
-        },
-        [&data, &buffer](const uint32_t& numRead) -> Result<Ok, nsresult> {
-          IDB_TRY(OkIf(data.AppendBytes(buffer, numRead)),
-                  Err(NS_ERROR_OUT_OF_MEMORY));
-
-          return Ok{};
-        }));
+    IDB_TRY(SnappyUncompressStructuredCloneData(*fileInputStream, data));
   }
 
   return StructuredCloneReadInfoParent{std::move(data), std::move(files),

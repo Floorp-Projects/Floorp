@@ -6,4 +6,34 @@
 
 #include "IndexedDBCommon.h"
 
-namespace mozilla::dom::indexedDB {}  // namespace mozilla::dom::indexedDB
+#include "mozilla/SnappyUncompressInputStream.h"
+
+namespace mozilla::dom::indexedDB {
+
+// aStructuredCloneData is a parameter rather than a return value because one
+// caller preallocates it on the heap not immediately before calling for some
+// reason. Maybe this could be changed.
+nsresult SnappyUncompressStructuredCloneData(
+    nsIInputStream& aInputStream, JSStructuredCloneData& aStructuredCloneData) {
+  const auto snappyInputStream =
+      MakeRefPtr<SnappyUncompressInputStream>(&aInputStream);
+
+  char buffer[kFileCopyBufferSize];
+
+  IDB_TRY(CollectEach(
+      [&snappyInputStream = *snappyInputStream, &buffer] {
+        IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer,
+                                            sizeof(buffer)));
+      },
+      [&aStructuredCloneData,
+       &buffer](const uint32_t& numRead) -> Result<Ok, nsresult> {
+        IDB_TRY(OkIf(aStructuredCloneData.AppendBytes(buffer, numRead)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
+
+        return Ok{};
+      }));
+
+  return NS_OK;
+}
+
+}  // namespace mozilla::dom::indexedDB
