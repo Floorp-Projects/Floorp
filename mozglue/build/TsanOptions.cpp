@@ -352,6 +352,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:GetCompositorBackendType\n"
          "race:SupportsTextureDirectMapping\n"
 
+         // Bug 1671574
+         "thread:StartupCache\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
