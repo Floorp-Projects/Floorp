@@ -50,6 +50,11 @@ interface nsIDashboard : nsISupports
      * aHost: host name */
     void requestDNSLookup(in ACString aHost, in nsINetDashboardCallback cb);
 
+    /* Resolve HTTPS RRs for host name
+     * aHost: host name */
+    void requestDNSHTTPSRRLookup(in ACString aHost,
+                                 in nsINetDashboardCallback cb);
+
     /**
      * Asyncly returns stats regarding the "Race Cache With Network" feature.
      */
