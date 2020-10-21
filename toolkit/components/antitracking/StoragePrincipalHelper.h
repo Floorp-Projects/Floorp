@@ -7,7 +7,8 @@
 #ifndef mozilla_StoragePrincipalHelper_h
 #define mozilla_StoragePrincipalHelper_h
 
-#include "nsError.h"
+#include <cstdint>
+#include "ErrorList.h"
 
 /**
  * StoragePrincipal
@@ -200,8 +201,10 @@
  */
 
 class nsIChannel;
+class nsICookieJarSettings;
 class nsILoadGroup;
 class nsIPrincipal;
+class nsIURI;
 
 namespace mozilla {
 

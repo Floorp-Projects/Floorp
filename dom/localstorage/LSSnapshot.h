@@ -7,15 +7,19 @@
 #ifndef mozilla_dom_localstorage_LSSnapshot_h
 #define mozilla_dom_localstorage_LSSnapshot_h
 
-#include "LSValue.h"
-
+#include <cstdint>
+#include <cstdlib>
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsIRunnable.h"
 #include "nsHashKeys.h"
 #include "nsIRunnable.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsTHashtable.h"
 
 class nsITimer;

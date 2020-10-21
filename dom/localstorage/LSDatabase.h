@@ -7,10 +7,20 @@
 #ifndef mozilla_dom_localstorage_LSDatabase_h
 #define mozilla_dom_localstorage_LSDatabase_h
 
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/StaticPtr.h"
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsTArrayForwardDeclare.h"
+
 namespace mozilla {
 namespace dom {
 
 class LSDatabaseChild;
+class LSNotifyInfo;
+class LSObject;
 class LSSnapshot;
 
 class LSDatabase final {
