@@ -196,6 +196,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // control all media belonging to this browsing context tree. Return nullptr
   // if the top-level browsing context has been discarded.
   MediaController* GetMediaController();
+  bool HasCreatedMediaController() const;
 
   // Attempts to start loading the given load state in this BrowsingContext,
   // without requiring any communication from a docshell. This will handle

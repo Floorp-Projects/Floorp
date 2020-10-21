@@ -1386,6 +1386,10 @@ MediaController* CanonicalBrowsingContext::GetMediaController() {
   return mTabMediaController;
 }
 
+bool CanonicalBrowsingContext::HasCreatedMediaController() const {
+  return !!mTabMediaController;
+}
+
 bool CanonicalBrowsingContext::SupportsLoadingInParent(
     nsDocShellLoadState* aLoadState, uint64_t* aOuterWindowId) {
   // We currently don't support initiating loads in the parent when they are
