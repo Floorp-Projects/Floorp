@@ -5366,7 +5366,7 @@ var AboutHomeStartupCache = {
     let state = AboutNewTab.activityStream.store.getState();
     return new Promise(resolve => {
       this._cacheDeferred = resolve;
-      this.log.trace("Parent received cache streams.");
+      this.log.trace("Parent is requesting cache streams.");
       this._procManager.sendAsyncMessage(this.CACHE_REQUEST_MESSAGE, { state });
     });
   },
