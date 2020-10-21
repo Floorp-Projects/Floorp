@@ -6,9 +6,22 @@
 
 #include "QuotaRequests.h"
 
+// Local includes
 #include "ActorsChild.h"
+
+// Global includes
 #include "mozilla/ErrorNames.h"
+#include "mozilla/MacroForEach.h"
+#include "nsDebug.h"
 #include "nsIQuotaCallbacks.h"
+#include "nsISupportsUtils.h"
+#include "nsIVariant.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
+
+namespace mozilla {
+class Runnable;
+}
 
 namespace mozilla {
 namespace dom {

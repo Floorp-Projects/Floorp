@@ -7,10 +7,14 @@
 #ifndef mozilla_dom_quota_originorpatternstring_h__
 #define mozilla_dom_quota_originorpatternstring_h__
 
-#include "mozilla/dom/quota/QuotaCommon.h"
-
-#include "mozilla/BasePrincipal.h"
+#include <utility>
+#include "mozilla/Assertions.h"
+#include "mozilla/OriginAttributes.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsStringFlags.h"
+#include "nsStringFwd.h"
 
 BEGIN_QUOTA_NAMESPACE
 

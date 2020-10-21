@@ -7,11 +7,15 @@
 #ifndef mozilla_dom_quota_DummyCipherStrategy_h
 #define mozilla_dom_quota_DummyCipherStrategy_h
 
-#include "mozilla/dom/quota/CipherStrategy.h"
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <utility>
+#include "ErrorList.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
-
-#include <array>
+#include "mozilla/dom/quota/CipherStrategy.h"
 
 namespace mozilla::dom::quota {
 

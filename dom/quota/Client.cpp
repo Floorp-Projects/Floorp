@@ -6,6 +6,9 @@
 
 #include "Client.h"
 
+// Global includes
+#include "mozilla/Assertions.h"
+
 namespace mozilla {
 namespace dom {
 namespace quota {

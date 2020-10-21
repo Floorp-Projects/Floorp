@@ -4,14 +4,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+
+#include "gtest/gtest.h"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <new>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Unused.h"
+#include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
-#include "nsISupports.h"
+#include "nsLiteralString.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
+#include "nsTLiteralString.h"
+
+class nsISupports;
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;
+
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
 
 TEST(QuotaCommon_Try, Success)
 {
@@ -1357,3 +1384,7 @@ TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
   EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
 #endif
 }
+
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif

@@ -9,12 +9,22 @@
 
 #include "DecryptingInputStream.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <type_traits>
+#include <utility>
 #include "CipherStrategy.h"
-
-#include "mozilla/ipc/InputStreamParams.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/Span.h"
+#include "mozilla/fallible.h"
+#include "nsDebug.h"
+#include "nsError.h"
 #include "nsFileStreams.h"
-#include "nsIAsyncInputStream.h"
-#include "nsStreamUtils.h"
+#include "nsID.h"
+#include "nsIFileStreams.h"
 
 namespace mozilla::dom::quota {
 

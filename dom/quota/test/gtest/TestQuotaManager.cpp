@@ -4,10 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
 #include "mozilla/dom/quota/OriginScope.h"
+
+#include "gtest/gtest.h"
+
+#include <cstdint>
+#include <memory>
+#include "ErrorList.h"
+#include "mozilla/Result.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/fallible.h"
+#include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIFile.h"
+#include "nsLiteralString.h"
+#include "nsString.h"
+#include "nsStringFwd.h"
+#include "nsTLiteralString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::quota;

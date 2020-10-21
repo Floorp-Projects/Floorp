@@ -7,12 +7,17 @@
 #ifndef mozilla_dom_quota_quotaobject_h__
 #define mozilla_dom_quota_quotaobject_h__
 
-#include "mozilla/dom/quota/QuotaCommon.h"
-
-#include "nsDataHashtable.h"
-
+// Local includes
 #include "Client.h"
-#include "PersistenceType.h"
+
+// Global includes
+#include <cstdint>
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 BEGIN_QUOTA_NAMESPACE
 

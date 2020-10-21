@@ -7,32 +7,43 @@
 #ifndef mozilla_dom_quota_quotamanager_h__
 #define mozilla_dom_quota_quotamanager_h__
 
-#include "QuotaCommon.h"
-#include "QuotaInfo.h"
-
+#include <cstdint>
+#include <utility>
+#include "Client.h"
+#include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/Mutex.h"
-
+#include "mozilla/dom/quota/InitializationTypes.h"
+#include "mozilla/dom/quota/PersistenceType.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/QuotaInfo.h"
+#include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
-#include "nsRefPtrHashtable.h"
-
-#include "InitializationTypes.h"
-#include "Client.h"
-#include "PersistenceType.h"
-
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsHashKeys.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "nsTStringRepr.h"
+#include "nscore.h"
 #include "prenv.h"
 
 #define QUOTA_MANAGER_CONTRACTID "@mozilla.org/dom/quota/manager;1"
 
 class mozIStorageConnection;
 class nsIEventTarget;
+class nsIFile;
 class nsIPrincipal;
+class nsIRunnable;
 class nsIThread;
 class nsITimer;
-class nsIURI;
 class nsPIDOMWindowOuter;
-class nsIRunnable;
 
 namespace mozilla {
 
