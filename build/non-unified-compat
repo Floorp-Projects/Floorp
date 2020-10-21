@@ -17,3 +17,4 @@ dom/debugger/
 dom/docs/
 dom/encoding/
 dom/events/
+dom/fetch/
