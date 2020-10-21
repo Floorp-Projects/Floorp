@@ -69,6 +69,23 @@ add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testSoundIndicatorForAudioStream() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab();
+  await initMediaStreamPlaybackDocument(tab);
+
+  info(`sound indicator should appear when audible audio starts playing`);
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info(`sound indicator should disappear when audio stops playing`);
+  await pauseAudio(tab);
+  await waitForTabSoundIndicatorDisappears(tab);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
@@ -84,6 +101,13 @@ function initMediaPlaybackDocument(tab, fileName, { preload } = {}) {
       content.audio.src = fileName;
     }
   );
+}
+
+function initMediaStreamPlaybackDocument(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+    content.audio = content.document.createElement("audio");
+    content.audio.srcObject = new content.AudioContext().createMediaStreamDestination().stream;
+  });
 }
 
 function playAudio(tab) {
