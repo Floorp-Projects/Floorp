@@ -72,11 +72,12 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
  * and resume the [Store] subscription. With that an application can, for example, automatically
  * stop updating the UI if the application is in the background. Once the [Lifecycle] switches back
  * to at least STARTED state then the latest [State] and further will be passed to the [Flow] again.
+ * By default, the fragment itself is used as a [LifecycleOwner].
  */
 @ExperimentalCoroutinesApi // Flow
 fun <S : State, A : Action> Fragment.consumeFlow(
     from: Store<S, A>,
-    owner: LifecycleOwner? = null,
+    owner: LifecycleOwner? = this,
     block: suspend (Flow<S>) -> Unit
 ) {
     val fragment = this
