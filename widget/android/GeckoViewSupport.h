@@ -62,7 +62,7 @@ class GeckoViewSupport final
                    jni::Object::Param aSessionAccessibility,
                    jni::Object::Param aInitData, jni::String::Param aId,
                    jni::String::Param aChromeURI, int32_t aScreenId,
-                   bool aPrivateMode);
+                   bool aPrivateMode, bool aRemote);
 
   // Close and destroy the nsWindow.
   void Close();
