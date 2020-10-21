@@ -17,6 +17,7 @@ if CONFIG['MOZ_GLEAN']:
     ]
 
     EXPORTS.mozilla.glean += [
+        '!GleanJSMetricsLookup.h',
         '!GleanMetrics.h',
         'bindings/Category.h',
         'bindings/Glean.h',
@@ -51,6 +52,12 @@ if CONFIG['MOZ_GLEAN']:
     GeneratedFile('GleanMetrics.h',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
                   entry_point='cpp_metrics',
+                  flags=[CONFIG['MOZ_APP_VERSION']],
+                  inputs=['metrics_index.py'] + metrics_yamls)
+
+    GeneratedFile('GleanJSMetricsLookup.h',
+                  script='build_scripts/glean_parser_ext/run_glean_parser.py',
+                  entry_point='js_metrics',
                   flags=[CONFIG['MOZ_APP_VERSION']],
                   inputs=['metrics_index.py'] + metrics_yamls)
 

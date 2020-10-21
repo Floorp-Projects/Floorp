@@ -7,11 +7,15 @@
 
 from __future__ import print_function
 from mozparsers.shared_telemetry_utils import (
-    StringTable,
     static_assert,
     ParserError
 )
 from mozparsers import parse_user_interactions
+import sys
+from os import path
+COMPONENTS_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
+sys.path.append(path.join(COMPONENTS_PATH, "glean", "build_scripts", "glean_parser_ext"))
+from string_table import StringTable
 
 import sys
 
