@@ -13,3 +13,4 @@ dom/commandhandler/
 dom/console/
 dom/credentialmanagement/
 dom/crypto/
+dom/debugger/
