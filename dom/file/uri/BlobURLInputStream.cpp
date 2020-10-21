@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BlobURLInputStream.h"
+#include "BlobURL.h"
+#include "BlobURLChannel.h"
+#include "BlobURLProtocolHandler.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
