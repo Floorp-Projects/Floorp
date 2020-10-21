@@ -424,11 +424,6 @@ already_AddRefed<PathBuilder> Factory::CreateSimplePathBuilder() {
   return pathBuilder.forget();
 }
 
-already_AddRefed<DrawTarget> Factory::CreateWrapAndRecordDrawTarget(
-    DrawEventRecorder* aRecorder, DrawTarget* aDT) {
-  return MakeAndAddRef<DrawTargetWrapAndRecord>(aRecorder, aDT);
-}
-
 already_AddRefed<DrawTarget> Factory::CreateRecordingDrawTarget(
     DrawEventRecorder* aRecorder, DrawTarget* aDT, IntRect aRect) {
   return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT, aRect);
