@@ -302,7 +302,6 @@ struct JSRuntime {
   /* Call this to accumulate telemetry data. May be called from any thread; the
    * embedder is responsible for locking. */
   JSAccumulateTelemetryDataCallback telemetryCallback;
-  JSAccumulateXYTelemetryDataCallback xyTelemetryCallback;
 
   /* Call this to accumulate use counter data. */
   js::MainThreadData<JSSetUseCounterCallback> useCounterCallback;
@@ -319,11 +318,6 @@ struct JSRuntime {
 
   void setTelemetryCallback(JSRuntime* rt,
                             JSAccumulateTelemetryDataCallback callback);
-
-  void addXYTelemetry(int id, uint32_t xSample, uint32_t ySample);
-
-  void setXYTelemetryCallback(JSRuntime* rt,
-                              JSAccumulateXYTelemetryDataCallback callback);
 
   void setElementCallback(JSRuntime* rt, JSGetElementCallback callback);
 
