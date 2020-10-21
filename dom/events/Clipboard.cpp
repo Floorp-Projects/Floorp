@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsIClipboard.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsITransferable.h"
 #include "nsArrayUtils.h"
 

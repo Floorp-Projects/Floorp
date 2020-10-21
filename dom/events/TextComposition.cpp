@@ -682,7 +682,7 @@ RawRangeBoundary TextComposition::GetStartRef() const {
       SelectionType::eIMERawClause, SelectionType::eIMESelectedRawClause,
       SelectionType::eIMEConvertedClause, SelectionType::eIMESelectedClause};
   for (auto selectionType : kIMESelectionTypes) {
-    Selection* selection =
+    dom::Selection* selection =
         selectionController->GetSelection(ToRawSelectionType(selectionType));
     if (!selection) {
       continue;
@@ -739,7 +739,7 @@ RawRangeBoundary TextComposition::GetEndRef() const {
       SelectionType::eIMERawClause, SelectionType::eIMESelectedRawClause,
       SelectionType::eIMEConvertedClause, SelectionType::eIMESelectedClause};
   for (auto selectionType : kIMESelectionTypes) {
-    Selection* selection =
+    dom::Selection* selection =
         selectionController->GetSelection(ToRawSelectionType(selectionType));
     if (!selection) {
       continue;
