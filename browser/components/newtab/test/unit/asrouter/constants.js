@@ -57,7 +57,9 @@ export const FAKE_LOCAL_PROVIDER = {
   cohort: 0,
 };
 export const FAKE_LOCAL_PROVIDERS = {
-  FAKE_LOCAL_PROVIDER: { getMessages: () => FAKE_LOCAL_MESSAGES },
+  FAKE_LOCAL_PROVIDER: {
+    getMessages: () => Promise.resolve(FAKE_LOCAL_MESSAGES),
+  },
 };
 
 export const FAKE_REMOTE_MESSAGES = [

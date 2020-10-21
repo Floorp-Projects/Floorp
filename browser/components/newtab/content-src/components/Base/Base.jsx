@@ -42,6 +42,18 @@ function debounce(func, wait) {
 }
 
 export class _Base extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: {},
+    };
+    this.notifyContent = this.notifyContent.bind(this);
+  }
+
+  notifyContent(state) {
+    this.setState(state);
+  }
+
   componentWillUnmount() {
     this.updateTheme();
   }
@@ -76,8 +88,10 @@ export class _Base extends React.PureComponent {
     return (
       <ErrorBoundary className="base-content-fallback">
         <React.Fragment>
-          <BaseContent {...this.props} />
-          {isDevtoolsEnabled ? <ASRouterAdmin /> : null}
+          <BaseContent {...this.props} adminContent={this.state} />
+          {isDevtoolsEnabled ? (
+            <ASRouterAdmin notifyContent={this.notifyContent} />
+          ) : null}
         </React.Fragment>
       </ErrorBoundary>
     );
@@ -163,6 +177,7 @@ export class BaseContent extends React.PureComponent {
               </div>
             )}
             <ASRouterUISurface
+              adminContent={this.props.adminContent}
               appUpdateChannel={this.props.Prefs.values.appUpdateChannel}
               fxaEndpoint={this.props.Prefs.values.fxa_endpoint}
               dispatch={this.props.dispatch}

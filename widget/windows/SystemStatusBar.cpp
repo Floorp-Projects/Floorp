@@ -208,6 +208,10 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       return TRUE;
     }
 
+    double scale = GetDesktopToDeviceScale().scale;
+    int32_t x = NSToIntRound(GET_X_LPARAM(wp) * scale);
+    int32_t y = NSToIntRound(GET_Y_LPARAM(wp) * scale);
+
     // The menu that is being opened is a Gecko <xul:menu>, and the popup code
     // that manages it expects that the window that the <xul:menu> belongs to
     // will be in the foreground when it opens. If we don't do this, then if the
@@ -217,8 +221,7 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     // focuses any window in the parent process).
     ::SetForegroundWindow(win);
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    pm->ShowPopupAtScreen(popupFrame->GetContent(), GET_X_LPARAM(wp),
-                          GET_Y_LPARAM(wp), false, nullptr);
+    pm->ShowPopupAtScreen(popupFrame->GetContent(), x, y, false, nullptr);
   }
 
   return DefWindowProc(hWnd, msg, wp, lp);

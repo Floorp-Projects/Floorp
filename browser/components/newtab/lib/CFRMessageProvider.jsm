@@ -1048,7 +1048,7 @@ const CFR_MESSAGES = [
 
 const CFRMessageProvider = {
   getMessages() {
-    return CFR_MESSAGES.filter(msg => !msg.exclude);
+    return Promise.resolve(CFR_MESSAGES.filter(msg => !msg.exclude));
   },
 };
 this.CFRMessageProvider = CFRMessageProvider;

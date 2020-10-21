@@ -30,13 +30,13 @@ class _ToolbarBadgeHub {
     this.removeToolbarNotification = this.removeToolbarNotification.bind(this);
     this.addToolbarNotification = this.addToolbarNotification.bind(this);
     this.registerBadgeToAllWindows = this.registerBadgeToAllWindows.bind(this);
-    this._sendTelemetry = this._sendTelemetry.bind(this);
+    this._sendPing = this._sendPing.bind(this);
     this.sendUserEventTelemetry = this.sendUserEventTelemetry.bind(this);
 
     this._handleMessageRequest = null;
     this._addImpression = null;
     this._blockMessageById = null;
-    this._dispatch = null;
+    this._sendTelemetry = null;
   }
 
   async init(
@@ -46,14 +46,14 @@ class _ToolbarBadgeHub {
       addImpression,
       blockMessageById,
       unblockMessageById,
-      dispatch,
+      sendTelemetry,
     }
   ) {
     this._handleMessageRequest = handleMessageRequest;
     this._blockMessageById = blockMessageById;
     this._unblockMessageById = unblockMessageById;
     this._addImpression = addImpression;
-    this._dispatch = dispatch;
+    this._sendTelemetry = sendTelemetry;
     // Need to wait for ASRouter to initialize before trying to fetch messages
     await waitForInitialized;
     this.messageRequest({
@@ -267,8 +267,8 @@ class _ToolbarBadgeHub {
     }
   }
 
-  _sendTelemetry(ping) {
-    this._dispatch({
+  _sendPing(ping) {
+    this._sendTelemetry({
       type: "TOOLBAR_BADGE_TELEMETRY",
       data: { action: "badge_user_event", ...ping },
     });
@@ -283,7 +283,7 @@ class _ToolbarBadgeHub {
         win.ownerGlobal.gBrowser.selectedBrowser
       )
     ) {
-      this._sendTelemetry({
+      this._sendPing({
         message_id: message.id,
         bucket_id: message.id,
         event,

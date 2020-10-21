@@ -8,7 +8,7 @@ const { CFRMessageProvider } = ChromeUtils.import(
 );
 
 add_task(async function test_all_test_messages() {
-  let messagesWithButtons = CFRMessageProvider.getMessages().filter(
+  let messagesWithButtons = (await CFRMessageProvider.getMessages()).filter(
     m => m.content.buttons
   );
 

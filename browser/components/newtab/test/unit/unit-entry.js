@@ -44,7 +44,31 @@ const RemoteSettings = name => ({
 });
 RemoteSettings.pollChanges = () => {};
 
+class JSWindowActorParent {
+  sendAsyncMessage(name, data) {
+    return { name, data };
+  }
+}
+
+class JSWindowActorChild {
+  sendAsyncMessage(name, data) {
+    return { name, data };
+  }
+
+  sendQuery(name, data) {
+    return Promise.resolve({ name, data });
+  }
+
+  get contentWindow() {
+    return {
+      Promise,
+    };
+  }
+}
+
 const TEST_GLOBAL = {
+  JSWindowActorParent,
+  JSWindowActorChild,
   AboutReaderParent: {
     addMessageListener: (messageName, listener) => {},
     removeMessageListener: (messageName, listener) => {},
@@ -408,7 +432,12 @@ const TEST_GLOBAL = {
   FX_MONITOR_OAUTH_CLIENT_ID: "fake_client_id",
   TelemetryEnvironment: {
     setExperimentActive() {},
-    currentEnvironment: { profile: { creationDate: 16587 } },
+    currentEnvironment: {
+      profile: {
+        creationDate: 16587,
+      },
+      settings: {},
+    },
   },
   TelemetryStopwatch: {
     start: () => {},

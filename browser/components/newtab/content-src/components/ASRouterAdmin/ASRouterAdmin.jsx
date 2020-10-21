@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import { ASRouterUtils } from "../../asrouter/asrouter-content";
+import { ASRouterUtils } from "../../asrouter/asrouter-utils";
 import { connect } from "react-redux";
 import { ModalOverlay } from "../../asrouter/components/ModalOverlay/ModalOverlay";
 import React from "react";
@@ -479,13 +479,13 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
 export class ASRouterAdminInner extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.onMessage = this.onMessage.bind(this);
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
     this.onChangeMessageGroupsFilter = this.onChangeMessageGroupsFilter.bind(
       this
     );
+    this.unblockAll = this.unblockAll.bind(this);
     this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(
       this
     );
@@ -509,6 +509,9 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.resetGroups = this.resetGroups.bind(this);
+    this.onMessageFromParent = this.onMessageFromParent.bind(this);
+    this.setStateFromParent = this.setStateFromParent.bind(this);
+    this.setState = this.setState.bind(this);
     this.state = {
       messageFilter: "all",
       messageGroupsFilter: "all",
@@ -533,34 +536,38 @@ export class ASRouterAdminInner extends React.PureComponent {
     };
   }
 
-  onMessage({ data: action }) {
-    if (action.type === "ADMIN_SET_STATE") {
-      this.setState(action.data);
-      if (!this.state.stringTargetingParameters) {
-        const stringTargetingParameters = {};
-        for (const param of Object.keys(action.data.targetingParameters)) {
-          stringTargetingParameters[param] = JSON.stringify(
-            action.data.targetingParameters[param],
-            null,
-            2
-          );
-        }
-        this.setState({ stringTargetingParameters });
+  onMessageFromParent({ type, data }) {
+    // These only exists due to onPrefChange events in ASRouter
+    switch (type) {
+      case "UpdateAdminState": {
+        this.setStateFromParent(data);
+        break;
       }
     }
   }
 
+  setStateFromParent(data) {
+    this.setState(data);
+    if (!this.state.stringTargetingParameters) {
+      const stringTargetingParameters = {};
+      for (const param of Object.keys(data.targetingParameters)) {
+        stringTargetingParameters[param] = JSON.stringify(
+          data.targetingParameters[param],
+          null,
+          2
+        );
+      }
+      this.setState({ stringTargetingParameters });
+    }
+  }
+
   componentWillMount() {
+    ASRouterUtils.addListener(this.onMessageFromParent);
     const endpoint = ASRouterUtils.getPreviewEndpoint();
     ASRouterUtils.sendMessage({
       type: "ADMIN_CONNECT_STATE",
       data: { endpoint },
-    });
-    ASRouterUtils.addListener(this.onMessage);
-  }
-
-  componentWillUnmount() {
-    ASRouterUtils.removeListener(this.onMessage);
+    }).then(this.setStateFromParent);
   }
 
   findOtherBundledMessagesOfSameTemplate(template) {
@@ -605,7 +612,13 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   handleOverride(id) {
-    return () => ASRouterUtils.overrideMessage(id);
+    return () =>
+      ASRouterUtils.overrideMessage(id).then(state => {
+        this.setStateFromParent(state);
+        this.props.notifyContent({
+          message: state.message,
+        });
+      });
   }
 
   async handleUpdateWNMessages() {
@@ -632,7 +645,7 @@ export class ASRouterAdminInner extends React.PureComponent {
   resetGroups(id, value) {
     ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE",
-    });
+    }).then(this.setStateFromParent);
   }
 
   handleExpressionEval() {
@@ -647,7 +660,7 @@ export class ASRouterAdminInner extends React.PureComponent {
         expression: this.refs.expressionInput.value,
         context,
       },
-    });
+    }).then(this.setStateFromParent);
   }
 
   onChangeTargetingParameters(event) {
@@ -672,6 +685,12 @@ export class ASRouterAdminInner extends React.PureComponent {
         targetingParametersError,
       };
     });
+  }
+
+  unblockAll() {
+    return ASRouterUtils.sendMessage({
+      type: "UNBLOCK_ALL",
+    }).then(this.setStateFromParent);
   }
 
   handleClearAllImpressionsByProvider() {
@@ -815,12 +834,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
   }
 
-  modifyJson(msg) {
-    ASRouterUtils.modifyMessageJson(
-      JSON.parse(document.getElementById(`${msg.id}-textarea`).value)
-    );
-  }
-
   handleChange(msgId) {
     if (!this.state.modifiedMessages.includes(msgId)) {
       this.setState(prevState => ({
@@ -948,6 +961,18 @@ export class ASRouterAdminInner extends React.PureComponent {
 
     this.setState({
       WNMessages: tempState,
+    });
+  }
+
+  modifyJson(content) {
+    const message = JSON.parse(
+      document.getElementById(`${content.id}-textarea`).value
+    );
+    return ASRouterUtils.modifyMessageJson(message).then(state => {
+      this.setStateFromParent(state);
+      this.props.notifyContent({
+        message: state.message,
+      });
     });
   }
 
@@ -1094,6 +1119,12 @@ export class ASRouterAdminInner extends React.PureComponent {
 
     return (
       <p>
+        <button
+          className="unblock-all ASRouterButton test-only"
+          onClick={this.unblockAll}
+        >
+          Unblock All Snippets
+        </button>
         {/* eslint-disable-next-line prettier/prettier */}
         Show messages from {/* eslint-disable-next-line jsx-a11y/no-onchange */}
         <select
@@ -1414,7 +1445,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     ASRouterUtils.sendMessage({
       type: "FORCE_ATTRIBUTION",
       data: this.state.attributionParameters,
-    });
+    }).then(this.setStateFromParent);
   }
 
   _getGroupImpressionsCount(id, frequency) {
@@ -1891,6 +1922,7 @@ export class CollapseToggle extends React.PureComponent {
 
   componentWillUnmount() {
     global.document.body.classList.remove("no-scroll");
+    ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
   render() {
