@@ -360,6 +360,7 @@ class ResourceWatcher {
           targetList: this.targetList,
           targetFront,
           isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
+          watcher: this.watcher,
         });
       }
 
@@ -763,7 +764,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
   SOURCE: "source",
 };
-module.exports = { ResourceWatcher };
+module.exports = { ResourceWatcher, TYPES: ResourceWatcher.TYPES };
 
 // Backward compat code for each type of resource.
 // Each section added here should eventually be removed once the equivalent server
@@ -833,6 +834,8 @@ const ResourceTransformers = {
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
   [ResourceWatcher.TYPES
     .INDEXED_DB]: require("devtools/shared/resources/transformers/storage-indexed-db.js"),
+  [ResourceWatcher.TYPES
+    .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
 };
