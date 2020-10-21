@@ -11,7 +11,7 @@
     android:background="@drawable/collection_home_list_row_background"
     android:clickable="true"
     android:clipToPadding="false"
-    android:elevation="5dp"
+    android:elevation="@dimen/home_collection_elevation"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground">
 
