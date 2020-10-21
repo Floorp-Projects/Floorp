@@ -161,7 +161,7 @@ def load_image(url, imageName=None, imageTag=None):
 
                     # Rewrite the repositories file
                     data = json.dumps({imageName or image: {imageTag or tag: layer}})
-                    reader = BytesIO(data)
+                    reader = BytesIO(data.encode("utf-8"))
                     member.size = len(data)
 
                 # Emit the tar header for this member.
@@ -177,7 +177,7 @@ def load_image(url, imageName=None, imageTag=None):
                 # Pad to fill a 512 bytes block, per tar format.
                 remainder = member.size % 512
                 if remainder:
-                    yield '\0' * (512 - remainder)
+                    yield ('\0' * (512 - remainder)).encode("utf-8")
 
                 reader.close()
 
