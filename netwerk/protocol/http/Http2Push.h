@@ -31,7 +31,6 @@ class Http2PushedStream final : public Http2Stream {
                     Http2Session* aSession, Http2Stream* aAssociatedStream,
                     uint32_t aID,
                     uint64_t aCurrentForegroundTabOuterContentWindowId);
-  virtual ~Http2PushedStream() = default;
 
   bool GetPushComplete();
 
@@ -75,6 +74,7 @@ class Http2PushedStream final : public Http2Stream {
   nsCString& GetResourceUrl() { return mResourceUrl; }
 
  private:
+  virtual ~Http2PushedStream() = default;
   Http2Stream*
       mConsumerStream;  // paired request stream that consumes from
                         // real http/2 one.. null until a match is made.

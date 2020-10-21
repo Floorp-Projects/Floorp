@@ -250,6 +250,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
 //-----------------------------------------------------------------------------
 
 class nsAHttpSegmentReader {
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
  public:
   // any returned failure code stops segment iteration
   [[nodiscard]] virtual nsresult OnReadSegment(const char* segment,
