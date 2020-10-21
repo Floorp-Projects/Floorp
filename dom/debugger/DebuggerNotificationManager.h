@@ -16,6 +16,9 @@
 namespace mozilla {
 namespace dom {
 
+class DebuggerNotification;
+class DebuggerNotificationObserver;
+
 class DebuggerNotificationManager final : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
