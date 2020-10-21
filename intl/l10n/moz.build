@@ -14,6 +14,7 @@ EXPORTS.mozilla.intl += [
 UNIFIED_SOURCES += [
     'FluentBundle.cpp',
     'FluentResource.cpp',
+    'L10nRegistry.cpp',
     'Localization.cpp',
 ]
 
@@ -24,6 +25,10 @@ EXTRA_JS_MODULES += [
 
 TESTING_JS_MODULES += [
     'FluentSyntax.jsm',
+]
+
+TEST_DIRS += [
+    'rust/gtest',
 ]
 
 XPIDL_SOURCES += [
