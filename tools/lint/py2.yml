@@ -38,11 +38,12 @@ py2:
         - python/mozlint
         - python/mozperftest
         - python/mozrelease/mozrelease/partner_repack.py
+        - taskcluster/test
+        - testing/performance
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/github-sync
         - tools/lint
         - tools/tryselect
-        - testing/performance
     extensions: ['py']
     support-files:
         - 'tools/lint/python/*compat*'
