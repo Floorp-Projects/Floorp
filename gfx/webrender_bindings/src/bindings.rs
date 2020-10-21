@@ -1605,7 +1605,7 @@ pub extern "C" fn wr_window_new(
         // `clear_caches_with_quads`, but scissored clears work well.
         clear_caches_with_quads: !software && !allow_scissored_cache_clears,
         start_debug_server,
-        surface_origin_is_top_left: !software && surface_origin_is_top_left,
+        surface_origin_is_top_left: surface_origin_is_top_left,
         compositor_config,
         enable_gpu_markers,
         panic_on_gl_error,
