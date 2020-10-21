@@ -217,6 +217,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">اطّلع على المزيد</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">افتح في لسان Firefox جديد</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ابحث</string>
     <!-- Text preview for larger sized widgets -->
@@ -345,6 +347,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">التنبيهات</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">مجموعة إضافات مخصّصة</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">حسنا</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -434,6 +439,8 @@
     <string name="preferences_usage_data_description">شارك بيانات المتصفح فيما يتعلق بالأداء و الاستخدام و العتاد و التخصيصات مع Mozilla لمساعدتنا في جعل %1$s أفضل</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">بيانات التسويق</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">يُشارك بيانات الميزات التي تستعملها في %1$s مع Leanplum، شركة التسويق للمحمول التي نتعامل معها.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">التجارب</string>
     <!-- Summary for experiments preferences -->
@@ -624,6 +631,8 @@
     <string name="collection_rename">إعادة تسمية المجموعة</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">افتح الألسنة</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">اسم التجميعة</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">أزِل</string>
 
@@ -1480,6 +1489,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">مرحبًا بك في %s الجديد</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">ينتظرك بعد التحديث متصفّح أُعيد تصميمه تمامًا بأداء أفضل وميزات تُساعدك لإنجاز المزيد على الإنترنت.\n\nمن فضلك انتظر ريثما نحدّث %s ونسترجع </string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">يحدّث %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1568,6 +1579,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">حسنًا، فهمت</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">اعرض المواقع الأكثر زيارة</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">أزِل</string>
 
@@ -1575,8 +1589,15 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">استغلّ %s إلى أقصى حد.</string>
 
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">انقر لتفاصيل أكثر</string>
+
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">اجمع ما يهمّك</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">جمّع عمليات البحث والمواقع والألسنة المتشابهة لتصل إليها بسرعة لاحقًا.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">ولجت ببريد %s على متصفّح Firefox آخر على هذا المحمول. أتريد الولوج بنفس الحساب؟</string>
     <!-- Deprecated: Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description">يمكنك إضافة هذا الموقع إلى شاشة البداية لتصل إليه بسرعة وتتصفحه كأي تطبيق آخر.</string>
 </resources>

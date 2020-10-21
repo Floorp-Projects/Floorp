@@ -28,7 +28,7 @@
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d selezziunatu(i)</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">Aghjunghje una nova cullezzione</string>
+    <string name="tab_tray_add_new_collection">Creà una nova cullezzione</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Nome</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
@@ -217,6 +217,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Sapene di più</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Apre una nova unghjetta in Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Ricercà</string>
     <!-- Text preview for larger sized widgets -->
