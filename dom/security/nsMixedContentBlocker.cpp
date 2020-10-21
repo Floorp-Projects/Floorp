@@ -229,7 +229,8 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
 
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
     const nsACString& aAsciiHost) {
-  if (mozilla::net::IsLoopbackHostname(aAsciiHost)) {
+  if (aAsciiHost.EqualsLiteral("::1") ||
+      aAsciiHost.EqualsLiteral("localhost")) {
     return true;
   }
 
@@ -248,8 +249,9 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
   // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy says
   // we should only consider [::1]/128 as a potentially trustworthy IPv6
   // address, whereas for IPv4 127.0.0.1/8 are considered as potentially
-  // trustworthy.
-  return addr.IsLoopBackAddressWithoutIPv6Mapping();
+  // trustworthy.  We already handled "[::1]" above, so all that's remained to
+  // handle here are IPv4 loopback addresses.
+  return addr.IsIPAddrV4() && addr.IsLoopbackAddr();
 }
 
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {

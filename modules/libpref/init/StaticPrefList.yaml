@@ -8218,12 +8218,6 @@
   value: true
   mirror: always
 
-# Set true to allow resolving proxy for localhost
-- name: network.proxy.allow_hijacking_localhost
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Allow CookieJarSettings to be unblocked for channels without a document.
 # This is for testing only.
 - name: network.cookieJarSettings.unblocked_for_testing

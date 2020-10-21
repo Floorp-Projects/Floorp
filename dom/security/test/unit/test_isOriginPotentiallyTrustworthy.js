@@ -38,7 +38,6 @@ add_task(async function test_isOriginPotentiallyTrustworthy() {
     ["http://example.com/", false],
     ["https://example.com/", true],
     ["http://localhost/", true],
-    ["http://localhost.localhost/", true],
     ["http://127.0.0.1/", true],
     ["file:///", true],
     ["resource:///", true],
