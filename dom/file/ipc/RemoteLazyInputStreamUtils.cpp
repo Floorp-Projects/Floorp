@@ -66,7 +66,7 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
 // static
 nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
     nsIInputStream* aInputStream, uint64_t aSize, RemoteLazyStream& aOutStream,
-    ContentParent* aManager) {
+    dom::ContentParent* aManager) {
   PRemoteLazyInputStreamParent* actor = nullptr;
   nsresult rv = SerializeInputStreamParent(
       aInputStream, aSize, aManager->ChildID(), actor, aManager);
@@ -79,10 +79,10 @@ nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
 // static
 nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
     nsIInputStream* aInputStream, uint64_t aSize, RemoteLazyStream& aOutStream,
-    PBackgroundParent* aManager) {
+    ipc::PBackgroundParent* aManager) {
   PRemoteLazyInputStreamParent* actor = nullptr;
   nsresult rv = SerializeInputStreamParent(
-      aInputStream, aSize, BackgroundParent::GetChildID(aManager), actor,
+      aInputStream, aSize, ipc::BackgroundParent::GetChildID(aManager), actor,
       aManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -93,8 +93,8 @@ nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
 // static
 nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
     nsIInputStream* aInputStream, uint64_t aSize, RemoteLazyStream& aOutStream,
-    ContentChild* aManager) {
-  AutoIPCStream ipcStream(true /* delayed start */);
+    dom::ContentChild* aManager) {
+  ipc::AutoIPCStream ipcStream(true /* delayed start */);
   if (!ipcStream.Serialize(aInputStream, aManager)) {
     return NS_ERROR_FAILURE;
   }
@@ -106,8 +106,8 @@ nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
 // static
 nsresult RemoteLazyInputStreamUtils::SerializeInputStream(
     nsIInputStream* aInputStream, uint64_t aSize, RemoteLazyStream& aOutStream,
-    PBackgroundChild* aManager) {
-  AutoIPCStream ipcStream(true /* delayed start */);
+    ipc::PBackgroundChild* aManager) {
+  ipc::AutoIPCStream ipcStream(true /* delayed start */);
   if (!ipcStream.Serialize(aInputStream, aManager)) {
     return NS_ERROR_FAILURE;
   }
