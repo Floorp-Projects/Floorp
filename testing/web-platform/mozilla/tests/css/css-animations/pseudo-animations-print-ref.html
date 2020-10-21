@@ -7,5 +7,12 @@ p {
   color: blue;
 }
 
+p::after {
+    content: "(::after)";
+}
+
+p::before {
+    content: "(::before)";
+}
 </style>
-<p>(::before)blue with animation support; olive without(::after)</p>
+<p>blue with animation support; olive without</p>
