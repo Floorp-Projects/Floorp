@@ -7,8 +7,14 @@
 #ifndef mozilla_dom_simpledb_ActorsChild_h
 #define mozilla_dom_simpledb_ActorsChild_h
 
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PBackgroundSDBRequestChild.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace ipc {

@@ -6,18 +6,38 @@
 
 #include "SDBConnection.h"
 
+// Local includes
 #include "ActorsChild.h"
-#include "js/ArrayBuffer.h"  // JS::{GetObjectAsArrayBuffer,IsArrayBufferObject}
-#include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
-#include "js/RootingAPI.h"  // JS::{Handle,Rooted}
-#include "js/Value.h"       // JS::Value
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "nsISDBCallbacks.h"
 #include "SDBRequest.h"
 #include "SimpleDBCommon.h"
+
+// Global includes
+#include <stdint.h>
+#include <utility>
+#include "MainThreadUtils.h"
+#include "js/ArrayBuffer.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
+#include "js/experimental/TypedData.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Variant.h"
+#include "mozilla/dom/PBackgroundSDBConnection.h"
+#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/fallible.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsISDBCallbacks.h"
+#include "nsISupportsUtils.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
 
 namespace mozilla {
 namespace dom {
@@ -59,7 +79,7 @@ nsresult GetWriteData(JSContext* aCx, JS::Handle<JS::Value> aValue,
 
 SDBConnection::SDBConnection()
     : mBackgroundActor(nullptr),
-      mPersistenceType(PERSISTENCE_TYPE_INVALID),
+      mPersistenceType(quota::PERSISTENCE_TYPE_INVALID),
       mRunningRequest(false),
       mOpen(false),
       mAllowedToClose(false) {
@@ -223,16 +243,16 @@ SDBConnection::Init(nsIPrincipal* aPrincipal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+  if (NS_WARN_IF(!quota::QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
     return NS_ERROR_INVALID_ARG;
   }
 
   PersistenceType persistenceType;
   if (aPersistenceType.IsVoid()) {
-    persistenceType = PERSISTENCE_TYPE_DEFAULT;
+    persistenceType = quota::PERSISTENCE_TYPE_DEFAULT;
   } else {
     const auto maybePersistenceType =
-        PersistenceTypeFromString(aPersistenceType, fallible);
+        quota::PersistenceTypeFromString(aPersistenceType, fallible);
     if (NS_WARN_IF(maybePersistenceType.isNothing())) {
       return NS_ERROR_INVALID_ARG;
     }

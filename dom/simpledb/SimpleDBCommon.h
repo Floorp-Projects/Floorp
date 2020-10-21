@@ -8,6 +8,7 @@
 #define mozilla_dom_simpledb_SimpledbCommon_h
 
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsLiteralString.h"
 
 // SimpleDB equivalents of QM_TRY.
 #define SDB_TRY_GLUE(...) \

@@ -6,7 +6,20 @@
 
 #include "SDBResults.h"
 
+#include <cstdint>
+#include <cstring>
+#include <new>
+#include <utility>
+#include "ErrorList.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/MacroForEach.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsTArray.h"
+#include "nscore.h"
 
 namespace mozilla {
 namespace dom {
