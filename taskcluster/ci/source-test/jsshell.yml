@@ -20,7 +20,7 @@ job-defaults:
                         v8:
                             SHELL: /bin/bash
                             JSSHELL: d8/release/d8
-                max-run-time: 1800
+                max-run-time: 3600
     treeherder:
         kind: test
         tier: 2
