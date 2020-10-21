@@ -138,14 +138,23 @@ nsIGlobalObject* ClientSource::GetGlobal() const {
   return nullptr;
 }
 
-void ClientSource::MaybeCreateInitialDocument() {
+// We want to be explicit about possible invalid states and
+// return them as errors.
+Result<bool, ErrorResult> ClientSource::MaybeCreateInitialDocument() {
+  // If there is not even a docshell, we do not expect to have a document
   nsIDocShell* docshell = GetDocShell();
-  if (docshell) {
-    // Force the create of the initial document if it does not exist yet.
-    Unused << docshell->GetDocument();
-
-    MOZ_DIAGNOSTIC_ASSERT(GetInnerWindow());
+  if (!docshell) {
+    return false;
   }
+
+  // Force the creation of the initial document if it does not yet exist.
+  if (!docshell->GetDocument()) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError("No document available.");
+    return Err(std::move(rv));
+  }
+
+  return true;
 }
 
 ClientSource::ClientSource(ClientManager* aManager,
@@ -674,7 +683,9 @@ Result<ClientState, ErrorResult> ClientSource::SnapshotState() {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
   if (mClientInfo.Type() == ClientType::Window) {
-    MaybeCreateInitialDocument();
+    // If there is a docshell, try to create a document, too.
+    MOZ_TRY(MaybeCreateInitialDocument());
+    // SnapshotWindowState can deal with a missing inner window
     return SnapshotWindowState();
   }
 

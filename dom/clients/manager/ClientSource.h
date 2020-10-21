@@ -77,7 +77,7 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
 
   nsIGlobalObject* GetGlobal() const;
 
-  void MaybeCreateInitialDocument();
+  Result<bool, ErrorResult> MaybeCreateInitialDocument();
 
   Result<ClientState, ErrorResult> SnapshotWindowState();
 
