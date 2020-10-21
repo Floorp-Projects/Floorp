@@ -14,7 +14,6 @@ interface InputEvent : UIEvent
 
   readonly attribute boolean       isComposing;
 
-  [Pref="dom.inputevent.inputtype.enabled"]
   readonly attribute DOMString inputType;
 
   [NeedsCallerType, Pref="dom.inputevent.data.enabled"]
