@@ -31,3 +31,14 @@ add_task(function test_fog_counter_works() {
   Assert.ok(Glean.test_only.bad_code.testHasValue("test-ping"));
   Assert.equal(31, Glean.test_only.bad_code.testGetValue("test-ping"));
 });
+
+add_task(async function test_fog_timespan_works() {
+  // We start, briefly sleep and then stop.
+  // That guarantees some time to measure.
+  Glean.test_only.can_we_time_it.start();
+  await sleep(10);
+  Glean.test_only.can_we_time_it.stop();
+
+  Assert.ok(Glean.test_only.can_we_time_it.testHasValue("test-ping"));
+  Assert.ok(Glean.test_only.can_we_time_it.testGetValue("test-ping") > 0);
+});

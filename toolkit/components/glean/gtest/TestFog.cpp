@@ -57,3 +57,15 @@ TEST(FOG, TestCppCounterWorks)
   ASSERT_TRUE(mozilla::glean::test_only::bad_code.TestHasValue("test-ping"));
   ASSERT_EQ(42, mozilla::glean::test_only::bad_code.TestGetValue("test-ping"));
 }
+
+TEST(FOG, TestCppTimespanWorks)
+{
+  mozilla::glean::test_only::can_we_time_it.Start();
+  PR_Sleep(PR_MillisecondsToInterval(10));
+  mozilla::glean::test_only::can_we_time_it.Stop();
+
+  ASSERT_TRUE(
+      mozilla::glean::test_only::can_we_time_it.TestHasValue("test-ping"));
+  ASSERT_TRUE(
+      mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping") > 0);
+}
