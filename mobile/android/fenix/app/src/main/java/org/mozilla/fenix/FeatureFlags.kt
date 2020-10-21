@@ -45,4 +45,9 @@ object FeatureFlags {
      * Enables ETP cookie purging
      */
     val etpCookiePurging = Config.channel.isNightlyOrDebug
+
+    /**
+     * Returns user to browser on cold start if they have open tabs
+     */
+    val returnToBrowserOnColdStart = Config.channel.isNightlyOrDebug
 }
