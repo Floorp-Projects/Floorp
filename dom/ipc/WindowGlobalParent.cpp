@@ -20,6 +20,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -353,6 +354,11 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateDocumentTitle(
   // for top-level frames.
   if (!BrowsingContext()->IsTop()) {
     return IPC_OK();
+  }
+
+  // Notify media controller in order to update its default metadata.
+  if (BrowsingContext()->HasCreatedMediaController()) {
+    BrowsingContext()->GetMediaController()->NotifyPageTitleChanged();
   }
 
   Element* frameElement = BrowsingContext()->GetEmbedderElement();
@@ -1049,8 +1055,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvAccumulatePageUseCounters(
       gUseCountersLog, LogLevel::Debug,
       ("Accumulate page use counters: WindowContext %" PRIu64 " -> %" PRIu64,
        InnerWindowId(),
-       mPageUseCountersWindow ? mPageUseCountersWindow->InnerWindowId()
-                              : 0));
+       mPageUseCountersWindow ? mPageUseCountersWindow->InnerWindowId() : 0));
 
   if (!mPageUseCountersWindow || mPageUseCountersWindow->mSentPageUseCounters) {
     MOZ_LOG(gUseCountersLog, LogLevel::Debug,
