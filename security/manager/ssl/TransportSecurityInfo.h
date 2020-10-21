@@ -122,9 +122,9 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   // on the original TransportSecurityInfo).
   Atomic<bool> mCanceled;
 
+ protected:
   mutable ::mozilla::Mutex mMutex;
 
- protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
   bool mNPNCompleted;
