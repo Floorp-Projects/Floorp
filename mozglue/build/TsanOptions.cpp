@@ -359,6 +359,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:CamerasParent::ActorDestroy\n"
          "race:CamerasParent::DispatchToVideoCaptureThread\n"
 
+         // Bug 1672230
+         "race:ScriptPreloader::Trace\n"
+         "race:ScriptPreloader::WriteCache\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
