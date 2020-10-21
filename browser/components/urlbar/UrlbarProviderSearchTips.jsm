@@ -29,12 +29,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "updateManager",
-  "@mozilla.org/updates/update-manager;1",
-  "nsIUpdateManager"
-);
+XPCOMUtils.defineLazyGetter(this, "updateManager", () => {
+  return (
+    Cc["@mozilla.org/updates/update-manager;1"] &&
+    Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager)
+  );
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
