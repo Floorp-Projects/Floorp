@@ -5,11 +5,11 @@
 
 use crate::ClientContext;
 use crate::{assert_not_in_callback, run_in_callback};
-use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
 use audioipc::rpc;
 use audioipc::shm::{SharedMemMutSlice, SharedMemSlice};
+use audioipc::{codec::LengthDelimitedCodec, messages::StreamCreateParams};
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
@@ -167,16 +167,20 @@ impl<'ctx> ClientStream<'ctx> {
     ) -> Result<Stream> {
         assert_not_in_callback();
 
-        let has_input = init_params.input_stream_params.is_some();
-        let has_output = init_params.output_stream_params.is_some();
-
         let rpc = ctx.rpc();
-        let data = send_recv!(rpc, StreamInit(init_params) => StreamCreated())?;
+        let create_params = StreamCreateParams {
+            input_stream_params: init_params.input_stream_params,
+            output_stream_params: init_params.output_stream_params,
+        };
+        let data = send_recv!(rpc, StreamCreate(create_params) => StreamCreated())?;
 
         debug!(
             "token = {}, handles = {:?}",
             data.token, data.platform_handles
         );
+
+        let has_input = init_params.input_stream_params.is_some();
+        let has_output = init_params.output_stream_params.is_some();
 
         let stream =
             unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
@@ -236,6 +240,8 @@ impl<'ctx> ClientStream<'ctx> {
             }))
             .expect("Failed to spawn CallbackServer");
         wait_rx.recv().unwrap();
+
+        send_recv!(rpc, StreamInit(data.token, init_params) => StreamInitialized)?;
 
         let stream = Box::into_raw(Box::new(ClientStream {
             context: ctx,
