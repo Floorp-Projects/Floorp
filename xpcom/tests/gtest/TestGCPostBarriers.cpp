@@ -9,6 +9,8 @@
  * implemented for nsTArrays that contain JavaScript Values.
  */
 
+#include "mozilla/UniquePtr.h"
+
 #include "jsapi.h"
 #include "nsTArray.h"
 
@@ -37,11 +39,13 @@ const size_t ElementCount = 100;
 const size_t InitialElements = ElementCount / 10;
 
 template <class ArrayT>
-static void RunTest(JSContext* cx, ArrayT* array) {
+static void TestGrow(JSContext* cx) {
   JS_GC(cx);
 
+  auto array = MakeUnique<ArrayT>();
   ASSERT_TRUE(array != nullptr);
-  JS_AddExtraGCRootsTracer(cx, TraceArray<ArrayT>, array);
+
+  JS_AddExtraGCRootsTracer(cx, TraceArray<ArrayT>, array.get());
 
   /*
    * Create the array and fill it with new JS objects. With GGC these will be
@@ -66,7 +70,8 @@ static void RunTest(JSContext* cx, ArrayT* array) {
   /*
    * Sanity check that our array contains what we expect.
    */
-  for (size_t i = 0; i < ElementCount; ++i) {
+  ASSERT_EQ(array->Length(), ElementCount);
+  for (size_t i = 0; i < array->Length(); i++) {
     RootedObject obj(cx, array->ElementAt(i));
     ASSERT_TRUE(JS::ObjectIsTenured(obj));
     ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
@@ -74,7 +79,54 @@ static void RunTest(JSContext* cx, ArrayT* array) {
     ASSERT_EQ(static_cast<int32_t>(i), value.toInt32());
   }
 
-  JS_RemoveExtraGCRootsTracer(cx, TraceArray<ArrayT>, array);
+  JS_RemoveExtraGCRootsTracer(cx, TraceArray<ArrayT>, array.get());
+}
+
+template <class ArrayT>
+static void TestShrink(JSContext* cx) {
+  JS_GC(cx);
+
+  auto array = MakeUnique<ArrayT>();
+  ASSERT_TRUE(array != nullptr);
+
+  JS_AddExtraGCRootsTracer(cx, TraceArray<ArrayT>, array.get());
+
+  /*
+   * Create the array and fill it with new JS objects. With GGC these will be
+   * allocated in the nursery.
+   */
+  RootedValue value(cx);
+  const char* property = "foo";
+  for (size_t i = 0; i < ElementCount; ++i) {
+    RootedObject obj(cx, JS_NewPlainObject(cx));
+    ASSERT_FALSE(JS::ObjectIsTenured(obj));
+    value = Int32Value(i);
+    ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));
+    ASSERT_TRUE(array->AppendElement(obj, fallible));
+  }
+
+  /* Shrink and compact the array */
+  array->RemoveElementsAt(InitialElements, ElementCount - InitialElements);
+  array->Compact();
+
+  JS_GC(cx);
+
+  ASSERT_EQ(array->Length(), InitialElements);
+  for (size_t i = 0; i < array->Length(); i++) {
+    RootedObject obj(cx, array->ElementAt(i));
+    ASSERT_TRUE(JS::ObjectIsTenured(obj));
+    ASSERT_TRUE(JS_GetProperty(cx, obj, property, &value));
+    ASSERT_TRUE(value.isInt32());
+    ASSERT_EQ(static_cast<int32_t>(i), value.toInt32());
+  }
+
+  JS_RemoveExtraGCRootsTracer(cx, TraceArray<ArrayT>, array.get());
+}
+
+template <class ArrayT>
+static void TestArrayType(JSContext* cx) {
+  TestGrow<ArrayT>(cx);
+  TestShrink<ArrayT>(cx);
 }
 
 static void CreateGlobalAndRunTest(JSContext* cx) {
@@ -89,25 +141,11 @@ static void CreateGlobalAndRunTest(JSContext* cx) {
 
   JS::Realm* oldRealm = JS::EnterRealm(cx, global);
 
-  typedef Heap<JSObject*> ElementT;
+  using ElementT = Heap<JSObject*>;
 
-  {
-    nsTArray<ElementT>* array = new nsTArray<ElementT>(InitialElements);
-    RunTest(cx, array);
-    delete array;
-  }
-
-  {
-    FallibleTArray<ElementT>* array =
-        new FallibleTArray<ElementT>(InitialElements);
-    RunTest(cx, array);
-    delete array;
-  }
-
-  {
-    AutoTArray<ElementT, InitialElements> array;
-    RunTest(cx, &array);
-  }
+  TestArrayType<nsTArray<ElementT>>(cx);
+  TestArrayType<FallibleTArray<ElementT>>(cx);
+  TestArrayType<AutoTArray<ElementT, 1>>(cx);
 
   JS::LeaveRealm(cx, oldRealm);
 }
