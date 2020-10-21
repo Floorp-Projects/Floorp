@@ -41,7 +41,7 @@ already_AddRefed<DrawTarget> PrintTargetThebes::MakeDrawTarget(
   }
 
   if (aRecorder) {
-    dt = CreateWrapAndRecordDrawTarget(aRecorder, dt);
+    dt = CreateRecordingDrawTarget(aRecorder, dt);
     if (!dt || !dt->IsValid()) {
       return nullptr;
     }
