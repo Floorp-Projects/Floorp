@@ -84,7 +84,7 @@ class KeyPath {
     return mType == aOther.mType && mStrings == aOther.mStrings;
   }
 
-  void SerializeToString(nsAString& aString) const;
+  nsAutoString SerializeToString() const;
   static KeyPath DeserializeFromString(const nsAString& aString);
 
   nsresult ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const;

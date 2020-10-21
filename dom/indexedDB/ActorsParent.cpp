@@ -18724,10 +18724,8 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
         IDB_TRY(stmt.BindStringByIndex(2, mMetadata.name()));
 
         if (mMetadata.keyPath().IsValid()) {
-          nsAutoString keyPathSerialization;
-          mMetadata.keyPath().SerializeToString(keyPathSerialization);
-
-          IDB_TRY(stmt.BindStringByIndex(3, keyPathSerialization));
+          IDB_TRY(stmt.BindStringByIndex(
+              3, mMetadata.keyPath().SerializeToString()));
         } else {
           IDB_TRY(stmt.BindNullByIndex(3));
         }
@@ -19162,9 +19160,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           return rv;
         }
 
-        nsAutoString keyPathSerialization;
-        mMetadata.keyPath().SerializeToString(keyPathSerialization);
-        rv = stmt.BindStringByIndex(2, keyPathSerialization);
+        rv = stmt.BindStringByIndex(2, mMetadata.keyPath().SerializeToString());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
