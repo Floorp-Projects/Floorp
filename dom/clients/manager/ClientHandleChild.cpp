@@ -6,6 +6,7 @@
 
 #include "ClientHandleChild.h"
 
+#include "ClientHandle.h"
 #include "ClientHandleOpChild.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 
