@@ -206,26 +206,26 @@ function run_test() {
         expectRootChildren(0);
       })
       .then(() => {
-        const deferred = defer();
-        rootFront.once("string-event", str => {
-          trace.expectSend({ type: "emitShortString", to: "<actorid>" });
-          trace.expectReceive({
-            type: "string-event",
-            str: "abc",
-            from: "<actorid>",
-          });
+        return new Promise(resolve => {
+          rootFront.once("string-event", str => {
+            trace.expectSend({ type: "emitShortString", to: "<actorid>" });
+            trace.expectReceive({
+              type: "string-event",
+              str: "abc",
+              from: "<actorid>",
+            });
 
-          Assert.ok(!!str);
-          strfront = str;
-          // Shouldn't generate any new references
-          expectRootChildren(0);
-          // will generate no packets.
-          strfront.string().then(value => {
-            deferred.resolve(value);
+            Assert.ok(!!str);
+            strfront = str;
+            // Shouldn't generate any new references
+            expectRootChildren(0);
+            // will generate no packets.
+            strfront.string().then(value => {
+              resolve(value);
+            });
           });
+          rootFront.emitShortString();
         });
-        rootFront.emitShortString();
-        return deferred.promise;
       })
       .then(value => {
         Assert.equal(value, SHORT_STR);
@@ -235,52 +235,52 @@ function run_test() {
         return strfront.release();
       })
       .then(() => {
-        const deferred = defer();
-        rootFront.once("string-event", str => {
-          trace.expectSend({ type: "emitLongString", to: "<actorid>" });
-          trace.expectReceive({
-            type: "string-event",
-            str: {
-              type: "longString",
-              actor: "<actorid>",
-              length: 16,
-              initial: "abcde",
-            },
-            from: "<actorid>",
-          });
+        return new Promise(resolve => {
+          rootFront.once("string-event", str => {
+            trace.expectSend({ type: "emitLongString", to: "<actorid>" });
+            trace.expectReceive({
+              type: "string-event",
+              str: {
+                type: "longString",
+                actor: "<actorid>",
+                length: 16,
+                initial: "abcde",
+              },
+              from: "<actorid>",
+            });
 
-          Assert.ok(!!str);
-          // Should generate one new reference
-          expectRootChildren(1);
-          strfront = str;
-          strfront.string().then(value => {
-            trace.expectSend({
-              type: "substring",
-              start: 5,
-              end: 10,
-              to: "<actorid>",
-            });
-            trace.expectReceive({ substring: "fghij", from: "<actorid>" });
-            trace.expectSend({
-              type: "substring",
-              start: 10,
-              end: 15,
-              to: "<actorid>",
-            });
-            trace.expectReceive({ substring: "klmno", from: "<actorid>" });
-            trace.expectSend({
-              type: "substring",
-              start: 15,
-              end: 20,
-              to: "<actorid>",
-            });
-            trace.expectReceive({ substring: "p", from: "<actorid>" });
+            Assert.ok(!!str);
+            // Should generate one new reference
+            expectRootChildren(1);
+            strfront = str;
+            strfront.string().then(value => {
+              trace.expectSend({
+                type: "substring",
+                start: 5,
+                end: 10,
+                to: "<actorid>",
+              });
+              trace.expectReceive({ substring: "fghij", from: "<actorid>" });
+              trace.expectSend({
+                type: "substring",
+                start: 10,
+                end: 15,
+                to: "<actorid>",
+              });
+              trace.expectReceive({ substring: "klmno", from: "<actorid>" });
+              trace.expectSend({
+                type: "substring",
+                start: 15,
+                end: 20,
+                to: "<actorid>",
+              });
+              trace.expectReceive({ substring: "p", from: "<actorid>" });
 
-            deferred.resolve(value);
+              resolve(value);
+            });
           });
+          rootFront.emitLongString();
         });
-        rootFront.emitLongString();
-        return deferred.promise;
       })
       .then(value => {
         Assert.equal(value, LONG_STR);

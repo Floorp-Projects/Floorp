@@ -57,21 +57,20 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   promiseReturn: function(toWait) {
     // Guarantee that this resolves after simpleReturn returns.
-    const deferred = defer();
-    const sequence = this.sequence++;
+    return new Promise(resolve => {
+      const sequence = this.sequence++;
 
-    // Wait until the number of requests specified by toWait have
-    // happened, to test queuing.
-    const check = () => {
-      if (this.sequence - sequence < toWait) {
-        executeSoon(check);
-        return;
-      }
-      deferred.resolve(sequence);
-    };
-    executeSoon(check);
-
-    return deferred.promise;
+      // Wait until the number of requests specified by toWait have
+      // happened, to test queuing.
+      const check = () => {
+        if (this.sequence - sequence < toWait) {
+          executeSoon(check);
+          return;
+        }
+        resolve(sequence);
+      };
+      executeSoon(check);
+    });
   },
 
   simpleThrow: function() {
@@ -80,13 +79,13 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   promiseThrow: function() {
     // Guarantee that this resolves after simpleReturn returns.
-    const deferred = defer();
-    let sequence = this.sequence++;
-    // This should be enough to force a failure if the code is broken.
-    do_timeout(150, () => {
-      deferred.reject(sequence++);
+    return new Promise((resolve, reject) => {
+      let sequence = this.sequence++;
+      // This should be enough to force a failure if the code is broken.
+      do_timeout(150, () => {
+        reject(sequence++);
+      });
     });
-    return deferred.promise;
   },
 });
 
