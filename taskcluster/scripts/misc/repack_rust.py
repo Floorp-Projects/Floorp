@@ -345,6 +345,7 @@ def repack(host, targets, channel='stable', cargo_channel=None, compiler_builtin
             'x86_64-unknown-linux-gnu',
             'i686-unknown-linux-gnu',
             'thumbv7neon-linux-androideabi',
+            'aarch64-linux-android',
         )
         llvm_bin = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'clang', 'bin')
     for t in hack_targets:
