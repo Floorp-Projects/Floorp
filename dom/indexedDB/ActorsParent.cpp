@@ -19480,17 +19480,11 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                            kStmtParamNameObjectStoreId +
                            " ORDER BY index_data.object_data_key ASC;"_ns)));
 
-  nsresult rv = selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId));
 
   if (!mUnique || !mIsLastIndex) {
-    rv = selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                     mObjectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                        mObjectStoreId));
   }
 
   Key lastObjectStoreKey;
@@ -19587,27 +19581,18 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   if (!lastObjectStoreKey.IsUnset()) {
     MOZ_ASSERT_IF(!mIsLastIndex, !lastIndexValues.IsEmpty());
 
-    rv = RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
-                                 lastIndexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
+                                    lastIndexValues));
   }
 
-  rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "DELETE FROM object_store_index "
       "WHERE id = :index_id;"_ns,
-      [this](mozIStorageStatement& deleteStmt) {
-        nsresult rv = deleteStmt.BindInt64ByIndex(0, mIndexId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      [this](mozIStorageStatement& deleteStmt) -> nsresult {
+        IDB_TRY(deleteStmt.BindInt64ByIndex(0, mIndexId));
 
         return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      }));
 
 #ifdef DEBUG
   {
@@ -19618,10 +19603,7 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 #endif
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
