@@ -143,6 +143,8 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
     return NS_OK;
   }
 
+  MutexAutoLock lock(mMutex);
+
   // An empty mSucceededCertChain means the server certificate verification
   // failed before, so don't join in this case.
   if (mSucceededCertChain.IsEmpty()) {
