@@ -18700,55 +18700,40 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, ([this, aConnection](const auto) {
+            if (!aConnection->GetUpdateRefcountFunction()) {
+              mAssumingPreviousOperationFail = true;
+            }
+          })
 #endif
-    return rv;
-  }
+  );
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "INSERT INTO object_store (id, auto_increment, name, key_path) "
       "VALUES (:id, :auto_increment, :name, :key_path);"_ns,
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      [this](mozIStorageStatement& stmt) -> Result<Ok, nsresult> {
+        IDB_TRY(stmt.BindInt64ByIndex(0, mMetadata.id()));
 
-        rv = stmt.BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0));
 
-        rv = stmt.BindStringByIndex(2, mMetadata.name());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindStringByIndex(2, mMetadata.name()));
 
         if (mMetadata.keyPath().IsValid()) {
           nsAutoString keyPathSerialization;
           mMetadata.keyPath().SerializeToString(keyPathSerialization);
 
-          rv = stmt.BindStringByIndex(3, keyPathSerialization);
+          IDB_TRY(stmt.BindStringByIndex(3, keyPathSerialization));
         } else {
-          rv = stmt.BindNullByIndex(3);
+          IDB_TRY(stmt.BindNullByIndex(3));
         }
 
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      }));
 
 #ifdef DEBUG
   {
@@ -18759,10 +18744,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 #endif
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
