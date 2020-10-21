@@ -7,9 +7,13 @@
 #ifndef mozilla_dom_quota_persistencetype_h__
 #define mozilla_dom_quota_persistencetype_h__
 
-#include "mozilla/dom/quota/QuotaCommon.h"
-
+#include <cstdint>
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/StorageTypeBinding.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/fallible.h"
+#include "nsStringFwd.h"
 
 BEGIN_QUOTA_NAMESPACE
 

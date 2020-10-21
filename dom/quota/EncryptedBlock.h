@@ -7,6 +7,10 @@
 #ifndef mozilla_dom_quota_EncryptedBlock_h
 #define mozilla_dom_quota_EncryptedBlock_h
 
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include "mozilla/Assertions.h"
 #include "mozilla/Span.h"
 #include "nsTArray.h"
 

@@ -7,6 +7,8 @@
 #include "DecryptingInputStream.h"
 #include "DecryptingInputStream_impl.h"
 
+#include "nsStreamUtils.h"
+
 namespace mozilla::dom::quota {
 
 NS_IMPL_ADDREF(DecryptingInputStreamBase);

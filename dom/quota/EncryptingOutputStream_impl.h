@@ -9,9 +9,14 @@
 
 #include "EncryptingOutputStream.h"
 
+#include <algorithm>
+#include <utility>
 #include "CipherStrategy.h"
-
-#include "nsStreamUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Span.h"
+#include "mozilla/fallible.h"
+#include "nsDebug.h"
+#include "nsError.h"
 
 namespace mozilla::dom::quota {
 template <typename CipherStrategy>

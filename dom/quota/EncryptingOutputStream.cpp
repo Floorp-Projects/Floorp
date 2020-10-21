@@ -7,6 +7,10 @@
 #include "EncryptingOutputStream.h"
 #include "EncryptingOutputStream_impl.h"
 
+#include <type_traits>
+#include "mozilla/MacroForEach.h"
+#include "nsStreamUtils.h"
+
 namespace mozilla::dom::quota {
 
 NS_IMPL_ISUPPORTS(EncryptingOutputStreamBase, nsIOutputStream);

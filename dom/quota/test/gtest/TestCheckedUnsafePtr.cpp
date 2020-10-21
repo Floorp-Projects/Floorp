@@ -6,6 +6,11 @@
 
 #include "gtest/gtest.h"
 
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include "mozilla/fallible.h"
+
 using namespace mozilla;
 
 class NoCheckTestType

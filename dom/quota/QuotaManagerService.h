@@ -7,14 +7,22 @@
 #ifndef mozilla_dom_quota_QuotaManagerService_h
 #define mozilla_dom_quota_QuotaManagerService_h
 
-#include "mozilla/dom/ipc/IdType.h"
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/HalBatteryInformation.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "nsIObserver.h"
 #include "nsIQuotaManagerService.h"
+#include "nsISupports.h"
 
 #define QUOTAMANAGER_SERVICE_CONTRACTID \
   "@mozilla.org/dom/quota-manager-service;1"
+
+class nsIPrincipal;
+class nsIQuotaRequest;
+class nsIQuotaUsageCallback;
+class nsIQuotaUsageRequest;
 
 namespace mozilla {
 namespace ipc {

@@ -6,7 +6,17 @@
 
 #include "MemoryOutputStream.h"
 
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/fallible.h"
+#include "nsDebug.h"
+#include "nsError.h"
 #include "nsStreamUtils.h"
+#include "nscore.h"
+
+class nsIInputStream;
 
 namespace mozilla {
 namespace dom {

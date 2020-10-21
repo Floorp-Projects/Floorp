@@ -7,6 +7,8 @@
 #ifndef mozilla_CheckedUnsafePtr_h
 #define mozilla_CheckedUnsafePtr_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DataMutex.h"
 #include "nsTArray.h"
 
