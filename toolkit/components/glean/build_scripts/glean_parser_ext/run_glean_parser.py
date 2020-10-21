@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cpp
+import js
 import re
 import rust
 import sys
@@ -63,6 +64,11 @@ def main(output_fd, _metrics_index, *args):
 def cpp_metrics(output_fd, _metrics_index, *args):
     all_objs, options = parse(args)
     cpp.output_cpp(all_objs, output_fd, options)
+
+
+def js_metrics(output_fd, _metrics_index, *args):
+    all_objs, options = parse(args)
+    js.output_js(all_objs, output_fd, options)
 
 
 if __name__ == '__main__':
