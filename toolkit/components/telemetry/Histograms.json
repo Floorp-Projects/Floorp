@@ -15879,5 +15879,15 @@
     ],
     "releaseChannelCollection": "opt-out",
     "description": "Ratio of used and unused resources preloaded with link rel=preload tag or response header, broken down by supported resource type."
+  },
+  "HTTP_TRANSACTION_RESTART_REASON": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "n_values": 50,
+    "bug_numbers": [1667775],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "kind": "enumerated",
+    "description": "The reason why a HTTP transaction is restarted."
   }
 }
