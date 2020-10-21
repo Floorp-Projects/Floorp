@@ -110,4 +110,6 @@ add_task(async function() {
 
     sidebarParseTreeVisible(parseTreeVisible);
   }
+
+  await finishTests();
 });

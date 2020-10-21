@@ -162,4 +162,6 @@ add_task(async function() {
 
   testTree(testCasesUserContextId);
   await testTables(testCasesUserContextId);
+
+  await finishTests();
 });

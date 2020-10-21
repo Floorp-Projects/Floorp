@@ -231,4 +231,6 @@ add_task(async function() {
 
   testTree(storageItemsForDefault);
   await testTables(storageItemsForDefault);
+
+  await finishTests();
 });

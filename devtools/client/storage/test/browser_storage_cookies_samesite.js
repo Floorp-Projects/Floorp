@@ -41,4 +41,6 @@ add_task(async function() {
   is(sameSite1, "None", `sameSite1 is "None"`);
   is(sameSite2, "Lax", `sameSite2 is "Lax"`);
   is(sameSite3, "Strict", `sameSite3 is "Strict"`);
+
+  await finishTests();
 });

@@ -57,4 +57,6 @@ add_task(async function() {
   }
 
   ok(errorThrown, "error was reported when trying to delete");
+
+  await finishTests();
 });

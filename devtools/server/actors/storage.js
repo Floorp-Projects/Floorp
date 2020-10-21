@@ -101,7 +101,6 @@ var ILLEGAL_CHAR_REGEX = new RegExp(illegalFileNameCharacters, "g");
 
 // Holder for all the registered storage actors.
 var storageTypePool = new Map();
-exports.storageTypePool = storageTypePool;
 
 /**
  * An async method equivalent to setTimeout but using Promises

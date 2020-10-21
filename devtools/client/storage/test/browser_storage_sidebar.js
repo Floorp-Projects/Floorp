@@ -129,4 +129,6 @@ add_task(async function() {
 
     info("-".repeat(80));
   }
+
+  await finishTests();
 });
