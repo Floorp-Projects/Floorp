@@ -225,7 +225,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
   }
 
   JSDependentString* str =
-      js::AllocateString<JSDependentString, js::NoGC>(cx, js::gc::DefaultHeap);
+      js::AllocateString<JSDependentString, js::NoGC>(cx, heap);
   if (str) {
     str->init(cx, baseArg, start, length);
     return str;
@@ -233,7 +233,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
 
   js::RootedLinearString base(cx, baseArg);
 
-  str = js::AllocateString<JSDependentString>(cx, js::gc::DefaultHeap);
+  str = js::AllocateString<JSDependentString>(cx, heap);
   if (!str) {
     return nullptr;
   }
@@ -329,8 +329,7 @@ MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(
     return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, allowGC>(cx));
   }
 
-  return js::AllocateString<JSFatInlineString, allowGC>(cx,
-                                                        js::gc::DefaultHeap);
+  return js::AllocateString<JSFatInlineString, allowGC>(cx, heap);
 }
 
 template <>
