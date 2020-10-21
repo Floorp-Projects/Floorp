@@ -14,3 +14,5 @@ dom/console/
 dom/credentialmanagement/
 dom/crypto/
 dom/debugger/
+dom/docs/
+dom/encoding/
