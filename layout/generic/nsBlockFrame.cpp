@@ -7544,7 +7544,7 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
 
   if ((!equal || lineFloats.Length() != storedFloats.Length()) &&
       !anyLineDirty) {
-    NS_WARNING(
+    NS_ERROR(
         "nsBlockFrame::CheckFloats: Explicit float list is out of sync with "
         "float cache");
 #  if defined(DEBUG_roc)
