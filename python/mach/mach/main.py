@@ -465,7 +465,7 @@ To see more help for a specific command, run:
         except KeyboardInterrupt as ki:
             raise ki
         except FailedCommandError as e:
-            print(e.message)
+            print(e)
             return e.exit_code
         except UserError:
             # We explicitly don't report UserErrors to Sentry.
