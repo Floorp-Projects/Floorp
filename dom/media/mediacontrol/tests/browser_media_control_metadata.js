@@ -350,6 +350,35 @@ add_task(async function testMetadataAfterTabNavigation() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testUpdateDefaultMetadataWhenPageTitleChanges() {
+  info(`open media page`);
+  const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY);
+
+  info(`start media`);
+  await playMedia(tab, testVideoId);
+
+  info(`should use default metadata because of lacking of media session`);
+  await isGivenTabUsingDefaultMetadata(tab);
+
+  info(`default metadata should be updated after page title changes`);
+  await changePageTitle(tab, { shouldAffectMetadata: true });
+  await isGivenTabUsingDefaultMetadata(tab);
+
+  info(`after setting metadata, title change won't affect current metadata`);
+  const metadata = {
+    title: "foo",
+    artist: "bar",
+    album: "foo",
+    artwork: [{ src: "bar.jpg", sizes: "128x128", type: "image/jpeg" }],
+  };
+  await setMediaMetadata(tab, metadata);
+  await changePageTitle(tab, { shouldAffectMetadata: false });
+  await isCurrentMetadataEqualTo(metadata);
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * The following are helper functions.
  */
@@ -369,4 +398,17 @@ function setNullMediaMetadata(tab) {
     content.navigator.mediaSession.metadata = null;
   });
   return Promise.all([promise, waitUntilControllerMetadataChanged()]);
+}
+
+async function changePageTitle(tab, { shouldAffectMetadata } = {}) {
+  const controller = tab.linkedBrowser.browsingContext.mediaController;
+  const shouldWaitMetadataChangePromise = shouldAffectMetadata
+    ? new Promise(r => (controller.onmetadatachange = r))
+    : Promise.resolve();
+  await Promise.all([
+    shouldWaitMetadataChangePromise,
+    SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+      content.document.title = "new title";
+    }),
+  ]);
 }
