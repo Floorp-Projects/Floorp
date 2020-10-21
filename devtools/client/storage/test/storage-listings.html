@@ -138,7 +138,6 @@ window.clear = async function () {
   if (window.caches) {
     await caches.delete("plop");
   }
-
   dump("removed indexedDB and cache data from " + document.location + "\n");
 };
 </script>

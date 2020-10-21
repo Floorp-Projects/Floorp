@@ -15,6 +15,4 @@ add_task(async function() {
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
-
-  await finishTests();
 });

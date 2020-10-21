@@ -78,5 +78,4 @@ add_task(async function() {
 
   testTree();
   await testDescriptions();
-  await finishTests();
 });

@@ -180,6 +180,4 @@ add_task(async function() {
     [["cookies", "http://test1.example.org"], []],
     [["cookies", "https://sectest1.example.org"], []],
   ]);
-
-  await finishTests();
 });
