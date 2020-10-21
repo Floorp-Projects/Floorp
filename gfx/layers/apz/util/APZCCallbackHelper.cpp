@@ -649,7 +649,7 @@ static bool PrepareForSetTargetAPZCNotification(
 
 static void SendLayersDependentApzcTargetConfirmation(
     PresShell* aPresShell, uint64_t aInputBlockId,
-    const nsTArray<ScrollableLayerGuid>& aTargets) {
+    nsTArray<ScrollableLayerGuid>&& aTargets) {
   LayerManager* lm = aPresShell->GetLayerManager();
   if (!lm) {
     return;
@@ -679,11 +679,13 @@ static void SendLayersDependentApzcTargetConfirmation(
 
 DisplayportSetListener::DisplayportSetListener(
     nsIWidget* aWidget, PresShell* aPresShell, const uint64_t& aInputBlockId,
-    const nsTArray<ScrollableLayerGuid>& aTargets)
-    : mWidget(aWidget),
-      mPresShell(aPresShell),
+    nsTArray<ScrollableLayerGuid>&& aTargets)
+    : OneShotPostRefreshObserver(
+          aPresShell,
+          [this](PresShell* aPresShell) { OnPostRefresh(this, aPresShell); }),
+      mWidget(aWidget),
       mInputBlockId(aInputBlockId),
-      mTargets(aTargets.Clone()) {}
+      mTargets(std::move(aTargets)) {}
 
 DisplayportSetListener::~DisplayportSetListener() = default;
 
@@ -699,29 +701,13 @@ bool DisplayportSetListener::Register() {
   return false;
 }
 
-void DisplayportSetListener::DidRefresh() {
-  if (!mPresShell) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Post-refresh observer fired again after failed attempt at "
-        "unregistering it");
-    return;
-  }
-
+/* static */
+void DisplayportSetListener::OnPostRefresh(DisplayportSetListener* aListener,
+                                           PresShell* aPresShell) {
   APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n",
-             mInputBlockId);
-  SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId,
-                                            std::move(mTargets));
-
-  if (!mPresShell->RemovePostRefreshObserver(this)) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Unable to unregister post-refresh observer! Leaking it instead of "
-        "leaving garbage registered");
-    // Graceful handling, just in case...
-    mPresShell = nullptr;
-    return;
-  }
-
-  delete this;
+             aListener->mInputBlockId);
+  SendLayersDependentApzcTargetConfirmation(
+      aPresShell, aListener->mInputBlockId, std::move(aListener->mTargets));
 }
 
 UniquePtr<DisplayportSetListener>
