@@ -6625,7 +6625,7 @@
 # See https://github.com/w3c/csswg-drafts/issues/3264
 - name: layout.css.is-and-where-better-error-recovery.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   rust: true
 
