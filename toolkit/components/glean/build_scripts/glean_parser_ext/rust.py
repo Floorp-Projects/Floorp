@@ -13,6 +13,7 @@ import json
 
 import jinja2
 
+from util import generate_metric_ids
 from glean_parser import util
 
 
@@ -85,9 +86,9 @@ def type_name(obj):
     if len(generate_enums):
         for name, suffix in generate_enums:
             if not len(getattr(obj, name)) and suffix == "Keys":
-                return class_name(obj.type) + "::<NoExtraKeys>"
+                return class_name(obj.type) + "<NoExtraKeys>"
             else:
-                return "{}::<{}>".format(class_name(obj.type), util.Camelize(obj.name) + suffix)
+                return "{}<{}>".format(class_name(obj.type), util.Camelize(obj.name) + suffix)
     return class_name(obj.type)
 
 
@@ -136,11 +137,44 @@ def output_rust(objs, output_fd, options={}):
         return env.get_template(template_name)
 
     util.get_jinja2_template = get_local_template
+    get_metric_id = generate_metric_ids(objs)
+
+    # Map from a tuple (const, typ) to an array of tuples (id, path)
+    # where:
+    #   const: The Rust constant name to be used for the lookup map
+    #   typ:   The metric type to be stored in the lookup map
+    #   id:    The numeric metric ID
+    #   path:  The fully qualified path to the metric object in Rust
+    #
+    # This map is only filled for metrics, not for pings.
+    #
+    # Example:
+    #
+    #   ("COUNTERS", "CounterMetric") -> [(1, "test_only::clicks"), ...]
+    objs_by_type = {}
 
     if len(objs) == 1 and "pings" in objs:
         template_filename = "rust_pings.jinja2"
     else:
         template_filename = "rust.jinja2"
+
+        for category_name, metrics in objs.items():
+            for metric in metrics.values():
+                # FIXME: Support events correctly
+                if metric.type == "event":
+                    continue
+
+                # The constant is all uppercase and suffixed by `_MAP`
+                const_name = util.snake_case(metric.type).upper() + "_MAP"
+                typ = type_name(metric)
+                key = (const_name, typ)
+                if key not in objs_by_type:
+                    objs_by_type[key] = []
+
+                metric_name = util.snake_case(metric.name)
+                category_name = util.snake_case(category_name)
+                full_path = f"{category_name}::{metric_name}"
+                objs_by_type[key].append((get_metric_id(metric), full_path))
 
     # Now for the modules for each category.
     template = util.get_jinja2_template(
@@ -151,6 +185,7 @@ def output_rust(objs, output_fd, options={}):
             ("type_name", type_name),
             ("ctor", ctor),
             ("extra_keys", extra_keys),
+            ("metric_id", get_metric_id),
         ),
     )
 
@@ -168,5 +203,6 @@ def output_rust(objs, output_fd, options={}):
 
     output_fd.write(template.render(
         all_objs=objs, common_metric_data_args=common_metric_data_args,
+        metric_by_type=objs_by_type,
         extra_args=util.extra_args))
     output_fd.write("\n")
