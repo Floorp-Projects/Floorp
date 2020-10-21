@@ -562,5 +562,6 @@ android-hw-arm7-browsertime:
     - browsertime-unity-webgl-mobile
 
 linux-tsan-tests:
+    - mochitest-media
     - mochitest-plain
     - xpcshell
