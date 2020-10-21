@@ -81,6 +81,51 @@ dictionary DNSLookupDict {
   boolean answer = false;
 };
 
+dictionary SVCParam {
+  unsigned short type = 0;
+};
+
+dictionary SVCParamAlpn : SVCParam {
+  DOMString alpn = "";
+};
+
+dictionary SVCParamNoDefaultAlpn : SVCParam {
+};
+
+dictionary SVCParamPort : SVCParam {
+  unsigned short port = 0;
+};
+
+dictionary SVCParamIPv4Hint : SVCParam {
+  sequence<DOMString> address;
+};
+
+dictionary SVCParamIPv6Hint : SVCParam {
+  sequence<DOMString> address;
+};
+
+dictionary SVCParamEchConfig : SVCParam {
+  DOMString echConfig = "";
+};
+
+dictionary HTTPSRecord {
+  unsigned short priority = 0;
+  DOMString targetName = "";
+  SVCParamAlpn alpn;
+  SVCParamNoDefaultAlpn noDefaultAlpn;
+  SVCParamPort port;
+  SVCParamIPv4Hint ipv4Hint;
+  SVCParamIPv6Hint ipv6Hint;
+  SVCParamEchConfig echConfig;
+};
+
+[GenerateConversionToJS]
+dictionary HTTPSRRLookupDict {
+  DOMString error = "";
+  boolean answer = false;
+  sequence<HTTPSRecord> records;
+};
+
 [GenerateConversionToJS]
 dictionary ConnStatusDict {
   DOMString status = "";
