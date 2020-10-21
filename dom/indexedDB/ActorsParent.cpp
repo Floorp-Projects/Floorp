@@ -19073,60 +19073,33 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsresult rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "INSERT INTO object_store_index (id, name, key_path, unique_index, "
       "multientry, object_store_id, locale, "
       "is_auto_locale) "
       "VALUES (:id, :name, :key_path, :unique, :multientry, "
       ":object_store_id, :locale, :is_auto_locale)"_ns,
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      [this](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindInt64ByIndex(0, mMetadata.id()));
 
-        rv = stmt.BindStringByIndex(1, mMetadata.name());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindStringByIndex(1, mMetadata.name()));
 
-        rv = stmt.BindStringByIndex(2, mMetadata.keyPath().SerializeToString());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(
+            stmt.BindStringByIndex(2, mMetadata.keyPath().SerializeToString()));
 
-        rv = stmt.BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0));
 
-        rv = stmt.BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0));
+        IDB_TRY(stmt.BindInt64ByIndex(5, mObjectStoreId));
 
-        rv = stmt.BindInt64ByIndex(5, mObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(mMetadata.locale().IsEmpty()
+                    ? stmt.BindNullByIndex(6)
+                    : stmt.BindUTF8StringByIndex(6, mMetadata.locale()));
 
-        rv = mMetadata.locale().IsEmpty()
-                 ? stmt.BindNullByIndex(6)
-                 : stmt.BindUTF8StringByIndex(6, mMetadata.locale());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        rv = stmt.BindInt32ByIndex(7, mMetadata.autoLocale());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindInt32ByIndex(7, mMetadata.autoLocale()));
 
         return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      }));
 
 #ifdef DEBUG
   {
@@ -19137,15 +19110,9 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 #endif
 
-  rv = InsertDataFromObjectStore(aConnection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(InsertDataFromObjectStore(aConnection));
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
