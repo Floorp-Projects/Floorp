@@ -86,6 +86,28 @@ add_task(async function testSoundIndicatorForAudioStream() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testPerformPlayOnMediaLoadingNewSource() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab();
+  await initMediaPlaybackDocument(tab, "audio.ogg");
+
+  info(`sound indicator should appear when audible audio starts playing`);
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info(`sound indicator should disappear when audio stops playing`);
+  await pauseAudio(tab);
+  await waitForTabSoundIndicatorDisappears(tab);
+
+  info(`reset media src and play it again should make sound indicator appear`);
+  await assignNewSourceForAudio(tab, "audio.ogg");
+  await playAudio(tab);
+  await waitForTabSoundIndicatorAppears(tab);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
@@ -119,5 +141,13 @@ function playAudio(tab) {
 function pauseAudio(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
     content.audio.pause();
+  });
+}
+
+function assignNewSourceForAudio(tab, fileName) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [fileName], async fileName => {
+    content.audio.src = "";
+    content.audio.removeAttribute("src");
+    content.audio.src = fileName;
   });
 }
