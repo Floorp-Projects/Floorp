@@ -54,8 +54,37 @@ function closeStream() {
   gStreams = [];
   message("closed");
 }
+
+const query = document.location.search.substring(1);
+const params = new URLSearchParams(query);
+const origins = params.getAll("origin");
+const nested = params.getAll("nested");
+const gumpage = nested.length
+  ? "get_user_media_in_frame.html"
+  : "get_user_media.html";
+let id = 1;
+if (!origins.length) {
+  for(let i = 0; i < 2; ++i) {
+    const iframe = document.createElement("iframe");
+    iframe.id = `frame${id++}`;
+    iframe.src = gumpage;
+    document.body.appendChild(iframe);
+  }
+} else {
+  for (let origin of origins) {
+    const iframe = document.createElement("iframe");
+    iframe.id = `frame${id++}`;
+    const base = new URL("browser/browser/base/content/test/webrtc/", origin).href;
+    const url = new URL(gumpage, base);
+    for (let nestedOrigin of nested) {
+      url.searchParams.append("origin", nestedOrigin);
+    }
+    iframe.src = url.href;
+    iframe.allow = "camera;microphone";
+    iframe.style = `width:${300 * Math.max(1, nested.length) + (nested.length ? 50 : 0)}px;`;
+    document.body.appendChild(iframe);
+  }
+}
 </script>
-<iframe id="frame1" src="get_user_media.html"></iframe>
-<iframe id="frame2" src="get_user_media.html"></iframe>
 </body>
 </html>
