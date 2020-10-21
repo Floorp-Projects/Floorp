@@ -620,15 +620,19 @@ var gTests = [
 ];
 
 add_task(async function test_inprocess() {
-  await runTests(gTests, { relativeURI: "get_user_media_in_frame.html" });
+  await runTests(gTests, {
+    relativeURI: "get_user_media_in_frame.html",
+    subFrames: { frame1: {}, frame2: {} },
+  });
 });
 
 add_task(async function test_outofprocess() {
-  let subFrames = SpecialPowers.useRemoteSubframes
-    ? { frame1: {}, frame2: {} }
-    : {};
+  const origin1 = encodeURI("https://test1.example.org");
+  const origin2 = encodeURI("https://www.mozilla.org:443");
+  const query = `origin=${origin1}&origin=${origin2}`;
+  const observe = SpecialPowers.useRemoteSubframes;
   await runTests(gTests, {
-    relativeURI: "get_user_media_in_oop_frame.html",
-    subFrames,
+    relativeURI: `get_user_media_in_frame.html?${query}`,
+    subFrames: { frame1: { observe }, frame2: { observe } },
   });
 });
