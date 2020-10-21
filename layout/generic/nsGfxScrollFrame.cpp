@@ -6683,8 +6683,6 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
       vRect.Deflate(margin);
     }
-    AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer,
-                                  ScrollDirection::eVertical);
   }
 
   bool hasVisualOnlyScrollbarsOnBothDirections =
@@ -6722,8 +6720,6 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
       hRect.Deflate(margin);
     }
-    AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer,
-                                  ScrollDirection::eHorizontal);
   }
 
   // place the scrollcorner
@@ -6795,6 +6791,18 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       // otherwise lay out the resizer with an empty rectangle
       nsBoxFrame::LayoutChildAt(aState, mResizerBox, nsRect());
     }
+  }
+
+  // Note that AdjustScrollbarRectForResizer has to be called after the
+  // resizer has been laid out immediately above this because it gets the rect
+  // of the resizer frame.
+  if (mVScrollbarBox) {
+    AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer,
+                                  ScrollDirection::eVertical);
+  }
+  if (mHScrollbarBox) {
+    AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer,
+                                  ScrollDirection::eHorizontal);
   }
 
   // Layout scrollbars can overlap at this point if they are both present and
