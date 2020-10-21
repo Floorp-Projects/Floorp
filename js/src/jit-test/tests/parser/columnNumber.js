@@ -32,10 +32,10 @@ const maxColumn = Math.pow(2, 30) - 1;
 assertEq(evaluate("saveStack().column", { columnNumber: maxColumn }),
          maxColumn + 1);
 
-// Check the 'silently zero' behavior when we reach the limit of the srcnotes
-// column encoding.
+// Check the saturation behavior when we reach the limit of the column
+// representation.
 assertEq(evaluate(" saveStack().column", { columnNumber: maxColumn }),
-         1);
+         maxColumn + 1);
 
 // Gathering source text for inclusion in error messages should not try to reach
 // outside the buffer to find the start of the source line. The below should

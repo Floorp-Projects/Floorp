@@ -596,17 +596,16 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   uint32_t columnIndex = parser->errorReporter().columnAt(offset);
+  MOZ_ASSERT(columnIndex <= ColumnLimit);
+
+  // Assert colspan is always representable.
+  static_assert((0 - ptrdiff_t(ColumnLimit)) >= SrcNote::ColSpan::MinColSpan);
+  static_assert((ptrdiff_t(ColumnLimit) - 0) <= SrcNote::ColSpan::MaxColSpan);
+
   ptrdiff_t colspan =
       ptrdiff_t(columnIndex) - ptrdiff_t(bytecodeSection().lastColumn());
+
   if (colspan != 0) {
-    // If the column span is so large that we can't store it, then just
-    // discard this information. This can happen with minimized or otherwise
-    // machine-generated code. Even gigantic column numbers are still
-    // valuable if you have a source map to relate them to something real;
-    // but it's better to fail soft here.
-    if (!SrcNote::ColSpan::isRepresentable(colspan)) {
-      return true;
-    }
     if (!newSrcNote2(SrcNoteType::ColSpan,
                      SrcNote::ColSpan::toOperand(colspan))) {
       return false;
