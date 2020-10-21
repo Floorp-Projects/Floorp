@@ -16,7 +16,14 @@ if CONFIG['MOZ_GLEAN']:
         'ipc/FOGIPC.h',
     ]
 
+    EXPORTS.mozilla.glean += [
+        'bindings/Category.h',
+        'bindings/Glean.h',
+    ]
+
     UNIFIED_SOURCES += [
+        'bindings/Category.cpp',
+        'bindings/Glean.cpp',
         'ipc/FOGIPC.cpp',
     ]
 
