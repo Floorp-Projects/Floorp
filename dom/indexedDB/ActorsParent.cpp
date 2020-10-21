@@ -18909,31 +18909,19 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsresult rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "UPDATE object_store "
       "SET name = :name "
       "WHERE id = :id;"_ns,
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindStringByIndex(0, mNewName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      [this](mozIStorageStatement& stmt) -> nsresult {
+        IDB_TRY(stmt.BindStringByIndex(0, mNewName));
 
-        rv = stmt.BindInt64ByIndex(1, mId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        IDB_TRY(stmt.BindInt64ByIndex(1, mId));
 
         return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      }));
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
