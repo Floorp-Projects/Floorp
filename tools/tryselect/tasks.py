@@ -13,7 +13,7 @@ from collections import defaultdict
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
-from moztest.resolve import TestResolver, get_suite_definition
+from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
 
 import taskgraph
 from taskgraph.generator import TaskGraphGenerator
@@ -116,7 +116,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
 
 
 def filter_tasks_by_paths(tasks, paths):
-    resolver = TestResolver.from_environment(cwd=here)
+    resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
     run_suites, run_tests = resolver.resolve_metadata(paths)
     flavors = set([(t['flavor'], t.get('subsuite')) for t in run_tests])
 
@@ -137,7 +137,7 @@ def filter_tasks_by_paths(tasks, paths):
 
 
 def resolve_tests_by_suite(paths):
-    resolver = TestResolver.from_environment(cwd=here)
+    resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
     _, run_tests = resolver.resolve_metadata(paths)
 
     suite_to_tests = defaultdict(list)
