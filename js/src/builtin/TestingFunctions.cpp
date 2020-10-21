@@ -1373,6 +1373,58 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool HasSameBytecodeData(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 2) {
+    JS_ReportErrorASCII(cx, "The function takes exactly two argument.");
+    return false;
+  }
+
+  auto GetSharedData = [](JSContext* cx,
+                          HandleValue v) -> SharedImmutableScriptData* {
+    if (!v.isObject()) {
+      JS_ReportErrorASCII(cx, "The arguments must be interpreted functions.");
+      return nullptr;
+    }
+
+    RootedObject obj(cx, CheckedUnwrapDynamic(&v.toObject(), cx));
+    if (!obj) {
+      return nullptr;
+    }
+
+    if (!obj->is<JSFunction>() || !obj->as<JSFunction>().isInterpreted()) {
+      JS_ReportErrorASCII(cx, "The arguments must be interpreted functions.");
+      return nullptr;
+    }
+
+    AutoRealm ar(cx, obj);
+    RootedFunction fun(cx, &obj->as<JSFunction>());
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
+    if (!script) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(script->sharedData());
+    return script->sharedData();
+  };
+
+  // NOTE: We use RefPtr below to keep the data alive across possible GC since
+  //       the functions may be in different Zones.
+
+  RefPtr<SharedImmutableScriptData> sharedData1 = GetSharedData(cx, args[0]);
+  if (!sharedData1) {
+    return false;
+  }
+
+  RefPtr<SharedImmutableScriptData> sharedData2 = GetSharedData(cx, args[1]);
+  if (!sharedData2) {
+    return false;
+  }
+
+  args.rval().setBoolean(sharedData1 == sharedData2);
+  return true;
+}
+
 static bool InternalConst(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
@@ -6877,6 +6929,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("isRelazifiableFunction", IsRelazifiableFunction, 1, 0,
 "isRelazifiableFunction(fun)",
 "  True if fun is a JSFunction with a relazifiable JSScript."),
+
+    JS_FN_HELP("hasSameBytecodeData", HasSameBytecodeData, 2, 0,
+"hasSameBytecodeData(fun1, fun2)",
+"  True if fun1 and fun2 share the same copy of bytecode data. This will\n"
+"  delazify the function if necessary."),
 
     JS_FN_HELP("enableShellAllocationMetadataBuilder", EnableShellAllocationMetadataBuilder, 0, 0,
 "enableShellAllocationMetadataBuilder()",
