@@ -306,9 +306,9 @@ mochitest-media:
             default: 5400
     run-on-projects:
         by-test-platform:
-            android-hw-.*(?<!-shippable)/opt: ['autoland']
-            android-hw-.*-api-16/(?:debug|pgo)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-            android-hw-.*-api-16-shippable/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
+            android-hw-.*-api-16(-qr)?/(?:debug|pgo)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
             windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects
     variants:
@@ -409,7 +409,7 @@ mochitest-webgl1-core:
             default: 1800
     run-on-projects:
         by-test-platform:
-            android-hw-.*(?<!-shippable)/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -440,7 +440,7 @@ mochitest-webgl1-ext:
     max-run-time: 2700
     run-on-projects:
         by-test-platform:
-            android-hw-.*(?<!-shippable)/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -472,7 +472,7 @@ mochitest-webgl2-core:
     max-run-time: 1800
     run-on-projects:
         by-test-platform:
-            android-hw-.*(?<!-shippable)/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             android-hw.*aarch.*-shippable/opt: ['mozilla-central']
             default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
