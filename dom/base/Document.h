@@ -5117,6 +5117,9 @@ class Document : public nsINode,
   // Accumulate JS telemetry collected
   void AccumulateJSTelemetry();
 
+  // Accumulate page load metrics
+  void AccumulatePageLoadTelemetry();
+
  public:
   // Needs to be public because the bindings code pokes at it.
   JS::ExpandoAndGeneration mExpandoAndGeneration;
