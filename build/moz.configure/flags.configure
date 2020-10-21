@@ -6,60 +6,73 @@
 
 # We support C++14, but we don't want to enable the sized deallocation
 # facilities in C++14 yet.
-check_and_add_gcc_flag('-fno-sized-deallocation', compiler=cxx_compiler)
+check_and_add_gcc_flag("-fno-sized-deallocation", compiler=cxx_compiler)
 # Likewise for C++17 and aligned allocation.  It's not immediately obvious
 # from the clang and GCC documentation, but they both support this.
-check_and_add_gcc_flag('-fno-aligned-new', compiler=cxx_compiler)
+check_and_add_gcc_flag("-fno-aligned-new", compiler=cxx_compiler)
 
 # Please keep these last in this file.
-add_old_configure_assignment('_COMPILATION_CFLAGS', compilation_flags.cflags)
+add_old_configure_assignment("_COMPILATION_CFLAGS", compilation_flags.cflags)
+add_old_configure_assignment("_COMPILATION_CXXFLAGS", compilation_flags.cxxflags)
+add_old_configure_assignment("_COMPILATION_HOST_CFLAGS", compilation_flags.host_cflags)
 add_old_configure_assignment(
-    '_COMPILATION_CXXFLAGS', compilation_flags.cxxflags)
-add_old_configure_assignment(
-    '_COMPILATION_HOST_CFLAGS', compilation_flags.host_cflags)
-add_old_configure_assignment(
-    '_COMPILATION_HOST_CXXFLAGS', compilation_flags.host_cxxflags)
+    "_COMPILATION_HOST_CXXFLAGS", compilation_flags.host_cxxflags
+)
 
 
 @depends(rust_compile_flags, rust_warning_flags)
 def rust_flags(compile_flags, warning_flags):
     return compile_flags + warning_flags
 
-set_config('MOZ_RUST_DEFAULT_FLAGS', rust_flags)
+
+set_config("MOZ_RUST_DEFAULT_FLAGS", rust_flags)
 
 
-option('--disable-new-pass-manager',
-       help='Use the legacy LLVM pass manager in clang builds')
+option(
+    "--disable-new-pass-manager",
+    help="Use the legacy LLVM pass manager in clang builds",
+)
 
-@depends('--enable-new-pass-manager', c_compiler, host, target, 'MOZ_PGO',
-         lto.enabled, enable_fuzzing, ubsan)
-def new_pass_manager_flags(enabled, compiler, host, target, pgo, lto,
-                           enable_fuzzing, ubsan):
-    if host.os == 'OSX':
+
+@depends(
+    "--enable-new-pass-manager",
+    c_compiler,
+    host,
+    target,
+    "MOZ_PGO",
+    lto.enabled,
+    enable_fuzzing,
+    ubsan,
+)
+def new_pass_manager_flags(
+    enabled, compiler, host, target, pgo, lto, enable_fuzzing, ubsan
+):
+    if host.os == "OSX":
         # Some native Mac builds hang with the new pass manager. Given the
         # inability to test in CI, don't take the risk of further breakage.
         return None
-    if target.os == 'OSX' and not pgo:
+    if target.os == "OSX" and not pgo:
         # Also disable when cross-compiling to Mac, because plain-ish opt
         # builds hang. Variants like asan and ccov work fine, but it would be
         # too tedious to test them all here. PGO is the only thing that matters
         # enough to make an exception for.
         return None
-    if target.os == 'WINNT' and target.cpu == 'aarch64' and not lto:
+    if target.os == "WINNT" and target.cpu == "aarch64" and not lto:
         # Building without LTO on aarch64-windows fails on some large functions
         # because clang doesn't know how to split SEH unwind info.
         return None
-    if enable_fuzzing and compiler.version < '10.0.0':
+    if enable_fuzzing and compiler.version < "10.0.0":
         # Clang 9 does not seem to play well with libFuzzer
         return None
-    if ubsan and compiler.version >= '10.0.0':
+    if ubsan and compiler.version >= "10.0.0":
         # Temporary until https://bugs.llvm.org/show_bug.cgi?id=45835 gets a
         # real fix: clang 10 hangs with some ubsan-inserted code constructs.
         return None
-    if enabled and compiler.version >= '9.0.0':
-        if compiler.type == 'clang':
-            return ['-fexperimental-new-pass-manager']
-        elif compiler.type == 'clang-cl':
-            return ['-Xclang', '-fexperimental-new-pass-manager']
+    if enabled and compiler.version >= "9.0.0":
+        if compiler.type == "clang":
+            return ["-fexperimental-new-pass-manager"]
+        elif compiler.type == "clang-cl":
+            return ["-Xclang", "-fexperimental-new-pass-manager"]
 
-set_config('MOZ_NEW_PASS_MANAGER_FLAGS', new_pass_manager_flags)
+
+set_config("MOZ_NEW_PASS_MANAGER_FLAGS", new_pass_manager_flags)

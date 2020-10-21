@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-DIRS += ['autoconfig']
+DIRS += ["autoconfig"]
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'AutoConfig (Mission Control Desktop)')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "AutoConfig (Mission Control Desktop)")

@@ -19,7 +19,6 @@ from taskgraph import GECKO
 
 
 class TestTaskclusterYml(unittest.TestCase):
-
     @property
     def taskcluster_yml(self):
         return load_yaml(GECKO, ".taskcluster.yml")

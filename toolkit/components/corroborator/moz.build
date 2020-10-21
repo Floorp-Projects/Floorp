@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "General")
 
 EXTRA_JS_MODULES += [
-    'Corroborate.jsm',
+    "Corroborate.jsm",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/xpcshell/xpcshell.ini',
+    "test/xpcshell/xpcshell.ini",
 ]

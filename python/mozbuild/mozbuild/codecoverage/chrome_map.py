@@ -30,7 +30,7 @@ _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
 
 
 def generate_pp_info(path, topsrcdir):
-    with open(path, encoding='utf-8') as fh:
+    with open(path, encoding="utf-8") as fh:
         # (start, end) -> (included_source, start)
         section_info = dict()
 
@@ -38,11 +38,11 @@ def generate_pp_info(path, topsrcdir):
 
         def finish_section(pp_end):
             pp_start, inc_source, inc_start = this_section
-            section_info[str(pp_start) + ',' + str(pp_end)] = inc_source, inc_start
+            section_info[str(pp_start) + "," + str(pp_end)] = inc_source, inc_start
 
         for count, line in enumerate(fh):
             # Regex are quite slow, so bail out early.
-            if not line.startswith('//@line'):
+            if not line.startswith("//@line"):
                 continue
             m = re.match(_line_comment_re, line)
             if m:
@@ -51,7 +51,7 @@ def generate_pp_info(path, topsrcdir):
                 inc_start, inc_source = m.groups()
 
                 # Special case to handle $SRCDIR prefixes
-                src_dir_prefix = '$SRCDIR'
+                src_dir_prefix = "$SRCDIR"
                 parts = mozpath.split(inc_source)
                 if parts[0] == src_dir_prefix:
                     inc_source = mozpath.join(*parts[1:])
@@ -66,6 +66,7 @@ def generate_pp_info(path, topsrcdir):
 
         return section_info
 
+
 # This build backend is assuming the build to have happened already, as it is parsing
 # built preprocessed files to generate data to map them to the original sources.
 
@@ -75,8 +76,12 @@ class ChromeMapBackend(CommonBackend):
         CommonBackend._init(self)
 
         log_manager = LoggingManager()
-        self._cmd = MozbuildObject(self.environment.topsrcdir, ConfigSettings(),
-                                   log_manager, self.environment.topobjdir)
+        self._cmd = MozbuildObject(
+            self.environment.topsrcdir,
+            ConfigSettings(),
+            log_manager,
+            self.environment.topobjdir,
+        )
         self._install_mapping = {}
         self.manifest_handler = ChromeManifestHandler()
 
@@ -85,8 +90,7 @@ class ChromeMapBackend(CommonBackend):
             self._consume_jar_manifest(obj)
         if isinstance(obj, ChromeManifestEntry):
             self.manifest_handler.handle_manifest_entry(obj.entry)
-        if isinstance(obj, (FinalTargetFiles,
-                            FinalTargetPreprocessedFiles)):
+        if isinstance(obj, (FinalTargetFiles, FinalTargetPreprocessedFiles)):
             self._handle_final_target_files(obj)
         return True
 
@@ -95,33 +99,42 @@ class ChromeMapBackend(CommonBackend):
             for f in files:
                 dest = mozpath.join(obj.install_target, path, f.target_basename)
                 obj_path = mozpath.join(self.environment.topobjdir, dest)
-                if obj_path.endswith('.in'):
+                if obj_path.endswith(".in"):
                     obj_path = obj_path[:-3]
                 if isinstance(obj, FinalTargetPreprocessedFiles):
-                    assert os.path.exists(obj_path), '%s should exist' % obj_path
+                    assert os.path.exists(obj_path), "%s should exist" % obj_path
                     pp_info = generate_pp_info(obj_path, obj.topsrcdir)
                 else:
                     pp_info = None
 
-                base = obj.topobjdir if f.full_path.startswith(obj.topobjdir) else obj.topsrcdir
-                self._install_mapping[dest] = mozpath.relpath(f.full_path, base), pp_info
+                base = (
+                    obj.topobjdir
+                    if f.full_path.startswith(obj.topobjdir)
+                    else obj.topsrcdir
+                )
+                self._install_mapping[dest] = (
+                    mozpath.relpath(f.full_path, base),
+                    pp_info,
+                )
 
     def consume_finished(self):
-        mp = os.path.join(self.environment.topobjdir, '_build_manifests', 'install', '_tests')
+        mp = os.path.join(
+            self.environment.topobjdir, "_build_manifests", "install", "_tests"
+        )
         install_manifest = InstallManifest(mp)
         reg = FileRegistry()
         install_manifest.populate_registry(reg)
 
         for dest, src in reg:
-            if not hasattr(src, 'path'):
+            if not hasattr(src, "path"):
                 continue
 
             if not os.path.isabs(dest):
-                dest = '_tests/' + dest
+                dest = "_tests/" + dest
 
             obj_path = mozpath.join(self.environment.topobjdir, dest)
             if isinstance(src, PreprocessedFile):
-                assert os.path.exists(obj_path), '%s should exist' % obj_path
+                assert os.path.exists(obj_path), "%s should exist" % obj_path
                 pp_info = generate_pp_info(obj_path, self.environment.topsrcdir)
             else:
                 pp_info = None
@@ -139,18 +152,25 @@ class ChromeMapBackend(CommonBackend):
         #    [ "$topsrcdir/browser/components/sessionstore/content/aboutSessionRestore.js", {} ],
         #    ... }
         #  An object containing build configuration information.
-        outputfile = os.path.join(self.environment.topobjdir, 'chrome-map.json')
+        outputfile = os.path.join(self.environment.topobjdir, "chrome-map.json")
         with self._write_file(outputfile) as fh:
             chrome_mapping = self.manifest_handler.chrome_mapping
             overrides = self.manifest_handler.overrides
-            json.dump([
-                {k: list(v) for k, v in six.iteritems(chrome_mapping)},
-                overrides,
-                self._install_mapping,
-                {
-                    'topobjdir': mozpath.normpath(self.environment.topobjdir),
-                    'MOZ_APP_NAME': self.environment.substs.get('MOZ_APP_NAME'),
-                    'OMNIJAR_NAME': self.environment.substs.get('OMNIJAR_NAME'),
-                    'MOZ_MACBUNDLE_NAME': self.environment.substs.get('MOZ_MACBUNDLE_NAME'),
-                }
-            ], fh, sort_keys=True, indent=2)
+            json.dump(
+                [
+                    {k: list(v) for k, v in six.iteritems(chrome_mapping)},
+                    overrides,
+                    self._install_mapping,
+                    {
+                        "topobjdir": mozpath.normpath(self.environment.topobjdir),
+                        "MOZ_APP_NAME": self.environment.substs.get("MOZ_APP_NAME"),
+                        "OMNIJAR_NAME": self.environment.substs.get("OMNIJAR_NAME"),
+                        "MOZ_MACBUNDLE_NAME": self.environment.substs.get(
+                            "MOZ_MACBUNDLE_NAME"
+                        ),
+                    },
+                ],
+                fh,
+                sort_keys=True,
+                indent=2,
+            )

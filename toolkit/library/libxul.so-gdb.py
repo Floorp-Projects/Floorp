@@ -6,11 +6,7 @@
 
 import re
 
-from os.path import (
-    abspath,
-    dirname,
-    exists
-)
+from os.path import abspath, dirname, exists
 
 # Add the toplevel objdir to the gdb source search path.
 
@@ -31,7 +27,7 @@ else:
     gdb.write("Warning: Gecko objdir not found\n")
 
 if objdir is not None:
-    m = re.search(r'[\w ]+: (.*)', gdb.execute("show dir", False, True))
+    m = re.search(r"[\w ]+: (.*)", gdb.execute("show dir", False, True))
     if m and objdir not in m.group(1).split(":"):
         gdb.execute("set dir {}:{}".format(objdir, m.group(1)))
 

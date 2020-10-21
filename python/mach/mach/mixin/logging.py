@@ -17,11 +17,11 @@ class LoggingMixin(object):
         a logging.Logger instance before they call log(). This function ensures
         self._logger is defined by populating it if it isn't.
         """
-        if hasattr(self, '_logger'):
+        if hasattr(self, "_logger"):
             return
 
         if name is None:
-            name = '.'.join([self.__module__, self.__class__.__name__])
+            name = ".".join([self.__module__, self.__class__.__name__])
 
         self._logger = logging.getLogger(name)
 
@@ -50,5 +50,4 @@ class LoggingMixin(object):
         self.log(logging.DEBUG, 'login', {'username': 'johndoe'},
             'User login: {username}')
         """
-        self._logger.log(level, format_str,
-                         extra={'action': action, 'params': params})
+        self._logger.log(level, format_str, extra={"action": action, "params": params})

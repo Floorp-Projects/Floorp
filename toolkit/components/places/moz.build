@@ -4,90 +4,90 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_PLACES']:
-    TEST_DIRS += ['tests']
+if CONFIG["MOZ_PLACES"]:
+    TEST_DIRS += ["tests"]
 
 XPIDL_SOURCES += [
-    'nsINavHistoryService.idl',
+    "nsINavHistoryService.idl",
 ]
 
-XPIDL_MODULE = 'places'
+XPIDL_MODULE = "places"
 
-if CONFIG['MOZ_PLACES']:
+if CONFIG["MOZ_PLACES"]:
     XPIDL_SOURCES += [
-        'mozIAsyncHistory.idl',
-        'mozIPlacesAutoComplete.idl',
-        'mozIPlacesPendingOperation.idl',
-        'mozISyncedBookmarksMirror.idl',
-        'nsIAnnotationService.idl',
-        'nsIFaviconService.idl',
-        'nsINavBookmarksService.idl',
-        'nsITaggingService.idl',
+        "mozIAsyncHistory.idl",
+        "mozIPlacesAutoComplete.idl",
+        "mozIPlacesPendingOperation.idl",
+        "mozISyncedBookmarksMirror.idl",
+        "nsIAnnotationService.idl",
+        "nsIFaviconService.idl",
+        "nsINavBookmarksService.idl",
+        "nsITaggingService.idl",
     ]
 
     EXPORTS.mozilla.places = [
-        'Database.h',
-        'History.h',
-        'INativePlacesEventCallback.h',
-        'PageIconProtocolHandler.h',
-        'Shutdown.h',
-        'SyncedBookmarksMirror.h',
+        "Database.h",
+        "History.h",
+        "INativePlacesEventCallback.h",
+        "PageIconProtocolHandler.h",
+        "Shutdown.h",
+        "SyncedBookmarksMirror.h",
     ]
 
     UNIFIED_SOURCES += [
-        'Database.cpp',
-        'FaviconHelpers.cpp',
-        'Helpers.cpp',
-        'History.cpp',
-        'nsAnnoProtocolHandler.cpp',
-        'nsAnnotationService.cpp',
-        'nsFaviconService.cpp',
-        'nsNavBookmarks.cpp',
-        'nsNavHistory.cpp',
-        'nsNavHistoryQuery.cpp',
-        'nsNavHistoryResult.cpp',
-        'PageIconProtocolHandler.cpp',
-        'PlaceInfo.cpp',
-        'Shutdown.cpp',
-        'SQLFunctions.cpp',
-        'VisitInfo.cpp',
+        "Database.cpp",
+        "FaviconHelpers.cpp",
+        "Helpers.cpp",
+        "History.cpp",
+        "nsAnnoProtocolHandler.cpp",
+        "nsAnnotationService.cpp",
+        "nsFaviconService.cpp",
+        "nsNavBookmarks.cpp",
+        "nsNavHistory.cpp",
+        "nsNavHistoryQuery.cpp",
+        "nsNavHistoryResult.cpp",
+        "PageIconProtocolHandler.cpp",
+        "PlaceInfo.cpp",
+        "Shutdown.cpp",
+        "SQLFunctions.cpp",
+        "VisitInfo.cpp",
     ]
 
     LOCAL_INCLUDES += [
-        '../build',
+        "../build",
     ]
 
     EXTRA_JS_MODULES += [
-        'BookmarkHTMLUtils.jsm',
-        'BookmarkJSONUtils.jsm',
-        'Bookmarks.jsm',
-        'ExtensionSearchHandler.jsm',
-        'History.jsm',
-        'PlacesBackups.jsm',
-        'PlacesCategoriesStarter.jsm',
-        'PlacesDBUtils.jsm',
-        'PlacesExpiration.jsm',
-        'PlacesRemoteTabsAutocompleteProvider.jsm',
-        'PlacesSyncUtils.jsm',
-        'PlacesTransactions.jsm',
-        'PlacesUtils.jsm',
-        'SyncedBookmarksMirror.jsm',
-        'TaggingService.jsm',
-        'UnifiedComplete.jsm',
+        "BookmarkHTMLUtils.jsm",
+        "BookmarkJSONUtils.jsm",
+        "Bookmarks.jsm",
+        "ExtensionSearchHandler.jsm",
+        "History.jsm",
+        "PlacesBackups.jsm",
+        "PlacesCategoriesStarter.jsm",
+        "PlacesDBUtils.jsm",
+        "PlacesExpiration.jsm",
+        "PlacesRemoteTabsAutocompleteProvider.jsm",
+        "PlacesSyncUtils.jsm",
+        "PlacesTransactions.jsm",
+        "PlacesUtils.jsm",
+        "SyncedBookmarksMirror.jsm",
+        "TaggingService.jsm",
+        "UnifiedComplete.jsm",
     ]
 
     XPCOM_MANIFESTS += [
-        'components.conf',
+        "components.conf",
     ]
 
-    FINAL_LIBRARY = 'xul'
+    FINAL_LIBRARY = "xul"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Places')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Places")
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]

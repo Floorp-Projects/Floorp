@@ -19,14 +19,30 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="print verbose registration failures", default=False)
-    parser.add_argument("file", nargs='*',
-                        help="font file to register or unregister", default=[])
-    parser.add_argument("-u", "--unregister", action="store_true",
-                        help="unregister the provided fonts", default=False)
-    parser.add_argument("-p", "--persist-user", action="store_true",
-                        help="permanently register the font", default=False)
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="print verbose registration failures",
+        default=False,
+    )
+    parser.add_argument(
+        "file", nargs="*", help="font file to register or unregister", default=[]
+    )
+    parser.add_argument(
+        "-u",
+        "--unregister",
+        action="store_true",
+        help="unregister the provided fonts",
+        default=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--persist-user",
+        action="store_true",
+        help="permanently register the font",
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -40,14 +56,17 @@ def main():
     failureCount = 0
     for fontPath in args.file:
         fontURL = Cocoa.NSURL.fileURLWithPath_(fontPath)
-        (result, error) = register_or_unregister_font(fontURL,
-                                                      args.unregister, scope)
+        (result, error) = register_or_unregister_font(fontURL, args.unregister, scope)
         if result:
-            print("%sregistered font %s with %s scope" %
-                  (("un" if args.unregister else ""), fontPath, scopeDesc))
+            print(
+                "%sregistered font %s with %s scope"
+                % (("un" if args.unregister else ""), fontPath, scopeDesc)
+            )
         else:
-            print("Failed to %sregister font %s with %s scope" %
-                  (("un" if args.unregister else ""), fontPath, scopeDesc))
+            print(
+                "Failed to %sregister font %s with %s scope"
+                % (("un" if args.unregister else ""), fontPath, scopeDesc)
+            )
             if args.verbose:
                 print(error)
             failureCount += 1
@@ -56,11 +75,12 @@ def main():
 
 
 def register_or_unregister_font(fontURL, unregister, scope):
-    return (CoreText.CTFontManagerUnregisterFontsForURL(fontURL,
-                                                        scope, None) if unregister
-            else CoreText.CTFontManagerRegisterFontsForURL(fontURL,
-                                                           scope, None))
+    return (
+        CoreText.CTFontManagerUnregisterFontsForURL(fontURL, scope, None)
+        if unregister
+        else CoreText.CTFontManagerRegisterFontsForURL(fontURL, scope, None)
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

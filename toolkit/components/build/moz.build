@@ -4,23 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 EXPORTS += [
-    'nsToolkitCompsCID.h',
+    "nsToolkitCompsCID.h",
 ]
 
 SOURCES += [
-    'nsToolkitCompsModule.cpp',
+    "nsToolkitCompsModule.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '../url-classifier',
+    "../url-classifier",
 ]

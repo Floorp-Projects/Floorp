@@ -55,11 +55,14 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     def browsertime_args(self):
         args_list = ["--viewPort", "1366x695"]
 
-        if self.config['app'] == 'chrome-m':
-            args_list.extend([
-                '--browser', 'chrome',
-                '--android',
-            ])
+        if self.config["app"] == "chrome-m":
+            args_list.extend(
+                [
+                    "--browser",
+                    "chrome",
+                    "--android",
+                ]
+            )
         else:
             activity = self.config["activity"]
             if self.config["app"] == "fenix":
@@ -69,16 +72,22 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 )
                 activity = "mozilla.telemetry.glean.debug.GleanDebugActivity"
 
-            args_list.extend([
-                "--browser", "firefox",
-                "--android",
-                # Work around a `selenium-webdriver` issue where Browsertime
-                # fails to find a Firefox binary even though we're going to
-                # actually do things on an Android device.
-                "--firefox.binaryPath", self.browsertime_node,
-                "--firefox.android.package", self.config["binary"],
-                "--firefox.android.activity", activity,
-            ])
+            args_list.extend(
+                [
+                    "--browser",
+                    "firefox",
+                    "--android",
+                    # Work around a `selenium-webdriver` issue where Browsertime
+                    # fails to find a Firefox binary even though we're going to
+                    # actually do things on an Android device.
+                    "--firefox.binaryPath",
+                    self.browsertime_node,
+                    "--firefox.android.package",
+                    self.config["binary"],
+                    "--firefox.android.activity",
+                    activity,
+                ]
+            )
 
         # Setup power testing
         if self.config["power_test"]:
@@ -92,14 +101,16 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             )
 
             # Change glean ping names in all cases on Fenix
-            args_list.extend([
-                "--firefox.android.intentArgument=--es",
-                "--firefox.android.intentArgument=startNext",
-                "--firefox.android.intentArgument=" + self.config["activity"],
-                "--firefox.android.intentArgument=--esa",
-                "--firefox.android.intentArgument=sourceTags",
-                "--firefox.android.intentArgument=automation",
-            ])
+            args_list.extend(
+                [
+                    "--firefox.android.intentArgument=--es",
+                    "--firefox.android.intentArgument=startNext",
+                    "--firefox.android.intentArgument=" + self.config["activity"],
+                    "--firefox.android.intentArgument=--esa",
+                    "--firefox.android.intentArgument=sourceTags",
+                    "--firefox.android.intentArgument=automation",
+                ]
+            )
 
             args_list.extend(["--firefox.android.intentArgument=-d"])
             args_list.extend(["--firefox.android.intentArgument", str("about:blank")])
@@ -107,7 +118,11 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         return args_list
 
     def setup_chrome_args(self, test):
-        chrome_args = ["--use-mock-keychain", "--no-default-browser-check", "--no-first-run"]
+        chrome_args = [
+            "--use-mock-keychain",
+            "--no-default-browser-check",
+            "--no-first-run",
+        ]
 
         if test.get("playback", False):
             pb_args = [
@@ -154,7 +169,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
         self.clear_app_data()
         self.set_debug_app_flag()
-        self.device.run_as_package = self.config['binary']
+        self.device.run_as_package = self.config["binary"]
         self.remote_test_root = os.path.join(self.device.test_root, "raptor")
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
 
@@ -170,7 +185,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     def run_tests(self, tests, test_names):
         self.setup_adb_device()
 
-        if self.config['app'] == "chrome-m":
+        if self.config["app"] == "chrome-m":
             # Make sure that chrome is enabled on the device
             self.device.shell_output("pm enable com.android.chrome")
 

@@ -13,7 +13,7 @@ from mozilla.prettyprinters import pretty_printer
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 
-@pretty_printer('JS::PropertyKey')
+@pretty_printer("JS::PropertyKey")
 class PropertyKey(object):
     # Since people don't always build with macro debugging info, I can't
     # think of any way to avoid copying these values here, short of using
@@ -32,7 +32,7 @@ class PropertyKey(object):
         self.concrete_type = self.value.type.strip_typedefs()
 
     def to_string(self):
-        bits = self.value['asBits']
+        bits = self.value["asBits"]
         tag = bits & PropertyKey.TYPE_MASK
         if tag == PropertyKey.TYPE_STRING:
             body = bits.cast(self.cache.JSString_ptr_t)
@@ -41,27 +41,26 @@ class PropertyKey(object):
         elif tag == PropertyKey.TYPE_VOID:
             return "JSID_VOID"
         elif tag == PropertyKey.TYPE_SYMBOL:
-            body = ((bits & ~PropertyKey.TYPE_MASK)
-                    .cast(self.cache.JSSymbol_ptr_t))
+            body = (bits & ~PropertyKey.TYPE_MASK).cast(self.cache.JSSymbol_ptr_t)
         elif tag == PropertyKey.TYPE_EMPTY:
             return "JSID_EMPTY"
         else:
             body = "<unrecognized>"
-        return '$jsid(%s)' % (body,)
+        return "$jsid(%s)" % (body,)
 
 
-@pretty_printer('JS::Rooted<long>')
+@pretty_printer("JS::Rooted<long>")
 def RootedPropertyKey(value, cache):
     # Hard-code the referent type pretty-printer for PropertyKey roots and
     # handles. See the comment for mozilla.Root.Common.__init__.
     return mozilla.Root.Rooted(value, cache, PropertyKey)
 
 
-@pretty_printer('JS::Handle<long>')
+@pretty_printer("JS::Handle<long>")
 def HandlePropertyKey(value, cache):
     return mozilla.Root.Handle(value, cache, PropertyKey)
 
 
-@pretty_printer('JS::MutableHandle<long>')
+@pretty_printer("JS::MutableHandle<long>")
 def MutableHandlePropertyKey(value, cache):
     return mozilla.Root.MutableHandle(value, cache, PropertyKey)

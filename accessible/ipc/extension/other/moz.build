@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['ACCESSIBILITY']:
-    IPDL_SOURCES += ['PDocAccessiblePlatformExt.ipdl']
+if CONFIG["ACCESSIBILITY"]:
+    IPDL_SOURCES += ["PDocAccessiblePlatformExt.ipdl"]
 
     EXPORTS.mozilla.a11y += [
-        'DocAccessiblePlatformExtChild.h',
-        'DocAccessiblePlatformExtParent.h',
+        "DocAccessiblePlatformExtChild.h",
+        "DocAccessiblePlatformExtParent.h",
     ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

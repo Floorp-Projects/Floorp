@@ -5,5 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # The gtests won't work in a SpiderMonkey-only build.
-if CONFIG['MOZ_WIDGET_TOOLKIT']:
-    TEST_DIRS += ['gtest']
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+    TEST_DIRS += ["gtest"]

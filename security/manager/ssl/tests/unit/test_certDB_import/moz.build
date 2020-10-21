@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Temporarily disabled. See Bug 1256495.
-#test_certificates = (
+# test_certificates = (
 #    'emailEE.pem',
 #    'importedCA.pem',
-#)
+# )
 #
-#for test_certificate in test_certificates:
+# for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)

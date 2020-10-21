@@ -4,51 +4,51 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 TEST_HARNESS_FILES.xpcshell.toolkit.components.downloads.test.data += [
-    'test/data/empty.txt',
-    'test/data/source.txt',
+    "test/data/empty.txt",
+    "test/data/source.txt",
 ]
 
 XPIDL_SOURCES += [
-    'mozIDownloadPlatform.idl',
+    "mozIDownloadPlatform.idl",
 ]
 
-XPIDL_MODULE = 'downloads'
+XPIDL_MODULE = "downloads"
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 SOURCES += [
-    'DownloadPlatform.cpp',
+    "DownloadPlatform.cpp",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += [
-        '/widget/windows',
+        "/widget/windows",
     ]
 
 EXTRA_JS_MODULES += [
-    'DownloadCore.jsm',
-    'DownloadIntegration.jsm',
-    'DownloadLegacy.jsm',
-    'DownloadList.jsm',
-    'DownloadPaths.jsm',
-    'Downloads.jsm',
-    'DownloadStore.jsm',
-    'DownloadUIHelper.jsm',
+    "DownloadCore.jsm",
+    "DownloadIntegration.jsm",
+    "DownloadLegacy.jsm",
+    "DownloadList.jsm",
+    "DownloadPaths.jsm",
+    "Downloads.jsm",
+    "DownloadStore.jsm",
+    "DownloadUIHelper.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-if CONFIG['MOZ_PLACES']:
+if CONFIG["MOZ_PLACES"]:
     EXTRA_JS_MODULES += [
-        'DownloadHistory.jsm',
+        "DownloadHistory.jsm",
     ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Downloads API')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Downloads API")

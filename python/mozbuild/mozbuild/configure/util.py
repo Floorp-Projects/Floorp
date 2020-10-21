@@ -28,13 +28,13 @@ def getpreferredencoding():
         # On english OSX, LC_ALL is UTF-8 (not en-US.UTF-8), and
         # that throws off locale._parse_localename, which ends up
         # being used on e.g. homebrew python.
-        if os.environ.get('LC_ALL', '').upper() == 'UTF-8':
-            encoding = 'utf-8'
+        if os.environ.get("LC_ALL", "").upper() == "UTF-8":
+            encoding = "utf-8"
     return encoding
 
 
 class Version(LooseVersion):
-    '''A simple subclass of distutils.version.LooseVersion.
+    """A simple subclass of distutils.version.LooseVersion.
     Adds attributes for `major`, `minor`, `patch` for the first three
     version components so users can easily pull out major/minor
     versions, like:
@@ -43,21 +43,24 @@ class Version(LooseVersion):
     v.major == 1
     v.minor == 2
     v.patch == 0
-    '''
+    """
 
     def __init__(self, version):
         # Can't use super, LooseVersion's base class is not a new-style class.
         LooseVersion.__init__(self, version)
         # Take the first three integer components, stopping at the first
         # non-integer and padding the rest with zeroes.
-        (self.major, self.minor, self.patch) = list(itertools.chain(
-            itertools.takewhile(lambda x: isinstance(x, int), self.version),
-            (0, 0, 0)))[:3]
+        (self.major, self.minor, self.patch) = list(
+            itertools.chain(
+                itertools.takewhile(lambda x: isinstance(x, int), self.version),
+                (0, 0, 0),
+            )
+        )[:3]
 
     def _cmp(self, other):
         # LooseVersion checks isinstance(StringType), so work around it.
         if six.PY2 and isinstance(other, six.text_type):
-            other = other.encode('ascii')
+            other = other.encode("ascii")
         if six.PY2:
             return LooseVersion.__cmp__(self, other)
         return LooseVersion._cmp(self, other)
@@ -81,7 +84,7 @@ class Version(LooseVersion):
 
 
 class ConfigureOutputHandler(logging.Handler):
-    '''A logging handler class that sends info messages to stdout and other
+    """A logging handler class that sends info messages to stdout and other
     messages to stderr.
 
     Messages sent to stdout are not formatted with the attached Formatter.
@@ -94,7 +97,7 @@ class ConfigureOutputHandler(logging.Handler):
     at which point the last `maxlen` accumulated messages below INFO are
     printed out. This feature is only enabled under the `queue_debug` context
     manager.
-    '''
+    """
 
     def __init__(self, stdout=sys.stdout, stderr=sys.stderr, maxlen=20):
         super(ConfigureOutputHandler, self).__init__()
@@ -150,17 +153,15 @@ class ConfigureOutputHandler(logging.Handler):
             if record.levelno == logging.INFO:
                 stream = self._stdout
                 msg = six.ensure_text(record.getMessage())
-                if (self._stdout_waiting == self.INTERRUPTED and
-                        self._same_output):
-                    msg = ' ... %s' % msg
-                self._stdout_waiting = msg.endswith('... ')
-                if msg.endswith('... '):
+                if self._stdout_waiting == self.INTERRUPTED and self._same_output:
+                    msg = " ... %s" % msg
+                self._stdout_waiting = msg.endswith("... ")
+                if msg.endswith("... "):
                     self._stdout_waiting = self.WAITING
                 else:
                     self._stdout_waiting = None
-                    msg = '%s\n' % msg
-            elif (record.levelno < logging.INFO and
-                    self._keep_if_debug != self.PRINT):
+                    msg = "%s\n" % msg
+            elif record.levelno < logging.INFO and self._keep_if_debug != self.PRINT:
                 if self._keep_if_debug == self.KEEP:
                     self._debug.append(record)
                 return
@@ -170,10 +171,10 @@ class ConfigureOutputHandler(logging.Handler):
 
                 if self._stdout_waiting == self.WAITING and self._same_output:
                     self._stdout_waiting = self.INTERRUPTED
-                    self._stdout.write('\n')
+                    self._stdout.write("\n")
                     self._stdout.flush()
                 stream = self._stderr
-                msg = '%s\n' % self.format(record)
+                msg = "%s\n" % self.format(record)
             stream.write(msg)
             stream.flush()
         except (KeyboardInterrupt, SystemExit, IOError):
@@ -204,10 +205,17 @@ class ConfigureOutputHandler(logging.Handler):
         self._keep_if_debug = self.PRINT
         if len(self._debug) == self._debug.maxlen:
             r = self._debug.popleft()
-            self.emit(logging.LogRecord(
-                r.name, r.levelno, r.pathname, r.lineno,
-                '<truncated - see config.log for full output>',
-                (), None))
+            self.emit(
+                logging.LogRecord(
+                    r.name,
+                    r.levelno,
+                    r.pathname,
+                    r.lineno,
+                    "<truncated - see config.log for full output>",
+                    (),
+                    None,
+                )
+            )
         while True:
             try:
                 self.emit(self._debug.popleft())
@@ -217,25 +225,25 @@ class ConfigureOutputHandler(logging.Handler):
 
 
 class LineIO(object):
-    '''File-like class that sends each line of the written data to a callback
+    """File-like class that sends each line of the written data to a callback
     (without carriage returns).
-    '''
+    """
 
-    def __init__(self, callback, errors='strict'):
+    def __init__(self, callback, errors="strict"):
         self._callback = callback
-        self._buf = ''
+        self._buf = ""
         self._encoding = getpreferredencoding()
         self._errors = errors
 
     def write(self, buf):
-        buf = six.ensure_text(buf, encoding=self._encoding or 'utf-8')
+        buf = six.ensure_text(buf, encoding=self._encoding or "utf-8")
         lines = buf.splitlines()
         if not lines:
             return
         if self._buf:
             lines[0] = self._buf + lines[0]
-            self._buf = ''
-        if not buf.endswith('\n'):
+            self._buf = ""
+        if not buf.endswith("\n"):
             self._buf = lines.pop()
 
         for line in lines:
@@ -244,7 +252,7 @@ class LineIO(object):
     def close(self):
         if self._buf:
             self._callback(self._buf)
-            self._buf = ''
+            self._buf = ""
 
     def __enter__(self):
         return self

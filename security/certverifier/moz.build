@@ -8,56 +8,56 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 EXPORTS += [
-    'BRNameMatchingPolicy.h',
-    'CertVerifier.h',
-    'OCSPCache.h',
+    "BRNameMatchingPolicy.h",
+    "CertVerifier.h",
+    "OCSPCache.h",
 ]
 
 UNIFIED_SOURCES += [
-    'BRNameMatchingPolicy.cpp',
-    'CertVerifier.cpp',
-    'NSSCertDBTrustDomain.cpp',
-    'OCSPCache.cpp',
-    'OCSPVerificationTrustDomain.cpp',
+    "BRNameMatchingPolicy.cpp",
+    "CertVerifier.cpp",
+    "NSSCertDBTrustDomain.cpp",
+    "OCSPCache.cpp",
+    "OCSPVerificationTrustDomain.cpp",
 ]
 
-if not CONFIG['NSS_NO_EV_CERTS']:
+if not CONFIG["NSS_NO_EV_CERTS"]:
     UNIFIED_SOURCES += [
-        'ExtendedValidation.cpp',
+        "ExtendedValidation.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/security/ct',
-    '/security/manager/ssl',
+    "/security/ct",
+    "/security/manager/ssl",
 ]
 
 DIRS += [
-    '../ct',
+    "../ct",
 ]
 
 TEST_DIRS += [
-    'tests/gtest',
+    "tests/gtest",
 ]
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     # -Wall on clang-cl maps to -Weverything, which turns on way too
     # much, so we're passing through -Wall using -Xclang.
-    CXXFLAGS += ['-Xclang']
-CXXFLAGS += ['-Wall']
+    CXXFLAGS += ["-Xclang"]
+CXXFLAGS += ["-Wall"]
 
 CXXFLAGS += [
-    '-Wextra',
-    '-Wunreachable-code',
+    "-Wextra",
+    "-Wunreachable-code",
 ]
 
 # Gecko headers aren't warning-free enough for us to enable these warnings.
 CXXFLAGS += [
-    '-Wno-unused-parameter',
+    "-Wno-unused-parameter",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     AllowCompilerWarnings()  # workaround for bug 1090497

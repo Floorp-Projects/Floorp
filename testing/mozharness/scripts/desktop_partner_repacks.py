@@ -24,77 +24,99 @@ from mozharness.base.log import FATAL
 # DesktopPartnerRepacks {{{1
 class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, SecretsMixin):
     """Manages desktop partner repacks"""
+
     actions = [
-                "get-secrets",
-                "setup",
-                "repack",
-                "summary",
-              ]
+        "get-secrets",
+        "setup",
+        "repack",
+        "summary",
+    ]
     config_options = [
-        [["--version", "-v"], {
-          "dest": "version",
-          "help": "Version of Firefox to repack",
-          }],
-        [["--build-number", "-n"], {
-          "dest": "build_number",
-          "help": "Build number of Firefox to repack",
-          }],
-        [["--platform"], {
-          "dest": "platform",
-          "help": "Platform to repack (e.g. linux64, macosx64, ...)",
-          }],
-        [["--partner", "-p"], {
-          "dest": "partner",
-          "help": "Limit repackaging to partners matching this string",
-          }],
-        [["--taskid", "-t"], {
-            "dest": "taskIds",
-            "action": "extend",
-            "help": "taskId(s) of upstream tasks for vanilla Firefox artifacts",
-        }],
-        [["--limit-locale", "-l"], {
-            "dest": "limitLocales",
-            "action": "append",
-        }],
+        [
+            ["--version", "-v"],
+            {
+                "dest": "version",
+                "help": "Version of Firefox to repack",
+            },
+        ],
+        [
+            ["--build-number", "-n"],
+            {
+                "dest": "build_number",
+                "help": "Build number of Firefox to repack",
+            },
+        ],
+        [
+            ["--platform"],
+            {
+                "dest": "platform",
+                "help": "Platform to repack (e.g. linux64, macosx64, ...)",
+            },
+        ],
+        [
+            ["--partner", "-p"],
+            {
+                "dest": "partner",
+                "help": "Limit repackaging to partners matching this string",
+            },
+        ],
+        [
+            ["--taskid", "-t"],
+            {
+                "dest": "taskIds",
+                "action": "extend",
+                "help": "taskId(s) of upstream tasks for vanilla Firefox artifacts",
+            },
+        ],
+        [
+            ["--limit-locale", "-l"],
+            {
+                "dest": "limitLocales",
+                "action": "append",
+            },
+        ],
     ]
 
     def __init__(self):
         # fxbuild style:
         buildscript_kwargs = {
-            'all_actions': DesktopPartnerRepacks.actions,
-            'default_actions': DesktopPartnerRepacks.actions,
-            'config': {
+            "all_actions": DesktopPartnerRepacks.actions,
+            "default_actions": DesktopPartnerRepacks.actions,
+            "config": {
                 "log_name": "partner-repacks",
                 "hashType": "sha512",
-                'workdir': 'partner-repacks',
+                "workdir": "partner-repacks",
             },
         }
         #
 
         BaseScript.__init__(
-            self,
-            config_options=self.config_options,
-            **buildscript_kwargs
+            self, config_options=self.config_options, **buildscript_kwargs
         )
 
     def _pre_config_lock(self, rw_config):
-        if os.getenv('REPACK_MANIFESTS_URL'):
-            self.info('Overriding repack_manifests_url to %s' % os.getenv('REPACK_MANIFESTS_URL'))
-            self.config['repack_manifests_url'] = os.getenv('REPACK_MANIFESTS_URL')
-        if os.getenv('UPSTREAM_TASKIDS'):
-            self.info('Overriding taskIds with %s' % os.getenv('UPSTREAM_TASKIDS'))
-            self.config['taskIds'] = os.getenv('UPSTREAM_TASKIDS').split()
+        if os.getenv("REPACK_MANIFESTS_URL"):
+            self.info(
+                "Overriding repack_manifests_url to %s"
+                % os.getenv("REPACK_MANIFESTS_URL")
+            )
+            self.config["repack_manifests_url"] = os.getenv("REPACK_MANIFESTS_URL")
+        if os.getenv("UPSTREAM_TASKIDS"):
+            self.info("Overriding taskIds with %s" % os.getenv("UPSTREAM_TASKIDS"))
+            self.config["taskIds"] = os.getenv("UPSTREAM_TASKIDS").split()
 
-        if 'version' not in self.config:
+        if "version" not in self.config:
             self.fatal("Version (-v) not supplied.")
-        if 'build_number' not in self.config:
+        if "build_number" not in self.config:
             self.fatal("Build number (-n) not supplied.")
-        if 'repo_file' not in self.config:
+        if "repo_file" not in self.config:
             self.fatal("repo_file not supplied.")
-        if 'repack_manifests_url' not in self.config:
-            self.fatal("repack_manifests_url not supplied in config or via REPACK_MANIFESTS_URL")
-        if 'taskIds' not in self.config:
-            self.fatal('Need upstream taskIds from command line or in UPSTREAM_TASKIDS')
+        if "repack_manifests_url" not in self.config:
+            self.fatal(
+                "repack_manifests_url not supplied in config or via REPACK_MANIFESTS_URL"
+            )
+        if "taskIds" not in self.config:
+            self.fatal("Need upstream taskIds from command line or in UPSTREAM_TASKIDS")
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -104,8 +126,8 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
             value = abs_dirs[directory]
             abs_dirs[directory] = value
         dirs = {}
-        dirs['abs_repo_dir'] = os.path.join(abs_dirs['abs_work_dir'], '.repo')
-        dirs['abs_partners_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'partners')
+        dirs["abs_repo_dir"] = os.path.join(abs_dirs["abs_work_dir"], ".repo")
+        dirs["abs_partners_dir"] = os.path.join(abs_dirs["abs_work_dir"], "partners")
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -114,62 +136,78 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
 
     # Actions {{{
     def _repo_cleanup(self):
-        self.rmtree(self.query_abs_dirs()['abs_repo_dir'])
-        self.rmtree(self.query_abs_dirs()['abs_partners_dir'])
+        self.rmtree(self.query_abs_dirs()["abs_repo_dir"])
+        self.rmtree(self.query_abs_dirs()["abs_partners_dir"])
 
     def _repo_init(self, repo):
         partial_env = {
-            'GIT_SSH_COMMAND': 'ssh -oIdentityFile={}'.format(self.config['ssh_key'])
+            "GIT_SSH_COMMAND": "ssh -oIdentityFile={}".format(self.config["ssh_key"])
         }
-        status = self.run_command([repo, "init", "--no-repo-verify",
-                                   "-u", self.config['repack_manifests_url']],
-                                  cwd=self.query_abs_dirs()['abs_work_dir'],
-                                  partial_env=partial_env)
+        status = self.run_command(
+            [
+                repo,
+                "init",
+                "--no-repo-verify",
+                "-u",
+                self.config["repack_manifests_url"],
+            ],
+            cwd=self.query_abs_dirs()["abs_work_dir"],
+            partial_env=partial_env,
+        )
         if status:
             return status
-        return self.run_command([repo, "sync", "--current-branch", "--no-tags"],
-                                cwd=self.query_abs_dirs()['abs_work_dir'],
-                                partial_env=partial_env)
+        return self.run_command(
+            [repo, "sync", "--current-branch", "--no-tags"],
+            cwd=self.query_abs_dirs()["abs_work_dir"],
+            partial_env=partial_env,
+        )
 
     def setup(self):
         """setup step"""
-        repo = self.download_file(self.config['repo_file'],
-                                  file_name='repo',
-                                  parent_dir=self.query_abs_dirs()['abs_work_dir'],
-                                  error_level=FATAL)
+        repo = self.download_file(
+            self.config["repo_file"],
+            file_name="repo",
+            parent_dir=self.query_abs_dirs()["abs_work_dir"],
+            error_level=FATAL,
+        )
         if not os.path.exists(repo):
             self.fatal("Unable to download repo tool.")
         self.chmod(repo, 0o755)
-        self.retry(self._repo_init,
-                   args=(repo,),
-                   error_level=FATAL,
-                   cleanup=self._repo_cleanup(),
-                   good_statuses=[0],
-                   sleeptime=5)
+        self.retry(
+            self._repo_init,
+            args=(repo,),
+            error_level=FATAL,
+            cleanup=self._repo_cleanup(),
+            good_statuses=[0],
+            sleeptime=5,
+        )
 
     def repack(self):
         """creates the repacks"""
-        repack_cmd = ["./mach", "python",
-                      "python/mozrelease/mozrelease/partner_repack.py",
-                      "-v", self.config['version'],
-                      "-n", str(self.config['build_number'])]
-        if self.config.get('platform'):
-            repack_cmd.extend(["--platform", self.config['platform']])
-        if self.config.get('partner'):
-            repack_cmd.extend(["--partner", self.config['partner']])
-        if self.config.get('taskIds'):
-            for taskId in self.config['taskIds']:
+        repack_cmd = [
+            "./mach",
+            "python",
+            "python/mozrelease/mozrelease/partner_repack.py",
+            "-v",
+            self.config["version"],
+            "-n",
+            str(self.config["build_number"]),
+        ]
+        if self.config.get("platform"):
+            repack_cmd.extend(["--platform", self.config["platform"]])
+        if self.config.get("partner"):
+            repack_cmd.extend(["--partner", self.config["partner"]])
+        if self.config.get("taskIds"):
+            for taskId in self.config["taskIds"]:
                 repack_cmd.extend(["--taskid", taskId])
         if self.config.get("limitLocales"):
             for locale in self.config["limitLocales"]:
                 repack_cmd.extend(["--limit-locale", locale])
 
-        self.run_command(repack_cmd,
-                         cwd=os.environ["GECKO_PATH"],
-                         halt_on_failure=True)
+        self.run_command(repack_cmd, cwd=os.environ["GECKO_PATH"], halt_on_failure=True)
 
 
 # main {{{
-if __name__ == '__main__':
+if __name__ == "__main__":
     partner_repacks = DesktopPartnerRepacks()
     partner_repacks.run_and_exit()

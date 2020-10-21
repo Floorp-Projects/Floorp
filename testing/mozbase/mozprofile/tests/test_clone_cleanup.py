@@ -24,10 +24,8 @@ see https://bugzilla.mozilla.org/show_bug.cgi?id=642843
 def profile(tmpdir):
     # make a profile with one preference
     path = tmpdir.mkdtemp().strpath
-    profile = Profile(path,
-                      preferences={'foo': 'bar'},
-                      restore=False)
-    user_js = os.path.join(profile.profile, 'user.js')
+    profile = Profile(path, preferences={"foo": "bar"}, restore=False)
+    user_js = os.path.join(profile.profile, "user.js")
     assert os.path.exists(user_js)
     return profile
 
@@ -46,8 +44,7 @@ def test_restore_true(profile):
         return []
 
     # make a clone of this profile with restore=True
-    clone = Profile.clone(profile.profile, restore=True,
-                          ignore=_feedback)
+    clone = Profile.clone(profile.profile, restore=True, ignore=_feedback)
     try:
         clone.cleanup()
 
@@ -80,5 +77,5 @@ def test_cleanup_on_garbage_collected(profile):
     assert not os.path.exists(profile_dir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

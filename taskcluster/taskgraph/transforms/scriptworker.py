@@ -16,10 +16,10 @@ from taskgraph.util.scriptworker import (
 
 def add_balrog_scopes(config, jobs):
     for job in jobs:
-        worker = job['worker']
+        worker = job["worker"]
 
         server_scope = get_balrog_server_scope(config)
-        action_scope = get_balrog_action_scope(config, action=worker['balrog-action'])
-        job['scopes'] = [server_scope, action_scope]
+        action_scope = get_balrog_action_scope(config, action=worker["balrog-action"])
+        job["scopes"] = [server_scope, action_scope]
 
         yield job

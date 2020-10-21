@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'actions.js',
-    'NetworkThrottlingMenu.js',
-    'profiles.js',
-    'reducer.js',
-    'types.js',
+    "actions.js",
+    "NetworkThrottlingMenu.js",
+    "profiles.js",
+    "reducer.js",
+    "types.js",
 )

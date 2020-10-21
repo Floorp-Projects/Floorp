@@ -22,17 +22,22 @@ class StaticAnalysisBackend(CompileDBBackend):
         self.non_unified_build = []
 
         # List of directories can be built outside of the unified build system.
-        with open(mozpath.join(self.environment.topsrcdir, "build", "non-unified-compat")) as fh:
+        with open(
+            mozpath.join(self.environment.topsrcdir, "build", "non-unified-compat")
+        ) as fh:
             content = fh.readlines()
             self.non_unified_build = [
-                mozpath.join(self.environment.topsrcdir, line.strip()) for line in content
+                mozpath.join(self.environment.topsrcdir, line.strip())
+                for line in content
             ]
 
     def _build_cmd(self, cmd, filename, unified):
         cmd = list(cmd)
         # Maybe the file is in non-unified environment or it resides under a directory
         # that can also be built in non-unified environment
-        if unified is None or any(filename.startswith(path) for path in self.non_unified_build):
+        if unified is None or any(
+            filename.startswith(path) for path in self.non_unified_build
+        ):
             cmd.append(filename)
         else:
             cmd.append(unified)

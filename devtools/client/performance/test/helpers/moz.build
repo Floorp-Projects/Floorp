@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'actions.js',
-    'dom-utils.js',
-    'event-utils.js',
-    'input-utils.js',
-    'panel-utils.js',
-    'prefs.js',
-    'profiler-mm-utils.js',
-    'recording-utils.js',
-    'synth-utils.js',
-    'tab-utils.js',
-    'urls.js',
-    'wait-utils.js',
+    "actions.js",
+    "dom-utils.js",
+    "event-utils.js",
+    "input-utils.js",
+    "panel-utils.js",
+    "prefs.js",
+    "profiler-mm-utils.js",
+    "recording-utils.js",
+    "synth-utils.js",
+    "tab-utils.js",
+    "urls.js",
+    "wait-utils.js",
 )

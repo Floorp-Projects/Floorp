@@ -4,303 +4,320 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files('nsComputedDOMStyle.*'):
-    BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
+with Files("nsComputedDOMStyle.*"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files('nsROCSSPrimitiveValue.*'):
-    BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
+with Files("nsROCSSPrimitiveValue.*"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files('CSSRuleList.*'):
-    BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
+with Files("CSSRuleList.*"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files('nsDOM*'):
-    BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
+with Files("nsDOM*"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
-with Files('AnimationCollection.*'):
-    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+with Files("AnimationCollection.*"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
-with Files('AnimationCommon.*'):
-    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+with Files("AnimationCommon.*"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
-with Files('nsAnimationManager.*'):
-    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+with Files("nsAnimationManager.*"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
-with Files('nsTransitionManager.*'):
-    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+with Files("nsTransitionManager.*"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
-with Files('StyleAnimationValue.*'):
-    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+with Files("StyleAnimationValue.*"):
+    BUG_COMPONENT = ("Core", "CSS Transitions and Animations")
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]
 
 EXPORTS += [
-    '!nsCSSPropertyID.h',
-    'AnimationCommon.h',
-    'CounterStyleManager.h',
-    'nsAnimationManager.h',
-    'nsCSSAnonBoxes.h',
-    'nsCSSAnonBoxList.h',
-    'nsCSSCounterDescList.h',
-    'nsCSSFontDescList.h',
-    'nsCSSPropertyIDSet.h',
-    'nsCSSProps.h',
-    'nsCSSPseudoElementList.h',
-    'nsCSSPseudoElements.h',
-    'nsCSSValue.h',
-    'nsDOMCSSAttrDeclaration.h',
-    'nsDOMCSSDeclaration.h',
-    'nsICSSDeclaration.h',
-    'nsICSSLoaderObserver.h',
-    'nsMediaFeatures.h',
-    'nsStyleAutoArray.h',
-    'nsStyleConsts.h',
-    'nsStyleStruct.h',
-    'nsStyleStructFwd.h',
-    'nsStyleStructInlines.h',
-    'nsStyleStructList.h',
-    'nsStyleTransformMatrix.h',
-    'nsStyleUtil.h',
-    'nsTimingFunction.h',
+    "!nsCSSPropertyID.h",
+    "AnimationCommon.h",
+    "CounterStyleManager.h",
+    "nsAnimationManager.h",
+    "nsCSSAnonBoxes.h",
+    "nsCSSAnonBoxList.h",
+    "nsCSSCounterDescList.h",
+    "nsCSSFontDescList.h",
+    "nsCSSPropertyIDSet.h",
+    "nsCSSProps.h",
+    "nsCSSPseudoElementList.h",
+    "nsCSSPseudoElements.h",
+    "nsCSSValue.h",
+    "nsDOMCSSAttrDeclaration.h",
+    "nsDOMCSSDeclaration.h",
+    "nsICSSDeclaration.h",
+    "nsICSSLoaderObserver.h",
+    "nsMediaFeatures.h",
+    "nsStyleAutoArray.h",
+    "nsStyleConsts.h",
+    "nsStyleStruct.h",
+    "nsStyleStructFwd.h",
+    "nsStyleStructInlines.h",
+    "nsStyleStructList.h",
+    "nsStyleTransformMatrix.h",
+    "nsStyleUtil.h",
+    "nsTimingFunction.h",
 ]
 
 EXPORTS.mozilla += [
-    '!ServoCSSPropList.h',
-    'AnimationCollection.h',
-    'BindingStyleRule.h',
-    'CachedInheritingStyles.h',
-    'ComputedStyle.h',
-    'ComputedStyleInlines.h',
-    'CSSEnabledState.h',
-    'CSSPropFlags.h',
-    'DeclarationBlock.h',
-    'DocumentStyleRootIterator.h',
-    'FontPreloader.h',
-    'GeckoBindings.h',
-    'GlobalStyleSheetCache.h',
-    'ImportScanner.h',
-    'LayerAnimationInfo.h',
-    'MappedDeclarations.h',
-    'MediaFeatureChange.h',
-    'PostTraversalTask.h',
-    'PreferenceSheet.h',
-    'PreloadedStyleSheet.h',
-    'PseudoStyleType.h',
-    'RustCell.h',
-    'ServoArcTypeList.h',
-    'ServoBindings.h',
-    'ServoBindingTypes.h',
-    'ServoBoxedTypeList.h',
-    'ServoComputedData.h',
-    'ServoComputedDataInlines.h',
-    'ServoCSSParser.h',
-    'ServoCSSRuleList.h',
-    'ServoElementSnapshot.h',
-    'ServoElementSnapshotTable.h',
-    'ServoStyleConstsForwards.h',
-    'ServoStyleConstsInlines.h',
-    'ServoStyleSet.h',
-    'ServoStyleSetInlines.h',
-    'ServoTraversalStatistics.h',
-    'ServoTypes.h',
-    'ServoUtils.h',
-    'ShadowParts.h',
-    'SharedStyleSheetCache.h',
-    'StyleAnimationValue.h',
-    'StyleColorInlines.h',
-    'StyleSheet.h',
-    'StyleSheetInfo.h',
-    'StyleSheetInlines.h',
-    'URLExtraData.h',
-    'UserAgentStyleSheetID.h',
-    'UserAgentStyleSheetList.h',
+    "!ServoCSSPropList.h",
+    "AnimationCollection.h",
+    "BindingStyleRule.h",
+    "CachedInheritingStyles.h",
+    "ComputedStyle.h",
+    "ComputedStyleInlines.h",
+    "CSSEnabledState.h",
+    "CSSPropFlags.h",
+    "DeclarationBlock.h",
+    "DocumentStyleRootIterator.h",
+    "FontPreloader.h",
+    "GeckoBindings.h",
+    "GlobalStyleSheetCache.h",
+    "ImportScanner.h",
+    "LayerAnimationInfo.h",
+    "MappedDeclarations.h",
+    "MediaFeatureChange.h",
+    "PostTraversalTask.h",
+    "PreferenceSheet.h",
+    "PreloadedStyleSheet.h",
+    "PseudoStyleType.h",
+    "RustCell.h",
+    "ServoArcTypeList.h",
+    "ServoBindings.h",
+    "ServoBindingTypes.h",
+    "ServoBoxedTypeList.h",
+    "ServoComputedData.h",
+    "ServoComputedDataInlines.h",
+    "ServoCSSParser.h",
+    "ServoCSSRuleList.h",
+    "ServoElementSnapshot.h",
+    "ServoElementSnapshotTable.h",
+    "ServoStyleConstsForwards.h",
+    "ServoStyleConstsInlines.h",
+    "ServoStyleSet.h",
+    "ServoStyleSetInlines.h",
+    "ServoTraversalStatistics.h",
+    "ServoTypes.h",
+    "ServoUtils.h",
+    "ShadowParts.h",
+    "SharedStyleSheetCache.h",
+    "StyleAnimationValue.h",
+    "StyleColorInlines.h",
+    "StyleSheet.h",
+    "StyleSheetInfo.h",
+    "StyleSheetInlines.h",
+    "URLExtraData.h",
+    "UserAgentStyleSheetID.h",
+    "UserAgentStyleSheetList.h",
 ]
 
 EXPORTS.mozilla.dom += [
-    'CSS.h',
-    'CSSCounterStyleRule.h',
-    'CSSFontFaceRule.h',
-    'CSSFontFeatureValuesRule.h',
-    'CSSImportRule.h',
-    'CSSKeyframeRule.h',
-    'CSSKeyframesRule.h',
-    'CSSMediaRule.h',
-    'CSSMozDocumentRule.h',
-    'CSSNamespaceRule.h',
-    'CSSPageRule.h',
-    'CSSRuleList.h',
-    'CSSStyleRule.h',
-    'CSSSupportsRule.h',
-    'CSSValue.h',
-    'FontFace.h',
-    'FontFaceSet.h',
-    'FontFaceSetIterator.h',
-    'MediaList.h',
-    'MediaQueryList.h',
-    'PaintWorkletGlobalScope.h',
+    "CSS.h",
+    "CSSCounterStyleRule.h",
+    "CSSFontFaceRule.h",
+    "CSSFontFeatureValuesRule.h",
+    "CSSImportRule.h",
+    "CSSKeyframeRule.h",
+    "CSSKeyframesRule.h",
+    "CSSMediaRule.h",
+    "CSSMozDocumentRule.h",
+    "CSSNamespaceRule.h",
+    "CSSPageRule.h",
+    "CSSRuleList.h",
+    "CSSStyleRule.h",
+    "CSSSupportsRule.h",
+    "CSSValue.h",
+    "FontFace.h",
+    "FontFaceSet.h",
+    "FontFaceSetIterator.h",
+    "MediaList.h",
+    "MediaQueryList.h",
+    "PaintWorkletGlobalScope.h",
 ]
 
 EXPORTS.mozilla.css += [
-    'DocumentMatchingFunction.h',
-    'ErrorReporter.h',
-    'GroupRule.h',
-    'ImageLoader.h',
-    'Loader.h',
-    'Rule.h',
-    'SheetLoadData.h',
-    'SheetParsingMode.h',
-    'StreamLoader.h',
+    "DocumentMatchingFunction.h",
+    "ErrorReporter.h",
+    "GroupRule.h",
+    "ImageLoader.h",
+    "Loader.h",
+    "Rule.h",
+    "SheetLoadData.h",
+    "SheetParsingMode.h",
+    "StreamLoader.h",
 ]
 
 UNIFIED_SOURCES += [
-    'AnimationCollection.cpp',
-    'BindingStyleRule.cpp',
-    'CachedInheritingStyles.cpp',
-    'ComputedStyle.cpp',
-    'CounterStyleManager.cpp',
-    'CSS.cpp',
-    'CSSCounterStyleRule.cpp',
-    'CSSFontFaceRule.cpp',
-    'CSSFontFeatureValuesRule.cpp',
-    'CSSImportRule.cpp',
-    'CSSKeyframeRule.cpp',
-    'CSSKeyframesRule.cpp',
-    'CSSMediaRule.cpp',
-    'CSSMozDocumentRule.cpp',
-    'CSSNamespaceRule.cpp',
-    'CSSPageRule.cpp',
-    'CSSRuleList.cpp',
-    'CSSStyleRule.cpp',
-    'CSSSupportsRule.cpp',
-    'DeclarationBlock.cpp',
-    'DocumentStyleRootIterator.cpp',
-    'ErrorReporter.cpp',
-    'FontFace.cpp',
-    'FontFaceSet.cpp',
-    'FontFaceSetIterator.cpp',
-    'FontPreloader.cpp',
-    'GeckoBindings.cpp',
-    'GlobalStyleSheetCache.cpp',
-    'GroupRule.cpp',
-    'ImageLoader.cpp',
-    'ImportScanner.cpp',
-    'LayerAnimationInfo.cpp',
-    'Loader.cpp',
-    'MappedDeclarations.cpp',
-    'MediaList.cpp',
-    'MediaQueryList.cpp',
-    'nsAnimationManager.cpp',
-    'nsComputedDOMStyle.cpp',
-    'nsCSSAnonBoxes.cpp',
-    'nsCSSProps.cpp',
-    'nsCSSPseudoElements.cpp',
-    'nsCSSValue.cpp',
-    'nsDOMCSSAttrDeclaration.cpp',
-    'nsDOMCSSDeclaration.cpp',
-    'nsDOMCSSValueList.cpp',
-    'nsFontFaceLoader.cpp',
-    'nsFontFaceUtils.cpp',
-    'nsHTMLCSSStyleSheet.cpp',
-    'nsHTMLStyleSheet.cpp',
-    'nsICSSDeclaration.cpp',
-    'nsMediaFeatures.cpp',
-    'nsROCSSPrimitiveValue.cpp',
-    'nsStyleStruct.cpp',
-    'nsStyleTransformMatrix.cpp',
-    'nsStyleUtil.cpp',
-    'nsTransitionManager.cpp',
-    'PaintWorkletGlobalScope.cpp',
-    'PaintWorkletImpl.cpp',
-    'PostTraversalTask.cpp',
-    'PreferenceSheet.cpp',
-    'PreloadedStyleSheet.cpp',
-    'PseudoStyleType.cpp',
-    'Rule.cpp',
-    'ServoCSSParser.cpp',
-    'ServoCSSRuleList.cpp',
-    'ServoElementSnapshot.cpp',
-    'ServoStyleSet.cpp',
-    'ShadowParts.cpp',
-    'SharedStyleSheetCache.cpp',
-    'StreamLoader.cpp',
-    'StyleAnimationValue.cpp',
-    'StyleColor.cpp',
-    'StyleSheet.cpp',
-    'URLExtraData.cpp',
+    "AnimationCollection.cpp",
+    "BindingStyleRule.cpp",
+    "CachedInheritingStyles.cpp",
+    "ComputedStyle.cpp",
+    "CounterStyleManager.cpp",
+    "CSS.cpp",
+    "CSSCounterStyleRule.cpp",
+    "CSSFontFaceRule.cpp",
+    "CSSFontFeatureValuesRule.cpp",
+    "CSSImportRule.cpp",
+    "CSSKeyframeRule.cpp",
+    "CSSKeyframesRule.cpp",
+    "CSSMediaRule.cpp",
+    "CSSMozDocumentRule.cpp",
+    "CSSNamespaceRule.cpp",
+    "CSSPageRule.cpp",
+    "CSSRuleList.cpp",
+    "CSSStyleRule.cpp",
+    "CSSSupportsRule.cpp",
+    "DeclarationBlock.cpp",
+    "DocumentStyleRootIterator.cpp",
+    "ErrorReporter.cpp",
+    "FontFace.cpp",
+    "FontFaceSet.cpp",
+    "FontFaceSetIterator.cpp",
+    "FontPreloader.cpp",
+    "GeckoBindings.cpp",
+    "GlobalStyleSheetCache.cpp",
+    "GroupRule.cpp",
+    "ImageLoader.cpp",
+    "ImportScanner.cpp",
+    "LayerAnimationInfo.cpp",
+    "Loader.cpp",
+    "MappedDeclarations.cpp",
+    "MediaList.cpp",
+    "MediaQueryList.cpp",
+    "nsAnimationManager.cpp",
+    "nsComputedDOMStyle.cpp",
+    "nsCSSAnonBoxes.cpp",
+    "nsCSSProps.cpp",
+    "nsCSSPseudoElements.cpp",
+    "nsCSSValue.cpp",
+    "nsDOMCSSAttrDeclaration.cpp",
+    "nsDOMCSSDeclaration.cpp",
+    "nsDOMCSSValueList.cpp",
+    "nsFontFaceLoader.cpp",
+    "nsFontFaceUtils.cpp",
+    "nsHTMLCSSStyleSheet.cpp",
+    "nsHTMLStyleSheet.cpp",
+    "nsICSSDeclaration.cpp",
+    "nsMediaFeatures.cpp",
+    "nsROCSSPrimitiveValue.cpp",
+    "nsStyleStruct.cpp",
+    "nsStyleTransformMatrix.cpp",
+    "nsStyleUtil.cpp",
+    "nsTransitionManager.cpp",
+    "PaintWorkletGlobalScope.cpp",
+    "PaintWorkletImpl.cpp",
+    "PostTraversalTask.cpp",
+    "PreferenceSheet.cpp",
+    "PreloadedStyleSheet.cpp",
+    "PseudoStyleType.cpp",
+    "Rule.cpp",
+    "ServoCSSParser.cpp",
+    "ServoCSSRuleList.cpp",
+    "ServoElementSnapshot.cpp",
+    "ServoStyleSet.cpp",
+    "ShadowParts.cpp",
+    "SharedStyleSheetCache.cpp",
+    "StreamLoader.cpp",
+    "StyleAnimationValue.cpp",
+    "StyleColor.cpp",
+    "StyleSheet.cpp",
+    "URLExtraData.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '../base',
-    '../generic',
-    '../xul',
-    '/dom/base',
-    '/dom/html',
-    '/dom/xul',
-    '/image',
+    "../base",
+    "../generic",
+    "../xul",
+    "/dom/base",
+    "/dom/html",
+    "/dom/xul",
+    "/image",
 ]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 RESOURCE_FILES += [
-    'contenteditable.css',
-    'designmode.css',
+    "contenteditable.css",
+    "designmode.css",
 ]
 
 CONTENT_ACCESSIBLE_FILES += [
-    'ImageDocument.css',
-    'res/plaintext.css',
-    'res/viewsource.css',
-    'TopLevelImageDocument.css',
-    'TopLevelVideoDocument.css',
+    "ImageDocument.css",
+    "res/plaintext.css",
+    "res/viewsource.css",
+    "TopLevelImageDocument.css",
+    "TopLevelVideoDocument.css",
 ]
 
 
-GeneratedFile('nsCSSPropertyID.h', script='GenerateCSSPropertyID.py',
-              entry_point='generate',
-              inputs=['nsCSSPropertyID.h.in', '!ServoCSSPropList.py'])
-GeneratedFile('ServoCSSPropList.h',
-              script='GenerateServoCSSPropList.py',
-              entry_point='generate_header',
-              inputs=['!ServoCSSPropList.py'])
-GeneratedFile('ServoCSSPropList.py',
-              script='GenerateServoCSSPropList.py', entry_point='generate_data',
-              inputs=['ServoCSSPropList.mako.py'])
+GeneratedFile(
+    "nsCSSPropertyID.h",
+    script="GenerateCSSPropertyID.py",
+    entry_point="generate",
+    inputs=["nsCSSPropertyID.h.in", "!ServoCSSPropList.py"],
+)
+GeneratedFile(
+    "ServoCSSPropList.h",
+    script="GenerateServoCSSPropList.py",
+    entry_point="generate_header",
+    inputs=["!ServoCSSPropList.py"],
+)
+GeneratedFile(
+    "ServoCSSPropList.py",
+    script="GenerateServoCSSPropList.py",
+    entry_point="generate_data",
+    inputs=["ServoCSSPropList.mako.py"],
+)
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla += [
-        '!CompositorAnimatableProperties.h',
-        '!CountedUnknownProperties.h',
-        '!ServoStyleConsts.h',
+        "!CompositorAnimatableProperties.h",
+        "!CountedUnknownProperties.h",
+        "!ServoStyleConsts.h",
     ]
 
-    GeneratedFile('CompositorAnimatableProperties.h',
-                  script='GenerateCompositorAnimatableProperties.py',
-                  entry_point='generate',
-                  inputs=['!ServoCSSPropList.py'])
     GeneratedFile(
-        'CountedUnknownProperties.h',
-        script='GenerateCountedUnknownProperties.py',
-        entry_point='generate',
+        "CompositorAnimatableProperties.h",
+        script="GenerateCompositorAnimatableProperties.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
+    )
+    GeneratedFile(
+        "CountedUnknownProperties.h",
+        script="GenerateCountedUnknownProperties.py",
+        entry_point="generate",
         inputs=[
-            '/servo/components/style/properties/counted_unknown_properties.py',
-        ])
-    GeneratedFile('nsComputedDOMStyleGenerated.inc',
-                  script='GenerateComputedDOMStyleGenerated.py',
-                  entry_point='generate',
-                  inputs=['!ServoCSSPropList.py'])
-    GeneratedFile('nsCSSPropsGenerated.inc',
-                  script='GenerateCSSPropsGenerated.py',
-                  entry_point='generate',
-                  inputs=['!ServoCSSPropList.py'])
-    CbindgenHeader('ServoStyleConsts.h',
-                   inputs=['/servo/ports/geckolib', '/servo/components/style'])
+            "/servo/components/style/properties/counted_unknown_properties.py",
+        ],
+    )
+    GeneratedFile(
+        "nsComputedDOMStyleGenerated.inc",
+        script="GenerateComputedDOMStyleGenerated.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
+    )
+    GeneratedFile(
+        "nsCSSPropsGenerated.inc",
+        script="GenerateCSSPropsGenerated.py",
+        entry_point="generate",
+        inputs=["!ServoCSSPropList.py"],
+    )
+    CbindgenHeader(
+        "ServoStyleConsts.h",
+        inputs=["/servo/ports/geckolib", "/servo/components/style"],
+    )
 
     CONFIGURE_SUBST_FILES += [
-        'bindgen.toml',
+        "bindgen.toml",
     ]

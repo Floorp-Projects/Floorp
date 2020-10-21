@@ -14,7 +14,7 @@ def badreturncode(files, config, **lintargs):
 
 
 def external(files, config, **lintargs):
-    if lintargs.get('fix'):
+    if lintargs.get("fix"):
         # mimics no results because they got fixed
         return []
 
@@ -23,11 +23,14 @@ def external(files, config, **lintargs):
         if os.path.isdir(path):
             continue
 
-        with open(path, 'r') as fh:
+        with open(path, "r") as fh:
             for i, line in enumerate(fh.readlines()):
-                if 'foobar' in line:
-                    results.append(result.from_config(
-                        config, path=path, lineno=i+1, column=1, rule="no-foobar"))
+                if "foobar" in line:
+                    results.append(
+                        result.from_config(
+                            config, path=path, lineno=i + 1, column=1, rule="no-foobar"
+                        )
+                    )
     return results
 
 
@@ -45,13 +48,12 @@ def structured(files, config, logger, **kwargs):
         if os.path.isdir(path):
             continue
 
-        with open(path, 'r') as fh:
+        with open(path, "r") as fh:
             for i, line in enumerate(fh.readlines()):
-                if 'foobar' in line:
-                    logger.lint_error(path=path,
-                                      lineno=i+1,
-                                      column=1,
-                                      rule="no-foobar")
+                if "foobar" in line:
+                    logger.lint_error(
+                        path=path, lineno=i + 1, column=1, rule="no-foobar"
+                    )
 
 
 def passes(files, config, **lintargs):
@@ -59,14 +61,14 @@ def passes(files, config, **lintargs):
 
 
 def setup(**lintargs):
-    print('setup passed')
+    print("setup passed")
 
 
 def setupfailed(**lintargs):
-    print('setup failed')
+    print("setup failed")
     return 1
 
 
 def setupraised(**lintargs):
-    print('setup raised')
-    raise LintException('oh no setup failed')
+    print("setup raised")
+    raise LintException("oh no setup failed")

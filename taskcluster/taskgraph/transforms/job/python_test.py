@@ -12,34 +12,37 @@ from taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional
 
-python_test_schema = Schema({
-    Required('using'): 'python-test',
-
-    # Python version to use
-    Required('python-version'): int,
-
-    # The subsuite to run
-    Required('subsuite'): text_type,
-
-    # Base work directory used to set up the task.
-    Optional('workdir'): text_type,
-})
+python_test_schema = Schema(
+    {
+        Required("using"): "python-test",
+        # Python version to use
+        Required("python-version"): int,
+        # The subsuite to run
+        Required("subsuite"): text_type,
+        # Base work directory used to set up the task.
+        Optional("workdir"): text_type,
+    }
+)
 
 
 defaults = {
-    'python-version': 2,
-    'subsuite': 'default',
+    "python-version": 2,
+    "subsuite": "default",
 }
 
 
-@run_job_using('docker-worker', 'python-test', schema=python_test_schema, defaults=defaults)
-@run_job_using('generic-worker', 'python-test', schema=python_test_schema, defaults=defaults)
+@run_job_using(
+    "docker-worker", "python-test", schema=python_test_schema, defaults=defaults
+)
+@run_job_using(
+    "generic-worker", "python-test", schema=python_test_schema, defaults=defaults
+)
 def configure_python_test(config, job, taskdesc):
-    run = job['run']
-    worker = job['worker']
+    run = job["run"]
+    worker = job["worker"]
 
     # defer to the mach implementation
-    run['mach'] = ("python-test --subsuite {subsuite} --run-slow").format(**run)
-    run['using'] = 'mach'
-    del run['subsuite']
-    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
+    run["mach"] = ("python-test --subsuite {subsuite} --run-slow").format(**run)
+    run["using"] = "mach"
+    del run["subsuite"]
+    configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])

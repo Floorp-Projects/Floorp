@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'GMPDecoderModule.h',
-    'GMPVideoDecoder.h',
+    "GMPDecoderModule.h",
+    "GMPVideoDecoder.h",
 ]
 
 UNIFIED_SOURCES += [
-    'GMPDecoderModule.cpp',
-    'GMPVideoDecoder.cpp',
+    "GMPDecoderModule.cpp",
+    "GMPVideoDecoder.cpp",
 ]
 
 # GMPVideoEncodedFrameImpl.h needs IPC
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

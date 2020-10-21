@@ -4,20 +4,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-  'dist',
-  'src',
+    "dist",
+    "src",
 ]
 
-include('../shared/build/node-templates.mozbuild')
+include("../shared/build/node-templates.mozbuild")
 
 BROWSER_CHROME_MANIFESTS += [
-  'test/mochitest/browser.ini',
+    "test/mochitest/browser.ini",
 ]
 
 DevToolsModules(
-    'panel.js',
+    "panel.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Debugger')
-
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Debugger")

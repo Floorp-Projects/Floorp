@@ -5,35 +5,35 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCAL_INCLUDES += [
-    '../..',
+    "../..",
 ]
 
-DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
-DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
 UNIFIED_SOURCES += [
-    'Common.cpp',
-    'TestCaching.cpp',
-    'TestChunkSet.cpp',
-    'TestClassifier.cpp',
-    'TestFailUpdate.cpp',
-    'TestFindFullHash.cpp',
-    'TestLookupCacheV4.cpp',
-    'TestPerProviderDirectory.cpp',
-    'TestProtocolParser.cpp',
-    'TestRiceDeltaDecoder.cpp',
-    'TestSafebrowsingHash.cpp',
-    'TestSafeBrowsingProtobuf.cpp',
-    'TestTable.cpp',
-    'TestUrlClassifierTableUpdateV4.cpp',
-    'TestUrlClassifierUtils.cpp',
-    'TestURLsAndHashing.cpp',
-    'TestVariableLengthPrefixSet.cpp',
+    "Common.cpp",
+    "TestCaching.cpp",
+    "TestChunkSet.cpp",
+    "TestClassifier.cpp",
+    "TestFailUpdate.cpp",
+    "TestFindFullHash.cpp",
+    "TestLookupCacheV4.cpp",
+    "TestPerProviderDirectory.cpp",
+    "TestProtocolParser.cpp",
+    "TestRiceDeltaDecoder.cpp",
+    "TestSafebrowsingHash.cpp",
+    "TestSafeBrowsingProtobuf.cpp",
+    "TestTable.cpp",
+    "TestUrlClassifierTableUpdateV4.cpp",
+    "TestUrlClassifierUtils.cpp",
+    "TestURLsAndHashing.cpp",
+    "TestVariableLengthPrefixSet.cpp",
 ]
 
 # Required to have the same MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
 # as non-testing code.
-if CONFIG['NIGHTLY_BUILD'] or CONFIG['MOZ_DEBUG']:
-    DEFINES['MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES'] = True
+if CONFIG["NIGHTLY_BUILD"] or CONFIG["MOZ_DEBUG"]:
+    DEFINES["MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES"] = True
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

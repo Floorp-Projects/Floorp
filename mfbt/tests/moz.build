@@ -4,105 +4,110 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
     TEST_DIRS += [
-        'gtest',
+        "gtest",
     ]
 
 # Important: for these tests to be run, they also need to be added
 # to testing/cppunittest.ini.
-CppUnitTests([
-    'TestAlgorithm',
-    'TestArray',
-    'TestArrayUtils',
-    'TestAtomicBitfields',
-    'TestAtomics',
-    'TestBinarySearch',
-    'TestBloomFilter',
-    'TestBufferList',
-    'TestCasting',
-    'TestCeilingFloor',
-    'TestCheckedInt',
-    'TestCompactPair',
-    'TestCountPopulation',
-    'TestCountZeroes',
-    'TestDefineEnum',
-    'TestDoublyLinkedList',
-    'TestEndian',
-    'TestEnumeratedArray',
-    'TestEnumSet',
-    'TestEnumTypeTraits',
-    'TestFastBernoulliTrial',
-    'TestFloatingPoint',
-    'TestFunctionRef',
-    'TestFunctionTypeTraits',
-    'TestHashTable',
-    'TestIntegerPrintfMacros',
-    'TestIntegerRange',
-    'TestJSONWriter',
-    'TestLinkedList',
-    'TestMacroArgs',
-    'TestMacroForEach',
-    'TestMathAlgorithms',
-    'TestMaybe',
-    'TestNonDereferenceable',
-    'TestNotNull',
-    'TestRandomNum',
-    'TestRange',
-    'TestRefPtr',
-    'TestResult',
-    'TestRollingMean',
-    'TestSaturate',
-    'TestScopeExit',
-    'TestSegmentedVector',
-    'TestSHA1',
-    'TestSmallPointerArray',
-    'TestSplayTree',
-    'TestSPSCQueue',
-    'TestTainting',
-    'TestTemplateLib',
-    'TestTextUtils',
-    'TestThreadSafeWeakPtr',
-    'TestTuple',
-    'TestTypedEnum',
-    'TestTypeTraits',
-    'TestUniquePtr',
-    'TestVariant',
-    'TestVector',
-    'TestWeakPtr',
-    'TestWrappingOperations',
-    'TestXorShift128PlusRNG',
-])
+CppUnitTests(
+    [
+        "TestAlgorithm",
+        "TestArray",
+        "TestArrayUtils",
+        "TestAtomicBitfields",
+        "TestAtomics",
+        "TestBinarySearch",
+        "TestBloomFilter",
+        "TestBufferList",
+        "TestCasting",
+        "TestCeilingFloor",
+        "TestCheckedInt",
+        "TestCompactPair",
+        "TestCountPopulation",
+        "TestCountZeroes",
+        "TestDefineEnum",
+        "TestDoublyLinkedList",
+        "TestEndian",
+        "TestEnumeratedArray",
+        "TestEnumSet",
+        "TestEnumTypeTraits",
+        "TestFastBernoulliTrial",
+        "TestFloatingPoint",
+        "TestFunctionRef",
+        "TestFunctionTypeTraits",
+        "TestHashTable",
+        "TestIntegerPrintfMacros",
+        "TestIntegerRange",
+        "TestJSONWriter",
+        "TestLinkedList",
+        "TestMacroArgs",
+        "TestMacroForEach",
+        "TestMathAlgorithms",
+        "TestMaybe",
+        "TestNonDereferenceable",
+        "TestNotNull",
+        "TestRandomNum",
+        "TestRange",
+        "TestRefPtr",
+        "TestResult",
+        "TestRollingMean",
+        "TestSaturate",
+        "TestScopeExit",
+        "TestSegmentedVector",
+        "TestSHA1",
+        "TestSmallPointerArray",
+        "TestSplayTree",
+        "TestSPSCQueue",
+        "TestTainting",
+        "TestTemplateLib",
+        "TestTextUtils",
+        "TestThreadSafeWeakPtr",
+        "TestTuple",
+        "TestTypedEnum",
+        "TestTypeTraits",
+        "TestUniquePtr",
+        "TestVariant",
+        "TestVector",
+        "TestWeakPtr",
+        "TestWrappingOperations",
+        "TestXorShift128PlusRNG",
+    ]
+)
 
 # Not to be unified with the rest, because this test
 # sets MOZ_PRETEND_NO_JSRUST, which changes the behavior
 # of the included headers.
-CppUnitTests([
-    'TestUtf8',
-])
+CppUnitTests(
+    [
+        "TestUtf8",
+    ]
+)
 
-if not CONFIG['MOZ_ASAN']:
-    CppUnitTests([
-        'TestPoisonArea',
-    ])
+if not CONFIG["MOZ_ASAN"]:
+    CppUnitTests(
+        [
+            "TestPoisonArea",
+        ]
+    )
 
 # Since we link directly with MFBT object files, define IMPL_MFBT
-DEFINES['IMPL_MFBT'] = True
+DEFINES["IMPL_MFBT"] = True
 
 DisableStlWrapping()
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
-  CXXFLAGS += [
-    '-wd4275', # non dll-interface class used as base for dll-interface class
-    '-wd4530', # C++ exception handler used, but unwind semantics are not enabled
-  ]
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += [
+        "-wd4275",  # non dll-interface class used as base for dll-interface class
+        "-wd4530",  # C++ exception handler used, but unwind semantics are not enabled
+    ]
 
 USE_LIBS += [
-    'mfbt',
+    "mfbt",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-CXXFLAGS += ['-O0']
-
+CXXFLAGS += ["-O0"]

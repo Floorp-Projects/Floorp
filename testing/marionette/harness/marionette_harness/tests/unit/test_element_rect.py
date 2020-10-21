@@ -15,11 +15,10 @@ def inline(doc):
 
 
 class TestElementSize(MarionetteTestCase):
-
     def test_payload(self):
         self.marionette.navigate(inline("""<a href="#">link</a>"""))
         rect = self.marionette.find_element(By.LINK_TEXT, "link").rect
-        self.assertTrue(rect['x'] > 0)
-        self.assertTrue(rect['y'] > 0)
-        self.assertTrue(rect['width'] > 0)
-        self.assertTrue(rect['height'] > 0)
+        self.assertTrue(rect["x"] > 0)
+        self.assertTrue(rect["y"] > 0)
+        self.assertTrue(rect["width"] > 0)
+        self.assertTrue(rect["height"] > 0)

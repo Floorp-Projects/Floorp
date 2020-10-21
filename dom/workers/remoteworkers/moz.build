@@ -5,41 +5,41 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'RemoteWorkerChild.h',
-    'RemoteWorkerController.h',
-    'RemoteWorkerControllerChild.h',
-    'RemoteWorkerControllerParent.h',
-    'RemoteWorkerManager.h',
-    'RemoteWorkerParent.h',
-    'RemoteWorkerService.h',
-    'RemoteWorkerServiceChild.h',
-    'RemoteWorkerServiceParent.h',
+    "RemoteWorkerChild.h",
+    "RemoteWorkerController.h",
+    "RemoteWorkerControllerChild.h",
+    "RemoteWorkerControllerParent.h",
+    "RemoteWorkerManager.h",
+    "RemoteWorkerParent.h",
+    "RemoteWorkerService.h",
+    "RemoteWorkerServiceChild.h",
+    "RemoteWorkerServiceParent.h",
 ]
 
 UNIFIED_SOURCES += [
-    'RemoteWorkerChild.cpp',
-    'RemoteWorkerController.cpp',
-    'RemoteWorkerControllerChild.cpp',
-    'RemoteWorkerControllerParent.cpp',
-    'RemoteWorkerManager.cpp',
-    'RemoteWorkerParent.cpp',
-    'RemoteWorkerService.cpp',
-    'RemoteWorkerServiceChild.cpp',
-    'RemoteWorkerServiceParent.cpp',
+    "RemoteWorkerChild.cpp",
+    "RemoteWorkerController.cpp",
+    "RemoteWorkerControllerChild.cpp",
+    "RemoteWorkerControllerParent.cpp",
+    "RemoteWorkerManager.cpp",
+    "RemoteWorkerParent.cpp",
+    "RemoteWorkerService.cpp",
+    "RemoteWorkerServiceChild.cpp",
+    "RemoteWorkerServiceParent.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/serviceworkers',
-    '/xpcom/build',
+    "/dom/serviceworkers",
+    "/xpcom/build",
 ]
 
 IPDL_SOURCES += [
-    'PRemoteWorker.ipdl',
-    'PRemoteWorkerController.ipdl',
-    'PRemoteWorkerService.ipdl',
-    'RemoteWorkerTypes.ipdlh',
+    "PRemoteWorker.ipdl",
+    "PRemoteWorkerController.ipdl",
+    "PRemoteWorkerService.ipdl",
+    "RemoteWorkerTypes.ipdlh",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

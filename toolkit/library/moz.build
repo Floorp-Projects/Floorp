@@ -4,348 +4,351 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @template
 def Libxul_defines():
-    LIBRARY_DEFINES['MOZILLA_INTERNAL_API'] = True
-    LIBRARY_DEFINES['IMPL_LIBXUL'] = True
-    if not CONFIG['JS_SHARED_LIBRARY']:
-        LIBRARY_DEFINES['STATIC_EXPORTABLE_JS_API'] = True
+    LIBRARY_DEFINES["MOZILLA_INTERNAL_API"] = True
+    LIBRARY_DEFINES["IMPL_LIBXUL"] = True
+    if not CONFIG["JS_SHARED_LIBRARY"]:
+        LIBRARY_DEFINES["STATIC_EXPORTABLE_JS_API"] = True
+
 
 @template
 def Libxul(name, output_category=None):
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
         # This is going to be a framework named "XUL", not an ordinary library named
         # "libxul.dylib"
         GeckoFramework(name, output_category=output_category, linkage=None)
-        SHARED_LIBRARY_NAME = 'XUL'
+        SHARED_LIBRARY_NAME = "XUL"
     else:
         GeckoSharedLibrary(name, output_category=output_category, linkage=None)
-        SHARED_LIBRARY_NAME = 'xul'
+        SHARED_LIBRARY_NAME = "xul"
 
     DELAYLOAD_DLLS += [
-        'comdlg32.dll',
-        'credui.dll',
-        'hid.dll',
-        'msimg32.dll',
-        'netapi32.dll',
-        'secur32.dll',
-        'urlmon.dll',
-        'wininet.dll',
-        'winspool.drv'
+        "comdlg32.dll",
+        "credui.dll",
+        "hid.dll",
+        "msimg32.dll",
+        "netapi32.dll",
+        "secur32.dll",
+        "urlmon.dll",
+        "wininet.dll",
+        "winspool.drv",
     ]
 
-    if CONFIG['ACCESSIBILITY']:
-        DELAYLOAD_DLLS += ['oleacc.dll']
+    if CONFIG["ACCESSIBILITY"]:
+        DELAYLOAD_DLLS += ["oleacc.dll"]
 
-    if CONFIG['MOZ_WEBRTC']:
-        DELAYLOAD_DLLS += ['msdmo.dll']
+    if CONFIG["MOZ_WEBRTC"]:
+        DELAYLOAD_DLLS += ["msdmo.dll"]
 
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         DELAYLOAD_DLLS += [
-            'api-ms-win-core-winrt-l1-1-0.dll',
-            'api-ms-win-core-winrt-string-l1-1-0.dll',
+            "api-ms-win-core-winrt-l1-1-0.dll",
+            "api-ms-win-core-winrt-string-l1-1-0.dll",
         ]
 
-    if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['ACCESSIBILITY']:
-        LOCAL_INCLUDES += ['!/accessible/interfaces/gecko/']
+    if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["ACCESSIBILITY"]:
+        LOCAL_INCLUDES += ["!/accessible/interfaces/gecko/"]
 
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         LOCAL_INCLUDES += [
-            '/widget/windows',
-            '/xpcom/base',
+            "/widget/windows",
+            "/xpcom/base",
         ]
-        RCINCLUDE = '/toolkit/library/xulrunner.rc'
+        RCINCLUDE = "/toolkit/library/xulrunner.rc"
 
     # Show a breakdown of linker time. (Too verbose for local builds.)
-    if CONFIG['CC_TYPE'] == 'clang-cl' and not CONFIG['DEVELOPER_OPTIONS']:
-        LDFLAGS += ['-time']
+    if CONFIG["CC_TYPE"] == "clang-cl" and not CONFIG["DEVELOPER_OPTIONS"]:
+        LDFLAGS += ["-time"]
 
     Libxul_defines()
 
-    if CONFIG['MOZ_NEEDS_LIBATOMIC']:
-        OS_LIBS += ['atomic']
+    if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
+        OS_LIBS += ["atomic"]
 
     # TouchBar-related classes are only available in the 10.12.2 SDK and later.
     # We need to weak link these classes until we've upgraded our SDK to at
     # least 10.12.2.
     # We're also linking against libresolv to solve bug 1367932.
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSTouchBar']
-        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSSharingServicePickerTouchBarItem']
-        LDFLAGS += ['-Wl,-U,_OBJC_METACLASS_$_NSTouchBar']
-        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem']
-        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSPopoverTouchBarItem']
-        LDFLAGS += ['-lresolv']
+    if CONFIG["OS_ARCH"] == "Darwin":
+        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSTouchBar"]
+        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSSharingServicePickerTouchBarItem"]
+        LDFLAGS += ["-Wl,-U,_OBJC_METACLASS_$_NSTouchBar"]
+        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem"]
+        LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSPopoverTouchBarItem"]
+        LDFLAGS += ["-lresolv"]
 
-    if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] == 'clang-cl':
-        LDFLAGS += ['-NATVIS:%s/toolkit/library/gecko.natvis' % TOPSRCDIR]
-    if CONFIG['RUSTC_NATVIS_LDFLAGS']:
-        LDFLAGS += CONFIG['RUSTC_NATVIS_LDFLAGS']
+    if CONFIG["MOZ_DEBUG_SYMBOLS"] and CONFIG["CC_TYPE"] == "clang-cl":
+        LDFLAGS += ["-NATVIS:%s/toolkit/library/gecko.natvis" % TOPSRCDIR]
+    if CONFIG["RUSTC_NATVIS_LDFLAGS"]:
+        LDFLAGS += CONFIG["RUSTC_NATVIS_LDFLAGS"]
 
-    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
-        GeneratedFile('symverscript', script='/build/gen_symverscript.py',
-                      inputs=['../symverscript.in'],
-                      flags=['xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']])
-        SYMBOLS_FILE = '!symverscript'
+    if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
+        GeneratedFile(
+            "symverscript",
+            script="/build/gen_symverscript.py",
+            inputs=["../symverscript.in"],
+            flags=["xul%s" % CONFIG["MOZILLA_SYMBOLVERSION"]],
+        )
+        SYMBOLS_FILE = "!symverscript"
 
     # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
     # too old to support Python pretty-printers; if this changes, we could
     # make this 'ifdef __GNUC__'.
-    if CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG["OS_ARCH"] == "Linux":
         # Create a GDB Python auto-load file alongside the libxul shared library
         # in the build directory.
-        DEFINES['topsrcdir'] = TOPSRCDIR
-        OBJDIR_FILES.toolkit.library.build += ['../libxul.so-gdb.py']
+        DEFINES["topsrcdir"] = TOPSRCDIR
+        OBJDIR_FILES.toolkit.library.build += ["../libxul.so-gdb.py"]
 
 
 # The real libxul definition is in ./build/moz.build, but we define a
 # xul library here such that # FINAL_LIBRARY = 'xul' refers to here, which
 # is then linked to both build/libxul and gtest/libxul.
-Library('xul')
+Library("xul")
 
-STATIC_LIBRARY_NAME = 'xul_s'
+STATIC_LIBRARY_NAME = "xul_s"
 
 # Use a FINAL_LIBRARY for Libxul_defines to propagate from there. They wouldn't
 # propagate from here.
-FINAL_LIBRARY = 'xul-real'
+FINAL_LIBRARY = "xul-real"
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        'nsDllMain.cpp',
+        "nsDllMain.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/config',
+    "/config",
     # need widget/windows for resource.h (included from widget.rc)
-    '/widget/windows',
+    "/widget/windows",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CC_TYPE"] not in ("clang", "gcc"):
     LOCAL_INCLUDES += [
-        '/xpcom/base',
+        "/xpcom/base",
     ]
 
 DIRS += [
-    'build',
-    'gtest',
+    "build",
+    "gtest",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-  DIRS += ['dummydll']
+if CONFIG["OS_ARCH"] == "WINNT":
+    DIRS += ["dummydll"]
 
 # js needs to come after xul for now, because it is an archive and its content
 # is discarded when it comes first.
 USE_LIBS += [
-    'js',
+    "js",
 ]
 
 USE_LIBS += [
-    'lgpllibs',
-    'nspr',
-    'nss',
-    'psshparser',
-    'sqlite',
-    'zlib',
+    "lgpllibs",
+    "nspr",
+    "nss",
+    "psshparser",
+    "sqlite",
+    "zlib",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     USE_LIBS += [
-        'mozgtk_stub',
+        "mozgtk_stub",
     ]
 
-if CONFIG['MOZ_WAYLAND']:
+if CONFIG["MOZ_WAYLAND"]:
     USE_LIBS += [
-        'mozwayland',
+        "mozwayland",
     ]
 
-if CONFIG['MOZ_JPROF']:
+if CONFIG["MOZ_JPROF"]:
     USE_LIBS += [
-        'jprof',
+        "jprof",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk' or \
-        CONFIG['MOZ_TREE_FREETYPE']:
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" or CONFIG["MOZ_TREE_FREETYPE"]:
     USE_LIBS += [
-        'freetype',
+        "freetype",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CXXFLAGS += CONFIG['TK_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG['MOZ_WEBRTC']:
-    if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["MOZ_WEBRTC"]:
+    if CONFIG["OS_TARGET"] == "WINNT":
         OS_LIBS += [
-            'secur32',
-            'iphlpapi',
-            'strmiids',
-            'dmoguids',
-            'wmcodecdspuuid',
-            'amstrmid',
-            'msdmo',
-            'wininet',
+            "secur32",
+            "iphlpapi",
+            "strmiids",
+            "dmoguids",
+            "wmcodecdspuuid",
+            "amstrmid",
+            "msdmo",
+            "wininet",
         ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     OS_LIBS += [
-        '-framework OpenGL',
-        '-framework SystemConfiguration',
-        '-framework AVFoundation',
-        '-framework CoreMedia',
-        '-framework IOKit',
-        '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
-        '-framework CoreUI',
-        '-framework CoreSymbolication',
-        'cups',
+        "-framework OpenGL",
+        "-framework SystemConfiguration",
+        "-framework AVFoundation",
+        "-framework CoreMedia",
+        "-framework IOKit",
+        "-F%s" % CONFIG["MACOS_PRIVATE_FRAMEWORKS_DIR"],
+        "-framework CoreUI",
+        "-framework CoreSymbolication",
+        "cups",
     ]
 
-if CONFIG['MOZ_WMF']:
+if CONFIG["MOZ_WMF"]:
     OS_LIBS += [
-        'mfuuid',
-        'wmcodecdspuuid',
-        'strmiids',
+        "mfuuid",
+        "wmcodecdspuuid",
+        "strmiids",
     ]
 
-if CONFIG['OS_ARCH'] == 'FreeBSD':
+if CONFIG["OS_ARCH"] == "FreeBSD":
     OS_LIBS += [
-        'util',
+        "util",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
-        'crypt32',
-        'shell32',
-        'ntdll',
-        'ole32',
-        'version',
-        'winspool',
+        "crypt32",
+        "shell32",
+        "ntdll",
+        "ole32",
+        "version",
+        "winspool",
     ]
 
-if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
     OS_LIBS += [
-        'rt',
+        "rt",
     ]
 
-if CONFIG['MOZ_ANDROID_GOOGLE_VR']:
+if CONFIG["MOZ_ANDROID_GOOGLE_VR"]:
     OS_LIBS += [
-        '-L%s' % CONFIG['MOZ_ANDROID_GOOGLE_VR_LIBS'],
-        '-lgvr',
+        "-L%s" % CONFIG["MOZ_ANDROID_GOOGLE_VR_LIBS"],
+        "-lgvr",
     ]
 
-OS_LIBS += CONFIG['MOZ_CAIRO_OSLIBS']
-OS_LIBS += CONFIG['MOZ_WEBRTC_X11_LIBS']
+OS_LIBS += CONFIG["MOZ_CAIRO_OSLIBS"]
+OS_LIBS += CONFIG["MOZ_WEBRTC_X11_LIBS"]
 
-if CONFIG['MOZ_SYSTEM_JPEG']:
-    OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
+if CONFIG["MOZ_SYSTEM_JPEG"]:
+    OS_LIBS += CONFIG["MOZ_JPEG_LIBS"]
 
-if CONFIG['MOZ_SYSTEM_PNG']:
-    OS_LIBS += CONFIG['MOZ_PNG_LIBS']
+if CONFIG["MOZ_SYSTEM_PNG"]:
+    OS_LIBS += CONFIG["MOZ_PNG_LIBS"]
 
-if CONFIG['MOZ_SYSTEM_WEBP']:
-    OS_LIBS += CONFIG['MOZ_WEBP_LIBS']
+if CONFIG["MOZ_SYSTEM_WEBP"]:
+    OS_LIBS += CONFIG["MOZ_WEBP_LIBS"]
 
-if CONFIG['MOZ_SYSTEM_LIBEVENT']:
-    OS_LIBS += CONFIG['MOZ_LIBEVENT_LIBS']
+if CONFIG["MOZ_SYSTEM_LIBEVENT"]:
+    OS_LIBS += CONFIG["MOZ_LIBEVENT_LIBS"]
 
-if CONFIG['MOZ_SYSTEM_LIBVPX']:
-    OS_LIBS += CONFIG['MOZ_LIBVPX_LIBS']
+if CONFIG["MOZ_SYSTEM_LIBVPX"]:
+    OS_LIBS += CONFIG["MOZ_LIBVPX_LIBS"]
 
-if not CONFIG['MOZ_TREE_PIXMAN']:
-    OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
+if not CONFIG["MOZ_TREE_PIXMAN"]:
+    OS_LIBS += CONFIG["MOZ_PIXMAN_LIBS"]
 
-if CONFIG['HAVE_CLOCK_MONOTONIC']:
-    OS_LIBS += CONFIG['REALTIME_LIBS']
+if CONFIG["HAVE_CLOCK_MONOTONIC"]:
+    OS_LIBS += CONFIG["REALTIME_LIBS"]
 
-OS_LIBS += CONFIG['ICONV_LIBS']
+OS_LIBS += CONFIG["ICONV_LIBS"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
-    OS_LIBS += CONFIG['TK_LIBS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
+    OS_LIBS += CONFIG["TK_LIBS"]
 
-if CONFIG['OS_ARCH'] == 'OpenBSD':
+if CONFIG["OS_ARCH"] == "OpenBSD":
     OS_LIBS += [
-        'sndio',
+        "sndio",
     ]
 
-if CONFIG['MOZ_ENABLE_DBUS']:
-    OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
+if CONFIG["MOZ_ENABLE_DBUS"]:
+    OS_LIBS += CONFIG["MOZ_DBUS_GLIB_LIBS"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    OS_LIBS += [l for l in CONFIG['TK_LIBS']
-        if l not in ('-lgtk-3', '-lgdk-3')]
-    OS_LIBS += CONFIG['XLDFLAGS']
-    OS_LIBS += CONFIG['XLIBS']
-    OS_LIBS += CONFIG['XEXT_LIBS']
-    OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
-    OS_LIBS += CONFIG['XT_LIBS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    OS_LIBS += [l for l in CONFIG["TK_LIBS"] if l not in ("-lgtk-3", "-lgdk-3")]
+    OS_LIBS += CONFIG["XLDFLAGS"]
+    OS_LIBS += CONFIG["XLIBS"]
+    OS_LIBS += CONFIG["XEXT_LIBS"]
+    OS_LIBS += CONFIG["MOZ_PANGO_LIBS"]
+    OS_LIBS += CONFIG["XT_LIBS"]
     OS_LIBS += [
-        'gthread-2.0',
+        "gthread-2.0",
     ]
 
-if CONFIG['MOZ_ENABLE_LIBPROXY']:
-    OS_LIBS += CONFIG['MOZ_LIBPROXY_LIBS']
+if CONFIG["MOZ_ENABLE_LIBPROXY"]:
+    OS_LIBS += CONFIG["MOZ_LIBPROXY_LIBS"]
 
-if CONFIG['OS_ARCH'] == 'FreeBSD':
+if CONFIG["OS_ARCH"] == "FreeBSD":
     OS_LIBS += [
-        'util',
+        "util",
     ]
 
-if CONFIG['OS_ARCH'] == 'Darwin':
+if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [
         # Link to Metal as required by the Metal gfx-hal backend
-        '-weak_framework Metal',
+        "-weak_framework Metal",
     ]
 
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
-        'shell32',
-        'ole32',
-        'version',
-        'winspool',
-        'comdlg32',
-        'imm32',
-        'msimg32',
-        'netapi32',
-        'shlwapi',
-        'ws2_32',
-        'dnsapi',
-        'dwmapi',
-        'iphlpapi',
-        'uxtheme',
-        'setupapi',
-        'secur32',
-        'sensorsapi',
-        'portabledeviceguids',
-        'wininet',
-        'wbemuuid',
-        'wintrust',
-        'wtsapi32',
-        'locationapi',
-        'sapi',
-        'dxguid',
-        'dhcpcsvc',
+        "shell32",
+        "ole32",
+        "version",
+        "winspool",
+        "comdlg32",
+        "imm32",
+        "msimg32",
+        "netapi32",
+        "shlwapi",
+        "ws2_32",
+        "dnsapi",
+        "dwmapi",
+        "iphlpapi",
+        "uxtheme",
+        "setupapi",
+        "secur32",
+        "sensorsapi",
+        "portabledeviceguids",
+        "wininet",
+        "wbemuuid",
+        "wintrust",
+        "wtsapi32",
+        "locationapi",
+        "sapi",
+        "dxguid",
+        "dhcpcsvc",
         # gfx-rs supports D3D11 and D3D12, but we are not linking to them implicitly
-        #"d3d11", # should be explicitly linked by gfx-backend-d3d11
+        # "d3d11", # should be explicitly linked by gfx-backend-d3d11
         #'d3d12', # should be explicitly linked by d3d12-rs
-        'd3dcompiler',
+        "d3dcompiler",
     ]
 
-    if CONFIG['CC_TYPE'] == 'clang-cl':
+    if CONFIG["CC_TYPE"] == "clang-cl":
         OS_LIBS += [
-            'runtimeobject',
+            "runtimeobject",
         ]
 
-    if CONFIG['ACCESSIBILITY']:
+    if CONFIG["ACCESSIBILITY"]:
         OS_LIBS += [
-            'oleacc',
+            "oleacc",
         ]
 
     # Prevent winapi-rs from statically linking
-    LIBRARY_DEFINES['WINAPI_NO_BUNDLED_LIBRARIES'] = True
+    LIBRARY_DEFINES["WINAPI_NO_BUNDLED_LIBRARIES"] = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     OS_LIBS += [
-        'usp10',
-        'oleaut32',
+        "usp10",
+        "oleaut32",
     ]
 
 # The buildid is refreshed on every (incremental) build. But we want to avoid
@@ -356,12 +359,15 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # objects files that constitute libxul, so that if any of the files linked into
 # libxul is rebuilt, we refresh the buildid and link it into libxul.
 
-if CONFIG['COMPILE_ENVIRONMENT']:
-    SOURCES += ['!buildid.cpp']
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
-        libxul_list = 'XUL'
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    SOURCES += ["!buildid.cpp"]
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
+        libxul_list = "XUL"
     else:
-        libxul_list = '%sxul_%s' % (
-            CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
-    GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
-                  inputs=['!build/%s.list' % libxul_list])
+        libxul_list = "%sxul_%s" % (
+            CONFIG["DLL_PREFIX"],
+            CONFIG["DLL_SUFFIX"].lstrip(".").replace(".", "_"),
+        )
+    GeneratedFile(
+        "buildid.cpp", script="gen_buildid.py", inputs=["!build/%s.list" % libxul_list]
+    )

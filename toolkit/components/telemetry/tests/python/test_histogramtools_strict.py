@@ -9,7 +9,9 @@ import os
 from os import path
 from test_histogramtools_non_strict import load_histogram
 
-TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
+TELEMETRY_ROOT_PATH = path.abspath(
+    path.join(path.dirname(__file__), path.pardir, path.pardir)
+)
 sys.path.append(TELEMETRY_ROOT_PATH)
 # The parsers live in a subdirectory of "build_scripts", account for that.
 # NOTE: if the parsers are moved, this logic will need to be updated.
@@ -22,6 +24,7 @@ class TestParser(unittest.TestCase):
     def setUp(self):
         def mockexit(x):
             raise SystemExit(x)
+
         self.oldexit = os._exit
         os._exit = mockexit
 
@@ -37,15 +40,17 @@ class TestParser(unittest.TestCase):
                 "expires_in_version": "never",
                 "kind": "boolean",
                 "products": ["firefox"],
-                "description": "Test histogram"
+                "description": "Test histogram",
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        hist = parse_histograms.Histogram('TEST_VALID_HISTOGRAM',
-                                          histograms['TEST_VALID_HISTOGRAM'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_VALID_HISTOGRAM",
+            histograms["TEST_VALID_HISTOGRAM"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
         self.assertTrue(hist.expiration(), "never")
@@ -61,36 +66,38 @@ class TestParser(unittest.TestCase):
                 "expires_in_version": "never",
                 "kind": "boolean",
                 "products": ["firefox"],
-                "description": "Test histogram"
+                "description": "Test histogram",
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS',
-                                   histograms['TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
         # Set global allowlists for parse_histograms.
         parse_histograms.allowlists = {
             "alert_emails": [],
-            "bug_numbers": [
-                "TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS"
-            ],
+            "bug_numbers": ["TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS"],
             "n_buckets": [],
             "expiry_default": [],
-            "kind": []
+            "kind": [],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'never')
-        self.assertEqual(hist.kind(), 'boolean')
+        self.assertEqual(hist.expiration(), "never")
+        self.assertEqual(hist.kind(), "boolean")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
@@ -110,30 +117,32 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS',
-                                   histograms['TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
         # Set global allowlists for parse_histograms.
         parse_histograms.allowlists = {
-            "alert_emails": [
-                "TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS"
-            ],
+            "alert_emails": ["TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS"],
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [],
-            "kind": []
+            "kind": [],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'never')
-        self.assertEqual(hist.kind(), 'boolean')
+        self.assertEqual(hist.expiration(), "never")
+        self.assertEqual(hist.kind(), "boolean")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
@@ -157,9 +166,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
-                                   histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
@@ -181,9 +192,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
-                                   histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
@@ -191,20 +204,20 @@ class TestParser(unittest.TestCase):
         parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [],
-            "n_buckets": [
-                "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"
-            ],
+            "n_buckets": ["TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"],
             "expiry_default": [],
-            "kind": []
+            "kind": [],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'never')
-        self.assertEqual(hist.kind(), 'exponential')
+        self.assertEqual(hist.expiration(), "never")
+        self.assertEqual(hist.kind(), "exponential")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
         self.assertEqual(hist.low(), 1024)
@@ -228,9 +241,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT',
-                                   histograms['TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
@@ -239,19 +254,19 @@ class TestParser(unittest.TestCase):
             "alert_emails": [],
             "bug_numbers": [],
             "n_buckets": [],
-            "expiry_default": [
-                "TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT"
-            ],
-            "kind": []
+            "expiry_default": ["TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT"],
+            "kind": [],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'default')
-        self.assertEqual(hist.kind(), 'boolean')
+        self.assertEqual(hist.expiration(), "default")
+        self.assertEqual(hist.kind(), "boolean")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
@@ -273,10 +288,13 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        self.assertRaises(SystemExit, parse_histograms.Histogram,
-                          'TEST_HISTOGRAM_ALLOWLIST_KIND',
-                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
-                          strict_type_checks=True)
+        self.assertRaises(
+            SystemExit,
+            parse_histograms.Histogram,
+            "TEST_HISTOGRAM_ALLOWLIST_KIND",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_KIND"],
+            strict_type_checks=True,
+        )
 
         # Set global allowlists for parse_histograms.
         parse_histograms.allowlists = {
@@ -284,18 +302,18 @@ class TestParser(unittest.TestCase):
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [],
-            "kind": [
-                "TEST_HISTOGRAM_ALLOWLIST_KIND"
-            ]
+            "kind": ["TEST_HISTOGRAM_ALLOWLIST_KIND"],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_KIND',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_KIND",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_KIND"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'never')
-        self.assertEqual(hist.kind(), 'count')
+        self.assertEqual(hist.expiration(), "never")
+        self.assertEqual(hist.kind(), "count")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
@@ -316,10 +334,13 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        self.assertRaises(SystemExit, parse_histograms.Histogram,
-                          'TEST_HISTOGRAM_ALLOWLIST_KIND',
-                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
-                          strict_type_checks=True)
+        self.assertRaises(
+            SystemExit,
+            parse_histograms.Histogram,
+            "TEST_HISTOGRAM_ALLOWLIST_KIND",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_KIND"],
+            strict_type_checks=True,
+        )
 
         # Set global allowlists for parse_histograms.
         parse_histograms.allowlists = {
@@ -327,18 +348,18 @@ class TestParser(unittest.TestCase):
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [],
-            "kind": [
-                "TEST_HISTOGRAM_ALLOWLIST_KIND"
-            ]
+            "kind": ["TEST_HISTOGRAM_ALLOWLIST_KIND"],
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_KIND',
-                                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALLOWLIST_KIND",
+            histograms["TEST_HISTOGRAM_ALLOWLIST_KIND"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
-        self.assertEqual(hist.expiration(), 'never')
-        self.assertEqual(hist.kind(), 'flag')
+        self.assertEqual(hist.expiration(), "never")
+        self.assertEqual(hist.kind(), "flag")
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
@@ -360,9 +381,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        hist = parse_histograms.Histogram('TEST_VALID_HISTOGRAM',
-                                          histograms['TEST_VALID_HISTOGRAM'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_VALID_HISTOGRAM",
+            histograms["TEST_VALID_HISTOGRAM"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
         self.assertTrue(hist.expiration(), "never")
@@ -385,9 +408,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_EMPTY_MULTISTORE',
-                                   histograms['TEST_HISTOGRAM_EMPTY_MULTISTORE'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_EMPTY_MULTISTORE",
+            histograms["TEST_HISTOGRAM_EMPTY_MULTISTORE"],
+            strict_type_checks=True,
+        )
         self.assertRaises(SystemExit, ParserError.exit_func)
 
     def test_products_absent(self):
@@ -404,9 +429,13 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        def test_parse(): return parse_histograms.Histogram('TEST_NO_PRODUCTS',
-                                                            histograms['TEST_NO_PRODUCTS'],
-                                                            strict_type_checks=True)
+        def test_parse():
+            return parse_histograms.Histogram(
+                "TEST_NO_PRODUCTS",
+                histograms["TEST_NO_PRODUCTS"],
+                strict_type_checks=True,
+            )
+
         self.assertRaises(SystemExit, test_parse)
 
     def test_products_empty(self):
@@ -424,9 +453,13 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        def test_parse(): return parse_histograms.Histogram('TEST_EMPTY_PRODUCTS',
-                                                            histograms['TEST_EMPTY_PRODUCTS'],
-                                                            strict_type_checks=True)
+        def test_parse():
+            return parse_histograms.Histogram(
+                "TEST_EMPTY_PRODUCTS",
+                histograms["TEST_EMPTY_PRODUCTS"],
+                strict_type_checks=True,
+            )
+
         self.assertRaises(SystemExit, test_parse)
 
     def test_products_all(self):
@@ -444,9 +477,11 @@ class TestParser(unittest.TestCase):
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_ALL_PRODUCTS',
-                                   histograms['TEST_HISTOGRAM_ALL_PRODUCTS'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_ALL_PRODUCTS",
+            histograms["TEST_HISTOGRAM_ALL_PRODUCTS"],
+            strict_type_checks=True,
+        )
         self.assertRaises(SystemExit, ParserError.exit_func)
 
     def test_gv_streaming_unsupported_kind(self):
@@ -463,9 +498,11 @@ class TestParser(unittest.TestCase):
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
-        parse_histograms.Histogram('TEST_HISTOGRAM_GV_STREAMING',
-                                   histograms['TEST_HISTOGRAM_GV_STREAMING'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_GV_STREAMING",
+            histograms["TEST_HISTOGRAM_GV_STREAMING"],
+            strict_type_checks=True,
+        )
         self.assertRaises(SystemExit, ParserError.exit_func)
 
     def test_gv_streaming_keyed(self):
@@ -486,9 +523,11 @@ class TestParser(unittest.TestCase):
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
-        parse_histograms.Histogram('TEST_HISTOGRAM_GV_STREAMING',
-                                   histograms['TEST_HISTOGRAM_GV_STREAMING'],
-                                   strict_type_checks=True)
+        parse_histograms.Histogram(
+            "TEST_HISTOGRAM_GV_STREAMING",
+            histograms["TEST_HISTOGRAM_GV_STREAMING"],
+            strict_type_checks=True,
+        )
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
@@ -502,15 +541,17 @@ class TestParser(unittest.TestCase):
                 "kind": "enumerated",
                 "n_values": 100,
                 "products": ["firefox"],
-                "description": "Test histogram"
+                "description": "Test histogram",
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        hist = parse_histograms.Histogram('TEST_100_BUCKETS_HISTOGRAM',
-                                          histograms['TEST_100_BUCKETS_HISTOGRAM'],
-                                          strict_type_checks=True)
+        hist = parse_histograms.Histogram(
+            "TEST_100_BUCKETS_HISTOGRAM",
+            histograms["TEST_100_BUCKETS_HISTOGRAM"],
+            strict_type_checks=True,
+        )
 
         ParserError.exit_func()
         self.assertTrue(hist.expiration(), "never")
@@ -520,5 +561,5 @@ class TestParser(unittest.TestCase):
         self.assertTrue(hist.record_into_store, ["main"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

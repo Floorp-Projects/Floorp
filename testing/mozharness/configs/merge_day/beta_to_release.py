@@ -12,23 +12,17 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ('build/defines.sh',
-         'EARLY_BETA_OR_EARLIER=1',
-         'EARLY_BETA_OR_EARLIER='),
+        ("build/defines.sh", "EARLY_BETA_OR_EARLIER=1", "EARLY_BETA_OR_EARLIER="),
     ],
-
-    "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
+    "vcs_share_base": os.path.join(ABS_WORK_DIR, "hg-shared"),
     # "hg_share_base": None,
     "from_repo_url": "https://hg.mozilla.org/releases/mozilla-beta",
     "to_repo_url": "https://hg.mozilla.org/releases/mozilla-release",
-
     "base_tag": "FIREFOX_RELEASE_%(major_version)s_BASE",
     "end_tag": "FIREFOX_RELEASE_%(major_version)s_END",
-
     "migration_behavior": "beta_to_release",
     "require_remove_locales": False,
     "pull_all_branches": True,
-
     "virtualenv_modules": [
         "requests==2.8.1",
     ],

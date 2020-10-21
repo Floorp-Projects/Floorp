@@ -1,2 +1,2 @@
-with Files('**'):
-    BUG_COMPONENT = ('Another', 'Component')
+with Files("**"):
+    BUG_COMPONENT = ("Another", "Component")

@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 
 class VersionError(Exception):
-
     def __init__(self, message):
         Exception.__init__(self, message)
 
@@ -22,7 +21,7 @@ class LocalAppNotFoundError(AppNotFoundError):
     """Exception for local application not found"""
 
     def __init__(self, path):
-        AppNotFoundError.__init__(self, 'Application not found at: %s' % path)
+        AppNotFoundError.__init__(self, "Application not found at: %s" % path)
 
 
 class RemoteAppNotFoundError(AppNotFoundError):

@@ -4,25 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Messaging System')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Messaging System")
 
 BROWSER_CHROME_MANIFESTS += [
-    'schemas/SpecialMessageActionSchemas/test/browser/browser.ini',
-    'schemas/TriggerActionSchemas/test/browser/browser.ini',
-    'test/browser/browser.ini',
+    "schemas/SpecialMessageActionSchemas/test/browser/browser.ini",
+    "schemas/TriggerActionSchemas/test/browser/browser.ini",
+    "test/browser/browser.ini",
 ]
 
-SPHINX_TREES['docs'] = 'schemas'
+SPHINX_TREES["docs"] = "schemas"
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-XPCSHELL_TESTS_MANIFESTS += ['targeting/test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["targeting/test/unit/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
-    'schemas/NimbusExperiment.schema.json',
-    'schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json',
-    'schemas/TriggerActionSchemas/TriggerActionSchemas.json',
-    'test/MSTestUtils.jsm',
+    "schemas/NimbusExperiment.schema.json",
+    "schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json",
+    "schemas/TriggerActionSchemas/TriggerActionSchemas.json",
+    "test/MSTestUtils.jsm",
 ]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]

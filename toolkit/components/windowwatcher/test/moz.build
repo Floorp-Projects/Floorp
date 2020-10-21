@@ -5,14 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    'browser.ini',
+    "browser.ini",
 ]
 
 MOCHITEST_MANIFESTS += [
-    'mochitest.ini',
+    "mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    'chrome.ini',
+    "chrome.ini",
 ]
-

@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Temporarily disabled. See bug 1256495.
-#test_certificates = (
+# test_certificates = (
 #    'ca.pem',
 #    'embeddedNull.pem',
 #    'embeddedNullCNAndSAN.pem',
 #    'embeddedNullSAN.pem',
 #    'embeddedNullSAN2.pem',
-#)
+# )
 #
-#for test_certificate in test_certificates:
+# for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)

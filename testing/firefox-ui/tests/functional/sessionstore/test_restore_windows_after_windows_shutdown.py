@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 import sys
 import os
+
 sys.path.append(os.path.dirname(__file__))
 
 from session_store_test_case import SessionStoreTestCase
@@ -24,9 +25,7 @@ from session_store_test_case import SessionStoreTestCase
 
 class TestWindowsShutdown(SessionStoreTestCase):
     def setUp(self):
-        super(TestWindowsShutdown, self).setUp(
-                startup_page=3,
-                no_auto_updates=False)
+        super(TestWindowsShutdown, self).setUp(startup_page=3, no_auto_updates=False)
 
     def test_with_variety(self):
         """Test session restore selected by user."""
@@ -36,9 +35,8 @@ class TestWindowsShutdown(SessionStoreTestCase):
 class TestWindowsShutdownRegisterRestart(SessionStoreTestCase):
     def setUp(self):
         super(TestWindowsShutdownRegisterRestart, self).setUp(
-                startup_page=3,
-                no_auto_updates=False,
-                win_register_restart=True)
+            startup_page=3, no_auto_updates=False, win_register_restart=True
+        )
 
     def test_manual_restart(self):
         """Test that restore tabs works in case of register restart failure."""
@@ -47,8 +45,7 @@ class TestWindowsShutdownRegisterRestart(SessionStoreTestCase):
 
 class TestWindowsShutdownNormal(SessionStoreTestCase):
     def setUp(self):
-        super(TestWindowsShutdownNormal, self).setUp(
-                no_auto_updates=False)
+        super(TestWindowsShutdownNormal, self).setUp(no_auto_updates=False)
 
     def test_with_variety(self):
         """Test that windows are not restored on a normal restart."""
@@ -58,8 +55,8 @@ class TestWindowsShutdownNormal(SessionStoreTestCase):
 class TestWindowsShutdownForcedSessionRestore(SessionStoreTestCase):
     def setUp(self):
         super(TestWindowsShutdownForcedSessionRestore, self).setUp(
-                no_auto_updates=False,
-                win_register_restart=True)
+            no_auto_updates=False, win_register_restart=True
+        )
 
     def test_os_restart(self):
         """Test that register application restart restores the session."""

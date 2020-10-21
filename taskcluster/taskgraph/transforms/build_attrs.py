@@ -18,18 +18,20 @@ def set_build_attributes(config, jobs):
     appropriately for that purpose.
     """
     for job in jobs:
-        build_platform, build_type = job['name'].split('/')
+        build_platform, build_type = job["name"].split("/")
 
         # pgo builds are represented as a different platform, type opt
-        if build_type == 'pgo':
-            build_platform = build_platform + '-pgo'
-            build_type = 'opt'
+        if build_type == "pgo":
+            build_platform = build_platform + "-pgo"
+            build_type = "opt"
 
-        attributes = job.setdefault('attributes', {})
-        attributes.update({
-            'build_platform': build_platform,
-            'build_type': build_type,
-        })
+        attributes = job.setdefault("attributes", {})
+        attributes.update(
+            {
+                "build_platform": build_platform,
+                "build_type": build_type,
+            }
+        )
 
         yield job
 
@@ -39,11 +41,10 @@ def set_schedules_optimization(config, jobs):
     """Set the `skip-unless-affected` optimization based on the build platform."""
     for job in jobs:
         # don't add skip-unless-schedules if there's already a when defined
-        if 'when' in job:
+        if "when" in job:
             yield job
             continue
 
-        build_platform = job['attributes']['build_platform']
-        job.setdefault('optimization',
-                       {'build': [platform_family(build_platform)]})
+        build_platform = job["attributes"]["build_platform"]
+        job.setdefault("optimization", {"build": [platform_family(build_platform)]})
         yield job

@@ -29,19 +29,23 @@ def inline(doc, mime="text/html;charset=utf-8"):
     return "data:{0},{1}".format(mime, quote(doc))
 
 
-box = inline("<body><div id='box'><p id='green' style='width: 50px; height: 50px; "
-             "background: silver;'></p></div></body>")
+box = inline(
+    "<body><div id='box'><p id='green' style='width: 50px; height: 50px; "
+    "background: silver;'></p></div></body>"
+)
 input = inline("<body><input id='text-input'></input></body>")
 long = inline("<body style='height: 300vh'><p style='margin-top: 100vh'>foo</p></body>")
 short = inline("<body style='height: 10vh'></body>")
-svg = inline("""
+svg = inline(
+    """
     <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20">
       <rect height="20" width="20"/>
-    </svg>""", mime="image/svg+xml")
+    </svg>""",
+    mime="image/svg+xml",
+)
 
 
 class ScreenCaptureTestCase(MarionetteTestCase):
-
     def setUp(self):
         super(ScreenCaptureTestCase, self).setUp()
 
@@ -56,9 +60,11 @@ class ScreenCaptureTestCase(MarionetteTestCase):
     @property
     def device_pixel_ratio(self):
         if self._device_pixel_ratio is None:
-            self._device_pixel_ratio = self.marionette.execute_script("""
+            self._device_pixel_ratio = self.marionette.execute_script(
+                """
                 return window.devicePixelRatio
-                """)
+                """
+            )
         return self._device_pixel_ratio
 
     @property
@@ -71,12 +77,14 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
     @property
     def viewport_dimensions(self):
-        return self.marionette.execute_script("return [window.innerWidth, window.innerHeight];")
+        return self.marionette.execute_script(
+            "return [window.innerWidth, window.innerHeight];"
+        )
 
     def assert_png(self, screenshot):
         """Test that screenshot is a Base64 encoded PNG file."""
         if six.PY3 and not isinstance(screenshot, bytes):
-            screenshot = bytes(screenshot, encoding='utf-8')
+            screenshot = bytes(screenshot, encoding="utf-8")
         image = base64.decodestring(screenshot)
         self.assertEqual(imghdr.what("", image), "png")
 
@@ -86,10 +94,10 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
         screenshot_default = self.marionette.screenshot(element=element)
         if six.PY3 and not isinstance(screenshot_default, bytes):
-            screenshot_default = bytes(screenshot_default, encoding='utf-8')
+            screenshot_default = bytes(screenshot_default, encoding="utf-8")
         screenshot_image = self.marionette.screenshot(element=element, format="base64")
         if six.PY3 and not isinstance(screenshot_image, bytes):
-            screenshot_image = bytes(screenshot_image, encoding='utf-8')
+            screenshot_image = bytes(screenshot_image, encoding="utf-8")
         binary1 = self.marionette.screenshot(element=element, format="binary")
         binary2 = self.marionette.screenshot(element=element, format="binary")
         hash1 = self.marionette.screenshot(element=element, format="hash")
@@ -117,19 +125,20 @@ class ScreenCaptureTestCase(MarionetteTestCase):
 
     def get_image_dimensions(self, screenshot):
         if six.PY3 and not isinstance(screenshot, bytes):
-            screenshot = bytes(screenshot, encoding='utf-8')
+            screenshot = bytes(screenshot, encoding="utf-8")
         self.assert_png(screenshot)
         image = base64.decodestring(screenshot)
         width, height = struct.unpack(">LL", image[16:24])
         return int(width), int(height)
 
     def scale(self, rect):
-        return (int(rect[0] * self.device_pixel_ratio),
-                int(rect[1] * self.device_pixel_ratio))
+        return (
+            int(rect[0] * self.device_pixel_ratio),
+            int(rect[1] * self.device_pixel_ratio),
+        )
 
 
 class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
-
     def setUp(self):
         super(TestScreenCaptureChrome, self).setUp()
         self.marionette.set_context("chrome")
@@ -140,11 +149,15 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
 
     @property
     def window_dimensions(self):
-        return tuple(self.marionette.execute_script("""
+        return tuple(
+            self.marionette.execute_script(
+                """
             let el = document.documentElement;
             let rect = el.getBoundingClientRect();
             return [rect.width, rect.height];
-            """))
+            """
+            )
+        )
 
     def open_dialog(self):
         return self.open_chrome_window("chrome://marionette/content/test_dialog.xhtml")
@@ -163,8 +176,10 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         # Ensure we only capture the element
         el = self.marionette.find_element(By.ID, "test-list")
         screenshot_element = self.marionette.screenshot(element=el)
-        self.assertEqual(self.scale(self.get_element_dimensions(el)),
-                         self.get_image_dimensions(screenshot_element))
+        self.assertEqual(
+            self.scale(self.get_element_dimensions(el)),
+            self.get_image_dimensions(screenshot_element),
+        )
 
         # Ensure we do not capture the full window
         screenshot_dialog = self.marionette.screenshot()
@@ -216,7 +231,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
 
 
 class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
-
     def setUp(self):
         super(TestScreenCaptureContent, self).setUp()
         self.marionette.set_context("content")
@@ -227,12 +241,16 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
 
     @property
     def scroll_dimensions(self):
-        return tuple(self.marionette.execute_script("""
+        return tuple(
+            self.marionette.execute_script(
+                """
             return [
               document.documentElement.scrollWidth,
               document.documentElement.scrollHeight
             ];
-            """))
+            """
+            )
+        )
 
     def test_capture_tab_already_closed(self):
         new_tab = self.open_tab()
@@ -257,7 +275,8 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
     @unittest.skipIf(mozinfo.info["bits"] == 32, "Bug 1582973 - Risk for OOM on 32bit")
     def test_capture_area_bounds(self):
         self.marionette.navigate(
-            inline("<body style='margin-right: 21747px; margin-top: 21747px'>foo"))
+            inline("<body style='margin-right: 21747px; margin-top: 21747px'>foo")
+        )
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
 
@@ -266,8 +285,10 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         el = self.marionette.find_element(By.TAG_NAME, "div")
         screenshot = self.marionette.screenshot(element=el)
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.get_element_dimensions(el)),
-                         self.get_image_dimensions(screenshot))
+        self.assertEqual(
+            self.scale(self.get_element_dimensions(el)),
+            self.get_image_dimensions(screenshot),
+        )
 
     @skip("Bug 1213875")
     def test_capture_element_scrolled_into_view(self):
@@ -275,23 +296,27 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         el = self.marionette.find_element(By.TAG_NAME, "p")
         screenshot = self.marionette.screenshot(element=el)
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.get_element_dimensions(el)),
-                         self.get_image_dimensions(screenshot))
+        self.assertEqual(
+            self.scale(self.get_element_dimensions(el)),
+            self.get_image_dimensions(screenshot),
+        )
         self.assertGreater(self.page_y_offset, 0)
 
     def test_capture_full_html_document_element(self):
         self.marionette.navigate(long)
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.scroll_dimensions),
-                         self.get_image_dimensions(screenshot))
+        self.assertEqual(
+            self.scale(self.scroll_dimensions), self.get_image_dimensions(screenshot)
+        )
 
     def test_capture_full_svg_document_element(self):
         self.marionette.navigate(svg)
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.scroll_dimensions),
-                         self.get_image_dimensions(screenshot))
+        self.assertEqual(
+            self.scale(self.scroll_dimensions), self.get_image_dimensions(screenshot)
+        )
 
     def test_capture_viewport(self):
         url = self.marionette.absolute_url("clicks.html")
@@ -299,15 +324,17 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.navigate(url)
         screenshot = self.marionette.screenshot(full=False)
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.viewport_dimensions),
-                         self.get_image_dimensions(screenshot))
+        self.assertEqual(
+            self.scale(self.viewport_dimensions), self.get_image_dimensions(screenshot)
+        )
 
     def test_capture_viewport_after_scroll(self):
         self.marionette.navigate(long)
         before = self.marionette.screenshot()
         el = self.marionette.find_element(By.TAG_NAME, "p")
         self.marionette.execute_script(
-            "arguments[0].scrollIntoView()", script_args=[el])
+            "arguments[0].scrollIntoView()", script_args=[el]
+        )
         after = self.marionette.screenshot(full=False)
         self.assertNotEqual(before, after)
         self.assertGreater(self.page_y_offset, 0)
@@ -325,7 +352,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
 
     def test_save_screenshot(self):
         expected = self.marionette.screenshot(format="binary")
-        with tempfile.TemporaryFile('w+b') as fh:
+        with tempfile.TemporaryFile("w+b") as fh:
             self.marionette.save_screenshot(fh)
             fh.flush()
             fh.seek(0)

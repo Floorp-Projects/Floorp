@@ -4,8 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('util.configure')
-include('checks.configure')
+include("util.configure")
+include("checks.configure")
 
 # Make `toolkit` available when toolkit/moz.configure is not included.
 toolkit = dependable(None)
@@ -13,24 +13,23 @@ toolkit = dependable(None)
 # build/moz.configure/bindgen.configure is not included.
 bindgen_config_paths = dependable(None)
 
-option(env='DIST', nargs=1, help='DIST directory')
+option(env="DIST", nargs=1, help="DIST directory")
 
 
 # Do not allow objdir == srcdir builds.
 # ==============================================================
-@depends('--help', 'DIST')
-@imports(_from='__builtin__', _import='open')
-@imports(_from='os.path', _import='exists')
-@imports(_from='six', _import='ensure_text')
+@depends("--help", "DIST")
+@imports(_from="__builtin__", _import="open")
+@imports(_from="os.path", _import="exists")
+@imports(_from="six", _import="ensure_text")
 def check_build_environment(help, dist):
-    topobjdir = os.path.realpath('.')
-    topsrcdir = os.path.realpath(
-        os.path.join(os.path.dirname(__file__), '..', '..'))
+    topobjdir = os.path.realpath(".")
+    topsrcdir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
     if dist:
         dist = normsep(dist[0])
     else:
-        dist = os.path.join(topobjdir, 'dist')
+        dist = os.path.join(topobjdir, "dist")
 
     result = namespace(
         topsrcdir=topsrcdir,
@@ -50,87 +49,86 @@ def check_build_environment(help, dist):
     # backend will make this limitation go away. But there is likely a long tail
     # of things that will need fixing due to e.g. lack of proper path quoting.
     if len(topsrcdir.split()) > 1:
-        die('Source directory cannot be located in a path with spaces: %s' %
-            topsrcdir)
+        die("Source directory cannot be located in a path with spaces: %s" % topsrcdir)
     if len(topobjdir.split()) > 1:
-        die('Object directory cannot be located in a path with spaces: %s' %
-            topobjdir)
+        die("Object directory cannot be located in a path with spaces: %s" % topobjdir)
 
     if topsrcdir == topobjdir:
-        die('  ***\n'
-            '  * Building directly in the main source directory is not allowed.\n'
-            '  *\n'
-            '  * To build, you must run configure from a separate directory\n'
-            '  * (referred to as an object directory).\n'
-            '  *\n'
-            '  * If you are building with a mozconfig, you will need to change your\n'
-            '  * mozconfig to point to a different object directory.\n'
-            '  ***'
-            )
+        die(
+            "  ***\n"
+            "  * Building directly in the main source directory is not allowed.\n"
+            "  *\n"
+            "  * To build, you must run configure from a separate directory\n"
+            "  * (referred to as an object directory).\n"
+            "  *\n"
+            "  * If you are building with a mozconfig, you will need to change your\n"
+            "  * mozconfig to point to a different object directory.\n"
+            "  ***"
+        )
 
     # Check for CRLF line endings.
-    with open(os.path.join(topsrcdir, 'configure.py'), 'r') as fh:
+    with open(os.path.join(topsrcdir, "configure.py"), "r") as fh:
         data = ensure_text(fh.read())
-        if '\r' in data:
-            die('\n ***\n'
-                ' * The source tree appears to have Windows-style line endings.\n'
-                ' *\n'
-                ' * If using Git, Git is likely configured to use Windows-style\n'
-                ' * line endings.\n'
-                ' *\n'
-                ' * To convert the working copy to UNIX-style line endings, run\n'
-                ' * the following:\n'
-                ' *\n'
-                ' * $ git config core.autocrlf false\n'
-                ' * $ git config core.eof lf\n'
-                ' * $ git rm --cached -r .\n'
-                ' * $ git reset --hard\n'
-                ' *\n'
-                ' * If not using Git, the tool you used to obtain the source\n'
-                ' * code likely converted files to Windows line endings. See\n'
-                ' * usage information for that tool for more.\n'
-                ' ***')
+        if "\r" in data:
+            die(
+                "\n ***\n"
+                " * The source tree appears to have Windows-style line endings.\n"
+                " *\n"
+                " * If using Git, Git is likely configured to use Windows-style\n"
+                " * line endings.\n"
+                " *\n"
+                " * To convert the working copy to UNIX-style line endings, run\n"
+                " * the following:\n"
+                " *\n"
+                " * $ git config core.autocrlf false\n"
+                " * $ git config core.eof lf\n"
+                " * $ git rm --cached -r .\n"
+                " * $ git reset --hard\n"
+                " *\n"
+                " * If not using Git, the tool you used to obtain the source\n"
+                " * code likely converted files to Windows line endings. See\n"
+                " * usage information for that tool for more.\n"
+                " ***"
+            )
 
     # Check for a couple representative files in the source tree
     conflict_files = [
-        '*         %s' % f for f in ('Makefile', 'config/autoconf.mk')
+        "*         %s" % f
+        for f in ("Makefile", "config/autoconf.mk")
         if exists(os.path.join(topsrcdir, f))
     ]
     if conflict_files:
-        die('  ***\n'
-            '  *   Your source tree contains these files:\n'
-            '  %s\n'
-            '  *   This indicates that you previously built in the source tree.\n'
-            '  *   A source tree build can confuse the separate objdir build.\n'
-            '  *\n'
-            '  *   To clean up the source tree:\n'
-            '  *     1. cd %s\n'
-            '  *     2. gmake distclean\n'
-            '  ***'
-            % ('\n  '.join(conflict_files), topsrcdir)
-            )
+        die(
+            "  ***\n"
+            "  *   Your source tree contains these files:\n"
+            "  %s\n"
+            "  *   This indicates that you previously built in the source tree.\n"
+            "  *   A source tree build can confuse the separate objdir build.\n"
+            "  *\n"
+            "  *   To clean up the source tree:\n"
+            "  *     1. cd %s\n"
+            "  *     2. gmake distclean\n"
+            "  ***" % ("\n  ".join(conflict_files), topsrcdir)
+        )
 
     return result
 
 
-set_config('TOPSRCDIR', check_build_environment.topsrcdir)
-set_config('TOPOBJDIR', check_build_environment.topobjdir)
-set_config('DIST', check_build_environment.dist)
+set_config("TOPSRCDIR", check_build_environment.topsrcdir)
+set_config("TOPOBJDIR", check_build_environment.topobjdir)
+set_config("DIST", check_build_environment.dist)
 
-add_old_configure_assignment(
-    '_topsrcdir', check_build_environment.topsrcdir)
-add_old_configure_assignment(
-    '_objdir', check_build_environment.topobjdir)
-add_old_configure_assignment(
-    'DIST', check_build_environment.dist)
+add_old_configure_assignment("_topsrcdir", check_build_environment.topsrcdir)
+add_old_configure_assignment("_objdir", check_build_environment.topobjdir)
+add_old_configure_assignment("DIST", check_build_environment.dist)
 
-option(env='MOZ_AUTOMATION', help='Enable options for automated builds')
-set_config('MOZ_AUTOMATION', depends_if('MOZ_AUTOMATION')(lambda x: True))
+option(env="MOZ_AUTOMATION", help="Enable options for automated builds")
+set_config("MOZ_AUTOMATION", depends_if("MOZ_AUTOMATION")(lambda x: True))
 
 
-option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
+option(env="OLD_CONFIGURE", nargs=1, help="Path to the old configure script")
 
-option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
+option(env="MOZCONFIG", nargs=1, help="Mozconfig location")
 
 
 # Read user mozconfig
@@ -140,13 +138,12 @@ option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 # be called when --help is passed, and the mozconfig wouldn't be read.
 
 
-@depends('MOZCONFIG', 'OLD_CONFIGURE', check_build_environment,
-         '--help')
-@imports(_from='mozbuild.mozconfig', _import='MozconfigLoader')
-@imports(_from='mozboot.mozconfig', _import='find_mozconfig')
+@depends("MOZCONFIG", "OLD_CONFIGURE", check_build_environment, "--help")
+@imports(_from="mozbuild.mozconfig", _import="MozconfigLoader")
+@imports(_from="mozboot.mozconfig", _import="find_mozconfig")
 def mozconfig(mozconfig, old_configure, build_env, help):
     if not old_configure and not help:
-        die('The OLD_CONFIGURE environment variable must be set')
+        die("The OLD_CONFIGURE environment variable must be set")
 
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
@@ -164,52 +161,53 @@ def mozconfig(mozconfig, old_configure, build_env, help):
     # OLD_CONFIGURE path, which points to js/src/old-configure.
     # I expect we'll have figured things out for mozconfigs well before
     # old-configure dies.
-    if old_configure and os.path.dirname(os.path.abspath(old_configure[0])).endswith('/js/src'):
-        return {'path': None}
+    if old_configure and os.path.dirname(os.path.abspath(old_configure[0])).endswith(
+        "/js/src"
+    ):
+        return {"path": None}
 
     topsrcdir = build_env.topsrcdir
     loader = MozconfigLoader(topsrcdir)
     mozconfig = mozconfig[0] if mozconfig else None
-    mozconfig = find_mozconfig(topsrcdir, env={'MOZCONFIG': mozconfig})
+    mozconfig = find_mozconfig(topsrcdir, env={"MOZCONFIG": mozconfig})
     mozconfig = loader.read_mozconfig(mozconfig)
 
     return mozconfig
 
 
-set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
+set_config("MOZCONFIG", depends(mozconfig)(lambda m: m["path"]))
 
 
 # Mozilla-Build
 # ==============================================================
-option(env='MOZILLABUILD', nargs=1,
-       help='Path to Mozilla Build (Windows-only)')
+option(env="MOZILLABUILD", nargs=1, help="Path to Mozilla Build (Windows-only)")
 
-option(env='CONFIG_SHELL', nargs=1, help='Path to a POSIX shell')
+option(env="CONFIG_SHELL", nargs=1, help="Path to a POSIX shell")
 
 # It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
 # but the end goal being that the configure script would go away...
 
 
-@depends('CONFIG_SHELL', 'MOZILLABUILD')
-@checking('for a shell')
-@imports('sys')
+@depends("CONFIG_SHELL", "MOZILLABUILD")
+@checking("for a shell")
+@imports("sys")
 def shell(value, mozillabuild):
     if value:
         return find_program(value[0])
-    shell = 'sh'
+    shell = "sh"
     if mozillabuild:
-        shell = mozillabuild[0] + '/msys/bin/sh'
-    if sys.platform == 'win32':
-        shell = shell + '.exe'
+        shell = mozillabuild[0] + "/msys/bin/sh"
+    if sys.platform == "win32":
+        shell = shell + ".exe"
     return find_program(shell)
 
 
 # This defines a reasonable shell for when running with --help.
 # If one was passed in the environment, though, fall back to that.
-@depends('--help', 'CONFIG_SHELL')
+@depends("--help", "CONFIG_SHELL")
 def help_shell(help, shell):
     if help and not shell:
-        return 'sh'
+        return "sh"
 
 
 shell = help_shell | shell
@@ -218,25 +216,28 @@ shell = help_shell | shell
 # Python 3
 # ========
 
-option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.6 or later)')
+option(env="PYTHON3", nargs=1, help="Python 3 interpreter (3.6 or later)")
 
-option(env='VIRTUALENV_NAME', nargs=1, default='init_py3',
-       help='Name of the in-objdir virtualenv')
+option(
+    env="VIRTUALENV_NAME",
+    nargs=1,
+    default="init_py3",
+    help="Name of the in-objdir virtualenv",
+)
 
 
-@depends('PYTHON3', 'VIRTUALENV_NAME', check_build_environment, mozconfig,
-         '--help')
-@imports(_from='__builtin__', _import='Exception')
-@imports('os')
-@imports('sys')
-@imports('subprocess')
-@imports('distutils.sysconfig')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
-@imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
-@imports(_from='mozbuild.pythonutil', _import='python_executable_version')
-@imports(_from='six', _import='ensure_text')
+@depends("PYTHON3", "VIRTUALENV_NAME", check_build_environment, mozconfig, "--help")
+@imports(_from="__builtin__", _import="Exception")
+@imports("os")
+@imports("sys")
+@imports("subprocess")
+@imports("distutils.sysconfig")
+@imports(_from="mozbuild.configure.util", _import="LineIO")
+@imports(_from="mozbuild.virtualenv", _import="VirtualenvManager")
+@imports(_from="mozbuild.virtualenv", _import="verify_python_version")
+@imports(_from="mozbuild.pythonutil", _import="find_python3_executable")
+@imports(_from="mozbuild.pythonutil", _import="python_executable_version")
+@imports(_from="six", _import="ensure_text")
 def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     # Avoid re-executing python when running configure --help.
     if help:
@@ -261,15 +262,15 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     # Ideally we'd rely on the mozconfig injection from mozconfig_options,
     # but we'd rather avoid the verbosity when we need to reexecute with
     # a different python.
-    if mozconfig['path']:
-        if 'PYTHON3' in mozconfig['env']['added']:
-            python = mozconfig['env']['added']['PYTHON3']
-        elif 'PYTHON3' in mozconfig['env']['modified']:
-            python = mozconfig['env']['modified']['PYTHON3'][1]
-        elif 'PYTHON3' in mozconfig['vars']['added']:
-            python = mozconfig['vars']['added']['PYTHON3']
-        elif 'PYTHON3' in mozconfig['vars']['modified']:
-            python = mozconfig['vars']['modified']['PYTHON3'][1]
+    if mozconfig["path"]:
+        if "PYTHON3" in mozconfig["env"]["added"]:
+            python = mozconfig["env"]["added"]["PYTHON3"]
+        elif "PYTHON3" in mozconfig["env"]["modified"]:
+            python = mozconfig["env"]["modified"]["PYTHON3"][1]
+        elif "PYTHON3" in mozconfig["vars"]["added"]:
+            python = mozconfig["vars"]["added"]["PYTHON3"]
+        elif "PYTHON3" in mozconfig["vars"]["modified"]:
+            python = mozconfig["vars"]["modified"]["PYTHON3"][1]
 
     log.debug("python3: executable from configuration: %r" % python)
 
@@ -284,25 +285,27 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     # See mozilla-central changeset d2cce982a7c809815d86d5daecefe2e7a563ecca
     # Bug 784841
     topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
-    if topobjdir.endswith('/js/src'):
+    if topobjdir.endswith("/js/src"):
         topobjdir = topobjdir[:-7]
 
-    virtualenvs_root = os.path.join(topobjdir, '_virtualenvs')
-    with LineIO(lambda l: log.info(l), 'replace') as out:
+    virtualenvs_root = os.path.join(topobjdir, "_virtualenvs")
+    with LineIO(lambda l: log.info(l), "replace") as out:
         manager = VirtualenvManager(
             topsrcdir,
-            os.path.join(virtualenvs_root, virtualenv_name), out,
-            os.path.join(topsrcdir, 'build', 'build_virtualenv_packages.txt'))
+            os.path.join(virtualenvs_root, virtualenv_name),
+            out,
+            os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+        )
 
     # If we're not in the virtualenv, we need to update the path to include some
     # necessary modules for find_program.
-    if 'MOZBUILD_VIRTUALENV' in os.environ:
+    if "MOZBUILD_VIRTUALENV" in os.environ:
         python = sys.executable
     else:
+        sys.path.insert(0, os.path.join(topsrcdir, "testing", "mozbase", "mozfile"))
         sys.path.insert(
-            0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
-        sys.path.insert(
-            0, os.path.join(topsrcdir, 'third_party', 'python', 'backports'))
+            0, os.path.join(topsrcdir, "third_party", "python", "backports")
+        )
 
     # If we know the Python executable the caller is asking for then verify its
     # version. If the caller did not ask for a specific executable then find
@@ -310,37 +313,44 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     if python:
         found_python = find_program(python)
         if not found_python:
-            die('The PYTHON3 environment variable does not contain '
-                'a valid path. Cannot find %s', python)
+            die(
+                "The PYTHON3 environment variable does not contain "
+                "a valid path. Cannot find %s",
+                python,
+            )
         python = found_python
         try:
             version = python_executable_version(python).version
         except Exception as e:
-            raise FatalCheckError('could not determine version of PYTHON3 '
-                                  '(%s): %s' % (python, e))
+            raise FatalCheckError(
+                "could not determine version of PYTHON3 " "(%s): %s" % (python, e)
+            )
     else:
         # Fall back to the search routine.
-        python, version = find_python3_executable(min_version='3.6.0')
+        python, version = find_python3_executable(min_version="3.6.0")
 
         # The API returns a bytes whereas everything in configure is unicode.
         if python:
             python = ensure_text(python)
 
     if not python:
-        raise FatalCheckError('Python 3.6 or newer is required to build. '
-                              'Ensure a `python3.x` executable is in your '
-                              'PATH or define PYTHON3 to point to a Python '
-                              '3.6 executable.')
+        raise FatalCheckError(
+            "Python 3.6 or newer is required to build. "
+            "Ensure a `python3.x` executable is in your "
+            "PATH or define PYTHON3 to point to a Python "
+            "3.6 executable."
+        )
 
     if version < (3, 6, 0):
-        raise FatalCheckError('Python 3.6 or newer is required to build; '
-                              '%s is Python %d.%d' % (python, version[0],
-                                                      version[1]))
+        raise FatalCheckError(
+            "Python 3.6 or newer is required to build; "
+            "%s is Python %d.%d" % (python, version[0], version[1])
+        )
 
     log.debug("python3: found executable: %r" % python)
 
     if not manager.up_to_date(python):
-        log.info('Creating Python 3 environment')
+        log.info("Creating Python 3 environment")
         manager.build(python)
     else:
         log.debug("python3: venv is up to date")
@@ -348,33 +358,35 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
     python = normsep(manager.python_path)
 
     if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
-        log.debug("python3: executing as %s, should be running as %s" % (
-            sys.executable, manager.python_path))
-        log.info('Re-executing in the virtualenv')
+        log.debug(
+            "python3: executing as %s, should be running as %s"
+            % (sys.executable, manager.python_path)
+        )
+        log.info("Re-executing in the virtualenv")
         if env_python:
-            del os.environ['PYTHON3']
+            del os.environ["PYTHON3"]
         # Homebrew on macOS will change Python's sys.executable to a custom
         # value which messes with mach's virtualenv handling code. Override
         # Homebrew's changes with the correct sys.executable value.
-        os.environ['PYTHONEXECUTABLE'] = python
+        os.environ["PYTHONEXECUTABLE"] = python
         # Another quirk on macOS, with the system python, the virtualenv is
         # not fully operational (missing entries in sys.path) if
         # __PYVENV_LAUNCHER__ is set.
-        os.environ.pop('__PYVENV_LAUNCHER__', None)
+        os.environ.pop("__PYVENV_LAUNCHER__", None)
         # One would prefer to use os.execl, but that's completely borked on
         # Windows.
         sys.exit(subprocess.call([python] + sys.argv))
 
     # We are now in the virtualenv
     if not distutils.sysconfig.get_python_lib():
-        die('Could not determine python site packages directory')
+        die("Could not determine python site packages directory")
 
     # We may have set PYTHONEXECUTABLE above, and that affects python
     # subprocesses we may invoke as part of configure (e.g. hg), so
     # unset it.
-    os.environ.pop('PYTHONEXECUTABLE', None)
+    os.environ.pop("PYTHONEXECUTABLE", None)
 
-    str_version = '.'.join(str(v) for v in version)
+    str_version = ".".join(str(v) for v in version)
 
     return namespace(
         path=python,
@@ -384,14 +396,14 @@ def virtualenv_python3(env_python, virtualenv_name, build_env, mozconfig, help):
 
 
 @depends(virtualenv_python3)
-@checking('for Python 3', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
+@checking("for Python 3", callback=lambda x: "%s (%s)" % (x.path, x.str_version))
 def virtualenv_python3(venv):
     return venv
 
 
-set_config('PYTHON3', virtualenv_python3.path)
-set_config('PYTHON3_VERSION', virtualenv_python3.str_version)
-add_old_configure_assignment('PYTHON3', virtualenv_python3.path)
+set_config("PYTHON3", virtualenv_python3.path)
+set_config("PYTHON3_VERSION", virtualenv_python3.str_version)
+add_old_configure_assignment("PYTHON3", virtualenv_python3.path)
 
 
 # Inject mozconfig options
@@ -402,61 +414,64 @@ add_old_configure_assignment('PYTHON3', virtualenv_python3.path)
 
 @template
 def early_options():
-    @depends('--help')
-    @imports('__sandbox__')
-    @imports(_from='six', _import='itervalues')
+    @depends("--help")
+    @imports("__sandbox__")
+    @imports(_from="six", _import="itervalues")
     def early_options(_):
         return set(
-            option.env
-            for option in itervalues(__sandbox__._options)
-            if option.env
+            option.env for option in itervalues(__sandbox__._options) if option.env
         )
+
     return early_options
 
 
 early_options = early_options()
 
 
-@depends(mozconfig, early_options, 'MOZ_AUTOMATION', '--help')
+@depends(mozconfig, early_options, "MOZ_AUTOMATION", "--help")
 # This gives access to the sandbox. Don't copy this blindly.
-@imports('__sandbox__')
-@imports('os')
-@imports('six')
+@imports("__sandbox__")
+@imports("os")
+@imports("six")
 def mozconfig_options(mozconfig, early_options, automation, help):
-    if mozconfig['path']:
-        if 'MOZ_AUTOMATION_MOZCONFIG' in mozconfig['env']['added']:
+    if mozconfig["path"]:
+        if "MOZ_AUTOMATION_MOZCONFIG" in mozconfig["env"]["added"]:
             if not automation:
-                log.error('%s directly or indirectly includes an in-tree '
-                          'mozconfig.', mozconfig['path'])
-                log.error('In-tree mozconfigs make strong assumptions about '
-                          'and are only meant to be used by Mozilla '
-                          'automation.')
+                log.error(
+                    "%s directly or indirectly includes an in-tree " "mozconfig.",
+                    mozconfig["path"],
+                )
+                log.error(
+                    "In-tree mozconfigs make strong assumptions about "
+                    "and are only meant to be used by Mozilla "
+                    "automation."
+                )
                 die("Please don't use them.")
         helper = __sandbox__._helper
-        log.info('Adding configure options from %s' % mozconfig['path'])
-        for arg in mozconfig['configure_args']:
-            log.info('  %s' % arg)
+        log.info("Adding configure options from %s" % mozconfig["path"])
+        for arg in mozconfig["configure_args"]:
+            log.info("  %s" % arg)
             # We could be using imply_option() here, but it has other
             # contraints that don't really apply to the command-line
             # emulation that mozconfig provides.
-            helper.add(arg, origin='mozconfig', args=helper._args)
+            helper.add(arg, origin="mozconfig", args=helper._args)
 
         def add(key, value):
             if key.isupper():
-                arg = '%s=%s' % (key, value)
-                log.info('  %s' % arg)
+                arg = "%s=%s" % (key, value)
+                log.info("  %s" % arg)
                 if key not in early_options:
-                    helper.add(arg, origin='mozconfig', args=helper._args)
+                    helper.add(arg, origin="mozconfig", args=helper._args)
 
-        for key, value in six.iteritems(mozconfig['env']['added']):
+        for key, value in six.iteritems(mozconfig["env"]["added"]):
             add(key, value)
             os.environ[key] = value
-        for key, (_, value) in six.iteritems(mozconfig['env']['modified']):
+        for key, (_, value) in six.iteritems(mozconfig["env"]["modified"]):
             add(key, value)
             os.environ[key] = value
-        for key, value in six.iteritems(mozconfig['vars']['added']):
+        for key, value in six.iteritems(mozconfig["vars"]["added"]):
             add(key, value)
-        for key, (_, value) in six.iteritems(mozconfig['vars']['modified']):
+        for key, (_, value) in six.iteritems(mozconfig["vars"]["modified"]):
             add(key, value)
 
 
@@ -464,51 +479,65 @@ def mozconfig_options(mozconfig, early_options, automation, help):
 # ================================================
 
 
-@depends(check_build_environment, 'MOZ_AUTOMATION', '--help')
-@checking('for vcs source checkout')
-@imports('os')
+@depends(check_build_environment, "MOZ_AUTOMATION", "--help")
+@checking("for vcs source checkout")
+@imports("os")
 def vcs_checkout_type(build_env, automation, help):
-    if os.path.exists(os.path.join(build_env.topsrcdir, '.hg')):
-        return 'hg'
-    elif os.path.exists(os.path.join(build_env.topsrcdir, '.git')):
-        return 'git'
+    if os.path.exists(os.path.join(build_env.topsrcdir, ".hg")):
+        return "hg"
+    elif os.path.exists(os.path.join(build_env.topsrcdir, ".git")):
+        return "git"
     elif automation and not help:
-        raise FatalCheckError('unable to resolve VCS type; must run '
-                              'from a source checkout when MOZ_AUTOMATION '
-                              'is set')
+        raise FatalCheckError(
+            "unable to resolve VCS type; must run "
+            "from a source checkout when MOZ_AUTOMATION "
+            "is set"
+        )
+
 
 # Resolve VCS binary for detected repository type.
 
 
 # TODO remove hg.exe once bug 1382940 addresses ambiguous executables case.
-hg = check_prog('HG', ('hg.exe', 'hg',), allow_missing=True,
-                when=depends(vcs_checkout_type)(lambda x: x == 'hg'))
-git = check_prog('GIT', ('git',), allow_missing=True,
-                 when=depends(vcs_checkout_type)(lambda x: x == 'git'))
+hg = check_prog(
+    "HG",
+    (
+        "hg.exe",
+        "hg",
+    ),
+    allow_missing=True,
+    when=depends(vcs_checkout_type)(lambda x: x == "hg"),
+)
+git = check_prog(
+    "GIT",
+    ("git",),
+    allow_missing=True,
+    when=depends(vcs_checkout_type)(lambda x: x == "git"),
+)
 
 
 @depends_if(hg)
-@checking('for Mercurial version')
-@imports('os')
-@imports('re')
+@checking("for Mercurial version")
+@imports("os")
+@imports("re")
 def hg_version(hg):
     # HGPLAIN in Mercurial 1.5+ forces stable output, regardless of set
     # locale or encoding.
     env = dict(os.environ)
-    env['HGPLAIN'] = '1'
+    env["HGPLAIN"] = "1"
 
-    out = check_cmd_output(hg, '--version', env=env)
+    out = check_cmd_output(hg, "--version", env=env)
 
-    match = re.search(r'Mercurial Distributed SCM \(version ([^\)]+)', out)
+    match = re.search(r"Mercurial Distributed SCM \(version ([^\)]+)", out)
 
     if not match:
-        raise FatalCheckError(
-            'unable to determine Mercurial version: %s' % out)
+        raise FatalCheckError("unable to determine Mercurial version: %s" % out)
 
     # The version string may be "unknown" for Mercurial run out of its own
     # source checkout or for bad builds. But LooseVersion handles it.
 
     return Version(match.group(1))
+
 
 # Resolve Mercurial config items so other checks have easy access.
 # Do NOT set this in the config because it may contain sensitive data
@@ -516,127 +545,133 @@ def hg_version(hg):
 
 
 @depends_all(check_build_environment, hg, hg_version)
-@imports('os')
+@imports("os")
 def hg_config(build_env, hg, version):
     env = dict(os.environ)
-    env['HGPLAIN'] = '1'
+    env["HGPLAIN"] = "1"
 
     # Warnings may get sent to stderr. But check_cmd_output() ignores
     # stderr if exit code is 0. And the command should always succeed if
     # `hg version` worked.
-    out = check_cmd_output(hg, 'config', env=env, cwd=build_env.topsrcdir)
+    out = check_cmd_output(hg, "config", env=env, cwd=build_env.topsrcdir)
 
     config = {}
 
     for line in out.strip().splitlines():
-        key, value = [s.strip() for s in line.split('=', 1)]
+        key, value = [s.strip() for s in line.split("=", 1)]
         config[key] = value
 
     return config
 
 
 @depends_if(git)
-@checking('for Git version')
-@imports('re')
+@checking("for Git version")
+@imports("re")
 def git_version(git):
-    out = check_cmd_output(git, '--version').rstrip()
+    out = check_cmd_output(git, "--version").rstrip()
 
-    match = re.search('git version (.*)$', out)
+    match = re.search("git version (.*)$", out)
 
     if not match:
-        raise FatalCheckError('unable to determine Git version: %s' % out)
+        raise FatalCheckError("unable to determine Git version: %s" % out)
 
     return Version(match.group(1))
+
 
 # Only set VCS_CHECKOUT_TYPE if we resolved the VCS binary.
 # Require resolved VCS info when running in automation so automation's
 # environment is more well-defined.
 
 
-@depends(vcs_checkout_type, hg_version, git_version, 'MOZ_AUTOMATION')
+@depends(vcs_checkout_type, hg_version, git_version, "MOZ_AUTOMATION")
 def exposed_vcs_checkout_type(vcs_checkout_type, hg, git, automation):
-    if vcs_checkout_type == 'hg':
+    if vcs_checkout_type == "hg":
         if hg:
-            return 'hg'
+            return "hg"
 
         if automation:
-            raise FatalCheckError('could not resolve Mercurial binary info')
+            raise FatalCheckError("could not resolve Mercurial binary info")
 
-    elif vcs_checkout_type == 'git':
+    elif vcs_checkout_type == "git":
         if git:
-            return 'git'
+            return "git"
 
         if automation:
-            raise FatalCheckError('could not resolve Git binary info')
+            raise FatalCheckError("could not resolve Git binary info")
     elif vcs_checkout_type:
-        raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
+        raise FatalCheckError("unhandled VCS type: %s" % vcs_checkout_type)
 
 
-set_config('VCS_CHECKOUT_TYPE', exposed_vcs_checkout_type)
+set_config("VCS_CHECKOUT_TYPE", exposed_vcs_checkout_type)
 
 # Obtain a Repository interface for the current VCS repository.
 
 
 @depends(check_build_environment, exposed_vcs_checkout_type, hg, git)
-@imports(_from='mozversioncontrol', _import='get_repository_object')
+@imports(_from="mozversioncontrol", _import="get_repository_object")
 def vcs_repository(build_env, vcs_checkout_type, hg, git):
-    if vcs_checkout_type == 'hg':
+    if vcs_checkout_type == "hg":
         return get_repository_object(build_env.topsrcdir, hg=hg)
-    elif vcs_checkout_type == 'git':
+    elif vcs_checkout_type == "git":
         return get_repository_object(build_env.topsrcdir, git=git)
     elif vcs_checkout_type:
-        raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
+        raise FatalCheckError("unhandled VCS type: %s" % vcs_checkout_type)
 
 
 @depends_if(vcs_repository)
-@checking('for sparse checkout')
+@checking("for sparse checkout")
 def vcs_sparse_checkout(repo):
     return repo.sparse_checkout_present()
 
 
-set_config('VCS_SPARSE_CHECKOUT', vcs_sparse_checkout)
+set_config("VCS_SPARSE_CHECKOUT", vcs_sparse_checkout)
 
 # The application/project to build
 # ==============================================================
-option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
-       help='Application to build. Same as --enable-project.')
+option(
+    "--enable-application",
+    nargs=1,
+    env="MOZ_BUILD_APP",
+    help="Application to build. Same as --enable-project.",
+)
 
 
-@depends('--enable-application')
+@depends("--enable-application")
 def application(app):
     if app:
         return app
 
 
-imply_option('--enable-project', application)
+imply_option("--enable-project", application)
 
 
 @depends(check_build_environment)
 def default_project(build_env):
-    if build_env.topobjdir.endswith('/js/src'):
-        return 'js'
-    return 'browser'
+    if build_env.topobjdir.endswith("/js/src"):
+        return "js"
+    return "browser"
 
 
-option('--enable-project', nargs=1, default=default_project,
-       help='Project to build')
+option("--enable-project", nargs=1, default=default_project, help="Project to build")
 
 
 # Host and target systems
 # ==============================================================
-option('--host', nargs=1, help='Define the system type performing the build')
+option("--host", nargs=1, help="Define the system type performing the build")
 
-option('--target', nargs=1,
-       help='Define the system type where the resulting executables will be '
-            'used')
+option(
+    "--target",
+    nargs=1,
+    help="Define the system type where the resulting executables will be " "used",
+)
 
 
-@imports(_from='mozbuild.configure.constants', _import='CPU')
-@imports(_from='mozbuild.configure.constants', _import='CPU_bitness')
-@imports(_from='mozbuild.configure.constants', _import='Endianness')
-@imports(_from='mozbuild.configure.constants', _import='Kernel')
-@imports(_from='mozbuild.configure.constants', _import='OS')
-@imports(_from='__builtin__', _import='ValueError')
+@imports(_from="mozbuild.configure.constants", _import="CPU")
+@imports(_from="mozbuild.configure.constants", _import="CPU_bitness")
+@imports(_from="mozbuild.configure.constants", _import="Endianness")
+@imports(_from="mozbuild.configure.constants", _import="Kernel")
+@imports(_from="mozbuild.configure.constants", _import="OS")
+@imports(_from="__builtin__", _import="ValueError")
 def split_triplet(triplet, allow_msvc=False):
     # The standard triplet is defined as
     #   CPU_TYPE-VENDOR-OPERATING_SYSTEM
@@ -646,8 +681,8 @@ def split_triplet(triplet, allow_msvc=False):
     # Additionally, some may omit "unknown" when the vendor
     # is not specified and emit
     #   CPU_TYPE-OPERATING_SYSTEM
-    vendor = 'unknown'
-    parts = triplet.split('-', 2)
+    vendor = "unknown"
+    parts = triplet.split("-", 2)
     if len(parts) == 3:
         cpu, vendor, os = parts
     elif len(parts) == 2:
@@ -664,101 +699,101 @@ def split_triplet(triplet, allow_msvc=False):
     # which can probably be improved/cleaned up because they are based on a
     # mix of uname and config.guess output, while we now only use the latter,
     # which presumably has a cleaner and leaner output. Let's refine later.
-    os = os.replace('/', '_')
-    if 'android' in os:
-        canonical_os = 'Android'
-        canonical_kernel = 'Linux'
-    elif os.startswith('linux'):
-        canonical_os = 'GNU'
-        canonical_kernel = 'Linux'
-    elif os.startswith('kfreebsd') and os.endswith('-gnu'):
-        canonical_os = 'GNU'
-        canonical_kernel = 'kFreeBSD'
-    elif os.startswith('gnu'):
-        canonical_os = canonical_kernel = 'GNU'
-    elif os.startswith('mingw') or (allow_msvc and os == 'windows-msvc'):
+    os = os.replace("/", "_")
+    if "android" in os:
+        canonical_os = "Android"
+        canonical_kernel = "Linux"
+    elif os.startswith("linux"):
+        canonical_os = "GNU"
+        canonical_kernel = "Linux"
+    elif os.startswith("kfreebsd") and os.endswith("-gnu"):
+        canonical_os = "GNU"
+        canonical_kernel = "kFreeBSD"
+    elif os.startswith("gnu"):
+        canonical_os = canonical_kernel = "GNU"
+    elif os.startswith("mingw") or (allow_msvc and os == "windows-msvc"):
         # windows-msvc is only opt-in for the caller of this function until
         # full support in bug 1617793.
-        canonical_os = canonical_kernel = 'WINNT'
-    elif os.startswith('darwin'):
-        canonical_kernel = 'Darwin'
-        canonical_os = 'OSX'
-    elif os.startswith('dragonfly'):
-        canonical_os = canonical_kernel = 'DragonFly'
-    elif os.startswith('freebsd'):
-        canonical_os = canonical_kernel = 'FreeBSD'
-    elif os.startswith('netbsd'):
-        canonical_os = canonical_kernel = 'NetBSD'
-    elif os.startswith('openbsd'):
-        canonical_os = canonical_kernel = 'OpenBSD'
-    elif os.startswith('solaris'):
-        canonical_os = canonical_kernel = 'SunOS'
+        canonical_os = canonical_kernel = "WINNT"
+    elif os.startswith("darwin"):
+        canonical_kernel = "Darwin"
+        canonical_os = "OSX"
+    elif os.startswith("dragonfly"):
+        canonical_os = canonical_kernel = "DragonFly"
+    elif os.startswith("freebsd"):
+        canonical_os = canonical_kernel = "FreeBSD"
+    elif os.startswith("netbsd"):
+        canonical_os = canonical_kernel = "NetBSD"
+    elif os.startswith("openbsd"):
+        canonical_os = canonical_kernel = "OpenBSD"
+    elif os.startswith("solaris"):
+        canonical_os = canonical_kernel = "SunOS"
     else:
-        raise ValueError('Unknown OS: %s' % os)
+        raise ValueError("Unknown OS: %s" % os)
 
     # The CPU granularity is probably not enough. Moving more things from
     # old-configure will tell us if we need more
-    if cpu.endswith('86') or (cpu.startswith('i') and '86' in cpu):
-        canonical_cpu = 'x86'
-        endianness = 'little'
-    elif cpu in ('x86_64', 'ia64'):
+    if cpu.endswith("86") or (cpu.startswith("i") and "86" in cpu):
+        canonical_cpu = "x86"
+        endianness = "little"
+    elif cpu in ("x86_64", "ia64"):
         canonical_cpu = cpu
-        endianness = 'little'
-    elif cpu in ('s390', 's390x'):
+        endianness = "little"
+    elif cpu in ("s390", "s390x"):
         canonical_cpu = cpu
-        endianness = 'big'
-    elif cpu in ('powerpc64', 'ppc64', 'powerpc64le', 'ppc64le'):
-        canonical_cpu = 'ppc64'
-        endianness = 'little' if 'le' in cpu else 'big'
-    elif cpu in ('powerpc', 'ppc', 'rs6000') or cpu.startswith('powerpc'):
-        canonical_cpu = 'ppc'
-        endianness = 'big'
-    elif cpu in ('Alpha', 'alpha', 'ALPHA'):
-        canonical_cpu = 'Alpha'
-        endianness = 'little'
-    elif cpu.startswith('hppa') or cpu == 'parisc':
-        canonical_cpu = 'hppa'
-        endianness = 'big'
-    elif cpu.startswith('sparc64') or cpu.startswith('sparcv9'):
-        canonical_cpu = 'sparc64'
-        endianness = 'big'
-    elif cpu.startswith('sparc') or cpu == 'sun4u':
-        canonical_cpu = 'sparc'
-        endianness = 'big'
-    elif cpu.startswith('arm'):
-        canonical_cpu = 'arm'
-        endianness = 'big' if cpu.startswith(('armeb', 'armbe')) else 'little'
-    elif cpu in ('m68k'):
-        canonical_cpu = 'm68k'
-        endianness = 'big'
-    elif cpu in ('mips', 'mipsel'):
-        canonical_cpu = 'mips32'
-        endianness = 'little' if 'el' in cpu else 'big'
-    elif cpu in ('mips64', 'mips64el'):
-        canonical_cpu = 'mips64'
-        endianness = 'little' if 'el' in cpu else 'big'
-    elif cpu.startswith('aarch64'):
-        canonical_cpu = 'aarch64'
-        endianness = 'little'
-    elif cpu in ('riscv64', 'riscv64gc'):
-        canonical_cpu = 'riscv64'
-        endianness = 'little'
-    elif cpu == 'sh4':
-        canonical_cpu = 'sh4'
-        endianness = 'little'
+        endianness = "big"
+    elif cpu in ("powerpc64", "ppc64", "powerpc64le", "ppc64le"):
+        canonical_cpu = "ppc64"
+        endianness = "little" if "le" in cpu else "big"
+    elif cpu in ("powerpc", "ppc", "rs6000") or cpu.startswith("powerpc"):
+        canonical_cpu = "ppc"
+        endianness = "big"
+    elif cpu in ("Alpha", "alpha", "ALPHA"):
+        canonical_cpu = "Alpha"
+        endianness = "little"
+    elif cpu.startswith("hppa") or cpu == "parisc":
+        canonical_cpu = "hppa"
+        endianness = "big"
+    elif cpu.startswith("sparc64") or cpu.startswith("sparcv9"):
+        canonical_cpu = "sparc64"
+        endianness = "big"
+    elif cpu.startswith("sparc") or cpu == "sun4u":
+        canonical_cpu = "sparc"
+        endianness = "big"
+    elif cpu.startswith("arm"):
+        canonical_cpu = "arm"
+        endianness = "big" if cpu.startswith(("armeb", "armbe")) else "little"
+    elif cpu in ("m68k"):
+        canonical_cpu = "m68k"
+        endianness = "big"
+    elif cpu in ("mips", "mipsel"):
+        canonical_cpu = "mips32"
+        endianness = "little" if "el" in cpu else "big"
+    elif cpu in ("mips64", "mips64el"):
+        canonical_cpu = "mips64"
+        endianness = "little" if "el" in cpu else "big"
+    elif cpu.startswith("aarch64"):
+        canonical_cpu = "aarch64"
+        endianness = "little"
+    elif cpu in ("riscv64", "riscv64gc"):
+        canonical_cpu = "riscv64"
+        endianness = "little"
+    elif cpu == "sh4":
+        canonical_cpu = "sh4"
+        endianness = "little"
     else:
-        raise ValueError('Unknown CPU type: %s' % cpu)
+        raise ValueError("Unknown CPU type: %s" % cpu)
 
     # Toolchains, most notably for cross compilation may use cpu-os
     # prefixes. We need to be more specific about the LLVM target on Mac
     # so cross-language LTO will work correctly.
 
-    if os.startswith('darwin'):
-        toolchain = '%s-apple-%s' % (cpu, os)
-    elif canonical_cpu == 'aarch64' and canonical_os == 'WINNT':
-        toolchain = 'aarch64-windows-msvc'
+    if os.startswith("darwin"):
+        toolchain = "%s-apple-%s" % (cpu, os)
+    elif canonical_cpu == "aarch64" and canonical_os == "WINNT":
+        toolchain = "aarch64-windows-msvc"
     else:
-        toolchain = '%s-%s' % (cpu, os)
+        toolchain = "%s-%s" % (cpu, os)
 
     return namespace(
         alias=triplet,
@@ -777,52 +812,53 @@ def split_triplet(triplet, allow_msvc=False):
 # This defines a fake target/host namespace for when running with --help
 # If either --host or --target is passed on the command line, then fall
 # back to the real deal.
-@depends('--help', '--host', '--target')
+@depends("--help", "--host", "--target")
 def help_host_target(help, host, target):
     if help and not host and not target:
         return namespace(
-            alias='unknown-unknown-unknown',
-            cpu='unknown',
-            bitness='unknown',
-            kernel='unknown',
-            os='unknown',
-            endianness='unknown',
-            raw_cpu='unknown',
-            raw_os='unknown',
-            toolchain='unknown-unknown',
+            alias="unknown-unknown-unknown",
+            cpu="unknown",
+            bitness="unknown",
+            kernel="unknown",
+            os="unknown",
+            endianness="unknown",
+            raw_cpu="unknown",
+            raw_os="unknown",
+            toolchain="unknown-unknown",
         )
 
 
 def config_sub(shell, triplet):
-    config_sub = os.path.join(os.path.dirname(__file__), '..',
-                              'autoconf', 'config.sub')
+    config_sub = os.path.join(os.path.dirname(__file__), "..", "autoconf", "config.sub")
     return check_cmd_output(shell, config_sub, triplet).strip()
 
 
-@depends('--host', shell)
-@checking('for host system type', lambda h: h.alias)
-@imports('os')
-@imports('sys')
-@imports(_from='__builtin__', _import='ValueError')
+@depends("--host", shell)
+@checking("for host system type", lambda h: h.alias)
+@imports("os")
+@imports("sys")
+@imports(_from="__builtin__", _import="ValueError")
 def real_host(value, shell):
-    if not value and sys.platform == 'win32':
-        arch = (os.environ.get('PROCESSOR_ARCHITEW6432') or
-                os.environ.get('PROCESSOR_ARCHITECTURE'))
-        if arch == 'AMD64':
-            return split_triplet('x86_64-pc-mingw32')
-        elif arch == 'x86':
-            return split_triplet('i686-pc-mingw32')
+    if not value and sys.platform == "win32":
+        arch = os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get(
+            "PROCESSOR_ARCHITECTURE"
+        )
+        if arch == "AMD64":
+            return split_triplet("x86_64-pc-mingw32")
+        elif arch == "x86":
+            return split_triplet("i686-pc-mingw32")
 
     if not value:
-        config_guess = os.path.join(os.path.dirname(__file__), '..',
-                                    'autoconf', 'config.guess')
+        config_guess = os.path.join(
+            os.path.dirname(__file__), "..", "autoconf", "config.guess"
+        )
 
         # Ensure that config.guess is determining the host triplet, not the target
         # triplet
         env = os.environ.copy()
-        env.pop('CC_FOR_BUILD', None)
-        env.pop('HOST_CC', None)
-        env.pop('CC', None)
+        env.pop("CC_FOR_BUILD", None)
+        env.pop("HOST_CC", None)
+        env.pop("CC", None)
 
         host = check_cmd_output(shell, config_guess, env=env).strip()
         try:
@@ -843,9 +879,9 @@ def real_host(value, shell):
 host = help_host_target | real_host
 
 
-@depends('--target', real_host, shell, '--enable-project', '--enable-application')
-@checking('for target system type', lambda t: t.alias)
-@imports(_from='__builtin__', _import='ValueError')
+@depends("--target", real_host, shell, "--enable-project", "--enable-application")
+@checking("for target system type", lambda t: t.alias)
+@imports(_from="__builtin__", _import="ValueError")
 def real_target(value, host, shell, project, application):
     # Because --enable-project is implied by --enable-application, and
     # implied options are not currently handled during --help, which is
@@ -858,26 +894,27 @@ def real_target(value, host, shell, project, application):
     elif project:
         project = project[0]
     if not value:
-        if project == 'mobile/android':
-            if host.raw_os == 'mingw32':
+        if project == "mobile/android":
+            if host.raw_os == "mingw32":
                 log.warning(
-                    'Building Firefox for Android on Windows is not fully '
-                    'supported. See https://bugzilla.mozilla.org/show_bug.cgi?'
-                    'id=1169873 for details.')
-            return split_triplet('arm-unknown-linux-androideabi')
+                    "Building Firefox for Android on Windows is not fully "
+                    "supported. See https://bugzilla.mozilla.org/show_bug.cgi?"
+                    "id=1169873 for details."
+                )
+            return split_triplet("arm-unknown-linux-androideabi")
         return host
     # If --target was only given a cpu arch, expand it with the
     # non-cpu part of the host. For mobile/android, expand it with
     # unknown-linux-android.
     target = value[0]
-    if '-' not in target:
-        if project == 'mobile/android':
-            rest = 'unknown-linux-android'
-            if target.startswith('arm'):
-                rest += 'eabi'
+    if "-" not in target:
+        if project == "mobile/android":
+            rest = "unknown-linux-android"
+            if target.startswith("arm"):
+                rest += "eabi"
         else:
-            cpu, rest = host.alias.split('-', 1)
-        target = '-'.join((target, rest))
+            cpu, rest = host.alias.split("-", 1)
+        target = "-".join((target, rest))
         try:
             return split_triplet(target)
         except ValueError:
@@ -893,14 +930,14 @@ target = help_host_target | real_target
 
 
 @depends(host, target)
-@checking('whether cross compiling')
+@checking("whether cross compiling")
 def cross_compiling(host, target):
     return host != target
 
 
-set_config('CROSS_COMPILE', cross_compiling)
-set_define('CROSS_COMPILE', cross_compiling)
-add_old_configure_assignment('CROSS_COMPILE', cross_compiling)
+set_config("CROSS_COMPILE", cross_compiling)
+set_define("CROSS_COMPILE", cross_compiling)
+add_old_configure_assignment("CROSS_COMPILE", cross_compiling)
 
 
 @depends(target)
@@ -909,43 +946,42 @@ def have_64_bit(target):
         return True
 
 
-set_config('HAVE_64BIT_BUILD', have_64_bit)
-set_define('HAVE_64BIT_BUILD', have_64_bit)
-add_old_configure_assignment('HAVE_64BIT_BUILD', have_64_bit)
+set_config("HAVE_64BIT_BUILD", have_64_bit)
+set_define("HAVE_64BIT_BUILD", have_64_bit)
+add_old_configure_assignment("HAVE_64BIT_BUILD", have_64_bit)
 
 
 @depends(host)
 def host_os_kernel_major_version(host):
-    versions = host.raw_os.split('.')
-    version = ''.join(x for x in versions[0] if x.isdigit())
+    versions = host.raw_os.split(".")
+    version = "".join(x for x in versions[0] if x.isdigit())
     return version
 
 
-set_config('HOST_MAJOR_VERSION', host_os_kernel_major_version)
+set_config("HOST_MAJOR_VERSION", host_os_kernel_major_version)
 
 # Autoconf needs these set
 
 
 @depends(host)
 def host_for_sub_configure(host):
-    return '--host=%s' % host.alias
+    return "--host=%s" % host.alias
 
 
 @depends(target)
 def target_for_sub_configure(target):
     target_alias = target.alias
-    return '--target=%s' % target_alias
+    return "--target=%s" % target_alias
 
 
 # These variables are for compatibility with the current moz.builds and
 # old-configure. Eventually, we'll want to canonicalize better.
 @depends(target)
 def target_variables(target):
-    if target.kernel == 'kFreeBSD':
-        os_target = 'GNU/kFreeBSD'
-        os_arch = 'GNU_kFreeBSD'
-    elif target.kernel == 'Darwin' or (target.kernel == 'Linux' and
-                                       target.os == 'GNU'):
+    if target.kernel == "kFreeBSD":
+        os_target = "GNU/kFreeBSD"
+        os_arch = "GNU_kFreeBSD"
+    elif target.kernel == "Darwin" or (target.kernel == "Linux" and target.os == "GNU"):
         os_target = target.kernel
         os_arch = target.kernel
     else:
@@ -955,28 +991,26 @@ def target_variables(target):
     return namespace(
         OS_TARGET=os_target,
         OS_ARCH=os_arch,
-        INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
+        INTEL_ARCHITECTURE=target.cpu in ("x86", "x86_64") or None,
     )
 
 
-set_config('OS_TARGET', target_variables.OS_TARGET)
-add_old_configure_assignment('OS_TARGET',
-                             target_variables.OS_TARGET)
-set_config('OS_ARCH', target_variables.OS_ARCH)
-add_old_configure_assignment('OS_ARCH',
-                             target_variables.OS_ARCH)
-set_config('CPU_ARCH', target.cpu)
-add_old_configure_assignment('CPU_ARCH', target.cpu)
-set_config('INTEL_ARCHITECTURE', target_variables.INTEL_ARCHITECTURE)
-set_config('TARGET_CPU', target.raw_cpu)
-set_config('TARGET_OS', target.raw_os)
-set_config('TARGET_ENDIANNESS', target.endianness)
+set_config("OS_TARGET", target_variables.OS_TARGET)
+add_old_configure_assignment("OS_TARGET", target_variables.OS_TARGET)
+set_config("OS_ARCH", target_variables.OS_ARCH)
+add_old_configure_assignment("OS_ARCH", target_variables.OS_ARCH)
+set_config("CPU_ARCH", target.cpu)
+add_old_configure_assignment("CPU_ARCH", target.cpu)
+set_config("INTEL_ARCHITECTURE", target_variables.INTEL_ARCHITECTURE)
+set_config("TARGET_CPU", target.raw_cpu)
+set_config("TARGET_OS", target.raw_os)
+set_config("TARGET_ENDIANNESS", target.endianness)
 
 
 @depends(host)
 def host_variables(host):
-    if host.kernel == 'kFreeBSD':
-        os_arch = 'GNU_kFreeBSD'
+    if host.kernel == "kFreeBSD":
+        os_arch = "GNU_kFreeBSD"
     else:
         os_arch = host.kernel
     return namespace(
@@ -984,193 +1018,200 @@ def host_variables(host):
     )
 
 
-set_config('HOST_CPU_ARCH', host.cpu)
-set_config('HOST_OS_ARCH', host_variables.HOST_OS_ARCH)
-add_old_configure_assignment('HOST_OS_ARCH',
-                             host_variables.HOST_OS_ARCH)
+set_config("HOST_CPU_ARCH", host.cpu)
+set_config("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
+add_old_configure_assignment("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
 
 
 @depends(target)
 def target_is_windows(target):
-    if target.kernel == 'WINNT':
+    if target.kernel == "WINNT":
         return True
 
 
-set_define('_WINDOWS', target_is_windows)
-set_define('WIN32', target_is_windows)
-set_define('XP_WIN', target_is_windows)
+set_define("_WINDOWS", target_is_windows)
+set_define("WIN32", target_is_windows)
+set_define("XP_WIN", target_is_windows)
 
 
 @depends(target)
 def target_is_unix(target):
-    if target.kernel != 'WINNT':
+    if target.kernel != "WINNT":
         return True
 
 
-set_define('XP_UNIX', target_is_unix)
+set_define("XP_UNIX", target_is_unix)
 
 
 @depends(target)
 def target_is_darwin(target):
-    if target.kernel == 'Darwin':
+    if target.kernel == "Darwin":
         return True
 
 
-set_define('XP_DARWIN', target_is_darwin)
+set_define("XP_DARWIN", target_is_darwin)
 
 
 @depends(target)
 def target_is_osx(target):
-    if target.kernel == 'Darwin' and target.os == 'OSX':
+    if target.kernel == "Darwin" and target.os == "OSX":
         return True
 
 
-set_define('XP_MACOSX', target_is_osx)
+set_define("XP_MACOSX", target_is_osx)
 
 
 @depends(target)
 def target_is_linux(target):
-    if target.kernel == 'Linux':
+    if target.kernel == "Linux":
         return True
 
 
-set_define('XP_LINUX', target_is_linux)
+set_define("XP_LINUX", target_is_linux)
 
 
 @depends(target)
 def target_is_android(target):
-    if target.os == 'Android':
+    if target.os == "Android":
         return True
 
 
-set_define('ANDROID', target_is_android)
+set_define("ANDROID", target_is_android)
 
 
 @depends(target)
 def target_is_openbsd(target):
-    if target.kernel == 'OpenBSD':
+    if target.kernel == "OpenBSD":
         return True
 
 
-set_define('XP_OPENBSD', target_is_openbsd)
+set_define("XP_OPENBSD", target_is_openbsd)
+
 
 @depends(target)
 def target_is_netbsd(target):
-    if target.kernel == 'NetBSD':
+    if target.kernel == "NetBSD":
         return True
 
 
-set_define('XP_NETBSD', target_is_netbsd)
+set_define("XP_NETBSD", target_is_netbsd)
+
 
 @depends(target)
 def target_is_freebsd(target):
-    if target.kernel == 'FreeBSD':
+    if target.kernel == "FreeBSD":
         return True
 
 
-set_define('XP_FREEBSD', target_is_freebsd)
+set_define("XP_FREEBSD", target_is_freebsd)
+
 
 @depends(target)
 def target_is_solaris(target):
-    if target.kernel == 'SunOS':
+    if target.kernel == "SunOS":
         return True
 
 
-set_define('XP_SOLARIS', target_is_solaris)
+set_define("XP_SOLARIS", target_is_solaris)
 
 
 @depends(target)
 def target_is_sparc(target):
-    if target.cpu == 'sparc64':
+    if target.cpu == "sparc64":
         return True
 
-set_define('SPARC64', target_is_sparc)
+
+set_define("SPARC64", target_is_sparc)
 
 
-@depends('--enable-project', check_build_environment, '--help')
-@imports(_from='os.path', _import='exists')
+@depends("--enable-project", check_build_environment, "--help")
+@imports(_from="os.path", _import="exists")
 def include_project_configure(project, build_env, help):
     if not project:
-        die('--enable-project is required.')
+        die("--enable-project is required.")
 
     base_dir = build_env.topsrcdir
-    path = os.path.join(base_dir, project[0], 'moz.configure')
+    path = os.path.join(base_dir, project[0], "moz.configure")
     if not exists(path):
-        die('Cannot find project %s', project[0])
+        die("Cannot find project %s", project[0])
     return path
 
 
 @depends(include_project_configure, check_build_environment)
 def build_project(include_project_configure, build_env):
-    ret = os.path.dirname(os.path.relpath(include_project_configure,
-                                          build_env.topsrcdir))
+    ret = os.path.dirname(
+        os.path.relpath(include_project_configure, build_env.topsrcdir)
+    )
     return ret
 
 
-set_config('MOZ_BUILD_APP', build_project)
-set_define('MOZ_BUILD_APP', build_project)
-add_old_configure_assignment('MOZ_BUILD_APP', build_project)
+set_config("MOZ_BUILD_APP", build_project)
+set_define("MOZ_BUILD_APP", build_project)
+add_old_configure_assignment("MOZ_BUILD_APP", build_project)
 
 
-option(env='MOZILLA_OFFICIAL',
-       help='Build an official release')
+option(env="MOZILLA_OFFICIAL", help="Build an official release")
 
 
-@depends('MOZILLA_OFFICIAL')
+@depends("MOZILLA_OFFICIAL")
 def mozilla_official(official):
     if official:
         return True
 
 
-set_config('MOZILLA_OFFICIAL', mozilla_official)
-set_define('MOZILLA_OFFICIAL', mozilla_official)
-add_old_configure_assignment('MOZILLA_OFFICIAL', mozilla_official)
+set_config("MOZILLA_OFFICIAL", mozilla_official)
+set_define("MOZILLA_OFFICIAL", mozilla_official)
+add_old_configure_assignment("MOZILLA_OFFICIAL", mozilla_official)
 
 
 # Allow specifying custom paths to the version files used by the milestone() function below.
-option('--with-version-file-path',
-       nargs=1,
-       help='Specify a custom path to app version files instead of auto-detecting',
-       default=None)
+option(
+    "--with-version-file-path",
+    nargs=1,
+    help="Specify a custom path to app version files instead of auto-detecting",
+    default=None,
+)
 
-@depends('--with-version-file-path')
+
+@depends("--with-version-file-path")
 def version_path(path):
     return path
+
 
 # set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
-@depends(check_build_environment, build_project, version_path, '--help')
-@imports(_from='__builtin__', _import='open')
-@imports('os')
-@imports('re')
+@depends(check_build_environment, build_project, version_path, "--help")
+@imports(_from="__builtin__", _import="open")
+@imports("os")
+@imports("re")
 def milestone(build_env, build_project, version_path, _):
     versions = []
-    paths = ['config/milestone.txt']
-    if build_project == 'js':
+    paths = ["config/milestone.txt"]
+    if build_project == "js":
         paths = paths * 3
     else:
         paths += [
-            'browser/config/version.txt',
-            'browser/config/version_display.txt',
+            "browser/config/version.txt",
+            "browser/config/version_display.txt",
         ]
     if version_path:
         version_path = version_path[0]
     else:
-        version_path = os.path.join(build_project, 'config')
-    for f in ('version.txt', 'version_display.txt'):
+        version_path = os.path.join(build_project, "config")
+    for f in ("version.txt", "version_display.txt"):
         f = os.path.join(version_path, f)
         if not os.path.exists(os.path.join(build_env.topsrcdir, f)):
             break
         paths.append(f)
 
     for p in paths:
-        with open(os.path.join(build_env.topsrcdir, p), 'r') as fh:
+        with open(os.path.join(build_env.topsrcdir, p), "r") as fh:
             content = fh.read().splitlines()
             if not content:
-                die('Could not find a version number in {}'.format(p))
+                die("Could not find a version number in {}".format(p))
             versions.append(content[-1])
 
     milestone, firefox_version, firefox_version_display = versions[:3]
@@ -1185,26 +1226,28 @@ def milestone(build_env, build_project, version_path, _):
 
     is_nightly = is_release_or_beta = is_early_beta_or_earlier = None
 
-    if 'a1' in milestone:
+    if "a1" in milestone:
         is_nightly = True
-    elif 'a' not in milestone:
+    elif "a" not in milestone:
         is_release_or_beta = True
 
-    major_version = milestone.split('.')[0]
+    major_version = milestone.split(".")[0]
     m = re.search(r"([ab]\d+)", milestone)
-    ab_patch = m.group(1) if m else ''
+    ab_patch = m.group(1) if m else ""
 
-    defines = os.path.join(build_env.topsrcdir, 'build', 'defines.sh')
-    with open(defines, 'r') as fh:
+    defines = os.path.join(build_env.topsrcdir, "build", "defines.sh")
+    with open(defines, "r") as fh:
         for line in fh.read().splitlines():
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
-            name, _, value = line.partition('=')
+            name, _, value = line.partition("=")
             name = name.strip()
             value = value.strip()
-            if name != 'EARLY_BETA_OR_EARLIER':
-                die('Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh')
+            if name != "EARLY_BETA_OR_EARLIER":
+                die(
+                    "Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh"
+                )
             if value:
                 is_early_beta_or_earlier = True
 
@@ -1213,39 +1256,41 @@ def milestone(build_env, build_project, version_path, _):
     #
     # Only expose major milestone and alpha version in the symbolversion
     # string; as the name suggests, we use it for symbol versioning on Linux.
-    return namespace(version=milestone,
-                     uaversion='%s.0' % major_version,
-                     symbolversion='%s%s' % (major_version, ab_patch),
-                     is_nightly=is_nightly,
-                     is_release_or_beta=is_release_or_beta,
-                     is_early_beta_or_earlier=is_early_beta_or_earlier,
-                     app_version=app_version,
-                     app_version_display=app_version_display)
+    return namespace(
+        version=milestone,
+        uaversion="%s.0" % major_version,
+        symbolversion="%s%s" % (major_version, ab_patch),
+        is_nightly=is_nightly,
+        is_release_or_beta=is_release_or_beta,
+        is_early_beta_or_earlier=is_early_beta_or_earlier,
+        app_version=app_version,
+        app_version_display=app_version_display,
+    )
 
 
-set_config('GRE_MILESTONE', milestone.version)
-set_config('NIGHTLY_BUILD', milestone.is_nightly)
-set_define('NIGHTLY_BUILD', milestone.is_nightly)
-set_config('RELEASE_OR_BETA', milestone.is_release_or_beta)
-set_define('RELEASE_OR_BETA', milestone.is_release_or_beta)
-add_old_configure_assignment('RELEASE_OR_BETA',
-                             milestone.is_release_or_beta)
-set_config('EARLY_BETA_OR_EARLIER', milestone.is_early_beta_or_earlier)
-set_define('EARLY_BETA_OR_EARLIER', milestone.is_early_beta_or_earlier)
-add_old_configure_assignment('EARLY_BETA_OR_EARLIER',
-                             milestone.is_early_beta_or_earlier)
-set_define('MOZILLA_VERSION', depends(milestone)(lambda m: '"%s"' % m.version))
-set_config('MOZILLA_VERSION', milestone.version)
-set_define('MOZILLA_VERSION_U', milestone.version)
-set_define('MOZILLA_UAVERSION', depends(milestone)(lambda m: '"%s"' % m.uaversion))
-set_config('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
+set_config("GRE_MILESTONE", milestone.version)
+set_config("NIGHTLY_BUILD", milestone.is_nightly)
+set_define("NIGHTLY_BUILD", milestone.is_nightly)
+set_config("RELEASE_OR_BETA", milestone.is_release_or_beta)
+set_define("RELEASE_OR_BETA", milestone.is_release_or_beta)
+add_old_configure_assignment("RELEASE_OR_BETA", milestone.is_release_or_beta)
+set_config("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
+set_define("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
+add_old_configure_assignment(
+    "EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier
+)
+set_define("MOZILLA_VERSION", depends(milestone)(lambda m: '"%s"' % m.version))
+set_config("MOZILLA_VERSION", milestone.version)
+set_define("MOZILLA_VERSION_U", milestone.version)
+set_define("MOZILLA_UAVERSION", depends(milestone)(lambda m: '"%s"' % m.uaversion))
+set_config("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
 # JS configure still wants to look at these.
-add_old_configure_assignment('MOZILLA_VERSION', milestone.version)
-add_old_configure_assignment('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
+add_old_configure_assignment("MOZILLA_VERSION", milestone.version)
+add_old_configure_assignment("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
 
-set_config('MOZ_APP_VERSION', milestone.app_version)
-set_config('MOZ_APP_VERSION_DISPLAY', milestone.app_version_display)
-add_old_configure_assignment('MOZ_APP_VERSION', milestone.app_version)
+set_config("MOZ_APP_VERSION", milestone.app_version)
+set_config("MOZ_APP_VERSION_DISPLAY", milestone.app_version_display)
+add_old_configure_assignment("MOZ_APP_VERSION", milestone.app_version)
 
 
 # Dummy function for availability in toolkit/moz.configure. Overridden in
@@ -1258,35 +1303,40 @@ def fennec_nightly(is_nightly):
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific
 # moz.configure).
-option('--enable-update-channel',
-       nargs=1,
-       help='Select application update channel',
-       default='default')
+option(
+    "--enable-update-channel",
+    nargs=1,
+    help="Select application update channel",
+    default="default",
+)
 
 
-@depends('--enable-update-channel')
+@depends("--enable-update-channel")
 def update_channel(channel):
-    if not channel or channel[0] == '':
-        return 'default'
+    if not channel or channel[0] == "":
+        return "default"
     return channel[0].lower()
 
 
-set_config('MOZ_UPDATE_CHANNEL', update_channel)
-set_define('MOZ_UPDATE_CHANNEL', update_channel)
-add_old_configure_assignment('MOZ_UPDATE_CHANNEL', update_channel)
+set_config("MOZ_UPDATE_CHANNEL", update_channel)
+set_define("MOZ_UPDATE_CHANNEL", update_channel)
+add_old_configure_assignment("MOZ_UPDATE_CHANNEL", update_channel)
 
 
-option(env='MOZBUILD_STATE_PATH', nargs=1,
-       help='Path to a persistent state directory for the build system '
-            'and related tools')
+option(
+    env="MOZBUILD_STATE_PATH",
+    nargs=1,
+    help="Path to a persistent state directory for the build system "
+    "and related tools",
+)
 
 
-@depends('MOZBUILD_STATE_PATH', '--help')
-@imports('os')
+@depends("MOZBUILD_STATE_PATH", "--help")
+@imports("os")
 def mozbuild_state_path(path, _):
     if path:
         return path[0]
-    return os.path.expanduser(os.path.join('~', '.mozbuild'))
+    return os.path.expanduser(os.path.join("~", ".mozbuild"))
 
 
 # A template providing a shorthand for setting a variable. The created
@@ -1298,14 +1348,12 @@ def mozbuild_state_path(path, _):
 # add_old_configure_assignment. util.configure would be an appropriate place for
 # this, but it uses add_old_configure_assignment, which is defined in this file.
 @template
-def project_flag(env=None, set_for_old_configure=False,
-                 set_as_define=False, **kwargs):
+def project_flag(env=None, set_for_old_configure=False, set_as_define=False, **kwargs):
 
     if not env:
-        configure_error(
-            "A project_flag must be passed a variable name to set.")
+        configure_error("A project_flag must be passed a variable name to set.")
 
-    opt = option(env=env, possible_origins=('implied',), **kwargs)
+    opt = option(env=env, possible_origins=("implied",), **kwargs)
 
     @depends(opt.option)
     def option_implementation(value):
@@ -1320,29 +1368,41 @@ def project_flag(env=None, set_for_old_configure=False,
     if set_for_old_configure:
         add_old_configure_assignment(env, option_implementation)
 
+
 # milestone.is_nightly corresponds to cases NIGHTLY_BUILD is set.
+
 
 @depends(milestone)
 def enabled_in_nightly(milestone):
     return milestone.is_nightly
 
+
 # Branding
 # ==============================================================
-option('--with-app-basename', env='MOZ_APP_BASENAME', nargs=1,
-       help='Typically stays consistent for multiple branded versions of a '
-       'given application (e.g. Aurora and Firefox both use "Firefox"), but '
-       'may vary for full rebrandings (e.g. Iceweasel). Used for '
-       'application.ini\'s "Name" field, which controls profile location in '
-       'the absence of a "Profile" field (see below), and various system '
-       'integration hooks (Unix remoting, Windows MessageWindow name, etc.')
+option(
+    "--with-app-basename",
+    env="MOZ_APP_BASENAME",
+    nargs=1,
+    help="Typically stays consistent for multiple branded versions of a "
+    'given application (e.g. Aurora and Firefox both use "Firefox"), but '
+    "may vary for full rebrandings (e.g. Iceweasel). Used for "
+    'application.ini\'s "Name" field, which controls profile location in '
+    'the absence of a "Profile" field (see below), and various system '
+    "integration hooks (Unix remoting, Windows MessageWindow name, etc.",
+)
 
-@depends('--with-app-basename', target_is_android)
+
+@depends("--with-app-basename", target_is_android)
 def moz_app_basename(value, target_is_android):
     if value:
         return value[0]
     if target_is_android:
-        return 'Fennec'
-    return 'Firefox'
+        return "Fennec"
+    return "Firefox"
 
-set_config('MOZ_APP_BASENAME', moz_app_basename,
-           when=depends(build_project)(lambda p: p != 'js'))
+
+set_config(
+    "MOZ_APP_BASENAME",
+    moz_app_basename,
+    when=depends(build_project)(lambda p: p != "js"),
+)

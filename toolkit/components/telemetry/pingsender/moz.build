@@ -4,32 +4,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_TARGET'] != 'Android':
-    GeckoProgram('pingsender', linkage=None)
+if CONFIG["OS_TARGET"] != "Android":
+    GeckoProgram("pingsender", linkage=None)
 
     UNIFIED_SOURCES += [
-        'pingsender.cpp',
+        "pingsender.cpp",
     ]
 
     LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/google-breakpad/src',
+        "/toolkit/crashreporter/google-breakpad/src",
     ]
 
     USE_LIBS += [
-        'zlib',
+        "zlib",
     ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
-        'pingsender_win.cpp',
+        "pingsender_win.cpp",
     ]
 
     OS_LIBS += [
-        'wininet',
+        "wininet",
     ]
 else:
     UNIFIED_SOURCES += [
-        'pingsender_unix_common.cpp',
+        "pingsender_unix_common.cpp",
     ]
 
 

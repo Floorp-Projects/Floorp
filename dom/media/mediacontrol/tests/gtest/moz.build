@@ -5,25 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestAudioFocusManager.cpp',
-    'TestMediaController.cpp',
-    'TestMediaControlService.cpp',
-    'TestMediaKeysEvent.cpp',
+    "TestAudioFocusManager.cpp",
+    "TestMediaController.cpp",
+    "TestMediaControlService.cpp",
+    "TestMediaKeysEvent.cpp",
 ]
 
-if CONFIG['MOZ_APPLEMEDIA']:
-  UNIFIED_SOURCES += [
-    'TestMediaKeysEventMac.mm',
-    'TestMediaKeysEventMediaCenter.mm'
-  ]
+if CONFIG["MOZ_APPLEMEDIA"]:
+    UNIFIED_SOURCES += ["TestMediaKeysEventMac.mm", "TestMediaKeysEventMediaCenter.mm"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/dom/media/mediacontrol',
+    "/dom/media/mediacontrol",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

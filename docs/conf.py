@@ -61,7 +61,7 @@ js_source_path = [
     "../toolkit/components/featuregates",
     "../toolkit/mozapps/extensions",
     "../toolkit/components/prompts/src",
- ]
+]
 root_for_relative_js_paths = ".."
 jsdoc_config_path = "jsdoc.json"
 
@@ -69,7 +69,9 @@ templates_path = ["_templates"]
 source_suffix = [".rst", ".md"]
 master_doc = "index"
 project = "Firefox Source Docs"
-html_logo = os.path.join(topsrcdir, "browser/branding/nightly/content/firefox-wordmark.svg")
+html_logo = os.path.join(
+    topsrcdir, "browser/branding/nightly/content/firefox-wordmark.svg"
+)
 html_favicon = os.path.join(topsrcdir, "browser/branding/nightly/firefox.ico")
 
 exclude_patterns = ["_build", "_staging", "_venv"]

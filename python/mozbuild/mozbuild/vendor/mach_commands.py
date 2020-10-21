@@ -150,7 +150,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         "vendor",
         "python",
         description="Vendor Python packages from pypi.org into third_party/python. "
-                    "Some extra files like docs and tests will automatically be excluded.",
+        "Some extra files like docs and tests will automatically be excluded.",
     )
     @CommandArgument(
         "--with-windows-wheel",

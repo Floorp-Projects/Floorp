@@ -5,113 +5,115 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-m4 = check_prog('M4', ('m4',))
+m4 = check_prog("M4", ("m4",))
 
 
 @depends(mozconfig)
 def prepare_mozconfig(mozconfig):
-    if mozconfig['path']:
+    if mozconfig["path"]:
         items = {}
-        for key, value in mozconfig['vars']['added'].items():
-            items[key] = (value, 'added')
-        for key, (old, value) in mozconfig['vars']['modified'].items():
-            items[key] = (value, 'modified')
-        for t in ('env', 'vars'):
-            for key in mozconfig[t]['removed'].keys():
-                items[key] = (None, 'removed ' + t)
+        for key, value in mozconfig["vars"]["added"].items():
+            items[key] = (value, "added")
+        for key, (old, value) in mozconfig["vars"]["modified"].items():
+            items[key] = (value, "modified")
+        for t in ("env", "vars"):
+            for key in mozconfig[t]["removed"].keys():
+                items[key] = (None, "removed " + t)
         return items
 
 
-@depends('OLD_CONFIGURE', build_project)
+@depends("OLD_CONFIGURE", build_project)
 def old_configure(old_configure, build_project):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
     # directory.
     old_configure = os.path.abspath(old_configure[0])
-    if build_project == 'js':
+    if build_project == "js":
         old_configure_dir = os.path.dirname(old_configure)
-        if not old_configure_dir.endswith('/js/src'):
-            old_configure = os.path.join(old_configure_dir, 'js', 'src',
-                                         os.path.basename(old_configure))
+        if not old_configure_dir.endswith("/js/src"):
+            old_configure = os.path.join(
+                old_configure_dir, "js", "src", os.path.basename(old_configure)
+            )
     return old_configure
 
 
 @depends(prepare_mozconfig, old_configure_assignments)
-@imports(_from='__builtin__', _import='open')
-@imports(_from='__builtin__', _import='print')
-@imports(_from='__builtin__', _import='sorted')
-@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from="__builtin__", _import="open")
+@imports(_from="__builtin__", _import="print")
+@imports(_from="__builtin__", _import="sorted")
+@imports(_from="mozbuild.shellutil", _import="quote")
 def prepare_configure(mozconfig, old_configure_assignments):
-    with open('old-configure.vars', 'w') as out:
-        log.debug('Injecting the following to old-configure:')
+    with open("old-configure.vars", "w") as out:
+        log.debug("Injecting the following to old-configure:")
 
         def inject(command):
-            print(command, file=out) # noqa Python 2vs3
-            log.debug('| %s', command)
+            print(command, file=out)  # noqa Python 2vs3
+            log.debug("| %s", command)
 
         if mozconfig:
-            inject('# start of mozconfig values')
+            inject("# start of mozconfig values")
             for key, (value, action) in sorted(mozconfig.items()):
-                if action.startswith('removed '):
-                    inject("unset %s # from %s" % (
-                        key, action[len('removed '):]))
+                if action.startswith("removed "):
+                    inject("unset %s # from %s" % (key, action[len("removed ") :]))
                 else:
                     inject("%s=%s # %s" % (key, quote(value), action))
 
-            inject('# end of mozconfig values')
+            inject("# end of mozconfig values")
 
         for k, v in old_configure_assignments:
-            inject('%s=%s' % (k, quote(v)))
+            inject("%s=%s" % (k, quote(v)))
 
 
 @template
 def old_configure_options(*options):
     for opt in options:
-        option(opt, nargs='*', help='Help missing for old configure options')
+        option(opt, nargs="*", help="Help missing for old configure options")
 
     @dependable
     def all_options():
         return list(options)
 
-    return depends(host_for_sub_configure, target_for_sub_configure, all_options, *options)
+    return depends(
+        host_for_sub_configure, target_for_sub_configure, all_options, *options
+    )
 
 
 @old_configure_options(
-    '--cache-file',
-    '--datadir',
-    '--enable-crashreporter',
-    '--enable-dbus',
-    '--enable-debug-js-modules',
-    '--enable-dump-painting',
-    '--enable-extensions',
-    '--enable-libproxy',
-    '--enable-logrefcnt',
-    '--enable-necko-wifi',
-    '--enable-negotiateauth',
-    '--enable-official-branding',
-    '--enable-parental-controls',
-    '--enable-sandbox',
-    '--enable-system-cairo',
-    '--enable-system-extension-dirs',
-    '--enable-system-pixman',
-    '--enable-universalchardet',
-    '--enable-updater',
-    '--enable-xul',
-    '--enable-zipwriter',
-    '--includedir',
-    '--libdir',
-    '--prefix',
-    '--with-android-max-sdk',
-    '--with-android-min-sdk',
-    '--with-branding',
-    '--with-distribution-id',
-    '--with-macbundlename-prefix',
-    '--with-system-libevent',
-    '--with-system-png',
-    '--with-user-appdir',
-    '--x-includes',
-    '--x-libraries',
+    "--cache-file",
+    "--datadir",
+    "--enable-crashreporter",
+    "--enable-dbus",
+    "--enable-debug-js-modules",
+    "--enable-dump-painting",
+    "--enable-extensions",
+    "--enable-libproxy",
+    "--enable-logrefcnt",
+    "--enable-necko-wifi",
+    "--enable-negotiateauth",
+    "--enable-official-branding",
+    "--enable-parental-controls",
+    "--enable-sandbox",
+    "--enable-system-cairo",
+    "--enable-system-extension-dirs",
+    "--enable-system-pixman",
+    "--enable-universalchardet",
+    "--enable-updater",
+    "--enable-xul",
+    "--enable-zipwriter",
+    "--includedir",
+    "--libdir",
+    "--prefix",
+    "--with-android-max-sdk",
+    "--with-android-min-sdk",
+    "--with-branding",
+    "--with-distribution-id",
+    "--with-macbundlename-prefix",
+    "--with-system-libevent",
+    "--with-system-png",
+    "--with-user-appdir",
+    "--x-includes",
+    "--x-libraries",
 )
 def prepare_configure_options(host, target, all_options, *options):
     # old-configure only supports the options listed in @old_configure_options
@@ -120,7 +122,7 @@ def prepare_configure_options(host, target, all_options, *options):
     options = [
         value.format(name)
         for name, value in zip(all_options, options)
-        if value.origin != 'default'
+        if value.origin != "default"
     ] + [host, target]
 
     return namespace(options=options, all_options=all_options)
@@ -131,36 +133,57 @@ def old_configure_for(old_configure_path, extra_env=None):
     if extra_env is None:
         extra_env = dependable(None)
 
-    @depends(prepare_configure, prepare_configure_options, altered_path, extra_env,
-             check_build_environment, old_configure_path, 'MOZILLABUILD', awk, m4, shell)
-    @imports(_from='__builtin__', _import='compile')
-    @imports(_from='__builtin__', _import='open')
-    @imports(_from='__builtin__', _import='OSError')
-    @imports('glob')
-    @imports('itertools')
-    @imports('logging')
-    @imports('os')
-    @imports('subprocess')
-    @imports('sys')
-    @imports(_from='mozbuild.shellutil', _import='quote')
-    @imports(_from='mozbuild.shellutil', _import='split')
-    @imports(_from='tempfile', _import='NamedTemporaryFile')
-    @imports(_from='subprocess', _import='CalledProcessError')
-    @imports(_from='six', _import='exec_')
-    @imports(_from='six', _import='iteritems')
-    @imports(_from='six', _import='string_types')
-    def old_configure(prepare_configure, prepare_configure_options, altered_path, extra_env,
-                      build_env, old_configure, mozillabuild, awk, m4, shell):
+    @depends(
+        prepare_configure,
+        prepare_configure_options,
+        altered_path,
+        extra_env,
+        check_build_environment,
+        old_configure_path,
+        "MOZILLABUILD",
+        awk,
+        m4,
+        shell,
+    )
+    @imports(_from="__builtin__", _import="compile")
+    @imports(_from="__builtin__", _import="open")
+    @imports(_from="__builtin__", _import="OSError")
+    @imports("glob")
+    @imports("itertools")
+    @imports("logging")
+    @imports("os")
+    @imports("subprocess")
+    @imports("sys")
+    @imports(_from="mozbuild.shellutil", _import="quote")
+    @imports(_from="mozbuild.shellutil", _import="split")
+    @imports(_from="tempfile", _import="NamedTemporaryFile")
+    @imports(_from="subprocess", _import="CalledProcessError")
+    @imports(_from="six", _import="exec_")
+    @imports(_from="six", _import="iteritems")
+    @imports(_from="six", _import="string_types")
+    def old_configure(
+        prepare_configure,
+        prepare_configure_options,
+        altered_path,
+        extra_env,
+        build_env,
+        old_configure,
+        mozillabuild,
+        awk,
+        m4,
+        shell,
+    ):
         # Use prepare_configure to make lint happy
         prepare_configure
         refresh = True
         if os.path.exists(old_configure):
             mtime = os.path.getmtime(old_configure)
-            aclocal = os.path.join(build_env.topsrcdir, 'build', 'autoconf',
-                                   '*.m4')
+            aclocal = os.path.join(build_env.topsrcdir, "build", "autoconf", "*.m4")
             for input in itertools.chain(
-                (old_configure + '.in',
-                 os.path.join(os.path.dirname(old_configure), 'aclocal.m4')),
+                (
+                    old_configure + ".in",
+                    os.path.join(os.path.dirname(old_configure), "aclocal.m4"),
+                ),
                 glob.iglob(aclocal),
             ):
                 if os.path.getmtime(input) > mtime:
@@ -169,40 +192,54 @@ def old_configure_for(old_configure_path, extra_env=None):
                 refresh = False
 
         if refresh:
-            autoconf = os.path.join(build_env.topsrcdir, 'build', 'autoconf', 'autoconf.sh')
-            log.info('Refreshing %s with %s', old_configure, autoconf)
+            autoconf = os.path.join(
+                build_env.topsrcdir, "build", "autoconf", "autoconf.sh"
+            )
+            log.info("Refreshing %s with %s", old_configure, autoconf)
             env = dict(os.environ)
-            env['M4'] = m4
-            env['AWK'] = awk
-            env['AC_MACRODIR'] = os.path.join(build_env.topsrcdir, 'build', 'autoconf')
+            env["M4"] = m4
+            env["AWK"] = awk
+            env["AC_MACRODIR"] = os.path.join(build_env.topsrcdir, "build", "autoconf")
 
             try:
-                script = subprocess.check_output([
-                    shell, autoconf,
-                    '--localdir=%s' % os.path.dirname(old_configure),
-                    old_configure + '.in'], env=env)
+                script = subprocess.check_output(
+                    [
+                        shell,
+                        autoconf,
+                        "--localdir=%s" % os.path.dirname(old_configure),
+                        old_configure + ".in",
+                    ],
+                    env=env,
+                )
             except CalledProcessError as exc:
                 # Autoconf on win32 may break due to a bad $PATH.  Let the user know
                 # their $PATH is suspect.
                 if mozillabuild:
                     mozillabuild_path = normsep(mozillabuild[0])
-                    sh_path = normsep(find_program('sh'))
+                    sh_path = normsep(find_program("sh"))
                     if mozillabuild_path not in sh_path:
-                        log.warning("The '{}msys/bin' directory is not first in $PATH. "
-                                    "This may cause autoconf to fail. ($PATH is currently "
-                                    "set to: {})".format(mozillabuild_path, os.environ[
-                            'PATH']))
-                die('autoconf exited with return code {}'.format(exc.returncode))
+                        log.warning(
+                            "The '{}msys/bin' directory is not first in $PATH. "
+                            "This may cause autoconf to fail. ($PATH is currently "
+                            "set to: {})".format(mozillabuild_path, os.environ["PATH"])
+                        )
+                die("autoconf exited with return code {}".format(exc.returncode))
 
             if not script:
-                die('Generated old-configure is empty! Check that your autoconf 2.13 program works!')
+                die(
+                    "Generated old-configure is empty! Check that your autoconf 2.13 program works!"
+                )
 
             # Make old-configure append to config.log, where we put our own log.
             # This could be done with a m4 macro, but it's way easier this way
-            script = script.replace(b'>./config.log', b'>>${CONFIG_LOG=./config.log}')
+            script = script.replace(b">./config.log", b">>${CONFIG_LOG=./config.log}")
 
-            with NamedTemporaryFile(mode='wb', prefix=os.path.basename(old_configure),
-                                    dir=os.path.dirname(old_configure), delete=False) as fh:
+            with NamedTemporaryFile(
+                mode="wb",
+                prefix=os.path.basename(old_configure),
+                dir=os.path.dirname(old_configure),
+                delete=False,
+            ) as fh:
                 fh.write(script)
 
             try:
@@ -213,37 +250,40 @@ def old_configure_for(old_configure_path, extra_env=None):
                     os.remove(old_configure)
                     os.rename(fh.name, old_configure)
                 except OSError as e:
-                    die('Failed re-creating old-configure: %s' % e.message)
+                    die("Failed re-creating old-configure: %s" % e.message)
 
         cmd = [shell, old_configure] + prepare_configure_options.options
 
         env = dict(os.environ)
 
         # For debugging purpose, in case it's not what we'd expect.
-        log.debug('Running %s', quote(*cmd))
+        log.debug("Running %s", quote(*cmd))
 
         # Our logging goes to config.log, the same file old.configure uses.
         # We can't share the handle on the file, so close it.
-        logger = logging.getLogger('moz.configure')
+        logger = logging.getLogger("moz.configure")
         config_log = None
         for handler in logger.handlers:
             if isinstance(handler, logging.FileHandler):
                 config_log = handler
                 config_log.close()
                 logger.removeHandler(config_log)
-                env['CONFIG_LOG'] = config_log.baseFilename
+                env["CONFIG_LOG"] = config_log.baseFilename
                 log_size = os.path.getsize(config_log.baseFilename)
                 break
 
         if altered_path:
-            env['PATH'] = altered_path
+            env["PATH"] = altered_path
 
         if extra_env:
             env.update(extra_env)
 
-        env['OLD_CONFIGURE_VARS'] = os.path.join(build_env.topobjdir, 'old-configure.vars')
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                env=env)
+        env["OLD_CONFIGURE_VARS"] = os.path.join(
+            build_env.topobjdir, "old-configure.vars"
+        )
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env
+        )
         while True:
             line = proc.stdout.readline()
             if not line:
@@ -254,53 +294,58 @@ def old_configure_for(old_configure_path, extra_env=None):
         if ret:
             with log.queue_debug():
                 if config_log:
-                    with open(config_log.baseFilename, 'r') as fh:
+                    with open(config_log.baseFilename, "r") as fh:
                         fh.seek(log_size)
                         for line in fh:
                             log.debug(line.rstrip())
-                log.error('old-configure failed')
+                log.error("old-configure failed")
             sys.exit(ret)
 
         if config_log:
             # Create a new handler in append mode
-            handler = logging.FileHandler(config_log.baseFilename, mode='a', delay=True)
+            handler = logging.FileHandler(config_log.baseFilename, mode="a", delay=True)
             handler.setFormatter(config_log.formatter)
             logger.addHandler(handler)
 
         raw_config = {
-            'split': split,
-            'unique_list': unique_list,
+            "split": split,
+            "unique_list": unique_list,
         }
-        with open('config.data', 'r') as fh:
-            code = compile(fh.read(), 'config.data', 'exec')
+        with open("config.data", "r") as fh:
+            code = compile(fh.read(), "config.data", "exec")
             exec_(code, raw_config)
 
         # Ensure all the flags known to old-configure appear in the
         # @old_configure_options above.
         all_options = set(prepare_configure_options.all_options)
-        for flag in raw_config['flags']:
+        for flag in raw_config["flags"]:
             if flag not in all_options:
-                die('Missing option in `@old_configure_options` in %s: %s',
-                    __file__, flag)
+                die(
+                    "Missing option in `@old_configure_options` in %s: %s",
+                    __file__,
+                    flag,
+                )
 
         # If the code execution above fails, we want to keep the file around for
         # debugging.
-        os.remove('config.data')
+        os.remove("config.data")
 
-        return namespace(**{
-            c: [
-                (k[1:-1], v[1:-1] if isinstance(v, string_types) else v)
-                for k, v in raw_config[c]
-            ]
-            for c in ('substs', 'defines')
-        })
+        return namespace(
+            **{
+                c: [
+                    (k[1:-1], v[1:-1] if isinstance(v, string_types) else v)
+                    for k, v in raw_config[c]
+                ]
+                for c in ("substs", "defines")
+            }
+        )
 
     return old_configure
 
 
 old_configure = old_configure_for(old_configure)
-set_config('OLD_CONFIGURE_SUBSTS', old_configure.substs)
-set_config('OLD_CONFIGURE_DEFINES', old_configure.defines)
+set_config("OLD_CONFIGURE_SUBSTS", old_configure.substs)
+set_config("OLD_CONFIGURE_DEFINES", old_configure.defines)
 
 
 # Assuming no other option is declared after this function, handle the
@@ -309,17 +354,18 @@ set_config('OLD_CONFIGURE_DEFINES', old_configure.defines)
 # them. We only do so for options that haven't been declared so far,
 # which should be a proxy for the options that old-configure handles
 # and that we don't know anything about.
-@depends('--help')
-@imports('__sandbox__')
-@imports(_from='mozbuild.configure.options', _import='Option')
+@depends("--help")
+@imports("__sandbox__")
+@imports(_from="mozbuild.configure.options", _import="Option")
 def remaining_mozconfig_options(_):
     helper = __sandbox__._helper
     for arg in list(helper):
-        if helper._origins[arg] != 'mozconfig':
+        if helper._origins[arg] != "mozconfig":
             continue
-        name = arg.split('=', 1)[0]
+        name = arg.split("=", 1)[0]
         if name.isupper() and name not in __sandbox__._options:
-            option = Option(env=name, nargs='*', help=name)
+            option = Option(env=name, nargs="*", help=name)
             helper.handle(option)
+
 
 # Please do not add anything after remaining_mozconfig_options()

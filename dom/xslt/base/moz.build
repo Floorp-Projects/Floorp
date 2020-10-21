@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'txDouble.cpp',
-    'txExpandedName.cpp',
-    'txExpandedNameMap.cpp',
-    'txList.cpp',
-    'txNamespaceMap.cpp',
-    'txURIUtils.cpp',
+    "txDouble.cpp",
+    "txExpandedName.cpp",
+    "txExpandedNameMap.cpp",
+    "txList.cpp",
+    "txNamespaceMap.cpp",
+    "txURIUtils.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '..',
-    '../xml',
-    '../xpath',
-    '../xslt',
+    "..",
+    "../xml",
+    "../xpath",
+    "../xslt",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

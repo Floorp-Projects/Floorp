@@ -5,30 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'nsPrintingProxy.h',
+    "nsPrintingProxy.h",
 ]
 
 EXPORTS.mozilla.embedding.printingui += [
-    'PrintingParent.h',
+    "PrintingParent.h",
 ]
 
-if CONFIG['NS_PRINTING']:
+if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
-        'nsPrintingProxy.cpp',
-        'PrintingParent.cpp',
-        'PrintProgressDialogChild.cpp',
-        'PrintProgressDialogParent.cpp',
-        'PrintSettingsDialogChild.cpp',
-        'PrintSettingsDialogParent.cpp',
+        "nsPrintingProxy.cpp",
+        "PrintingParent.cpp",
+        "PrintProgressDialogChild.cpp",
+        "PrintProgressDialogParent.cpp",
+        "PrintSettingsDialogChild.cpp",
+        "PrintSettingsDialogParent.cpp",
     ]
 
 IPDL_SOURCES += [
-    'PPrinting.ipdl',
-    'PPrintingTypes.ipdlh',
-    'PPrintProgressDialog.ipdl',
-    'PPrintSettingsDialog.ipdl',
+    "PPrinting.ipdl",
+    "PPrintingTypes.ipdlh",
+    "PPrintProgressDialog.ipdl",
+    "PPrintSettingsDialog.ipdl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

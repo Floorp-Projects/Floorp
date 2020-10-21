@@ -7,25 +7,25 @@
 with Files("**"):
     BUG_COMPONENT = ("WebExtensions", "Untriaged")
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_COMPONENTS += [
-    'extensions-browser.manifest',
+    "extensions-browser.manifest",
 ]
 
 EXTRA_JS_MODULES += [
-    'ExtensionControlledPopup.jsm',
-    'ExtensionPopups.jsm',
+    "ExtensionControlledPopup.jsm",
+    "ExtensionPopups.jsm",
 ]
 
-DIRS += ['schemas']
+DIRS += ["schemas"]
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser/browser-private.ini',
-    'test/browser/browser.ini',
+    "test/browser/browser-private.ini",
+    "test/browser/browser.ini",
 ]
 
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/xpcshell/xpcshell.ini',
+    "test/xpcshell/xpcshell.ini",
 ]

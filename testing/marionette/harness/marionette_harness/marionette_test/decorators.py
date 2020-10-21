@@ -7,9 +7,7 @@ from __future__ import absolute_import
 import functools
 import types
 
-from unittest.case import (
-    SkipTest,
-)
+from unittest.case import SkipTest
 
 
 def parameterized(func_suffix, *args, **kwargs):
@@ -40,56 +38,67 @@ def parameterized(func_suffix, *args, **kwargs):
     :param \*args: arguments to pass to the new method
     :param \*\*kwargs: named arguments to pass to the new method
     """
+
     def wrapped(func):
-        if not hasattr(func, 'metaparameters'):
+        if not hasattr(func, "metaparameters"):
             func.metaparameters = []
         func.metaparameters.append((func_suffix, args, kwargs))
         return func
+
     return wrapped
 
 
 def run_if_manage_instance(reason):
     """Decorator which runs a test if Marionette manages the application instance."""
+
     def decorator(test_item):
         if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+            raise Exception("Decorator only supported for functions")
 
         @functools.wraps(test_item)
         def skip_wrapper(self, *args, **kwargs):
             if self.marionette.instance is None:
                 raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
+
         return skip_wrapper
+
     return decorator
 
 
 def skip_if_chrome(reason):
     """Decorator which skips a test if chrome context is active."""
+
     def decorator(test_item):
         if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+            raise Exception("Decorator only supported for functions")
 
         @functools.wraps(test_item)
         def skip_wrapper(self, *args, **kwargs):
-            if self.marionette._send_message('getContext', key='value') == 'chrome':
+            if self.marionette._send_message("getContext", key="value") == "chrome":
                 raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
+
         return skip_wrapper
+
     return decorator
 
 
 def skip_if_desktop(reason):
     """Decorator which skips a test if run on desktop."""
+
     def decorator(test_item):
         if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+            raise Exception("Decorator only supported for functions")
 
         @functools.wraps(test_item)
         def skip_wrapper(self, *args, **kwargs):
-            if self.marionette.session_capabilities.get('browserName') == 'firefox':
+            if self.marionette.session_capabilities.get("browserName") == "firefox":
                 raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
+
         return skip_wrapper
+
     return decorator
 
 
@@ -115,11 +124,12 @@ def skip_unless_browser_pref(reason, pref, predicate=bool):
               pass  # test implementation here
 
     """
+
     def decorator(test_item):
         if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+            raise Exception("Decorator only supported for functions")
         if not callable(predicate):
-            raise ValueError('predicate must be callable')
+            raise ValueError("predicate must be callable")
 
         @functools.wraps(test_item)
         def skip_wrapper(self, *args, **kwargs):
@@ -129,17 +139,20 @@ def skip_unless_browser_pref(reason, pref, predicate=bool):
             if not predicate(value):
                 raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
+
         return skip_wrapper
+
     return decorator
 
 
 def skip_unless_protocol(reason, predicate):
     """Decorator which skips a test if the predicate does not match the current protocol level."""
+
     def decorator(test_item):
         if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
+            raise Exception("Decorator only supported for functions")
         if not callable(predicate):
-            raise ValueError('predicate must be callable')
+            raise ValueError("predicate must be callable")
 
         @functools.wraps(test_item)
         def skip_wrapper(self, *args, **kwargs):
@@ -147,7 +160,9 @@ def skip_unless_protocol(reason, predicate):
             if not predicate(level):
                 raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
+
         return skip_wrapper
+
     return decorator
 
 
@@ -174,7 +189,9 @@ def with_parameters(parameters):
     :param parameters: list of tuples (**func_suffix**, **args**, **kwargs**)
                        defining parameters like in :func:`todo`.
     """
+
     def wrapped(func):
         func.metaparameters = parameters
         return func
+
     return wrapped

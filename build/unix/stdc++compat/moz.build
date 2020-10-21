@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
-    Library('stdc++compat')
-    SOURCES += ['stdc++compat.cpp']
+if CONFIG["MOZ_LIBSTDCXX_TARGET_VERSION"]:
+    Library("stdc++compat")
+    SOURCES += ["stdc++compat.cpp"]
 
-if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
-    HostLibrary('host_stdc++compat')
+if CONFIG["MOZ_LIBSTDCXX_HOST_VERSION"]:
+    HostLibrary("host_stdc++compat")
     HOST_SOURCES += [
-        'stdc++compat.cpp',
+        "stdc++compat.cpp",
     ]
 
 FORCE_STATIC_LIB = True
@@ -19,9 +19,9 @@ FORCE_STATIC_LIB = True
 NO_PGO = True
 
 DisableStlWrapping()
-COMPILE_FLAGS['CLANG_PLUGIN'] = []
+COMPILE_FLAGS["CLANG_PLUGIN"] = []
 
-DEFINES['MOZ_LIBSTDCXX_VERSION'] = CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']
-HOST_DEFINES['MOZ_LIBSTDCXX_VERSION'] = CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']
+DEFINES["MOZ_LIBSTDCXX_VERSION"] = CONFIG["MOZ_LIBSTDCXX_TARGET_VERSION"]
+HOST_DEFINES["MOZ_LIBSTDCXX_VERSION"] = CONFIG["MOZ_LIBSTDCXX_HOST_VERSION"]
 
-OS_LIBS += ['-Wl,--version-script,%s/hide_std.ld' % SRCDIR]
+OS_LIBS += ["-Wl,--version-script,%s/hide_std.ld" % SRCDIR]

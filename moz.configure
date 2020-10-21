@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('build/moz.configure/init.configure')
+include("build/moz.configure/init.configure")
 
 # Note:
 # - Gecko-specific options and rules should go in toolkit/moz.configure.
@@ -14,189 +14,225 @@ include('build/moz.configure/init.configure')
 # - Spidermonkey-specific options and rules should go in js/moz.configure.
 # - etc.
 
-option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
-       help='Download and use prebuilt binary artifacts.')
+option(
+    "--enable-artifact-builds",
+    env="MOZ_ARTIFACT_BUILDS",
+    help="Download and use prebuilt binary artifacts.",
+)
 
-@depends('--enable-artifact-builds')
+
+@depends("--enable-artifact-builds")
 def artifact_builds(value):
     if value:
         return True
 
-set_config('MOZ_ARTIFACT_BUILDS', artifact_builds)
 
-imply_option('--enable-artifact-build-symbols',
-             depends(artifact_builds)(lambda v: False if v is None else None),
-             reason='--disable-artifact-builds')
+set_config("MOZ_ARTIFACT_BUILDS", artifact_builds)
 
-option('--enable-artifact-build-symbols', nargs='?', choices=('full',),
-       help='Download symbols when artifact builds are enabled.')
+imply_option(
+    "--enable-artifact-build-symbols",
+    depends(artifact_builds)(lambda v: False if v is None else None),
+    reason="--disable-artifact-builds",
+)
 
-@depends('--enable-artifact-build-symbols', 'MOZ_AUTOMATION', target)
+option(
+    "--enable-artifact-build-symbols",
+    nargs="?",
+    choices=("full",),
+    help="Download symbols when artifact builds are enabled.",
+)
+
+
+@depends("--enable-artifact-build-symbols", "MOZ_AUTOMATION", target)
 def enable_artifact_build_symbols(value, automation, target):
     if len(value):
         return value[0]
     if bool(value):
-        if target.os == 'Android' and not automation:
-            return 'full'
+        if target.os == "Android" and not automation:
+            return "full"
         return True
     return None
 
-set_config('MOZ_ARTIFACT_BUILD_SYMBOLS',
-           enable_artifact_build_symbols)
 
-@depends('--enable-artifact-builds')
+set_config("MOZ_ARTIFACT_BUILD_SYMBOLS", enable_artifact_build_symbols)
+
+
+@depends("--enable-artifact-builds")
 def imply_disable_compile_environment(value):
     if value:
         return False
 
-option(env='MOZ_COPY_PDBS',
-    help='For builds that do not support symbols in the normal fashion,'
-         ' generate and copy them into the resulting build archive.')
 
-set_config('MOZ_COPY_PDBS', depends_if('MOZ_COPY_PDBS')(lambda _: True))
+option(
+    env="MOZ_COPY_PDBS",
+    help="For builds that do not support symbols in the normal fashion,"
+    " generate and copy them into the resulting build archive.",
+)
 
-imply_option('--enable-compile-environment', imply_disable_compile_environment)
+set_config("MOZ_COPY_PDBS", depends_if("MOZ_COPY_PDBS")(lambda _: True))
 
-option('--disable-compile-environment',
-       help='Disable compiler/library checks')
+imply_option("--enable-compile-environment", imply_disable_compile_environment)
 
-@depends('--disable-compile-environment')
+option("--disable-compile-environment", help="Disable compiler/library checks")
+
+
+@depends("--disable-compile-environment")
 def compile_environment(compile_env):
     if compile_env:
         return True
 
-set_config('COMPILE_ENVIRONMENT', compile_environment)
-add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
 
-option('--disable-tests',
-       help='Do not build test libraries & programs')
+set_config("COMPILE_ENVIRONMENT", compile_environment)
+add_old_configure_assignment("COMPILE_ENVIRONMENT", compile_environment)
 
-@depends('--disable-tests')
+option("--disable-tests", help="Do not build test libraries & programs")
+
+
+@depends("--disable-tests")
 def enable_tests(value):
     if value:
         return True
 
-set_config('ENABLE_TESTS', enable_tests)
-set_define('ENABLE_TESTS', enable_tests)
+
+set_config("ENABLE_TESTS", enable_tests)
+set_define("ENABLE_TESTS", enable_tests)
+
 
 @depends(enable_tests)
 def gtest_has_rtti(value):
     if value:
-        return '0'
+        return "0"
 
-set_define('GTEST_HAS_RTTI', gtest_has_rtti)
+
+set_define("GTEST_HAS_RTTI", gtest_has_rtti)
+
 
 @depends(target, enable_tests)
 def linux_gtest_defines(target, enable_tests):
-    if enable_tests and target.os == 'Android':
-        return namespace(os_linux_android=True,
-                         use_own_tr1_tuple=True,
-                         has_clone='0')
+    if enable_tests and target.os == "Android":
+        return namespace(os_linux_android=True, use_own_tr1_tuple=True, has_clone="0")
 
-set_define('GTEST_OS_LINUX_ANDROID',
-           linux_gtest_defines.os_linux_android)
-set_define('GTEST_USE_OWN_TR1_TUPLE',
-           linux_gtest_defines.use_own_tr1_tuple)
-set_define('GTEST_HAS_CLONE',
-           linux_gtest_defines.has_clone)
 
-option('--enable-debug',
-       nargs='?',
-       help='Enable building with developer debug info '
-            '(using the given compiler flags).')
+set_define("GTEST_OS_LINUX_ANDROID", linux_gtest_defines.os_linux_android)
+set_define("GTEST_USE_OWN_TR1_TUPLE", linux_gtest_defines.use_own_tr1_tuple)
+set_define("GTEST_HAS_CLONE", linux_gtest_defines.has_clone)
 
-@depends('--enable-debug')
+option(
+    "--enable-debug",
+    nargs="?",
+    help="Enable building with developer debug info "
+    "(using the given compiler flags).",
+)
+
+
+@depends("--enable-debug")
 def moz_debug(debug):
     if debug:
         return bool(debug)
 
-set_config('MOZ_DEBUG', moz_debug)
-set_define('MOZ_DEBUG', moz_debug)
+
+set_config("MOZ_DEBUG", moz_debug)
+set_define("MOZ_DEBUG", moz_debug)
 # Override any value MOZ_DEBUG may have from the environment when passing it
 # down to old-configure.
-add_old_configure_assignment('MOZ_DEBUG',
-                             depends('--enable-debug')(lambda x: bool(x)))
+add_old_configure_assignment("MOZ_DEBUG", depends("--enable-debug")(lambda x: bool(x)))
 
-option('--with-debug-label', nargs='+',
-       help='Debug DEBUG_<value> for each comma-separated value given')
+option(
+    "--with-debug-label",
+    nargs="+",
+    help="Debug DEBUG_<value> for each comma-separated value given",
+)
 
-@depends(moz_debug, '--with-debug-label')
+
+@depends(moz_debug, "--with-debug-label")
 def debug_defines(debug, labels):
     if debug:
-        return ['DEBUG'] + ['DEBUG_%s' % label for label in labels]
-    return ['NDEBUG', 'TRIMMED']
+        return ["DEBUG"] + ["DEBUG_%s" % label for label in labels]
+    return ["NDEBUG", "TRIMMED"]
 
-set_config('MOZ_DEBUG_DEFINES', debug_defines)
 
-option('--enable-rust-debug',
-       default=depends(when='--enable-debug')(lambda: True),
-       help='{Build|Do not build} Rust code with debug assertions turned '
-            'on.')
+set_config("MOZ_DEBUG_DEFINES", debug_defines)
 
-@depends(when='--enable-rust-debug')
+option(
+    "--enable-rust-debug",
+    default=depends(when="--enable-debug")(lambda: True),
+    help="{Build|Do not build} Rust code with debug assertions turned " "on.",
+)
+
+
+@depends(when="--enable-rust-debug")
 def debug_rust():
     return True
 
-set_config('MOZ_DEBUG_RUST', debug_rust)
-set_define('MOZ_DEBUG_RUST', debug_rust)
 
-option(env='MOZ_PGO', help='Build with profile guided optimizations')
+set_config("MOZ_DEBUG_RUST", debug_rust)
+set_define("MOZ_DEBUG_RUST", debug_rust)
 
-set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
+option(env="MOZ_PGO", help="Build with profile guided optimizations")
+
+set_config("MOZ_PGO", depends("MOZ_PGO")(lambda x: bool(x)))
 
 
 wine = check_prog(
-    'WINE', ['wine64', 'wine'], allow_missing=True,
+    "WINE",
+    ["wine64", "wine"],
+    allow_missing=True,
     when=depends(target, host)(
-        lambda t, h: t.kernel == 'WINNT' and h.kernel != 'WINNT'))
-check_prog('WGET', ('wget',), allow_missing=True)
+        lambda t, h: t.kernel == "WINNT" and h.kernel != "WINNT"
+    ),
+)
+check_prog("WGET", ("wget",), allow_missing=True)
 
 
-include('build/moz.configure/toolchain.configure',
-        when='--enable-compile-environment')
+include("build/moz.configure/toolchain.configure", when="--enable-compile-environment")
 
-include('build/moz.configure/pkg.configure')
+include("build/moz.configure/pkg.configure")
 # Make this assignment here rather than in pkg.configure to avoid
 # requiring this file in unit tests.
-add_old_configure_assignment('PKG_CONFIG', pkg_config)
+add_old_configure_assignment("PKG_CONFIG", pkg_config)
 
-include('build/moz.configure/memory.configure',
-        when='--enable-compile-environment')
-include('build/moz.configure/headers.configure',
-        when='--enable-compile-environment')
-include('build/moz.configure/warnings.configure',
-        when='--enable-compile-environment')
-include('build/moz.configure/lto-pgo.configure',
-        when='--enable-compile-environment')
-include('build/moz.configure/flags.configure',
-        when='--enable-compile-environment')
+include("build/moz.configure/memory.configure", when="--enable-compile-environment")
+include("build/moz.configure/headers.configure", when="--enable-compile-environment")
+include("build/moz.configure/warnings.configure", when="--enable-compile-environment")
+include("build/moz.configure/lto-pgo.configure", when="--enable-compile-environment")
+include("build/moz.configure/flags.configure", when="--enable-compile-environment")
 # rust.configure is included by js/moz.configure.
 
-option('--enable-valgrind',
-       help='Enable Valgrind integration hooks')
+option("--enable-valgrind", help="Enable Valgrind integration hooks")
 
-valgrind_h = check_header('valgrind/valgrind.h', when='--enable-valgrind')
+valgrind_h = check_header("valgrind/valgrind.h", when="--enable-valgrind")
 
-@depends('--enable-valgrind', valgrind_h)
+
+@depends("--enable-valgrind", valgrind_h)
 def check_valgrind(valgrind, valgrind_h):
     if valgrind:
         if not valgrind_h:
-            die('--enable-valgrind specified but Valgrind is not installed')
+            die("--enable-valgrind specified but Valgrind is not installed")
         return True
 
-set_define('MOZ_VALGRIND', check_valgrind)
-set_config('MOZ_VALGRIND', check_valgrind)
+
+set_define("MOZ_VALGRIND", check_valgrind)
+set_config("MOZ_VALGRIND", check_valgrind)
+
 
 @depends(target, host)
 def is_openbsd(target, host):
-    return target.kernel == 'OpenBSD' or host.kernel == 'OpenBSD'
+    return target.kernel == "OpenBSD" or host.kernel == "OpenBSD"
 
-option(env='SO_VERSION', nargs=1, default='1.0', when=is_openbsd,
-       help='Shared library version for OpenBSD systems')
 
-@depends('SO_VERSION', when=is_openbsd)
+option(
+    env="SO_VERSION",
+    nargs=1,
+    default="1.0",
+    when=is_openbsd,
+    help="Shared library version for OpenBSD systems",
+)
+
+
+@depends("SO_VERSION", when=is_openbsd)
 def so_version(value):
     return value
+
 
 @template
 def library_name_info_template(host_or_target):
@@ -208,61 +244,66 @@ def library_name_info_template(host_or_target):
 
     @depends(host_or_target, compiler, so_version)
     def library_name_info_impl(host_or_target, compiler, so_version):
-        if host_or_target.kernel == 'WINNT':
+        if host_or_target.kernel == "WINNT":
             # There aren't artifacts for mingw builds, so it's OK that the
             # results are inaccurate in that case.
-            if compiler and compiler.type != 'clang-cl':
+            if compiler and compiler.type != "clang-cl":
                 return namespace(
-                    dll=namespace(prefix='', suffix='.dll'),
-                    lib=namespace(prefix='lib', suffix='a'),
-                    import_lib=namespace(prefix='lib', suffix='a'),
-                    obj=namespace(prefix='', suffix='o'),
+                    dll=namespace(prefix="", suffix=".dll"),
+                    lib=namespace(prefix="lib", suffix="a"),
+                    import_lib=namespace(prefix="lib", suffix="a"),
+                    obj=namespace(prefix="", suffix="o"),
                 )
 
             return namespace(
-                dll=namespace(prefix='', suffix='.dll'),
-                lib=namespace(prefix='', suffix='lib'),
-                import_lib=namespace(prefix='', suffix='lib'),
-                obj=namespace(prefix='', suffix='obj'),
+                dll=namespace(prefix="", suffix=".dll"),
+                lib=namespace(prefix="", suffix="lib"),
+                import_lib=namespace(prefix="", suffix="lib"),
+                obj=namespace(prefix="", suffix="obj"),
             )
 
-        elif host_or_target.kernel == 'Darwin':
+        elif host_or_target.kernel == "Darwin":
             return namespace(
-                dll=namespace(prefix='lib', suffix='.dylib'),
-                lib=namespace(prefix='lib', suffix='a'),
-                import_lib=namespace(prefix=None, suffix=''),
-                obj=namespace(prefix='', suffix='o'),
+                dll=namespace(prefix="lib", suffix=".dylib"),
+                lib=namespace(prefix="lib", suffix="a"),
+                import_lib=namespace(prefix=None, suffix=""),
+                obj=namespace(prefix="", suffix="o"),
             )
         elif so_version:
-            so = '.so.%s' % so_version
+            so = ".so.%s" % so_version
         else:
-            so = '.so'
+            so = ".so"
 
         return namespace(
-            dll=namespace(prefix='lib', suffix=so),
-            lib=namespace(prefix='lib', suffix='a'),
-            import_lib=namespace(prefix=None, suffix=''),
-            obj=namespace(prefix='', suffix='o'),
+            dll=namespace(prefix="lib", suffix=so),
+            lib=namespace(prefix="lib", suffix="a"),
+            import_lib=namespace(prefix=None, suffix=""),
+            obj=namespace(prefix="", suffix="o"),
         )
 
     return library_name_info_impl
 
+
 host_library_name_info = library_name_info_template(host)
 library_name_info = library_name_info_template(target)
 
-set_config('DLL_PREFIX', library_name_info.dll.prefix)
-set_config('DLL_SUFFIX', library_name_info.dll.suffix)
-set_config('HOST_DLL_PREFIX', host_library_name_info.dll.prefix)
-set_config('HOST_DLL_SUFFIX', host_library_name_info.dll.suffix)
-set_config('LIB_PREFIX', library_name_info.lib.prefix)
-set_config('LIB_SUFFIX', library_name_info.lib.suffix)
-set_config('OBJ_SUFFIX', library_name_info.obj.suffix)
+set_config("DLL_PREFIX", library_name_info.dll.prefix)
+set_config("DLL_SUFFIX", library_name_info.dll.suffix)
+set_config("HOST_DLL_PREFIX", host_library_name_info.dll.prefix)
+set_config("HOST_DLL_SUFFIX", host_library_name_info.dll.suffix)
+set_config("LIB_PREFIX", library_name_info.lib.prefix)
+set_config("LIB_SUFFIX", library_name_info.lib.suffix)
+set_config("OBJ_SUFFIX", library_name_info.obj.suffix)
 # Lots of compilation tests depend on this variable being present.
-add_old_configure_assignment('OBJ_SUFFIX', library_name_info.obj.suffix)
-set_config('IMPORT_LIB_SUFFIX', library_name_info.import_lib.suffix)
-set_define('MOZ_DLL_PREFIX', depends(library_name_info.dll.prefix)(lambda s: '"%s"' % s))
-set_define('MOZ_DLL_SUFFIX', depends(library_name_info.dll.suffix)(lambda s: '"%s"' % s))
-set_config('WASM_OBJ_SUFFIX', 'wasm')
+add_old_configure_assignment("OBJ_SUFFIX", library_name_info.obj.suffix)
+set_config("IMPORT_LIB_SUFFIX", library_name_info.import_lib.suffix)
+set_define(
+    "MOZ_DLL_PREFIX", depends(library_name_info.dll.prefix)(lambda s: '"%s"' % s)
+)
+set_define(
+    "MOZ_DLL_SUFFIX", depends(library_name_info.dll.suffix)(lambda s: '"%s"' % s)
+)
+set_config("WASM_OBJ_SUFFIX", "wasm")
 
 # Make `profiling` available to this file even when js/moz.configure
 # doesn't end up included.
@@ -274,208 +315,259 @@ fold_libs = dependable(False)
 
 include(include_project_configure)
 
-@depends('--help')
-@imports(_from='mozbuild.backend', _import='backends')
+
+@depends("--help")
+@imports(_from="mozbuild.backend", _import="backends")
 def build_backends_choices(_):
     return tuple(backends)
 
 
-@deprecated_option('--enable-build-backend', nargs='+',
-                   choices=build_backends_choices)
+@deprecated_option("--enable-build-backend", nargs="+", choices=build_backends_choices)
 def build_backend(backends):
     if backends:
-        return tuple('+%s' % b for b in backends)
-
-imply_option('--build-backends', build_backend)
+        return tuple("+%s" % b for b in backends)
 
 
-@depends('--enable-artifact-builds', '--disable-compile-environment',
-         '--enable-build-backend', '--enable-project', '--enable-application',
-         '--help')
-@imports('sys')
-def build_backend_defaults(artifact_builds, compile_environment, requested_backends,
-                           project, application, _):
+imply_option("--build-backends", build_backend)
+
+
+@depends(
+    "--enable-artifact-builds",
+    "--disable-compile-environment",
+    "--enable-build-backend",
+    "--enable-project",
+    "--enable-application",
+    "--help",
+)
+@imports("sys")
+def build_backend_defaults(
+    artifact_builds, compile_environment, requested_backends, project, application, _
+):
     if application:
         project = application[0]
     elif project:
         project = project[0]
 
-    if 'Tup' in requested_backends:
+    if "Tup" in requested_backends:
         # As a special case, if Tup was requested, do not combine it with any
         # Make based backend by default.
         all_backends = []
     elif artifact_builds:
-        all_backends = ['FasterMake+RecursiveMake']
+        all_backends = ["FasterMake+RecursiveMake"]
     else:
-        all_backends = ['RecursiveMake', 'FasterMake']
+        all_backends = ["RecursiveMake", "FasterMake"]
     # Normally, we'd use target.os == 'WINNT', but a dependency on target
     # would require target to depend on --help, as well as host and shell,
     # and this is not a can of worms we can open at the moment.
-    if sys.platform == 'win32' and compile_environment and project != 'mobile/android':
-        all_backends.append('VisualStudio')
+    if sys.platform == "win32" and compile_environment and project != "mobile/android":
+        all_backends.append("VisualStudio")
     return tuple(all_backends) or None
 
-option('--build-backends', nargs='+', default=build_backend_defaults,
-       choices=build_backends_choices, help='Build backends to generate')
 
-@depends('--build-backends')
+option(
+    "--build-backends",
+    nargs="+",
+    default=build_backend_defaults,
+    choices=build_backends_choices,
+    help="Build backends to generate",
+)
+
+
+@depends("--build-backends")
 def build_backends(backends):
     return backends
 
-set_config('BUILD_BACKENDS', build_backends)
+
+set_config("BUILD_BACKENDS", build_backends)
 
 
 @depends(check_build_environment, build_backends)
-@imports('glob')
+@imports("glob")
 def check_objdir_backend_reuse(build_env, backends):
     # "Make based" might be RecursiveMake or a hybrid backend, so "Make" is
     # intentionally vague for use with the substring match below.
-    incompatible_backends = (
-        ('Tup', 'Make'),
-        ('Make', 'Tup')
-    )
-    for backend_file in glob.iglob(os.path.join(build_env.topobjdir,
-                                                'backend.*Backend')):
+    incompatible_backends = (("Tup", "Make"), ("Make", "Tup"))
+    for backend_file in glob.iglob(
+        os.path.join(build_env.topobjdir, "backend.*Backend")
+    ):
         for prev, curr in incompatible_backends:
             if prev in backend_file and any(curr in b for b in backends):
-                die("The active objdir, %s, was previously "
+                die(
+                    "The active objdir, %s, was previously "
                     "used to build with a %s based backend. "
                     "Change objdirs (by setting MOZ_OBJDIR in "
                     "your mozconfig) or clobber to continue.\n",
-                    build_env.topobjdir, prev)
+                    build_env.topobjdir,
+                    prev,
+                )
 
 
-option('--disable-gtest-in-build',
-       help='Force disable building the gtest libxul during the build.',
-       when='--enable-compile-environment')
+option(
+    "--disable-gtest-in-build",
+    help="Force disable building the gtest libxul during the build.",
+    when="--enable-compile-environment",
+)
 
 # Determine whether to build the gtest xul. This happens in automation
 # on Android and Desktop platforms with the exception of:
 #  - Windows PGO, where linking xul-gtest.dll takes too long;
 #  - Android other than x86_64, where gtest is not required.
-@depends('MOZ_PGO', build_project, target, 'MOZ_AUTOMATION', '--disable-gtest-in-build',
-         enable_tests, when='--enable-compile-environment')
+@depends(
+    "MOZ_PGO",
+    build_project,
+    target,
+    "MOZ_AUTOMATION",
+    "--disable-gtest-in-build",
+    enable_tests,
+    when="--enable-compile-environment",
+)
 def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
     if not enable_tests or not enabled:
         return None
-    if (automation and build_project in ('browser', 'comm/mail', 'mobile/android') and
-        not ((pgo and target.os == 'WINNT') or (target.os == 'Android' and target.cpu != 'x86_64'))):
+    if (
+        automation
+        and build_project in ("browser", "comm/mail", "mobile/android")
+        and not (
+            (pgo and target.os == "WINNT")
+            or (target.os == "Android" and target.cpu != "x86_64")
+        )
+    ):
         return True
 
-set_config('LINK_GTEST_DURING_COMPILE', build_gtest)
+
+set_config("LINK_GTEST_DURING_COMPILE", build_gtest)
 
 # Localization
 # ==============================================================
-option('--enable-ui-locale', default='en-US',
-       help='Select the user interface locale (default: en-US)')
+option(
+    "--enable-ui-locale",
+    default="en-US",
+    help="Select the user interface locale (default: en-US)",
+)
 
-set_config('MOZ_UI_LOCALE', depends('--enable-ui-locale')(lambda x: x))
+set_config("MOZ_UI_LOCALE", depends("--enable-ui-locale")(lambda x: x))
 
 # clang-plugin location
 # ==============================================================
-@depends(host_library_name_info, check_build_environment,
-         when='--enable-clang-plugin')
+@depends(host_library_name_info, check_build_environment, when="--enable-clang-plugin")
 def clang_plugin_path(library_name_info, build_env):
     topobjdir = build_env.topobjdir
-    if topobjdir.endswith('/js/src'):
+    if topobjdir.endswith("/js/src"):
         topobjdir = topobjdir[:-7]
     return os.path.abspath(
-        os.path.join(topobjdir, 'build', 'clang-plugin',
-                     '%sclang-plugin%s' % (library_name_info.dll.prefix,
-                                           library_name_info.dll.suffix))
+        os.path.join(
+            topobjdir,
+            "build",
+            "clang-plugin",
+            "%sclang-plugin%s"
+            % (library_name_info.dll.prefix, library_name_info.dll.suffix),
+        )
     )
 
-add_old_configure_assignment('CLANG_PLUGIN', clang_plugin_path)
+
+add_old_configure_assignment("CLANG_PLUGIN", clang_plugin_path)
 
 
 # Awk detection
 # ==============================================================
-awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
+awk = check_prog("AWK", ("gawk", "mawk", "nawk", "awk"))
 
 # Until the AWK variable is not necessary in old-configure
 @depends(awk)
 def awk_for_old_configure(value):
     return value
 
-add_old_configure_assignment('AWK', awk_for_old_configure)
+
+add_old_configure_assignment("AWK", awk_for_old_configure)
 
 
 # Perl detection
 # ==============================================================
-perl = check_prog('PERL', ('perl5', 'perl'))
+perl = check_prog("PERL", ("perl5", "perl"))
 
 # Until the PERL variable is not necessary in old-configure
 @depends(perl)
 def perl_for_old_configure(value):
     return value
 
-add_old_configure_assignment('PERL', perl_for_old_configure)
+
+add_old_configure_assignment("PERL", perl_for_old_configure)
+
 
 @template
 def perl_version_check(min_version):
     @depends(perl)
-    @checking('for minimum required perl version >= %s' % min_version)
+    @checking("for minimum required perl version >= %s" % min_version)
     def get_perl_version(perl):
-        return Version(check_cmd_output(
-            perl, '-e', 'print $]',
-            onerror=lambda: die('Failed to get perl version.')
-        ))
+        return Version(
+            check_cmd_output(
+                perl,
+                "-e",
+                "print $]",
+                onerror=lambda: die("Failed to get perl version."),
+            )
+        )
 
     @depends(get_perl_version)
     def check_perl_version(version):
         if version < min_version:
-            die('Perl %s or higher is required.', min_version)
+            die("Perl %s or higher is required.", min_version)
 
     @depends(perl)
-    @checking('for full perl installation')
-    @imports('subprocess')
+    @checking("for full perl installation")
+    @imports("subprocess")
     def has_full_perl_installation(perl):
-        ret = subprocess.call(
-            [perl, '-e', 'use Config; exit(!-d $Config{archlib})'])
+        ret = subprocess.call([perl, "-e", "use Config; exit(!-d $Config{archlib})"])
         return ret == 0
 
     @depends(has_full_perl_installation)
     def require_full_perl_installation(has_full_perl_installation):
         if not has_full_perl_installation:
-            die('Cannot find Config.pm or $Config{archlib}. '
-                'A full perl installation is required.')
+            die(
+                "Cannot find Config.pm or $Config{archlib}. "
+                "A full perl installation is required."
+            )
 
-perl_version_check('5.006')
+
+perl_version_check("5.006")
 
 
 # GNU make detection
 # ==============================================================
-option(env='MAKE', nargs=1, help='Path to GNU make')
+option(env="MAKE", nargs=1, help="Path to GNU make")
 
-@depends('MAKE', host)
+
+@depends("MAKE", host)
 def possible_makes(make, host):
     candidates = []
-    if host.kernel == 'WINNT':
-        candidates.append('mingw32-make')
+    if host.kernel == "WINNT":
+        candidates.append("mingw32-make")
     if make:
         candidates.append(make[0])
-    if host.kernel == 'WINNT':
-        candidates.extend(('make', 'gmake'))
+    if host.kernel == "WINNT":
+        candidates.extend(("make", "gmake"))
     else:
-        candidates.extend(('gmake', 'make'))
+        candidates.extend(("gmake", "make"))
     return candidates
 
-check_prog('GMAKE', possible_makes)
+
+check_prog("GMAKE", possible_makes)
 
 # watchman detection
 # ==============================================================
 
-option(env='WATCHMAN', nargs=1, help='Path to the watchman program')
+option(env="WATCHMAN", nargs=1, help="Path to the watchman program")
 
-@depends(host, 'WATCHMAN')
-@checking('for watchman', callback=lambda w: w.path if w else 'not found')
+
+@depends(host, "WATCHMAN")
+@checking("for watchman", callback=lambda w: w.path if w else "not found")
 def watchman(host, prog):
     # On Windows, `watchman` is only supported on 64-bit hosts.
-    if host.os == 'WINNT' and host.cpu != 'x86_64':
+    if host.os == "WINNT" and host.cpu != "x86_64":
         return
 
     if not prog:
-        prog = find_program('watchman')
+        prog = find_program("watchman")
 
     if not prog:
         return
@@ -484,294 +576,336 @@ def watchman(host, prog):
     # This can hang due to permissions problems. e.g.
     # https://github.com/facebook/watchman/issues/376. So use
     # `watchman --version` to prevent a class of failures.
-    out = check_cmd_output(prog, '--version', onerror=lambda: None)
+    out = check_cmd_output(prog, "--version", onerror=lambda: None)
     if out is None:
         return
 
     return namespace(path=prog, version=Version(out.strip()))
 
+
 @depends_if(watchman)
-@checking('for watchman version')
+@checking("for watchman version")
 def watchman_version(w):
     return w.version
 
-set_config('WATCHMAN', watchman.path)
+
+set_config("WATCHMAN", watchman.path)
+
 
 @depends_all(hg_version, hg_config, watchman)
-@checking('for watchman Mercurial integration')
-@imports('os')
+@checking("for watchman Mercurial integration")
+@imports("os")
 def watchman_hg(hg_version, hg_config, watchman):
-    if hg_version < Version('3.8'):
-        return 'no (Mercurial 3.8+ required)'
+    if hg_version < Version("3.8"):
+        return "no (Mercurial 3.8+ required)"
 
     ext_enabled = False
     mode_disabled = False
 
-    for k in ('extensions.fsmonitor', 'extensions.hgext.fsmonitor'):
-        if k in hg_config and hg_config[k] != '!':
+    for k in ("extensions.fsmonitor", "extensions.hgext.fsmonitor"):
+        if k in hg_config and hg_config[k] != "!":
             ext_enabled = True
 
-    mode_disabled = hg_config.get('fsmonitor.mode') == 'off'
+    mode_disabled = hg_config.get("fsmonitor.mode") == "off"
 
     if not ext_enabled:
-        return 'no (fsmonitor extension not enabled)'
+        return "no (fsmonitor extension not enabled)"
     if mode_disabled:
-        return 'no (fsmonitor.mode=off disables fsmonitor)'
+        return "no (fsmonitor.mode=off disables fsmonitor)"
 
     return True
 
+
 # Miscellaneous programs
 # ==============================================================
-check_prog('XARGS', ('xargs',))
+check_prog("XARGS", ("xargs",))
+
 
 @depends(target)
 def extra_programs(target):
-    if target.kernel == 'Darwin':
+    if target.kernel == "Darwin":
         return namespace(
-            DSYMUTIL=('dsymutil', 'llvm-dsymutil'),
-            MKFSHFS=('newfs_hfs', 'mkfs.hfsplus'),
-            HFS_TOOL=('hfsplus',)
+            DSYMUTIL=("dsymutil", "llvm-dsymutil"),
+            MKFSHFS=("newfs_hfs", "mkfs.hfsplus"),
+            HFS_TOOL=("hfsplus",),
         )
-    if target.os == 'GNU' and target.kernel == 'Linux':
-        return namespace(RPMBUILD=('rpmbuild',))
+    if target.os == "GNU" and target.kernel == "Linux":
+        return namespace(RPMBUILD=("rpmbuild",))
 
-check_prog('DSYMUTIL', extra_programs.DSYMUTIL,
-           allow_missing=True)
-check_prog('MKFSHFS', extra_programs.MKFSHFS,
-           allow_missing=True)
-check_prog('HFS_TOOL', extra_programs.HFS_TOOL,
-           allow_missing=True)
-check_prog('RPMBUILD', extra_programs.RPMBUILD,
-           allow_missing=True)
+
+check_prog("DSYMUTIL", extra_programs.DSYMUTIL, allow_missing=True)
+check_prog("MKFSHFS", extra_programs.MKFSHFS, allow_missing=True)
+check_prog("HFS_TOOL", extra_programs.HFS_TOOL, allow_missing=True)
+check_prog("RPMBUILD", extra_programs.RPMBUILD, allow_missing=True)
 
 
 @depends(target)
-@imports('os')
+@imports("os")
 def makensis_progs(target):
-    if target.kernel != 'WINNT':
+    if target.kernel != "WINNT":
         return
 
     candidates = [
-        'makensis-3.01',
-        'makensis-3.0b3',
-        'makensis-3.0b1',
-        'makensis',
+        "makensis-3.01",
+        "makensis-3.0b3",
+        "makensis-3.0b1",
+        "makensis",
     ]
 
     # Look for nsis installed by msys environment. But only the 32-bit version.
     # We use an absolute path and insert as the first entry so it is preferred
     # over a 64-bit exe that may be in PATH.
-    if 'MSYSTEM_PREFIX' in os.environ:
-        prefix = os.path.dirname(os.environ['MSYSTEM_PREFIX'])
-        candidates.insert(0, os.path.join(prefix, 'mingw32', 'bin', 'makensis.exe'))
+    if "MSYSTEM_PREFIX" in os.environ:
+        prefix = os.path.dirname(os.environ["MSYSTEM_PREFIX"])
+        candidates.insert(0, os.path.join(prefix, "mingw32", "bin", "makensis.exe"))
 
     return tuple(candidates)
 
-nsis = check_prog('MAKENSISU', makensis_progs, allow_missing=True)
+
+nsis = check_prog("MAKENSISU", makensis_progs, allow_missing=True)
 
 # Make sure the version of makensis is up to date.
 @depends(nsis, wine)
-@checking('for NSIS version')
-@imports('re')
+@checking("for NSIS version")
+@imports("re")
 def nsis_version(nsis, wine):
     if not nsis:
         return None
-    nsis_min_version = '3.0b1'
-    onerror = lambda: die('Failed to get nsis version.')
-    if wine and nsis.lower().endswith('.exe'):
-        out = check_cmd_output(wine, nsis, '-version', onerror=onerror)
+    nsis_min_version = "3.0b1"
+    onerror = lambda: die("Failed to get nsis version.")
+    if wine and nsis.lower().endswith(".exe"):
+        out = check_cmd_output(wine, nsis, "-version", onerror=onerror)
     else:
-        out = check_cmd_output(nsis, '-version', onerror=onerror)
+        out = check_cmd_output(nsis, "-version", onerror=onerror)
 
-    m = re.search(r'(?<=v)[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?', out)
+    m = re.search(r"(?<=v)[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?", out)
 
     if not m:
-        raise FatalCheckError('Unknown version of makensis')
+        raise FatalCheckError("Unknown version of makensis")
     ver = Version(m.group(0))
 
     # Versions comparisons don't quite work well with beta versions, so ensure
     # it works for the non-beta version.
-    if ver < nsis_min_version and (ver >= '3.0a' or ver < '3'):
-        raise FatalCheckError('To build the installer you must have NSIS'
-                              ' version %s or greater in your path'
-                              % nsis_min_version)
+    if ver < nsis_min_version and (ver >= "3.0a" or ver < "3"):
+        raise FatalCheckError(
+            "To build the installer you must have NSIS"
+            " version %s or greater in your path" % nsis_min_version
+        )
 
     return ver
 
+
 # And that makensis is 32-bit (but only on Windows).
-@depends_if(nsis, when=depends(host)(lambda h: h.kernel == 'WINNT'))
-@checking('for 32-bit NSIS')
+@depends_if(nsis, when=depends(host)(lambda h: h.kernel == "WINNT"))
+@checking("for 32-bit NSIS")
 def nsis_binary_type(nsis):
     bin_type = windows_binary_type(nsis)
-    if bin_type != 'win32':
-        raise FatalCheckError('%s is not a 32-bit Windows application' % nsis)
+    if bin_type != "win32":
+        raise FatalCheckError("%s is not a 32-bit Windows application" % nsis)
 
-    return 'yes'
+    return "yes"
+
 
 # And any flags we have to give to makensis
 @depends(host)
 def nsis_flags(host):
-    if host.kernel != 'WINNT':
-        return '-nocd'
-    return ''
+    if host.kernel != "WINNT":
+        return "-nocd"
+    return ""
 
-set_config('MAKENSISU_FLAGS', nsis_flags)
 
-check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
-check_prog('UPX', ('upx',), allow_missing=True, when=target_is_windows)
+set_config("MAKENSISU_FLAGS", nsis_flags)
+
+check_prog("7Z", ("7z", "7za"), allow_missing=True, when=target_is_windows)
+check_prog("UPX", ("upx",), allow_missing=True, when=target_is_windows)
 
 
 @depends(host_c_compiler, c_compiler, bindgen_config_paths)
 def llvm_objdump(host_c_compiler, c_compiler, bindgen_config_paths):
     clang = None
     for compiler in (host_c_compiler, c_compiler):
-        if compiler and compiler.type == 'clang':
+        if compiler and compiler.type == "clang":
             clang = compiler.compiler
             break
-        elif compiler and compiler.type == 'clang-cl':
-            clang = os.path.join(os.path.dirname(compiler.compiler), 'clang')
+        elif compiler and compiler.type == "clang-cl":
+            clang = os.path.join(os.path.dirname(compiler.compiler), "clang")
             break
 
     if not clang and bindgen_config_paths:
         clang = bindgen_config_paths.clang_path
-    llvm_objdump = 'llvm-objdump'
+    llvm_objdump = "llvm-objdump"
     if clang:
-        out = check_cmd_output(clang, '--print-prog-name=llvm-objdump',
-                               onerror=lambda: None)
+        out = check_cmd_output(
+            clang, "--print-prog-name=llvm-objdump", onerror=lambda: None
+        )
         if out:
             llvm_objdump = out.rstrip()
     return (llvm_objdump,)
 
 
-llvm_objdump = check_prog('LLVM_OBJDUMP', llvm_objdump, what='llvm-objdump',
-                          when='--enable-compile-environment',
-                          paths=toolchain_search_path)
+llvm_objdump = check_prog(
+    "LLVM_OBJDUMP",
+    llvm_objdump,
+    what="llvm-objdump",
+    when="--enable-compile-environment",
+    paths=toolchain_search_path,
+)
 
-add_old_configure_assignment('LLVM_OBJDUMP', llvm_objdump)
-
-
-option('--enable-dtrace', help='Build with dtrace support')
-
-dtrace = check_header('sys/sdt.h', when='--enable-dtrace',
-                      onerror=lambda: die('dtrace enabled but sys/sdt.h not found'))
-
-set_config('HAVE_DTRACE', True, when=dtrace)
-set_define('INCLUDE_MOZILLA_DTRACE', True, when=dtrace)
-add_old_configure_assignment('enable_dtrace', 'yes', when=dtrace)
+add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
 
 
-option('--disable-icf', help='Disable Identical Code Folding')
+option("--enable-dtrace", help="Build with dtrace support")
+
+dtrace = check_header(
+    "sys/sdt.h",
+    when="--enable-dtrace",
+    onerror=lambda: die("dtrace enabled but sys/sdt.h not found"),
+)
+
+set_config("HAVE_DTRACE", True, when=dtrace)
+set_define("INCLUDE_MOZILLA_DTRACE", True, when=dtrace)
+add_old_configure_assignment("enable_dtrace", "yes", when=dtrace)
+
+
+option("--disable-icf", help="Disable Identical Code Folding")
 
 add_old_configure_assignment(
-    'MOZ_DISABLE_ICF', '1', when=depends('--enable-icf')(lambda x: not x))
+    "MOZ_DISABLE_ICF", "1", when=depends("--enable-icf")(lambda x: not x)
+)
 
 
-option('--enable-strip', when=compile_environment,
-       help='Enable stripping of libs & executables')
+option(
+    "--enable-strip",
+    when=compile_environment,
+    help="Enable stripping of libs & executables",
+)
 
 # This should be handled as a `when` once bug 1617793 is fixed.
-@depends('--enable-strip', c_compiler, when=compile_environment)
+@depends("--enable-strip", c_compiler, when=compile_environment)
 def enable_strip(strip, c_compiler):
-    if strip and c_compiler.type != 'clang-cl':
+    if strip and c_compiler.type != "clang-cl":
         return True
 
-set_config('ENABLE_STRIP', enable_strip)
 
-option('--disable-install-strip', when=compile_environment,
-       help='Enable stripping of libs & executables when packaging')
+set_config("ENABLE_STRIP", enable_strip)
+
+option(
+    "--disable-install-strip",
+    when=compile_environment,
+    help="Enable stripping of libs & executables when packaging",
+)
 
 # This should be handled as a `when` once bug 1617793 is fixed.
-@depends('--enable-install-strip', c_compiler, when=compile_environment)
+@depends("--enable-install-strip", c_compiler, when=compile_environment)
 def enable_install_strip(strip, c_compiler):
-    if strip and c_compiler.type != 'clang-cl':
+    if strip and c_compiler.type != "clang-cl":
         return True
 
-set_config('PKG_STRIP', enable_install_strip)
+
+set_config("PKG_STRIP", enable_install_strip)
 
 
-@depends('--enable-strip', '--enable-install-strip', when=compile_environment)
+@depends("--enable-strip", "--enable-install-strip", when=compile_environment)
 def strip(strip, install_strip):
     return strip or install_strip
 
-option(env='STRIP_FLAGS', nargs=1, when=strip, help='Flags for the strip command')
 
-@depends('STRIP_FLAGS', target, when=strip)
+option(env="STRIP_FLAGS", nargs=1, when=strip, help="Flags for the strip command")
+
+
+@depends("STRIP_FLAGS", target, when=strip)
 def strip_flags(flags, target):
     if flags:
         return flags[0].split()
     # Strip everything we can, which happens without flags on non-Darwin.
     # On Darwin, it tries to strip things it can't, so we need to limit its scope.
-    if target.kernel == 'Darwin':
-        return ['-x', '-S']
+    if target.kernel == "Darwin":
+        return ["-x", "-S"]
 
-set_config('STRIP_FLAGS', strip_flags)
+
+set_config("STRIP_FLAGS", strip_flags)
 
 
 @depends(js_standalone, target)
 def system_zlib_default(js_standalone, target):
-    return js_standalone and target.kernel != 'WINNT'
+    return js_standalone and target.kernel != "WINNT"
 
-option('--with-system-zlib', nargs='?', default=system_zlib_default,
-       help='{Use|Do not use} system libz')
 
-@depends('--with-system-zlib')
+option(
+    "--with-system-zlib",
+    nargs="?",
+    default=system_zlib_default,
+    help="{Use|Do not use} system libz",
+)
+
+
+@depends("--with-system-zlib")
 def deprecated_system_zlib_path(value):
     if len(value) == 1:
-        die('--with-system-zlib=PATH is not supported anymore. Please use '
-            '--with-system-zlib and set any necessary pkg-config environment variable.')
+        die(
+            "--with-system-zlib=PATH is not supported anymore. Please use "
+            "--with-system-zlib and set any necessary pkg-config environment variable."
+        )
 
-pkg_check_modules('MOZ_ZLIB', 'zlib >= 1.2.3', when='--with-system-zlib')
 
-set_config('MOZ_SYSTEM_ZLIB', True, when='--with-system-zlib')
-add_old_configure_assignment('MOZ_SYSTEM_ZLIB', True, when='--with-system-zlib')
+pkg_check_modules("MOZ_ZLIB", "zlib >= 1.2.3", when="--with-system-zlib")
+
+set_config("MOZ_SYSTEM_ZLIB", True, when="--with-system-zlib")
+add_old_configure_assignment("MOZ_SYSTEM_ZLIB", True, when="--with-system-zlib")
 
 
 # Please do not add configure checks from here on.
 
 # Fallthrough to autoconf-based configure
-include('build/moz.configure/old.configure')
+include("build/moz.configure/old.configure")
 
 # JS Subconfigure.
-include('js/sub.configure', when=compile_environment & toolkit)
+include("js/sub.configure", when=compile_environment & toolkit)
 
 
 @depends(check_build_environment, build_project)
-@imports('__sandbox__')
-@imports('glob')
-@imports(_from='os.path', _import='exists')
+@imports("__sandbox__")
+@imports("glob")
+@imports(_from="os.path", _import="exists")
 def config_status_deps(build_env, build_project):
 
     topsrcdir = build_env.topsrcdir
     topobjdir = build_env.topobjdir
 
-    if not topobjdir.endswith('js/src'):
-        extra_deps = [os.path.join(topobjdir, '.mozconfig.json')]
+    if not topobjdir.endswith("js/src"):
+        extra_deps = [os.path.join(topobjdir, ".mozconfig.json")]
     else:
         # mozconfig changes may impact js configure.
-        extra_deps = [os.path.join(topobjdir[:-7], '.mozconfig.json')]
+        extra_deps = [os.path.join(topobjdir[:-7], ".mozconfig.json")]
 
-    confvars = os.path.join(topsrcdir, build_project, 'confvars.sh')
+    confvars = os.path.join(topsrcdir, build_project, "confvars.sh")
     if exists(confvars):
         extra_deps.append(confvars)
 
-    return list(__sandbox__._all_paths) + extra_deps + [
-        os.path.join(topsrcdir, 'CLOBBER'),
-        os.path.join(topsrcdir, 'configure.in'),
-        os.path.join(topsrcdir, 'js', 'src', 'configure.in'),
-        os.path.join(topsrcdir, 'nsprpub', 'configure'),
-        os.path.join(topsrcdir, 'config', 'milestone.txt'),
-        os.path.join(topsrcdir, 'browser', 'config', 'version.txt'),
-        os.path.join(topsrcdir, 'browser', 'config', 'version_display.txt'),
-        os.path.join(topsrcdir, 'build', 'build_virtualenv_packages.txt'),
-        os.path.join(topsrcdir, 'build', 'common_virtualenv_packages.txt'),
-        os.path.join(topsrcdir, 'build', 'mach_virtualenv_packages.txt'),
-        os.path.join(topsrcdir, 'python', 'mozbuild', 'mozbuild', 'virtualenv.py'),
-        os.path.join(topsrcdir, 'testing', 'mozbase', 'packages.txt'),
-        os.path.join(topsrcdir, 'aclocal.m4'),
-        os.path.join(topsrcdir, 'old-configure.in'),
-        os.path.join(topsrcdir, 'js', 'src', 'aclocal.m4'),
-        os.path.join(topsrcdir, 'js', 'src', 'old-configure.in'),
-    ] + glob.glob(os.path.join(topsrcdir, 'build', 'autoconf', '*.m4'))
+    return (
+        list(__sandbox__._all_paths)
+        + extra_deps
+        + [
+            os.path.join(topsrcdir, "CLOBBER"),
+            os.path.join(topsrcdir, "configure.in"),
+            os.path.join(topsrcdir, "js", "src", "configure.in"),
+            os.path.join(topsrcdir, "nsprpub", "configure"),
+            os.path.join(topsrcdir, "config", "milestone.txt"),
+            os.path.join(topsrcdir, "browser", "config", "version.txt"),
+            os.path.join(topsrcdir, "browser", "config", "version_display.txt"),
+            os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+            os.path.join(topsrcdir, "build", "common_virtualenv_packages.txt"),
+            os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
+            os.path.join(topsrcdir, "python", "mozbuild", "mozbuild", "virtualenv.py"),
+            os.path.join(topsrcdir, "testing", "mozbase", "packages.txt"),
+            os.path.join(topsrcdir, "aclocal.m4"),
+            os.path.join(topsrcdir, "old-configure.in"),
+            os.path.join(topsrcdir, "js", "src", "aclocal.m4"),
+            os.path.join(topsrcdir, "js", "src", "old-configure.in"),
+        ]
+        + glob.glob(os.path.join(topsrcdir, "build", "autoconf", "*.m4"))
+    )
 
-set_config('CONFIG_STATUS_DEPS', config_status_deps)
+
+set_config("CONFIG_STATUS_DEPS", config_status_deps)
 # Please do not add anything after setting config_dep_paths.

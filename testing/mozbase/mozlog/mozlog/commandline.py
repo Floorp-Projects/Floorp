@@ -16,24 +16,26 @@ from .structuredlog import StructuredLogger, set_default_logger
 import six
 
 log_formatters = {
-    'raw': (formatters.JSONFormatter, "Raw structured log messages "
-                                      "(provided by mozlog)"),
-    'unittest': (formatters.UnittestFormatter, "Unittest style output "
-                                               "(provided by mozlog)"),
-    'xunit': (formatters.XUnitFormatter, "xUnit compatible XML "
-                                         "(povided by mozlog)"),
-    'html': (formatters.HTMLFormatter, "HTML report "
-                                       "(provided by mozlog)"),
-    'mach': (formatters.MachFormatter, "Human-readable output "
-                                       "(provided by mozlog)"),
-    'tbpl': (formatters.TbplFormatter, "TBPL style log format "
-                                       "(provided by mozlog)"),
-    'grouped': (formatters.GroupingFormatter, "Grouped summary of test results "
-                                              "(provided by mozlog)"),
-    'errorsummary': (formatters.ErrorSummaryFormatter, argparse.SUPPRESS),
+    "raw": (
+        formatters.JSONFormatter,
+        "Raw structured log messages " "(provided by mozlog)",
+    ),
+    "unittest": (
+        formatters.UnittestFormatter,
+        "Unittest style output " "(provided by mozlog)",
+    ),
+    "xunit": (formatters.XUnitFormatter, "xUnit compatible XML " "(povided by mozlog)"),
+    "html": (formatters.HTMLFormatter, "HTML report " "(provided by mozlog)"),
+    "mach": (formatters.MachFormatter, "Human-readable output " "(provided by mozlog)"),
+    "tbpl": (formatters.TbplFormatter, "TBPL style log format " "(provided by mozlog)"),
+    "grouped": (
+        formatters.GroupingFormatter,
+        "Grouped summary of test results " "(provided by mozlog)",
+    ),
+    "errorsummary": (formatters.ErrorSummaryFormatter, argparse.SUPPRESS),
 }
 
-TEXT_FORMATTERS = ('raw', 'mach')
+TEXT_FORMATTERS = ("raw", "mach")
 """a subset of formatters for non test harnesses related applications"""
 
 
@@ -72,13 +74,8 @@ def valgrind_handler_wrapper(handler):
 
 
 def default_formatter_options(log_type, overrides):
-    formatter_option_defaults = {
-        "raw": {
-            "level": "debug"
-        }
-    }
-    rv = {"verbose": False,
-          "level": "info"}
+    formatter_option_defaults = {"raw": {"level": "debug"}}
+    rv = {"verbose": False, "level": "info"}
     rv.update(formatter_option_defaults.get(log_type, {}))
 
     if overrides is not None:
@@ -90,25 +87,43 @@ def default_formatter_options(log_type, overrides):
 fmt_options = {
     # <option name>: (<wrapper function>, description, <applicable formatters>, action)
     # "action" is used by the commandline parser in use.
-    'verbose': (verbose_wrapper,
-                "Enables verbose mode for the given formatter.",
-                {"mach"}, "store_true"),
-    'compact': (compact_wrapper,
-                "Enables compact mode for the given formatter.",
-                {"tbpl"}, "store_true"),
-    'level': (level_filter_wrapper,
-              "A least log level to subscribe to for the given formatter "
-              "(debug, info, error, etc.)",
-              {"mach", "raw", "tbpl"}, "store"),
-    'buffer': (buffer_handler_wrapper,
-               "If specified, enables message buffering at the given buffer size limit.",
-               ["mach", "tbpl"], "store"),
-    'screenshot': (screenshot_wrapper,
-                   "Enable logging reftest-analyzer compatible screenshot data.",
-                   {"mach"}, "store_true"),
-    'no-screenshot': (screenshot_wrapper,
-                      "Disable logging reftest-analyzer compatible screenshot data.",
-                      {"mach"}, "store_false"),
+    "verbose": (
+        verbose_wrapper,
+        "Enables verbose mode for the given formatter.",
+        {"mach"},
+        "store_true",
+    ),
+    "compact": (
+        compact_wrapper,
+        "Enables compact mode for the given formatter.",
+        {"tbpl"},
+        "store_true",
+    ),
+    "level": (
+        level_filter_wrapper,
+        "A least log level to subscribe to for the given formatter "
+        "(debug, info, error, etc.)",
+        {"mach", "raw", "tbpl"},
+        "store",
+    ),
+    "buffer": (
+        buffer_handler_wrapper,
+        "If specified, enables message buffering at the given buffer size limit.",
+        ["mach", "tbpl"],
+        "store",
+    ),
+    "screenshot": (
+        screenshot_wrapper,
+        "Enable logging reftest-analyzer compatible screenshot data.",
+        {"mach"},
+        "store_true",
+    ),
+    "no-screenshot": (
+        screenshot_wrapper,
+        "Disable logging reftest-analyzer compatible screenshot data.",
+        {"mach"},
+        "store_false",
+    ),
 }
 
 
@@ -142,32 +157,32 @@ def add_logging_group(parser, include_formatters=None):
                                that is not related to test harnesses.
     """
     group_name = "Output Logging"
-    group_description = ("Each option represents a possible logging format "
-                         "and takes a filename to write that format to, "
-                         "or '-' to write to stdout. Some options are "
-                         "provided by the mozlog utility; see %s "
-                         "for extended documentation." % DOCS_URL)
+    group_description = (
+        "Each option represents a possible logging format "
+        "and takes a filename to write that format to, "
+        "or '-' to write to stdout. Some options are "
+        "provided by the mozlog utility; see %s "
+        "for extended documentation." % DOCS_URL
+    )
 
     if include_formatters is None:
         include_formatters = list(log_formatters.keys())
 
     if isinstance(parser, optparse.OptionParser):
-        group = optparse.OptionGroup(parser,
-                                     group_name,
-                                     group_description)
+        group = optparse.OptionGroup(parser, group_name, group_description)
         parser.add_option_group(group)
-        opt_log_type = 'str'
+        opt_log_type = "str"
         group_add = group.add_option
     else:
-        group = parser.add_argument_group(group_name,
-                                          group_description)
+        group = parser.add_argument_group(group_name, group_description)
         opt_log_type = log_file
         group_add = group.add_argument
 
     for name, (cls, help_str) in six.iteritems(log_formatters):
         if name in include_formatters:
-            group_add("--log-" + name, action="append", type=opt_log_type,
-                      help=help_str)
+            group_add(
+                "--log-" + name, action="append", type=opt_log_type, help=help_str
+            )
 
     for fmt in include_formatters:
         for optname, (cls, help_str, formatters_, action) in six.iteritems(fmt_options):
@@ -178,8 +193,13 @@ def add_logging_group(parser, include_formatters=None):
             else:
                 dest = optname
             dest = dest.replace("-", "_")
-            group_add("--log-%s-%s" % (fmt, optname), action=action,
-                      help=help_str, default=None, dest="log_%s_%s" % (fmt, dest))
+            group_add(
+                "--log-%s-%s" % (fmt, optname),
+                action=action,
+                help=help_str,
+                default=None,
+                dest="log_%s_%s" % (fmt, dest),
+            )
 
 
 def setup_handlers(logger, formatters, formatter_options, allow_unused_options=False):
@@ -194,8 +214,9 @@ def setup_handlers(logger, formatters, formatter_options, allow_unused_options=F
     """
     unused_options = set(formatter_options.keys()) - set(formatters.keys())
     if unused_options and not allow_unused_options:
-        msg = ("Options specified for unused formatter(s) (%s) have no effect" %
-               list(unused_options))
+        msg = "Options specified for unused formatter(s) (%s) have no effect" % list(
+            unused_options
+        )
         raise ValueError(msg)
 
     for fmt, streams in six.iteritems(formatters):
@@ -222,8 +243,9 @@ def setup_handlers(logger, formatters, formatter_options, allow_unused_options=F
             logger.add_handler(handler)
 
 
-def setup_logging(logger, args, defaults=None, formatter_defaults=None,
-                  allow_unused_options=False):
+def setup_logging(
+    logger, args, defaults=None, formatter_defaults=None, allow_unused_options=False
+):
     """
     Configure a structuredlogger based on command line arguments.
 
@@ -269,13 +291,13 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None,
             defaults = {"raw": sys.stdout}
 
     for name, values in six.iteritems(args):
-        parts = name.split('_')
+        parts = name.split("_")
         if len(parts) > 3:
             continue
         # Our args will be ['log', <formatter>]
         #               or ['log', <formatter>, <option>]
         #               or ['valgrind']
-        if parts[0] == 'log' and values is not None:
+        if parts[0] == "log" and values is not None:
             if len(parts) == 1 or parts[1] not in log_formatters:
                 continue
             if len(parts) == 2:
@@ -290,8 +312,9 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None,
             if len(parts) == 3:
                 _, formatter, opt = parts
                 if formatter not in formatter_options:
-                    formatter_options[formatter] = default_formatter_options(formatter,
-                                                                             formatter_defaults)
+                    formatter_options[formatter] = default_formatter_options(
+                        formatter, formatter_defaults
+                    )
                 formatter_options[formatter][opt] = values
 
     # If there is no user-specified logging, go with the default options
@@ -306,12 +329,14 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None,
 
     for name in formatters:
         if name not in formatter_options:
-            formatter_options[name] = default_formatter_options(name, formatter_defaults)
+            formatter_options[name] = default_formatter_options(
+                name, formatter_defaults
+            )
 
     # If the user specified --valgrind, add it as an option for all formatters
-    if args.get('valgrind', None) is not None:
+    if args.get("valgrind", None) is not None:
         for name in formatters:
-            formatter_options[name]['valgrind'] = True
+            formatter_options[name]["valgrind"] = True
     setup_handlers(logger, formatters, formatter_options, allow_unused_options)
     set_default_logger(logger)
 

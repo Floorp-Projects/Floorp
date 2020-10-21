@@ -139,10 +139,10 @@ class VendorPython(MozbuildObject):
         ignore = ()
         if not keep_extra_files:
             ignore = (
-                '*/doc',
-                '*/docs',
-                '*/test',
-                '*/tests',
+                "*/doc",
+                "*/docs",
+                "*/test",
+                "*/tests",
             )
         finder = FileFinder(src)
         for path, _ in finder.find("*"):
@@ -162,7 +162,9 @@ class VendorPython(MozbuildObject):
                 mozfile.extract(os.path.join(finder.base, path), target, ignore=ignore)
             else:
                 # packages extract into package-version directory name and we strip the version
-                tld = mozfile.extract(os.path.join(finder.base, path), dest, ignore=ignore)[0]
+                tld = mozfile.extract(
+                    os.path.join(finder.base, path), dest, ignore=ignore
+                )[0]
                 target = os.path.join(dest, tld.rpartition("-")[0])
                 mozfile.remove(target)  # remove existing version of vendored package
                 mozfile.move(tld, target)

@@ -10,9 +10,9 @@ def _run_pip(*args):
     Helper function that runs pip with subprocess
     """
     try:
-        subprocess.check_output(['pip'] + list(args),
-                                stderr=subprocess.STDOUT,
-                                universal_newlines=True)
+        subprocess.check_output(
+            ["pip"] + list(args), stderr=subprocess.STDOUT, universal_newlines=True
+        )
         return True
     except subprocess.CalledProcessError as e:
         print(e.output)
@@ -24,9 +24,7 @@ def reinstall_program(REQ_PATH):
     Try to install flake8 at the target version, returns True on success
     otherwise prints the otuput of the pip command and returns False
     """
-    if _run_pip('install', '-U',
-                '--require-hashes', '-r',
-                REQ_PATH):
+    if _run_pip("install", "-U", "--require-hashes", "-r", REQ_PATH):
         return True
 
     return False

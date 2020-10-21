@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'devices.js',
-    'index.js',
-    'screenshot.js',
-    'ui.js',
-    'viewports.js',
+    "devices.js",
+    "index.js",
+    "screenshot.js",
+    "ui.js",
+    "viewports.js",
 )
