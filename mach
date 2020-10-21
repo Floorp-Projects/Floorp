@@ -30,7 +30,6 @@ py2commands="
     raptor-test
     reftest
     talos-test
-    taskcluster-load-image
     telemetry-tests-client
     test
     tps-build
