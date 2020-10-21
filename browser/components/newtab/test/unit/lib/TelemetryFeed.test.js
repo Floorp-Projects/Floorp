@@ -17,6 +17,7 @@ import {
 import { FakePrefs, GlobalOverrider } from "test/unit/utils";
 import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
 import injector from "inject!lib/TelemetryFeed.jsm";
+import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
 
 const FAKE_UUID = "{foo-123-foo}";
 const FAKE_ROUTER_MESSAGE_PROVIDER = [{ id: "cfr", enabled: true }];
@@ -101,6 +102,18 @@ describe("TelemetryFeed", () => {
     ASRouterPreferences.uninit();
   });
   describe("#init", () => {
+    it("should set preferences in parent process", () => {
+      const testInstance = new TelemetryFeed({ isParentProcess: true });
+      // unfortuntely testing gUUIDGenerator.generateUUID is not possible here
+      // but we still need test coverage
+      assert.isDefined(testInstance);
+    });
+    it("should not set preferences in content process", () => {
+      const testInstance = new TelemetryFeed({ isParentProcess: false });
+      // unfortuntely testing gUUIDGenerator.generateUUID is not possible here
+      // but we still need test coverage
+      assert.isDefined(testInstance);
+    });
     it("should add .pingCentre, a PingCentre instance", () => {
       assert.instanceOf(instance.pingCentre, PingCentre);
     });
@@ -1459,20 +1472,31 @@ describe("TelemetryFeed", () => {
       assert.calledWith(sendEvent, eventCreator.returnValue);
       assert.calledWith(utSendUserEvent, eventCreator.returnValue);
     });
-    it("should call handleASRouterUserEvent on TELEMETRY_USER_EVENT action", () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
-      instance = new TelemetryFeed();
+    describe("should call handleASRouterUserEvent on x action", () => {
+      const actions = [
+        at.AS_ROUTER_TELEMETRY_USER_EVENT,
+        msg.TOOLBAR_BADGE_TELEMETRY,
+        msg.TOOLBAR_PANEL_TELEMETRY,
+        msg.MOMENTS_PAGE_TELEMETRY,
+        msg.DOORHANGER_TELEMETRY,
+      ];
+      actions.forEach(type => {
+        it(`${type} action`, () => {
+          FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+          FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+          instance = new TelemetryFeed();
 
-      const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
-      const action = {
-        type: at.AS_ROUTER_TELEMETRY_USER_EVENT,
-        data: { event: "CLICK" },
-      };
+          const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
+          const action = {
+            type,
+            data: { event: "CLICK" },
+          };
 
-      instance.onAction(action);
+          instance.onAction(action);
 
-      assert.calledWith(eventHandler, action);
+          assert.calledWith(eventHandler, action);
+        });
+      });
     });
     it("should send an event on a TELEMETRY_PERFORMANCE_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");

@@ -87,8 +87,8 @@ describe("ExtensionDoorhanger", () => {
   it("should validate L10N_CONTENT", () => {
     assert.jsonSchema(L10N_CONTENT, CFRDoorhangerSchema);
   });
-  it("should validate all messages from CFRMessageProvider", () => {
-    const messages = CFRMessageProvider.getMessages();
+  it("should validate all messages from CFRMessageProvider", async () => {
+    const messages = await CFRMessageProvider.getMessages();
     messages.forEach(msg =>
       assert.jsonSchema(msg.content, SCHEMAS[msg.template])
     );
