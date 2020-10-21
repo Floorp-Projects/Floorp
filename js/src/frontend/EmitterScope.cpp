@@ -406,9 +406,11 @@ bool EmitterScope::appendScopeNote(BytecodeEmitter* bce) {
                          : ScopeNote::NoScopeNoteIndex);
 }
 
-bool EmitterScope::deadZoneFrameSlotRange(BytecodeEmitter* bce,
-                                          uint32_t slotStart,
-                                          uint32_t slotEnd) const {
+bool EmitterScope::clearFrameSlotRange(BytecodeEmitter* bce, JSOp opcode,
+                                       uint32_t slotStart,
+                                       uint32_t slotEnd) const {
+  MOZ_ASSERT(opcode == JSOp::Uninitialized || opcode == JSOp::Undefined);
+
   // Lexical bindings throw ReferenceErrors if they are used before
   // initialization. See ES6 8.1.1.1.6.
   //
@@ -417,10 +419,12 @@ bool EmitterScope::deadZoneFrameSlotRange(BytecodeEmitter* bce,
   // throw reference errors. See 13.1.11, 9.2.13, 13.6.3.4, 13.6.4.6,
   // 13.6.4.8, 13.14.5, 15.1.8, and 15.2.0.15.
   //
-  // The same code is used to clear slots on exit, in generators and async
-  // functions, to avoid keeping garbage alive indefinitely.
+  // This code is also used to reset `var`s to `undefined` when entering an
+  // extra body var scope; and to clear slots when leaving a block, in
+  // generators and async functions, to avoid keeping garbage alive
+  // indefinitely.
   if (slotStart != slotEnd) {
-    if (!bce->emit1(JSOp::Uninitialized)) {
+    if (!bce->emit1(opcode)) {
       return false;
     }
     for (uint32_t slot = slotStart; slot < slotEnd; slot++) {
@@ -712,12 +716,24 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
       }
 
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      MOZ_ASSERT(bi.kind() == BindingKind::Var);
       if (!putNameInCache(bce, bi.name(), loc)) {
         return false;
       }
     }
 
+    uint32_t priorEnd = bce->maxFixedSlots;
     updateFrameFixedSlots(bce, bi);
+
+    // If any of the bound slots were previously used, reset them to undefined.
+    // This doesn't break TDZ for let/const/class bindings because there aren't
+    // any in extra body var scopes. We assert above that bi.kind() is Var.
+    uint32_t end = std::min(priorEnd, nextFrameSlot_);
+    if (firstFrameSlot < end) {
+      if (!clearFrameSlotRange(bce, JSOp::Undefined, firstFrameSlot, end)) {
+        return false;
+      }
+    }
   } else {
     nextFrameSlot_ = firstFrameSlot;
   }
