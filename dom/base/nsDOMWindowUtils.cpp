@@ -2589,6 +2589,26 @@ nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
   return NS_OK;
 }
 
+static nsTArray<nsIScrollableFrame*> CollectScrollableAncestors(
+    nsIFrame* aStart) {
+  nsTArray<nsIScrollableFrame*> result;
+  nsIFrame* frame = aStart;
+  while (frame) {
+    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
+    if (!frame) {
+      break;
+    }
+    nsIScrollableFrame* scrollAncestor =
+        nsLayoutUtils::GetAsyncScrollableAncestorFrame(frame);
+    if (!scrollAncestor) {
+      break;
+    }
+    result.AppendElement(scrollAncestor);
+    frame = do_QueryFrame(scrollAncestor);
+  }
+  return result;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::ZoomToFocusedInput() {
   if (!Preferences::GetBool("apz.zoom-to-focused-input.enabled")) {
@@ -2695,7 +2715,27 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
   }
 
   bounds.Inflate(15.0f, 0.0f);
-  widget->ZoomToRect(presShellId, viewId, bounds, flags);
+
+  bool waitForRefresh = false;
+  for (nsIScrollableFrame* scrollAncestor :
+       CollectScrollableAncestors(element->GetPrimaryFrame())) {
+    if (scrollAncestor->HasScrollUpdates()) {
+      waitForRefresh = true;
+      break;
+    }
+  }
+  if (waitForRefresh) {
+    waitForRefresh =
+        presShell->AddPostRefreshObserver(new OneShotPostRefreshObserver(
+            presShell, [widget = RefPtr<nsIWidget>(widget), presShellId, viewId,
+                        bounds, flags](PresShell*) {
+              widget->ZoomToRect(presShellId, viewId, bounds, flags);
+            }));
+  }
+  if (!waitForRefresh) {
+    widget->ZoomToRect(presShellId, viewId, bounds, flags);
+  }
+
   return NS_OK;
 }
 
