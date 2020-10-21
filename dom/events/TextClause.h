@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
