@@ -20,7 +20,7 @@ try {
 function message(m) {
   // eslint-disable-next-line no-unsanitized/property
   document.getElementById("message").innerHTML = m;
-  window.parent.postMessage(m, "*");
+  window.top.postMessage(m, "*");
 }
 
 var gStreams = [];
