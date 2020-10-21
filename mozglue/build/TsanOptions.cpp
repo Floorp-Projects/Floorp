@@ -355,6 +355,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1671574
          "thread:StartupCache\n"
 
+         // Bug 1671601
+         "race:CamerasParent::ActorDestroy\n"
+         "race:CamerasParent::DispatchToVideoCaptureThread\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
