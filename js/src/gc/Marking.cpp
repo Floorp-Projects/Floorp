@@ -2631,6 +2631,10 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   MOZ_ASSERT(marker->isWeakMarking());
 
   if (!marker->incrementalWeakMapMarkingEnabled) {
+    // Do not rely on the information about not-yet-marked weak keys that have
+    // been collected by barriers. Rebuild the full table here.
+    mozilla::Unused << gcWeakKeys().clear();
+
     for (WeakMapBase* m : gcWeakMapList()) {
       if (m->mapColor) {
         mozilla::Unused << m->markEntries(marker);
