@@ -24,6 +24,4 @@ add_task(async function() {
   const c2id = getCookieId("cs2", ".example.org", "/");
   await selectTableItem(c2id);
   checkCell(c2id, "hostOnly", "false");
-
-  await finishTests();
 });

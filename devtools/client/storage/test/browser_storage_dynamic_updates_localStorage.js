@@ -32,8 +32,6 @@ add_task(async function() {
   await gUI.once("store-objects-cleared");
 
   await checkState([[["localStorage", TEST_HOST], []]]);
-
-  await finishTests();
 });
 
 async function testRemoveAndChange(targetKey, expectedKeys, host) {
