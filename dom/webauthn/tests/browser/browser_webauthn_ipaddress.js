@@ -21,7 +21,6 @@ add_task(function test_setup() {
     "security.webauth.webauthn_enable_usbtoken",
     false
   );
-  Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 });
 
 registerCleanupFunction(async function() {
@@ -32,7 +31,6 @@ registerCleanupFunction(async function() {
   );
   Services.prefs.clearUserPref("security.webauth.webauthn_enable_softtoken");
   Services.prefs.clearUserPref("security.webauth.webauthn_enable_usbtoken");
-  Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 });
 
 add_task(async function test_appid() {

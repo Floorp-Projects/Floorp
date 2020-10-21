@@ -494,14 +494,6 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                        uint16_t flags, uint16_t af,
                        nsResolveHostCallback* callback);
 
-  nsHostRecord* InitRecord(const nsHostKey& key);
-
-  /**
-   * return a resolved hard coded loopback dns record for the specified key
-   */
-  already_AddRefed<nsHostRecord> InitLoopbackRecord(const nsHostKey& key,
-                                                    nsresult* aRv);
-
   /**
    * removes the specified callback from the nsHostRecord for the given
    * hostname, originAttributes, flags, and address family.  these parameters

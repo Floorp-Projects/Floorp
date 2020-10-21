@@ -6,11 +6,9 @@
 
 #include "mozilla/net/DNS.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
-#include "mozilla/StaticPrefs_network.h"
-#include "nsContentUtils.h"
+#include "mozilla/ArrayUtils.h"
 #include "nsString.h"
 #include <string.h>
 
@@ -142,41 +140,23 @@ bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
 }
 
 bool NetAddr::IsLoopbackAddr() const {
-  if (IsLoopBackAddressWithoutIPv6Mapping()) {
-    return true;
-  }
-  const NetAddr* addr = this;
-  if (addr->raw.family != AF_INET6) {
-    return false;
-  }
-
-  return IPv6ADDR_IS_V4MAPPED(&addr->inet6.ip) &&
-         IPv6ADDR_V4MAPPED_TO_IPADDR(&addr->inet6.ip) == htonl(INADDR_LOOPBACK);
-}
-
-bool NetAddr::IsLoopBackAddressWithoutIPv6Mapping() const {
   const NetAddr* addr = this;
   if (addr->raw.family == AF_INET) {
     // Consider 127.0.0.1/8 as loopback
     uint32_t ipv4Addr = ntohl(addr->inet.ip);
     return (ipv4Addr >> 24) == 127;
   }
-
-  return addr->raw.family == AF_INET6 && IPv6ADDR_IS_LOOPBACK(&addr->inet6.ip);
-}
-
-bool IsLoopbackHostname(const nsACString& aAsciiHost) {
-  // If the user has configured to proxy localhost addresses don't consider them
-  // to be secure
-  if (StaticPrefs::network_proxy_allow_hijacking_localhost()) {
-    return false;
+  if (addr->raw.family == AF_INET6) {
+    if (IPv6ADDR_IS_LOOPBACK(&addr->inet6.ip)) {
+      return true;
+    }
+    if (IPv6ADDR_IS_V4MAPPED(&addr->inet6.ip) &&
+        IPv6ADDR_V4MAPPED_TO_IPADDR(&addr->inet6.ip) ==
+            htonl(INADDR_LOOPBACK)) {
+      return true;
+    }
   }
-
-  nsAutoCString host;
-  nsContentUtils::ASCIIToLower(aAsciiHost, host);
-
-  return host.EqualsLiteral("localhost") ||
-         StringEndsWith(host, ".localhost"_ns);
+  return false;
 }
 
 bool NetAddr::IsIPAddrAny() const {
