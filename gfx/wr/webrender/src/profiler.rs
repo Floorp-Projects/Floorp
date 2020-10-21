@@ -53,16 +53,37 @@ const ONE_SECOND_NS: u64 = 1_000_000_000;
 
 /// Profiler UI string presets. Defined in the profiler UI string syntax, can contain other presets.
 static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
-    (&"Transaction times", &"DisplayList,Scene building,Content send,API send"),
-    (&"Frame times", &"Frame CPU total,Frame building,Visibility,Prepare,Batching,Glyph resolve,Renderer,GPU"),
-    (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
-    (&"Time graphs", &"#DisplayList,#Scene building,#Blob rasterization, ,#Frame CPU total,#Frame building,#Renderer,#Texture cache upload, ,#GPU"),
-    (&"Memory", &"Image templates,Image templates mem,Font templates,Font templates mem,DisplayList mem,Picture tiles mem"),
-    (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
-    (&"Interners", "Interned primitives,Interned clips,Interned pictures,Interned text runs,Interned normal borders,Interned image borders,Interned images,Interned YUV images,Interned line decorations,Interned linear gradients,Interned radial gradients,Interned conic gradients,Interned filter data,Interned backdrops"),
-    (&"Slow indicators", &"*Slow transaction,*Slow frame"),
-    (&"Compact", &"FPS, ,Frame times, ,Frame stats"),
+    // Default view, doesn't show everything, but still shows quite a bit.
     (&"Default", &"FPS,|,Slow indicators,_,Time graphs,|,Frame times, ,Transaction times, ,Frame stats, ,Memory, ,Interners,_,GPU time queries"),
+    // Smaller, less intrusive overview
+    (&"Compact", &"FPS, ,Frame times, ,Frame stats"),
+    // Even less intrusive, only slow transactions and frame indicators.
+    (&"Slow indicators", &"*Slow transaction,*Slow frame"),
+
+    // Counters:
+
+    // Timing information for per layout transaction stages.
+    (&"Transaction times", &"DisplayList,Scene building,Content send,API send"),
+    // Timing information for per-frame stages.
+    (&"Frame times", &"Frame CPU total,Frame building,Visibility,Prepare,Batching,Glyph resolve,Texture cache update,Renderer,GPU"),
+    // Stats about the content of the frame.
+    (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
+
+    // Graphs:
+
+    // Graph overview of time spent in WebRender's main stages.
+    (&"Time graphs", &"#DisplayList,#Scene building,#Blob rasterization, ,#Frame CPU total,#Frame building,#Renderer,#Texture cache update, ,#GPU"),
+    // Useful when investigating render backend bottlenecks.
+    (&"Backend graphs", &"#Frame building, #Visibility, #Prepare, #Batching, #Glyph resolve"),
+    // Useful when investigating renderer bottlenecks.
+    (&"Renderer graphs", &"#Rendered picture tiles,#Draw calls,#Rasterized glyphs,#Texture uploads,#Texture uploads mem, ,#Texture cache update,#Renderer,"),
+
+    // Misc:
+
+    (&"Memory", &"Image templates,Image templates mem,Font templates,Font templates mem,DisplayList mem,Picture tiles mem"),
+    (&"Interners", "Interned primitives,Interned clips,Interned pictures,Interned text runs,Interned normal borders,Interned image borders,Interned images,Interned YUV images,Interned line decorations,Interned linear gradients,Interned radial gradients,Interned conic gradients,Interned filter data,Interned backdrops"),
+    // Gpu sampler queries (need the pref gfx.webrender.debug.gpu-sampler-queries).
+    (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
 ];
 
 fn find_preset(name: &str) -> Option<&'static str> {
@@ -268,7 +289,7 @@ impl Profiler {
             float("Slow transaction", "", SLOW_TXN, expected(0.0..0.0)),
 
             float("GPU cache upload", "ms", GPU_CACHE_UPLOAD_TIME, expected(0.0..2.0)),
-            float("Texture cache upload", "ms", TEXTURE_CACHE_UPLOAD_TIME, expected(0.0..3.0)),
+            float("Texture cache update", "ms", TEXTURE_CACHE_UPLOAD_TIME, expected(0.0..3.0)),
 
             float("Frame", "ms", FRAME_TIME, Expected::none()),
 
@@ -624,7 +645,7 @@ impl Profiler {
             );
         }
 
-        rect.size.width += 200.0;
+        rect.size.width += 220.0;
         debug_renderer.add_quad(
             rect.min_x(),
             rect.min_y(),
