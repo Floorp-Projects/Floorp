@@ -96,7 +96,7 @@ async function initBrowserToolboxTask({
     );
   }
 
-  importFunctions({
+  await importFunctions({
     info: msg => dump(msg + "\n"),
     is: (a, b, description) => {
       let msg =
