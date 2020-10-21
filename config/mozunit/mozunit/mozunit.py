@@ -23,13 +23,15 @@ try:
     # buildconfig doesn't yet support Python 3, so we can use pathlib to
     # resolve the topsrcdir relative to our current location.
     from pathlib import Path
+
     topsrcdir = Path(here).parents[2]
 except ImportError:
     from mozbuild.base import MozbuildObject
+
     build = MozbuildObject.from_environment(cwd=here)
     topsrcdir = build.topsrcdir
 
-'''Helper to make python unit tests report the way that the Mozilla
+"""Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
 
 Usage:
@@ -38,7 +40,7 @@ import mozunit
 
 if __name__ == '__main__':
     mozunit.main()
-'''
+"""
 
 
 class _MozTestResult(_TestResult):
@@ -53,32 +55,32 @@ class _MozTestResult(_TestResult):
         else:
             return str(test)
 
-    def printStatus(self, status, test, message=''):
+    def printStatus(self, status, test, message=""):
         line = "{status} | {file} | {klass}.{test}{sep}{message}".format(
             status=status,
             file=inspect.getfile(test.__class__),
             klass=test.__class__.__name__,
             test=test._testMethodName,
-            sep=', ' if message else '',
+            sep=", " if message else "",
             message=message,
         )
         self.stream.writeln(line)
 
     def addSuccess(self, test):
         _TestResult.addSuccess(self, test)
-        self.printStatus('TEST-PASS', test)
+        self.printStatus("TEST-PASS", test)
 
     def addSkip(self, test, reason):
         _TestResult.addSkip(self, test, reason)
-        self.printStatus('TEST-SKIP', test)
+        self.printStatus("TEST-SKIP", test)
 
     def addExpectedFailure(self, test, err):
         _TestResult.addExpectedFailure(self, test, err)
-        self.printStatus('TEST-KNOWN-FAIL', test)
+        self.printStatus("TEST-KNOWN-FAIL", test)
 
     def addUnexpectedSuccess(self, test):
         _TestResult.addUnexpectedSuccess(self, test)
-        self.printStatus('TEST-UNEXPECTED-PASS', test)
+        self.printStatus("TEST-UNEXPECTED-PASS", test)
 
     def addError(self, test, err):
         _TestResult.addError(self, test, err)
@@ -94,15 +96,15 @@ class _MozTestResult(_TestResult):
 
     def printFail(self, test, err):
         exctype, value, tb = err
-        message = value or 'NO MESSAGE'
-        if hasattr(value, 'message'):
+        message = value or "NO MESSAGE"
+        if hasattr(value, "message"):
             message = value.message.splitlines()[0]
         # Skip test runner traceback levels
         while tb and self._is_relevant_tb_level(tb):
             tb = tb.tb_next
         if tb:
             _, ln, _ = inspect.getframeinfo(tb)[:3]
-            message = 'line {0}: {1}'.format(ln, message)
+            message = "line {0}: {1}".format(ln, message)
         self.printStatus("TEST-UNEXPECTED-FAIL", test, message)
 
 
@@ -117,8 +119,8 @@ class MozTestRunner(_TestRunner):
 
 
 def _mocked_file(cls):
-    '''Create a mocked file class that inherits from the given class.
-    '''
+    """Create a mocked file class that inherits from the given class."""
+
     class MockedFile(cls):
         def __init__(self, context, filename, content):
             self.context = context
@@ -143,73 +145,74 @@ MockedBytesFile = _mocked_file(BytesIO)
 
 
 def normcase(path):
-    '''
+    """
     Normalize the case of `path`.
 
     Don't use `os.path.normcase` because that also normalizes forward slashes
     to backslashes on Windows.
-    '''
-    if sys.platform.startswith('win'):
+    """
+    if sys.platform.startswith("win"):
         return path.lower()
     return path
 
 
 class _MockBaseOpen(object):
-    '''Callable that acts like the open() function; see MockedOpen for more
+    """Callable that acts like the open() function; see MockedOpen for more
     info.
-    '''
+    """
+
     def __init__(self, open, files):
         self.open = open
         self.files = files
 
-    def __call__(self, name, mode='r', buffering=None, encoding=None, newline=None):
+    def __call__(self, name, mode="r", buffering=None, encoding=None, newline=None):
         # open() can be called with an integer "name" (i.e. a file descriptor).
         # We don't generally do this in our codebase, but internal Python
         # libraries sometimes do and we want to handle that cleanly.
         if isinstance(name, int):
-            return self.open(name, mode=mode, buffering=buffering,
-                             encoding=encoding, newline=newline)
+            return self.open(
+                name, mode=mode, buffering=buffering, encoding=encoding, newline=newline
+            )
         # buffering is ignored.
         absname = normcase(os.path.abspath(name))
-        if 'w' in mode:
+        if "w" in mode:
             file = self._mocked_file(absname, mode)
         elif absname in self.files:
             content = self.files[absname]
             if content is None:
-                raise IOError(2, 'No such file or directory')
+                raise IOError(2, "No such file or directory")
             file = self._mocked_file(absname, mode, content)
-        elif 'a' in mode:
-            read_mode = 'rb' if 'b' in mode else 'r'
-            file = self._mocked_file(
-                absname, mode, self.open(name, read_mode).read())
+        elif "a" in mode:
+            read_mode = "rb" if "b" in mode else "r"
+            file = self._mocked_file(absname, mode, self.open(name, read_mode).read())
         else:
             file = self.open(name, mode)
-        if 'a' in mode:
+        if "a" in mode:
             file.seek(0, os.SEEK_END)
         return file
 
     def _mocked_file(self, name, mode, content=None):
-        raise NotImplementedError('subclass must implement')
+        raise NotImplementedError("subclass must implement")
 
 
 class _MockPy2Open(_MockBaseOpen):
     def _mocked_file(self, name, mode, content=None):
-        content = six.ensure_binary(content or b'')
+        content = six.ensure_binary(content or b"")
         return MockedBytesFile(self, name, content)
 
 
 class _MockOpen(_MockBaseOpen):
     def _mocked_file(self, name, mode, content=None):
-        if 'b' in mode:
-            content = six.ensure_binary(content or b'')
+        if "b" in mode:
+            content = six.ensure_binary(content or b"")
             return MockedBytesFile(self, name, content)
         else:
-            content = six.ensure_text(content or u'')
+            content = six.ensure_text(content or u"")
             return MockedStringFile(self, name, content)
 
 
 class MockedOpen(object):
-    '''
+    """
     Context manager diverting the open builtin such that opening files
     can open "virtual" file instances given when creating a MockedOpen.
 
@@ -229,7 +232,7 @@ class MockedOpen(object):
         f = open('foo', 'w')
         f.write('foo')
     self.assertRaises(Exception,f.open('foo', 'r'))
-    '''
+    """
 
     def __init__(self, files={}):
         self.files = {}
@@ -238,6 +241,7 @@ class MockedOpen(object):
 
     def __enter__(self):
         import six.moves.builtins
+
         self.open = six.moves.builtins.open
         self.io_open = io.open
         self._orig_path_exists = os.path.exists
@@ -252,6 +256,7 @@ class MockedOpen(object):
 
     def __exit__(self, type, value, traceback):
         import six.moves.builtins
+
         six.moves.builtins.open = self.open
         io.open = self.io_open
         os.path.exists = self._orig_path_exists
@@ -259,8 +264,7 @@ class MockedOpen(object):
         os.path.isfile = self._orig_path_isfile
 
     def _wrapped_exists(self, p):
-        return (self._wrapped_isfile(p) or
-                self._wrapped_isdir(p))
+        return self._wrapped_isfile(p) or self._wrapped_isdir(p)
 
     def _wrapped_isfile(self, p):
         p = normcase(p)
@@ -275,7 +279,7 @@ class MockedOpen(object):
 
     def _wrapped_isdir(self, p):
         p = normcase(p)
-        p = p if p.endswith(('/', '\\')) else p + os.sep
+        p = p if p.endswith(("/", "\\")) else p + os.sep
         if any(f.startswith(p) for f in self.files):
             return True
 
@@ -287,24 +291,33 @@ class MockedOpen(object):
 
 
 def main(*args, **kwargs):
-    runwith = kwargs.pop('runwith', 'pytest')
+    runwith = kwargs.pop("runwith", "pytest")
 
-    if runwith == 'unittest':
+    if runwith == "unittest":
         unittest.main(testRunner=MozTestRunner(), *args, **kwargs)
     else:
         args = list(args)
-        if os.environ.get('MACH_STDOUT_ISATTY') and not any(a.startswith('--color') for a in args):
-            args.append('--color=yes')
+        if os.environ.get("MACH_STDOUT_ISATTY") and not any(
+            a.startswith("--color") for a in args
+        ):
+            args.append("--color=yes")
 
-        module = __import__('__main__')
-        args.extend([
-            '--rootdir', topsrcdir,
-            '-c', os.path.join(here, 'pytest.ini'),
-            '-vv',
-            '-p', 'mozlog.pytest_mozlog.plugin',
-            '-p', 'mozunit.pytest_plugin',
-            '-p', 'no:cacheprovider',
-            '-rsx',  # show reasons for skip / xfail
-            module.__file__,
-        ])
+        module = __import__("__main__")
+        args.extend(
+            [
+                "--rootdir",
+                topsrcdir,
+                "-c",
+                os.path.join(here, "pytest.ini"),
+                "-vv",
+                "-p",
+                "mozlog.pytest_mozlog.plugin",
+                "-p",
+                "mozunit.pytest_plugin",
+                "-p",
+                "no:cacheprovider",
+                "-rsx",  # show reasons for skip / xfail
+                module.__file__,
+            ]
+        )
         sys.exit(pytest.main(args))

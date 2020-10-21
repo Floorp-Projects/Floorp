@@ -1,4 +1,3 @@
-
 config = {
     "log_name": "updates_devedition",
     "repo": {

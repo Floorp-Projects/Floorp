@@ -4,18 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Networking: HTTP')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: HTTP")
 
 UNIFIED_SOURCES += [
-    'TestDHCPUtils.cpp',
+    "TestDHCPUtils.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/toolkit/system/windowsDHCPClient',
+    "/toolkit/system/windowsDHCPClient",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
+if CONFIG["GNU_CXX"]:
+    CXXFLAGS += ["-Wshadow"]

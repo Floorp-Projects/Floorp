@@ -48,31 +48,31 @@ class Task(object):
     )
 
     def __attrs_post_init__(self):
-        self.attributes['kind'] = self.kind
+        self.attributes["kind"] = self.kind
 
     @property
     def name(self):
         if self.label.startswith(self.kind + "-"):
-            return self.label[len(self.kind)+1:]
+            return self.label[len(self.kind) + 1 :]
         else:
             raise AttributeError("Task {} does not have a name.".format(self.label))
 
     def to_json(self):
         rv = {
-            'kind': self.kind,
-            'label': self.label,
-            'description': self.description,
-            'attributes': self.attributes,
-            'dependencies': self.dependencies,
-            'soft_dependencies': sorted(self.soft_dependencies),
-            'if_dependencies': self.if_dependencies,
-            'optimization': self.optimization,
-            'task': self.task,
+            "kind": self.kind,
+            "label": self.label,
+            "description": self.description,
+            "attributes": self.attributes,
+            "dependencies": self.dependencies,
+            "soft_dependencies": sorted(self.soft_dependencies),
+            "if_dependencies": self.if_dependencies,
+            "optimization": self.optimization,
+            "task": self.task,
         }
         if self.task_id:
-            rv['task_id'] = self.task_id
+            rv["task_id"] = self.task_id
         if self.release_artifacts:
-            rv['release_artifacts'] = sorted(self.release_artifacts)
+            rv["release_artifacts"] = sorted(self.release_artifacts)
         return rv
 
     @classmethod
@@ -83,17 +83,17 @@ class Task(object):
         generation process, for example in Action tasks.
         """
         rv = cls(
-            kind=task_dict['kind'],
-            label=task_dict['label'],
-            description=task_dict.get('description', ""),
-            attributes=task_dict['attributes'],
-            task=task_dict['task'],
-            optimization=task_dict['optimization'],
-            dependencies=task_dict.get('dependencies'),
-            soft_dependencies=task_dict.get('soft_dependencies'),
-            if_dependencies=task_dict.get('if_dependencies'),
-            release_artifacts=task_dict.get('release-artifacts'),
+            kind=task_dict["kind"],
+            label=task_dict["label"],
+            description=task_dict.get("description", ""),
+            attributes=task_dict["attributes"],
+            task=task_dict["task"],
+            optimization=task_dict["optimization"],
+            dependencies=task_dict.get("dependencies"),
+            soft_dependencies=task_dict.get("soft_dependencies"),
+            if_dependencies=task_dict.get("if_dependencies"),
+            release_artifacts=task_dict.get("release-artifacts"),
         )
-        if 'task_id' in task_dict:
-            rv.task_id = task_dict['task_id']
+        if "task_id" in task_dict:
+            rv.task_id = task_dict["task_id"]
         return rv

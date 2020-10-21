@@ -10,7 +10,6 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestGetCurrentUrlChrome(WindowManagerMixin, MarionetteTestCase):
-
     def setUp(self):
         super(TestGetCurrentUrlChrome, self).setUp()
         self.marionette.set_context("chrome")

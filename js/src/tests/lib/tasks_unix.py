@@ -124,7 +124,7 @@ def read_input(tasks, timeout):
     try:
         readable, _, _ = select.select(rlist, [], exlist, timeout)
     except OverflowError:
-        print >> sys.stderr, "timeout value", timeout
+        print >>sys.stderr, "timeout value", timeout
         raise
 
     for fd in readable:
@@ -163,7 +163,7 @@ def timed_out(task, timeout):
 
 
 # Local copy of six.ensure_str for when six is unavailable or too old.
-def ensure_str(s, encoding='utf-8', errors='strict'):
+def ensure_str(s, encoding="utf-8", errors="strict"):
     if PY2:
         if isinstance(s, str):
             return s
@@ -207,12 +207,14 @@ def reap_zombies(tasks, timeout):
             TestOutput(
                 ended.test,
                 ended.cmd,
-                ensure_str(b''.join(ended.out), errors='replace'),
-                ensure_str(b''.join(ended.err), errors='replace'),
+                ensure_str(b"".join(ended.out), errors="replace"),
+                ensure_str(b"".join(ended.err), errors="replace"),
                 returncode,
                 (datetime.now() - ended.start).total_seconds(),
                 timed_out(ended, timeout),
-                {'pid': ended.pid}))
+                {"pid": ended.pid},
+            )
+        )
     return tasks, finished
 
 
@@ -243,8 +245,9 @@ def run_all_tests(tests, prefix, pb, options):
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
             test = tests.pop()
-            task = spawn_test(test, prefix,
-                              options.passthrough, options.run_skipped, options.show_cmd)
+            task = spawn_test(
+                test, prefix, options.passthrough, options.run_skipped, options.show_cmd
+            )
             if task:
                 tasks.append(task)
             else:

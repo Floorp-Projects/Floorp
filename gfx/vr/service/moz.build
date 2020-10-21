@@ -5,47 +5,44 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Build Oculus support on Windows only
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["OS_TARGET"] == "WINNT":
     SOURCES += [
-        'OculusSession.cpp',
-        'OpenVRWMRMapper.cpp',
+        "OculusSession.cpp",
+        "OpenVRWMRMapper.cpp",
     ]
 
 # Build OSVR on all platforms except Android
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        'OSVRSession.cpp',
-        'VRService.cpp',
-        'VRSession.cpp',
+        "OSVRSession.cpp",
+        "VRService.cpp",
+        "VRSession.cpp",
     ]
     # PuppetSession includes MacIOSurface.h which includes Mac headers
     # which define Size and Points types in the root namespace that
     # often conflict with our own types.
     SOURCES += [
-        'PuppetSession.cpp',
+        "PuppetSession.cpp",
     ]
-    include('/ipc/chromium/chromium-config.mozbuild')
+    include("/ipc/chromium/chromium-config.mozbuild")
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
-if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
+if CONFIG["OS_TARGET"] in ("WINNT", "Linux", "Darwin"):
     DIRS += [
-        'openvr',
+        "openvr",
     ]
-    LOCAL_INCLUDES += [
-        '/dom/base',
-        '/gfx/layers/d3d11'
-    ]
+    LOCAL_INCLUDES += ["/dom/base", "/gfx/layers/d3d11"]
 
     # OpenVRSession includes MacIOSurface.h which includes Mac headers
     # which define Size and Points types in the root namespace that
     # often conflict with our own types.
     SOURCES += [
-        'OpenVRControllerMapper.cpp',
-        'OpenVRCosmosMapper.cpp',
-        'OpenVRDefaultMapper.cpp',
-        'OpenVRKnucklesMapper.cpp',
-        'OpenVRSession.cpp',
-        'OpenVRViveMapper.cpp',
+        "OpenVRControllerMapper.cpp",
+        "OpenVRCosmosMapper.cpp",
+        "OpenVRDefaultMapper.cpp",
+        "OpenVRKnucklesMapper.cpp",
+        "OpenVRSession.cpp",
+        "OpenVRViveMapper.cpp",
     ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

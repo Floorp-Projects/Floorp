@@ -5,30 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'SessionStoreData.h',
-    'SessionStoreListener.h',
-    'SessionStoreMessageUtils.h',
-    'SessionStoreUtils.h',
+    "SessionStoreData.h",
+    "SessionStoreListener.h",
+    "SessionStoreMessageUtils.h",
+    "SessionStoreUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'SessionStoreListener.cpp',
-    'SessionStoreUtils.cpp',
+    "SessionStoreListener.cpp",
+    "SessionStoreUtils.cpp",
 ]
 
 EXTRA_JS_MODULES += [
-    'SessionStoreFunctions.jsm',
+    "SessionStoreFunctions.jsm",
 ]
 
-XPIDL_MODULE = 'sessionStore_funcs'
+XPIDL_MODULE = "sessionStore_funcs"
 
 XPIDL_SOURCES += [
-    'SessionStoreFunctions.idl',
+    "SessionStoreFunctions.idl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Session Restore')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Session Restore")

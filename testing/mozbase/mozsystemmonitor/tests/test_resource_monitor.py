@@ -22,9 +22,8 @@ from mozsystemmonitor.resourcemonitor import (
 )
 
 
-@unittest.skipIf(psutil is None, 'Resource monitor requires psutil.')
+@unittest.skipIf(psutil is None, "Resource monitor requires psutil.")
 class TestResourceMonitor(unittest.TestCase):
-
     def test_basic(self):
         monitor = SystemResourceMonitor(poll_interval=0.5)
 
@@ -52,20 +51,20 @@ class TestResourceMonitor(unittest.TestCase):
         monitor.start()
         time.sleep(1)
 
-        with monitor.phase('phase1'):
+        with monitor.phase("phase1"):
             time.sleep(1)
 
-            with monitor.phase('phase2'):
+            with monitor.phase("phase2"):
                 time.sleep(1)
 
         monitor.stop()
 
         self.assertEqual(len(monitor.phases), 2)
-        self.assertEqual(['phase2', 'phase1'], list(monitor.phases.keys()))
+        self.assertEqual(["phase2", "phase1"], list(monitor.phases.keys()))
 
         all = list(monitor.range_usage())
-        data1 = list(monitor.phase_usage('phase1'))
-        data2 = list(monitor.phase_usage('phase2'))
+        data1 = list(monitor.phase_usage("phase1"))
+        data2 = list(monitor.phase_usage("phase2"))
 
         self.assertGreater(len(all), len(data1))
         self.assertGreater(len(data1), len(data2))
@@ -87,10 +86,10 @@ class TestResourceMonitor(unittest.TestCase):
         time.sleep(0.5)
 
         t0 = time.time()
-        monitor.record_event('t0')
+        monitor.record_event("t0")
         time.sleep(2)
 
-        monitor.record_event('t1')
+        monitor.record_event("t1")
         time.sleep(0.5)
         monitor.stop()
 
@@ -99,10 +98,10 @@ class TestResourceMonitor(unittest.TestCase):
 
         event = events[0]
 
-        self.assertEqual(event[1], 't0')
+        self.assertEqual(event[1], "t0")
         self.assertAlmostEqual(event[0], t0, delta=0.25)
 
-        data = list(monitor.between_events_usage('t0', 't1'))
+        data = list(monitor.between_events_usage("t0", "t1"))
         self.assertGreater(len(data), 0)
 
     def test_aggregate_cpu(self):
@@ -124,7 +123,7 @@ class TestResourceMonitor(unittest.TestCase):
         values = monitor.aggregate_cpu_times()
         self.assertIsInstance(values, list)
         self.assertGreater(len(values), 0)
-        self.assertTrue(hasattr(values[0], 'user'))
+        self.assertTrue(hasattr(values[0], "user"))
 
         t = type(values[0])
 
@@ -141,7 +140,7 @@ class TestResourceMonitor(unittest.TestCase):
         monitor.stop()
 
         values = monitor.aggregate_io()
-        self.assertTrue(hasattr(values, 'read_count'))
+        self.assertTrue(hasattr(values, "read_count"))
 
     def test_memory(self):
         monitor = SystemResourceMonitor(poll_interval=0.25)
@@ -161,29 +160,29 @@ class TestResourceMonitor(unittest.TestCase):
 
         monitor.start()
         time.sleep(0.1)
-        monitor.begin_phase('phase1')
-        monitor.record_event('foo')
+        monitor.begin_phase("phase1")
+        monitor.record_event("foo")
         time.sleep(0.1)
-        monitor.begin_phase('phase2')
-        monitor.record_event('bar')
+        monitor.begin_phase("phase2")
+        monitor.record_event("bar")
         time.sleep(0.2)
-        monitor.finish_phase('phase1')
+        monitor.finish_phase("phase1")
         time.sleep(0.2)
-        monitor.finish_phase('phase2')
+        monitor.finish_phase("phase2")
         time.sleep(0.4)
         monitor.stop()
 
         d = monitor.as_dict()
 
-        self.assertEqual(d['version'], 2)
-        self.assertEqual(len(d['events']), 2)
-        self.assertEqual(len(d['phases']), 2)
-        self.assertIn('system', d)
-        self.assertIsInstance(d['system'], dict)
-        self.assertIsInstance(d['overall'], dict)
-        self.assertIn('duration', d['overall'])
-        self.assertIn('cpu_times', d['overall'])
+        self.assertEqual(d["version"], 2)
+        self.assertEqual(len(d["events"]), 2)
+        self.assertEqual(len(d["phases"]), 2)
+        self.assertIn("system", d)
+        self.assertIsInstance(d["system"], dict)
+        self.assertIsInstance(d["overall"], dict)
+        self.assertIn("duration", d["overall"])
+        self.assertIn("cpu_times", d["overall"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

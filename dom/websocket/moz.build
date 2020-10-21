@@ -8,26 +8,26 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
 EXPORTS.mozilla.dom += [
-    'WebSocket.h',
+    "WebSocket.h",
 ]
 
 UNIFIED_SOURCES += [
-    'WebSocket.cpp',
+    "WebSocket.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/base',
+    "/dom/base",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    'tests/chrome.ini',
+    "tests/chrome.ini",
 ]
 
 MOCHITEST_MANIFESTS += [
-    'tests/mochitest.ini',
-    'tests/websocket_hybi/mochitest.ini',
+    "tests/mochitest.ini",
+    "tests/websocket_hybi/mochitest.ini",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

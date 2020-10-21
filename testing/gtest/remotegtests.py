@@ -23,21 +23,22 @@ import mozdevice
 import mozinfo
 import mozlog
 
-LOGGER_NAME = 'gtest'
+LOGGER_NAME = "gtest"
 log = mozlog.unstructured.getLogger(LOGGER_NAME)
 
 
 class RemoteGTests(object):
     """
-       A test harness to run gtest on Android.
+    A test harness to run gtest on Android.
     """
+
     def __init__(self):
         self.device = None
 
     def build_environment(self, shuffle, test_filter, enable_webrender):
         """
-           Create and return a dictionary of all the appropriate env variables
-           and values.
+        Create and return a dictionary of all the appropriate env variables
+        and values.
         """
         env = {}
         env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
@@ -50,7 +51,9 @@ class RemoteGTests(object):
         env["MOZ_GTEST_CWD"] = self.remote_profile
         env["MOZ_GTEST_MINIDUMPS_PATH"] = self.remote_minidumps
         env["MOZ_IN_AUTOMATION"] = "1"
-        env["MOZ_ANDROID_LIBDIR_OVERRIDE"] = posixpath.join(self.remote_libdir, 'libxul.so')
+        env["MOZ_ANDROID_LIBDIR_OVERRIDE"] = posixpath.join(
+            self.remote_libdir, "libxul.so"
+        )
         if shuffle:
             env["GTEST_SHUFFLE"] = "True"
         if test_filter:
@@ -62,24 +65,37 @@ class RemoteGTests(object):
 
         return env
 
-    def run_gtest(self, test_dir, shuffle, test_filter, package, adb_path, device_serial,
-                  remote_test_root, libxul_path, symbols_path, enable_webrender):
+    def run_gtest(
+        self,
+        test_dir,
+        shuffle,
+        test_filter,
+        package,
+        adb_path,
+        device_serial,
+        remote_test_root,
+        libxul_path,
+        symbols_path,
+        enable_webrender,
+    ):
         """
-           Launch the test app, run gtest, collect test results and wait for completion.
-           Return False if a crash or other failure is detected, else True.
+        Launch the test app, run gtest, collect test results and wait for completion.
+        Return False if a crash or other failure is detected, else True.
         """
         update_mozinfo()
-        self.device = mozdevice.ADBDeviceFactory(adb=adb_path,
-                                                 device=device_serial,
-                                                 test_root=remote_test_root,
-                                                 logger_name=LOGGER_NAME,
-                                                 verbose=False,
-                                                 run_as_package=package)
+        self.device = mozdevice.ADBDeviceFactory(
+            adb=adb_path,
+            device=device_serial,
+            test_root=remote_test_root,
+            logger_name=LOGGER_NAME,
+            verbose=False,
+            run_as_package=package,
+        )
         root = self.device.test_root
-        self.remote_profile = posixpath.join(root, 'gtest-profile')
-        self.remote_minidumps = posixpath.join(root, 'gtest-minidumps')
-        self.remote_log = posixpath.join(root, 'gtest.log')
-        self.remote_libdir = posixpath.join(root, 'gtest')
+        self.remote_profile = posixpath.join(root, "gtest-profile")
+        self.remote_minidumps = posixpath.join(root, "gtest-minidumps")
+        self.remote_log = posixpath.join(root, "gtest.log")
+        self.remote_libdir = posixpath.join(root, "gtest")
 
         self.package = package
         self.cleanup()
@@ -106,13 +122,20 @@ class RemoteGTests(object):
         if test_filter is not None:
             test_filter = six.ensure_text(test_filter)
         env = self.build_environment(shuffle, test_filter, enable_webrender)
-        args = ["-unittest", "--gtest_death_test_style=threadsafe",
-                "-profile %s" % self.remote_profile]
-        if 'geckoview' in self.package:
+        args = [
+            "-unittest",
+            "--gtest_death_test_style=threadsafe",
+            "-profile %s" % self.remote_profile,
+        ]
+        if "geckoview" in self.package:
             activity = "TestRunnerActivity"
-            self.device.launch_activity(self.package, activity_name=activity,
-                                        e10s=False,  # gtest is non-e10s on desktop
-                                        moz_env=env, extra_args=args)
+            self.device.launch_activity(
+                self.package,
+                activity_name=activity,
+                e10s=False,  # gtest is non-e10s on desktop
+                moz_env=env,
+                extra_args=args,
+            )
         else:
             self.device.launch_fennec(self.package, moz_env=env, extra_args=args)
         waiter = AppWaiter(self.device, self.remote_log)
@@ -124,10 +147,10 @@ class RemoteGTests(object):
 
     def shutdown(self, use_kill):
         """
-           Stop the remote application.
-           If use_kill is specified, a multi-stage kill procedure is used,
-           attempting to trigger ANR and minidump reports before ending
-           the process.
+        Stop the remote application.
+        If use_kill is specified, a multi-stage kill procedure is used,
+        attempting to trigger ANR and minidump reports before ending
+        the process.
         """
         if not use_kill:
             self.device.stop_application(self.package)
@@ -182,8 +205,8 @@ class RemoteGTests(object):
 
     def check_for_crashes(self, symbols_path):
         """
-           Pull minidumps from the remote device and generate crash reports.
-           Returns True if a crash was detected, or suspected.
+        Pull minidumps from the remote device and generate crash reports.
+        Returns True if a crash was detected, or suspected.
         """
         try:
             dump_dir = tempfile.mkdtemp()
@@ -191,7 +214,9 @@ class RemoteGTests(object):
             if not self.device.is_dir(remote_dir):
                 return False
             self.device.pull(remote_dir, dump_dir)
-            crashed = mozcrash.check_for_crashes(dump_dir, symbols_path, test_name="gtest")
+            crashed = mozcrash.check_for_crashes(
+                dump_dir, symbols_path, test_name="gtest"
+            )
         except Exception as e:
             log.error("unable to check for crashes: %s" % str(e))
             crashed = True
@@ -212,14 +237,22 @@ class RemoteGTests(object):
 
 
 class AppWaiter(object):
-    def __init__(self, device, remote_log,
-                 test_proc_timeout=1200, test_proc_no_output_timeout=300,
-                 test_proc_start_timeout=60, output_poll_interval=10):
+    def __init__(
+        self,
+        device,
+        remote_log,
+        test_proc_timeout=1200,
+        test_proc_no_output_timeout=300,
+        test_proc_start_timeout=60,
+        output_poll_interval=10,
+    ):
         self.device = device
         self.remote_log = remote_log
         self.start_time = datetime.datetime.now()
         self.timeout_delta = datetime.timedelta(seconds=test_proc_timeout)
-        self.output_timeout_delta = datetime.timedelta(seconds=test_proc_no_output_timeout)
+        self.output_timeout_delta = datetime.timedelta(
+            seconds=test_proc_no_output_timeout
+        )
         self.start_timeout_delta = datetime.timedelta(seconds=test_proc_start_timeout)
         self.output_poll_interval = output_poll_interval
         self.last_output_time = datetime.datetime.now()
@@ -261,12 +294,12 @@ class AppWaiter(object):
 
     def wait(self, package):
         """
-           Wait until:
-            - the app loses foreground, or
-            - no new output is observed for the output timeout, or
-            - the timeout is exceeded.
-           While waiting, update the log every periodically: pull the gtest log from
-           device and log any new content.
+        Wait until:
+         - the app loses foreground, or
+         - no new output is observed for the output timeout, or
+         - the timeout is exceeded.
+        While waiting, update the log every periodically: pull the gtest log from
+        device and log any new content.
         """
         top = self.wait_for_start(package)
         if top != package:
@@ -281,23 +314,29 @@ class AppWaiter(object):
             time.sleep(self.output_poll_interval)
         self.update_log()
         if self.timed_out():
-            log.testFail("gtest | timed out after %d seconds", self.timeout_delta.seconds)
+            log.testFail(
+                "gtest | timed out after %d seconds", self.timeout_delta.seconds
+            )
         elif self.output_timed_out():
-            log.testFail("gtest | timed out after %d seconds without output",
-                         self.output_timeout_delta.seconds)
+            log.testFail(
+                "gtest | timed out after %d seconds without output",
+                self.output_timeout_delta.seconds,
+            )
         else:
             log.info("gtest | wait for %s complete; top activity=%s" % (package, top))
         return True if top == package else False
 
     def update_log(self):
         """
-           Pull the test log from the remote device and display new content.
+        Pull the test log from the remote device and display new content.
         """
         if not self.device.is_file(self.remote_log):
             log.info("gtest | update_log %s is not a file." % self.remote_log)
             return False
         try:
-            new_content = self.device.get_file(self.remote_log, offset=self.remote_log_len)
+            new_content = self.device.get_file(
+                self.remote_log, offset=self.remote_log_len
+            )
         except mozdevice.ADBTimeoutError:
             raise
         except Exception as e:
@@ -307,14 +346,14 @@ class AppWaiter(object):
             log.info("gtest | update_log : no new content")
             return False
         new_content = six.ensure_text(new_content)
-        last_full_line_pos = new_content.rfind('\n')
+        last_full_line_pos = new_content.rfind("\n")
         if last_full_line_pos <= 0:
             # wait for a full line
             return False
         # trim partial line
         new_content = new_content[:last_full_line_pos]
         self.remote_log_len += len(new_content)
-        for line in new_content.lstrip('\n').split('\n'):
+        for line in new_content.lstrip("\n").split("\n"):
             print(line)
         self.last_output_time = datetime.datetime.now()
         return True
@@ -322,63 +361,83 @@ class AppWaiter(object):
 
 class remoteGtestOptions(argparse.ArgumentParser):
     def __init__(self):
-        super(remoteGtestOptions, self).__init__(usage="usage: %prog [options] test_filter")
-        self.add_argument("--package",
-                          dest="package",
-                          default="org.mozilla.geckoview.test",
-                          help="Package name of test app.")
-        self.add_argument("--adbpath",
-                          action="store",
-                          type=str,
-                          dest="adb_path",
-                          default="adb",
-                          help="Path to adb binary.")
-        self.add_argument("--deviceSerial",
-                          action="store",
-                          type=str,
-                          dest="device_serial",
-                          help="adb serial number of remote device. This is required "
-                               "when more than one device is connected to the host. "
-                               "Use 'adb devices' to see connected devices. ")
-        self.add_argument("--remoteTestRoot",
-                          action="store",
-                          type=str,
-                          dest="remote_test_root",
-                          help="Remote directory to use as test root "
-                               "(eg. /data/local/tmp/test_root).")
-        self.add_argument("--libxul",
-                          action="store",
-                          type=str,
-                          dest="libxul_path",
-                          default=None,
-                          help="Path to gtest libxul.so.")
-        self.add_argument("--symbols-path",
-                          dest="symbols_path",
-                          default=None,
-                          help="absolute path to directory containing breakpad "
-                               "symbols, or the URL of a zip file containing symbols")
-        self.add_argument("--shuffle",
-                          action="store_true",
-                          default=False,
-                          help="Randomize the execution order of tests.")
-        self.add_argument("--tests-path",
-                          default=None,
-                          help="Path to gtest directory containing test support files.")
-        self.add_argument("--enable-webrender",
-                          action="store_true",
-                          dest="enable_webrender",
-                          default=False,
-                          help="Enable the WebRender compositor in Gecko.")
+        super(remoteGtestOptions, self).__init__(
+            usage="usage: %prog [options] test_filter"
+        )
+        self.add_argument(
+            "--package",
+            dest="package",
+            default="org.mozilla.geckoview.test",
+            help="Package name of test app.",
+        )
+        self.add_argument(
+            "--adbpath",
+            action="store",
+            type=str,
+            dest="adb_path",
+            default="adb",
+            help="Path to adb binary.",
+        )
+        self.add_argument(
+            "--deviceSerial",
+            action="store",
+            type=str,
+            dest="device_serial",
+            help="adb serial number of remote device. This is required "
+            "when more than one device is connected to the host. "
+            "Use 'adb devices' to see connected devices. ",
+        )
+        self.add_argument(
+            "--remoteTestRoot",
+            action="store",
+            type=str,
+            dest="remote_test_root",
+            help="Remote directory to use as test root "
+            "(eg. /data/local/tmp/test_root).",
+        )
+        self.add_argument(
+            "--libxul",
+            action="store",
+            type=str,
+            dest="libxul_path",
+            default=None,
+            help="Path to gtest libxul.so.",
+        )
+        self.add_argument(
+            "--symbols-path",
+            dest="symbols_path",
+            default=None,
+            help="absolute path to directory containing breakpad "
+            "symbols, or the URL of a zip file containing symbols",
+        )
+        self.add_argument(
+            "--shuffle",
+            action="store_true",
+            default=False,
+            help="Randomize the execution order of tests.",
+        )
+        self.add_argument(
+            "--tests-path",
+            default=None,
+            help="Path to gtest directory containing test support files.",
+        )
+        self.add_argument(
+            "--enable-webrender",
+            action="store_true",
+            dest="enable_webrender",
+            default=False,
+            help="Enable the WebRender compositor in Gecko.",
+        )
         self.add_argument("args", nargs=argparse.REMAINDER)
 
 
 def update_mozinfo():
     """
-       Walk up directories to find mozinfo.json and update the info.
+    Walk up directories to find mozinfo.json and update the info.
     """
     path = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
     dirs = set()
-    while path != os.path.expanduser('~'):
+    while path != os.path.expanduser("~"):
         if path in dirs:
             break
         dirs.add(path)
@@ -401,11 +460,18 @@ def main():
     result = False
     try:
         device_exception = False
-        result = tester.run_gtest(options.tests_path,
-                                  options.shuffle, test_filter, options.package,
-                                  options.adb_path, options.device_serial,
-                                  options.remote_test_root, options.libxul_path,
-                                  options.symbols_path, options.enable_webrender)
+        result = tester.run_gtest(
+            options.tests_path,
+            options.shuffle,
+            test_filter,
+            options.package,
+            options.adb_path,
+            options.device_serial,
+            options.remote_test_root,
+            options.libxul_path,
+            options.symbols_path,
+            options.enable_webrender,
+        )
     except KeyboardInterrupt:
         log.info("gtest | Received keyboard interrupt")
     except Exception as e:
@@ -419,5 +485,5 @@ def main():
     sys.exit(0 if result else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

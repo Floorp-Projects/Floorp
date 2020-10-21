@@ -65,16 +65,18 @@ class AwsyTestCase(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
 
         self.logger = mozlog.structured.structuredlog.get_default_logger()
-        self.marionette.set_context('chrome')
+        self.marionette.set_context("chrome")
         self._resultsDir = self.testvars["resultsDir"]
 
-        self._binary = self.testvars['bin']
-        self._run_local = self.testvars.get('run_local', False)
+        self._binary = self.testvars["bin"]
+        self._run_local = self.testvars.get("run_local", False)
 
         # Cleanup our files from previous runs.
-        for patt in ('memory-report-*.json.gz',
-                     'perfherder_data.json',
-                     'dmd-*.json.gz'):
+        for patt in (
+            "memory-report-*.json.gz",
+            "perfherder_data.json",
+            "dmd-*.json.gz",
+        ):
             for f in glob.glob(os.path.join(self._resultsDir, patt)):
                 os.unlink(f)
 
@@ -86,10 +88,16 @@ class AwsyTestCase(MarionetteTestCase):
         self._maxTabs = self.testvars.get("maxTabs", MAX_TABS)
         self._dmd = self.testvars.get("dmd", False)
 
-        self.logger.info("areweslimyet run by %d pages, %d iterations,"
-                         " %d perTabPause, %d settleWaitTime"
-                         % (self._pages_to_load, self._iterations,
-                            self._perTabPause, self._settleWaitTime))
+        self.logger.info(
+            "areweslimyet run by %d pages, %d iterations,"
+            " %d perTabPause, %d settleWaitTime"
+            % (
+                self._pages_to_load,
+                self._iterations,
+                self._perTabPause,
+                self._settleWaitTime,
+            )
+        )
         self.reset_state()
 
     def tearDown(self):
@@ -98,13 +106,15 @@ class AwsyTestCase(MarionetteTestCase):
         try:
             self.logger.info("processing data in %s!" % self._resultsDir)
             perf_blob = process_perf_data.create_perf_data(
-                            self._resultsDir, self.perf_suites(),
-                            self.perf_checkpoints(),
-                            self.perf_extra_opts())
+                self._resultsDir,
+                self.perf_suites(),
+                self.perf_checkpoints(),
+                self.perf_extra_opts(),
+            )
             self.logger.info("PERFHERDER_DATA: %s" % json.dumps(perf_blob))
 
             perf_file = os.path.join(self._resultsDir, "perfherder_data.json")
-            with open(perf_file, 'w') as fp:
+            with open(perf_file, "w") as fp:
                 json.dump(perf_blob, fp, indent=2)
             self.logger.info("Perfherder data written to %s" % perf_file)
         except Exception:
@@ -116,7 +126,7 @@ class AwsyTestCase(MarionetteTestCase):
                 self.cleanup_dmd()
 
             # copy it to moz upload dir if set
-            if 'MOZ_UPLOAD_DIR' in os.environ:
+            if "MOZ_UPLOAD_DIR" in os.environ:
                 for file in os.listdir(self._resultsDir):
                     file = os.path.join(self._resultsDir, file)
                     if os.path.isfile(file):
@@ -135,7 +145,7 @@ class AwsyTestCase(MarionetteTestCase):
             f = os.path.join(tmpdir, f)
             # We don't fix stacks on Windows, even though we could, due to the
             # tale of woe in bug 1626272.
-            if not sys.platform.startswith('win'):
+            if not sys.platform.startswith("win"):
                 self.logger.info("Fixing stacks for %s, this may take a while" % f)
                 isZipped = True
                 fixStackTraces(f, isZipped, gzip.open)
@@ -178,10 +188,8 @@ class AwsyTestCase(MarionetteTestCase):
         # On Windows, replace / with the Windows directory
         # separator \ and escape it to prevent it from being
         # interpreted as an escape character.
-        if sys.platform.startswith('win'):
-            checkpoint_path = (checkpoint_path.
-                               replace('\\', '\\\\').
-                               replace('/', '\\\\'))
+        if sys.platform.startswith("win"):
+            checkpoint_path = checkpoint_path.replace("\\", "\\\\").replace("/", "\\\\")
 
         checkpoint_script = r"""
             let [resolve] = arguments;
@@ -194,13 +202,16 @@ class AwsyTestCase(MarionetteTestCase):
                 null,
                 /* anonymize */ false,
                 /* minimize memory usage */ %s);
-            """ % (checkpoint_path,
-                   "true" if minimize else "false")
+            """ % (
+            checkpoint_path,
+            "true" if minimize else "false",
+        )
 
         checkpoint = None
         try:
             finished = self.marionette.execute_async_script(
-                checkpoint_script, script_timeout=60000)
+                checkpoint_script, script_timeout=60000
+            )
             if finished:
                 checkpoint = checkpoint_path
         except JavascriptException as e:
@@ -241,7 +252,8 @@ class AwsyTestCase(MarionetteTestCase):
         #
         # and for the memory report:
         #   unified-memory-report-<checkpoint>-<iteration>.json.gz
-        dmd_script = r"""
+        dmd_script = (
+            r"""
             let dumper =
             Cc["@mozilla.org/memory-info-dumper;1"].getService(
             Ci.nsIMemoryInfoDumper);
@@ -249,14 +261,19 @@ class AwsyTestCase(MarionetteTestCase):
                 "%s",
                 /* anonymize = */ false,
                 /* minimize = */ false);
-            """ % ident
+            """
+            % ident
+        )
 
         try:
             # This is async and there's no callback so we use the existence
             # of an incomplete memory report to check if it hasn't finished yet.
             self.marionette.execute_script(dmd_script, script_timeout=60000)
             tmpdir = tempfile.gettempdir()
-            prefix = "incomplete-unified-memory-report-%s-%d-*" % (checkpointName, iteration)
+            prefix = "incomplete-unified-memory-report-%s-%d-*" % (
+                checkpointName,
+                iteration,
+            )
             max_wait = 240
             elapsed = 0
             while fnmatch.filter(os.listdir(tmpdir), prefix) and elapsed < max_wait:
@@ -302,7 +319,7 @@ class AwsyTestCase(MarionetteTestCase):
 
             Wait(self.marionette).until(
                 lambda mn: len(mn.window_handles) == tabs_loaded + 1,
-                message="No new tab has been opened"
+                message="No new tab has been opened",
             )
 
             # NB: The tab list isn't sorted, so we do a set diff to determine
@@ -325,7 +342,7 @@ class AwsyTestCase(MarionetteTestCase):
             self.marionette.switch_to_window(tab)
             self.logger.info("switched to tab")
 
-        with self.marionette.using_context('content'):
+        with self.marionette.using_context("content"):
             self.logger.info("loading %s" % page_to_load)
             self.marionette.navigate(page_to_load)
             self.logger.info("loaded!")

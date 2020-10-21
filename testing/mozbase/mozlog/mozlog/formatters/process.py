@@ -22,9 +22,12 @@ def strsig(n):
         # cache signal names
         _SIG_NAME = {}
         for k in dir(signal):
-            if (k.startswith("SIG")
+            if (
+                k.startswith("SIG")
                 and not k.startswith("SIG_")
-                    and k != "SIGCLD" and k != "SIGPOLL"):
+                and k != "SIGCLD"
+                and k != "SIGPOLL"
+            ):
 
                 _SIG_NAME[getattr(signal, k)] = k
 
@@ -47,10 +50,10 @@ def strstatus(status):
     by the subprocess module.
     """
     # 'status' is the exit status
-    if os.name != 'posix':
+    if os.name != "posix":
         # Windows error codes are easier to look up if printed in hexadecimal
         if status < 0:
-            status += 2**32
+            status += 2 ** 32
         return "exit %x" % status
     elif status >= 0:
         return "exit %d" % status

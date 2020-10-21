@@ -8,45 +8,45 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Performance")
 
 EXPORTS.mozilla.dom += [
-    'Performance.h',
-    'PerformanceEntry.h',
-    'PerformanceMainThread.h',
-    'PerformanceMark.h',
-    'PerformanceMeasure.h',
-    'PerformanceNavigation.h',
-    'PerformanceNavigationTiming.h',
-    'PerformanceObserver.h',
-    'PerformanceObserverEntryList.h',
-    'PerformanceResourceTiming.h',
-    'PerformanceServerTiming.h',
-    'PerformanceService.h',
-    'PerformanceStorage.h',
-    'PerformanceStorageWorker.h',
-    'PerformanceTiming.h',
+    "Performance.h",
+    "PerformanceEntry.h",
+    "PerformanceMainThread.h",
+    "PerformanceMark.h",
+    "PerformanceMeasure.h",
+    "PerformanceNavigation.h",
+    "PerformanceNavigationTiming.h",
+    "PerformanceObserver.h",
+    "PerformanceObserverEntryList.h",
+    "PerformanceResourceTiming.h",
+    "PerformanceServerTiming.h",
+    "PerformanceService.h",
+    "PerformanceStorage.h",
+    "PerformanceStorageWorker.h",
+    "PerformanceTiming.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Performance.cpp',
-    'PerformanceEntry.cpp',
-    'PerformanceMainThread.cpp',
-    'PerformanceMark.cpp',
-    'PerformanceMeasure.cpp',
-    'PerformanceNavigation.cpp',
-    'PerformanceNavigationTiming.cpp',
-    'PerformanceObserver.cpp',
-    'PerformanceObserverEntryList.cpp',
-    'PerformanceResourceTiming.cpp',
-    'PerformanceServerTiming.cpp',
-    'PerformanceService.cpp',
-    'PerformanceStorageWorker.cpp',
-    'PerformanceTiming.cpp',
-    'PerformanceWorker.cpp',
+    "Performance.cpp",
+    "PerformanceEntry.cpp",
+    "PerformanceMainThread.cpp",
+    "PerformanceMark.cpp",
+    "PerformanceMeasure.cpp",
+    "PerformanceNavigation.cpp",
+    "PerformanceNavigationTiming.cpp",
+    "PerformanceObserver.cpp",
+    "PerformanceObserverEntryList.cpp",
+    "PerformanceResourceTiming.cpp",
+    "PerformanceServerTiming.cpp",
+    "PerformanceService.cpp",
+    "PerformanceStorageWorker.cpp",
+    "PerformanceTiming.cpp",
+    "PerformanceWorker.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

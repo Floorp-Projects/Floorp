@@ -18,11 +18,13 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
         super(ServiceWorkerAtStartupTestCase, self).tearDown()
 
     def install_service_worker(self):
-        install_url = self.marionette.absolute_url("serviceworker/install_serviceworker.html")
+        install_url = self.marionette.absolute_url(
+            "serviceworker/install_serviceworker.html"
+        )
         self.marionette.navigate(install_url)
         Wait(self.marionette).until(
             lambda _: self.is_service_worker_registered,
-            message="Wait the service worker to be installed"
+            message="Wait the service worker to be installed",
         )
 
     def test_registered_service_worker_after_restart(self):
@@ -31,7 +33,7 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
         # (Bug 1665184).
         Wait(self.marionette, timeout=10).until(
             lambda _: self.profile_serviceworker_txt_exists,
-            message="Wait service workers to be stored in the profile"
+            message="Wait service workers to be stored in the profile",
         )
 
         # Quit and start a new session to simulate a full browser restart
@@ -44,7 +46,7 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
 
         Wait(self.marionette).until(
             lambda _: self.is_service_worker_registered,
-            message="Wait the service worker to be registered after restart"
+            message="Wait the service worker to be registered after restart",
         )
         self.assertTrue(self.is_service_worker_registered)
 
@@ -55,7 +57,8 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
     @property
     def is_service_worker_registered(self):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script("""
+            return self.marionette.execute_script(
+                """
                 let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
                     Ci.nsIServiceWorkerManager
                 );
@@ -74,4 +77,6 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
                     }
                 }
                 return false;
-            """, script_args=(self.marionette.absolute_url(""),))
+            """,
+                script_args=(self.marionette.absolute_url(""),),
+            )

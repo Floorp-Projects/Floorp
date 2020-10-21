@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIMIMEHeaderParam.idl',
-    'nsIMIMEInfo.idl',
-    'nsIMIMEService.idl',
+    "nsIMIMEHeaderParam.idl",
+    "nsIMIMEInfo.idl",
+    "nsIMIMEService.idl",
 ]
 
-XPIDL_MODULE = 'mimetype'
+XPIDL_MODULE = "mimetype"
 
 EXPORTS += [
-    'nsMimeTypes.h',
+    "nsMimeTypes.h",
 ]
 
 SOURCES += [
-    'nsMIMEHeaderParamImpl.cpp',
+    "nsMIMEHeaderParamImpl.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

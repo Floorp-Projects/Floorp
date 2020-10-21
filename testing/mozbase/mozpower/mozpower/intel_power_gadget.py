@@ -19,6 +19,7 @@ class IPGTimeoutError(Exception):
     `stop_ipg` through a `finalize_power_measurements` call. The
     other possiblity is that IPG failed to stop.
     """
+
     pass
 
 
@@ -27,6 +28,7 @@ class IPGMissingOutputFileError(Exception):
     to _clean_ipg_file but it does not exist or cannot be found
     at the expected location.
     """
+
     pass
 
 
@@ -35,6 +37,7 @@ class IPGEmptyFileError(Exception):
     to _clean_ipg_file and it exists but it is empty (contains
     no results to clean).
     """
+
     pass
 
 
@@ -43,6 +46,7 @@ class IPGUnknownValueTypeError(Exception):
     given results file (that was cleaned) cannot be converted to
     its column's expected data type.
     """
+
     pass
 
 
@@ -67,14 +71,17 @@ class IntelPowerGadget(object):
        # ipg.output_files, ipg.output_file_ext, ipg.ipg_measure_duration,
        # and ipg.sampling_rate.
     """
-    def __init__(self,
-                 exe_file_path,
-                 ipg_measure_duration=10,
-                 sampling_rate=1000,
-                 output_file_ext='.txt',
-                 file_counter=1,
-                 output_file_path='powerlog',
-                 logger_name='mozpower'):
+
+    def __init__(
+        self,
+        exe_file_path,
+        ipg_measure_duration=10,
+        sampling_rate=1000,
+        output_file_ext=".txt",
+        file_counter=1,
+        output_file_path="powerlog",
+        logger_name="mozpower",
+    ):
         """Initializes the IntelPowerGadget object.
 
         :param str exe_file_path: path to Intel Power Gadget 'PowerLog' executable.
@@ -102,7 +109,9 @@ class IntelPowerGadget(object):
         self._output_files = []
         self._output_file_path = output_file_path
         self._output_file_ext = output_file_ext
-        self._output_dir_path, self._output_file_prefix = os.path.split(self._output_file_path)
+        self._output_dir_path, self._output_file_prefix = os.path.split(
+            self._output_file_path
+        )
 
         # IPG-specific settings
         self._ipg_measure_duration = ipg_measure_duration  # in seconds
@@ -166,8 +175,7 @@ class IntelPowerGadget(object):
         return self._ipg_measure_duration
 
     def start_ipg(self):
-        """Starts the thread which runs IPG to start gathering measurements.
-        """
+        """Starts the thread which runs IPG to start gathering measurements."""
         self._logger.info("Starting IPG thread")
         self._stop = False
         self._thread.start()
@@ -195,7 +203,9 @@ class IntelPowerGadget(object):
         """
         timeout_stime = time.time()
         while self._running and (time.time() - timeout_stime) < timeout:
-            self._logger.info("Waiting %s sec for Intel Power Gadget to stop" % wait_interval)
+            self._logger.info(
+                "Waiting %s sec for Intel Power Gadget to stop" % wait_interval
+            )
             time.sleep(wait_interval)
         if self._running:
             raise IPGTimeoutError("Timed out waiting for IPG to stop")
@@ -209,7 +219,8 @@ class IntelPowerGadget(object):
         """
         self._output_file_path = os.path.join(
             self._output_dir_path,
-            '%s_%s_%s' % (self._output_file_prefix, self._file_counter, self._output_file_ext)
+            "%s_%s_%s"
+            % (self._output_file_prefix, self._file_counter, self._output_file_ext),
         )
         self._file_counter += 1
         self._logger.info(
@@ -233,12 +244,18 @@ class IntelPowerGadget(object):
             self._output_files.append(outname)
 
             try:
-                subprocess.check_output([
-                    exe_file_path,
-                    '-duration', str(ipg_measure_duration),
-                    '-resolution', str(self._sampling_rate),
-                    '-file', outname
-                ], stderr=subprocess.STDOUT)
+                subprocess.check_output(
+                    [
+                        exe_file_path,
+                        "-duration",
+                        str(ipg_measure_duration),
+                        "-resolution",
+                        str(self._sampling_rate),
+                        "-file",
+                        outname,
+                    ],
+                    stderr=subprocess.STDOUT,
+                )
             except subprocess.CalledProcessError as e:
                 error_log = str(e)
                 if e.output:
@@ -281,12 +298,15 @@ class IPGResultsHandler(object):
        # after calling format_ipg_data_to_partial_perfherder
        perfherder_data = ipg_rh.summarized_results
     """
-    def __init__(self,
-                 output_files,
-                 output_dir_path,
-                 ipg_measure_duration=10,
-                 sampling_rate=1000,
-                 logger_name='mozpower'):
+
+    def __init__(
+        self,
+        output_files,
+        output_dir_path,
+        ipg_measure_duration=10,
+        sampling_rate=1000,
+        logger_name="mozpower",
+    ):
         """Initializes the IPGResultsHandler object.
 
         :param list output_files: files output by IntelPowerGadget containing
@@ -318,7 +338,7 @@ class IPGResultsHandler(object):
             # for the cleaned files, and the merged file.
             single_file = self._output_files[0]
             _, file = os.path.split(single_file)
-            self._output_file_ext = '.' + file.split('.')[-1]
+            self._output_file_ext = "." + file.split(".")[-1]
 
             # This prefix detection depends on the path names created
             # by _get_output_file_path.
@@ -327,7 +347,7 @@ class IPGResultsHandler(object):
             if match:
                 self._output_file_prefix = match.group(1)
             else:
-                self._output_file_prefix = file.split('_')[0]
+                self._output_file_prefix = file.split("_")[0]
                 self._logger.warning(
                     "Cannot find output file prefix from output file name %s"
                     "using the following prefix: %s" % (file, self._output_file_prefix)
@@ -434,9 +454,9 @@ class IPGResultsHandler(object):
         """
         self._logger.info("Cleaning IPG data file %s" % file)
 
-        txt = ''
+        txt = ""
         if os.path.exists(file):
-            with open(file, 'r') as f:
+            with open(file, "r") as f:
                 txt = f.read()
         else:
             # This should never happen, so prevent IPGResultsHandler
@@ -445,7 +465,7 @@ class IPGResultsHandler(object):
                 "The following file does not exist so it cannot be cleaned: %s " % file
             )
 
-        if txt == '':
+        if txt == "":
             raise IPGEmptyFileError(
                 "The following file is empty so it cannot be cleaned: %s" % file
             )
@@ -456,7 +476,7 @@ class IPGResultsHandler(object):
         # Clean the summary
         summary = '"Total Elapsed Time' + summary
         summary = [
-            line for line in re.split(r"""\n""", summary.replace('\r', '')) if line
+            line for line in re.split(r"""\n""", summary.replace("\r", "")) if line
         ]
 
         # Clean the time series data, store the clean rows to write out later,
@@ -465,7 +485,7 @@ class IPGResultsHandler(object):
         clean_rows = []
         csv_header = None
         for c, row in enumerate(
-            csv.reader(tseries.split('\n'), quotechar=str('"'), delimiter=str(','))
+            csv.reader(tseries.split("\n"), quotechar=str('"'), delimiter=str(","))
         ):
             if not row:
                 continue
@@ -473,11 +493,11 @@ class IPGResultsHandler(object):
             # Make sure we don't have any bad line endings
             # contaminating the cleaned rows.
             fmt_row = [
-                val.replace('\n', '').
-                replace('\t', '').
-                replace('\r', '').
-                replace('\\n', '').
-                strip()
+                val.replace("\n", "")
+                .replace("\t", "")
+                .replace("\r", "")
+                .replace("\\n", "")
+                .strip()
                 for val in row
             ]
 
@@ -499,12 +519,13 @@ class IPGResultsHandler(object):
         clean_output_path = os.path.join(
             self._output_dir_path,
             fname.replace(
-                self._output_file_ext, '_clean.%s' % self._output_file_ext.replace('.', '')
-            )
+                self._output_file_ext,
+                "_clean.%s" % self._output_file_ext.replace(".", ""),
+            ),
         )
         self._logger.info("Writing cleaned IPG results to %s" % clean_output_path)
         try:
-            with open(clean_output_path, 'w') as csvfile:
+            with open(clean_output_path, "w") as csvfile:
                 writer = csv.writer(csvfile)
                 for count, row in enumerate(clean_rows):
                     if count == 0:
@@ -513,7 +534,8 @@ class IPGResultsHandler(object):
                         elif self._csv_header != row:
                             self._logger.warning(
                                 "CSV Headers from IPG data have changed during the experiment "
-                                "expected: %s; got: %s" % (str(self._csv_header), str(row))
+                                "expected: %s; got: %s"
+                                % (str(self._csv_header), str(row))
                             )
                     writer.writerow(row)
         except Exception as e:
@@ -525,21 +547,19 @@ class IPGResultsHandler(object):
         # Check to make sure the expected number of samples
         # exist in the file and that the columns have the correct
         # data type.
-        column_datatypes = {
-            'System Time': str,
-            'RDTSC': int,
-            'default': float
-        }
-        expected_samples = int(self._ipg_measure_duration/(float(self._sampling_rate)/1000))
+        column_datatypes = {"System Time": str, "RDTSC": int, "default": float}
+        expected_samples = int(
+            self._ipg_measure_duration / (float(self._sampling_rate) / 1000)
+        )
         for key in results:
             if len(results[key]) != expected_samples:
                 self._logger.warning(
                     "Unexpected number of samples in %s for column %s - "
-                    "expected: %s, got: %s" %
-                    (clean_output_path, key, expected_samples, len(results[key]))
+                    "expected: %s, got: %s"
+                    % (clean_output_path, key, expected_samples, len(results[key]))
                 )
 
-            dtype = column_datatypes['default']
+            dtype = column_datatypes["default"]
             if key in column_datatypes:
                 dtype = column_datatypes[key]
 
@@ -552,23 +572,25 @@ class IPGResultsHandler(object):
                     raise IPGUnknownValueTypeError(
                         "Cleaned file %s entry %s in column %s has unknown type "
                         "instead of the expected type %s - data corrupted, "
-                        "cannot continue: %s" %
-                        (clean_output_path, str(val), key, dtype.__name__, str(e))
+                        "cannot continue: %s"
+                        % (clean_output_path, str(val), key, dtype.__name__, str(e))
                     )
 
         # Check to make sure that IPG measured for the expected
         # amount of time.
-        etime = 'Elapsed Time (sec)'
+        etime = "Elapsed Time (sec)"
         if etime in results:
             total_time = int(float(results[etime][-1]))
             if total_time != self._ipg_measure_duration:
                 self._logger.warning(
                     "Elapsed time found in file %s is different from expected length - "
-                    "expected: %s, got: %s" %
-                    (clean_output_path, self._ipg_measure_duration, total_time)
+                    "expected: %s, got: %s"
+                    % (clean_output_path, self._ipg_measure_duration, total_time)
                 )
         else:
-            self._logger.warning("Missing 'Elapsed Time (sec)' in file %s" % clean_output_path)
+            self._logger.warning(
+                "Missing 'Elapsed Time (sec)' in file %s" % clean_output_path
+            )
 
         return results, summary, clean_output_path
 
@@ -586,10 +608,7 @@ class IPGResultsHandler(object):
         for count, cumulative in enumerate(cumulatives):
             # Add the previous file's maximum cumulative value
             # to the current one
-            mod_cumulative = [
-                val_mod + float(val)
-                for val in cumulative
-            ]
+            mod_cumulative = [val_mod + float(val) for val in cumulative]
             val_mod = mod_cumulative[-1]
             combined_cumulatives.extend(mod_cumulative)
 
@@ -622,11 +641,11 @@ class IPGResultsHandler(object):
         combined_results = {}
         for measure in all_results[0]:
             lmeasure = measure.lower()
-            if 'cumulative' not in lmeasure and 'elapsed time' not in lmeasure:
+            if "cumulative" not in lmeasure and "elapsed time" not in lmeasure:
                 # For measures which are not cumulative, or elapsed time,
                 # combine them without changing the data.
                 for count, result in enumerate(all_results):
-                    if 'system time' in lmeasure or 'rdtsc' in lmeasure:
+                    if "system time" in lmeasure or "rdtsc" in lmeasure:
                         new_results = result[measure]
                     else:
                         new_results = [float(val) for val in result[measure]]
@@ -639,23 +658,23 @@ class IPGResultsHandler(object):
                 # For cumulative, and elapsed time measures, we need to
                 # modify all values - see _combine_cumulative_rows for
                 # more information on this procedure.
-                cumulatives = [
-                    result[measure]
-                    for result in all_results
-                ]
-                self._logger.info("Combining cumulative rows for '%s' measure" % measure)
+                cumulatives = [result[measure] for result in all_results]
+                self._logger.info(
+                    "Combining cumulative rows for '%s' measure" % measure
+                )
                 combined_results[measure] = self._combine_cumulative_rows(cumulatives)
 
         # Write merged results to a new file
         merged_output_path = os.path.join(
             self._output_dir_path,
-            '%s_merged.%s' % (self._output_file_prefix, self._output_file_ext.replace('.', ''))
+            "%s_merged.%s"
+            % (self._output_file_prefix, self._output_file_ext.replace(".", "")),
         )
 
         self._merged_output_path = merged_output_path
         self._logger.info("Writing merged IPG results to %s" % merged_output_path)
         try:
-            with open(merged_output_path, 'w') as csvfile:
+            with open(merged_output_path, "w") as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(self._csv_header)
 
@@ -675,14 +694,21 @@ class IPGResultsHandler(object):
             )
 
         # Check that the combined results have the expected number of samples.
-        expected_samples = int(self._ipg_measure_duration/(float(self._sampling_rate)/1000))
+        expected_samples = int(
+            self._ipg_measure_duration / (float(self._sampling_rate) / 1000)
+        )
         combined_expected_samples = len(self._cleaned_files) * expected_samples
         for key in combined_results:
             if len(combined_results[key]) != combined_expected_samples:
                 self._logger.warning(
                     "Unexpected number of merged samples in %s for column %s - "
-                    "expected: %s, got: %s" %
-                    (merged_output_path, key, combined_expected_samples, len(results[key]))
+                    "expected: %s, got: %s"
+                    % (
+                        merged_output_path,
+                        key,
+                        combined_expected_samples,
+                        len(results[key]),
+                    )
                 )
 
         self._results = combined_results
@@ -755,14 +781,14 @@ class IPGResultsHandler(object):
             :returns: str
             """
             lname = name.lower()
-            if 'ia ' in lname:
-                return 'processor-cores'
-            elif 'processor ' in lname:
-                return 'processor-package'
-            elif 'gt ' in lname:
-                return 'gpu'
-            elif 'dram ' in lname:
-                return 'dram'
+            if "ia " in lname:
+                return "processor-cores"
+            elif "processor " in lname:
+                return "processor-package"
+            elif "gt " in lname:
+                return "gpu"
+            elif "dram " in lname:
+                return "dram"
             else:
                 return name
 
@@ -771,7 +797,7 @@ class IPGResultsHandler(object):
         cut_results = self._results
         if duration:
             cutoff_index = 0
-            for count, etime in enumerate(self._results['Elapsed Time (sec)']):
+            for count, etime in enumerate(self._results["Elapsed Time (sec)"]):
                 if etime > duration:
                     cutoff_index = count
                     break
@@ -782,7 +808,7 @@ class IPGResultsHandler(object):
         # Get the cumulative power used in mWh
         cumulative_mwh = {}
         for measure in cut_results:
-            if 'cumulative' in measure.lower() and 'mwh' in measure.lower():
+            if "cumulative" in measure.lower() and "mwh" in measure.lower():
                 cumulative_mwh[replace_measure_name(measure)] = float(
                     cut_results[measure][-1]
                 )
@@ -790,93 +816,91 @@ class IPGResultsHandler(object):
         # Get the power usage rate in Watts
         watt_usage = {}
         for measure in cut_results:
-            if 'watt' in measure.lower() and 'limit' not in measure.lower():
-                watt_usage[replace_measure_name(measure) + '-avg'] = sum([
-                    float(val)
-                    for val in cut_results[measure]
-                ])/len(cut_results[measure])
-                watt_usage[replace_measure_name(measure) + '-max'] = max([
-                    float(val)
-                    for val in cut_results[measure]
-                ])
+            if "watt" in measure.lower() and "limit" not in measure.lower():
+                watt_usage[replace_measure_name(measure) + "-avg"] = sum(
+                    [float(val) for val in cut_results[measure]]
+                ) / len(cut_results[measure])
+                watt_usage[replace_measure_name(measure) + "-max"] = max(
+                    [float(val) for val in cut_results[measure]]
+                )
 
         # Get average CPU and GPU utilization
         average_utilization = {}
-        for utilization in ('CPU Utilization(%)', 'GT Utilization(%)'):
+        for utilization in ("CPU Utilization(%)", "GT Utilization(%)"):
             if utilization not in cut_results:
-                self._logger.warning("Could not find measurements for: %s" % utilization)
+                self._logger.warning(
+                    "Could not find measurements for: %s" % utilization
+                )
                 continue
 
             utilized_name = utilization.lower()
-            if 'cpu ' in utilized_name:
-                utilized_name = 'cpu'
-            elif 'gt ' in utilized_name:
-                utilized_name = 'gpu'
+            if "cpu " in utilized_name:
+                utilized_name = "cpu"
+            elif "gt " in utilized_name:
+                utilized_name = "gpu"
 
-            average_utilization[utilized_name] = sum([
-                float(val)
-                for val in cut_results[utilization]
-            ])/len(cut_results[utilization])
+            average_utilization[utilized_name] = sum(
+                [float(val) for val in cut_results[utilization]]
+            ) / len(cut_results[utilization])
 
         # Get average and maximum CPU and GPU frequency
-        frequency_info = {'cpu': {}, 'gpu': {}}
-        for frequency_measure in ('CPU Frequency_0(MHz)', 'GT Frequency(MHz)'):
+        frequency_info = {"cpu": {}, "gpu": {}}
+        for frequency_measure in ("CPU Frequency_0(MHz)", "GT Frequency(MHz)"):
             if frequency_measure not in cut_results:
-                self._logger.warning("Could not find measurements for: %s" % frequency_measure)
+                self._logger.warning(
+                    "Could not find measurements for: %s" % frequency_measure
+                )
                 continue
 
             fmeasure_name = frequency_measure.lower()
-            if 'cpu ' in fmeasure_name:
-                fmeasure_name = 'cpu'
-            elif 'gt ' in fmeasure_name:
-                fmeasure_name = 'gpu'
+            if "cpu " in fmeasure_name:
+                fmeasure_name = "cpu"
+            elif "gt " in fmeasure_name:
+                fmeasure_name = "gpu"
 
-            frequency_info[fmeasure_name]['favg'] = sum([
-                float(val)
-                for val in cut_results[frequency_measure]
-            ])/len(cut_results[frequency_measure])
+            frequency_info[fmeasure_name]["favg"] = sum(
+                [float(val) for val in cut_results[frequency_measure]]
+            ) / len(cut_results[frequency_measure])
 
-            frequency_info[fmeasure_name]['fmax'] = max([
-                float(val)
-                for val in cut_results[frequency_measure]
-            ])
+            frequency_info[fmeasure_name]["fmax"] = max(
+                [float(val) for val in cut_results[frequency_measure]]
+            )
 
-            frequency_info[fmeasure_name]['fmin'] = min([
-                float(val)
-                for val in cut_results[frequency_measure]
-            ])
+            frequency_info[fmeasure_name]["fmin"] = min(
+                [float(val) for val in cut_results[frequency_measure]]
+            )
 
         summarized_results = {
             "utilization": {
                 "type": "power",
-                "test": str(test_name) + '-utilization',
+                "test": str(test_name) + "-utilization",
                 "unit": "%",
-                "values": average_utilization
+                "values": average_utilization,
             },
             "power-usage": {
                 "type": "power",
-                "test": str(test_name) + '-cumulative',
+                "test": str(test_name) + "-cumulative",
                 "unit": "mWh",
-                "values": cumulative_mwh
+                "values": cumulative_mwh,
             },
             "power-watts": {
                 "type": "power",
-                "test": str(test_name) + '-watts',
+                "test": str(test_name) + "-watts",
                 "unit": "W",
-                "values": watt_usage
+                "values": watt_usage,
             },
             "frequency-cpu": {
                 "type": "power",
-                "test": str(test_name) + '-frequency-cpu',
+                "test": str(test_name) + "-frequency-cpu",
                 "unit": "MHz",
-                "values": frequency_info['cpu']
+                "values": frequency_info["cpu"],
             },
             "frequency-gpu": {
                 "type": "power",
-                "test": str(test_name) + '-frequency-gpu',
+                "test": str(test_name) + "-frequency-gpu",
                 "unit": "MHz",
-                "values": frequency_info['gpu']
-            }
+                "values": frequency_info["gpu"],
+            },
         }
 
         self._summarized_results = summarized_results

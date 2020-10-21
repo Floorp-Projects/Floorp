@@ -8,32 +8,30 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
 
 XPIDL_SOURCES += [
-    'nsIEnterprisePolicies.idl',
+    "nsIEnterprisePolicies.idl",
 ]
 
-XPIDL_MODULE = 'enterprisepolicies'
+XPIDL_MODULE = "enterprisepolicies"
 
-TEST_DIRS += [
-    'tests'
-]
+TEST_DIRS += ["tests"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android":
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES += [
-        'EnterprisePolicies.jsm',
-        'EnterprisePoliciesContent.jsm',
-        'EnterprisePoliciesParent.jsm',
+        "EnterprisePolicies.jsm",
+        "EnterprisePoliciesContent.jsm",
+        "EnterprisePoliciesParent.jsm",
     ]
 
     XPCOM_MANIFESTS += [
-        'components.conf',
+        "components.conf",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES.policies += [
-        'WindowsGPOParser.jsm',
-]
+        "WindowsGPOParser.jsm",
+    ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXTRA_JS_MODULES.policies += [
-        'macOSPoliciesParser.jsm',
-]
+        "macOSPoliciesParser.jsm",
+    ]

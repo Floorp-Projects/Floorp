@@ -5,88 +5,88 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.mscom += [
-    'Aggregation.h',
-    'AgileReference.h',
-    'ApartmentRegion.h',
-    'AsyncInvoker.h',
-    'COMPtrHolder.h',
-    'EnsureMTA.h',
-    'Objref.h',
-    'PassthruProxy.h',
-    'ProcessRuntime.h',
-    'ProfilerMarkers.h',
-    'ProxyStream.h',
-    'Ptr.h',
-    'Utils.h',
+    "Aggregation.h",
+    "AgileReference.h",
+    "ApartmentRegion.h",
+    "AsyncInvoker.h",
+    "COMPtrHolder.h",
+    "EnsureMTA.h",
+    "Objref.h",
+    "PassthruProxy.h",
+    "ProcessRuntime.h",
+    "ProfilerMarkers.h",
+    "ProxyStream.h",
+    "Ptr.h",
+    "Utils.h",
 ]
 
 DIRS += [
-    'mozglue',
+    "mozglue",
 ]
 
 SOURCES += [
-    'VTableBuilder.c',
+    "VTableBuilder.c",
 ]
 
 UNIFIED_SOURCES += [
-    'AgileReference.cpp',
-    'EnsureMTA.cpp',
-    'Objref.cpp',
-    'PassthruProxy.cpp',
-    'ProcessRuntime.cpp',
-    'ProfilerMarkers.cpp',
-    'ProxyStream.cpp',
-    'RegistrationAnnotator.cpp',
-    'Utils.cpp',
+    "AgileReference.cpp",
+    "EnsureMTA.cpp",
+    "Objref.cpp",
+    "PassthruProxy.cpp",
+    "ProcessRuntime.cpp",
+    "ProfilerMarkers.cpp",
+    "ProxyStream.cpp",
+    "RegistrationAnnotator.cpp",
+    "Utils.cpp",
 ]
 
-if CONFIG['ACCESSIBILITY']:
+if CONFIG["ACCESSIBILITY"]:
     DIRS += [
-        'oop',
+        "oop",
     ]
 
     EXPORTS.mozilla.mscom += [
-        'ActivationContext.h',
-        'DispatchForwarder.h',
-        'FastMarshaler.h',
-        'IHandlerProvider.h',
-        'Interceptor.h',
-        'InterceptorLog.h',
-        'MainThreadHandoff.h',
-        'MainThreadInvoker.h',
-        'Registration.h',
-        'SpinEvent.h',
-        'StructStream.h',
-        'WeakRef.h',
+        "ActivationContext.h",
+        "DispatchForwarder.h",
+        "FastMarshaler.h",
+        "IHandlerProvider.h",
+        "Interceptor.h",
+        "InterceptorLog.h",
+        "MainThreadHandoff.h",
+        "MainThreadInvoker.h",
+        "Registration.h",
+        "SpinEvent.h",
+        "StructStream.h",
+        "WeakRef.h",
     ]
 
     SOURCES += [
-        'Interceptor.cpp',
-        'MainThreadHandoff.cpp',
-        'Registration.cpp',
-        'SpinEvent.cpp',
-        'WeakRef.cpp',
+        "Interceptor.cpp",
+        "MainThreadHandoff.cpp",
+        "Registration.cpp",
+        "SpinEvent.cpp",
+        "WeakRef.cpp",
     ]
 
     UNIFIED_SOURCES += [
-        'ActivationContext.cpp',
-        'DispatchForwarder.cpp',
-        'FastMarshaler.cpp',
-        'InterceptorLog.cpp',
-        'MainThreadInvoker.cpp',
-        'StructStream.cpp',
+        "ActivationContext.cpp",
+        "DispatchForwarder.cpp",
+        "FastMarshaler.cpp",
+        "InterceptorLog.cpp",
+        "MainThreadInvoker.cpp",
+        "StructStream.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/xpcom/base',
-    '/xpcom/build',
+    "/xpcom/base",
+    "/xpcom/build",
 ]
 
-DEFINES['MOZ_MSCOM_REMARSHAL_NO_HANDLER'] = True
+DEFINES["MOZ_MSCOM_REMARSHAL_NO_HANDLER"] = True
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "IPC: MSCOM")

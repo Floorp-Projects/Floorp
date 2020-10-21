@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'OCSPCommon.cpp',
-    'TLSServer.cpp',
+    "OCSPCommon.cpp",
+    "TLSServer.cpp",
 ]
 
 USE_LIBS += [
-    'mozpkix-testlib',
+    "mozpkix-testlib",
 ]
 
-Library('tlsserver')
+Library("tlsserver")

@@ -4,23 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Storage')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Storage")
 
 EXTRA_JS_MODULES += [
-    'kvstore.jsm',
+    "kvstore.jsm",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 XPIDL_SOURCES += [
-    'nsIKeyValue.idl',
+    "nsIKeyValue.idl",
 ]
 
-XPIDL_MODULE = 'kvstore'
+XPIDL_MODULE = "kvstore"
 
 UNIFIED_SOURCES += [
-    'nsKeyValueModule.cpp',
+    "nsKeyValueModule.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

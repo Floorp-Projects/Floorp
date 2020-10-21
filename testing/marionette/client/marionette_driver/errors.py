@@ -46,8 +46,7 @@ class MarionetteException(Exception):
                 msg += u", caused by {}".format(self.cause)
 
         if self.stacktrace:
-            st = u"".join(["\t{}\n".format(x)
-                           for x in self.stacktrace.splitlines()])
+            st = u"".join(["\t{}\n".format(x) for x in self.stacktrace.splitlines()])
             msg += u"\nstacktrace:\n{}".format(st)
 
         if tb:
@@ -109,11 +108,15 @@ class ElementNotVisibleException(MarionetteException):
 
     status = "element not visible"
 
-    def __init__(self,
-                 message="Element is not currently visible and may not be manipulated",
-                 stacktrace=None, cause=None):
+    def __init__(
+        self,
+        message="Element is not currently visible and may not be manipulated",
+        stacktrace=None,
+        cause=None,
+    ):
         super(ElementNotVisibleException, self).__init__(
-            message, cause=cause, stacktrace=stacktrace)
+            message, cause=cause, stacktrace=stacktrace
+        )
 
 
 class ElementNotAccessibleException(MarionetteException):
@@ -180,7 +183,11 @@ class UnresponsiveInstanceException(Exception):
     pass
 
 
-es_ = [e for e in locals().values() if type(e) == type and issubclass(e, MarionetteException)]
+es_ = [
+    e
+    for e in locals().values()
+    if type(e) == type and issubclass(e, MarionetteException)
+]
 by_string = {e.status: e for e in es_}
 
 

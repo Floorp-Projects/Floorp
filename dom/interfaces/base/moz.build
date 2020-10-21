@@ -8,27 +8,26 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 XPIDL_SOURCES += [
-    'domstubs.idl',
-    'nsIBrowser.idl',
-    'nsIBrowserChild.idl',
-    'nsIBrowserDOMWindow.idl',
-    'nsIBrowserUsage.idl',
-    'nsIContentPermissionPrompt.idl',
-    'nsIContentPrefService2.idl',
-    'nsIContentProcess.idl',
-    'nsIDOMChromeWindow.idl',
-    'nsIDOMGlobalPropertyInitializer.idl',
-    'nsIDOMWindow.idl',
-    'nsIDOMWindowUtils.idl',
-    'nsIFocusManager.idl',
-    'nsIPermissionDelegateHandler.idl',
-    'nsIQueryContentEventResult.idl',
-    'nsIRemoteTab.idl',
-    'nsIServiceWorkerManager.idl',
-    'nsIStructuredCloneContainer.idl',
-    'nsITextInputProcessor.idl',
-    'nsITextInputProcessorCallback.idl',
+    "domstubs.idl",
+    "nsIBrowser.idl",
+    "nsIBrowserChild.idl",
+    "nsIBrowserDOMWindow.idl",
+    "nsIBrowserUsage.idl",
+    "nsIContentPermissionPrompt.idl",
+    "nsIContentPrefService2.idl",
+    "nsIContentProcess.idl",
+    "nsIDOMChromeWindow.idl",
+    "nsIDOMGlobalPropertyInitializer.idl",
+    "nsIDOMWindow.idl",
+    "nsIDOMWindowUtils.idl",
+    "nsIFocusManager.idl",
+    "nsIPermissionDelegateHandler.idl",
+    "nsIQueryContentEventResult.idl",
+    "nsIRemoteTab.idl",
+    "nsIServiceWorkerManager.idl",
+    "nsIStructuredCloneContainer.idl",
+    "nsITextInputProcessor.idl",
+    "nsITextInputProcessorCallback.idl",
 ]
 
-XPIDL_MODULE = 'dom_base'
-
+XPIDL_MODULE = "dom_base"

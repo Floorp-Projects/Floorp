@@ -26,20 +26,28 @@ class BouncerSubmitterMixin(object):
             return self.credentials
         global_dict = {}
         local_dict = {}
-        exec(compile(
-            open(self.config["credentials_file"], "rb").read(),
-            self.config["credentials_file"],
-            'exec'), global_dict, local_dict)
-        self.credentials = (local_dict["tuxedoUsername"],
-                            local_dict["tuxedoPassword"])
+        exec(
+            compile(
+                open(self.config["credentials_file"], "rb").read(),
+                self.config["credentials_file"],
+                "exec",
+            ),
+            global_dict,
+            local_dict,
+        )
+        self.credentials = (local_dict["tuxedoUsername"], local_dict["tuxedoPassword"])
         return self.credentials
 
     def api_call(self, route, data, error_level=FATAL, retry_config=None):
         retry_args = dict(
             failure_status=None,
-            retry_exceptions=(HTTPError, URLError,
-                              httplib.BadStatusLine,
-                              socket.timeout, socket.error),
+            retry_exceptions=(
+                HTTPError,
+                URLError,
+                httplib.BadStatusLine,
+                socket.timeout,
+                socket.error,
+            ),
             error_message="call to %s failed" % (route),
             error_level=error_level,
         )
@@ -47,11 +55,7 @@ class BouncerSubmitterMixin(object):
         if retry_config:
             retry_args.update(retry_config)
 
-        return self.retry(
-            self._api_call,
-            args=(route, data),
-            **retry_args
-        )
+        return self.retry(self._api_call, args=(route, data), **retry_args)
 
     def _api_call(self, route, data):
         api_prefix = self.config["bouncer-api-prefix"]
@@ -63,7 +67,7 @@ class BouncerSubmitterMixin(object):
             self.info("POST data: %s" % post_data)
         credentials = self.query_credentials()
         if credentials:
-            auth = base64.encodestring('%s:%s' % credentials)
+            auth = base64.encodestring("%s:%s" % credentials)
             request.add_header("Authorization", "Basic %s" % auth.strip())
         try:
             self.info("Submitting to %s" % api_url)
@@ -88,13 +92,12 @@ class BouncerSubmitterMixin(object):
             self.warning("Socket error when accessing %s: %s" % (api_url, e))
             raise
         except httplib.BadStatusLine as e:
-            self.warning('BadStatusLine accessing %s: %s' % (api_url, e))
+            self.warning("BadStatusLine accessing %s: %s" % (api_url, e))
             raise
 
     def product_exists(self, product_name):
         self.info("Checking if %s already exists" % product_name)
-        res = self.api_call("product_show?product=%s" %
-                            quote(product_name), data=None)
+        res = self.api_call("product_show?product=%s" % quote(product_name), data=None)
         try:
             xml = parseString(res)
             # API returns <products/> if the product doesn't exist

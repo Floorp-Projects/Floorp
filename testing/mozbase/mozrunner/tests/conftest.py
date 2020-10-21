@@ -13,39 +13,40 @@ import pytest
 from moztest.selftest import fixtures
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def get_binary():
-    if 'BROWSER_PATH' in os.environ:
-        os.environ['GECKO_BINARY_PATH'] = os.environ['BROWSER_PATH']
+    if "BROWSER_PATH" in os.environ:
+        os.environ["GECKO_BINARY_PATH"] = os.environ["BROWSER_PATH"]
 
     def inner(app):
-        if app not in ('chrome', 'chromium', 'firefox'):
+        if app not in ("chrome", "chromium", "firefox"):
             pytest.xfail(reason="{} support not implemented".format(app))
 
-        if app == 'firefox':
+        if app == "firefox":
             binary = fixtures.binary()
-        elif app == 'chrome':
-            binary = os.environ.get('CHROME_BINARY_PATH')
-        elif app == 'chromium':
-            binary = os.environ.get('CHROMIUM_BINARY_PATH')
+        elif app == "chrome":
+            binary = os.environ.get("CHROME_BINARY_PATH")
+        elif app == "chromium":
+            binary = os.environ.get("CHROMIUM_BINARY_PATH")
 
         if not binary:
             pytest.skip("could not find a {} binary".format(app))
         return binary
+
     return inner
 
 
-@pytest.fixture(params=['firefox', 'chrome', 'chromium'])
+@pytest.fixture(params=["firefox", "chrome", "chromium"])
 def runner(request, get_binary):
     app = request.param
     binary = get_binary(app)
 
-    cmdargs = ['--headless']
-    if app in ['chrome', 'chromium']:
+    cmdargs = ["--headless"]
+    if app in ["chrome", "chromium"]:
         # prevents headless chromium from exiting after loading the page
-        cmdargs.append('--remote-debugging-port=9222')
+        cmdargs.append("--remote-debugging-port=9222")
         # only needed on Windows, but no harm in specifying it everywhere
-        cmdargs.append('--disable-gpu')
+        cmdargs.append("--disable-gpu")
     runner = mozrunner.runners[app](binary, cmdargs=cmdargs)
     runner.app = app
     yield runner

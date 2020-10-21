@@ -5,41 +5,41 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIBFCacheEntry.idl',
-    'nsISHEntry.idl',
-    'nsISHistory.idl',
-    'nsISHistoryListener.idl',
+    "nsIBFCacheEntry.idl",
+    "nsISHEntry.idl",
+    "nsISHistory.idl",
+    "nsISHistoryListener.idl",
 ]
 
-XPIDL_MODULE = 'shistory'
+XPIDL_MODULE = "shistory"
 
 EXPORTS += [
-    'nsSHEntry.h',
-    'nsSHEntryShared.h',
-    'nsSHistory.h',
+    "nsSHEntry.h",
+    "nsSHEntryShared.h",
+    "nsSHistory.h",
 ]
 
 EXPORTS.mozilla.dom += [
-    'ChildSHistory.h',
-    'SessionHistoryEntry.h',
+    "ChildSHistory.h",
+    "SessionHistoryEntry.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ChildSHistory.cpp',
-    'nsSHEntry.cpp',
-    'nsSHEntryShared.cpp',
-    'nsSHistory.cpp',
-    'SessionHistoryEntry.cpp',
+    "ChildSHistory.cpp",
+    "nsSHEntry.cpp",
+    "nsSHEntryShared.cpp",
+    "nsSHistory.cpp",
+    "SessionHistoryEntry.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/docshell/base',
-    '/dom/base',
+    "/docshell/base",
+    "/dom/base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

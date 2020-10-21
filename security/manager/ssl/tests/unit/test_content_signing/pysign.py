@@ -30,6 +30,6 @@ import pykey
 
 data = sys.stdin.buffer.read()
 
-key = pykey.ECCKey('secp384r1')
-sig = key.signRaw(b'Content-Signature:\00' + data, pykey.HASH_SHA384)
-print base64.b64encode(sig).replace('+', '-').replace('/', '_')
+key = pykey.ECCKey("secp384r1")
+sig = key.signRaw(b"Content-Signature:\00" + data, pykey.HASH_SHA384)
+print base64.b64encode(sig).replace("+", "-").replace("/", "_")

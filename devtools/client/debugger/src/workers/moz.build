@@ -4,11 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'parser',
-    'pretty-print',
-    'search',
+    "parser",
+    "pretty-print",
+    "search",
 ]
 
-CompiledModules(
-
-)
+CompiledModules()

@@ -4,19 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('FuzzingContentParentIPC')
+Library("FuzzingContentParentIPC")
 
 LOCAL_INCLUDES += [
-    '/dom/base',
+    "/dom/base",
 ]
 
-SOURCES += [
-    'content_parent_ipc_libfuzz.cpp'
-]
+SOURCES += ["content_parent_ipc_libfuzz.cpp"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

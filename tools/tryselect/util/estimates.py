@@ -8,9 +8,9 @@ import os
 import json
 from datetime import datetime, timedelta
 
-TASK_DURATION_CACHE = 'task_duration_history.json'
-GRAPH_QUANTILE_CACHE = 'graph_quantile_cache.csv'
-TASK_DURATION_TAG_FILE = 'task_duration_tag.json'
+TASK_DURATION_CACHE = "task_duration_history.json"
+GRAPH_QUANTILE_CACHE = "graph_quantile_cache.csv"
+TASK_DURATION_TAG_FILE = "task_duration_tag.json"
 
 
 def find_all_dependencies(graph, tasklist):
@@ -46,8 +46,7 @@ def find_longest_path(graph, tasklist, duration_data):
         if task in dep_durations:
             return dep_durations[task]
 
-        durations = [find_dependency_durations(dep)
-                     for dep in graph.get(task, list())]
+        durations = [find_dependency_durations(dep) for dep in graph.get(task, list())]
         durations.append(0.0)
         md = max(durations) + duration_data.get(task, 0.0)
         dep_durations[task] = md
@@ -112,14 +111,17 @@ def duration_summary(graph_cache_file, tasklist, cache_dir):
     quantile = None
     graph_quantile_cache = os.path.join(cache_dir, GRAPH_QUANTILE_CACHE)
     if os.path.isfile(graph_quantile_cache):
-        quantile = 100 - determine_quantile(graph_quantile_cache,
-                                            total_dependency_duration + total_requested_duration)
+        quantile = 100 - determine_quantile(
+            graph_quantile_cache, total_dependency_duration + total_requested_duration
+        )
     if quantile:
-        output['quantile'] = quantile
+        output["quantile"] = quantile
 
     output["wall_duration_seconds"] = timedelta(seconds=int(longest_path))
-    output["eta_datetime"] = datetime.now()+timedelta(seconds=longest_path)
+    output["eta_datetime"] = datetime.now() + timedelta(seconds=longest_path)
 
-    output["task_durations"] = {task: int(durations.get(task, 0.0)) for task in tasklist}
+    output["task_durations"] = {
+        task: int(durations.get(task, 0.0)) for task in tasklist
+    }
 
     return output

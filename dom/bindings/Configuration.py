@@ -19,6 +19,7 @@ class DescriptorProvider:
     Subclasses must also have a getConfig() method that returns a
     Configuration.
     """
+
     def __init__(self):
         pass
 
@@ -33,15 +34,17 @@ class Configuration(DescriptorProvider):
     Represents global configuration state based on IDL parse data and
     the configuration file.
     """
+
     def __init__(self, filename, webRoots, parseData, generatedEvents=[]):
         DescriptorProvider.__init__(self)
 
         # Read the configuration file.
         glbl = {}
-        exec(io.open(filename, encoding='utf-8').read(), glbl)
-        config = glbl['DOMInterfaces']
+        exec(io.open(filename, encoding="utf-8").read(), glbl)
+        config = glbl["DOMInterfaces"]
 
         webRoots = tuple(map(os.path.normpath, webRoots))
+
         def isInWebIDLRoot(path):
             return any(isChildPath(path, root) for root in webRoots)
 
@@ -61,20 +64,23 @@ class Configuration(DescriptorProvider):
                 # different .webidl file than their LHS interface.  Make sure we
                 # don't have any of those.  See similar block below for partial
                 # interfaces!
-                if (thing.interface.filename() != thing.filename()):
+                if thing.interface.filename() != thing.filename():
                     raise TypeError(
                         "The binding build system doesn't really support "
                         "'includes' statements which don't appear in the "
                         "file in which the left-hand side of the statement is "
                         "defined.\n"
                         "%s\n"
-                        "%s" %
-                        (thing.location, thing.interface.location))
+                        "%s" % (thing.location, thing.interface.location)
+                    )
 
             assert not thing.isType()
 
-            if (not thing.isInterface() and not thing.isNamespace() and
-                not thing.isInterfaceMixin()):
+            if (
+                not thing.isInterface()
+                and not thing.isNamespace()
+                and not thing.isInterfaceMixin()
+            ):
                 continue
             # Our build system doesn't support dep builds involving
             # addition/removal of partial interfaces/namespaces/mixins that
@@ -92,8 +98,8 @@ class Configuration(DescriptorProvider):
                             "interface/namespace/mixin they are extending is "
                             "defined.  Don't do this.\n"
                             "%s\n"
-                            "%s" %
-                            (partial.location, thing.location))
+                            "%s" % (partial.location, thing.location)
+                        )
 
             # The rest of the logic doesn't apply to mixins.
             if thing.isInterfaceMixin():
@@ -101,18 +107,21 @@ class Configuration(DescriptorProvider):
 
             iface = thing
             if not iface.isExternal():
-                if not (iface.getExtendedAttribute("ChromeOnly") or
-                        iface.getExtendedAttribute("Func") == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"] or
-                        not iface.hasInterfaceObject() or
-                        isInWebIDLRoot(iface.filename())):
+                if not (
+                    iface.getExtendedAttribute("ChromeOnly")
+                    or iface.getExtendedAttribute("Func")
+                    == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"]
+                    or not iface.hasInterfaceObject()
+                    or isInWebIDLRoot(iface.filename())
+                ):
                     raise TypeError(
                         "Interfaces which are exposed to the web may only be "
                         "defined in a DOM WebIDL root %r. Consider marking "
                         "the interface [ChromeOnly] or "
                         "[Func='nsContentUtils::IsCallerChromeOrFuzzingEnabled'] "
                         "if you do not want it exposed to the web.\n"
-                        "%s" %
-                        (webRoots, iface.location))
+                        "%s" % (webRoots, iface.location)
+                    )
 
             self.interfaces[iface.identifier.name] = iface
 
@@ -130,19 +139,18 @@ class Configuration(DescriptorProvider):
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(key=lambda x: x.name)
 
-
         self.descriptorsByFile = {}
         for d in self.descriptors:
-            self.descriptorsByFile.setdefault(d.interface.filename(),
-                                              []).append(d)
+            self.descriptorsByFile.setdefault(d.interface.filename(), []).append(d)
 
         self.enums = [e for e in parseData if e.isEnum()]
 
         self.dictionaries = [d for d in parseData if d.isDictionary()]
-        self.dictionariesByName = { d.identifier.name: d for d in self.dictionaries }
+        self.dictionariesByName = {d.identifier.name: d for d in self.dictionaries}
 
-        self.callbacks = [c for c in parseData if
-                          c.isCallback() and not c.isInterface()]
+        self.callbacks = [
+            c for c in parseData if c.isCallback() and not c.isInterface()
+        ]
 
         # Dictionary mapping from a union type name to a set of filenames where
         # union types with that name are used.
@@ -184,7 +192,8 @@ class Configuration(DescriptorProvider):
                                 # unions for the file where we previously found
                                 # them.
                                 unionsForFilename = [
-                                    u for u in self.unionsPerFilename[f]
+                                    u
+                                    for u in self.unionsPerFilename[f]
                                     if u.name != t.name
                                 ]
                                 if len(unionsForFilename) == 0:
@@ -197,12 +206,14 @@ class Configuration(DescriptorProvider):
                     self.unionsPerFilename[uniqueFilenameForUnion].append(t)
                     filenamesForUnion.add(t.filename())
 
-        for d in getDictionariesConvertedToJS(self.descriptors, self.dictionaries,
-                                              self.callbacks):
+        for d in getDictionariesConvertedToJS(
+            self.descriptors, self.dictionaries, self.callbacks
+        ):
             d.needsConversionToJS = True
 
-        for d in getDictionariesConvertedFromJS(self.descriptors, self.dictionaries,
-                                                self.callbacks):
+        for d in getDictionariesConvertedFromJS(
+            self.descriptors, self.dictionaries, self.callbacks
+        ):
             d.needsConversionFromJS = True
 
     def getInterface(self, ifname):
@@ -213,34 +224,34 @@ class Configuration(DescriptorProvider):
         curr = self.descriptors
         # Collect up our filters, because we may have a webIDLFile filter that
         # we always want to apply first.
-        tofilter = [ (lambda x: x.interface.isExternal(), False) ]
+        tofilter = [(lambda x: x.interface.isExternal(), False)]
         for key, val in six.iteritems(filters):
-            if key == 'webIDLFile':
+            if key == "webIDLFile":
                 # Special-case this part to make it fast, since most of our
                 # getDescriptors calls are conditioned on a webIDLFile.  We may
                 # not have this key, in which case we have no descriptors
                 # either.
                 curr = self.descriptorsByFile.get(val, [])
                 continue
-            elif key == 'hasInterfaceObject':
+            elif key == "hasInterfaceObject":
                 getter = lambda x: x.interface.hasInterfaceObject()
-            elif key == 'hasInterfacePrototypeObject':
+            elif key == "hasInterfacePrototypeObject":
                 getter = lambda x: x.interface.hasInterfacePrototypeObject()
-            elif key == 'hasInterfaceOrInterfacePrototypeObject':
+            elif key == "hasInterfaceOrInterfacePrototypeObject":
                 getter = lambda x: x.hasInterfaceOrInterfacePrototypeObject()
-            elif key == 'isCallback':
+            elif key == "isCallback":
                 getter = lambda x: x.interface.isCallback()
-            elif key == 'isJSImplemented':
+            elif key == "isJSImplemented":
                 getter = lambda x: x.interface.isJSImplemented()
-            elif key == 'isExposedInAnyWorker':
+            elif key == "isExposedInAnyWorker":
                 getter = lambda x: x.interface.isExposedInAnyWorker()
-            elif key == 'isExposedInWorkerDebugger':
+            elif key == "isExposedInWorkerDebugger":
                 getter = lambda x: x.interface.isExposedInWorkerDebugger()
-            elif key == 'isExposedInAnyWorklet':
+            elif key == "isExposedInAnyWorklet":
                 getter = lambda x: x.interface.isExposedInAnyWorklet()
-            elif key == 'isExposedInWindow':
+            elif key == "isExposedInWindow":
                 getter = lambda x: x.interface.isExposedInWindow()
-            elif key == 'isSerializable':
+            elif key == "isSerializable":
                 getter = lambda x: x.interface.isSerializable()
             else:
                 # Have to watch out: just closing over "key" is not enough,
@@ -308,23 +319,27 @@ def MemberIsUnforgeable(member, descriptor):
     # necessarily booleans.  Make sure to return a boolean from this
     # method, because callers will compare its return value to
     # booleans.
-    return bool((member.isAttr() or member.isMethod()) and
-                not member.isStatic() and
-                (member.isUnforgeable() or
-                 descriptor.interface.getExtendedAttribute("Unforgeable")))
+    return bool(
+        (member.isAttr() or member.isMethod())
+        and not member.isStatic()
+        and (
+            member.isUnforgeable()
+            or descriptor.interface.getExtendedAttribute("Unforgeable")
+        )
+    )
 
 
 class Descriptor(DescriptorProvider):
     """
     Represents a single descriptor for an interface. See Bindings.conf.
     """
+
     def __init__(self, config, interface, desc):
         DescriptorProvider.__init__(self)
         self.config = config
         self.interface = interface
 
-        self.wantsXrays = (not interface.isExternal() and
-                           interface.isExposedInWindow())
+        self.wantsXrays = not interface.isExternal() and interface.isExposedInWindow()
 
         if self.wantsXrays:
             # We could try to restrict self.wantsXrayExpandoClass further.  For
@@ -334,7 +349,7 @@ class Descriptor(DescriptorProvider):
             # of not only the members of "interface" but also of all its
             # ancestors, because those can have members living in our slots too.
             # For now, do the simple thing.
-            self.wantsXrayExpandoClass = (interface.totalMembersInSlots != 0)
+            self.wantsXrayExpandoClass = interface.totalMembersInSlots != 0
 
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name
@@ -353,7 +368,7 @@ class Descriptor(DescriptorProvider):
         else:
             nativeTypeDefault = "mozilla::dom::" + ifaceName
 
-        self.nativeType = desc.get('nativeType', nativeTypeDefault)
+        self.nativeType = desc.get("nativeType", nativeTypeDefault)
         # Now create a version of nativeType that doesn't have extra
         # mozilla::dom:: at the beginning.
         prettyNativeType = self.nativeType.split("::")
@@ -363,7 +378,7 @@ class Descriptor(DescriptorProvider):
                 prettyNativeType.pop(0)
         self.prettyNativeType = "::".join(prettyNativeType)
 
-        self.jsImplParent = desc.get('jsImplParent', self.nativeType)
+        self.jsImplParent = desc.get("jsImplParent", self.nativeType)
 
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
@@ -374,51 +389,58 @@ class Descriptor(DescriptorProvider):
             # Use our local version of the header, not the exported one, so that
             # test bindings, which don't export, will work correctly.
             basename = os.path.basename(self.interface.filename())
-            headerDefault = basename.replace('.webidl', 'Binding.h')
+            headerDefault = basename.replace(".webidl", "Binding.h")
         else:
-            if not self.interface.isExternal() and self.interface.getExtendedAttribute("HeaderFile"):
+            if not self.interface.isExternal() and self.interface.getExtendedAttribute(
+                "HeaderFile"
+            ):
                 headerDefault = self.interface.getExtendedAttribute("HeaderFile")[0]
             elif self.interface.isIteratorInterface():
                 headerDefault = "mozilla/dom/IterableIterator.h"
             else:
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
-        self.headerFile = desc.get('headerFile', headerDefault)
+        self.headerFile = desc.get("headerFile", headerDefault)
         self.headerIsDefault = self.headerFile == headerDefault
         if self.jsImplParent == self.nativeType:
             self.jsImplParentHeader = self.headerFile
         else:
             self.jsImplParentHeader = self.jsImplParent.replace("::", "/") + ".h"
 
-        self.notflattened = desc.get('notflattened', False)
-        self.register = desc.get('register', True)
+        self.notflattened = desc.get("notflattened", False)
+        self.register = desc.get("register", True)
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
-        concreteDefault = (not self.interface.isExternal() and
-                           not self.interface.isCallback() and
-                           not self.interface.isNamespace() and
-                           # We're going to assume that leaf interfaces are
-                           # concrete; otherwise what's the point?  Also
-                           # interfaces with constructors had better be
-                           # concrete; otherwise how can you construct them?
-                           (not self.interface.hasChildInterfaces() or
-                            self.interface.ctor() is not None))
+        concreteDefault = (
+            not self.interface.isExternal()
+            and not self.interface.isCallback()
+            and not self.interface.isNamespace()
+            and
+            # We're going to assume that leaf interfaces are
+            # concrete; otherwise what's the point?  Also
+            # interfaces with constructors had better be
+            # concrete; otherwise how can you construct them?
+            (
+                not self.interface.hasChildInterfaces()
+                or self.interface.ctor() is not None
+            )
+        )
 
-        self.concrete = desc.get('concrete', concreteDefault)
-        self.hasUnforgeableMembers = (self.concrete and
-                                      any(MemberIsUnforgeable(m, self) for m in
-                                          self.interface.members))
+        self.concrete = desc.get("concrete", concreteDefault)
+        self.hasUnforgeableMembers = self.concrete and any(
+            MemberIsUnforgeable(m, self) for m in self.interface.members
+        )
         self.operations = {
-            'IndexedGetter': None,
-            'IndexedSetter': None,
-            'IndexedDeleter': None,
-            'NamedGetter': None,
-            'NamedSetter': None,
-            'NamedDeleter': None,
-            'Stringifier': None,
-            'LegacyCaller': None,
-            }
+            "IndexedGetter": None,
+            "IndexedSetter": None,
+            "IndexedDeleter": None,
+            "NamedGetter": None,
+            "NamedSetter": None,
+            "NamedDeleter": None,
+            "Stringifier": None,
+            "LegacyCaller": None,
+        }
 
         self.hasDefaultToJSON = False
 
@@ -437,7 +459,7 @@ class Descriptor(DescriptorProvider):
         if not self.interface.isExternal():
             for m in self.interface.members:
                 if m.isMethod() and m.isStringifier():
-                    addOperation('Stringifier', m)
+                    addOperation("Stringifier", m)
                 if m.isMethod() and m.isDefaultToJSON():
                     self.hasDefaultToJSON = True
 
@@ -452,10 +474,15 @@ class Descriptor(DescriptorProvider):
                 # Check that we don't have duplicated instrumented props.
                 uniqueInstrumentedProps = set(self.instrumentedProps)
                 if len(uniqueInstrumentedProps) != len(self.instrumentedProps):
-                    duplicates = [p for p in uniqueInstrumentedProps if
-                                  self.instrumentedProps.count(p) > 1]
-                    raise TypeError("Duplicated instrumented properties: %s.\n%s" %
-                                    (duplicates, self.interface.location))
+                    duplicates = [
+                        p
+                        for p in uniqueInstrumentedProps
+                        if self.instrumentedProps.count(p) > 1
+                    ]
+                    raise TypeError(
+                        "Duplicated instrumented properties: %s.\n%s"
+                        % (duplicates, self.interface.location)
+                    )
 
         if self.concrete:
             self.proxy = False
@@ -465,12 +492,16 @@ class Descriptor(DescriptorProvider):
                 # practice these are on most-derived prototypes.
                 if m.isMethod() and m.isLegacycaller():
                     if not m.isIdentifierLess():
-                        raise TypeError("We don't support legacycaller with "
-                                        "identifier.\n%s" % m.location)
+                        raise TypeError(
+                            "We don't support legacycaller with "
+                            "identifier.\n%s" % m.location
+                        )
                     if len(m.signatures()) != 1:
-                        raise TypeError("We don't support overloaded "
-                                        "legacycaller.\n%s" % m.location)
-                    addOperation('LegacyCaller', m)
+                        raise TypeError(
+                            "We don't support overloaded "
+                            "legacycaller.\n%s" % m.location
+                        )
+                    addOperation("LegacyCaller", m)
 
             while iface:
                 for m in iface.members:
@@ -479,97 +510,110 @@ class Descriptor(DescriptorProvider):
 
                     def addIndexedOrNamedOperation(operation, m):
                         if m.isIndexed():
-                            operation = 'Indexed' + operation
+                            operation = "Indexed" + operation
                         else:
                             assert m.isNamed()
-                            operation = 'Named' + operation
+                            operation = "Named" + operation
                         addOperation(operation, m)
 
                     if m.isGetter():
-                        addIndexedOrNamedOperation('Getter', m)
+                        addIndexedOrNamedOperation("Getter", m)
                     if m.isSetter():
-                        addIndexedOrNamedOperation('Setter', m)
+                        addIndexedOrNamedOperation("Setter", m)
                     if m.isDeleter():
-                        addIndexedOrNamedOperation('Deleter', m)
+                        addIndexedOrNamedOperation("Deleter", m)
                     if m.isLegacycaller() and iface != self.interface:
-                        raise TypeError("We don't support legacycaller on "
-                                        "non-leaf interface %s.\n%s" %
-                                        (iface, iface.location))
+                        raise TypeError(
+                            "We don't support legacycaller on "
+                            "non-leaf interface %s.\n%s" % (iface, iface.location)
+                        )
 
-                iface.setUserData('hasConcreteDescendant', True)
+                iface.setUserData("hasConcreteDescendant", True)
                 iface = iface.parent
 
-            self.proxy = (self.supportsIndexedProperties() or
-                          (self.supportsNamedProperties() and
-                           not self.hasNamedPropertiesObject) or
-                          self.isMaybeCrossOriginObject())
+            self.proxy = (
+                self.supportsIndexedProperties()
+                or (
+                    self.supportsNamedProperties() and not self.hasNamedPropertiesObject
+                )
+                or self.isMaybeCrossOriginObject()
+            )
 
             if self.proxy:
-                if (self.isMaybeCrossOriginObject() and
-                    (self.supportsIndexedProperties() or
-                     self.supportsNamedProperties())):
-                    raise TypeError("We don't support named or indexed "
-                                    "properties on maybe-cross-origin objects. "
-                                    "This lets us assume that their proxy "
-                                    "hooks are never called via Xrays.  "
-                                    "Fix %s.\n%s" %
-                                    (self.interface, self.interface.location))
-                    
-                if (not self.operations['IndexedGetter'] and
-                    (self.operations['IndexedSetter'] or
-                     self.operations['IndexedDeleter'])):
-                    raise SyntaxError("%s supports indexed properties but does "
-                                      "not have an indexed getter.\n%s" %
-                                      (self.interface, self.interface.location))
-                if (not self.operations['NamedGetter'] and
-                    (self.operations['NamedSetter'] or
-                     self.operations['NamedDeleter'])):
-                    raise SyntaxError("%s supports named properties but does "
-                                      "not have a named getter.\n%s" %
-                                      (self.interface, self.interface.location))
+                if self.isMaybeCrossOriginObject() and (
+                    self.supportsIndexedProperties() or self.supportsNamedProperties()
+                ):
+                    raise TypeError(
+                        "We don't support named or indexed "
+                        "properties on maybe-cross-origin objects. "
+                        "This lets us assume that their proxy "
+                        "hooks are never called via Xrays.  "
+                        "Fix %s.\n%s" % (self.interface, self.interface.location)
+                    )
+
+                if not self.operations["IndexedGetter"] and (
+                    self.operations["IndexedSetter"]
+                    or self.operations["IndexedDeleter"]
+                ):
+                    raise SyntaxError(
+                        "%s supports indexed properties but does "
+                        "not have an indexed getter.\n%s"
+                        % (self.interface, self.interface.location)
+                    )
+                if not self.operations["NamedGetter"] and (
+                    self.operations["NamedSetter"] or self.operations["NamedDeleter"]
+                ):
+                    raise SyntaxError(
+                        "%s supports named properties but does "
+                        "not have a named getter.\n%s"
+                        % (self.interface, self.interface.location)
+                    )
                 iface = self.interface
                 while iface:
-                    iface.setUserData('hasProxyDescendant', True)
+                    iface.setUserData("hasProxyDescendant", True)
                     iface = iface.parent
 
-        if desc.get('wantsQI', None) is not None:
-            self._wantsQI = desc.get('wantsQI', None)
-        self.wrapperCache = (not self.interface.isCallback() and
-                             not self.interface.isIteratorInterface() and
-                             desc.get('wrapperCache', True))
+        if desc.get("wantsQI", None) is not None:
+            self._wantsQI = desc.get("wantsQI", None)
+        self.wrapperCache = (
+            not self.interface.isCallback()
+            and not self.interface.isIteratorInterface()
+            and desc.get("wrapperCache", True)
+        )
 
         self.name = interface.identifier.name
 
         # self.implicitJSContext is a list of names of methods and attributes
         # that need a JSContext.
         if self.interface.isJSImplemented():
-            self.implicitJSContext = ['constructor']
+            self.implicitJSContext = ["constructor"]
         else:
-            self.implicitJSContext = desc.get('implicitJSContext', [])
+            self.implicitJSContext = desc.get("implicitJSContext", [])
         assert isinstance(self.implicitJSContext, list)
 
         self._binaryNames = {}
 
         if not self.interface.isExternal():
+
             def maybeAddBinaryName(member):
                 binaryName = member.getExtendedAttribute("BinaryName")
                 if binaryName:
                     assert isinstance(binaryName, list)
                     assert len(binaryName) == 1
-                    self._binaryNames.setdefault(member.identifier.name,
-                                                 binaryName[0])
+                    self._binaryNames.setdefault(member.identifier.name, binaryName[0])
+
             for member in self.interface.members:
                 if not member.isAttr() and not member.isMethod():
                     continue
-                maybeAddBinaryName(member);
+                maybeAddBinaryName(member)
 
             ctor = self.interface.ctor()
             if ctor:
                 maybeAddBinaryName(ctor)
 
             # Some default binary names for cases when nothing else got set.
-            self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
-            self._binaryNames.setdefault('__stringifier', 'Stringify')
+            self._binaryNames.setdefault("__legacycaller", "LegacyCall")
+            self._binaryNames.setdefault("__stringifier", "Stringify")
 
             # Build the prototype chain.
             self.prototypeChain = []
@@ -577,12 +621,14 @@ class Descriptor(DescriptorProvider):
             parent = interface
             while parent:
                 self.needsMissingPropUseCounters = (
-                    self.needsMissingPropUseCounters or
-                    parent.getExtendedAttribute("InstrumentedProps"))
+                    self.needsMissingPropUseCounters
+                    or parent.getExtendedAttribute("InstrumentedProps")
+                )
                 self.prototypeChain.insert(0, parent.identifier.name)
                 parent = parent.parent
-            config.maxProtoChainLength = max(config.maxProtoChainLength,
-                                             len(self.prototypeChain))
+            config.maxProtoChainLength = max(
+                config.maxProtoChainLength, len(self.prototypeChain)
+            )
 
     def binaryNameFor(self, name):
         return self._binaryNames.get(name, name)
@@ -598,8 +644,10 @@ class Descriptor(DescriptorProvider):
         return self.getDescriptor(self.prototypeChain[-2]).name
 
     def hasInterfaceOrInterfacePrototypeObject(self):
-        return (self.interface.hasInterfaceObject() or
-                self.interface.hasInterfacePrototypeObject())
+        return (
+            self.interface.hasInterfaceObject()
+            or self.interface.hasInterfacePrototypeObject()
+        )
 
     @property
     def hasNamedPropertiesObject(self):
@@ -607,7 +655,7 @@ class Descriptor(DescriptorProvider):
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
         def ensureValidBoolExtendedAttribute(attr, name):
-            if (attr is not None and attr is not True):
+            if attr is not None and attr is not True:
                 raise TypeError("Unknown value for '%s': %s" % (name, attr[0]))
 
         def ensureValidThrowsExtendedAttribute(attr):
@@ -630,11 +678,15 @@ class Descriptor(DescriptorProvider):
                 attrs.append("canOOM")
 
         def maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal):
-            if (needsSubjectPrincipal is not None and
-                needsSubjectPrincipal is not True and
-                needsSubjectPrincipal != ["NonSystem"]):
-                raise TypeError("Unknown value for 'NeedsSubjectPrincipal': %s" %
-                                needsSubjectPrincipal[0])
+            if (
+                needsSubjectPrincipal is not None
+                and needsSubjectPrincipal is not True
+                and needsSubjectPrincipal != ["NonSystem"]
+            ):
+                raise TypeError(
+                    "Unknown value for 'NeedsSubjectPrincipal': %s"
+                    % needsSubjectPrincipal[0]
+                )
 
             if needsSubjectPrincipal is not None:
                 attrs.append("needsSubjectPrincipal")
@@ -642,12 +694,14 @@ class Descriptor(DescriptorProvider):
                     attrs.append("needsNonSystemSubjectPrincipal")
 
         name = member.identifier.name
-        throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
+        throws = self.interface.isJSImplemented() or member.getExtendedAttribute(
+            "Throws"
+        )
         canOOM = member.getExtendedAttribute("CanOOM")
         needsSubjectPrincipal = member.getExtendedAttribute("NeedsSubjectPrincipal")
         attrs = []
         if name in self.implicitJSContext:
-            attrs.append('implicitJSContext')
+            attrs.append("implicitJSContext")
         if member.isMethod():
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
@@ -658,8 +712,7 @@ class Descriptor(DescriptorProvider):
                     canOOM = True
             maybeAppendInfallibleToAttrs(attrs, throws)
             maybeAppendCanOOMToAttrs(attrs, canOOM)
-            maybeAppendNeedsSubjectPrincipalToAttrs(attrs,
-                                                    needsSubjectPrincipal)
+            maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal)
             return attrs
 
         assert member.isAttr()
@@ -674,14 +727,18 @@ class Descriptor(DescriptorProvider):
         maybeAppendCanOOMToAttrs(attrs, canOOM)
         if needsSubjectPrincipal is None:
             needsSubjectPrincipalAttr = (
-                "GetterNeedsSubjectPrincipal" if getter else "SetterNeedsSubjectPrincipal")
+                "GetterNeedsSubjectPrincipal"
+                if getter
+                else "SetterNeedsSubjectPrincipal"
+            )
             needsSubjectPrincipal = member.getExtendedAttribute(
-                needsSubjectPrincipalAttr)
+                needsSubjectPrincipalAttr
+            )
         maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal)
         return attrs
 
     def supportsIndexedProperties(self):
-        return self.operations['IndexedGetter'] is not None
+        return self.operations["IndexedGetter"] is not None
 
     def lengthNeedsCallerType(self):
         """
@@ -691,11 +748,11 @@ class Descriptor(DescriptorProvider):
         calls need one too.
         """
         assert self.supportsIndexedProperties()
-        indexedGetter = self.operations['IndexedGetter']
+        indexedGetter = self.operations["IndexedGetter"]
         return indexedGetter.getExtendedAttribute("NeedsCallerType")
 
     def supportsNamedProperties(self):
-        return self.operations['NamedGetter'] is not None
+        return self.operations["NamedGetter"] is not None
 
     def supportedNamesNeedCallerType(self):
         """
@@ -704,13 +761,17 @@ class Descriptor(DescriptorProvider):
         GetSupportedNames.
         """
         assert self.supportsNamedProperties()
-        namedGetter = self.operations['NamedGetter']
+        namedGetter = self.operations["NamedGetter"]
         return namedGetter.getExtendedAttribute("NeedsCallerType")
 
     def isMaybeCrossOriginObject(self):
         # If we're isGlobal and have cross-origin members, we're a Window, and
         # that's not a cross-origin object.  The WindowProxy is.
-        return self.concrete and self.interface.hasCrossOriginMembers and not self.isGlobal()
+        return (
+            self.concrete
+            and self.interface.hasCrossOriginMembers
+            and not self.isGlobal()
+        )
 
     def needsHeaderInclude(self):
         """
@@ -721,26 +782,36 @@ class Descriptor(DescriptorProvider):
         have a parent.
 
         """
-        return (self.interface.isExternal() or self.concrete or
-                self.interface.hasInterfacePrototypeObject() or
-                any((m.isAttr() or m.isMethod()) and m.isStatic() for m in self.interface.members) or
-                self.interface.parent)
+        return (
+            self.interface.isExternal()
+            or self.concrete
+            or self.interface.hasInterfacePrototypeObject()
+            or any(
+                (m.isAttr() or m.isMethod()) and m.isStatic()
+                for m in self.interface.members
+            )
+            or self.interface.parent
+        )
 
     def hasThreadChecks(self):
         # isExposedConditionally does not necessarily imply thread checks
         # (since at least [SecureContext] is independent of them), but we're
         # only used to decide whether to include nsThreadUtils.h, so we don't
         # worry about that.
-        return ((self.isExposedConditionally() and
-                 not self.interface.isExposedInWindow()) or
-                self.interface.isExposedInSomeButNotAllWorkers())
+        return (
+            self.isExposedConditionally() and not self.interface.isExposedInWindow()
+        ) or self.interface.isExposedInSomeButNotAllWorkers()
 
     def hasCEReactions(self):
-        return any(m.getExtendedAttribute("CEReactions") for m in self.interface.members)
+        return any(
+            m.getExtendedAttribute("CEReactions") for m in self.interface.members
+        )
 
     def isExposedConditionally(self):
-        return (self.interface.isExposedConditionally() or
-                self.interface.isExposedInSomeButNotAllWorkers())
+        return (
+            self.interface.isExposedConditionally()
+            or self.interface.isExposedInSomeButNotAllWorkers()
+        )
 
     def needsXrayResolveHooks(self):
         """
@@ -751,9 +822,13 @@ class Descriptor(DescriptorProvider):
         due to chrome touching them and that's all those hooks do on
         those elements.  So we special-case those here.
         """
-        return (self.interface.getExtendedAttribute("NeedResolve") and
-                self.interface.identifier.name not in ["HTMLObjectElement",
-                                                       "HTMLEmbedElement"])
+        return self.interface.getExtendedAttribute(
+            "NeedResolve"
+        ) and self.interface.identifier.name not in [
+            "HTMLObjectElement",
+            "HTMLEmbedElement",
+        ]
+
     def needsXrayNamedDeleterHook(self):
         return self.operations["NamedDeleter"] is not None
 
@@ -780,9 +855,11 @@ class Descriptor(DescriptorProvider):
 
     @property
     def registersGlobalNamesOnWindow(self):
-        return (self.interface.hasInterfaceObject() and
-                self.interface.isExposedInWindow() and
-                self.register)
+        return (
+            self.interface.hasInterfaceObject()
+            and self.interface.isExposedInWindow()
+            and self.register
+        )
 
     def getDescriptor(self, interfaceName):
         """
@@ -801,7 +878,7 @@ def getTypesFromDescriptor(descriptor, includeArgs=True, includeReturns=True):
     default returns all argument types (which includes types of writable
     attributes) and all return types (which includes types of all attributes).
     """
-    assert(includeArgs or includeReturns) # Must want _something_.
+    assert includeArgs or includeReturns  # Must want _something_.
     members = [m for m in descriptor.interface.members]
     if descriptor.interface.ctor():
         members.append(descriptor.interface.ctor())
@@ -816,9 +893,11 @@ def getTypesFromDescriptor(descriptor, includeArgs=True, includeReturns=True):
         if includeArgs:
             types.extend(a.type for a in arguments)
 
-    types.extend(a.type for a in members if
-                 (a.isAttr() and (includeReturns or
-                                  (includeArgs and not a.readonly))))
+    types.extend(
+        a.type
+        for a in members
+        if (a.isAttr() and (includeReturns or (includeArgs and not a.readonly)))
+    )
 
     if descriptor.interface.maplikeOrSetlikeOrIterable:
         maplikeOrSetlikeOrIterable = descriptor.interface.maplikeOrSetlikeOrIterable
@@ -841,7 +920,10 @@ def getTypesFromDescriptor(descriptor, includeArgs=True, includeReturns=True):
         elif maplikeOrSetlikeOrIterable.isSetlike():
             assert maplikeOrSetlikeOrIterable.hasKeyType()
             assert maplikeOrSetlikeOrIterable.hasValueType()
-            assert maplikeOrSetlikeOrIterable.keyType == maplikeOrSetlikeOrIterable.valueType
+            assert (
+                maplikeOrSetlikeOrIterable.keyType
+                == maplikeOrSetlikeOrIterable.valueType
+            )
             # As in the maplike case, we don't always declare our return values
             # quite correctly.
             if includeReturns:
@@ -900,6 +982,7 @@ def getAllTypes(descriptors, dictionaries, callbacks):
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
             yield (t, None)
+
 
 def iteratorNativeType(descriptor):
     assert descriptor.interface.isIterable()

@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'components',
-    'utils',
-    'views',
+    "components",
+    "utils",
+    "views",
 ]
 
 DevToolsModules(
-    'markup-context-menu.js',
-    'markup.js',
-    'utils.js',
+    "markup-context-menu.js",
+    "markup.js",
+    "utils.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]

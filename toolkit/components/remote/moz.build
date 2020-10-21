@@ -4,47 +4,47 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
 
 SOURCES += [
-    'nsRemoteService.cpp',
+    "nsRemoteService.cpp",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     SOURCES += [
-        'nsGTKRemoteServer.cpp',
-        'nsUnixRemoteServer.cpp',
-        'nsXRemoteClient.cpp',
-        'nsXRemoteServer.cpp',
-        'RemoteUtils.cpp',
+        "nsGTKRemoteServer.cpp",
+        "nsUnixRemoteServer.cpp",
+        "nsXRemoteClient.cpp",
+        "nsXRemoteServer.cpp",
+        "RemoteUtils.cpp",
     ]
-    if CONFIG['MOZ_ENABLE_DBUS']:
+    if CONFIG["MOZ_ENABLE_DBUS"]:
         SOURCES += [
-            'nsDBusRemoteClient.cpp',
-            'nsDBusRemoteServer.cpp',
+            "nsDBusRemoteClient.cpp",
+            "nsDBusRemoteServer.cpp",
         ]
-        CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+        CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
         EXPORTS += [
-            'nsUnixRemoteServer.h',
-            'RemoteUtils.h',
+            "nsUnixRemoteServer.h",
+            "RemoteUtils.h",
         ]
-    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     SOURCES += [
-        'nsWinRemoteClient.cpp',
-        'nsWinRemoteServer.cpp',
-        'WinRemoteMessage.cpp',
+        "nsWinRemoteClient.cpp",
+        "nsWinRemoteServer.cpp",
+        "WinRemoteMessage.cpp",
     ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     SOURCES += [
-        'nsMacRemoteClient.mm',
-        'nsMacRemoteServer.mm',
+        "nsMacRemoteClient.mm",
+        "nsMacRemoteServer.mm",
     ]
 
 LOCAL_INCLUDES += [
-    '../../profile',
-    '../../xre',
+    "../../profile",
+    "../../xre",
 ]
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

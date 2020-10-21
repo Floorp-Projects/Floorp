@@ -4,37 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('GeckoView', 'General')
-    SCHEDULES.exclusive = ['android']
+with Files("**"):
+    BUG_COMPONENT = ("GeckoView", "General")
+    SCHEDULES.exclusive = ["android"]
 
-CONFIGURE_SUBST_FILES += ['installer/Makefile']
+CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 DIRS += [
-    '../locales',
-    'locales',
+    "../locales",
+    "locales",
 ]
 
 DIRS += [
-    'actors',
-    'base',
-    'chrome',
-    'components',
-    'modules',
-    'themes/core',
-    'themes/geckoview',
-    'geckoview/src/androidTest/assets',
-    'app',
-    'fonts',
+    "actors",
+    "base",
+    "chrome",
+    "components",
+    "modules",
+    "themes/core",
+    "themes/geckoview",
+    "geckoview/src/androidTest/assets",
+    "app",
+    "fonts",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
-    'geckoview/src/androidTest/assets/www/hello.html',
-    'geckoview/src/androidTest/assets/www/simple_redirect.sjs',
-    'geckoview/src/androidTest/assets/www/update_manifest.json',
+    "geckoview/src/androidTest/assets/www/hello.html",
+    "geckoview/src/androidTest/assets/www/simple_redirect.sjs",
+    "geckoview/src/androidTest/assets/www/update_manifest.json",
 ]
 
-SPHINX_TREES['/mobile/android'] = 'docs'
+SPHINX_TREES["/mobile/android"] = "docs"
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]

@@ -9,7 +9,7 @@ import mozunit
 from mozversioncontrol import get_repository_object
 
 STEPS = {
-    'hg': [
+    "hg": [
         """
         echo "bar" >> bar
         echo "baz" > baz
@@ -19,7 +19,7 @@ STEPS = {
         hg commit -m "Remove foo; modify bar; touch baz (but don't add it)"
         """,
     ],
-    'git': [
+    "git": [
         """
         echo "bar" >> bar
         echo "baz" > baz
@@ -27,8 +27,8 @@ STEPS = {
         """,
         """
         git commit -am "Remove foo; modify bar; touch baz (but don't add it)"
-        """
-    ]
+        """,
+    ],
 }
 
 
@@ -44,5 +44,5 @@ def test_working_directory_clean_untracked_files(repo):
     assert not vcs.working_directory_clean(untracked=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

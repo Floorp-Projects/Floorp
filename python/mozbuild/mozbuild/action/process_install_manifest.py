@@ -17,21 +17,19 @@ from mozpack.files import (
     BaseFile,
     FileFinder,
 )
-from mozpack.manifests import (
-    InstallManifest,
-)
+from mozpack.manifests import InstallManifest
 from mozbuild.util import DefinesAction
 from mozbuild.action.util import log_build_task
 
 
-COMPLETE = 'Elapsed: {elapsed:.2f}s; From {dest}: Kept {existing} existing; ' \
-    'Added/updated {updated}; ' \
-    'Removed {rm_files} files and {rm_dirs} directories.'
+COMPLETE = (
+    "Elapsed: {elapsed:.2f}s; From {dest}: Kept {existing} existing; "
+    "Added/updated {updated}; "
+    "Removed {rm_files} files and {rm_dirs} directories."
+)
 
 
-def process_manifest(destdir, paths, track,
-                     no_symlinks=False,
-                     defines={}):
+def process_manifest(destdir, paths, track, no_symlinks=False, defines={}):
 
     if os.path.exists(track):
         # We use the same format as install manifests for the tracking
@@ -64,10 +62,12 @@ def process_manifest(destdir, paths, track,
     manifest.populate_registry(
         copier, defines_override=defines, link_policy=link_policy
     )
-    result = copier.copy(destdir,
-                         remove_unaccounted=remove_unaccounted,
-                         remove_all_directory_symlinks=remove_all_directory_symlinks,
-                         remove_empty_directories=remove_empty_directories)
+    result = copier.copy(
+        destdir,
+        remove_unaccounted=remove_unaccounted,
+        remove_all_directory_symlinks=remove_all_directory_symlinks,
+        remove_empty_directories=remove_empty_directories,
+    )
 
     if track:
         # We should record files that we actually copied.
@@ -78,38 +78,54 @@ def process_manifest(destdir, paths, track,
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(
-        description='Process install manifest files.')
+    parser = argparse.ArgumentParser(description="Process install manifest files.")
 
-    parser.add_argument('destdir', help='Destination directory.')
-    parser.add_argument('manifests', nargs='+', help='Path to manifest file(s).')
-    parser.add_argument('--no-symlinks', action='store_true',
-                        help='Do not install symbolic links. Always copy files')
-    parser.add_argument('--track', metavar="PATH", required=True,
-                        help='Use installed files tracking information from the given path.')
-    parser.add_argument('-D', action=DefinesAction,
-                        dest='defines', metavar="VAR[=VAL]",
-                        help='Define a variable to override what is specified in the manifest')
+    parser.add_argument("destdir", help="Destination directory.")
+    parser.add_argument("manifests", nargs="+", help="Path to manifest file(s).")
+    parser.add_argument(
+        "--no-symlinks",
+        action="store_true",
+        help="Do not install symbolic links. Always copy files",
+    )
+    parser.add_argument(
+        "--track",
+        metavar="PATH",
+        required=True,
+        help="Use installed files tracking information from the given path.",
+    )
+    parser.add_argument(
+        "-D",
+        action=DefinesAction,
+        dest="defines",
+        metavar="VAR[=VAL]",
+        help="Define a variable to override what is specified in the manifest",
+    )
 
     args = parser.parse_args(argv)
 
     start = time.time()
 
-    result = process_manifest(args.destdir, args.manifests,
-                              track=args.track,
-                              no_symlinks=args.no_symlinks,
-                              defines=args.defines)
+    result = process_manifest(
+        args.destdir,
+        args.manifests,
+        track=args.track,
+        no_symlinks=args.no_symlinks,
+        defines=args.defines,
+    )
 
     elapsed = time.time() - start
 
-    print(COMPLETE.format(
-        elapsed=elapsed,
-        dest=args.destdir,
-        existing=result.existing_files_count,
-        updated=result.updated_files_count,
-        rm_files=result.removed_files_count,
-        rm_dirs=result.removed_directories_count))
+    print(
+        COMPLETE.format(
+            elapsed=elapsed,
+            dest=args.destdir,
+            existing=result.existing_files_count,
+            updated=result.updated_files_count,
+            rm_files=result.removed_files_count,
+            rm_dirs=result.removed_directories_count,
+        )
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     log_build_task(main, sys.argv[1:])

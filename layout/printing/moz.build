@@ -5,38 +5,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIPrintProgress.idl',
-    'nsIPrintProgressParams.idl',
+    "nsIPrintProgress.idl",
+    "nsIPrintProgressParams.idl",
 ]
 
 EXPORTS.mozilla.layout += [
-    'ipc/RemotePrintJobChild.h',
-    'ipc/RemotePrintJobParent.h',
+    "ipc/RemotePrintJobChild.h",
+    "ipc/RemotePrintJobParent.h",
 ]
 
-EXPORTS.mozilla.layout.printing += [
-    'DrawEventRecorder.h'
-]
+EXPORTS.mozilla.layout.printing += ["DrawEventRecorder.h"]
 
-XPIDL_MODULE = 'layout_printing'
+XPIDL_MODULE = "layout_printing"
 
 UNIFIED_SOURCES += [
-    'DrawEventRecorder.cpp',
-    'ipc/RemotePrintJobChild.cpp',
-    'ipc/RemotePrintJobParent.cpp',
-    'nsPagePrintTimer.cpp',
-    'nsPrintData.cpp',
-    'nsPrintJob.cpp',
-    'nsPrintObject.cpp',
-    'PrintTranslator.cpp',
+    "DrawEventRecorder.cpp",
+    "ipc/RemotePrintJobChild.cpp",
+    "ipc/RemotePrintJobParent.cpp",
+    "nsPagePrintTimer.cpp",
+    "nsPrintData.cpp",
+    "nsPrintJob.cpp",
+    "nsPrintObject.cpp",
+    "PrintTranslator.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
-    '../base',
-    '/dom/base',
-    '/gfx/2d/',
-    '/netwerk/base/',
+    "../base",
+    "/dom/base",
+    "/gfx/2d/",
+    "/netwerk/base/",
 ]

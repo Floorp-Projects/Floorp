@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'ConsoleApiCall.js',
-    'ConsoleCommand.js',
-    'CSSWarning.js',
-    'DefaultRenderer.js',
-    'EvaluationResult.js',
-    'NetworkEventMessage.js',
-    'PageError.js',
-    'WarningGroup.js',
+    "ConsoleApiCall.js",
+    "ConsoleCommand.js",
+    "CSSWarning.js",
+    "DefaultRenderer.js",
+    "EvaluationResult.js",
+    "NetworkEventMessage.js",
+    "PageError.js",
+    "WarningGroup.js",
 )

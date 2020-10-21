@@ -10,20 +10,23 @@ import six
 
 
 def get_parser():
-    parser = argparse.ArgumentParser("structlog",
-                                     description="Tools for dealing with structured logs")
+    parser = argparse.ArgumentParser(
+        "structlog", description="Tools for dealing with structured logs"
+    )
 
-    commands = {"unstable": (unstable.get_parser, unstable.main),
-                "format": (formatlog.get_parser, formatlog.main),
-                "logmerge": (logmerge.get_parser, logmerge.main)}
+    commands = {
+        "unstable": (unstable.get_parser, unstable.main),
+        "format": (formatlog.get_parser, formatlog.main),
+        "logmerge": (logmerge.get_parser, logmerge.main),
+    }
 
-    sub_parser = parser.add_subparsers(title='Subcommands')
+    sub_parser = parser.add_subparsers(title="Subcommands")
 
     for command, (parser_func, main_func) in six.iteritems(commands):
         parent = parser_func(False)
-        command_parser = sub_parser.add_parser(command,
-                                               description=parent.description,
-                                               parents=[parent])
+        command_parser = sub_parser.add_parser(
+            command, description=parent.description, parents=[parent]
+        )
         command_parser.set_defaults(func=main_func)
 
     return parser

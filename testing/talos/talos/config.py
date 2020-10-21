@@ -19,13 +19,13 @@ class ConfigurationError(Exception):
 DEFAULTS = dict(
     # args to pass to browser
     extra_args=[],
-    buildid='testbuildid',
-    init_url='getInfo.html',
-    env={'NO_EM_RESTART': '1'},
+    buildid="testbuildid",
+    init_url="getInfo.html",
+    env={"NO_EM_RESTART": "1"},
     # base data for all tests
     basetest=dict(
         cycles=1,
-        profile_path='${talos}/base_profile',
+        profile_path="${talos}/base_profile",
         responsiveness=False,
         gecko_profile=False,
         gecko_profile_interval=1,
@@ -62,20 +62,20 @@ DEFAULTS = dict(
 
 # keys to generated self.config that are global overrides to tests
 GLOBAL_OVERRIDES = (
-    'cycles',
-    'gecko_profile',
-    'gecko_profile_interval',
-    'gecko_profile_entries',
-    'tpcycles',
-    'tppagecycles',
-    'tpmanifest',
-    'tptimeout',
-    'tpmozafterpaint',
-    'tphero',
-    'fnbpaint',
-    'pdfpaint',
-    'firstpaint',
-    'userready',
+    "cycles",
+    "gecko_profile",
+    "gecko_profile_interval",
+    "gecko_profile_entries",
+    "tpcycles",
+    "tppagecycles",
+    "tpmanifest",
+    "tptimeout",
+    "tpmozafterpaint",
+    "tphero",
+    "fnbpaint",
+    "pdfpaint",
+    "firstpaint",
+    "userready",
 )
 
 
@@ -94,16 +94,16 @@ def validator(func):
 
 
 def convert_url(config, url):
-    webserver = config['webserver']
+    webserver = config["webserver"]
     if not webserver:
         return url
 
-    if '://' in url:
+    if "://" in url:
         # assume a fully qualified url
         return url
 
-    if '.html' in url:
-        url = 'http://%s/%s' % (webserver, url)
+    if ".html" in url:
+        url = "http://%s/%s" % (webserver, url)
 
     return url
 
@@ -113,64 +113,68 @@ def fix_xperf(config):
     # BBB: remove doubly-quoted xperf values from command line
     # (needed for buildbot)
     # https://bugzilla.mozilla.org/show_bug.cgi?id=704654#c43
-    win7_path = 'c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe'
-    if config['xperf_path']:
-        xperf_path = config['xperf_path']
+    win7_path = "c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe"
+    if config["xperf_path"]:
+        xperf_path = config["xperf_path"]
         quotes = ('"', "'")
         for quote in quotes:
             if xperf_path.startswith(quote) and xperf_path.endswith(quote):
-                config['xperf_path'] = xperf_path[1:-1]
+                config["xperf_path"] = xperf_path[1:-1]
                 break
-        if not os.path.exists(config['xperf_path']):
+        if not os.path.exists(config["xperf_path"]):
             # look for old win7 path
             if not os.path.exists(win7_path):
                 raise ConfigurationError(
-                    "xperf.exe cannot be found at the path specified")
-            config['xperf_path'] = win7_path
+                    "xperf.exe cannot be found at the path specified"
+                )
+            config["xperf_path"] = win7_path
 
 
 @validator
 def set_webserver(config):
     # pick a free port
     import socket
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('', 0))
+    sock.bind(("", 0))
     port = sock.getsockname()[1]
     sock.close()
 
-    config['webserver'] = '127.0.0.1:%d' % port
+    config["webserver"] = "127.0.0.1:%d" % port
 
 
 @validator
 def update_prefs(config):
-    config.setdefault('preferences', {})
+    config.setdefault("preferences", {})
 
     # update prefs from command line
-    prefs = config.pop('extraPrefs')
+    prefs = config.pop("extraPrefs")
     if prefs:
         for arg in prefs:
-            k, v = arg.split('=', 1)
-            config['preferences'][k] = utils.parse_pref(v)
+            k, v = arg.split("=", 1)
+            config["preferences"][k] = utils.parse_pref(v)
 
 
 @validator
 def fix_init_url(config):
-    if 'init_url' in config:
-        config['init_url'] = convert_url(config, config['init_url'])
+    if "init_url" in config:
+        config["init_url"] = convert_url(config, config["init_url"])
 
 
 @validator
 def determine_local_symbols_path(config):
-    if 'symbols_path' not in config:
+    if "symbols_path" not in config:
         return
 
     # use objdir/dist/crashreporter-symbols for symbolsPath if none provided
-    if not config['symbols_path'] and \
-       config['develop'] and \
-       'MOZ_DEVELOPER_OBJ_DIR' in os.environ:
-        config['symbols_path'] = os.path.join(os.environ['MOZ_DEVELOPER_OBJ_DIR'],
-                                              'dist',
-                                              'crashreporter-symbols')
+    if (
+        not config["symbols_path"]
+        and config["develop"]
+        and "MOZ_DEVELOPER_OBJ_DIR" in os.environ
+    ):
+        config["symbols_path"] = os.path.join(
+            os.environ["MOZ_DEVELOPER_OBJ_DIR"], "dist", "crashreporter-symbols"
+        )
 
 
 def get_counters(config):
@@ -179,15 +183,13 @@ def get_counters(config):
 
 
 def get_active_tests(config):
-    activeTests = config.pop('activeTests').strip().split(':')
+    activeTests = config.pop("activeTests").strip().split(":")
 
     # ensure tests are available
     availableTests = test.test_dict()
     if not set(activeTests).issubset(availableTests):
-        missing = [i for i in activeTests
-                   if i not in availableTests]
-        raise ConfigurationError("No definition found for test(s): %s"
-                                 % missing)
+        missing = [i for i in activeTests if i not in availableTests]
+        raise ConfigurationError("No definition found for test(s): %s" % missing)
 
     return activeTests
 
@@ -199,7 +201,7 @@ def get_global_overrides(config):
         value = config[key]
         if value is not None:
             global_overrides[key] = value
-        if key != 'gecko_profile':
+        if key != "gecko_profile":
             config.pop(key)
 
     return global_overrides
@@ -207,29 +209,29 @@ def get_global_overrides(config):
 
 def build_manifest(config, manifestName):
     # read manifest lines
-    with open(manifestName, 'r') as fHandle:
+    with open(manifestName, "r") as fHandle:
         manifestLines = fHandle.readlines()
 
     # write modified manifest lines
-    with open(manifestName + '.develop', 'w') as newHandle:
+    with open(manifestName + ".develop", "w") as newHandle:
         for line in manifestLines:
-            newline = line.replace('localhost', config['webserver'])
-            newline = newline.replace('page_load_test', 'tests')
+            newline = line.replace("localhost", config["webserver"])
+            newline = newline.replace("page_load_test", "tests")
             newHandle.write(newline)
 
-    newManifestName = manifestName + '.develop'
+    newManifestName = manifestName + ".develop"
 
     # return new manifest
     return newManifestName
 
 
 def get_test(config, global_overrides, counters, test_instance):
-    mozAfterPaint = getattr(test_instance, 'tpmozafterpaint', None)
-    hero = getattr(test_instance, 'tphero', None)
-    firstPaint = getattr(test_instance, 'firstpaint', None)
-    userReady = getattr(test_instance, 'userready', None)
-    firstNonBlankPaint = getattr(test_instance, 'fnbpaint', None)
-    pdfPaint = getattr(test_instance, 'pdfpaint', None)
+    mozAfterPaint = getattr(test_instance, "tpmozafterpaint", None)
+    hero = getattr(test_instance, "tphero", None)
+    firstPaint = getattr(test_instance, "firstpaint", None)
+    userReady = getattr(test_instance, "userready", None)
+    firstNonBlankPaint = getattr(test_instance, "fnbpaint", None)
+    pdfPaint = getattr(test_instance, "pdfpaint", None)
 
     test_instance.update(**global_overrides)
 
@@ -249,20 +251,24 @@ def get_test(config, global_overrides, counters, test_instance):
         test_instance.pdfpaint = pdfPaint
 
     # fix up url
-    url = getattr(test_instance, 'url', None)
+    url = getattr(test_instance, "url", None)
     if url:
         test_instance.url = utils.interpolate(convert_url(config, url))
 
     # fix up tpmanifest
-    tpmanifest = getattr(test_instance, 'tpmanifest', None)
+    tpmanifest = getattr(test_instance, "tpmanifest", None)
     if tpmanifest:
-        test_instance.tpmanifest = \
-            build_manifest(config, utils.interpolate(tpmanifest))
+        test_instance.tpmanifest = build_manifest(config, utils.interpolate(tpmanifest))
 
     # add any counters
     if counters:
-        keys = ('linux_counters', 'mac_counters',
-                'win_counters', 'w7_counters', 'xperf_counters')
+        keys = (
+            "linux_counters",
+            "mac_counters",
+            "win_counters",
+            "w7_counters",
+            "xperf_counters",
+        )
         for key in keys:
             if key not in test_instance.keys:
                 # only populate attributes that will be output
@@ -270,8 +276,9 @@ def get_test(config, global_overrides, counters, test_instance):
             if not isinstance(getattr(test_instance, key, None), list):
                 setattr(test_instance, key, [])
             _counters = getattr(test_instance, key)
-            _counters.extend([counter for counter in counters
-                              if counter not in _counters])
+            _counters.extend(
+                [counter for counter in counters if counter not in _counters]
+            )
     return dict(test_instance.items())
 
 
@@ -285,47 +292,54 @@ def tests(config):
     tests = []
     for test_name in activeTests:
         test_class = test_dict[test_name]
-        tests.append(get_test(config, global_overrides, counters,
-                              test_class()))
-    config['tests'] = tests
+        tests.append(get_test(config, global_overrides, counters, test_class()))
+    config["tests"] = tests
 
 
 def get_browser_config(config):
-    required = ('extensions', 'browser_path', 'browser_wait',
-                'extra_args', 'buildid', 'env', 'init_url', 'webserver')
-    optional = {'bcontroller_config': '${talos}/bcontroller.json',
-                'child_process': 'plugin-container',
-                'debug': False,
-                'debugger': None,
-                'debugger_args': None,
-                'develop': False,
-                'enable_webrender': False,
-                'enable_fission': False,
-                'process': '',
-                'framework': 'talos',
-                'repository': None,
-                'sourcestamp': None,
-                'symbols_path': None,
-                'test_timeout': 1200,
-                'xperf_path': None,
-                'error_filename': None,
-                'no_upload_results': False,
-                'stylothreads': 0,
-                'subtests': None,
-                'preferences': {},
-                }
-    browser_config = dict(title=config['title'])
+    required = (
+        "extensions",
+        "browser_path",
+        "browser_wait",
+        "extra_args",
+        "buildid",
+        "env",
+        "init_url",
+        "webserver",
+    )
+    optional = {
+        "bcontroller_config": "${talos}/bcontroller.json",
+        "child_process": "plugin-container",
+        "debug": False,
+        "debugger": None,
+        "debugger_args": None,
+        "develop": False,
+        "enable_webrender": False,
+        "enable_fission": False,
+        "process": "",
+        "framework": "talos",
+        "repository": None,
+        "sourcestamp": None,
+        "symbols_path": None,
+        "test_timeout": 1200,
+        "xperf_path": None,
+        "error_filename": None,
+        "no_upload_results": False,
+        "stylothreads": 0,
+        "subtests": None,
+        "preferences": {},
+    }
+    browser_config = dict(title=config["title"])
     browser_config.update(dict([(i, config[i]) for i in required]))
-    browser_config.update(dict([(i, config.get(i, j))
-                          for i, j in optional.items()]))
+    browser_config.update(dict([(i, config.get(i, j)) for i, j in optional.items()]))
     return browser_config
 
 
 def suites_conf():
     import json
-    with open(os.path.join(os.path.dirname(utils.here),
-                           'talos.json')) as f:
-        return json.load(f)['suites']
+
+    with open(os.path.join(os.path.dirname(utils.here), "talos.json")) as f:
+        return json.load(f)["suites"]
 
 
 def get_config(argv=None):
@@ -336,15 +350,15 @@ def get_config(argv=None):
         try:
             suite_conf = suites_conf()[cli_opts.suite]
         except KeyError:
-            raise ConfigurationError('No such suite: %r' % cli_opts.suite)
-        argv += ['-a', ':'.join(suite_conf['tests'])]
+            raise ConfigurationError("No such suite: %r" % cli_opts.suite)
+        argv += ["-a", ":".join(suite_conf["tests"])]
         # talos_options in the suite config should not override command line
         # options, so we prepend argv with talos_options so that, when parsed,
         # the command line options will clobber the suite config options.
-        argv = suite_conf.get('talos_options', []) + argv
+        argv = suite_conf.get("talos_options", []) + argv
         # args needs to be reparsed now
     elif not cli_opts.activeTests:
-        raise ConfigurationError('--activeTests or --suite required!')
+        raise ConfigurationError("--activeTests or --suite required!")
 
     cli_opts = parse_args(argv=argv)
     setup_logging("talos", cli_opts, {"tbpl": sys.stdout})
@@ -365,7 +379,7 @@ def get_configs(argv=None):
     return config, browser_config
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cfgs = get_configs()
     print(cfgs[0])
     print

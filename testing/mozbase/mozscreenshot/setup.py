@@ -7,8 +7,8 @@ from __future__ import absolute_import
 from setuptools import setup
 
 
-PACKAGE_NAME = 'mozscreenshot'
-PACKAGE_VERSION = '1.0.0'
+PACKAGE_NAME = "mozscreenshot"
+PACKAGE_VERSION = "1.0.0"
 
 
 setup(
@@ -16,15 +16,17 @@ setup(
     version=PACKAGE_VERSION,
     description="Library for taking screenshots in tests harness",
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
-    classifiers=['Programming Language :: Python :: 2.7',
-                 'Programming Language :: Python :: 3.5'],
+    classifiers=[
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
+    ],
     # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-    keywords='mozilla',
-    author='Mozilla Automation and Tools team',
-    author_email='tools@lists.mozilla.org',
-    url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
-    license='MPL',
-    packages=['mozscreenshot'],
+    keywords="mozilla",
+    author="Mozilla Automation and Tools team",
+    author_email="tools@lists.mozilla.org",
+    url="https://wiki.mozilla.org/Auto-tools/Projects/Mozbase",
+    license="MPL",
+    packages=["mozscreenshot"],
     zip_safe=False,
-    install_requires=['mozlog', 'mozinfo'],
+    install_requires=["mozlog", "mozinfo"],
 )

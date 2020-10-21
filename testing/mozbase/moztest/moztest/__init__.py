@@ -5,4 +5,5 @@
 from __future__ import absolute_import
 
 from moztest import adapters
-__all__ = ['adapters']
+
+__all__ = ["adapters"]

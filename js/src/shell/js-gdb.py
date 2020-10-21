@@ -9,8 +9,8 @@
 
 from os.path import abspath, dirname
 
-devel_objdir = abspath(os.path.join(dirname(__file__), '..', '..'))
-m = re.search(r'[\w ]+: (.*)', gdb.execute("show dir", False, True))
+devel_objdir = abspath(os.path.join(dirname(__file__), "..", ".."))
+m = re.search(r"[\w ]+: (.*)", gdb.execute("show dir", False, True))
 if m and devel_objdir not in m.group(1).split(":"):
     gdb.execute("set dir {}:{}".format(devel_objdir, m.group(1)))
 

@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'class-list.js',
-    'element-style.js',
-    'rule.js',
-    'text-property.js',
-    'user-properties.js',
+    "class-list.js",
+    "element-style.js",
+    "rule.js",
+    "text-property.js",
+    "user-properties.js",
 )

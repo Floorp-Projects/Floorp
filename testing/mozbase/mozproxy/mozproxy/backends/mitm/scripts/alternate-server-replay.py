@@ -105,16 +105,18 @@ class AlternateServerPlayback:
             "Replay server responses from a saved file.",
         )
         loader.add_option(
-            "upload_dir", str, "",
+            "upload_dir",
+            str,
+            "",
             "Upload directory",
         )
 
     def load_flows(self, flows):
         """
-            Replay server responses from flows.
+        Replay server responses from flows.
         """
         for i in flows:
-            if i.type == 'websocket':
+            if i.type == "websocket":
                 # Mitmproxy can't replay WebSocket packages.
                 ctx.log.info(
                     "Recorded response is a WebSocketFlow. Removing from recording list as"
@@ -158,9 +160,7 @@ class AlternateServerPlayback:
                         _PROTO.update(recording_info["http_protocol"])
                     else:
                         ctx.log.warn(
-                            "Replaying file {} has no http_protocol info.".format(
-                                proto
-                            )
+                            "Replaying file {} has no http_protocol info.".format(proto)
                         )
         except Exception as e:
             ctx.log.error("Could not load recording file! Stopping playback process!")
@@ -169,7 +169,7 @@ class AlternateServerPlayback:
 
     def _hash(self, flow):
         """
-            Calculates a loose hash of the flow request.
+        Calculates a loose hash of the flow request.
         """
         r = flow.request
 
@@ -190,8 +190,8 @@ class AlternateServerPlayback:
 
     def next_flow(self, request):
         """
-            Returns the next flow object, or None if no matching flow was
-            found.
+        Returns the next flow object, or None if no matching flow was
+        found.
         """
         hsh = self._hash(request)
         if hsh in self.flowmap:
@@ -207,19 +207,18 @@ class AlternateServerPlayback:
             return
 
         confidence = float(self._replayed) / float(self._replayed + self._not_replayed)
-        stats = {"totals": dict(self.netlocs),
-                 "calls": self.calls,
-                 "replayed": self._replayed,
-                 "not-replayed": self._not_replayed,
-                 "confidence": int(confidence * 100)}
-        file_name = "mitm_netlocs_%s.json" % \
-                    os.path.splitext(
-                        os.path.basename(
-                            ctx.options.server_replay_files[0]
-                        )
-                    )[0]
-        path = os.path.normpath(os.path.join(ctx.options.upload_dir,
-                                             file_name))
+        stats = {
+            "totals": dict(self.netlocs),
+            "calls": self.calls,
+            "replayed": self._replayed,
+            "not-replayed": self._not_replayed,
+            "confidence": int(confidence * 100),
+        }
+        file_name = (
+            "mitm_netlocs_%s.json"
+            % os.path.splitext(os.path.basename(ctx.options.server_replay_files[0]))[0]
+        )
+        path = os.path.normpath(os.path.join(ctx.options.upload_dir, file_name))
         try:
             with open(path, "w") as f:
                 f.write(json.dumps(stats, indent=2, sort_keys=True))
@@ -255,9 +254,13 @@ class AlternateServerPlayback:
                 if ctx.options.upload_dir:
                     parsed_url = urllib.parse.urlparse(parse.unquote(f.request.url))
                     self.netlocs[parsed_url.netloc][f.response.status_code] += 1
-                    self.calls.append({'time': str(time.time()),
-                                       'url': f.request.url,
-                                       'response_status': f.response.status_code})
+                    self.calls.append(
+                        {
+                            "time": str(time.time()),
+                            "url": f.request.url,
+                            "response_status": f.response.status_code,
+                        }
+                    )
             except Exception as e:
                 ctx.log.error("Could not generate response! Stopping playback process!")
                 ctx.log.info(e)
@@ -271,7 +274,7 @@ class AlternateServerPlayback:
 
 playback = AlternateServerPlayback()
 
-if hasattr(signal, 'SIGBREAK'):
+if hasattr(signal, "SIGBREAK"):
     # allows the addon to dump the stats even if mitmproxy
     # does not call done() like on windows termination
     # for this, the parent process sends CTRL_BREAK_EVENT which

@@ -5,23 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.a11y += [
-    'AccessibleWrap.h',
-    'HyperTextAccessibleWrap.h',
+    "AccessibleWrap.h",
+    "HyperTextAccessibleWrap.h",
 ]
 
 SOURCES += [
-    'AccessibleWrap.cpp',
-    'Platform.cpp',
+    "AccessibleWrap.cpp",
+    "Platform.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/accessible/base',
-    '/accessible/generic',
-    '/accessible/html',
-    '/accessible/xul',
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/xul",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

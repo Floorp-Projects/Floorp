@@ -8,10 +8,11 @@ import os
 import sys
 import subprocess
 
+
 def main(output, css_properties, exe):
     # moz.build passes in the exe name without any path, so to run it we need to
     # prepend the './'
-    run_exe = exe if os.path.isabs(exe) else './%s' % exe
+    run_exe = exe if os.path.isabs(exe) else "./%s" % exe
 
     # Use universal_newlines so everything is '\n', which gets converted to
     # '\r\n' when writing out the file in Windows.
@@ -20,5 +21,6 @@ def main(output, css_properties, exe):
         data += f.read()
     output.write(data)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

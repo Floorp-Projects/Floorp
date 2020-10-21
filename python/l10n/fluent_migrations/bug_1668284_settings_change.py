@@ -9,6 +9,7 @@ from fluent.migrate.helpers import transforms_from
 from fluent.migrate import REPLACE, COPY
 from fluent.migrate.helpers import MESSAGE_REFERENCE, TERM_REFERENCE
 
+
 def migrate(ctx):
     """Bug 1668284 - Unknown content type change settings label is no longer accurate, part {index}."""
 
@@ -34,9 +35,11 @@ def migrate(ctx):
                                                     "toolkit/chrome/mozapps/downloads/settingsChange.dtd",
                                                     "settingsChangeOptions.label",
                                                     {
-                                                        "&brandShortName;": TERM_REFERENCE("brand-short-name"),
+                                                        "&brandShortName;": TERM_REFERENCE(
+                                                            "brand-short-name"
+                                                        ),
                                                     },
-                                                )
+                                                ),
                                             ),
                                             FTL.Variant(
                                                 key=FTL.Identifier("other"),
@@ -45,17 +48,19 @@ def migrate(ctx):
                                                     "toolkit/chrome/mozapps/downloads/settingsChange.dtd",
                                                     "settingsChangePreferences.label",
                                                     {
-                                                        "&brandShortName;": TERM_REFERENCE("brand-short-name"),
+                                                        "&brandShortName;": TERM_REFERENCE(
+                                                            "brand-short-name"
+                                                        ),
                                                     },
-                                                )
-                                            )
-                                        ]
+                                                ),
+                                            ),
+                                        ],
                                     )
                                 )
                             ]
-                        )
+                        ),
                     )
-                ]
+                ],
             )
-        ]
+        ],
     )

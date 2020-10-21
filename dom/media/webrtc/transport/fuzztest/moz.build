@@ -4,28 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('FuzzingStun')
+Library("FuzzingStun")
 
-DEFINES['HAVE_STRDUP'] = True
+DEFINES["HAVE_STRDUP"] = True
 
 LOCAL_INCLUDES += [
-  '/dom/media/webrtc/transport/third_party/nICEr/src/net',
-  '/dom/media/webrtc/transport/third_party/nICEr/src/stun',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/event',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/log',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/plugin',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/share',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/stats',
-  '/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr',
-  '/ipc/chromium/src',
+    "/dom/media/webrtc/transport/third_party/nICEr/src/net",
+    "/dom/media/webrtc/transport/third_party/nICEr/src/stun",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/event",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/log",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/plugin",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/share",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/stats",
+    "/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr",
+    "/ipc/chromium/src",
 ]
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
 SOURCES += [
-    'stun_parser_libfuzz.cpp',
+    "stun_parser_libfuzz.cpp",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

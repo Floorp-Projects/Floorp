@@ -12,6 +12,7 @@ import attr
 
 class ResultSummary(object):
     """Represents overall result state from an entire lint run."""
+
     root = None
 
     def __init__(self, root):
@@ -94,7 +95,7 @@ class Issue(object):
 
     def __attrs_post_init__(self):
         root = ResultSummary.root
-        assert root is not None, 'Missing ResultSummary.root'
+        assert root is not None, "Missing ResultSummary.root"
         if os.path.isabs(self.path):
             self.path = mozpath.normpath(self.path)
             if self.path.startswith(root):

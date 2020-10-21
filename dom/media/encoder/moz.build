@@ -4,45 +4,47 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('*'):
-    BUG_COMPONENT = ('Core', 'Audio/Video: Recording')
+with Files("*"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Recording")
 
 EXPORTS += [
-    'ContainerWriter.h',
-    'EncodedFrame.h',
-    'MediaEncoder.h',
-    'OpusTrackEncoder.h',
-    'TrackEncoder.h',
-    'TrackMetadataBase.h',
+    "ContainerWriter.h",
+    "EncodedFrame.h",
+    "MediaEncoder.h",
+    "OpusTrackEncoder.h",
+    "TrackEncoder.h",
+    "TrackMetadataBase.h",
 ]
 
 UNIFIED_SOURCES += [
-    'MediaEncoder.cpp',
-    'Muxer.cpp',
-    'OpusTrackEncoder.cpp',
-    'TrackEncoder.cpp',
+    "MediaEncoder.cpp",
+    "Muxer.cpp",
+    "OpusTrackEncoder.cpp",
+    "TrackEncoder.cpp",
 ]
 
-if CONFIG['MOZ_WEBM_ENCODER']:
-    EXPORTS += ['VP8TrackEncoder.h',
+if CONFIG["MOZ_WEBM_ENCODER"]:
+    EXPORTS += [
+        "VP8TrackEncoder.h",
     ]
-    UNIFIED_SOURCES += ['VP8TrackEncoder.cpp',
+    UNIFIED_SOURCES += [
+        "VP8TrackEncoder.cpp",
     ]
-    LOCAL_INCLUDES += ['/media/libyuv/libyuv/include']
+    LOCAL_INCLUDES += ["/media/libyuv/libyuv/include"]
 
-DEFINES['TRACING'] = True
+DEFINES["TRACING"] = True
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/dom/media',
-    '/ipc/chromium/src',
+    "/dom/media",
+    "/ipc/chromium/src",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 # Suppress some GCC warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-  CXXFLAGS += ['-Wno-error=attributes']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=attributes"]

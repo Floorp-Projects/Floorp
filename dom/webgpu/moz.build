@@ -4,68 +4,67 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Graphics: WebGPU')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebGPU")
 
 MOCHITEST_MANIFESTS += [
-    'mochitest/mochitest-no-pref.ini',
-    'mochitest/mochitest.ini',
+    "mochitest/mochitest-no-pref.ini",
+    "mochitest/mochitest.ini",
 ]
 
-DIRS += [
-]
+DIRS += []
 
 h_and_cpp = [
-    'Adapter',
-    'BindGroup',
-    'BindGroupLayout',
-    'Buffer',
-    'CanvasContext',
-    'CommandBuffer',
-    'CommandEncoder',
-    'ComputePassEncoder',
-    'ComputePipeline',
-    'Device',
-    'DeviceLostInfo',
-    'Fence',
-    'Instance',
-    'ObjectModel',
-    'OutOfMemoryError',
-    'PipelineLayout',
-    'Queue',
-    'RenderBundle',
-    'RenderBundleEncoder',
-    'RenderPassEncoder',
-    'RenderPipeline',
-    'Sampler',
-    'ShaderModule',
-    'SwapChain',
-    'Texture',
-    'TextureView',
-    'ValidationError',
+    "Adapter",
+    "BindGroup",
+    "BindGroupLayout",
+    "Buffer",
+    "CanvasContext",
+    "CommandBuffer",
+    "CommandEncoder",
+    "ComputePassEncoder",
+    "ComputePipeline",
+    "Device",
+    "DeviceLostInfo",
+    "Fence",
+    "Instance",
+    "ObjectModel",
+    "OutOfMemoryError",
+    "PipelineLayout",
+    "Queue",
+    "RenderBundle",
+    "RenderBundleEncoder",
+    "RenderPassEncoder",
+    "RenderPipeline",
+    "Sampler",
+    "ShaderModule",
+    "SwapChain",
+    "Texture",
+    "TextureView",
+    "ValidationError",
 ]
-EXPORTS.mozilla.webgpu += [x + '.h' for x in h_and_cpp]
-UNIFIED_SOURCES += [x + '.cpp' for x in h_and_cpp]
+EXPORTS.mozilla.webgpu += [x + ".h" for x in h_and_cpp]
+UNIFIED_SOURCES += [x + ".cpp" for x in h_and_cpp]
 
 IPDL_SOURCES += [
-    'ipc/PWebGPU.ipdl',
+    "ipc/PWebGPU.ipdl",
 ]
 
 EXPORTS.mozilla.webgpu += [
-    'ipc/WebGPUChild.h',
-    'ipc/WebGPUParent.h',
-    'ipc/WebGPUSerialize.h',
-    'ipc/WebGPUTypes.h',
+    "ipc/WebGPUChild.h",
+    "ipc/WebGPUParent.h",
+    "ipc/WebGPUSerialize.h",
+    "ipc/WebGPUTypes.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ipc/WebGPUChild.cpp',
-    'ipc/WebGPUParent.cpp',
+    "ipc/WebGPUChild.cpp",
+    "ipc/WebGPUParent.cpp",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
-    CXXFLAGS += ['-Werror=implicit-int-conversion']
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
+    CXXFLAGS += ["-Werror=implicit-int-conversion"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

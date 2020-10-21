@@ -4,45 +4,49 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option('--disable-nodejs',
-       help='Require Node.js to build')
-option(env='NODEJS', nargs=1, help='Path to nodejs')
+option("--disable-nodejs", help="Require Node.js to build")
+option(env="NODEJS", nargs=1, help="Path to nodejs")
 
 
-@depends('--enable-nodejs', 'NODEJS')
-@checking('for nodejs',
-          callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
-@imports(_from='mozbuild.nodeutil', _import='find_node_executable')
-@imports(_from='mozbuild.nodeutil', _import='NODE_MIN_VERSION')
+@depends("--enable-nodejs", "NODEJS")
+@checking(
+    "for nodejs", callback=lambda x: "%s (%s)" % (x.path, x.str_version) if x else "no"
+)
+@imports(_from="mozbuild.nodeutil", _import="find_node_executable")
+@imports(_from="mozbuild.nodeutil", _import="NODE_MIN_VERSION")
 def nodejs(require, env_node):
     node_exe = env_node[0] if env_node else None
 
     nodejs, version = find_node_executable(node_exe)
 
-    MAYBE_FILE_A_BUG = '''
+    MAYBE_FILE_A_BUG = """
 
     Executing `mach bootstrap --no-system-changes` should
     install a compatible version in ~/.mozbuild on most platforms.
     If you believe this is a bug, <https://mzl.la/2vLbXAv> is a good way
     to file.  More details: <https://bit.ly/2BbyD1E>
-    '''
+    """
 
     if not nodejs:
-        msg = ('could not find Node.js executable later than %s; ensure '
-               '`node` or `nodejs` is in PATH or set NODEJS in environment '
-               'to point to an executable.%s' % (NODE_MIN_VERSION, MAYBE_FILE_A_BUG)
-               )
+        msg = (
+            "could not find Node.js executable later than %s; ensure "
+            "`node` or `nodejs` is in PATH or set NODEJS in environment "
+            "to point to an executable.%s" % (NODE_MIN_VERSION, MAYBE_FILE_A_BUG)
+        )
 
         if require:
             raise FatalCheckError(msg)
         else:
             log.warning(msg)
-            log.warning('(This will become an error in the near future.)')
+            log.warning("(This will become an error in the near future.)")
             return
 
     if not version:
-        msg = 'NODEJS must point to node %s or newer; found node location: %s. %s' % (
-            NODE_MIN_VERSION, nodejs, MAYBE_FILE_A_BUG)
+        msg = "NODEJS must point to node %s or newer; found node location: %s. %s" % (
+            NODE_MIN_VERSION,
+            nodejs,
+            MAYBE_FILE_A_BUG,
+        )
 
         if require:
             raise FatalCheckError(msg)
@@ -53,8 +57,8 @@ def nodejs(require, env_node):
     return namespace(
         path=nodejs,
         version=version,
-        str_version='.'.join(str(v) for v in version),
+        str_version=".".join(str(v) for v in version),
     )
 
 
-set_config('NODEJS', depends_if(nodejs)(lambda p: p.path))
+set_config("NODEJS", depends_if(nodejs)(lambda p: p.path))

@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['../../../third_party/sqlite3/src']
-if CONFIG['MOZ_FOLD_LIBS']:
-    Library('sqlite')
+DIRS += ["../../../third_party/sqlite3/src"]
+if CONFIG["MOZ_FOLD_LIBS"]:
+    Library("sqlite")
     # When folding libraries, sqlite is actually in the nss library.
     USE_LIBS += [
-        'nss',
+        "nss",
     ]
 else:
-    SharedLibrary('sqlite')
-    SHARED_LIBRARY_NAME = 'mozsqlite3'
+    SharedLibrary("sqlite")
+    SHARED_LIBRARY_NAME = "mozsqlite3"
 
-    SYMBOLS_FILE = '/third_party/sqlite3/src/sqlite.symbols'
+    SYMBOLS_FILE = "/third_party/sqlite3/src/sqlite.symbols"

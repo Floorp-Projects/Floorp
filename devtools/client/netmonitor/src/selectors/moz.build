@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'index.js',
-    'messages.js',
-    'requests.js',
-    'search.js',
-    'timing-markers.js',
-    'ui.js',
+    "index.js",
+    "messages.js",
+    "requests.js",
+    "search.js",
+    "timing-markers.js",
+    "ui.js",
 )

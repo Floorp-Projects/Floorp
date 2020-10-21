@@ -81,8 +81,8 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a directory with an open file"""
         # Open a file in the generated stub
         filepath = os.path.join(self.tempdir, *stubs.files[1])
-        f = open(filepath, 'w')
-        f.write('foo-bar')
+        f = open(filepath, "w")
+        f.write("foo-bar")
 
         # keep file open and then try removing the dir-tree
         if mozinfo.isWin:
@@ -98,8 +98,8 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a closed file"""
         # Open a file in the generated stub
         filepath = os.path.join(self.tempdir, *stubs.files[1])
-        with open(filepath, 'w') as f:
-            f.write('foo-bar')
+        with open(filepath, "w") as f:
+            f.write("foo-bar")
 
         # Folder should be deleted on all platforms
         mozfile.remove(self.tempdir)
@@ -154,7 +154,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
     def test_remove_symlink(self):
         """Test removing a symlink"""
         file_path = os.path.join(self.tempdir, *stubs.files[1])
-        symlink_path = os.path.join(self.tempdir, 'symlink')
+        symlink_path = os.path.join(self.tempdir, "symlink")
 
         os.symlink(file_path, symlink_path)
         self.assertTrue(os.path.islink(symlink_path))
@@ -169,7 +169,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a folder with an contained symlink"""
         file_path = os.path.join(self.tempdir, *stubs.files[0])
         dir_path = os.path.dirname(os.path.join(self.tempdir, *stubs.files[1]))
-        symlink_path = os.path.join(dir_path, 'symlink')
+        symlink_path = os.path.join(dir_path, "symlink")
 
         os.symlink(file_path, symlink_path)
         self.assertTrue(os.path.islink(symlink_path))
@@ -181,11 +181,13 @@ class MozfileRemoveTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(symlink_path))
         self.assertTrue(os.path.exists(file_path))
 
-    @unittest.skipIf(mozinfo.isWin or not os.geteuid(),
-                     "Symlinks are not supported on Windows and cannot run test as root")
+    @unittest.skipIf(
+        mozinfo.isWin or not os.geteuid(),
+        "Symlinks are not supported on Windows and cannot run test as root",
+    )
     def test_remove_symlink_for_system_path(self):
         """Test removing a symlink which points to a system folder"""
-        symlink_path = os.path.join(self.tempdir, 'symlink')
+        symlink_path = os.path.join(self.tempdir, "symlink")
 
         os.symlink(os.path.dirname(self.tempdir), symlink_path)
         self.assertTrue(os.path.islink(symlink_path))
@@ -196,7 +198,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
         self.assertFalse(os.path.exists(symlink_path))
 
     def test_remove_path_that_does_not_exists(self):
-        not_existing_path = os.path.join(self.tempdir, 'I_do_not_not_exists')
+        not_existing_path = os.path.join(self.tempdir, "I_do_not_not_exists")
         try:
             mozfile.remove(not_existing_path)
         except OSError as exc:
@@ -206,7 +208,6 @@ class MozfileRemoveTestCase(unittest.TestCase):
 
 
 class MozFileMoveTestCase(unittest.TestCase):
-
     def setUp(self):
         # Generate a stub
         self.tempdir = stubs.create_stub()
@@ -214,7 +215,7 @@ class MozFileMoveTestCase(unittest.TestCase):
 
     def test_move_file(self):
         file_path = os.path.join(self.tempdir, *stubs.files[1])
-        moved_path = file_path + '.moved'
+        moved_path = file_path + ".moved"
         self.assertTrue(os.path.isfile(file_path))
         self.assertFalse(os.path.exists(moved_path))
         mozfile.move(file_path, moved_path)
@@ -223,7 +224,7 @@ class MozFileMoveTestCase(unittest.TestCase):
 
     def test_move_file_with_retry(self):
         file_path = os.path.join(self.tempdir, *stubs.files[1])
-        moved_path = file_path + '.moved'
+        moved_path = file_path + ".moved"
 
         with wait_file_opened_in_thread(file_path, 0.2):
             # first move attempt should fail on windows and be retried
@@ -232,5 +233,5 @@ class MozFileMoveTestCase(unittest.TestCase):
             self.assertTrue(os.path.isfile(moved_path))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

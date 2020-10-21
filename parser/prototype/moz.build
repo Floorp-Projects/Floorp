@@ -4,20 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'XML')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "XML")
 
 EXPORTS.mozilla.parser += [
-    'PrototypeDocumentParser.h',
+    "PrototypeDocumentParser.h",
 ]
 
 
 UNIFIED_SOURCES += [
-    'PrototypeDocumentParser.cpp',
+    "PrototypeDocumentParser.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/dom/xul',
+    "/dom/xul",
 ]

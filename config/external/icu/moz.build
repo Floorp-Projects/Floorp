@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('icu')
+Library("icu")
 
-if CONFIG['MOZ_SYSTEM_ICU']:
-    OS_LIBS += CONFIG['MOZ_ICU_LIBS']
+if CONFIG["MOZ_SYSTEM_ICU"]:
+    OS_LIBS += CONFIG["MOZ_ICU_LIBS"]
 else:
     DIRS += [
-        'common',
-        'data',
-        'i18n',
+        "common",
+        "data",
+        "i18n",
     ]
-    if CONFIG['TARGET_ENDIANNESS'] == 'big':
+    if CONFIG["TARGET_ENDIANNESS"] == "big":
         DIRS += [
-            'toolutil',
-            'icupkg',
+            "toolutil",
+            "icupkg",
         ]
-    USE_LIBS += ['icudata']
+    USE_LIBS += ["icudata"]

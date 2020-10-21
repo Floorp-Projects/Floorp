@@ -15,11 +15,11 @@ transforms = TransformSequence()
 @transforms.add
 def add_dependencies(config, jobs):
     for job in jobs:
-        job.setdefault('soft-dependencies', [])
-        job['soft-dependencies'] += [
+        job.setdefault("soft-dependencies", [])
+        job["soft-dependencies"] += [
             dep_task.label
             for dep_task in config.kind_dependencies_tasks.values()
-            if dep_task.attributes.get('code-review') is True
+            if dep_task.attributes.get("code-review") is True
         ]
         yield job
 
@@ -27,8 +27,8 @@ def add_dependencies(config, jobs):
 @transforms.add
 def add_phabricator_config(config, jobs):
     for job in jobs:
-        diff = config.params.get('phabricator_diff')
+        diff = config.params.get("phabricator_diff")
         if diff is not None:
-            code_review = job.setdefault('extra', {}).setdefault('code-review', {})
-            code_review['phabricator-diff'] = diff
+            code_review = job.setdefault("extra", {}).setdefault("code-review", {})
+            code_review["phabricator-diff"] = diff
         yield job

@@ -4,72 +4,72 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Web Painting')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Web Painting")
 
 EXPORTS += [
-    'ActiveLayerTracker.h',
-    'DisplayItemClip.h',
-    'DisplayItemClipChain.h',
-    'DisplayListClipState.h',
-    'FrameLayerBuilder.h',
-    'LayerState.h',
-    'MatrixStack.h',
-    'nsCSSRenderingBorders.h',
-    'nsCSSRenderingGradients.h',
-    'nsDisplayItemTypes.h',
-    'nsDisplayItemTypesList.h',
-    'nsDisplayList.h',
-    'nsDisplayListArenaTypes.h',
-    'nsDisplayListInvalidation.h',
-    'nsImageRenderer.h',
-    'RetainedDisplayListBuilder.h',
-    'RetainedDisplayListHelpers.h',
-    'TransformClipNode.h',
+    "ActiveLayerTracker.h",
+    "DisplayItemClip.h",
+    "DisplayItemClipChain.h",
+    "DisplayListClipState.h",
+    "FrameLayerBuilder.h",
+    "LayerState.h",
+    "MatrixStack.h",
+    "nsCSSRenderingBorders.h",
+    "nsCSSRenderingGradients.h",
+    "nsDisplayItemTypes.h",
+    "nsDisplayItemTypesList.h",
+    "nsDisplayList.h",
+    "nsDisplayListArenaTypes.h",
+    "nsDisplayListInvalidation.h",
+    "nsImageRenderer.h",
+    "RetainedDisplayListBuilder.h",
+    "RetainedDisplayListHelpers.h",
+    "TransformClipNode.h",
 ]
 
 EXPORTS.mozilla += [
-    'PaintTracker.h',
+    "PaintTracker.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ActiveLayerTracker.cpp',
-    'DashedCornerFinder.cpp',
-    'DisplayItemClip.cpp',
-    'DisplayItemClipChain.cpp',
-    'DisplayListChecker.cpp',
-    'DisplayListClipState.cpp',
-    'DottedCornerFinder.cpp',
-    'FrameLayerBuilder.cpp',
-    'MaskLayerImageCache.cpp',
-    'nsCSSRendering.cpp',
-    'nsCSSRenderingBorders.cpp',
-    'nsCSSRenderingGradients.cpp',
-    'nsDisplayList.cpp',
-    'nsDisplayListInvalidation.cpp',
-    'nsImageRenderer.cpp',
-    'PaintTracker.cpp',
-    'RetainedDisplayListBuilder.cpp',
+    "ActiveLayerTracker.cpp",
+    "DashedCornerFinder.cpp",
+    "DisplayItemClip.cpp",
+    "DisplayItemClipChain.cpp",
+    "DisplayListChecker.cpp",
+    "DisplayListClipState.cpp",
+    "DottedCornerFinder.cpp",
+    "FrameLayerBuilder.cpp",
+    "MaskLayerImageCache.cpp",
+    "nsCSSRendering.cpp",
+    "nsCSSRenderingBorders.cpp",
+    "nsCSSRenderingGradients.cpp",
+    "nsDisplayList.cpp",
+    "nsDisplayListInvalidation.cpp",
+    "nsImageRenderer.cpp",
+    "PaintTracker.cpp",
+    "RetainedDisplayListBuilder.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/docshell/base',
-    '/dom/base',
-    '/gfx/2d',
-    '/layout/base',
-    '/layout/generic',
-    '/layout/style',
-    '/layout/tables',
-    '/layout/xul',
+    "/docshell/base",
+    "/dom/base",
+    "/gfx/2d",
+    "/layout/base",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/tables",
+    "/layout/xul",
 ]
 
-LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

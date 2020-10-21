@@ -7,12 +7,11 @@ from marionette_harness import BaseMarionetteArguments
 
 
 class FirefoxUIBaseArguments(object):
-    name = 'Firefox UI Tests'
+    name = "Firefox UI Tests"
     args = []
 
 
 class FirefoxUIArguments(BaseMarionetteArguments):
-
     def __init__(self, **kwargs):
         super(FirefoxUIArguments, self).__init__(**kwargs)
 

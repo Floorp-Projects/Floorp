@@ -4,52 +4,52 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Graphics')
-    SCHEDULES.inclusive += ['android-hw-gfx']
-with Files('wr/**'):
-    BUG_COMPONENT = ('Core', 'Graphics: WebRender')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics")
+    SCHEDULES.inclusive += ["android-hw-gfx"]
+with Files("wr/**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebRender")
 
-if CONFIG['MOZ_TREE_CAIRO']:
-    DIRS += ['cairo']
+if CONFIG["MOZ_TREE_CAIRO"]:
+    DIRS += ["cairo"]
 
 DIRS += [
-    '2d',
-    'ycbcr',
-    'angle',
-    'src',
-    'qcms',
-    'gl',
-    'layers',
-    'graphite2/src',
-    'harfbuzz/src',
-    'ots/src',
-    'thebes',
-    'ipc',
-    'vr',
-    'config',
-    'webrender_bindings',
-    'wgpu_bindings',
+    "2d",
+    "ycbcr",
+    "angle",
+    "src",
+    "qcms",
+    "gl",
+    "layers",
+    "graphite2/src",
+    "harfbuzz/src",
+    "ots/src",
+    "thebes",
+    "ipc",
+    "vr",
+    "config",
+    "webrender_bindings",
+    "wgpu_bindings",
 ]
 
-if CONFIG['MOZ_ENABLE_SKIA']:
-    DIRS += ['skia']
+if CONFIG["MOZ_ENABLE_SKIA"]:
+    DIRS += ["skia"]
 
-if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY']:
-     DIRS += ['sfntly/cpp/src']
+if CONFIG["MOZ_ENABLE_SKIA_PDF_SFNTLY"]:
+    DIRS += ["sfntly/cpp/src"]
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['tests/gtest']
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]
 
-SPHINX_TREES['/gfx'] = 'docs'
+SPHINX_TREES["/gfx"] = "docs"
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
 
-with Files('wr/**'):
-    SCHEDULES.exclusive = ['webrender']
+with Files("wr/**"):
+    SCHEDULES.exclusive = ["webrender"]
 
-with Files('webrender_bindings/**'):
-    SCHEDULES.exclusive = ['webrender']
+with Files("webrender_bindings/**"):
+    SCHEDULES.exclusive = ["webrender"]

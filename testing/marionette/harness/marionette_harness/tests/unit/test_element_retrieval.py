@@ -19,8 +19,9 @@ def inline(doc, doctype="html"):
     if doctype == "html":
         return "data:text/html;charset=utf-8,{}".format(quote(doc))
     elif doctype == "xhtml":
-        return "data:application/xhtml+xml,{}".format(quote(
-r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        return "data:application/xhtml+xml,{}".format(
+            quote(
+                r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
@@ -30,13 +31,19 @@ r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <body>
     {}
   </body>
-</html>""".format(doc)))
+</html>""".format(
+                    doc
+                )
+            )
+        )
 
 
 id_html = inline("<p id=foo></p>", doctype="html")
 id_xhtml = inline('<p id="foo"></p>', doctype="xhtml")
 parent_child_html = inline("<div id=parent><p id=child></p></div>", doctype="html")
-parent_child_xhtml = inline('<div id="parent"><p id="child"></p></div>', doctype="xhtml")
+parent_child_xhtml = inline(
+    '<div id="parent"><p id="child"></p></div>', doctype="xhtml"
+)
 children_html = inline("<div><p>foo <p>bar</div>", doctype="html")
 children_xhtml = inline("<div><p>foo</p> <p>bar</p></div>", doctype="xhtml")
 class_html = inline("<p class='foo bar'>", doctype="html")
@@ -82,7 +89,9 @@ class TestFindElementHTML(MarionetteTestCase):
 
     def test_by_name(self):
         self.marionette.navigate(name_html)
-        el = self.marionette.execute_script("return document.querySelector('[name=foo]')")
+        el = self.marionette.execute_script(
+            "return document.querySelector('[name=foo]')"
+        )
         found = self.marionette.find_element(By.NAME, "foo")
         self.assertIsInstance(found, HTMLElement)
         self.assertEqual(el, found)
@@ -107,50 +116,120 @@ class TestFindElementHTML(MarionetteTestCase):
 
     def test_not_found(self):
         self.marionette.timeout.implicit = 0
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.PARTIAL_LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.CLASS_NAME,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.CSS_SELECTOR,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.ID, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.PARTIAL_LINK_TEXT,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese"
+        )
 
     def test_not_found_implicit_wait(self):
         self.marionette.timeout.implicit = 0.5
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.PARTIAL_LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.CLASS_NAME,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.CSS_SELECTOR,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.ID, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException,
+            self.marionette.find_element,
+            By.PARTIAL_LINK_TEXT,
+            "cheese",
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese"
+        )
 
     def test_not_found_from_element(self):
         self.marionette.timeout.implicit = 0
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
-        self.assertRaises(NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.CSS_SELECTOR, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.CSS_SELECTOR, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.ID, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.LINK_TEXT, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.LINK_TEXT, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.NAME, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.PARTIAL_LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.TAG_NAME, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.PARTIAL_LINK_TEXT, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.TAG_NAME, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.XPATH, "cheese")
 
     def test_not_found_implicit_wait_from_element(self):
         self.marionette.timeout.implicit = 0.5
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
-        self.assertRaises(NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.CSS_SELECTOR, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.CSS_SELECTOR, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.ID, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.LINK_TEXT, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.LINK_TEXT, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.NAME, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.PARTIAL_LINK_TEXT, "cheese")
-        self.assertRaises(NoSuchElementException, el.find_element, By.TAG_NAME, "cheese")
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.PARTIAL_LINK_TEXT, "cheese"
+        )
+        self.assertRaises(
+            NoSuchElementException, el.find_element, By.TAG_NAME, "cheese"
+        )
         self.assertRaises(NoSuchElementException, el.find_element, By.XPATH, "cheese")
 
     def test_css_selector_scope_doesnt_start_at_rootnode(self):
@@ -167,10 +246,13 @@ class TestFindElementHTML(MarionetteTestCase):
     def test_element_id_is_valid_uuid(self):
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.TAG_NAME, "p")
-        uuid_regex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
-        self.assertIsNotNone(re.search(uuid_regex, el.id),
-                             'UUID for the WebElement is not valid. ID is {}'\
-                             .format(el.id))
+        uuid_regex = re.compile(
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        )
+        self.assertIsNotNone(
+            re.search(uuid_regex, el.id),
+            "UUID for the WebElement is not valid. ID is {}".format(el.id),
+        )
 
     def test_invalid_xpath_selector(self):
         with self.assertRaises(InvalidSelectorException):
@@ -229,7 +311,9 @@ class TestFindElementXHTML(MarionetteTestCase):
 
     def test_by_name(self):
         self.marionette.navigate(name_xhtml)
-        el = self.marionette.execute_script("return document.querySelector('[name=foo]')")
+        el = self.marionette.execute_script(
+            "return document.querySelector('[name=foo]')"
+        )
         found = self.marionette.find_element(By.NAME, "foo")
         self.assertIsInstance(found, HTMLElement)
         self.assertEqual(el, found)
@@ -294,7 +378,9 @@ class TestFindElementsHTML(MarionetteTestCase):
 
     def test_by_name(self):
         self.marionette.navigate(name_html)
-        els = self.marionette.execute_script("return document.querySelectorAll('[name=foo]')")
+        els = self.marionette.execute_script(
+            "return document.querySelectorAll('[name=foo]')"
+        )
         found = self.marionette.find_elements(By.NAME, "foo")
         self.assertItemsIsInstance(found, HTMLElement)
         self.assertSequenceEqual(els, found)
@@ -331,10 +417,13 @@ class TestFindElementsHTML(MarionetteTestCase):
     def test_element_id_is_valid_uuid(self):
         self.marionette.navigate(id_html)
         els = self.marionette.find_elements(By.TAG_NAME, "p")
-        uuid_regex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
-        self.assertIsNotNone(re.search(uuid_regex, els[0].id),
-                             'UUID for the WebElement is not valid. ID is {}'\
-                             .format(els[0].id))
+        uuid_regex = re.compile(
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        )
+        self.assertIsNotNone(
+            re.search(uuid_regex, els[0].id),
+            "UUID for the WebElement is not valid. ID is {}".format(els[0].id),
+        )
 
     def test_invalid_xpath_selector(self):
         with self.assertRaises(InvalidSelectorException):
@@ -384,7 +473,9 @@ class TestFindElementsXHTML(MarionetteTestCase):
 
     def test_by_name(self):
         self.marionette.navigate(name_xhtml)
-        els = self.marionette.execute_script("return document.querySelectorAll('[name=foo]')")
+        els = self.marionette.execute_script(
+            "return document.querySelectorAll('[name=foo]')"
+        )
         found = self.marionette.find_elements(By.NAME, "foo")
         self.assertItemsIsInstance(found, HTMLElement)
         self.assertSequenceEqual(els, found)

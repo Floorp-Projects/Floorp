@@ -14,7 +14,6 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
-
     def setUp(self):
         super(TestWindowHandles, self).setUp()
 
@@ -30,45 +29,64 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
     def assert_window_handles(self):
         try:
-            self.assertIsInstance(self.marionette.current_chrome_window_handle,  six.string_types)
-            self.assertIsInstance(self.marionette.current_window_handle,  six.string_types)
+            self.assertIsInstance(
+                self.marionette.current_chrome_window_handle, six.string_types
+            )
+            self.assertIsInstance(
+                self.marionette.current_window_handle, six.string_types
+            )
         except errors.NoSuchWindowException:
             pass
 
         for handle in self.marionette.chrome_window_handles:
-            self.assertIsInstance(handle,  six.string_types)
+            self.assertIsInstance(handle, six.string_types)
 
         for handle in self.marionette.window_handles:
-            self.assertIsInstance(handle,  six.string_types)
+            self.assertIsInstance(handle, six.string_types)
 
     def test_chrome_window_handles_with_scopes(self):
         new_browser = self.open_window()
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows) + 1
+        )
         self.assertIn(new_browser, self.marionette.chrome_window_handles)
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
         new_dialog = self.open_chrome_window(self.chrome_dialog)
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 2)
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows) + 2
+        )
         self.assertIn(new_dialog, self.marionette.chrome_window_handles)
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
         chrome_window_handles_in_chrome_scope = self.marionette.chrome_window_handles
         window_handles_in_chrome_scope = self.marionette.window_handles
 
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.chrome_window_handles,
-                             chrome_window_handles_in_chrome_scope)
-            self.assertEqual(self.marionette.window_handles,
-                             window_handles_in_chrome_scope)
+            self.assertEqual(
+                self.marionette.chrome_window_handles,
+                chrome_window_handles_in_chrome_scope,
+            )
+            self.assertEqual(
+                self.marionette.window_handles, window_handles_in_chrome_scope
+            )
 
     def test_chrome_window_handles_after_opening_new_chrome_window(self):
         new_window = self.open_chrome_window(self.chrome_dialog)
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows) + 1
+        )
         self.assertIn(new_window, self.marionette.chrome_window_handles)
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
         # Check that the new chrome window has the correct URL loaded
         self.marionette.switch_to_window(new_window)
@@ -79,19 +97,27 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         # Close the chrome window, and carry on in our original window.
         self.marionette.close_chrome_window()
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows))
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows)
+        )
         self.assertNotIn(new_window, self.marionette.chrome_window_handles)
 
         self.marionette.switch_to_window(self.start_window)
         self.assert_window_handles()
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
     def test_chrome_window_handles_after_opening_new_window(self):
         new_window = self.open_window()
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows) + 1
+        )
         self.assertIn(new_window, self.marionette.chrome_window_handles)
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
         self.marionette.switch_to_window(new_window)
         self.assert_window_handles()
@@ -100,12 +126,16 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         # Close the opened window and carry on in our original window.
         self.marionette.close()
         self.assert_window_handles()
-        self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows))
+        self.assertEqual(
+            len(self.marionette.chrome_window_handles), len(self.start_windows)
+        )
         self.assertNotIn(new_window, self.marionette.chrome_window_handles)
 
         self.marionette.switch_to_window(self.start_window)
         self.assert_window_handles()
-        self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
+        self.assertEqual(
+            self.marionette.current_chrome_window_handle, self.start_window
+        )
 
     def test_window_handles_after_opening_new_tab(self):
         with self.marionette.using_context("content"):

@@ -8,19 +8,19 @@ with Files("**"):
     BUG_COMPONENT = ("DevTools", "Debugger")
 
 EXPORTS.mozilla.dom += [
-    'CallbackDebuggerNotification.h',
-    'DebuggerNotification.h',
-    'DebuggerNotificationManager.h',
-    'DebuggerNotificationObserver.h',
-    'EventCallbackDebuggerNotification.h',
+    "CallbackDebuggerNotification.h",
+    "DebuggerNotification.h",
+    "DebuggerNotificationManager.h",
+    "DebuggerNotificationObserver.h",
+    "EventCallbackDebuggerNotification.h",
 ]
 
 UNIFIED_SOURCES += [
-    'CallbackDebuggerNotification.cpp',
-    'DebuggerNotification.cpp',
-    'DebuggerNotificationManager.cpp',
-    'DebuggerNotificationObserver.cpp',
-    'EventCallbackDebuggerNotification.cpp',
+    "CallbackDebuggerNotification.cpp",
+    "DebuggerNotification.cpp",
+    "DebuggerNotificationManager.cpp",
+    "DebuggerNotificationObserver.cpp",
+    "EventCallbackDebuggerNotification.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

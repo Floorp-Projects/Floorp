@@ -7,11 +7,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from mozparsers.shared_telemetry_utils import (
-    StringTable,
-    static_assert,
-    ParserError
-)
+from mozparsers.shared_telemetry_utils import StringTable, static_assert, ParserError
 from mozparsers import parse_events
 
 import json
@@ -55,20 +51,18 @@ def write_extra_table(events, output, string_table):
             extra_count += len(extra_keys)
             indexes = string_table.stringIndexes(extra_keys)
 
-            print("  // %s, [%s], [%s]" % (
-                  e.category,
-                  ", ".join(e.methods),
-                  ", ".join(e.objects)),
-                  file=output)
+            print(
+                "  // %s, [%s], [%s]"
+                % (e.category, ", ".join(e.methods), ", ".join(e.objects)),
+                file=output,
+            )
             print("  // extra_keys: %s" % ", ".join(extra_keys), file=output)
-            print("  %s," % ", ".join(map(str, indexes)),
-                  file=output)
+            print("  %s," % ", ".join(map(str, indexes)), file=output)
 
         extra_table.append((extra_index, len(extra_keys)))
 
     print("};", file=output)
-    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
-                  "index overflow")
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name, "index overflow")
 
     return extra_table
 
@@ -89,19 +83,22 @@ def write_common_event_table(events, output, string_table, extra_table):
         print("  // objects: [%s]" % ", ".join(e.objects), file=output)
 
         # Write the common info structure
-        print("  {%d, %d, %d, %d, %s, %s, %s }," %
-              (string_table.stringIndex(e.category),
-               string_table.stringIndex(e.expiry_version),
-               extras[0],  # extra keys index
-               extras[1],  # extra keys count
-               e.dataset,
-               " | ".join(e.record_in_processes_enum),
-               " | ".join(e.products_enum)),
-              file=output)
+        print(
+            "  {%d, %d, %d, %d, %s, %s, %s },"
+            % (
+                string_table.stringIndex(e.category),
+                string_table.stringIndex(e.expiry_version),
+                extras[0],  # extra keys index
+                extras[1],  # extra keys count
+                e.dataset,
+                " | ".join(e.record_in_processes_enum),
+                " | ".join(e.products_enum),
+            ),
+            file=output,
+        )
 
     print("};", file=output)
-    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
-                  "index overflow")
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name, "index overflow")
 
 
 def write_event_table(events, output, string_table):
@@ -115,23 +112,28 @@ def write_event_table(events, output, string_table):
 
     for common_info_index, e in enumerate(events):
         for method_name, object_name in itertools.product(e.methods, e.objects):
-            print("  // category: %s, method: %s, object: %s" %
-                  (e.category, method_name, object_name),
-                  file=output)
+            print(
+                "  // category: %s, method: %s, object: %s"
+                % (e.category, method_name, object_name),
+                file=output,
+            )
 
-            print("  {gCommonEventInfo[%d], %d, %d}," %
-                  (common_info_index,
-                   string_table.stringIndex(method_name),
-                   string_table.stringIndex(object_name)),
-                  file=output)
+            print(
+                "  {gCommonEventInfo[%d], %d, %d},"
+                % (
+                    common_info_index,
+                    string_table.stringIndex(method_name),
+                    string_table.stringIndex(object_name),
+                ),
+                file=output,
+            )
 
     print("};", file=output)
-    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
-                  "index overflow")
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name, "index overflow")
 
 
 def generate_JSON_definitions(output, *filenames):
-    """ Write the event definitions to a JSON file.
+    """Write the event definitions to a JSON file.
 
     :param output: the file to write the content to.
     :param filenames: a list of filenames provided by the build system.
@@ -154,17 +156,21 @@ def generate_JSON_definitions(output, *filenames):
         if category not in event_definitions:
             event_definitions[category] = OrderedDict()
 
-        event_definitions[category][event.name] = OrderedDict({
-            'methods': event.methods,
-            'objects': event.objects,
-            'extra_keys': event.extra_keys,
-            'record_on_release': True if event.dataset_short == 'opt-out' else False,
-            # We don't expire dynamic-builtin scalars: they're only meant for
-            # use in local developer builds anyway. They will expire when rebuilding.
-            'expires': event.expiry_version,
-            'expired': False,
-            'products': event.products,
-        })
+        event_definitions[category][event.name] = OrderedDict(
+            {
+                "methods": event.methods,
+                "objects": event.objects,
+                "extra_keys": event.extra_keys,
+                "record_on_release": True
+                if event.dataset_short == "opt-out"
+                else False,
+                # We don't expire dynamic-builtin scalars: they're only meant for
+                # use in local developer builds anyway. They will expire when rebuilding.
+                "expires": event.expiry_version,
+                "expired": False,
+                "products": event.products,
+            }
+        )
 
     json.dump(event_definitions, output, sort_keys=True)
 
@@ -200,12 +206,13 @@ def main(output, *filenames):
     # Write the string table.
     string_table_name = "gEventsStringTable"
     string_table.writeDefinition(output, string_table_name)
-    static_assert(output, "sizeof(%s) <= UINT32_MAX" % string_table_name,
-                  "index overflow")
+    static_assert(
+        output, "sizeof(%s) <= UINT32_MAX" % string_table_name, "index overflow"
+    )
     print("", file=output)
 
     print(file_footer, file=output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

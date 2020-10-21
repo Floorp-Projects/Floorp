@@ -5,9 +5,9 @@ import re
 
 assert len(sys.argv) == 2
 MOCHI_PATH = pathlib.Path(sys.argv[1])
-assert MOCHI_PATH.suffix == '.html'
+assert MOCHI_PATH.suffix == ".html"
 
-TEST_PATH = MOCHI_PATH.with_suffix('.solo.html')
+TEST_PATH = MOCHI_PATH.with_suffix(".solo.html")
 
 
 def read_local_file(include):
@@ -17,10 +17,10 @@ def read_local_file(include):
     try:
         return file_path.read_bytes()
     except IOError:
-        return b''
+        return b""
 
 
-SIMPLETEST_REPLACEMENT = b'''
+SIMPLETEST_REPLACEMENT = b"""
 
 <script>
 // SimpleTest.js replacement
@@ -61,39 +61,41 @@ SpecialPowers = {
 </script>
 <div id='mochi-to-testcase-output'></div>
 
-'''
+"""
 
-INCLUDE_PATTERN = re.compile(b'<script\\s*src=[\'"](.*)\\.js[\'"]>\\s*</script>')
-CSS_PATTERN = re.compile(b'<link\\s*rel=[\'"]stylesheet[\'"]\\s*href=[\'"]([^=>]*)[\'"]>')
+INCLUDE_PATTERN = re.compile(b"<script\\s*src=['\"](.*)\\.js['\"]>\\s*</script>")
+CSS_PATTERN = re.compile(
+    b"<link\\s*rel=['\"]stylesheet['\"]\\s*href=['\"]([^=>]*)['\"]>"
+)
 
-with open(TEST_PATH, 'wb') as fout:
-    with open(MOCHI_PATH, 'rb') as fin:
+with open(TEST_PATH, "wb") as fout:
+    with open(MOCHI_PATH, "rb") as fin:
         for line in fin:
             skip_line = False
             for css in CSS_PATTERN.findall(line):
                 skip_line = True
-                print('Ignoring stylesheet: ' + css.decode())
+                print("Ignoring stylesheet: " + css.decode())
 
             for inc in INCLUDE_PATTERN.findall(line):
                 skip_line = True
-                if inc == b'/MochiKit/MochiKit':
+                if inc == b"/MochiKit/MochiKit":
                     continue
 
-                if inc == b'/tests/SimpleTest/SimpleTest':
-                    print('Injecting SimpleTest replacement')
+                if inc == b"/tests/SimpleTest/SimpleTest":
+                    print("Injecting SimpleTest replacement")
                     fout.write(SIMPLETEST_REPLACEMENT)
                     continue
 
-                inc_js = inc.decode() + '.js'
+                inc_js = inc.decode() + ".js"
                 inc_data = read_local_file(inc_js)
                 if not inc_data:
-                    print('Warning: Unknown JS file ignored: ' + inc_js)
+                    print("Warning: Unknown JS file ignored: " + inc_js)
                     continue
 
-                print('Injecting include: ' + inc_js)
-                fout.write(b'\n<script>\n// Imported from: ' + inc_js.encode() + b'\n')
+                print("Injecting include: " + inc_js)
+                fout.write(b"\n<script>\n// Imported from: " + inc_js.encode() + b"\n")
                 fout.write(inc_data)
-                fout.write(b'\n</script>\n')
+                fout.write(b"\n</script>\n")
                 continue
 
             if skip_line:

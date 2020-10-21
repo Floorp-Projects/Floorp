@@ -4,50 +4,50 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Form Manager')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Form Manager")
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
 XPIDL_SOURCES += [
-    'nsIFormAutoComplete.idl',
-    'nsIFormFillController.idl',
-    'nsIInputListAutoComplete.idl',
+    "nsIFormAutoComplete.idl",
+    "nsIFormFillController.idl",
+    "nsIInputListAutoComplete.idl",
 ]
 
-XPIDL_MODULE = 'satchel'
+XPIDL_MODULE = "satchel"
 
 SOURCES += [
-    'nsFormFillController.cpp',
+    "nsFormFillController.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '../build',
+    "../build",
 ]
 
 EXTRA_JS_MODULES += [
-    'FormAutoComplete.jsm',
-    'FormHistory.jsm',
-    'FormHistoryStartup.jsm',
-    'InputListAutoComplete.jsm',
-    'nsFormAutoCompleteResult.jsm',
+    "FormAutoComplete.jsm",
+    "FormHistory.jsm",
+    "FormHistoryStartup.jsm",
+    "InputListAutoComplete.jsm",
+    "nsFormAutoCompleteResult.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 TESTING_JS_MODULES += [
-    'test/FormHistoryTestUtils.jsm',
+    "test/FormHistoryTestUtils.jsm",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_TARGET_FILES.actors += [
-    'FormHistoryChild.jsm',
-    'FormHistoryParent.jsm',
+    "FormHistoryChild.jsm",
+    "FormHistoryParent.jsm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
