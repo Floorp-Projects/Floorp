@@ -1,0 +1,10 @@
+<!-- We want to test that the presence of the resizer affects the area used
+	 for the scrollbar. So we use a div to block where the resizer might go
+	 and then make sure that the part above that, the part where the scroll
+	 thumb is looks different with vs without the resizer. -->
+<html>
+	<body>
+		<textarea style="position: absolute; top:10px; left:10px; height: 100px; width: 175px;">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text some more text some more text</textarea>
+		<div style="position: absolute; background: white; width: 35px; height: 35px; top: 85px; left: 160px;"></div>
+	</body>
+</html>
