@@ -153,7 +153,7 @@ class PrintTarget {
   // Protected because we're refcounted
   virtual ~PrintTarget();
 
-  static already_AddRefed<DrawTarget> CreateWrapAndRecordDrawTarget(
+  static already_AddRefed<DrawTarget> CreateRecordingDrawTarget(
       DrawEventRecorder* aRecorder, DrawTarget* aDrawTarget);
 
   cairo_surface_t* mCairoSurface;
