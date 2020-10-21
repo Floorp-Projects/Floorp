@@ -18784,113 +18784,68 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
 
   DatabaseConnection::AutoSavepoint autoSave;
-  nsresult rv = autoSave.Start(Transaction());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(autoSave.Start(Transaction())
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (!aConnection->GetUpdateRefcountFunction()) {
-      mAssumingPreviousOperationFail = true;
-    }
+              ,
+          QM_PROPAGATE, ([this, aConnection](const auto) {
+            if (!aConnection->GetUpdateRefcountFunction()) {
+              mAssumingPreviousOperationFail = true;
+            }
+          })
 #endif
-    return rv;
-  }
+  );
 
   if (mIsLastObjectStore) {
     // We can just delete everything if this is the last object store.
-    rv = aConnection->ExecuteCachedStatement("DELETE FROM index_data;"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aConnection->ExecuteCachedStatement("DELETE FROM index_data;"_ns));
 
-    rv = aConnection->ExecuteCachedStatement(
-        "DELETE FROM unique_index_data;"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aConnection->ExecuteCachedStatement(
+        "DELETE FROM unique_index_data;"_ns));
 
-    rv = aConnection->ExecuteCachedStatement("DELETE FROM object_data;"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aConnection->ExecuteCachedStatement("DELETE FROM object_data;"_ns));
 
-    rv = aConnection->ExecuteCachedStatement(
-        "DELETE FROM object_store_index;"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aConnection->ExecuteCachedStatement(
+        "DELETE FROM object_store_index;"_ns));
 
-    rv = aConnection->ExecuteCachedStatement("DELETE FROM object_store;"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        aConnection->ExecuteCachedStatement("DELETE FROM object_store;"_ns));
   } else {
     IDB_TRY_INSPECT(
         const bool& hasIndexes,
         ObjectStoreHasIndexes(*aConnection, mMetadata->mCommonMetadata.id()));
 
+    const auto bindObjectStoreIdToFirstParameter =
+        [this](mozIStorageStatement& stmt) -> nsresult {
+      IDB_TRY(stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id()));
+
+      return NS_OK;
+    };
+
+    // The parameter name :object_store_id in the SQL statements below is not
+    // used for binding, parameters are bound by index only locally by
+    // bindObjectStoreIdToFirstParameter.
     if (hasIndexes) {
-      rv = DeleteObjectStoreDataTableRowsWithIndexes(
-          aConnection, mMetadata->mCommonMetadata.id(), Nothing());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(DeleteObjectStoreDataTableRowsWithIndexes(
+          aConnection, mMetadata->mCommonMetadata.id(), Nothing()));
 
       // Now clean up the object store index table.
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
-      rv = aConnection->ExecuteCachedStatement(
+      IDB_TRY(aConnection->ExecuteCachedStatement(
           "DELETE FROM object_store_index "
           "WHERE object_store_id = :object_store_id;"_ns,
-          [this](mozIStorageStatement& stmt) {
-            nsresult rv =
-                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
-
-            return NS_OK;
-          });
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          bindObjectStoreIdToFirstParameter));
     } else {
       // We only have to worry about object data if this object store has no
       // indexes.
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
-      rv = aConnection->ExecuteCachedStatement(
+      IDB_TRY(aConnection->ExecuteCachedStatement(
           "DELETE FROM object_data "
           "WHERE object_store_id = :object_store_id;"_ns,
-          [this](mozIStorageStatement& stmt) {
-            nsresult rv =
-                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
-
-            return NS_OK;
-          });
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          bindObjectStoreIdToFirstParameter));
     }
 
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    rv = aConnection->ExecuteCachedStatement(
-        "DELETE FROM object_store "
-        "WHERE id = :object_store_id;"_ns,
-        [this](mozIStorageStatement& stmt) {
-          nsresult rv =
-              stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          return NS_OK;
-        });
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        aConnection->ExecuteCachedStatement("DELETE FROM object_store "
+                                            "WHERE id = :object_store_id;"_ns,
+                                            bindObjectStoreIdToFirstParameter));
 
 #ifdef DEBUG
     {
@@ -18903,10 +18858,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #endif
   }
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   if (mMetadata->mCommonMetadata.autoIncrement()) {
     Transaction().ForgetModifiedAutoIncrementObjectStore(mMetadata);
