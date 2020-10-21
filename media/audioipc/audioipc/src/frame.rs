@@ -5,7 +5,7 @@
 
 use crate::codec::Codec;
 use bytes::{Buf, Bytes, BytesMut, IntoBuf};
-use futures::{AsyncSink, Poll, Sink, StartSend, Stream, task};
+use futures::{task, AsyncSink, Poll, Sink, StartSend, Stream};
 use std::io;
 use tokio_io::{AsyncRead, AsyncWrite};
 

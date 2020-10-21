@@ -6,7 +6,7 @@
 use crate::codec::Codec;
 use crate::messages::AssocRawPlatformHandle;
 use bytes::{Bytes, BytesMut, IntoBuf};
-use futures::{AsyncSink, Poll, Sink, StartSend, Stream, task};
+use futures::{task, AsyncSink, Poll, Sink, StartSend, Stream};
 use std::collections::VecDeque;
 use std::{fmt, io};
 use tokio_io::{AsyncRead, AsyncWrite};
