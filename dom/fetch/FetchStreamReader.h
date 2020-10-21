@@ -11,6 +11,7 @@
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla {
 namespace dom {
