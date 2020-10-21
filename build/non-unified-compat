@@ -1,6 +1,11 @@
+dom/abort/
 dom/animation/
+dom/audiochannel/
 dom/base/
+dom/battery/
 dom/bindings/
+dom/broadcastchannel/
+dom/browser-element/
 dom/cache/
 dom/canvas/
 dom/clients/
