@@ -64,6 +64,4 @@ add_task(async function() {
     );
   }
   ok(origins.includes(ORIGIN), `${ORIGIN} is added`);
-
-  await finishTests();
 });

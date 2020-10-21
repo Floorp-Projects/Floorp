@@ -52,6 +52,4 @@ add_task(async function() {
     !gUI.tree.isSelected(cacheToDelete),
     "Cache item is no longer present in the tree"
   );
-
-  await finishTests();
 });
