@@ -99,4 +99,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">摺疊建議的登入資訊</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">建議的登入資訊</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">要重新發送資料到這個網站嗎？</string>
+    <string name="mozac_feature_prompt_repost_message">重新整理頁面可能會再次執行最近的操作，例如重複付款或張貼留言。</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">重送資料</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">取消</string>
 </resources>

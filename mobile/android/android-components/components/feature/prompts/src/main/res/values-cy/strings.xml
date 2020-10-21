@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Lleihau’r mewngofnodion</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Mewngofnodion</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Ail-anfon data i’r wefan hon?</string>
+    <string name="mozac_feature_prompt_repost_message">Gall adnewyddu’r dudalen hon ddyblygu gweithredoedd diweddar, fel anfon taliad neu gofnodi sylw ddwywaith.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Ail-anfon data</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Diddymu</string>
 </resources>
