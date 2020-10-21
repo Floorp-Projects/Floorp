@@ -9,7 +9,18 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "ClientOpPromise.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/ClientIPCTypes.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
+
+struct nsID;
 
 namespace mozilla {
 
@@ -24,7 +35,6 @@ namespace dom {
 class ClientManagerParent;
 class ClientSourceParent;
 class ClientHandleParent;
-class ContentParent;
 
 // Define a singleton service to manage client activity throughout the
 // browser.  This service runs on the PBackground thread.  To interact

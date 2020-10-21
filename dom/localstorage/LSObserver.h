@@ -7,6 +7,10 @@
 #ifndef mozilla_dom_localstorage_LSObserver_h
 #define mozilla_dom_localstorage_LSObserver_h
 
+#include "mozilla/Assertions.h"
+#include "nsISupports.h"
+#include "nsString.h"
+
 namespace mozilla {
 namespace dom {
 

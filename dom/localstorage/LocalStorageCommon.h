@@ -7,6 +7,13 @@
 #ifndef mozilla_dom_localstorage_LocalStorageCommon_h
 #define mozilla_dom_localstorage_LocalStorageCommon_h
 
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "nsLiteralString.h"
+#include "nsStringFwd.h"
+
 /*
  * Local storage
  * ~~~~~~~~~~~~~
@@ -181,10 +188,6 @@
  * the "LocalStorageManager2" class that implements the "nsIDOMStorageManager"
  * interface.
  */
-
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
-#include "nsString.h"
 
 // LocalStorage equivalents of QM_TRY.
 #define LS_TRY_GLUE(...)                                             \

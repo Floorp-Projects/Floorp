@@ -6,6 +6,10 @@
 
 #include "LSWriteOptimizer.h"
 
+#include <new>
+#include "nsBaseHashtable.h"
+#include "nsTArray.h"
+
 namespace mozilla {
 namespace dom {
 

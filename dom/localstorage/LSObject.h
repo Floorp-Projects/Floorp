@@ -7,11 +7,24 @@
 #ifndef mozilla_dom_localstorage_LSObject_h
 #define mozilla_dom_localstorage_LSObject_h
 
-#include "mozilla/dom/Storage.h"
+#include <cstdint>
+#include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/Storage.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsID.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsGlobalWindowInner;
+class nsIEventTarget;
 class nsIPrincipal;
+class nsISerialEventTarget;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
