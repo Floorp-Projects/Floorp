@@ -1218,101 +1218,6 @@ static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,
   return true;
 }
 
-// clang-format off
-#define LIT(NAME) #NAME,
-static const char* telemetryNames[JS_TELEMETRY_END + 1] = {
-  MAP_JS_TELEMETRY(LIT)
-  "JS_TELEMETRY_END"
-};
-
-static const char* xyTelemetryNames[JS_XYTELEMETRY_END + 1] = {
-  MAP_JS_XYTELEMETRY(LIT)
-  "JS_XYTELEMETRY_END"
-};
-#undef LIT
-// clang-format on
-
-// Telemetry can be executed from multiple threads, and the callback is
-// responsible to avoid contention on the recorded telemetry data.
-static Mutex* telemetryLock = nullptr;
-class MOZ_RAII AutoLockTelemetry : public LockGuard<Mutex> {
-  using Base = LockGuard<Mutex>;
-
- public:
-  AutoLockTelemetry() : Base(*telemetryLock) {
-    MOZ_ASSERT(telemetryLock);
-  }
-};
-
-using TelemetryData = uint32_t;
-using TelemetryVec = Vector<TelemetryData, 0, SystemAllocPolicy>;
-static mozilla::Array<TelemetryVec, JS_TELEMETRY_END> telemetryResults;
-static void AccumulateTelemetryDataCallback(int id, uint32_t sample,
-                                            const char* key) {
-  AutoLockTelemetry alt;
-  // We ignore OOMs while writting teleemtry data.
-  if (telemetryResults[id].append(sample)) {
-    return;
-  }
-}
-
-using XYTelemetryData = std::pair<uint32_t, uint32_t>;
-using XYTelemetryVec = Vector<XYTelemetryData , 0, SystemAllocPolicy>;
-static mozilla::Array<XYTelemetryVec, JS_XYTELEMETRY_END> xyTelemetryResults;
-static void AccumulateXYTelemetryDataCallback(int id, uint32_t xSample,
-                                              uint32_t ySample) {
-  AutoLockTelemetry alt;
-  // We ignore OOMs while writting teleemtry data.
-  if (xyTelemetryResults[id].append(std::make_pair(xSample, ySample))) {
-    return;
-  }
-}
-
-static void WriteTelemetryDataToDisk(const char *dir) {
-  const int pathLen = 260;
-  char fileName[pathLen];
-  Fprinter output;
-  auto initOutput = [&](const char* name) -> bool {
-    if (SprintfLiteral(fileName, "%s%s.csv", dir, name) >= pathLen) {
-      return false;
-    }
-    FILE* file = fopen(fileName, "a");
-    if (!file) {
-      return false;
-    }
-    output.init(file);
-    return true;
-  };
-
-  for (size_t id = 0; id < JS_TELEMETRY_END; id++) {
-    auto clear = MakeScopeExit([&] {
-      telemetryResults[id].clearAndFree();
-    });
-    if (!initOutput(telemetryNames[id])) {
-      continue;
-    }
-    for (uint32_t data : telemetryResults[id]) {
-      output.printf("%u\n", data);
-    }
-    output.finish();
-  }
-  for (size_t id = 0; id < JS_XYTELEMETRY_END; id++) {
-    auto clear = MakeScopeExit([&] {
-      xyTelemetryResults[id].clearAndFree();
-    });
-    if (!initOutput(xyTelemetryNames[id])) {
-      continue;
-    }
-    for (auto &data : xyTelemetryResults[id]) {
-      output.printf("%u,%u\n", data.first, data.second);
-    }
-    output.finish();
-  }
-}
-
-#undef MAP_TELEMETRY
-
-
 static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -11603,9 +11508,7 @@ int main(int argc, char** argv, char** envp) {
 #endif
       !op.addBoolOption('\0', "wasm-compile-and-serialize",
                         "Compile the wasm bytecode from stdin and serialize "
-                        "the results to stdout") ||
-      !op.addStringOption('\0', "telemetry-dir", "[directory]",
-                          "Output telemetry results in a directory")) {
+                        "the results to stdout")) {
     return EXIT_FAILURE;
   }
 
@@ -11627,25 +11530,6 @@ int main(int argc, char** argv, char** envp) {
   if (op.getHelpOption()) {
     return EXIT_SUCCESS;
   }
-
-  // Record aggregated telemetry data on disk. Do this as early as possible such
-  // that the telemetry is recording both before starting the context and after
-  // closing it.
-  if (op.getStringOption("telemetry-dir")) {
-    if (!telemetryLock) {
-      telemetryLock = js_new<Mutex>(mutexid::ShellTelemetry);
-      if (!telemetryLock) {
-        return EXIT_FAILURE;
-      }
-    }
-  }
-  auto writeTelemetryResults = MakeScopeExit([&op] {
-    if (const char* dir = op.getStringOption("telemetry-dir")) {
-      WriteTelemetryDataToDisk(dir);
-      js_free(telemetryLock);
-      telemetryLock = nullptr;
-    }
-  });
 
   /*
    * Allow dumping on Linux with the fuzzing flag set, even when running with
@@ -11750,12 +11634,6 @@ int main(int argc, char** argv, char** envp) {
   JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes);
   if (!cx) {
     return 1;
-  }
-
-  // Register telemetry callbacks, if needed.
-  if (telemetryLock) {
-    JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryDataCallback);
-    JS_SetAccumulateXYTelemetryCallback(cx, AccumulateXYTelemetryDataCallback);
   }
 
   size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
