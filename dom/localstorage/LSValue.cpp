@@ -4,7 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LSValue.h"
+#include "mozilla/dom/LSValue.h"
+
+#include "mozIStorageStatement.h"
+#include "mozilla/dom/SnappyUtils.h"
+#include "mozilla/fallible.h"
+#include "nsDebug.h"
+#include "nsError.h"
 
 namespace mozilla {
 namespace dom {

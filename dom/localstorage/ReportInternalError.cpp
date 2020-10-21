@@ -6,10 +6,10 @@
 
 #include "ReportInternalError.h"
 
-#include "mozilla/IntegerPrintfMacros.h"
-
+#include <cinttypes>
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

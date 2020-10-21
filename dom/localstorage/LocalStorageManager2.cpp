@@ -6,9 +6,42 @@
 
 #include "LocalStorageManager2.h"
 
+// Local includes
+#include "ActorsChild.h"
 #include "LSObject.h"
+
+// Global includes
+#include <utility>
+#include "MainThreadUtils.h"
+#include "jsapi.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/OriginAttributes.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/RemoteLazyInputStreamThread.h"
+#include "mozilla/dom/LocalStorageCommon.h"
+#include "mozilla/dom/PBackgroundLSRequest.h"
+#include "mozilla/dom/PBackgroundLSSharedTypes.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequest.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsIEventTarget.h"
+#include "nsILocalStorageManager.h"
+#include "nsIPrincipal.h"
+#include "nsIRunnable.h"
+#include "nsPIDOMWindow.h"
+#include "nsStringFwd.h"
+#include "nsThreadUtils.h"
+#include "nscore.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
@@ -140,8 +173,8 @@ nsresult CreatePromise(JSContext* aContext, Promise** aPromise) {
   return NS_OK;
 }
 
-nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
-                                         PrincipalInfo& aPrincipalInfo) {
+nsresult CheckedPrincipalToPrincipalInfo(
+    nsIPrincipal* aPrincipal, mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
@@ -150,12 +183,14 @@ nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
+  if (NS_WARN_IF(!quota::QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo &&
-      aPrincipalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
+  if (aPrincipalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TContentPrincipalInfo &&
+      aPrincipalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -275,7 +310,7 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  PrincipalInfo principalInfo;
+  mozilla::ipc::PrincipalInfo principalInfo;
   rv = CheckedPrincipalToPrincipalInfo(aPrincipal, principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -355,8 +390,8 @@ LSRequestChild* LocalStorageManager2::StartRequest(
     const LSRequestParams& aParams, LSRequestChildCallback* aCallback) {
   AssertIsOnDOMFileThread();
 
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
+  mozilla::ipc::PBackgroundChild* backgroundActor =
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;
   }
@@ -380,8 +415,8 @@ nsresult LocalStorageManager2::StartSimpleRequest(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromise);
 
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
+  mozilla::ipc::PBackgroundChild* backgroundActor =
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return NS_ERROR_FAILURE;
   }

@@ -6,11 +6,18 @@
 
 #include "ActorsChild.h"
 
-#include "LocalStorageCommon.h"
+#include "ErrorList.h"
 #include "LSDatabase.h"
-#include "LSObject.h"
 #include "LSObserver.h"
 #include "LSSnapshot.h"
+#include "LocalStorageCommon.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Result.h"
+#include "mozilla/dom/LSValue.h"
+#include "mozilla/dom/Storage.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {

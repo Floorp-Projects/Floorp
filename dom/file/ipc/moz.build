@@ -26,6 +26,7 @@ EXPORTS.mozilla += [
     'RemoteLazyInputStreamChild.h',
     'RemoteLazyInputStreamParent.h',
     'RemoteLazyInputStreamStorage.h',
+    'RemoteLazyInputStreamThread.h',
     'RemoteLazyInputStreamUtils.h',
 ]
 

@@ -6,10 +6,35 @@
 
 #include "LSDatabase.h"
 
+// Local includes
+#include "ActorsChild.h"
+#include "LSObject.h"
+#include "LSSnapshot.h"
+
+// Global includes
+#include <cstring>
+#include <new>
+#include <utility>
+#include "MainThreadUtils.h"
+#include "mozilla/MacroForEach.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/dom/PBackgroundLSDatabase.h"
+#include "nsBaseHashtable.h"
+#include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsHashKeys.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nscore.h"
+
 namespace mozilla {
 namespace dom {
-
-using namespace mozilla::services;
 
 namespace {
 
@@ -53,7 +78,8 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
 
     sObserver = new Observer();
 
-    nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
+    nsCOMPtr<nsIObserverService> obsSvc =
+        mozilla::services::GetObserverService();
     MOZ_ASSERT(obsSvc);
 
     MOZ_ALWAYS_SUCCEEDS(
@@ -353,7 +379,8 @@ void LSDatabase::AllowToClose() {
 
     MOZ_ASSERT(sObserver);
 
-    nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
+    nsCOMPtr<nsIObserverService> obsSvc =
+        mozilla::services::GetObserverService();
     MOZ_ASSERT(obsSvc);
 
     MOZ_ALWAYS_SUCCEEDS(

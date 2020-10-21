@@ -6,6 +6,11 @@
 
 #include "SnappyUtils.h"
 
+#include <stddef.h>
+#include "mozilla/Assertions.h"
+#include "mozilla/fallible.h"
+#include "nsDebug.h"
+#include "nsString.h"
 #include "snappy/snappy.h"
 
 namespace mozilla {

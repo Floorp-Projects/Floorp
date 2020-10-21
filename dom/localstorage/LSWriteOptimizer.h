@@ -7,8 +7,16 @@
 #ifndef mozilla_dom_localstorage_LSWriteOptimizer_h
 #define mozilla_dom_localstorage_LSWriteOptimizer_h
 
+#include <cstdint>
+#include <utility>
+#include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace dom {

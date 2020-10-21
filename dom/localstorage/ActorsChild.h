@@ -7,11 +7,19 @@
 #ifndef mozilla_dom_localstorage_ActorsChild_h
 #define mozilla_dom_localstorage_ActorsChild_h
 
+#include <cstdint>
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/PBackgroundLSDatabaseChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
+#include "mozilla/dom/PBackgroundLSRequest.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
+#include "mozilla/dom/PBackgroundLSSimpleRequest.h"
 #include "mozilla/dom/PBackgroundLSSimpleRequestChild.h"
 #include "mozilla/dom/PBackgroundLSSnapshotChild.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
 
 namespace mozilla {
 
