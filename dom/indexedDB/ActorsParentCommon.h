@@ -42,8 +42,6 @@ struct StructuredCloneReadInfoParent;
 using IndexedDBCipherStrategy = quota::IPCStreamCipherStrategy;
 using CipherKey = IndexedDBCipherStrategy::KeyType;
 
-constexpr uint32_t kFileCopyBufferSize = 32768;
-
 // At the moment, the encrypted stream block size is assumed to be unchangeable
 // between encrypting and decrypting blobs. This assumptions holds as long as we
 // only encrypt in private browsing mode, but when we support encryption for
