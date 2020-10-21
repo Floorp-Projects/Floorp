@@ -8,6 +8,7 @@
 
 #include "ClientHandleOpParent.h"
 #include "ClientManagerService.h"
+#include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"

@@ -6,6 +6,8 @@
 #ifndef _mozilla_dom_ClientValidation_h
 #define _mozilla_dom_ClientValidation_h
 
+#include "nsStringFwd.h"
+
 namespace mozilla {
 
 namespace ipc {

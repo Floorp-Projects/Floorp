@@ -3,3 +3,4 @@ dom/base/
 dom/bindings/
 dom/cache/
 dom/canvas/
+dom/clients/

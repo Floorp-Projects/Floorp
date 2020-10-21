@@ -6,6 +6,7 @@
 
 #include "Clients.h"
 
+#include "Client.h"
 #include "ClientDOMUtil.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientManager.h"

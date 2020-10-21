@@ -8,6 +8,7 @@
 
 #include "ClientHandleParent.h"
 #include "ClientSourceParent.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/PClientManagerParent.h"
 
 namespace mozilla {
@@ -44,7 +45,7 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
               ClientPostMessageArgs rebuild;
               rebuild.serviceWorker() = orig.serviceWorker();
 
-              StructuredCloneData data;
+              ipc::StructuredCloneData data;
               data.BorrowFromClonedMessageDataForBackgroundParent(
                   orig.clonedData());
               if (!data.BuildClonedMessageDataForBackgroundParent(
