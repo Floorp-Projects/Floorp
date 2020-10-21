@@ -168,8 +168,6 @@ class ConstraintLayoutPerfDetector : ResourceXmlDetector() {
     }
 
     override fun visitElement(context: XmlContext, element: Element) {
-        super.visitElement(context, element)
-
         // This scope is unideal: if the root element is a ConstraintLayout and is suppressed, all
         // ConstraintLayout children will also be suppressed. If more ConstraintLayout children are
         // added, the root ConstraintLayout will suppress them too. Ideally, we'd want a suppression
