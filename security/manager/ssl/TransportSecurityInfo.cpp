@@ -961,6 +961,7 @@ NS_IMETHODIMP
 TransportSecurityInfo::GetSucceededCertChain(
     nsTArray<RefPtr<nsIX509Cert>>& aSucceededCertChain) {
   MOZ_ASSERT(aSucceededCertChain.IsEmpty());
+  MutexAutoLock lock(mMutex);
   if (!aSucceededCertChain.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -970,6 +971,7 @@ TransportSecurityInfo::GetSucceededCertChain(
 
 nsresult TransportSecurityInfo::SetSucceededCertChain(
     nsTArray<nsTArray<uint8_t>>&& aCertList) {
+  MutexAutoLock lock(mMutex);
   return CreateCertChain(mSucceededCertChain, std::move(aCertList));
 }
 
