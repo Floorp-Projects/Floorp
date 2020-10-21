@@ -200,7 +200,7 @@ int32_t WordBreaker::NextWord(const char16_t* aText, uint32_t aLen,
     AutoTArray<uint8_t, 256> breakBefore;
     breakBefore.SetLength(aLen - aPos);
     NS_GetComplexLineBreaks(aText + aPos, aLen - aPos, breakBefore.Elements());
-    uint32_t i = 0;
+    uint32_t i = 1;
     while (i < cur - aPos && !breakBefore[i]) {
       i++;
     }
@@ -213,5 +213,6 @@ int32_t WordBreaker::NextWord(const char16_t* aText, uint32_t aLen,
     return NS_WORDBREAKER_NEED_MORE_TEXT;
   }
 
+  MOZ_ASSERT(cur != aPos);
   return cur;
 }
