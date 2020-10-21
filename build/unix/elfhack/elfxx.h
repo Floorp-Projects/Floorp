@@ -583,7 +583,7 @@ class ElfRel_Section : public ElfSection {
  public:
   ElfRel_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent)
       : ElfSection(s, file, parent) {
-    int pos = file->tellg();
+    auto pos = file->tellg();
     file->seekg(shdr.sh_offset);
     for (unsigned int i = 0; i < s.sh_size / s.sh_entsize; i++) {
       Rel r(*file, parent->getClass(), parent->getData());
