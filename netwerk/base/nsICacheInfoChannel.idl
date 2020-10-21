@@ -8,6 +8,7 @@ interface nsIAsyncOutputStream;
 interface nsIInputStream;
 
 %{C++
+#include "nsTArray.h"
 namespace mozilla {
 namespace net {
 class PreferredAlternativeDataTypeParams;
