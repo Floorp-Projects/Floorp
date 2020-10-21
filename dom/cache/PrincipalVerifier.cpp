@@ -13,6 +13,7 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "CacheCommon.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
