@@ -19,6 +19,8 @@
         detekt \
         assembleDebug \
         assembleDebugAndroidTest \
+        mozilla-detekt-rules:test \
+        mozilla-lint-rules:test \
         testDebug
 
 # Tasks omitted because they take a long time to run:
