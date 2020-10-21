@@ -15,7 +15,7 @@ const {
 } = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {
-  isAuthorStylesheet,
+  isAgentStylesheet,
   getCSSStyleRules,
 } = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
@@ -822,7 +822,7 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
       const sheet = domRules[i].parentStyleSheet;
       sheets.push({
         href: sheet.href,
-        isContentSheet: isAuthorStylesheet(sheet),
+        isContentSheet: !isAgentStylesheet(sheet),
       });
     }
 

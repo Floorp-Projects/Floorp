@@ -784,7 +784,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     for (let i = domRules.length - 1; i >= 0; i--) {
       const domRule = domRules[i];
 
-      const isSystem = !SharedCssLogic.isAuthorStylesheet(
+      const isSystem = SharedCssLogic.isAgentStylesheet(
         domRule.parentStyleSheet
       );
 
@@ -807,8 +807,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
       rules.push({
         rule: ruleActor,
-        inherited: inherited,
-        isSystem: isSystem,
+        inherited,
+        isSystem,
         pseudoElement: pseudo,
       });
     }
@@ -1657,12 +1657,25 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // validity of some properties and property values.
       const userAgent =
         this._parentSheet &&
-        !SharedCssLogic.isAuthorStylesheet(this._parentSheet);
+        SharedCssLogic.isAgentStylesheet(this._parentSheet);
       // Whether the stylesheet is a chrome stylesheet. Ditto.
-      const chrome =
-        this._parentSheet &&
-        this._parentSheet.href &&
-        this._parentSheet.href.startsWith("chrome:");
+      //
+      // Note that chrome rules are also enabled in user sheets, see
+      // ParserContext::chrome_rules_enabled().
+      //
+      // https://searchfox.org/mozilla-central/rev/919607a3610222099fbfb0113c98b77888ebcbfb/servo/components/style/parser.rs#164
+      const chrome = (() => {
+        if (!this._parentSheet) {
+          return false;
+        }
+        if (SharedCssLogic.isUserStylesheet(this._parentSheet)) {
+          return true;
+        }
+        if (this._parentSheet.href) {
+          return this._parentSheet.href.startsWith("chrome:");
+        }
+        return el && el.ownerDocument.documentURI.startsWith("chrome:");
+      })();
       // Whether the document is in quirks mode. This affects whether stuff
       // like `width: 10` is valid.
       const quirks =

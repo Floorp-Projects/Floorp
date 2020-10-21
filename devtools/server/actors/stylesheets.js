@@ -428,7 +428,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       nodeHref: docHref,
       disabled: this.rawSheet.disabled,
       title: this.rawSheet.title,
-      system: !CssLogic.isAuthorStylesheet(this.rawSheet),
+      system: CssLogic.isAgentStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex,
       sourceMapBaseURL: getSourcemapBaseURL(
         // Technically resolveSourceURL should be used here alongside
