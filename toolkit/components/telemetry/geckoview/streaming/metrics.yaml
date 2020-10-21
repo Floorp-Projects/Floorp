@@ -908,6 +908,143 @@ network:
       - mnovotny@mozilla.com
     expires: never
 
+performance.pageload:
+  load_time:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_PAGE_LOAD_TIME_MS
+    description: >
+      Time in milliseconds from navigationStart to loadEventStart
+      for the foreground http or https root content document.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  load_time_responsestart:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS
+    description: >
+      Time in milliseconds from responseStart to loadEventStart
+      for the foreground http or https root content document.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  dcl:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_DOM_CONTENT_LOADED_MS
+    description: >
+      Time in milliseconds from navigationStart to domContentLoaded
+      for the foreground http or https root content document.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  dcl_responsestart:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_DOM_CONTENT_LOADED_FROM_RESPONSESTART_MS
+    description: >
+      Time in milliseconds from responseStart to domContentLoaded
+      for the foreground http or https root content document.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  fcp:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_FIRST_CONTENTFUL_PAINT_MS
+    description: >
+      The time between navigationStart and the first contentful paint
+      of a foreground http or https root content document, in
+      milliseconds. The contentful paint timestamp is taken during
+      display list building and does not include rasterization or
+      compositing of that paint.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  fcp_responsestart:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS
+    description: >
+      The time between responseStart and the first contentful paint
+      of a foreground http or https root content document, in
+      milliseconds. The contentful paint timestamp is taken during
+      display list building and does not include rasterization or
+      compositing of that paint.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+  req_anim_frame_callback:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_REQUEST_ANIMATION_CALLBACK_PAGELOAD_MS
+    description: >
+      Time spent in milliseconds calling all request animation frame callbacks
+      for a document before it has reached readystate complete.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+performance.responsiveness:
+  req_anim_frame_callback:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: PERF_REQUEST_ANIMATION_CALLBACK_NON_PAGELOAD_MS
+    description: >
+      Time spent in milliseconds calling all request animation frame callbacks
+      for a document after it has reached readystate complete.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1671729#c7
+    notification_emails:
+      - dpalmeiro@mozilla.com
+      - perfteam@mozilla.com
+    expires: never
+
+
 performance.time:
   response_start:
     type: timing_distribution
