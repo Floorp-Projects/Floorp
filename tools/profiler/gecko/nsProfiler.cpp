@@ -85,7 +85,10 @@ nsProfiler::Observe(nsISupports* aSubject, const char* aTopic,
     if (loadContext && loadContext->UsePrivateBrowsing() &&
         !mLockedForPrivateBrowsing) {
       mLockedForPrivateBrowsing = true;
-      profiler_stop();
+      // Allow profiling tests that trigger private browsing.
+      if (!xpc::IsInAutomation()) {
+        profiler_stop();
+      }
     }
   } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     mLockedForPrivateBrowsing = false;
