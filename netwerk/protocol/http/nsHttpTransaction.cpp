@@ -1396,6 +1396,11 @@ void nsHttpTransaction::Close(nsresult reason) {
       mSentData = false;
       mReceivedData = false;
       LOG(("transaction force restarted\n"));
+      // Only record the first restart attempt.
+      if (!mRestartCount) {
+        Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                              TRANSACTION_RESTART_FORCED);
+      }
       return;
     }
 
@@ -1439,9 +1444,32 @@ void nsHttpTransaction::Close(nsresult reason) {
       // Note that when echConfig is enabled, it's possible that we don't have a
       // usable connection info to retry.
       if (mConnInfo && NS_SUCCEEDED(Restart())) {
+        // Only record the first restart attempt.
+        if (!mRestartCount) {
+          if (restartToFallbackConnInfo) {
+            Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                                  TRANSACTION_RESTART_HTTPSSVC_INVOLVED);
+          } else if (!reallySentData) {
+            Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                                  TRANSACTION_RESTART_NO_DATA_SENT);
+          } else if (reason == psm::GetXPCOMFromNSSError(
+                                   SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA)) {
+            Telemetry::Accumulate(
+                Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA);
+          } else {
+            Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                                  TRANSACTION_RESTART_OTHERS);
+          }
+        }
         return;
       }
     }
+  }
+
+  if (!mRestartCount) {
+    Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
+                          TRANSACTION_RESTART_NONE);
   }
 
   if (!mResponseIsComplete && NS_SUCCEEDED(reason) && isHttp2or3) {

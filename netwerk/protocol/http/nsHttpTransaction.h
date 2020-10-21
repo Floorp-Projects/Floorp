@@ -490,6 +490,17 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mFastFallbackTriggered = false;
   nsCOMPtr<nsITimer> mFastFallbackTimer;
   nsCOMPtr<nsISVCBRecord> mFastFallbackRecord;
+
+  // IMPORTANT: when adding new values, always add them to the end, otherwise
+  // it will mess up telemetry.
+  enum TRANSACTION_RESTART_REASON : uint32_t {
+    TRANSACTION_RESTART_NONE = 0,    // The transacion was not restarted.
+    TRANSACTION_RESTART_FORCED = 1,  // The transaction was forced to restart.
+    TRANSACTION_RESTART_HTTPSSVC_INVOLVED = 2,
+    TRANSACTION_RESTART_NO_DATA_SENT = 3,
+    TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA = 4,
+    TRANSACTION_RESTART_OTHERS = 5,
+  };
 };
 
 }  // namespace net
