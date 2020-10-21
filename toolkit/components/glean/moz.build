@@ -17,8 +17,10 @@ if CONFIG['MOZ_GLEAN']:
     ]
 
     EXPORTS.mozilla.glean += [
+        '!GleanMetrics.h',
         'bindings/Category.h',
         'bindings/Glean.h',
+        'bindings/MetricTypes.h',
     ]
 
     UNIFIED_SOURCES += [
@@ -43,6 +45,12 @@ if CONFIG['MOZ_GLEAN']:
     pings_yamls = ['../../../' + x for x in pings_yamls]
     GeneratedFile('api/src/metrics.rs',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
+                  flags=[CONFIG['MOZ_APP_VERSION']],
+                  inputs=['metrics_index.py'] + metrics_yamls)
+
+    GeneratedFile('GleanMetrics.h',
+                  script='build_scripts/glean_parser_ext/run_glean_parser.py',
+                  entry_point='cpp_metrics',
                   flags=[CONFIG['MOZ_APP_VERSION']],
                   inputs=['metrics_index.py'] + metrics_yamls)
 
