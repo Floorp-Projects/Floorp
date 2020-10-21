@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/glean/GleanMetrics.h"
 
 #include "mozilla/Preferences.h"
 #include "nsString.h"
@@ -47,4 +48,12 @@ TEST(FOG, BuiltinPingsRegistered)
   // This will probably change to NS_OK once "duration" is implemented.
   ASSERT_EQ(NS_ERROR_NO_CONTENT, fog_submit_ping(&baselinePingName));
   ASSERT_EQ(NS_ERROR_NO_CONTENT, fog_submit_ping(&eventsPingName));
+}
+
+TEST(FOG, TestCppCounterWorks)
+{
+  mozilla::glean::test_only::bad_code.Add(42);
+
+  ASSERT_TRUE(mozilla::glean::test_only::bad_code.TestHasValue("test-ping"));
+  ASSERT_EQ(42, mozilla::glean::test_only::bad_code.TestGetValue("test-ping"));
 }
