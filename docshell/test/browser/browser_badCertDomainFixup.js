@@ -9,8 +9,6 @@
 
 const PREF_BAD_CERT_DOMAIN_FIX_ENABLED =
   "security.bad_cert_domain_error.url_fix_enabled";
-const PREF_ALLOW_HIJACKING_LOCALHOST =
-  "network.proxy.allow_hijacking_localhost";
 
 const BAD_CERT_DOMAIN_ERROR_URL = "https://badcertdomain.example.com:443";
 const FIXED_URL = "https://www.badcertdomain.example.com/";
@@ -79,9 +77,7 @@ add_task(async function ignoreBadCertDomain() {
   info("Certificate error was shown as expected");
 
   // Test that urls with IP addresses are not fixed.
-  Services.prefs.setBoolPref(PREF_ALLOW_HIJACKING_LOCALHOST, true);
   await verifyErrorPage(IPV4_ADDRESS);
-  Services.prefs.clearUserPref(PREF_ALLOW_HIJACKING_LOCALHOST);
   info("Certificate error was shown as expected for an IP address");
 
   // Test that urls with ports are not fixed.
