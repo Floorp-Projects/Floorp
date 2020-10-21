@@ -209,8 +209,6 @@ class SrcNote {
      * (fromOperand).
      */
     static constexpr ptrdiff_t ColSpanSignBit = 1 << (OperandBits - 1);
-    static constexpr ptrdiff_t MinColSpan = -ColSpanSignBit;
-    static constexpr ptrdiff_t MaxColSpan = ColSpanSignBit - 1;
 
     static inline ptrdiff_t fromOperand(ptrdiff_t operand) {
       // There should be no bits set outside the field we're going to
@@ -222,9 +220,8 @@ class SrcNote {
     }
 
    public:
-    static inline bool isRepresentable(ptrdiff_t colspan) {
-      return MinColSpan <= colspan && colspan <= MaxColSpan;
-    }
+    static constexpr ptrdiff_t MinColSpan = -ColSpanSignBit;
+    static constexpr ptrdiff_t MaxColSpan = ColSpanSignBit - 1;
 
     static inline ptrdiff_t toOperand(ptrdiff_t colspan) {
       // Truncate the two's complement colspan, for storage as an operand.

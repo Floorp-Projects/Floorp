@@ -619,9 +619,8 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {
-  // Constrain starting columns to half of the range of a signed 32-bit value,
-  // to avoid overflow.
-  if (options().column >= std::numeric_limits<int32_t>::max() / 2 + 1) {
+  // Constrain starting columns to where they will saturate.
+  if (options().column > ColumnLimit) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
@@ -983,10 +982,26 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
 
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-  uint32_t partialCols =
+  uint32_t column =
       anyChars.computePartialColumn(lineToken, offset, this->sourceUnits);
 
-  return (lineToken.isFirstLine() ? anyChars.options_.column : 0) + partialCols;
+  if (lineToken.isFirstLine()) {
+    if (column > ColumnLimit) {
+      return ColumnLimit;
+    }
+
+    static_assert(uint32_t(ColumnLimit + ColumnLimit) > ColumnLimit,
+                  "Adding ColumnLimit should not overflow");
+
+    uint32_t firstLineOffset = anyChars.options_.column;
+    column += firstLineOffset;
+  }
+
+  if (column > ColumnLimit) {
+    return ColumnLimit;
+  }
+
+  return column;
 }
 
 template <typename Unit, class AnyCharsAccess>
