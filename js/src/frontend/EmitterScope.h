@@ -19,6 +19,7 @@
 #include "frontend/ParseContext.h"
 #include "frontend/SharedContext.h"
 #include "js/TypeDecls.h"
+#include "vm/BytecodeUtil.h"   // JSOp
 #include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
@@ -99,9 +100,15 @@ class EmitterScope : public Nestable<EmitterScope> {
                                                 ScopeCreator createScope);
   MOZ_MUST_USE bool appendScopeNote(BytecodeEmitter* bce);
 
+  MOZ_MUST_USE bool clearFrameSlotRange(BytecodeEmitter* bce, JSOp opcode,
+                                        uint32_t slotStart,
+                                        uint32_t slotEnd) const;
+
   MOZ_MUST_USE bool deadZoneFrameSlotRange(BytecodeEmitter* bce,
                                            uint32_t slotStart,
-                                           uint32_t slotEnd) const;
+                                           uint32_t slotEnd) const {
+    return clearFrameSlotRange(bce, JSOp::Uninitialized, slotStart, slotEnd);
+  }
 
  public:
   explicit EmitterScope(BytecodeEmitter* bce);
