@@ -6,6 +6,7 @@
 
 #include "InternalRequest.h"
 
+#include "InternalResponse.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FetchTypes.h"

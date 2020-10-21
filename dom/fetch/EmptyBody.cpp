@@ -6,6 +6,9 @@
 
 #include "EmptyBody.h"
 
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsStringStream.h"
+
 namespace mozilla {
 namespace dom {
 
