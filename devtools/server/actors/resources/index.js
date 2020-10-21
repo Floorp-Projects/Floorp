@@ -12,7 +12,6 @@ const TYPES = {
   CSS_MESSAGE: "css-message",
   DOCUMENT_EVENT: "document-event",
   ERROR_MESSAGE: "error-message",
-  LOCAL_STORAGE: "local-storage",
   PLATFORM_MESSAGE: "platform-message",
   NETWORK_EVENT: "network-event",
   STYLESHEET: "stylesheet",
@@ -44,9 +43,6 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.ERROR_MESSAGE]: {
     path: "devtools/server/actors/resources/error-messages",
-  },
-  [TYPES.LOCAL_STORAGE]: {
-    path: "devtools/server/actors/resources/local-storage",
   },
   [TYPES.PLATFORM_MESSAGE]: {
     path: "devtools/server/actors/resources/platform-messages",

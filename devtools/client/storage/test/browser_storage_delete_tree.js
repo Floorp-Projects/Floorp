@@ -89,4 +89,6 @@ add_task(async function() {
     [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], []],
     [["Cache", "http://test1.example.org", "plop"], []],
   ]);
+
+  await finishTests();
 });
