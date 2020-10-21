@@ -22,4 +22,6 @@ add_task(async function() {
       `Item ${item.join(" > ")} is present in the tree`
     );
   }
+
+  await finishTests();
 });

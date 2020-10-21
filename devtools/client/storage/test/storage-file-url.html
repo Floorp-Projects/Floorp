@@ -5,8 +5,8 @@
   <title>Storage Test</title>
   <script>
     "use strict";
-    /* exported setup */
-    function setup() {
+    /* exported init */
+    function init() {
       createIndexedDB();
       createCookies();
       createLocalStorage();
@@ -53,7 +53,7 @@
     }
   </script>
 </head>
-<body>
+<body onload="init();">
   <h1>IndexedDB Test</h1>
 </body>
 </html>

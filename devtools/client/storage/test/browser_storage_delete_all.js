@@ -110,4 +110,6 @@ add_task(async function() {
   ];
 
   await checkState(afterState);
+
+  await finishTests();
 });

@@ -64,7 +64,6 @@ add_task(async function() {
       );
     });
 
-    info("Awaiting for store-objects-edit event");
     await eventWait;
 
     ok(
@@ -72,4 +71,6 @@ add_task(async function() {
       `There is no row '${rowName}' in ${treeItemName} after deletion`
     );
   }
+
+  await finishTests();
 });

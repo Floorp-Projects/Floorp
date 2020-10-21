@@ -15,4 +15,6 @@ add_task(async function() {
   await performAdd(["localStorage", "http://test1.example.org"]);
   await performAdd(["localStorage", "http://test1.example.org"]);
   await performAdd(["localStorage", "http://test1.example.org"]);
+
+  await finishTests();
 });

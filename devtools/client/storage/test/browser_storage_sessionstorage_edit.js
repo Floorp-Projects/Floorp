@@ -19,4 +19,6 @@ add_task(async function() {
 
   await editCell("TestSS5", "name", "newTestSS5");
   await editCell("newTestSS5", "value", "newValueSS5");
+
+  await finishTests();
 });

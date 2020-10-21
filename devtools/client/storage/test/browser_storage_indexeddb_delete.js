@@ -48,4 +48,6 @@ add_task(async function() {
   await checkState([
     [["indexedDB", "http://test1.example.org"], ["idb2 (default)"]],
   ]);
+
+  await finishTests();
 });

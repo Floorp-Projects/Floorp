@@ -40,4 +40,6 @@ add_task(async function() {
     1,
     `There is only one displayed variable named '${ITEM_NAME}'`
   );
+
+  await finishTests();
 });

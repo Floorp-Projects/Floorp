@@ -37,4 +37,6 @@ add_task(async function() {
   ];
 
   await checkState(state);
+
+  await finishTests();
 });

@@ -31,4 +31,6 @@ add_task(async function() {
       ],
     ],
   ]);
+
+  await finishTests();
 });

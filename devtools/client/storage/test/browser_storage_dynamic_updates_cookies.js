@@ -216,6 +216,8 @@ add_task(async function() {
   await checkState([[["cookies", "http://test1.example.org"], []]]);
 
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");
+
+  await finishTests();
 });
 
 async function addCookie(name, value, path) {

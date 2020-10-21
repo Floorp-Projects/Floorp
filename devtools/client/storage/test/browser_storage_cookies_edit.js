@@ -24,4 +24,6 @@ add_task(async function() {
   await editCell(id, "value", "newValue3");
   await editCell(id, "isSecure", "true");
   await editCell(id, "isHttpOnly", "true");
+
+  await finishTests();
 });

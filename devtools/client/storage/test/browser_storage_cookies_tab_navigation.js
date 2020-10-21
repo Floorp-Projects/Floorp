@@ -22,4 +22,6 @@ add_task(async function() {
     "test1",
     "We have shift-tabbed to the correct cell."
   );
+
+  await finishTests();
 });

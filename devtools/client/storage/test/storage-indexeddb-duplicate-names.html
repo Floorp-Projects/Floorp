@@ -7,8 +7,8 @@
   <script type="application/javascript">
     "use strict";
 
-    /* exported setup */
-    function setup() {
+    /* exported createIndexedDBs */
+    function createIndexedDBs() {
       createIndexedDB("idb1", "temporary");
       createIndexedDB("idb1", "default");
       createIndexedDB("idb1", "persistent");
@@ -45,7 +45,7 @@
     };
   </script>
 </head>
-<body>
+<body onload="createIndexedDBs()">
   <h1>storage-indexeddb-duplicate-names.html</h1>
 </body>
 </html>
