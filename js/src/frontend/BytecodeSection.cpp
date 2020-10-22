@@ -188,14 +188,16 @@ JSObject* ObjLiteralStencil::create(JSContext* cx,
   return InterpretObjLiteral(cx, atomCache, atoms_, writer_);
 }
 
-BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum)
+BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum,
+                                 uint32_t column)
     : code_(cx),
       notes_(cx),
       lastNoteOffset_(0),
       tryNoteList_(cx),
       scopeNoteList_(cx),
       resumeOffsetList_(cx),
-      currentLine_(lineNum) {}
+      currentLine_(lineNum),
+      lastColumn_(column) {}
 
 void BytecodeSection::updateDepth(BytecodeOffset target) {
   jsbytecode* pc = code(target);
