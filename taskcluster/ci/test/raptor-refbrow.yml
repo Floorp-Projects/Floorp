@@ -83,16 +83,6 @@ raptor-scn-cpu-memory-power-idle-bg-refbrow:
             - --power-test
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
-raptor-speedometer-refbrow:
-    description: "Raptor Speedometer on the reference browser"
-    treeherder-symbol: Rap-refbrow(sp)
-    mozharness:
-        extra-options:
-            - --test=raptor-speedometer
-            - --app=refbrow
-            - --binary-path=org.mozilla.reference.browser.raptor
-            - --activity=org.mozilla.reference.browser.BrowserTestActivity
-
 raptor-unity-webgl-refbrow:
     description: "Raptor Unity WebGL on the reference browser"
     treeherder-symbol: Rap-refbrow(ugl)

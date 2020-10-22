@@ -321,19 +321,19 @@ browsertime-tp6m-profiling:
 
 browsertime-speedometer-mobile:
     description: "Browsertime Speedometer on Android"
-    apps: ["geckoview", "fenix", "fennec"]
+    apps: ["geckoview", "fenix", "fennec", "chrome-m"]
     tier:
         by-app:
             fenix: 1
             default: 3
     run-on-projects:
         by-app:
-            fenix: []
-            default:
+            geckoview:
                 by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
-                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
+                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
+                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
                     default: []
+            default: []
     treeherder-symbol: Btime(sp)
     mozharness:
         extra-options:

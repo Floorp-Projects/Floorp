@@ -24,27 +24,6 @@ job-defaults:
     optimization:
         skip-unless-backstop: null
 
-raptor-speedometer-geckoview:
-    description: "Raptor Speedometer on GeckoView"
-    try-name: raptor-speedometer-geckoview
-    treeherder-symbol: Rap(sp)
-    run-on-projects:
-        by-test-platform:
-            android-hw-.*(?<!-shippable)/opt: []
-            android-hw-p2-.*api-16/pgo: []
-            android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-p2-.*aarch64-shippable/opt: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*-shippable/opt: ['trunk', 'mozilla-beta']
-            default: ['mozilla-central', 'mozilla-beta']
-    max-run-time: 900
-    mozharness:
-        extra-options:
-            - --test=raptor-speedometer
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
 raptor-speedometer-geckoview-cpu-memory:
     description: "Raptor Speedometer cpu/memory on GeckoView"
     try-name: raptor-speedometer-geckoview-cpu-memory
