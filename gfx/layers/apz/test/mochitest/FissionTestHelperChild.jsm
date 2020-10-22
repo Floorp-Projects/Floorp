@@ -51,6 +51,10 @@ class FissionTestHelperChild extends JSWindowActorChild {
       defineAs: "subtestDone",
     });
 
+    Cu.exportFunction(this.subtestFailed.bind(this), FissionTestHelper, {
+      defineAs: "subtestFailed",
+    });
+
     Cu.exportFunction(this.sendToOopif.bind(this), FissionTestHelper, {
       defineAs: "sendToOopif",
     });
@@ -67,6 +71,13 @@ class FissionTestHelperChild extends JSWindowActorChild {
       cw.ApzCleanup.execute();
     }
     this.sendAsyncMessage("Test:Complete", {});
+  }
+
+  // Called by the subtest to indicate subtest failure. Only one of subtestDone
+  // or subtestFailed should be called.
+  subtestFailed(msg) {
+    this.sendAsyncMessage("ok", { cond: false, msg });
+    this.subtestDone();
   }
 
   // Called by the subtest to eval some code in the OOP iframe. This returns
