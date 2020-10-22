@@ -84,5 +84,5 @@ async function test() {
 
 waitUntilApzStable()
 .then(test)
-.finally(subtestDone);
+.then(subtestDone, subtestFailed);
 </script>
