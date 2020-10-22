@@ -67,7 +67,7 @@ RemoteLazyInputStreamParent::Create<mozilla::ipc::PBackgroundParent>(
 /* static */
 already_AddRefed<RemoteLazyInputStreamParent>
 RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
-                                    net::SocketProcessParent* aManager) {
+                                    SocketProcessParent* aManager) {
   RefPtr<RemoteLazyInputStreamParent> actor =
       new RemoteLazyInputStreamParent(aID, aSize, aManager);
 
@@ -87,13 +87,12 @@ RemoteLazyInputStreamParent::Create<mozilla::net::SocketProcessParent>(
     mozilla::net::SocketProcessParent*);
 
 template already_AddRefed<RemoteLazyInputStreamParent>
-RemoteLazyInputStreamParent::Create<dom::ContentParent>(nsIInputStream*,
-                                                        uint64_t, uint64_t,
-                                                        nsresult*,
-                                                        dom::ContentParent*);
+RemoteLazyInputStreamParent::Create<ContentParent>(nsIInputStream*, uint64_t,
+                                                   uint64_t, nsresult*,
+                                                   ContentParent*);
 
 RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
-    const nsID& aID, uint64_t aSize, dom::ContentParent* aManager)
+    const nsID& aID, uint64_t aSize, ContentParent* aManager)
     : mID(aID),
       mSize(aSize),
       mContentManager(aManager),
@@ -111,7 +110,7 @@ RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
       mMigrating(false) {}
 
 RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
-    const nsID& aID, uint64_t aSize, net::SocketProcessParent* aManager)
+    const nsID& aID, uint64_t aSize, SocketProcessParent* aManager)
     : mID(aID),
       mSize(aSize),
       mContentManager(nullptr),

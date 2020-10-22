@@ -9,7 +9,6 @@
 
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsTString.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 
 class nsIEventTarget;
