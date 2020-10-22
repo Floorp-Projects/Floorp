@@ -208,7 +208,7 @@ jobs:
             command: >-
                 mv cargo-test-binaries target &&
                 cd target &&
-                for i in debug/*; do $i; done
+                for i in debug/deps/*; do $i; done
         treeherder:
             platform: macosx1014-64-qr/debug
             symbol: WR(cargotest)
