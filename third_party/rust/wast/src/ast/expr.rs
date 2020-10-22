@@ -993,6 +993,9 @@ instructions! {
         F32x4ConvertI32x4S : [0xfd, 0xfa] : "f32x4.convert_i32x4_s",
         F32x4ConvertI32x4U : [0xfd, 0xfb] : "f32x4.convert_i32x4_u",
 
+        V128Load32Zero(MemArg<4>) : [0xfd, 0xfc] : "v128.load32_zero",
+        V128Load64Zero(MemArg<8>) : [0xfd, 0xfd] : "v128.load64_zero",
+
         // Exception handling proposal
         Try(BlockType<'a>) : [0x06] : "try",
         Catch : [0x07] : "catch",
