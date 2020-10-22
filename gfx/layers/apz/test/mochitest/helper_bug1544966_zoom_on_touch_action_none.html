@@ -53,7 +53,7 @@ function* test(testDriver) {
   ];
 
   var touchIds = [0, 1];
-  yield* synthesizeNativeTouchSequences(document.getElementById("target"), zoom_in, null, touchIds);
+  synthesizeNativeTouchSequences(document.getElementById("target"), zoom_in, null, touchIds);
 
   dump("All touch events synthesized, waiting for final pointerup...\n");
   yield true;
