@@ -378,6 +378,24 @@ describe("PlacesFeed", () => {
 
       assert.calledOnce(feed.fillSearchTopSiteTerm);
     });
+    it("should call openTrustedLinkIn with the correct SUMO url on ABOUT_SPONSORED_TOP_SITES", () => {
+      const openTrustedLinkIn = sinon.stub();
+      const openLinkAction = {
+        type: at.ABOUT_SPONSORED_TOP_SITES,
+        _target: {
+          browser: {
+            ownerGlobal: { openTrustedLinkIn },
+          },
+        },
+      };
+
+      feed.onAction(openLinkAction);
+
+      assert.calledOnce(openTrustedLinkIn);
+      const [url, where] = openTrustedLinkIn.firstCall.args;
+      assert.equal(url.endsWith("sponsor-privacy"), true);
+      assert.equal(where, "tab");
+    });
     it("should set the URL bar value to the label value", () => {
       const locationBar = { search: sandbox.stub() };
       const action = {
