@@ -79,17 +79,17 @@ async function checkInspectorIcon(dbg) {
 
   // Ensure hovering over button highlights the node in content pane
   const view = node.ownerDocument.defaultView;
-  const inspectorFront = await toolbox.target.getFront("inspector");
-  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  const onNodeHighlight = toolbox.getHighlighter().waitForHighlighterShown();
 
   EventUtils.synthesizeMouseAtCenter(node, { type: "mousemove" }, view);
 
-  const nodeFront = await onNodeHighlight;
+  const { nodeFront } = await onNodeHighlight;
   is(nodeFront.displayName, "button", "The correct node was highlighted");
 
   // Ensure panel changes when button is clicked
+  const onInspectorPanelLoad = waitForInspectorPanelChange(dbg);
   node.click();
-  await waitForInspectorPanelChange(dbg);
+  await onInspectorPanelLoad;
 
   await resume(dbg);
 }
