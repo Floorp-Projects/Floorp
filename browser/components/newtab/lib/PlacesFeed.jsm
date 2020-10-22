@@ -479,6 +479,14 @@ class PlacesFeed {
       case at.UNINIT:
         this.removeObservers();
         break;
+      case at.ABOUT_SPONSORED_TOP_SITES: {
+        const url = `${Services.urlFormatter.formatURLPref(
+          "app.support.baseURL"
+        )}sponsor-privacy`;
+        const win = action._target.browser.ownerGlobal;
+        win.openTrustedLinkIn(url, "tab");
+        break;
+      }
       case at.BLOCK_URL: {
         if (action.data) {
           action.data.forEach(site => {

@@ -30,6 +30,14 @@ export const LinkMenuOptions = {
     },
     userEvent: "SHOW_PRIVACY_INFO",
   }),
+  AboutSponsored: site => ({
+    id: "newtab-menu-show-privacy-info",
+    icon: "info",
+    action: ac.AlsoToMain({
+      type: at.ABOUT_SPONSORED_TOP_SITES,
+    }),
+    userEvent: "TOPSITE_SPONSOR_INFO",
+  }),
   RemoveBookmark: site => ({
     id: "newtab-menu-remove-bookmark",
     icon: "bookmark-added",
