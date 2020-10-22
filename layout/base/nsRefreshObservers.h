@@ -19,7 +19,6 @@
 namespace mozilla {
 class AnimationEventDispatcher;
 class PendingFullscreenEvent;
-class PresShell;
 class RefreshDriverTimer;
 namespace layout {
 class VsyncChild;
@@ -64,29 +63,5 @@ class nsAPostRefreshObserver {
  public:
   virtual void DidRefresh() = 0;
 };
-
-namespace mozilla {
-
-/**
- * A wrapper for nsAPostRefreshObserver that's one-shot (unregisters itself
- * after firing once) and can be used without writing a derived class by passing
- * in the action in the form of a lambda (or other function object).
- *
- * Note, while the observer unregisters itself, the registering still needs to
- * be done by the caller.
- */
-class OneShotPostRefreshObserver : public nsAPostRefreshObserver {
- public:
-  using Action = std::function<void(mozilla::PresShell*)>;
-  OneShotPostRefreshObserver(mozilla::PresShell* aPresShell, Action&& aAction);
-  virtual ~OneShotPostRefreshObserver();
-  void DidRefresh() override;
-
- protected:
-  RefPtr<mozilla::PresShell> mPresShell;
-  Action mAction;
-};
-
-}  // namespace mozilla
 
 #endif

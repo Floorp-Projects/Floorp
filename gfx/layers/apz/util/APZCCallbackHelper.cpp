@@ -649,7 +649,7 @@ static bool PrepareForSetTargetAPZCNotification(
 
 static void SendLayersDependentApzcTargetConfirmation(
     PresShell* aPresShell, uint64_t aInputBlockId,
-    nsTArray<ScrollableLayerGuid>&& aTargets) {
+    const nsTArray<ScrollableLayerGuid>& aTargets) {
   LayerManager* lm = aPresShell->GetLayerManager();
   if (!lm) {
     return;
@@ -679,13 +679,11 @@ static void SendLayersDependentApzcTargetConfirmation(
 
 DisplayportSetListener::DisplayportSetListener(
     nsIWidget* aWidget, PresShell* aPresShell, const uint64_t& aInputBlockId,
-    nsTArray<ScrollableLayerGuid>&& aTargets)
-    : OneShotPostRefreshObserver(
-          aPresShell,
-          [this](PresShell* aPresShell) { OnPostRefresh(this, aPresShell); }),
-      mWidget(aWidget),
+    const nsTArray<ScrollableLayerGuid>& aTargets)
+    : mWidget(aWidget),
+      mPresShell(aPresShell),
       mInputBlockId(aInputBlockId),
-      mTargets(std::move(aTargets)) {}
+      mTargets(aTargets.Clone()) {}
 
 DisplayportSetListener::~DisplayportSetListener() = default;
 
@@ -701,13 +699,29 @@ bool DisplayportSetListener::Register() {
   return false;
 }
 
-/* static */
-void DisplayportSetListener::OnPostRefresh(DisplayportSetListener* aListener,
-                                           PresShell* aPresShell) {
+void DisplayportSetListener::DidRefresh() {
+  if (!mPresShell) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Post-refresh observer fired again after failed attempt at "
+        "unregistering it");
+    return;
+  }
+
   APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n",
-             aListener->mInputBlockId);
-  SendLayersDependentApzcTargetConfirmation(
-      aPresShell, aListener->mInputBlockId, std::move(aListener->mTargets));
+             mInputBlockId);
+  SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId,
+                                            std::move(mTargets));
+
+  if (!mPresShell->RemovePostRefreshObserver(this)) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Unable to unregister post-refresh observer! Leaking it instead of "
+        "leaving garbage registered");
+    // Graceful handling, just in case...
+    mPresShell = nullptr;
+    return;
+  }
+
+  delete this;
 }
 
 UniquePtr<DisplayportSetListener>
