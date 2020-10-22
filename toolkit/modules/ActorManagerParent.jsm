@@ -332,9 +332,6 @@ let JSWINDOWACTORS = {
     },
     child: {
       moduleURI: "resource://gre/actors/PictureInPictureChild.jsm",
-      events: {
-        MozStopPictureInPicture: { capture: true },
-      },
     },
 
     allFrames: true,
