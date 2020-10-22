@@ -35,21 +35,20 @@ typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
     SetAllowedTouchBehaviorCallback;
 
 /* Refer to documentation on SendSetTargetAPZCNotification for this class */
-class DisplayportSetListener : public OneShotPostRefreshObserver {
+class DisplayportSetListener : public nsAPostRefreshObserver {
  public:
   DisplayportSetListener(nsIWidget* aWidget, PresShell* aPresShell,
                          const uint64_t& aInputBlockId,
-                         nsTArray<ScrollableLayerGuid>&& aTargets);
+                         const nsTArray<ScrollableLayerGuid>& aTargets);
   virtual ~DisplayportSetListener();
   bool Register();
+  void DidRefresh() override;
 
  private:
   RefPtr<nsIWidget> mWidget;
+  RefPtr<PresShell> mPresShell;
   uint64_t mInputBlockId;
   nsTArray<ScrollableLayerGuid> mTargets;
-
-  static void OnPostRefresh(DisplayportSetListener* aListener,
-                            PresShell* aPresShell);
 };
 
 /* This class contains some helper methods that facilitate implementing the
