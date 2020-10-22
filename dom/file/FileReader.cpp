@@ -26,6 +26,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsError.h"
 #include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 #include "xpcpublic.h"
 #include "nsReadableUtils.h"
 

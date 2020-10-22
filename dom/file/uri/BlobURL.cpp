@@ -15,8 +15,6 @@
 
 using namespace mozilla::dom;
 
-static NS_DEFINE_CID(kHOSTOBJECTURICID, NS_HOSTOBJECTURI_CID);
-
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 

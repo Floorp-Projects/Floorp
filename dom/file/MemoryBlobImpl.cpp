@@ -7,7 +7,11 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SHA1.h"
+#include "nsMemory.h"
 #include "nsPrintfCString.h"
+#include "nsRFPService.h"
+#include "nsStringStream.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
