@@ -565,31 +565,6 @@ class SpiderMonkeyTests(MachCommandBase):
 
         return subprocess.call(check_cmd)
 
-    @Command('check-spidermonkey', category='testing',
-             description='Run SpiderMonkey tests (JavaScript engine).')
-    @CommandArgument('--valgrind', action='store_true',
-                     help='Run jit-test suite with valgrind flag')
-    def run_checkspidermonkey(self, valgrind=False):
-        print('Running jit-tests')
-        jittest_args = [
-            '--no-slow',
-            '--jitflags=all',
-        ]
-        if valgrind:
-            jittest_args.append('--valgrind')
-        jittest_result = self.run_jittests(shell=None, params=jittest_args)
-
-        print('running jstests')
-        jstest_result = self.run_jstests(shell=None, params=[])
-
-        print('running jsapi-tests')
-        jsapi_tests_result = self.run_jsapitests(test_name=None)
-
-        print('running check-js-msg-encoding')
-        check_js_msg_result = self.run_check_js_msg()
-
-        return jittest_result and jstest_result and jsapi_tests_result and check_js_msg_result
-
 
 def get_jsshell_parser():
     from jsshell.benchmark import get_parser
