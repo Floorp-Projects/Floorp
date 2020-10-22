@@ -16837,29 +16837,20 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     mozIStorageConnection& aConnection, const IndexMetadata& aIndexMetadata,
     const nsCString& aLocale) {
-  nsresult rv;
-
-  nsCString indexTable;
-  if (aIndexMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data");
-  } else {
-    indexTable.AssignLiteral("index_data");
-  }
+  const auto indexTable =
+      aIndexMetadata.unique() ? "unique_index_data"_ns : "index_data"_ns;
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsCString readQuery = "SELECT value, object_data_key FROM "_ns + indexTable +
-                        " WHERE index_id = :index_id"_ns;
-  nsCOMPtr<mozIStorageStatement> readStmt;
-  rv = aConnection.CreateStatement(readQuery, getter_AddRefs(readStmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  const nsCString readQuery = "SELECT value, object_data_key FROM "_ns +
+                              indexTable + " WHERE index_id = :index_id"_ns;
 
-  rv = readStmt->BindInt64ByIndex(0, aIndexMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& readStmt,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConnection,
+                                 CreateStatement, readQuery));
+
+  IDB_TRY(readStmt->BindInt64ByIndex(0, aIndexMetadata.id()));
 
   IDB_TRY(CollectWhileHasResult(
       *readStmt,
@@ -16905,26 +16896,19 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
   static constexpr auto metaQuery =
       "UPDATE object_store_index SET "
       "locale = :locale WHERE id = :id"_ns;
-  nsCOMPtr<mozIStorageStatement> metaStmt;
-  rv = aConnection.CreateStatement(metaQuery, getter_AddRefs(metaStmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
-  nsString locale;
-  CopyASCIItoUTF16(aLocale, locale);
-  rv = metaStmt->BindStringByIndex(0, locale);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& metaStmt,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConnection,
+                                 CreateStatement, metaQuery));
 
-  rv = metaStmt->BindInt64ByIndex(1, aIndexMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(metaStmt->BindStringByIndex(0, NS_ConvertASCIItoUTF16(aLocale)));
 
-  rv = metaStmt->Execute();
-  return rv;
+  IDB_TRY(metaStmt->BindInt64ByIndex(1, aIndexMetadata.id()));
+
+  IDB_TRY(metaStmt->Execute());
+
+  return NS_OK;
 }
 
 nsresult OpenDatabaseOp::BeginVersionChange() {
