@@ -25,7 +25,7 @@ add_task(async function() {
     client,
     resourceWatcher,
     targetList,
-  } = await initResourceWatcherAndTarget();
+  } = await initMultiProcessResourceWatcher();
 
   const expectedPlatformMessage = "expectedMessage";
 

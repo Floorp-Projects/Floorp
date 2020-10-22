@@ -114,11 +114,9 @@ async function testNetworkEventResourcesWithoutExistingResources() {
 
 async function testNetworkEventResources(options) {
   const tab = await addTab(TEST_URI);
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   const actualResourcesOnAvailable = {};
   const actualResourcesOnUpdated = {};
