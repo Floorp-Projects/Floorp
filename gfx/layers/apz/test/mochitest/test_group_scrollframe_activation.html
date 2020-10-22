@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
       window.onload = function() {
         runSubtestsSeriallyInFreshWindows(subtests)
-          .finally(SimpleTest.finish);
+          .then(SimpleTest.finish, SimpleTest.finishWithFailure);
       };
     }
   </script>
