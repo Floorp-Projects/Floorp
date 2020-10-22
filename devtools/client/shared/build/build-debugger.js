@@ -8,18 +8,10 @@ const Babel = require("./babel");
 const fs = require("fs");
 const _path = require("path");
 
-const EXCLUDED_FILES = {
-  "../assets/panel/debugger.properties": "devtools/shared/flags",
-  "devtools-connection": "devtools/shared/flags",
-  "chrome-remote-interface": "devtools/shared/flags",
-  "devtools-launchpad": "devtools/shared/flags",
-};
-
 const mappings = {
   "./source-editor": "devtools/client/shared/sourceeditor/editor",
   "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
   "./test-flag": "devtools/shared/flags",
-  "./fronts-device": "devtools/client/fronts/device",
   immutable: "devtools/client/shared/vendor/immutable",
   lodash: "devtools/client/shared/vendor/lodash",
   react: "devtools/client/shared/vendor/react",
@@ -35,7 +27,6 @@ const mappings = {
   "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
   "framework-actions": "devtools/client/framework/actions/index",
   "inspector-shared-utils": "devtools/client/inspector/shared/utils",
-  ...EXCLUDED_FILES,
 };
 
 const mappingValues = Object.values(mappings);
