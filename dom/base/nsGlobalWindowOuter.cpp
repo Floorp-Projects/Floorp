@@ -57,8 +57,6 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
-#include "mozilla/dom/WakeLock.h"
-#include "mozilla/dom/power/PowerManagerService.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
@@ -4742,26 +4740,6 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
       }
       mChromeFields.mFullscreenPresShell = nullptr;
     }
-  }
-
-  if (!mWakeLock && mFullscreen) {
-    RefPtr<power::PowerManagerService> pmService =
-        power::PowerManagerService::GetInstance();
-    if (!pmService) {
-      return;
-    }
-
-    // XXXkhuey using the inner here, do we need to do something if it changes?
-    ErrorResult rv;
-    mWakeLock = pmService->NewWakeLock(u"DOM_Fullscreen"_ns,
-                                       GetCurrentInnerWindow(), rv);
-    NS_WARNING_ASSERTION(!rv.Failed(), "Failed to lock the wakelock");
-    rv.SuppressException();
-  } else if (mWakeLock && !mFullscreen) {
-    ErrorResult rv;
-    mWakeLock->Unlock(rv);
-    mWakeLock = nullptr;
-    rv.SuppressException();
   }
 }
 
