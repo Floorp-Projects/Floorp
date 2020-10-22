@@ -136,8 +136,6 @@ class AudioContext final : public DOMEventTargetHelper,
                float aSampleRate = 0.0f);
   ~AudioContext();
 
-  nsresult Init();
-
  public:
   typedef uint64_t AudioContextId;
 

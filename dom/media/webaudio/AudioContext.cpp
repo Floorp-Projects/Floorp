@@ -174,8 +174,9 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
   const bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
-  mDestination = new AudioDestinationNode(this, aIsOffline, allowedToStart,
-                                          aNumberOfChannels, aLength);
+  mDestination =
+      new AudioDestinationNode(this, aIsOffline, aNumberOfChannels, aLength);
+  mDestination->Init();
   // If an AudioContext is not allowed to start, we would postpone its state
   // transition from `suspended` to `running` until sites explicitly call
   // AudioContext.resume() or AudioScheduledSourceNode.start().
@@ -217,17 +218,6 @@ void AudioContext::StartBlockedAudioContextIfAllowed() {
   } else {
     ReportBlocked();
   }
-}
-
-nsresult AudioContext::Init() {
-  if (!mIsOffline) {
-    nsresult rv = mDestination->CreateAudioChannelAgent();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
 }
 
 void AudioContext::DisconnectFromWindow() {
@@ -292,10 +282,6 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
 
   RefPtr<AudioContext> object =
       new AudioContext(window, false, 2, 0, sampleRate);
-  aRv = object->Init();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
 
   RegisterWeakMemoryReporter(object);
 
@@ -887,6 +873,7 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
   }
 
   mAudioContextState = aNewState;
+  Destination()->NotifyAudioContextStateChanged();
 }
 
 nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
@@ -1157,7 +1144,7 @@ void AudioContext::CloseInternal(void* aPromise,
   // this point, so we need extra null-checks.
   AudioNodeTrack* ds = DestinationTrack();
   if (ds && !mIsOffline) {
-    Destination()->DestroyAudioChannelAgent();
+    Destination()->Close();
 
     nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
     // If mSuspendCalled or mCloseCalled are true then we already suspended
