@@ -33,12 +33,30 @@ RenderBufferTextureHostSWGL::~RenderBufferTextureHostSWGL() {
   MOZ_COUNT_DTOR_INHERITED(RenderBufferTextureHostSWGL, RenderTextureHostSWGL);
 }
 
-size_t RenderBufferTextureHostSWGL::GetPlaneCount() {
+size_t RenderBufferTextureHostSWGL::GetPlaneCount() const {
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor:
       return 3;
     default:
       return 1;
+  }
+}
+
+gfx::SurfaceFormat RenderBufferTextureHostSWGL::GetFormat() const {
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor:
+      return gfx::SurfaceFormat::YUV;
+    default:
+      return mDescriptor.get_RGBDescriptor().format();
+  }
+}
+
+gfx::ColorDepth RenderBufferTextureHostSWGL::GetColorDepth() const {
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor:
+      return mDescriptor.get_YCbCrDescriptor().colorDepth();
+    default:
+      return gfx::ColorDepth::COLOR_8;
   }
 }
 
@@ -56,7 +74,6 @@ bool RenderBufferTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor: {
       const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-      aPlaneInfo.mFormat = gfx::SurfaceFormat::YUV;
       switch (aChannelIndex) {
         case 0:
           aPlaneInfo.mData =
@@ -81,7 +98,6 @@ bool RenderBufferTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
     }
     default: {
       const layers::RGBDescriptor& desc = mDescriptor.get_RGBDescriptor();
-      aPlaneInfo.mFormat = desc.format();
       aPlaneInfo.mData = mBuffer;
       aPlaneInfo.mStride = layers::ImageDataSerializer::GetRGBStride(desc);
       aPlaneInfo.mSize = desc.size();

@@ -24,7 +24,15 @@ RenderSharedSurfaceTextureHostSWGL::~RenderSharedSurfaceTextureHostSWGL() {
                            RenderTextureHostSWGL);
 }
 
-size_t RenderSharedSurfaceTextureHostSWGL::GetPlaneCount() { return 1; }
+size_t RenderSharedSurfaceTextureHostSWGL::GetPlaneCount() const { return 1; }
+
+gfx::SurfaceFormat RenderSharedSurfaceTextureHostSWGL::GetFormat() const {
+  return mSurface->GetFormat();
+}
+
+gfx::ColorDepth RenderSharedSurfaceTextureHostSWGL::GetColorDepth() const {
+  return gfx::ColorDepth::COLOR_8;
+}
 
 bool RenderSharedSurfaceTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
                                                   PlaneInfo& aPlaneInfo) {
@@ -35,7 +43,6 @@ bool RenderSharedSurfaceTextureHostSWGL::MapPlane(uint8_t aChannelIndex,
   aPlaneInfo.mData = mMap.mData;
   aPlaneInfo.mStride = mMap.mStride;
   aPlaneInfo.mSize = mSurface->GetSize();
-  aPlaneInfo.mFormat = mSurface->GetFormat();
   return true;
 }
 

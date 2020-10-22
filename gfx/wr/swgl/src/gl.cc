@@ -135,6 +135,8 @@ static int bytes_for_internal_format(GLenum internal_format) {
       return 4;
     case GL_RGB_RAW_422_APPLE:
       return 2;
+    case GL_R16:
+      return 2;
     default:
       debugf("internal format: %x\n", internal_format);
       assert(0);
@@ -156,6 +158,8 @@ static TextureFormat gl_format_to_texture_format(int type) {
       return TextureFormat::R8;
     case GL_RG8:
       return TextureFormat::RG8;
+    case GL_R16:
+      return TextureFormat::R16;
     case GL_RGB_RAW_422_APPLE:
       return TextureFormat::YUV422;
     default:
@@ -1641,11 +1645,64 @@ void TexStorage3D(GLenum target, GLint levels, GLenum internal_format,
   t.allocate(changed);
 }
 
-static void set_tex_storage(Texture& t, GLenum internal_format, GLsizei width,
+}  // extern "C"
+
+static bool format_requires_conversion(GLenum external_format,
+                                       GLenum internal_format) {
+  switch (external_format) {
+    case GL_RGBA:
+      return internal_format == GL_RGBA8;
+    default:
+      return false;
+  }
+}
+
+static inline void copy_bgra8_to_rgba8(uint32_t* dest, const uint32_t* src,
+                                       int width) {
+  for (; width >= 4; width -= 4, dest += 4, src += 4) {
+    U32 p = unaligned_load<U32>(src);
+    U32 rb = p & 0x00FF00FF;
+    unaligned_store(dest, (p & 0xFF00FF00) | (rb << 16) | (rb >> 16));
+  }
+  for (; width > 0; width--, dest++, src++) {
+    uint32_t p = *src;
+    uint32_t rb = p & 0x00FF00FF;
+    *dest = (p & 0xFF00FF00) | (rb << 16) | (rb >> 16);
+  }
+}
+
+static void convert_copy(GLenum external_format, GLenum internal_format,
+                         uint8_t* dst_buf, size_t dst_stride,
+                         const uint8_t* src_buf, size_t src_stride,
+                         size_t width, size_t height) {
+  switch (external_format) {
+    case GL_RGBA:
+      if (internal_format == GL_RGBA8) {
+        for (; height; height--) {
+          copy_bgra8_to_rgba8((uint32_t*)dst_buf, (const uint32_t*)src_buf,
+                              width);
+          dst_buf += dst_stride;
+          src_buf += src_stride;
+        }
+        return;
+      }
+      break;
+    default:
+      break;
+  }
+  size_t row_bytes = width * bytes_for_internal_format(internal_format);
+  for (; height; height--) {
+    memcpy(dst_buf, src_buf, row_bytes);
+    dst_buf += dst_stride;
+    src_buf += src_stride;
+  }
+}
+
+static void set_tex_storage(Texture& t, GLenum external_format, GLsizei width,
                             GLsizei height, void* buf = nullptr,
                             GLsizei stride = 0, GLsizei min_width = 0,
                             GLsizei min_height = 0) {
-  internal_format = remap_internal_format(internal_format);
+  GLenum internal_format = remap_internal_format(external_format);
   bool changed = false;
   if (t.width != width || t.height != height || t.depth != 0 ||
       t.internal_format != internal_format) {
@@ -1657,7 +1714,11 @@ static void set_tex_storage(Texture& t, GLenum internal_format, GLsizei width,
   }
   // If we are changed from an internally managed buffer to an externally
   // supplied one or vice versa, ensure that we clean up old buffer state.
-  bool should_free = buf == nullptr;
+  // However, if we have to convert the data from a non-native format, then
+  // always treat it as internally managed since we will need to copy to an
+  // internally managed native format buffer.
+  bool should_free = buf == nullptr || format_requires_conversion(
+                                           external_format, internal_format);
   if (t.should_free() != should_free) {
     changed = true;
     t.cleanup();
@@ -1669,7 +1730,14 @@ static void set_tex_storage(Texture& t, GLenum internal_format, GLsizei width,
   }
   t.disable_delayed_clear();
   t.allocate(changed, min_width, min_height);
+  // If we have a buffer that needs format conversion, then do that now.
+  if (buf && should_free) {
+    convert_copy(external_format, internal_format, (uint8_t*)t.buf, t.stride(),
+                 (const uint8_t*)buf, stride, width, height);
+  }
 }
+
+extern "C" {
 
 void TexStorage2D(GLenum target, GLint levels, GLenum internal_format,
                   GLsizei width, GLsizei height) {
@@ -1693,24 +1761,12 @@ GLenum internal_format_for_data(GLenum format, GLenum ty) {
   } else if (format == GL_RGB_422_APPLE &&
              ty == GL_UNSIGNED_SHORT_8_8_REV_APPLE) {
     return GL_RGB_RAW_422_APPLE;
+  } else if (format == GL_RED && ty == GL_UNSIGNED_SHORT) {
+    return GL_R16;
   } else {
     debugf("unknown internal format for format %x, type %x\n", format, ty);
     assert(false);
     return 0;
-  }
-}
-
-static inline void copy_bgra8_to_rgba8(uint32_t* dest, uint32_t* src,
-                                       int width) {
-  for (; width >= 4; width -= 4, dest += 4, src += 4) {
-    U32 p = unaligned_load<U32>(src);
-    U32 rb = p & 0x00FF00FF;
-    unaligned_store(dest, (p & 0xFF00FF00) | (rb << 16) | (rb >> 16));
-  }
-  for (; width > 0; width--, dest++, src++) {
-    uint32_t p = *src;
-    uint32_t rb = p & 0x00FF00FF;
-    *dest = (p & 0xFF00FF00) | (rb << 16) | (rb >> 16);
   }
 }
 
@@ -1758,20 +1814,13 @@ void TexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   GLsizei row_length =
       ctx->unpack_row_length != 0 ? ctx->unpack_row_length : width;
   assert(t.internal_format == internal_format_for_data(format, ty));
-  int bpp = t.bpp();
-  if (!bpp || !t.buf) return;
-  size_t dest_stride = t.stride();
-  char* dest = t.sample_ptr(xoffset, yoffset);
-  char* src = (char*)data;
-  for (int y = 0; y < height; y++) {
-    if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
-      copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
-    } else {
-      memcpy(dest, src, width * bpp);
-    }
-    dest += dest_stride;
-    src += row_length * bpp;
-  }
+  int src_bpp = format_requires_conversion(format, t.internal_format)
+                    ? bytes_for_internal_format(format)
+                    : t.bpp();
+  if (!src_bpp || !t.buf) return;
+  convert_copy(format, t.internal_format,
+               (uint8_t*)t.sample_ptr(xoffset, yoffset), t.stride(),
+               (const uint8_t*)data, row_length * src_bpp, width, height);
 }
 
 void TexImage2D(GLenum target, GLint level, GLint internal_format,
@@ -1800,30 +1849,22 @@ void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
   assert(ctx->unpack_row_length == 0 || ctx->unpack_row_length >= width);
   GLsizei row_length =
       ctx->unpack_row_length != 0 ? ctx->unpack_row_length : width;
-  if (format == GL_BGRA) {
-    assert(ty == GL_UNSIGNED_BYTE || ty == GL_UNSIGNED_INT_8_8_8_8_REV);
-    assert(t.internal_format == GL_RGBA8);
-  } else {
-    assert(t.internal_format == internal_format_for_data(format, ty));
-  }
-  int bpp = t.bpp();
-  if (!bpp || !t.buf) return;
-  char* src = (char*)data;
+  assert(t.internal_format == internal_format_for_data(format, ty));
+  int src_bpp = format_requires_conversion(format, t.internal_format)
+                    ? bytes_for_internal_format(format)
+                    : t.bpp();
+  if (!src_bpp || !t.buf) return;
+  const uint8_t* src = (const uint8_t*)data;
   assert(xoffset + width <= t.width);
   assert(yoffset + height <= t.height);
   assert(zoffset + depth <= t.depth);
   size_t dest_stride = t.stride();
+  size_t src_stride = row_length * src_bpp;
   for (int z = 0; z < depth; z++) {
-    char* dest = t.sample_ptr(xoffset, yoffset, zoffset + z);
-    for (int y = 0; y < height; y++) {
-      if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
-        copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
-      } else {
-        memcpy(dest, src, width * bpp);
-      }
-      dest += dest_stride;
-      src += row_length * bpp;
-    }
+    convert_copy(format, t.internal_format,
+                 (uint8_t*)t.sample_ptr(xoffset, yoffset, zoffset + z),
+                 dest_stride, src, src_stride, width, height);
+    src += src_stride * height;
   }
 }
 
@@ -2489,19 +2530,12 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
            internal_format_for_data(format, type));
     assert(false);
   }
-  int bpp = t.bpp();
-  char* dest = (char*)data;
-  size_t src_stride = t.stride();
-  char* src = t.sample_ptr(x, y, fb->layer);
-  for (; height > 0; height--) {
-    if (t.internal_format == GL_RGBA8 && format != GL_BGRA) {
-      copy_bgra8_to_rgba8((uint32_t*)dest, (uint32_t*)src, width);
-    } else {
-      memcpy(dest, src, width * bpp);
-    }
-    dest += width * bpp;
-    src += src_stride;
-  }
+  // Only support readback conversions that are reversible
+  assert(!format_requires_conversion(format, t.internal_format) ||
+         bytes_for_internal_format(format) == t.bpp());
+  convert_copy(format, t.internal_format, (uint8_t*)data, width * t.bpp(),
+               (const uint8_t*)t.sample_ptr(x, y, fb->layer), t.stride(), width,
+               height);
 }
 
 void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,

@@ -128,9 +128,17 @@ void RenderMacIOSurfaceTextureHost::DeleteTextureHandle() {
   }
 }
 
-size_t RenderMacIOSurfaceTextureHost::GetPlaneCount() {
+size_t RenderMacIOSurfaceTextureHost::GetPlaneCount() const {
   size_t planeCount = mSurface->GetPlaneCount();
   return planeCount > 0 ? planeCount : 1;
+}
+
+gfx::SurfaceFormat RenderMacIOSurfaceTextureHost::GetFormat() const {
+  return mSurface->GetFormat();
+}
+
+gfx::ColorDepth RenderMacIOSurfaceTextureHost::GetColorDepth() const {
+  return gfx::ColorDepth::COLOR_8;
 }
 
 gfx::YUVColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace() const {
@@ -142,7 +150,6 @@ bool RenderMacIOSurfaceTextureHost::MapPlane(uint8_t aChannelIndex,
   if (!aChannelIndex) {
     mSurface->Lock();
   }
-  aPlaneInfo.mFormat = mSurface->GetFormat();
   aPlaneInfo.mData = mSurface->GetBaseAddressOfPlane(aChannelIndex);
   aPlaneInfo.mStride = mSurface->GetBytesPerRow(aChannelIndex);
   aPlaneInfo.mSize =
