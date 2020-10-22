@@ -224,6 +224,11 @@ nsViewSourceChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetSupportsHTTP3(bool* aSupportsHTTP3) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::IsPending(bool* result) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 

@@ -213,6 +213,7 @@ WaitForHttp3Listener.prototype.onStopRequest = function testOnStopRequest(
     run_next_test();
   } else {
     dump("poll later for alt svc mapping\n");
+    Assert.ok(request.supportsHTTP3);
     do_test_pending();
     do_timeout(500, () => {
       doTest(this.uri, this.expectedRoute, this.h3AltSvc);
