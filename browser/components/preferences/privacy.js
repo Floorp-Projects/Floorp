@@ -101,6 +101,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gStatePartitioningMVPEnabled",
+  "browser.contentblocking.state-partitioning.mvp.ui.enabled",
+  false
+);
+
 Preferences.addAll([
   // Content blocking / Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
@@ -269,7 +276,19 @@ function dataCollectionCheckboxHandler({
 }
 
 // Sets the "Learn how" SUMO link in the Strict/Custom options of Content Blocking.
-function addCustomBlockingLearnMore() {
+function setUpContentBlockingWarnings() {
+  if (gStatePartitioningMVPEnabled) {
+    let warnings = document.querySelectorAll(
+      ".content-blocking-warning-description"
+    );
+    for (let warning of warnings) {
+      document.l10n.setAttributes(
+        warning,
+        "content-blocking-and-isolating-etp-warning-description-2"
+      );
+    }
+  }
+
   let links = document.querySelectorAll(".contentBlockWarningLink");
   let contentBlockingWarningUrl =
     Services.urlFormatter.formatURLPref("app.support.baseURL") +
@@ -893,13 +912,22 @@ var gPrivacyPane = {
       let contentBlockOptionSocialMedia = document.getElementById(
         "blockCookiesSocialMedia"
       );
+      let l10nID = gStatePartitioningMVPEnabled
+        ? "sitedata-option-block-cross-site-tracking-cookies-including-social-media"
+        : "sitedata-option-block-cross-site-and-social-media-trackers";
+      document.l10n.setAttributes(contentBlockOptionSocialMedia, l10nID);
+    }
+    if (gStatePartitioningMVPEnabled) {
+      let contentBlockOptionIsolate = document.getElementById(
+        "isolateCookiesSocialMedia"
+      );
       document.l10n.setAttributes(
-        contentBlockOptionSocialMedia,
-        "sitedata-option-block-cross-site-and-social-media-trackers"
+        contentBlockOptionIsolate,
+        "sitedata-option-block-cross-site-cookies-including-social-media"
       );
     }
 
-    addCustomBlockingLearnMore();
+    setUpContentBlockingWarnings();
   },
 
   populateCategoryContents() {
@@ -984,6 +1012,9 @@ var gPrivacyPane = {
       document.querySelector(selector + " .all-cookies-option").hidden = true;
       document.querySelector(
         selector + " .unvisited-cookies-option"
+      ).hidden = true;
+      document.querySelector(
+        selector + " .cross-site-cookies-option"
       ).hidden = true;
       document.querySelector(
         selector + " .third-party-tracking-cookies-option"
@@ -1077,9 +1108,10 @@ var gPrivacyPane = {
             ).hidden = false;
             break;
           case "cookieBehavior5":
-            document.querySelector(
-              selector + " .third-party-tracking-cookies-plus-isolate-option"
-            ).hidden = false;
+            let cookieSelector = gStatePartitioningMVPEnabled
+              ? " .cross-site-cookies-option"
+              : " .third-party-tracking-cookies-plus-isolate-option";
+            document.querySelector(selector + cookieSelector).hidden = false;
             break;
         }
       }
