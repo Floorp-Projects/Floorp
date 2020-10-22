@@ -6755,7 +6755,7 @@ class DeserializeIndexValueHelper final : public Runnable {
         mUpdateInfoArray(aUpdateInfoArray),
         mStatus(NS_ERROR_FAILURE) {}
 
-  void DispatchAndWait(ErrorResult& aRv) {
+  nsresult DispatchAndWait() {
     // FIXME(Bug 1637530) Re-enable optimization using a non-system-principaled
     // JS context
 #if 0
@@ -6768,10 +6768,11 @@ class DeserializeIndexValueHelper final : public Runnable {
       JS::Rooted<JS::Value> value(jsapi.cx());
       value.setUndefined();
 
+      ErrorResult rv;
       IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
                                             mLocale, jsapi.cx(), value,
-                                            &mUpdateInfoArray, &aRv);
-      return;
+                                            &mUpdateInfoArray, &rv);
+      return rv.Failed() ? rv.StealNSResult() : NS_OK;
     }
 #endif
 
@@ -6782,15 +6783,10 @@ class DeserializeIndexValueHelper final : public Runnable {
     MonitorAutoLock lock(mMonitor);
 
     RefPtr<Runnable> self = this;
-    const nsresult rv =
-        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
+    IDB_TRY(SchedulerGroup::Dispatch(TaskCategory::Other, self.forget()));
 
     lock.Wait();
-    aRv = mStatus;
+    return mStatus;
   }
 
   NS_IMETHOD
@@ -6870,16 +6866,20 @@ class DeserializeIndexValueHelper final : public Runnable {
   nsresult mStatus;
 };
 
-void DeserializeIndexValueToUpdateInfos(
+auto DeserializeIndexValueToUpdateInfos(
     int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
-    const nsCString& aLocale, StructuredCloneReadInfoParent& aCloneReadInfo,
-    nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv) {
+    const nsCString& aLocale, StructuredCloneReadInfoParent& aCloneReadInfo) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  const RefPtr<DeserializeIndexValueHelper> helper =
-      new DeserializeIndexValueHelper(aIndexID, aKeyPath, aMultiEntry, aLocale,
-                                      aCloneReadInfo, aUpdateInfoArray);
-  helper->DispatchAndWait(aRv);
+  using ArrayType = AutoTArray<IndexUpdateInfo, 32>;
+  using ResultType = Result<ArrayType, nsresult>;
+
+  ArrayType updateInfoArray;
+  const auto helper = MakeRefPtr<DeserializeIndexValueHelper>(
+      aIndexID, aKeyPath, aMultiEntry, aLocale, aCloneReadInfo,
+      updateInfoArray);
+  const nsresult rv = helper->DispatchAndWait();
+  return NS_FAILED(rv) ? Err(rv) : ResultType{std::move(updateInfoArray)};
 }
 
 }  // namespace
@@ -19166,15 +19166,11 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   const IndexMetadata& metadata = mOp->mMetadata;
   const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
 
-  AutoTArray<IndexUpdateInfo, 32> updateInfos;
-  ErrorResult errorResult;
   // XXX does this really need a non-const cloneInfo?
-  DeserializeIndexValueToUpdateInfos(metadata.id(), metadata.keyPath(),
-                                     metadata.multiEntry(), metadata.locale(),
-                                     cloneInfo, updateInfos, errorResult);
-  if (NS_WARN_IF(errorResult.Failed())) {
-    return errorResult.StealNSResult();
-  }
+  IDB_TRY_INSPECT(const auto& updateInfos,
+                  DeserializeIndexValueToUpdateInfos(
+                      metadata.id(), metadata.keyPath(), metadata.multiEntry(),
+                      metadata.locale(), cloneInfo));
 
   if (updateInfos.IsEmpty()) {
     // XXX See if we can do this without copying...
@@ -19182,11 +19178,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     nsCOMPtr<nsIVariant> unmodifiedValue;
 
     // No changes needed, just return the original value.
-    int32_t valueType;
-    nsresult rv = aValues->GetTypeOfIndex(1, &valueType);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const int32_t& valueType,
+                    MOZ_TO_RESULT_INVOKE(aValues, GetTypeOfIndex, 1));
 
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
                valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
@@ -19201,12 +19194,9 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
     const uint8_t* blobData;
     uint32_t blobDataLength;
-    rv = aValues->GetSharedBlob(1, &blobDataLength, &blobData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aValues->GetSharedBlob(1, &blobDataLength, &blobData));
 
-    std::pair<uint8_t*, int> copiedBlobDataPair(
+    const std::pair<uint8_t*, int> copiedBlobDataPair(
         static_cast<uint8_t*>(malloc(blobDataLength)), blobDataLength);
 
     if (!copiedBlobDataPair.first) {
@@ -19223,10 +19213,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 
   Key key;
-  nsresult rv = key.SetFromValueArray(aValues, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(key.SetFromValueArray(aValues, 0));
 
   IDB_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 1));
 
@@ -19234,11 +19221,9 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
   const uint32_t updateInfoCount = updateInfos.Length();
 
-  if (NS_WARN_IF(!indexValues.SetCapacity(
-          indexValues.Length() + updateInfoCount, fallible))) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  IDB_TRY(OkIf(indexValues.SetCapacity(indexValues.Length() + updateInfoCount,
+                                       fallible)),
+          NS_ERROR_OUT_OF_MEMORY, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   // First construct the full list to update the index_data_values row.
   for (const IndexUpdateInfo& info : updateInfos) {
@@ -19277,10 +19262,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     }
   }
 
-  rv = InsertIndexTableRows(mConnection, objectStoreId, key, indexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(InsertIndexTableRows(mConnection, objectStoreId, key, indexValues));
 
   value = new storage::AdoptedBlobVariant(
       std::pair(indexValuesBlob.release(), indexValuesBlobLength));
