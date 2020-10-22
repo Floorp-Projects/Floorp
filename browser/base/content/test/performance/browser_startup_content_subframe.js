@@ -47,7 +47,6 @@ const known_scripts = {
 
     // Browser front-end
     "resource:///actors/PageStyleChild.jsm",
-    "resource://gre/actors/AutoCompleteChild.jsm",
 
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.jsm", // bug 1470339
