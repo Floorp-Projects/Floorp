@@ -2082,6 +2082,10 @@ EnvironmentCache.prototype = {
       return;
     }
 
+    if (ObjectUtils.deepEqual(this._currentEnvironment, oldEnvironment)) {
+      Services.telemetry.scalarAdd("telemetry.environment_didnt_change", 1);
+    }
+
     for (let [name, listener] of this._changeListeners) {
       try {
         this._log.debug("_onEnvironmentChange - calling " + name);
