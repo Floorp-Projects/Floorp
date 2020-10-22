@@ -93,7 +93,7 @@
       checkFixedPosDisplayport();
     }
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(8.0);
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

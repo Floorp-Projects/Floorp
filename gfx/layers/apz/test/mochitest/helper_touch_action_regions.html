@@ -271,7 +271,7 @@ if (SpecialPowers.isMainProcess()) {
 } else {
   waitUntilApzStable()
   .then(runContinuation(test))
-  .then(subtestDone);
+  .then(subtestDone, subtestFailed);
 }
 
   </script>

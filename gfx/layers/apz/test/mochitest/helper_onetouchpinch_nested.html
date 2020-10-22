@@ -78,7 +78,7 @@ function* test(testDriver) {
 
 waitUntilApzStable()
 .then(runContinuation(test))
-.then(subtestDone);
+.then(subtestDone, subtestFailed);
 
   </script>
   <style>
