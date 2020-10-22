@@ -98,6 +98,11 @@ interface nsIAboutModule : nsISupports
      * registered to deal with.
      */
     unsigned long getURIFlags(in nsIURI aURI);
+
+    /**
+     * A method to get the chrome URI that corresponds to a given about URI.
+     */
+    nsIURI getChromeURI(in nsIURI aURI);
 };
 
 %{C++

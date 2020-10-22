@@ -39,6 +39,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["File", "FileReader"]);
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 const BROWSER_DOCUMENT_URL = AppConstants.BROWSER_CHROME_URL;
+const ABOUT_CONTRACT = "@mozilla.org/network/protocol/about;1?what=";
 
 let env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
@@ -91,6 +92,7 @@ var Policies = {
     onBeforeAddons(manager) {
       if (Cu.isInAutomation || isXpcshell) {
         console.log("_cleanup from onBeforeAddons");
+        clearBlockedAboutPages();
       }
     },
     onProfileAfterChange(manager) {
@@ -2315,31 +2317,29 @@ function installAddonFromURL(url, extensionID, addon) {
   });
 }
 
-let gBlockedChromePages = [];
+let gBlockedAboutPages = [];
+
+function clearBlockedAboutPages() {
+  gBlockedAboutPages = [];
+}
 
 function blockAboutPage(manager, feature, neededOnContentProcess = false) {
-  if (!gBlockedChromePages.length) {
-    addChromeURLBlocker();
+  addChromeURLBlocker();
+  gBlockedAboutPages.push(feature);
+
+  try {
+    let aboutModule = Cc[ABOUT_CONTRACT + feature.split(":")[1]].getService(
+      Ci.nsIAboutModule
+    );
+    let chromeURL = aboutModule.getChromeURI(Services.io.newURI(feature)).spec;
+    gBlockedAboutPages.push(chromeURL);
+  } catch (e) {
+    // Some about pages don't have chrome URLS (compat)
   }
-  manager.disallowFeature(feature, neededOnContentProcess);
-  let splitURL = Services.io
-    .newChannelFromURI(
-      Services.io.newURI(feature),
-      null,
-      Services.scriptSecurityManager.getSystemPrincipal(),
-      null,
-      0,
-      Ci.nsIContentPolicy.TYPE_OTHER
-    )
-    .URI.spec.split("/");
-  // about:debugging uses index.html for a filename, so we need to rely
-  // on more than just the filename.
-  let fileName =
-    splitURL[splitURL.length - 2] + "/" + splitURL[splitURL.length - 1];
-  gBlockedChromePages.push(fileName);
+
   if (feature == "about:config") {
     // Hide old page until it is removed
-    gBlockedChromePages.push("config.xhtml");
+    gBlockedAboutPages.push("chrome://global/content/config.xhtml");
   }
 }
 
@@ -2347,15 +2347,19 @@ let ChromeURLBlockPolicy = {
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let contentType = loadInfo.externalContentPolicyType;
     if (
-      contentLocation.scheme == "chrome" &&
-      contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT &&
-      loadInfo.loadingContext &&
-      loadInfo.loadingContext.baseURI == AppConstants.BROWSER_CHROME_URL &&
-      gBlockedChromePages.some(function(fileName) {
-        return contentLocation.filePath.endsWith(fileName);
+      (contentLocation.scheme != "chrome" &&
+        contentLocation.scheme != "about") ||
+      (contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT &&
+        contentType != Ci.nsIContentPolicy.TYPE_SUBDOCUMENT)
+    ) {
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
+    if (
+      gBlockedAboutPages.some(function(aboutPage) {
+        return contentLocation.spec.startsWith(aboutPage);
       })
     ) {
-      return Ci.nsIContentPolicy.REJECT_REQUEST;
+      return Ci.nsIContentPolicy.REJECT_POLICY;
     }
     return Ci.nsIContentPolicy.ACCEPT;
   },
@@ -2372,6 +2376,10 @@ let ChromeURLBlockPolicy = {
 };
 
 function addChromeURLBlocker() {
+  if (Cc[ChromeURLBlockPolicy.contractID]) {
+    return;
+  }
+
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(
     ChromeURLBlockPolicy.classID,
