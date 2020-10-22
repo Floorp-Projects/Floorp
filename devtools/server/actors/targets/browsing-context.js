@@ -690,6 +690,8 @@ const browsingContextTargetPrototype = {
     // Save references to the original document we attached to
     this._originalWindow = this.window;
 
+    this._docShellsObserved = false;
+
     // Ensure replying to attach() request first
     // before notifying about new docshells.
     DevToolsUtils.executeSoon(() => this._watchDocshells());
@@ -698,15 +700,40 @@ const browsingContextTargetPrototype = {
   },
 
   _watchDocshells() {
+    // If for some unexpected reason, the actor is immediately destroyed,
+    // avoid registering leaking observer listener.
+    if (this.exited) {
+      return;
+    }
+
     // In child processes, we watch all docshells living in the process.
     Services.obs.addObserver(this, "webnavigation-create");
     Services.obs.addObserver(this, "webnavigation-destroy");
+    this._docShellsObserved = true;
 
     // We watch for all child docshells under the current document,
     this._progressListener.watch(this.docShell);
 
     // And list all already existing ones.
     this._updateChildDocShells();
+  },
+
+  _unwatchDocshells() {
+    if (this._progressListener) {
+      this._progressListener.destroy();
+      this._progressListener = null;
+      this._originalWindow = null;
+    }
+
+    // Removes the observers being set in _watchDocshells, but only
+    // if _watchDocshells has been called. The target actor may be immediately destroyed
+    // and doesn't have time to register them.
+    // (Calling removeObserver without having called addObserver throws)
+    if (this._docShellsObserved) {
+      Services.obs.removeObserver(this, "webnavigation-create");
+      Services.obs.removeObserver(this, "webnavigation-destroy");
+      this._docShellsObserved = true;
+    }
   },
 
   _unwatchDocShell(docShell) {
@@ -1033,15 +1060,7 @@ const browsingContextTargetPrototype = {
       this._unwatchDocShell(this.docShell);
       this._restoreDocumentSettings();
     }
-    if (this._progressListener) {
-      this._progressListener.destroy();
-      this._progressListener = null;
-      this._originalWindow = null;
-
-      // Removes the observers being set in _watchDocShells
-      Services.obs.removeObserver(this, "webnavigation-create");
-      Services.obs.removeObserver(this, "webnavigation-destroy");
-    }
+    this._unwatchDocshells();
 
     this._destroyThreadActor();
 
