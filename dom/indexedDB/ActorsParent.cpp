@@ -20732,34 +20732,30 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
                       "WHERE object_store_id = :"_ns +
                       kStmtParamNameObjectStoreId + keyRangeClause));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                      mParams.objectStoreId());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                mParams.objectStoreId()));
 
   if (mParams.optionalKeyRange().isSome()) {
-    rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt));
   }
 
   IDB_TRY_INSPECT(const bool& hasResult,
                   MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
-  if (NS_WARN_IF(!hasResult)) {
+  IDB_TRY(OkIf(hasResult), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
-  int64_t count = stmt->AsInt64(0);
-  if (NS_WARN_IF(count < 0)) {
+  const int64_t count = stmt->AsInt64(0);
+  IDB_TRY(OkIf(count >= 0), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
   mResponse.count() = count;
 
