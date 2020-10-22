@@ -52,7 +52,7 @@ hw-g5-view-fenix:
             --android-activity org.mozilla.fenix.IntentReceiverActivity
             --android-clear-logcat
             --android-capture-logcat logcat
-            --perfherder-metrics processLaunchToNavStart
+            --perfherder-metrics name:processLaunchToNavStart,shouldAlert:True
             --android-install-apk fenix_nightlysim_multicommit_armeabi_v7a
             --hooks testing/performance/hooks_android_view.py
             --perfherder
@@ -79,7 +79,7 @@ hw-p2-view-fenix:
             --flavor mobile-browser
             --android
             --android-app-name org.mozilla.fenix
-            --perfherder-metrics processLaunchToNavStart
+            --perfherder-metrics name:processLaunchToNavStart,shouldAlert:True
             --android-install-apk fenix_nightlysim_multicommit_arm64_v8a
             --android-activity org.mozilla.fenix.IntentReceiverActivity
             --android-clear-logcat
