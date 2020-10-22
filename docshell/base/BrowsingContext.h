@@ -174,7 +174,9 @@ class WindowProxyHolder;
    * browsing contexts created as a descendant of this one.  Valid only for  \
    * top BCs. */                                                             \
   FIELD(AuthorStyleDisabledDefault, bool)                                    \
-  FIELD(DisplayMode, mozilla::dom::DisplayMode)
+  FIELD(DisplayMode, mozilla::dom::DisplayMode)                              \
+  /* True if the top level browsing context owns a main media controller */  \
+  FIELD(HasMainMediaController, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -339,6 +341,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // Check that this browsing context is targetable for navigations (i.e. that
   // it is neither closed, cached, nor discarded).
   bool IsTargetable();
+
+  // True if this browsing context is inactive and is able to be suspended.
+  bool InactiveForSuspend() const;
 
   const nsString& Name() const { return GetName(); }
   void GetName(nsAString& aName) { aName = GetName(); }
@@ -890,6 +895,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_PendingInitialization>, bool aNewValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_HasMainMediaController>, bool aNewValue,
+              ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
