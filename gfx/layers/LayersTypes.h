@@ -65,6 +65,8 @@ struct LayersId {
 
   bool operator!=(const LayersId& aOther) const { return !(*this == aOther); }
 
+  friend std::ostream& operator<<(std::ostream& aStream, const LayersId& aId);
+
   // Helper struct that allow this class to be used as a key in
   // std::unordered_map like so:
   //   std::unordered_map<LayersId, ValueType, LayersId::HashFn> myMap;
