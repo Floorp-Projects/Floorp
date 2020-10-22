@@ -3448,11 +3448,9 @@ static MOZ_MUST_USE bool DisassembleScript(JSContext* cx, HandleScript script,
         RootedFunction fun(cx, &obj->as<JSFunction>());
         if (fun->isInterpreted()) {
           RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-          if (script) {
-            if (!DisassembleScript(cx, script, fun, lines, recursive,
-                                   sourceNotes, gcThings, sp)) {
-              return false;
-            }
+          if (!script || !DisassembleScript(cx, script, fun, lines, recursive,
+                                            sourceNotes, gcThings, sp)) {
+            return false;
           }
         } else {
           if (!sp->put("[native code]\n")) {
