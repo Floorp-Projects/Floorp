@@ -61,7 +61,7 @@ void AbortController::Abort() {
   mAborted = true;
 
   if (mSignal) {
-    mSignal->Abort();
+    mSignal->SignalAbort();
   }
 }
 

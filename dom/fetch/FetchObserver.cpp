@@ -43,7 +43,7 @@ JSObject* FetchObserver::WrapObject(JSContext* aCx,
 
 FetchState FetchObserver::State() const { return mState; }
 
-void FetchObserver::Abort() { SetState(FetchState::Aborted); }
+void FetchObserver::RunAbortAlgorithm() { SetState(FetchState::Aborted); }
 
 void FetchObserver::SetState(FetchState aState) {
   MOZ_ASSERT(mState < aState);

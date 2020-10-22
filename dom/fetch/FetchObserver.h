@@ -30,7 +30,8 @@ class FetchObserver final : public DOMEventTargetHelper, public AbortFollower {
   IMPL_EVENT_HANDLER(requestprogress);
   IMPL_EVENT_HANDLER(responseprogress);
 
-  void Abort() override;
+  // AbortFollower
+  void RunAbortAlgorithm() override;
 
   void SetState(FetchState aState);
 

@@ -826,7 +826,9 @@ void WebAuthnManager::RequestAborted(const uint64_t& aTransactionId,
   }
 }
 
-void WebAuthnManager::Abort() { CancelTransaction(NS_ERROR_DOM_ABORT_ERR); }
+void WebAuthnManager::RunAbortAlgorithm() {
+  CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
+}
 
 }  // namespace dom
 }  // namespace mozilla
