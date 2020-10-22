@@ -8,17 +8,45 @@
 <body>
 <div style="height: 8000px;">ABC</div>
 <input id="input1">
+<!-- Leave additional room below the element so it can be scrolled to the center -->
+<div style="height: 1000px;">ABC</div>
 <script type="application/javascript">
-function test() {
+async function test() {
   is(0, window.scrollY, "scroll position starts at zero");
   input1.focus();
   isnot(0, window.scrollY, "scroll position isn't top");
   window.scrollTo(0, 0);
   is(0, window.scrollY, "scroll position is top");
 
-  SpecialPowers.getDOMWindowUtils(window).zoomToFocusedInput();
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.zoomToFocusedInput();
   isnot(0, window.scrollY, "scroll position isn't top");
+
+  // Test for bug 1669588: check that the zoom animation did not get
+  // cancelled by a main thread scroll position update triggered by
+  // the ScrollContentIntoView() operation performed by zoomToFocusedInput().
+
+  // Tick the refresh driver enough to let the zoom animation run
+  // to completion.
+  utils.advanceTimeAndRefresh(0);
+  for (let i = 0; i < 100; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+  await promiseApzFlushedRepaints();
+
+  // Check that the zoom animation performed additional scrolling
+  // beyond the ScrollContentIntoView(). The ScrollContentIntoView()
+  // just scrolls enough to bring `input1` into the viewport, while
+  // the zoom animation will scroll further to center it. To
+  // distinguish the two cases, check that we scrolled enough that
+  // the element's top is above the middle of the visual viewport.
+  let inputTop = input1.getBoundingClientRect().top;
+  inputTop -= window.visualViewport.offsetTop;
+  ok(inputTop < (window.visualViewport.height / 2),
+     "input was scrolled at least as far as the middle of the viewport");
 }
+
 
 waitUntilApzStable().then(test).then(subtestDone);
 </script>
