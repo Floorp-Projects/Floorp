@@ -1071,7 +1071,7 @@
     "TIMEOUT"
   ],
   "navigation Frame.goto should return matching responses (navigation.spec.ts)": [
-    "TIMEOUT"
+    "FAIL"
   ],
   "navigation Frame.waitForNavigation should work (navigation.spec.ts)": [
     "FAIL"
@@ -1197,7 +1197,7 @@
     "PASS"
   ],
   "Page Page.close should run beforeunload if asked for (page.spec.ts)": [
-    "TIMEOUT"
+    "FAIL"
   ],
   "Page Page.close should *not* run beforeunload by default (page.spec.ts)": [
     "TIMEOUT"
@@ -1542,7 +1542,7 @@
     "FAIL"
   ],
   "Page Page.Events.Close should work with window.close (page.spec.ts)": [
-    "FAIL"
+    "SKIP"
   ],
   "Page Page.Events.Close should work with page.close (page.spec.ts)": [
     "PASS"

@@ -21,6 +21,7 @@ import expect from 'expect';
 import sinon from 'sinon';
 import {
   getTestState,
+  itFailsFirefox,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils';
@@ -1668,7 +1669,7 @@ describe('Page', function () {
   });
 
   describe('Page.Events.Close', function () {
-    it('should work with window.close', async () => {
+    itFailsFirefox('should work with window.close', async () => {
       const { page, context } = getTestState();
 
       const newPagePromise = new Promise<Page>((fulfill) =>
