@@ -7,6 +7,7 @@
 #define mozilla_gfx_config_gfxConfigManager_h
 
 #include "gfxFeature.h"
+#include "gfxTypes.h"
 
 namespace mozilla {
 namespace gfx {
@@ -36,7 +37,6 @@ class gfxConfigManager {
         mXRenderEnabled(false),
         mWrEnvForceEnabled(false),
         mWrEnvForceDisabled(false),
-        mHwStretchingSupport(false),
         mScaledResolution(false),
         mDisableHwCompositingNoWr(false),
         mIsNightly(false),
@@ -91,7 +91,7 @@ class gfxConfigManager {
   /**
    * System support
    */
-  bool mHwStretchingSupport;
+  HwStretchingSupport mHwStretchingSupport;
   bool mScaledResolution;
   bool mDisableHwCompositingNoWr;
   bool mIsNightly;
