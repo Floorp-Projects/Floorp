@@ -92,7 +92,7 @@ async function testWatchTargets(mainRoot) {
   for (let i = 1; i < Services.ppmm.childCount; i++) {
     const process = Services.ppmm.getChildAt(i);
     const hasTargetWithSamePID = [...targets].find(
-      processTarget => processTarget.descriptorFront.id == process.osPid
+      processTarget => processTarget.targetForm.processID == process.osPid
     );
     ok(
       hasTargetWithSamePID,
