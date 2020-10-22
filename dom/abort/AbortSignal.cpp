@@ -19,7 +19,7 @@ AbortSignalImpl::AbortSignalImpl(bool aAborted) : mAborted(aAborted) {}
 
 bool AbortSignalImpl::Aborted() const { return mAborted; }
 
-void AbortSignalImpl::Abort() {
+void AbortSignalImpl::SignalAbort() {
   if (mAborted) {
     return;
   }
@@ -28,7 +28,7 @@ void AbortSignalImpl::Abort() {
 
   // Let's inform the followers.
   for (RefPtr<AbortFollower> follower : mFollowers.ForwardRange()) {
-    follower->Abort();
+    follower->RunAbortAlgorithm();
   }
 }
 
@@ -73,8 +73,8 @@ JSObject* AbortSignal::WrapObject(JSContext* aCx,
   return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void AbortSignal::Abort() {
-  AbortSignalImpl::Abort();
+void AbortSignal::SignalAbort() {
+  AbortSignalImpl::SignalAbort();
 
   EventInit init;
   init.mBubbles = false;

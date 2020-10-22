@@ -460,7 +460,7 @@ nsresult FetchDriver::Fetch(AbortSignalImpl* aSignalImpl,
   // the operation.
   if (aSignalImpl) {
     if (aSignalImpl->Aborted()) {
-      Abort();
+      RunAbortAlgorithm();
       return NS_OK;
     }
 
@@ -1579,7 +1579,7 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
   }
 }
 
-void FetchDriver::Abort() {
+void FetchDriver::RunAbortAlgorithm() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   if (mObserver) {
