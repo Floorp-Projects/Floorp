@@ -5023,11 +5023,9 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I64x2LoadS32x2):
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK(EmitLoadExtendSimd128(f, SimdOp(op.b1)));
-          case uint32_t(SimdOp::V128Load32ZeroExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::V128Load32Zero):
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float32, 4));
-          case uint32_t(SimdOp::V128Load64ZeroExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::V128Load64Zero):
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float64, 8));
           default:
             return f.iter().unrecognizedOpcode(&op);
