@@ -20635,44 +20635,28 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
                   ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
                                         mObjectStoreMayHaveIndexes));
 
-  nsresult rv;
   if (objectStoreHasIndexes) {
-    rv = DeleteObjectStoreDataTableRowsWithIndexes(
-        aConnection, mParams.objectStoreId(), Some(mParams.keyRange()));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DeleteObjectStoreDataTableRowsWithIndexes(
+        aConnection, mParams.objectStoreId(), Some(mParams.keyRange())));
   } else {
     const auto keyRangeClause =
         GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey);
 
-    rv = aConnection->ExecuteCachedStatement(
+    IDB_TRY(aConnection->ExecuteCachedStatement(
         "DELETE FROM object_data "
         "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
-        [this](mozIStorageStatement& stmt) {
-          nsresult rv = stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                             mParams.objectStoreId());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+        [this](mozIStorageStatement& stmt) -> nsresult {
+          IDB_TRY(stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                       mParams.objectStoreId()));
 
-          rv = BindKeyRangeToStatement(mParams.keyRange(), &stmt);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+          IDB_TRY(BindKeyRangeToStatement(mParams.keyRange(), &stmt));
 
           return NS_OK;
-        });
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+        }));
   }
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
