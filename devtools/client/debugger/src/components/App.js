@@ -42,9 +42,6 @@ const verticalLayoutBreakpoint = window.matchMedia(
 import "./variables.css";
 import "./App.css";
 
-// $FlowIgnore
-import "devtools-launchpad/src/components/Root.css";
-
 import type { ActiveSearchType } from "../selectors";
 
 import "./shared/menu.css";
