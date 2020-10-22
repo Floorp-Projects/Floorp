@@ -62,7 +62,7 @@
       is(getResolution(), 1.0, "should not be zoomed (21)");
     }
 
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

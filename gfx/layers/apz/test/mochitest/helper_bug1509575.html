@@ -72,7 +72,7 @@ function* test(testDriver) {
 SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
 waitUntilApzStable()
 .then(runContinuation(test))
-.then(subtestDone);
+.then(subtestDone, subtestFailed);
 
   </script>
 </body>
