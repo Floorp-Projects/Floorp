@@ -47,8 +47,7 @@ async function test() {
      "input was scrolled at least as far as the middle of the viewport");
 }
 
-
-waitUntilApzStable().then(test).then(subtestDone);
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
 </script>
 </body>
 </html>
