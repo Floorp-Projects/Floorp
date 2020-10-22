@@ -458,7 +458,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   uint32_t CurrentScrollGeneration() const { return mScrollGeneration; }
   nsPoint LastScrollDestination() const { return mDestination; }
   nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
-  bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
 
   bool IsLastScrollUpdateAnimating() const;
   using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
@@ -1064,7 +1063,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const final {
     return mHelper.GetScrollUpdates();
   }
-  bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
@@ -1540,7 +1538,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const final {
     return mHelper.GetScrollUpdates();
   }
-  bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
