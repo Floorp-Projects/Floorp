@@ -19324,21 +19324,11 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
                         kStmtParamNameObjectStoreId + " AND key = :"_ns +
                         kStmtParamNameKey + ";"_ns));
 
-    nsresult rv =
-        stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId));
 
-    rv = aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameKey));
 
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->Execute());
 
     return NS_OK;
   }
@@ -19369,11 +19359,8 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
     aIndexValues.RemoveElementsAt(beginRange - begin, endRange - beginRange);
   }
 
-  nsresult rv = UpdateIndexValues(aConnection, mObjectStoreId, aObjectStoreKey,
-                                  aIndexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(UpdateIndexValues(aConnection, mObjectStoreId, aObjectStoreKey,
+                            aIndexValues));
 
   return NS_OK;
 }
