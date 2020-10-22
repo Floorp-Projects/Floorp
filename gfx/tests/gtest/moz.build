@@ -68,8 +68,8 @@ SOURCES += [
 # notice embedded in the profiles should be reviewed to ensure there are
 # no known restrictions on distribution.
 TEST_HARNESS_FILES.gtest += [
-    "icc_profiles/lcms_samsung_syncmaster.icc",
-    "icc_profiles/lcms_thinkpad_w540.icc",
+    "../../qcms/profiles/lcms_samsung_syncmaster.icc",
+    "../../qcms/profiles/lcms_thinkpad_w540.icc",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
