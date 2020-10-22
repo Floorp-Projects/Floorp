@@ -271,7 +271,7 @@ already_AddRefed<MediaDataDecoder> PDMFactory::CreateDecoderWithPDM(
 
   if (config.IsAudio()) {
     m = aPDM->CreateAudioDecoder(aParams);
-    if (!aParams.mNoWrapper.mDontUseWrapper) {
+    if (m && !aParams.mNoWrapper.mDontUseWrapper) {
       m = new AudioTrimmer(m.forget(), aParams);
     }
     return m.forget();
