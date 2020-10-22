@@ -70,11 +70,6 @@ TEST_SUITES = {
         'mach_command': 'firefox-ui-update',
         'kwargs': {},
     },
-    'check-spidermonkey': {
-        'aliases': ('sm',),
-        'mach_command': 'check-spidermonkey',
-        'kwargs': {'valgrind': False},
-    },
     # TODO(ato): integrate geckodriver tests with moz.build
     'geckodriver': {
         'aliases': ('testing/geckodriver',),
