@@ -29,10 +29,6 @@
 
 #include <objbase.h>
 
-#if !defined(STATUS_HEAP_CORRUPTION) // mingw doesn't declare this yet
-#define STATUS_HEAP_CORRUPTION ((DWORD)0xC0000374L)
-#endif // !defined(STATUS_HEAP_CORRUPTION)
-
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
