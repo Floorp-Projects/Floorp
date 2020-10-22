@@ -47,7 +47,9 @@ WebSocketDebuggerTransport.prototype = {
     this.socket = null;
 
     if (this.hooks) {
-      this.hooks.onClosed();
+      if (this.hooks.onClosed) {
+        this.hooks.onClosed();
+      }
       this.hooks = null;
     }
   },
