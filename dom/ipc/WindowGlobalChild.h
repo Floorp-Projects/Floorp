@@ -48,8 +48,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   }
 
   dom::BrowsingContext* BrowsingContext() override;
-  dom::WindowContext* WindowContext() { return mWindowContext; }
-  nsGlobalWindowInner* GetWindowGlobal() { return mWindowGlobal; }
+  dom::WindowContext* WindowContext() const { return mWindowContext; }
+  nsGlobalWindowInner* GetWindowGlobal() const { return mWindowGlobal; }
 
   // Has this actor been shut down
   bool IsClosed() { return !CanSend(); }
@@ -106,6 +106,14 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   // Called when a new document is loaded in this WindowGlobalChild.
   void OnNewDocument(Document* aNewDocument);
+
+  // Returns true if this WindowGlobal is same-origin with the given
+  // WindowContext. Out-of-process WindowContexts are supported, and are assumed
+  // to be cross-origin.
+  //
+  // The given WindowContext must be in the same BrowsingContextGroup as this
+  // window global.
+  bool IsSameOriginWith(const dom::WindowContext* aOther) const;
 
   bool SameOriginWithTop();
 
