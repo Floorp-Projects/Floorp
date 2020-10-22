@@ -262,14 +262,26 @@ class MochaOutputHandler(object):
             known_intermittent = expected[1:]
             expected_status = expected[0]
 
-            self.test_results[test_name] = status
+            # check if we've seen a result for this test before this log line
+            result_recorded = self.test_results.get(test_name)
+            if result_recorded:
+                self.logger.warning(
+                    "Received a second status for {}: "
+                    "first {}, now {}".format(
+                        test_name,
+                        result_recorded,
+                        status)
+                )
+            # mocha intermittently logs an additional test result after the
+            # test has already timed out. Avoid recording this second status.
+            if result_recorded != "TIMEOUT":
+                self.test_results[test_name] = status
+                if status not in expected:
+                    self.has_unexpected = True
             self.logger.test_end(test_name,
                                  status=status,
                                  expected=expected_status,
                                  known_intermittent=known_intermittent)
-
-            if status not in expected:
-                self.has_unexpected = True
 
     def new_expected(self):
         new_expected = OrderedDict()
