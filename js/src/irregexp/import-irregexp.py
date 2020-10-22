@@ -36,29 +36,27 @@ def get_hash(path):
     # Get the hash for the current git revision
     cwd = os.getcwd()
     os.chdir(path)
-    command = ["git", "rev-parse", "HEAD"]
-    result = subprocess.check_output(command, encoding="utf-8")
+    command = ['git', 'rev-parse', 'HEAD']
+    result = subprocess.check_output(command, encoding='utf-8')
     os.chdir(cwd)
     return result.rstrip()
 
 
 def copy_and_update_includes(src_path, dst_path):
     # List of header files that need to include the shim header
-    need_shim = [
-        "property-sequences.h",
-        "regexp-ast.h",
-        "regexp-bytecode-peephole.h",
-        "regexp-bytecodes.h",
-        "regexp-dotprinter.h",
-        "regexp-error.h",
-        "regexp.h",
-        "regexp-macro-assembler.h",
-        "regexp-stack.h",
-        "special-case.h",
-    ]
+    need_shim = ['property-sequences.h',
+                 'regexp-ast.h',
+                 'regexp-bytecode-peephole.h',
+                 'regexp-bytecodes.h',
+                 'regexp-dotprinter.h',
+                 'regexp-error.h',
+                 'regexp.h',
+                 'regexp-macro-assembler.h',
+                 'regexp-stack.h',
+                 'special-case.h']
 
-    src = open(str(src_path), "r")
-    dst = open(str(dst_path), "w")
+    src = open(str(src_path), 'r')
+    dst = open(str(dst_path), 'w')
 
     # 1. Rewrite includes of V8 regexp headers:
     regexp_include = re.compile('#include "src/regexp')
@@ -79,7 +77,7 @@ def copy_and_update_includes(src_path, dst_path):
 
     for line in src:
         if adding_shim_now:
-            if line == "\n":
+            if line == '\n':
                 dst.write('#include "irregexp/RegExpShim.h"\n')
                 need_to_add_shim = False
                 adding_shim_now = False
@@ -94,13 +92,11 @@ def copy_and_update_includes(src_path, dst_path):
 
 
 def import_from(srcdir, dstdir):
-    excluded = [
-        "OWNERS",
-        "regexp.cc",
-        "regexp-utils.cc",
-        "regexp-utils.h",
-        "regexp-macro-assembler-arch.h",
-    ]
+    excluded = ['OWNERS',
+                'regexp.cc',
+                'regexp-utils.cc',
+                'regexp-utils.h',
+                'regexp-macro-assembler-arch.h']
 
     for file in srcdir.iterdir():
         if file.is_dir():
@@ -111,37 +107,38 @@ def import_from(srcdir, dstdir):
 
     # Update IRREGEXP_VERSION file
     hash = get_hash(srcdir)
-    version_file = open(str(dstdir / "IRREGEXP_VERSION"), "w")
-    version_file.write("Imported using import-irregexp.py from:\n")
-    version_file.write("https://github.com/v8/v8/tree/%s/src/regexp\n" % hash)
+    version_file = open(str(dstdir / 'IRREGEXP_VERSION'), 'w')
+    version_file.write('Imported using import-irregexp.py from:\n')
+    version_file.write('https://github.com/v8/v8/tree/%s/src/regexp\n' % hash)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import argparse
     import tempfile
 
     # This script should be run from js/src/irregexp to work correctly.
     current_path = Path(os.getcwd())
-    expected_path = "js/src/irregexp"
+    expected_path = 'js/src/irregexp'
     if not current_path.match(expected_path):
-        raise RuntimeError("%s must be run from %s" % (sys.argv[0], expected_path))
+        raise RuntimeError('%s must be run from %s' % (sys.argv[0],
+                                                       expected_path))
 
-    parser = argparse.ArgumentParser(description="Import irregexp from v8")
-    parser.add_argument("-p", "--path", help="path to v8/src/regexp")
+    parser = argparse.ArgumentParser(description='Import irregexp from v8')
+    parser.add_argument('-p', '--path', help='path to v8/src/regexp')
     args = parser.parse_args()
 
     if args.path:
         src_path = Path(args.path)
 
-        if not (src_path / "regexp.h").exists():
-            print("Usage:\n  import-irregexp.py --path <path/to/v8/src/regexp>")
+        if not (src_path / 'regexp.h').exists():
+            print('Usage:\n  import-irregexp.py --path <path/to/v8/src/regexp>')
             sys.exit(1)
         import_from(src_path, current_path)
         sys.exit(0)
 
     with tempfile.TemporaryDirectory() as tempdir:
-        v8_git = "https://github.com/v8/v8.git"
-        clone = "git clone --depth 1 %s %s" % (v8_git, tempdir)
+        v8_git = 'https://github.com/v8/v8.git'
+        clone = 'git clone --depth 1 %s %s' % (v8_git, tempdir)
         os.system(clone)
-        src_path = Path(tempdir) / "src/regexp"
+        src_path = Path(tempdir) / 'src/regexp'
         import_from(src_path, current_path)

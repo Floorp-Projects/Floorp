@@ -4,16 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-@depends(target.os, "--help")
+@depends(target.os, '--help')
 def arm_option_defaults(os, _):
-    if os == "Android":
-        arch = "armv7-a"
-        thumb = "yes"
-        fpu = "neon"
-        float_abi = "softfp"
+    if os == 'Android':
+        arch = 'armv7-a'
+        thumb = 'yes'
+        fpu = 'neon'
+        float_abi = 'softfp'
     else:
-        arch = thumb = fpu = float_abi = "toolchain-default"
+        arch = thumb = fpu = float_abi = 'toolchain-default'
     return namespace(
         arch=arch,
         thumb=thumb,
@@ -27,154 +26,124 @@ def arm_option_defaults(os, _):
 # default is always returned. The lint is fooled by this file being
 # conditional. If it weren't conditional, the lint wouldn't ask for '{|}' to
 # be there.
-option(
-    "--with-arch",
-    nargs=1,
-    default=arm_option_defaults.arch,
-    help="{Use specific CPU features (-march=type). Resets thumb, fpu, "
-    "float-abi, etc. defaults when set|}",
-)
+option('--with-arch', nargs=1,
+       default=arm_option_defaults.arch,
+       help='{Use specific CPU features (-march=type). Resets thumb, fpu, '
+            'float-abi, etc. defaults when set|}')
 
 
-@depends("--with-arch")
+@depends('--with-arch')
 def arch_option(value):
     if value:
-        if value[0] != "toolchain-default":
-            return ["-march={}".format(value[0])]
+        if value[0] != 'toolchain-default':
+            return ['-march={}'.format(value[0])]
     return []
 
 
-option(
-    "--with-thumb",
-    choices=("yes", "no", "toolchain-default"),
-    default=arm_option_defaults.thumb,
-    nargs="?",
-    help="{Use Thumb instruction set (-mthumb)|}",
-)
+option('--with-thumb', choices=('yes', 'no', 'toolchain-default'),
+       default=arm_option_defaults.thumb,
+       nargs='?', help='{Use Thumb instruction set (-mthumb)|}')
 
 
 def normalize_arm_option(value):
     if value:
         if len(value):
-            if value[0] == "yes":
+            if value[0] == 'yes':
                 return True
-            elif value[0] == "no":
+            elif value[0] == 'no':
                 return False
             else:
                 return value[0]
         return True
     return False
 
-
-@depends("--with-thumb")
+@depends('--with-thumb')
 def thumb_option(value):
     value = normalize_arm_option(value)
     if value is True:
-        return ["-mthumb"]
+        return ['-mthumb']
     if value is False:
-        return ["-marm"]
+        return ['-marm']
     return []
 
 
-option(
-    "--with-thumb-interwork",
-    choices=("yes", "no", "toolchain-default"),
-    default="toolchain-default",
-    nargs="?",
-    help="Use Thumb/ARM instuctions interwork (-mthumb-interwork)",
-)
+option('--with-thumb-interwork', choices=('yes', 'no', 'toolchain-default'),
+       default='toolchain-default',
+       nargs='?', help='Use Thumb/ARM instuctions interwork (-mthumb-interwork)')
 
 
-@depends("--with-thumb-interwork")
+@depends('--with-thumb-interwork')
 def thumb_interwork_option(value):
     value = normalize_arm_option(value)
     if value is True:
-        return ["-mthumb-interwork"]
+        return ['-mthumb-interwork']
     if value is False:
-        return ["-mno-thumb-interwork"]
+        return ['-mno-thumb-interwork']
     return []
 
 
-option(
-    "--with-fpu",
-    nargs=1,
-    default=arm_option_defaults.fpu,
-    help="{Use specific FPU type (-mfpu=type)|}",
-)
+option('--with-fpu', nargs=1,
+       default=arm_option_defaults.fpu,
+       help='{Use specific FPU type (-mfpu=type)|}')
 
 
-@depends("--with-fpu")
+@depends('--with-fpu')
 def fpu_option(value):
     if value:
-        if value[0] != "toolchain-default":
-            return ["-mfpu={}".format(value[0])]
+        if value[0] != 'toolchain-default':
+            return ['-mfpu={}'.format(value[0])]
     return []
 
 
-option(
-    "--with-float-abi",
-    nargs=1,
-    default=arm_option_defaults.float_abi,
-    help="{Use specific arm float ABI (-mfloat-abi=type)|}",
-)
+option('--with-float-abi', nargs=1,
+       default=arm_option_defaults.float_abi,
+       help='{Use specific arm float ABI (-mfloat-abi=type)|}')
 
 
-@depends("--with-float-abi")
+@depends('--with-float-abi')
 def float_abi_option(value):
     if value:
-        if value[0] != "toolchain-default":
-            return ["-mfloat-abi={}".format(value[0])]
+        if value[0] != 'toolchain-default':
+            return ['-mfloat-abi={}'.format(value[0])]
     return []
 
 
-option(
-    "--with-soft-float",
-    choices=("yes", "no", "toolchain-default"),
-    default="toolchain-default",
-    nargs="?",
-    help="Use soft float library (-msoft-float)",
-)
+option('--with-soft-float', choices=('yes', 'no', 'toolchain-default'),
+       default='toolchain-default',
+       nargs='?', help='Use soft float library (-msoft-float)')
 
 
-@depends("--with-soft-float")
+@depends('--with-soft-float')
 def soft_float_option(value):
     value = normalize_arm_option(value)
     if value is True:
-        return ["-msoft-float"]
+        return ['-msoft-float']
     if value is False:
-        return ["-mno-soft-float"]
+        return ['-mno-soft-float']
     return []
 
 
-check_and_add_gcc_flag(
-    "-mno-unaligned-access", when=depends(target.os)(lambda os: os == "Android")
-)
+check_and_add_gcc_flag('-mno-unaligned-access',
+                       when=depends(target.os)(lambda os: os == 'Android'))
 
 
-@depends(
-    arch_option,
-    thumb_option,
-    thumb_interwork_option,
-    fpu_option,
-    float_abi_option,
-    soft_float_option,
-)
+@depends(arch_option, thumb_option, thumb_interwork_option, fpu_option,
+         float_abi_option, soft_float_option)
 def all_flags(arch, thumb, interwork, fpu, float_abi, soft_float):
     return arch + thumb + interwork + fpu + float_abi + soft_float
 
 
-add_old_configure_assignment("_ARM_FLAGS", all_flags)
-add_old_configure_assignment("_THUMB_FLAGS", thumb_option)
+add_old_configure_assignment('_ARM_FLAGS', all_flags)
+add_old_configure_assignment('_THUMB_FLAGS', thumb_option)
 
 
 @depends(c_compiler, all_flags)
-@checking("ARM version support in compiler", lambda x: x.arm_arch)
-@imports(_from="textwrap", _import="dedent")
+@checking('ARM version support in compiler', lambda x: x.arm_arch)
+@imports(_from='textwrap', _import='dedent')
 def arm_target(compiler, all_flags):
     # We're going to preprocess the following source to figure out some details
     # about the arm target options we have enabled.
-    source = dedent(
-        """\
+    source = dedent('''\
         %ARM_ARCH __ARM_ARCH
         #if __thumb2__
         %THUMB2 yes
@@ -203,58 +172,54 @@ def arm_target(compiler, all_flags):
         #elif __ARM_FPV5__
         %FPU fp-armv8
         #endif
-    """
-    )
+    ''')
     result = try_invoke_compiler(
         compiler.wrapper + [compiler.compiler] + compiler.flags,
         compiler.language,
         source,
-        ["-E"] + all_flags,
+        ['-E'] + all_flags,
     )
     # Metadata emitted by preprocessors such as GCC with LANG=ja_JP.utf-8 may
     # have non-ASCII characters. Treat the output as bytearray.
-    data = {"fpu": None}  # fpu may not get a value from the preprocessor.
+    data = {'fpu': None}  # fpu may not get a value from the preprocessor.
     for line in result.splitlines():
-        if line.startswith("%"):
-            k, _, v = line.partition(" ")
-            k = k.lstrip("%").lower()
-            if k == "arm_arch":
+        if line.startswith('%'):
+            k, _, v = line.partition(' ')
+            k = k.lstrip('%').lower()
+            if k == 'arm_arch':
                 data[k] = int(v)
             else:
                 data[k] = {
-                    "yes": True,
-                    "no": False,
+                    'yes': True,
+                    'no': False,
                 }.get(v, v)
-            log.debug("%s = %s", k, data[k])
+            log.debug('%s = %s', k, data[k])
 
     return namespace(**data)
 
 
-@depends(arm_target.arm_arch, when=depends(target.os)(lambda os: os == "Android"))
+@depends(arm_target.arm_arch, when=depends(target.os)(lambda os: os == 'Android'))
 def armv7(arch):
     if arch < 7:
-        die("Android/armv6 and earlier are not supported")
+        die('Android/armv6 and earlier are not supported')
 
 
-set_config("MOZ_THUMB2", True, when=arm_target.thumb2)
-set_define("MOZ_THUMB2", True, when=arm_target.thumb2)
-add_old_configure_assignment("MOZ_THUMB2", True, when=arm_target.thumb2)
+set_config('MOZ_THUMB2', True, when=arm_target.thumb2)
+set_define('MOZ_THUMB2', True, when=arm_target.thumb2)
+add_old_configure_assignment('MOZ_THUMB2', True, when=arm_target.thumb2)
 
 
-have_arm_simd = c_compiler.try_compile(
-    body='asm("uqadd8 r1, r1, r2");', check_msg="for ARM SIMD support in compiler"
-)
+have_arm_simd = c_compiler.try_compile(body='asm("uqadd8 r1, r1, r2");',
+                                       check_msg='for ARM SIMD support in compiler')
 
-set_config("HAVE_ARM_SIMD", have_arm_simd)
-set_define("HAVE_ARM_SIMD", have_arm_simd)
+set_config('HAVE_ARM_SIMD', have_arm_simd)
+set_define('HAVE_ARM_SIMD', have_arm_simd)
 
-have_arm_neon = c_compiler.try_compile(
-    body='asm(".fpu neon\\n vadd.i8 d0, d0, d0");',
-    check_msg="for ARM NEON support in compiler",
-)
+have_arm_neon = c_compiler.try_compile(body='asm(".fpu neon\\n vadd.i8 d0, d0, d0");',
+                                       check_msg='for ARM NEON support in compiler')
 
-set_config("HAVE_ARM_NEON", have_arm_neon)
-set_define("HAVE_ARM_NEON", have_arm_neon)
+set_config('HAVE_ARM_NEON', have_arm_neon)
+set_define('HAVE_ARM_NEON', have_arm_neon)
 
 
 # We don't need to build NEON support if we're targetting a non-NEON device.
@@ -264,13 +229,13 @@ def build_arm_neon(arm_arch):
     return arm_arch >= 7
 
 
-set_config("BUILD_ARM_NEON", build_arm_neon)
-set_define("BUILD_ARM_NEON", build_arm_neon)
+set_config('BUILD_ARM_NEON', build_arm_neon)
+set_define('BUILD_ARM_NEON', build_arm_neon)
 
 
-set_config("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: str(x)))
-add_old_configure_assignment("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: str(x)))
-set_config("MOZ_FPU", arm_target.fpu)
+set_config('ARM_ARCH', depends(arm_target.arm_arch)(lambda x: str(x)))
+add_old_configure_assignment('ARM_ARCH', depends(arm_target.arm_arch)(lambda x: str(x)))
+set_config('MOZ_FPU', arm_target.fpu)
 
 
 @depends(arm_target.float_abi)
@@ -283,10 +248,10 @@ def neon_flags(float_abi):
     # we can safely mix code built with both ABIs. So, if we detect
     # that compiling uses the "softfloat" ABI, force the use of the
     # "softfp" ABI instead.
-    flags = ["-mfpu=neon"]
-    if float_abi == "soft":
-        flags.append("-mfloat-abi=softfp")
+    flags = ['-mfpu=neon']
+    if float_abi == 'soft':
+        flags.append('-mfloat-abi=softfp')
     return tuple(flags)
 
 
-set_config("NEON_FLAGS", neon_flags)
+set_config('NEON_FLAGS', neon_flags)

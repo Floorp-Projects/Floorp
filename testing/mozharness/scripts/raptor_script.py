@@ -15,6 +15,6 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.mozilla.testing.raptor import Raptor
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     raptor = Raptor()
     raptor.run_and_exit()

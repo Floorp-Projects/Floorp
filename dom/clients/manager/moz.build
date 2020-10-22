@@ -5,65 +5,68 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "ClientChannelHelper.h",
-    "ClientHandle.h",
-    "ClientInfo.h",
-    "ClientIPCUtils.h",
-    "ClientManager.h",
-    "ClientManagerActors.h",
-    "ClientManagerService.h",
-    "ClientOpenWindowUtils.h",
-    "ClientOpPromise.h",
-    "ClientSource.h",
-    "ClientState.h",
-    "ClientThing.h",
+  'ClientChannelHelper.h',
+  'ClientHandle.h',
+  'ClientInfo.h',
+  'ClientIPCUtils.h',
+  'ClientManager.h',
+  'ClientManagerActors.h',
+  'ClientManagerService.h',
+  'ClientOpenWindowUtils.h',
+  'ClientOpPromise.h',
+  'ClientSource.h',
+  'ClientState.h',
+  'ClientThing.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ClientChannelHelper.cpp",
-    "ClientHandle.cpp",
-    "ClientHandleChild.cpp",
-    "ClientHandleOpChild.cpp",
-    "ClientHandleOpParent.cpp",
-    "ClientHandleParent.cpp",
-    "ClientInfo.cpp",
-    "ClientManager.cpp",
-    "ClientManagerActors.cpp",
-    "ClientManagerChild.cpp",
-    "ClientManagerOpChild.cpp",
-    "ClientManagerOpParent.cpp",
-    "ClientManagerParent.cpp",
-    "ClientManagerService.cpp",
-    "ClientNavigateOpChild.cpp",
-    "ClientNavigateOpParent.cpp",
-    "ClientOpenWindowUtils.cpp",
-    "ClientPrincipalUtils.cpp",
-    "ClientSource.cpp",
-    "ClientSourceChild.cpp",
-    "ClientSourceOpChild.cpp",
-    "ClientSourceOpParent.cpp",
-    "ClientSourceParent.cpp",
-    "ClientState.cpp",
-    "ClientValidation.cpp",
+  'ClientChannelHelper.cpp',
+  'ClientHandle.cpp',
+  'ClientHandleChild.cpp',
+  'ClientHandleOpChild.cpp',
+  'ClientHandleOpParent.cpp',
+  'ClientHandleParent.cpp',
+  'ClientInfo.cpp',
+  'ClientManager.cpp',
+  'ClientManagerActors.cpp',
+  'ClientManagerChild.cpp',
+  'ClientManagerOpChild.cpp',
+  'ClientManagerOpParent.cpp',
+  'ClientManagerParent.cpp',
+  'ClientManagerService.cpp',
+  'ClientNavigateOpChild.cpp',
+  'ClientNavigateOpParent.cpp',
+  'ClientOpenWindowUtils.cpp',
+  'ClientPrincipalUtils.cpp',
+  'ClientSource.cpp',
+  'ClientSourceChild.cpp',
+  'ClientSourceOpChild.cpp',
+  'ClientSourceOpParent.cpp',
+  'ClientSourceParent.cpp',
+  'ClientState.cpp',
+  'ClientValidation.cpp',
 ]
 
 IPDL_SOURCES += [
-    "ClientIPCTypes.ipdlh",
-    "PClientHandle.ipdl",
-    "PClientHandleOp.ipdl",
-    "PClientManager.ipdl",
-    "PClientManagerOp.ipdl",
-    "PClientNavigateOp.ipdl",
-    "PClientSource.ipdl",
-    "PClientSourceOp.ipdl",
+  'ClientIPCTypes.ipdlh',
+  'PClientHandle.ipdl',
+  'PClientHandleOp.ipdl',
+  'PClientManager.ipdl',
+  'PClientManagerOp.ipdl',
+  'PClientNavigateOp.ipdl',
+  'PClientSource.ipdl',
+  'PClientSourceOp.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-MOCHITEST_MANIFESTS += []
+MOCHITEST_MANIFESTS += [
+]
 
-BROWSER_CHROME_MANIFESTS += []
+BROWSER_CHROME_MANIFESTS += [
+]
 
-XPCSHELL_TESTS_MANIFESTS += []
+XPCSHELL_TESTS_MANIFESTS += [
+]

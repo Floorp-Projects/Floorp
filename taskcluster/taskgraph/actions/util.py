@@ -33,16 +33,18 @@ from taskgraph.util.taskcluster import (
     trigger_hook,
     CONCURRENCY,
 )
-from taskgraph.util.taskgraph import find_decision_task
+from taskgraph.util.taskgraph import (
+    find_decision_task,
+)
 
 logger = logging.getLogger(__name__)
 
-INDEX_TMPL = "gecko.v2.{}.pushlog-id.{}.decision"
-PUSHLOG_TMPL = "{}/json-pushes?version=2&startID={}&endID={}"
+INDEX_TMPL = 'gecko.v2.{}.pushlog-id.{}.decision'
+PUSHLOG_TMPL = '{}/json-pushes?version=2&startID={}&endID={}'
 
 
 def _tags_within_context(tags, context=[]):
-    """A context of [] means that it *only* applies to a task group"""
+    '''A context of [] means that it *only* applies to a task group'''
     return any(
         all(tag in tags and tags[tag] == tag_set[tag] for tag in tag_set.keys())
         for tag_set in context
@@ -50,7 +52,7 @@ def _tags_within_context(tags, context=[]):
 
 
 def _extract_applicable_action(actions_json, action_name, task_group_id, task_id):
-    """Extract action that applies to the given task or task group.
+    '''Extract action that applies to the given task or task group.
 
     A task (as defined by its tags) is said to match a tag-set if its
     tags are a super-set of the tag-set. A tag-set is a set of key-value pairs.
@@ -64,16 +66,16 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
 
     For more details visit:
     https://docs.taskcluster.net/docs/manual/design/conventions/actions/spec
-    """
+    '''
     if task_id:
-        tags = get_task_definition(task_id).get("tags")
+        tags = get_task_definition(task_id).get('tags')
     action = None
 
-    for _action in actions_json["actions"]:
-        if action_name != _action["name"]:
+    for _action in actions_json['actions']:
+        if action_name != _action['name']:
             continue
 
-        context = _action.get("context", [])
+        context = _action.get('context', [])
         # Ensure the task is within the context of the action
         if task_id and tags and _tags_within_context(tags, context):
             action = _action
@@ -81,13 +83,10 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
             action = _action
 
     if not action:
-        available_actions = ", ".join(
-            sorted({a["name"] for a in actions_json["actions"]})
-        )
+        available_actions = ", ".join(sorted({a["name"] for a in actions_json['actions']}))
         raise LookupError(
             "{} action is not available for this task. Available: {}".format(
-                action_name, available_actions
-            )
+                action_name, available_actions)
         )
 
     return action
@@ -96,35 +95,33 @@ def _extract_applicable_action(actions_json, action_name, task_group_id, task_id
 def trigger_action(action_name, decision_task_id, task_id=None, input={}):
     if not decision_task_id:
         raise ValueError("No decision task. We can't find the actions artifact.")
-    actions_json = get_artifact(decision_task_id, "public/actions.json")
-    if actions_json["version"] != 1:
-        raise RuntimeError("Wrong version of actions.json, unable to continue")
+    actions_json = get_artifact(decision_task_id, 'public/actions.json')
+    if actions_json['version'] != 1:
+        raise RuntimeError('Wrong version of actions.json, unable to continue')
 
     # These values substitute $eval in the template
     context = {
-        "input": input,
-        "taskId": task_id,
-        "taskGroupId": decision_task_id,
+        'input': input,
+        'taskId': task_id,
+        'taskGroupId': decision_task_id,
     }
     # https://docs.taskcluster.net/docs/manual/design/conventions/actions/spec#variables
-    context.update(actions_json["variables"])
-    action = _extract_applicable_action(
-        actions_json, action_name, decision_task_id, task_id
-    )
-    kind = action["kind"]
-    if kind == "hook":
-        hook_payload = jsone.render(action["hookPayload"], context)
-        trigger_hook(action["hookGroupId"], action["hookId"], hook_payload)
+    context.update(actions_json['variables'])
+    action = _extract_applicable_action(actions_json, action_name, decision_task_id, task_id)
+    kind = action['kind']
+    if kind == 'hook':
+        hook_payload = jsone.render(action['hookPayload'], context)
+        trigger_hook(action['hookGroupId'], action['hookId'], hook_payload)
     else:
         raise NotImplementedError("Unable to submit actions with {} kind.".format(kind))
 
 
 def get_pushes_from_params_input(parameters, input):
-    inclusive_tweak = 1 if input.get("inclusive") else 0
+    inclusive_tweak = 1 if input.get('inclusive') else 0
     return get_pushes(
-        project=parameters["head_repository"],
-        end_id=int(parameters["pushlog_id"]) - (1 - inclusive_tweak),
-        depth=input.get("depth", 9) + inclusive_tweak,
+        project=parameters['head_repository'],
+        end_id=int(parameters['pushlog_id']) - (1 - inclusive_tweak),
+        depth=input.get('depth', 9) + inclusive_tweak
     )
 
 
@@ -136,7 +133,7 @@ def get_pushes(project, end_id, depth):
         logger.debug(pushlog_url)
         r = requests.get(pushlog_url)
         r.raise_for_status()
-        pushes = pushes + list(r.json()["pushes"].keys())
+        pushes = pushes + list(r.json()['pushes'].keys())
         if len(pushes) >= depth:
             break
 
@@ -175,49 +172,39 @@ def fetch_graph_and_labels(parameters, graph_config):
         # fetch any modifications made by action tasks and swap out new tasks
         # for old ones
         def fetch_action(task_id):
-            logger.info(
-                "fetching label-to-taskid.json for action task {}".format(task_id)
-            )
+            logger.info('fetching label-to-taskid.json for action task {}'.format(task_id))
             try:
                 run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
                 label_to_taskid.update(run_label_to_id)
             except HTTPError as e:
                 if e.response.status_code != 404:
                     raise
-                logger.debug(
-                    "No label-to-taskid.json found for {}: {}".format(task_id, e)
-                )
+                logger.debug('No label-to-taskid.json found for {}: {}'.format(task_id, e))
 
-        head_rev_param = "{}head_rev".format(graph_config["project-repo-param-prefix"])
+        head_rev_param = '{}head_rev'.format(graph_config['project-repo-param-prefix'])
 
-        namespace = "{}.v2.{}.revision.{}.taskgraph.actions".format(
-            graph_config["trust-domain"],
-            parameters["project"],
-            parameters[head_rev_param],
-        )
+        namespace = '{}.v2.{}.revision.{}.taskgraph.actions'.format(
+            graph_config['trust-domain'],
+            parameters['project'],
+            parameters[head_rev_param])
         for task_id in list_tasks(namespace):
             fetches.append(e.submit(fetch_action, task_id))
 
         # Similarly for cron tasks..
         def fetch_cron(task_id):
-            logger.info(
-                "fetching label-to-taskid.json for cron task {}".format(task_id)
-            )
+            logger.info('fetching label-to-taskid.json for cron task {}'.format(task_id))
             try:
                 run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
                 label_to_taskid.update(run_label_to_id)
             except HTTPError as e:
                 if e.response.status_code != 404:
                     raise
-                logger.debug(
-                    "No label-to-taskid.json found for {}: {}".format(task_id, e)
-                )
+                logger.debug('No label-to-taskid.json found for {}: {}'.format(task_id, e))
 
-        namespace = "{}.v2.{}.revision.{}.cron".format(
-            graph_config["trust-domain"],
-            parameters["project"],
-            parameters[head_rev_param],
-        )
+        namespace = '{}.v2.{}.revision.{}.cron'.format(
+            graph_config['trust-domain'],
+            parameters['project'],
+            parameters[head_rev_param])
         for task_id in list_tasks(namespace):
             fetches.append(e.submit(fetch_cron, task_id))
 
@@ -237,34 +224,26 @@ def create_task_from_def(task_def, level):
     It is useful if you want to "edit" the full_task_graph and then hand
     it to this function. No dependencies will be scheduled. You must handle
     this yourself. Seeing how create_tasks handles it might prove helpful."""
-    task_def["schedulerId"] = "gecko-level-{}".format(level)
-    label = task_def["metadata"]["name"]
-    task_id = slugid().decode("ascii")
+    task_def['schedulerId'] = 'gecko-level-{}'.format(level)
+    label = task_def['metadata']['name']
+    task_id = slugid().decode('ascii')
     session = get_session()
     create.create_task(session, task_id, label, task_def)
 
 
 def update_parent(task, graph):
-    task.task.setdefault("extra", {})["parent"] = os.environ.get("TASK_ID", "")
+    task.task.setdefault('extra', {})['parent'] = os.environ.get('TASK_ID', '')
     return task
 
 
 def update_dependencies(task, graph):
-    if os.environ.get("TASK_ID"):
-        task.task.setdefault("dependencies", []).append(os.environ["TASK_ID"])
+    if os.environ.get('TASK_ID'):
+        task.task.setdefault('dependencies', []).append(os.environ['TASK_ID'])
     return task
 
 
-def create_tasks(
-    graph_config,
-    to_run,
-    full_task_graph,
-    label_to_taskid,
-    params,
-    decision_task_id,
-    suffix="",
-    modifier=lambda t: t,
-):
+def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
+                 params, decision_task_id, suffix='', modifier=lambda t: t):
     """Create new tasks.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks,
@@ -283,8 +262,8 @@ def create_tasks(
     If you wish to create the tasks in a new group, leave out decision_task_id.
 
     Returns an updated label_to_taskid containing the new tasks"""
-    if suffix != "":
-        suffix = "-{}".format(suffix)
+    if suffix != '':
+        suffix = '-{}'.format(suffix)
     to_run = set(to_run)
 
     #  Copy to avoid side-effects later
@@ -293,22 +272,20 @@ def create_tasks(
 
     target_graph = full_task_graph.graph.transitive_closure(to_run)
     target_task_graph = TaskGraph(
-        {l: modifier(full_task_graph[l]) for l in target_graph.nodes}, target_graph
-    )
+        {l: modifier(full_task_graph[l]) for l in target_graph.nodes},
+        target_graph)
     target_task_graph.for_each_task(update_parent)
-    if decision_task_id and decision_task_id != os.environ.get("TASK_ID"):
+    if decision_task_id and decision_task_id != os.environ.get('TASK_ID'):
         target_task_graph.for_each_task(update_dependencies)
-    optimized_task_graph, label_to_taskid = optimize_task_graph(
-        target_task_graph,
-        to_run,
-        params,
-        to_run,
-        decision_task_id,
-        existing_tasks=label_to_taskid,
-    )
-    write_artifact("task-graph{}.json".format(suffix), optimized_task_graph.to_json())
-    write_artifact("label-to-taskid{}.json".format(suffix), label_to_taskid)
-    write_artifact("to-run{}.json".format(suffix), list(to_run))
+    optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
+                                                                to_run,
+                                                                params,
+                                                                to_run,
+                                                                decision_task_id,
+                                                                existing_tasks=label_to_taskid)
+    write_artifact('task-graph{}.json'.format(suffix), optimized_task_graph.to_json())
+    write_artifact('label-to-taskid{}.json'.format(suffix), label_to_taskid)
+    write_artifact('to-run{}.json'.format(suffix), list(to_run))
     create.create_tasks(
         graph_config,
         optimized_task_graph,
@@ -340,10 +317,10 @@ def combine_task_graph_files(suffixes):
     """
 
     if len(suffixes) == 1:
-        for filename in ["task-graph", "label-to-taskid", "to-run"]:
+        for filename in ['task-graph', 'label-to-taskid', 'to-run']:
             rename_artifact(
-                "{}-{}.json".format(filename, suffixes[0]), "{}.json".format(filename)
-            )
+                "{}-{}.json".format(filename, suffixes[0]),
+                "{}.json".format(filename))
         return
 
     def combine(file_contents, base):
@@ -352,9 +329,7 @@ def combine_task_graph_files(suffixes):
     files = [read_artifact("task-graph-{}.json".format(suffix)) for suffix in suffixes]
     write_artifact("task-graph.json", combine(files, dict()))
 
-    files = [
-        read_artifact("label-to-taskid-{}.json".format(suffix)) for suffix in suffixes
-    ]
+    files = [read_artifact("label-to-taskid-{}.json".format(suffix)) for suffix in suffixes]
     write_artifact("label-to-taskid.json", combine(files, dict()))
 
     files = [read_artifact("to-run-{}.json".format(suffix)) for suffix in suffixes]
@@ -367,69 +342,64 @@ def relativize_datestamps(task_def):
     to {relative_datestamp: ..} format, with the task creation time as "now".
     The result is useful for handing to ``create_task``.
     """
-    base = parse_time(task_def["created"])
+    base = parse_time(task_def['created'])
     # borrowed from https://github.com/epoberezkin/ajv/blob/master/lib/compile/formats.js
     ts_pattern = re.compile(
-        r"^\d\d\d\d-[0-1]\d-[0-3]\d[t\s]"
-        r"(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?"
-        r"(?:z|[+-]\d\d:\d\d)$",
-        re.I,
-    )
+        r'^\d\d\d\d-[0-1]\d-[0-3]\d[t\s]'
+        r'(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?'
+        r'(?:z|[+-]\d\d:\d\d)$', re.I)
 
     def recurse(value):
         if isinstance(value, text_type):
             if ts_pattern.match(value):
                 value = parse_time(value)
                 diff = value - base
-                return {
-                    "relative-datestamp": "{} seconds".format(int(diff.total_seconds()))
-                }
+                return {'relative-datestamp': '{} seconds'.format(int(diff.total_seconds()))}
         if isinstance(value, list):
             return [recurse(e) for e in value]
         if isinstance(value, dict):
             return {k: recurse(v) for k, v in value.items()}
         return value
-
     return recurse(task_def)
 
 
 def add_args_to_command(cmd_parts, extra_args=[]):
     """
-    Add custom command line args to a given command.
-    args:
-      cmd_parts: the raw command as seen by taskcluster
-      extra_args: array of args we want to add
+        Add custom command line args to a given command.
+        args:
+          cmd_parts: the raw command as seen by taskcluster
+          extra_args: array of args we want to add
     """
     # Prevent modification of the caller's copy of cmd_parts
     cmd_parts = copy.deepcopy(cmd_parts)
-    cmd_type = "default"
+    cmd_type = 'default'
     if len(cmd_parts) == 1 and isinstance(cmd_parts[0], dict):
         # windows has single cmd part as dict: 'task-reference', with long string
-        cmd_parts = cmd_parts[0]["task-reference"].split(" ")
-        cmd_type = "dict"
+        cmd_parts = cmd_parts[0]['task-reference'].split(' ')
+        cmd_type = 'dict'
     elif len(cmd_parts) == 1 and isinstance(cmd_parts[0], string_types):
         # windows has single cmd part as a long string
-        cmd_parts = cmd_parts[0].split(" ")
-        cmd_type = "unicode"
+        cmd_parts = cmd_parts[0].split(' ')
+        cmd_type = 'unicode'
     elif len(cmd_parts) == 1 and isinstance(cmd_parts[0], list):
         # osx has an single value array with an array inside
         cmd_parts = cmd_parts[0]
-        cmd_type = "subarray"
+        cmd_type = 'subarray'
     elif len(cmd_parts) == 2 and isinstance(cmd_parts[1], list):
         # osx has an double value array with an array inside each element.
         # The first element is a pre-requisite command while the second
         # is the actual test command.
-        cmd_type = "subarray2"
+        cmd_type = 'subarray2'
 
-    if cmd_type == "subarray2":
+    if cmd_type == 'subarray2':
         cmd_parts[1].extend(extra_args)
     else:
         cmd_parts.extend(extra_args)
 
-    if cmd_type == "dict":
-        cmd_parts = [{"task-reference": " ".join(cmd_parts)}]
-    elif cmd_type == "unicode":
-        cmd_parts = [" ".join(cmd_parts)]
-    elif cmd_type == "subarray":
+    if cmd_type == 'dict':
+        cmd_parts = [{'task-reference': ' '.join(cmd_parts)}]
+    elif cmd_type == 'unicode':
+        cmd_parts = [' '.join(cmd_parts)]
+    elif cmd_type == 'subarray':
         cmd_parts = [cmd_parts]
     return cmd_parts

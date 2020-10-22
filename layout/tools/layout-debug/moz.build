@@ -4,10 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["src", "ui"]
+DIRS += ['src', 'ui']
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
-FINAL_TARGET_FILES.actors += ["LayoutDebugChild.jsm"]
+FINAL_TARGET_FILES.actors += ['LayoutDebugChild.jsm']

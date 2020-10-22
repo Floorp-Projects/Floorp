@@ -4,41 +4,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram("fuzz-tests", linkage=None)
+GeckoProgram('fuzz-tests', linkage=None)
 
-include("../js-cxxflags.mozbuild")
-include("../js-standalone.mozbuild")
+include('../js-cxxflags.mozbuild')
+include('../js-standalone.mozbuild')
 
 UNIFIED_SOURCES += [
-    "testExample.cpp",
-    "testRegExp.cpp",
-    "tests.cpp",
-    "testStructuredCloneReader.cpp",
-    "testWasm.cpp",
+    'testExample.cpp',
+    'testRegExp.cpp',
+    'tests.cpp',
+    'testStructuredCloneReader.cpp',
+    'testWasm.cpp',
 ]
 
-DEFINES["EXPORT_JS_API"] = True
+DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
-    "!..",
-    "..",
+    '!..',
+    '..',
 ]
 
-if CONFIG["FUZZING"]:
+if CONFIG['FUZZING']:
     USE_LIBS += [
-        "static:fuzzer-registry",
+        'static:fuzzer-registry',
     ]
 
-if CONFIG["LIBFUZZER"]:
+if CONFIG['LIBFUZZER']:
     USE_LIBS += [
-        "static:fuzzer",
+        'static:fuzzer',
     ]
 
     # Add libFuzzer configuration directives
-    include("/tools/fuzzing/libfuzzer-config.mozbuild")
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 USE_LIBS += [
-    "static:js",
+    'static:js',
 ]
 
-DEFINES["topsrcdir"] = "%s/js/src" % TOPSRCDIR
+DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR

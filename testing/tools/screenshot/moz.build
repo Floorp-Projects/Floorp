@@ -4,28 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["MOZ_X11"]:
-    Program("screentopng")
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk' and CONFIG['MOZ_X11']:
+    Program('screentopng')
     SOURCES += [
-        "gdk-screenshot.cpp",
+        'gdk-screenshot.cpp',
     ]
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    LDFLAGS += CONFIG["XLDFLAGS"]
-    OS_LIBS += CONFIG["TK_LIBS"]
-    if CONFIG["MOZ_ENABLE_DBUS"]:
-        OS_LIBS += CONFIG["MOZ_DBUS_GLIB_LIBS"]
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    LDFLAGS += CONFIG['XLDFLAGS']
+    OS_LIBS += CONFIG['TK_LIBS']
+    if CONFIG['MOZ_ENABLE_DBUS']:
+        OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
 
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    Program("screenshot")
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    Program('screenshot')
     SOURCES += [
-        "win32-screenshot.cpp",
+        'win32-screenshot.cpp',
     ]
     USE_STATIC_LIBS = True
-    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-        WIN32_EXE_LDFLAGS += ["-municode"]
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        WIN32_EXE_LDFLAGS += ['-municode']
     OS_LIBS += [
-        "gdiplus",
+        'gdiplus',
     ]
 
 NO_PGO = True
 DisableStlWrapping()
+

@@ -5,20 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "WidevineFileIO.cpp",
-    "WidevineUtils.cpp",
-    "WidevineVideoFrame.cpp",
+    'WidevineFileIO.cpp',
+    'WidevineUtils.cpp',
+    'WidevineVideoFrame.cpp',
 ]
 
-EXPORTS += ["WidevineFileIO.h", "WidevineUtils.h", "WidevineVideoFrame.h"]
+EXPORTS += [
+    'WidevineFileIO.h',
+    'WidevineUtils.h',
+    'WidevineVideoFrame.h'
+]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/dom/media/gmp",
+    '/dom/media/gmp',
 ]
 
-if CONFIG["CC_TYPE"] == "clang":
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] == 'clang':
+    CXXFLAGS += ['-Wno-error=shadow']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

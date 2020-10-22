@@ -50,14 +50,13 @@ class TestStaticAnalysis(unittest.TestCase):
         old_sep = os.sep
         os.sep = "\\"
         try:
-            self.assertTrue(
-                cmd._is_ignored_path(ignored_dirs_re, win32_path) is not None
-            )
+            self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, win32_path) is
+                            not None)
         finally:
             os.sep = old_sep
 
         self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, "path2") is None)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

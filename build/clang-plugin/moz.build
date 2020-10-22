@@ -4,119 +4,111 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-HostSharedLibrary("clang-plugin")
+HostSharedLibrary('clang-plugin')
 
-HOST_SOURCES += ["!ThirdPartyPaths.cpp"]
+HOST_SOURCES += ['!ThirdPartyPaths.cpp']
 
 HOST_SOURCES += [
-    "ArithmeticArgChecker.cpp",
-    "AssertAssignmentChecker.cpp",
-    "CanRunScriptChecker.cpp",
-    "CustomAttributes.cpp",
-    "CustomTypeAnnotation.cpp",
-    "DanglingOnTemporaryChecker.cpp",
-    "DiagnosticsMatcher.cpp",
-    "ExplicitImplicitChecker.cpp",
-    "ExplicitOperatorBoolChecker.cpp",
-    "KungFuDeathGripChecker.cpp",
-    "MozCheckAction.cpp",
-    "MustOverrideChecker.cpp",
-    "MustReturnFromCallerChecker.cpp",
-    "MustUseChecker.cpp",
-    "NaNExprChecker.cpp",
-    "NeedsNoVTableTypeChecker.cpp",
-    "NoAddRefReleaseOnReturnChecker.cpp",
-    "NoAutoTypeChecker.cpp",
-    "NoDuplicateRefCntMemberChecker.cpp",
-    "NoExplicitMoveConstructorChecker.cpp",
-    "NoNewThreadsChecker.cpp",
-    "NonMemMovableMemberChecker.cpp",
-    "NonMemMovableTemplateArgChecker.cpp",
-    "NonParamInsideFunctionDeclChecker.cpp",
-    "NonTrivialTypeInFfiChecker.cpp",
-    "NoPrincipalGetURI.cpp",
-    "NoUsingNamespaceMozillaJavaChecker.cpp",
-    "OverrideBaseCallChecker.cpp",
-    "OverrideBaseCallUsageChecker.cpp",
-    "ParamTraitsEnumChecker.cpp",
-    "RefCountedCopyConstructorChecker.cpp",
-    "RefCountedInsideLambdaChecker.cpp",
-    "ScopeChecker.cpp",
-    "SprintfLiteralChecker.cpp",
-    "TemporaryLifetimeBoundChecker.cpp",
-    "TrivialCtorDtorChecker.cpp",
-    "TrivialDtorChecker.cpp",
-    "VariableUsageHelpers.cpp",
+    'ArithmeticArgChecker.cpp',
+    'AssertAssignmentChecker.cpp',
+    'CanRunScriptChecker.cpp',
+    'CustomAttributes.cpp',
+    'CustomTypeAnnotation.cpp',
+    'DanglingOnTemporaryChecker.cpp',
+    'DiagnosticsMatcher.cpp',
+    'ExplicitImplicitChecker.cpp',
+    'ExplicitOperatorBoolChecker.cpp',
+    'KungFuDeathGripChecker.cpp',
+    'MozCheckAction.cpp',
+    'MustOverrideChecker.cpp',
+    'MustReturnFromCallerChecker.cpp',
+    'MustUseChecker.cpp',
+    'NaNExprChecker.cpp',
+    'NeedsNoVTableTypeChecker.cpp',
+    'NoAddRefReleaseOnReturnChecker.cpp',
+    'NoAutoTypeChecker.cpp',
+    'NoDuplicateRefCntMemberChecker.cpp',
+    'NoExplicitMoveConstructorChecker.cpp',
+    'NoNewThreadsChecker.cpp',
+    'NonMemMovableMemberChecker.cpp',
+    'NonMemMovableTemplateArgChecker.cpp',
+    'NonParamInsideFunctionDeclChecker.cpp',
+    'NonTrivialTypeInFfiChecker.cpp',
+    'NoPrincipalGetURI.cpp',
+    'NoUsingNamespaceMozillaJavaChecker.cpp',
+    'OverrideBaseCallChecker.cpp',
+    'OverrideBaseCallUsageChecker.cpp',
+    'ParamTraitsEnumChecker.cpp',
+    'RefCountedCopyConstructorChecker.cpp',
+    'RefCountedInsideLambdaChecker.cpp',
+    'ScopeChecker.cpp',
+    'SprintfLiteralChecker.cpp',
+    'TemporaryLifetimeBoundChecker.cpp',
+    'TrivialCtorDtorChecker.cpp',
+    'TrivialDtorChecker.cpp',
+    'VariableUsageHelpers.cpp',
 ]
 
 # Ideally, we wouldn't have compile-time choices wrt checkes. bug 1617153.
-if CONFIG["OS_ARCH"] == "WINNT":
-    HOST_DEFINES["TARGET_IS_WINDOWS"] = True
+if CONFIG['OS_ARCH'] == 'WINNT':
+    HOST_DEFINES['TARGET_IS_WINDOWS'] = True
     HOST_SOURCES += [
-        "FopenUsageChecker.cpp",
-        "LoadLibraryUsageChecker.cpp",
+        'FopenUsageChecker.cpp',
+        'LoadLibraryUsageChecker.cpp',
     ]
 
-if CONFIG["ENABLE_MOZSEARCH_PLUGIN"]:
+if CONFIG['ENABLE_MOZSEARCH_PLUGIN']:
     HOST_SOURCES += [
-        "mozsearch-plugin/FileOperations.cpp",
-        "mozsearch-plugin/JSONFormatter.cpp",
-        "mozsearch-plugin/MozsearchIndexer.cpp",
-        "mozsearch-plugin/StringOperations.cpp",
+        'mozsearch-plugin/FileOperations.cpp',
+        'mozsearch-plugin/JSONFormatter.cpp',
+        'mozsearch-plugin/MozsearchIndexer.cpp',
+        'mozsearch-plugin/StringOperations.cpp',
     ]
 
-GeneratedFile(
-    "ThirdPartyPaths.cpp",
-    script="ThirdPartyPaths.py",
-    entry_point="generate",
-    inputs=[
-        "/tools/rewriting/ThirdPartyPaths.txt",
-        "/tools/rewriting/Generated.txt",
-    ],
-)
+GeneratedFile('ThirdPartyPaths.cpp', script="ThirdPartyPaths.py",
+              entry_point="generate", inputs=[
+                  '/tools/rewriting/ThirdPartyPaths.txt',
+                  '/tools/rewriting/Generated.txt',
+              ])
 
-GeneratedFile(
-    "ThreadAllows.h",
-    script="ThreadAllows.py",
-    entry_point="generate_file",
-    inputs=[
-        "/build/clang-plugin/ThreadAllows.txt",
-        "/build/clang-plugin/ThreadFileAllows.txt",
-    ],
-)
+GeneratedFile('ThreadAllows.h', script="ThreadAllows.py",
+              entry_point="generate_file", inputs=[
+              '/build/clang-plugin/ThreadAllows.txt',
+              '/build/clang-plugin/ThreadFileAllows.txt'
+              ])
 
-HOST_COMPILE_FLAGS["STL"] = []
-HOST_COMPILE_FLAGS["VISIBILITY"] = []
+HOST_COMPILE_FLAGS['STL'] = []
+HOST_COMPILE_FLAGS['VISIBILITY'] = []
 
 # libc++ is required to build plugins against clang on OS X.
-if CONFIG["HOST_OS_ARCH"] == "Darwin":
-    HOST_CXXFLAGS += ["-stdlib=libc++"]
+if CONFIG['HOST_OS_ARCH'] == 'Darwin':
+    HOST_CXXFLAGS += ['-stdlib=libc++']
 
 # As of clang 8, llvm-config doesn't output the flags used to build clang
 # itself, so we don't end up with -fPIC as a side effect. llvm.org/PR8220
-if CONFIG["HOST_OS_ARCH"] != "WINNT":
-    HOST_CXXFLAGS += ["-fPIC"]
+if CONFIG['HOST_OS_ARCH'] != 'WINNT':
+    HOST_CXXFLAGS += ['-fPIC']
 
 DIRS += [
-    "tests",
+    'tests',
 ]
 
-include("external/sources.mozbuild")
+include('external/sources.mozbuild')
 
-if CONFIG["ENABLE_CLANG_PLUGIN_ALPHA"]:
+if CONFIG['ENABLE_CLANG_PLUGIN_ALPHA']:
     HOST_DEFINES["MOZ_CLANG_PLUGIN_ALPHA"] = "1"
-    include("alpha/sources.mozbuild")
+    include('alpha/sources.mozbuild')
 
 # In the current moz.build world, we need to override essentially every
 # variable to limit ourselves to what we need to build the clang plugin.
-if CONFIG["HOST_OS_ARCH"] == "WINNT":
-    extra_cxxflags = ["-GR-", "-EHsc"]
+if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+    extra_cxxflags = ['-GR-', '-EHsc']
 else:
-    extra_cxxflags = ["-fno-rtti", "-fno-exceptions"]
+    extra_cxxflags = ['-fno-rtti', '-fno-exceptions']
 
-if CONFIG["LLVM_CXXFLAGS"]:
-    HOST_COMPILE_FLAGS["HOST_CXXFLAGS"] = CONFIG["LLVM_CXXFLAGS"] + extra_cxxflags
+if CONFIG['LLVM_CXXFLAGS']:
+    HOST_COMPILE_FLAGS['HOST_CXXFLAGS'] = CONFIG['LLVM_CXXFLAGS'] + extra_cxxflags
 
 # Avoid -DDEBUG=1 on the command line, which conflicts with a #define
 # DEBUG(...) in llvm headers.
-DEFINES["DEBUG"] = False
+DEFINES['DEBUG'] = False

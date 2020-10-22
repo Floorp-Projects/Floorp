@@ -26,9 +26,8 @@ class LoggingMixin(object):
 
     def _log_msg(self, cmd, *args, **kwargs):
         if not hasattr(self, "_logger"):
-            self._logger = getLogger(
-                ".".join([self.__module__, self.__class__.__name__])
-            )
+            self._logger = getLogger(".".join([self.__module__,
+                                               self.__class__.__name__]))
         getattr(self._logger, cmd)(*args, **kwargs)
 
     def log(self, *args, **kwargs):

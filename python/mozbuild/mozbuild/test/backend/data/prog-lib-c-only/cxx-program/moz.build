@@ -2,6 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-Program("cxx_test_program")
+Program('cxx_test_program')
 
-SOURCES = ["cxx_test_program.cpp"]
+SOURCES = ['cxx_test_program.cpp']

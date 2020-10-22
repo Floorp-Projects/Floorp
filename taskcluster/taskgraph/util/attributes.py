@@ -10,63 +10,61 @@ import six
 
 
 INTEGRATION_PROJECTS = {
-    "autoland",
+    'autoland',
 }
 
-TRUNK_PROJECTS = INTEGRATION_PROJECTS | {"mozilla-central", "comm-central"}
+TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', 'comm-central'}
 
 RELEASE_PROJECTS = {
-    "mozilla-central",
-    "mozilla-beta",
-    "mozilla-release",
-    "mozilla-esr78",
-    "comm-central",
-    "comm-beta",
-    "comm-esr78",
-    "oak",
+    'mozilla-central',
+    'mozilla-beta',
+    'mozilla-release',
+    'mozilla-esr78',
+    'comm-central',
+    'comm-beta',
+    'comm-esr78',
+    'oak',
 }
 
 RELEASE_PROMOTION_PROJECTS = {
-    "jamun",
-    "maple",
-    "try",
-    "try-comm-central",
+    'jamun',
+    'maple',
+    'try',
+    'try-comm-central',
 } | RELEASE_PROJECTS
 
-TEMPORARY_PROJECTS = set(
-    {
-        # When using a "Disposeabel Project Branch" you can specify your branch here. e.g.:
-        # 'oak',
-    }
-)
+TEMPORARY_PROJECTS = set({
+    # When using a "Disposeabel Project Branch" you can specify your branch here. e.g.:
+    # 'oak',
+})
 
 ALL_PROJECTS = RELEASE_PROMOTION_PROJECTS | TRUNK_PROJECTS | TEMPORARY_PROJECTS
 
 RUN_ON_PROJECT_ALIASES = {
     # key is alias, value is lambda to test it against
-    "all": lambda project: True,
-    "integration": lambda project: project in INTEGRATION_PROJECTS,
-    "release": lambda project: project in RELEASE_PROJECTS,
-    "trunk": lambda project: project in TRUNK_PROJECTS,
+    'all': lambda project: True,
+    'integration': lambda project: project in INTEGRATION_PROJECTS,
+    'release': lambda project: project in RELEASE_PROJECTS,
+    'trunk': lambda project: project in TRUNK_PROJECTS,
 }
 
 _COPYABLE_ATTRIBUTES = (
-    "accepted-mar-channel-ids",
-    "artifact_map",
-    "artifact_prefix",
-    "build_platform",
-    "build_type",
-    "l10n_chunk",
-    "locale",
-    "mar-channel-id",
-    "nightly",
-    "required_signoffs",
-    "shippable",
-    "shipping_phase",
-    "shipping_product",
-    "signed",
-    "stub-installer",
-    "update-channel",
+    'accepted-mar-channel-ids',
+    'artifact_map',
+    'artifact_prefix',
+    'build_platform',
+    'build_type',
+    'l10n_chunk',
+    'locale',
+    'mar-channel-id',
+    'nightly',
+    'required_signoffs',
+    'shippable',
+    'shipping_phase',
+    'shipping_product',
+    'signed',
+    'stub-installer',
+    'update-channel',
 )
 
 
@@ -103,13 +101,13 @@ def keymatch(attributes, target):
         return [attributes[target]]
 
     # regular expression match
-    matches = [v for k, v in six.iteritems(attributes) if re.match(k + "$", target)]
+    matches = [v for k, v in six.iteritems(attributes) if re.match(k + '$', target)]
     if matches:
         return matches
 
     # default
-    if "default" in attributes:
-        return [attributes["default"]]
+    if 'default' in attributes:
+        return [attributes['default']]
 
     return []
 
@@ -121,7 +119,10 @@ def match_run_on_projects(project, run_on_projects):
     aliases = RUN_ON_PROJECT_ALIASES.keys()
     run_aliases = set(aliases) & set(run_on_projects)
     if run_aliases:
-        if any(RUN_ON_PROJECT_ALIASES[alias](project) for alias in run_aliases):
+        if any(
+            RUN_ON_PROJECT_ALIASES[alias](project)
+            for alias in run_aliases
+        ):
             return True
 
     return project in run_on_projects
@@ -130,7 +131,7 @@ def match_run_on_projects(project, run_on_projects):
 def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
     """Determine whether the given project is included in the `run-on-hg-branches`
     parameter. Allows 'all'."""
-    if "all" in run_on_hg_branches:
+    if 'all' in run_on_hg_branches:
         return True
 
     for expected_hg_branch_pattern in run_on_hg_branches:
@@ -143,8 +144,7 @@ def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
 def copy_attributes_from_dependent_job(dep_job, denylist=()):
     return {
         attr: dep_job.attributes[attr]
-        for attr in _COPYABLE_ATTRIBUTES
-        if attr in dep_job.attributes and attr not in denylist
+        for attr in _COPYABLE_ATTRIBUTES if attr in dep_job.attributes and attr not in denylist
     }
 
 
@@ -160,4 +160,4 @@ def release_level(project):
 
     :return six.text_type: One of "production" or "staging".
     """
-    return "production" if project in RELEASE_PROJECTS else "staging"
+    return 'production' if project in RELEASE_PROJECTS else 'staging'

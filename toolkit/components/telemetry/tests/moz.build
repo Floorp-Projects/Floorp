@@ -7,19 +7,17 @@
 DIST_INSTALL = False
 
 SOURCES += [
-    "modules-test.cpp",
+    'modules-test.cpp',
 ]
 
-SharedLibrary("modules-test")
+SharedLibrary('modules-test')
 
 NO_PGO = True
 
 TESTING_JS_MODULES += [
-    "utils/TelemetryTestUtils.jsm",
+    'utils/TelemetryTestUtils.jsm',
 ]
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    shared_library = "!%smodules-test%s" % (CONFIG["DLL_PREFIX"], CONFIG["DLL_SUFFIX"])
-    TEST_HARNESS_FILES.xpcshell.toolkit.components.telemetry.tests.unit += [
-        shared_library
-    ]
+if CONFIG['COMPILE_ENVIRONMENT']:
+    shared_library = '!%smodules-test%s' % (CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'])
+    TEST_HARNESS_FILES.xpcshell.toolkit.components.telemetry.tests.unit += [shared_library]

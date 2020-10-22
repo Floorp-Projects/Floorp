@@ -20,7 +20,7 @@ def check_for_reused_pretty_printer(fn):
     # 'enable/disable/info pretty-printer' commands are simply stored as
     # properties of the function objects themselves, so a single function
     # object can't carry the 'enabled' flags for two different printers.)
-    if hasattr(fn, "enabled"):
+    if hasattr(fn, 'enabled'):
         raise RuntimeError("pretty-printer function %r registered more than once" % fn)
 
 
@@ -37,7 +37,6 @@ def pretty_printer(type_name):
         add_to_subprinter_list(fn, type_name)
         printers_by_tag[type_name] = fn
         return fn
-
     return add
 
 
@@ -55,7 +54,6 @@ def ptr_pretty_printer(type_name):
         add_to_subprinter_list(fn, "ptr-to-" + type_name)
         ptr_printers_by_tag[type_name] = fn
         return fn
-
     return add
 
 
@@ -73,7 +71,6 @@ def ref_pretty_printer(type_name):
         add_to_subprinter_list(fn, "ref-to-" + type_name)
         ref_printers_by_tag[type_name] = fn
         return fn
-
     return add
 
 
@@ -88,10 +85,9 @@ template_printers_by_tag = {}
 def template_pretty_printer(template_name):
     def add(fn):
         check_for_reused_pretty_printer(fn)
-        add_to_subprinter_list(fn, "instantiations-of-" + template_name)
+        add_to_subprinter_list(fn, 'instantiations-of-' + template_name)
         template_printers_by_tag[template_name] = fn
         return fn
-
     return add
 
 
@@ -114,9 +110,7 @@ def pretty_printer_for_regexp(pattern, name):
         add_to_subprinter_list(fn, name)
         printers_by_regexp.append((compiled, fn))
         return fn
-
     return add
-
 
 # Forget all pretty-printer lookup functions defined in the module name
 # |module_name|, if any exist. Use this at the top of each pretty-printer
@@ -172,20 +166,17 @@ def add_to_subprinter_list(subprinter, name):
     subprinter.enabled = True
     subprinters.append(subprinter)
 
-
 # Remove |subprinter| from our list of all SpiderMonkey subprinters.
 
 
 def remove_from_subprinter_list(subprinter):
     subprinters.remove(subprinter)
 
-
 # An exception class meaning, "This objfile has no SpiderMonkey in it."
 
 
 class NotSpiderMonkeyObjfileError(TypeError):
     pass
-
 
 # TypeCache: a cache for frequently used information about an objfile.
 #
@@ -211,13 +202,13 @@ class TypeCache(object):
         # the objfile in whose scope lookups should occur. But simply
         # knowing that we need to lookup the types afresh is probably
         # enough.
-        self.void_t = gdb.lookup_type("void")
+        self.void_t = gdb.lookup_type('void')
         self.void_ptr_t = self.void_t.pointer()
-        self.uintptr_t = gdb.lookup_type("uintptr_t")
+        self.uintptr_t = gdb.lookup_type('uintptr_t')
         try:
-            self.JSString_ptr_t = gdb.lookup_type("JSString").pointer()
-            self.JSSymbol_ptr_t = gdb.lookup_type("JS::Symbol").pointer()
-            self.JSObject_ptr_t = gdb.lookup_type("JSObject").pointer()
+            self.JSString_ptr_t = gdb.lookup_type('JSString').pointer()
+            self.JSSymbol_ptr_t = gdb.lookup_type('JS::Symbol').pointer()
+            self.JSObject_ptr_t = gdb.lookup_type('JSObject').pointer()
         except gdb.error:
             raise NotSpiderMonkeyObjfileError
 
@@ -229,7 +220,6 @@ class TypeCache(object):
         self.mod_JS_Value = None
         self.mod_ExecutableAllocator = None
         self.mod_IonGraph = None
-
 
 # Yield a series of all the types that |t| implements, by following typedefs
 # and iterating over base classes. Specifically:
@@ -281,7 +271,6 @@ def is_struct_or_union(t):
 def is_struct_or_union_or_enum(t):
     return t.code in (gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION, gdb.TYPE_CODE_ENUM)
 
-
 # Construct and return a pretty-printer lookup function for objfile, or
 # return None if the objfile doesn't contain SpiderMonkey code
 # (specifically, definitions for SpiderMonkey types).
@@ -293,10 +282,8 @@ def lookup_for_objfile(objfile):
         cache = TypeCache(objfile)
     except NotSpiderMonkeyObjfileError:
         if gdb.parameter("verbose"):
-            gdb.write(
-                "objfile '%s' has no SpiderMonkey code; not registering pretty-printers\n"
-                % (objfile.filename,)
-            )
+            gdb.write("objfile '%s' has no SpiderMonkey code; not registering pretty-printers\n"
+                      % (objfile.filename,))
         return None
 
     # Return a pretty-printer for |value|, if we have one. This is the lookup
@@ -364,7 +351,6 @@ def lookup_for_objfile(objfile):
 
     return lookup
 
-
 # A base class for pretty-printers for pointer values that handles null
 # pointers, by declining to construct a pretty-printer for them at all.
 # Derived classes may simply assume that self.value is non-null.
@@ -399,19 +385,19 @@ class Pointer(object):
 
     def to_string(self):
         # See comment above.
-        assert not hasattr(self, "display_hint") or self.display_hint() != "string"
+        assert not hasattr(self, 'display_hint') or self.display_hint() != 'string'
         concrete_type = self.value.type.strip_typedefs()
         if concrete_type.code == gdb.TYPE_CODE_PTR:
             address = self.value.cast(self.cache.void_ptr_t)
         elif concrete_type.code == gdb.TYPE_CODE_REF:
-            address = "@" + str(self.value.address.cast(self.cache.void_ptr_t))
+            address = '@' + str(self.value.address.cast(self.cache.void_ptr_t))
         else:
             assert not "mozilla.prettyprinters.Pointer applied to bad value type"
         try:
             summary = self.summary()
         except gdb.MemoryError as r:
             summary = str(r)
-        v = "(%s) %s %s" % (self.value.type, address, summary)
+        v = '(%s) %s %s' % (self.value.type, address, summary)
         return v
 
     def summary(self):
@@ -433,14 +419,8 @@ def enum_value(t, name):
     f = t[name]
     # Monkey-patching is a-okay in polyfills! Just because.
     if not field_enum_value:
-        if hasattr(f, "enumval"):
-
-            def field_enum_value(f):
-                return f.enumval
-
+        if hasattr(f, 'enumval'):
+            def field_enum_value(f): return f.enumval
         else:
-
-            def field_enum_value(f):
-                return f.bitpos
-
+            def field_enum_value(f): return f.bitpos
     return field_enum_value(f)

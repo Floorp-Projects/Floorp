@@ -4,64 +4,64 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("../components/telemetry/telemetry-constants.mozbuild")
+include('../components/telemetry/telemetry-constants.mozbuild')
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files("docs/**"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('docs/**'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("subprocess/**"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('subprocess/**'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("tests/browser/*AsyncPrefs*"):
-    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+with Files('tests/browser/*AsyncPrefs*'):
+    BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
-with Files("tests/browser/*Finder*"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('tests/browser/*Finder*'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("tests/xpcshell/test_Color.js"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('tests/xpcshell/test_Color.js'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("tests/xpcshell/test_DeferredTask.js"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('tests/xpcshell/test_DeferredTask.js'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("tests/xpcshell/test_FinderIterator.js"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('tests/xpcshell/test_FinderIterator.js'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("tests/xpcshell/test_Integration.js"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('tests/xpcshell/test_Integration.js'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("tests/xpcshell/test_JSONFile.js"):
-    BUG_COMPONENT = ("Toolkit", "Form Manager")
+with Files('tests/xpcshell/test_JSONFile.js'):
+    BUG_COMPONENT = ('Toolkit', 'Form Manager')
 
-with Files("tests/xpcshell/test_Match*.js"):
-    BUG_COMPONENT = ("WebExtensions", "General")
+with Files('tests/xpcshell/test_Match*.js'):
+    BUG_COMPONENT = ('WebExtensions', 'General')
 
-with Files("tests/xpcshell/test_NewTabUtils.js"):
-    BUG_COMPONENT = ("Firefox", "New Tab Page")
+with Files('tests/xpcshell/test_NewTabUtils.js'):
+    BUG_COMPONENT = ('Firefox', 'New Tab Page')
 
-with Files("tests/xpcshell/test_UpdateUtils*.js"):
-    BUG_COMPONENT = ("Toolkit", "Application Update")
+with Files('tests/xpcshell/test_UpdateUtils*.js'):
+    BUG_COMPONENT = ('Toolkit', 'Application Update')
 
-with Files("AsyncPrefs.jsm"):
-    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+with Files('AsyncPrefs.jsm'):
+    BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
-with Files("CharsetMenu.jsm"):
-    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+with Files('CharsetMenu.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
-with Files("Color.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('Color.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("Console.jsm"):
-    BUG_COMPONENT = ("DevTools", "Console")
+with Files('Console.jsm'):
+    BUG_COMPONENT = ('DevTools', 'Console')
 
-with Files("DateTimePicker*.jsm"):
-    BUG_COMPONENT = ("Core", "Layout: Form Controls ")
+with Files('DateTimePicker*.jsm'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls ')
 
-with Files("DeferredTask.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('DeferredTask.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
 with Files("E10SUtils.jsm"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
@@ -69,246 +69,242 @@ with Files("E10SUtils.jsm"):
 with Files("nsIE10SUtils.idl"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
-with Files("Finder*.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('Finder*.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("FormLikeFactory.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Password Manager")
+with Files('FormLikeFactory.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Password Manager')
 
-with Files("IndexedDB.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('IndexedDB.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("InlineSpellChecker*.jsm"):
-    BUG_COMPONENT = ("Core", "Spelling checker")
+with Files('InlineSpellChecker*.jsm'):
+    BUG_COMPONENT = ('Core', 'Spelling checker')
 
-with Files("Integration.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('Integration.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("JSONFile.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Form Manager")
+with Files('JSONFile.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Form Manager')
 
-with Files("LightweightThemeConsumer.jsm"):
-    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+with Files('LightweightThemeConsumer.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
-with Files("NLP.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('NLP.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("NewTabUtils.jsm"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+with Files('NewTabUtils.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
-with Files("ObjectUtils.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Telemetry")
+with Files('ObjectUtils.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Telemetry')
 
 with Files("offlineAppCache.jsm"):
     BUG_COMPONENT = ("Toolkit", "Preferences")
 
-with Files("PageMenu.jsm"):
-    BUG_COMPONENT = ("Firefox", "Menus")
+with Files('PageMenu.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Menus')
 
-with Files("PermissionsUtils.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
+with Files('PermissionsUtils.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Add-ons Manager')
 
-with Files("PopupNotifications.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+with Files('PopupNotifications.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Notifications and Alerts')
 
-with Files("PrivateBrowsingUtils.jsm"):
-    BUG_COMPONENT = ("Firefox", "Private Browsing")
+with Files('PrivateBrowsingUtils.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Private Browsing')
 
-with Files("Promise*.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('Promise*.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files("ResponsivenessMonitor.jsm"):
-    BUG_COMPONENT = ("Firefox", "Migration")
+with Files('ResponsivenessMonitor.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Migration')
 
-with Files("ShortcutUtils.jsm"):
-    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+with Files('ShortcutUtils.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')
 
-with Files("Sqlite.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Storage")
+with Files('Sqlite.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Storage')
 
 with Files("SubDialog.jsm"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
-with Files("UpdateUtils.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Application Update")
+with Files('UpdateUtils.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Application Update')
 
-with Files("WindowsRegistry.jsm"):
-    BUG_COMPONENT = ("Toolkit", "General")
+with Files('WindowsRegistry.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'General')
 
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 TESTING_JS_MODULES += [
-    "tests/modules/MockDocument.jsm",
-    "tests/modules/OSKeyStoreTestUtils.jsm",
-    "tests/modules/PromiseTestUtils.jsm",
-    "tests/modules/Task.jsm",
-    "tests/xpcshell/TestIntegration.jsm",
+    'tests/modules/MockDocument.jsm',
+    'tests/modules/OSKeyStoreTestUtils.jsm',
+    'tests/modules/PromiseTestUtils.jsm',
+    'tests/modules/Task.jsm',
+    'tests/xpcshell/TestIntegration.jsm',
 ]
 
-SPHINX_TREES["toolkit_modules"] = "docs"
+SPHINX_TREES['toolkit_modules'] = 'docs'
 
-with Files("docs/**"):
-    SCHEDULES.exclusive = ["docs"]
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 EXTRA_JS_MODULES += [
-    "AboutPagesUtils.jsm",
-    "ActorChild.jsm",
-    "ActorManagerChild.jsm",
-    "ActorManagerParent.jsm",
-    "AppMenuNotifications.jsm",
-    "AsyncPrefs.jsm",
-    "BinarySearch.jsm",
-    "BrowserUtils.jsm",
-    "CanonicalJSON.jsm",
-    "CertUtils.jsm",
-    "CharsetMenu.jsm",
-    "Color.jsm",
-    "Console.jsm",
-    "ContentDOMReference.jsm",
-    "CreditCard.jsm",
-    "DateTimePickerPanel.jsm",
-    "DeferredTask.jsm",
-    "Deprecated.jsm",
-    "E10SUtils.jsm",
-    "EventEmitter.jsm",
-    "FileUtils.jsm",
-    "FindBarContent.jsm",
-    "Finder.jsm",
-    "FinderHighlighter.jsm",
-    "FinderIterator.jsm",
-    "FinderParent.jsm",
-    "FirstStartup.jsm",
-    "FormLikeFactory.jsm",
-    "Geometry.jsm",
-    "HiddenFrame.jsm",
-    "Http.jsm",
-    "IgnoreLists.jsm",
-    "IndexedDB.jsm",
-    "InlineSpellChecker.jsm",
-    "InlineSpellCheckerContent.jsm",
-    "Integration.jsm",
-    "JSONFile.jsm",
-    "Log.jsm",
-    "NewTabUtils.jsm",
-    "NLP.jsm",
-    "ObjectUtils.jsm",
-    "offlineAppCache.jsm",
-    "OsEnvironment.jsm",
-    "OSKeyStore.jsm",
-    "PageMenu.jsm",
-    "PermissionsUtils.jsm",
-    "PopupNotifications.jsm",
-    "Preferences.jsm",
-    "PrivateBrowsingUtils.jsm",
-    "ProfileAge.jsm",
-    "Promise-backend.js",
-    "Promise.jsm",
-    "PromiseUtils.jsm",
-    "Region.jsm",
-    "RemotePageAccessManager.jsm",
-    "ResetProfile.jsm",
-    "ResponsivenessMonitor.jsm",
-    "ServiceRequest.jsm",
-    "Services.jsm",
-    "ShortcutUtils.jsm",
-    "Sqlite.jsm",
-    "SubDialog.jsm",
-    "Timer.jsm",
-    "Troubleshoot.jsm",
-    "UpdateUtils.jsm",
-    "WebChannel.jsm",
+    'AboutPagesUtils.jsm',
+    'ActorChild.jsm',
+    'ActorManagerChild.jsm',
+    'ActorManagerParent.jsm',
+    'AppMenuNotifications.jsm',
+    'AsyncPrefs.jsm',
+    'BinarySearch.jsm',
+    'BrowserUtils.jsm',
+    'CanonicalJSON.jsm',
+    'CertUtils.jsm',
+    'CharsetMenu.jsm',
+    'Color.jsm',
+    'Console.jsm',
+    'ContentDOMReference.jsm',
+    'CreditCard.jsm',
+    'DateTimePickerPanel.jsm',
+    'DeferredTask.jsm',
+    'Deprecated.jsm',
+    'E10SUtils.jsm',
+    'EventEmitter.jsm',
+    'FileUtils.jsm',
+    'FindBarContent.jsm',
+    'Finder.jsm',
+    'FinderHighlighter.jsm',
+    'FinderIterator.jsm',
+    'FinderParent.jsm',
+    'FirstStartup.jsm',
+    'FormLikeFactory.jsm',
+    'Geometry.jsm',
+    'HiddenFrame.jsm',
+    'Http.jsm',
+    'IgnoreLists.jsm',
+    'IndexedDB.jsm',
+    'InlineSpellChecker.jsm',
+    'InlineSpellCheckerContent.jsm',
+    'Integration.jsm',
+    'JSONFile.jsm',
+    'Log.jsm',
+    'NewTabUtils.jsm',
+    'NLP.jsm',
+    'ObjectUtils.jsm',
+    'offlineAppCache.jsm',
+    'OsEnvironment.jsm',
+    'OSKeyStore.jsm',
+    'PageMenu.jsm',
+    'PermissionsUtils.jsm',
+    'PopupNotifications.jsm',
+    'Preferences.jsm',
+    'PrivateBrowsingUtils.jsm',
+    'ProfileAge.jsm',
+    'Promise-backend.js',
+    'Promise.jsm',
+    'PromiseUtils.jsm',
+    'Region.jsm',
+    'RemotePageAccessManager.jsm',
+    'ResetProfile.jsm',
+    'ResponsivenessMonitor.jsm',
+    'ServiceRequest.jsm',
+    'Services.jsm',
+    'ShortcutUtils.jsm',
+    'Sqlite.jsm',
+    'SubDialog.jsm',
+    'Timer.jsm',
+    'Troubleshoot.jsm',
+    'UpdateUtils.jsm',
+    'WebChannel.jsm',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXTRA_JS_MODULES += [
-        "PropertyListUtils.jsm",
+        'PropertyListUtils.jsm',
     ]
 
-EXTRA_JS_MODULES.third_party.jsesc += ["third_party/jsesc/jsesc.js"]
+EXTRA_JS_MODULES.third_party.jsesc += ['third_party/jsesc/jsesc.js']
 EXTRA_JS_MODULES.sessionstore += [
-    "sessionstore/PrivacyFilter.jsm",
-    "sessionstore/PrivacyLevel.jsm",
-    "sessionstore/SessionHistory.jsm",
-    "sessionstore/Utils.jsm",
+    'sessionstore/PrivacyFilter.jsm',
+    'sessionstore/PrivacyLevel.jsm',
+    'sessionstore/SessionHistory.jsm',
+    'sessionstore/Utils.jsm',
 ]
 
-EXTRA_JS_MODULES.third_party.fathom += ["third_party/fathom/fathom.jsm"]
+EXTRA_JS_MODULES.third_party.fathom += ['third_party/fathom/fathom.jsm']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk"):
-    DEFINES["MENUBAR_CAN_AUTOHIDE"] = 1
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk'):
+    DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk", "cocoa"):
-    DEFINES["HAVE_SHELL_SERVICE"] = 1
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk', 'cocoa'):
+    DEFINES['HAVE_SHELL_SERVICE'] = 1
 
 EXTRA_PP_JS_MODULES += [
-    "AppConstants.jsm",
+    'AppConstants.jsm',
 ]
 
-if "Android" != CONFIG["OS_TARGET"]:
+if 'Android' != CONFIG['OS_TARGET']:
     EXTRA_JS_MODULES += [
-        "GMPExtractorWorker.js",
-        "GMPInstallManager.jsm",
-        "GMPUtils.jsm",
-        "LightweightThemeConsumer.jsm",
+        'GMPExtractorWorker.js',
+        'GMPInstallManager.jsm',
+        'GMPUtils.jsm',
+        'LightweightThemeConsumer.jsm',
     ]
 
     DIRS += [
-        "subprocess",
+        'subprocess',
     ]
 else:
-    DEFINES["ANDROID"] = True
+    DEFINES['ANDROID'] = True
     EXTRA_JS_MODULES += [
-        "secondscreen/RokuApp.jsm",
-        "secondscreen/SimpleServiceDiscovery.jsm",
+        'secondscreen/RokuApp.jsm',
+        'secondscreen/SimpleServiceDiscovery.jsm',
     ]
 
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXTRA_JS_MODULES += [
-        "WindowsRegistry.jsm",
+        'WindowsRegistry.jsm',
     ]
 
-for var in (
-    "ANDROID_PACKAGE_NAME",
-    "MOZ_APP_NAME",
-    "MOZ_APP_BASENAME",
-    "MOZ_APP_VERSION",
-    "MOZ_APP_VERSION_DISPLAY",
-    "MOZ_BING_API_CLIENTID",
-    "MOZ_BING_API_KEY",
-    "MOZ_GOOGLE_LOCATION_SERVICE_API_KEY",
-    "MOZ_GOOGLE_SAFEBROWSING_API_KEY",
-    "MOZ_MACBUNDLE_NAME",
-    "MOZ_MOZILLA_API_KEY",
-    "MOZ_WIDGET_TOOLKIT",
-    "DLL_PREFIX",
-    "DLL_SUFFIX",
-    "DEBUG_JS_MODULES",
-    "OMNIJAR_NAME",
-):
-    DEFINES[var] = CONFIG[var]
+for var in ('ANDROID_PACKAGE_NAME',
+            'MOZ_APP_NAME',
+            'MOZ_APP_BASENAME',
+            'MOZ_APP_VERSION',
+            'MOZ_APP_VERSION_DISPLAY',
+            'MOZ_BING_API_CLIENTID',
+            'MOZ_BING_API_KEY',
+            'MOZ_GOOGLE_LOCATION_SERVICE_API_KEY',
+            'MOZ_GOOGLE_SAFEBROWSING_API_KEY',
+            'MOZ_MACBUNDLE_NAME',
+            'MOZ_MOZILLA_API_KEY',
+            'MOZ_WIDGET_TOOLKIT',
+            'DLL_PREFIX',
+            'DLL_SUFFIX',
+            'DEBUG_JS_MODULES',
+            'OMNIJAR_NAME'):
+            DEFINES[var] = CONFIG[var]
 
-for var in (
-    "MOZ_ALLOW_ADDON_SIDELOAD",
-    "MOZ_SYSTEM_NSS",
-    "MOZ_UNSIGNED_APP_SCOPE",
-    "MOZ_UNSIGNED_SYSTEM_SCOPE",
-    "MOZ_UPDATER",
-):
+for var in ('MOZ_ALLOW_ADDON_SIDELOAD',
+            'MOZ_SYSTEM_NSS',
+            'MOZ_UNSIGNED_APP_SCOPE',
+            'MOZ_UNSIGNED_SYSTEM_SCOPE',
+            'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
-DEFINES["TOPOBJDIR"] = TOPOBJDIR
+DEFINES['TOPOBJDIR'] = TOPOBJDIR
 
 XPIDL_SOURCES += [
-    "nsIBrowserWindowTracker.idl",
-    "nsIE10SUtils.idl",
-    "nsIRegion.idl",
+    'nsIBrowserWindowTracker.idl',
+    'nsIE10SUtils.idl',
+    'nsIRegion.idl',
 ]
 
-XPIDL_MODULE = "toolkit_modules"
+XPIDL_MODULE = 'toolkit_modules'

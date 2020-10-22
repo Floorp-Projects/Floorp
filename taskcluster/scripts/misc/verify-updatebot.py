@@ -45,21 +45,12 @@ class Revision:
         bug_str = " (No Bug)" if not self.bug else " (Bug %s)" % self.bug
         return self.node + " by " + self.author + bug_str
 
-
 # ================================================================================================
 # Find all commits we are hopefully landing in this push
 
 
 revisions = subprocess.check_output(
-    [
-        "hg",
-        "log",
-        "--template",
-        "{node} | {author} | {desc|firstline}\n",
-        "-r",
-        "!public()",
-    ]
-)
+    ["hg", "log", "--template", "{node} | {author} | {desc|firstline}\n", "-r", "!public()"])
 revisions = revisions.decode("utf-8").split("\n")
 
 # ================================================================================================
@@ -81,10 +72,8 @@ for r in revisions:
     if revision.author == "Updatebot <updatebot@mozilla.com>":
         updatebot_revisions.append(revision)
         if not revision.bug:
-            raise Exception(
-                "Could not find a bug for revision %s (Description: %s)"
-                % (revision.node, revision.desc)
-            )
+            raise Exception("Could not find a bug for revision %s (Description: %s)" %
+                            (revision.node, revision.desc))
 
 # ================================================================================================
 # Process each Updatebot revision
@@ -109,10 +98,8 @@ for u in updatebot_revisions:
         for f in files_changed:
             if "moz.yaml" in f:
                 if moz_yaml_file:
-                    msg = (
-                        "Already had a moz.yaml file (%s) and then we found another? (%s)"
-                        % (moz_yaml_file, f)
-                    )
+                    msg = "Already had a moz.yaml file (%s) and then we found another? (%s)" % (
+                        moz_yaml_file, f)
                     raise Exception(msg)
                 moz_yaml_file = f[2:]
 
@@ -120,17 +107,10 @@ for u in updatebot_revisions:
         # They should be ordered with the first commit as the first element and so on.
         all_commits_for_this_update = [r for r in all_revisions if r.bug == u.bug]
 
-        print(
-            "  Found %i commits associated with this bug."
-            % len(all_commits_for_this_update)
-        )
+        print("  Found %i commits associated with this bug." % len(all_commits_for_this_update))
 
         # Grab the updatebot commit and transform it into patch form
-        commitdiff = (
-            subprocess.check_output(["hg", "export", u.node])
-            .decode("utf-8")
-            .split("\n")
-        )
+        commitdiff = subprocess.check_output(["hg", "export", u.node]).decode("utf-8").split("\n")
         start_index = 0
         for i in range(len(commitdiff)):
             if "diff --git" in commitdiff[i]:
@@ -146,59 +126,36 @@ for u in updatebot_revisions:
             # hg doesn't support the ability to commit a backout without prompting the
             # user, but it does support not committing
             subprocess.check_output(["hg", "backout", c.node, "--no-commit"])
-            subprocess.check_output(
-                [
-                    "hg",
-                    "--config",
-                    "ui.username=Updatebot Verifier <updatebot@mozilla.com>",
-                    "commit",
-                    "-m",
-                    "Backed out changeset %s" % c.node,
-                ]
-            )
+            subprocess.check_output(["hg", "--config",
+                                     "ui.username=Updatebot Verifier <updatebot@mozilla.com>",
+                                     "commit", "-m", "Backed out changeset %s" % c.node])
 
         # And now re-do the updatebot commit
         print("  Vendoring", moz_yaml_file)
-        ret = subprocess.call(
-            ["./mach", "vendor", "--revision", target_revision, moz_yaml_file]
-        )
+        ret = subprocess.call(["./mach", "vendor", "--revision", target_revision, moz_yaml_file])
         if ret:
             print("  Vendoring returned code %i, but we're going to continue..." % ret)
 
         # And now get the diff
-        recreated_diff = (
-            subprocess.check_output(["hg", "diff"]).decode("utf-8").split("\n")
-        )
+        recreated_diff = subprocess.check_output(["hg", "diff"]).decode("utf-8").split("\n")
 
         # Now compare it, print if needed, and return.
         this_failure = False
         if len(recreated_diff) != len(patch_diff):
-            print(
-                "  The recreated diff is %i lines long and the original diff is %i lines long."
-                % (len(recreated_diff), len(patch_diff))
-            )
+            print("  The recreated diff is %i lines long and the original diff is %i lines long." %
+                  (len(recreated_diff), len(patch_diff)))
             this_failure = True
 
         for i in range(min(len(recreated_diff), len(patch_diff))):
             if recreated_diff[i] != patch_diff[i]:
                 if not this_failure:
-                    print(
-                        "  Identified a difference between patches, starting on line %i."
-                        % i
-                    )
+                    print("  Identified a difference between patches, starting on line %i." % i)
                 this_failure = True
 
         # Cleanup so we can go to the next one
         subprocess.check_output(["hg", "revert", "."])
-        subprocess.check_output(
-            [
-                "hg",
-                "--config",
-                "extensions.strip=",
-                "strip",
-                "tip~" + str(len(all_commits_for_this_update) - 1),
-            ]
-        )
+        subprocess.check_output(["hg", "--config", "extensions.strip=",
+                                 "strip", "tip~" + str(len(all_commits_for_this_update) - 1)])
 
         # Now process the outcome
         if not this_failure:

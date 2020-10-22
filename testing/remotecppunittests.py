@@ -20,21 +20,19 @@ from mozdevice import ADBDeviceFactory, ADBProcessError, ADBTimeoutError
 
 try:
     from mozbuild.base import MozbuildObject
-
     build_obj = MozbuildObject.from_environment()
 except ImportError:
     build_obj = None
 
 
 class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
+
     def __init__(self, options, progs):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
-        self.device = ADBDeviceFactory(
-            adb=options.adb_path or "adb",
-            device=options.device_serial,
-            test_root=options.remote_test_root,
-        )
+        self.device = ADBDeviceFactory(adb=options.adb_path or 'adb',
+                                       device=options.device_serial,
+                                       test_root=options.remote_test_root)
         self.remote_test_root = posixpath.join(self.device.test_root, "cppunittests")
         self.remote_bin_dir = posixpath.join(self.remote_test_root, "b")
         self.remote_tmp_dir = posixpath.join(self.remote_test_root, "tmp")
@@ -60,14 +58,14 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                     if info.filename.endswith(".so"):
                         print("Pushing %s.." % info.filename, file=sys.stderr)
                         remote_file = posixpath.join(
-                            self.remote_bin_dir, os.path.basename(info.filename)
-                        )
+                            self.remote_bin_dir, os.path.basename(info.filename))
                         apk_contents.extract(info, tmpdir)
                         local_file = os.path.join(tmpdir, info.filename)
                         with open(local_file) as f:
                             # Decompress xz-compressed file.
-                            if f.read(5)[1:] == "7zXZ":
-                                cmd = ["xz", "-df", "--suffix", ".so", local_file]
+                            if f.read(5)[1:] == '7zXZ':
+                                cmd = [
+                                    'xz', '-df', '--suffix', '.so', local_file]
                                 subprocess.check_output(cmd)
                                 # xz strips the ".so" file suffix.
                                 os.rename(local_file[:-3], local_file)
@@ -89,20 +87,20 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         for path in paths:
                             if path.endswith(".so"):
                                 print("Pushing {}..".format(path), file=sys.stderr)
-                                remote_file = posixpath.join(self.remote_bin_dir, path)
+                                remote_file = posixpath.join(
+                                    self.remote_bin_dir, path)
                                 local_file = os.path.join(root, path)
                                 self.device.push(local_file, remote_file)
 
     def push_progs(self, progs):
         for local_file in progs:
             remote_file = posixpath.join(
-                self.remote_bin_dir, os.path.basename(local_file)
-            )
+                self.remote_bin_dir, os.path.basename(local_file))
             self.device.push(local_file, remote_file)
 
     def build_environment(self, enable_webrender=False):
         env = self.build_core_environment({}, enable_webrender)
-        env["LD_LIBRARY_PATH"] = self.remote_bin_dir
+        env['LD_LIBRARY_PATH'] = self.remote_bin_dir
         env["TMPDIR"] = self.remote_tmp_dir
         env["HOME"] = self.remote_home_dir
         env["MOZ_XRE_DIR"] = self.remote_bin_dir
@@ -114,13 +112,13 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                 elif len(envdef_parts) == 1:
                     env[envdef_parts[0]] = ""
                 else:
-                    self.log.warning("invalid --addEnv option skipped: %s" % envdef)
+                    self.log.warning(
+                        "invalid --addEnv option skipped: %s" % envdef)
 
         return env
 
-    def run_one_test(
-        self, prog, env, symbols_path=None, interactive=False, timeout_factor=1
-    ):
+    def run_one_test(self, prog, env, symbols_path=None, interactive=False,
+                     timeout_factor=1):
         """
         Run a single C++ unit test program remotely.
 
@@ -136,12 +134,13 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         basename = os.path.basename(prog)
         remote_bin = posixpath.join(self.remote_bin_dir, basename)
         self.log.test_start(basename)
-        test_timeout = cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT * timeout_factor
+        test_timeout = cppunittests.CPPUnitTests.TEST_PROC_TIMEOUT * \
+            timeout_factor
 
         try:
-            output = self.device.shell_output(
-                remote_bin, env=env, cwd=self.remote_home_dir, timeout=test_timeout
-            )
+            output = self.device.shell_output(remote_bin, env=env,
+                                              cwd=self.remote_home_dir,
+                                              timeout=test_timeout)
             returncode = 0
         except ADBTimeoutError:
             raise
@@ -149,94 +148,68 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
             output = e.adb_process.stdout
             returncode = e.adb_process.exitcode
 
-        self.log.process_output(basename, "\n%s" % output, command=[remote_bin])
+        self.log.process_output(basename, "\n%s" % output,
+                                command=[remote_bin])
         with mozfile.TemporaryDirectory() as tempdir:
             self.device.pull(self.remote_home_dir, tempdir)
-            if mozcrash.check_for_crashes(tempdir, symbols_path, test_name=basename):
-                self.log.test_end(basename, status="CRASH", expected="PASS")
+            if mozcrash.check_for_crashes(tempdir, symbols_path,
+                                          test_name=basename):
+                self.log.test_end(basename, status='CRASH', expected='PASS')
                 return False
         result = returncode == 0
         if not result:
-            self.log.test_end(
-                basename,
-                status="FAIL",
-                expected="PASS",
-                message=("test failed with return code %s" % returncode),
-            )
+            self.log.test_end(basename, status='FAIL', expected='PASS',
+                              message=("test failed with return code %s" %
+                                       returncode))
         else:
-            self.log.test_end(basename, status="PASS", expected="PASS")
+            self.log.test_end(basename, status='PASS', expected='PASS')
         return result
 
 
 class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
+
     def __init__(self):
         cppunittests.CPPUnittestOptions.__init__(self)
         defaults = {}
 
-        self.add_option(
-            "--deviceSerial",
-            action="store",
-            type="string",
-            dest="device_serial",
-            help="adb serial number of remote device. This is required "
-            "when more than one device is connected to the host. "
-            "Use 'adb devices' to see connected devices.",
-        )
+        self.add_option("--deviceSerial", action="store",
+                        type="string", dest="device_serial",
+                        help="adb serial number of remote device. This is required "
+                             "when more than one device is connected to the host. "
+                             "Use 'adb devices' to see connected devices.")
         defaults["device_serial"] = None
 
-        self.add_option(
-            "--adbPath",
-            action="store",
-            type="string",
-            dest="adb_path",
-            help="Path to adb binary.",
-        )
+        self.add_option("--adbPath", action="store",
+                        type="string", dest="adb_path",
+                        help="Path to adb binary.")
         defaults["adb_path"] = None
 
-        self.add_option(
-            "--noSetup",
-            action="store_false",
-            dest="setup",
-            help="Do not copy any files to device (to be used only if "
-            "device is already setup).",
-        )
+        self.add_option("--noSetup", action="store_false",
+                        dest="setup",
+                        help="Do not copy any files to device (to be used only if "
+                             "device is already setup).")
         defaults["setup"] = True
 
-        self.add_option(
-            "--localLib",
-            action="store",
-            type="string",
-            dest="local_lib",
-            help="Location of libraries to push -- preferably stripped.",
-        )
+        self.add_option("--localLib", action="store",
+                        type="string", dest="local_lib",
+                        help="Location of libraries to push -- preferably stripped.")
         defaults["local_lib"] = None
 
-        self.add_option(
-            "--apk",
-            action="store",
-            type="string",
-            dest="local_apk",
-            help="Local path to Firefox for Android APK.",
-        )
+        self.add_option("--apk", action="store",
+                        type="string", dest="local_apk",
+                        help="Local path to Firefox for Android APK.")
         defaults["local_apk"] = None
 
-        self.add_option(
-            "--localBinDir",
-            action="store",
-            type="string",
-            dest="local_bin",
-            help="Local path to bin directory.",
-        )
-        defaults["local_bin"] = build_obj.bindir if build_obj is not None else None
+        self.add_option("--localBinDir", action="store",
+                        type="string", dest="local_bin",
+                        help="Local path to bin directory.")
+        defaults[
+            "local_bin"] = build_obj.bindir if build_obj is not None else None
 
-        self.add_option(
-            "--remoteTestRoot",
-            action="store",
-            type="string",
-            dest="remote_test_root",
-            help="Remote directory to use as test root "
-            "(eg. /data/local/tmp/test_root).",
-        )
+        self.add_option("--remoteTestRoot", action="store",
+                        type="string", dest="remote_test_root",
+                        help="Remote directory to use as test root "
+                             "(eg. /data/local/tmp/test_root).")
 
         # /data/local/tmp/test_root is used because it is usually not
         # possible to set +x permissions on binaries on /mnt/sdcard
@@ -244,14 +217,10 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         # errors on the sdcard.
         defaults["remote_test_root"] = "/data/local/tmp/test_root"
 
-        self.add_option(
-            "--addEnv",
-            action="append",
-            type="string",
-            dest="add_env",
-            help="additional remote environment variable definitions "
-            '(eg. --addEnv "somevar=something")',
-        )
+        self.add_option("--addEnv", action="append",
+                        type="string", dest="add_env",
+                        help="additional remote environment variable definitions "
+                        "(eg. --addEnv \"somevar=something\")")
         defaults["add_env"] = None
 
         self.set_defaults(**defaults)
@@ -260,16 +229,12 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
 def run_test_harness(options, args):
     options.xre_path = os.path.abspath(options.xre_path)
     cppunittests.update_mozinfo()
-    progs = cppunittests.extract_unittests_from_args(
-        args, mozinfo.info, options.manifest_path
-    )
+    progs = cppunittests.extract_unittests_from_args(args,
+                                                     mozinfo.info,
+                                                     options.manifest_path)
     tester = RemoteCPPUnitTests(options, [item[0] for item in progs])
-    result = tester.run_tests(
-        progs,
-        options.xre_path,
-        options.symbols_path,
-        enable_webrender=options.enable_webrender,
-    )
+    result = tester.run_tests(progs, options.xre_path, options.symbols_path,
+                              enable_webrender=options.enable_webrender)
     return result
 
 
@@ -278,16 +243,10 @@ def main():
     mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
-        print(
-            """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0],
-            file=sys.stderr,
-        )
+        print("""Usage: %s <test binary> [<test binary>...]""" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     if options.local_lib is not None and not os.path.isdir(options.local_lib):
-        print(
-            """Error: --localLib directory %s not found""" % options.local_lib,
-            file=sys.stderr,
-        )
+        print("""Error: --localLib directory %s not found""" % options.local_lib, file=sys.stderr)
         sys.exit(1)
     if options.local_apk is not None and not os.path.isfile(options.local_apk):
         print("""Error: --apk file %s not found""" % options.local_apk, file=sys.stderr)
@@ -296,9 +255,8 @@ def main():
         print("""Error: --xre-path is required""", file=sys.stderr)
         sys.exit(1)
 
-    log = mozlog.commandline.setup_logging(
-        "remotecppunittests", options, {"tbpl": sys.stdout}
-    )
+    log = mozlog.commandline.setup_logging("remotecppunittests", options,
+                                           {"tbpl": sys.stdout})
     try:
         result = run_test_harness(options, args)
     except Exception as e:
@@ -308,5 +266,5 @@ def main():
     sys.exit(0 if result else 1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -19,6 +19,7 @@ def inline(doc):
 
 
 class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestWindowHandles, self).setUp()
 
@@ -31,14 +32,12 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
     def assert_window_handles(self):
         try:
-            self.assertIsInstance(
-                self.marionette.current_window_handle, six.string_types
-            )
+            self.assertIsInstance(self.marionette.current_window_handle, six.string_types)
         except errors.NoSuchWindowException:
             pass
 
         for handle in self.marionette.window_handles:
-            self.assertIsInstance(handle, six.string_types)
+            self.assertIsInstance(handle,  six.string_types)
 
     def tst_window_handles_after_opening_new_tab(self):
         new_tab = self.open_tab()

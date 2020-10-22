@@ -5,4 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Temporarily disabled. See bug 1256495.
-# GeneratedTestCertificate('http2-ca.pem')
+#GeneratedTestCertificate('http2-ca.pem')

@@ -4,22 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("sandboxtest")
+Library('sandboxtest')
 
 UNIFIED_SOURCES = [
-    "../SandboxBrokerClient.cpp",
-    "TestBroker.cpp",
-    "TestBrokerPolicy.cpp",
+    '../SandboxBrokerClient.cpp',
+    'TestBroker.cpp',
+    'TestBrokerPolicy.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/security/sandbox/linux",
+    '/security/sandbox/linux',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/security/sandbox/chromium",
+    '/security/sandbox/chromium',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'

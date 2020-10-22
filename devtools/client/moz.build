@@ -4,45 +4,45 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("../templates.mozbuild")
+include('../templates.mozbuild')
 
 DIRS += [
-    "aboutdebugging",
-    "accessibility",
-    "application",
-    "debugger",
-    "dom",
-    "framework",
-    "fronts",
-    "inspector",
-    "jsonview",
-    "locales",
-    "memory",
-    "netmonitor",
-    "performance",
-    "performance-new",
-    "preferences",
-    "responsive",
-    "shared",
-    "storage",
-    "styleeditor",
-    "themes",
-    "webconsole",
+    'aboutdebugging',
+    'accessibility',
+    'application',
+    'debugger',
+    'dom',
+    'framework',
+    'fronts',
+    'inspector',
+    'jsonview',
+    'locales',
+    'memory',
+    'netmonitor',
+    'performance',
+    'performance-new',
+    'preferences',
+    'responsive',
+    'shared',
+    'storage',
+    'styleeditor',
+    'themes',
+    'webconsole',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 DevToolsModules(
-    "constants.js",
-    "definitions.js",
-    "devtools-client.js",
-    "menus.js",
+    'constants.js',
+    'definitions.js',
+    'devtools-client.js',
+    'menus.js',
 )
 
-if not CONFIG["MOZILLA_OFFICIAL"]:
+if not CONFIG['MOZILLA_OFFICIAL']:
     DevToolsModules(
-        "devtools-fission-prefs.js",
+        'devtools-fission-prefs.js',
     )
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "General")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'General')

@@ -1,2 +1,2 @@
 # -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
-DIRS = ["biz"]
+DIRS = ['biz']

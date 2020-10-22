@@ -40,19 +40,19 @@ from mozbuild.util import (
 )
 
 if sys.version_info[0] == 3:
-    str_type = "str"
+    str_type = 'str'
 else:
-    str_type = "unicode"
+    str_type = 'unicode'
 
 data_path = os.path.abspath(os.path.dirname(__file__))
-data_path = os.path.join(data_path, "data")
+data_path = os.path.join(data_path, 'data')
 
 
 class TestHashing(unittest.TestCase):
     def test_hash_file_known_hash(self):
         """Ensure a known hash value is recreated."""
-        data = b"The quick brown fox jumps over the lazy cog"
-        expected = "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"
+        data = b'The quick brown fox jumps over the lazy cog'
+        expected = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3'
 
         temp = NamedTemporaryFile()
         temp.write(data)
@@ -64,7 +64,7 @@ class TestHashing(unittest.TestCase):
 
     def test_hash_file_large(self):
         """Ensure that hash_file seems to work with a large file."""
-        data = b"x" * 1048576
+        data = b'x' * 1048576
 
         hasher = hashlib.sha1()
         hasher.update(data)
@@ -87,67 +87,50 @@ class TestResolveTargetToMake(unittest.TestCase):
         # Handle Windows path separators.
         (reldir, target) = resolve_target_to_make(self.topobjdir, path)
         if reldir is not None:
-            reldir = reldir.replace(os.sep, "/")
+            reldir = reldir.replace(os.sep, '/')
         if target is not None:
-            target = target.replace(os.sep, "/")
+            target = target.replace(os.sep, '/')
         self.assertEqual((reldir, target), expected)
 
     def test_root_path(self):
-        self.assertResolve("/test-dir", ("test-dir", None))
-        self.assertResolve("/test-dir/with", ("test-dir/with", None))
-        self.assertResolve("/test-dir/without", ("test-dir", None))
-        self.assertResolve("/test-dir/without/with", ("test-dir/without/with", None))
+        self.assertResolve('/test-dir', ('test-dir', None))
+        self.assertResolve('/test-dir/with', ('test-dir/with', None))
+        self.assertResolve('/test-dir/without', ('test-dir', None))
+        self.assertResolve('/test-dir/without/with', ('test-dir/without/with', None))
 
     def test_dir(self):
-        self.assertResolve("test-dir", ("test-dir", None))
-        self.assertResolve("test-dir/with", ("test-dir/with", None))
-        self.assertResolve("test-dir/with", ("test-dir/with", None))
-        self.assertResolve("test-dir/without", ("test-dir", None))
-        self.assertResolve("test-dir/without/with", ("test-dir/without/with", None))
+        self.assertResolve('test-dir', ('test-dir', None))
+        self.assertResolve('test-dir/with', ('test-dir/with', None))
+        self.assertResolve('test-dir/with', ('test-dir/with', None))
+        self.assertResolve('test-dir/without', ('test-dir', None))
+        self.assertResolve('test-dir/without/with', ('test-dir/without/with', None))
 
     def test_top_level(self):
-        self.assertResolve("package", (None, "package"))
+        self.assertResolve('package', (None, 'package'))
         # Makefile handling shouldn't affect top-level targets.
-        self.assertResolve("Makefile", (None, "Makefile"))
+        self.assertResolve('Makefile', (None, 'Makefile'))
 
     def test_regular_file(self):
-        self.assertResolve("test-dir/with/file", ("test-dir/with", "file"))
-        self.assertResolve(
-            "test-dir/with/without/file", ("test-dir/with", "without/file")
-        )
-        self.assertResolve(
-            "test-dir/with/without/with/file", ("test-dir/with/without/with", "file")
-        )
+        self.assertResolve('test-dir/with/file', ('test-dir/with', 'file'))
+        self.assertResolve('test-dir/with/without/file', ('test-dir/with', 'without/file'))
+        self.assertResolve('test-dir/with/without/with/file',
+                           ('test-dir/with/without/with', 'file'))
 
-        self.assertResolve("test-dir/without/file", ("test-dir", "without/file"))
-        self.assertResolve(
-            "test-dir/without/with/file", ("test-dir/without/with", "file")
-        )
-        self.assertResolve(
-            "test-dir/without/with/without/file",
-            ("test-dir/without/with", "without/file"),
-        )
+        self.assertResolve('test-dir/without/file', ('test-dir', 'without/file'))
+        self.assertResolve('test-dir/without/with/file', ('test-dir/without/with', 'file'))
+        self.assertResolve('test-dir/without/with/without/file',
+                           ('test-dir/without/with', 'without/file'))
 
     def test_Makefile(self):
-        self.assertResolve("test-dir/with/Makefile", ("test-dir", "with/Makefile"))
-        self.assertResolve(
-            "test-dir/with/without/Makefile", ("test-dir/with", "without/Makefile")
-        )
-        self.assertResolve(
-            "test-dir/with/without/with/Makefile",
-            ("test-dir/with", "without/with/Makefile"),
-        )
+        self.assertResolve('test-dir/with/Makefile', ('test-dir', 'with/Makefile'))
+        self.assertResolve('test-dir/with/without/Makefile', ('test-dir/with', 'without/Makefile'))
+        self.assertResolve('test-dir/with/without/with/Makefile',
+                           ('test-dir/with', 'without/with/Makefile'))
 
-        self.assertResolve(
-            "test-dir/without/Makefile", ("test-dir", "without/Makefile")
-        )
-        self.assertResolve(
-            "test-dir/without/with/Makefile", ("test-dir", "without/with/Makefile")
-        )
-        self.assertResolve(
-            "test-dir/without/with/without/Makefile",
-            ("test-dir/without/with", "without/Makefile"),
-        )
+        self.assertResolve('test-dir/without/Makefile', ('test-dir', 'without/Makefile'))
+        self.assertResolve('test-dir/without/with/Makefile', ('test-dir', 'without/with/Makefile'))
+        self.assertResolve('test-dir/without/with/without/Makefile',
+                           ('test-dir/without/with', 'without/Makefile'))
 
 
 class TestHierarchicalStringList(unittest.TestCase):
@@ -167,7 +150,8 @@ class TestHierarchicalStringList(unittest.TestCase):
         six.assertCountEqual(self, self.EXPORTS._children, {"foo": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.EXPORTS.bar += ["bar.h"]
-        six.assertCountEqual(self, self.EXPORTS._children, {"foo": True, "bar": True})
+        six.assertCountEqual(self, self.EXPORTS._children,
+                             {"foo": True, "bar": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.assertEqual(self.EXPORTS.bar._strings, ["bar.h"])
 
@@ -184,128 +168,100 @@ class TestHierarchicalStringList(unittest.TestCase):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += "foo.h"
         six.assertRegex(
-            self,
-            str(ve.exception),
-            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type,
-        )
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_set(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS.foo = "foo.h"
 
         six.assertRegex(
-            self,
-            str(ve.exception),
-            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type,
-        )
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_append_base(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += "foo.h"
 
         six.assertRegex(
-            self,
-            str(ve.exception),
-            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type,
-        )
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_bool(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += [True]
 
         six.assertRegex(
-            self,
-            str(ve.exception),
-            "Expected a list of strings, not an element of " "<(?:type|class) 'bool'>",
-        )
+            self, str(ve.exception),
+            "Expected a list of strings, not an element of "
+            "<(?:type|class) 'bool'>")
 
     def test_del_exports(self):
         with self.assertRaises(MozbuildDeletionError):
-            self.EXPORTS.foo += ["bar.h"]
+            self.EXPORTS.foo += ['bar.h']
             del self.EXPORTS.foo
 
     def test_unsorted(self):
         with self.assertRaises(UnsortedError):
-            self.EXPORTS += ["foo.h", "bar.h"]
+            self.EXPORTS += ['foo.h', 'bar.h']
 
         with self.assertRaises(UnsortedError):
-            self.EXPORTS.foo = ["foo.h", "bar.h"]
+            self.EXPORTS.foo = ['foo.h', 'bar.h']
 
         with self.assertRaises(UnsortedError):
-            self.EXPORTS.foo += ["foo.h", "bar.h"]
+            self.EXPORTS.foo += ['foo.h', 'bar.h']
 
     def test_reassign(self):
-        self.EXPORTS.foo = ["foo.h"]
+        self.EXPORTS.foo = ['foo.h']
 
         with self.assertRaises(KeyError):
-            self.EXPORTS.foo = ["bar.h"]
+            self.EXPORTS.foo = ['bar.h']
 
     def test_walk(self):
         l = HierarchicalStringList()
-        l += ["root1", "root2", "root3"]
-        l.child1 += ["child11", "child12", "child13"]
-        l.child1.grandchild1 += ["grandchild111", "grandchild112"]
-        l.child1.grandchild2 += ["grandchild121", "grandchild122"]
-        l.child2.grandchild1 += ["grandchild211", "grandchild212"]
-        l.child2.grandchild1 += ["grandchild213", "grandchild214"]
+        l += ['root1', 'root2', 'root3']
+        l.child1 += ['child11', 'child12', 'child13']
+        l.child1.grandchild1 += ['grandchild111', 'grandchild112']
+        l.child1.grandchild2 += ['grandchild121', 'grandchild122']
+        l.child2.grandchild1 += ['grandchild211', 'grandchild212']
+        l.child2.grandchild1 += ['grandchild213', 'grandchild214']
 
         els = list((path, list(seq)) for path, seq in l.walk())
-        self.assertEqual(
-            els,
-            [
-                ("", ["root1", "root2", "root3"]),
-                ("child1", ["child11", "child12", "child13"]),
-                ("child1/grandchild1", ["grandchild111", "grandchild112"]),
-                ("child1/grandchild2", ["grandchild121", "grandchild122"]),
-                (
-                    "child2/grandchild1",
-                    [
-                        "grandchild211",
-                        "grandchild212",
-                        "grandchild213",
-                        "grandchild214",
-                    ],
-                ),
-            ],
-        )
+        self.assertEqual(els, [
+            ('', ['root1', 'root2', 'root3']),
+            ('child1', ['child11', 'child12', 'child13']),
+            ('child1/grandchild1', ['grandchild111', 'grandchild112']),
+            ('child1/grandchild2', ['grandchild121', 'grandchild122']),
+            ('child2/grandchild1', ['grandchild211', 'grandchild212',
+                                    'grandchild213', 'grandchild214']),
+        ])
 
     def test_merge(self):
         l1 = HierarchicalStringList()
-        l1 += ["root1", "root2", "root3"]
-        l1.child1 += ["child11", "child12", "child13"]
-        l1.child1.grandchild1 += ["grandchild111", "grandchild112"]
-        l1.child1.grandchild2 += ["grandchild121", "grandchild122"]
-        l1.child2.grandchild1 += ["grandchild211", "grandchild212"]
-        l1.child2.grandchild1 += ["grandchild213", "grandchild214"]
+        l1 += ['root1', 'root2', 'root3']
+        l1.child1 += ['child11', 'child12', 'child13']
+        l1.child1.grandchild1 += ['grandchild111', 'grandchild112']
+        l1.child1.grandchild2 += ['grandchild121', 'grandchild122']
+        l1.child2.grandchild1 += ['grandchild211', 'grandchild212']
+        l1.child2.grandchild1 += ['grandchild213', 'grandchild214']
         l2 = HierarchicalStringList()
-        l2.child1 += ["child14", "child15"]
-        l2.child1.grandchild2 += ["grandchild123"]
-        l2.child3 += ["child31", "child32"]
+        l2.child1 += ['child14', 'child15']
+        l2.child1.grandchild2 += ['grandchild123']
+        l2.child3 += ['child31', 'child32']
 
         l1 += l2
         els = list((path, list(seq)) for path, seq in l1.walk())
-        self.assertEqual(
-            els,
-            [
-                ("", ["root1", "root2", "root3"]),
-                ("child1", ["child11", "child12", "child13", "child14", "child15"]),
-                ("child1/grandchild1", ["grandchild111", "grandchild112"]),
-                (
-                    "child1/grandchild2",
-                    ["grandchild121", "grandchild122", "grandchild123"],
-                ),
-                (
-                    "child2/grandchild1",
-                    [
-                        "grandchild211",
-                        "grandchild212",
-                        "grandchild213",
-                        "grandchild214",
-                    ],
-                ),
-                ("child3", ["child31", "child32"]),
-            ],
-        )
+        self.assertEqual(els, [
+            ('', ['root1', 'root2', 'root3']),
+            ('child1', ['child11', 'child12', 'child13', 'child14',
+                        'child15']),
+            ('child1/grandchild1', ['grandchild111', 'grandchild112']),
+            ('child1/grandchild2', ['grandchild121', 'grandchild122',
+                                    'grandchild123']),
+            ('child2/grandchild1', ['grandchild211', 'grandchild212',
+                                    'grandchild213', 'grandchild214']),
+            ('child3', ['child31', 'child32']),
+        ])
 
 
 class TestStrictOrderingOnAppendList(unittest.TestCase):
@@ -313,75 +269,75 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
         l = StrictOrderingOnAppendList()
         self.assertEqual(len(l), 0)
 
-        l = StrictOrderingOnAppendList(["a", "b", "c"])
+        l = StrictOrderingOnAppendList(['a', 'b', 'c'])
         self.assertEqual(len(l), 3)
 
         with self.assertRaises(UnsortedError):
-            StrictOrderingOnAppendList(["c", "b", "a"])
+            StrictOrderingOnAppendList(['c', 'b', 'a'])
 
         self.assertEqual(len(l), 3)
 
     def test_extend(self):
         l = StrictOrderingOnAppendList()
-        l.extend(["a", "b"])
+        l.extend(['a', 'b'])
         self.assertEqual(len(l), 2)
         self.assertIsInstance(l, StrictOrderingOnAppendList)
 
         with self.assertRaises(UnsortedError):
-            l.extend(["d", "c"])
+            l.extend(['d', 'c'])
 
         self.assertEqual(len(l), 2)
 
     def test_slicing(self):
         l = StrictOrderingOnAppendList()
-        l[:] = ["a", "b"]
+        l[:] = ['a', 'b']
         self.assertEqual(len(l), 2)
         self.assertIsInstance(l, StrictOrderingOnAppendList)
 
         with self.assertRaises(UnsortedError):
-            l[:] = ["b", "a"]
+            l[:] = ['b', 'a']
 
         self.assertEqual(len(l), 2)
 
     def test_add(self):
         l = StrictOrderingOnAppendList()
-        l2 = l + ["a", "b"]
+        l2 = l + ['a', 'b']
         self.assertEqual(len(l), 0)
         self.assertEqual(len(l2), 2)
         self.assertIsInstance(l2, StrictOrderingOnAppendList)
 
         with self.assertRaises(UnsortedError):
-            l2 = l + ["b", "a"]
+            l2 = l + ['b', 'a']
 
         self.assertEqual(len(l), 0)
 
     def test_iadd(self):
         l = StrictOrderingOnAppendList()
-        l += ["a", "b"]
+        l += ['a', 'b']
         self.assertEqual(len(l), 2)
         self.assertIsInstance(l, StrictOrderingOnAppendList)
 
         with self.assertRaises(UnsortedError):
-            l += ["b", "a"]
+            l += ['b', 'a']
 
         self.assertEqual(len(l), 2)
 
     def test_add_after_iadd(self):
-        l = StrictOrderingOnAppendList(["b"])
-        l += ["a"]
-        l2 = l + ["c", "d"]
+        l = StrictOrderingOnAppendList(['b'])
+        l += ['a']
+        l2 = l + ['c', 'd']
         self.assertEqual(len(l), 2)
         self.assertEqual(len(l2), 4)
         self.assertIsInstance(l2, StrictOrderingOnAppendList)
         with self.assertRaises(UnsortedError):
-            l2 = l + ["d", "c"]
+            l2 = l + ['d', 'c']
 
         self.assertEqual(len(l), 2)
 
     def test_add_StrictOrderingOnAppendList(self):
         l = StrictOrderingOnAppendList()
-        l += ["c", "d"]
-        l += ["a", "b"]
+        l += ['c', 'd']
+        l += ['a', 'b']
         l2 = StrictOrderingOnAppendList()
         with self.assertRaises(UnsortedError):
             l2 += list(l)
@@ -401,115 +357,113 @@ class TestStrictOrderingOnAppendListWithAction(unittest.TestCase):
     def test_init(self):
         l = StrictOrderingOnAppendListWithAction(action=self.action)
         self.assertEqual(len(l), 0)
-        original = ["a", "b", "c"]
-        l = StrictOrderingOnAppendListWithAction(["a", "b", "c"], action=self.action)
+        original = ['a', 'b', 'c']
+        l = StrictOrderingOnAppendListWithAction(['a', 'b', 'c'], action=self.action)
         expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
-            StrictOrderingOnAppendListWithAction("abc", action=self.action)
+            StrictOrderingOnAppendListWithAction('abc', action=self.action)
 
         with self.assertRaises(ValueError):
             StrictOrderingOnAppendListWithAction()
 
     def test_extend(self):
         l = StrictOrderingOnAppendListWithAction(action=self.action)
-        original = ["a", "b"]
+        original = ['a', 'b']
         l.extend(original)
         expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
-            l.extend("ab")
+            l.extend('ab')
 
     def test_slicing(self):
         l = StrictOrderingOnAppendListWithAction(action=self.action)
-        original = ["a", "b"]
+        original = ['a', 'b']
         l[:] = original
         expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
-            l[:] = "ab"
+            l[:] = 'ab'
 
     def test_add(self):
         l = StrictOrderingOnAppendListWithAction(action=self.action)
-        original = ["a", "b"]
+        original = ['a', 'b']
         l2 = l + original
         expected = [self.action(i) for i in original]
         self.assertSameList(expected, l2)
 
         with self.assertRaises(ValueError):
-            l + "abc"
+            l + 'abc'
 
     def test_iadd(self):
         l = StrictOrderingOnAppendListWithAction(action=self.action)
-        original = ["a", "b"]
+        original = ['a', 'b']
         l += original
         expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
-            l += "abc"
+            l += 'abc'
 
 
 class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
     def test_strict_ordering_on_append_list_with_flags_factory(self):
-        cls = StrictOrderingOnAppendListWithFlagsFactory(
-            {
-                "foo": bool,
-                "bar": int,
-            }
-        )
+        cls = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool,
+            'bar': int,
+        })
 
         l = cls()
-        l += ["a", "b"]
+        l += ['a', 'b']
 
         with self.assertRaises(Exception):
-            l["a"] = "foo"
+            l['a'] = 'foo'
 
         with self.assertRaises(Exception):
-            l["c"]
+            l['c']
 
-        self.assertEqual(l["a"].foo, False)
-        l["a"].foo = True
-        self.assertEqual(l["a"].foo, True)
+        self.assertEqual(l['a'].foo, False)
+        l['a'].foo = True
+        self.assertEqual(l['a'].foo, True)
 
         with self.assertRaises(TypeError):
-            l["a"].bar = "bar"
+            l['a'].bar = 'bar'
 
-        self.assertEqual(l["a"].bar, 0)
-        l["a"].bar = 42
-        self.assertEqual(l["a"].bar, 42)
+        self.assertEqual(l['a'].bar, 0)
+        l['a'].bar = 42
+        self.assertEqual(l['a'].bar, 42)
 
-        l["b"].foo = True
-        self.assertEqual(l["b"].foo, True)
-
-        with self.assertRaises(AttributeError):
-            l["b"].baz = False
-
-        l["b"].update(foo=False, bar=12)
-        self.assertEqual(l["b"].foo, False)
-        self.assertEqual(l["b"].bar, 12)
+        l['b'].foo = True
+        self.assertEqual(l['b'].foo, True)
 
         with self.assertRaises(AttributeError):
-            l["b"].update(xyz=1)
+            l['b'].baz = False
+
+        l['b'].update(foo=False, bar=12)
+        self.assertEqual(l['b'].foo, False)
+        self.assertEqual(l['b'].bar, 12)
+
+        with self.assertRaises(AttributeError):
+            l['b'].update(xyz=1)
 
     def test_strict_ordering_on_append_list_with_flags_factory_extend(self):
-        FooList = StrictOrderingOnAppendListWithFlagsFactory(
-            {"foo": bool, "bar": six.text_type}
-        )
-        foo = FooList(["a", "b", "c"])
-        foo["a"].foo = True
-        foo["b"].bar = "bar"
+        FooList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool, 'bar': six.text_type
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
 
         # Don't allow extending lists with different flag definitions.
-        BarList = StrictOrderingOnAppendListWithFlagsFactory(
-            {"foo": six.text_type, "baz": bool}
-        )
-        bar = BarList(["d", "e", "f"])
-        bar["d"].foo = "foo"
-        bar["e"].baz = True
+        BarList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': six.text_type, 'baz': bool
+        })
+        bar = BarList(['d', 'e', 'f'])
+        bar['d'].foo = 'foo'
+        bar['e'].baz = True
         with self.assertRaises(ValueError):
             foo + bar
         with self.assertRaises(ValueError):
@@ -522,24 +476,24 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
         def assertExtended(l):
             self.assertEqual(len(l), 6)
-            self.assertEqual(l["a"].foo, True)
-            self.assertEqual(l["b"].bar, "bar")
-            self.assertTrue("c" in l)
-            self.assertEqual(l["d"].foo, True)
-            self.assertEqual(l["e"].bar, "bar")
-            self.assertTrue("f" in l)
+            self.assertEqual(l['a'].foo, True)
+            self.assertEqual(l['b'].bar, 'bar')
+            self.assertTrue('c' in l)
+            self.assertEqual(l['d'].foo, True)
+            self.assertEqual(l['e'].bar, 'bar')
+            self.assertTrue('f' in l)
 
         # Test extend.
-        zot = FooList(["d", "e", "f"])
-        zot["d"].foo = True
-        zot["e"].bar = "bar"
+        zot = FooList(['d', 'e', 'f'])
+        zot['d'].foo = True
+        zot['e'].bar = 'bar'
         zot.extend(foo)
         assertExtended(zot)
 
         # Test __add__.
-        zot = FooList(["d", "e", "f"])
-        zot["d"].foo = True
-        zot["e"].bar = "bar"
+        zot = FooList(['d', 'e', 'f'])
+        zot['d'].foo = True
+        zot['e'].bar = 'bar'
         assertExtended(foo + zot)
         assertExtended(zot + foo)
 
@@ -636,7 +590,7 @@ class TestTypedList(unittest.TestCase):
         self.assertEqual(len(l), 3)
 
         with self.assertRaises(ValueError):
-            cls([1, 2, "c"])
+            cls([1, 2, 'c'])
 
     def test_extend(self):
         cls = TypedList(int)
@@ -646,7 +600,7 @@ class TestTypedList(unittest.TestCase):
         self.assertIsInstance(l, cls)
 
         with self.assertRaises(ValueError):
-            l.extend([3, "c"])
+            l.extend([3, 'c'])
 
         self.assertEqual(len(l), 2)
 
@@ -658,7 +612,7 @@ class TestTypedList(unittest.TestCase):
         self.assertIsInstance(l, cls)
 
         with self.assertRaises(ValueError):
-            l[:] = [3, "c"]
+            l[:] = [3, 'c']
 
         self.assertEqual(len(l), 2)
 
@@ -671,7 +625,7 @@ class TestTypedList(unittest.TestCase):
         self.assertIsInstance(l2, cls)
 
         with self.assertRaises(ValueError):
-            l2 = l + [3, "c"]
+            l2 = l + [3, 'c']
 
         self.assertEqual(len(l), 0)
 
@@ -683,7 +637,7 @@ class TestTypedList(unittest.TestCase):
         self.assertIsInstance(l, cls)
 
         with self.assertRaises(ValueError):
-            l += [3, "c"]
+            l += [3, 'c']
 
         self.assertEqual(len(l), 2)
 
@@ -736,54 +690,54 @@ class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
         l = cls()
         self.assertEqual(len(l), 0)
 
-        l = cls(["a", "b", "c"])
+        l = cls(['a', 'b', 'c'])
         self.assertEqual(len(l), 3)
 
         with self.assertRaises(UnsortedError):
-            cls(["c", "b", "a"])
+            cls(['c', 'b', 'a'])
 
         with self.assertRaises(ValueError):
-            cls(["a", "b", 3])
+            cls(['a', 'b', 3])
 
         self.assertEqual(len(l), 3)
 
 
 class TestTypedNamedTuple(unittest.TestCase):
     def test_simple(self):
-        FooBar = TypedNamedTuple("FooBar", [("foo", six.text_type), ("bar", int)])
+        FooBar = TypedNamedTuple('FooBar', [('foo', six.text_type), ('bar', int)])
 
-        t = FooBar(foo="foo", bar=2)
+        t = FooBar(foo='foo', bar=2)
         self.assertEquals(type(t), FooBar)
-        self.assertEquals(t.foo, "foo")
+        self.assertEquals(t.foo, 'foo')
         self.assertEquals(t.bar, 2)
-        self.assertEquals(t[0], "foo")
+        self.assertEquals(t[0], 'foo')
         self.assertEquals(t[1], 2)
 
-        FooBar("foo", 2)
+        FooBar('foo', 2)
 
         with self.assertRaises(TypeError):
-            FooBar("foo", "not integer")
+            FooBar('foo', 'not integer')
         with self.assertRaises(TypeError):
             FooBar(2, 4)
 
         # Passing a tuple as the first argument is the same as passing multiple
         # arguments.
-        t1 = ("foo", 3)
+        t1 = ('foo', 3)
         t2 = FooBar(t1)
         self.assertEquals(type(t2), FooBar)
-        self.assertEqual(FooBar(t1), FooBar("foo", 3))
+        self.assertEqual(FooBar(t1), FooBar('foo', 3))
 
 
 class TestGroupUnifiedFiles(unittest.TestCase):
-    FILES = ["%s.cpp" % letter for letter in string.ascii_lowercase]
+    FILES = ['%s.cpp' % letter for letter in string.ascii_lowercase]
 
     def test_multiple_files(self):
-        mapping = list(group_unified_files(self.FILES, "Unified", "cpp", 5))
+        mapping = list(group_unified_files(self.FILES, 'Unified', 'cpp', 5))
 
         def check_mapping(index, expected_num_source_files):
             (unified_file, source_files) = mapping[index]
 
-            self.assertEqual(unified_file, "Unified%d.cpp" % index)
+            self.assertEqual(unified_file, 'Unified%d.cpp' % index)
             self.assertEqual(len(source_files), expected_num_source_files)
 
         all_files = list(itertools.chain(*[files for (_, files) in mapping]))
@@ -795,9 +749,9 @@ class TestGroupUnifiedFiles(unittest.TestCase):
             check_mapping(i, amount)
 
     def test_unsorted_files(self):
-        unsorted_files = ["a%d.cpp" % i for i in range(11)]
+        unsorted_files = ['a%d.cpp' % i for i in range(11)]
         sorted_files = sorted(unsorted_files)
-        mapping = list(group_unified_files(unsorted_files, "Unified", "cpp", 5))
+        mapping = list(group_unified_files(unsorted_files, 'Unified', 'cpp', 5))
 
         self.assertEqual(mapping[0][1], sorted_files[0:5])
         self.assertEqual(mapping[1][1], sorted_files[5:10])
@@ -806,61 +760,69 @@ class TestGroupUnifiedFiles(unittest.TestCase):
 
 class TestMisc(unittest.TestCase):
     def test_pair(self):
-        self.assertEqual(list(pair([1, 2, 3, 4, 5, 6])), [(1, 2), (3, 4), (5, 6)])
+        self.assertEqual(
+            list(pair([1, 2, 3, 4, 5, 6])),
+            [(1, 2), (3, 4), (5, 6)]
+        )
 
         self.assertEqual(
-            list(pair([1, 2, 3, 4, 5, 6, 7])), [(1, 2), (3, 4), (5, 6), (7, None)]
+            list(pair([1, 2, 3, 4, 5, 6, 7])),
+            [(1, 2), (3, 4), (5, 6), (7, None)]
         )
 
     def test_expand_variables(self):
-        self.assertEqual(expand_variables("$(var)", {"var": "value"}), "value")
-
         self.assertEqual(
-            expand_variables("$(a) and $(b)", {"a": "1", "b": "2"}), "1 and 2"
+            expand_variables('$(var)', {'var': 'value'}),
+            'value'
         )
 
         self.assertEqual(
-            expand_variables("$(a) and $(undefined)", {"a": "1", "b": "2"}), "1 and "
+            expand_variables('$(a) and $(b)', {'a': '1', 'b': '2'}),
+            '1 and 2'
         )
 
         self.assertEqual(
-            expand_variables(
-                "before $(string) between $(list) after",
-                {"string": "abc", "list": ["a", "b", "c"]},
-            ),
-            "before abc between a b c after",
+            expand_variables('$(a) and $(undefined)', {'a': '1', 'b': '2'}),
+            '1 and '
+        )
+
+        self.assertEqual(
+            expand_variables('before $(string) between $(list) after', {
+                'string': 'abc',
+                'list': ['a', 'b', 'c']
+            }),
+            'before abc between a b c after'
         )
 
 
 class TestEnumString(unittest.TestCase):
     def test_string(self):
-        CompilerType = EnumString.subclass("gcc", "clang", "clang-cl")
+        CompilerType = EnumString.subclass('gcc', 'clang', 'clang-cl')
 
-        type = CompilerType("gcc")
-        self.assertEquals(type, "gcc")
-        self.assertNotEquals(type, "clang")
-        self.assertNotEquals(type, "clang-cl")
-        self.assertIn(type, ("gcc", "clang-cl"))
-        self.assertNotIn(type, ("clang", "clang-cl"))
-
-        with self.assertRaises(EnumStringComparisonError):
-            self.assertEquals(type, "foo")
+        type = CompilerType('gcc')
+        self.assertEquals(type, 'gcc')
+        self.assertNotEquals(type, 'clang')
+        self.assertNotEquals(type, 'clang-cl')
+        self.assertIn(type, ('gcc', 'clang-cl'))
+        self.assertNotIn(type, ('clang', 'clang-cl'))
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertNotEquals(type, "foo")
+            self.assertEquals(type, 'foo')
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertIn(type, ("foo", "gcc"))
+            self.assertNotEquals(type, 'foo')
+
+        with self.assertRaises(EnumStringComparisonError):
+            self.assertIn(type, ('foo', 'gcc'))
 
         with self.assertRaises(ValueError):
-            type = CompilerType("foo")
+            type = CompilerType('foo')
 
 
 class TestIndentedRepr(unittest.TestCase):
-    @unittest.skipUnless(six.PY2, "requires Python 2")
+    @unittest.skipUnless(six.PY2, 'requires Python 2')
     def test_write_indented_repr_py2(self):
-        data = textwrap.dedent(
-            r"""
+        data = textwrap.dedent(r'''
         {
             'a': 1,
             'b': b'abc',
@@ -881,8 +843,7 @@ class TestIndentedRepr(unittest.TestCase):
             'special_chars': '\\\'"\x08\n\t',
             'with_accents': 'éàñ',
         }
-        """
-        ).lstrip()
+        ''').lstrip()
 
         obj = eval(data)
         buf = io.StringIO()
@@ -890,10 +851,9 @@ class TestIndentedRepr(unittest.TestCase):
 
         self.assertEqual(buf.getvalue(), data)
 
-    @unittest.skipUnless(six.PY3, "requires Python 3")
+    @unittest.skipUnless(six.PY3, 'requires Python 3')
     def test_write_indented_repr(self):
-        data = textwrap.dedent(
-            r"""
+        data = textwrap.dedent(r'''
         {   b'c': 'xyz',
             'a': 1,
             'b': b'abc',
@@ -904,8 +864,7 @@ class TestIndentedRepr(unittest.TestCase):
             'pile_of_poo': '💩',
             'special_chars': '\\\'"\x08\n\t',
             'with_accents': 'éàñ'}
-        """
-        ).lstrip()
+        ''').lstrip()
 
         obj = eval(data)
         buf = six.StringIO()
@@ -914,5 +873,5 @@ class TestIndentedRepr(unittest.TestCase):
         self.assertEqual(buf.getvalue(), data)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

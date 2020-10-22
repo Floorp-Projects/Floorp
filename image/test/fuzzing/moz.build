@@ -4,21 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("FuzzingImage")
+Library('FuzzingImage')
 
 SOURCES += [
-    "TestDecoders.cpp",
+    'TestDecoders.cpp',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/gfx/2d",
-    "/image",
-    "/image/test/gtest",
+    '/dom/base',
+    '/gfx/2d',
+    '/image',
+    '/image/test/gtest',
 ]
 
-LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']

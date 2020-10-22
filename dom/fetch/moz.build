@@ -8,58 +8,58 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
 EXPORTS.mozilla.dom += [
-    "BodyExtractor.h",
-    "ChannelInfo.h",
-    "Fetch.h",
-    "FetchDriver.h",
-    "FetchIPCTypes.h",
-    "FetchObserver.h",
-    "FetchStreamReader.h",
-    "FetchUtil.h",
-    "Headers.h",
-    "InternalHeaders.h",
-    "InternalRequest.h",
-    "InternalResponse.h",
-    "Request.h",
-    "Response.h",
+    'BodyExtractor.h',
+    'ChannelInfo.h',
+    'Fetch.h',
+    'FetchDriver.h',
+    'FetchIPCTypes.h',
+    'FetchObserver.h',
+    'FetchStreamReader.h',
+    'FetchUtil.h',
+    'Headers.h',
+    'InternalHeaders.h',
+    'InternalRequest.h',
+    'InternalResponse.h',
+    'Request.h',
+    'Response.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BodyExtractor.cpp",
-    "ChannelInfo.cpp",
-    "EmptyBody.cpp",
-    "Fetch.cpp",
-    "FetchDriver.cpp",
-    "FetchObserver.cpp",
-    "FetchStreamReader.cpp",
-    "FetchUtil.cpp",
-    "Headers.cpp",
-    "InternalHeaders.cpp",
-    "InternalRequest.cpp",
-    "InternalResponse.cpp",
-    "Request.cpp",
-    "Response.cpp",
+    'BodyExtractor.cpp',
+    'ChannelInfo.cpp',
+    'EmptyBody.cpp',
+    'Fetch.cpp',
+    'FetchDriver.cpp',
+    'FetchObserver.cpp',
+    'FetchStreamReader.cpp',
+    'FetchUtil.cpp',
+    'Headers.cpp',
+    'InternalHeaders.cpp',
+    'InternalRequest.cpp',
+    'InternalResponse.cpp',
+    'Request.cpp',
+    'Response.cpp',
 ]
 
 IPDL_SOURCES += [
-    "ChannelInfo.ipdlh",
-    "FetchTypes.ipdlh",
+    'ChannelInfo.ipdlh',
+    'FetchTypes.ipdlh',
 ]
 
 LOCAL_INCLUDES += [
     # For nsDOMSerializer
-    "/dom/base",
+    '/dom/base',
     # For HttpBaseChannel.h dependencies
-    "/netwerk/base",
+    '/netwerk/base',
     # For nsDataHandler.h
-    "/netwerk/protocol/data",
+    '/netwerk/protocol/data',
     # For HttpBaseChannel.h
-    "/netwerk/protocol/http",
+    '/netwerk/protocol/http',
 ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += [ 'tests/browser.ini' ]
+MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

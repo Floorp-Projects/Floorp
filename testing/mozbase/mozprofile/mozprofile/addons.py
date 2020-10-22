@@ -79,7 +79,7 @@ class AddonManager(object):
 
         # restore backups
         if self.backup_dir and os.path.isdir(self.backup_dir):
-            extensions_path = os.path.join(self.profile, "extensions")
+            extensions_path = os.path.join(self.profile, 'extensions')
 
             for backup in os.listdir(self.backup_dir):
                 backup_path = os.path.join(self.backup_dir, backup)
@@ -98,16 +98,14 @@ class AddonManager(object):
         """
         # By default we should expect add-ons being located under the
         # extensions folder.
-        extensions_path = os.path.join(self.profile, "extensions")
-        paths = [
-            os.path.join(extensions_path, addon_id),
-            os.path.join(extensions_path, addon_id + ".xpi"),
-        ]
+        extensions_path = os.path.join(self.profile, 'extensions')
+        paths = [os.path.join(extensions_path, addon_id),
+                 os.path.join(extensions_path, addon_id + '.xpi')]
         for path in paths:
             if os.path.exists(path):
                 return path
 
-        raise IOError("Add-on not found: %s" % addon_id)
+        raise IOError('Add-on not found: %s' % addon_id)
 
     @classmethod
     def is_addon(self, addon_path):
@@ -129,39 +127,36 @@ class AddonManager(object):
         try:
             self.addon_details(path)
         except AddonFormatError as e:
-            module_logger.warning("Could not install %s: %s" % (path, str(e)))
+            module_logger.warning('Could not install %s: %s' % (path, str(e)))
 
             # If the path doesn't exist, then we don't really care, just return
             if not os.path.isdir(path):
                 return
 
-            addons = [
-                os.path.join(path, x)
-                for x in os.listdir(path)
-                if self.is_addon(os.path.join(path, x))
-            ]
+            addons = [os.path.join(path, x) for x in os.listdir(path) if
+                      self.is_addon(os.path.join(path, x))]
             addons.sort()
 
         # install each addon
         for addon in addons:
             # determine the addon id
             addon_details = self.addon_details(addon)
-            addon_id = addon_details.get("id")
+            addon_id = addon_details.get('id')
 
             # if the add-on has to be unpacked force it now
             # note: we might want to let Firefox do it in case of addon details
             orig_path = None
-            if os.path.isfile(addon) and (unpack or addon_details["unpack"]):
+            if os.path.isfile(addon) and (unpack or addon_details['unpack']):
                 orig_path = addon
                 addon = tempfile.mkdtemp()
                 mozfile.extract(orig_path, addon)
 
             # copy the addon to the profile
-            extensions_path = os.path.join(self.profile, "extensions")
+            extensions_path = os.path.join(self.profile, 'extensions')
             addon_path = os.path.join(extensions_path, addon_id)
 
             if os.path.isfile(addon):
-                addon_path += ".xpi"
+                addon_path += '.xpi'
 
                 # move existing xpi file to backup location to restore later
                 if os.path.exists(addon_path):
@@ -226,7 +221,12 @@ class AddonManager(object):
              'unpack':  False }                # whether to unpack the addon
         """
 
-        details = {"id": None, "unpack": False, "name": None, "version": None}
+        details = {
+            'id': None,
+            'unpack': False,
+            'name': None,
+            'version': None
+        }
 
         def get_namespace_id(doc, url):
             attributes = doc.documentElement.attributes
@@ -235,7 +235,7 @@ class AddonManager(object):
                 if attributes.item(i).value == url:
                     if ":" in attributes.item(i).name:
                         # If the namespace is not the default one remove 'xlmns:'
-                        namespace = attributes.item(i).name.split(":")[1] + ":"
+                        namespace = attributes.item(i).name.split(':')[1] + ":"
                         break
             return namespace
 
@@ -245,10 +245,10 @@ class AddonManager(object):
             for node in element.childNodes:
                 if node.nodeType == node.TEXT_NODE:
                     rc.append(node.data)
-            return "".join(rc).strip()
+            return ''.join(rc).strip()
 
         if not os.path.exists(addon_path):
-            raise IOError("Add-on path does not exist: %s" % addon_path)
+            raise IOError('Add-on path does not exist: %s' % addon_path)
 
         is_webext = False
         try:
@@ -256,13 +256,13 @@ class AddonManager(object):
                 # Bug 944361 - We cannot use 'with' together with zipFile because
                 # it will cause an exception thrown in Python 2.6.
                 try:
-                    compressed_file = zipfile.ZipFile(addon_path, "r")
+                    compressed_file = zipfile.ZipFile(addon_path, 'r')
                     filenames = [f.filename for f in (compressed_file).filelist]
-                    if "install.rdf" in filenames:
-                        manifest = compressed_file.read("install.rdf")
-                    elif "manifest.json" in filenames:
+                    if 'install.rdf' in filenames:
+                        manifest = compressed_file.read('install.rdf')
+                    elif 'manifest.json' in filenames:
                         is_webext = True
-                        manifest = compressed_file.read("manifest.json").decode()
+                        manifest = compressed_file.read('manifest.json').decode()
                         manifest = json.loads(manifest)
                     else:
                         raise KeyError("No manifest")
@@ -270,44 +270,40 @@ class AddonManager(object):
                     compressed_file.close()
             elif os.path.isdir(addon_path):
                 try:
-                    with open(os.path.join(addon_path, "install.rdf")) as f:
+                    with open(os.path.join(addon_path, 'install.rdf')) as f:
                         manifest = f.read()
                 except IOError:
-                    with open(os.path.join(addon_path, "manifest.json")) as f:
+                    with open(os.path.join(addon_path, 'manifest.json')) as f:
                         manifest = json.loads(f.read())
                         is_webext = True
             else:
-                raise IOError(
-                    "Add-on path is neither an XPI nor a directory: %s" % addon_path
-                )
+                raise IOError('Add-on path is neither an XPI nor a directory: %s' % addon_path)
         except (IOError, KeyError) as e:
             reraise(AddonFormatError, AddonFormatError(str(e)), sys.exc_info()[2])
 
         if is_webext:
-            details["version"] = manifest["version"]
-            details["name"] = manifest["name"]
+            details['version'] = manifest['version']
+            details['name'] = manifest['name']
             # Bug 1572404 - we support two locations for gecko-specific
             # metadata.
-            for location in ("applications", "browser_specific_settings"):
+            for location in ('applications', 'browser_specific_settings'):
                 try:
-                    details["id"] = manifest[location]["gecko"]["id"]
+                    details['id'] = manifest[location]['gecko']['id']
                     break
                 except KeyError:
                     pass
-            if details["id"] is None:
-                details["id"] = cls._gen_iid(addon_path)
-            details["unpack"] = False
+            if details['id'] is None:
+                details['id'] = cls._gen_iid(addon_path)
+            details['unpack'] = False
         else:
             try:
                 doc = minidom.parseString(manifest)
 
                 # Get the namespaces abbreviations
-                em = get_namespace_id(doc, "http://www.mozilla.org/2004/em-rdf#")
-                rdf = get_namespace_id(
-                    doc, "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-                )
+                em = get_namespace_id(doc, 'http://www.mozilla.org/2004/em-rdf#')
+                rdf = get_namespace_id(doc, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 
-                description = doc.getElementsByTagName(rdf + "Description").item(0)
+                description = doc.getElementsByTagName(rdf + 'Description').item(0)
                 for entry, value in description.attributes.items():
                     # Remove the namespace prefix from the tag for comparison
                     entry = entry.replace(em, "")
@@ -322,12 +318,12 @@ class AddonManager(object):
                 reraise(AddonFormatError, AddonFormatError(str(e)), sys.exc_info()[2])
 
         # turn unpack into a true/false value
-        if isinstance(details["unpack"], string_types):
-            details["unpack"] = details["unpack"].lower() == "true"
+        if isinstance(details['unpack'], string_types):
+            details['unpack'] = details['unpack'].lower() == 'true'
 
         # If no ID is set, the add-on is invalid
-        if details.get("id") is None and not is_webext:
-            raise AddonFormatError("Add-on id could not be found.")
+        if details.get('id') is None and not is_webext:
+            raise AddonFormatError('Add-on id could not be found.')
 
         return details
 

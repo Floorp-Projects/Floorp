@@ -4,46 +4,46 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "XUL")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'XUL')
 
 XPIDL_SOURCES += [
-    "nsITreeSelection.idl",
-    "nsITreeView.idl",
+    'nsITreeSelection.idl',
+    'nsITreeView.idl',
 ]
 
-XPIDL_MODULE = "layout_xul_tree"
+XPIDL_MODULE = 'layout_xul_tree'
 
 EXPORTS += [
-    "nsTreeColFrame.h",
-    "nsTreeColumns.h",
-    "nsTreeUtils.h",
+    'nsTreeColFrame.h',
+    'nsTreeColumns.h',
+    'nsTreeUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsTreeBodyFrame.cpp",
-    "nsTreeColFrame.cpp",
-    "nsTreeColumns.cpp",
-    "nsTreeContentView.cpp",
-    "nsTreeImageListener.cpp",
-    "nsTreeSelection.cpp",
-    "nsTreeStyleCache.cpp",
-    "nsTreeUtils.cpp",
+    'nsTreeBodyFrame.cpp',
+    'nsTreeColFrame.cpp',
+    'nsTreeColumns.cpp',
+    'nsTreeContentView.cpp',
+    'nsTreeImageListener.cpp',
+    'nsTreeSelection.cpp',
+    'nsTreeStyleCache.cpp',
+    'nsTreeUtils.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "..",
-    "../../base",
-    "../../forms",
-    "../../generic",
-    "../../painting",
-    "../../style",
-    "/dom/base",
-    "/dom/xul",
+    '..',
+    '../../base',
+    '../../forms',
+    '../../generic',
+    '../../painting',
+    '../../style',
+    '/dom/base',
+    '/dom/xul',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

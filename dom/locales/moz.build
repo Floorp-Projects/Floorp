@@ -55,14 +55,14 @@ with Files("en-US/chrome/xslt/**"):
 with Files("en-US/chrome/plugins.properties"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 RESOURCE_FILES.locale.layout += [
-    "en-US/chrome/layout/HtmlForm.properties",
-    "en-US/chrome/layout/MediaDocument.properties",
-    "en-US/chrome/layout/xmlparser.properties",
+    'en-US/chrome/layout/HtmlForm.properties',
+    'en-US/chrome/layout/MediaDocument.properties',
+    'en-US/chrome/layout/xmlparser.properties',
 ]
 
 RESOURCE_FILES.locale.dom += [
-    "en-US/chrome/dom/dom.properties",
+    'en-US/chrome/dom/dom.properties',
 ]

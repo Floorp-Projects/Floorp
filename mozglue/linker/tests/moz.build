@@ -4,20 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
 UNIFIED_SOURCES += [
-    "../Zip.cpp",
-    "TestZip.cpp",
+    '../Zip.cpp',
+    'TestZip.cpp',
 ]
 
 SOURCES += [
-    "TestZipData.S",
+    'TestZipData.S',
 ]
 
-LOCAL_INCLUDES += [".."]
+LOCAL_INCLUDES += ['..']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-ASFLAGS += ["-I", SRCDIR]
+ASFLAGS += ['-I', SRCDIR]

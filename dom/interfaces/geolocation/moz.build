@@ -8,10 +8,11 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 XPIDL_SOURCES += [
-    "nsIDOMGeoPosition.idl",
-    "nsIDOMGeoPositionCallback.idl",
-    "nsIDOMGeoPositionCoords.idl",
-    "nsIDOMGeoPositionErrorCallback.idl",
+    'nsIDOMGeoPosition.idl',
+    'nsIDOMGeoPositionCallback.idl',
+    'nsIDOMGeoPositionCoords.idl',
+    'nsIDOMGeoPositionErrorCallback.idl',
 ]
 
-XPIDL_MODULE = "dom_geolocation"
+XPIDL_MODULE = 'dom_geolocation'
+

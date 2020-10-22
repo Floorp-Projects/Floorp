@@ -4,53 +4,53 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Layout: Tables")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
-    "celldata.h",  # included by nsCellMap.h
-    "nsCellMap.h",  # included by nsTableWrapperFrame.h
-    "nsITableCellLayout.h",
-    "nsTableCellFrame.h",  # included by dom/base/Selection.cpp
-    "nsTableFrame.h",  # included by nsTableWrapperFrame.h
-    "nsTableRowFrame.h",  # included by nsTableCellFrame.h
-    "nsTableRowGroupFrame.h",  # included by nsTableRowFrame.h
-    "nsTableWrapperFrame.h",  # included by dom/base/Selection.cpp
-    "TableArea.h",  # included by nsCellMap.h
+    'celldata.h',             # included by nsCellMap.h
+    'nsCellMap.h',            # included by nsTableWrapperFrame.h
+    'nsITableCellLayout.h',
+    'nsTableCellFrame.h',     # included by dom/base/Selection.cpp
+    'nsTableFrame.h',         # included by nsTableWrapperFrame.h
+    'nsTableRowFrame.h',      # included by nsTableCellFrame.h
+    'nsTableRowGroupFrame.h', # included by nsTableRowFrame.h
+    'nsTableWrapperFrame.h',  # included by dom/base/Selection.cpp
+    'TableArea.h',            # included by nsCellMap.h
 ]
 
 UNIFIED_SOURCES += [
-    "BasicTableLayoutStrategy.cpp",
-    "FixedTableLayoutStrategy.cpp",
-    "nsCellMap.cpp",
-    "nsTableCellFrame.cpp",
-    "nsTableColFrame.cpp",
-    "nsTableColGroupFrame.cpp",
-    "nsTableFrame.cpp",
-    "nsTableRowFrame.cpp",
-    "nsTableRowGroupFrame.cpp",
-    "nsTableWrapperFrame.cpp",
-    "SpanningCellSorter.cpp",
+    'BasicTableLayoutStrategy.cpp',
+    'FixedTableLayoutStrategy.cpp',
+    'nsCellMap.cpp',
+    'nsTableCellFrame.cpp',
+    'nsTableColFrame.cpp',
+    'nsTableColGroupFrame.cpp',
+    'nsTableFrame.cpp',
+    'nsTableRowFrame.cpp',
+    'nsTableRowGroupFrame.cpp',
+    'nsTableWrapperFrame.cpp',
+    'SpanningCellSorter.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../../intl/unicharutil/util",
-    "../base",
-    "../generic",
-    "../painting",
-    "../style",
-    "../xul",
-    "/dom/base",
-    "/dom/html",
+    '../../intl/unicharutil/util',
+    '../base',
+    '../generic',
+    '../painting',
+    '../style',
+    '../xul',
+    '/dom/base',
+    '/dom/html',
 ]
 
-DEFINES["DEBUG_TABLE_STRATEGY_off"] = True
+DEFINES['DEBUG_TABLE_STRATEGY_off'] = True
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

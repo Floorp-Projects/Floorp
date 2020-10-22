@@ -2,10 +2,10 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-DELAYLOAD_DLLS = ["foo.dll", "bar.dll"]
+DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']
 
-RCFILE = "foo.rc"
-RCINCLUDE = "bar.rc"
-DEFFILE = "baz.def"
+RCFILE = 'foo.rc'
+RCINCLUDE = 'bar.rc'
+DEFFILE = 'baz.def'
 
-WIN32_EXE_LDFLAGS += ["-subsystem:console"]
+WIN32_EXE_LDFLAGS += ['-subsystem:console']

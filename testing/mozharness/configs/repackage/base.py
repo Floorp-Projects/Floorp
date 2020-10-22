@@ -5,5 +5,5 @@ config = {
     "installer-tag": "browser/installer/windows/app.tag",
     "stub-installer-tag": "browser/installer/windows/stub.tag",
     "wsx-stub": "browser/installer/windows/msi/installer.wxs",
-    "fetch-dir": os.environ.get("MOZ_FETCHES_DIR"),
+    "fetch-dir": os.environ.get('MOZ_FETCHES_DIR'),
 }

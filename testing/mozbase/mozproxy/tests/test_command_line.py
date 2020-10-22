@@ -60,7 +60,8 @@ class OutputHandler(object):
         if isinstance(data, dict) and "action" in data:
             # Retrieve the port number for the proxy server from the logs of
             # our subprocess.
-            m = re.match(r"Proxy running on port (\d+)", data.get("message", ""))
+            m = re.match(r"Proxy running on port (\d+)",
+                         data.get("message", ""))
             if m:
                 self.port = m.group(1)
                 self.port_event.set()
@@ -71,7 +72,8 @@ class OutputHandler(object):
 
 @pytest.fixture(scope="module")
 def install_mozproxy():
-    build = MozbuildObject.from_environment(cwd=here, virtualenv_name="python-test")
+    build = MozbuildObject.from_environment(
+        cwd=here, virtualenv_name='python-test')
     build.virtualenv_manager.activate()
 
     mozbase = os.path.join(build.topsrcdir, "testing", "mozbase")
@@ -91,14 +93,12 @@ def test_run(install_mozproxy):
     build = install_mozproxy
     output_handler = OutputHandler()
     p = ProcessHandler(
-        [
-            "mozproxy",
-            "--local",
-            "--binary=firefox",
-            "--topsrcdir=" + build.topsrcdir,
-            "--objdir=" + build.topobjdir,
-            os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip"),
-        ],
+        ["mozproxy",
+         "--local",
+         "--binary=firefox",
+         "--topsrcdir=" + build.topsrcdir,
+         "--objdir=" + build.topobjdir,
+         os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip")],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
     )
@@ -118,12 +118,10 @@ def test_run(install_mozproxy):
 def test_failure(install_mozproxy):
     output_handler = OutputHandler()
     p = ProcessHandler(
-        [
-            "mozproxy",
-            "--local",
-            # Exclude some options here to trigger a command-line error.
-            os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip"),
-        ],
+        ["mozproxy",
+         "--local",
+         # Exclude some options here to trigger a command-line error.
+         os.path.join(here, "files", "mitm5-linux-firefox-amazon.zip")],
         processOutputLine=output_handler,
         onFinish=output_handler.finished,
     )

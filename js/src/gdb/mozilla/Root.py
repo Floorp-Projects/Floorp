@@ -18,7 +18,7 @@ class Common(object):
     # there's not much to it.
 
     # The name of the template member holding the referent.
-    member = "ptr"
+    member = 'ptr'
 
     # If True, this is a handle type, and should be dereferenced. If False,
     # the template member holds the referent directly.
@@ -82,23 +82,21 @@ class MutableHandle(Common):
 
 @template_pretty_printer("js::BarrieredBase")
 class BarrieredBase(Common):
-    member = "value"
+    member = 'value'
 
 
 def deref(root):
     # Return the referent of a HeapPtr, Rooted, or Handle.
     tag = root.type.strip_typedefs().tag
     if not tag:
-        raise TypeError(
-            "Can't dereference type with no structure tag: %s" % (root.type,)
-        )
-    elif tag.startswith("js::HeapPtr<"):
-        return root["value"]
-    elif tag.startswith("JS::Rooted<"):
-        return root["ptr"]
-    elif tag.startswith("JS::Handle<"):
-        return root["ptr"]
-    elif tag.startswith("js::GCPtr<"):
-        return root["value"]
+        raise TypeError("Can't dereference type with no structure tag: %s" % (root.type,))
+    elif tag.startswith('js::HeapPtr<'):
+        return root['value']
+    elif tag.startswith('JS::Rooted<'):
+        return root['ptr']
+    elif tag.startswith('JS::Handle<'):
+        return root['ptr']
+    elif tag.startswith('js::GCPtr<'):
+        return root['value']
     else:
         raise NotImplementedError("Unrecognized tag: " + tag)

@@ -43,7 +43,7 @@ def evaluate_keyed_by(value, item_name, attributes, defer=None):
         if not isinstance(value, dict) or len(value) != 1:
             return value
         value_key = next(iter(value))
-        if not value_key.startswith("by-"):
+        if not value_key.startswith('by-'):
             return value
 
         keyed_by = value_key[3:]  # strip off 'by-' prefix
@@ -54,36 +54,34 @@ def evaluate_keyed_by(value, item_name, attributes, defer=None):
         key = attributes.get(keyed_by)
         alternatives = next(iter(value.values()))
 
-        if len(alternatives) == 1 and "default" in alternatives:
+        if len(alternatives) == 1 and 'default' in alternatives:
             # Error out when only 'default' is specified as only alternatives,
             # because we don't need to by-{keyed_by} there.
             raise Exception(
                 "Keyed-by '{}' unnecessary with only value 'default' "
-                "found, when determining item {}".format(keyed_by, item_name)
-            )
+                "found, when determining item {}".format(
+                    keyed_by, item_name))
 
         if key is None:
-            if "default" in alternatives:
-                value = alternatives["default"]
+            if 'default' in alternatives:
+                value = alternatives['default']
                 continue
             else:
                 raise Exception(
                     "No attribute {} and no value for 'default' found "
-                    "while determining item {}".format(keyed_by, item_name)
-                )
+                    "while determining item {}".format(
+                        keyed_by, item_name))
 
         matches = keymatch(alternatives, key)
         if len(matches) > 1:
             raise Exception(
                 "Multiple matching values for {} {!r} found while "
-                "determining item {}".format(keyed_by, key, item_name)
-            )
+                "determining item {}".format(
+                    keyed_by, key, item_name))
         elif matches:
             value = matches[0]
             continue
 
         raise Exception(
             "No {} matching {!r} nor 'default' found while determining item {}".format(
-                keyed_by, key, item_name
-            )
-        )
+                keyed_by, key, item_name))

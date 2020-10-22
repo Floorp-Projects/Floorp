@@ -33,24 +33,16 @@ class TestReftest(MarionetteTestCase):
     @skip("Bug 1648444 - Unexpected page unload when refreshing about:blank")
     def test_basic(self):
         self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
-        rv = self.marionette._send_message(
-            "reftest:run",
-            {
-                "test": "about:blank",
-                "references": [["about:blank", [], "=="]],
-                "expected": "PASS",
-                "timeout": 10 * 1000,
-            },
-        )
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": "about:blank",
+                                            "references": [["about:blank", [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 10 * 1000})
         self.marionette._send_message("reftest:teardown", {})
-        expected = {
-            u"value": {
-                u"extra": {},
-                u"message": u"Testing about:blank == about:blank\n",
-                u"stack": None,
-                u"status": u"PASS",
-            }
-        }
+        expected = {u'value': {u'extra': {},
+                               u'message': u'Testing about:blank == about:blank\n',
+                               u'stack': None,
+                               u'status': u'PASS'}}
         self.assertEqual(expected, rv)
 
     def test_url_comparison(self):
@@ -58,15 +50,11 @@ class TestReftest(MarionetteTestCase):
         test_page_2 = self.fixtures.where_is("foo/../test.html")
 
         self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
-        rv = self.marionette._send_message(
-            "reftest:run",
-            {
-                "test": test_page,
-                "references": [[test_page_2, [], "=="]],
-                "expected": "PASS",
-                "timeout": 10 * 1000,
-            },
-        )
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": test_page,
+                                            "references": [[test_page_2, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 10 * 1000})
         self.marionette._send_message("reftest:teardown", {})
         self.assertEqual(u"PASS", rv[u"value"][u"status"])
 
@@ -75,29 +63,21 @@ class TestReftest(MarionetteTestCase):
         mostly_teal = self.fixtures.where_is("reftest/mostly-teal-700x700.html")
 
         self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
-        rv = self.marionette._send_message(
-            "reftest:run",
-            {
-                "test": teal,
-                "references": [[mostly_teal, [], "=="]],
-                "expected": "PASS",
-                "timeout": 10 * 1000,
-                "width": 600,
-                "height": 600,
-            },
-        )
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": teal,
+                                            "references": [[mostly_teal, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 10 * 1000,
+                                            "width": 600,
+                                            "height": 600})
         self.assertEqual(u"PASS", rv[u"value"][u"status"])
 
-        rv = self.marionette._send_message(
-            "reftest:run",
-            {
-                "test": teal,
-                "references": [[mostly_teal, [], "=="]],
-                "expected": "PASS",
-                "timeout": 10 * 1000,
-                "width": 700,
-                "height": 700,
-            },
-        )
+        rv = self.marionette._send_message("reftest:run",
+                                           {"test": teal,
+                                            "references": [[mostly_teal, [], "=="]],
+                                            "expected": "PASS",
+                                            "timeout": 10 * 1000,
+                                            "width": 700,
+                                            "height": 700})
         self.assertEqual(u"FAIL", rv[u"value"][u"status"])
         self.marionette._send_message("reftest:teardown", {})

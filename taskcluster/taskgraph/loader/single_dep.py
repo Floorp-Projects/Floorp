@@ -11,11 +11,9 @@ from voluptuous import Required
 from ..task import Task
 from ..util.schema import Schema
 
-schema = Schema(
-    {
-        Required("primary-dependency", "primary dependency task"): Task,
-    }
-)
+schema = Schema({
+    Required('primary-dependency', 'primary dependency task'): Task,
+})
 
 
 def loader(kind, path, config, params, loaded_tasks):
@@ -35,18 +33,18 @@ def loader(kind, path, config, params, loaded_tasks):
     Optional `job-template` kind configuration value, if specified, will be used to
     pass configuration down to the specified transforms used.
     """
-    only_platforms = config.get("only-for-build-platforms")
-    not_platforms = config.get("not-for-build-platforms")
-    only_attributes = config.get("only-for-attributes")
-    job_template = config.get("job-template")
+    only_platforms = config.get('only-for-build-platforms')
+    not_platforms = config.get('not-for-build-platforms')
+    only_attributes = config.get('only-for-attributes')
+    job_template = config.get('job-template')
 
     for task in loaded_tasks:
-        if task.kind not in config.get("kind-dependencies", []):
+        if task.kind not in config.get('kind-dependencies', []):
             continue
 
         if only_platforms or not_platforms:
-            build_platform = task.attributes.get("build_platform")
-            build_type = task.attributes.get("build_type")
+            build_platform = task.attributes.get('build_platform')
+            build_type = task.attributes.get('build_type')
             if not build_platform or not build_type:
                 continue
             platform = "{}/{}".format(build_platform, build_type)
@@ -62,7 +60,7 @@ def loader(kind, path, config, params, loaded_tasks):
                 continue
 
         job = {
-            "primary-dependency": task,
+            'primary-dependency': task,
         }
 
         if job_template:
@@ -70,9 +68,9 @@ def loader(kind, path, config, params, loaded_tasks):
 
         # copy shipping_product from upstream
         product = task.attributes.get(
-            "shipping_product", task.task.get("shipping-product")
+            'shipping_product', task.task.get('shipping-product')
         )
         if product:
-            job.setdefault("shipping-product", product)
+            job.setdefault('shipping-product', product)
 
         yield job

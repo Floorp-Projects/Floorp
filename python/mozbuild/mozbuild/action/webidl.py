@@ -16,5 +16,5 @@ def main(argv):
     manager.generate_build_files()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(log_build_task(main, sys.argv[1:]))

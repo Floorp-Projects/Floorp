@@ -5,16 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "adb",
+    'adb',
 ]
 
 DevToolsModules(
-    "constants.js",
-    "remote-client-manager.js",
-    "version-checker.js",
+    'constants.js',
+    'remote-client-manager.js',
+    'version-checker.js',
 )
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell.ini'
+]
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "about:debugging")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'about:debugging')

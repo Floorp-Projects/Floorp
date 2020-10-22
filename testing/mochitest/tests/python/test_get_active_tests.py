@@ -19,8 +19,8 @@ from conftest import setup_args
 @pytest.fixture
 def get_active_tests(setup_test_harness, parser):
     setup_test_harness(*setup_args)
-    runtests = pytest.importorskip("runtests")
-    md = runtests.MochitestDesktop("plain", {"log_tbpl": "-"})
+    runtests = pytest.importorskip('runtests')
+    md = runtests.MochitestDesktop('plain', {'log_tbpl': '-'})
 
     options = vars(parser.parse_args([]))
 
@@ -28,7 +28,7 @@ def get_active_tests(setup_test_harness, parser):
         opts = options.copy()
         opts.update(kwargs)
 
-        manifest = opts.get("manifestFile")
+        manifest = opts.get('manifestFile')
         if isinstance(manifest, basestring):
             md.testRootAbs = os.path.dirname(manifest)
         elif isinstance(manifest, TestManifest):
@@ -43,7 +43,8 @@ def get_active_tests(setup_test_harness, parser):
 
 @pytest.fixture
 def create_manifest(tmpdir, build_obj):
-    def inner(string, name="manifest.ini"):
+
+    def inner(string, name='manifest.ini'):
         manifest = tmpdir.join(name)
         manifest.write(string, ensure=True)
         path = unicode(manifest)
@@ -54,10 +55,8 @@ def create_manifest(tmpdir, build_obj):
 
 def test_prefs_validation(get_active_tests, create_manifest):
     # Test prefs set in a single manifest.
-    manifest_relpath = "manifest.ini"
-    manifest = create_manifest(
-        dedent(
-            """
+    manifest_relpath = 'manifest.ini'
+    manifest = create_manifest(dedent("""
     [DEFAULT]
     prefs=
       foo=bar
@@ -65,13 +64,11 @@ def test_prefs_validation(get_active_tests, create_manifest):
 
     [files/test_pass.html]
     [files/test_fail.html]
-    """
-        )
-    )
+    """))
 
     options = {
-        "runByManifest": True,
-        "manifestFile": manifest,
+        'runByManifest': True,
+        'manifestFile': manifest,
     }
     md, tests = get_active_tests(**options)
 
@@ -83,30 +80,24 @@ def test_prefs_validation(get_active_tests, create_manifest):
     assert prefs.pop() == "\nfoo=bar\nbrowser.dom.foo=baz"
 
     # Test prefs set with runByManifest disabled.
-    options["runByManifest"] = False
+    options['runByManifest'] = False
     with pytest.raises(SystemExit):
         get_active_tests(**options)
 
     # Test prefs set in non-default section.
-    options["runByManifest"] = True
-    options["manifestFile"] = create_manifest(
-        dedent(
-            """
+    options['runByManifest'] = True
+    options['manifestFile'] = create_manifest(dedent("""
     [files/test_pass.html]
     prefs=foo=bar
     [files/test_fail.html]
-    """
-        )
-    )
+    """))
     with pytest.raises(SystemExit):
         get_active_tests(**options)
 
 
 def test_prefs_validation_with_ancestor_manifest(get_active_tests, create_manifest):
     # Test prefs set by an ancestor manifest.
-    create_manifest(
-        dedent(
-            """
+    create_manifest(dedent("""
     [DEFAULT]
     prefs=
       foo=bar
@@ -114,14 +105,9 @@ def test_prefs_validation_with_ancestor_manifest(get_active_tests, create_manife
 
     [files/test_pass.html]
     [files/test_fail.html]
-    """
-        ),
-        name="subdir/manifest.ini",
-    )
+    """), name='subdir/manifest.ini')
 
-    manifest = create_manifest(
-        dedent(
-            """
+    manifest = create_manifest(dedent("""
     [DEFAULT]
     prefs =
       browser.dom.foo=fleem
@@ -129,37 +115,31 @@ def test_prefs_validation_with_ancestor_manifest(get_active_tests, create_manife
 
     [include:manifest.ini]
     [test_foo.html]
-    """
-        ),
-        name="subdir/ancestor-manifest.ini",
-    )
+    """), name='subdir/ancestor-manifest.ini')
 
     options = {
-        "runByManifest": True,
-        "manifestFile": manifest,
+        'runByManifest': True,
+        'manifestFile': manifest,
     }
 
     md, tests = get_active_tests(**options)
     assert len(tests) == 3
 
-    key = os.path.join("subdir", "ancestor-manifest.ini")
+    key = os.path.join('subdir', 'ancestor-manifest.ini')
     assert key in md.prefs_by_manifest
     prefs = md.prefs_by_manifest[key]
     assert len(prefs) == 1
-    assert prefs.pop() == "\nbrowser.dom.foo=fleem\nflower=rose"
+    assert prefs.pop() == '\nbrowser.dom.foo=fleem\nflower=rose'
 
-    key = "{}:{}".format(
-        os.path.join("subdir", "ancestor-manifest.ini"),
-        os.path.join("subdir", "manifest.ini"),
+    key = '{}:{}'.format(
+        os.path.join('subdir', 'ancestor-manifest.ini'),
+        os.path.join('subdir', 'manifest.ini')
     )
     assert key in md.prefs_by_manifest
     prefs = md.prefs_by_manifest[key]
     assert len(prefs) == 1
-    assert (
-        prefs.pop()
-        == "\nbrowser.dom.foo=fleem\nflower=rose \nfoo=bar\nbrowser.dom.foo=baz"
-    )
+    assert prefs.pop() == '\nbrowser.dom.foo=fleem\nflower=rose \nfoo=bar\nbrowser.dom.foo=baz'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

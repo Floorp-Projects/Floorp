@@ -11,9 +11,9 @@
 # the intermediate in a different directory, so that BadCertAndPinningServer
 # doesn't know about it and can't send it in the TLS handshake.
 # Temporarily disabled. See bug 1256495.
-# test_certificates = (
+#test_certificates = (
 #    'missing-intermediate.pem',
-# )
+#)
 #
-# for test_certificate in test_certificates:
+#for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)

@@ -15,7 +15,7 @@ def format_test_id(test_id):
         raise NotImplementedError
 
     # Turn a path into something like a class heirachy
-    return test_id.replace(".", "_").replace("/", ".")
+    return test_id.replace('.', '_').replace('/', ".")
 
 
 class XUnitFormatter(base.BaseFormatter):
@@ -55,8 +55,8 @@ class XUnitFormatter(base.BaseFormatter):
     def _create_result(self, data):
         test = ElementTree.SubElement(self.root, "testcase")
         name = format_test_id(data["test"])
-        extra = data.get("extra") or {}
-        test.attrib["classname"] = extra.get("class_name") or name
+        extra = data.get('extra') or {}
+        test.attrib["classname"] = extra.get('class_name') or name
 
         if "subtest" in data:
             test.attrib["name"] = data["subtest"]
@@ -67,12 +67,10 @@ class XUnitFormatter(base.BaseFormatter):
                 test_name = name.rsplit(".", 1)[1]
             else:
                 test_name = name
-            test.attrib["name"] = extra.get("method_name") or test_name
-            test.attrib["time"] = "%.2f" % (
-                (data["time"] - self.test_start_time) / 1000.0
-            )
+            test.attrib["name"] = extra.get('method_name') or test_name
+            test.attrib["time"] = "%.2f" % ((data["time"] - self.test_start_time) / 1000.0)
 
-        if "expected" in data and data["expected"] != data["status"]:
+        if ("expected" in data and data["expected"] != data["status"]):
             if data["status"] in ("NOTRUN", "ASSERT", "ERROR"):
                 result = ElementTree.SubElement(test, "error")
                 self.errors += 1
@@ -80,11 +78,8 @@ class XUnitFormatter(base.BaseFormatter):
                 result = ElementTree.SubElement(test, "failure")
                 self.failures += 1
 
-            result.attrib["message"] = "Expected %s, got %s" % (
-                data["expected"],
-                data["status"],
-            )
-            result.text = "%s\n%s" % (data.get("stack", ""), data.get("message", ""))
+            result.attrib["message"] = "Expected %s, got %s" % (data["expected"], data["status"])
+            result.text = '%s\n%s' % (data.get('stack', ''), data.get('message', ''))
 
         elif data["status"] == "SKIP":
             result = ElementTree.SubElement(test, "skipped")
@@ -97,17 +92,13 @@ class XUnitFormatter(base.BaseFormatter):
         self._create_result(data)
 
     def suite_end(self, data):
-        self.root.attrib.update(
-            {
-                "tests": str(self.tests_run),
-                "errors": str(self.errors),
-                "failures": str(self.failures),
-                "skips": str(self.skips),
-                "time": "%.2f" % ((data["time"] - self.suite_start_time) / 1000.0),
-            }
-        )
+        self.root.attrib.update({"tests": str(self.tests_run),
+                                 "errors": str(self.errors),
+                                 "failures": str(self.failures),
+                                 "skips": str(self.skips),
+                                 "time":   "%.2f" % (
+                                     (data["time"] - self.suite_start_time) / 1000.0)})
         xml_string = ElementTree.tostring(self.root, encoding="utf8")
         # pretty printing can not be done from xml.etree
         from xml.dom import minidom
-
         return minidom.parseString(xml_string).toprettyxml(encoding="utf8")

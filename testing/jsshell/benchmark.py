@@ -68,7 +68,7 @@ class Benchmark(object):
         if self._version:
             return self._version
 
-        with open(os.path.join(self.path, "VERSION"), "r") as fh:
+        with open(os.path.join(self.path, 'VERSION'), 'r') as fh:
             self._version = fh.read().strip("\r\n\r\n \t")
         return self._version
 
@@ -76,24 +76,24 @@ class Benchmark(object):
         """Resets state between runs."""
         name = self.name
         if self.shell_name:
-            name = "{}-{}".format(name, self.shell_name)
+            name = '{}-{}'.format(name, self.shell_name)
 
         self.perfherder_data = {
-            "framework": {
-                "name": "js-bench",
+            'framework': {
+                'name': 'js-bench',
             },
-            "suites": [
+            'suites': [
                 {
-                    "lowerIsBetter": self.lower_is_better,
-                    "name": name,
-                    "shouldAlert": self.should_alert,
-                    "subtests": [],
-                    "unit": self.unit,
-                    "value": None,
+                    'lowerIsBetter': self.lower_is_better,
+                    'name': name,
+                    'shouldAlert': self.should_alert,
+                    'subtests': [],
+                    'unit': self.unit,
+                    'value': None
                 },
             ],
         }
-        self.suite = self.perfherder_data["suites"][0]
+        self.suite = self.perfherder_data['suites'][0]
 
     def _provision_benchmark_script(self):
         if os.path.isdir(self.path):
@@ -101,7 +101,7 @@ class Benchmark(object):
 
         # Some benchmarks may have been downloaded from a fetch task, make
         # sure they get copied over.
-        fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
+        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
         if fetches_dir and os.path.isdir(fetches_dir):
             fetchdir = os.path.join(fetches_dir, self.name)
             if os.path.isdir(fetchdir):
@@ -114,15 +114,15 @@ class Benchmark(object):
         env = os.environ.copy()
 
         # disable "GC poisoning" Bug# 1499043
-        env["JSGC_DISABLE_POISONING"] = "1"
+        env['JSGC_DISABLE_POISONING'] = '1'
 
         process_args = {
-            "cmd": self.command,
-            "cwd": self.path,
-            "onFinish": self.collect_results,
-            "processOutputLine": self.process_line,
-            "stream": sys.stdout,
-            "env": env,
+            'cmd': self.command,
+            'cwd': self.path,
+            'onFinish': self.collect_results,
+            'processOutputLine': self.process_line,
+            'stream': sys.stdout,
+            'env': env,
         }
         proc = ProcessHandler(**process_args)
         proc.run()
@@ -137,20 +137,20 @@ class RunOnceBenchmark(Benchmark):
             for score, values in scores.items():
                 test_name = "{}-{}".format(self.name, score)
                 mean = sum(values) / len(values)
-                self.suite["subtests"].append({"name": test_name, "value": mean})
+                self.suite['subtests'].append({'name': test_name, 'value': mean})
                 bench_total += int(sum(values))
-        self.suite["value"] = bench_total
+        self.suite['value'] = bench_total
 
 
 class Ares6(Benchmark):
-    name = "ares6"
-    path = os.path.join("third_party", "webkit", "PerformanceTests", "ARES-6")
-    unit = "ms"
+    name = 'ares6'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'ARES-6')
+    unit = 'ms'
 
     @property
     def command(self):
         cmd = super(Ares6, self).command
-        return cmd + ["cli.js"]
+        return cmd + ['cli.js']
 
     def reset(self):
         super(Ares6, self).reset()
@@ -162,7 +162,7 @@ class Ares6(Benchmark):
         self.scores = defaultdict(lambda: defaultdict(list))
 
     def _try_find_score(self, score_name, line):
-        m = re.search(score_name + ":\s*(\d+\.?\d*?) (\+-)?.+", line)
+        m = re.search(score_name + ':\s*(\d+\.?\d*?) (\+-)?.+', line)
         if not m:
             return False
 
@@ -176,16 +176,16 @@ class Ares6(Benchmark):
             self.bench_name = m.group(1)
             return
 
-        if self._try_find_score("firstIteration", line):
+        if self._try_find_score('firstIteration', line):
             return
 
-        if self._try_find_score("averageWorstCase", line):
+        if self._try_find_score('averageWorstCase', line):
             return
 
-        if self._try_find_score("steadyState", line):
+        if self._try_find_score('steadyState', line):
             return
 
-        m = re.search("summary:\s*(\d+\.?\d*?) (\+-)?.+", line)
+        m = re.search('summary:\s*(\d+\.?\d*?) (\+-)?.+', line)
         if m:
             self.last_summary = float(m.group(1))
 
@@ -194,21 +194,21 @@ class Ares6(Benchmark):
             for score, values in scores.items():
                 mean = sum(values) / len(values)
                 test_name = "{}-{}".format(bench, score)
-                self.suite["subtests"].append({"name": test_name, "value": mean})
+                self.suite['subtests'].append({'name': test_name, 'value': mean})
 
         if self.last_summary:
-            self.suite["value"] = self.last_summary
+            self.suite['value'] = self.last_summary
 
 
 class SixSpeed(RunOnceBenchmark):
-    name = "six-speed"
-    path = os.path.join("third_party", "webkit", "PerformanceTests", "six-speed")
-    unit = "ms"
+    name = 'six-speed'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
+    unit = 'ms'
 
     @property
     def command(self):
         cmd = super(SixSpeed, self).command
-        return cmd + ["test.js"]
+        return cmd + ['test.js']
 
     def reset(self):
         super(SixSpeed, self).reset()
@@ -229,16 +229,14 @@ class SixSpeed(RunOnceBenchmark):
 
 
 class SunSpider(RunOnceBenchmark):
-    name = "sunspider"
-    path = os.path.join(
-        "third_party", "webkit", "PerformanceTests", "SunSpider", "sunspider-0.9.1"
-    )
-    unit = "ms"
+    name = 'sunspider'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'SunSpider', 'sunspider-0.9.1')
+    unit = 'ms'
 
     @property
     def command(self):
         cmd = super(SunSpider, self).command
-        return cmd + ["sunspider-standalone-driver.js"]
+        return cmd + ['sunspider-standalone-driver.js']
 
     def reset(self):
         super(SunSpider, self).reset()
@@ -259,12 +257,10 @@ class SunSpider(RunOnceBenchmark):
 
 
 class WebToolingBenchmark(Benchmark):
-    name = "web-tooling-benchmark"
-    path = os.path.join(
-        "third_party", "webkit", "PerformanceTests", "web-tooling-benchmark"
-    )
-    main_js = "cli.js"
-    unit = "score"
+    name = 'web-tooling-benchmark'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'web-tooling-benchmark')
+    main_js = 'cli.js'
+    unit = 'score'
     lower_is_better = False
     subtests_lower_is_better = False
 
@@ -296,16 +292,14 @@ class WebToolingBenchmark(Benchmark):
             for score_name, values in scores.items():
                 test_name = "{}-{}".format(self.name, score_name)
                 mean = sum(values) / len(values)
-                self.suite["subtests"].append(
-                    {
-                        "lowerIsBetter": self.subtests_lower_is_better,
-                        "name": test_name,
-                        "value": mean,
-                    }
-                )
-                if score_name == "mean":
+                self.suite['subtests'].append({
+                    'lowerIsBetter': self.subtests_lower_is_better,
+                    'name': test_name,
+                    'value': mean,
+                });
+                if score_name == 'mean':
                     bench_mean = mean
-        self.suite["value"] = bench_mean
+        self.suite['value'] = bench_mean
 
     def run(self):
         self._provision_benchmark_script()
@@ -313,15 +307,15 @@ class WebToolingBenchmark(Benchmark):
 
 
 class Octane(RunOnceBenchmark):
-    name = "octane"
-    path = os.path.join("third_party", "webkit", "PerformanceTests", "octane")
-    unit = "score"
+    name = 'octane'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'octane')
+    unit = 'score'
     lower_is_better = False
 
     @property
     def command(self):
         cmd = super(Octane, self).command
-        return cmd + ["run.js"]
+        return cmd + ['run.js']
 
     def reset(self):
         super(Octane, self).reset()
@@ -336,8 +330,8 @@ class Octane(RunOnceBenchmark):
             return
         subtest = m.group(1)
         score = m.group(2)
-        if subtest.startswith("Score"):
-            subtest = "score"
+        if subtest.startswith('Score'):
+            subtest = 'score'
         if subtest not in self.scores[self.name]:
             self.scores[self.name][subtest] = []
         self.scores[self.name][subtest].append(int(score))
@@ -348,10 +342,10 @@ class Octane(RunOnceBenchmark):
             for score_name, values in scores.items():
                 test_name = "{}-{}".format(self.name, score_name)
                 mean = sum(values) / len(values)
-                self.suite["subtests"].append({"name": test_name, "value": mean})
-                if score_name == "score":
+                self.suite['subtests'].append({'name': test_name, 'value': mean})
+                if score_name == 'score':
                     bench_score = mean
-        self.suite["value"] = bench_score
+        self.suite['value'] = bench_score
 
     def run(self):
         self._provision_benchmark_script()
@@ -359,18 +353,18 @@ class Octane(RunOnceBenchmark):
 
 
 all_benchmarks = {
-    "ares6": Ares6,
-    "six-speed": SixSpeed,
-    "sunspider": SunSpider,
-    "web-tooling-benchmark": WebToolingBenchmark,
-    "octane": Octane,
+    'ares6': Ares6,
+    'six-speed': SixSpeed,
+    'sunspider': SunSpider,
+    'web-tooling-benchmark': WebToolingBenchmark,
+    'octane': Octane
 }
 
 
 def run(benchmark, binary=None, extra_args=None, perfherder=None):
     if not binary:
         try:
-            binary = os.path.join(build.bindir, "js" + build.substs["BIN_SUFFIX"])
+            binary = os.path.join(build.bindir, 'js' + build.substs['BIN_SUFFIX'])
         except BuildEnvironmentNotFoundException:
             binary = None
 
@@ -378,9 +372,7 @@ def run(benchmark, binary=None, extra_args=None, perfherder=None):
             print(JSSHELL_NOT_FOUND)
             return 1
 
-    bench = all_benchmarks.get(benchmark)(
-        binary, args=extra_args, shell_name=perfherder
-    )
+    bench = all_benchmarks.get(benchmark)(binary, args=extra_args, shell_name=perfherder)
     res = bench.run()
 
     if perfherder:
@@ -390,26 +382,14 @@ def run(benchmark, binary=None, extra_args=None, perfherder=None):
 
 def get_parser():
     parser = ArgumentParser()
-    parser.add_argument(
-        "benchmark",
-        choices=all_benchmarks.keys(),
-        help="The name of the benchmark to run.",
-    )
-    parser.add_argument(
-        "-b", "--binary", default=None, help="Path to the JS shell binary to use."
-    )
-    parser.add_argument(
-        "--arg",
-        dest="extra_args",
-        action="append",
-        default=None,
-        help="Extra arguments to pass to the JS shell.",
-    )
-    parser.add_argument(
-        "--perfherder",
-        default=None,
-        help="Log PERFHERDER_DATA to stdout using the given suite name.",
-    )
+    parser.add_argument('benchmark', choices=all_benchmarks.keys(),
+                        help="The name of the benchmark to run.")
+    parser.add_argument('-b', '--binary', default=None,
+                        help="Path to the JS shell binary to use.")
+    parser.add_argument('--arg', dest='extra_args', action='append', default=None,
+                        help="Extra arguments to pass to the JS shell.")
+    parser.add_argument('--perfherder', default=None,
+                        help="Log PERFHERDER_DATA to stdout using the given suite name.")
     return parser
 
 
@@ -419,5 +399,5 @@ def cli(args=sys.argv[1:]):
     return run(**vars(args))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(cli())

@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from mozlog.proxy import ProxyLogger
 
 
-class RaptorLogger:
+class RaptorLogger():
     app = ""
 
     def __init__(self, component=None):
@@ -29,19 +29,13 @@ class RaptorLogger:
         return self.logger.info("Info: {}".format(message), **kwargs)
 
     def warning(self, message, **kwargs):
-        return self.logger.warning(
-            "Warning:{} {}".format(RaptorLogger.app, message), **kwargs
-        )
+        return self.logger.warning("Warning:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def error(self, message, **kwargs):
-        return self.logger.error(
-            "Error:{} {}".format(RaptorLogger.app, message), **kwargs
-        )
+        return self.logger.error("Error:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def critical(self, message, **kwargs):
-        return self.logger.critical(
-            "Critical:{} {}".format(RaptorLogger.app, message), **kwargs
-        )
+        return self.logger.critical("Critical:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def log_raw(self, message, **kwargs):
         return self.logger.log_raw(message, **kwargs)

@@ -4,102 +4,104 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Networking: DNS")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Networking: DNS')
 
-DIRS += ["mdns", "tests"]
+DIRS += [
+    'mdns',
+    'tests'
+]
 
 XPIDL_SOURCES += [
-    "nsIDNSByTypeRecord.idl",
-    "nsIDNSListener.idl",
-    "nsIDNSRecord.idl",
-    "nsIDNSResolverInfo.idl",
-    "nsIDNSService.idl",
-    "nsIEffectiveTLDService.idl",
-    "nsIIDNService.idl",
-    "nsINativeDNSResolverOverride.idl",
-    "nsPIDNSService.idl",
+    'nsIDNSByTypeRecord.idl',
+    'nsIDNSListener.idl',
+    'nsIDNSRecord.idl',
+    'nsIDNSResolverInfo.idl',
+    'nsIDNSService.idl',
+    'nsIEffectiveTLDService.idl',
+    'nsIIDNService.idl',
+    'nsINativeDNSResolverOverride.idl',
+    'nsPIDNSService.idl',
 ]
 
-XPIDL_MODULE = "necko_dns"
+XPIDL_MODULE = 'necko_dns'
 
-EXTRA_JS_MODULES["netwerk-dns"] += [
-    "PublicSuffixList.jsm",
+EXTRA_JS_MODULES['netwerk-dns'] += [
+    'PublicSuffixList.jsm',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 EXPORTS += [
-    "nsEffectiveTLDService.h",
+    'nsEffectiveTLDService.h',
 ]
 
 EXPORTS.mozilla.net += [
-    "ChildDNSService.h",
-    "DNS.h",
-    "DNSByTypeRecord.h",
-    "DNSListenerProxy.h",
-    "DNSRequestBase.h",
-    "DNSRequestChild.h",
-    "DNSRequestParent.h",
-    "HTTPSSVC.h",
-    "IDNBlocklistUtils.h",
-    "NativeDNSResolverOverrideChild.h",
-    "NativeDNSResolverOverrideParent.h",
-    "TRRService.h",
-    "TRRServiceBase.h",
-    "TRRServiceChild.h",
-    "TRRServiceParent.h",
+    'ChildDNSService.h',
+    'DNS.h',
+    'DNSByTypeRecord.h',
+    'DNSListenerProxy.h',
+    'DNSRequestBase.h',
+    'DNSRequestChild.h',
+    'DNSRequestParent.h',
+    'HTTPSSVC.h',
+    'IDNBlocklistUtils.h',
+    'NativeDNSResolverOverrideChild.h',
+    'NativeDNSResolverOverrideParent.h',
+    'TRRService.h',
+    'TRRServiceBase.h',
+    'TRRServiceChild.h',
+    'TRRServiceParent.h',
 ]
 
 SOURCES += [
-    "nsEffectiveTLDService.cpp",  # Excluded from UNIFIED_SOURCES due to special build flags.
-    "nsHostResolver.cpp",  # Redefines LOG
+    'nsEffectiveTLDService.cpp', # Excluded from UNIFIED_SOURCES due to special build flags.
+    'nsHostResolver.cpp', # Redefines LOG
 ]
 
 UNIFIED_SOURCES += [
-    "ChildDNSService.cpp",
-    "DNS.cpp",
-    "DNSListenerProxy.cpp",
-    "DNSRequestChild.cpp",
-    "DNSRequestParent.cpp",
-    "DNSResolverInfo.cpp",
-    "GetAddrInfo.cpp",
-    "HTTPSSVC.cpp",
-    "IDNBlocklistUtils.cpp",
-    "NativeDNSResolverOverrideChild.cpp",
-    "NativeDNSResolverOverrideParent.cpp",
-    "nsDNSService2.cpp",
-    "nsIDNService.cpp",
-    "punycode.c",
-    "TRR.cpp",
-    "TRRService.cpp",
-    "TRRServiceBase.cpp",
-    "TRRServiceChild.cpp",
-    "TRRServiceParent.cpp",
+    'ChildDNSService.cpp',
+    'DNS.cpp',
+    'DNSListenerProxy.cpp',
+    'DNSRequestChild.cpp',
+    'DNSRequestParent.cpp',
+    'DNSResolverInfo.cpp',
+    'GetAddrInfo.cpp',
+    'HTTPSSVC.cpp',
+    'IDNBlocklistUtils.cpp',
+    'NativeDNSResolverOverrideChild.cpp',
+    'NativeDNSResolverOverrideParent.cpp',
+    'nsDNSService2.cpp',
+    'nsIDNService.cpp',
+    'punycode.c',
+    'TRR.cpp',
+    'TRRService.cpp',
+    'TRRServiceBase.cpp',
+    'TRRServiceChild.cpp',
+    'TRRServiceParent.cpp',
 ]
 
 IPDL_SOURCES = [
-    "PDNSRequest.ipdl",
-    "PDNSRequestParams.ipdlh",
-    "PNativeDNSResolverOverride.ipdl",
-    "PTRRService.ipdl",
+    'PDNSRequest.ipdl',
+    'PDNSRequestParams.ipdlh',
+    'PNativeDNSResolverOverride.ipdl',
+    'PTRRService.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-GeneratedFile(
-    "etld_data.inc", script="prepare_tlds.py", inputs=["effective_tld_names.dat"]
-)
+GeneratedFile('etld_data.inc', script='prepare_tlds.py',
+              inputs=['effective_tld_names.dat'])
 
 # need to include etld_data.inc
 LOCAL_INCLUDES += [
-    "/netwerk/base",
-    "/netwerk/protocol/http",
+    '/netwerk/base',
+    '/netwerk/protocol/http',
 ]
 
-USE_LIBS += ["icu"]
+USE_LIBS += ['icu']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

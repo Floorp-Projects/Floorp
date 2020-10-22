@@ -4,18 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "OS.File")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'OS.File')
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
-    "lz4.js",
-    "lz4_internal.js",
+    'lz4.js',
+    'lz4_internal.js',
 ]
 
 SOURCES += [
-    "lz4.cpp",
+    'lz4.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

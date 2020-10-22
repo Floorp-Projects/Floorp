@@ -32,15 +32,13 @@ def test_get_playback(get_binary):
     config["obj_path"] = os.path.dirname(get_binary("firefox"))
     config["playback_tool"] = "mitmproxy"
     config["playback_version"] = "5.1.1"
-    config["playback_files"] = [
-        os.path.join(
-            os.path.dirname(os.path.abspath(os.path.dirname(__file__))),
-            "raptor",
-            "tooltool-manifests",
-            "playback",
-            "mitm4-linux-firefox-amazon.manifest",
-        )
-    ]
+    config["playback_files"] = [os.path.join(
+        os.path.dirname(os.path.abspath(os.path.dirname(__file__))),
+        "raptor",
+        "tooltool-manifests",
+        "playback",
+        "mitm4-linux-firefox-amazon.manifest",
+    )]
     config["binary"] = get_binary("firefox")
     config["run_local"] = run_local
     config["app"] = "firefox"

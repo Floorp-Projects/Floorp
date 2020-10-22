@@ -9,16 +9,12 @@ from ..push import push_to_try, generate_try_task_config
 
 
 class EmptyParser(BaseTryParser):
-    name = "empty"
-    common_groups = ["push"]
+    name = 'empty'
+    common_groups = ['push']
 
 
-def run(message="{msg}", push=True, closed_tree=False):
+def run(message='{msg}', push=True, closed_tree=False):
     msg = 'No try selector specified, use "Add New Jobs" to select tasks.'
-    return push_to_try(
-        "empty",
-        message.format(msg=msg),
-        try_task_config=generate_try_task_config("empty", []),
-        push=push,
-        closed_tree=closed_tree,
-    )
+    return push_to_try('empty', message.format(msg=msg),
+                       try_task_config=generate_try_task_config('empty', []),
+                       push=push, closed_tree=closed_tree)

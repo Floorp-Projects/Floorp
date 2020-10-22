@@ -10,7 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from shellutil import quote
 
@@ -23,10 +23,9 @@ def environ():
             # os.environ always returns string keys and values in Python 3.
             return s
         else:
-            return s.decode("utf-8")
-
+            return s.decode('utf-8')
     return [(ensure_text(k), ensure_text(v)) for (k, v) in os.environ.items()]
 
 
 for key, value in environ():
-    print("%s=%s" % (key, quote(value)))
+    print('%s=%s' % (key, quote(value)))

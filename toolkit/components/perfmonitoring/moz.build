@@ -4,20 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Performance Monitoring")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Performance Monitoring')
 
 
-UNIFIED_SOURCES += ["PerformanceMetricsCollector.cpp", "PerformanceUtils.cpp"]
-
-EXPORTS.mozilla += [
-    "PerformanceMetricsCollector.h",
-    "PerformanceTypes.h",
-    "PerformanceUtils.h",
+UNIFIED_SOURCES += [
+    'PerformanceMetricsCollector.cpp',
+    'PerformanceUtils.cpp'
 ]
 
-LOCAL_INCLUDES += ["/dom/base"]
+EXPORTS.mozilla += [
+    'PerformanceMetricsCollector.h',
+    'PerformanceTypes.h',
+    'PerformanceUtils.h'
+]
 
-FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    '/dom/base'
+]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')

@@ -4,33 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_LINKER"]:
+if CONFIG['MOZ_LINKER']:
     SOURCES += [
-        "BaseElf.cpp",
-        "CustomElf.cpp",
-        "ElfLoader.cpp",
-        "Mappable.cpp",
-        "XZStream.cpp",
+        'BaseElf.cpp',
+        'CustomElf.cpp',
+        'ElfLoader.cpp',
+        'Mappable.cpp',
+        'XZStream.cpp',
     ]
 
 # When the linker is disabled, we still need Zip for mozglue/android.
 # Logging is a required dependency.
 SOURCES += [
-    "Logging.cpp",
-    "Zip.cpp",
+    'Logging.cpp',
+    'Zip.cpp',
 ]
 
-Library("linker")
+Library('linker')
 
-FINAL_LIBRARY = "mozglue"
+FINAL_LIBRARY = 'mozglue'
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ['tests']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-DEFINES["XZ_USE_CRC64"] = 1
+DEFINES['XZ_USE_CRC64'] = 1
 
 USE_LIBS += [
-    "xz-embedded",
+    'xz-embedded',
 ]

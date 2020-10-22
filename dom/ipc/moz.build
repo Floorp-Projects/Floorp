@@ -7,236 +7,238 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
-DIRS += ["jsactor"]
+DIRS += ['jsactor']
 
 XPIDL_SOURCES += [
-    "nsIDOMProcessChild.idl",
-    "nsIDOMProcessParent.idl",
-    "nsIHangReport.idl",
+    'nsIDOMProcessChild.idl',
+    'nsIDOMProcessParent.idl',
+    'nsIHangReport.idl',
 ]
 
-XPIDL_MODULE = "dom"
+XPIDL_MODULE = 'dom'
 
 EXTRA_JS_MODULES += [
-    "ManifestMessagesChild.jsm",
+    'ManifestMessagesChild.jsm',
 ]
 
 EXPORTS.mozilla.dom.ipc += [
-    "IdType.h",
-    "MemMapSnapshot.h",
-    "SharedMap.h",
-    "SharedMapChangeEvent.h",
-    "SharedStringMap.h",
-    "StringTable.h",
-    "StructuredCloneData.h",
+    'IdType.h',
+    'MemMapSnapshot.h',
+    'SharedMap.h',
+    'SharedMapChangeEvent.h',
+    'SharedStringMap.h',
+    'StringTable.h',
+    'StructuredCloneData.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "BrowserBridgeChild.h",
-    "BrowserBridgeHost.h",
-    "BrowserBridgeParent.h",
-    "BrowserChild.h",
-    "BrowserHost.h",
-    "BrowserParent.h",
-    "ClonedErrorHolder.h",
-    "CoalescedInputData.h",
-    "CoalescedMouseData.h",
-    "CoalescedWheelData.h",
-    "ContentChild.h",
-    "ContentParent.h",
-    "ContentProcess.h",
-    "ContentProcessManager.h",
-    "CSPMessageUtils.h",
-    "DocShellMessageUtils.h",
-    "EffectsInfo.h",
-    "FilePickerParent.h",
-    "InProcessChild.h",
-    "InProcessParent.h",
-    "MaybeDiscarded.h",
-    "MemoryReportRequest.h",
-    "NativeThreadId.h",
-    "PermissionMessageUtils.h",
-    "ProcessActor.h",
-    "PropertyBagUtils.h",
-    "ReferrerInfoUtils.h",
-    "RefMessageBodyService.h",
-    "RemoteBrowser.h",
-    "RemoteType.h",
-    "RemoteWebProgress.h",
-    "RemoteWebProgressRequest.h",
-    "SharedMessageBody.h",
-    "TabContext.h",
-    "TabMessageTypes.h",
-    "TabMessageUtils.h",
-    "URLClassifierChild.h",
-    "URLClassifierParent.h",
-    "UserActivationIPCUtils.h",
-    "WindowGlobalActor.h",
-    "WindowGlobalChild.h",
-    "WindowGlobalParent.h",
+    'BrowserBridgeChild.h',
+    'BrowserBridgeHost.h',
+    'BrowserBridgeParent.h',
+    'BrowserChild.h',
+    'BrowserHost.h',
+    'BrowserParent.h',
+    'ClonedErrorHolder.h',
+    'CoalescedInputData.h',
+    'CoalescedMouseData.h',
+    'CoalescedWheelData.h',
+    'ContentChild.h',
+    'ContentParent.h',
+    'ContentProcess.h',
+    'ContentProcessManager.h',
+    'CSPMessageUtils.h',
+    'DocShellMessageUtils.h',
+    'EffectsInfo.h',
+    'FilePickerParent.h',
+    'InProcessChild.h',
+    'InProcessParent.h',
+    'MaybeDiscarded.h',
+    'MemoryReportRequest.h',
+    'NativeThreadId.h',
+    'PermissionMessageUtils.h',
+    'ProcessActor.h',
+    'PropertyBagUtils.h',
+    'ReferrerInfoUtils.h',
+    'RefMessageBodyService.h',
+    'RemoteBrowser.h',
+    'RemoteType.h',
+    'RemoteWebProgress.h',
+    'RemoteWebProgressRequest.h',
+    'SharedMessageBody.h',
+    'TabContext.h',
+    'TabMessageTypes.h',
+    'TabMessageUtils.h',
+    'URLClassifierChild.h',
+    'URLClassifierParent.h',
+    'UserActivationIPCUtils.h',
+    'WindowGlobalActor.h',
+    'WindowGlobalChild.h',
+    'WindowGlobalParent.h',
 ]
 
 EXPORTS.mozilla += [
-    "PreallocatedProcessManager.h",
-    "ProcessHangMonitor.h",
-    "ProcessHangMonitorIPC.h",
-    "ProcessPriorityManager.h",
+    'PreallocatedProcessManager.h',
+    'ProcessHangMonitor.h',
+    'ProcessHangMonitorIPC.h',
+    'ProcessPriorityManager.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BrowserBridgeChild.cpp",
-    "BrowserBridgeHost.cpp",
-    "BrowserBridgeParent.cpp",
-    "BrowserChild.cpp",
-    "BrowserHost.cpp",
-    "BrowserParent.cpp",
-    "ClonedErrorHolder.cpp",
-    "CoalescedMouseData.cpp",
-    "CoalescedWheelData.cpp",
-    "ColorPickerParent.cpp",
-    "ContentParent.cpp",
-    "ContentProcess.cpp",
-    "ContentProcessManager.cpp",
-    "CSPMessageUtils.cpp",
-    "DocShellMessageUtils.cpp",
-    "FilePickerParent.cpp",
-    "InProcessImpl.cpp",
-    "MemMapSnapshot.cpp",
-    "MemoryReportRequest.cpp",
-    "MMPrinter.cpp",
-    "PermissionMessageUtils.cpp",
-    "PreallocatedProcessManager.cpp",
-    "ProcessActor.cpp",
-    "ProcessPriorityManager.cpp",
-    "PropertyBagUtils.cpp",
-    "ReferrerInfoUtils.cpp",
-    "RefMessageBodyService.cpp",
-    "RemoteBrowser.cpp",
-    "RemoteWebProgress.cpp",
-    "RemoteWebProgressRequest.cpp",
-    "SharedMap.cpp",
-    "SharedMessageBody.cpp",
-    "SharedStringMap.cpp",
-    "StructuredCloneData.cpp",
-    "TabContext.cpp",
-    "TabMessageUtils.cpp",
-    "URLClassifierParent.cpp",
-    "WindowGlobalActor.cpp",
-    "WindowGlobalChild.cpp",
-    "WindowGlobalParent.cpp",
+    'BrowserBridgeChild.cpp',
+    'BrowserBridgeHost.cpp',
+    'BrowserBridgeParent.cpp',
+    'BrowserChild.cpp',
+    'BrowserHost.cpp',
+    'BrowserParent.cpp',
+    'ClonedErrorHolder.cpp',
+    'CoalescedMouseData.cpp',
+    'CoalescedWheelData.cpp',
+    'ColorPickerParent.cpp',
+    'ContentParent.cpp',
+    'ContentProcess.cpp',
+    'ContentProcessManager.cpp',
+    'CSPMessageUtils.cpp',
+    'DocShellMessageUtils.cpp',
+    'FilePickerParent.cpp',
+    'InProcessImpl.cpp',
+    'MemMapSnapshot.cpp',
+    'MemoryReportRequest.cpp',
+    'MMPrinter.cpp',
+    'PermissionMessageUtils.cpp',
+    'PreallocatedProcessManager.cpp',
+    'ProcessActor.cpp',
+    'ProcessPriorityManager.cpp',
+    'PropertyBagUtils.cpp',
+    'ReferrerInfoUtils.cpp',
+    'RefMessageBodyService.cpp',
+    'RemoteBrowser.cpp',
+    'RemoteWebProgress.cpp',
+    'RemoteWebProgressRequest.cpp',
+    'SharedMap.cpp',
+    'SharedMessageBody.cpp',
+    'SharedStringMap.cpp',
+    'StructuredCloneData.cpp',
+    'TabContext.cpp',
+    'TabMessageUtils.cpp',
+    'URLClassifierParent.cpp',
+    'WindowGlobalActor.cpp',
+    'WindowGlobalChild.cpp',
+    'WindowGlobalParent.cpp',
 ]
 
 # ContentChild.cpp cannot be compiled in unified mode on  linux due to Time conflict
 SOURCES += [
-    "ContentChild.cpp",
-    "ProcessHangMonitor.cpp",
+    'ContentChild.cpp',
+    'ProcessHangMonitor.cpp',
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
-    "PBrowser.ipdl",
-    "PBrowserBridge.ipdl",
-    "PContent.ipdl",
+    'PBrowser.ipdl',
+    'PBrowserBridge.ipdl',
+    'PContent.ipdl',
 ]
 
 IPDL_SOURCES += [
-    "DOMTypes.ipdlh",
-    "MemoryReportTypes.ipdlh",
-    "PColorPicker.ipdl",
-    "PContentPermission.ipdlh",
-    "PContentPermissionRequest.ipdl",
-    "PCycleCollectWithLogs.ipdl",
-    "PFilePicker.ipdl",
-    "PInProcess.ipdl",
-    "PLoginReputation.ipdl",
-    "PPluginWidget.ipdl",
-    "PProcessHangMonitor.ipdl",
-    "PrefsTypes.ipdlh",
-    "PTabContext.ipdlh",
-    "PURLClassifier.ipdl",
-    "PURLClassifierInfo.ipdlh",
-    "PURLClassifierLocal.ipdl",
-    "PWindowGlobal.ipdl",
-    "ServiceWorkerConfiguration.ipdlh",
-    "WindowGlobalTypes.ipdlh",
+    'DOMTypes.ipdlh',
+    'MemoryReportTypes.ipdlh',
+    'PColorPicker.ipdl',
+    'PContentPermission.ipdlh',
+    'PContentPermissionRequest.ipdl',
+    'PCycleCollectWithLogs.ipdl',
+    'PFilePicker.ipdl',
+    'PInProcess.ipdl',
+    'PLoginReputation.ipdl',
+    'PPluginWidget.ipdl',
+    'PProcessHangMonitor.ipdl',
+    'PrefsTypes.ipdlh',
+    'PTabContext.ipdlh',
+    'PURLClassifier.ipdl',
+    'PURLClassifierInfo.ipdlh',
+    'PURLClassifierLocal.ipdl',
+    'PWindowGlobal.ipdl',
+    'ServiceWorkerConfiguration.ipdlh',
+    'WindowGlobalTypes.ipdlh',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["MOZ_SANDBOX"] and (CONFIG["OS_TARGET"] in ["Darwin", "Linux"]):
+if CONFIG['MOZ_SANDBOX'] and (CONFIG['OS_TARGET'] in ['Darwin', 'Linux']):
     USE_LIBS += [
-        "mozsandbox",
+        'mozsandbox',
     ]
 
 LOCAL_INCLUDES += [
-    "/caps",
-    "/chrome",
-    "/docshell/base",
-    "/dom/base",
-    "/dom/bindings",
-    "/dom/events",
-    "/dom/filesystem",
-    "/dom/geolocation",
-    "/dom/media/webrtc",
-    "/dom/media/webspeech/synth/ipc",
-    "/dom/security",
-    "/dom/storage",
-    "/extensions/spellcheck/src",
-    "/gfx/2d",
-    "/hal/sandbox",
-    "/js/xpconnect/loader",
-    "/js/xpconnect/src",
-    "/layout/base",
-    "/media/webrtc",
-    "/netwerk/base",
-    "/netwerk/protocol/http",
-    "/toolkit/components/printingui/ipc",
-    "/toolkit/crashreporter",
-    "/toolkit/xre",
-    "/uriloader/exthandler",
-    "/widget",
-    "/xpcom/base",
-    "/xpcom/threads",
+    '/caps',
+    '/chrome',
+    '/docshell/base',
+    '/dom/base',
+    '/dom/bindings',
+    '/dom/events',
+    '/dom/filesystem',
+    '/dom/geolocation',
+    '/dom/media/webrtc',
+    '/dom/media/webspeech/synth/ipc',
+    '/dom/security',
+    '/dom/storage',
+    '/extensions/spellcheck/src',
+    '/gfx/2d',
+    '/hal/sandbox',
+    '/js/xpconnect/loader',
+    '/js/xpconnect/src',
+    '/layout/base',
+    '/media/webrtc',
+    '/netwerk/base',
+    '/netwerk/protocol/http',
+    '/toolkit/components/printingui/ipc',
+    '/toolkit/crashreporter',
+    '/toolkit/xre',
+    '/uriloader/exthandler',
+    '/widget',
+    '/xpcom/base',
+    '/xpcom/threads',
 ]
 
-if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
-        "/security/sandbox/chromium",
-        "/security/sandbox/chromium-shim",
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
     ]
 
-if CONFIG["OS_ARCH"] != "WINNT":
+if CONFIG['OS_ARCH'] != 'WINNT':
     LOCAL_INCLUDES += [
-        "/modules/libjar",
+        '/modules/libjar',
     ]
 
-DEFINES["BIN_SUFFIX"] = '"%s"' % CONFIG["BIN_SUFFIX"]
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
-DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+DEFINES['MOZ_APP_NAME'] = '"%s"' % CONFIG['MOZ_APP_NAME']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    DEFINES["MOZ_ENABLE_FREETYPE"] = True
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser.ini",
-    "tests/JSProcessActor/browser.ini",
-    "tests/JSWindowActor/browser.ini",
+    'tests/browser.ini',
+    'tests/JSProcessActor/browser.ini',
+    'tests/JSWindowActor/browser.ini',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
-    TEST_DIRS += ["fuzztest"]
+if CONFIG['FUZZING'] and CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'fuzztest'
+    ]
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

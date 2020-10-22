@@ -17,16 +17,13 @@ transforms = TransformSequence()
 def find_upstream_artifact_task(config, jobs):
     for job in jobs:
         dep_job = None
-        if job.get("dependent-tasks"):
-            dep_labels = [l for l in job["dependent-tasks"].keys()]
+        if job.get('dependent-tasks'):
+            dep_labels = [l for l in job['dependent-tasks'].keys()]
             for label in dep_labels:
-                if "notarization-part-1" in label:
-                    assert (
-                        dep_job is None
-                    ), "Can't determine whether " "{} or {} is dep_job!".format(
-                        dep_job.label, label
-                    )
-                    dep_job = job["dependent-tasks"][label]
+                if 'notarization-part-1' in label:
+                    assert dep_job is None, "Can't determine whether " \
+                        "{} or {} is dep_job!".format(dep_job.label, label)
+                    dep_job = job['dependent-tasks'][label]
             if dep_job is not None:
-                job["upstream-artifact-task"] = dep_job
+                job['upstream-artifact-task'] = dep_job
         yield job

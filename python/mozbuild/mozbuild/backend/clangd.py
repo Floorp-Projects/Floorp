@@ -27,9 +27,7 @@ class ClangdBackend(CompileDBBackend):
         CompileDBBackend._init(self)
 
     def _get_compiler_args(self, cenv, canonical_suffix):
-        compiler_args = super(ClangdBackend, self)._get_compiler_args(
-            cenv, canonical_suffix
-        )
+        compiler_args = super(ClangdBackend, self)._get_compiler_args(cenv, canonical_suffix)
         if compiler_args is None:
             return None
 
@@ -55,6 +53,4 @@ class ClangdBackend(CompileDBBackend):
 
     def _process_unified_sources(self, obj):
         for f in list(sorted(obj.files)):
-            self._build_db_line(
-                obj.objdir, obj.relsrcdir, obj.config, f, obj.canonical_suffix
-            )
+            self._build_db_line(obj.objdir, obj.relsrcdir, obj.config, f, obj.canonical_suffix)

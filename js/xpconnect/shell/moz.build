@@ -4,58 +4,58 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram("xpcshell", linkage="dependent")
+GeckoProgram('xpcshell', linkage='dependent')
 
 SOURCES += [
-    "xpcshell.cpp",
+    'xpcshell.cpp',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
-        "xpcshellMacUtils.mm",
+        'xpcshellMacUtils.mm',
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/toolkit/xre",
+    '/toolkit/xre',
 ]
 
-if CONFIG["CC_TYPE"] == "clang-cl":
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.
-    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
 # DELAYLOAD_DLLS in this block ensure that the DLL blocklist initializes
-if CONFIG["OS_ARCH"] == "WINNT":
-    if CONFIG["MOZ_SANDBOX"]:
+if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['MOZ_SANDBOX']:
         # For sandbox includes and the include dependencies those have
         LOCAL_INCLUDES += [
-            "/security/sandbox/chromium",
-            "/security/sandbox/chromium-shim",
+            '/security/sandbox/chromium',
+            '/security/sandbox/chromium-shim',
         ]
 
         OS_LIBS += [
-            "version",
+            'version',
         ]
 
         USE_LIBS += [
-            "sandbox_s",
+            'sandbox_s',
         ]
 
         DELAYLOAD_DLLS += [
-            "winmm.dll",
-            "user32.dll",
+            'winmm.dll',
+            'user32.dll',
         ]
 
     OS_LIBS += [
-        "ntdll",
+        'ntdll',
     ]
 
     DELAYLOAD_DLLS += [
-        "xul.dll",
+        'xul.dll',
     ]
 
-CFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-OS_LIBS += CONFIG["TK_LIBS"]
+CFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
+OS_LIBS += CONFIG['TK_LIBS']

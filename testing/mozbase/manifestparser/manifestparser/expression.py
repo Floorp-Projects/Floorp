@@ -10,7 +10,7 @@ import traceback
 
 import six
 
-__all__ = ["parse", "ParseError", "ExpressionParser"]
+__all__ = ['parse', 'ParseError', 'ExpressionParser']
 
 # expr.py
 # from:
@@ -51,6 +51,7 @@ __all__ = ["parse", "ParseError", "ExpressionParser"]
 
 
 class ident_token(object):
+
     def __init__(self, scanner, value):
         self.value = value
 
@@ -61,6 +62,7 @@ class ident_token(object):
 
 
 class literal_token(object):
+
     def __init__(self, scanner, value):
         self.value = value
 
@@ -149,33 +151,35 @@ class rparen_token(object):
 class end_token(object):
     """always ends parsing"""
 
-
 # derived literal tokens
 
 
 class bool_token(literal_token):
+
     def __init__(self, scanner, value):
-        value = {"true": True, "false": False}[value]
+        value = {'true': True, 'false': False}[value]
         literal_token.__init__(self, scanner, value)
 
 
 class int_token(literal_token):
+
     def __init__(self, scanner, value):
         literal_token.__init__(self, scanner, int(value))
 
 
 class string_token(literal_token):
+
     def __init__(self, scanner, value):
         literal_token.__init__(self, scanner, value[1:-1])
 
 
-precedence = [
-    (end_token, rparen_token),
-    (or_op_token,),
-    (and_op_token,),
-    (lt_op_token, gt_op_token, le_op_token, ge_op_token, eq_op_token, neq_op_token),
-    (lparen_token,),
-]
+precedence = [(end_token, rparen_token),
+              (or_op_token,),
+              (and_op_token,),
+              (lt_op_token, gt_op_token, le_op_token, ge_op_token,
+               eq_op_token, neq_op_token),
+              (lparen_token,),
+              ]
 for index, rank in enumerate(precedence):
     for token in rank:
         token.lbp = index  # lbp = lowest left binding power
@@ -235,27 +239,25 @@ class ExpressionParser(object):
         Lex the input text into tokens and yield them in sequence.
         """
         if not ExpressionParser.scanner:
-            ExpressionParser.scanner = re.Scanner(
-                [
-                    # Note: keep these in sync with the class docstring above.
-                    (r"true|false", bool_token),
-                    (r"[a-zA-Z_]\w*", ident_token),
-                    (r"[0-9]+", int_token),
-                    (r'("[^"]*")|(\'[^\']*\')', string_token),
-                    (r"==", eq_op_token()),
-                    (r"!=", neq_op_token()),
-                    (r"<=", le_op_token()),
-                    (r">=", ge_op_token()),
-                    (r"<", lt_op_token()),
-                    (r">", gt_op_token()),
-                    (r"\|\|", or_op_token()),
-                    (r"!", not_op_token()),
-                    (r"&&", and_op_token()),
-                    (r"\(", lparen_token()),
-                    (r"\)", rparen_token()),
-                    (r"\s+", None),  # skip whitespace
-                ]
-            )
+            ExpressionParser.scanner = re.Scanner([
+                # Note: keep these in sync with the class docstring above.
+                (r"true|false", bool_token),
+                (r"[a-zA-Z_]\w*", ident_token),
+                (r"[0-9]+", int_token),
+                (r'("[^"]*")|(\'[^\']*\')', string_token),
+                (r"==", eq_op_token()),
+                (r"!=", neq_op_token()),
+                (r"<=", le_op_token()),
+                (r">=", ge_op_token()),
+                (r"<", lt_op_token()),
+                (r">", gt_op_token()),
+                (r"\|\|", or_op_token()),
+                (r"!", not_op_token()),
+                (r"&&", and_op_token()),
+                (r"\(", lparen_token()),
+                (r"\)", rparen_token()),
+                (r"\s+", None),  # skip whitespace
+            ])
         tokens, remainder = ExpressionParser.scanner.scan(self.text)
         for t in tokens:
             yield t
@@ -306,15 +308,9 @@ class ExpressionParser(object):
             return self.expression()
         except Exception:
             extype, ex, tb = sys.exc_info()
-            formatted = "".join(traceback.format_exception_only(extype, ex))
-            six.reraise(
-                ParseError,
-                ParseError(
-                    "could not parse: %s\nexception: %svariables: %s"
-                    % (self.text, formatted, self.valuemapping)
-                ),
-                tb,
-            )
+            formatted = ''.join(traceback.format_exception_only(extype, ex))
+            six.reraise(ParseError, ParseError("could not parse: %s\nexception: %svariables: %s" %
+                        (self.text, formatted, self.valuemapping)), tb)
 
     __call__ = parse
 

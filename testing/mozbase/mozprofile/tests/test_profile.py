@@ -43,16 +43,13 @@ def test_with_profile_should_cleanup_even_on_exception():
     assert not os.path.exists(profile.profile)
 
 
-@pytest.mark.parametrize(
-    "app,cls",
-    [
-        ("chrome", ChromeProfile),
-        ("chromium", ChromiumProfile),
-        ("firefox", FirefoxProfile),
-        ("thunderbird", ThunderbirdProfile),
-        ("unknown", None),
-    ],
-)
+@pytest.mark.parametrize('app,cls', [
+    ('chrome', ChromeProfile),
+    ('chromium', ChromiumProfile),
+    ('firefox', FirefoxProfile),
+    ('thunderbird', ThunderbirdProfile),
+    ('unknown', None)
+])
 def test_create_profile(tmpdir, app, cls):
     path = tmpdir.strpath
 
@@ -67,22 +64,17 @@ def test_create_profile(tmpdir, app, cls):
     assert profile.profile == path
 
 
-@pytest.mark.parametrize(
-    "cls",
-    [
-        Profile,
-        ChromeProfile,
-        ChromiumProfile,
-    ],
-)
+@pytest.mark.parametrize('cls', [
+    Profile,
+    ChromeProfile,
+    ChromiumProfile,
+])
 def test_merge_profile(cls):
-    profile = cls(preferences={"foo": "bar"})
+    profile = cls(preferences={'foo': 'bar'})
     assert profile._addons == []
-    assert os.path.isfile(
-        os.path.join(profile.profile, profile.preference_file_names[0])
-    )
+    assert os.path.isfile(os.path.join(profile.profile, profile.preference_file_names[0]))
 
-    other_profile = os.path.join(here, "files", "dummy-profile")
+    other_profile = os.path.join(here, 'files', 'dummy-profile')
     profile.merge(other_profile)
 
     # make sure to add a pref file for each preference_file_names in the dummy-profile
@@ -96,18 +88,18 @@ def test_merge_profile(cls):
         except ValueError:
             prefs.update(Preferences.read_prefs(path))
 
-    assert "foo" in prefs
+    assert 'foo' in prefs
     assert len(prefs) == len(profile.preference_file_names) + 1
     assert all(name in prefs for name in profile.preference_file_names)
 
     # for Google Chrome currently we ignore webext in profile prefs
     if cls == Profile:
         assert len(profile._addons) == 1
-        assert profile._addons[0].endswith("empty.xpi")
+        assert profile._addons[0].endswith('empty.xpi')
         assert os.path.exists(profile._addons[0])
     else:
         assert len(profile._addons) == 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

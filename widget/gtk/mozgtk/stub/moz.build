@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "../mozgtk.c",
+    '../mozgtk.c',
 ]
 
-for var in ("COMMON_SYMBOLS", "GTK2_SYMBOLS", "GTK3_SYMBOLS"):
+for var in ('COMMON_SYMBOLS', 'GTK2_SYMBOLS', 'GTK3_SYMBOLS'):
     DEFINES[var] = True
 
-SharedLibrary("mozgtk_stub")
+SharedLibrary('mozgtk_stub')
 
-SONAME = "mozgtk"
+SONAME = 'mozgtk'

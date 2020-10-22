@@ -16,11 +16,13 @@ import buildconfig
 
 def shell_main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", type=str, required=True, help="Output file")
-    parser.add_argument("manifest", type=str, help="Manifest source file")
+    parser.add_argument('-o', '--output', type=str, required=True,
+                        help='Output file')
+    parser.add_argument('manifest', type=str,
+                        help='Manifest source file')
     args = parser.parse_args()
 
-    with open(args.output, "w") as out_file:
+    with open(args.output, 'w') as out_file:
         process_manifest(out_file, args.manifest)
 
 
@@ -40,7 +42,7 @@ FOOTER = """
 
 
 def process_manifest(output_fp, manifest_filename):
-    with codecs.open(manifest_filename, "r", "UTF-8") as in_fp:
+    with codecs.open(manifest_filename, 'r', 'UTF-8') as in_fp:
         manifest = yaml.safe_load(in_fp)
     shader_folder, _ = os.path.split(manifest_filename)
 
@@ -48,64 +50,67 @@ def process_manifest(output_fp, manifest_filename):
 
     deps = set()
     for block in manifest:
-        if "type" not in block:
+        if 'type' not in block:
             raise Exception("Expected 'type' key with shader mode")
-        if "file" not in block:
+        if 'file' not in block:
             raise Exception("Expected 'file' key with shader file")
-        if "shaders" not in block:
+        if 'shaders' not in block:
             raise Exception("Expected 'shaders' key with shader name list")
 
-        shader_file = os.path.join(shader_folder, block["file"])
+        shader_file = os.path.join(shader_folder, block['file'])
         deps.add(shader_file)
 
-        shader_model = block["type"]
-        for shader_name in block["shaders"]:
+        shader_model = block['type']
+        for shader_name in block['shaders']:
             new_deps = run_fxc(
                 shader_model=shader_model,
                 shader_file=shader_file,
                 shader_name=shader_name,
-                output_fp=output_fp,
-            )
+                output_fp=output_fp)
             deps |= new_deps
 
     output_fp.write(FOOTER)
     return deps
 
 
-def run_fxc(shader_model, shader_file, shader_name, output_fp):
-    fxc_location = buildconfig.substs["FXC"]
+def run_fxc(shader_model,
+            shader_file,
+            shader_name,
+            output_fp):
+    fxc_location = buildconfig.substs['FXC']
 
     argv = [
         fxc_location,
-        "-nologo",
-        "-T{0}".format(shader_model),
+        '-nologo',
+        '-T{0}'.format(shader_model),
         os.path.relpath(shader_file),
-        "-E{0}".format(shader_name),
-        "-Vn{0}".format(shader_name),
-        "-Vi",
+        '-E{0}'.format(shader_name),
+        '-Vn{0}'.format(shader_name),
+        '-Vi',
     ]
-    if "WINNT" not in buildconfig.substs["HOST_OS_ARCH"]:
-        argv.insert(0, buildconfig.substs["WINE"])
-    if shader_model.startswith("vs_"):
-        argv += ["-DVERTEX_SHADER"]
-    elif shader_model.startswith("ps_"):
-        argv += ["-DPIXEL_SHADER"]
+    if 'WINNT' not in buildconfig.substs['HOST_OS_ARCH']:
+        argv.insert(0, buildconfig.substs['WINE'])
+    if shader_model.startswith('vs_'):
+        argv += ['-DVERTEX_SHADER']
+    elif shader_model.startswith('ps_'):
+        argv += ['-DPIXEL_SHADER']
 
     deps = None
     with ScopedTempFilename() as temp_filename:
-        argv += ["-Fh{0}".format(os.path.relpath(temp_filename))]
+        argv += ['-Fh{0}'.format(os.path.relpath(temp_filename))]
 
-        sys.stdout.write("{0}\n".format(" ".join(argv)))
+        sys.stdout.write('{0}\n'.format(' '.join(argv)))
         sys.stdout.flush()
         proc_stdout = subprocess.check_output(argv)
         proc_stdout = decode_console_text(sys.stdout, proc_stdout)
         deps = find_dependencies(proc_stdout)
-        assert "fxc2" in fxc_location or len(deps) > 0
+        assert 'fxc2' in fxc_location or len(deps) > 0
 
-        with open(temp_filename, "r") as temp_fp:
+        with open(temp_filename, 'r') as temp_fp:
             output_fp.write(temp_fp.read())
 
-    output_fp.write("ShaderBytes s{0} = {{ {0}, sizeof({0}) }};\n".format(shader_name))
+    output_fp.write("ShaderBytes s{0} = {{ {0}, sizeof({0}) }};\n".format(
+        shader_name))
     return deps
 
 
@@ -117,7 +122,7 @@ def find_dependencies(fxc_output):
     # instead of pattern matching on that string, we take everything in between
     # brackets. We filter out potentially bogus strings later.
     deps = set()
-    for line in fxc_output.split("\n"):
+    for line in fxc_output.split('\n'):
         m = re.search(r"\[([^\]]+)\]", line)
         if m is None:
             continue
@@ -125,14 +130,11 @@ def find_dependencies(fxc_output):
         dep_path = os.path.normpath(dep_path)
         # When run via Wine, FXC's output contains Windows paths on the Z drive.
         # We want to normalize them back to unix paths for the build system.
-        if "WINNT" not in buildconfig.substs[
-            "HOST_OS_ARCH"
-        ] and dep_path.lower().startswith("z:"):
-            dep_path = dep_path[2:].replace("\\", "/")
+        if 'WINNT' not in buildconfig.substs['HOST_OS_ARCH'] and dep_path.lower().startswith('z:'):
+            dep_path = dep_path[2:].replace('\\', '/')
         if os.path.isfile(dep_path):
             deps.add(dep_path)
     return deps
-
 
 # Python reads the raw bytes from stdout, so we need to try our best to
 # capture that as a valid Python string.
@@ -141,14 +143,13 @@ def find_dependencies(fxc_output):
 def decode_console_text(pipe, text):
     try:
         if pipe.encoding:
-            return text.decode(pipe.encoding, "replace")
+            return text.decode(pipe.encoding, 'replace')
     except Exception:
         pass
     try:
-        return text.decode(locale.getpreferredencoding(), "replace")
+        return text.decode(locale.getpreferredencoding(), 'replace')
     except Exception:
-        return text.decode("utf8", "replace")
-
+        return text.decode('utf8', 'replace')
 
 # Allocate a temporary file name and delete it when done. We need an extra
 # wrapper for this since TemporaryNamedFile holds the file open.
@@ -172,5 +173,5 @@ class ScopedTempFilename(object):
             pass
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     shell_main()

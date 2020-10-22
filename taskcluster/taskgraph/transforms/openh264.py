@@ -18,11 +18,11 @@ def set_mh_options(config, jobs):
     This transform sets the 'openh264_rev' attribute.
     """
     for job in jobs:
-        repo = job.pop("repo")
-        rev = job.pop("revision")
-        attributes = job.setdefault("attributes", {})
-        attributes["openh264_rev"] = rev
-        run = job.setdefault("run", {})
-        options = run.setdefault("options", [])
-        options.extend(["repo={}".format(repo), "rev={}".format(rev)])
+        repo = job.pop('repo')
+        rev = job.pop('revision')
+        attributes = job.setdefault('attributes', {})
+        attributes['openh264_rev'] = rev
+        run = job.setdefault('run', {})
+        options = run.setdefault('options', [])
+        options.extend(['repo={}'.format(repo), 'rev={}'.format(rev)])
         yield job

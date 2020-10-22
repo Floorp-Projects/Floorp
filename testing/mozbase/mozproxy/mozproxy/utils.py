@@ -16,7 +16,6 @@ import socket
 
 from six.moves.urllib.request import urlretrieve
 from redo import retriable, retry
-
 try:
     import zstandard
 except ImportError:
@@ -37,16 +36,8 @@ LOG = get_proxy_logger(component="mozproxy")
 TOOLTOOL_PATHS = [os.path.join(mozharness_dir, "external_tools", "tooltool.py")]
 
 if "MOZ_UPLOAD_DIR" in os.environ:
-    TOOLTOOL_PATHS.append(
-        os.path.join(
-            os.environ["MOZ_UPLOAD_DIR"],
-            "..",
-            "..",
-            "mozharness",
-            "external_tools",
-            "tooltool.py",
-        )
-    )
+    TOOLTOOL_PATHS.append(os.path.join(
+        os.environ["MOZ_UPLOAD_DIR"], "..", "..", "mozharness", "external_tools", "tooltool.py"))
 
 
 def transform_platform(str_to_transform, config_platform, config_processor=None):
@@ -130,9 +121,8 @@ def tooltool_download(manifest, run_local, raptor_dir):
         if proc.wait() != 0:
             raise Exception("Command failed")
     except Exception as e:
-        LOG.critical(
-            "Error while downloading {} from tooltool:{}".format(manifest, str(e))
-        )
+        LOG.critical("Error while downloading {} from tooltool:{}".format(
+                     manifest, str(e)))
         if proc.poll() is None:
             proc.kill(signal.SIGTERM)
         raise

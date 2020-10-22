@@ -10,15 +10,15 @@ import subprocess
 from mozpack.errors import errors
 
 MACHO_SIGNATURES = [
-    0xFEEDFACE,  # mach-o 32-bits big endian
-    0xCEFAEDFE,  # mach-o 32-bits little endian
-    0xFEEDFACF,  # mach-o 64-bits big endian
-    0xCFFAEDFE,  # mach-o 64-bits little endian
+    0xfeedface,  # mach-o 32-bits big endian
+    0xcefaedfe,  # mach-o 32-bits little endian
+    0xfeedfacf,  # mach-o 64-bits big endian
+    0xcffaedfe,  # mach-o 64-bits little endian
 ]
 
-FAT_SIGNATURE = 0xCAFEBABE  # mach-o FAT binary
+FAT_SIGNATURE = 0xcafebabe  # mach-o FAT binary
 
-ELF_SIGNATURE = 0x7F454C46  # Elf binary
+ELF_SIGNATURE = 0x7f454c46  # Elf binary
 
 UNKNOWN = 0
 MACHO = 1
@@ -26,15 +26,15 @@ ELF = 2
 
 
 def get_type(path):
-    """
+    '''
     Check the signature of the give file and returns what kind of executable
     matches.
-    """
-    with open(path, "rb") as f:
+    '''
+    with open(path, 'rb') as f:
         signature = f.read(4)
         if len(signature) < 4:
             return UNKNOWN
-        signature = struct.unpack(">L", signature)[0]
+        signature = struct.unpack('>L', signature)[0]
         if signature == ELF_SIGNATURE:
             return ELF
         if signature in MACHO_SIGNATURES:
@@ -51,14 +51,14 @@ def get_type(path):
         num = f.read(4)
         if len(num) < 4:
             return UNKNOWN
-        num = struct.unpack(">L", num)[0]
+        num = struct.unpack('>L', num)[0]
         if num < 20:
             return MACHO
         return UNKNOWN
 
 
 def is_executable(path):
-    """
+    '''
     Return whether a given file path points to an executable or a library,
     where an executable or library is identified by:
         - the file extension on OS/2 and WINNT
@@ -69,99 +69,90 @@ def is_executable(path):
     and File classes in FileFinder, and choosing ExecutableFile only matters
     on OS/2, OS/X, ELF and WINNT (in GCC build) systems, we don't bother
     detecting other kind of executables.
-    """
+    '''
     from buildconfig import substs
-
     if not os.path.exists(path):
         return False
 
-    if substs["OS_ARCH"] == "WINNT":
-        return path.lower().endswith((substs["DLL_SUFFIX"], substs["BIN_SUFFIX"]))
+    if substs['OS_ARCH'] == 'WINNT':
+        return path.lower().endswith((substs['DLL_SUFFIX'],
+                                      substs['BIN_SUFFIX']))
 
     return get_type(path) != UNKNOWN
 
 
 def may_strip(path):
-    """
+    '''
     Return whether strip() should be called
-    """
+    '''
     from buildconfig import substs
-
     # Bug 1658632: clang-11-based strip complains about d3dcompiler_47.dll.
     # It's not clear why this happens, but as a quick fix just avoid stripping
     # this DLL. It's not from our build anyway.
-    if "d3dcompiler" in path:
+    if 'd3dcompiler' in path:
         return False
-    return bool(substs.get("PKG_STRIP"))
+    return bool(substs.get('PKG_STRIP'))
 
 
 def strip(path):
-    """
+    '''
     Execute the STRIP command with STRIP_FLAGS on the given path.
-    """
+    '''
     from buildconfig import substs
-
-    strip = substs["STRIP"]
-    flags = substs.get("STRIP_FLAGS", [])
+    strip = substs['STRIP']
+    flags = substs.get('STRIP_FLAGS', [])
     cmd = [strip] + flags + [path]
     if subprocess.call(cmd) != 0:
-        errors.fatal("Error executing " + " ".join(cmd))
+        errors.fatal('Error executing ' + ' '.join(cmd))
 
 
 def may_elfhack(path):
-    """
+    '''
     Return whether elfhack() should be called
-    """
+    '''
     # elfhack only supports libraries. We should check the ELF header for
     # the right flag, but checking the file extension works too.
     from buildconfig import substs
-
-    return (
-        "USE_ELF_HACK" in substs
-        and substs["USE_ELF_HACK"]
-        and path.endswith(substs["DLL_SUFFIX"])
-        and "COMPILE_ENVIRONMENT" in substs
-        and substs["COMPILE_ENVIRONMENT"]
-    )
+    return ('USE_ELF_HACK' in substs and substs['USE_ELF_HACK'] and
+            path.endswith(substs['DLL_SUFFIX']) and
+            'COMPILE_ENVIRONMENT' in substs and substs['COMPILE_ENVIRONMENT'])
 
 
 def elfhack(path):
-    """
+    '''
     Execute the elfhack command on the given path.
-    """
+    '''
     from buildconfig import topobjdir
-
-    cmd = [os.path.join(topobjdir, "build/unix/elfhack/elfhack"), path]
+    cmd = [os.path.join(topobjdir, 'build/unix/elfhack/elfhack'), path]
     if subprocess.call(cmd) != 0:
-        errors.fatal("Error executing " + " ".join(cmd))
+        errors.fatal('Error executing ' + ' '.join(cmd))
 
 
 def xz_compress(path):
-    """
+    '''
     Execute xz to compress the given path.
-    """
-    if open(path, "rb").read(5)[1:] == "7zXZ":
-        print("%s is already compressed" % path)
+    '''
+    if open(path, 'rb').read(5)[1:] == '7zXZ':
+        print('%s is already compressed' % path)
         return
 
     from buildconfig import substs
-
-    xz = substs.get("XZ")
-    cmd = [xz, "-zkf", path]
+    xz = substs.get('XZ')
+    cmd = [xz, '-zkf', path]
 
     # For now, the mozglue XZStream ELF loader can only support xz files
     # with a single stream that contains a single block. In xz, there is no
     # explicit option to set the max block count. Instead, we force xz to use
     # single thread mode, which results in a single block.
-    cmd.extend(["--threads=1"])
+    cmd.extend(['--threads=1'])
 
     bcj = None
-    if substs.get("MOZ_THUMB2"):
-        bcj = "--armthumb"
-    elif substs.get("CPU_ARCH") == "arm":
-        bcj = "--arm"
-    elif substs.get("CPU_ARCH") == "x86":
-        bcj = "--x86"
+    if substs.get('MOZ_THUMB2'):
+        bcj = '--armthumb'
+    elif substs.get('CPU_ARCH') == 'arm':
+        bcj = '--arm'
+    elif substs.get('CPU_ARCH') == 'x86':
+        bcj = '--x86'
 
     if bcj:
         cmd.extend([bcj])
@@ -172,11 +163,11 @@ def xz_compress(path):
     # xz-utils version 5.0. See:
     # https://github.com/xz-mirror/xz/blob/v5.0.0/src/liblzma/lzma/lzma_encoder_presets.c
     # https://github.com/xz-mirror/xz/blob/v5.0.0/src/liblzma/api/lzma/container.h#L31
-    cmd.extend(["--lzma2=dict=8MiB,lc=3,lp=0,pb=2,mode=normal,nice=64,mf=bt4,depth=0"])
-    print("xz-compressing %s with %s" % (path, " ".join(cmd)))
+    cmd.extend(['--lzma2=dict=8MiB,lc=3,lp=0,pb=2,mode=normal,nice=64,mf=bt4,depth=0'])
+    print('xz-compressing %s with %s' % (path, ' '.join(cmd)))
 
     if subprocess.call(cmd) != 0:
-        errors.fatal("Error executing " + " ".join(cmd))
+        errors.fatal('Error executing ' + ' '.join(cmd))
         return
 
-    os.rename(path + ".xz", path)
+    os.rename(path + '.xz', path)

@@ -5,20 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.interceptor += [
-    "Arm64.h",
-    "MMPolicies.h",
-    "PatcherBase.h",
-    "PatcherDetour.h",
-    "PatcherNopSpace.h",
-    "RangeMap.h",
-    "TargetFunction.h",
-    "Trampoline.h",
-    "VMSharingPolicies.h",
+    'Arm64.h',
+    'MMPolicies.h',
+    'PatcherBase.h',
+    'PatcherDetour.h',
+    'PatcherNopSpace.h',
+    'RangeMap.h',
+    'TargetFunction.h',
+    'Trampoline.h',
+    'VMSharingPolicies.h',
 ]
 
-if CONFIG["CPU_ARCH"] == "aarch64":
-    FINAL_LIBRARY = "mozglue"
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    FINAL_LIBRARY = 'mozglue'
 
     UNIFIED_SOURCES += [
-        "Arm64.cpp",
+        'Arm64.cpp',
     ]
+

@@ -13,7 +13,7 @@ from mozbuild.virtualenv import VirtualenvHelper
 here = os.path.join(os.path.dirname(__file__))
 
 
-MINIMUM_RUST_VERSION = "1.43.0"
+MINIMUM_RUST_VERSION = '1.43.0'
 
 
 def get_state_dir(srcdir=False):
@@ -26,7 +26,7 @@ def get_state_dir(srcdir=False):
     Returns:
         A path to the state dir (str)
     """
-    state_dir = os.environ.get("MOZBUILD_STATE_PATH", os.path.expanduser("~/.mozbuild"))
+    state_dir = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser('~/.mozbuild'))
     if not srcdir:
         return state_dir
 
@@ -40,18 +40,17 @@ def get_state_dir(srcdir=False):
     # in a terminal and is more than good enough for this purpose.
     srcdir_hash = hashlib.sha256(srcdir.encode("utf-8")).hexdigest()[:12]
 
-    state_dir = os.path.join(
-        state_dir, "srcdirs", "{}-{}".format(os.path.basename(srcdir), srcdir_hash)
-    )
+    state_dir = os.path.join(state_dir, 'srcdirs', '{}-{}'.format(
+        os.path.basename(srcdir), srcdir_hash))
 
     if not os.path.isdir(state_dir):
         # We create the srcdir here rather than 'mach_bootstrap.py' so direct
         # consumers of this function don't create the directory inconsistently.
-        print("Creating local state directory: %s" % state_dir)
+        print('Creating local state directory: %s' % state_dir)
         os.makedirs(state_dir, mode=0o770)
         # Save the topsrcdir that this state dir corresponds to so we can clean
         # it up in the event its srcdir was deleted.
-        with open(os.path.join(state_dir, "topsrcdir.txt"), "w") as fh:
+        with open(os.path.join(state_dir, 'topsrcdir.txt'), 'w') as fh:
             fh.write(srcdir)
 
     return state_dir
@@ -59,8 +58,8 @@ def get_state_dir(srcdir=False):
 
 def get_mach_virtualenv_root(state_dir=None, py2=False):
     return os.path.join(
-        state_dir or get_state_dir(), "_virtualenvs", "mach_py2" if py2 else "mach"
-    )
+        state_dir or get_state_dir(), '_virtualenvs',
+        'mach_py2' if py2 else 'mach')
 
 
 def get_mach_virtualenv_binary(state_dir=None, py2=False):

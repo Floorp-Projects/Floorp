@@ -26,8 +26,8 @@ CARGO_TOML = mozpath.join(buildconfig.topsrcdir, "Cargo.toml")
 
 def _run_process(args):
     env = os.environ.copy()
-    env["CARGO"] = str(buildconfig.substs["CARGO"])
-    env["RUSTC"] = str(buildconfig.substs["RUSTC"])
+    env['CARGO'] = str(buildconfig.substs['CARGO'])
+    env['RUSTC'] = str(buildconfig.substs['RUSTC'])
 
     p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -41,17 +41,15 @@ def _run_process(args):
 
 
 def generate_metadata(output, cargo_config):
-    stdout, returncode = _run_process(
-        [
-            buildconfig.substs["CARGO"],
-            "metadata",
-            "--all-features",
-            "--format-version",
-            "1",
-            "--manifest-path",
-            CARGO_TOML,
-        ]
-    )
+    stdout, returncode = _run_process([
+        buildconfig.substs['CARGO'],
+        "metadata",
+        "--all-features",
+        "--format-version",
+        "1",
+        "--manifest-path",
+        CARGO_TOML
+    ])
 
     if returncode != 0:
         return returncode
@@ -64,19 +62,17 @@ def generate_metadata(output, cargo_config):
 
 
 def generate(output, metadata_path, cbindgen_crate_path, *in_tree_dependencies):
-    stdout, returncode = _run_process(
-        [
-            buildconfig.substs["CBINDGEN"],
-            buildconfig.topsrcdir,
-            "--lockfile",
-            CARGO_LOCK,
-            "--crate",
-            _get_crate_name(cbindgen_crate_path),
-            "--metadata",
-            metadata_path,
-            "--cpp-compat",
-        ]
-    )
+    stdout, returncode = _run_process([
+        buildconfig.substs['CBINDGEN'],
+        buildconfig.topsrcdir,
+        "--lockfile",
+        CARGO_LOCK,
+        "--crate",
+        _get_crate_name(cbindgen_crate_path),
+        "--metadata",
+        metadata_path,
+        "--cpp-compat"
+    ])
 
     if returncode != 0:
         return returncode

@@ -20,9 +20,7 @@ def getCandidatesDir(product, version, buildNumber, protocol=None, server=None):
 
     product = product2ftp(product)
     directory = "/{}/candidates/{}-candidates/build{}".format(
-        product,
-        str(version),
-        str(buildNumber),
+        product, str(version), str(buildNumber),
     )
 
     if protocol:
@@ -45,42 +43,25 @@ def getReleasesDir(product, version=None, protocol=None, server=None):
         return directory
 
 
-def getReleaseInstallerPath(productName, brandName, version, platform, locale="en-US"):
-    if productName not in ("fennec",):
-        if platform.startswith("linux"):
-            return "/".join(
-                [
-                    p.strip("/")
-                    for p in [
-                        platform,
-                        locale,
-                        "%s-%s.tar.bz2" % (productName, version),
-                    ]
-                ]
-            )
-        elif "mac" in platform:
-            return "/".join(
-                [
-                    p.strip("/")
-                    for p in [platform, locale, "%s %s.dmg" % (brandName, version)]
-                ]
-            )
-        elif platform.startswith("win"):
-            return "/".join(
-                [
-                    p.strip("/")
-                    for p in [
-                        platform,
-                        locale,
-                        "%s Setup %s.exe" % (brandName, version),
-                    ]
-                ]
-            )
+def getReleaseInstallerPath(productName, brandName, version, platform,
+                            locale='en-US'):
+    if productName not in ('fennec',):
+        if platform.startswith('linux'):
+            return '/'.join([p.strip('/') for p in [
+                platform, locale, '%s-%s.tar.bz2' % (productName, version)]])
+        elif 'mac' in platform:
+            return '/'.join([p.strip('/') for p in [
+                platform, locale, '%s %s.dmg' % (brandName, version)]])
+        elif platform.startswith('win'):
+            return '/'.join([p.strip('/') for p in [
+                platform, locale, '%s Setup %s.exe' % (brandName, version)]])
         else:
             raise "Unsupported platform"
     else:
-        if platform.startswith("android"):
-            filename = "%s-%s.%s.android-arm.apk" % (productName, version, locale)
-            return "/".join([p.strip("/") for p in [platform, locale, filename]])
+        if platform.startswith('android'):
+            filename = '%s-%s.%s.android-arm.apk' % (
+                productName, version, locale)
+            return '/'.join([p.strip('/') for p in [
+                platform, locale, filename]])
         else:
             raise "Unsupported platform"

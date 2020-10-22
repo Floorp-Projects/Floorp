@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "ChromiumCDMVideoDecoder.h",
-    "DecryptThroughputLimit.h",
-    "EMEDecoderModule.h",
-    "SamplesWaitingForKey.h",
+    'ChromiumCDMVideoDecoder.h',
+    'DecryptThroughputLimit.h',
+    'EMEDecoderModule.h',
+    'SamplesWaitingForKey.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ChromiumCDMVideoDecoder.cpp",
-    "EMEDecoderModule.cpp",
-    "SamplesWaitingForKey.cpp",
+    'ChromiumCDMVideoDecoder.cpp',
+    'EMEDecoderModule.cpp',
+    'SamplesWaitingForKey.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

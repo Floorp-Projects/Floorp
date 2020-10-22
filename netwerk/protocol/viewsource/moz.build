@@ -5,25 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIViewSourceChannel.idl",
+    'nsIViewSourceChannel.idl',
 ]
 
-XPIDL_MODULE = "necko_viewsource"
+XPIDL_MODULE = 'necko_viewsource'
 
 UNIFIED_SOURCES += [
-    "nsViewSourceChannel.cpp",
-    "nsViewSourceHandler.cpp",
+    'nsViewSourceChannel.cpp',
+    'nsViewSourceHandler.cpp',
 ]
 
 EXPORTS += [
-    "nsViewSourceHandler.h",
+  'nsViewSourceHandler.h',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/netwerk/base",
+    '/netwerk/base',
     # For nsHttpChannel.h
-    "/netwerk/protocol/http",
+    '/netwerk/protocol/http',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

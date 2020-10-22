@@ -30,43 +30,36 @@ from xml.sax.saxutils import escape
 try:
     import markdown
 except ModuleNotFoundError as exc:
-    if exc.name == "markdown":
+    if exc.name == 'markdown':
         # Right, most people won't have python-markdown installed. Suggest the
         # most likely path to getting this running.
         print("Failed to import markdown: " + exc.msg, file=sys.stderr)
         if os.path.exists(os.path.join(this_dir, "venv")):
-            print(
-                "It looks like you previously created a virtualenv here. Try this:\n"
-                "    . venv/bin/activate",
-                file=sys.stderr,
-            )
+            print("It looks like you previously created a virtualenv here. Try this:\n"
+                  "    . venv/bin/activate",
+                  file=sys.stderr)
             sys.exit(1)
-        print(
-            "Try this:\n"
-            "    pip3 install markdown\n"
-            "Or, if you want to avoid installing things globally:\n"
-            "    python3 -m venv venv && . venv/bin/activate && pip3 install markdown",
-            file=sys.stderr,
-        )
+        print("Try this:\n"
+              "    pip3 install markdown\n"
+              "Or, if you want to avoid installing things globally:\n"
+              "    python3 -m venv venv && . venv/bin/activate && pip3 install markdown",
+              file=sys.stderr)
         sys.exit(1)
     raise exc
 except ImportError as exc:
     # Oh no! Markdown failed to load. Check for a specific known issue.
-    if exc.msg.startswith("bad magic number in 'opcode'") and os.path.isfile(
-        os.path.join(this_dir, "opcode.pyc")
-    ):
-        print(
-            "Failed to import markdown due to bug 1506380.\n"
-            "This is dumb--it's an old Python cache file in your directory. Try this:\n"
-            "    rm " + this_dir + "/opcode.pyc\n"
-            "The file is obsolete since November 2018.",
-            file=sys.stderr,
-        )
+    if (exc.msg.startswith("bad magic number in 'opcode'")
+        and os.path.isfile(os.path.join(this_dir, "opcode.pyc"))):
+        print("Failed to import markdown due to bug 1506380.\n"
+              "This is dumb--it's an old Python cache file in your directory. Try this:\n"
+              "    rm " + this_dir + "/opcode.pyc\n"
+              "The file is obsolete since November 2018.",
+              file=sys.stderr)
         sys.exit(1)
     raise exc
 
 
-SOURCE_BASE = "https://searchfox.org/mozilla-central/source"
+SOURCE_BASE = 'https://searchfox.org/mozilla-central/source'
 
 FORMAT_TO_IGNORE = {
     "JOF_BYTE",
@@ -87,8 +80,8 @@ FORMAT_TO_IGNORE = {
 def format_format(format):
     format = [flag for flag in format if flag not in FORMAT_TO_IGNORE]
     if len(format) == 0:
-        return ""
-    return "<div>Format: {format}</div>\n".format(format=", ".join(format))
+        return ''
+    return '<div>Format: {format}</div>\n'.format(format=', '.join(format))
 
 
 def maybe_escape(value, format_str, fallback=""):
@@ -107,7 +100,7 @@ OPCODE_FORMAT = """\
 
 def print_opcode(opcode):
     opcodes = [opcode] + opcode.group
-    names = ", ".join(maybe_escape(code.op, "<code>{}</code>") for code in opcodes)
+    names = ', '.join(maybe_escape(code.op, "<code>{}</code>") for code in opcodes)
     operands = maybe_escape(opcode.operands, "<div>Operands: <code>({})</code></div>\n")
     stack_uses = maybe_escape(opcode.stack_uses, "<code>{}</code> ")
     stack_defs = maybe_escape(opcode.stack_defs, " <code>{}</code>")
@@ -116,35 +109,33 @@ def print_opcode(opcode):
     else:
         stack = ""
 
-    print(
-        OPCODE_FORMAT.format(
-            id=opcodes[0].op,
-            names=names,
-            operands=operands,
-            stack=stack,
-            desc=markdown.markdown(opcode.desc),
-            format=format_format(opcode.format_),
-        )
-    )
+    print(OPCODE_FORMAT.format(
+        id=opcodes[0].op,
+        names=names,
+        operands=operands,
+        stack=stack,
+        desc=markdown.markdown(opcode.desc),
+        format=format_format(opcode.format_),
+    ))
 
 
 id_cache = dict()
 id_count = dict()
 
 
-def make_element_id(category, type=""):
-    key = "{}:{}".format(category, type)
+def make_element_id(category, type=''):
+    key = '{}:{}'.format(category, type)
     if key in id_cache:
         return id_cache[key]
 
-    if type == "":
-        id = category.replace(" ", "_")
+    if type == '':
+        id = category.replace(' ', '_')
     else:
-        id = type.replace(" ", "_")
+        id = type.replace(' ', '_')
 
     if id in id_count:
         id_count[id] += 1
-        id = "{}_{}".format(id, id_count[id])
+        id = '{}_{}'.format(id, id_count[id])
     else:
         id_count[id] = 1
 
@@ -153,44 +144,36 @@ def make_element_id(category, type=""):
 
 
 def print_doc(index):
-    print(
-        """<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
+    print("""<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
 
 <h2 id="Bytecode_Listing">Bytecode Listing</h2>
 
 <p>This document is automatically generated from
 <a href="{source_base}/js/src/vm/Opcodes.h">Opcodes.h</a> by
 <a href="{source_base}/js/src/vm/make_opcode_doc.py">make_opcode_doc.py</a>.</p>
-""".format(
-            source_base=SOURCE_BASE
-        )
-    )
+""".format(source_base=SOURCE_BASE))
 
     for (category_name, types) in index:
-        print(
-            '<h3 id="{id}">{name}</h3>'.format(
-                name=category_name, id=make_element_id(category_name)
-            )
-        )
+        print('<h3 id="{id}">{name}</h3>'.format(name=category_name,
+                                                 id=make_element_id(category_name)))
         for (type_name, opcodes) in types:
             if type_name:
-                print(
-                    '<h4 id="{id}">{name}</h4>'.format(
-                        name=type_name, id=make_element_id(category_name, type_name)
-                    )
-                )
-            print("<dl>")
+                print('<h4 id="{id}">{name}</h4>'.format(
+                    name=type_name,
+                    id=make_element_id(category_name, type_name)))
+            print('<dl>')
             for opcode in opcodes:
                 print_opcode(opcode)
-            print("</dl>")
+            print('</dl>')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) != 1:
-        print("Usage: mach python make_opcode_doc.py", file=sys.stderr)
+        print("Usage: mach python make_opcode_doc.py",
+              file=sys.stderr)
         sys.exit(1)
     js_src_vm_dir = os.path.dirname(os.path.realpath(__file__))
-    root_dir = os.path.abspath(os.path.join(js_src_vm_dir, "..", "..", ".."))
+    root_dir = os.path.abspath(os.path.join(js_src_vm_dir, '..', '..', '..'))
 
     index, _ = jsopcode.get_opcodes(root_dir)
     print_doc(index)

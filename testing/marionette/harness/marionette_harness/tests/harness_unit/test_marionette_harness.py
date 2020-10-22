@@ -20,8 +20,8 @@ def harness_class(request):
     Mock based on MarionetteHarness whose run method just returns a number of
     failures according to the supplied test parameter
     """
-    if "num_fails_crashed" in request.funcargnames:
-        num_fails_crashed = request.getfuncargvalue("num_fails_crashed")
+    if 'num_fails_crashed' in request.funcargnames:
+        num_fails_crashed = request.getfuncargvalue('num_fails_crashed')
     else:
         num_fails_crashed = (0, 0)
     harness_cls = Mock(spec=MarionetteHarness)
@@ -39,8 +39,8 @@ def runner_class(request):
     Mock based on MarionetteTestRunner, wherein the runner.failed,
     runner.crashed attributes are provided by a test parameter
     """
-    if "num_fails_crashed" in request.funcargnames:
-        failures, crashed = request.getfuncargvalue("num_fails_crashed")
+    if 'num_fails_crashed' in request.funcargnames:
+        failures, crashed = request.getfuncargvalue('num_fails_crashed')
     else:
         failures = 0
         crashed = 0
@@ -62,23 +62,22 @@ def test_cli_exit_code(num_fails_crashed, exit_code, harness_class):
 
 
 @pytest.mark.parametrize("num_fails_crashed", [(0, 0), (1, 0), (1, 1)])
-def test_call_harness_with_parsed_args_yields_num_failures(
-    mach_parsed_kwargs, runner_class, num_fails_crashed
-):
+def test_call_harness_with_parsed_args_yields_num_failures(mach_parsed_kwargs,
+                                                           runner_class,
+                                                           num_fails_crashed):
     with patch(
-        "marionette_harness.runtests.MarionetteHarness.parse_args"
+        'marionette_harness.runtests.MarionetteHarness.parse_args'
     ) as parse_args:
-        failed_or_crashed = MarionetteHarness(
-            runner_class, args=mach_parsed_kwargs
-        ).run()
+        failed_or_crashed = MarionetteHarness(runner_class,
+                                              args=mach_parsed_kwargs).run()
         parse_args.assert_not_called()
     assert failed_or_crashed == sum(num_fails_crashed)
 
 
 def test_call_harness_with_no_args_yields_num_failures(runner_class):
     with patch(
-        "marionette_harness.runtests.MarionetteHarness.parse_args",
-        return_value={"tests": []},
+        'marionette_harness.runtests.MarionetteHarness.parse_args',
+        return_value={'tests': []}
     ) as parse_args:
         failed_or_crashed = MarionetteHarness(runner_class).run()
         assert parse_args.call_count == 1
@@ -87,7 +86,7 @@ def test_call_harness_with_no_args_yields_num_failures(runner_class):
 
 def test_args_passed_to_runner_class(mach_parsed_kwargs, runner_class):
     arg_list = list(mach_parsed_kwargs.keys())
-    arg_list.remove("tests")
+    arg_list.remove('tests')
     mach_parsed_kwargs.update([(a, getattr(sentinel, a)) for a in arg_list])
     harness = MarionetteHarness(runner_class, args=mach_parsed_kwargs)
     harness.process_args = Mock()
@@ -102,10 +101,10 @@ def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
     tests are omitted silently
     """
     harness = MarionetteHarness(args=mach_parsed_kwargs)
-    mach_parsed_kwargs.pop("tests")
+    mach_parsed_kwargs.pop('tests')
     runner = harness._runner_class(**mach_parsed_kwargs)
     assert marionette_test.MarionetteTestCase in runner.test_handlers
 
 
-if __name__ == "__main__":
-    mozunit.main("-p", "no:terminalreporter", "--log-tbpl=-", "--capture", "no")
+if __name__ == '__main__':
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-', '--capture', 'no')

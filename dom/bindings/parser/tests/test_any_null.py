@@ -1,13 +1,11 @@
 def WebIDLTest(parser, harness):
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface DoubleNull {
               attribute any? foo;
             };
-        """
-        )
+        """)
 
         results = parser.finish()
     except:

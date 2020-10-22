@@ -5,22 +5,22 @@
 from setuptools import setup
 
 VERSION = 0.1
-DEPS = ["mozlog >= 6.0"]
+DEPS = ['mozlog >= 6.0']
 
 setup(
-    name="mozlint",
-    description="Framework for registering and running micro lints",
-    license="MPL 2.0",
-    author="Andrew Halberstadt",
-    author_email="ahalberstadt@mozilla.com",
-    url="",
-    packages=["mozlint"],
+    name='mozlint',
+    description='Framework for registering and running micro lints',
+    license='MPL 2.0',
+    author='Andrew Halberstadt',
+    author_email='ahalberstadt@mozilla.com',
+    url='',
+    packages=['mozlint'],
     version=VERSION,
     classifiers=[
-        "Environment :: Console",
-        "Development Status :: 3 - Alpha",
-        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-        "Natural Language :: English",
+        'Environment :: Console',
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+        'Natural Language :: English',
     ],
     install_requires=DEPS,
 )

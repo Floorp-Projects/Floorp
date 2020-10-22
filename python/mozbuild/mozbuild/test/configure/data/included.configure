@@ -11,30 +11,25 @@ def check_compiler_flag(flag):
     def check(value):
         if value:
             return [flag]
-
-    set_config("CFLAGS", check)
+    set_config('CFLAGS', check)
     return check
 
 
-check_compiler_flag("-Werror=foobar")
+check_compiler_flag('-Werror=foobar')
 
 # Normal functions can be used in @depends functions.
 def fortytwo():
     return 42
 
-
 def twentyone():
     yield 21
-
 
 @depends(is_gcc)
 def check(value):
     if value:
         return fortytwo()
 
-
-set_config("TEMPLATE_VALUE", check)
-
+set_config('TEMPLATE_VALUE', check)
 
 @depends(is_gcc)
 def check(value):
@@ -42,26 +37,20 @@ def check(value):
         for val in twentyone():
             return val
 
-
-set_config("TEMPLATE_VALUE_2", check)
+set_config('TEMPLATE_VALUE_2', check)
 
 # Normal functions can use @imports too to import modules.
-@imports("sys")
+@imports('sys')
 def platform():
     return sys.platform
 
-
-option("--enable-imports-in-template", help="Imports in template")
-
-
-@depends("--enable-imports-in-template")
+option('--enable-imports-in-template', help='Imports in template')
+@depends('--enable-imports-in-template')
 def check(value):
     if value:
         return platform()
 
-
-set_config("PLATFORM", check)
-
+set_config('PLATFORM', check)
 
 @template
 def indirectly_define_option(*args, **kwargs):

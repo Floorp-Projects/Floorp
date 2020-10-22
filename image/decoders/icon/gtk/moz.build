@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "nsIconChannel.cpp",
+    'nsIconChannel.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['TK_CFLAGS']

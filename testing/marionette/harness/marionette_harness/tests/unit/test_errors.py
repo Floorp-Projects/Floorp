@@ -19,7 +19,6 @@ def fake_cause():
     except ValueError:
         return sys.exc_info()
 
-
 message = "foo"
 unicode_message = u"\u201Cfoo"
 cause = fake_cause()
@@ -27,24 +26,23 @@ stacktrace = "first\nsecond"
 
 
 class TestErrors(marionette_test.MarionetteTestCase):
+
     def test_defaults(self):
         exc = errors.MarionetteException()
-        self.assertEquals(str(exc), "None")
+        self.assertEquals(str(exc), 'None')
         self.assertIsNone(exc.cause)
         self.assertIsNone(exc.stacktrace)
 
     def test_construction(self):
         exc = errors.MarionetteException(
-            message=message, cause=cause, stacktrace=stacktrace
-        )
+            message=message, cause=cause, stacktrace=stacktrace)
         self.assertEquals(exc.message, message)
         self.assertEquals(exc.cause, cause)
         self.assertEquals(exc.stacktrace, stacktrace)
 
     def test_str_message(self):
         exc = errors.MarionetteException(
-            message=message, cause=cause, stacktrace=stacktrace
-        )
+            message=message, cause=cause, stacktrace=stacktrace)
         r = str(exc)
         self.assertIn(message, r)
         self.assertIn(", caused by {0!r}".format(cause[0]), r)
@@ -52,8 +50,7 @@ class TestErrors(marionette_test.MarionetteTestCase):
 
     def test_unicode_message(self):
         exc = errors.MarionetteException(
-            message=unicode_message, cause=cause, stacktrace=stacktrace
-        )
+            message=unicode_message, cause=cause, stacktrace=stacktrace)
         r = six.text_type(exc)
         self.assertIn(unicode_message, r)
         self.assertIn(", caused by {0!r}".format(cause[0]), r)
@@ -61,8 +58,7 @@ class TestErrors(marionette_test.MarionetteTestCase):
 
     def test_unicode_message_as_str(self):
         exc = errors.MarionetteException(
-            message=unicode_message, cause=cause, stacktrace=stacktrace
-        )
+            message=unicode_message, cause=cause, stacktrace=stacktrace)
         r = str(exc)
         self.assertIn(six.ensure_str(unicode_message, encoding="utf-8"), r)
         self.assertIn(", caused by {0!r}".format(cause[0]), r)
@@ -82,26 +78,23 @@ class TestErrors(marionette_test.MarionetteTestCase):
 
 
 class TestLookup(marionette_test.MarionetteTestCase):
+
     def test_by_unknown_number(self):
         self.assertEqual(errors.MarionetteException, errors.lookup(123456))
 
     def test_by_known_string(self):
-        self.assertEqual(
-            errors.NoSuchElementException, errors.lookup("no such element")
-        )
+        self.assertEqual(errors.NoSuchElementException, errors.lookup("no such element"))
 
     def test_by_unknown_string(self):
         self.assertEqual(errors.MarionetteException, errors.lookup("barbera"))
 
     def test_by_known_unicode_string(self):
-        self.assertEqual(
-            errors.NoSuchElementException, errors.lookup(u"no such element")
-        )
+        self.assertEqual(errors.NoSuchElementException, errors.lookup(u"no such element"))
 
 
 class TestAllErrors(marionette_test.MarionetteTestCase):
+
     def test_properties(self):
         for exc in errors.es_:
-            self.assertTrue(
-                hasattr(exc, "status"), "expected exception to have attribute `status'"
-            )
+            self.assertTrue(hasattr(exc, "status"),
+                            "expected exception to have attribute `status'")

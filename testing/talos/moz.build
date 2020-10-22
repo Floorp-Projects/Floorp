@@ -6,7 +6,7 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Talos")
-    SCHEDULES.exclusive = ["talos"]
+    SCHEDULES.exclusive = ['talos']
 
 with Files("talos/startup_test/sessionrestore/**"):
     BUG_COMPONENT = ("Firefox", "Session Restore")

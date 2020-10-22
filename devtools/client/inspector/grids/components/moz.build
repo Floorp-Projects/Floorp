@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "Grid.js",
-    "GridDisplaySettings.js",
-    "GridItem.js",
-    "GridList.js",
-    "GridOutline.js",
+    'Grid.js',
+    'GridDisplaySettings.js',
+    'GridItem.js',
+    'GridList.js',
+    'GridOutline.js',
 )

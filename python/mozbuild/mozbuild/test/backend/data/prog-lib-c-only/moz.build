@@ -3,30 +3,26 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 DIRS += [
-    "c-program",
-    "cxx-program",
-    "c-simple-programs",
-    "cxx-simple-programs",
-    "c-library",
-    "cxx-library",
+    'c-program',
+    'cxx-program',
+    'c-simple-programs',
+    'cxx-simple-programs',
+    'c-library',
+    'cxx-library',
 ]
-
 
 @template
 def Program(name):
     PROGRAM = name
 
-
 @template
-def SimplePrograms(names, ext=".cpp"):
+def SimplePrograms(names, ext='.cpp'):
     SIMPLE_PROGRAMS += names
-    SOURCES += ["%s%s" % (name, ext) for name in names]
-
+    SOURCES += ['%s%s' % (name, ext) for name in names]
 
 @template
 def Library(name):
     LIBRARY_NAME = name
-
 
 @template
 def SharedLibrary(name):

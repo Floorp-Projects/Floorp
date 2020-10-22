@@ -14,7 +14,6 @@ from marionette_harness import MarionetteTestCase
 def inline(doc):
     return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
-
 class TestPosition(MarionetteTestCase):
     def test_should_get_element_position_back(self):
         doc = """
@@ -44,5 +43,5 @@ class TestPosition(MarionetteTestCase):
 
         r2 = self.marionette.find_element(By.ID, "r")
         location = r2.rect
-        self.assertEqual(11, location["x"])
-        self.assertEqual(10, location["y"])
+        self.assertEqual(11, location['x'])
+        self.assertEqual(10, location['y'])

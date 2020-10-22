@@ -8,26 +8,26 @@ with Files("**"):
     BUG_COMPONENT = ("GeckoView", "General")
 
 EXPORTS.mozilla.jni += [
-    "Accessors.h",
-    "Conversions.h",
-    "GeckoBundleUtils.h",
-    "GeckoResultUtils.h",
-    "Natives.h",
-    "Refs.h",
-    "Types.h",
-    "Utils.h",
+    'Accessors.h',
+    'Conversions.h',
+    'GeckoBundleUtils.h',
+    'GeckoResultUtils.h',
+    'Natives.h',
+    'Refs.h',
+    'Types.h',
+    'Utils.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Conversions.cpp",
-    "Utils.cpp",
+    'Conversions.cpp',
+    'Utils.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/widget",
-    "/widget/android",
+    '/widget',
+    '/widget/android',
 ]

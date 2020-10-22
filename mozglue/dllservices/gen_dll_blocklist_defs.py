@@ -7,7 +7,7 @@
 from __future__ import print_function
 
 from copy import deepcopy
-from six import iteritems, PY2
+from six import (iteritems, PY2)
 from struct import unpack
 import os
 from uuid import UUID
@@ -54,14 +54,14 @@ DLL_BLOCKLIST_DEFINITIONS_BEGIN_NAMED(gBlockedInprocDlls)
 """
 
 # These flag names should match the ones defined in WindowsDllBlocklistCommon.h
-FLAGS_DEFAULT = "FLAGS_DEFAULT"
-BLOCK_WIN8_AND_OLDER = "BLOCK_WIN8_AND_OLDER"
-BLOCK_WIN7_AND_OLDER = "BLOCK_WIN7_AND_OLDER"
-USE_TIMESTAMP = "USE_TIMESTAMP"
-CHILD_PROCESSES_ONLY = "CHILD_PROCESSES_ONLY"
-BROWSER_PROCESS_ONLY = "BROWSER_PROCESS_ONLY"
-SUBSTITUTE_LSP_PASSTHROUGH = "SUBSTITUTE_LSP_PASSTHROUGH"
-REDIRECT_TO_NOOP_ENTRYPOINT = "REDIRECT_TO_NOOP_ENTRYPOINT"
+FLAGS_DEFAULT = 'FLAGS_DEFAULT'
+BLOCK_WIN8_AND_OLDER = 'BLOCK_WIN8_AND_OLDER'
+BLOCK_WIN7_AND_OLDER = 'BLOCK_WIN7_AND_OLDER'
+USE_TIMESTAMP = 'USE_TIMESTAMP'
+CHILD_PROCESSES_ONLY = 'CHILD_PROCESSES_ONLY'
+BROWSER_PROCESS_ONLY = 'BROWSER_PROCESS_ONLY'
+SUBSTITUTE_LSP_PASSTHROUGH = 'SUBSTITUTE_LSP_PASSTHROUGH'
+REDIRECT_TO_NOOP_ENTRYPOINT = 'REDIRECT_TO_NOOP_ENTRYPOINT'
 
 # Only these flags are available in the input script
 INPUT_ONLY_FLAGS = {
@@ -94,10 +94,10 @@ def FILTER_TESTS_ONLY(entry):
 
 
 def derive_test_key(key):
-    return key + "_TESTS"
+    return key + '_TESTS'
 
 
-ALL_DEFINITION_LISTS = ("ALL_PROCESSES", "BROWSER_PROCESS", "CHILD_PROCESSES")
+ALL_DEFINITION_LISTS = ('ALL_PROCESSES', 'BROWSER_PROCESS', 'CHILD_PROCESSES')
 
 
 class BlocklistDescriptor(object):
@@ -107,13 +107,13 @@ class BlocklistDescriptor(object):
     """
 
     DEFAULT_OUTSPEC = {
-        "mode": "",
-        "filter": FILTER_ALLOW_ALL,
-        "begin": H_DEFS_BEGIN_DEFAULT,
-        "end": H_DEFS_END_DEFAULT,
+        'mode': '',
+        'filter': FILTER_ALLOW_ALL,
+        'begin': H_DEFS_BEGIN_DEFAULT,
+        'end': H_DEFS_END_DEFAULT,
     }
 
-    FILE_NAME_TPL = "WindowsDllBlocklist{0}Defs"
+    FILE_NAME_TPL = 'WindowsDllBlocklist{0}Defs'
 
     OutputDir = None
     ExistingFd = None
@@ -170,12 +170,13 @@ class BlocklistDescriptor(object):
         # to each entry in that blocklist.
         self._inspec = {blocklist: set() for blocklist in inspec}
 
-        self._outspecs = kwargs.get("outspec", BlocklistDescriptor.DEFAULT_OUTSPEC)
+        self._outspecs = kwargs.get('outspec',
+                                    BlocklistDescriptor.DEFAULT_OUTSPEC)
         if isinstance(self._outspecs, dict):
             # _outspecs should always be stored as a list of dicts
             self._outspecs = [self._outspecs]
 
-        flagspecs = kwargs.get("flagspec", dict())
+        flagspecs = kwargs.get('flagspec', dict())
         # flagspec's keys must all come from ALL_DEFINITION_LISTS
         assert not (set(flagspecs.keys()).difference(set(self._inspec.keys())))
 
@@ -183,7 +184,7 @@ class BlocklistDescriptor(object):
         for blocklist, flagspec in iteritems(flagspecs):
             spec = self._inspec[blocklist]
             if not isinstance(spec, set):
-                raise TypeError("Flag spec for list %s must be a set!" % blocklist)
+                raise TypeError('Flag spec for list %s must be a set!' % blocklist)
             spec.update(flagspec)
 
     @staticmethod
@@ -194,10 +195,8 @@ class BlocklistDescriptor(object):
         use as the base directory for the other output files that we open.
         """
         BlocklistDescriptor.ExistingFd = fd
-        (
-            BlocklistDescriptor.OutputDir,
-            BlocklistDescriptor.ExistingFdLeafName,
-        ) = os.path.split(fd.name)
+        (BlocklistDescriptor.OutputDir,
+         BlocklistDescriptor.ExistingFdLeafName) = os.path.split(fd.name)
 
     @staticmethod
     def ensure_no_dupes(defs):
@@ -210,7 +209,7 @@ class BlocklistDescriptor(object):
             if name not in seen:
                 seen.add(name)
             else:
-                raise ValueError("Duplicate entry found: %s" % name)
+                raise ValueError('Duplicate entry found: %s' % name)
 
     @staticmethod
     def get_test_entries(exec_env, blocklist):
@@ -256,7 +255,6 @@ class BlocklistDescriptor(object):
         # for their entries, add any flags, and then add them to the
         # unified_list.
         for blocklist, listflags in iteritems(self._inspec):
-
             def add_list_flags(elem):
                 # We deep copy so that flags set for an entry in one blocklist
                 # do not interfere with flags set for an entry in a different
@@ -264,15 +262,14 @@ class BlocklistDescriptor(object):
                 result = deepcopy(elem)
                 result.add_flags(listflags)
                 return result
-
             # We add list flags *before* filtering because the filters might
             # want to access flags as part of their operation.
             unified_list.extend(map(add_list_flags, exec_env[blocklist]))
 
             # We also add any test entries for the lists specified by _inspec
             unified_list.extend(
-                map(add_list_flags, self.get_test_entries(exec_env, blocklist))
-            )
+                map(add_list_flags,
+                    self.get_test_entries(exec_env, blocklist)))
 
         # There should be no dupes in the input. If there are, raise an error.
         self.ensure_no_dupes(unified_list)
@@ -290,12 +287,11 @@ class BlocklistDescriptor(object):
         then we return that. Otherwise, we construct a new absolute path to
         outspec_leaf_name and open a new file descriptor for writing.
         """
-        if (
-            not BlocklistDescriptor.ExistingFd
-            or BlocklistDescriptor.ExistingFdLeafName != outspec_leaf_name
-        ):
-            new_name = os.path.join(BlocklistDescriptor.OutputDir, outspec_leaf_name)
-            return open(new_name, "w")
+        if (not BlocklistDescriptor.ExistingFd or
+            BlocklistDescriptor.ExistingFdLeafName != outspec_leaf_name):
+            new_name = os.path.join(BlocklistDescriptor.OutputDir,
+                                    outspec_leaf_name)
+            return open(new_name, 'w')
 
         fd = BlocklistDescriptor.ExistingFd
         BlocklistDescriptor.ExistingFd = None
@@ -317,69 +313,58 @@ class BlocklistDescriptor(object):
             effective_outspec = BlocklistDescriptor.DEFAULT_OUTSPEC.copy()
             effective_outspec.update(outspec)
 
-            entries = self.gen_list(exec_env, effective_outspec["filter"])
+            entries = self.gen_list(exec_env, effective_outspec['filter'])
             if not entries:
                 continue
 
-            mode = effective_outspec["mode"]
+            mode = effective_outspec['mode']
 
             # Since each output descriptor may generate output across multiple
             # modes, each list is uniquified via the concatenation of our name
             # and the mode.
             listname = self._name + mode
             leafname_no_ext = BlocklistDescriptor.FILE_NAME_TPL.format(listname)
-            leafname = leafname_no_ext + ".h"
+            leafname = leafname_no_ext + '.h'
 
             with self.get_fd(leafname) as output:
-                print(H_HEADER.format(src_file, leafname_no_ext), file=output, end="")
-                print(effective_outspec["begin"], file=output, end="")
+                print(H_HEADER.format(src_file, leafname_no_ext), file=output,
+                      end='')
+                print(effective_outspec['begin'], file=output, end='')
 
                 for e in entries:
                     e.write(output, mode)
 
-                print(effective_outspec["end"], file=output, end="")
-                print(H_FOOTER.format(src_file, leafname_no_ext), file=output, end="")
+                print(effective_outspec['end'], file=output, end='')
+                print(H_FOOTER.format(src_file, leafname_no_ext), file=output,
+                      end='')
 
 
 A11Y_OUTPUT_SPEC = {
-    "filter": FILTER_ALLOW_ONLY_A11Y,
-    "begin": H_BEGIN_A11Y,
+    'filter': FILTER_ALLOW_ONLY_A11Y,
+    'begin': H_BEGIN_A11Y,
 }
 
-LSP_MODE_GUID = "Guid"
+LSP_MODE_GUID = 'Guid'
 
 LSP_OUTPUT_SPEC = [
-    {
-        "mode": LSP_MODE_GUID,
-        "filter": FILTER_ALLOW_ONLY_LSP,
-        "begin": H_BEGIN_LSP,
-        "end": H_END_LSP,
-    },
+    {'mode': LSP_MODE_GUID,
+     'filter': FILTER_ALLOW_ONLY_LSP,
+     'begin': H_BEGIN_LSP,
+     'end': H_END_LSP},
 ]
 
 GENERATED_BLOCKLIST_FILES = [
-    BlocklistDescriptor("A11y", ["BROWSER_PROCESS"], outspec=A11Y_OUTPUT_SPEC),
-    BlocklistDescriptor(
-        "Launcher",
-        ALL_DEFINITION_LISTS,
-        flagspec={
-            "BROWSER_PROCESS": {BROWSER_PROCESS_ONLY},
-            "CHILD_PROCESSES": {CHILD_PROCESSES_ONLY},
-        },
-    ),
-    BlocklistDescriptor(
-        "Legacy",
-        ALL_DEFINITION_LISTS,
-        flagspec={
-            "BROWSER_PROCESS": {BROWSER_PROCESS_ONLY},
-            "CHILD_PROCESSES": {CHILD_PROCESSES_ONLY},
-        },
-    ),
+    BlocklistDescriptor('A11y', ['BROWSER_PROCESS'], outspec=A11Y_OUTPUT_SPEC),
+    BlocklistDescriptor('Launcher', ALL_DEFINITION_LISTS, flagspec={
+                        'BROWSER_PROCESS': {BROWSER_PROCESS_ONLY},
+                        'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
+    BlocklistDescriptor('Legacy', ALL_DEFINITION_LISTS, flagspec={
+                        'BROWSER_PROCESS': {BROWSER_PROCESS_ONLY},
+                        'CHILD_PROCESSES': {CHILD_PROCESSES_ONLY}}),
     # Roughed-in for the moment; we'll enable this in bug 1238735
     # BlocklistDescriptor('LSP', ALL_DEFINITION_LISTS, outspec=LSP_OUTPUT_SPEC),
-    BlocklistDescriptor(
-        "Test", ALL_DEFINITION_LISTS, outspec={"filter": FILTER_TESTS_ONLY}
-    ),
+    BlocklistDescriptor('Test', ALL_DEFINITION_LISTS,
+                        outspec={'filter': FILTER_TESTS_ONLY}),
 ]
 
 
@@ -387,15 +372,16 @@ class PETimeStamp(object):
     def __init__(self, ts):
         max_timestamp = (2 ** 32) - 1
         if ts < 0 or ts > max_timestamp:
-            raise ValueError("Invalid timestamp value")
+            raise ValueError('Invalid timestamp value')
         self._value = ts
 
     def __str__(self):
-        return "0x%08XU" % self._value
+        return '0x%08XU' % self._value
 
 
 class Version(object):
-    """Encapsulates a DLL version."""
+    """Encapsulates a DLL version.
+    """
 
     ALL_VERSIONS = 0xFFFFFFFFFFFFFFFF
     UNVERSIONED = 0
@@ -418,7 +404,7 @@ class Version(object):
             if isinstance(args[0], tuple):
                 self.validate_iterable(args[0])
 
-                self._ver = "MAKE_VERSION%r" % (args[0],)
+                self._ver = 'MAKE_VERSION%r' % (args[0],)
             elif isinstance(args[0], PETimeStamp):
                 self._ver = args[0]
             else:
@@ -426,28 +412,24 @@ class Version(object):
         elif len(args) == 4:
             self.validate_iterable(args)
 
-            self._ver = "MAKE_VERSION%r" % (tuple(args),)
+            self._ver = 'MAKE_VERSION%r' % (tuple(args),)
         else:
-            raise ValueError("Bad arguments to Version constructor")
+            raise ValueError('Bad arguments to Version constructor')
 
     def validate_iterable(self, arg):
         if len(arg) != 4:
-            raise ValueError("Versions must be a 4-tuple")
+            raise ValueError('Versions must be a 4-tuple')
 
         for component in arg:
-            if not isinstance(component, int) or component < 0 or component > 0xFFFF:
-                raise ValueError(
-                    "Each version component must be a 16-bit " "unsigned integer"
-                )
+            if (not isinstance(component, int) or component < 0
+                or component > 0xFFFF):
+                raise ValueError('Each version component must be a 16-bit '
+                                 'unsigned integer')
 
     def build_long(self, args):
         self.validate_iterable(args)
-        return (
-            (int(args[0]) << 48)
-            | (int(args[1]) << 32)
-            | (int(args[2]) << 16)
-            | int(args[3])
-        )
+        return (int(args[0]) << 48) | (int(args[1]) << 32) | \
+            (int(args[2]) << 16) | int(args[3])
 
     def is_timestamp(self):
         return isinstance(self._ver, PETimeStamp)
@@ -455,18 +437,18 @@ class Version(object):
     def __str__(self):
         if isinstance(self._ver, int):
             if self._ver == Version.ALL_VERSIONS:
-                return "DllBlockInfo::ALL_VERSIONS"
+                return 'DllBlockInfo::ALL_VERSIONS'
 
             if self._ver == Version.UNVERSIONED:
-                return "DllBlockInfo::UNVERSIONED"
+                return 'DllBlockInfo::UNVERSIONED'
 
-            return "0x%016XULL" % self._ver
+            return '0x%016XULL' % self._ver
 
         return str(self._ver)
 
 
 class DllBlocklistEntry(object):
-    TEST_CONDITION = "defined(ENABLE_TESTS)"
+    TEST_CONDITION = 'defined(ENABLE_TESTS)'
 
     def __init__(self, name, ver, flags=(), **kwargs):
         """Positional arguments:
@@ -496,7 +478,7 @@ class DllBlocklistEntry(object):
         if self._ver.is_timestamp():
             self._flags.add(USE_TIMESTAMP)
 
-        self._cond = kwargs.get("condition", set())
+        self._cond = kwargs.get('condition', set())
         if isinstance(self._cond, str):
             self._cond = {self._cond}
 
@@ -516,7 +498,7 @@ class DllBlocklistEntry(object):
             pass
 
         try:
-            name.encode("ascii")
+            name.encode('ascii')
         except UnicodeEncodeError:
             raise ValueError('DLL name "%s" must be ASCII!' % name)
 
@@ -528,11 +510,11 @@ class DllBlocklistEntry(object):
 
     def get_condition(self):
         if len(self._cond) == 1:
-            fmt = "{0}"
+            fmt = '{0}'
         else:
-            fmt = "({0})"
+            fmt = '({0})'
 
-        return " && ".join([fmt.format(c) for c in self._cond])
+        return ' && '.join([fmt.format(c) for c in self._cond])
 
     def set_is_test(self):
         self.set_condition(DllBlocklistEntry.TEST_CONDITION)
@@ -548,46 +530,44 @@ class DllBlocklistEntry(object):
 
     @staticmethod
     def get_flag_string(flag):
-        return "DllBlockInfo::" + flag
+        return 'DllBlockInfo::' + flag
 
     def get_flags_list(self):
         return self._flags
 
     def write(self, output, mode):
         if self._cond:
-            print("#if %s" % self.get_condition(), file=output)
+            print('#if %s' % self.get_condition(), file=output)
 
-        flags_str = ""
+        flags_str = ''
 
         flags = self.get_flags_list()
         if flags:
-            flags_str = ", " + " | ".join(map(self.get_flag_string, flags))
+            flags_str = ', ' + ' | '.join(map(self.get_flag_string, flags))
 
-        entry_str = '  DLL_BLOCKLIST_ENTRY("%s", %s%s)' % (
-            self._name,
-            str(self._ver),
-            flags_str,
-        )
+        entry_str = "  DLL_BLOCKLIST_ENTRY(\"%s\", %s%s)" % \
+                    (self._name, str(self._ver), flags_str)
         print(entry_str, file=output)
 
         if self._cond:
-            print("#endif  // %s" % self.get_condition(), file=output)
+            print('#endif  // %s' % self.get_condition(), file=output)
 
 
 class A11yBlocklistEntry(DllBlocklistEntry):
-    """Represents a blocklist entry for injected a11y DLLs. This class does
+    """ Represents a blocklist entry for injected a11y DLLs. This class does
     not need to do anything special compared to a DllBlocklistEntry; we just
     use this type to distinguish a11y entries from "regular" blocklist entries.
     """
 
     def __init__(self, name, ver, flags=(), **kwargs):
-        """These arguments are identical to DllBlocklistEntry.__init__"""
+        """These arguments are identical to DllBlocklistEntry.__init__
+        """
 
         super(A11yBlocklistEntry, self).__init__(name, ver, flags, **kwargs)
 
 
 class RedirectToNoOpEntryPoint(DllBlocklistEntry):
-    """Represents a blocklist entry to hook the entrypoint into a function
+    """ Represents a blocklist entry to hook the entrypoint into a function
     just returning TRUE to keep a module alive and harmless.
     This entry is intended to block a DLL which is injected by IAT patching
     which is planted by a kernel callback routine for LoadImage because
@@ -595,7 +575,8 @@ class RedirectToNoOpEntryPoint(DllBlocklistEntry):
     """
 
     def __init__(self, name, ver, flags=(), **kwargs):
-        """These arguments are identical to DllBlocklistEntry.__init__"""
+        """These arguments are identical to DllBlocklistEntry.__init__
+        """
 
         super(RedirectToNoOpEntryPoint, self).__init__(name, ver, flags, **kwargs)
 
@@ -607,9 +588,10 @@ class RedirectToNoOpEntryPoint(DllBlocklistEntry):
 
 
 class LspBlocklistEntry(DllBlocklistEntry):
-    """Represents a blocklist entry for a WinSock Layered Service Provider (LSP)."""
+    """ Represents a blocklist entry for a WinSock Layered Service Provider (LSP).
+    """
 
-    GUID_UNPACK_FMT_LE = "<IHHBBBBBBBB"
+    GUID_UNPACK_FMT_LE = '<IHHBBBBBBBB'
     Guids = dict()
 
     def __init__(self, name, ver, guids, flags=(), **kwargs):
@@ -638,7 +620,7 @@ class LspBlocklistEntry(DllBlocklistEntry):
 
         super(LspBlocklistEntry, self).__init__(name, ver, flags, **kwargs)
         if not guids:
-            raise ValueError("Missing GUID(s)!")
+            raise ValueError('Missing GUID(s)!')
 
         if isinstance(guids, str):
             self.insert(UUID(guids), name)
@@ -664,26 +646,11 @@ class LspBlocklistEntry(DllBlocklistEntry):
     @staticmethod
     def as_c_struct(guid, names):
         parts = unpack(LspBlocklistEntry.GUID_UNPACK_FMT_LE, guid.bytes_le)
-        str_guid = (
-            "  // %r\n  // {%s}\n  { 0x%08x, 0x%04x, 0x%04x, "
-            "{ 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }"
-            " }"
-            % (
-                names,
-                str(guid),
-                parts[0],
-                parts[1],
-                parts[2],
-                parts[3],
-                parts[4],
-                parts[5],
-                parts[6],
-                parts[7],
-                parts[8],
-                parts[9],
-                parts[10],
-            )
-        )
+        str_guid = "  // %r\n  // {%s}\n  { 0x%08x, 0x%04x, 0x%04x, " \
+            "{ 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x }" \
+            " }" % (names, str(guid), parts[0], parts[1], parts[2], parts[3],
+                    parts[4], parts[5], parts[6], parts[7], parts[8], parts[9],
+                    parts[10])
         return str_guid
 
     def write(self, output, mode):
@@ -694,19 +661,15 @@ class LspBlocklistEntry(DllBlocklistEntry):
         # We dump the entire contents of Guids on the first call, and then
         # clear it. Remaining invocations of this method are no-ops.
         if LspBlocklistEntry.Guids:
-            result = ",\n".join(
-                [
-                    self.as_c_struct(guid, names)
-                    for guid, names in iteritems(LspBlocklistEntry.Guids)
-                ]
-            )
+            result = ',\n'.join([self.as_c_struct(guid, names)
+                                 for guid, names in iteritems(LspBlocklistEntry.Guids)])
             print(result, file=output)
             LspBlocklistEntry.Guids.clear()
 
 
 def exec_script_file(script_name, globals):
     with open(script_name) as script:
-        exec(compile(script.read(), script_name, "exec"), globals)
+        exec(compile(script.read(), script_name, 'exec'), globals)
 
 
 def gen_blocklists(first_fd, defs_filename):
@@ -717,14 +680,14 @@ def gen_blocklists(first_fd, defs_filename):
     # execution environment when defs_filename is run by exec.
     exec_env = {
         # Add the blocklist entry types
-        "A11yBlocklistEntry": A11yBlocklistEntry,
-        "DllBlocklistEntry": DllBlocklistEntry,
-        "LspBlocklistEntry": LspBlocklistEntry,
-        "RedirectToNoOpEntryPoint": RedirectToNoOpEntryPoint,
+        'A11yBlocklistEntry': A11yBlocklistEntry,
+        'DllBlocklistEntry': DllBlocklistEntry,
+        'LspBlocklistEntry': LspBlocklistEntry,
+        'RedirectToNoOpEntryPoint': RedirectToNoOpEntryPoint,
         # Add the special version types
-        "ALL_VERSIONS": Version.ALL_VERSIONS,
-        "UNVERSIONED": Version.UNVERSIONED,
-        "PETimeStamp": PETimeStamp,
+        'ALL_VERSIONS': Version.ALL_VERSIONS,
+        'UNVERSIONED': Version.UNVERSIONED,
+        'PETimeStamp': PETimeStamp,
     }
 
     # Import definition lists into exec_env

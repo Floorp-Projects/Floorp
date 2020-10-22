@@ -4,123 +4,123 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-libevent_path_prefix = "src/third_party"
-include(libevent_path_prefix + "/libeventcommon.mozbuild")
+libevent_path_prefix = 'src/third_party'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
 
 UNIFIED_SOURCES += [
-    "src/base/at_exit.cc",
-    "src/base/command_line.cc",
-    "src/base/file_path.cc",
-    "src/base/histogram.cc",
-    "src/base/logging.cc",
-    "src/base/message_loop.cc",
-    "src/base/message_pump_default.cc",
-    "src/base/pickle.cc",
-    "src/base/rand_util.cc",
-    "src/base/revocable_store.cc",
-    "src/base/string_piece.cc",
-    "src/base/string_util.cc",
-    "src/base/thread.cc",
-    "src/base/time.cc",
-    "src/base/timer.cc",
-    "src/chrome/common/child_process.cc",
-    "src/chrome/common/child_process_host.cc",
-    "src/chrome/common/child_thread.cc",
-    "src/chrome/common/chrome_switches.cc",
-    "src/chrome/common/ipc_channel_utils.cc",
-    "src/chrome/common/ipc_message.cc",
+    'src/base/at_exit.cc',
+    'src/base/command_line.cc',
+    'src/base/file_path.cc',
+    'src/base/histogram.cc',
+    'src/base/logging.cc',
+    'src/base/message_loop.cc',
+    'src/base/message_pump_default.cc',
+    'src/base/pickle.cc',
+    'src/base/rand_util.cc',
+    'src/base/revocable_store.cc',
+    'src/base/string_piece.cc',
+    'src/base/string_util.cc',
+    'src/base/thread.cc',
+    'src/base/time.cc',
+    'src/base/timer.cc',
+    'src/chrome/common/child_process.cc',
+    'src/chrome/common/child_process_host.cc',
+    'src/chrome/common/child_thread.cc',
+    'src/chrome/common/chrome_switches.cc',
+    'src/chrome/common/ipc_channel_utils.cc',
+    'src/chrome/common/ipc_message.cc',
 ]
 
 if os_win:
     SOURCES += [
-        "src/base/condition_variable_win.cc",
-        "src/base/lock_impl_win.cc",
-        "src/base/message_pump_win.cc",
-        "src/base/object_watcher.cc",
-        "src/base/platform_thread_win.cc",
-        "src/base/process_util_win.cc",
-        "src/base/shared_memory_win.cc",
-        "src/base/sys_string_conversions_win.cc",
-        "src/base/thread_local_win.cc",
-        "src/base/time_win.cc",
-        "src/base/waitable_event_win.cc",
-        "src/base/win_util.cc",
-        "src/chrome/common/ipc_channel_win.cc",
-        "src/chrome/common/process_watcher_win.cc",
+        'src/base/condition_variable_win.cc',
+        'src/base/lock_impl_win.cc',
+        'src/base/message_pump_win.cc',
+        'src/base/object_watcher.cc',
+        'src/base/platform_thread_win.cc',
+        'src/base/process_util_win.cc',
+        'src/base/shared_memory_win.cc',
+        'src/base/sys_string_conversions_win.cc',
+        'src/base/thread_local_win.cc',
+        'src/base/time_win.cc',
+        'src/base/waitable_event_win.cc',
+        'src/base/win_util.cc',
+        'src/chrome/common/ipc_channel_win.cc',
+        'src/chrome/common/process_watcher_win.cc',
     ]
 
-elif not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
-    DIRS += ["src/third_party"]
+elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
+    DIRS += ['src/third_party']
 
 if os_posix:
     UNIFIED_SOURCES += [
-        "src/base/condition_variable_posix.cc",
-        "src/base/lock_impl_posix.cc",
-        "src/base/message_pump_libevent.cc",
-        "src/base/platform_thread_posix.cc",
-        "src/base/process_util_posix.cc",
-        "src/base/shared_memory_posix.cc",
-        "src/base/string16.cc",
-        "src/base/thread_local_posix.cc",
-        "src/base/waitable_event_posix.cc",
-        "src/chrome/common/file_descriptor_set_posix.cc",
-        "src/chrome/common/ipc_channel_posix.cc",
-        "src/chrome/common/process_watcher_posix_sigchld.cc",
+        'src/base/condition_variable_posix.cc',
+        'src/base/lock_impl_posix.cc',
+        'src/base/message_pump_libevent.cc',
+        'src/base/platform_thread_posix.cc',
+        'src/base/process_util_posix.cc',
+        'src/base/shared_memory_posix.cc',
+        'src/base/string16.cc',
+        'src/base/thread_local_posix.cc',
+        'src/base/waitable_event_posix.cc',
+        'src/chrome/common/file_descriptor_set_posix.cc',
+        'src/chrome/common/ipc_channel_posix.cc',
+        'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
 
 if os_macosx:
     UNIFIED_SOURCES += [
-        "src/base/chrome_application_mac.mm",
-        "src/base/mac_util.mm",
-        "src/base/message_pump_mac.mm",
-        "src/base/process_util_mac.mm",
-        "src/base/scoped_nsautorelease_pool.mm",
-        "src/base/sys_string_conversions_mac.mm",
-        "src/base/time_mac.cc",
-        "src/chrome/common/mach_ipc_mac.mm",
-        "src/chrome/common/mach_message_source_mac.cc",
+        'src/base/chrome_application_mac.mm',
+        'src/base/mac_util.mm',
+        'src/base/message_pump_mac.mm',
+        'src/base/process_util_mac.mm',
+        'src/base/scoped_nsautorelease_pool.mm',
+        'src/base/sys_string_conversions_mac.mm',
+        'src/base/time_mac.cc',
+        'src/chrome/common/mach_ipc_mac.mm',
+        'src/chrome/common/mach_message_source_mac.cc',
     ]
     SOURCES += [
         # This file cannot be built in unified mode because of the redefinition
         # of NoOp.
-        "src/base/platform_thread_mac.mm",
+        'src/base/platform_thread_mac.mm',
     ]
 
 if os_bsd:
     SOURCES += [
-        "src/base/process_util_linux.cc",
-        "src/base/time_posix.cc",
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
     ]
 
 if os_linux:
     SOURCES += [
-        "src/base/process_util_linux.cc",
-        "src/base/time_posix.cc",
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
     ]
-    if CONFIG["OS_TARGET"] == "Android":
+    if CONFIG['OS_TARGET'] == 'Android':
         UNIFIED_SOURCES += [
-            "src/base/message_pump_android.cc",
+            'src/base/message_pump_android.cc',
         ]
-        DEFINES["ANDROID"] = True
-        DEFINES["_POSIX_MONOTONIC_CLOCK"] = 0
+        DEFINES['ANDROID'] = True
+        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_bsd or os_linux:
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
         SOURCES += [
-            "src/base/message_pump_glib.cc",
+            'src/base/message_pump_glib.cc',
         ]
 
 if os_solaris:
     SOURCES += [
-        "src/base/process_util_linux.cc",
-        "src/base/time_posix.cc",
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
     ]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

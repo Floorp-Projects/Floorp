@@ -23,14 +23,14 @@ from awsy.awsy_test_case import AwsyTestCase
 
 class TestMemoryUsage(AwsyTestCase):
     """Provides a test that collects memory usage at various checkpoints:
-    - "Start" - Just after startup
-    - "StartSettled" - After an additional wait time
-    - "TabsOpen" - After opening all provided URLs
-    - "TabsOpenSettled" - After an additional wait time
-    - "TabsOpenForceGC" - After forcibly invoking garbage collection
-    - "TabsClosed" - After closing all tabs
-    - "TabsClosedSettled" - After an additional wait time
-    - "TabsClosedForceGC" - After forcibly invoking garbage collection
+      - "Start" - Just after startup
+      - "StartSettled" - After an additional wait time
+      - "TabsOpen" - After opening all provided URLs
+      - "TabsOpenSettled" - After an additional wait time
+      - "TabsOpenForceGC" - After forcibly invoking garbage collection
+      - "TabsClosed" - After closing all tabs
+      - "TabsClosedSettled" - After an additional wait time
+      - "TabsClosedForceGC" - After forcibly invoking garbage collection
     """
 
     def urls(self):
@@ -47,22 +47,22 @@ class TestMemoryUsage(AwsyTestCase):
 
     def setupTp5(self):
         urls = None
-        default_tp5n_manifest = os.path.join(
-            self._webroot_dir, "page_load_test", "tp5n", "tp5n.manifest"
-        )
+        default_tp5n_manifest = os.path.join(self._webroot_dir, 'page_load_test', 'tp5n',
+                                             'tp5n.manifest')
         tp5n_manifest = self.testvars.get("pageManifest", default_tp5n_manifest)
         with open(tp5n_manifest) as fp:
             urls = fp.readlines()
-        urls = map(lambda x: x.replace("localhost", "localhost:{}"), urls)
+        urls = map(lambda x: x.replace('localhost', 'localhost:{}'), urls)
 
         # We haven't set self._urls yet, so this value might be zero if
         # 'entities' wasn't specified.
         to_load = self.pages_to_load()
         if not to_load:
             to_load = len(urls)
-        self._webservers = webservers.WebServers(
-            "localhost", 8001, self._webroot_dir, to_load
-        )
+        self._webservers = webservers.WebServers("localhost",
+                                                 8001,
+                                                 self._webroot_dir,
+                                                 to_load)
         self._webservers.start()
         for url, server in zip(urls, self._webservers.servers):
             self._urls.append(url.strip().format(server.port))
@@ -70,17 +70,15 @@ class TestMemoryUsage(AwsyTestCase):
     def setupTp6(self):
         # tp5n stores its manifest in the zip file that gets extracted, tp6
         # doesn't so we just keep one in our project dir for now.
-        default_tp6_pages_manifest = os.path.join(AWSY_PATH, "conf", "tp6-pages.yml")
-        tp6_pages_manifest = self.testvars.get(
-            "pageManifest", default_tp6_pages_manifest
-        )
+        default_tp6_pages_manifest = os.path.join(AWSY_PATH, 'conf', 'tp6-pages.yml')
+        tp6_pages_manifest = self.testvars.get("pageManifest", default_tp6_pages_manifest)
         urls = []
         recordings = set()
         with open(tp6_pages_manifest) as f:
             d = yaml.safe_load(f)
             for r in d:
-                recordings.add(r["rec"])
-                url = r["url"]
+                recordings.add(r['rec'])
+                url = r['url']
                 if isinstance(url, list):
                     urls.extend(url)
                 else:
@@ -91,22 +89,22 @@ class TestMemoryUsage(AwsyTestCase):
         # Indicate that we're using tp6 in the perf data.
         self._extra_opts = ["tp6"]
 
-        if self.marionette.get_pref("fission.autostart"):
+        if self.marionette.get_pref('fission.autostart'):
             self._extra_opts.append("fission")
 
         # Now we setup the mitm proxy with our tp6 pageset.
-        tp6_pageset_manifest = os.path.join(AWSY_PATH, "tp6-pageset.manifest")
+        tp6_pageset_manifest = os.path.join(AWSY_PATH, 'tp6-pageset.manifest')
         config = {
-            "playback_tool": "mitmproxy",
-            "playback_version": "4.0.4",
-            "playback_files": [tp6_pageset_manifest],
-            "platform": mozinfo.os,
-            "obj_path": self._webroot_dir,
-            "binary": self._binary,
-            "run_local": self._run_local,
-            "app": "firefox",
-            "host": "127.0.0.1",
-            "ignore_mitmdump_exit_failure": True,
+            'playback_tool': 'mitmproxy',
+            'playback_version': '4.0.4',
+            'playback_files': [tp6_pageset_manifest],
+            'platform': mozinfo.os,
+            'obj_path': self._webroot_dir,
+            'binary': self._binary,
+            'run_local': self._run_local,
+            'app': 'firefox',
+            'host': '127.0.0.1',
+            'ignore_mitmdump_exit_failure': True,
         }
 
         self._playback = get_playback(config)
@@ -121,7 +119,7 @@ class TestMemoryUsage(AwsyTestCase):
             "unhandledPromptBehavior": "dismiss",  # Ignore page navigation warnings
         }
         self.marionette.start_session(caps)
-        self.marionette.set_context("chrome")
+        self.marionette.set_context('chrome')
 
     def setUp(self):
         AwsyTestCase.setUp(self)
@@ -135,16 +133,10 @@ class TestMemoryUsage(AwsyTestCase):
         else:
             self.setupTp5()
 
-        self.logger.info(
-            "areweslimyet run by %d pages, %d iterations,"
-            " %d perTabPause, %d settleWaitTime"
-            % (
-                self._pages_to_load,
-                self._iterations,
-                self._perTabPause,
-                self._settleWaitTime,
-            )
-        )
+        self.logger.info("areweslimyet run by %d pages, %d iterations,"
+                         " %d perTabPause, %d settleWaitTime"
+                         % (self._pages_to_load, self._iterations,
+                            self._perTabPause, self._settleWaitTime))
         self.logger.info("done setting up!")
 
     def tearDown(self):
@@ -173,15 +165,15 @@ class TestMemoryUsage(AwsyTestCase):
             return "NewTabPagePreloading.removePreloadedBrowser not available";
             """
         try:
-            result = self.marionette.execute_script(script, script_timeout=180000)
+            result = self.marionette.execute_script(script,
+                                                    script_timeout=180000)
         except JavascriptException as e:
             self.logger.error("removePreloadedBrowser() JavaScript error: %s" % e)
         except ScriptTimeoutException:
             self.logger.error("removePreloadedBrowser() timed out")
         except Exception:
             self.logger.error(
-                "removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0]
-            )
+                "removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0])
         else:
             if result:
                 self.logger.info(result)
@@ -219,7 +211,7 @@ class TestMemoryUsage(AwsyTestCase):
             # Close all tabs
             self.reset_state()
 
-            with self.marionette.using_context("content"):
+            with self.marionette.using_context('content'):
                 self.logger.info("navigating to about:blank")
                 self.marionette.navigate("about:blank")
                 self.logger.info("navigated to about:blank")

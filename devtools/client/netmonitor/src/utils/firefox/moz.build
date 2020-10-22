@@ -4,5 +4,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "open-request-in-tab.js",
+    'open-request-in-tab.js',
 )

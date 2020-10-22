@@ -18,7 +18,7 @@ class TPSFirefoxRunner(object):
     PROCESS_TIMEOUT = 240
 
     def __init__(self, binary):
-        if binary is not None and ("http://" in binary or "ftp://" in binary):
+        if binary is not None and ('http://' in binary or 'ftp://' in binary):
             self.url = binary
             self.binary = None
         else:
@@ -33,32 +33,31 @@ class TPSFirefoxRunner(object):
 
     def download_url(self, url, dest=None):
         h = httplib2.Http()
-        resp, content = h.request(url, "GET")
+        resp, content = h.request(url, 'GET')
         if dest is None:
             dest = os.path.basename(url)
 
-        local = open(dest, "wb")
+        local = open(dest, 'wb')
         local.write(content)
         local.close()
         return dest
 
-    def download_build(self, installdir="downloadedbuild", appname="firefox"):
+    def download_build(self, installdir='downloadedbuild', appname='firefox'):
         self.installdir = os.path.abspath(installdir)
         buildName = os.path.basename(self.url)
-        pathToBuild = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), buildName
-        )
+        pathToBuild = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   buildName)
 
         # delete the build if it already exists
         if os.access(pathToBuild, os.F_OK):
             os.remove(pathToBuild)
 
         # download the build
-        print("downloading build")
+        print('downloading build')
         self.download_url(self.url, pathToBuild)
 
         # install the build
-        print("installing {}".format(pathToBuild))
+        print('installing {}'.format(pathToBuild))
         mozfile.remove(self.installdir, True)
         binary = mozinstall.install(src=pathToBuild, dest=self.installdir)
 
@@ -69,7 +68,7 @@ class TPSFirefoxRunner(object):
 
     def run(self, profile=None, timeout=PROCESS_TIMEOUT, env=None, args=None):
         """Runs the given FirefoxRunner with the given Profile, waits
-        for completion, then returns the process exit code
+           for completion, then returns the process exit code
         """
         if profile is None:
             profile = Profile()
@@ -78,9 +77,8 @@ class TPSFirefoxRunner(object):
         if self.binary is None and self.url:
             self.binary = self.download_build()
 
-        runner = FirefoxRunner(
-            profile=self.profile, binary=self.binary, env=env, cmdargs=args
-        )
+        runner = FirefoxRunner(profile=self.profile, binary=self.binary,
+                               env=env, cmdargs=args)
 
         runner.start(timeout=timeout)
         return runner.wait()

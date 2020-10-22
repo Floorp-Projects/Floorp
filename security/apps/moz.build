@@ -8,52 +8,43 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 UNIFIED_SOURCES += [
-    "AppSignatureVerification.cpp",
-    "AppTrustDomain.cpp",
+    'AppSignatureVerification.cpp',
+    'AppTrustDomain.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/security/certverifier",
-    "/security/manager/ssl",
-    "/third_party/rust/cose-c/include",
+    '/security/certverifier',
+    '/security/manager/ssl',
+    '/third_party/rust/cose-c/include',
 ]
 
-DEFINES["NSS_ENABLE_ECC"] = "True"
-for var in ("DLL_PREFIX", "DLL_SUFFIX"):
+DEFINES['NSS_ENABLE_ECC'] = 'True'
+for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
-        "-Wextra",
+        '-Wextra',
     ]
 
     # Gecko headers aren't warning-free enough for us to enable these warnings.
     CXXFLAGS += [
-        "-Wno-unused-parameter",
+        '-Wno-unused-parameter',
     ]
 
-test_ssl_path = "/security/manager/ssl/tests/unit"
+test_ssl_path = '/security/manager/ssl/tests/unit'
 
 headers_arrays_certs = [
-    (
-        "xpcshell.inc",
-        "xpcshellRoot",
-        test_ssl_path + "/test_signed_apps/xpcshellTestRoot.der",
-    ),
-    ("addons-public.inc", "addonsPublicRoot", "addons-public.crt"),
-    (
-        "addons-public-intermediate.inc",
-        "addonsPublicIntermediate",
-        "addons-public-intermediate.crt",
-    ),
-    ("addons-stage.inc", "addonsStageRoot", "addons-stage.crt"),
+    ('xpcshell.inc', 'xpcshellRoot', test_ssl_path + '/test_signed_apps/xpcshellTestRoot.der'),
+    ('addons-public.inc', 'addonsPublicRoot', 'addons-public.crt'),
+    ('addons-public-intermediate.inc', 'addonsPublicIntermediate', 'addons-public-intermediate.crt'),
+    ('addons-stage.inc', 'addonsStageRoot', 'addons-stage.crt'),
 ]
 
 for header, array_name, cert in headers_arrays_certs:
-    GeneratedFile(
-        header, script="gen_cert_header.py", entry_point=array_name, inputs=[cert]
-    )
+    GeneratedFile(header, script='gen_cert_header.py',
+                  entry_point=array_name, inputs=[cert])

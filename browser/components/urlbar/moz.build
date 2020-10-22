@@ -6,42 +6,42 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
 EXTRA_JS_MODULES += [
-    "UrlbarController.jsm",
-    "UrlbarEventBufferer.jsm",
-    "UrlbarInput.jsm",
-    "UrlbarMuxerUnifiedComplete.jsm",
-    "UrlbarPrefs.jsm",
-    "UrlbarProviderAutofill.jsm",
-    "UrlbarProviderExtension.jsm",
-    "UrlbarProviderHeuristicFallback.jsm",
-    "UrlbarProviderInterventions.jsm",
-    "UrlbarProviderOmnibox.jsm",
-    "UrlbarProviderOpenTabs.jsm",
-    "UrlbarProviderPrivateSearch.jsm",
-    "UrlbarProviderSearchSuggestions.jsm",
-    "UrlbarProviderSearchTips.jsm",
-    "UrlbarProvidersManager.jsm",
-    "UrlbarProviderTabToSearch.jsm",
-    "UrlbarProviderTokenAliasEngines.jsm",
-    "UrlbarProviderTopSites.jsm",
-    "UrlbarProviderUnifiedComplete.jsm",
-    "UrlbarResult.jsm",
-    "UrlbarSearchOneOffs.jsm",
-    "UrlbarSearchUtils.jsm",
-    "UrlbarTokenizer.jsm",
-    "UrlbarUtils.jsm",
-    "UrlbarValueFormatter.jsm",
-    "UrlbarView.jsm",
+    'UrlbarController.jsm',
+    'UrlbarEventBufferer.jsm',
+    'UrlbarInput.jsm',
+    'UrlbarMuxerUnifiedComplete.jsm',
+    'UrlbarPrefs.jsm',
+    'UrlbarProviderAutofill.jsm',
+    'UrlbarProviderExtension.jsm',
+    'UrlbarProviderHeuristicFallback.jsm',
+    'UrlbarProviderInterventions.jsm',
+    'UrlbarProviderOmnibox.jsm',
+    'UrlbarProviderOpenTabs.jsm',
+    'UrlbarProviderPrivateSearch.jsm',
+    'UrlbarProviderSearchSuggestions.jsm',
+    'UrlbarProviderSearchTips.jsm',
+    'UrlbarProvidersManager.jsm',
+    'UrlbarProviderTabToSearch.jsm',
+    'UrlbarProviderTokenAliasEngines.jsm',
+    'UrlbarProviderTopSites.jsm',
+    'UrlbarProviderUnifiedComplete.jsm',
+    'UrlbarResult.jsm',
+    'UrlbarSearchOneOffs.jsm',
+    'UrlbarSearchUtils.jsm',
+    'UrlbarTokenizer.jsm',
+    'UrlbarUtils.jsm',
+    'UrlbarValueFormatter.jsm',
+    'UrlbarView.jsm',
 ]
 
 TESTING_JS_MODULES += [
-    "tests/UrlbarTestUtils.jsm",
+    'tests/UrlbarTestUtils.jsm',
 ]
 BROWSER_CHROME_MANIFESTS += [
-    "tests/browser-tips/browser.ini",
-    "tests/browser/browser.ini",
-    "tests/ext/browser/browser.ini",
+    'tests/browser-tips/browser.ini',
+    'tests/browser/browser.ini',
+    'tests/ext/browser/browser.ini',
 ]
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-SPHINX_TREES["/browser/urlbar"] = "docs"
+SPHINX_TREES['/browser/urlbar'] = 'docs'

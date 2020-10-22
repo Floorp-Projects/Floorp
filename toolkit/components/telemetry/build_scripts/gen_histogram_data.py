@@ -6,7 +6,11 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import StringTable, static_assert, ParserError
+from mozparsers.shared_telemetry_utils import (
+    StringTable,
+    static_assert,
+    ParserError
+)
 from mozparsers import parse_histograms
 
 import sys
@@ -16,41 +20,28 @@ banner = """/* This file is auto-generated, see gen_histogram_data.py.  */
 """
 
 
-def print_array_entry(
-    output,
-    histogram,
-    name_index,
-    exp_index,
-    label_index,
-    label_count,
-    key_index,
-    key_count,
-    store_index,
-    store_count,
-):
+def print_array_entry(output, histogram, name_index, exp_index,
+                      label_index, label_count,
+                      key_index, key_count,
+                      store_index, store_count):
     if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
-        print(
-            "  { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s },"
-            % (
-                histogram.low(),
-                histogram.high(),
-                histogram.n_buckets(),
-                name_index,
-                exp_index,
-                label_count,
-                key_count,
-                store_count,
-                label_index,
-                key_index,
-                store_index,
-                " | ".join(histogram.record_in_processes_enum()),
-                "true" if histogram.keyed() else "false",
-                histogram.nsITelemetry_kind(),
-                histogram.dataset(),
-                " | ".join(histogram.products_enum()),
-            ),
-            file=output,
-        )
+        print("  { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s },"
+              % (histogram.low(),
+                 histogram.high(),
+                 histogram.n_buckets(),
+                 name_index,
+                 exp_index,
+                 label_count,
+                 key_count,
+                 store_count,
+                 label_index,
+                 key_index,
+                 store_index,
+                 " | ".join(histogram.record_in_processes_enum()),
+                 "true" if histogram.keyed() else "false",
+                 histogram.nsITelemetry_kind(),
+                 histogram.dataset(),
+                 " | ".join(histogram.products_enum())), file=output)
 
 
 def write_histogram_table(output, histograms):
@@ -86,29 +77,21 @@ def write_histogram_table(output, histograms):
         store_index = 0
         if stores == ["main"]:
             # if count == 1 && offset == UINT16_MAX -> only main store
-            store_index = "UINT16_MAX"
+            store_index = 'UINT16_MAX'
         else:
             store_index = total_store_count
             store_table.append((histogram.name(), string_table.stringIndexes(stores)))
             total_store_count += len(stores)
 
-        print_array_entry(
-            output,
-            histogram,
-            name_index,
-            exp_index,
-            label_index,
-            len(labels),
-            key_index,
-            len(keys),
-            store_index,
-            len(stores),
-        )
+        print_array_entry(output, histogram, name_index, exp_index,
+                          label_index, len(labels), key_index, len(keys),
+                          store_index, len(stores))
     print("};\n", file=output)
 
     strtab_name = "gHistogramStringTable"
     string_table.writeDefinition(output, strtab_name)
-    static_assert(output, "sizeof(%s) <= UINT32_MAX" % strtab_name, "index overflow")
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % strtab_name,
+                  "index overflow")
 
     print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
     print("const uint32_t gHistogramLabelTable[] = {", file=output)
@@ -118,9 +101,7 @@ def write_histogram_table(output, histograms):
     for name, indexes in label_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
-    static_assert(
-        output, "sizeof(gHistogramLabelTable) <= UINT16_MAX", "index overflow"
-    )
+    static_assert(output, "sizeof(gHistogramLabelTable) <= UINT16_MAX", "index overflow")
 
     print("\n#if defined(_MSC_VER) && !defined(__clang__)", file=output)
     print("const uint32_t gHistogramKeyTable[] = {", file=output)
@@ -141,16 +122,14 @@ def write_histogram_table(output, histograms):
     for name, indexes in store_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
-    static_assert(
-        output, "sizeof(%s) <= UINT16_MAX" % store_table_name, "index overflow"
-    )
+    static_assert(output, "sizeof(%s) <= UINT16_MAX" % store_table_name,
+                  "index overflow")
 
 
 # Write out static asserts for histogram data.  We'd prefer to perform
 # these checks in this script itself, but since several histograms
 # (generally enumerated histograms) use compile-time constants for
 # their upper bounds, we have to let the compiler do the checking.
-
 
 def static_asserts_for_boolean(output, histogram):
     pass
@@ -166,9 +145,8 @@ def static_asserts_for_count(output, histogram):
 
 def static_asserts_for_enumerated(output, histogram):
     n_values = histogram.high()
-    static_assert(
-        output, "%s > 2" % n_values, "Not enough values for %s" % histogram.name()
-    )
+    static_assert(output, "%s > 2" % n_values,
+                  "Not enough values for %s" % histogram.name())
 
 
 def shared_static_asserts(output, histogram):
@@ -179,12 +157,8 @@ def shared_static_asserts(output, histogram):
     static_assert(output, "%s < %s" % (low, high), "low >= high for %s" % name)
     static_assert(output, "%s > 2" % n_buckets, "Not enough values for %s" % name)
     static_assert(output, "%s >= 1" % low, "Incorrect low value for %s" % name)
-    static_assert(
-        output,
-        "%s > %s" % (high, n_buckets),
-        "high must be > number of buckets for %s;"
-        " you may want an enumerated histogram" % name,
-    )
+    static_assert(output, "%s > %s" % (high, n_buckets), "high must be > number of buckets for %s;"
+                  " you may want an enumerated histogram" % name)
 
 
 def static_asserts_for_linear(output, histogram):
@@ -196,22 +170,19 @@ def static_asserts_for_exponential(output, histogram):
 
 
 def write_histogram_static_asserts(output, histograms):
-    print(
-        """
+    print("""
 // Perform the checks at the beginning of HistogramGet at
 // compile time, so that incorrect histogram definitions
-// give compile-time errors, not runtime errors.""",
-        file=output,
-    )
+// give compile-time errors, not runtime errors.""", file=output)
 
     table = {
-        "boolean": static_asserts_for_boolean,
-        "flag": static_asserts_for_flag,
-        "count": static_asserts_for_count,
-        "enumerated": static_asserts_for_enumerated,
-        "categorical": static_asserts_for_enumerated,
-        "linear": static_asserts_for_linear,
-        "exponential": static_asserts_for_exponential,
+        'boolean': static_asserts_for_boolean,
+        'flag': static_asserts_for_flag,
+        'count': static_asserts_for_count,
+        'enumerated': static_asserts_for_enumerated,
+        'categorical': static_asserts_for_enumerated,
+        'linear': static_asserts_for_linear,
+        'exponential': static_asserts_for_exponential,
     }
 
     target_os = buildconfig.substs["OS_TARGET"]
@@ -221,9 +192,7 @@ def write_histogram_static_asserts(output, histograms):
             continue
 
         if kind not in table:
-            raise Exception(
-                'Unknown kind "%s" for histogram "%s".' % (kind, histogram.name())
-            )
+            raise Exception('Unknown kind "%s" for histogram "%s".' % (kind, histogram.name()))
         fn = table[kind]
         fn(output, histogram)
 
@@ -252,11 +221,11 @@ def write_histogram_ranges(output, histograms):
             # Suffix each ranges listing with INT_MAX, to match histogram.cc's
             # expected format.
             offset += len(ranges) + 1
-            print(",".join(map(str, ranges)), ",INT_MAX,", file=output)
+            print(','.join(map(str, ranges)), ',INT_MAX,', file=output)
     print("0};", file=output)
 
     if offset > 32767:
-        raise Exception("Histogram offsets exceeded maximum value for an int16_t.")
+        raise Exception('Histogram offsets exceeded maximum value for an int16_t.')
 
     target_os = buildconfig.substs["OS_TARGET"]
     print("#if defined(_MSC_VER) && !defined(__clang__)", file=output)
@@ -285,5 +254,5 @@ def main(output, *filenames):
     write_histogram_static_asserts(output, histograms)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

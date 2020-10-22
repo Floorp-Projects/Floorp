@@ -3,6 +3,6 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 LOCALIZED_PP_FILES.foo += [
-    "en-US/bar.ini",
-    "en-US/foo.js",
+    'en-US/bar.ini',
+    'en-US/foo.js',
 ]

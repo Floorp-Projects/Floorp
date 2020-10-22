@@ -79,11 +79,10 @@ def read_splits(splitfile):
     representing exactly that.  (Note that the name cannot contain
     spaces, but the function name can, and often does.)
     """
-
     def line_to_split(line):
         line = line.strip("\r\n")
         idx = line.index(" ")
-        return (line[0:idx], line[idx + 1 :])
+        return (line[0:idx], line[idx + 1:])
 
     io = open(splitfile, "r")
     result = [line_to_split(line) for line in io]
@@ -113,11 +112,8 @@ def generate_profile(options, destfile):
     destio.close()
     if process.returncode != 0:
         os.remove(destfile)
-        sys.stderr.write(
-            "Error {0} from command:\n  {1}\n".format(
-                process.returncode, " ".join(args)
-            )
-        )
+        sys.stderr.write("Error {0} from command:\n  {1}\n".format(
+            process.returncode, " ".join(args)))
         sys.exit(process.returncode)
 
 
@@ -127,7 +123,6 @@ def output_filename(number, splitname):
     profile segment with the given number and splitname.  Splitname
     should be None for the complete profile and the remainder.
     """
-
     def pad_count(i):
         result = str(i)
         # 0-pad to the same length
@@ -138,7 +133,8 @@ def output_filename(number, splitname):
     if splitname is not None:
         name += "-" + splitname
 
-    return os.path.join(os.path.dirname(splitfile), "jprof-{0}.html".format(name))
+    return os.path.join(os.path.dirname(splitfile),
+                        "jprof-{0}.html".format(name))
 
 
 # generate the complete profile
@@ -148,9 +144,8 @@ generate_profile([], output_filename(0, None))
 count = 1
 excludes = []
 for (splitname, splitfunction) in splits:
-    generate_profile(
-        excludes + ["-i" + splitfunction], output_filename(count, splitname)
-    )
+    generate_profile(excludes + ["-i" + splitfunction],
+                     output_filename(count, splitname))
     excludes += ["-e" + splitfunction]
     count = count + 1
 

@@ -20,15 +20,13 @@ from .addons import AddonManager
 from .permissions import Permissions
 from .prefs import Preferences
 
-__all__ = [
-    "BaseProfile",
-    "ChromeProfile",
-    "ChromiumProfile",
-    "Profile",
-    "FirefoxProfile",
-    "ThunderbirdProfile",
-    "create_profile",
-]
+__all__ = ['BaseProfile',
+           'ChromeProfile',
+           'ChromiumProfile',
+           'Profile',
+           'FirefoxProfile',
+           'ThunderbirdProfile',
+           'create_profile']
 
 
 class BaseProfile(object):
@@ -67,7 +65,7 @@ class BaseProfile(object):
             # Ensure we have a full path to the profile
             self.profile = os.path.abspath(os.path.expanduser(profile))
         else:
-            self.profile = tempfile.mkdtemp(suffix=".mozrunner")
+            self.profile = tempfile.mkdtemp(suffix='.mozrunner')
 
     def __enter__(self):
         return self
@@ -98,7 +96,7 @@ class BaseProfile(object):
         self._reset()
 
     @abstractmethod
-    def set_preferences(self, preferences, filename="user.js"):
+    def set_preferences(self, preferences, filename='user.js'):
         pass
 
     @abstractproperty
@@ -123,7 +121,7 @@ class BaseProfile(object):
                 prefs = Preferences.read_prefs(path, interpolation=interpolation)
             self.set_preferences(prefs, filename=basename)
 
-        extension_dir = os.path.join(other, "extensions")
+        extension_dir = os.path.join(other, 'extensions')
         if not os.path.isdir(extension_dir):
             return
 
@@ -180,20 +178,10 @@ class Profile(BaseProfile):
           pass
       # profile.cleanup() has been called here
     """
+    preference_file_names = ('user.js', 'prefs.js')
 
-    preference_file_names = ("user.js", "prefs.js")
-
-    def __init__(
-        self,
-        profile=None,
-        addons=None,
-        preferences=None,
-        locations=None,
-        proxy=None,
-        restore=True,
-        whitelistpaths=None,
-        **kwargs
-    ):
+    def __init__(self, profile=None, addons=None, preferences=None, locations=None,
+                 proxy=None, restore=True, whitelistpaths=None, **kwargs):
         """
         :param profile: Path to the profile
         :param addons: String of one or list of addons to install
@@ -205,12 +193,7 @@ class Profile(BaseProfile):
             access to from the content process sandbox.
         """
         super(Profile, self).__init__(
-            profile=profile,
-            addons=addons,
-            preferences=preferences,
-            restore=restore,
-            **kwargs
-        )
+            profile=profile, addons=addons, preferences=preferences, restore=restore, **kwargs)
 
         self._locations = locations
         self._proxy = proxy
@@ -229,14 +212,12 @@ class Profile(BaseProfile):
         self.written_prefs = set()
 
         # Our magic markers
-        nonce = "%s %s" % (str(time.time()), uuid.uuid4())
-        self.delimeters = (
-            "#MozRunner Prefs Start %s" % nonce,
-            "#MozRunner Prefs End %s" % nonce,
-        )
+        nonce = '%s %s' % (str(time.time()), uuid.uuid4())
+        self.delimeters = ('#MozRunner Prefs Start %s' % nonce,
+                           '#MozRunner Prefs End %s' % nonce)
 
         # If sub-classes want to set default preferences
-        if hasattr(self.__class__, "preferences"):
+        if hasattr(self.__class__, 'preferences'):
             self.set_preferences(self.__class__.preferences)
         # Set additional preferences
         self.set_preferences(self._preferences)
@@ -251,26 +232,18 @@ class Profile(BaseProfile):
             if platform.system() == "Darwin":
                 assert len(self._whitelistpaths) <= 2
                 if len(self._whitelistpaths) == 2:
-                    prefs_js.append(
-                        (
-                            "security.sandbox.content.mac.testing_read_path2",
-                            self._whitelistpaths[1],
-                        )
-                    )
-                prefs_js.append(
-                    (
-                        "security.sandbox.content.mac.testing_read_path1",
-                        self._whitelistpaths[0],
-                    )
-                )
+                    prefs_js.append((
+                        "security.sandbox.content.mac.testing_read_path2",
+                        self._whitelistpaths[1]
+                    ))
+                prefs_js.append((
+                    "security.sandbox.content.mac.testing_read_path1",
+                    self._whitelistpaths[0]
+                ))
             else:
-                prefs_js.append(
-                    (
-                        "security.sandbox.content.read_path_whitelist",
-                        ",".join(self._whitelistpaths),
-                    )
-                )
-        self.set_preferences(prefs_js, "prefs.js")
+                prefs_js.append(("security.sandbox.content.read_path_whitelist",
+                                 ",".join(self._whitelistpaths)))
+        self.set_preferences(prefs_js, 'prefs.js')
         self.set_preferences(user_js)
 
         # handle add-on installation
@@ -284,9 +257,9 @@ class Profile(BaseProfile):
             # If copies of those class instances exist ensure we correctly
             # reset them all (see bug 934484)
             self.clean_preferences()
-            if getattr(self, "addons", None) is not None:
+            if getattr(self, 'addons', None) is not None:
                 self.addons.clean()
-            if getattr(self, "permissions", None) is not None:
+            if getattr(self, 'permissions', None) is not None:
                 self.permissions.clean_db()
         super(Profile, self).cleanup()
 
@@ -302,10 +275,10 @@ class Profile(BaseProfile):
 
     # methods for preferences
 
-    def set_preferences(self, preferences, filename="user.js"):
+    def set_preferences(self, preferences, filename='user.js'):
         """Adds preferences dict to profile preferences"""
         prefs_file = os.path.join(self.profile, filename)
-        with open(prefs_file, "a") as f:
+        with open(prefs_file, 'a') as f:
             if not preferences:
                 return
 
@@ -313,12 +286,12 @@ class Profile(BaseProfile):
             self.written_prefs.add(filename)
 
             # opening delimeter
-            f.write("\n%s\n" % self.delimeters[0])
+            f.write('\n%s\n' % self.delimeters[0])
 
             Preferences.write(f, preferences)
 
             # closing delimeter
-            f.write("%s\n" % self.delimeters[1])
+            f.write('%s\n' % self.delimeters[1])
 
     def set_persistent_preferences(self, preferences):
         """
@@ -334,11 +307,10 @@ class Profile(BaseProfile):
         for new_pref in preferences:
             # if dupe remove item from original list
             self._preferences = [
-                pref for pref in self._preferences if not new_pref[0] == pref[0]
-            ]
+                pref for pref in self._preferences if not new_pref[0] == pref[0]]
             self._preferences.append(new_pref)
 
-        self.set_preferences(preferences, filename="user.js")
+        self.set_preferences(preferences, filename='user.js')
 
     def pop_preferences(self, filename):
         """
@@ -358,34 +330,23 @@ class Profile(BaseProfile):
             for index in reversed(range(len(_list))):
                 if _list[index] == value:
                     return index
-
         s = last_index(lines, self.delimeters[0])
         e = last_index(lines, self.delimeters[1])
 
         # ensure both markers are found
         if s is None:
-            assert e is None, "%s found without %s" % (
-                self.delimeters[1],
-                self.delimeters[0],
-            )
+            assert e is None, '%s found without %s' % (self.delimeters[1], self.delimeters[0])
             return False  # no preferences found
         elif e is None:
-            assert s is None, "%s found without %s" % (
-                self.delimeters[0],
-                self.delimeters[1],
-            )
+            assert s is None, '%s found without %s' % (self.delimeters[0], self.delimeters[1])
 
         # ensure the markers are in the proper order
-        assert e > s, "%s found at %s, while %s found at %s" % (
-            self.delimeters[1],
-            e,
-            self.delimeters[0],
-            s,
-        )
+        assert e > s, '%s found at %s, while %s found at %s' % (self.delimeters[1], e,
+                                                                self.delimeters[0], s)
 
         # write the prefs
-        cleaned_prefs = "\n".join(lines[:s] + lines[e + 1 :])
-        with open(path, "w") as f:
+        cleaned_prefs = '\n'.join(lines[:s] + lines[e + 1:])
+        with open(path, 'w') as f:
             f.write(cleaned_prefs)
         return True
 
@@ -398,91 +359,70 @@ class Profile(BaseProfile):
         of tuples instead of the assembled string
         """
 
-        parts = [("Path", self.profile)]  # profile path
+        parts = [('Path', self.profile)]  # profile path
 
         # directory tree
-        parts.append(("Files", "\n%s" % mozfile.tree(self.profile)))
+        parts.append(('Files', '\n%s' % mozfile.tree(self.profile)))
 
         # preferences
-        for prefs_file in ("user.js", "prefs.js"):
+        for prefs_file in ('user.js', 'prefs.js'):
             path = os.path.join(self.profile, prefs_file)
             if os.path.exists(path):
 
                 # prefs that get their own section
                 # This is currently only 'network.proxy.autoconfig_url'
                 # but could be expanded to include others
-                section_prefs = ["network.proxy.autoconfig_url"]
+                section_prefs = ['network.proxy.autoconfig_url']
                 line_length = 80
                 # buffer for 80 character display:
                 # length = 80 - len(key) - len(': ') - line_length_buffer
                 line_length_buffer = 10
-                line_length_buffer += len(": ")
+                line_length_buffer += len(': ')
 
                 def format_value(key, value):
                     if key not in section_prefs:
                         return value
                     max_length = line_length - len(key) - line_length_buffer
                     if len(value) > max_length:
-                        value = "%s..." % value[:max_length]
+                        value = '%s...' % value[:max_length]
                     return value
 
                 prefs = Preferences.read_prefs(path)
                 if prefs:
                     prefs = dict(prefs)
-                    parts.append(
-                        (
-                            prefs_file,
-                            "\n%s"
-                            % (
-                                "\n".join(
-                                    [
-                                        "%s: %s" % (key, format_value(key, prefs[key]))
-                                        for key in sorted(prefs.keys())
-                                    ]
-                                )
-                            ),
-                        )
-                    )
+                    parts.append((prefs_file,
+                                  '\n%s' % ('\n'.join(
+                                      ['%s: %s' % (key, format_value(key, prefs[key]))
+                                       for key in sorted(prefs.keys())]))))
 
                     # Currently hardcorded to 'network.proxy.autoconfig_url'
                     # but could be generalized, possibly with a generalized (simple)
                     # JS-parser
-                    network_proxy_autoconfig = prefs.get("network.proxy.autoconfig_url")
+                    network_proxy_autoconfig = prefs.get('network.proxy.autoconfig_url')
                     if network_proxy_autoconfig and network_proxy_autoconfig.strip():
                         network_proxy_autoconfig = network_proxy_autoconfig.strip()
-                        lines = network_proxy_autoconfig.replace(
-                            ";", ";\n"
-                        ).splitlines()
+                        lines = network_proxy_autoconfig.replace(';', ';\n').splitlines()
                         lines = [line.strip() for line in lines]
-                        origins_string = "var origins = ["
-                        origins_end = "];"
+                        origins_string = 'var origins = ['
+                        origins_end = '];'
                         if origins_string in lines[0]:
                             start = lines[0].find(origins_string)
                             end = lines[0].find(origins_end, start)
-                            splitline = [
-                                lines[0][:start],
-                                lines[0][start : start + len(origins_string) - 1],
-                            ]
-                            splitline.extend(
-                                lines[0][start + len(origins_string) : end]
-                                .replace(",", ",\n")
-                                .splitlines()
-                            )
+                            splitline = [lines[0][:start],
+                                         lines[0][start:start + len(origins_string) - 1],
+                                         ]
+                            splitline.extend(lines[0][start + len(origins_string):end].replace(
+                                ',', ',\n').splitlines())
                             splitline.append(lines[0][end:])
                             lines[0:1] = [i.strip() for i in splitline]
-                        parts.append(
-                            (
-                                "Network Proxy Autoconfig, %s" % (prefs_file),
-                                "\n%s" % "\n".join(lines),
-                            )
-                        )
+                        parts.append(('Network Proxy Autoconfig, %s' % (prefs_file),
+                                      '\n%s' % '\n'.join(lines)))
 
         if return_parts:
             return parts
 
-        retval = "%s\n" % (
-            "\n\n".join(["[%s]: %s" % (key, value) for key, value in parts])
-        )
+        retval = '%s\n' % ('\n\n'.join(['[%s]: %s' % (key, value)
+                                        for key, value in parts]))
         return retval
 
     def __str__(self):
@@ -491,7 +431,6 @@ class Profile(BaseProfile):
 
 class FirefoxProfile(Profile):
     """Specialized Profile subclass for Firefox"""
-
     preferences = {}
 
 
@@ -499,19 +438,19 @@ class ThunderbirdProfile(Profile):
     """Specialized Profile subclass for Thunderbird"""
 
     preferences = {
-        "extensions.update.enabled": False,
-        "extensions.update.notifyUser": False,
-        "browser.shell.checkDefaultBrowser": False,
-        "browser.tabs.warnOnClose": False,
-        "browser.warnOnQuit": False,
-        "browser.sessionstore.resume_from_crash": False,
+        'extensions.update.enabled': False,
+        'extensions.update.notifyUser': False,
+        'browser.shell.checkDefaultBrowser': False,
+        'browser.tabs.warnOnClose': False,
+        'browser.warnOnQuit': False,
+        'browser.sessionstore.resume_from_crash': False,
         # prevents the 'new e-mail address' wizard on new profile
-        "mail.provider.enabled": False,
+        'mail.provider.enabled': False,
     }
 
 
 class ChromiumProfile(BaseProfile):
-    preference_file_names = ("Preferences",)
+    preference_file_names = ('Preferences',)
 
     class AddonManager(list):
         def install(self, addons):
@@ -528,7 +467,7 @@ class ChromiumProfile(BaseProfile):
         super(ChromiumProfile, self).__init__(**kwargs)
 
         if self.create_new:
-            self.profile = os.path.join(self.profile, "Default")
+            self.profile = os.path.join(self.profile, 'Default')
         self._reset()
 
     def _reset(self):
@@ -542,16 +481,16 @@ class ChromiumProfile(BaseProfile):
         if self._addons:
             self.addons.install(self._addons)
 
-    def set_preferences(self, preferences, filename="Preferences", **values):
+    def set_preferences(self, preferences, filename='Preferences', **values):
         pref_file = os.path.join(self.profile, filename)
 
         prefs = {}
         if os.path.isfile(pref_file):
-            with open(pref_file, "r") as fh:
+            with open(pref_file, 'r') as fh:
                 prefs.update(json.load(fh))
 
         prefs.update(preferences)
-        with open(pref_file, "w") as fh:
+        with open(pref_file, 'w') as fh:
             prefstr = json.dumps(prefs)
             prefstr % values  # interpolate prefs with values
             fh.write(prefstr)
@@ -564,10 +503,10 @@ class ChromeProfile(ChromiumProfile):
 
 
 profile_class = {
-    "chrome": ChromeProfile,
-    "chromium": ChromiumProfile,
-    "firefox": FirefoxProfile,
-    "thunderbird": ThunderbirdProfile,
+    'chrome': ChromeProfile,
+    'chromium': ChromiumProfile,
+    'firefox': FirefoxProfile,
+    'thunderbird': ThunderbirdProfile,
 }
 
 
@@ -582,8 +521,6 @@ def create_profile(app, **kwargs):
     cls = profile_class.get(app)
 
     if not cls:
-        raise NotImplementedError(
-            "Profiles not supported for application '{}'".format(app)
-        )
+        raise NotImplementedError("Profiles not supported for application '{}'".format(app))
 
     return cls(**kwargs)

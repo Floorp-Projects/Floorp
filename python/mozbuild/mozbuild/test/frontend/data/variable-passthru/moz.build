@@ -4,10 +4,10 @@
 
 DIST_INSTALL = False
 
-DELAYLOAD_DLLS = ["foo.dll", "bar.dll"]
+DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']
 
-RCFILE = "foo.rc"
-RCINCLUDE = "bar.rc"
-DEFFILE = "baz.def"
+RCFILE = 'foo.rc'
+RCINCLUDE = 'bar.rc'
+DEFFILE = 'baz.def'
 
-WIN32_EXE_LDFLAGS += ["-subsystem:console"]
+WIN32_EXE_LDFLAGS += ['-subsystem:console']

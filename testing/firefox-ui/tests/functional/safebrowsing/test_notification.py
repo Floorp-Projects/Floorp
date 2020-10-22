@@ -11,22 +11,29 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestSafeBrowsingNotificationBar, self).setUp()
 
         self.test_data = [
             # Unwanted software URL
-            {"unsafe_page": "https://www.itisatrap.org/firefox/unwanted.html"},
+            {
+                'unsafe_page': 'https://www.itisatrap.org/firefox/unwanted.html'
+            },
             # Phishing URL info
-            {"unsafe_page": "https://www.itisatrap.org/firefox/its-a-trap.html"},
+            {
+                'unsafe_page': 'https://www.itisatrap.org/firefox/its-a-trap.html'
+            },
             # Malware URL object
-            {"unsafe_page": "https://www.itisatrap.org/firefox/its-an-attack.html"},
+            {
+                'unsafe_page': 'https://www.itisatrap.org/firefox/its-an-attack.html'
+            }
         ]
 
-        self.default_homepage = self.marionette.get_pref("browser.startup.homepage")
+        self.default_homepage = self.marionette.get_pref('browser.startup.homepage')
 
-        self.marionette.set_pref("browser.safebrowsing.phishing.enabled", True)
-        self.marionette.set_pref("browser.safebrowsing.malware.enabled", True)
+        self.marionette.set_pref('browser.safebrowsing.phishing.enabled', True)
+        self.marionette.set_pref('browser.safebrowsing.malware.enabled', True)
 
         # Give the browser a little time, because SafeBrowsing.jsm takes a while
         # between start up and adding the example urls to the db.
@@ -39,17 +46,17 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:
-            self.marionette.clear_pref("browser.safebrowsing.phishing.enabled")
-            self.marionette.clear_pref("browser.safebrowsing.malware.enabled")
+            self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
+            self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
 
-            self.remove_permission("https://www.itisatrap.org", "safe-browsing")
+            self.remove_permission('https://www.itisatrap.org', 'safe-browsing')
             self.close_all_tabs()
         finally:
             super(TestSafeBrowsingNotificationBar, self).tearDown()
 
     def test_notification_bar(self):
         for item in self.test_data:
-            unsafe_page = item["unsafe_page"]
+            unsafe_page = item['unsafe_page']
 
             # Return to the unsafe page
             # Check "ignore warning" link then notification bar's "get me out" button
@@ -72,57 +79,49 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
         return self.marionette.get_url()
 
     def remove_permission(self, host, permission):
-        with self.marionette.using_context("chrome"):
-            self.marionette.execute_script(
-                """
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
               let uri = Services.io.newURI(arguments[0], null, null);
               let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
               Services.perms.removeFromPrincipal(principal, arguments[1]);
-            """,
-                script_args=[host, permission],
-            )
+            """, script_args=[host, permission])
 
     def check_ignore_warning_link(self, unsafe_page):
-        button = self.marionette.find_element(By.ID, "seeDetailsButton")
+        button = self.marionette.find_element(By.ID, 'seeDetailsButton')
         button.click()
         time.sleep(1)
-        link = self.marionette.find_element(By.ID, "ignore_warning_link")
+        link = self.marionette.find_element(By.ID, 'ignore_warning_link')
         link.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            expected.element_present(By.ID, "main-feature"),
+            expected.element_present(By.ID, 'main-feature'),
             message='Expected target element "#main-feature" has not been found',
         )
         self.assertEquals(self.marionette.get_url(), self.get_final_url(unsafe_page))
 
         # Clean up here since the permission gets set in this function
-        self.remove_permission("https://www.itisatrap.org", "safe-browsing")
+        self.remove_permission('https://www.itisatrap.org', 'safe-browsing')
 
     def check_get_me_out_of_here_button(self):
-        with self.marionette.using_context("chrome"):
-            button = self.marionette.find_element(
-                By.ID, "tabbrowser-tabbox"
-            ).find_element(By.CSS_SELECTOR, 'button[label="Get me out of here!"]')
+        with self.marionette.using_context('chrome'):
+            button = (self.marionette.find_element(By.ID, 'tabbrowser-tabbox')
+                      .find_element(By.CSS_SELECTOR, 'button[label="Get me out of here!"]'))
             button.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: self.default_homepage in mn.get_url(),
-            message="The default home page has not been loaded",
+            message='The default home page has not been loaded',
         )
 
     def check_x_button(self):
-        with self.marionette.using_context("chrome"):
-            button = (
-                self.marionette.find_element(By.ID, "tabbrowser-tabbox")
-                .find_element(
-                    By.CSS_SELECTOR, "notification[value=blocked-badware-page]"
-                )
-                .find_element(By.CSS_SELECTOR, ".messageCloseButton")
-            )
+        with self.marionette.using_context('chrome'):
+            button = (self.marionette.find_element(By.ID, 'tabbrowser-tabbox')
+                      .find_element(By.CSS_SELECTOR, 'notification[value=blocked-badware-page]')
+                      .find_element(By.CSS_SELECTOR, '.messageCloseButton'))
             button.click()
 
             Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 expected.element_stale(button),
-                message="The notification bar has not been closed",
+                message='The notification bar has not been closed',
             )

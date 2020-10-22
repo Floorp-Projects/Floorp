@@ -5,12 +5,7 @@
 import os
 
 from wptrunner.update.base import Step, StepRunner
-from wptrunner.update.update import (
-    LoadConfig,
-    SyncFromUpstream,
-    UpdateMetadata,
-    RemoveObsolete,
-)
+from wptrunner.update.update import LoadConfig, SyncFromUpstream, UpdateMetadata, RemoveObsolete
 from wptrunner.update.tree import NoVCSTree
 
 from .tree import GitTree, HgTree, GeckoCommit
@@ -35,17 +30,15 @@ class LoadTrees(Step):
         else:
             local_tree = NoVCSTree()
 
-        state.update({"local_tree": local_tree, "sync_tree": sync_tree})
+        state.update({"local_tree": local_tree,
+                      "sync_tree": sync_tree})
 
 
 class UpdateRunner(StepRunner):
     """Overall runner for updating web-platform-tests in Gecko."""
-
-    steps = [
-        LoadConfig,
-        LoadTrees,
-        SyncToUpstream,
-        SyncFromUpstream,
-        RemoveObsolete,
-        UpdateMetadata,
-    ]
+    steps = [LoadConfig,
+             LoadTrees,
+             SyncToUpstream,
+             SyncFromUpstream,
+             RemoveObsolete,
+             UpdateMetadata]

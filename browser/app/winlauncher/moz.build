@@ -4,48 +4,48 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("winlauncher")
+Library('winlauncher')
 
 FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
-    "/ipc/mscom/ProcessRuntime.cpp",
-    "/widget/windows/WindowsConsole.cpp",
-    "DllBlocklistInit.cpp",
-    "ErrorHandler.cpp",
-    "LauncherProcessWin.cpp",
-    "LaunchUnelevated.cpp",
-    "NtLoaderAPI.cpp",
+    '/ipc/mscom/ProcessRuntime.cpp',
+    '/widget/windows/WindowsConsole.cpp',
+    'DllBlocklistInit.cpp',
+    'ErrorHandler.cpp',
+    'LauncherProcessWin.cpp',
+    'LaunchUnelevated.cpp',
+    'NtLoaderAPI.cpp',
 ]
 
 OS_LIBS += [
-    "oleaut32",
-    "ole32",
-    "rpcrt4",
-    "version",
+    'oleaut32',
+    'ole32',
+    'rpcrt4',
+    'version',
 ]
 
 DIRS += [
-    "freestanding",
+    'freestanding',
 ]
 
 USE_LIBS += [
-    "winlauncher-freestanding",
+    'winlauncher-freestanding',
 ]
 
 TEST_DIRS += [
-    "test",
+    'test',
 ]
 
-if CONFIG["MOZ_LAUNCHER_PROCESS"]:
+if CONFIG['MOZ_LAUNCHER_PROCESS']:
     UNIFIED_SOURCES += [
-        "/toolkit/xre/LauncherRegistryInfo.cpp",
-        "/toolkit/xre/WinTokenUtils.cpp",
+        '/toolkit/xre/LauncherRegistryInfo.cpp',
+        '/toolkit/xre/WinTokenUtils.cpp',
     ]
-    for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR"):
+    for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
         DEFINES[var] = '"%s"' % CONFIG[var]
 
 DisableStlWrapping()
 
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Launcher Process")
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Launcher Process')

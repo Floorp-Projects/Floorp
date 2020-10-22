@@ -8,6 +8,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestPageSourceChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestPageSourceChrome, self).setUp()
         self.marionette.set_context("chrome")
@@ -21,6 +22,4 @@ class TestPageSourceChrome(WindowManagerMixin, MarionetteTestCase):
 
     def testShouldReturnXULDetails(self):
         source = self.marionette.page_source
-        self.assertTrue(
-            '<input xmlns="http://www.w3.org/1999/xhtml" id="textInput"' in source
-        )
+        self.assertTrue('<input xmlns="http://www.w3.org/1999/xhtml" id="textInput"' in source)

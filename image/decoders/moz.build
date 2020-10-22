@@ -4,53 +4,53 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 # The Icon Channel stuff really shouldn't live in decoders/icon, but we'll
 # fix that another time.
-if toolkit == "gtk":
-    DIRS += ["icon/gtk", "icon"]
+if toolkit == 'gtk':
+    DIRS += ['icon/gtk', 'icon']
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["icon/win", "icon"]
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DIRS += ['icon/win', 'icon']
 
-if toolkit == "cocoa":
-    DIRS += ["icon/mac", "icon"]
-elif toolkit == "android":
-    DIRS += ["icon/android", "icon"]
+if toolkit == 'cocoa':
+    DIRS += ['icon/mac', 'icon']
+elif toolkit == 'android':
+    DIRS += ['icon/android', 'icon']
 
 UNIFIED_SOURCES += [
-    "EXIF.cpp",
-    "iccjpeg.c",
-    "nsBMPDecoder.cpp",
-    "nsGIFDecoder2.cpp",
-    "nsICODecoder.cpp",
-    "nsIconDecoder.cpp",
-    "nsJPEGDecoder.cpp",
-    "nsPNGDecoder.cpp",
-    "nsWebPDecoder.cpp",
+    'EXIF.cpp',
+    'iccjpeg.c',
+    'nsBMPDecoder.cpp',
+    'nsGIFDecoder2.cpp',
+    'nsICODecoder.cpp',
+    'nsIconDecoder.cpp',
+    'nsJPEGDecoder.cpp',
+    'nsPNGDecoder.cpp',
+    'nsWebPDecoder.cpp',
 ]
 
-if CONFIG["MOZ_AV1"]:
+if CONFIG['MOZ_AV1']:
     UNIFIED_SOURCES += [
-        "nsAVIFDecoder.cpp",
+        'nsAVIFDecoder.cpp',
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     # Access to Skia headers for Downscaler.
-    "/gfx/2d",
+    '/gfx/2d',
     # Decoders need ImageLib headers.
-    "/image",
+    '/image',
 ]
 
-LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

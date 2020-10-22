@@ -4,6 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-LINUX_FIX_STACKS = "linux64-fix-stacks"
-MACOS_FIX_STACKS = "macosx64-fix-stacks"
-WINDOWS_FIX_STACKS = "win32-fix-stacks"
+LINUX_FIX_STACKS = 'linux64-fix-stacks'
+MACOS_FIX_STACKS = 'macosx64-fix-stacks'
+WINDOWS_FIX_STACKS = 'win32-fix-stacks'

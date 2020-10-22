@@ -5,13 +5,13 @@
 
 DIST_INSTALL = False
 
-SharedLibrary("TestDllBlocklist_NoOpEntryPoint")
+SharedLibrary('TestDllBlocklist_NoOpEntryPoint')
 
 UNIFIED_SOURCES = [
-    "TestDllBlocklist_NoOpEntryPoint.cpp",
+    'TestDllBlocklist_NoOpEntryPoint.cpp',
 ]
 
-RCFILE = "TestDllBlocklist_NoOpEntryPoint.rc"
+RCFILE  = 'TestDllBlocklist_NoOpEntryPoint.rc'
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    TEST_HARNESS_FILES.gtest += ["!TestDllBlocklist_NoOpEntryPoint.dll"]
+if CONFIG['COMPILE_ENVIRONMENT']:
+    TEST_HARNESS_FILES.gtest += ['!TestDllBlocklist_NoOpEntryPoint.dll']

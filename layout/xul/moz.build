@@ -4,76 +4,76 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "XUL")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'XUL')
 
-with Files("*Menu*"):
-    BUG_COMPONENT = ("Firefox", "Menus")
+with Files('*Menu*'):
+    BUG_COMPONENT = ('Firefox', 'Menus')
 
-if CONFIG["ENABLE_TESTS"]:
-    MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-    MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
-    BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+if CONFIG['ENABLE_TESTS']:
+    MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+    MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+    BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
-    "nsIScrollbarMediator.h",
-    "nsXULPopupManager.h",
-    "nsXULTooltipListener.h",
+    'nsIScrollbarMediator.h',
+    'nsXULPopupManager.h',
+    'nsXULTooltipListener.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsBox.cpp",
-    "nsBoxFrame.cpp",
-    "nsBoxLayout.cpp",
-    "nsBoxLayoutState.cpp",
-    "nsButtonBoxFrame.cpp",
-    "nsRepeatService.cpp",
-    "nsRootBoxFrame.cpp",
-    "nsScrollbarButtonFrame.cpp",
-    "nsScrollbarFrame.cpp",
-    "nsSliderFrame.cpp",
-    "nsSprocketLayout.cpp",
-    "nsStackFrame.cpp",
-    "nsStackLayout.cpp",
-    "nsXULTooltipListener.cpp",
+    'nsBox.cpp',
+    'nsBoxFrame.cpp',
+    'nsBoxLayout.cpp',
+    'nsBoxLayoutState.cpp',
+    'nsButtonBoxFrame.cpp',
+    'nsRepeatService.cpp',
+    'nsRootBoxFrame.cpp',
+    'nsScrollbarButtonFrame.cpp',
+    'nsScrollbarFrame.cpp',
+    'nsSliderFrame.cpp',
+    'nsSprocketLayout.cpp',
+    'nsStackFrame.cpp',
+    'nsStackLayout.cpp',
+    'nsXULTooltipListener.cpp',
 ]
 
-if CONFIG["MOZ_XUL"]:
+if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
-        "nsDeckFrame.cpp",
-        "nsDocElementBoxFrame.cpp",
-        "nsImageBoxFrame.cpp",
-        "nsLeafBoxFrame.cpp",
-        "nsMenuBarFrame.cpp",
-        "nsMenuBarListener.cpp",
-        "nsMenuFrame.cpp",
-        "nsMenuPopupFrame.cpp",
-        "nsPopupSetFrame.cpp",
-        "nsResizerFrame.cpp",
-        "nsSplitterFrame.cpp",
-        "nsTextBoxFrame.cpp",
-        "nsTitleBarFrame.cpp",
-        "nsXULLabelFrame.cpp",
-        "nsXULPopupManager.cpp",
+        'nsDeckFrame.cpp',
+        'nsDocElementBoxFrame.cpp',
+        'nsImageBoxFrame.cpp',
+        'nsLeafBoxFrame.cpp',
+        'nsMenuBarFrame.cpp',
+        'nsMenuBarListener.cpp',
+        'nsMenuFrame.cpp',
+        'nsMenuPopupFrame.cpp',
+        'nsPopupSetFrame.cpp',
+        'nsResizerFrame.cpp',
+        'nsSplitterFrame.cpp',
+        'nsTextBoxFrame.cpp',
+        'nsTitleBarFrame.cpp',
+        'nsXULLabelFrame.cpp',
+        'nsXULPopupManager.cpp',
     ]
 
-if CONFIG["MOZ_XUL"]:
-    DIRS += ["tree", "grid"]
+if CONFIG['MOZ_XUL']:
+    DIRS += ['tree', 'grid']
 
-CFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "../base",
-    "../generic",
-    "../painting",
-    "../style",
-    "/dom/base",
-    "/dom/xul",
+    '../base',
+    '../generic',
+    '../painting',
+    '../style',
+    '/dom/base',
+    '/dom/xul',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

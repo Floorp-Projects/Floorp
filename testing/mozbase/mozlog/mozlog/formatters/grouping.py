@@ -17,8 +17,7 @@ DEFAULT_CLEAR_EOL_CODE = u"\x1b[K"
 
 class GroupingFormatter(base.BaseFormatter):
     """Formatter designed to produce unexpected test results grouped
-    together in a readable format."""
-
+       together in a readable format."""
     def __init__(self):
         super(GroupingFormatter, self).__init__()
         self.number_of_tests = 0
@@ -33,45 +32,40 @@ class GroupingFormatter(base.BaseFormatter):
         self.interactive = os.isatty(sys.stdout.fileno())
         self.show_logs = False
 
-        self.message_handler.register_message_handlers(
-            "show_logs",
-            {
-                "on": self._enable_show_logs,
-                "off": self._disable_show_logs,
-            },
-        )
+        self.message_handler.register_message_handlers("show_logs", {
+            "on": self._enable_show_logs,
+            "off": self._disable_show_logs,
+        })
 
         # TODO(mrobinson, 8313): We need to add support for Windows terminals here.
         if self.interactive:
             self.move_up, self.clear_eol = self.get_move_up_and_clear_eol_codes()
             if platform.system() != "Windows":
-                self.line_width = int(
-                    subprocess.check_output(["stty", "size"]).split()[1]
-                )
+                self.line_width = int(subprocess.check_output(['stty', 'size']).split()[1])
             else:
                 # Until we figure out proper Windows support,
                 # this makes things work well enough to run.
                 self.line_width = 80
 
         self.expected = {
-            "OK": 0,
-            "PASS": 0,
-            "FAIL": 0,
-            "PRECONDITION_FAILED": 0,
-            "ERROR": 0,
-            "TIMEOUT": 0,
-            "SKIP": 0,
-            "CRASH": 0,
+            'OK': 0,
+            'PASS': 0,
+            'FAIL': 0,
+            'PRECONDITION_FAILED': 0,
+            'ERROR': 0,
+            'TIMEOUT': 0,
+            'SKIP': 0,
+            'CRASH': 0,
         }
 
         self.unexpected_tests = {
-            "OK": [],
-            "PASS": [],
-            "FAIL": [],
-            "PRECONDITION_FAILED": [],
-            "ERROR": [],
-            "TIMEOUT": [],
-            "CRASH": [],
+            'OK': [],
+            'PASS': [],
+            'FAIL': [],
+            'PRECONDITION_FAILED': [],
+            'ERROR': [],
+            'TIMEOUT': [],
+            'CRASH': [],
         }
 
         # Follows the format of {(<test>, <subtest>): <data>}, where
@@ -94,16 +88,15 @@ class GroupingFormatter(base.BaseFormatter):
             self.terminal = blessings.Terminal()
             return self.terminal.move_up, self.terminal.clear_eol
         except Exception as exception:
-            sys.stderr.write(
-                "GroupingFormatter: Could not get terminal "
-                "control characters: %s\n" % exception
-            )
+            sys.stderr.write("GroupingFormatter: Could not get terminal "
+                             "control characters: %s\n" % exception)
             return DEFAULT_MOVE_UP_CODE, DEFAULT_CLEAR_EOL_CODE
 
     def text_to_erase_display(self):
         if not self.interactive or not self.current_display:
             return ""
-        return (self.move_up + self.clear_eol) * self.current_display.count("\n")
+        return ((self.move_up + self.clear_eol) *
+                self.current_display.count('\n'))
 
     def generate_output(self, text=None, new_display=None):
         if not self.interactive:
@@ -128,36 +121,27 @@ class GroupingFormatter(base.BaseFormatter):
                 max_width = self.line_width - len(new_display)
             else:
                 max_width = sys.maxsize
-            return (
-                new_display
-                + ("\n%s" % indent).join(
-                    val[:max_width] for val in self.running_tests.values()
-                )
-                + "\n"
-            )
+            return new_display + ("\n%s" % indent).join(
+                val[:max_width] for val in self.running_tests.values()) + "\n"
         else:
             return new_display + "No tests running.\n"
 
     def suite_start(self, data):
-        self.number_of_tests = sum(
-            len(tests) for tests in six.itervalues(data["tests"])
-        )
+        self.number_of_tests = sum(len(tests) for tests in six.itervalues(data["tests"]))
         self.start_time = data["time"]
 
         if self.number_of_tests == 0:
-            return "Running tests in %s\n\n" % data[u"source"]
+            return "Running tests in %s\n\n" % data[u'source']
         else:
-            return "Running %i tests in %s\n\n" % (
-                self.number_of_tests,
-                data[u"source"],
-            )
+            return "Running %i tests in %s\n\n" % (self.number_of_tests, data[u'source'])
 
     def test_start(self, data):
-        self.running_tests[data["thread"]] = data["test"]
-        return self.generate_output(text=None, new_display=self.build_status_line())
+        self.running_tests[data['thread']] = data['test']
+        return self.generate_output(text=None,
+                                    new_display=self.build_status_line())
 
     def wrap_and_indent_lines(self, lines, indent):
-        assert len(lines) > 0
+        assert(len(lines) > 0)
 
         output = indent + u"\u25B6 %s\n" % lines[0]
         for line in lines[1:-1]:
@@ -166,12 +150,15 @@ class GroupingFormatter(base.BaseFormatter):
             output += indent + u"\u2514 %s\n" % lines[-1]
         return output
 
-    def get_lines_for_unexpected_result(
-        self, test_name, status, expected, message, stack
-    ):
+    def get_lines_for_unexpected_result(self,
+                                        test_name,
+                                        status,
+                                        expected,
+                                        message,
+                                        stack):
         # Test names sometimes contain control characters, which we want
         # to be printed in their raw form, and not their interpreted form.
-        test_name = test_name.encode("unicode-escape").decode("utf-8")
+        test_name = test_name.encode('unicode-escape').decode("utf-8")
 
         if expected:
             expected_text = u" [expected %s]" % expected
@@ -192,19 +179,12 @@ class GroupingFormatter(base.BaseFormatter):
         for (test, subtest), data in six.iteritems(self.known_intermittent_results):
             status = data["status"]
             known_intermittent = ", ".join(data["known_intermittent"])
-            expected = " [expected %s, known intermittent [%s]" % (
-                data["expected"],
-                known_intermittent,
-            )
-            lines += [
-                u"%s%s %s%s"
-                % (
-                    status,
-                    expected,
-                    test,
-                    (", %s" % subtest) if subtest is not None else "",
-                )
-            ]
+            expected = " [expected %s, known intermittent [%s]" % (data["expected"],
+                                                                   known_intermittent)
+            lines += [u"%s%s %s%s" % (status,
+                                      expected,
+                                      test,
+                                      (", %s" % subtest) if subtest is not None else "")]
         output = self.wrap_and_indent_lines(lines, "  ") + "\n"
         return output
 
@@ -214,12 +194,11 @@ class GroupingFormatter(base.BaseFormatter):
 
         def add_subtest_failure(lines, subtest, stack=None):
             lines += self.get_lines_for_unexpected_result(
-                subtest.get("subtest", None),
-                subtest.get("status", None),
-                subtest.get("expected", None),
-                subtest.get("message", None),
-                stack,
-            )
+                subtest.get('subtest', None),
+                subtest.get('status', None),
+                subtest.get('expected', None),
+                subtest.get('message', None),
+                stack)
 
         def make_subtests_failure(test_name, subtests, stack=None):
             lines = [u"Unexpected subtest result in %s:" % test_name]
@@ -235,10 +214,10 @@ class GroupingFormatter(base.BaseFormatter):
         failures_by_stack = collections.defaultdict(list)
         for failure in unexpected_subtests:
             # Print stackless results first. They are all separate.
-            if "stack" not in failure:
+            if 'stack' not in failure:
                 output += make_subtests_failure(test_name, [failure], None)
             else:
-                failures_by_stack[failure["stack"]].append(failure)
+                failures_by_stack[failure['stack']].append(failure)
 
         for (stack, failures) in six.iteritems(failures_by_stack):
             output += make_subtests_failure(test_name, failures, stack)
@@ -250,12 +229,12 @@ class GroupingFormatter(base.BaseFormatter):
         test_name = data["test"]
         known_intermittent_statuses = data.get("known_intermittent", [])
         subtest_failures = self.subtest_failures.pop(test_name, [])
-        if "expected" in data and test_status not in known_intermittent_statuses:
+        if ("expected" in data and test_status not in known_intermittent_statuses):
             had_unexpected_test_result = True
         else:
             had_unexpected_test_result = False
 
-        del self.running_tests[data["thread"]]
+        del self.running_tests[data['thread']]
         new_display = self.build_status_line()
 
         if not had_unexpected_test_result and not subtest_failures:
@@ -263,9 +242,8 @@ class GroupingFormatter(base.BaseFormatter):
             if self.interactive:
                 return self.generate_output(text=None, new_display=new_display)
             else:
-                return self.generate_output(
-                    text="  %s\n" % test_name, new_display=new_display
-                )
+                return self.generate_output(text="  %s\n" % test_name,
+                                            new_display=new_display)
 
         if test_status in known_intermittent_statuses:
             self.known_intermittent_results[(test_name, None)] = data
@@ -274,9 +252,9 @@ class GroupingFormatter(base.BaseFormatter):
         # because there is a good chance that the test produced a stack trace
         # or other error messages.
         if test_status in ("CRASH", "TIMEOUT"):
-            stack = self.test_output[test_name] + data.get("stack", "")
+            stack = self.test_output[test_name] + data.get('stack', "")
         else:
-            stack = data.get("stack", None)
+            stack = data.get('stack', None)
 
         output = ""
         if had_unexpected_test_result:
@@ -284,25 +262,22 @@ class GroupingFormatter(base.BaseFormatter):
             lines = self.get_lines_for_unexpected_result(
                 test_name,
                 test_status,
-                data.get("expected", None),
-                data.get("message", None),
-                stack,
-            )
+                data.get('expected', None),
+                data.get('message', None),
+                stack)
             output += self.wrap_and_indent_lines(lines, "  ") + "\n"
 
         if subtest_failures:
             self.tests_with_failing_subtests.append(test_name)
-            output += self.get_output_for_unexpected_subtests(
-                test_name, subtest_failures
-            )
+            output += self.get_output_for_unexpected_subtests(test_name,
+                                                              subtest_failures)
         self.test_failure_text += output
 
         return self.generate_output(text=output, new_display=new_display)
 
     def test_status(self, data):
-        if "expected" in data and data["status"] not in data.get(
-            "known_intermittent", []
-        ):
+        if ("expected" in data and data["status"] not in
+                data.get("known_intermittent", [])):
             self.subtest_failures[data["test"]].append(data)
         elif data["status"] in data.get("known_intermittent", []):
             self.known_intermittent_results[(data["test"], data["subtest"])] = data
@@ -316,17 +291,12 @@ class GroupingFormatter(base.BaseFormatter):
             output = ""
 
         output += u"Ran %i tests finished in %.1f seconds.\n" % (
-            self.completed_tests,
-            (self.end_time - self.start_time) / 1000.0,
-        )
+            self.completed_tests, (self.end_time - self.start_time) / 1000.0)
         output += u"  \u2022 %i ran as expected. %i tests skipped.\n" % (
-            sum(self.expected.values()),
-            self.expected["SKIP"],
-        )
+            sum(self.expected.values()), self.expected['SKIP'])
         if self.known_intermittent_results:
             output += u"  \u2022 %i known intermittent results.\n" % (
-                len(self.known_intermittent_results)
-            )
+                len(self.known_intermittent_results))
 
         def text_for_unexpected_list(text, section):
             tests = self.unexpected_tests[section]
@@ -334,22 +304,19 @@ class GroupingFormatter(base.BaseFormatter):
                 return u""
             return u"  \u2022 %i tests %s\n" % (len(tests), text)
 
-        output += text_for_unexpected_list(u"crashed unexpectedly", "CRASH")
-        output += text_for_unexpected_list(u"had errors unexpectedly", "ERROR")
-        output += text_for_unexpected_list(u"failed unexpectedly", "FAIL")
-        output += text_for_unexpected_list(
-            u"precondition failed unexpectedly", "PRECONDITION_FAILED"
-        )
-        output += text_for_unexpected_list(u"timed out unexpectedly", "TIMEOUT")
-        output += text_for_unexpected_list(u"passed unexpectedly", "PASS")
-        output += text_for_unexpected_list(u"unexpectedly okay", "OK")
+        output += text_for_unexpected_list(u"crashed unexpectedly", 'CRASH')
+        output += text_for_unexpected_list(u"had errors unexpectedly", 'ERROR')
+        output += text_for_unexpected_list(u"failed unexpectedly", 'FAIL')
+        output += text_for_unexpected_list(u"precondition failed unexpectedly",
+                                           'PRECONDITION_FAILED')
+        output += text_for_unexpected_list(u"timed out unexpectedly", 'TIMEOUT')
+        output += text_for_unexpected_list(u"passed unexpectedly", 'PASS')
+        output += text_for_unexpected_list(u"unexpectedly okay", 'OK')
 
         num_with_failing_subtests = len(self.tests_with_failing_subtests)
         if num_with_failing_subtests:
-            output += (
-                u"  \u2022 %i tests had unexpected subtest results\n"
-                % num_with_failing_subtests
-            )
+            output += (u"  \u2022 %i tests had unexpected subtest results\n"
+                       % num_with_failing_subtests)
         output += "\n"
 
         # Repeat failing test output, so that it is easier to find, since the
@@ -358,33 +325,31 @@ class GroupingFormatter(base.BaseFormatter):
             output += u"Tests with unexpected results:\n" + self.test_failure_text
 
         if self.known_intermittent_results:
-            results = self.get_lines_for_known_intermittents(
-                self.known_intermittent_results
-            )
+            results = self.get_lines_for_known_intermittents(self.known_intermittent_results)
             output += u"Tests with known intermittent results:\n" + results
 
         return self.generate_output(text=output, new_display="")
 
     def process_output(self, data):
-        if data["thread"] not in self.running_tests:
+        if data['thread'] not in self.running_tests:
             return
-        test_name = self.running_tests[data["thread"]]
-        self.test_output[test_name] += data["data"] + "\n"
+        test_name = self.running_tests[data['thread']]
+        self.test_output[test_name] += data['data'] + "\n"
 
     def log(self, data):
-        if data.get("component"):
-            message = "%s %s %s" % (data["component"], data["level"], data["message"])
+        if data.get('component'):
+            message = "%s %s %s" % (data['component'], data['level'], data['message'])
         else:
-            message = "%s %s" % (data["level"], data["message"])
+            message = "%s %s" % (data['level'], data['message'])
         if "stack" in data:
             message += "\n%s" % data["stack"]
 
         # We are logging messages that begin with STDERR, because that is how exceptions
         # in this formatter are indicated.
-        if data["message"].startswith("STDERR"):
+        if data['message'].startswith('STDERR'):
             return self.generate_output(text=message + "\n")
 
-        if data["level"] in ("CRITICAL", "ERROR"):
+        if data['level'] in ('CRITICAL', 'ERROR'):
             return self.generate_output(text=message + "\n")
         # Show all messages if show_logs switched on.
         if self.show_logs:

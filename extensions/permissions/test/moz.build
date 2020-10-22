@@ -5,11 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "unit/xpcshell.ini",
+    'unit/xpcshell.ini',
 ]
 
-BROWSER_CHROME_MANIFESTS += ["browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+

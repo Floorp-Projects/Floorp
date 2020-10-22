@@ -4,29 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("fuzzer-interface")
+Library('fuzzer-interface')
 
 EXPORTS += [
-    "FuzzingInterface.h",
+    'FuzzingInterface.h',
 ]
 
 SOURCES += [
-    "FuzzingInterface.cpp",
+    'FuzzingInterface.cpp',
 ]
 
-if CONFIG["JS_STANDALONE"]:
+if CONFIG['JS_STANDALONE']:
     FINAL_LIBRARY = "js"
 else:
     EXPORTS += [
-        "FuzzingInterfaceStream.h",
+        'FuzzingInterfaceStream.h',
     ]
 
     SOURCES += [
-        "FuzzingInterfaceStream.cpp",
+        'FuzzingInterfaceStream.cpp',
     ]
 
     DIRS += [
-        "harness",
+      'harness',
     ]
 
-    FINAL_LIBRARY = "xul-gtest"
+    FINAL_LIBRARY = 'xul-gtest'

@@ -6,7 +6,11 @@
 # defined in a file provided as a command-line argument.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import StringTable, static_assert, ParserError
+from mozparsers.shared_telemetry_utils import (
+    StringTable,
+    static_assert,
+    ParserError
+)
 from mozparsers import parse_user_interactions
 
 import sys
@@ -47,14 +51,12 @@ def write_user_interaction_table(user_interactions, output, string_table):
 
     for u in user_interactions:
         name_index = string_table.stringIndex(u.label)
-        print("  UserInteractionInfo({}),".format(name_index), file=output)
+        print("  UserInteractionInfo({}),".format(name_index),
+              file=output)
     print("};", file=output)
 
-    static_assert(
-        output,
-        "sizeof(%s) <= UINT32_MAX" % table_name,
-        "index overflow of UserInteractionInfo table %s" % table_name,
-    )
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
+                  "index overflow of UserInteractionInfo table %s" % table_name)
 
     print("}  // namespace", file=output)
 
@@ -83,13 +85,12 @@ def main(output, *filenames):
     # Write the string table.
     string_table_name = "gUserInteractionsStringTable"
     string_table.writeDefinition(output, string_table_name)
-    static_assert(
-        output, "sizeof(%s) <= UINT32_MAX" % string_table_name, "index overflow"
-    )
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % string_table_name,
+                  "index overflow")
     print("", file=output)
 
     print(file_footer, file=output)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

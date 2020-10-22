@@ -4,37 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ["gtest"]
+TEST_DIRS += ['gtest']
 
 EXPORTS.mozilla.intl += [
-    "LineBreaker.h",
-    "WordBreaker.h",
+    'LineBreaker.h',
+    'WordBreaker.h',
 ]
 
 UNIFIED_SOURCES += [
-    "LineBreaker.cpp",
-    "WordBreaker.cpp",
+    'LineBreaker.cpp',
+    'WordBreaker.cpp',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     SOURCES += [
-        "nsPangoBreaker.cpp",
+        'nsPangoBreaker.cpp',
     ]
-    CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
-        "nsUniscribeBreaker.cpp",
+        'nsUniscribeBreaker.cpp',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
-        "nsCarbonBreaker.cpp",
+        'nsCarbonBreaker.cpp',
     ]
 else:
     SOURCES += [
-        "nsRuleBreaker.cpp",
+        'nsRuleBreaker.cpp',
     ]
     SOURCES += [
-        "rulebrk.c",
+        'rulebrk.c',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

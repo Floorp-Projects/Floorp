@@ -3,8 +3,7 @@ import unittest
 from mozharness.base.log import LogMixin
 from mozharness.base.script import ScriptMixin
 from mozharness.mozilla.building.buildbase import (
-    get_mozconfig_path,
-    MozconfigPathError,
+    get_mozconfig_path, MozconfigPathError,
 )
 
 
@@ -31,8 +30,7 @@ class TestMozconfigPath(unittest.TestCase):
         script = FakeScriptMixin()
 
         abs_src_path = get_mozconfig_path(
-            script,
-            config={"src_mozconfig": "path/to/mozconfig"},
+            script, config={'src_mozconfig': "path/to/mozconfig"},
             dirs={"abs_src_dir": "/src"},
         )
         self.assertEqual(abs_src_path, "/src/path/to/mozconfig")
@@ -46,13 +44,12 @@ class TestMozconfigPath(unittest.TestCase):
         script = FakeScriptMixin()
 
         config = {
-            "app_name": "the-app",
-            "mozconfig_variant": "variant",
-            "mozconfig_platform": "platform9000",
+            'app_name': 'the-app',
+            'mozconfig_variant': 'variant',
+            'mozconfig_platform': 'platform9000',
         }
         abs_src_path = get_mozconfig_path(
-            script,
-            config=config,
+            script, config=config,
             dirs={"abs_src_dir": "/src"},
         )
         self.assertEqual(
@@ -69,10 +66,11 @@ class TestMozconfigPath(unittest.TestCase):
         script = FakeScriptMixin()
 
         test_dir = os.path.dirname(__file__)
-        config = {"src_mozconfig_manifest": "helper_files/mozconfig_manifest.json"}
+        config = {
+            'src_mozconfig_manifest': "helper_files/mozconfig_manifest.json"
+        }
         abs_src_path = get_mozconfig_path(
-            script,
-            config=config,
+            script, config=config,
             dirs={
                 "abs_src_dir": "/src",
                 "abs_work_dir": test_dir,
@@ -87,60 +85,34 @@ class TestMozconfigPath(unittest.TestCase):
             # Not specifying any parts of a mozconfig path
             {},
             # Specifying both src_mozconfig and src_mozconfig_manifest
-            {"src_mozconfig": "path", "src_mozconfig_manifest": "path"},
+            {'src_mozconfig': 'path', 'src_mozconfig_manifest': 'path'},
             # Specifying src_mozconfig with some or all of a composite
             # mozconfig path
-            {
-                "src_mozconfig": "path",
-                "app_name": "app",
-                "mozconfig_platform": "platform",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig": "path",
-                "mozconfig_platform": "platform",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig": "path",
-                "app_name": "app",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig": "path",
-                "app_name": "app",
-                "mozconfig_platform": "platform",
-            },
+            {'src_mozconfig': 'path', 'app_name': 'app',
+             'mozconfig_platform': 'platform', 'mozconfig_variant': 'variant'},
+            {'src_mozconfig': 'path', 'mozconfig_platform': 'platform',
+             'mozconfig_variant': 'variant'},
+            {'src_mozconfig': 'path', 'app_name': 'app',
+             'mozconfig_variant': 'variant'},
+            {'src_mozconfig': 'path', 'app_name': 'app',
+             'mozconfig_platform': 'platform'},
             # Specifying src_mozconfig_manifest with some or all of a composite
             # mozconfig path
-            {
-                "src_mozconfig_manifest": "path",
-                "app_name": "app",
-                "mozconfig_platform": "platform",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig_manifest": "path",
-                "mozconfig_platform": "platform",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig_manifest": "path",
-                "app_name": "app",
-                "mozconfig_variant": "variant",
-            },
-            {
-                "src_mozconfig_manifest": "path",
-                "app_name": "app",
-                "mozconfig_platform": "platform",
-            },
+            {'src_mozconfig_manifest': 'path', 'app_name': 'app',
+             'mozconfig_platform': 'platform', 'mozconfig_variant': 'variant'},
+            {'src_mozconfig_manifest': 'path',
+             'mozconfig_platform': 'platform', 'mozconfig_variant': 'variant'},
+            {'src_mozconfig_manifest': 'path', 'app_name': 'app',
+             'mozconfig_variant': 'variant'},
+            {'src_mozconfig_manifest': 'path', 'app_name': 'app',
+             'mozconfig_platform': 'platform'},
             # Specifying only some parts of a compsite mozconfig path
-            {"mozconfig_platform": "platform", "mozconfig_variant": "variant"},
-            {"app_name": "app", "mozconfig_variant": "variant"},
-            {"app_name": "app", "mozconfig_platform": "platform"},
-            {"app_name": "app"},
-            {"mozconfig_variant": "variant"},
-            {"mozconfig_platform": "platform"},
+            {'mozconfig_platform': 'platform', 'mozconfig_variant': 'variant'},
+            {'app_name': 'app', 'mozconfig_variant': 'variant'},
+            {'app_name': 'app', 'mozconfig_platform': 'platform'},
+            {'app_name': 'app'},
+            {'mozconfig_variant': 'variant'},
+            {'mozconfig_platform': 'platform'},
         ]
 
         for config in configs:
