@@ -125,9 +125,17 @@ nsIDocShell* JSWindowActorChild::GetDocShell(ErrorResult& aRv) {
 
 Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
     ErrorResult& aRv) {
-  if (BrowsingContext* bc = GetBrowsingContext(aRv)) {
-    return WindowProxyHolder(bc);
+  if (!mManager) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
+
+  if (nsGlobalWindowInner* window = mManager->GetWindowGlobal()) {
+    if (window->IsCurrentInnerWindow()) {
+      return WindowProxyHolder(window->GetBrowsingContext());
+    }
+  }
+
   return nullptr;
 }
 
