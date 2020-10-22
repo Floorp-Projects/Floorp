@@ -46,8 +46,8 @@ class MigrateActorRunnable final : public Runnable {
     MOZ_ASSERT(mActor->State() ==
                RemoteLazyInputStreamChild::eInactiveMigrating);
 
-    ipc::PBackgroundChild* actorChild =
-        ipc::BackgroundChild::GetOrCreateForCurrentThread();
+    PBackgroundChild* actorChild =
+        BackgroundChild::GetOrCreateForCurrentThread();
     if (!actorChild) {
       return NS_OK;
     }

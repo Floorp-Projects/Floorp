@@ -9,7 +9,6 @@
 
 #include <utility>
 
-#include "Blob.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
