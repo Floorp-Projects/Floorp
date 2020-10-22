@@ -31,6 +31,7 @@ add_task(async function() {
                 "History listener got called after a content viewer was evicted"
               );
               legacySHistory.removeSHistoryListener(historyListener);
+              delete content._testListener;
               // 6. Resolve the promise when we got our 'content viewer evicted' event
               resolve();
             },

@@ -8,8 +8,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["TestWindowChild"];
 
-var docShellThunks = new Map();
-
 class TestWindowChild extends JSWindowActorChild {
   constructor() {
     super();
@@ -43,31 +41,6 @@ class TestWindowChild extends JSWindowActorChild {
       case "noncloneReply":
         // Return a value which is non-cloneable, like a WindowProxy.
         return this.contentWindow;
-      case "storeActor":
-        docShellThunks.set(this.docShell, this);
-        break;
-      case "checkActor": {
-        let actor = docShellThunks.get(this.docShell);
-        docShellThunks.delete(this.docShell);
-
-        let contentWindow;
-        let error;
-        try {
-          contentWindow = actor.contentWindow;
-        } catch (e) {
-          error = e;
-        }
-        if (error) {
-          return {
-            status: "error",
-            errorType: error.name,
-          };
-        }
-        return {
-          status: "success",
-          valueIsNull: contentWindow === null,
-        };
-      }
     }
 
     return undefined;

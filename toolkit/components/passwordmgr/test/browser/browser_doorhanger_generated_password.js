@@ -267,10 +267,10 @@ async function submitForm(browser) {
   await SpecialPowers.spawn(browser, [], async function() {
     content.document.querySelector("form").submit();
 
-    let win = content;
     await ContentTaskUtils.waitForCondition(() => {
       return (
-        win.location.pathname == "/" && win.document.readyState == "complete"
+        content.location.pathname == "/" &&
+        content.document.readyState == "complete"
       );
     }, "Wait for form submission load");
   });
