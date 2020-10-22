@@ -458,6 +458,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const = 0;
   /**
+   * Returns true if the scroll frame has any scroll position updates since
+   * the last call to NotifyApzTransaction().
+   */
+  virtual bool HasScrollUpdates() const = 0;
+  /**
    * Clears the "origin of last scroll" property stored in this frame, if
    * the generation counter passed in matches the current scroll generation
    * counter, and clears the "origin of last smooth scroll" property if the
