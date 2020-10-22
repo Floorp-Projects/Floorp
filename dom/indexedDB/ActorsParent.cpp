@@ -20851,14 +20851,9 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("IndexGetRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mOptionalKeyRange.isSome();
-
-  nsCString indexTable;
-  if (mMetadata->mCommonMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data ");
-  } else {
-    indexTable.AssignLiteral("index_data ");
-  }
+  const auto indexTable = mMetadata->mCommonMetadata.unique()
+                              ? "unique_index_data "_ns
+                              : "index_data "_ns;
 
   IDB_TRY_INSPECT(
       const auto& stmt,
@@ -20878,17 +20873,11 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                                            kColumnNameValue) +
           (mLimit ? kOpenLimit + IntToCString(mLimit) : EmptyCString())));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
+                                mMetadata->mCommonMetadata.id()));
 
-  if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (mOptionalKeyRange.isSome()) {
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
