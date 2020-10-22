@@ -444,8 +444,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       }
     }
 
-    // Add the remaining form history results.
+    // Add the remaining form history results.  maxHistoricalSearchSuggestions
+    // == 0 is an opt-out mechanism, so do this only if it's non-zero.
     while (
+      maxInitialFormHistory &&
       results.length < queryContext.maxResults + 1 &&
       fetchData.local.length
     ) {
