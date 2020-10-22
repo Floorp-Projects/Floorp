@@ -652,6 +652,10 @@ addon-permissions-list > .addon-detail-row {
   background-repeat: no-repeat;
 }
 
+.addon-permissions-list > li:dir(rtl) {
+  background-position-x: right 0;
+}
+
 /* justify the permission toggle */
 li.permission-info > label {
   display: flex;
