@@ -1006,6 +1006,11 @@ def build_beetmover_maven_payload(config, task, task_def):
     if task['worker'].get('artifact-map'):
         task_def['payload']['artifactMap'] = task['worker']['artifact-map']
 
+    task_def['payload']['version'] = _compute_geckoview_version(
+        task['worker']['release-properties']['app-version'],
+        task['worker']['release-properties']['build-id']
+    )
+
     del task_def['payload']['releaseProperties']['hashType']
     del task_def['payload']['releaseProperties']['platform']
 
