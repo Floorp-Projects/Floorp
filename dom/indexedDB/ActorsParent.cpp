@@ -21704,11 +21704,11 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
   const nsCString sortColumnAlias =
       "SELECT "_ns + columnPairSelectionList + ", "_ns;
 
-  nsAutoCString queryStart = sortColumnAlias +
-                             "object_data_key "
-                             " FROM "_ns +
-                             table + " WHERE index_id = :"_ns +
-                             kStmtParamNameId;
+  const nsAutoCString queryStart = sortColumnAlias +
+                                   "object_data_key "
+                                   " FROM "_ns +
+                                   table + " WHERE index_id = :"_ns +
+                                   kStmtParamNameId;
 
   const auto keyRangeClause =
       DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
@@ -21742,21 +21742,15 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId));
 
   if (usingKeyRange) {
     if (GetCursor().IsLocaleAware()) {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale);
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale));
     } else {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt));
     }
   }
 
