@@ -625,11 +625,17 @@ AsyncFetchAndSetIconForPage::OnStartRequest(nsIRequest* aRequest) {
   if (mCanceled) {
     mRequest->Cancel(NS_BINDING_ABORTED);
   }
-  // Don't store icons responding with Cache-Control: no-store.
+  // Don't store icons responding with Cache-Control: no-store, but always
+  // allow root domain icons.
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   if (httpChannel) {
     bool isNoStore;
-    if (NS_SUCCEEDED(httpChannel->IsNoStoreResponse(&isNoStore)) && isNoStore) {
+    nsAutoCString path;
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(httpChannel->GetURI(getter_AddRefs(uri))) &&
+        NS_SUCCEEDED(uri->GetFilePath(path)) &&
+        !path.EqualsLiteral("/favicon.ico") &&
+        NS_SUCCEEDED(httpChannel->IsNoStoreResponse(&isNoStore)) && isNoStore) {
       // Abandon the network fetch.
       mRequest->Cancel(NS_BINDING_ABORTED);
     }
