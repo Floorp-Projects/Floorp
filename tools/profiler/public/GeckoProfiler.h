@@ -640,7 +640,9 @@ int profiler_current_process_id();
 // Get the current thread's ID.
 int profiler_current_thread_id();
 
-extern const int scProfilerMainThreadId;
+// Statically initialized to 0, then set once from profiler_init(), which should
+// be called from the main thread before any other use of the profiler.
+extern int scProfilerMainThreadId;
 
 inline int profiler_main_thread_id() { return scProfilerMainThreadId; }
 
