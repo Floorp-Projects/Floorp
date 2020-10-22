@@ -334,20 +334,12 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     }
 
     if (gotPaperSizeFromPrefs) {
-      // Impose some limits to purge at least some corrupt pref values to try to
-      // avoid bugs like bug 315687.  Sizes based on telemetry max/mins.
-      constexpr double minInMM = 10.0;
-      constexpr double maxInMM = 4500.0;
-      constexpr double minInIn = minInMM / 25.4;
-      constexpr double maxInIn = 100.0;  // (~2.4m) used since bug 315687
-
-      if ((paperSizeUnit == nsIPrintSettings::kPaperSizeMillimeters &&
-           (paperWidth < minInMM || paperWidth > maxInMM ||
-            paperHeight < minInMM || paperHeight > maxInMM)) ||
-          (paperWidth < minInIn || paperWidth > maxInIn ||
-           paperHeight < minInIn || paperHeight > maxInIn)) {
-        gotPaperSizeFromPrefs = false;
-      }
+      // Bug 315687: Sanity check paper size to avoid paper size values in
+      // mm when the size unit flag is inches. The value 100 is arbitrary
+      // and can be changed.
+      gotPaperSizeFromPrefs =
+          (paperSizeUnit != nsIPrintSettings::kPaperSizeInches) ||
+          (paperWidth < 100.0) || (paperHeight < 100.0);
     }
 
     if (gotPaperSizeFromPrefs) {
