@@ -71,31 +71,6 @@ MOZ_MAYBE_UNUSED static void WaitUntilTimeStampChanges(
 
 using namespace mozilla;
 
-void TestProfilerUtilities() {
-  printf("TestProfilerUtilities...\n");
-
-  // We'll assume that this test runs in the main thread (which should be true
-  // when called from the `main` function).
-  const int mainThreadId = mozilla::baseprofiler::profiler_current_thread_id();
-
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_main_thread_id() ==
-                     mainThreadId);
-  MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_is_main_thread());
-
-  std::thread testThread([&]() {
-    const int testThreadId =
-        mozilla::baseprofiler::profiler_current_thread_id();
-    MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
-
-    MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_main_thread_id() !=
-                       testThreadId);
-    MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
-  });
-  testThread.join();
-
-  printf("TestProfilerUtilities done\n");
-}
-
 void TestPowerOfTwoMask() {
   printf("TestPowerOfTwoMask...\n");
 
@@ -3233,7 +3208,6 @@ void TestProfilerStringView() {
 }
 
 void TestProfilerDependencies() {
-  TestProfilerUtilities();
   TestPowerOfTwoMask();
   TestPowerOfTwo();
   TestLEB128();
@@ -3307,6 +3281,24 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_is_active());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
+
+    const int mainThreadId =
+        mozilla::baseprofiler::profiler_current_thread_id();
+
+    MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_main_thread_id() ==
+                       mainThreadId);
+    MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_is_main_thread());
+
+    std::thread testThread([&]() {
+      const int testThreadId =
+          mozilla::baseprofiler::profiler_current_thread_id();
+      MOZ_RELEASE_ASSERT(testThreadId != mainThreadId);
+
+      MOZ_RELEASE_ASSERT(mozilla::baseprofiler::profiler_main_thread_id() !=
+                         testThreadId);
+      MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_is_main_thread());
+    });
+    testThread.join();
 
     printf("profiler_start()...\n");
     Vector<const char*> filters;
