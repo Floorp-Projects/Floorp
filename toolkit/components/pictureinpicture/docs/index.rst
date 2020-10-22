@@ -127,7 +127,8 @@ PictureInPictureLauncherChild
 
 A small actor class whose only responsibility is to tell the parent process to open an always-on-top-window by sending a ``PictureInPicture:Request`` message to its parent actor.
 
-Currently, this only occurs when a chrome-only ``MozTogglePictureInPicture`` event is dispatched by the ``PictureInPictureToggleChild`` when the user clicks the Picture-in-Picture toggle button.
+Currently, this only occurs when a chrome-only ``MozTogglePictureInPicture`` event is dispatched by the ``PictureInPictureToggleChild`` when the user clicks the Picture-in-Picture toggle button
+or uses the context-menu.
 
 PictureInPictureChild
 =====================
