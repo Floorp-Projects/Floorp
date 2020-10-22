@@ -1512,6 +1512,11 @@ add_task(async function formHistory() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
+  // Setting maxHistoricalSearchSuggestions = 0 is special and indicates that
+  // the user has opted out of form history, so we should include form history
+  // neither before the expected remote results nor after, unlike the other
+  // checks below, where remaining form history is included after the expected
+  // remote results.
   Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 0);
   let context = createContext(SEARCH_STRING, { isPrivate: false });
   await check_results({
@@ -1519,7 +1524,6 @@ add_task(async function formHistory() {
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       ...makeExpectedRemoteSuggestionResults(context),
-      ...makeExpectedFormHistoryResults(context, 2),
     ],
   });
 
