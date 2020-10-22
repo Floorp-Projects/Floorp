@@ -1717,8 +1717,8 @@ bool JS_FASTCALL js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
 }
 
 template <typename CharT>
-static bool CharsToNumberImpl(JSContext* cx, const CharT* chars, size_t length,
-                              double* result) {
+bool js::CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
+                       double* result) {
   if (length == 1) {
     CharT c = chars[0];
     if ('0' <= c && c <= '9') {
@@ -1787,15 +1787,11 @@ static bool CharsToNumberImpl(JSContext* cx, const CharT* chars, size_t length,
   return true;
 }
 
-bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars, size_t length,
-                       double* result) {
-  return CharsToNumberImpl(cx, chars, length, result);
-}
+template bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars,
+                                size_t length, double* result);
 
-bool js::CharsToNumber(JSContext* cx, const char16_t* chars, size_t length,
-                       double* result) {
-  return CharsToNumberImpl(cx, chars, length, result);
-}
+template bool js::CharsToNumber(JSContext* cx, const char16_t* chars,
+                                size_t length, double* result);
 
 bool js::StringToNumber(JSContext* cx, JSString* str, double* result) {
   AutoCheckCannotGC nogc;
