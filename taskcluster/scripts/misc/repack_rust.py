@@ -183,17 +183,19 @@ def verify_sha(filename, sha):
     return False
 
 
-def fetch(url):
+def fetch(url, validate=True):
     '''Download and verify a package url.'''
     base = os.path.basename(url)
     log('Fetching %s...' % base)
-    fetch_file(url + '.asc')
-    fetch_file(url + '.sha256')
+    if validate:
+        fetch_file(url + '.asc')
+        fetch_file(url + '.sha256')
     sha = fetch_file(url)
-    log('Verifying %s...' % base)
-    verify_sha(base, sha)
-    subprocess.check_call(['gpg', '--keyid-format', '0xlong',
-                           '--verify', base + '.asc', base])
+    if validate:
+        log('Verifying %s...' % base)
+        verify_sha(base, sha)
+        subprocess.check_call(['gpg', '--keyid-format', '0xlong',
+                               '--verify', base + '.asc', base])
     return sha
 
 
@@ -231,11 +233,11 @@ def fetch_package(manifest, pkg, host):
     version, info = package(manifest, pkg, host)
     if not info['available']:
         log('%s marked unavailable for %s' % (pkg, host))
-        raise AssertionError
+        raise KeyError
 
     log('%s %s\n  %s\n  %s' % (pkg, version, info['url'], info['hash']))
-    sha = fetch(info['url'])
-    if sha != info['hash']:
+    sha = fetch(info['url'], info['hash'] is not None)
+    if info['hash'] and sha != info['hash']:
         log('Checksum mismatch: package resource is different from manifest'
             '\n  %s' % sha)
         raise AssertionError
@@ -284,7 +286,45 @@ def build_tar_package(name, base, directory):
                 tf.add(directory)
 
 
-def fetch_manifest(channel='stable'):
+def fetch_manifest(channel='stable', host=None, targets=()):
+    if channel.startswith('bors-'):
+        assert host
+        rev = channel[len('bors-'):]
+        base_url = 'https://s3-us-west-1.amazonaws.com/rust-lang-ci2/rustc-builds'
+        manifest = {
+            'date': 'some date',
+            'pkg': {},
+        }
+
+        def target(url):
+            return {
+                'url': url,
+                'hash': None,
+                'available': requests.head(url).status_code == 200,
+            }
+
+        for pkg in ('cargo', 'rustc', 'rustfmt-preview'):
+            manifest['pkg'][pkg] = {
+                'version': 'bors',
+                'target': {
+                    host: target('{}/{}/{}-nightly-{}.tar.xz'.format(base_url, rev, pkg, host)),
+                },
+            }
+        manifest['pkg']['rust-src'] = {
+            'version': 'bors',
+            'target': {
+                '*': target('{}/{}/rust-src-nightly.tar.xz'.format(base_url, rev)),
+            }
+        }
+        for pkg in ('rust-std', 'rust-analysis'):
+            manifest['pkg'][pkg] = {
+                'version': 'bors',
+                'target': {
+                    t: target('{}/{}/{}-nightly-{}.tar.xz'.format(base_url, rev, pkg, t))
+                    for t in sorted(set(targets) | set([host]))
+                },
+            }
+        return manifest
     if '-' in channel:
         channel, date = channel.split('-', 1)
         prefix = '/' + date
@@ -304,12 +344,12 @@ def fetch_manifest(channel='stable'):
 def repack(host, targets, channel='stable', cargo_channel=None, compiler_builtins_hack=False):
     log("Repacking rust for %s supporting %s..." % (host, targets))
 
-    manifest = fetch_manifest(channel)
+    manifest = fetch_manifest(channel, host, targets)
     log('Using manifest for rust %s as of %s.' % (channel, manifest['date']))
     if cargo_channel == channel:
         cargo_manifest = manifest
     else:
-        cargo_manifest = fetch_manifest(cargo_channel)
+        cargo_manifest = fetch_manifest(cargo_channel, host, targets)
         log('Using manifest for cargo %s as of %s.' %
             (cargo_channel, cargo_manifest['date']))
 
