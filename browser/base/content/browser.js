@@ -484,19 +484,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gBookmarksToolbar2h2020",
-  "browser.toolbars.bookmarks.2h2020",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gBookmarksToolbarVisibility",
-  "browser.toolbars.bookmarks.visibility",
-  "newtab"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gFxaToolbarEnabled",
   "identity.fxaccounts.toolbar.enabled",
   false,
@@ -1802,14 +1789,6 @@ var gBrowserInit = {
       let node = document.getElementById(area);
       CustomizableUI.registerToolbarNode(node);
     }
-    setToolbarVisibility(
-      gNavToolbox.querySelector("#PersonalToolbar"),
-      gBookmarksToolbar2h2020
-        ? gBookmarksToolbarVisibility
-        : gBookmarksToolbarVisibility == "always",
-      false,
-      false
-    );
     BrowserSearch.initPlaceHolder();
 
     // Hack to ensure that the various initial pages favicon is loaded
@@ -5394,15 +5373,6 @@ var XULBrowserWindow = {
       gURLBar.setURI(aLocationURI, aIsSimulated);
 
       BookmarkingUI.onLocationChange();
-      if (gBookmarksToolbar2h2020) {
-        let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");
-        setToolbarVisibility(
-          bookmarksToolbar,
-          gBookmarksToolbarVisibility,
-          false,
-          false
-        );
-      }
 
       gIdentityHandler.onLocationChange();
 
@@ -6415,37 +6385,34 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     }
   }
 
-  MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
-  let firstMenuItem = aInsertPoint || popup.firstElementChild;
+  var firstMenuItem = aInsertPoint || popup.firstElementChild;
+
   let toolbarNodes = gNavToolbox.querySelectorAll("toolbar");
+
   for (let toolbar of toolbarNodes) {
     if (!toolbar.hasAttribute("toolbarname")) {
       continue;
     }
 
-    if (toolbar.id == "PersonalToolbar" && gBookmarksToolbar2h2020) {
-      let menu = BookmarkingUI.buildBookmarksToolbarSubmenu(toolbar);
-      popup.insertBefore(menu, firstMenuItem);
-    } else {
-      let menuItem = document.createXULElement("menuitem");
-      menuItem.setAttribute("id", "toggle_" + toolbar.id);
-      menuItem.setAttribute("toolbarId", toolbar.id);
-      menuItem.setAttribute("type", "checkbox");
-      menuItem.setAttribute("label", toolbar.getAttribute("toolbarname"));
-      let hidingAttribute =
-        toolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
-      menuItem.setAttribute(
-        "checked",
-        toolbar.getAttribute(hidingAttribute) != "true"
-      );
-      menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
-      if (popup.id != "toolbar-context-menu") {
-        menuItem.setAttribute("key", toolbar.getAttribute("key"));
-      }
-
-      popup.insertBefore(menuItem, firstMenuItem);
-      menuItem.addEventListener("command", onViewToolbarCommand);
+    let menuItem = document.createXULElement("menuitem");
+    let hidingAttribute =
+      toolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
+    menuItem.setAttribute("id", "toggle_" + toolbar.id);
+    menuItem.setAttribute("toolbarId", toolbar.id);
+    menuItem.setAttribute("type", "checkbox");
+    menuItem.setAttribute("label", toolbar.getAttribute("toolbarname"));
+    menuItem.setAttribute(
+      "checked",
+      toolbar.getAttribute(hidingAttribute) != "true"
+    );
+    menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
+    if (popup.id != "toolbar-context-menu") {
+      menuItem.setAttribute("key", toolbar.getAttribute("key"));
     }
+
+    popup.insertBefore(menuItem, firstMenuItem);
+
+    menuItem.addEventListener("command", onViewToolbarCommand);
   }
 
   let moveToPanel = popup.querySelector(".customize-context-moveToPanel");
@@ -6491,6 +6458,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     node.hidden = !showTabStripItems;
   }
 
+  MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
   document
     .getElementById("toolbar-context-menu")
     .querySelectorAll("[data-lazy-l10n-id]")
@@ -6540,27 +6508,15 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
 function onViewToolbarCommand(aEvent) {
   let node = aEvent.originalTarget;
-  let menuId;
-  let toolbarId;
-  let isVisible;
-  if (node.dataset.bookmarksToolbarVisibility) {
-    isVisible = node.dataset.visibilityEnum;
-    toolbarId = "PersonalToolbar";
-    menuId = node.parentNode.parentNode.parentNode.id;
-    Services.prefs.setCharPref(
-      "browser.toolbars.bookmarks.visibility",
-      isVisible
-    );
-  } else {
-    menuId = node.parentNode.id;
-    toolbarId = node.getAttribute("toolbarId");
-    isVisible = node.getAttribute("checked") == "true";
-  }
+  let menuId = node.parentNode.id;
+  let toolbarId = node.getAttribute("toolbarId");
+  let isVisible = node.getAttribute("checked") == "true";
   CustomizableUI.setToolbarVisibility(toolbarId, isVisible);
   BrowserUsageTelemetry.recordToolbarVisibility(toolbarId, isVisible, menuId);
+  updateToggleControlLabel(node);
 }
 
-function toggleBookmarksToolbarViaKeyboardShortcut() {
+function toggleBookmarksToolbar() {
   // We only show the bookmarks toolbar if the shortcut is enabled.
   const shortcutEnabled = Services.prefs.getBoolPref(
     "browser.toolbars.bookmarks.2h2020",
@@ -6568,21 +6524,22 @@ function toggleBookmarksToolbarViaKeyboardShortcut() {
   );
 
   if (!shortcutEnabled) {
-    // The shortcut was previously used to open the Library,
-    // so if the shortcut is disabled then return to opening the Library.
     PlacesCommandHook.showPlacesOrganizer("UnfiledBookmarks");
     return;
   }
 
-  BookmarkingUI.toggleBookmarksToolbar("shortcut");
+  let toolbar = document.getElementById("PersonalToolbar");
+  let isVisible = toolbar.getAttribute("collapsed") === "true";
+
+  CustomizableUI.setToolbarVisibility("PersonalToolbar", isVisible);
+  BrowserUsageTelemetry.recordToolbarVisibility(
+    "PersonalToolbar",
+    isVisible,
+    "shortcut"
+  );
 }
 
-function setToolbarVisibility(
-  toolbar,
-  isVisible,
-  persist = true,
-  animated = true
-) {
+function setToolbarVisibility(toolbar, isVisible, persist = true) {
   let hidingAttribute;
   if (toolbar.getAttribute("type") == "menubar") {
     hidingAttribute = "autohide";
@@ -6593,48 +6550,10 @@ function setToolbarVisibility(
     hidingAttribute = "collapsed";
   }
 
-  if (persist) {
-    if (toolbar.id == "PersonalToolbar") {
-      let prefValue;
-      if (typeof isVisible == "string") {
-        prefValue = isVisible;
-      } else {
-        prefValue = isVisible ? "always" : "never";
-      }
-      Services.prefs.setCharPref(
-        "browser.toolbars.bookmarks.visibility",
-        prefValue
-      );
-    } else {
-      Services.xulStore.persist(toolbar, hidingAttribute);
-    }
-  }
-
-  if (typeof isVisible == "string") {
-    switch (isVisible) {
-      case "always":
-        isVisible = true;
-        break;
-      case "never":
-        isVisible = false;
-        break;
-      case "newtab":
-        isVisible = BookmarkingUI.isOnNewTabPage({
-          currentURI: gBrowser.currentURI,
-          isNullPrincipal: gBrowser.contentPrincipal.isNullPrincipal,
-        });
-        break;
-    }
-  }
-
-  if (toolbar.getAttribute(hidingAttribute) == (!isVisible).toString()) {
-    // If this call will not result in a visibility change, return early
-    // since dispatching toolbarvisibilitychange will cause views to get rebuilt.
-    return;
-  }
-
-  toolbar.classList.toggle("instant", !animated);
   toolbar.setAttribute(hidingAttribute, !isVisible);
+  if (persist) {
+    Services.xulStore.persist(toolbar, hidingAttribute);
+  }
 
   let eventParams = {
     detail: {

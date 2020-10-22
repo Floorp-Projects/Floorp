@@ -3326,7 +3326,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 100;
+    const UI_VERSION = 99;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3960,30 +3960,6 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 99) {
       Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
-    }
-
-    // Set a pref if the bookmarks toolbar was already visible,
-    // so we can keep it visible when navigating away from newtab
-    if (currentUIVersion < 100) {
-      let bookmarksToolbarWasVisible =
-        Services.xulStore.getValue(
-          BROWSER_DOCURL,
-          "PersonalToolbar",
-          "collapsed"
-        ) == "false";
-      if (bookmarksToolbarWasVisible) {
-        // Migrate the user to the "always visible" value. See firefox.js for
-        // the other possible states.
-        Services.prefs.setCharPref(
-          "browser.toolbars.bookmarks.visibility",
-          "always"
-        );
-      }
-      Services.xulStore.removeValue(
-        BROWSER_DOCURL,
-        "PersonalToolbar",
-        "collapsed"
-      );
     }
 
     // Update the migration version.

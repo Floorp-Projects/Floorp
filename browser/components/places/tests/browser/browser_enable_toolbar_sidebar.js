@@ -39,8 +39,6 @@ async function openBookmarkingToolsPanelInLibraryToolbarButton() {
 
 add_task(async function test_enable_toolbar() {
   await openBookmarkingToolsPanelInLibraryToolbarButton();
-  let toolbar = document.getElementById("PersonalToolbar");
-  Assert.ok(toolbar.collapsed, "Bookmarks Toolbar is hidden");
 
   let viewBookmarksToolbarBtn;
   await BrowserTestUtils.waitForCondition(() => {
@@ -50,10 +48,11 @@ add_task(async function test_enable_toolbar() {
     return viewBookmarksToolbarBtn;
   }, "Should have the library 'View Bookmarks Toolbar' button.");
   viewBookmarksToolbarBtn.click();
-  await BrowserTestUtils.waitForCondition(
-    () => !toolbar.collapsed,
-    "Should have the Bookmarks Toolbar enabled."
-  );
+  let toolbar;
+  await BrowserTestUtils.waitForCondition(() => {
+    toolbar = document.getElementById("PersonalToolbar");
+    return !toolbar.collapsed;
+  }, "Should have the Bookmarks Toolbar enabled.");
   Assert.ok(!toolbar.collapsed, "Bookmarks Toolbar is enabled");
 });
 
