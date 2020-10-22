@@ -7,16 +7,11 @@
 #ifndef mozilla_RemoteLazyInputStreamUtils_h
 #define mozilla_RemoteLazyInputStreamUtils_h
 
-#include <cstdint>
-
 /*
  * RemoteLazyInputStream was previously part of the IPCBlob world.
  * See IPCBlobUtils.h to know how to use it. As a follow up, the documentation
  * will be partially moved here too.
  */
-
-class nsIInputStream;
-enum class nsresult : uint32_t;
 
 namespace mozilla {
 
