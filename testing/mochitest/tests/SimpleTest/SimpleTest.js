@@ -1440,6 +1440,11 @@ SimpleTest.timeout = async function() {
   SimpleTest._timeoutFunctions = [];
 };
 
+SimpleTest.finishWithFailure = function(msg) {
+  SimpleTest.ok(false, msg);
+  SimpleTest.finish();
+};
+
 /**
  * Finishes the tests. This is automatically called, except when
  * SimpleTest.waitForExplicitFinish() has been invoked.
