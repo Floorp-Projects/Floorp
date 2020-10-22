@@ -38,7 +38,6 @@ function connectToContentProcess(connection, mm, onDestroy) {
       childTransport = new ChildDebuggerTransport(mm, prefix);
       childTransport.hooks = {
         onPacket: connection.send.bind(connection),
-        onClosed() {},
       };
       childTransport.ready();
 

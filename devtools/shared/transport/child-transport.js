@@ -59,7 +59,9 @@ ChildDebuggerTransport.prototype = {
 
   close: function() {
     this._removeListener();
-    this.hooks.onClosed();
+    if (this.hooks.onClosed) {
+      this.hooks.onClosed();
+    }
   },
 
   receiveMessage: function({ data }) {
