@@ -210,7 +210,7 @@ if (isApzEnabled()) {
   SimpleTest.expectAssertions(0, 1); // this test triggers an assertion, see bug 1247050
   waitUntilApzStable()
   .then(runContinuation(test))
-  .then(SimpleTest.finish);
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 
 </script>

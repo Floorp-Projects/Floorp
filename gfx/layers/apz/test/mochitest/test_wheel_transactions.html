@@ -128,7 +128,7 @@ SimpleTest.waitForExplicitFinish();
 pushPrefs([["general.smoothScroll", false]])
 .then(waitUntilApzStable)
 .then(runContinuation(test))
-.then(SimpleTest.finish);
+.then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
 </pre>

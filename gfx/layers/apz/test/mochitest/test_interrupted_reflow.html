@@ -711,7 +711,7 @@ if (isApzEnabled()) {
              ["apz.displayport_expiry_ms", 0]])
   .then(waitUntilApzStable)
   .then(runContinuation(test))
-  .then(SimpleTest.finish);
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 }
 
 </script>

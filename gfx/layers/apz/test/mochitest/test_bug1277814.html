@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
       pushPrefs([["apz.test.logging_enabled", true]])
         .then(waitUntilApzStable)
         .then(runContinuation(test))
-        .then(SimpleTest.finish);
+        .then(SimpleTest.finish, SimpleTest.finishWithFailure);
     }
   </script>
   <style>
