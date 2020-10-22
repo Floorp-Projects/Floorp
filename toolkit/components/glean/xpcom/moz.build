@@ -23,6 +23,7 @@ if CONFIG['MOZ_GLEAN']:
 
     XPIDL_SOURCES += [
         'nsIFOG.idl',
+        'nsIGleanMetrics.idl',
     ]
 
 with Files('**'):

@@ -74,7 +74,7 @@
     }
 
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(RESOLUTION);
-    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

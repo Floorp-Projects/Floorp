@@ -15,8 +15,8 @@ const schemas = {
   simple_below_search_snippet: SimpleBelowSearchSnippetSchema,
 };
 
-describe("SnippetsTestMessageProvider", () => {
-  let messages = SnippetsTestMessageProvider.getMessages();
+describe("SnippetsTestMessageProvider", async () => {
+  let messages = await SnippetsTestMessageProvider.getMessages();
 
   it("should return an array of messages", () => {
     assert.isArray(messages);

@@ -51,7 +51,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       ok(rcd != null, "found the RCD node");
       is(rcd.children.length, 0, "expected no children on the RCD");
     }
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(test).finally(subtestDone);
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(test)
+    .then(subtestDone, subtestFailed);
   </script>
 </head>
 <body>

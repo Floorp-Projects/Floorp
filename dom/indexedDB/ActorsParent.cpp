@@ -6755,7 +6755,7 @@ class DeserializeIndexValueHelper final : public Runnable {
         mUpdateInfoArray(aUpdateInfoArray),
         mStatus(NS_ERROR_FAILURE) {}
 
-  void DispatchAndWait(ErrorResult& aRv) {
+  nsresult DispatchAndWait() {
     // FIXME(Bug 1637530) Re-enable optimization using a non-system-principaled
     // JS context
 #if 0
@@ -6768,10 +6768,11 @@ class DeserializeIndexValueHelper final : public Runnable {
       JS::Rooted<JS::Value> value(jsapi.cx());
       value.setUndefined();
 
+      ErrorResult rv;
       IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
                                             mLocale, jsapi.cx(), value,
-                                            &mUpdateInfoArray, &aRv);
-      return;
+                                            &mUpdateInfoArray, &rv);
+      return rv.Failed() ? rv.StealNSResult() : NS_OK;
     }
 #endif
 
@@ -6782,15 +6783,10 @@ class DeserializeIndexValueHelper final : public Runnable {
     MonitorAutoLock lock(mMonitor);
 
     RefPtr<Runnable> self = this;
-    const nsresult rv =
-        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
+    IDB_TRY(SchedulerGroup::Dispatch(TaskCategory::Other, self.forget()));
 
     lock.Wait();
-    aRv = mStatus;
+    return mStatus;
   }
 
   NS_IMETHOD
@@ -6870,16 +6866,20 @@ class DeserializeIndexValueHelper final : public Runnable {
   nsresult mStatus;
 };
 
-void DeserializeIndexValueToUpdateInfos(
+auto DeserializeIndexValueToUpdateInfos(
     int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
-    const nsCString& aLocale, StructuredCloneReadInfoParent& aCloneReadInfo,
-    nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv) {
+    const nsCString& aLocale, StructuredCloneReadInfoParent& aCloneReadInfo) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  const RefPtr<DeserializeIndexValueHelper> helper =
-      new DeserializeIndexValueHelper(aIndexID, aKeyPath, aMultiEntry, aLocale,
-                                      aCloneReadInfo, aUpdateInfoArray);
-  helper->DispatchAndWait(aRv);
+  using ArrayType = AutoTArray<IndexUpdateInfo, 32>;
+  using ResultType = Result<ArrayType, nsresult>;
+
+  ArrayType updateInfoArray;
+  const auto helper = MakeRefPtr<DeserializeIndexValueHelper>(
+      aIndexID, aKeyPath, aMultiEntry, aLocale, aCloneReadInfo,
+      updateInfoArray);
+  const nsresult rv = helper->DispatchAndWait();
+  return NS_FAILED(rv) ? Err(rv) : ResultType{std::move(updateInfoArray)};
 }
 
 }  // namespace
@@ -15109,8 +15109,6 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
   DatabaseConnection::CachedStatement deleteUniqueStmt;
   DatabaseConnection::CachedStatement deleteStmt;
 
-  nsresult rv;
-
   for (uint32_t index = 0; index < count; index++) {
     const IndexDataValue& indexValue = aIndexValues[index];
 
@@ -15133,30 +15131,18 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
 
     const auto borrowedStmt = stmt.Borrow();
 
-    rv = borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
-                                       indexValue.mIndexId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
+                                          indexValue.mIndexId));
 
-    rv = indexValue.mPosition.BindToStatement(&*borrowedStmt,
-                                              kStmtParamNameValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(indexValue.mPosition.BindToStatement(&*borrowedStmt,
+                                                 kStmtParamNameValue));
 
     if (!indexValue.mUnique) {
-      rv = aObjectStoreKey.BindToStatement(&*borrowedStmt,
-                                           kStmtParamNameObjectDataKey);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
+                                              kStmtParamNameObjectDataKey));
     }
 
-    rv = borrowedStmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(borrowedStmt->Execute());
   }
 
   return NS_OK;
@@ -16851,29 +16837,20 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     mozIStorageConnection& aConnection, const IndexMetadata& aIndexMetadata,
     const nsCString& aLocale) {
-  nsresult rv;
-
-  nsCString indexTable;
-  if (aIndexMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data");
-  } else {
-    indexTable.AssignLiteral("index_data");
-  }
+  const auto indexTable =
+      aIndexMetadata.unique() ? "unique_index_data"_ns : "index_data"_ns;
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsCString readQuery = "SELECT value, object_data_key FROM "_ns + indexTable +
-                        " WHERE index_id = :index_id"_ns;
-  nsCOMPtr<mozIStorageStatement> readStmt;
-  rv = aConnection.CreateStatement(readQuery, getter_AddRefs(readStmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  const nsCString readQuery = "SELECT value, object_data_key FROM "_ns +
+                              indexTable + " WHERE index_id = :index_id"_ns;
 
-  rv = readStmt->BindInt64ByIndex(0, aIndexMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& readStmt,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConnection,
+                                 CreateStatement, readQuery));
+
+  IDB_TRY(readStmt->BindInt64ByIndex(0, aIndexMetadata.id()));
 
   IDB_TRY(CollectWhileHasResult(
       *readStmt,
@@ -16919,26 +16896,19 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
   static constexpr auto metaQuery =
       "UPDATE object_store_index SET "
       "locale = :locale WHERE id = :id"_ns;
-  nsCOMPtr<mozIStorageStatement> metaStmt;
-  rv = aConnection.CreateStatement(metaQuery, getter_AddRefs(metaStmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
-  nsString locale;
-  CopyASCIItoUTF16(aLocale, locale);
-  rv = metaStmt->BindStringByIndex(0, locale);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& metaStmt,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, aConnection,
+                                 CreateStatement, metaQuery));
 
-  rv = metaStmt->BindInt64ByIndex(1, aIndexMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(metaStmt->BindStringByIndex(0, NS_ConvertASCIItoUTF16(aLocale)));
 
-  rv = metaStmt->Execute();
-  return rv;
+  IDB_TRY(metaStmt->BindInt64ByIndex(1, aIndexMetadata.id()));
+
+  IDB_TRY(metaStmt->Execute());
+
+  return NS_OK;
 }
 
 nsresult OpenDatabaseOp::BeginVersionChange() {
@@ -19166,15 +19136,11 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   const IndexMetadata& metadata = mOp->mMetadata;
   const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
 
-  AutoTArray<IndexUpdateInfo, 32> updateInfos;
-  ErrorResult errorResult;
   // XXX does this really need a non-const cloneInfo?
-  DeserializeIndexValueToUpdateInfos(metadata.id(), metadata.keyPath(),
-                                     metadata.multiEntry(), metadata.locale(),
-                                     cloneInfo, updateInfos, errorResult);
-  if (NS_WARN_IF(errorResult.Failed())) {
-    return errorResult.StealNSResult();
-  }
+  IDB_TRY_INSPECT(const auto& updateInfos,
+                  DeserializeIndexValueToUpdateInfos(
+                      metadata.id(), metadata.keyPath(), metadata.multiEntry(),
+                      metadata.locale(), cloneInfo));
 
   if (updateInfos.IsEmpty()) {
     // XXX See if we can do this without copying...
@@ -19182,11 +19148,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     nsCOMPtr<nsIVariant> unmodifiedValue;
 
     // No changes needed, just return the original value.
-    int32_t valueType;
-    nsresult rv = aValues->GetTypeOfIndex(1, &valueType);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_INSPECT(const int32_t& valueType,
+                    MOZ_TO_RESULT_INVOKE(aValues, GetTypeOfIndex, 1));
 
     MOZ_ASSERT(valueType == mozIStorageValueArray::VALUE_TYPE_NULL ||
                valueType == mozIStorageValueArray::VALUE_TYPE_BLOB);
@@ -19201,12 +19164,9 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
     const uint8_t* blobData;
     uint32_t blobDataLength;
-    rv = aValues->GetSharedBlob(1, &blobDataLength, &blobData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aValues->GetSharedBlob(1, &blobDataLength, &blobData));
 
-    std::pair<uint8_t*, int> copiedBlobDataPair(
+    const std::pair<uint8_t*, int> copiedBlobDataPair(
         static_cast<uint8_t*>(malloc(blobDataLength)), blobDataLength);
 
     if (!copiedBlobDataPair.first) {
@@ -19223,10 +19183,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 
   Key key;
-  nsresult rv = key.SetFromValueArray(aValues, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(key.SetFromValueArray(aValues, 0));
 
   IDB_TRY_UNWRAP(auto indexValues, ReadCompressedIndexDataValues(*aValues, 1));
 
@@ -19234,11 +19191,9 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 
   const uint32_t updateInfoCount = updateInfos.Length();
 
-  if (NS_WARN_IF(!indexValues.SetCapacity(
-          indexValues.Length() + updateInfoCount, fallible))) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  IDB_TRY(OkIf(indexValues.SetCapacity(indexValues.Length() + updateInfoCount,
+                                       fallible)),
+          NS_ERROR_OUT_OF_MEMORY, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   // First construct the full list to update the index_data_values row.
   for (const IndexUpdateInfo& info : updateInfos) {
@@ -19277,10 +19232,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     }
   }
 
-  rv = InsertIndexTableRows(mConnection, objectStoreId, key, indexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(InsertIndexTableRows(mConnection, objectStoreId, key, indexValues));
 
   value = new storage::AdoptedBlobVariant(
       std::pair(indexValuesBlob.release(), indexValuesBlobLength));
@@ -19324,21 +19276,11 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
                         kStmtParamNameObjectStoreId + " AND key = :"_ns +
                         kStmtParamNameKey + ";"_ns));
 
-    nsresult rv =
-        stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId));
 
-    rv = aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(aObjectStoreKey.BindToStatement(&*stmt, kStmtParamNameKey));
 
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(stmt->Execute());
 
     return NS_OK;
   }
@@ -19369,11 +19311,8 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
     aIndexValues.RemoveElementsAt(beginRange - begin, endRange - beginRange);
   }
 
-  nsresult rv = UpdateIndexValues(aConnection, mObjectStoreId, aObjectStoreKey,
-                                  aIndexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(UpdateIndexValues(aConnection, mObjectStoreId, aObjectStoreKey,
+                            aIndexValues));
 
   return NS_OK;
 }
@@ -20399,17 +20338,10 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId));
 
   if (mOptionalKeyRange.isSome()) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
@@ -20635,44 +20567,28 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
                   ObjectStoreHasIndexes(*aConnection, mParams.objectStoreId(),
                                         mObjectStoreMayHaveIndexes));
 
-  nsresult rv;
   if (objectStoreHasIndexes) {
-    rv = DeleteObjectStoreDataTableRowsWithIndexes(
-        aConnection, mParams.objectStoreId(), Some(mParams.keyRange()));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DeleteObjectStoreDataTableRowsWithIndexes(
+        aConnection, mParams.objectStoreId(), Some(mParams.keyRange())));
   } else {
     const auto keyRangeClause =
         GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey);
 
-    rv = aConnection->ExecuteCachedStatement(
+    IDB_TRY(aConnection->ExecuteCachedStatement(
         "DELETE FROM object_data "
         "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
-        [this](mozIStorageStatement& stmt) {
-          nsresult rv = stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                             mParams.objectStoreId());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+        [this](mozIStorageStatement& stmt) -> nsresult {
+          IDB_TRY(stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                       mParams.objectStoreId()));
 
-          rv = BindKeyRangeToStatement(mParams.keyRange(), &stmt);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+          IDB_TRY(BindKeyRangeToStatement(mParams.keyRange(), &stmt));
 
           return NS_OK;
-        });
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+        }));
   }
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
@@ -20713,29 +20629,20 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsresult rv = objectStoreHasIndexes
-                    ? DeleteObjectStoreDataTableRowsWithIndexes(
-                          aConnection, mParams.objectStoreId(), Nothing())
-                    : aConnection->ExecuteCachedStatement(
-                          "DELETE FROM object_data "
-                          "WHERE object_store_id = :object_store_id;"_ns,
-                          [this](mozIStorageStatement& stmt) {
-                            nsresult rv = stmt.BindInt64ByIndex(
-                                0, mParams.objectStoreId());
-                            if (NS_WARN_IF(NS_FAILED(rv))) {
-                              return rv;
-                            }
+  IDB_TRY(objectStoreHasIndexes
+              ? DeleteObjectStoreDataTableRowsWithIndexes(
+                    aConnection, mParams.objectStoreId(), Nothing())
+              : aConnection->ExecuteCachedStatement(
+                    "DELETE FROM object_data "
+                    "WHERE object_store_id = :object_store_id;"_ns,
+                    [this](mozIStorageStatement& stmt) -> nsresult {
+                      IDB_TRY(
+                          stmt.BindInt64ByIndex(0, mParams.objectStoreId()));
 
-                            return NS_OK;
-                          });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+                      return NS_OK;
+                    }));
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
@@ -20757,34 +20664,30 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
                       "WHERE object_store_id = :"_ns +
                       kStmtParamNameObjectStoreId + keyRangeClause));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                      mParams.objectStoreId());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                mParams.objectStoreId()));
 
   if (mParams.optionalKeyRange().isSome()) {
-    rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt));
   }
 
   IDB_TRY_INSPECT(const bool& hasResult,
                   MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
-  if (NS_WARN_IF(!hasResult)) {
+  IDB_TRY(OkIf(hasResult), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
-  int64_t count = stmt->AsInt64(0);
-  if (NS_WARN_IF(count < 0)) {
+  const int64_t count = stmt->AsInt64(0);
+  IDB_TRY(OkIf(count >= 0), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
   mResponse.count() = count;
 
@@ -20880,14 +20783,9 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("IndexGetRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mOptionalKeyRange.isSome();
-
-  nsCString indexTable;
-  if (mMetadata->mCommonMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data ");
-  } else {
-    indexTable.AssignLiteral("index_data ");
-  }
+  const auto indexTable = mMetadata->mCommonMetadata.unique()
+                              ? "unique_index_data "_ns
+                              : "index_data "_ns;
 
   IDB_TRY_INSPECT(
       const auto& stmt,
@@ -20907,17 +20805,11 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                                            kColumnNameValue) +
           (mLimit ? kOpenLimit + IntToCString(mLimit) : EmptyCString())));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
+                                mMetadata->mCommonMetadata.id()));
 
-  if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (mOptionalKeyRange.isSome()) {
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
@@ -21021,12 +20913,9 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   const bool hasKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString indexTable;
-  if (mMetadata->mCommonMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data ");
-  } else {
-    indexTable.AssignLiteral("index_data ");
-  }
+  const auto indexTable = mMetadata->mCommonMetadata.unique()
+                              ? "unique_index_data "_ns
+                              : "index_data "_ns;
 
   const nsCString query =
       "SELECT object_data_key "
@@ -21037,17 +20926,11 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
+                                mMetadata->mCommonMetadata.id()));
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
@@ -21097,12 +20980,9 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   const bool hasKeyRange = mParams.optionalKeyRange().isSome();
 
-  nsCString indexTable;
-  if (mMetadata->mCommonMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data ");
-  } else {
-    indexTable.AssignLiteral("index_data ");
-  }
+  const auto indexTable = mMetadata->mCommonMetadata.unique()
+                              ? "unique_index_data "_ns
+                              : "index_data "_ns;
 
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameValue);
@@ -21115,34 +20995,30 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
+                                mMetadata->mCommonMetadata.id()));
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), &*stmt));
   }
 
   IDB_TRY_INSPECT(const bool& hasResult,
                   MOZ_TO_RESULT_INVOKE(&*stmt, ExecuteStep));
 
-  if (NS_WARN_IF(!hasResult)) {
+  IDB_TRY(OkIf(hasResult), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
-  int64_t count = stmt->AsInt64(0);
-  if (NS_WARN_IF(count < 0)) {
+  const int64_t count = stmt->AsInt64(0);
+  IDB_TRY(OkIf(count >= 0), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, [](const auto) {
+    // XXX Why do we have an assertion here, but not at most other places using
+    // IDB_REPORT_INTERNAL_ERR(_LAMBDA)?
     MOZ_ASSERT(false, "This should never be possible!");
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  });
 
   mResponse.count() = count;
 
@@ -21554,18 +21430,11 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId));
 
   if (usingKeyRange) {
-    rv = DatabaseOperationBase::BindKeyRangeToStatement(
-        GetOptionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+        GetOptionalKeyRange().ref(), &*stmt));
   }
 
   // Now we need to make the query for ContinueOp.
@@ -21603,18 +21472,11 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStoreKey>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId));
 
   if (usingKeyRange) {
-    rv = DatabaseOperationBase::BindKeyRangeToStatement(
-        GetOptionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+        GetOptionalKeyRange().ref(), &*stmt));
   }
 
   // Now we need to make the query to get the next match.
@@ -21694,21 +21556,15 @@ nsresult OpenOpHelper<IDBCursorType::Index>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId));
 
   if (usingKeyRange) {
     if (GetCursor().IsLocaleAware()) {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale);
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale));
     } else {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt));
     }
   }
 
@@ -21744,11 +21600,11 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
   const nsCString sortColumnAlias =
       "SELECT "_ns + columnPairSelectionList + ", "_ns;
 
-  nsAutoCString queryStart = sortColumnAlias +
-                             "object_data_key "
-                             " FROM "_ns +
-                             table + " WHERE index_id = :"_ns +
-                             kStmtParamNameId;
+  const nsAutoCString queryStart = sortColumnAlias +
+                                   "object_data_key "
+                                   " FROM "_ns +
+                                   table + " WHERE index_id = :"_ns +
+                                   kStmtParamNameId;
 
   const auto keyRangeClause =
       DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
@@ -21782,21 +21638,15 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId));
 
   if (usingKeyRange) {
     if (GetCursor().IsLocaleAware()) {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale);
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt, GetCursor().mLocale));
     } else {
-      rv = DatabaseOperationBase::BindKeyRangeToStatement(
-          GetOptionalKeyRange().ref(), &*stmt);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+          GetOptionalKeyRange().ref(), &*stmt));
     }
   }
 
@@ -21936,35 +21786,22 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
                       mCursor->mContinueQueries->GetContinueQuery(
                           hasContinueKey, hasContinuePrimaryKey)));
 
-  // Bind limit.
-  nsresult rv = stmt->BindUTF8StringByName(
+  IDB_TRY(stmt->BindUTF8StringByName(
       kStmtParamNameLimit,
-      IntToCString(advanceCount + mCursor->mMaxExtraCount));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      IntToCString(advanceCount + mCursor->mMaxExtraCount)));
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->Id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, mCursor->Id()));
 
   // Bind current key.
   const auto& continueKey =
       hasContinueKey ? explicitContinueKey
                      : mCurrentPosition.GetSortKey(mCursor->IsLocaleAware());
-  rv = continueKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(continueKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey));
 
   // Bind range bound if it is specified.
   if (!mCursor->mLocaleAwareRangeBound->IsUnset()) {
-    rv = mCursor->mLocaleAwareRangeBound->BindToStatement(
-        &*stmt, kStmtParamNameRangeBound);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(mCursor->mLocaleAwareRangeBound->BindToStatement(
+        &*stmt, kStmtParamNameRangeBound));
   }
 
   // Bind object store position if duplicates are allowed and we're not
@@ -21972,17 +21809,12 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   if constexpr (IsIndexCursor) {
     if (!hasContinueKey && (mCursor->mDirection == IDBCursorDirection::Next ||
                             mCursor->mDirection == IDBCursorDirection::Prev)) {
-      rv = mCurrentPosition.mObjectStoreKey.BindToStatement(
-          &*stmt, kStmtParamNameObjectStorePosition);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(mCurrentPosition.mObjectStoreKey.BindToStatement(
+          &*stmt, kStmtParamNameObjectStorePosition));
     } else if (hasContinuePrimaryKey) {
-      rv = mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
-          &*stmt, kStmtParamNameObjectStorePosition);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(
+          mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
+              &*stmt, kStmtParamNameObjectStorePosition));
     }
   }
 
@@ -21999,7 +21831,8 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   }
 
   Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+  auto* const optPreviousKey =
+      IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
 
   auto helper = CursorOpBaseHelperBase<CursorType>{*this};
   IDB_TRY_INSPECT(

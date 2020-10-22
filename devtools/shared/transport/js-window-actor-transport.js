@@ -37,7 +37,9 @@ class JsWindowActorTransport {
 
   close() {
     this._removeListener();
-    this.hooks.onClosed();
+    if (this.hooks.onClosed) {
+      this.hooks.onClosed();
+    }
   }
 
   _onPacketReceived(eventName, { data }) {

@@ -32,7 +32,14 @@ export class CertificateTabsSection extends HTMLElement {
 
   createTabSection(tabName, i) {
     let tab = document.createElement("button");
-    tab.textContent = tabName;
+    if (tabName) {
+      tab.textContent = tabName;
+    } else {
+      tab.setAttribute(
+        "data-l10n-id",
+        "certificate-viewer-unknown-group-label"
+      );
+    }
     tab.setAttribute("id", normalizeToKebabCase(tabName));
     tab.setAttribute("aria-controls", "panel" + i);
     tab.setAttribute("idnumber", i);

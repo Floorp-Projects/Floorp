@@ -74,7 +74,7 @@ if (getPlatform() == "windows") {
   SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
   waitUntilApzStable()
   .then(test)
-  .then(subtestDone);
+  .then(subtestDone, subtestFailed);
 }
 
   </script>

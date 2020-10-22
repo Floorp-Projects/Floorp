@@ -1854,10 +1854,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   }
 
   SharedImmutableScriptData* sharedData() const { return sharedData_; }
-  void initSharedData(SharedImmutableScriptData* data) {
-    MOZ_ASSERT(sharedData_ == nullptr);
-    sharedData_ = data;
-  }
+  inline void initSharedData(SharedImmutableScriptData* data);
   void freeSharedData() { sharedData_ = nullptr; }
 
   // NOTE: Script only has bytecode if JSScript::fullyInitFromStencil completes

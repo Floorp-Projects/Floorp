@@ -48,5 +48,5 @@
     is(window.scrollY, 0, "Should've completed the smooth scroll without getting interrupted by scroll anchoring");
   }
 
-  waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  waitUntilApzStable().then(runContinuation(test)).then(subtestDone, subtestFailed);
 </script>

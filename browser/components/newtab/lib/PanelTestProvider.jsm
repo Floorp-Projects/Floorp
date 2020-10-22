@@ -524,10 +524,12 @@ const MESSAGES = () => [
 
 const PanelTestProvider = {
   getMessages() {
-    return MESSAGES().map(message => ({
-      ...message,
-      targeting: `providerCohorts.panel_local_testing == "SHOW_TEST"`,
-    }));
+    return Promise.resolve(
+      MESSAGES().map(message => ({
+        ...message,
+        targeting: `providerCohorts.panel_local_testing == "SHOW_TEST"`,
+      }))
+    );
   },
 };
 this.PanelTestProvider = PanelTestProvider;

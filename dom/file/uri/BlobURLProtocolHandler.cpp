@@ -18,6 +18,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
@@ -46,7 +47,7 @@ namespace dom {
 struct DataInfo {
   enum ObjectType { eBlobImpl, eMediaSource };
 
-  DataInfo(BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
+  DataInfo(mozilla::dom::BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
            const Maybe<nsID>& aAgentClusterId)
       : mObjectType(eBlobImpl),
         mBlobImpl(aBlobImpl),
@@ -90,10 +91,10 @@ static StaticMutex sMutex;
 // sMutex. Reading from gDataTable on the main thread may happen without
 // locking, since no changes are possible. Reading it from another thread
 // must also lock sMutex to prevent data races.
-static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
+static nsClassHashtable<nsCStringHashKey, mozilla::dom::DataInfo>* gDataTable;
 
-static DataInfo* GetDataInfo(const nsACString& aUri,
-                             bool aAlsoIfRevoked = false) {
+static mozilla::dom::DataInfo* GetDataInfo(const nsACString& aUri,
+                                           bool aAlsoIfRevoked = false) {
   if (!gDataTable) {
     return nullptr;
   }
@@ -101,7 +102,7 @@ static DataInfo* GetDataInfo(const nsACString& aUri,
   // Let's remove any fragment from this URI.
   int32_t fragmentPos = aUri.FindChar('#');
 
-  DataInfo* res;
+  mozilla::dom::DataInfo* res;
   if (fragmentPos < 0) {
     res = gDataTable->Get(aUri);
   } else {
@@ -115,7 +116,8 @@ static DataInfo* GetDataInfo(const nsACString& aUri,
   return res;
 }
 
-static DataInfo* GetDataInfoFromURI(nsIURI* aURI, bool aAlsoIfRevoked = false) {
+static mozilla::dom::DataInfo* GetDataInfoFromURI(nsIURI* aURI,
+                                                  bool aAlsoIfRevoked = false) {
   if (!aURI) {
     return nullptr;
   }
@@ -130,7 +132,8 @@ static DataInfo* GetDataInfoFromURI(nsIURI* aURI, bool aAlsoIfRevoked = false) {
 }
 
 // Memory reporting for the hash table.
-void BroadcastBlobURLRegistration(const nsACString& aURI, BlobImpl* aBlobImpl,
+void BroadcastBlobURLRegistration(const nsACString& aURI,
+                                  mozilla::dom::BlobImpl* aBlobImpl,
                                   nsIPrincipal* aPrincipal,
                                   const Maybe<nsID>& aAgentClusterId) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -181,15 +184,16 @@ class BlobURLsReporter final : public nsIMemoryReporter {
       return NS_OK;
     }
 
-    nsDataHashtable<nsPtrHashKey<BlobImpl>, uint32_t> refCounts;
+    nsDataHashtable<nsPtrHashKey<mozilla::dom::BlobImpl>, uint32_t> refCounts;
 
-    // Determine number of URLs per BlobImpl, to handle the case where it's > 1.
+    // Determine number of URLs per mozilla::dom::BlobImpl, to handle the case
+    // where it's > 1.
     for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
-      if (iter.UserData()->mObjectType != DataInfo::eBlobImpl) {
+      if (iter.UserData()->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
         continue;
       }
 
-      BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
+      mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
       MOZ_ASSERT(blobImpl);
 
       refCounts.Put(blobImpl, refCounts.Get(blobImpl) + 1);
@@ -197,10 +201,10 @@ class BlobURLsReporter final : public nsIMemoryReporter {
 
     for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
       nsCStringHashKey::KeyType key = iter.Key();
-      DataInfo* info = iter.UserData();
+      mozilla::dom::DataInfo* info = iter.UserData();
 
-      if (iter.UserData()->mObjectType == DataInfo::eBlobImpl) {
-        BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
+      if (iter.UserData()->mObjectType == mozilla::dom::DataInfo::eBlobImpl) {
+        mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
         MOZ_ASSERT(blobImpl);
 
         constexpr auto desc =
@@ -234,7 +238,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
           nsAutoCString addrStr;
 
           addrStr = "0x";
-          addrStr.AppendInt((uint64_t)(BlobImpl*)blobImpl, 16);
+          addrStr.AppendInt((uint64_t)(mozilla::dom::BlobImpl*)blobImpl, 16);
 
           path += " ";
           path.AppendInt(refCount);
@@ -285,7 +289,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
 
   // Initialize info->mStack to record JS stack info, if enabled.
   // The string generated here is used in ReportCallback, below.
-  static void GetJSStackForBlob(DataInfo* aInfo) {
+  static void GetJSStackForBlob(mozilla::dom::DataInfo* aInfo) {
     nsCString& stack = aInfo->mStack;
     MOZ_ASSERT(stack.IsEmpty());
     const uint32_t maxFrames =
@@ -345,7 +349,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
   ~BlobURLsReporter() = default;
 
   static void BuildPath(nsAutoCString& path, nsCStringHashKey::KeyType aKey,
-                        DataInfo* aInfo, bool anonymize) {
+                        mozilla::dom::DataInfo* aInfo, bool anonymize) {
     nsAutoCString url, owner;
     aInfo->mPrincipal->GetAsciiSpec(owner);
     if (!owner.IsEmpty()) {
@@ -471,7 +475,7 @@ class ReleasingTimerHolder final : public Runnable,
 
     MOZ_ASSERT(NS_IsMainThread(),
                "without locking gDataTable is main-thread only");
-    DataInfo* info =
+    mozilla::dom::DataInfo* info =
         GetDataInfo(mURI, true /* We care about revoked dataInfo */);
     if (!info) {
       // Already gone!
@@ -522,10 +526,11 @@ static void AddDataEntryInternal(const nsACString& aURI, T aObject,
   MOZ_ASSERT(NS_IsMainThread(), "changing gDataTable is main-thread only");
   StaticMutexAutoLock lock(sMutex);
   if (!gDataTable) {
-    gDataTable = new nsClassHashtable<nsCStringHashKey, DataInfo>;
+    gDataTable = new nsClassHashtable<nsCStringHashKey, mozilla::dom::DataInfo>;
   }
 
-  DataInfo* info = new DataInfo(aObject, aPrincipal, aAgentClusterId);
+  mozilla::dom::DataInfo* info =
+      new mozilla::dom::DataInfo(aObject, aPrincipal, aAgentClusterId);
   BlobURLsReporter::GetJSStackForBlob(info);
 
   gDataTable->Put(aURI, info);
@@ -546,7 +551,7 @@ BlobURLProtocolHandler::~BlobURLProtocolHandler() = default;
 
 /* static */
 nsresult BlobURLProtocolHandler::AddDataEntry(
-    BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
+    mozilla::dom::BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
     const Maybe<nsID>& aAgentClusterId, nsACString& aUri) {
   MOZ_ASSERT(aBlobImpl);
   MOZ_ASSERT(aPrincipal);
@@ -582,7 +587,7 @@ nsresult BlobURLProtocolHandler::AddDataEntry(
 void BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
                                           nsIPrincipal* aPrincipal,
                                           const Maybe<nsID>& aAgentClusterId,
-                                          BlobImpl* aBlobImpl) {
+                                          mozilla::dom::BlobImpl* aBlobImpl) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aBlobImpl);
   AddDataEntryInternal(aURI, aBlobImpl, aPrincipal, aAgentClusterId);
@@ -590,8 +595,9 @@ void BlobURLProtocolHandler::AddDataEntry(const nsACString& aURI,
 
 /* static */
 bool BlobURLProtocolHandler::ForEachBlobURL(
-    std::function<bool(BlobImpl*, nsIPrincipal*, const Maybe<nsID>&,
-                       const nsACString&, bool aRevoked)>&& aCb) {
+    std::function<bool(mozilla::dom::BlobImpl*, nsIPrincipal*,
+                       const Maybe<nsID>&, const nsACString&, bool aRevoked)>&&
+        aCb) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gDataTable) {
@@ -599,10 +605,10 @@ bool BlobURLProtocolHandler::ForEachBlobURL(
   }
 
   for (auto iter = gDataTable->ConstIter(); !iter.Done(); iter.Next()) {
-    DataInfo* info = iter.UserData();
+    mozilla::dom::DataInfo* info = iter.UserData();
     MOZ_ASSERT(info);
 
-    if (info->mObjectType != DataInfo::eBlobImpl) {
+    if (info->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
       continue;
     }
 
@@ -623,7 +629,7 @@ void BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   if (!gDataTable) {
     return;
   }
-  DataInfo* info = GetDataInfo(aUri);
+  mozilla::dom::DataInfo* info = GetDataInfo(aUri);
   if (!info) {
     return;
   }
@@ -633,13 +639,14 @@ void BlobURLProtocolHandler::RemoveDataEntry(const nsACString& aUri,
     info->mRevoked = true;
   }
 
-  if (aBroadcastToOtherProcesses && info->mObjectType == DataInfo::eBlobImpl) {
+  if (aBroadcastToOtherProcesses &&
+      info->mObjectType == mozilla::dom::DataInfo::eBlobImpl) {
     BroadcastBlobURLUnregistration(nsCString(aUri), info->mPrincipal);
   }
 
   // The timer will take care of removing the entry for real after
-  // RELEASING_TIMER milliseconds. In the meantime, the DataInfo, marked as
-  // revoked, will not be exposed.
+  // RELEASING_TIMER milliseconds. In the meantime, the mozilla::dom::DataInfo,
+  // marked as revoked, will not be exposed.
   ReleasingTimerHolder::Create(aUri);
 }
 
@@ -652,7 +659,7 @@ bool BlobURLProtocolHandler::RemoveDataEntry(
     return false;
   }
 
-  DataInfo* info = GetDataInfo(aUri);
+  mozilla::dom::DataInfo* info = GetDataInfo(aUri);
   if (!info) {
     return false;
   }
@@ -727,7 +734,7 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
 
 /* static */
 bool BlobURLProtocolHandler::GetDataEntry(
-    const nsACString& aUri, BlobImpl** aBlobImpl,
+    const nsACString& aUri, mozilla::dom::BlobImpl** aBlobImpl,
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
     const OriginAttributes& aOriginAttributes,
     const Maybe<nsID>& aAgentClusterId, bool aAlsoIfRevoked) {
@@ -739,7 +746,7 @@ bool BlobURLProtocolHandler::GetDataEntry(
     return false;
   }
 
-  DataInfo* info = GetDataInfo(aUri, aAlsoIfRevoked);
+  mozilla::dom::DataInfo* info = GetDataInfo(aUri, aAlsoIfRevoked);
   if (!info) {
     return false;
   }
@@ -773,7 +780,7 @@ bool BlobURLProtocolHandler::GetDataEntry(
     return false;
   }
 
-  RefPtr<BlobImpl> blobImpl = info->mBlobImpl;
+  RefPtr<mozilla::dom::BlobImpl> blobImpl = info->mBlobImpl;
   blobImpl.forget(aBlobImpl);
 
   return true;
@@ -788,18 +795,18 @@ void BlobURLProtocolHandler::Traverse(
     return;
   }
 
-  DataInfo* res;
+  mozilla::dom::DataInfo* res;
   gDataTable->Get(aUri, &res);
   if (!res) {
     return;
   }
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-      aCallback, "BlobURLProtocolHandler DataInfo.mBlobImpl");
+      aCallback, "BlobURLProtocolHandler mozilla::dom::DataInfo.mBlobImpl");
   aCallback.NoteXPCOMChild(res->mBlobImpl);
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-      aCallback, "BlobURLProtocolHandler DataInfo.mMediaSource");
+      aCallback, "BlobURLProtocolHandler mozilla::dom::DataInfo.mMediaSource");
   aCallback.NoteXPCOMChild(res->mMediaSource);
 }
 
@@ -839,8 +846,8 @@ BlobURLProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
   bool revoked = true;
   {
     StaticMutexAutoLock lock(sMutex);
-    DataInfo* info = GetDataInfo(aSpec);
-    if (info && info->mObjectType == DataInfo::eBlobImpl) {
+    mozilla::dom::DataInfo* info = GetDataInfo(aSpec);
+    if (info && info->mObjectType == mozilla::dom::DataInfo::eBlobImpl) {
       revoked = info->mRevoked;
     }
   }
@@ -891,8 +898,10 @@ bool BlobURLProtocolHandler::GetBlobURLPrincipal(nsIURI* aURI,
 
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
-  DataInfo* info = GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
-  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
+  mozilla::dom::DataInfo* info =
+      GetDataInfoFromURI(aURI, true /*aAlsoIfRevoked */);
+  if (!info || info->mObjectType != mozilla::dom::DataInfo::eBlobImpl ||
+      !info->mBlobImpl) {
     return false;
   }
 
@@ -912,47 +921,52 @@ bool BlobURLProtocolHandler::GetBlobURLPrincipal(nsIURI* aURI,
 }  // namespace dom
 }  // namespace mozilla
 
-nsresult NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob) {
+nsresult NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::BlobImpl** aBlob) {
   *aBlob = nullptr;
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
-  DataInfo* info = GetDataInfoFromURI(aURI, false /* aAlsoIfRevoked */);
-  if (!info || info->mObjectType != DataInfo::eBlobImpl) {
+  mozilla::dom::DataInfo* info =
+      mozilla::dom::GetDataInfoFromURI(aURI, false /* aAlsoIfRevoked */);
+  if (!info || info->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  RefPtr<BlobImpl> blob = info->mBlobImpl;
+  RefPtr<mozilla::dom::BlobImpl> blob = info->mBlobImpl;
   blob.forget(aBlob);
   return NS_OK;
 }
 
-nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob,
+nsresult NS_GetBlobForBlobURISpec(const nsACString& aSpec,
+                                  mozilla::dom::BlobImpl** aBlob,
                                   bool aAlsoIfRevoked) {
   *aBlob = nullptr;
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
 
-  DataInfo* info = GetDataInfo(aSpec, aAlsoIfRevoked);
-  if (!info || info->mObjectType != DataInfo::eBlobImpl || !info->mBlobImpl) {
+  mozilla::dom::DataInfo* info =
+      mozilla::dom::GetDataInfo(aSpec, aAlsoIfRevoked);
+  if (!info || info->mObjectType != mozilla::dom::DataInfo::eBlobImpl ||
+      !info->mBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  RefPtr<BlobImpl> blob = info->mBlobImpl;
+  RefPtr<mozilla::dom::BlobImpl> blob = info->mBlobImpl;
   blob.forget(aBlob);
   return NS_OK;
 }
 
-nsresult NS_GetSourceForMediaSourceURI(nsIURI* aURI, MediaSource** aSource) {
+nsresult NS_GetSourceForMediaSourceURI(nsIURI* aURI,
+                                       mozilla::dom::MediaSource** aSource) {
   *aSource = nullptr;
 
   MOZ_ASSERT(NS_IsMainThread(),
              "without locking gDataTable is main-thread only");
-  DataInfo* info = GetDataInfoFromURI(aURI);
-  if (!info || info->mObjectType != DataInfo::eMediaSource) {
+  mozilla::dom::DataInfo* info = mozilla::dom::GetDataInfoFromURI(aURI);
+  if (!info || info->mObjectType != mozilla::dom::DataInfo::eMediaSource) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  RefPtr<MediaSource> mediaSource = info->mMediaSource;
+  RefPtr<mozilla::dom::MediaSource> mediaSource = info->mMediaSource;
   mediaSource.forget(aSource);
   return NS_OK;
 }
@@ -960,10 +974,10 @@ nsresult NS_GetSourceForMediaSourceURI(nsIURI* aURI, MediaSource** aSource) {
 namespace mozilla {
 namespace dom {
 
-bool IsType(nsIURI* aUri, DataInfo::ObjectType aType) {
+bool IsType(nsIURI* aUri, mozilla::dom::DataInfo::ObjectType aType) {
   // We lock because this may be called off-main-thread
   StaticMutexAutoLock lock(sMutex);
-  DataInfo* info = GetDataInfoFromURI(aUri);
+  mozilla::dom::DataInfo* info = GetDataInfoFromURI(aUri);
   if (!info) {
     return false;
   }
@@ -971,7 +985,9 @@ bool IsType(nsIURI* aUri, DataInfo::ObjectType aType) {
   return info->mObjectType == aType;
 }
 
-bool IsBlobURI(nsIURI* aUri) { return IsType(aUri, DataInfo::eBlobImpl); }
+bool IsBlobURI(nsIURI* aUri) {
+  return IsType(aUri, mozilla::dom::DataInfo::eBlobImpl);
+}
 
 bool BlobURLSchemeIsHTTPOrHTTPS(const nsACString& aUri) {
   return (StringBeginsWith(aUri, "blob:http://"_ns) ||
@@ -979,7 +995,7 @@ bool BlobURLSchemeIsHTTPOrHTTPS(const nsACString& aUri) {
 }
 
 bool IsMediaSourceURI(nsIURI* aUri) {
-  return IsType(aUri, DataInfo::eMediaSource);
+  return IsType(aUri, mozilla::dom::DataInfo::eMediaSource);
 }
 
 }  // namespace dom

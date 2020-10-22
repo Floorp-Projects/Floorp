@@ -16,7 +16,16 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterDefaultConfig",
+  "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterNewTabHook",
+  "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "ActorManagerParent",
@@ -615,6 +624,22 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:studies"],
+  },
+
+  ASRouter: {
+    parent: {
+      moduleURI: "resource:///actors/ASRouterParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/ASRouterChild.jsm",
+      events: {
+        // This is added so the actor instantiates immediately and makes
+        // methods available to the page js on load.
+        DOMWindowCreated: {},
+      },
+    },
+    matches: ["about:home*", "about:newtab*", "about:welcome*"],
+    remoteTypes: ["privilegedabout"],
   },
 
   SwitchDocumentDirection: {
@@ -2142,6 +2167,7 @@ BrowserGlue.prototype = {
 
     Normandy.uninit();
     RFPHelper.uninit();
+    ASRouterNewTabHook.destroy();
   },
 
   // Set up a listener to enable/disable the screenshots extension
@@ -2659,6 +2685,12 @@ BrowserGlue.prototype = {
           ) {
             PlacesUIUtils.removeImportButtonWhenImportSucceeds();
           }
+        },
+      },
+
+      {
+        task: () => {
+          ASRouterNewTabHook.createInstance(ASRouterDefaultConfig());
         },
       },
 
@@ -5310,7 +5342,7 @@ var AboutHomeStartupCache = {
     let state = AboutNewTab.activityStream.store.getState();
     return new Promise(resolve => {
       this._cacheDeferred = resolve;
-      this.log.trace("Parent received cache streams.");
+      this.log.trace("Parent is requesting cache streams.");
       this._procManager.sendAsyncMessage(this.CACHE_REQUEST_MESSAGE, { state });
     });
   },

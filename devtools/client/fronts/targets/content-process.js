@@ -23,6 +23,7 @@ class ContentProcessTargetFront extends TargetMixin(
 
   form(json) {
     this.actorID = json.actor;
+    this.processID = json.processID;
 
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method

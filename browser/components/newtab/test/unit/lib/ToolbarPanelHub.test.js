@@ -21,7 +21,7 @@ describe("ToolbarPanelHub", () => {
   let setBoolPrefStub;
   let waitForInitializedStub;
   let isBrowserPrivateStub;
-  let fakeDispatch;
+  let fakeSendTelemetry;
   let getEarliestRecordedDateStub;
   let getEventsByDateRangeStub;
   let defaultSearchStub;
@@ -119,7 +119,7 @@ describe("ToolbarPanelHub", () => {
     removeObserverStub = sandbox.stub();
     getBoolPrefStub = sandbox.stub();
     setBoolPrefStub = sandbox.stub();
-    fakeDispatch = sandbox.stub();
+    fakeSendTelemetry = sandbox.stub();
     isBrowserPrivateStub = sandbox.stub();
     getEarliestRecordedDateStub = sandbox.stub().returns(
       // A random date that's not the current timestamp
@@ -336,7 +336,7 @@ describe("ToolbarPanelHub", () => {
       getMessagesStub = sandbox.stub();
       instance.init(waitForInitializedStub, {
         getMessages: getMessagesStub,
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
       });
     });
     it("should have correct state", async () => {
@@ -582,7 +582,7 @@ describe("ToolbarPanelHub", () => {
         await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
         assert.calledOnce(spy);
-        assert.calledOnce(fakeDispatch);
+        assert.calledOnce(fakeSendTelemetry);
         assert.propertyVal(
           spy.firstCall.args[2],
           "id",
@@ -606,7 +606,7 @@ describe("ToolbarPanelHub", () => {
         await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
         assert.calledOnce(spy);
-        assert.calledOnce(fakeDispatch);
+        assert.calledOnce(fakeSendTelemetry);
 
         spy.resetHistory();
 
@@ -645,10 +645,10 @@ describe("ToolbarPanelHub", () => {
             },
           }
         );
-        assert.calledOnce(fakeDispatch);
+        assert.calledOnce(fakeSendTelemetry);
         const {
           args: [dispatchPayload],
-        } = fakeDispatch.lastCall;
+        } = fakeSendTelemetry.lastCall;
         assert.propertyVal(dispatchPayload, "type", "TOOLBAR_PANEL_TELEMETRY");
         assert.propertyVal(dispatchPayload.data, "message_id", panelPingId);
         assert.deepEqual(dispatchPayload.data.event_context, {
@@ -684,10 +684,10 @@ describe("ToolbarPanelHub", () => {
             },
           }
         );
-        assert.calledOnce(fakeDispatch);
+        assert.calledOnce(fakeSendTelemetry);
         const {
           args: [dispatchPayload],
-        } = fakeDispatch.lastCall;
+        } = fakeSendTelemetry.lastCall;
         assert.propertyVal(dispatchPayload, "type", "TOOLBAR_PANEL_TELEMETRY");
         assert.propertyVal(dispatchPayload.data, "message_id", panelPingId);
         assert.deepEqual(dispatchPayload.data.event_context, {
@@ -709,9 +709,7 @@ describe("ToolbarPanelHub", () => {
         removeMessagesSpy = sandbox.spy(instance, "removeMessages");
         renderMessagesStub = sandbox.spy(instance, "renderMessages");
         addEventListenerStub = fakeElementById.addEventListener;
-        browser = {
-          browser: { ownerGlobal: fakeWindow, ownerDocument: fakeDocument },
-        };
+        browser = { ownerGlobal: fakeWindow, ownerDocument: fakeDocument };
         fakeElementById.querySelectorAll.returns([fakeElementById]);
       });
       it("should call removeMessages when forcing a message to show", () => {
@@ -768,7 +766,7 @@ describe("ToolbarPanelHub", () => {
           onboardingMsgs.find(msg => msg.template === "protections_panel")
         );
       await instance.init(waitForInitializedStub, {
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
         getMessages: getMessagesStub,
       });
     });

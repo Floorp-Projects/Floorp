@@ -108,3 +108,45 @@ add_task(async function later_addition() {
   });
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function root_icon_stored() {
+  AddonTestUtils.initMochitest(this);
+  let server = AddonTestUtils.createHttpServer({ hosts: ["www.nostore.com"] });
+  server.registerFile(
+    "/favicon.ico",
+    FileUtils.getFile(
+      "CurWorkD",
+      `/browser/browser/base/content/test/favicons/no-store.png`.split("/")
+    )
+  );
+  server.registerPathHandler("/page", (request, response) => {
+    response.write("<html>A page without icon</html>");
+  });
+
+  let noStorePromise = TestUtils.topicObserved(
+    "http-on-stop-request",
+    (s, t, d) => {
+      let chan = s.QueryInterface(Ci.nsIHttpChannel);
+      return chan?.URI.spec == "http://www.nostore.com/favicon.ico";
+    }
+  ).then(([chan]) => chan.isNoStoreResponse());
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "http://www.nostore.com/page",
+    },
+    async function(browser) {
+      await TestUtils.waitForCondition(async () => {
+        let uri = await new Promise(resolve =>
+          PlacesUtils.favicons.getFaviconURLForPage(
+            Services.io.newURI("http://www.nostore.com/page"),
+            resolve
+          )
+        );
+        return uri.spec == "http://www.nostore.com/favicon.ico";
+      }, "wait for the favicon to be stored");
+      Assert.ok(await noStorePromise, "Should have received no-store header");
+    }
+  );
+});

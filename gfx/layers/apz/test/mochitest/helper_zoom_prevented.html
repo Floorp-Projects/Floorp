@@ -64,8 +64,8 @@ function cleanup() {
 
 waitUntilApzStable()
 .then(runContinuation(test))
-.then(cleanup)
-.then(subtestDone);
+.finally(cleanup)
+.then(subtestDone, subtestFailed);
 
   </script>
 </head>

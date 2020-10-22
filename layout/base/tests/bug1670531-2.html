@@ -1,0 +1,27 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Select non-editable content in an editor</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div:focus {
+    outline: 3px solid blue;
+  }
+</style>
+<div contenteditable="true" spellcheck="false">
+  xx<span contenteditable="false">NOT EDITABLE</span>xxx
+</div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    // Move before the three x
+    for (let i = 0; i < 3; ++i) {
+      synthesizeKey("KEY_ArrowRight");
+    }
+    // Select <span>
+    synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>

@@ -58,7 +58,6 @@ USE_LIBS += [
 
 # Suppress warnings in third-party code.
 CFLAGS += [
-    '-Wno-missing-braces',
     '-Wno-pointer-to-int-cast',
     '-Wno-sign-compare',
 ]

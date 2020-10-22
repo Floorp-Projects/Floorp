@@ -45,7 +45,7 @@
 //! [`Parse`]: parser::Parse
 //! [`LexError`]: lexer::LexError
 
-#![deny(missing_docs, intra_doc_link_resolution_failure)]
+#![deny(missing_docs, broken_intra_doc_links)]
 
 use std::fmt;
 use std::path::{Path, PathBuf};

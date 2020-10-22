@@ -1,4 +1,9 @@
 /**
+ * Global variables for testing.
+ */
+const gEMPTY_PAGE_URL = GetTestWebBasedURL("file_empty.html");
+
+/**
  * Return a web-based URL for a given file based on the testing directory.
  * @param {String} fileName
  *        file that caller wants its web-based url
@@ -51,4 +56,11 @@ async function waitForTabSoundIndicatorDisappears(tab) {
     );
   }
   ok(!tab.soundPlaying, "Tab sound indicator disappears");
+}
+
+/**
+ * Return a new foreground tab loading with an empty file.
+ */
+function createBlankForegroundTab() {
+  return BrowserTestUtils.openNewForegroundTab(gBrowser, gEMPTY_PAGE_URL);
 }

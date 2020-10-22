@@ -16,6 +16,11 @@ const SCRIPT_TEMPLATE_RESOURCE_PATH =
 let window = self;
 window.requestAnimationFrame = () => {};
 window.cancelAnimationFrame = () => {};
+window.ASRouterMessage = () => {
+  return Promise.resolve();
+};
+window.ASRouterAddParentListener = () => {};
+window.ASRouterRemoveParentListener = () => {};
 
 importScripts("resource://gre/modules/workers/require.js");
 

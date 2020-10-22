@@ -77,7 +77,11 @@ const getElementByPathOrFalse = (obj, pathString) => {
 
 export const adjustCertInformation = cert => {
   let certItems = [];
-  let tabName = cert.subject ? cert.subject.cn || "" : "";
+  let tabName = cert?.subject?.cn || "";
+  if (cert && !tabName) {
+    // No common name, use the value of the last item in the cert's entries.
+    tabName = cert.subject.entries?.slice(-1)[1] || "";
+  }
 
   if (!cert) {
     return {

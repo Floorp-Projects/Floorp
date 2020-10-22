@@ -17,7 +17,7 @@ var subtests = [
       SimpleTest.waitForExplicitFinish();
       window.onload = function() {
         runSubtestsSeriallyInFreshWindows(subtests)
-        .then(SimpleTest.finish, SimpleTest.finish);
+        .then(SimpleTest.finish, SimpleTest.finishWithFailure);
       };
     } else {
       SimpleTest.ok(true, "Keyboard APZ is disabled");
