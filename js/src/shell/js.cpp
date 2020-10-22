@@ -1234,9 +1234,7 @@ class MOZ_RAII AutoLockTelemetry : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
 
  public:
-  AutoLockTelemetry() : Base(*telemetryLock) {
-    MOZ_ASSERT(telemetryLock);
-  }
+  AutoLockTelemetry() : Base(*telemetryLock) { MOZ_ASSERT(telemetryLock); }
 };
 
 using TelemetryData = uint32_t;
@@ -1268,9 +1266,7 @@ static void WriteTelemetryDataToDisk(const char* dir) {
   };
 
   for (size_t id = 0; id < JS_TELEMETRY_END; id++) {
-    auto clear = MakeScopeExit([&] {
-      telemetryResults[id].clearAndFree();
-    });
+    auto clear = MakeScopeExit([&] { telemetryResults[id].clearAndFree(); });
     if (!initOutput(telemetryNames[id])) {
       continue;
     }
@@ -1282,7 +1278,6 @@ static void WriteTelemetryDataToDisk(const char* dir) {
 }
 
 #undef MAP_TELEMETRY
-
 
 static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -3448,9 +3443,11 @@ static MOZ_MUST_USE bool DisassembleScript(JSContext* cx, HandleScript script,
         RootedFunction fun(cx, &obj->as<JSFunction>());
         if (fun->isInterpreted()) {
           RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-          if (!script || !DisassembleScript(cx, script, fun, lines, recursive,
-                                            sourceNotes, gcThings, sp)) {
-            return false;
+          if (script) {
+            if (!DisassembleScript(cx, script, fun, lines, recursive,
+                                   sourceNotes, gcThings, sp)) {
+              return false;
+            }
           }
         } else {
           if (!sp->put("[native code]\n")) {
