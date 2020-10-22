@@ -915,7 +915,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
 
     std::queue<RefPtr<MicroTaskRunnable>>* microTaskQueue = nullptr;
 
-    JSContext* cx = GetCurrentWorkerThreadJSContext();
+    JSContext* cx = Context();
     NS_ASSERTION(cx, "This should never be null!");
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
