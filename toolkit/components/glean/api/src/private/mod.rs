@@ -7,12 +7,14 @@
 use std::convert::TryFrom;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use serde::{Deserialize, Serialize};
+
 // Re-export of `glean_core` types we can re-use.
 // That way a user only needs to depend on this crate, not on glean_core (and there can't be a
 // version mismatch).
 pub use glean_core::{
-    metrics::DistributionData, metrics::MemoryUnit, metrics::TimeUnit, CommonMetricData, ErrorType,
-    Lifetime,
+    metrics::DistributionData, metrics::MemoryUnit, metrics::RecordedEvent, metrics::TimeUnit,
+    CommonMetricData, ErrorType, Lifetime,
 };
 
 mod boolean;
@@ -49,7 +51,8 @@ pub use self::uuid::UuidMetric;
 /// This is needed, as the current `glean-core` API expects timestamps as integers.
 /// We probably should move this API into `glean-core` directly.
 /// See [Bug 1619253](https://bugzilla.mozilla.org/show_bug.cgi?id=1619253).
-struct Instant(u64);
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Instant(u64);
 
 impl Instant {
     /// Returns an instant corresponding to "now".
