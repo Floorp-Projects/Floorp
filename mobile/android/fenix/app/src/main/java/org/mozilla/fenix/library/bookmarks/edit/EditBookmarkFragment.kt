@@ -5,7 +5,10 @@
 package org.mozilla.fenix.library.bookmarks.edit
 
 import android.content.DialogInterface
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -13,6 +16,7 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
@@ -134,6 +138,23 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 placeCursorAtEnd()
                 showKeyboard()
             }
+
+            view.bookmarkUrlEdit.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                    // NOOP
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    bookmarkUrlEdit.onTextChanged(s)
+
+                    inputLayoutBookmarkUrl.error = null
+                    inputLayoutBookmarkUrl.errorIconDrawable = null
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // NOOP
+                }
+            })
         }
     }
 
@@ -245,13 +266,24 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                         )
                     )
                 }
+                withContext(Main) {
+                    inputLayoutBookmarkUrl.error = null
+                    inputLayoutBookmarkUrl.errorIconDrawable = null
+
+                    findNavController().popBackStack()
+                }
             } catch (e: UrlParseFailed) {
                 withContext(Main) {
-                    bookmarkUrlEdit.error = getString(R.string.bookmark_invalid_url_error)
+                    inputLayoutBookmarkUrl.error = getString(R.string.bookmark_invalid_url_error)
+                    inputLayoutBookmarkUrl.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
+                    inputLayoutBookmarkUrl.setErrorIconTintList(
+                        ColorStateList.valueOf(
+                            ContextCompat.getColor(requireContext(), R.color.design_error)
+                        )
+                    )
                 }
             }
         }
         progress_bar_bookmark.visibility = View.INVISIBLE
-        findNavController().popBackStack()
     }
 }

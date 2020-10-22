@@ -46,6 +46,10 @@ class ClearableEditText @JvmOverloads constructor(
      * Displays a clear icon if text has been entered.
      */
     override fun onTextChanged(text: CharSequence?, start: Int, lengthBefore: Int, lengthAfter: Int) {
+        onTextChanged(text)
+    }
+
+    fun onTextChanged(text: CharSequence?) {
         // lengthAfter has inconsistent behaviour when there are spaces in the entered text, so we'll use text.length.
         val textLength = text?.length ?: 0
         val drawable = if (shouldShowClearButton(textLength)) {

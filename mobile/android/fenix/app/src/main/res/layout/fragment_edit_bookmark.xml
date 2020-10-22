@@ -59,19 +59,26 @@
         android:textColor="?primaryText"
         android:textSize="12sp" />
 
-    <org.mozilla.fenix.utils.ClearableEditText
-        android:id="@+id/bookmarkUrlEdit"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputLayoutBookmarkUrl"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/bookmark_edit_text_height"
-        android:layout_marginBottom="8dp"
-        android:drawablePadding="8dp"
-        android:ellipsize="none"
-        android:fadingEdgeLength="8dp"
-        android:inputType="textUri"
-        android:requiresFadingEdge="horizontal"
-        android:textColor="?secondaryText"
-        android:textSize="15sp"
-        tools:text="https://www.mozilla.org/en-US/" />
+        android:layout_height="wrap_content">
+
+        <org.mozilla.fenix.utils.ClearableEditText
+            android:id="@+id/bookmarkUrlEdit"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/bookmark_edit_text_height"
+            android:layout_marginBottom="8dp"
+            android:drawablePadding="8dp"
+            android:ellipsize="none"
+            android:fadingEdgeLength="8dp"
+            android:inputType="textUri"
+            android:requiresFadingEdge="horizontal"
+            android:textColor="?secondaryText"
+            android:textSize="15sp"
+            tools:text="https://www.mozilla.org/en-US/" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/bookmark_folder_label"
