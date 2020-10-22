@@ -15,6 +15,7 @@
 
 #include "jslibmath.h"
 #include "jsmath.h"
+#include "jsnum.h"
 
 #include "builtin/RegExp.h"
 #include "jit/AtomicOperations.h"
@@ -6225,13 +6226,17 @@ MDefinition* MGuardStringToInt32::foldsTo(TempAllocator& alloc) {
   }
 
   JSAtom* atom = &string()->toConstant()->toString()->asAtom();
-  if (!atom->hasIndexValue()) {
+  double number;
+  if (!js::MaybeStringToNumber(atom, &number)) {
     return this;
   }
 
-  uint32_t index = atom->getIndexValue();
-  MOZ_ASSERT(index <= INT32_MAX);
-  return MConstant::New(alloc, Int32Value(index));
+  int32_t n;
+  if (!mozilla::NumberIsInt32(number, &n)) {
+    return this;
+  }
+
+  return MConstant::New(alloc, Int32Value(n));
 }
 
 MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
@@ -6240,13 +6245,12 @@ MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
   }
 
   JSAtom* atom = &string()->toConstant()->toString()->asAtom();
-  if (!atom->hasIndexValue()) {
+  double number;
+  if (!js::MaybeStringToNumber(atom, &number)) {
     return this;
   }
 
-  uint32_t index = atom->getIndexValue();
-  MOZ_ASSERT(index <= INT32_MAX);
-  return MConstant::New(alloc, DoubleValue(index));
+  return MConstant::New(alloc, DoubleValue(number));
 }
 
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
