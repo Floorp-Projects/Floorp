@@ -63,8 +63,6 @@ if (isProduction) {
   // the other debugger modules will be transpiled to a format that is
   // compatible with the DevTools Loader.
   webpackConfig.entry.vendors = getEntry("src/vendors.js");
-} else {
-  webpackConfig.entry.debugger = getEntry("src/main.development.js");
 }
 
 const envConfig = getConfig();
