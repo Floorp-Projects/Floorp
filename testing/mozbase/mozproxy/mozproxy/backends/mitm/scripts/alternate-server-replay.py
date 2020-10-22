@@ -93,6 +93,7 @@ class AlternateServerPlayback:
         self._done = False
         self._replayed = 0
         self._not_replayed = 0
+        self._recordings_used = 0
         self.mitm_version = ctx.mitmproxy.version.VERSION
 
         ctx.log.info("MitmProxy version: %s" % self.mitm_version)
@@ -122,8 +123,8 @@ class AlternateServerPlayback:
                 )
             elif i.response and self.mitm_version in ("4.0.2", "4.0.4", "5.1.1"):
                 # see: https://github.com/mitmproxy/mitmproxy/issues/3856
-                l = self.flowmap.setdefault(self._hash(i), [])
-                l.append(i)
+                l = self.flowmap.setdefault(self._hash(i), {"items": [], "reply_count": 0})
+                l["items"].append(i)
             else:
                 ctx.log.info(
                     "Recorded request %s has no response. Removing from recording list"
@@ -195,7 +196,10 @@ class AlternateServerPlayback:
         """
         hsh = self._hash(request)
         if hsh in self.flowmap:
-            return self.flowmap[hsh][-1]
+            if self.flowmap[hsh]["reply_count"] == 0:
+                self._recordings_used += 1
+            self.flowmap[hsh]["reply_count"] += 1
+            return self.flowmap[hsh]["items"][-1]
 
     def configure(self, updated):
         if not self.configured and ctx.options.server_replay_files:
@@ -206,12 +210,15 @@ class AlternateServerPlayback:
         if self._done or not ctx.options.upload_dir:
             return
 
-        confidence = float(self._replayed) / float(self._replayed + self._not_replayed)
+        replay_confidence = float(self._replayed) / (self._replayed + self._not_replayed)
+        recording_proportion_used = 0 if self._recordings_used == 0 else float(
+            self._recordings_used) / len(self.flowmap)
         stats = {"totals": dict(self.netlocs),
                  "calls": self.calls,
                  "replayed": self._replayed,
                  "not-replayed": self._not_replayed,
-                 "confidence": int(confidence * 100)}
+                 "replay-confidence": int(replay_confidence * 100),
+                 "recording-proportion-used": int(recording_proportion_used * 100)}
         file_name = "mitm_netlocs_%s.json" % \
                     os.path.splitext(
                         os.path.basename(
