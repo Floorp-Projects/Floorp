@@ -20399,17 +20399,10 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId));
 
   if (mOptionalKeyRange.isSome()) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
