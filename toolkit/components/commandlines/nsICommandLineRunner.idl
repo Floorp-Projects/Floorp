@@ -29,6 +29,8 @@ interface nsICommandLineRunner : nsICommandLine
    * On Windows, the "native" character set is UTF-8, not the native codepage.
    *
    * @param workingDir The working directory for resolving file and URI paths.
+   *                   Can be null, in which case resolving files will not
+   *                   work, and only absolute URIs will be resolvable.
    * @param state      The nsICommandLine.state flag.
    */
   void init(in long argc, in nsArgvArray argv,

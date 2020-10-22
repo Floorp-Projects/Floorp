@@ -1,0 +1,30 @@
+/* Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+add_task(async function test_resolveFile() {
+  const EXISTING_FILE = do_get_file("xpcshell.ini");
+  // We explicitly do not initialize this with a working dir.
+  let cmdLine = Cu.createCommandLine();
+  let fileByPath = cmdLine.resolveFile(EXISTING_FILE.path);
+  info("Resolved: " + fileByPath.path);
+  Assert.ok(EXISTING_FILE.equals(fileByPath), "Should find the same file");
+
+  Assert.ok(
+    !cmdLine.resolveFile("xpcshell.ini"),
+    "Should get null for relative files."
+  );
+
+  // Now create a commandline with a working dir:
+  cmdLine = Cu.createCommandLine(EXISTING_FILE.parent);
+  let resolvedTxtFile = cmdLine.resolveFile("xpcshell.ini");
+
+  info("Resolved: " + resolvedTxtFile.path);
+  Assert.ok(
+    EXISTING_FILE.equals(resolvedTxtFile),
+    "Should resolve relative file."
+  );
+});
