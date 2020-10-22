@@ -287,6 +287,11 @@ NullHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetSupportsHTTP3(bool* aSupportsHTTP3) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // NullHttpChannel::nsIChannel
 //-----------------------------------------------------------------------------
