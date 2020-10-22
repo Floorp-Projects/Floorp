@@ -4,9 +4,6 @@
 user_pref("browser.newtabpage.enabled", false);
 // Don't restore the last open set of tabs if the browser has crashed
 user_pref("browser.sessionstore.resume_from_crash", false);
-// Don't show the Bookmarks Toolbar on any tab (the above pref that
-// disables the New Tab Page ends up showing the toolbar on about:blank).
-user_pref("browser.toolbars.bookmarks.visibility", "never");
 // Only install add-ons from the profile and the application scope
 // Also ensure that those are not getting disabled.
 // see: https://developer.mozilla.org/en/Installing_extensions

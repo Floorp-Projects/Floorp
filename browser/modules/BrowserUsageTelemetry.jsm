@@ -865,21 +865,11 @@ let BrowserUsageTelemetry = {
     let widgetMap = new Map();
 
     const toolbarState = nodeId => {
-      let value;
-      if (nodeId == "PersonalToolbar") {
-        value = Services.prefs.getCharPref(
-          "browser.toolbars.bookmarks.visibility",
-          "newtab"
-        );
-        value = (value == "never").toString();
-      } else {
-        value = Services.xulStore.getValue(
-          AppConstants.BROWSER_CHROME_URL,
-          nodeId,
-          "collapsed"
-        );
-      }
-
+      let value = Services.xulStore.getValue(
+        AppConstants.BROWSER_CHROME_URL,
+        nodeId,
+        "collapsed"
+      );
       if (value) {
         return value == "true" ? "off" : "on";
       }
@@ -1161,12 +1151,9 @@ let BrowserUsageTelemetry = {
   },
 
   recordToolbarVisibility(toolbarId, newState, reason) {
-    if (typeof newState != "string") {
-      newState = newState ? "on" : "off";
-    }
     this._recordWidgetChange(
       BROWSER_UI_CONTAINER_IDS[toolbarId],
-      newState,
+      newState ? "on" : "off",
       reason
     );
   },
