@@ -6330,7 +6330,9 @@ already_AddRefed<PresShell> Document::CreatePresShell(
 
   // Gaining a shell causes changes in how media queries are evaluated, so
   // invalidate that.
-  aContext->MediaFeatureValuesChanged({MediaFeatureChange::kAllChanges});
+  aContext->MediaFeatureValuesChanged(
+      {MediaFeatureChange::kAllChanges},
+      MediaFeatureChangePropagation::JustThisDocument);
 
   // Make sure to never paint if we belong to an invisible DocShell.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);

@@ -48,6 +48,15 @@ enum class MediaFeatureChangeReason : uint16_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangeReason)
 
+enum class MediaFeatureChangePropagation : uint8_t {
+  JustThisDocument = 0,
+  SubDocuments = 1 << 0,
+  Images = 1 << 1,
+  All = Images | SubDocuments,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangePropagation)
+
 struct MediaFeatureChange {
   static const auto kAllChanges = static_cast<MediaFeatureChangeReason>(~0);
 
