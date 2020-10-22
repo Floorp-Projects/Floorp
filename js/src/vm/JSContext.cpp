@@ -865,6 +865,11 @@ mozilla::GenericErrorResult<OOM> JSContext::alreadyReportedOOM() {
 }
 
 mozilla::GenericErrorResult<JS::Error> JSContext::alreadyReportedError() {
+#ifdef DEBUG
+  if (!isHelperThreadContext()) {
+    MOZ_ASSERT(isExceptionPending());
+  }
+#endif
   return mozilla::Err(JS::Error());
 }
 
