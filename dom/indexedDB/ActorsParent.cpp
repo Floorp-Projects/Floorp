@@ -20981,12 +20981,9 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   const bool hasKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString indexTable;
-  if (mMetadata->mCommonMetadata.unique()) {
-    indexTable.AssignLiteral("unique_index_data ");
-  } else {
-    indexTable.AssignLiteral("index_data ");
-  }
+  const auto indexTable = mMetadata->mCommonMetadata.unique()
+                              ? "unique_index_data "_ns
+                              : "index_data "_ns;
 
   const nsCString query =
       "SELECT object_data_key "
@@ -20997,17 +20994,11 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   IDB_TRY_INSPECT(const auto& stmt, aConnection->BorrowCachedStatement(query));
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameIndexId,
+                                mMetadata->mCommonMetadata.id()));
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(BindKeyRangeToStatement(mOptionalKeyRange.ref(), &*stmt));
   }
 
   IDB_TRY(CollectWhileHasResult(
