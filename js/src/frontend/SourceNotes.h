@@ -249,13 +249,18 @@ class SrcNote {
     }
 
    public:
-    static inline unsigned lengthFor(unsigned line) {
-      return 1 /* SetLine */ + (line > SrcNote::FourBytesOperandMask ? 4 : 1);
+    static inline unsigned lengthFor(unsigned line, size_t initialLine) {
+      unsigned operandSize =
+          toOperand(line, initialLine) > SrcNote::FourBytesOperandMask ? 4 : 1;
+      return 1 /* SetLine */ + operandSize;
     }
 
-    static inline ptrdiff_t toOperand(size_t line) { return ptrdiff_t(line); }
+    static inline ptrdiff_t toOperand(size_t line, size_t initialLine) {
+      MOZ_ASSERT(line >= initialLine);
+      return ptrdiff_t(line - initialLine);
+    }
 
-    static inline size_t getLine(const SrcNote* sn);
+    static inline size_t getLine(const SrcNote* sn, size_t initialLine);
   };
 
   friend class SrcNoteWriter;
@@ -363,8 +368,9 @@ inline ptrdiff_t SrcNote::ColSpan::getSpan(const SrcNote* sn) {
 }
 
 /* static */
-inline size_t SrcNote::SetLine::getLine(const SrcNote* sn) {
-  return fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Line)));
+inline size_t SrcNote::SetLine::getLine(const SrcNote* sn, size_t initialLine) {
+  return initialLine +
+         fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Line)));
 }
 
 // Iterate over SrcNote array, until it hits terminator.
