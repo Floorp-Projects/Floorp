@@ -9,9 +9,6 @@
 namespace ots {
 
 bool OpenTypeGLOC::Parse(const uint8_t* data, size_t length) {
-  if (GetFont()->dropped_graphite) {
-    return Drop("Skipping Graphite table");
-  }
   Buffer table(data, length);
   OpenTypeNAME* name = static_cast<OpenTypeNAME*>(
       GetFont()->GetTypedTable(OTS_TAG_NAME));
