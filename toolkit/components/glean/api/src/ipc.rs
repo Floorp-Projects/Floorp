@@ -4,7 +4,7 @@
 
 //! IPC Implementation, Rust part
 
-use crate::private::CommonMetricData;
+use crate::private::{CommonMetricData, Instant};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -22,6 +22,7 @@ use {
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
+    pub events: HashMap<MetricId, Vec<(Instant, Option<HashMap<i32, String>>)>>,
 }
 
 /// Uniquely identifies a single metric within its metric type.
