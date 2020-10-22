@@ -262,9 +262,11 @@ class FaviconLoad {
     // By default don't store icons added after "pageshow".
     let canStoreIcon = this.icon.beforePageShow;
     if (canStoreIcon) {
-      // Don't store icons responding with Cache-Control: no-store.
+      // Don't store icons responding with Cache-Control: no-store, but always
+      // allow root domain icons.
       try {
         if (
+          this.icon.iconUri.filePath != "/favicon.ico" &&
           this.channel instanceof Ci.nsIHttpChannel &&
           this.channel.isNoStoreResponse()
         ) {

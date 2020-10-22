@@ -6,6 +6,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   LinkHandlerParent: "resource:///actors/LinkHandlerParent.jsm",
