@@ -345,8 +345,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   const auto& origin = quotaInfo.mOrigin;
 #else
-  LS_TRY_INSPECT(const auto& origin,
-                 QuotaManager::GetOriginFromPrincipal(storagePrincipal.get()));
+  LS_TRY_INSPECT(
+      const auto& origin,
+      quota::QuotaManager::GetOriginFromPrincipal(storagePrincipal.get()));
 #endif
 
   uint32_t privateBrowsingId;
@@ -429,13 +430,14 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
 #ifdef DEBUG
   LS_TRY_INSPECT(
       const auto& quotaInfo,
-      ([&storagePrincipalInfo, &aPrincipal]() -> Result<QuotaInfo, nsresult> {
+      ([&storagePrincipalInfo,
+        &aPrincipal]() -> Result<quota::QuotaInfo, nsresult> {
         if (storagePrincipalInfo->type() ==
             PrincipalInfo::TSystemPrincipalInfo) {
-          return QuotaManager::GetInfoForChrome();
+          return quota::QuotaManager::GetInfoForChrome();
         }
 
-        LS_TRY_RETURN(QuotaManager::GetInfoFromPrincipal(aPrincipal));
+        LS_TRY_RETURN(quota::QuotaManager::GetInfoFromPrincipal(aPrincipal));
       }()));
 
   MOZ_ASSERT(originAttrSuffix == quotaInfo.mSuffix);
