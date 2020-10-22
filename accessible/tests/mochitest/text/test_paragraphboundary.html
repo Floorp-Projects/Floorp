@@ -90,6 +90,11 @@
       [[0, 2, "ab\n", 0, 3],
       [3, 3, "", 3, 3]]);
 
+      // Link followed by a paragraph.
+      testTextAtOffset("linkThenPara", BOUNDARY_PARAGRAPH,
+      [[0, 0, kEmbedChar, 0, 1],
+       [1, 2, kEmbedChar, 1, 2]]);
+
       SimpleTest.finish();
     }
 
@@ -126,9 +131,10 @@ b
 c</textarea> <!-- This must be outdented for a correct test case -->
   <textarea id="textarea_with_trailing_br">This is a test.
 </textarea> <!-- This must be outdented for a correct test case -->
-<p id="presentational_br" style="white-space: pre-wrap;">a<span> <br role="presentation"></span>b</p>
-<div id="two_paragraphs"><p>a</p><p>b</p></div>
-<div id ="divWithParaWithLink"><p><a href="#">a</a></p>b</div>
-<p id="twoTextNodesAndBr">a<span>b</span><br></p>
+  <p id="presentational_br" style="white-space: pre-wrap;">a<span> <br role="presentation"></span>b</p>
+  <div id="two_paragraphs"><p>a</p><p>b</p></div>
+  <div id ="divWithParaWithLink"><p><a href="#">a</a></p>b</div>
+  <p id="twoTextNodesAndBr">a<span>b</span><br></p>
+  <div id="linkThenPara"><a href="#">a</a><p>b</p></div>
 </body>
 </html>
