@@ -152,15 +152,11 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
   // unique image cache per the top-level document eTLD+1.
   if (!ContentBlocking::ApproximateAllowAccessForWithoutChannel(
           aDocument->GetInnerWindow(), aURI)) {
-    nsPIDOMWindowOuter* top =
-        aDocument->GetInnerWindow()->GetInProcessScriptableTop();
-    nsPIDOMWindowInner* topInner = top ? top->GetCurrentInnerWindow() : nullptr;
-    if (!topInner) {
-      return aDocument
-          ->GetBaseDomain();  // because we don't have anything better!
-    }
-    return topInner->GetExtantDoc() ? topInner->GetExtantDoc()->GetBaseDomain()
-                                    : ""_ns;
+    // If we are here, the image is a 3rd-party resource loaded by a first-party
+    // context. We can just use the document's base domain as the key because it
+    // should be the same as the top-level document's base domain.
+    return aDocument
+        ->GetBaseDomain();  // because we don't have anything better!
   }
 
   return ""_ns;
