@@ -100,7 +100,7 @@
       isfuzzy(getResolution(), 1.0, 0.0001, "should be back at initial resolution");
     }
 
-    waitUntilApzStable().then(test).finally(subtestDone);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>
