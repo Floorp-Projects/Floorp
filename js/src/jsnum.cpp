@@ -1820,6 +1820,40 @@ template bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars,
 template bool js::CharsToNumber(JSContext* cx, const char16_t* chars,
                                 size_t length, double* result);
 
+template <typename CharT>
+static bool CharsToNumber(const CharT* chars, size_t length, double* result) {
+  if (length == 1) {
+    CharToNumber(chars[0], result);
+    return true;
+  }
+
+  const CharT* end = chars + length;
+  const CharT* start = SkipSpace(chars, end);
+
+  // ECMA doesn't allow signed non-decimal numbers (bug 273467).
+  if (end - start >= 2 && start[0] == '0') {
+    if (CharsToNonDecimalNumber(start, end, result)) {
+      return true;
+    }
+  }
+
+  // It's probably a decimal number. Accept if no non-whitespace characters
+  // follow all the digits.
+  //
+  // NB: Fractional digits are not supported, because they require calling into
+  // dtoa, which isn't possible without a JSContext.
+  const CharT* endptr;
+  double d;
+  if (!GetPrefixInteger(start, end, 10, IntegerSeparatorHandling::None, &endptr,
+                        &d) ||
+      SkipSpace(endptr, end) != end) {
+    return false;
+  }
+
+  *result = d;
+  return true;
+}
+
 bool js::StringToNumber(JSContext* cx, JSString* str, double* result) {
   AutoCheckCannotGC nogc;
   JSLinearString* linearStr = str->ensureLinear(cx);
@@ -1848,6 +1882,19 @@ bool js::StringToNumberPure(JSContext* cx, JSString* str, double* result) {
     return false;
   }
   return true;
+}
+
+bool js::MaybeStringToNumber(JSLinearString* str, double* result) {
+  AutoCheckCannotGC nogc;
+
+  if (str->hasIndexValue()) {
+    *result = str->getIndexValue();
+    return true;
+  }
+
+  return str->hasLatin1Chars()
+             ? ::CharsToNumber(str->latin1Chars(nogc), str->length(), result)
+             : ::CharsToNumber(str->twoByteChars(nogc), str->length(), result);
 }
 
 JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,

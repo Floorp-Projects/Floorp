@@ -200,6 +200,14 @@ extern MOZ_MUST_USE bool StringToNumber(JSContext* cx, JSString* str,
 extern MOZ_MUST_USE bool StringToNumberPure(JSContext* cx, JSString* str,
                                             double* result);
 
+/*
+ * Return true and set |*result| to the parsed number value if |str| can be
+ * parsed as a number using the same rules as in |StringToNumber|. Otherwise
+ * return false and leave |*result| in an indeterminate state.
+ */
+extern MOZ_MUST_USE bool MaybeStringToNumber(JSLinearString* str,
+                                             double* result);
+
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 MOZ_ALWAYS_INLINE MOZ_MUST_USE bool ToNumber(JSContext* cx,
                                              JS::MutableHandleValue vp) {
