@@ -99,7 +99,6 @@ EXPORTS.mozilla.layout += [
 ]
 
 UNIFIED_SOURCES += [
-<<<<<<< dest:   e0db5954e844 - jyavenard: Bug 1672553 - Don't use AudioTrimme...
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
