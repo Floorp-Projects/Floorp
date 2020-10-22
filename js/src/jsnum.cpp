@@ -814,7 +814,7 @@ template JSLinearString* js::Int32ToString<CanGC>(JSContext* cx, int32_t si);
 
 template JSLinearString* js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
-JSLinearString* js::Int32ToStringHelperPure(JSContext* cx, int32_t si) {
+JSLinearString* js::Int32ToStringPure(JSContext* cx, int32_t si) {
   AutoUnsafeCallWithABI unsafe;
   JSLinearString* res = Int32ToString<NoGC>(cx, si);
   if (!res) {
@@ -1609,7 +1609,7 @@ template JSString* js::NumberToString<CanGC>(JSContext* cx, double d);
 
 template JSString* js::NumberToString<NoGC>(JSContext* cx, double d);
 
-JSString* js::NumberToStringHelperPure(JSContext* cx, double d) {
+JSString* js::NumberToStringPure(JSContext* cx, double d) {
   AutoUnsafeCallWithABI unsafe;
   JSString* res = NumberToString<NoGC>(cx, d);
   if (!res) {
