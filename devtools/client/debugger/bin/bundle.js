@@ -2,77 +2,68 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const {
-  tools: { makeBundle, copyFile },
-} = require("devtools-launchpad/index");
-
 const sourceMapAssets = require("devtools-source-map/assets");
 const path = require("path");
 var fs = require("fs");
 const rimraf = require("rimraf");
+const webpack = require("webpack");
 
 const projectPath = path.resolve(__dirname, "..");
 const bundlePath = path.join(projectPath, "./dist");
-
 const clientPath = path.join(projectPath, "../");
-const watch = false;
-const updateAssets = true;
 
 process.env.NODE_ENV = "production";
 
-function moveFile(src, dest, opts) {
+function moveFile(src, dest) {
   if (!fs.existsSync(src)) {
     return;
   }
 
-  copyFile(src, dest, opts);
+  fs.copyFileSync(src, dest);
   rimraf.sync(src);
 }
 
-async function bundle() {
-  makeBundle({
-    outputPath: bundlePath,
-    projectPath,
-    watch,
-    updateAssets,
-    onFinish: () => onBundleFinish(),
-  })
-    .then(() => {
-      console.log("[copy-assets] bundle is done");
-    })
-    .catch(err => {
-      console.log(
-        "[copy-assets] Uhoh, something went wrong. " +
-          "The error was written to assets-error.log"
-      );
+(async function bundle() {
+  process.env.TARGET = "firefox-panel";
+  process.env.OUTPUT_PATH = bundlePath;
 
-      fs.writeFileSync("assets-error.log", JSON.stringify(err, null, 2));
-    });
-}
+  const webpackConfig = require(path.resolve(projectPath, "webpack.config.js"));
+  const webpackCompiler = webpack(webpackConfig);
 
-function onBundleFinish() {
-  console.log("[copy-assets] copy shared bundles to client/shared");
+  const result = await new Promise(resolve => {
+    webpackCompiler.run((error, stats) => resolve(stats));
+  });
+
+  if (result.hasErrors()) {
+    console.log(
+      "[bundle] Something went wrong. The error was written to assets-error.log"
+    );
+
+    fs.writeFileSync(
+      "assets-error.log",
+      JSON.stringify(result.toJson("verbose"), null, 2)
+    );
+    return;
+  }
+
+  console.log(`[bundle] Done bundling. Copy bundles to devtools/client/shared`);
+
   moveFile(
     path.join(bundlePath, "source-map-worker.js"),
-    path.join(clientPath, "shared/source-map/worker.js"),
-    { cwd: projectPath }
+    path.join(clientPath, "shared/source-map/worker.js")
   );
 
   for (const filename of Object.keys(sourceMapAssets)) {
     moveFile(
       path.join(bundlePath, "source-map-worker-assets", filename),
-      path.join(clientPath, "shared/source-map/assets", filename),
-      { cwd: projectPath }
+      path.join(clientPath, "shared/source-map/assets", filename)
     );
   }
 
   moveFile(
     path.join(bundlePath, "source-map-index.js"),
-    path.join(clientPath, "shared/source-map/index.js"),
-    { cwd: projectPath }
+    path.join(clientPath, "shared/source-map/index.js")
   );
 
-  console.log("[copy-assets] done");
-}
-
-bundle();
+  console.log("[bundle] Task completed.");
+})();
