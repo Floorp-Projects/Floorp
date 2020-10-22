@@ -1753,25 +1753,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
         "FEATURE_UNQUALIFIED_WEBRENDER_NVIDIA_BLOCKED");
 
-#ifndef EARLY_BETA_OR_EARLIER
-    // Block all Windows versions other than Windows 10.
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows7, DeviceFamily::All,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
-        "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_7");
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows8, DeviceFamily::All,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
-        "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_8");
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows8_1, DeviceFamily::All,
-        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
-        "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_8_1");
-#endif
-
 #ifndef NIGHTLY_BUILD
     // Bug 1615421 / 1607860 - Playing videos appear to crash with WebRender
     // with this particular driver. Bug 1671253 enabled this on nightly only.
