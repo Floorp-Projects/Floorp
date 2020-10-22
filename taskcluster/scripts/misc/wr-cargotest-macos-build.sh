@@ -15,7 +15,7 @@ CARGOFLAGS="-vv --frozen --target=${TARGET_TRIPLE}" \
 cd "target/${TARGET_TRIPLE}"
 mkdir cargo-test-binaries
 mv debug cargo-test-binaries/
-find cargo-test-binaries -type f -maxdepth 2 -executable -print0 > binaries.lst
+find cargo-test-binaries/debug/deps -type f -maxdepth 1 -executable -print0 > binaries.lst
 tar cjf cargo-test-binaries.tar.bz2 --null -T binaries.lst
 mv cargo-test-binaries.tar.bz2 "${UPLOAD_DIR}"
 # Clean the build
