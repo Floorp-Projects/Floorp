@@ -1,18 +1,13 @@
 import { _ASRouter, MessageLoaderUtils } from "lib/ASRouter.jsm";
-import { ASRouterTargeting, QueryCache } from "lib/ASRouterTargeting.jsm";
+import { QueryCache } from "lib/ASRouterTargeting.jsm";
 import {
-  CHILD_TO_PARENT_MESSAGE_NAME,
   FAKE_LOCAL_MESSAGES,
   FAKE_LOCAL_PROVIDER,
   FAKE_LOCAL_PROVIDERS,
-  FAKE_RECOMMENDATION,
   FAKE_REMOTE_MESSAGES,
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
-  FakeRemotePageManager,
-  PARENT_TO_CHILD_MESSAGE_NAME,
 } from "./constants";
-import { actionCreators as ac } from "common/Actions.jsm";
 import {
   ASRouterPreferences,
   TARGETING_PREFERENCES,
@@ -24,7 +19,6 @@ import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
-const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const MESSAGE_PROVIDER_PREF_NAME =
   "browser.newtabpage.activity-stream.asrouter.providers.snippets";
 const FAKE_PROVIDERS = [
@@ -32,29 +26,18 @@ const FAKE_PROVIDERS = [
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
 ];
-const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const FAKE_RESPONSE_HEADERS = { get() {} };
 
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
-// Creates a message object that looks like messages returned by
-// RemotePageManager listeners
-function fakeAsyncMessage(action) {
-  return { data: action, target: new FakeRemotePageManager() };
-}
-// Create a message that looks like a user action
-function fakeExecuteUserAction(action) {
-  return fakeAsyncMessage({ data: action, type: "USER_ACTION" });
-}
-
 // eslint-disable-next-line max-statements
 describe("ASRouter", () => {
   let Router;
   let globals;
-  let channel;
   let sandbox;
+  let initParams;
   let messageBlockList;
   let providerBlockList;
   let messageImpressions;
@@ -63,16 +46,20 @@ describe("ASRouter", () => {
   let fetchStub;
   let clock;
   let getStringPrefStub;
-  let dispatchStub;
   let fakeAttributionCode;
+  let fakeTargetingContext;
   let FakeBookmarkPanelHub;
   let FakeToolbarBadgeHub;
   let FakeToolbarPanelHub;
   let FakeMomentsPageHub;
   let personalizedCfrScores;
-  let fakeTargetingContext;
+  let ASRouterTargeting;
 
-  function createFakeStorage() {
+  function setMessageProviderPref(value) {
+    sandbox.stub(ASRouterPreferences, "providers").get(() => value);
+  }
+
+  function initASRouter(router) {
     const getStub = sandbox.stub();
     getStub.returns(Promise.resolve());
     getStub
@@ -88,23 +75,25 @@ describe("ASRouter", () => {
     getStub
       .withArgs("previousSessionEnd")
       .returns(Promise.resolve(previousSessionEnd));
-    return {
-      get: getStub,
-      set: sandbox.stub().returns(Promise.resolve()),
+    initParams = {
+      storage: {
+        get: getStub,
+        set: sandbox.stub().returns(Promise.resolve()),
+      },
+      sendTelemetry: sandbox.stub().resolves(),
+      clearChildMessages: sandbox.stub().resolves(),
+      updateAdminState: sandbox.stub().resolves(),
+      dispatchCFRAction: sandbox.stub().resolves(),
     };
-  }
-
-  function setMessageProviderPref(value) {
-    sandbox.stub(ASRouterPreferences, "providers").get(() => value);
+    sandbox.stub(router, "loadMessagesFromAllProviders").callThrough();
+    return router.init(initParams);
   }
 
   async function createRouterAndInit(providers = FAKE_PROVIDERS) {
     setMessageProviderPref(providers);
-    channel = new FakeRemotePageManager();
-    dispatchStub = sandbox.stub();
     // `.freeze` to catch any attempts at modifying the object
     Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
-    await Router.init(channel, createFakeStorage(), dispatchStub);
+    await initASRouter(Router);
   }
 
   beforeEach(async () => {
@@ -116,7 +105,81 @@ describe("ASRouter", () => {
     previousSessionEnd = 100;
     sandbox = sinon.createSandbox();
     personalizedCfrScores = {};
+    ASRouterTargeting = {
+      isMatch: sandbox.stub(),
+      findMatchingMessage: sandbox.stub(),
+      Environment: {
+        locale: "en-US",
+        localeLanguageCode: "en",
+        browserSettings: {
+          update: {
+            channel: "default",
+            enabled: true,
+            autoDownload: true,
+          },
+        },
+        attributionData: {},
+        currentDate: "2000-01-01T10:00:0.001Z",
+        profileAgeCreated: {},
+        profileAgeReset: {},
+        usesFirefoxSync: false,
+        isFxAEnabled: true,
+        trailheadInterrupt: "join",
+        trailheadTriplet: "dynamic",
+        sync: {
+          desktopDevices: 0,
+          mobileDevices: 0,
+          totalDevices: 0,
+        },
+        xpinstallEnabled: true,
+        addonsInfo: {},
+        searchEngines: {},
+        isDefaultBrowser: false,
+        devToolsOpenedCount: 5,
+        topFrecentSites: {},
+        recentBookmarks: {},
+        pinnedSites: [
+          {
+            url: "https://amazon.com",
+            host: "amazon.com",
+            searchTopSite: true,
+          },
+        ],
+        providerCohorts: {
+          onboarding: "",
+          "cfr-fxa": "",
+          cfr: "",
+          "message-groups": "",
+          "messaging-experiments": "",
+          snippets: "",
+          "whats-new-panel": "",
+        },
+        totalBookmarksCount: {},
+        firefoxVersion: 80,
+        region: "US",
+        needsUpdate: {},
+        hasPinnedTabs: false,
+        hasAccessedFxAPanel: false,
+        isWhatsNewPanelEnabled: true,
+        userPrefs: {
+          cfrFeatures: true,
+          cfrAddons: true,
+          snippets: true,
+        },
+        totalBlockedCount: {},
+        blockedCountByType: {},
+        attachedFxAOAuthClients: [],
+        platformName: "macosx",
+        scores: {},
+        scoreThreshold: 5000,
+        isChinaRepack: false,
+        userId: "adsf",
+      },
+    };
 
+    ASRouterPreferences.specialConditions = {
+      someCondition: true,
+    };
     sandbox.spy(ASRouterPreferences, "init");
     sandbox.spy(ASRouterPreferences, "uninit");
     sandbox.spy(ASRouterPreferences, "addListener");
@@ -148,11 +211,12 @@ describe("ASRouter", () => {
       getAttrDataAsync: () => Promise.resolve({ content: "addonID" }),
       deleteFileAsync: () => Promise.resolve(),
       writeAttributionFile: () => Promise.resolve(),
+      getCachedAttributionData: sinon.stub(),
     };
     FakeBookmarkPanelHub = {
       init: sandbox.stub(),
       uninit: sandbox.stub(),
-      _forceShowMessage: sandbox.stub(),
+      forceShowMessage: sandbox.stub(),
     };
     FakeToolbarPanelHub = {
       init: sandbox.stub(),
@@ -177,7 +241,7 @@ describe("ASRouter", () => {
     globals.set({
       // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
       // importing these modules into the global scope ourselves.
-      GroupsConfigurationProvider: { getMessages: () => [] },
+      GroupsConfigurationProvider: { getMessages: () => Promise.resolve([]) },
       ASRouterPreferences,
       TARGETING_PREFERENCES,
       ASRouterTargeting,
@@ -252,6 +316,7 @@ describe("ASRouter", () => {
     await createRouterAndInit();
   });
   afterEach(() => {
+    Router.uninit();
     ASRouterPreferences.uninit();
     sandbox.restore();
     globals.restore();
@@ -266,18 +331,10 @@ describe("ASRouter", () => {
   });
 
   describe("#init", () => {
-    it("should add a message listener to the RemotePageManager for incoming messages", () => {
-      assert.calledWith(
-        channel.addMessageListener,
-        CHILD_TO_PARENT_MESSAGE_NAME
-      );
-      const [, listenerAdded] = channel.addMessageListener.firstCall.args;
-      assert.isFunction(listenerAdded);
-    });
     it("should set state.messageBlockList to the block list in persistent storage", async () => {
       messageBlockList = ["foo"];
       Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
 
       assert.deepEqual(Router.state.messageBlockList, ["foo"]);
     });
@@ -296,7 +353,7 @@ describe("ASRouter", () => {
           handleMessageRequest: Router.handleMessageRequest,
           addImpression: Router.addImpression,
           blockMessageById: Router.blockMessageById,
-          dispatch: Router.dispatch,
+          sendTelemetry: Router.sendTelemetry,
           unblockMessageById: Router.unblockMessageById,
         }
       );
@@ -306,7 +363,7 @@ describe("ASRouter", () => {
         Router.waitForInitialized,
         {
           getMessages: Router.handleMessageRequest,
-          dispatch: Router.dispatch,
+          sendTelemetry: Router.sendTelemetry,
         }
       );
 
@@ -317,7 +374,7 @@ describe("ASRouter", () => {
           handleMessageRequest: Router.handleMessageRequest,
           addImpression: Router.addImpression,
           blockMessageById: Router.blockMessageById,
-          dispatch: Router.dispatch,
+          sendTelemetry: Router.sendTelemetry,
         }
       );
 
@@ -325,7 +382,7 @@ describe("ASRouter", () => {
         FakeBookmarkPanelHub.init,
         Router.handleMessageRequest,
         Router.addImpression,
-        Router.dispatch
+        Router.sendTelemetry
       );
     });
     it("should set state.messageImpressions to the messageImpressions object in persistent storage", async () => {
@@ -337,20 +394,20 @@ describe("ASRouter", () => {
         { id: "onboarding", type: "local", messages: [testMessage] },
       ]);
       Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
 
       assert.deepEqual(Router.state.messageImpressions, messageImpressions);
     });
     it("should clear impressions for groups that are not active", async () => {
       groupImpressions = { foo: [0, 1, 2] };
       Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
 
       assert.notProperty(Router.state.groupImpressions, "foo");
     });
     it("should keep impressions for groups that are active", async () => {
       Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
       await Router.setState(() => {
         return {
           groups: [
@@ -373,7 +430,7 @@ describe("ASRouter", () => {
     });
     it("should remove old impressions for a group", async () => {
       Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
       await Router.setState(() => {
         return {
           groups: [
@@ -398,13 +455,9 @@ describe("ASRouter", () => {
     it("should await .loadMessagesFromAllProviders() and add messages from providers to state.messages", async () => {
       Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
 
-      const loadMessagesSpy = sandbox.spy(
-        Router,
-        "loadMessagesFromAllProviders"
-      );
-      await Router.init(channel, createFakeStorage(), dispatchStub);
+      await initASRouter(Router);
 
-      assert.calledOnce(loadMessagesSpy);
+      assert.calledOnce(Router.loadMessagesFromAllProviders);
       assert.isArray(Router.state.messages);
       assert.lengthOf(
         Router.state.messages,
@@ -435,26 +488,15 @@ describe("ASRouter", () => {
         "production"
       );
     });
-    it("should set this.dispatchToAS to the third parameter passed to .init()", async () => {
-      assert.equal(Router.dispatchToAS, dispatchStub);
-    });
     it("should set state.previousSessionEnd from IndexedDB", async () => {
       previousSessionEnd = 200;
       await createRouterAndInit();
 
       assert.equal(Router.state.previousSessionEnd, previousSessionEnd);
     });
-    it("should dispatch a AS_ROUTER_INITIALIZED event to AS with ASRouterPreferences.specialConditions", async () => {
-      assert.calledWith(
-        Router.dispatchToAS,
-        ac.BroadcastToContent({
-          type: "AS_ROUTER_INITIALIZED",
-          data: ASRouterPreferences.specialConditions,
-          meta: {
-            isStartup: true,
-          },
-        })
-      );
+    it("should assign ASRouterPreferences.specialConditions to state", async () => {
+      assert.isTrue(ASRouterPreferences.specialConditions.someCondition);
+      assert.isTrue(Router.state.someCondition);
     });
     it("should add observer for `intl:app-locales-changed`", async () => {
       sandbox.spy(global.Services.obs, "addObserver");
@@ -538,31 +580,24 @@ describe("ASRouter", () => {
 
       await Router.onPrefChange("services.sync.username");
 
-      assert.calledOnce(channel.sendAsyncMessage);
-      const [, { type, data }] = channel.sendAsyncMessage.firstCall.args;
-      assert.equal(type, "AS_ROUTER_TARGETING_UPDATE");
-      assert.equal(data[0], messageTargeted.id);
-      assert.lengthOf(data, 1);
+      assert.calledOnce(initParams.clearChildMessages);
+      assert.calledWith(initParams.clearChildMessages, [messageTargeted.id]);
     });
     it("should call loadMessagesFromAllProviders on pref change", () => {
-      sandbox.spy(Router, "loadMessagesFromAllProviders");
-
       ASRouterPreferences.observe(null, null, MESSAGE_PROVIDER_PREF_NAME);
-
       assert.calledOnce(Router.loadMessagesFromAllProviders);
     });
     it("should update groups state if a user pref changes", async () => {
       await Router.setState({
         groups: [{ id: "foo", userPreferences: ["bar"], enabled: true }],
       });
-      sandbox.stub(Router, "loadMessagesFromAllProviders").returns();
       sandbox.stub(ASRouterPreferences, "getUserPreference");
 
       await Router.onPrefChange(MESSAGE_PROVIDER_PREF_NAME);
 
       assert.calledWithExactly(ASRouterPreferences.getUserPreference, "bar");
     });
-    it("should update the list of providers on pref change", () => {
+    it("should update the list of providers on pref change", async () => {
       const modifiedRemoteProvider = Object.assign({}, FAKE_REMOTE_PROVIDER, {
         url: "baz.com",
       });
@@ -575,6 +610,7 @@ describe("ASRouter", () => {
       const { length } = Router.state.providers;
 
       ASRouterPreferences.observe(null, null, MESSAGE_PROVIDER_PREF_NAME);
+      await Router._updateMessageProviders();
 
       const provider = Router.state.providers.find(p => p.url === "baz.com");
       assert.lengthOf(Router.state.providers, length);
@@ -586,25 +622,23 @@ describe("ASRouter", () => {
     it("should broadcast a message to update the admin tool on a state change if the asrouter.devtoolsEnabled pref is", async () => {
       sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => true);
       sandbox.stub(Router, "getTargetingParameters").resolves({});
-      await Router.setState({ foo: 123 });
+      const state = await Router.setState({ foo: 123 });
 
-      assert.calledOnce(channel.sendAsyncMessage);
-      assert.deepEqual(channel.sendAsyncMessage.firstCall.args[1], {
-        type: "ADMIN_SET_STATE",
-        data: Object.assign({}, Router.state, {
-          providerPrefs: ASRouterPreferences.providers,
-          userPrefs: ASRouterPreferences.getAllUserPreferences(),
-          targetingParameters: {},
-          trailheadTriplet: ASRouterPreferences.trailheadTriplet,
-          errors: Router.errors,
-        }),
-      });
+      assert.calledOnce(initParams.updateAdminState);
+      assert.deepEqual(state.providerPrefs, ASRouterPreferences.providers);
+      assert.deepEqual(
+        state.userPrefs,
+        ASRouterPreferences.getAllUserPreferences()
+      );
+      assert.deepEqual(state.targetingParameters, {});
+      assert.deepEqual(state.trailhead, ASRouterPreferences.trailhead);
+      assert.deepEqual(state.errors, Router.errors);
     });
     it("should not send a message on a state change asrouter.devtoolsEnabled pref is on", async () => {
       sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => false);
       await Router.setState({ foo: 123 });
 
-      assert.notCalled(channel.sendAsyncMessage);
+      assert.notCalled(initParams.updateAdminState);
     });
   });
 
@@ -621,162 +655,122 @@ describe("ASRouter", () => {
   });
 
   describe("evaluateExpression", () => {
-    let stub;
-    beforeEach(async () => {
-      stub = sandbox.stub();
-      stub.resolves("foo");
-      fakeTargetingContext.evalWithDefault.callsFake(stub);
-    });
-    afterEach(() => {
-      sandbox.restore();
-    });
     it("should call ASRouterTargeting to evaluate", async () => {
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.evaluateExpression(targetStub, {});
-
-      assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(
-        targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus
-          .result,
-        "foo"
-      );
-      assert.isTrue(
-        targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus
-          .success
-      );
+      fakeTargetingContext.evalWithDefault.resolves("foo");
+      const response = await Router.evaluateExpression({});
+      assert.equal(response.evaluationStatus.result, "foo");
+      assert.isTrue(response.evaluationStatus.success);
     });
     it("should catch evaluation errors", async () => {
-      stub.returns(Promise.reject(new Error("fake error")));
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.evaluateExpression(targetStub, {});
-
-      assert.isFalse(
-        targetStub.sendAsyncMessage.firstCall.args[1].data.evaluationStatus
-          .success
+      fakeTargetingContext.evalWithDefault.returns(
+        Promise.reject(new Error("fake error"))
       );
+      const response = await Router.evaluateExpression({});
+      assert.isFalse(response.evaluationStatus.success);
     });
   });
 
-  describe("#routeMessageToTarget", () => {
-    let target;
+  describe("#routeCFRMessage", () => {
+    let browser;
     beforeEach(() => {
       sandbox.stub(CFRPageActions, "forceRecommendation");
       sandbox.stub(CFRPageActions, "addRecommendation");
-      target = { sendAsyncMessage: sandbox.stub() };
+      browser = {};
     });
     it("should route whatsnew_panel_message message to the right hub", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "whatsnew_panel_message" },
-        target,
+        browser,
         "",
         true
       );
 
       assert.calledOnce(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route moments messages to the right hub", () => {
-      Router.routeMessageToTarget(
-        { template: "update_action" },
-        target,
-        "",
-        true
-      );
+      Router.routeCFRMessage({ template: "update_action" }, browser, "", true);
 
       assert.calledOnce(FakeMomentsPageHub.executeAction);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
     });
     it("should route toolbar_badge message to the right hub", () => {
-      Router.routeMessageToTarget({ template: "toolbar_badge" }, target);
+      Router.routeCFRMessage({ template: "toolbar_badge" }, browser);
 
       assert.calledOnce(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route milestone_message to the right hub", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "milestone_message" },
-        target,
+        browser,
         "",
         false
       );
 
       assert.calledOnce(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route fxa_bookmark_panel message to the right hub force = true", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "fxa_bookmark_panel" },
-        target,
+        browser,
         {},
         true
       );
 
-      assert.calledOnce(FakeBookmarkPanelHub._forceShowMessage);
+      assert.calledOnce(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.addRecommendation);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route cfr_doorhanger message to the right hub force = false", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "cfr_doorhanger" },
-        target,
+        browser,
         { param: {} },
         false
       );
 
       assert.calledOnce(CFRPageActions.addRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route cfr_doorhanger message to the right hub force = true", () => {
-      Router.routeMessageToTarget(
-        { template: "cfr_doorhanger" },
-        target,
-        {},
-        true
-      );
+      Router.routeCFRMessage({ template: "cfr_doorhanger" }, browser, {}, true);
 
       assert.calledOnce(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route cfr_urlbar_chiclet message to the right hub force = false", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "cfr_urlbar_chiclet" },
-        target,
+        browser,
         { param: {} },
         false
       );
@@ -786,16 +780,15 @@ describe("ASRouter", () => {
       // Host should be null
       assert.isNull(args[1]);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(CFRPageActions.forceRecommendation);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route cfr_urlbar_chiclet message to the right hub force = true", () => {
-      Router.routeMessageToTarget(
+      Router.routeCFRMessage(
         { template: "cfr_urlbar_chiclet" },
-        target,
+        browser,
         {},
         true
       );
@@ -803,19 +796,17 @@ describe("ASRouter", () => {
       assert.calledOnce(CFRPageActions.forceRecommendation);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
-      assert.notCalled(target.sendAsyncMessage);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route default to sending to content", () => {
-      Router.routeMessageToTarget({ template: "snippets" }, target, {}, true);
+      Router.routeCFRMessage({ template: "snippets" }, browser, {}, true);
 
-      assert.calledOnce(target.sendAsyncMessage);
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.forceRecommendation);
       assert.notCalled(CFRPageActions.addRecommendation);
-      assert.notCalled(FakeBookmarkPanelHub._forceShowMessage);
+      assert.notCalled(FakeBookmarkPanelHub.forceShowMessage);
       assert.notCalled(FakeToolbarBadgeHub.registerBadgeNotificationListener);
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
@@ -992,7 +983,7 @@ describe("ASRouter", () => {
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
         .rejects("fake error");
       await createRouterAndInit();
-      assert.calledWith(Router.dispatchToAS, {
+      assert.calledWith(initParams.dispatchCFRAction, {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_ERROR",
@@ -1007,8 +998,7 @@ describe("ASRouter", () => {
       sandbox
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
         .resolves([]);
-      await createRouterAndInit();
-      assert.calledWith(Router.dispatchToAS, {
+      assert.calledWith(initParams.dispatchCFRAction, {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_NO_MESSAGES",
@@ -1056,7 +1046,7 @@ describe("ASRouter", () => {
       };
       await createRouterAndInit([provider]);
 
-      assert.calledWith(Router.dispatchToAS, {
+      assert.calledWith(initParams.dispatchCFRAction, {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_NO_MESSAGES",
@@ -1070,7 +1060,7 @@ describe("ASRouter", () => {
   });
 
   describe("#_updateMessageProviders", () => {
-    it("should correctly replace %STARTPAGE_VERSION% in remote provider urls", () => {
+    it("should correctly replace %STARTPAGE_VERSION% in remote provider urls", async () => {
       // If this test fails, you need to update the constant STARTPAGE_VERSION in
       // ASRouter.jsm to match the `version` property of provider-response-schema.json
       const expectedStartpageVersion = ProviderResponseSchema.version;
@@ -1081,13 +1071,13 @@ describe("ASRouter", () => {
         url: "https://www.mozilla.org/%STARTPAGE_VERSION%/",
       };
       setMessageProviderPref([provider]);
-      Router._updateMessageProviders();
+      await Router._updateMessageProviders();
       assert.equal(
         Router.state.providers[0].url,
         `https://www.mozilla.org/${parseInt(expectedStartpageVersion, 10)}/`
       );
     });
-    it("should replace other params in remote provider urls by calling Services.urlFormater.formatURL", () => {
+    it("should replace other params in remote provider urls by calling Services.urlFormater.formatURL", async () => {
       const url = "https://www.example.com/";
       const replacedUrl = "https://www.foo.bar/";
       const stub = sandbox
@@ -1096,12 +1086,12 @@ describe("ASRouter", () => {
         .returns(replacedUrl);
       const provider = { id: "foo", enabled: true, type: "remote", url };
       setMessageProviderPref([provider]);
-      Router._updateMessageProviders();
+      await Router._updateMessageProviders();
       assert.calledOnce(stub);
       assert.calledWithExactly(stub, url);
       assert.equal(Router.state.providers[0].url, replacedUrl);
     });
-    it("should only add the providers that are enabled", () => {
+    it("should only add the providers that are enabled", async () => {
       const providers = [
         {
           id: "foo",
@@ -1117,7 +1107,7 @@ describe("ASRouter", () => {
         },
       ];
       setMessageProviderPref(providers);
-      Router._updateMessageProviders();
+      await Router._updateMessageProviders();
       assert.equal(Router.state.providers.length, 1);
       assert.equal(Router.state.providers[0].id, providers[1].id);
     });
@@ -1138,15 +1128,17 @@ describe("ASRouter", () => {
         ],
         messageBlockList: ["foo"],
       }));
-      const result = await Router.handleMessageRequest({
+      await Router.handleMessageRequest({
         provider: "snippets",
       });
-      assert.equal(result.id, "bar");
+      assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
+        messages: [{ id: "bar", provider: "snippets", groups: ["snippets"] }],
+      });
     });
     it("should not return a message from a disabled group", async () => {
-      sandbox
-        .stub(ASRouterTargeting, "findMatchingMessage")
-        .callsFake(({ messages }) => messages[0]);
+      ASRouterTargeting.findMatchingMessage.callsFake(
+        ({ messages }) => messages[0]
+      );
       // Block all messages except the first
       await Router.setState(() => ({
         messages: [
@@ -1175,16 +1167,16 @@ describe("ASRouter", () => {
         messageBlockList: ["foocampaign"],
       }));
 
-      const result = await Router.handleMessageRequest({
+      await Router.handleMessageRequest({
         provider: "snippets",
       });
-
-      assert.equal(result.id, "bar");
+      assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
+        messages: [{ id: "bar", provider: "snippets", groups: ["snippets"] }],
+      });
     });
     it("should not return a message excluded by the provider", async () => {
       // There are only two providers; block the FAKE_LOCAL_PROVIDER, leaving
       // only FAKE_REMOTE_PROVIDER unblocked, which provides only one message
-      sandbox.stub(Router, "loadMessagesFromAllProviders");
       await Router.setState(() => ({
         providers: [{ id: "snippets", exclude: ["foo"] }],
       }));
@@ -1226,9 +1218,9 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      sandbox
-        .stub(ASRouterTargeting, "findMatchingMessage")
-        .callsFake(({ messages }) => messages[0]);
+      ASRouterTargeting.findMatchingMessage.callsFake(
+        ({ messages }) => messages[0]
+      );
 
       const result = Router.handleMessageRequest({ triggerId: "foo" });
 
@@ -1253,9 +1245,9 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      sandbox
-        .stub(ASRouterTargeting, "findMatchingMessage")
-        .callsFake(({ messages }) => messages[0]);
+      ASRouterTargeting.findMatchingMessage.callsFake(
+        ({ messages }) => messages[0]
+      );
 
       const result = Router.handleMessageRequest({
         triggerId: "foo",
@@ -1292,9 +1284,10 @@ describe("ASRouter", () => {
         template: "badge",
         groups: ["whats_new"],
       };
-      sandbox
-        .stub(ASRouterTargeting, "findMatchingMessage")
-        .callsFake(() => [message2, message1]);
+      ASRouterTargeting.findMatchingMessage.callsFake(() => [
+        message2,
+        message1,
+      ]);
       await Router.setState({
         messages: [message3, message2, message1],
         providers: [{ id: "whats_new" }],
@@ -1329,13 +1322,12 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      const stub = sandbox.stub(ASRouterTargeting, "findMatchingMessage");
 
       Router.handleMessageRequest(trigger);
 
-      assert.calledOnce(stub);
+      assert.calledOnce(ASRouterTargeting.findMatchingMessage);
 
-      const [options] = stub.firstCall.args;
+      const [options] = ASRouterTargeting.findMatchingMessage.firstCall.args;
       assert.propertyVal(options.trigger, "id", trigger.triggerId);
       assert.propertyVal(options.trigger, "param", trigger.triggerParam);
       assert.propertyVal(options.trigger, "context", trigger.triggerContext);
@@ -1360,14 +1352,12 @@ describe("ASRouter", () => {
         groups: ["snippets"],
       };
       await Router.setState({ messages: [message2, message1] });
-      // Just return the first message provided as arg
-      const stub = sandbox.stub(ASRouterTargeting, "findMatchingMessage");
 
       Router.handleMessageRequest(trigger);
 
-      assert.calledOnce(stub);
+      assert.calledOnce(ASRouterTargeting.findMatchingMessage);
 
-      const [options] = stub.firstCall.args;
+      const [options] = ASRouterTargeting.findMatchingMessage.firstCall.args;
       assert.propertyVal(options, "shouldCache", true);
     });
     it("should not cache badge messages", async () => {
@@ -1392,13 +1382,12 @@ describe("ASRouter", () => {
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
-      const stub = sandbox.stub(ASRouterTargeting, "findMatchingMessage");
 
       Router.handleMessageRequest(trigger);
 
-      assert.calledOnce(stub);
+      assert.calledOnce(ASRouterTargeting.findMatchingMessage);
 
-      const [options] = stub.firstCall.args;
+      const [options] = ASRouterTargeting.findMatchingMessage.firstCall.args;
       assert.propertyVal(options, "shouldCache", false);
     });
     it("should filter out messages without a trigger (or different) when a triggerId is defined", async () => {
@@ -1428,9 +1417,7 @@ describe("ASRouter", () => {
         groups: [{ id: "snippets", enabled: true }],
       });
       // Just return the first message provided as arg
-      sandbox
-        .stub(ASRouterTargeting, "findMatchingMessage")
-        .callsFake(args => args.messages);
+      ASRouterTargeting.findMatchingMessage.callsFake(args => args.messages);
 
       const result = Router.handleMessageRequest(trigger);
 
@@ -1440,18 +1427,6 @@ describe("ASRouter", () => {
   });
 
   describe("#uninit", () => {
-    it("should remove the message listener on the RemotePageManager", () => {
-      const [, listenerAdded] = channel.addMessageListener.firstCall.args;
-      assert.isFunction(listenerAdded);
-
-      Router.uninit();
-
-      assert.calledWith(
-        channel.removeMessageListener,
-        CHILD_TO_PARENT_MESSAGE_NAME,
-        listenerAdded
-      );
-    });
     it("should unregister the trigger listeners", () => {
       for (const listener of ASRouterTriggerListeners.values()) {
         sandbox.spy(listener, "uninit");
@@ -1463,9 +1438,11 @@ describe("ASRouter", () => {
         assert.calledOnce(listener.uninit);
       }
     });
-    it("should set .dispatchToAS to null", () => {
+    it("should set .dispatchCFRAction to null", () => {
       Router.uninit();
-      assert.isNull(Router.dispatchToAS);
+      assert.isNull(Router.dispatchCFRAction);
+      assert.isNull(Router.clearChildMessages);
+      assert.isNull(Router.sendTelemetry);
     });
     it("should save previousSessionEnd", () => {
       Router.uninit();
@@ -1497,1540 +1474,68 @@ describe("ASRouter", () => {
     });
   });
 
-  describe("onMessage", () => {
-    describe("#onMessage: NEWTAB_MESSAGE_REQUEST", () => {
-      it("should send a message back to the to the target", async () => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-        // force the only message to be a regular message so getRandomItemFromArray picks it
-        await Router.setState({
-          messages: [
-            {
-              id: "foo",
-              provider: "snippets",
-              groups: ["snippets"],
-            },
-          ],
-          providers: [{ id: "snippets" }],
-        });
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          {
-            type: "SET_MESSAGE",
-            data: {
-              id: "foo",
-              groups: ["snippets"],
-              provider: "snippets",
-            },
-          }
-        );
-      });
-      it("should send a message back to the target if there is a bundle, too", async () => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-        // force the only message to be a bundled message so getRandomItemFromArray picks it
-        sandbox.stub(Router, "_findProvider").returns(null);
-        await Router.setState({
-          messages: [
-            {
-              id: "foo1",
-              groups: ["snippets"],
-              provider: "snippets",
-              template: "simple_template",
-              bundled: 1,
-              content: { title: "Foo1", body: "Foo123-1" },
-            },
-          ],
-          providers: [{ id: "snippets" }],
-        });
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        await Router.onMessage(msg);
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME
-        );
-        assert.equal(
-          msg.target.sendAsyncMessage.firstCall.args[1].type,
-          "SET_BUNDLED_MESSAGES"
-        );
-      });
-      it("should properly order the message's bundle if specified", async () => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-        // force the only messages to be a bundled messages so getRandomItemFromArray picks one of them
-        sandbox.stub(Router, "_findProvider").returns(null);
-        const firstMessage = {
-          id: "foo2",
-          groups: ["snippets"],
-          provider: "snippets",
-          template: "simple_template",
-          bundled: 2,
-          order: 1,
-          content: { title: "Foo2", body: "Foo123-2" },
-        };
-        const secondMessage = {
-          id: "foo1",
-          groups: ["snippets"],
-          provider: "snippets",
-          template: "simple_template",
-          bundled: 2,
-          order: 2,
-          content: { title: "Foo1", body: "Foo123-1" },
-        };
-        await Router.setState({
-          messages: [secondMessage, firstMessage],
-          providers: [{ id: "snippets" }],
-        });
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        await Router.onMessage(msg);
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME
-        );
-        assert.equal(
-          msg.target.sendAsyncMessage.firstCall.args[1].type,
-          "SET_BUNDLED_MESSAGES"
-        );
-        assert.equal(
-          msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content,
-          firstMessage.content
-        );
-        assert.equal(
-          msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[1].content,
-          secondMessage.content
-        );
-      });
-      it("should return a null bundle if we do not have enough messages to fill the bundle", async () => {
-        // force the only message to be a bundled message that needs 2 messages in the bundle
-        await Router.setState({
-          messages: [
-            {
-              id: "foo1",
-              template: "simple_template",
-              bundled: 2,
-              content: { title: "Foo1", body: "Foo123-1" },
-              groups: ["bundle"],
-              provider: "snippets",
-            },
-          ],
-          providers: [{ id: "snippets" }],
-        });
-        const bundle = await Router._getBundledMessages(
-          Router.state.messages[0]
-        );
-        assert.equal(bundle, null);
-      });
-      it("should send down extra attributes in the bundle if they exist", async () => {
-        sandbox.stub(Router, "_findProvider").returns({
-          getExtraAttributes() {
-            return Promise.resolve({ header: "header" });
-          },
-        });
-        await Router.setState({
-          messages: [
-            {
-              id: "foo1",
-              template: "simple_template",
-              bundled: 1,
-              content: { title: "Foo1", body: "Foo123-1" },
-              groups: ["snippets"],
-            },
-          ],
-          providers: [{ id: "snippets" }],
-        });
-        const result = await Router._getBundledMessages(
-          Router.state.messages[0]
-        );
-        assert.equal(result.extraTemplateStrings.header, "header");
-      });
-      it("should send a CLEAR_ALL message if no bundle available", async () => {
-        // force the only message to be a bundled message that needs 2 messages in the bundle
-        await Router.setState({
-          messages: [
-            {
-              id: "foo1",
-              groups: ["snippets"],
-              provider: "snippets",
-              template: "simple_template",
-              bundled: 2,
-              content: { title: "Foo1", body: "Foo123-1" },
-            },
-          ],
-        });
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        await Router.onMessage(msg);
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_ALL" }
-        );
-      });
-      it("should send a CLEAR_ALL message if no messages are available", async () => {
-        await Router.setState({ messages: [] });
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_ALL" }
-        );
-      });
+  describe("forceAttribution", () => {
+    let setReferrerUrl;
+    beforeEach(() => {
+      setReferrerUrl = sinon.spy();
+      global.Cc["@mozilla.org/mac-attribution;1"] = {
+        getService: () => ({ setReferrerUrl }),
+      };
+      global.Cc["@mozilla.org/process/environment;1"] = {
+        getService: () => ({ set: sandbox.stub() }),
+      };
     });
-    describe("#_addPreviewEndpoint", () => {
-      it("should make a request to the provided endpoint on NEWTAB_MESSAGE_REQUEST", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
+    it("should double encode on windows", async () => {
+      sandbox.stub(fakeAttributionCode, "writeAttributionFile");
 
-        assert.calledWith(global.fetch, url);
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should make a request to the provided endpoint on ADMIN_CONNECT_STATE and remove the endpoint", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const msg = fakeAsyncMessage({
-          type: "ADMIN_CONNECT_STATE",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
+      Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-        assert.calledWith(global.fetch, url);
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should dispatch SNIPPETS_PREVIEW_MODE when adding a preview endpoint", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWithExactly(
-          Router.dispatchToAS,
-          ac.OnlyToOneContent(
-            { type: "SNIPPETS_PREVIEW_MODE" },
-            msg.target.portID
-          )
-        );
-      });
-      it("should not add a url that is not from an allowed host", async () => {
-        const url = "https://mozilla.org";
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
-
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should reject bad urls", async () => {
-        const url = "foo";
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: { endpoint: { url } },
-        });
-        await Router.onMessage(msg);
-
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should handle onboarding message provider", async () => {
-        const handleMessageRequestStub = sandbox.stub(
-          Router,
-          "handleMessageRequest"
-        );
-        handleMessageRequestStub
-          .withArgs({
-            template: "extended_triplets",
-          })
-          .resolves({ id: "foo" });
-        sandbox.stub(Router, "sendNewTabMessage").resolves();
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: {},
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.sendNewTabMessage);
-      });
-      it("should hide extended triplets by default when browser.aboutwelcome.enabled is true", async () => {
-        const handleMessageRequestStub = sandbox.stub(
-          Router,
-          "handleMessageRequest"
-        );
-        handleMessageRequestStub
-          .withArgs({
-            template: "extended_triplets",
-          })
-          .resolves({ id: "foo" });
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: {},
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(handleMessageRequestStub);
-        assert.calledWithExactly(handleMessageRequestStub, {
-          provider: "snippets",
-        });
-      });
-      it("should show extended triplets when browser.aboutwelcome.enabled is false", async () => {
-        globals.set({ isSeparateAboutWelcome: false });
-        const handleMessageRequestStub = sandbox.stub(
-          Router,
-          "handleMessageRequest"
-        );
-        handleMessageRequestStub
-          .withArgs({
-            template: "extended_triplets",
-          })
-          .resolves({ id: "foo" });
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: {},
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(handleMessageRequestStub);
-        assert.calledWithExactly(handleMessageRequestStub, {
-          template: "extended_triplets",
-        });
-      });
-      it("should fallback to snippets if onboarding message provider returned none when browser.aboutwelcome.enabled is false", async () => {
-        globals.set({ isSeparateAboutWelcome: false });
-        const handleMessageRequestStub = sandbox.stub(
-          Router,
-          "handleMessageRequest"
-        );
-        handleMessageRequestStub
-          .withArgs({
-            template: "extended_triplets",
-          })
-          .resolves(null);
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: {},
-        });
-        await Router.onMessage(msg);
-
-        assert.calledTwice(handleMessageRequestStub);
-        assert.calledWithExactly(handleMessageRequestStub, {
-          template: "extended_triplets",
-        });
-        assert.calledWithExactly(handleMessageRequestStub, {
-          provider: "snippets",
-        });
-      });
-      it("should record telemetry for message request duration", async () => {
-        const startTelemetryStopwatch = sandbox.stub(
-          global.TelemetryStopwatch,
-          "start"
-        );
-        const finishTelemetryStopwatch = sandbox.stub(
-          global.TelemetryStopwatch,
-          "finish"
-        );
-        sandbox.stub(Router, "handleMessageRequest");
-        const msg = fakeAsyncMessage({
-          type: "NEWTAB_MESSAGE_REQUEST",
-          data: {},
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(startTelemetryStopwatch);
-        assert.calledWithExactly(
-          startTelemetryStopwatch,
-          "MS_MESSAGE_REQUEST_TIME_MS",
-          { port: msg.target.portID }
-        );
-        assert.calledOnce(finishTelemetryStopwatch);
-        assert.calledWithExactly(
-          finishTelemetryStopwatch,
-          "MS_MESSAGE_REQUEST_TIME_MS",
-          { port: msg.target.portID }
-        );
-      });
+      assert.notCalled(setReferrerUrl);
+      assert.calledWithMatch(
+        fakeAttributionCode.writeAttributionFile,
+        "foo%3DFOO!%26bar%3DBAR%253F"
+      );
     });
+    it("should set referrer on mac", async () => {
+      sandbox.stub(AppConstants, "platform").value("macosx");
 
-    describe("#isUnblockedMessage", () => {
-      it("should block a message if the group is blocked", async () => {
-        const msg = { id: "msg1", groups: ["foo"], provider: "unit-test" };
-        await Router.setState({
-          groups: [{ id: "foo", enabled: false }],
-          messages: [msg],
-          providers: [{ id: "unit-test" }],
-        });
-        assert.isFalse(Router.isUnblockedMessage(msg));
+      Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-        await Router.setState({ groups: [{ id: "foo", enabled: true }] });
-
-        assert.isTrue(Router.isUnblockedMessage(msg));
-      });
-      it("should block a message if at least one group is blocked", async () => {
-        const msg = {
-          id: "msg1",
-          groups: ["foo", "bar"],
-          provider: "unit-test",
-        };
-        await Router.setState({
-          groups: [
-            { id: "foo", enabled: false },
-            { id: "bar", enabled: false },
-          ],
-          messages: [msg],
-          providers: [{ id: "unit-test" }],
-        });
-        assert.isFalse(Router.isUnblockedMessage(msg));
-
-        await Router.setState({
-          groups: [
-            { id: "foo", enabled: true },
-            { id: "bar", enabled: false },
-          ],
-        });
-
-        assert.isFalse(Router.isUnblockedMessage(msg));
-      });
-    });
-
-    describe("#onMessage: BLOCK_MESSAGE_BY_ID", () => {
-      it("should add the id to the messageBlockList and broadcast a CLEAR_MESSAGE message with the id", async () => {
-        const msg = fakeAsyncMessage({
-          type: "BLOCK_MESSAGE_BY_ID",
-          data: { id: "foo" },
-        });
-        await Router.onMessage(msg);
-
-        assert.isTrue(Router.state.messageBlockList.includes("foo"));
-        assert.calledWith(
-          channel.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_MESSAGE", data: { id: "foo" } }
-        );
-      });
-      it("should only send CLEAR_MESSAGE to preloaded if action.data.preloadedOnly is true", async () => {
-        sandbox.stub(Router, "sendAsyncMessageToPreloaded");
-        const msg = fakeAsyncMessage({
-          type: "BLOCK_MESSAGE_BY_ID",
-          data: { id: "foo", preloadedOnly: true },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWith(Router.sendAsyncMessageToPreloaded, {
-          type: "CLEAR_MESSAGE",
-          data: { id: "foo" },
-        });
-      });
-      it("should add the campaign to the messageBlockList instead of id if .campaign is specified and not select messages of that campaign again", async () => {
-        await Router.setState({
-          messages: [
-            { id: "1", campaign: "foocampaign" },
-            { id: "2", campaign: "foocampaign" },
-          ],
-        });
-        const msg = fakeAsyncMessage({
-          type: "BLOCK_MESSAGE_BY_ID",
-          data: { id: "1" },
-        });
-        await Router.onMessage(msg);
-
-        assert.isTrue(Router.state.messageBlockList.includes("foocampaign"));
-        assert.isEmpty(Router.state.messages.filter(Router.isUnblockedMessage));
-      });
-      it("should not broadcast CLEAR_MESSAGE if preventDismiss is true", async () => {
-        const msg = fakeAsyncMessage({
-          type: "BLOCK_MESSAGE_BY_ID",
-          data: { id: "foo", preventDismiss: true },
-        });
-        await Router.onMessage(msg);
-
-        assert.notCalled(channel.sendAsyncMessage);
-      });
-    });
-
-    describe("#onMessage: MODIFY_MESSAGE_JSON", () => {
-      it("should call `modifyMessageJson`", async () => {
-        const msg = fakeAsyncMessage({
-          type: "MODIFY_MESSAGE_JSON",
-          data: { content: {} },
-        });
-
-        sandbox.spy(Router, "modifyMessageJson");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.modifyMessageJson);
-      });
-    });
-
-    describe("#onMessage: DISMISS_MESSAGE_BY_ID", () => {
-      it("should reply with CLEAR_MESSAGE with the correct id", async () => {
-        const msg = fakeAsyncMessage({
-          type: "DISMISS_MESSAGE_BY_ID",
-          data: { id: "foo" },
-        });
-
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          channel.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_MESSAGE", data: { id: "foo" } }
-        );
-      });
-    });
-
-    describe("#onMessage: UNBLOCK_MESSAGE_BY_ID", () => {
-      it("should remove the id from the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({ type: "BLOCK_MESSAGE_BY_ID", data: { id: "foo" } })
-        );
-        assert.isTrue(Router.state.messageBlockList.includes("foo"));
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "UNBLOCK_MESSAGE_BY_ID",
-            data: { id: "foo" },
-          })
-        );
-
-        assert.isFalse(Router.state.messageBlockList.includes("foo"));
-      });
-      it("should remove the campaign from the messageBlockList if it is defined", async () => {
-        await Router.setState({ messages: [{ id: "1", campaign: "foo" }] });
-        await Router.onMessage(
-          fakeAsyncMessage({ type: "BLOCK_MESSAGE_BY_ID", data: { id: "1" } })
-        );
-        assert.isTrue(
-          Router.state.messageBlockList.includes("foo"),
-          "blocklist has campaign id"
-        );
-        await Router.onMessage(
-          fakeAsyncMessage({ type: "UNBLOCK_MESSAGE_BY_ID", data: { id: "1" } })
-        );
-
-        assert.isFalse(
-          Router.state.messageBlockList.includes("foo"),
-          "campaign id removed from blocklist"
-        );
-      });
-      it("should save the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "UNBLOCK_MESSAGE_BY_ID",
-            data: { id: "foo" },
-          })
-        );
-
-        assert.calledWithExactly(Router._storage.set, "messageBlockList", []);
-      });
-    });
-
-    describe("#onMessage: BLOCK_BUNDLE", () => {
-      it("should add all the ids in the bundle to the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "BLOCK_BUNDLE",
-            data: { bundle: FAKE_BUNDLE },
-          })
-        );
-        assert.isTrue(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[0].id)
-        );
-        assert.isTrue(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[1].id)
-        );
-      });
-      it("should save the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "BLOCK_BUNDLE",
-            data: { bundle: FAKE_BUNDLE },
-          })
-        );
-
-        assert.calledWithExactly(Router._storage.set, "messageBlockList", [
-          FAKE_BUNDLE[0].id,
-          FAKE_BUNDLE[1].id,
-        ]);
-      });
-    });
-
-    describe("#onMessage: UNBLOCK_BUNDLE", () => {
-      it("should remove all the ids in the bundle from the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "BLOCK_BUNDLE",
-            data: { bundle: FAKE_BUNDLE },
-          })
-        );
-        assert.isTrue(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[0].id)
-        );
-        assert.isTrue(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[1].id)
-        );
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "UNBLOCK_BUNDLE",
-            data: { bundle: FAKE_BUNDLE },
-          })
-        );
-
-        assert.isFalse(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[0].id)
-        );
-        assert.isFalse(
-          Router.state.messageBlockList.includes(FAKE_BUNDLE[1].id)
-        );
-      });
-      it("should save the messageBlockList", async () => {
-        await Router.onMessage(
-          fakeAsyncMessage({
-            type: "UNBLOCK_BUNDLE",
-            data: { bundle: FAKE_BUNDLE },
-          })
-        );
-
-        assert.calledWithExactly(Router._storage.set, "messageBlockList", []);
-      });
-    });
-
-    describe("#onMessage: ADMIN_CONNECT_STATE", () => {
-      it("should send a message containing the whole state", async () => {
-        sandbox.stub(Router, "getTargetingParameters").resolves({});
-        const msg = fakeAsyncMessage({ type: "ADMIN_CONNECT_STATE" });
-
-        await Router.onMessage(msg);
-        assert.calledOnce(msg.target.sendAsyncMessage);
-        assert.deepEqual(msg.target.sendAsyncMessage.firstCall.args[1], {
-          type: "ADMIN_SET_STATE",
-          data: Object.assign({}, Router.state, {
-            providerPrefs: ASRouterPreferences.providers,
-            userPrefs: ASRouterPreferences.getAllUserPreferences(),
-            targetingParameters: {},
-            trailheadTriplet: ASRouterPreferences.trailheadTriplet,
-            errors: Router.errors,
-          }),
-        });
-      });
-    });
-
-    describe("#onMessage: NEWTAB_MESSAGE_REQUEST", () => {
-      beforeEach(() => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-      });
-      it("should call sendNewTabMessage on NEWTAB_MESSAGE_REQUEST", async () => {
-        sandbox.stub(Router, "sendNewTabMessage").resolves();
-        const data = { endpoint: "foo" };
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST", data });
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.sendNewTabMessage);
-        assert.calledWithExactly(
-          Router.sendNewTabMessage,
-          sinon.match.instanceOf(FakeRemotePageManager),
-          data
-        );
-      });
-      it("should return the preview message if that's available and remove it from Router.state", async () => {
-        const expectedObj = {
-          id: "foo",
-          groups: ["preview"],
-          provider: "preview",
-        };
-        Router.setState({
-          messages: [expectedObj],
-          providers: [{ id: "preview" }],
-        });
-
-        await Router.sendNewTabMessage(channel, { endpoint: "foo.com" });
-
-        assert.calledWith(
-          channel.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "SET_MESSAGE", data: expectedObj }
-        );
-        assert.isUndefined(
-          Router.state.messages.find(m => m.provider === "preview")
-        );
-      });
-      it("should call _getBundledMessages if we request a message that needs to be bundled", async () => {
-        sandbox.stub(Router, "_getBundledMessages").resolves();
-        // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
-        const [, testMessage] = Router.state.messages;
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage.id },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router._getBundledMessages);
-      });
-      it("should properly pick another message of the same template if it is bundled; force = true", async () => {
-        // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
-        const [, testMessage1, testMessage2] = Router.state.messages;
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage1.id },
-        });
-        await Router.onMessage(msg);
-
-        // Expected object should have some properties of the original message it picked (testMessage1)
-        // plus the bundled content of the others that it picked of the same template (testMessage2)
-        const expectedObj = {
-          template: testMessage1.template,
-          provider: testMessage1.provider,
-          bundle: [
-            { content: testMessage1.content, id: testMessage1.id, order: 1 },
-            { content: testMessage2.content, id: testMessage2.id },
-          ],
-        };
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "SET_BUNDLED_MESSAGES", data: expectedObj }
-        );
-      });
-      it("should properly pick another message of the same template if it is bundled; force = false", async () => {
-        // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
-        const [, testMessage1, testMessage2] = Router.state.messages;
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage1.id },
-        });
-        await Router.setMessageById(testMessage1.id, msg.target, false);
-
-        // Expected object should have some properties of the original message it picked (testMessage1)
-        // plus the bundled content of the others that it picked of the same template (testMessage2)
-        const expectedObj = {
-          template: testMessage1.template,
-          provider: testMessage1.provider,
-          bundle: [
-            { content: testMessage1.content, id: testMessage1.id, order: 1 },
-            {
-              content: testMessage2.content,
-              id: testMessage2.id,
-              order: 2,
-              blockOnClick: false,
-            },
-          ],
-        };
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "SET_BUNDLED_MESSAGES", data: expectedObj }
-        );
-      });
-      it("should get the bundle and send the message if the message has a bundle", async () => {
-        sandbox.stub(Router, "sendNewTabMessage").resolves();
-        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-        msg.bundled = 2; // force this message to want to be bundled
-        await Router.onMessage(msg);
-        assert.calledOnce(Router.sendNewTabMessage);
-      });
-    });
-
-    describe("#onMessage: TRIGGER", () => {
-      it("should pass the trigger to ASRouterTargeting on TRIGGER message", async () => {
-        await Router.setState({
-          messages: [
-            {
-              id: "foo1",
-              provider: "onboarding",
-              template: "onboarding",
-              trigger: { id: "firstRun" },
-              content: { title: "Foo1", body: "Foo123-1" },
-              groups: ["onboarding"],
-            },
-          ],
-          providers: [{ id: "onboarding" }],
-        });
-        sandbox.stub(Router, "loadMessagesFromAllProviders").resolves();
-        sandbox.stub(ASRouterTargeting, "findMatchingMessage").resolves();
-        const msg = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "firstRun" } },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(ASRouterTargeting.findMatchingMessage);
-        assert.deepEqual(
-          ASRouterTargeting.findMatchingMessage.firstCall.args[0].trigger,
-          {
-            id: "firstRun",
-            param: undefined,
-            context: undefined,
-          }
-        );
-      });
-      it("should record telemetry information", async () => {
-        const startTelemetryStopwatch = sandbox.stub(
-          global.TelemetryStopwatch,
-          "start"
-        );
-        const finishTelemetryStopwatch = sandbox.stub(
-          global.TelemetryStopwatch,
-          "finish"
-        );
-        const msg = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "foo" } },
-        });
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(startTelemetryStopwatch);
-        assert.calledWithExactly(
-          startTelemetryStopwatch,
-          "MS_MESSAGE_REQUEST_TIME_MS",
-          { port: msg.target.portID }
-        );
-        assert.calledOnce(finishTelemetryStopwatch);
-        assert.calledWithExactly(
-          finishTelemetryStopwatch,
-          "MS_MESSAGE_REQUEST_TIME_MS",
-          { port: msg.target.portID }
-        );
-      });
-      it("should pick a message with the right targeting and trigger", async () => {
-        let messages = [
-          {
-            id: "foo1",
-            groups: ["bundled"],
-            template: "simple_template",
-            bundled: 2,
-            trigger: { id: "foo" },
-            content: { title: "Foo1", body: "Foo123-1" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo2",
-            groups: ["bundled"],
-            template: "simple_template",
-            bundled: 2,
-            trigger: { id: "bar" },
-            content: { title: "Foo2", body: "Foo123-2" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo3",
-            groups: ["bundled"],
-            template: "simple_template",
-            bundled: 2,
-            trigger: { id: "foo" },
-            content: { title: "Foo3", body: "Foo123-3" },
-            provider: "onboarding",
-          },
-        ];
-        sandbox.stub(Router, "_findProvider").returns(null);
-        await Router.setState({ messages, providers: [{ id: "onboarding" }] });
-        const { target } = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "foo" } },
-        });
-        let { bundle } = await Router._getBundledMessages(messages[0], target, {
-          id: "foo",
-        });
-        assert.equal(bundle.length, 2);
-        // it should have picked foo1 and foo3 only
-        assert.isTrue(
-          bundle.every(elem => elem.id === "foo1" || elem.id === "foo3")
-        );
-      });
-      it("should have previousSessionEnd in the message context", () => {
-        assert.propertyVal(
-          Router._getMessagesContext(),
-          "previousSessionEnd",
-          100
-        );
-      });
-      it("should record the Reach event if found any", async () => {
-        let messages = [
-          {
-            id: "foo1",
-            forReachEvent: { sent: false, group: "cfr" },
-            experimentSlug: "exp01",
-            branchSlug: "branch01",
-            template: "simple_template",
-            trigger: { id: "foo" },
-            content: { title: "Foo1", body: "Foo123-1" },
-          },
-          {
-            id: "foo2",
-            template: "simple_template",
-            trigger: { id: "bar" },
-            content: { title: "Foo2", body: "Foo123-2" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo3",
-            forReachEvent: { sent: false, group: "cfr" },
-            experimentSlug: "exp02",
-            branchSlug: "branch02",
-            template: "simple_template",
-            trigger: { id: "foo" },
-            content: { title: "Foo1", body: "Foo123-1" },
-          },
-        ];
-        sandbox.stub(Router, "handleMessageRequest").resolves(messages);
-        sandbox.spy(Services.telemetry, "recordEvent");
-
-        const msg = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "foo" } },
-        });
-
-        await Router.onMessage(msg);
-        assert.calledTwice(Services.telemetry.recordEvent);
-      });
-      it("should not record the Reach event if it's already sent", async () => {
-        let messages = [
-          {
-            id: "foo1",
-            forReachEvent: { sent: true, group: "cfr" },
-            experimentSlug: "exp01",
-            branchSlug: "branch01",
-            template: "simple_template",
-            trigger: { id: "foo" },
-            content: { title: "Foo1", body: "Foo123-1" },
-          },
-        ];
-        sandbox.stub(Router, "handleMessageRequest").resolves(messages);
-        sandbox.spy(Services.telemetry, "recordEvent");
-
-        const msg = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "foo" } },
-        });
-
-        await Router.onMessage(msg);
-        assert.notCalled(Services.telemetry.recordEvent);
-      });
-    });
-
-    describe(".includeBundle", () => {
-      let msg;
-      beforeEach(async () => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-        let messages = [
-          {
-            id: "trailhead",
-            groups: ["onboarding"],
-            template: "trailhead",
-            includeBundle: {
-              length: 3,
-              template: "foo",
-              trigger: { id: "foo" },
-            },
-            trigger: { id: "firstRun" },
-            content: {},
-            provider: "onboarding",
-          },
-          {
-            id: "foo2",
-            groups: ["onboarding"],
-            template: "foo",
-            bundled: 3,
-            order: 2,
-            trigger: { id: "foo" },
-            content: { title: "Foo2", body: "Foo123-2" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo3",
-            groups: ["onboarding"],
-            template: "foo",
-            bundled: 3,
-            order: 3,
-            trigger: { id: "foo" },
-            content: { title: "Foo3", body: "Foo123-3" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo4",
-            groups: ["onboarding"],
-            template: "foo",
-            bundled: 3,
-            order: 1,
-            trigger: { id: "foo" },
-            content: { title: "Foo4", body: "Foo123-4" },
-            provider: "onboarding",
-          },
-          {
-            id: "foo5",
-            groups: ["onboarding"],
-            template: "foo",
-            bundled: 3,
-            order: 4,
-            trigger: { id: "foo" },
-            content: { title: "Foo5", body: "Foo123-5" },
-            provider: "onboarding",
-          },
-        ];
-
-        sandbox.stub(Router, "_findProvider").returns(null);
-        await Router.setState({ messages, providers: [{ id: "onboarding" }] });
-
-        msg = fakeAsyncMessage({
-          type: "TRIGGER",
-          data: { trigger: { id: "firstRun" } },
-        });
-      });
-
-      it("should send a message with .includeBundle property with specified length and template", async () => {
-        await Router.onMessage(msg);
-        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
-        assert.propertyVal(resp, "type", "SET_MESSAGE");
-        assert.isArray(resp.data.bundle, "resp.data.bundle");
-        assert.lengthOf(resp.data.bundle, 3, "resp.data.bundle");
-      });
-
-      it("should set blockOnClick property by default false on returned ordered bundle messages", async () => {
-        const expectedBundle = [
-          {
-            content: { title: "Foo4", body: "Foo123-4" },
-            id: "foo4",
-            order: 1,
-            blockOnClick: false,
-          },
-          {
-            content: { title: "Foo2", body: "Foo123-2" },
-            id: "foo2",
-            order: 2,
-            blockOnClick: false,
-          },
-          {
-            content: { title: "Foo3", body: "Foo123-3" },
-            id: "foo3",
-            order: 3,
-            blockOnClick: false,
-          },
-        ];
-
-        await Router.onMessage(msg);
-        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
-
-        for (let i = 0; i < 3; i++) {
-          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
-        }
-      });
-
-      it("should set blockOnClick property true for dynamic triplet and matching messages more than 3", async () => {
-        sandbox.replaceGetter(
-          ASRouterPreferences,
-          "trailheadTriplet",
-          function() {
-            return "dynamic";
-          }
-        );
-        await Router.onMessage(msg);
-        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
-        const expectedBundle = [
-          {
-            content: { title: "Foo4", body: "Foo123-4" },
-            id: "foo4",
-            order: 1,
-            blockOnClick: true,
-          },
-          {
-            content: { title: "Foo2", body: "Foo123-2" },
-            id: "foo2",
-            order: 2,
-            blockOnClick: true,
-          },
-          {
-            content: { title: "Foo3", body: "Foo123-3" },
-            id: "foo3",
-            order: 3,
-            blockOnClick: true,
-          },
-        ];
-
-        for (let i = 0; i < 3; i++) {
-          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
-        }
-      });
-
-      it("should set blockOnClick property true for triplet branch name that starts with 'dynamic' and matching messages more than 3", async () => {
-        sandbox.replaceGetter(
-          ASRouterPreferences,
-          "trailheadTriplet",
-          function() {
-            return "dynamic_test";
-          }
-        );
-        await Router.onMessage(msg);
-        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
-        const expectedBundle = [
-          {
-            content: { title: "Foo4", body: "Foo123-4" },
-            id: "foo4",
-            order: 1,
-            blockOnClick: true,
-          },
-          {
-            content: { title: "Foo2", body: "Foo123-2" },
-            id: "foo2",
-            order: 2,
-            blockOnClick: true,
-          },
-          {
-            content: { title: "Foo3", body: "Foo123-3" },
-            id: "foo3",
-            order: 3,
-            blockOnClick: true,
-          },
-        ];
-
-        for (let i = 0; i < 3; i++) {
-          assert.deepEqual(resp.data.bundle[i], expectedBundle[i]);
-        }
-      });
-    });
-
-    describe("#onMessage: OVERRIDE_MESSAGE", () => {
-      it("should broadcast a SET_MESSAGE message to all clients with a particular id", async () => {
-        const [testMessage] = Router.state.messages;
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage.id },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "SET_MESSAGE", data: testMessage }
-        );
-      });
-
-      it("should call CFRPageActions.forceRecommendation if the template is cfr_action and force is true", async () => {
-        sandbox.stub(CFRPageActions, "forceRecommendation");
-        const testMessage = { id: "foo", template: "cfr_doorhanger" };
-        await Router.setState({ messages: [testMessage] });
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage.id },
-        });
-        await Router.onMessage(msg);
-
-        assert.notCalled(msg.target.sendAsyncMessage);
-        assert.calledOnce(CFRPageActions.forceRecommendation);
-      });
-
-      it("should call BookmarkPanelHub._forceShowMessage the provider is cfr-fxa", async () => {
-        const testMessage = { id: "foo", template: "fxa_bookmark_panel" };
-        await Router.setState({ messages: [testMessage] });
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: testMessage.id },
-        });
-        await Router.onMessage(msg);
-
-        assert.notCalled(msg.target.sendAsyncMessage);
-        assert.calledOnce(FakeBookmarkPanelHub._forceShowMessage);
-      });
-
-      it("should call CFRPageActions.addRecommendation if the template is cfr_action and force is false", async () => {
-        sandbox.stub(CFRPageActions, "addRecommendation");
-        const testMessage = { id: "foo", template: "cfr_doorhanger" };
-        await Router.setState({ messages: [testMessage] });
-        await Router._sendMessageToTarget(
-          testMessage,
-          {},
-          { param: {} },
-          false
-        );
-
-        assert.calledOnce(CFRPageActions.addRecommendation);
-      });
-
-      it("should broadcast CLEAR_ALL if provided id did not resolve to a message", async () => {
-        const msg = fakeAsyncMessage({
-          type: "OVERRIDE_MESSAGE",
-          data: { id: -1 },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          msg.target.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_ALL" }
-        );
-      });
-    });
-
-    describe("#dispatch(action, target)", () => {
-      it("should an action and target to onMessage", async () => {
-        // use the IMPRESSION action to make sure actions are actually getting processed
-        sandbox.stub(Router, "addImpression");
-        sandbox.spy(Router, "onMessage");
-        const target = {};
-        const action = { type: "IMPRESSION" };
-
-        Router.dispatch(action, target);
-
-        assert.calledWith(Router.onMessage, { data: action, target });
-        assert.calledOnce(Router.addImpression);
-      });
-    });
-
-    describe("#onMessage: DOORHANGER_TELEMETRY", () => {
-      it("should dispatch an AS_ROUTER_TELEMETRY_USER_EVENT on DOORHANGER_TELEMETRY message", async () => {
-        const msg = fakeAsyncMessage({
-          type: "DOORHANGER_TELEMETRY",
-          data: { message_id: "foo" },
-        });
-        dispatchStub.reset();
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(dispatchStub);
-        const [action] = dispatchStub.firstCall.args;
-        assert.equal(action.type, "AS_ROUTER_TELEMETRY_USER_EVENT");
-        assert.equal(action.data.message_id, "foo");
-      });
-    });
-
-    describe("#onMessage: EXPIRE_QUERY_CACHE", () => {
-      it("should clear all QueryCache getters", async () => {
-        const msg = fakeAsyncMessage({ type: "EXPIRE_QUERY_CACHE" });
-        sandbox.stub(QueryCache, "expireAll");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(QueryCache.expireAll);
-      });
-    });
-
-    describe("#onMessage: ENABLE_PROVIDER", () => {
-      it("should enable the provider via ASRouterPreferences", async () => {
-        const msg = fakeAsyncMessage({ type: "ENABLE_PROVIDER", data: "foo" });
-        sandbox.stub(ASRouterPreferences, "enableOrDisableProvider");
-
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          ASRouterPreferences.enableOrDisableProvider,
-          "foo",
-          true
-        );
-      });
-    });
-
-    describe("#onMessage: DISABLE_PROVIDER", () => {
-      it("should disable the provider via ASRouterPreferences", async () => {
-        const msg = fakeAsyncMessage({ type: "DISABLE_PROVIDER", data: "foo" });
-        sandbox.stub(ASRouterPreferences, "enableOrDisableProvider");
-
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          ASRouterPreferences.enableOrDisableProvider,
-          "foo",
-          false
-        );
-      });
-    });
-
-    describe("#onMessage: RESET_PROVIDER_PREF", () => {
-      it("should reset provider pref via ASRouterPreferences", async () => {
-        const msg = fakeAsyncMessage({
-          type: "RESET_PROVIDER_PREF",
-          data: "foo",
-        });
-        sandbox.stub(ASRouterPreferences, "resetProviderPref");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(ASRouterPreferences.resetProviderPref);
-      });
-    });
-    describe("#onMessage: SET_PROVIDER_USER_PREF", () => {
-      it("should set provider user pref via ASRouterPreferences", async () => {
-        const msg = fakeAsyncMessage({
-          type: "SET_PROVIDER_USER_PREF",
-          data: { id: "foo", value: true },
-        });
-        sandbox.stub(ASRouterPreferences, "setUserPreference");
-
-        await Router.onMessage(msg);
-
-        assert.calledWith(ASRouterPreferences.setUserPreference, "foo", true);
-      });
-    });
-    describe("#onMessage: RESET_GROUPS_STATE", () => {
-      beforeEach(() => {
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-      });
-      it("should call resetGroupsState", async () => {
-        const msg = fakeAsyncMessage({
-          type: "RESET_GROUPS_STATE",
-        });
-        sandbox.stub(Router, "resetGroupsState");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.resetGroupsState);
-        assert.calledOnce(Router.loadMessagesFromAllProviders);
-      });
-      it("should persist state to disk", async () => {
-        const msg = fakeAsyncMessage({
-          type: "RESET_GROUPS_STATE",
-        });
-        await Router.setState({
-          groups: [{ id: "foo", enabled: true }],
-          groupImpressions: { foo: [123] },
-        });
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router._storage.set);
-        assert.calledWithExactly(Router._storage.set, "groupImpressions", {
-          foo: [],
-        });
-        assert.property(Router.state, "groupImpressions");
-        assert.lengthOf(Router.state.groupImpressions.foo, 0);
-      });
-    });
-    describe("#onMessage: EVALUATE_JEXL_EXPRESSION", () => {
-      it("should call evaluateExpression", async () => {
-        const msg = fakeAsyncMessage({
-          type: "EVALUATE_JEXL_EXPRESSION",
-          data: { foo: true },
-        });
-        sandbox.stub(Router, "evaluateExpression");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.evaluateExpression);
-        assert.calledWithExactly(
-          Router.evaluateExpression,
-          msg.target,
-          msg.data.data
-        );
-      });
-    });
-    describe("#onMessage: FORCE_ATTRIBUTION", () => {
-      let setReferrerUrl;
-      beforeEach(() => {
-        setReferrerUrl = sinon.spy();
-        global.Cc["@mozilla.org/mac-attribution;1"] = {
-          getService: () => ({ setReferrerUrl }),
-        };
-        global.Cc["@mozilla.org/process/environment;1"] = {
-          getService: () => ({ set: sandbox.stub() }),
-        };
-      });
-      afterEach(() => {
-        globals.restore();
-      });
-      it("should call forceAttribution", async () => {
-        const msg = fakeAsyncMessage({
-          type: "FORCE_ATTRIBUTION",
-          data: { foo: true },
-        });
-        sandbox.stub(Router, "forceAttribution");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.forceAttribution);
-        assert.calledWithExactly(Router.forceAttribution, msg.data.data);
-      });
-      it("should force attribution and update providers", async () => {
-        sandbox.stub(AppConstants, "platform").value("");
-        sandbox.stub(Router, "_updateMessageProviders");
-        sandbox.stub(Router, "loadMessagesFromAllProviders");
-        sandbox.stub(fakeAttributionCode, "_clearCache");
-        sandbox.stub(fakeAttributionCode, "getAttrDataAsync");
-        const msg = fakeAsyncMessage({
-          type: "FORCE_ATTRIBUTION",
-          data: { foo: true },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledOnce(fakeAttributionCode._clearCache);
-        assert.calledOnce(fakeAttributionCode.getAttrDataAsync);
-        assert.calledOnce(Router._updateMessageProviders);
-        assert.calledOnce(Router.loadMessagesFromAllProviders);
-      });
-      it("should double encode on windows", async () => {
-        sandbox.stub(fakeAttributionCode, "writeAttributionFile");
-
-        Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
-
-        assert.notCalled(setReferrerUrl);
-        assert.calledWithMatch(
-          fakeAttributionCode.writeAttributionFile,
-          "foo%3DFOO!%26bar%3DBAR%253F"
-        );
-      });
-      it("should set referrer on mac", async () => {
-        sandbox.stub(AppConstants, "platform").value("macosx");
-
-        Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
-
-        assert.calledOnce(setReferrerUrl);
-        assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
-      });
-    });
-    describe("#onMessage: FORCE_WHATSNEW_PANEL", () => {
-      it("should call forceWNPanel", async () => {
-        let messages = [];
-        const msg = fakeAsyncMessage({
-          type: "FORCE_WHATSNEW_PANEL",
-          data: { messages },
-        });
-        sandbox.stub(Router, "forceWNPanel");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.forceWNPanel);
-      });
-      describe("forceWNPanel", () => {
-        let browser = {
-          document: new Document(),
-          PanelUI: {
-            showSubView: sinon.stub(),
-          },
-        };
-        it("should call enableToolbarButton", async () => {
-          await Router.forceWNPanel(browser);
-
-          assert.calledOnce(FakeToolbarPanelHub.enableToolbarButton);
-        });
-        it("should call PanelUI.showSubView", () => {
-          assert.calledOnce(browser.PanelUI.showSubView);
-        });
-      });
-    });
-    describe("#onMessage: RENDER_WHATSNEW_MESSAGES", () => {
-      it("should call renderWNMessages", async () => {
-        let messages = [];
-        const msg = fakeAsyncMessage({
-          type: "RENDER_WHATSNEW_MESSAGES",
-          data: { messages },
-        });
-        sandbox.stub(Router, "renderWNMessages");
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(Router.renderWNMessages);
-      });
-      describe("renderWNMessages", () => {
-        let messages = [{}, {}];
-        let browser = {
-          document: new Document(),
-          PanelUI: {
-            showSubView: sinon.stub(),
-          },
-        };
-        it("should call forceShowMessage", () => {
-          Router.renderWNMessages(browser, messages);
-
-          assert.calledOnce(FakeToolbarPanelHub.forceShowMessage);
-        });
-      });
-    });
-    describe("#onMessage: default", () => {
-      it("should report unknown messages", () => {
-        const msg = fakeAsyncMessage({ type: "FOO" });
-        sandbox.stub(Cu, "reportError");
-
-        Router.onMessage(msg);
-
-        assert.calledOnce(Cu.reportError);
-      });
-    });
-    describe("#onMessage: USER_ACTION", () => {
-      it("should dispatch to SpecialMessageActions", async () => {
-        const msg = fakeExecuteUserAction({
-          type: "OPEN_URL",
-          data: {
-            args: "foo",
-          },
-        });
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(global.SpecialMessageActions.handleAction);
-        assert.calledWithExactly(
-          global.SpecialMessageActions.handleAction,
-          msg.data.data,
-          msg.target.browser
-        );
-      });
-      it("should call update onboarding state on INSTALL_ADDON_FROM_URL", async () => {
-        const spy = sandbox.spy(global.Services.obs, "addObserver");
-        const msg = fakeExecuteUserAction({
-          type: "INSTALL_ADDON_FROM_URL",
-        });
-
-        await Router.onMessage(msg);
-
-        assert.calledOnce(spy);
-        assert.calledWithExactly(
-          spy,
-          sinon.match.func,
-          "webextension-install-notify"
-        );
-
-        const [eventCb] = spy.firstCall.args;
-        // Call the observer cb
-        eventCb();
-        assert.calledOnce(Router.messageChannel.sendAsyncMessage);
-        assert.calledWithExactly(
-          Router.messageChannel.sendAsyncMessage,
-          OUTGOING_MESSAGE_NAME,
-          { type: "CLEAR_INTERRUPT" }
-        );
-      });
+      assert.calledOnce(setReferrerUrl);
+      assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
     });
   });
 
   describe("_triggerHandler", () => {
-    it("should call #onMessage with the correct trigger", () => {
+    it("should call #sendTriggerMessage with the correct trigger", () => {
       const getter = sandbox.stub();
       getter.returns(false);
       sandbox.stub(global.BrowserHandler, "kiosk").get(getter);
-      sinon.spy(Router, "onMessage");
-      const target = {};
+      sinon.spy(Router, "sendTriggerMessage");
+      const browser = {};
       const trigger = { id: "FAKE_TRIGGER", param: "some fake param" };
-      Router._triggerHandler(target, trigger);
-      assert.calledOnce(Router.onMessage);
-      assert.calledWithExactly(Router.onMessage, {
-        target,
-        data: { type: "TRIGGER", data: { trigger } },
-      });
+      Router._triggerHandler(browser, trigger);
+      assert.calledOnce(Router.sendTriggerMessage);
+      assert.calledWith(
+        Router.sendTriggerMessage,
+        sandbox.match({
+          id: "FAKE_TRIGGER",
+          param: "some fake param",
+        })
+      );
     });
   });
 
   describe("_triggerHandler_kiosk", () => {
-    it("should not call #onMessage", () => {
+    it("should not call #sendTriggerMessage", () => {
       const getter = sandbox.stub();
       getter.returns(true);
       sandbox.stub(global.BrowserHandler, "kiosk").get(getter);
-      sinon.spy(Router, "onMessage");
-      const target = {};
+      sinon.spy(Router, "sendTriggerMessage");
+      const browser = {};
       const trigger = { id: "FAKE_TRIGGER", param: "some fake param" };
-      Router._triggerHandler(target, trigger);
-      assert.notCalled(Router.onMessage);
+      Router._triggerHandler(browser, trigger);
+      assert.notCalled(Router.sendTriggerMessage);
     });
   });
 
@@ -3044,114 +1549,26 @@ describe("ASRouter", () => {
   });
 
   describe("impressions", () => {
-    async function addGroupWithFrequency(id, frequency) {
-      await Router.setState(state => {
-        const newGroup = { id, frequency };
-        const groups = [...state.groups, newGroup];
-        return { groups };
-      });
-    }
-
-    describe("#addImpression", () => {
-      it("should add a message impression and update _storage with the current time if the message has frequency caps", async () => {
-        clock.tick(42);
-        const msg = fakeAsyncMessage({
-          type: "IMPRESSION",
-          data: {
-            id: "foo",
-            provider: FAKE_LOCAL_PROVIDER.id,
-            frequency: { lifetime: 5 },
-          },
-        });
-        await Router.onMessage(msg);
-        assert.isArray(Router.state.messageImpressions.foo);
-        assert.deepEqual(Router.state.messageImpressions.foo, [42]);
-        assert.calledWith(Router._storage.set, "messageImpressions", {
-          foo: [42],
-        });
-      });
-      it("should not add a message impression if the message doesn't have frequency caps", async () => {
-        // Note that storage.set is called during initialization, so it needs to be reset
-        Router._storage.set.reset();
-        clock.tick(42);
-        const msg = fakeAsyncMessage({
-          type: "IMPRESSION",
-          data: { id: "foo" },
-        });
-        await Router.onMessage(msg);
-        assert.notProperty(Router.state.messageImpressions, "foo");
-        assert.notCalled(Router._storage.set);
-      });
-      it("should add a provider impression and update _storage with the current time if the message's provider has frequency caps", async () => {
-        clock.tick(42);
-        await addGroupWithFrequency("foo", { lifetime: 5 });
-        const msg = fakeAsyncMessage({
-          type: "IMPRESSION",
-          data: { id: "bar", provider: "foo", groups: ["foo"] },
-        });
-        await Router.onMessage(msg);
-        assert.isArray(Router.state.groupImpressions.foo);
-        assert.deepEqual(Router.state.groupImpressions.foo, [42]);
-        assert.calledWith(Router._storage.set, "groupImpressions", {
-          foo: [42],
-        });
-      });
-      it("should not add a group impression if the message's group doesn't have frequency caps", async () => {
-        // Note that storage.set is called during initialization, so it needs to be reset
-        Router._storage.set.reset();
-        clock.tick(42);
-        // Add "foo" group with no frequency
-        await addGroupWithFrequency("foo", null);
-        const msg = fakeAsyncMessage({
-          type: "IMPRESSION",
-          data: { id: "bar", provider: "foo", groups: ["foo"] },
-        });
-        await Router.onMessage(msg);
-        assert.notProperty(Router.state.groupImpressions, "foo");
-        assert.notCalled(Router._storage.set);
-      });
-      it("should only send impressions for one message", async () => {
-        const getElementById = sandbox.stub().returns({
-          setAttribute: sandbox.stub(),
-          style: { setProperty: sandbox.stub() },
-          addEventListener: sandbox.stub(),
-        });
-        const data = {
-          param: { host: "mozilla.com", url: "https://mozilla.com" },
+    describe("frequency normalisation", () => {
+      beforeEach(async () => {
+        const messages = [
+          { frequency: { custom: [{ period: "daily", cap: 10 }] } },
+        ];
+        const provider = {
+          id: "foo",
+          frequency: { custom: [{ period: "daily", cap: 100 }] },
+          messages,
+          enabled: true,
         };
-        const target = {
-          sendAsyncMessage: sandbox.stub(),
-          documentURI: { scheme: "https", host: "mozilla.com" },
-        };
-        const gURLBar = document.createElement("div");
-        gURLBar.textbox = document.createElement("div");
-        target.ownerGlobal = {
-          gURLBar,
-          gBrowser: { selectedBrowser: target },
-          document: { getElementById },
-          promiseDocumentFlushed: sandbox.stub().resolves([{ width: 0 }]),
-          setTimeout: sandbox.stub(),
-          A11yUtils: { announce: sandbox.stub() },
-        };
-        const firstMessage = { ...FAKE_RECOMMENDATION, id: "first_message" };
-        const secondMessage = { ...FAKE_RECOMMENDATION, id: "second_message" };
-        await Router.setState({ messages: [firstMessage, secondMessage] });
-        global.DOMLocalization = class DOMLocalization {};
-        sandbox.spy(CFRPageActions, "addRecommendation");
-        sandbox.stub(Router, "addImpression").resolves();
-
-        await Router.setMessageById("first_message", target, false, { data });
-        await Router.setMessageById("second_message", target, false, { data });
-
-        assert.calledTwice(CFRPageActions.addRecommendation);
-        const [
-          firstReturn,
-          secondReturn,
-        ] = CFRPageActions.addRecommendation.returnValues;
-        assert.isTrue(await firstReturn);
-        // Adding the second message should fail.
-        assert.isFalse(await secondReturn);
-        assert.calledOnce(Router.addImpression);
+        await createRouterAndInit([provider]);
+      });
+      it("period aliases in provider frequency caps should be normalised", () => {
+        const [provider] = Router.state.providers;
+        assert.equal(provider.frequency.custom[0].period, "daily");
+      });
+      it("period aliases in message frequency caps should be normalised", async () => {
+        const [message] = Router.state.messages;
+        assert.equal(message.frequency.custom[0].period, "daily");
       });
     });
 
@@ -3469,35 +1886,6 @@ describe("ASRouter", () => {
     });
   });
 
-  describe("handle targeting errors", () => {
-    beforeEach(() => {
-      sandbox.stub(Router, "loadMessagesFromAllProviders");
-    });
-    it("should dispatch an event when a targeting expression throws an error", async () => {
-      fakeTargetingContext.evalWithDefault.rejects("unit test error");
-      await Router.setState({
-        messages: [
-          {
-            id: "foo",
-            provider: "snippets",
-            targeting: "foo2.[[(",
-            groups: ["snippets"],
-          },
-        ],
-        providers: [{ id: "snippets" }],
-      });
-      const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
-      dispatchStub.reset();
-
-      await Router.onMessage(msg);
-
-      assert.calledOnce(dispatchStub);
-      const [action] = dispatchStub.firstCall.args;
-      assert.equal(action.type, "AS_ROUTER_TELEMETRY_USER_EVENT");
-      assert.equal(action.data.message_id, "foo");
-    });
-  });
-
   describe("#_onLocaleChanged", () => {
     it("should call _maybeUpdateL10nAttachment in the handler", async () => {
       sandbox.spy(Router, "_maybeUpdateL10nAttachment");
@@ -3521,7 +1909,7 @@ describe("ASRouter", () => {
       };
       await createRouterAndInit([provider]);
       sandbox.spy(Router, "setState");
-      sandbox.spy(Router, "loadMessagesFromAllProviders");
+      Router.loadMessagesFromAllProviders.resetHistory();
 
       await Router._maybeUpdateL10nAttachment();
 
@@ -3551,8 +1939,8 @@ describe("ASRouter", () => {
         type: "local",
       };
       await createRouterAndInit([provider]);
+      Router.loadMessagesFromAllProviders.resetHistory();
       sandbox.spy(Router, "setState");
-      sandbox.spy(Router, "loadMessagesFromAllProviders");
 
       await Router._maybeUpdateL10nAttachment();
 
@@ -3574,50 +1962,6 @@ describe("ASRouter", () => {
       Router.observe("", "", "foo");
 
       assert.notCalled(CFRPageActions.reloadL10n);
-    });
-  });
-  describe("#sendAsyncMessageToPreloaded", () => {
-    it("should send the message to the preloaded browser if there's data and a preloaded browser exists", () => {
-      const port = {
-        browser: {
-          getAttribute() {
-            return "preloaded";
-          },
-        },
-        sendAsyncMessage: sinon.spy(),
-      };
-      Router.messageChannel.messagePorts.push(port);
-
-      const action = { type: "FOO" };
-      Router.sendAsyncMessageToPreloaded(action);
-      assert.calledWith(port.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
-    });
-    it("should send the message to all the preloaded browsers if there's data and they exist", () => {
-      const port = {
-        browser: {
-          getAttribute() {
-            return "preloaded";
-          },
-        },
-        sendAsyncMessage: sinon.spy(),
-      };
-      Router.messageChannel.messagePorts.push(port);
-      Router.messageChannel.messagePorts.push(port);
-      Router.sendAsyncMessageToPreloaded({ type: "FOO" });
-      assert.calledTwice(port.sendAsyncMessage);
-    });
-    it("should not send the message to the preloaded browser if there's no data and a preloaded browser does not exists", () => {
-      const port = {
-        browser: {
-          getAttribute() {
-            return "consumed";
-          },
-        },
-        sendAsyncMessage: sinon.spy(),
-      };
-      Router.messageChannel.messagePorts.push(port);
-      Router.sendAsyncMessageToPreloaded({ type: "FOO" });
-      assert.notCalled(port.sendAsyncMessage);
     });
   });
   describe("#loadAllMessageGroups", () => {
@@ -3755,6 +2099,15 @@ describe("ASRouter", () => {
       assert.ok(group);
       // Pref changed, updated the group state
       assert.propertyVal(group, "enabled", false);
+    });
+  });
+  describe("unblockAll", () => {
+    it("Clears the message block list and returns the state value", async () => {
+      await Router.setState({ messageBlockList: ["one", "two", "three"] });
+      assert.equal(Router.state.messageBlockList.length, 3);
+      const state = await Router.unblockAll();
+      assert.equal(Router.state.messageBlockList.length, 0);
+      assert.equal(state.messageBlockList.length, 0);
     });
   });
   describe("#loadMessagesForProvider", () => {

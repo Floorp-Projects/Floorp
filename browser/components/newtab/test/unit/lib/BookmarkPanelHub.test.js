@@ -13,10 +13,10 @@ describe("BookmarkPanelHub", () => {
   let fakeMessageFluent;
   let fakeTarget;
   let fakeContainer;
-  let fakeDispatch;
+  let fakeSendTelemetry;
   let fakeWindow;
   let isBrowserPrivateStub;
-  beforeEach(() => {
+  beforeEach(async () => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
 
@@ -41,7 +41,7 @@ describe("BookmarkPanelHub", () => {
     [
       { content: fakeMessageFluent },
       { content: fakeMessage },
-    ] = PanelTestProvider.getMessages();
+    ] = await PanelTestProvider.getMessages();
     fakeContainer = {
       addEventListener: sandbox.stub(),
       setAttribute: sandbox.stub(),
@@ -85,7 +85,7 @@ describe("BookmarkPanelHub", () => {
         },
       },
     };
-    fakeDispatch = sandbox.stub();
+    fakeSendTelemetry = sandbox.stub();
   });
   afterEach(() => {
     instance.uninit();
@@ -103,11 +103,15 @@ describe("BookmarkPanelHub", () => {
     assert.isNull(instance._handleMessageRequest);
   });
   it("should instantiate handleMessageRequest and addImpression and l10n", () => {
-    instance.init(fakeHandleMessageRequest, fakeAddImpression, fakeDispatch);
+    instance.init(
+      fakeHandleMessageRequest,
+      fakeAddImpression,
+      fakeSendTelemetry
+    );
 
     assert.equal(instance._addImpression, fakeAddImpression);
     assert.equal(instance._handleMessageRequest, fakeHandleMessageRequest);
-    assert.equal(instance._dispatch, fakeDispatch);
+    assert.equal(instance._sendTelemetry, fakeSendTelemetry);
     assert.ok(instance._l10n);
     assert.isTrue(instance._initialized);
   });
@@ -117,7 +121,11 @@ describe("BookmarkPanelHub", () => {
   describe("#messageRequest", () => {
     beforeEach(() => {
       sandbox.stub(instance, "onResponse");
-      instance.init(fakeHandleMessageRequest, fakeAddImpression, fakeDispatch);
+      instance.init(
+        fakeHandleMessageRequest,
+        fakeAddImpression,
+        fakeSendTelemetry
+      );
     });
     afterEach(() => {
       sandbox.restore();
@@ -158,7 +166,11 @@ describe("BookmarkPanelHub", () => {
   });
   describe("#onResponse", () => {
     beforeEach(() => {
-      instance.init(fakeHandleMessageRequest, fakeAddImpression, fakeDispatch);
+      instance.init(
+        fakeHandleMessageRequest,
+        fakeAddImpression,
+        fakeSendTelemetry
+      );
       sandbox.stub(instance, "showMessage");
       sandbox.stub(instance, "sendImpression");
       sandbox.stub(instance, "hideMessage");
@@ -200,9 +212,9 @@ describe("BookmarkPanelHub", () => {
         "IMPRESSION",
         fakeWindow
       );
-      assert.calledOnce(fakeDispatch);
+      assert.calledOnce(fakeSendTelemetry);
 
-      const [ping] = fakeDispatch.firstCall.args;
+      const [ping] = fakeSendTelemetry.firstCall.args;
 
       assert.equal(ping.type, "DOORHANGER_TELEMETRY");
       assert.equal(ping.data.event, "IMPRESSION");
@@ -219,7 +231,7 @@ describe("BookmarkPanelHub", () => {
         "IMPRESSION",
         fakeWindow
       );
-      assert.notCalled(fakeDispatch);
+      assert.notCalled(fakeSendTelemetry);
     });
     it("should hide existing messages if no response is provided", () => {
       instance.onResponse(null, fakeTarget);
@@ -230,7 +242,11 @@ describe("BookmarkPanelHub", () => {
   });
   describe("#showMessage.collapsed=false", () => {
     beforeEach(() => {
-      instance.init(fakeHandleMessageRequest, fakeAddImpression, fakeDispatch);
+      instance.init(
+        fakeHandleMessageRequest,
+        fakeAddImpression,
+        fakeSendTelemetry
+      );
       sandbox.stub(instance, "toggleRecommendation");
       sandbox.stub(instance, "_response").value({ collapsed: false });
     });
@@ -438,12 +454,12 @@ describe("BookmarkPanelHub", () => {
       assert.calledOnce(target.container.removeAttribute);
     });
   });
-  describe("#_forceShowMessage", () => {
+  describe("#forceShowMessage", () => {
     it("should call showMessage with the correct args", () => {
       sandbox.spy(instance, "showMessage");
       sandbox.stub(instance, "hideMessage");
 
-      instance._forceShowMessage(fakeTarget, { content: fakeMessage });
+      instance.forceShowMessage(fakeTarget.browser, { content: fakeMessage });
 
       assert.calledOnce(instance.showMessage);
       assert.calledOnce(instance.hideMessage);
@@ -457,7 +473,7 @@ describe("BookmarkPanelHub", () => {
     it("should insert required fluent files", () => {
       sandbox.stub(instance, "showMessage");
 
-      instance._forceShowMessage(fakeTarget, { content: fakeMessage });
+      instance.forceShowMessage(fakeTarget.browser, { content: fakeMessage });
 
       assert.calledTwice(fakeWindow.MozXULElement.insertFTLIfNeeded);
     });
@@ -466,7 +482,7 @@ describe("BookmarkPanelHub", () => {
       sandbox.stub(instance, "toggleRecommendation");
       sandbox.stub(instance, "sendUserEventTelemetry");
 
-      instance._forceShowMessage(fakeTarget, { content: fakeMessage });
+      instance.forceShowMessage(fakeTarget.browser, { content: fakeMessage });
 
       const [
         ,
@@ -481,7 +497,11 @@ describe("BookmarkPanelHub", () => {
   });
   describe("#sendImpression", () => {
     beforeEach(() => {
-      instance.init(fakeHandleMessageRequest, fakeAddImpression, fakeDispatch);
+      instance.init(
+        fakeHandleMessageRequest,
+        fakeAddImpression,
+        fakeSendTelemetry
+      );
       instance._response = "foo";
     });
     it("should dispatch an impression", () => {

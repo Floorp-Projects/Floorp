@@ -44,20 +44,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
 <pre id="test">
 <script type="application/javascript">
 
-function startTest() {
+async function test() {
   var subframe = document.getElementById("subframe");
-  synthesizeNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10, continueTest);
-}
+  await new Promise(resolve => {
+    synthesizeNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10, resolve);
+  });
 
-function continueTest() {
-  var subframe = document.getElementById("subframe");
   is(subframe.scrollTop > 0, true, "We should have scrolled the subframe down");
   is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
-  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
-waitUntilApzStable().then(startTest);
+waitUntilApzStable()
+  .then(test)
+  .then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
 </pre>

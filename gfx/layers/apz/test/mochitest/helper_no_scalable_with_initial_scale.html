@@ -42,7 +42,7 @@
          "The visual viewport offset should not be moved");
     }
 
-    waitUntilApzStable().then(test).then(subtestDone);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

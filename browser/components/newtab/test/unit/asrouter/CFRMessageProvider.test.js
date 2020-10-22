@@ -1,5 +1,4 @@
 import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
-const messages = CFRMessageProvider.getMessages();
 
 const REGULAR_IDS = [
   "FACEBOOK_CONTAINER",
@@ -11,6 +10,10 @@ const REGULAR_IDS = [
 ];
 
 describe("CFRMessageProvider", () => {
+  let messages;
+  beforeEach(async () => {
+    messages = await CFRMessageProvider.getMessages();
+  });
   it("should have a total of 13 messages", () => {
     assert.lengthOf(messages, 13);
   });

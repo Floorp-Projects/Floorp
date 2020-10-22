@@ -25,7 +25,7 @@ add_task(async function() {
     client,
     resourceWatcher,
     targetList,
-  } = await initResourceWatcherAndTarget();
+  } = await initMultiProcessResourceWatcher();
 
   const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
 

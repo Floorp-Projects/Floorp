@@ -24,10 +24,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { AboutNewTab } = ChromeUtils.import(
   "resource:///modules/AboutNewTab.jsm"
 );

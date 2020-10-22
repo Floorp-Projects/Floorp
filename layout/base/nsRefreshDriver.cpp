@@ -1897,6 +1897,8 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
                                           "requestAnimationFrame callbacks",
                                           GRAPHICS, GetDocShell(mPresContext));
     for (const DocumentFrameCallbacks& docCallbacks : frameRequestCallbacks) {
+      TimeStamp startTime = TimeStamp::Now();
+
       // XXXbz Bug 863140: GetInnerWindow can return the outer
       // window in some cases.
       nsPIDOMWindowInner* innerWindow =
@@ -1924,6 +1926,17 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         // mutated by the call.
         LogFrameRequestCallback::Run run(callback.mCallback);
         MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
+      }
+
+      if (docCallbacks.mDocument->GetReadyStateEnum() ==
+          Document::READYSTATE_COMPLETE) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::PERF_REQUEST_ANIMATION_CALLBACK_NON_PAGELOAD_MS,
+            startTime, TimeStamp::Now());
+      } else {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::PERF_REQUEST_ANIMATION_CALLBACK_PAGELOAD_MS, startTime,
+            TimeStamp::Now());
       }
     }
   }

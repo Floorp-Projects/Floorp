@@ -681,8 +681,8 @@ enum class SimdOp {
   I32x4TruncUSatF32x4 = 0xf9,
   F32x4ConvertSI32x4 = 0xfa,
   F32x4ConvertUI32x4 = 0xfb,
-  V128Load32ZeroExperimental = 0xfc,
-  V128Load64ZeroExperimental = 0xfd,
+  V128Load32Zero = 0xfc,
+  V128Load64Zero = 0xfd,
   // Unused = 0xfe and up
 
   Limit

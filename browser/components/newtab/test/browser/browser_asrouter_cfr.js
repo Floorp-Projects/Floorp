@@ -200,7 +200,7 @@ function trigger_cfr_panel(
     trigger,
     recommendation,
     // Use the real AS dispatch method to trigger real notifications
-    ASRouter.dispatch
+    ASRouter.dispatchCFRAction
   );
 }
 
@@ -653,10 +653,15 @@ add_task(
       "popuphidden"
     );
 
+    let protectionsTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+
     document
       .getElementById("contextual-feature-recommendation-notification")
       .button.click();
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+    let protectionsTab = await protectionsTabPromise;
+
+    await BrowserTestUtils.removeTab(protectionsTab);
     await hidePanel;
   }
 );
@@ -1000,7 +1005,7 @@ add_task(async function test_providerNames() {
   const cfrProviderPrefs = Services.prefs.getChildList(providersBranch);
   for (const prefName of cfrProviderPrefs) {
     const prefValue = JSON.parse(Services.prefs.getStringPref(prefName));
-    if (prefValue.id) {
+    if (prefValue && prefValue.id) {
       // Snippets are disabled in tests and value is set to []
       Assert.equal(
         prefValue.id,
@@ -1071,7 +1076,7 @@ add_task(function test_updateCycleForProviders() {
     .getChildList("browser.newtabpage.activity-stream.asrouter.providers.")
     .forEach(provider => {
       const prefValue = JSON.parse(Services.prefs.getStringPref(provider, ""));
-      if (prefValue.type === "remote-settings") {
+      if (prefValue && prefValue.type === "remote-settings") {
         Assert.ok(prefValue.updateCycleInMs);
       }
     });
@@ -1085,7 +1090,7 @@ add_task(async function test_heartbeat_tactic_2() {
     clearNotifications();
   });
 
-  const msg = CFRMessageProvider.getMessages().find(
+  const msg = (await CFRMessageProvider.getMessages()).find(
     m => m.id === "HEARTBEAT_TACTIC_2"
   );
   const shown = await CFRPageActions.addRecommendation(
@@ -1098,7 +1103,7 @@ add_task(async function test_heartbeat_tactic_2() {
       targeting: true,
     },
     // Use the real AS dispatch method to trigger real notifications
-    ASRouter.dispatch
+    ASRouter.dispatchCFRAction
   );
 
   Assert.ok(shown, "Heartbeat CFR added");
@@ -1109,12 +1114,13 @@ add_task(async function test_heartbeat_tactic_2() {
     "Heartbeat button exists"
   );
 
+  let newTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    Services.urlFormatter.formatURL(msg.content.action.url),
+    true
+  );
+
   document.getElementById("contextual-feature-recommendation").click();
 
-  // This will fail if the URL from the message does not load
-  await BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    Services.urlFormatter.formatURL(msg.content.action.url)
-  );
+  await newTabPromise;
 });

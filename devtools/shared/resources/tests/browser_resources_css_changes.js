@@ -15,11 +15,9 @@ add_task(async function() {
     "data:text/html,<body style='color: lime;'>CSS Changes</body>"
   );
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   // CSS_CHANGE watcher doesn't record modification made before watching,
   // so we have to start watching before doing any DOM mutation.

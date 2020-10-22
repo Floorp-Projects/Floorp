@@ -47,7 +47,7 @@
       document.exitFullscreen();
     }
 
-    waitUntilApzStable().then(test).then(subtestDone);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

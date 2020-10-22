@@ -1399,10 +1399,14 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   bool withCredentials =
       originalLoadInfo->GetCookiePolicy() == nsILoadInfo::SEC_COOKIES_INCLUDE;
 
-  nsPreflightCache::CacheEntry* entry =
-      sPreflightCache
-          ? sPreflightCache->GetEntry(uri, principal, withCredentials, false)
-          : nullptr;
+  nsPreflightCache::CacheEntry* entry = nullptr;
+
+  // Disable cache if devtools says so.
+  bool disableCache = Preferences::GetBool("devtools.cache.disabled");
+
+  if (sPreflightCache && !disableCache) {
+    entry = sPreflightCache->GetEntry(uri, principal, withCredentials, false);
+  }
 
   if (entry && entry->CheckRequest(method, aUnsafeHeaders)) {
     aCallback->OnPreflightSucceeded();

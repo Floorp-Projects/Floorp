@@ -24,7 +24,7 @@ async function testPlatformMessagesResources() {
     client,
     resourceWatcher,
     targetList,
-  } = await initResourceWatcherAndTarget();
+  } = await initMultiProcessResourceWatcher();
 
   const expectedMessages = [
     "This is a cached message",
@@ -99,7 +99,7 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
     client,
     resourceWatcher,
     targetList,
-  } = await initResourceWatcherAndTarget();
+  } = await initMultiProcessResourceWatcher();
 
   info(
     "Check whether onAvailable will not be called with existing platform messages"

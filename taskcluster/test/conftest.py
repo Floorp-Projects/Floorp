@@ -112,3 +112,22 @@ def filter_tasks():
         return filter(func, graph.tasks.values())
 
     return inner
+
+
+@pytest.fixture(scope="session")
+def print_dependents():
+    def inner(graph, label, indent=""):
+        if indent == "":
+            print(f"Dependent graph for {label}:")
+
+        dependents = set()
+        for task in graph.tasks.values():
+            if label in task.dependencies.values():
+                dependents.add(task.label)
+
+        print(f"{indent}{label}")
+        if dependents:
+            for dep in sorted(dependents):
+                inner(graph, dep, indent=indent + "  ")
+
+    return inner

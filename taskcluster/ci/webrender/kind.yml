@@ -45,7 +45,7 @@ jobs:
             files-changed:
                 - 'gfx/wr/**'
 
-    linux-release:
+    linux64-release:
         description: Runs release-mode WebRender CI tests on a Linux worker
         worker-type: b-linux
         worker:
@@ -69,7 +69,7 @@ jobs:
             files-changed:
                 - 'gfx/wr/**'
 
-    linux-debug:
+    linux64-debug:
         description: Runs debug-mode WebRender CI tests on a Linux worker
         worker-type: b-linux
         worker:

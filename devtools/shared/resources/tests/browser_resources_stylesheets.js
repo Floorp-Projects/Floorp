@@ -111,11 +111,9 @@ async function testResourceAvailableFeature() {
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Check whether ResourceWatcher gets existing stylesheet");
   const availableResources = [];
@@ -180,11 +178,9 @@ async function testResourceUpdateFeature() {
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Setup the watcher");
   const availableResources = [];
@@ -314,11 +310,9 @@ async function testNestedResourceUpdateFeature() {
     tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
   });
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Setup the watcher");
   const availableResources = [];

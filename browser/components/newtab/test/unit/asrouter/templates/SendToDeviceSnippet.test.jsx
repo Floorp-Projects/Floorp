@@ -7,13 +7,6 @@ import {
 } from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
-const DEFAULT_CONTENT = SnippetsTestMessageProvider.getMessages().find(
-  msg => msg.template === "send_to_device_snippet"
-).content;
-const DEFAULT_SCENE2_CONTENT = SnippetsTestMessageProvider.getMessages().find(
-  msg => msg.template === "send_to_device_scene2_snippet"
-).content;
-
 async function testBodyContains(body, key, value) {
   const regex = new RegExp(
     `Content-Disposition: form-data; name="${key}"${value}`
@@ -42,6 +35,8 @@ describe("SendToDeviceSnippet", () => {
   let sandbox;
   let fetchStub;
   let jsonResponse;
+  let DEFAULT_CONTENT;
+  let DEFAULT_SCENE2_CONTENT;
 
   function mountAndCheckProps(content = {}) {
     const props = {
@@ -58,7 +53,13 @@ describe("SendToDeviceSnippet", () => {
     return comp;
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    DEFAULT_CONTENT = (await SnippetsTestMessageProvider.getMessages()).find(
+      msg => msg.template === "send_to_device_snippet"
+    ).content;
+    DEFAULT_SCENE2_CONTENT = (
+      await SnippetsTestMessageProvider.getMessages()
+    ).find(msg => msg.template === "send_to_device_scene2_snippet").content;
     sandbox = sinon.createSandbox();
     jsonResponse = { status: "ok" };
     fetchStub = sandbox

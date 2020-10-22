@@ -1388,9 +1388,6 @@ class Runnable;
 /**
  * A macro to declare and implement addref/release for a class that does not
  * need to QI to any interfaces other than the ones its parent class QIs to.
- * This can be a no-op when we're not building with refcount logging, because in
- * that case there's no real reason to have a separate addref/release on this
- * class.
  */
 #if defined(NS_BUILD_REFCNT_LOGGING)
 #  define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)  \
@@ -1401,8 +1398,16 @@ class Runnable;
       NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super);           \
     }
 #else  // NS_BUILD_REFCNT_LOGGING
-#  define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super)
-#endif  // NS_BUILD_REFCNT_LOGGINGx
+   // Defining inheriting versions of functions in the refcount logging case has
+   // the side effect of making qualified references to |AddRef| and |Release|
+   // on the containing class unambiguous, if |Super| isn't the only base class
+   // that provides these members.  So if we're building without refcount
+   // logging, |using| in |Super|'s declarations to make the names similarly
+   // unambiguous.
+#  define NS_INLINE_DECL_REFCOUNTING_INHERITED(Class, Super) \
+    using Super::AddRef;                                     \
+    using Super::Release;
+#endif  // NS_BUILD_REFCNT_LOGGING
 
 /*
  * Macro to glue together a QI that starts with an interface table

@@ -221,19 +221,28 @@ def CLANGXX(version):
 
 CLANG_3_3 = CLANG('3.3.0') + DEFAULT_C99
 CLANGXX_3_3 = CLANGXX('3.3.0')
-CLANG_4_0 = CLANG('4.0.2') + DEFAULT_C11 + {
-    '__has_attribute(diagnose_if)': 1,
+CLANG_4_0 = CLANG('4.0.2') + DEFAULT_C11
+CLANGXX_4_0 = CLANGXX('4.0.2') + SUPPORTS_GNUXX1Z
+CLANG_5_0 = CLANG('5.0.1') + DEFAULT_C11
+CLANGXX_5_0 = CLANGXX('5.0.1') + SUPPORTS_GNUXX17
+XCODE_CLANG_3_3 = CLANG('5.0') + DEFAULT_C99 + {
+    # Real Xcode clang has a full version here, but we don't care about it.
+    '__apple_build_version__': '1',
 }
-CLANGXX_4_0 = CLANGXX('4.0.2') + SUPPORTS_GNUXX1Z + {
-    '__has_attribute(diagnose_if)': 1,
+XCODE_CLANGXX_3_3 = CLANGXX('5.0') + {
+    '__apple_build_version__': '1',
 }
-CLANG_5_0 = CLANG('5.0.1') + DEFAULT_C11 + {
-    '__has_attribute(diagnose_if)': 1,
-    '__has_warning("-Wunguarded-availability")': 1,
+XCODE_CLANG_4_0 = CLANG('9.0.0') + DEFAULT_C11 + {
+    '__apple_build_version__': '1',
 }
-CLANGXX_5_0 = CLANGXX('5.0.1') + SUPPORTS_GNUXX17 + {
-    '__has_attribute(diagnose_if)': 1,
-    '__has_warning("-Wunguarded-availability")': 1,
+XCODE_CLANGXX_4_0 = CLANGXX('9.0.0') + SUPPORTS_GNUXX1Z + {
+    '__apple_build_version__': '1',
+}
+XCODE_CLANG_5_0 = CLANG('9.1.0') + DEFAULT_C11 + {
+    '__apple_build_version__': '1',
+}
+XCODE_CLANGXX_5_0 = CLANGXX('9.1.0') + SUPPORTS_GNUXX17 + {
+    '__apple_build_version__': '1',
 }
 DEFAULT_CLANG = CLANG_5_0
 DEFAULT_CLANGXX = CLANGXX_5_0
@@ -524,10 +533,10 @@ class LinuxToolchainTest(BaseToolchainTest):
     DEFAULT_GCC_RESULT = GCC_7_RESULT + {'compiler': '/usr/bin/gcc'}
     DEFAULT_GXX_RESULT = GXX_7_RESULT + {'compiler': '/usr/bin/g++'}
 
-    CLANG_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANGXX_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANG_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANGXX_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
+    CLANG_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 3.3.0).'
+    CLANGXX_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 3.3.0).'
+    CLANG_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.2).'
+    CLANGXX_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.2).'
     CLANG_5_0_RESULT = CompilerResult(
         flags=['-std=gnu99'],
         version='5.0.1',
@@ -859,28 +868,28 @@ class OSXToolchainTest(BaseToolchainTest):
         '/usr/bin/g++-5': GXX_5 + GCC_PLATFORM_X86_64_OSX,
         '/usr/bin/gcc-7': GCC_7 + GCC_PLATFORM_X86_64_OSX,
         '/usr/bin/g++-7': GXX_7 + GCC_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang': CLANG_5_0 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang++': CLANGXX_5_0 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang-4.0': CLANG_4_0 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang++-4.0': CLANGXX_4_0 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_OSX,
-        '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang': XCODE_CLANG_5_0 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++': XCODE_CLANGXX_5_0 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang-4.0': XCODE_CLANG_4_0 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++-4.0': XCODE_CLANGXX_4_0 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang-3.3': XCODE_CLANG_3_3 + CLANG_PLATFORM_X86_64_OSX,
+        '/usr/bin/clang++-3.3': XCODE_CLANGXX_3_3 + CLANG_PLATFORM_X86_64_OSX,
         '/usr/bin/xcrun': xcrun,
     }
-    CLANG_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANGXX_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANG_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
-    CLANGXX_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported.'
+    CLANG_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.0.or.less).'
+    CLANGXX_3_3_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.0.or.less).'
+    CLANG_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.0.or.less).'
+    CLANGXX_4_0_RESULT = 'Only clang/llvm 5.0 or newer is supported (found version 4.0.0.or.less).'
     DEFAULT_CLANG_RESULT = CompilerResult(
         flags=['-std=gnu99'],
-        version='5.0.1',
+        version='5.0.2',
         type='clang',
         compiler='/usr/bin/clang',
         language='C',
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
         flags=['-std=gnu++17'],
-        version='5.0.1',
+        version='5.0.2',
         type='clang',
         compiler='/usr/bin/clang++',
         language='C++',
@@ -1430,8 +1439,20 @@ class OSXCrossToolchainTest(BaseToolchainTest):
         '/usr/bin/clang': CLANG_5_0 + CLANG_PLATFORM_X86_64_LINUX,
         '/usr/bin/clang++': CLANGXX_5_0 + CLANG_PLATFORM_X86_64_LINUX,
     })
-    DEFAULT_CLANG_RESULT = OSXToolchainTest.DEFAULT_CLANG_RESULT
-    DEFAULT_CLANGXX_RESULT = OSXToolchainTest.DEFAULT_CLANGXX_RESULT
+    DEFAULT_CLANG_RESULT = CompilerResult(
+        flags=['-std=gnu99'],
+        version='5.0.1',
+        type='clang',
+        compiler='/usr/bin/clang',
+        language='C',
+    )
+    DEFAULT_CLANGXX_RESULT = CompilerResult(
+        flags=['-std=gnu++17'],
+        version='5.0.1',
+        type='clang',
+        compiler='/usr/bin/clang++',
+        language='C++',
+    )
 
     def test_osx_cross(self):
         self.do_toolchain_test(self.PATHS, {

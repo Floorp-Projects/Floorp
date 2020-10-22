@@ -12,11 +12,9 @@ const {
 
 add_task(async function() {
   const tab = await addTab("data:text/html,Test");
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   // Start watching for console messages. We don't care about messages here, only the
   // registration/destroy mechanism, so we make onAvailable a no-op function.

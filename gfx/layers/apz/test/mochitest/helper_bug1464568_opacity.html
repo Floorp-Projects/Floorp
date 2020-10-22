@@ -59,7 +59,7 @@ if (utils.layerManagerType == "WebRender") {
   ok(true, "This test doesn't need to run on WebRender");
   subtestDone();
 } else {
-  waitUntilApzStable().then(test_opacity).then(subtestDone);
+  waitUntilApzStable().then(test_opacity).then(subtestDone, subtestFailed);
 }
 
 </script>

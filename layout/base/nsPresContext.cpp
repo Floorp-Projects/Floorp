@@ -430,9 +430,10 @@ void nsPresContext::AppUnitsPerDevPixelChanged() {
     mDeviceContext->FlushFontCache();
   }
 
-  MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(),
-                             NS_STYLE_HINT_REFLOW,
-                             MediaFeatureChangeReason::ResolutionChange});
+  MediaFeatureValuesChanged(
+      {RestyleHint::RecascadeSubtree(), NS_STYLE_HINT_REFLOW,
+       MediaFeatureChangeReason::ResolutionChange},
+      MediaFeatureChangePropagation::JustThisDocument);
 
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 
@@ -516,7 +517,8 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
       prefName.EqualsLiteral("privacy.resistFingerprinting") ||
       prefName.EqualsLiteral("browser.display.foreground_color") ||
       prefName.EqualsLiteral("browser.display.background_color")) {
-    MediaFeatureValuesChanged({MediaFeatureChangeReason::PreferenceChange});
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::PreferenceChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
   }
   if (prefName.EqualsLiteral(GFX_MISSING_FONTS_NOTIFY_PREF)) {
     if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
@@ -1010,9 +1012,10 @@ void nsPresContext::UpdateEffectiveTextZoom() {
 
   // Media queries could have changed, since we changed the meaning
   // of 'em' units in them.
-  MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(),
-                             NS_STYLE_HINT_REFLOW,
-                             MediaFeatureChangeReason::ZoomChange});
+  MediaFeatureValuesChanged(
+      {RestyleHint::RecascadeSubtree(), NS_STYLE_HINT_REFLOW,
+       MediaFeatureChangeReason::ZoomChange},
+      MediaFeatureChangePropagation::JustThisDocument);
 }
 
 float nsPresContext::GetDeviceFullZoom() {
@@ -1062,7 +1065,8 @@ void nsPresContext::SetOverrideDPPX(float aDPPX) {
   }
 
   mMediaEmulationData.mDPPX = aDPPX;
-  MediaFeatureValuesChanged({MediaFeatureChangeReason::ResolutionChange});
+  MediaFeatureValuesChanged({MediaFeatureChangeReason::ResolutionChange},
+                            MediaFeatureChangePropagation::JustThisDocument);
 }
 
 void nsPresContext::SetOverridePrefersColorScheme(
@@ -1073,7 +1077,8 @@ void nsPresContext::SetOverridePrefersColorScheme(
   mMediaEmulationData.mPrefersColorScheme = aOverride;
   // This is a bit of a lie, but it's the code-path that gets taken for regular
   // system metrics changes via ThemeChanged().
-  MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange});
+  MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange},
+                            MediaFeatureChangePropagation::JustThisDocument);
 }
 
 gfxSize nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged) {
@@ -1410,11 +1415,13 @@ void nsPresContext::ThemeChangedInternal() {
   // reflected in computed style data), system fonts (whose changes are not),
   // and -moz-appearance (whose changes likewise are not), so we need to
   // recascade for the first, and reflow for the rest.
-  MediaFeatureValuesChangedAllDocuments({
-      RestyleHint::RecascadeSubtree(),
-      NS_STYLE_HINT_REFLOW,
-      MediaFeatureChangeReason::SystemMetricsChange,
-  });
+  MediaFeatureValuesChanged(
+      {
+          RestyleHint::RecascadeSubtree(),
+          NS_STYLE_HINT_REFLOW,
+          MediaFeatureChangeReason::SystemMetricsChange,
+      },
+      MediaFeatureChangePropagation::All);
 }
 
 void nsPresContext::UIResolutionChanged() {
@@ -1485,27 +1492,14 @@ void nsPresContext::EmulateMedium(nsAtom* aMediaType) {
   mMediaEmulationData.mMedium = aMediaType;
 
   if (Medium() != oldMedium) {
-    MediaFeatureValuesChanged({MediaFeatureChangeReason::MediumChange});
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::MediumChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
   }
 }
 
 void nsPresContext::ContentLanguageChanged() {
   PostRebuildAllStyleDataEvent(nsChangeHint(0),
                                RestyleHint::RecascadeSubtree());
-}
-
-void nsPresContext::MediaFeatureValuesChanged(
-    const MediaFeatureChange& aChange) {
-  if (mPresShell) {
-    mPresShell->EnsureStyleFlush();
-  }
-
-  if (!mPendingMediaFeatureValuesChange) {
-    mPendingMediaFeatureValuesChange = MakeUnique<MediaFeatureChange>(aChange);
-    return;
-  }
-
-  *mPendingMediaFeatureValuesChange |= aChange;
 }
 
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
@@ -1539,22 +1533,30 @@ void nsPresContext::PostRebuildAllStyleDataEvent(
   RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
 
-void nsPresContext::MediaFeatureValuesChangedAllDocuments(
+void nsPresContext::MediaFeatureValuesChanged(
     const MediaFeatureChange& aChange,
-    RecurseIntoInProcessSubDocuments aRecurseSubDocuments) {
-  // Handle the media feature value change in this document.
-  MediaFeatureValuesChanged(aChange);
+    MediaFeatureChangePropagation aPropagation) {
+  if (mPresShell) {
+    mPresShell->EnsureStyleFlush();
+  }
 
-  // Propagate the media feature value change down to any SVG images the
-  // document is using.
-  mDocument->ImageTracker()->MediaFeatureValuesChangedAllDocuments(aChange);
+  if (!mPendingMediaFeatureValuesChange) {
+    mPendingMediaFeatureValuesChange = MakeUnique<MediaFeatureChange>(aChange);
+  } else {
+    *mPendingMediaFeatureValuesChange |= aChange;
+  }
 
-  if (aRecurseSubDocuments == RecurseIntoInProcessSubDocuments::Yes) {
+  if (aPropagation & MediaFeatureChangePropagation::Images) {
+    // Propagate the media feature value change down to any SVG images the
+    // document is using.
+    mDocument->ImageTracker()->MediaFeatureValuesChangedAllDocuments(aChange);
+  }
+
+  if (aPropagation & MediaFeatureChangePropagation::SubDocuments) {
     // And then into any subdocuments.
-    auto recurse = [&aChange, aRecurseSubDocuments](dom::Document& aSubDoc) {
+    auto recurse = [&aChange, aPropagation](dom::Document& aSubDoc) {
       if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-        pc->MediaFeatureValuesChangedAllDocuments(aChange,
-                                                  aRecurseSubDocuments);
+        pc->MediaFeatureValuesChanged(aChange, aPropagation);
       }
       return CallState::Continue;
     };
@@ -1636,8 +1638,8 @@ void nsPresContext::SizeModeChanged(nsSizeMode aSizeMode) {
           return CallState::Continue;
         });
   }
-  MediaFeatureValuesChangedAllDocuments(
-      {MediaFeatureChangeReason::SizeModeChange});
+  MediaFeatureValuesChanged({MediaFeatureChangeReason::SizeModeChange},
+                            MediaFeatureChangePropagation::SubDocuments);
 }
 
 nsCompatibility nsPresContext::CompatibilityMode() const {
@@ -2515,7 +2517,8 @@ void nsPresContext::SetVisibleArea(const nsRect& r) {
     // Visible area does not affect media queries when paginated.
     if (!IsPaginated()) {
       MediaFeatureValuesChanged(
-          {mozilla::MediaFeatureChangeReason::ViewportChange});
+          {mozilla::MediaFeatureChangeReason::ViewportChange},
+          MediaFeatureChangePropagation::JustThisDocument);
     }
   }
 }

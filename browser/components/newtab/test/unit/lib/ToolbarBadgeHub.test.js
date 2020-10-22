@@ -7,7 +7,7 @@ describe("ToolbarBadgeHub", () => {
   let sandbox;
   let instance;
   let fakeAddImpression;
-  let fakeDispatch;
+  let fakeSendTelemetry;
   let isBrowserPrivateStub;
   let fxaMessage;
   let whatsnewMessage;
@@ -28,7 +28,7 @@ describe("ToolbarBadgeHub", () => {
     sandbox = sinon.createSandbox();
     instance = new _ToolbarBadgeHub();
     fakeAddImpression = sandbox.stub();
-    fakeDispatch = sandbox.stub();
+    fakeSendTelemetry = sandbox.stub();
     isBrowserPrivateStub = sandbox.stub();
     const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
     fxaMessage = onboardingMsgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
@@ -233,7 +233,7 @@ describe("ToolbarBadgeHub", () => {
     beforeEach(async () => {
       await instance.init(sandbox.stub().resolves(), {
         addImpression: fakeAddImpression,
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
       });
       fakeDocument = {
         getElementById: sandbox.stub().returns(fakeElement),
@@ -348,7 +348,7 @@ describe("ToolbarBadgeHub", () => {
     beforeEach(async () => {
       await instance.init(sandbox.stub().resolves(), {
         addImpression: fakeAddImpression,
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
       });
       sandbox.stub(instance, "addToolbarNotification").returns(fakeElement);
       sandbox.stub(instance, "removeToolbarNotification");
@@ -459,7 +459,7 @@ describe("ToolbarBadgeHub", () => {
     let fakeEvent;
     beforeEach(async () => {
       await instance.init(sandbox.stub().resolves(), {
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
       });
       blockMessageByIdStub = sandbox.stub();
       sandbox.stub(instance, "_blockMessageById").value(blockMessageByIdStub);
@@ -600,7 +600,7 @@ describe("ToolbarBadgeHub", () => {
   describe("#sendUserEventTelemetry", () => {
     beforeEach(async () => {
       await instance.init(sandbox.stub().resolves(), {
-        dispatch: fakeDispatch,
+        sendTelemetry: fakeSendTelemetry,
       });
     });
     it("should check for private window and not send", () => {
@@ -608,15 +608,15 @@ describe("ToolbarBadgeHub", () => {
 
       instance.sendUserEventTelemetry("CLICK", { id: fxaMessage });
 
-      assert.notCalled(instance._dispatch);
+      assert.notCalled(instance._sendTelemetry);
     });
     it("should check for private window and send", () => {
       isBrowserPrivateStub.returns(false);
 
       instance.sendUserEventTelemetry("CLICK", { id: fxaMessage });
 
-      assert.calledOnce(fakeDispatch);
-      const [ping] = instance._dispatch.firstCall.args;
+      assert.calledOnce(fakeSendTelemetry);
+      const [ping] = instance._sendTelemetry.firstCall.args;
       assert.propertyVal(ping, "type", "TOOLBAR_BADGE_TELEMETRY");
       assert.propertyVal(ping.data, "event", "CLICK");
     });

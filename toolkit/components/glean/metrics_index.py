@@ -8,6 +8,7 @@
 # New additions should be added to the bottom of the list.
 metrics_yamls = [
     'toolkit/components/glean/metrics.yaml',
+    'toolkit/components/glean/test_metrics.yaml',
 ]
 
 # The list of all Glean pings.yaml files, relative to the top src dir.

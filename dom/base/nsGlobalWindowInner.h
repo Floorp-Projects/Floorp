@@ -50,6 +50,9 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#ifdef MOZ_GLEAN
+#  include "mozilla/glean/Glean.h"
+#endif
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSize.h"
@@ -832,6 +835,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mozilla::ErrorResult& aError);
   bool HasActiveSpeechSynthesis();
 #endif
+
+#ifdef MOZ_GLEAN
+  mozilla::glean::Glean* Glean();
+#endif
   already_AddRefed<nsICSSDeclaration> GetDefaultComputedStyle(
       mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
       mozilla::ErrorResult& aError);
@@ -1419,6 +1426,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
 #ifdef MOZ_WEBSPEECH
   RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
+#endif
+
+#ifdef MOZ_GLEAN
+  RefPtr<mozilla::glean::Glean> mGlean;
 #endif
 
   // This is the CC generation the last time we called CanSkip.

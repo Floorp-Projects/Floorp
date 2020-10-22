@@ -9,6 +9,7 @@
 #include "mozilla/dom/File.h"
 #include "MemoryBlobImpl.h"
 #include "MultipartBlobImpl.h"
+#include "StringBlobImpl.h"
 
 namespace mozilla {
 namespace dom {

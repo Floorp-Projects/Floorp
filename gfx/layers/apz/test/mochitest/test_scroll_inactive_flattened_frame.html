@@ -16,7 +16,7 @@
  </div>
 </div>
 <script class="testbody" type="text/javascript">
-function test() {
+async function test() {
   var container = document.getElementById("container");
   var outer = document.getElementById("outer");
   var inner = document.getElementById("inner");
@@ -29,11 +29,11 @@ function test() {
     lineOrPageDeltaX: 0,
     lineOrPageDeltaY: 10,
   };
-  sendWheelAndPaint(inner, 20, 30, event, function() {
-    ok(container.scrollTop == containerScrollTop, "container scrollframe should not have scrolled");
-    ok(outer.scrollTop > outerScrollTop, "nested scrollframe should have scrolled");
-    SimpleTest.finish();
+  await new Promise(resolve => {
+    sendWheelAndPaint(inner, 20, 30, event, resolve);
   });
+  ok(container.scrollTop == containerScrollTop, "container scrollframe should not have scrolled");
+  ok(outer.scrollTop > outerScrollTop, "nested scrollframe should have scrolled");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -41,7 +41,8 @@ SimpleTest.waitForExplicitFinish();
 pushPrefs([["general.smoothScroll", false],
            ["mousewheel.transaction.timeout", 1000000]])
 .then(waitUntilApzStable)
-.then(test);
+.then(test)
+.then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
 </body>

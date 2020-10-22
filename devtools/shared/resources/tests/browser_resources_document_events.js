@@ -68,11 +68,9 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
