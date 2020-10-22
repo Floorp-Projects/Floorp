@@ -388,22 +388,19 @@ def get_compiler_info(compiler, language):
     - the compiler supported language
     - the compiler supported language version
     '''
-    # Note: We'd normally do a version check for clang, but versions of clang
-    # in Xcode have a completely different versioning scheme despite exposing
-    # the version with the same defines.
-    # So instead, we make things such that the version is missing when the
-    # clang used is below the minimum supported version (currently clang 5.0).
-    # We then only include the version information when the compiler matches
-    # the feature check, so that an unsupported version of clang would have
-    # no version number.
+    # Xcode clang versions are different from the underlying llvm version (they
+    # instead are aligned with the Xcode version). Fortunately, we can tell
+    # apart plain clang from Xcode clang, and convert the Xcode clang version
+    # into the more or less corresponding plain clang version.
     check = dedent('''\
         #if defined(_MSC_VER) && defined(__clang__) && defined(_MT)
         %COMPILER "clang-cl"
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #elif defined(__clang__)
         %COMPILER "clang"
-        #  if __has_warning("-Wunguarded-availability")
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
+        #  ifdef __apple_build_version__
+        %XCODE 1
         #  endif
         #elif defined(__GNUC__) && !defined(__MINGW32__)
         %COMPILER "gcc"
@@ -476,6 +473,24 @@ def get_compiler_info(compiler, language):
     version = data.get('VERSION')
     if version:
         version = Version(version)
+        if data.get('XCODE'):
+            # Derived from https://en.wikipedia.org/wiki/Xcode#Toolchain_versions
+            # with enough granularity for major.minor version checks further
+            # down the line
+            if version < '9.1':
+                version = Version('4.0.0.or.less')
+            elif version < '10.0':
+                version = Version('5.0.2')
+            elif version < '10.0.1':
+                version = Version('6.0.1')
+            elif version < '11.0':
+                version = Version('7.0.0')
+            elif version < '11.0.3':
+                version = Version('8.0.0')
+            elif version < '12.0':
+                version = Version('9.0.0')
+            else:
+                version = Version('10.0.0.or.more')
 
     return namespace(
         type=type,
@@ -1048,11 +1063,12 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     'Only clang-cl 8.0 or newer is supported (found version %s)'
                     % info.version)
 
-        # If you want to bump the version check here search for
-        # diagnose_if above, and see the associated comment.
-        if info.type == 'clang' and not info.version:
+        # If you want to bump the version check here ensure the version
+        # is known for Xcode in get_compiler_info.
+        if info.type == 'clang' and info.version < '5.0':
             raise FatalCheckError(
-                'Only clang/llvm 5.0 or newer is supported.')
+                'Only clang/llvm 5.0 or newer is supported (found version %s).'
+                % info.version)
 
         if info.flags:
             raise FatalCheckError(
