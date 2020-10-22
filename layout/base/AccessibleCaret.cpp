@@ -114,10 +114,8 @@ nsAutoString AccessibleCaret::AppearanceString(Appearance aAppearance) {
   nsAutoString string;
   switch (aAppearance) {
     case Appearance::None:
-      string = u"none"_ns;
-      break;
     case Appearance::NormalNotShown:
-      string = u"hidden"_ns;
+      string = u"none"_ns;
       break;
     case Appearance::Normal:
       string = u"normal"_ns;
