@@ -4,6 +4,9 @@ var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
   Ci.nsIThreadManager
 );
+var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+  Ci.nsIPrefBranch
+);
 var mainThread = threadManager.currentThread;
 
 var listener1 = {
@@ -31,6 +34,7 @@ var listener2 = {
 var listener3 = {
   onLookupComplete(inRequest, inRecord, inStatus) {
     Assert.equal(inStatus, Cr.NS_ERROR_OFFLINE);
+    cleanup();
     do_test_finished();
   },
 };
@@ -41,6 +45,7 @@ const secondOriginAttributes = { userContextId: 2 };
 // First, we resolve the address normally for first originAttributes.
 function run_test() {
   do_test_pending();
+  prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
   dns.asyncResolve(
     "localhost",
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
@@ -84,6 +89,11 @@ function test3() {
     );
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_OFFLINE);
+    cleanup();
     do_test_finished();
   }
+}
+
+function cleanup() {
+  prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 }
