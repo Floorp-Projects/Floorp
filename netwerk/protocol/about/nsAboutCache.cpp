@@ -524,4 +524,9 @@ nsresult nsAboutCache::Create(nsISupports* aOuter, REFNSIID aIID,
   return about->QueryInterface(aIID, aResult);
 }
 
+NS_IMETHODIMP
+nsAboutCache::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
