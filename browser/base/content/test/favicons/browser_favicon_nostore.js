@@ -144,7 +144,7 @@ add_task(async function root_icon_stored() {
             resolve
           )
         );
-        return uri.spec == "http://www.nostore.com/favicon.ico";
+        return uri?.spec == "http://www.nostore.com/favicon.ico";
       }, "wait for the favicon to be stored");
       Assert.ok(await noStorePromise, "Should have received no-store header");
     }
