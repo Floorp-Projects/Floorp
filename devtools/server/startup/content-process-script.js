@@ -215,10 +215,10 @@ class ContentProcessStartup {
     const prefix =
       parentConnectionPrefix + "contentProcess" + Services.appinfo.processID;
     //TODO: probably merge content-process.jsm with this module
-    const { init } = ChromeUtils.import(
+    const { initContentProcessTarget } = ChromeUtils.import(
       "resource://devtools/server/startup/content-process.jsm"
     );
-    const { actor, connection } = init({
+    const { actor, connection } = initContentProcessTarget({
       target: Services.cpmm,
       data: {
         watcherActorID,

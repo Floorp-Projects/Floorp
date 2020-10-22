@@ -19,10 +19,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function onInit(message) {
   // Only reply if we are in a real content process
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-    const { init } = ChromeUtils.import(
+    const { initContentProcessTarget } = ChromeUtils.import(
       "resource://devtools/server/startup/content-process.jsm"
     );
-    init(message);
+    initContentProcessTarget(message);
   }
 }
 
