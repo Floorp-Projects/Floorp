@@ -7031,7 +7031,7 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(input);
-  masm.callWithABI<Fn, js::Int32ToStringHelperPure>();
+  masm.callWithABI<Fn, js::Int32ToStringPure>();
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);
@@ -7068,7 +7068,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   masm.loadJSContext(result);
   masm.passABIArg(result);
   masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
-  masm.callWithABI<Fn, js::NumberToStringHelperPure>();
+  masm.callWithABI<Fn, js::NumberToStringPure>();
 
   masm.mov(ReturnReg, result);
   masm.PopRegsInMask(volatileRegs);
