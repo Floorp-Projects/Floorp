@@ -59,7 +59,7 @@ add_task(async function test_trigger_docs() {
 });
 
 add_task(async function test_message_triggers() {
-  const messages = CFRMessageProvider.getMessages();
+  const messages = await CFRMessageProvider.getMessages();
   for (let message of messages) {
     await validateTrigger(message.trigger);
   }

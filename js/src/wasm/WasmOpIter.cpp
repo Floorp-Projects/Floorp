@@ -501,8 +501,8 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I32x4LoadU16x4:
         case SimdOp::I64x2LoadS32x2:
         case SimdOp::I64x2LoadU32x2:
-        case SimdOp::V128Load32ZeroExperimental:
-        case SimdOp::V128Load64ZeroExperimental:
+        case SimdOp::V128Load32Zero:
+        case SimdOp::V128Load64Zero:
           WASM_SIMD_OP(OpKind::Load);
         case SimdOp::V128Store:
           WASM_SIMD_OP(OpKind::Store);

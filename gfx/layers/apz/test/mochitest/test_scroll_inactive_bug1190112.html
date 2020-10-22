@@ -497,28 +497,30 @@ var DefaultEvent = {
   lineOrPageDeltaX: 0, lineOrPageDeltaY: 1,
 };
 
-function test() {
+async function test() {
   var subframe = document.getElementById("subframe");
   var oldpos = new ScrollTops();
-  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function() {
-    var newpos = new ScrollTops();
-    ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
-    ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
-    doOuterScroll(subframe, newpos);
+  await new Promise(resolve => {
+    sendWheelAndPaint(subframe, 10, 10, DefaultEvent, resolve);
   });
-}
 
-function doOuterScroll(subframe, oldpos) {
+  var newpos = new ScrollTops();
+  ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
+  ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
+  oldpos = newpos;
+
+  // Scroll outer
   var outer = document.getElementById("iframe-body");
-  sendWheelAndPaint(outer, 20, 5, DefaultEvent, function() {
-    var newpos = new ScrollTops();
-    ok(oldpos.outerScrollTop != newpos.outerScrollTop, "viewport should have scrolled");
-    ok(oldpos.innerScrollTop == newpos.innerScrollTop, "subframe should not have scrolled");
-    doInnerScrollAgain(subframe, newpos);
+  await new Promise(resolve => {
+    sendWheelAndPaint(outer, 20, 5, DefaultEvent, resolve);
   });
-}
 
-function doInnerScrollAgain(subframe, oldpos) {
+  newpos = new ScrollTops();
+  ok(oldpos.outerScrollTop != newpos.outerScrollTop, "viewport should have scrolled");
+  ok(oldpos.innerScrollTop == newpos.innerScrollTop, "subframe should not have scrolled");
+  oldpos = newpos;
+
+  // Scroll inner again
   // Tick the refresh driver once to make sure the compositor has sent the
   // updated scroll offset for the outer scroller to WebRender, so that the
   // hit-test in sendWheelAndPaint takes it into account. (This isn't needed
@@ -527,12 +529,13 @@ function doInnerScrollAgain(subframe, oldpos) {
   dwu.advanceTimeAndRefresh(16);
   dwu.restoreNormalRefresh();
 
-  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function() {
-    var newpos = new ScrollTops();
-    ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
-    ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
-    SimpleTest.finish();
+  await new Promise(resolve => {
+    sendWheelAndPaint(subframe, 10, 10, DefaultEvent, resolve);
   });
+
+  newpos = new ScrollTops();
+  ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
+  ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -541,7 +544,8 @@ pushPrefs([["general.smoothScroll", false],
            ["mousewheel.transaction.timeout", 0],
            ["mousewheel.transaction.ignoremovedelay", 0]])
 .then(waitUntilApzStable)
-.then(test);
+.then(test)
+.then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
 </body>

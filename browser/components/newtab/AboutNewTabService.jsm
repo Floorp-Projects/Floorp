@@ -106,7 +106,10 @@ const AboutHomeStartupCacheChild = {
    *   The stream for the cached script to run on the page.
    */
   init(pageInputStream, scriptInputStream) {
-    if (!IS_PRIVILEGED_PROCESS) {
+    if (
+      !IS_PRIVILEGED_PROCESS &&
+      !Services.prefs.getBoolPref(PREF_ABOUT_HOME_CACHE_TESTING, false)
+    ) {
       throw new Error(
         "Can only instantiate in the privileged about content processes."
       );
@@ -120,6 +123,7 @@ const AboutHomeStartupCacheChild = {
       throw new Error("AboutHomeStartupCacheChild already initted.");
     }
 
+    Services.obs.addObserver(this, "memory-pressure");
     Services.cpmm.addMessageListener(this.CACHE_REQUEST_MESSAGE, this);
 
     this._pageInputStream = pageInputStream;
@@ -138,6 +142,18 @@ const AboutHomeStartupCacheChild = {
       throw new Error(
         "Cannot uninit AboutHomeStartupCacheChild unless testing."
       );
+    }
+
+    if (!this._initted) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "memory-pressure");
+    Services.cpmm.removeMessageListener(this.CACHE_REQUEST_MESSAGE, this);
+
+    if (this._cacheWorker) {
+      this._cacheWorker.terminate();
+      this._cacheWorker = null;
     }
 
     this._pageInputStream = null;
@@ -279,6 +295,13 @@ const AboutHomeStartupCacheChild = {
     Services.cpmm.sendAsyncMessage(this.CACHE_USAGE_RESULT_MESSAGE, {
       success,
     });
+  },
+
+  observe(subject, topic, data) {
+    if (topic === "memory-pressure" && this._cacheWorker) {
+      this._cacheWorker.terminate();
+      this._cacheWorker = null;
+    }
   },
 };
 

@@ -42,7 +42,9 @@ class ConsoleMessageWatcher {
     // prepareConsoleMessageForRemote > TabSources.getActorIdForInternalSourceId
     // The Thread Actor is instantiated via Target.attach, but we should
     // probably review this and only instantiate the actor instead of attaching the target.
-    targetActor.attach();
+    if (!targetActor.threadActor) {
+      targetActor.attach();
+    }
 
     // Bug 1642297: Maybe we could merge ConsoleAPI Listener into this module?
     const onConsoleAPICall = message => {

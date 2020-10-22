@@ -719,7 +719,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   nsFlowAreaRect floatAvailableSpace =
       GetFloatAvailableSpaceForPlacingFloat(mBCoord);
   LogicalRect adjustedAvailableSpace = mBlock->AdjustFloatAvailableSpace(
-      *this, floatAvailableSpace.mRect, aFloat);
+      *this, floatAvailableSpace.mRect);
 
   NS_ASSERTION(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
@@ -758,9 +758,6 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   MOZ_ASSERT(StyleFloat::Left == floatStyle || StyleFloat::Right == floatStyle,
              "Invalid float type!");
 
-  // Can the float fit here?
-  bool keepFloatOnSameLine = false;
-
   // Are we required to place at least part of the float because we're
   // at the top of the page (to avoid an infinite loop of pushing and
   // breaking).
@@ -780,63 +777,11 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
     }
 
     // Nope. try to advance to the next band.
-    if (StyleDisplay::Table != floatDisplay->mDisplay ||
-        eCompatibility_NavQuirks != mPresContext->CompatibilityMode()) {
-      mBCoord += floatAvailableSpace.mRect.BSize(wm);
-      if (adjustedAvailableSpace.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
-        adjustedAvailableSpace.BSize(wm) -= floatAvailableSpace.mRect.BSize(wm);
-      }
-      floatAvailableSpace = GetFloatAvailableSpaceForPlacingFloat(mBCoord);
-    } else {
-      // This quirk matches the one in nsBlockFrame::AdjustFloatAvailableSpace
-      // IE handles float tables in a very special way
-
-      // see if the previous float is also a table and has "align"
-      nsFloatCache* fc = mCurrentLineFloats.Head();
-      nsIFrame* prevFrame = nullptr;
-      while (fc) {
-        if (fc->mFloat == aFloat) {
-          break;
-        }
-        prevFrame = fc->mFloat;
-        fc = fc->Next();
-      }
-
-      if (prevFrame) {
-        // get the frame type
-        if (prevFrame->IsTableWrapperFrame()) {
-          // see if it has "align="
-          // IE makes a difference between align and the float property.
-          //
-          // We're interested only if previous frame is align=left IE messes
-          // things up when "right" (overlapping frames).
-          //
-          // FIXME(emilio, bug 1426747): This looks fishy.
-          nsIContent* content = prevFrame->GetContent();
-          if (content && content->IsElement() &&
-              content->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                nsGkAtoms::align, u"left"_ns,
-                                                eIgnoreCase)) {
-            keepFloatOnSameLine = true;
-            // don't advance to next line (IE quirkie behaviour)
-            // it breaks rule CSS2/9.5.1/1, but what the hell
-            // since we cannot evangelize the world
-            break;
-          }
-        }
-      }
-
-      // the table does not fit anymore in this line so advance to next band
-      mBCoord += floatAvailableSpace.mRect.BSize(wm);
-      // To match nsBlockFrame::AdjustFloatAvailableSpace, we have to
-      // get a new width for the new band.
-      floatAvailableSpace = GetFloatAvailableSpaceForPlacingFloat(mBCoord);
-      adjustedAvailableSpace = mBlock->AdjustFloatAvailableSpace(
-          *this, floatAvailableSpace.mRect, aFloat);
-      floatMarginISize = FloatMarginISize(
-          mReflowInput, adjustedAvailableSpace.ISize(wm), aFloat, offsets);
+    mBCoord += floatAvailableSpace.mRect.BSize(wm);
+    if (adjustedAvailableSpace.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
+      adjustedAvailableSpace.BSize(wm) -= floatAvailableSpace.mRect.BSize(wm);
     }
-
+    floatAvailableSpace = GetFloatAvailableSpaceForPlacingFloat(mBCoord);
     mustPlaceFloat = false;
   }
 
@@ -855,14 +800,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   if (leftFloat == wm.IsBidiLTR()) {
     floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
   } else {
-    if (!keepFloatOnSameLine) {
-      floatPos.I(wm) = floatAvailableSpace.mRect.IEnd(wm) - floatMarginISize;
-    } else {
-      // this is the IE quirk (see few lines above)
-      // the table is kept in the same line: don't let it overlap the
-      // previous float
-      floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
-    }
+    floatPos.I(wm) = floatAvailableSpace.mRect.IEnd(wm) - floatMarginISize;
   }
   // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
   // be higher than the top of its containing block."  (Since the

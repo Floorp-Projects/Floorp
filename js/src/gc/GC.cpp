@@ -6451,7 +6451,6 @@ void GCRuntime::updateAllGCStartThresholds(const AutoLockGC& lock) {
   }
 }
 
-
 static const char* GCHeapStateToLabel(JS::HeapState heapState) {
   switch (heapState) {
     case JS::HeapState::MinorCollecting:

@@ -20,7 +20,7 @@ function test() {
   isnot(0, window.scrollY, "scroll position isn't top");
 }
 
-waitUntilApzStable().then(test).then(subtestDone);
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
 </script>
 </body>
 </html>

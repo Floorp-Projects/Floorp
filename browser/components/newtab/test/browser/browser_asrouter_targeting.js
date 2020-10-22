@@ -836,7 +836,7 @@ add_task(async function check_blockedCountByType() {
 add_task(async function checkCFRPinnedTabsTargetting() {
   const now = Date.now();
   const timeMinutesAgo = numMinutes => now - numMinutes * 60 * 1000;
-  const messages = CFRMessageProvider.getMessages();
+  const messages = await CFRMessageProvider.getMessages();
   const trigger = {
     id: "frequentVisits",
     context: {
@@ -911,7 +911,7 @@ add_task(async function checkPatternMatches() {
 });
 
 add_task(async function checkPatternsValid() {
-  const messages = CFRMessageProvider.getMessages().filter(
+  const messages = (await CFRMessageProvider.getMessages()).filter(
     m => m.trigger.patterns
   );
 
@@ -1113,7 +1113,9 @@ add_task(async function check_newTabSettings_webExtension() {
 
 add_task(async function check_openUrlTrigger_context() {
   const message = {
-    ...CFRMessageProvider.getMessages().find(m => m.id === "YOUTUBE_ENHANCE_3"),
+    ...(await CFRMessageProvider.getMessages()).find(
+      m => m.id === "YOUTUBE_ENHANCE_3"
+    ),
     targeting: "visitsCount == 3",
   };
   const trigger = {

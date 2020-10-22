@@ -218,17 +218,11 @@ extern "C" const char* __tsan_default_suppressions() {
          // The rest of these suppressions are miscellaneous issues in gecko
          // that should be investigated and ideally fixed.
 
-         // Bug 1367344
-         "race:TelemetryImpl::sTelemetry\n"
-
          // Bug 1506812
          "race:BeginBackgroundRead\n"
 
          // Bug 1506910
          "race:gMozillaPoisonValue\n"
-
-         // Bug 1587510
-         "race:SystemGroupImpl::sSingleton\n"
 
          // Bug 1600594
          "race:nsThread::SizeOfEventQueues\n"

@@ -1,16 +1,22 @@
+# encoding: utf-8
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import mozunit
-import pytest
-from six import BytesIO, unichr
-import unittest
+import json
 import os
 import signal
+import time
+import unittest
 import xml.etree.ElementTree as ET
+from textwrap import dedent
+
+import mozunit
+import pytest
+from six import StringIO, ensure_text, unichr
 
 from mozlog.structuredlog import StructuredLogger
 from mozlog.formatters import (
@@ -18,232 +24,243 @@ from mozlog.formatters import (
     TbplFormatter,
     HTMLFormatter,
     XUnitFormatter,
-    GroupingFormatter
+    GroupingFormatter,
+    ErrorSummaryFormatter,
 )
 from mozlog.handlers import StreamHandler
 
 formatters = {
     'mach': MachFormatter,
+    'errorsummary': ErrorSummaryFormatter,
 }
 
 FORMATS = {
     # A list of tuples consisting of (name, options, expected string).
     'PASS': [
-        ('mach', {}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: OK
- 0:00.00 TEST_START: test_bar
- 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: FAIL
- 0:00.00 SUITE_END
+        ('mach', {}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: OK
+             0:00.00 TEST_START: test_bar
+             0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (1 subtests, 3 tests)
-Expected results: 4
-Unexpected results: 0
-OK
-""".lstrip(b'\n')),
-        ('mach', {'verbose': True}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: OK
- 0:00.00 TEST_START: test_bar
- 0:00.00 PASS a subtest
- 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: FAIL
- 0:00.00 SUITE_END
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (1 subtests, 3 tests)
+            Expected results: 4
+            Unexpected results: 0
+            OK
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: OK
+             0:00.00 TEST_START: test_bar
+             0:00.00 PASS a subtest
+             0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (1 subtests, 3 tests)
-Expected results: 4
-Unexpected results: 0
-OK
-""".lstrip(b'\n')),
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (1 subtests, 3 tests)
+            Expected results: 4
+            Unexpected results: 0
+            OK
+            """).lstrip('\n')),
     ],
 
     'FAIL': [
-        ('mach', {}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
- 0:00.00 TEST_START: test_bar
- 0:00.00 TEST_END: Test OK. Subtests passed 0/2. Unexpected 2
-FAIL a subtest - expected 0 got 1
-    SimpleTest.is@SimpleTest/SimpleTest.js:312:5
-    @caps/tests/mochitest/test_bug246699.html:53:1
-TIMEOUT another subtest
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: PASS, expected FAIL
- 0:00.00 SUITE_END
+        ('mach', {}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
+             0:00.00 TEST_START: test_bar
+             0:00.00 TEST_END: Test OK. Subtests passed 0/2. Unexpected 2
+            FAIL a subtest - expected 0 got 1
+                SimpleTest.is@SimpleTest/SimpleTest.js:312:5
+                @caps/tests/mochitest/test_bug246699.html:53:1
+            TIMEOUT another subtest
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: PASS, expected FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 5 checks (2 subtests, 3 tests)
-Expected results: 1
-Unexpected results: 4
-  test: 2 (1 fail, 1 pass)
-  subtest: 2 (1 fail, 1 timeout)
+            suite 1
+            ~~~~~~~
+            Ran 5 checks (2 subtests, 3 tests)
+            Expected results: 1
+            Unexpected results: 4
+              test: 2 (1 fail, 1 pass)
+              subtest: 2 (1 fail, 1 timeout)
 
-Unexpected Results
-------------------
-test_foo
-  FAIL test_foo - expected 0 got 1
-test_bar
-  FAIL a subtest - expected 0 got 1
-    SimpleTest.is@SimpleTest/SimpleTest.js:312:5
-    @caps/tests/mochitest/test_bug246699.html:53:1
-  TIMEOUT another subtest
-test_baz
-  UNEXPECTED-PASS test_baz
-""".lstrip(b'\n')),
-        ('mach', {'verbose': True}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
- 0:00.00 TEST_START: test_bar
- 0:00.00 FAIL a subtest - expected 0 got 1
-    SimpleTest.is@SimpleTest/SimpleTest.js:312:5
-    @caps/tests/mochitest/test_bug246699.html:53:1
- 0:00.00 TIMEOUT another subtest
- 0:00.00 TEST_END: Test OK. Subtests passed 0/2. Unexpected 2
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: PASS, expected FAIL
- 0:00.00 SUITE_END
+            Unexpected Results
+            ------------------
+            test_foo
+              FAIL test_foo - expected 0 got 1
+            test_bar
+              FAIL a subtest - expected 0 got 1
+                SimpleTest.is@SimpleTest/SimpleTest.js:312:5
+                @caps/tests/mochitest/test_bug246699.html:53:1
+              TIMEOUT another subtest
+            test_baz
+              UNEXPECTED-PASS test_baz
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
+             0:00.00 TEST_START: test_bar
+             0:00.00 FAIL a subtest - expected 0 got 1
+                SimpleTest.is@SimpleTest/SimpleTest.js:312:5
+                @caps/tests/mochitest/test_bug246699.html:53:1
+             0:00.00 TIMEOUT another subtest
+             0:00.00 TEST_END: Test OK. Subtests passed 0/2. Unexpected 2
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: PASS, expected FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 5 checks (2 subtests, 3 tests)
-Expected results: 1
-Unexpected results: 4
-  test: 2 (1 fail, 1 pass)
-  subtest: 2 (1 fail, 1 timeout)
+            suite 1
+            ~~~~~~~
+            Ran 5 checks (2 subtests, 3 tests)
+            Expected results: 1
+            Unexpected results: 4
+              test: 2 (1 fail, 1 pass)
+              subtest: 2 (1 fail, 1 timeout)
 
-Unexpected Results
-------------------
-test_foo
-  FAIL test_foo - expected 0 got 1
-test_bar
-  FAIL a subtest - expected 0 got 1
-    SimpleTest.is@SimpleTest/SimpleTest.js:312:5
-    @caps/tests/mochitest/test_bug246699.html:53:1
-  TIMEOUT another subtest
-test_baz
-  UNEXPECTED-PASS test_baz
-""".lstrip(b'\n')),
+            Unexpected Results
+            ------------------
+            test_foo
+              FAIL test_foo - expected 0 got 1
+            test_bar
+              FAIL a subtest - expected 0 got 1
+                SimpleTest.is@SimpleTest/SimpleTest.js:312:5
+                @caps/tests/mochitest/test_bug246699.html:53:1
+              TIMEOUT another subtest
+            test_baz
+              UNEXPECTED-PASS test_baz
+            """).lstrip('\n')),
     ],
 
     'PRECONDITION_FAILED': [
-        ('mach', {}, b"""
- 0:00.00 SUITE_START: running 2 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
- 0:00.00 TEST_START: test_bar
- 0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
-PRECONDITION_FAILED another subtest
- 0:00.00 SUITE_END
+        ('mach', {}, dedent("""
+             0:00.00 SUITE_START: running 2 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
+             0:00.00 TEST_START: test_bar
+             0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
+            PRECONDITION_FAILED another subtest
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (2 subtests, 2 tests)
-Expected results: 2
-Unexpected results: 2
-  test: 1 (1 precondition_failed)
-  subtest: 1 (1 precondition_failed)
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (2 subtests, 2 tests)
+            Expected results: 2
+            Unexpected results: 2
+              test: 1 (1 precondition_failed)
+              subtest: 1 (1 precondition_failed)
 
-Unexpected Results
-------------------
-test_foo
-  PRECONDITION_FAILED test_foo
-test_bar
-  PRECONDITION_FAILED another subtest
-""".lstrip(b'\n')),
-        ('mach', {'verbose': True}, b"""
- 0:00.00 SUITE_START: running 2 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
- 0:00.00 TEST_START: test_bar
- 0:00.00 PASS a subtest
- 0:00.00 PRECONDITION_FAILED another subtest
- 0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
- 0:00.00 SUITE_END
+            Unexpected Results
+            ------------------
+            test_foo
+              PRECONDITION_FAILED test_foo
+            test_bar
+              PRECONDITION_FAILED another subtest
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
+             0:00.00 SUITE_START: running 2 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
+             0:00.00 TEST_START: test_bar
+             0:00.00 PASS a subtest
+             0:00.00 PRECONDITION_FAILED another subtest
+             0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (2 subtests, 2 tests)
-Expected results: 2
-Unexpected results: 2
-  test: 1 (1 precondition_failed)
-  subtest: 1 (1 precondition_failed)
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (2 subtests, 2 tests)
+            Expected results: 2
+            Unexpected results: 2
+              test: 1 (1 precondition_failed)
+              subtest: 1 (1 precondition_failed)
 
-Unexpected Results
-------------------
-test_foo
-  PRECONDITION_FAILED test_foo
-test_bar
-  PRECONDITION_FAILED another subtest
-""".lstrip(b'\n')),
+            Unexpected Results
+            ------------------
+            test_foo
+              PRECONDITION_FAILED test_foo
+            test_bar
+              PRECONDITION_FAILED another subtest
+            """).lstrip('\n')),
     ],
 
     'KNOWN-INTERMITTENT': [
-        ('mach', {}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: FAIL
-KNOWN-INTERMITTENT-FAIL test_foo
- 0:00.00 TEST_START: test_bar
- 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
-KNOWN-INTERMITTENT-PASS a subtest
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: FAIL
- 0:00.00 SUITE_END
+        ('mach', {}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: FAIL
+            KNOWN-INTERMITTENT-FAIL test_foo
+             0:00.00 TEST_START: test_bar
+             0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+            KNOWN-INTERMITTENT-PASS a subtest
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (1 subtests, 3 tests)
-Expected results: 4 (2 known intermittents)
-Unexpected results: 0
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (1 subtests, 3 tests)
+            Expected results: 4 (2 known intermittents)
+            Unexpected results: 0
 
-Known Intermittent Results
---------------------------
-test_foo
-  KNOWN-INTERMITTENT-FAIL test_foo
-test_bar
-  KNOWN-INTERMITTENT-PASS a subtest
-OK
-""".lstrip(b'\n')),
-        ('mach', {'verbose': True}, b"""
- 0:00.00 SUITE_START: running 3 tests
- 0:00.00 TEST_START: test_foo
- 0:00.00 TEST_END: FAIL
-KNOWN-INTERMITTENT-FAIL test_foo
- 0:00.00 TEST_START: test_bar
- 0:00.00 KNOWN-INTERMITTENT-PASS a subtest
- 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
-KNOWN-INTERMITTENT-PASS a subtest
- 0:00.00 TEST_START: test_baz
- 0:00.00 TEST_END: FAIL
- 0:00.00 SUITE_END
+            Known Intermittent Results
+            --------------------------
+            test_foo
+              KNOWN-INTERMITTENT-FAIL test_foo
+            test_bar
+              KNOWN-INTERMITTENT-PASS a subtest
+            OK
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
+             0:00.00 SUITE_START: running 3 tests
+             0:00.00 TEST_START: test_foo
+             0:00.00 TEST_END: FAIL
+            KNOWN-INTERMITTENT-FAIL test_foo
+             0:00.00 TEST_START: test_bar
+             0:00.00 KNOWN-INTERMITTENT-PASS a subtest
+             0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+            KNOWN-INTERMITTENT-PASS a subtest
+             0:00.00 TEST_START: test_baz
+             0:00.00 TEST_END: FAIL
+             0:00.00 SUITE_END
 
-suite 1
-~~~~~~~
-Ran 4 checks (1 subtests, 3 tests)
-Expected results: 4 (2 known intermittents)
-Unexpected results: 0
+            suite 1
+            ~~~~~~~
+            Ran 4 checks (1 subtests, 3 tests)
+            Expected results: 4 (2 known intermittents)
+            Unexpected results: 0
 
-Known Intermittent Results
---------------------------
-test_foo
-  KNOWN-INTERMITTENT-FAIL test_foo
-test_bar
-  KNOWN-INTERMITTENT-PASS a subtest
-OK
-""".lstrip(b'\n')),
+            Known Intermittent Results
+            --------------------------
+            test_foo
+              KNOWN-INTERMITTENT-FAIL test_foo
+            test_bar
+              KNOWN-INTERMITTENT-PASS a subtest
+            OK
+            """).lstrip('\n')),
     ],
+
+    'ERRORSUMMARY': [
+        ('errorsummary', {}, dedent("""
+            {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
+            {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
+            {"group": "manifestA", "status": "ERROR", "duration": 70, "action": "group_result", "line": 9}
+            {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
+            """).lstrip('\n')),
+    ]
 }
 
 
@@ -266,13 +283,25 @@ def timestamp(monkeypatch):
     monkeypatch.setattr(MachFormatter, '_time', fake_time)
 
 
+@pytest.fixture
+def get_logger():
+    # Ensure a new state instance is created for each test function.
+    StructuredLogger._logger_states = {}
+
+    def inner(name, **fmt_args):
+        buf = StringIO()
+        fmt = formatters[name](**fmt_args)
+        logger = StructuredLogger('test_logger')
+        logger.add_handler(StreamHandler(buf, fmt))
+        return logger
+
+    return inner
+
+
 @pytest.mark.parametrize("name,opts,expected", FORMATS['PASS'],
                          ids=ids('PASS'))
-def test_pass(name, opts, expected):
-    buf = BytesIO()
-    fmt = formatters[name](**opts)
-    logger = StructuredLogger('test_logger')
-    logger.add_handler(StreamHandler(buf, fmt))
+def test_pass(get_logger, name, opts, expected):
+    logger = get_logger(name, **opts)
 
     logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
     logger.test_start('test_foo')
@@ -284,6 +313,7 @@ def test_pass(name, opts, expected):
     logger.test_end('test_baz', 'FAIL', 'FAIL', 'expected 0 got 1')
     logger.suite_end()
 
+    buf = logger.handlers[0].stream
     result = buf.getvalue()
     print("Dumping result for copy/paste:")
     print(result)
@@ -292,16 +322,13 @@ def test_pass(name, opts, expected):
 
 @pytest.mark.parametrize("name,opts,expected", FORMATS['FAIL'],
                          ids=ids('FAIL'))
-def test_fail(name, opts, expected):
+def test_fail(get_logger, name, opts, expected):
     stack = """
     SimpleTest.is@SimpleTest/SimpleTest.js:312:5
     @caps/tests/mochitest/test_bug246699.html:53:1
 """.strip('\n')
 
-    buf = BytesIO()
-    fmt = formatters[name](**opts)
-    logger = StructuredLogger('test_logger')
-    logger.add_handler(StreamHandler(buf, fmt))
+    logger = get_logger(name, **opts)
 
     logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
     logger.test_start('test_foo')
@@ -314,6 +341,7 @@ def test_fail(name, opts, expected):
     logger.test_end('test_baz', 'PASS', 'FAIL')
     logger.suite_end()
 
+    buf = logger.handlers[0].stream
     result = buf.getvalue()
     print("Dumping result for copy/paste:")
     print(result)
@@ -322,11 +350,8 @@ def test_fail(name, opts, expected):
 
 @pytest.mark.parametrize("name,opts,expected", FORMATS['PRECONDITION_FAILED'],
                          ids=ids('PRECONDITION_FAILED'))
-def test_precondition_failed(name, opts, expected):
-    buf = BytesIO()
-    fmt = formatters[name](**opts)
-    logger = StructuredLogger('test_logger')
-    logger.add_handler(StreamHandler(buf, fmt))
+def test_precondition_failed(get_logger, name, opts, expected):
+    logger = get_logger(name, **opts)
 
     logger.suite_start(['test_foo', 'test_bar'])
     logger.test_start('test_foo')
@@ -337,6 +362,7 @@ def test_precondition_failed(name, opts, expected):
     logger.test_end('test_bar', 'OK')
     logger.suite_end()
 
+    buf = logger.handlers[0].stream
     result = buf.getvalue()
     print("Dumping result for copy/paste:")
     print(result)
@@ -345,11 +371,8 @@ def test_precondition_failed(name, opts, expected):
 
 @pytest.mark.parametrize("name,opts,expected", FORMATS['KNOWN-INTERMITTENT'],
                          ids=ids('KNOWN-INTERMITTENT'))
-def test_known_intermittent(name, opts, expected):
-    buf = BytesIO()
-    fmt = formatters[name](**opts)
-    logger = StructuredLogger('test_logger')
-    logger.add_handler(StreamHandler(buf, fmt))
+def test_known_intermittent(get_logger, name, opts, expected):
+    logger = get_logger(name, **opts)
 
     logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
     logger.test_start('test_foo')
@@ -363,10 +386,52 @@ def test_known_intermittent(name, opts, expected):
                     known_intermittent=['PASS'])
     logger.suite_end()
 
+    buf = logger.handlers[0].stream
     result = buf.getvalue()
     print("Dumping result for copy/paste:")
     print(result)
     assert result == expected
+
+
+@pytest.mark.parametrize("name,opts,expected", FORMATS['ERRORSUMMARY'],
+                         ids=ids('ERRORSUMMARY'))
+def test_errorsummary(monkeypatch, get_logger, name, opts, expected):
+
+    ts = {'ts': 0}  # need to use dict since 'nonlocal' doesn't exist on PY2
+
+    def fake_time():
+        ts['ts'] += 0.01
+        return ts['ts']
+
+    monkeypatch.setattr(time, 'time', fake_time)
+    logger = get_logger(name, **opts)
+
+    logger.suite_start({
+        'manifestA': ['test_foo', 'test_bar', 'test_baz'],
+        'manifestB': ['test_something'],
+    })
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'SKIP')
+    logger.test_start('test_bar')
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_something')
+    logger.test_end('test_something', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'PASS', 'FAIL')
+    logger.suite_end()
+
+    buf = logger.handlers[0].stream
+    result = buf.getvalue()
+    print("Dumping result for copy/paste:")
+    print(result)
+
+    expected = expected.split("\n")
+    for i, line in enumerate(result.split("\n")):
+        if not line:
+            continue
+
+        data = json.loads(line)
+        assert data == json.loads(expected[i])
 
 
 class FormatterTest(unittest.TestCase):
@@ -375,7 +440,7 @@ class FormatterTest(unittest.TestCase):
         self.position = 0
         self.logger = StructuredLogger(
             "test_%s" % type(self).__name__)
-        self.output_file = BytesIO()
+        self.output_file = StringIO()
         self.handler = StreamHandler(
             self.output_file, self.get_formatter())
         self.logger.add_handler(self.handler)
@@ -392,7 +457,7 @@ class FormatterTest(unittest.TestCase):
     @property
     def loglines(self):
         self.output_file.seek(self.position)
-        return [line.rstrip() for line in self.output_file.readlines()]
+        return [ensure_text(line.rstrip()) for line in self.output_file.readlines()]
 
 
 class TestHTMLFormatter(FormatterTest):
@@ -406,7 +471,7 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("string_test", "FAIL",
                              extra={"data": "foobar"})
         self.logger.suite_end()
-        self.assertIn(b"data:text/html;charset=utf-8;base64,Zm9vYmFy",
+        self.assertIn("data:text/html;charset=utf-8;base64,Zm9vYmFy",
                       self.loglines[-3])
 
     def test_base64_unicode(self):
@@ -415,7 +480,7 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("unicode_test", "FAIL",
                              extra={"data": unichr(0x02A9)})
         self.logger.suite_end()
-        self.assertIn(b"data:text/html;charset=utf-8;base64,yqk=",
+        self.assertIn("data:text/html;charset=utf-8;base64,yqk=",
                       self.loglines[-3])
 
     def test_base64_other(self):
@@ -424,7 +489,7 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("int_test", "FAIL",
                              extra={"data": {"foo": "bar"}})
         self.logger.suite_end()
-        self.assertIn(b"data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
+        self.assertIn("data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
                       self.loglines[-3])
 
 
@@ -439,7 +504,7 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_end("timeout_test",
                              "TIMEOUT",
                              message="timed out")
-        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
                       self.loglines)
         self.logger.suite_end()
 
@@ -448,7 +513,7 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_start("timeout_test")
         self.logger.test_end("timeout_test",
                              "TIMEOUT")
-        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
                       self.loglines)
         self.logger.suite_end()
 
@@ -458,7 +523,7 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_status("timeout_test",
                                 "subtest",
                                 status="TIMEOUT")
-        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
                       self.loglines)
         self.logger.test_end("timeout_test", "OK")
         self.logger.suite_end()
@@ -473,9 +538,9 @@ class TestTBPLFormatter(FormatterTest):
         # test_end log format:
         # "TEST-KNOWN-INTERMITTENT-<STATUS> | <test> | took <duration>ms"
         # where duration may be different each time
-        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | took ",
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | took ",
                       self.loglines[2])
-        self.assertIn(b"ms", self.loglines[2])
+        self.assertIn("ms", self.loglines[2])
         self.logger.suite_end()
 
     def test_known_intermittent_status(self):
@@ -486,7 +551,7 @@ class TestTBPLFormatter(FormatterTest):
                                 status="FAIL",
                                 expected="PASS",
                                 known_intermittent=["FAIL"])
-        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | subtest",
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | subtest",
                       self.loglines)
         self.logger.test_end("intermittent_test", "OK")
         self.logger.suite_end()
@@ -503,18 +568,18 @@ class TestTBPLFormatter(FormatterTest):
 
         # This sequence should not produce blanklines
         for line in self.loglines:
-            self.assertNotEqual(b"", line)
+            self.assertNotEqual("", line)
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn(b'TEST-INFO | 1234: exit 0', self.loglines)
+        self.assertIn('TEST-INFO | 1234: exit 0', self.loglines)
 
     @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn(b'TEST-INFO | 1234: killed by SIGTERM', self.loglines)
+        self.assertIn('TEST-INFO | 1234: killed by SIGTERM', self.loglines)
 
 
 class TestTBPLFormatterWithShutdown(FormatterTest):
@@ -534,9 +599,9 @@ class TestTBPLFormatterWithShutdown(FormatterTest):
         self.logger.suite_end()
         self.logger.shutdown()
 
-        self.assertIn(b"suite 1: 2/2 (2 known intermittent tests)", self.loglines)
-        self.assertIn(b"Known Intermittent tests:", self.loglines)
-        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | summary_test | subtest", self.loglines)
+        self.assertIn("suite 1: 2/2 (2 known intermittent tests)", self.loglines)
+        self.assertIn("Known Intermittent tests:", self.loglines)
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | summary_test | subtest", self.loglines)
 
 
 class TestMachFormatter(FormatterTest):
@@ -560,15 +625,15 @@ class TestMachFormatter(FormatterTest):
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn(b"Ran 3 checks (3 tests)", self.loglines)
-        self.assertIn(b"Expected results: 1", self.loglines)
-        self.assertIn(b"""
+        self.assertIn("Ran 3 checks (3 tests)", self.loglines)
+        self.assertIn("Expected results: 1", self.loglines)
+        self.assertIn("""
 Unexpected results: 2
   test: 2 (1 fail, 1 pass)
-""".strip(), b"\n".join(self.loglines))
-        self.assertNotIn(b"test1", self.loglines)
-        self.assertIn(b"UNEXPECTED-PASS test2", self.loglines)
-        self.assertIn(b"FAIL test3", self.loglines)
+""".strip(), "\n".join(self.loglines))
+        self.assertNotIn("test1", self.loglines)
+        self.assertIn("UNEXPECTED-PASS test2", self.loglines)
+        self.assertIn("FAIL test3", self.loglines)
 
     def test_summary_subtests(self):
         self.logger.suite_start([])
@@ -586,13 +651,13 @@ Unexpected results: 2
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn(b"Ran 5 checks (3 subtests, 2 tests)", self.loglines)
-        self.assertIn(b"Expected results: 2", self.loglines)
-        self.assertIn(b"""
+        self.assertIn("Ran 5 checks (3 subtests, 2 tests)", self.loglines)
+        self.assertIn("Expected results: 2", self.loglines)
+        self.assertIn("""
 Unexpected results: 3
   test: 1 (1 timeout)
   subtest: 2 (1 fail, 1 timeout)
-""".strip(), b"\n".join(self.loglines))
+""".strip(), "\n".join(self.loglines))
 
     def test_summary_ok(self):
         self.logger.suite_start([])
@@ -610,28 +675,28 @@ Unexpected results: 3
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn(b"OK", self.loglines)
-        self.assertIn(b"Expected results: 5", self.loglines)
-        self.assertIn(b"Unexpected results: 0", self.loglines)
+        self.assertIn("OK", self.loglines)
+        self.assertIn("Expected results: 5", self.loglines)
+        self.assertIn("Unexpected results: 0", self.loglines)
 
     def test_process_start(self):
         self.logger.process_start(1234)
-        self.assertIn(b"Started process `1234`", self.loglines[0])
+        self.assertIn("Started process `1234`", self.loglines[0])
 
     def test_process_start_with_command(self):
         self.logger.process_start(1234, command='test cmd')
-        self.assertIn(b"Started process `1234` (test cmd)", self.loglines[0])
+        self.assertIn("Started process `1234` (test cmd)", self.loglines[0])
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn(b'1234: exit 0', self.loglines[0])
+        self.assertIn('1234: exit 0', self.loglines[0])
 
     @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn(b'1234: killed by SIGTERM', self.loglines[0])
+        self.assertIn('1234: killed by SIGTERM', self.loglines[0])
 
 
 class TestGroupingFormatter(FormatterTest):
@@ -658,15 +723,15 @@ class TestGroupingFormatter(FormatterTest):
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn(b"Ran 2 tests finished in 0.0 seconds.", self.loglines)
-        self.assertIn(b"  \xe2\x80\xa2 1 ran as expected. 0 tests skipped.",
-                      self.loglines)
-        self.assertIn(b"  \xe2\x80\xa2 1 known intermittent results.", self.loglines)
-        self.assertIn(b"  \xe2\x80\xa2 1 tests failed unexpectedly", self.loglines)
-        self.assertIn(b"  \xe2\x96\xb6 FAIL [expected OK] test2", self.loglines)
-        self.assertIn(b"""
-  \xe2\x96\xb6 FAIL [expected PASS, known intermittent [FAIL] test2, subtest2
-""".strip(b"\n"), self.loglines)
+        self.assertIn("Ran 2 tests finished in 0.0 seconds.", self.loglines)
+        self.assertIn("  \u2022 1 ran as expected. 0 tests skipped.", self.loglines)
+        self.assertIn("  \u2022 1 known intermittent results.", self.loglines)
+        self.assertIn("  \u2022 1 tests failed unexpectedly", self.loglines)
+        self.assertIn("  \u25B6 FAIL [expected OK] test2", self.loglines)
+        self.assertIn(
+            "  \u25B6 FAIL [expected PASS, known intermittent [FAIL] test2, subtest2",
+            self.loglines
+        )
 
 
 class TestXUnitFormatter(FormatterTest):
@@ -675,7 +740,7 @@ class TestXUnitFormatter(FormatterTest):
         return XUnitFormatter()
 
     def log_as_xml(self):
-        return ET.fromstring(b'\n'.join(self.loglines))
+        return ET.fromstring('\n'.join(self.loglines))
 
     def test_stacktrace_is_present(self):
         self.logger.suite_start([])

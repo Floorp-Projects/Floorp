@@ -46,7 +46,7 @@ async function test() {
 if (getPlatform() == "android") {
   waitUntilApzStable()
   .then(test)
-  .then(subtestDone);
+  .then(subtestDone, subtestFailed);
 } else {
   // The fix for bug 1637135 is limited to Android, because
   // it breaks the ability to target scrollbars, so we can

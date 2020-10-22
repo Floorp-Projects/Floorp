@@ -18,22 +18,20 @@ const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
 
 add_task(async function() {
   info("Execute test in top level document");
-  await testConsoleMessagesResources(false);
-  await testConsoleMessagesResourcesWithIgnoreExistingResources(false);
+  await testTabConsoleMessagesResources(false);
+  await testTabConsoleMessagesResourcesWithIgnoreExistingResources(false);
 
   info("Execute test in an iframe document, possibly remote with fission");
-  await testConsoleMessagesResources(true);
-  await testConsoleMessagesResourcesWithIgnoreExistingResources(true);
+  await testTabConsoleMessagesResources(true);
+  await testTabConsoleMessagesResourcesWithIgnoreExistingResources(true);
 });
 
-async function testConsoleMessagesResources(executeInIframe) {
+async function testTabConsoleMessagesResources(executeInIframe) {
   const tab = await addTab(FISSION_TEST_URL);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info(
     "Log some messages *before* calling ResourceWatcher.watchResources in order to " +
@@ -100,17 +98,15 @@ async function testConsoleMessagesResources(executeInIframe) {
   await client.close();
 }
 
-async function testConsoleMessagesResourcesWithIgnoreExistingResources(
+async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   executeInIframe
 ) {
   info("Test ignoreExistingResources option for console messages");
   const tab = await addTab(FISSION_TEST_URL);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info(
     "Check whether onAvailable will not be called with existing console messages"

@@ -13,8 +13,8 @@ use std::sync::atomic::{AtomicU32, AtomicU8, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::thread;
 use webrender::{
-    api::channel, api::units::*, api::ExternalImageId, api::ImageRendering, api::YuvColorSpace, Compositor,
-    CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
+    api::channel, api::units::*, api::ColorDepth, api::ExternalImageId, api::ImageRendering, api::YuvColorSpace,
+    Compositor, CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
     ThreadListener,
 };
 
@@ -98,6 +98,8 @@ struct WrSWGLCompositeSurfaceInfo {
     textures: [u32; 3],
     /// Color space of surface if using a YUV format.
     color_space: YuvColorSpace,
+    /// Color depth of surface if using a YUV format.
+    color_depth: ColorDepth,
     /// The actual source surface size before transformation.
     size: DeviceIntSize,
 }
@@ -423,6 +425,7 @@ enum SwCompositeSource {
         swgl::LockedResource,
         swgl::LockedResource,
         YuvColorSpace,
+        ColorDepth,
     ),
 }
 
@@ -474,7 +477,7 @@ impl SwCompositeJob {
                     band_height,
                 );
             }
-            SwCompositeSource::YUV(ref y, ref u, ref v, color_space) => {
+            SwCompositeSource::YUV(ref y, ref u, ref v, color_space, color_depth) => {
                 let swgl_color_space = match color_space {
                     YuvColorSpace::Rec601 => swgl::YUVColorSpace::Rec601,
                     YuvColorSpace::Rec709 => swgl::YUVColorSpace::Rec709,
@@ -486,6 +489,7 @@ impl SwCompositeJob {
                     u,
                     v,
                     swgl_color_space,
+                    color_depth.bit_depth(),
                     self.src_rect.origin.x,
                     self.src_rect.origin.y,
                     self.src_rect.size.width,
@@ -933,7 +937,7 @@ impl SwCompositor {
                                 self.gl.lock_texture(info.textures[2]),
                             ) {
                                 (Some(y_texture), Some(u_texture), Some(v_texture)) => {
-                                    SwCompositeSource::YUV(y_texture, u_texture, v_texture, info.color_space)
+                                    SwCompositeSource::YUV(y_texture, u_texture, v_texture, info.color_space, info.color_depth)
                                 }
                                 _ => return,
                             },
@@ -973,6 +977,7 @@ impl SwCompositor {
                     yuv_planes: 0,
                     textures: [0; 3],
                     color_space: YuvColorSpace::Identity,
+                    color_depth: ColorDepth::Color8,
                     size: DeviceIntSize::zero(),
                 };
                 assert!(surface.tiles.len() > 0);

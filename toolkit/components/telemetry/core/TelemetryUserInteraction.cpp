@@ -21,9 +21,6 @@ using mozilla::Telemetry::UserInteractionIDByNameLookup;
 // PRIVATE TYPES
 namespace {
 
-const uint32_t kUserInteractionCount =
-    mozilla::Telemetry::UserInteractionID::UserInteractionCount;
-
 struct UserInteractionKey {
   uint32_t id;
 };
@@ -93,8 +90,9 @@ bool TelemetryUserInteraction::CanRecord(const nsAString& aName) {
 
   nsCString name = NS_ConvertUTF16toUTF8(aName);
   const uint32_t idx = UserInteractionIDByNameLookup(name);
+
   MOZ_DIAGNOSTIC_ASSERT(
-      idx < kUserInteractionCount,
+      idx < mozilla::Telemetry::UserInteractionID::UserInteractionCount,
       "Intermediate lookup should always give a valid index.");
 
   if (name.Equals(gUserInteractions[idx].name())) {

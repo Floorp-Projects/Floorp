@@ -27,7 +27,6 @@ async function sendRequest(transport, request) {
           resolve(packet);
         }
       },
-      onClosed: () => {},
     };
     transport.send(request);
   });

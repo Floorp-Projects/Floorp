@@ -104,7 +104,7 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
 
   // AbortFollower
 
-  void Abort() override;
+  void RunAbortAlgorithm() override;
 
  protected:
   // Cancels the current transaction (by sending a Cancel message to the

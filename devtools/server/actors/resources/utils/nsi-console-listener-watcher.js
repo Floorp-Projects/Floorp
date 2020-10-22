@@ -34,7 +34,9 @@ class nsIConsoleListenerWatcher {
     // The following code expects the ThreadActor to be instantiated (in prepareStackForRemote)
     // The Thread Actor is instantiated via Target.attach, but we should probably review
     // this and only instantiate the actor instead of attaching the target.
-    targetActor.attach();
+    if (!targetActor.threadActor) {
+      targetActor.attach();
+    }
 
     // Create the consoleListener.
     const listener = {

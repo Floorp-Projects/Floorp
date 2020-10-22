@@ -255,9 +255,9 @@ template double js::ParseDecimalNumber(
     const mozilla::Range<const char16_t> chars);
 
 template <typename CharT>
-bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
-                          int base, IntegerSeparatorHandling separatorHandling,
-                          const CharT** endp, double* dp) {
+static bool GetPrefixInteger(const CharT* start, const CharT* end, int base,
+                             IntegerSeparatorHandling separatorHandling,
+                             const CharT** endp, double* dp) {
   MOZ_ASSERT(start <= end);
   MOZ_ASSERT(2 <= base && base <= 36);
 
@@ -296,7 +296,7 @@ bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
    * other bases; see ES2018, 18.2.5 `parseInt(string, radix)`, step 13.
    */
   if (base == 10) {
-    return ComputeAccurateDecimalInteger(cx, start, s, dp);
+    return false;
   }
 
   if ((base & (base - 1)) == 0) {
@@ -304,6 +304,20 @@ bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
   }
 
   return true;
+}
+
+template <typename CharT>
+bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
+                          int base, IntegerSeparatorHandling separatorHandling,
+                          const CharT** endp, double* dp) {
+  if (::GetPrefixInteger(start, end, base, separatorHandling, endp, dp)) {
+    return true;
+  }
+
+  // Can only fail for base 10.
+  MOZ_ASSERT(base == 10);
+
+  return ComputeAccurateDecimalInteger(cx, start, *endp, dp);
 }
 
 namespace js {
@@ -521,7 +535,7 @@ static bool ParseIntImpl(JSContext* cx, const CharT* chars, size_t length,
 }
 
 /* ES5 15.1.2.2. */
-bool js::num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
+static bool num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   /* Fast paths and exceptional cases. */
@@ -814,7 +828,7 @@ template JSLinearString* js::Int32ToString<CanGC>(JSContext* cx, int32_t si);
 
 template JSLinearString* js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
-JSLinearString* js::Int32ToStringHelperPure(JSContext* cx, int32_t si) {
+JSLinearString* js::Int32ToStringPure(JSContext* cx, int32_t si) {
   AutoUnsafeCallWithABI unsafe;
   JSLinearString* res = Int32ToString<NoGC>(cx, si);
   if (!res) {
@@ -1609,7 +1623,7 @@ template JSString* js::NumberToString<CanGC>(JSContext* cx, double d);
 
 template JSString* js::NumberToString<NoGC>(JSContext* cx, double d);
 
-JSString* js::NumberToStringHelperPure(JSContext* cx, double d) {
+JSString* js::NumberToStringPure(JSContext* cx, double d) {
   AutoUnsafeCallWithABI unsafe;
   JSString* res = NumberToString<NoGC>(cx, d);
   if (!res) {
@@ -1717,49 +1731,62 @@ bool JS_FASTCALL js::NumberValueToStringBuffer(JSContext* cx, const Value& v,
 }
 
 template <typename CharT>
-static bool CharsToNumberImpl(JSContext* cx, const CharT* chars, size_t length,
-                              double* result) {
+inline void CharToNumber(CharT c, double* result) {
+  if ('0' <= c && c <= '9') {
+    *result = c - '0';
+  } else if (unicode::IsSpace(c)) {
+    *result = 0.0;
+  } else {
+    *result = GenericNaN();
+  }
+}
+
+template <typename CharT>
+inline bool CharsToNonDecimalNumber(const CharT* start, const CharT* end,
+                                    double* result) {
+  MOZ_ASSERT(end - start >= 2);
+  MOZ_ASSERT(start[0] == '0');
+
+  int radix = 0;
+  if (start[1] == 'b' || start[1] == 'B') {
+    radix = 2;
+  } else if (start[1] == 'o' || start[1] == 'O') {
+    radix = 8;
+  } else if (start[1] == 'x' || start[1] == 'X') {
+    radix = 16;
+  } else {
+    return false;
+  }
+
+  // It's probably a non-decimal number. Accept if there's at least one digit
+  // after the 0b|0o|0x, and if no non-whitespace characters follow all the
+  // digits.
+  const CharT* endptr;
+  double d;
+  MOZ_ALWAYS_TRUE(GetPrefixInteger(
+      start + 2, end, radix, IntegerSeparatorHandling::None, &endptr, &d));
+  if (endptr == start + 2 || SkipSpace(endptr, end) != end) {
+    *result = GenericNaN();
+  } else {
+    *result = d;
+  }
+  return true;
+}
+
+template <typename CharT>
+bool js::CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
+                       double* result) {
   if (length == 1) {
-    CharT c = chars[0];
-    if ('0' <= c && c <= '9') {
-      *result = c - '0';
-    } else if (unicode::IsSpace(c)) {
-      *result = 0.0;
-    } else {
-      *result = GenericNaN();
-    }
+    CharToNumber(chars[0], result);
     return true;
   }
 
   const CharT* end = chars + length;
-  const CharT* bp = SkipSpace(chars, end);
+  const CharT* start = SkipSpace(chars, end);
 
-  /* ECMA doesn't allow signed non-decimal numbers (bug 273467). */
-  if (end - bp >= 2 && bp[0] == '0') {
-    int radix = 0;
-    if (bp[1] == 'b' || bp[1] == 'B') {
-      radix = 2;
-    } else if (bp[1] == 'o' || bp[1] == 'O') {
-      radix = 8;
-    } else if (bp[1] == 'x' || bp[1] == 'X') {
-      radix = 16;
-    }
-
-    if (radix != 0) {
-      /*
-       * It's probably a non-decimal number. Accept if there's at least one
-       * digit after the 0b|0o|0x, and if no non-whitespace characters follow
-       * all the digits.
-       */
-      const CharT* endptr;
-      double d;
-      if (!GetPrefixInteger(cx, bp + 2, end, radix,
-                            IntegerSeparatorHandling::None, &endptr, &d) ||
-          endptr == bp + 2 || SkipSpace(endptr, end) != end) {
-        *result = GenericNaN();
-      } else {
-        *result = d;
-      }
+  // ECMA doesn't allow signed non-decimal numbers (bug 273467).
+  if (end - start >= 2 && start[0] == '0') {
+    if (CharsToNonDecimalNumber(start, end, result)) {
       return true;
     }
   }
@@ -1773,7 +1800,7 @@ static bool CharsToNumberImpl(JSContext* cx, const CharT* chars, size_t length,
    */
   const CharT* ep;
   double d;
-  if (!js_strtod(cx, bp, end, &ep, &d)) {
+  if (!js_strtod(cx, start, end, &ep, &d)) {
     *result = GenericNaN();
     return false;
   }
@@ -1787,14 +1814,44 @@ static bool CharsToNumberImpl(JSContext* cx, const CharT* chars, size_t length,
   return true;
 }
 
-bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars, size_t length,
-                       double* result) {
-  return CharsToNumberImpl(cx, chars, length, result);
-}
+template bool js::CharsToNumber(JSContext* cx, const Latin1Char* chars,
+                                size_t length, double* result);
 
-bool js::CharsToNumber(JSContext* cx, const char16_t* chars, size_t length,
-                       double* result) {
-  return CharsToNumberImpl(cx, chars, length, result);
+template bool js::CharsToNumber(JSContext* cx, const char16_t* chars,
+                                size_t length, double* result);
+
+template <typename CharT>
+static bool CharsToNumber(const CharT* chars, size_t length, double* result) {
+  if (length == 1) {
+    CharToNumber(chars[0], result);
+    return true;
+  }
+
+  const CharT* end = chars + length;
+  const CharT* start = SkipSpace(chars, end);
+
+  // ECMA doesn't allow signed non-decimal numbers (bug 273467).
+  if (end - start >= 2 && start[0] == '0') {
+    if (CharsToNonDecimalNumber(start, end, result)) {
+      return true;
+    }
+  }
+
+  // It's probably a decimal number. Accept if no non-whitespace characters
+  // follow all the digits.
+  //
+  // NB: Fractional digits are not supported, because they require calling into
+  // dtoa, which isn't possible without a JSContext.
+  const CharT* endptr;
+  double d;
+  if (!GetPrefixInteger(start, end, 10, IntegerSeparatorHandling::None, &endptr,
+                        &d) ||
+      SkipSpace(endptr, end) != end) {
+    return false;
+  }
+
+  *result = d;
+  return true;
 }
 
 bool js::StringToNumber(JSContext* cx, JSString* str, double* result) {
@@ -1825,6 +1882,19 @@ bool js::StringToNumberPure(JSContext* cx, JSString* str, double* result) {
     return false;
   }
   return true;
+}
+
+bool js::MaybeStringToNumber(JSLinearString* str, double* result) {
+  AutoCheckCannotGC nogc;
+
+  if (str->hasIndexValue()) {
+    *result = str->getIndexValue();
+    return true;
+  }
+
+  return str->hasLatin1Chars()
+             ? ::CharsToNumber(str->latin1Chars(nogc), str->length(), result)
+             : ::CharsToNumber(str->twoByteChars(nogc), str->length(), result);
 }
 
 JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,

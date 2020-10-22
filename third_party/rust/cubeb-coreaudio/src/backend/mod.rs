@@ -494,28 +494,28 @@ fn host_time_to_ns(host_time: u64) -> u64 {
     rv as u64
 }
 
-fn compute_output_latency(stm: &AudioUnitStream, host_time: u64, now: u64) -> u32 {
+fn compute_output_latency(stm: &AudioUnitStream, audio_output_time: u64, now: u64) -> u32 {
     const NS2S: u64 = 1_000_000_000;
-    let audio_output_time = host_time_to_ns(host_time);
     let output_hw_rate = stm.core_stream_data.output_hw_rate as u64;
     let fixed_latency_ns =
         (stm.output_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / output_hw_rate;
     // The total output latency is the timestamp difference + the stream latency + the hardware
     // latency.
-    let total_output_latency_ns = fixed_latency_ns + audio_output_time.saturating_sub(now);
+    let total_output_latency_ns =
+        fixed_latency_ns + host_time_to_ns(audio_output_time.saturating_sub(now));
 
     (total_output_latency_ns * output_hw_rate / NS2S) as u32
 }
 
-fn compute_input_latency(stm: &AudioUnitStream, host_time: u64, now: u64) -> u32 {
+fn compute_input_latency(stm: &AudioUnitStream, audio_input_time: u64, now: u64) -> u32 {
     const NS2S: u64 = 1_000_000_000;
-    let audio_input_time = host_time_to_ns(host_time);
     let input_hw_rate = stm.core_stream_data.input_hw_rate as u64;
     let fixed_latency_ns =
         (stm.input_device_latency_frames.load(Ordering::SeqCst) as u64 * NS2S) / input_hw_rate;
     // The total input latency is the timestamp difference + the stream latency +
     // the hardware latency.
-    let total_input_latency_ns = now.saturating_sub(audio_input_time) + fixed_latency_ns;
+    let total_input_latency_ns =
+        host_time_to_ns(now.saturating_sub(audio_input_time)) + fixed_latency_ns;
 
     (total_input_latency_ns * input_hw_rate / NS2S) as u32
 }
@@ -2920,12 +2920,16 @@ impl<'ctx> CoreStreamData<'ctx> {
         let stm = unsafe { &(*self.stm_ptr) };
 
         if !self.output_unit.is_null() {
+            assert_ne!(self.output_device.id, kAudioObjectUnknown);
+            assert_ne!(self.output_device.id, kAudioObjectSystemObject);
+            assert!(
+                self.output_source_listener.is_none(),
+                "register output_source_listener without unregistering the one in use"
+            );
+
             // This event will notify us when the data source on the same device changes,
             // for example when the user plugs in a normal (non-usb) headset in the
             // headphone jack.
-            assert_ne!(self.output_device.id, kAudioObjectUnknown);
-            assert_ne!(self.output_device.id, kAudioObjectSystemObject);
-
             self.output_source_listener = Some(device_property_listener::new(
                 self.output_device.id,
                 get_property_address(Property::DeviceSource, DeviceType::OUTPUT),
@@ -2940,10 +2944,18 @@ impl<'ctx> CoreStreamData<'ctx> {
         }
 
         if !self.input_unit.is_null() {
-            // This event will notify us when the data source on the input device changes.
             assert_ne!(self.input_device.id, kAudioObjectUnknown);
             assert_ne!(self.input_device.id, kAudioObjectSystemObject);
+            assert!(
+                self.input_source_listener.is_none(),
+                "register input_source_listener without unregistering the one in use"
+            );
+            assert!(
+                self.input_alive_listener.is_none(),
+                "register input_alive_listener without unregistering the one in use"
+            );
 
+            // This event will notify us when the data source on the input device changes.
             self.input_source_listener = Some(device_property_listener::new(
                 self.input_device.id,
                 get_property_address(Property::DeviceSource, DeviceType::INPUT),
@@ -2981,6 +2993,11 @@ impl<'ctx> CoreStreamData<'ctx> {
         let stm = unsafe { &(*self.stm_ptr) };
 
         if !self.output_unit.is_null() {
+            assert!(
+                self.default_output_listener.is_none(),
+                "register default_output_listener without unregistering the one in use"
+            );
+
             // This event will notify us when the default audio device changes,
             // for example when the user plugs in a USB headset and the system chooses it
             // automatically as the default, or when another device is chosen in the
@@ -3002,6 +3019,11 @@ impl<'ctx> CoreStreamData<'ctx> {
         }
 
         if !self.input_unit.is_null() {
+            assert!(
+                self.default_input_listener.is_none(),
+                "register default_input_listener without unregistering the one in use"
+            );
+
             // This event will notify us when the default input device changes.
             self.default_input_listener = Some(device_property_listener::new(
                 kAudioObjectSystemObject,

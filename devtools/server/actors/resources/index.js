@@ -54,6 +54,20 @@ const FrameTargetResources = augmentResourceDictionary({
     path: "devtools/server/actors/resources/network-events-stacktraces",
   },
 });
+const ProcessTargetResources = augmentResourceDictionary({
+  [TYPES.CONSOLE_MESSAGE]: {
+    path: "devtools/server/actors/resources/console-messages",
+  },
+  [TYPES.CSS_MESSAGE]: {
+    path: "devtools/server/actors/resources/css-messages",
+  },
+  [TYPES.ERROR_MESSAGE]: {
+    path: "devtools/server/actors/resources/error-messages",
+  },
+  [TYPES.PLATFORM_MESSAGE]: {
+    path: "devtools/server/actors/resources/platform-messages",
+  },
+});
 const ParentProcessResources = augmentResourceDictionary({
   [TYPES.NETWORK_EVENT]: {
     path: "devtools/server/actors/resources/network-events",
@@ -95,6 +109,8 @@ function getResourceTypeDictionaryForTargetType(targetType) {
   switch (targetType) {
     case Targets.TYPES.FRAME:
       return FrameTargetResources;
+    case Targets.TYPES.PROCESS:
+      return ProcessTargetResources;
     default:
       throw new Error(`Unsupported target actor typeName '${targetType}'`);
   }

@@ -13,6 +13,9 @@ describe("<Base>", () => {
     Sections: [],
     DiscoveryStream: { config: { enabled: false } },
     dispatch: () => {},
+    adminContent: {
+      message: {},
+    },
   };
 
   it("should render Base component", () => {
@@ -22,8 +25,12 @@ describe("<Base>", () => {
 
   it("should render the BaseContent component, passing through all props", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
-
-    assert.deepEqual(wrapper.find(BaseContent).props(), DEFAULT_PROPS);
+    const props = wrapper.find(BaseContent).props();
+    assert.deepEqual(
+      props,
+      DEFAULT_PROPS,
+      JSON.stringify([props, DEFAULT_PROPS], null, 3)
+    );
   });
 
   it("should render an ErrorBoundary with class base-content-fallback", () => {

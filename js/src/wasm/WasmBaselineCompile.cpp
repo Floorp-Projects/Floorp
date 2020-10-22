@@ -15101,11 +15101,9 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitLoadExtend(Scalar::Int32));
           case uint32_t(SimdOp::I64x2LoadU32x2):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint32));
-          case uint32_t(SimdOp::V128Load32ZeroExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::V128Load32Zero):
             CHECK_NEXT(emitLoadZero(Scalar::Float32));
-          case uint32_t(SimdOp::V128Load64ZeroExperimental):
-            CHECK_SIMD_EXPERIMENTAL();
+          case uint32_t(SimdOp::V128Load64Zero):
             CHECK_NEXT(emitLoadZero(Scalar::Float64));
           case uint32_t(SimdOp::V128Store):
             CHECK_NEXT(emitStore(ValType::V128, Scalar::Simd128));

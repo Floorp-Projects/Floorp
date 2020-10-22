@@ -68,28 +68,24 @@ var DefaultEvent = {
 
 var ScrollbarWidth = 0;
 
-function test() {
+async function test() {
   var subframe = document.getElementById("subframe");
   var oldClientWidth = subframe.clientWidth;
 
   subframe.style.overflow = "auto";
   subframe.getBoundingClientRect();
 
-  waitForAllPaintsFlushed(function() {
-    ScrollbarWidth = oldClientWidth - subframe.clientWidth;
-    if (!ScrollbarWidth) {
-      // Probably we have overlay scrollbars - abort the test.
-      ok(true, "overlay scrollbars - skipping test");
-      SimpleTest.finish();
-      return;
-    }
+  await promiseAllPaintsDone(null, /*flush=*/true);
 
-    ok(subframe.scrollHeight > subframe.clientHeight, "subframe should have scrollable content");
-    testScrolling(subframe);
-  });
-}
+  ScrollbarWidth = oldClientWidth - subframe.clientWidth;
+  if (!ScrollbarWidth) {
+    // Probably we have overlay scrollbars - abort the test.
+    ok(true, "overlay scrollbars - skipping test");
+    return;
+  }
 
-function testScrolling(subframe) {
+  ok(subframe.scrollHeight > subframe.clientHeight, "subframe should have scrollable content");
+
   // Send a wheel event roughly to where we think the trackbar is. We pick a
   // point at the bottom, in the middle of the trackbar, where the slider is
   // unlikely to be (since it starts at the top).
@@ -98,10 +94,11 @@ function testScrolling(subframe) {
 
   var oldScrollTop = subframe.scrollTop;
 
-  sendWheelAndPaint(subframe, posX, posY, DefaultEvent, function() {
-    ok(subframe.scrollTop > oldScrollTop, "subframe should have scrolled");
-    SimpleTest.finish();
+  await new Promise(resolve => {
+    sendWheelAndPaint(subframe, posX, posY, DefaultEvent, resolve);
   });
+
+  ok(subframe.scrollTop > oldScrollTop, "subframe should have scrolled");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -110,7 +107,8 @@ pushPrefs([["general.smoothScroll", false],
            ["mousewheel.transaction.timeout", 0],
            ["mousewheel.transaction.ignoremovedelay", 0]])
 .then(waitUntilApzStable)
-.then(test);
+.then(test)
+.then(SimpleTest.finish, SimpleTest.finishWithFailure);
 
 </script>
 </body>

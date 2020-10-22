@@ -21,7 +21,7 @@ add_task(async function test_fxa_message_shown() {
   BrowserTestUtils.loadURI(browser, testURL);
   await BrowserTestUtils.browserLoaded(browser, false, testURL);
 
-  const [msg] = PanelTestProvider.getMessages();
+  const [msg] = await PanelTestProvider.getMessages();
   const response = BookmarkPanelHub.onResponse(
     msg,
     {

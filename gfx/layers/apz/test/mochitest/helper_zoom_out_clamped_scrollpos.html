@@ -79,7 +79,7 @@
       is(visualViewport.pageTop, 0, "shouldn't have scrolled (8)");
     }
 
-    waitUntilApzStable().then(test).finally(subtestDone);
+    waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
   </script>
 </body>
 </html>

@@ -259,8 +259,11 @@ class PrintHelper {
     EventUtils.sendString(text, this.win);
   }
 
-  async openMoreSettings() {
-    this.click(this.get("more-settings").firstElementChild);
+  async openMoreSettings(options) {
+    let details = this.get("more-settings");
+    if (!details.open) {
+      this.click(details.firstElementChild, options);
+    }
     await this.awaitAnimationFrame();
   }
 

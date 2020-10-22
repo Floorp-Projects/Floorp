@@ -78,7 +78,7 @@ async function* test() {
 
 waitUntilApzStable()
 .then(runAsyncContinuation(test))
-.then(subtestDone);
+.then(subtestDone, subtestFailed);
 
   </script>
 </head>

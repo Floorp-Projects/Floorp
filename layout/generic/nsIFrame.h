@@ -3773,6 +3773,9 @@ class nsIFrame : public nsQueryFrame {
     bool mJumpedHardBreak = false;
     /** whether we jumped over a non-selectable frame during the search */
     bool mMovedOverNonSelectableText = false;
+    /** whether we met selectable text frame that isn't editable during the
+     *  search */
+    bool mHasSelectableFrame = false;
 
     FrameSearchResult PeekOffsetNoAmount(bool aForward) {
       return mFrame->PeekOffsetNoAmount(aForward, &mOffset);

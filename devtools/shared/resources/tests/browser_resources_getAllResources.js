@@ -14,11 +14,9 @@ const TEST_URI = "data:text/html;charset=utf-8,getAllResources test";
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Check the resources gotten from getAllResources at initial");
   is(

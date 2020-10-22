@@ -17,7 +17,11 @@ class RenderBufferTextureHostSWGL final : public RenderTextureHostSWGL {
   RenderBufferTextureHostSWGL(uint8_t* aBuffer,
                               const layers::BufferDescriptor& aDescriptor);
 
-  size_t GetPlaneCount() override;
+  size_t GetPlaneCount() const override;
+
+  gfx::SurfaceFormat GetFormat() const override;
+
+  gfx::ColorDepth GetColorDepth() const override;
 
   gfx::YUVColorSpace GetYUVColorSpace() const override;
 

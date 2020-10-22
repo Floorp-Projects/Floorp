@@ -65,7 +65,9 @@ TracingTransport.prototype = {
     this.hooks.onPacket(packet);
   },
   onClosed: function() {
-    this.hooks.onClosed();
+    if (this.hooks.onClosed) {
+      this.hooks.onClosed();
+    }
   },
 
   expectSend: function(expected) {

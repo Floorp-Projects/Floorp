@@ -153,7 +153,11 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
       gVersion = Ci.nsILDAPConnection.VERSION3;
     }
     // user supplied method
-    processLDAPValues(ldapquery.getQueryResults(url, gVersion));
+    if ("processLDAPValues" in gSandbox) {
+      gSandbox.processLDAPValues(ldapquery.getQueryResults(url, gVersion));
+    } else {
+      processLDAPValues(ldapquery.getQueryResults(url, gVersion));
+    }
   } catch (e) {
     displayError("getLDAPAttributes", e);
   }
