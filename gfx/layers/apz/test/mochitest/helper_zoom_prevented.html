@@ -36,7 +36,7 @@ function* testPreventDefault(testDriver, aTouchStartToCancel) {
   // Ensure that APZ gets updated hit-test info
   yield waitForAllPaints(testDriver);
 
-  yield* pinchZoomInTouchSequence(150, 300);
+  pinchZoomInTouchSequence(150, 300);
   yield; // wait for the touchend listener to fire
 
   // Flush state and get the resolution we're at now
