@@ -739,6 +739,9 @@ class nsHttpChannel final : public HttpBaseChannel,
   // is created.
   uint32_t mHTTPSSVCTelemetryReported : 1;
 
+  // True only when the channel supports any of the versions of HTTP3
+  bool mSupportsHTTP3 = false;
+
   // The origin of the top window, only valid when mTopWindowOriginComputed is
   // true.
   nsCString mTopWindowOrigin;
