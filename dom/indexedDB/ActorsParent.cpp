@@ -21896,35 +21896,22 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
                       mCursor->mContinueQueries->GetContinueQuery(
                           hasContinueKey, hasContinuePrimaryKey)));
 
-  // Bind limit.
-  nsresult rv = stmt->BindUTF8StringByName(
+  IDB_TRY(stmt->BindUTF8StringByName(
       kStmtParamNameLimit,
-      IntToCString(advanceCount + mCursor->mMaxExtraCount));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      IntToCString(advanceCount + mCursor->mMaxExtraCount)));
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->Id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, mCursor->Id()));
 
   // Bind current key.
   const auto& continueKey =
       hasContinueKey ? explicitContinueKey
                      : mCurrentPosition.GetSortKey(mCursor->IsLocaleAware());
-  rv = continueKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(continueKey.BindToStatement(&*stmt, kStmtParamNameCurrentKey));
 
   // Bind range bound if it is specified.
   if (!mCursor->mLocaleAwareRangeBound->IsUnset()) {
-    rv = mCursor->mLocaleAwareRangeBound->BindToStatement(
-        &*stmt, kStmtParamNameRangeBound);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(mCursor->mLocaleAwareRangeBound->BindToStatement(
+        &*stmt, kStmtParamNameRangeBound));
   }
 
   // Bind object store position if duplicates are allowed and we're not
@@ -21932,17 +21919,12 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   if constexpr (IsIndexCursor) {
     if (!hasContinueKey && (mCursor->mDirection == IDBCursorDirection::Next ||
                             mCursor->mDirection == IDBCursorDirection::Prev)) {
-      rv = mCurrentPosition.mObjectStoreKey.BindToStatement(
-          &*stmt, kStmtParamNameObjectStorePosition);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(mCurrentPosition.mObjectStoreKey.BindToStatement(
+          &*stmt, kStmtParamNameObjectStorePosition));
     } else if (hasContinuePrimaryKey) {
-      rv = mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
-          &*stmt, kStmtParamNameObjectStorePosition);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(
+          mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
+              &*stmt, kStmtParamNameObjectStorePosition));
     }
   }
 
@@ -21959,7 +21941,8 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   }
 
   Key previousKey;
-  auto* optPreviousKey = IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
+  auto* const optPreviousKey =
+      IsUnique(mCursor->mDirection) ? &previousKey : nullptr;
 
   auto helper = CursorOpBaseHelperBase<CursorType>{*this};
   IDB_TRY_INSPECT(
