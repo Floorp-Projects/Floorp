@@ -46,7 +46,7 @@ extern JSObject* InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
 template <AllowGC allowGC>
 extern JSString* NumberToString(JSContext* cx, double d);
 
-extern JSString* NumberToStringHelperPure(JSContext* cx, double d);
+extern JSString* NumberToStringPure(JSContext* cx, double d);
 
 extern JSAtom* NumberToAtom(JSContext* cx, double d);
 
@@ -56,7 +56,7 @@ const frontend::ParserAtom* NumberToParserAtom(
 template <AllowGC allowGC>
 extern JSLinearString* Int32ToString(JSContext* cx, int32_t i);
 
-extern JSLinearString* Int32ToStringHelperPure(JSContext* cx, int32_t i);
+extern JSLinearString* Int32ToStringPure(JSContext* cx, int32_t i);
 
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
