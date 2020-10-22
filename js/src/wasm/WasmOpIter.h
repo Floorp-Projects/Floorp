@@ -80,6 +80,9 @@ class StackType {
       case ValType::F32:
       case ValType::I64:
       case ValType::F64:
+#ifdef ENABLE_WASM_SIMD
+      case ValType::V128:
+#endif
         return true;
       default:
         return false;
