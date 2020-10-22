@@ -45,13 +45,17 @@ nsParserUtils::ConvertToPlainText(const nsAString& aFromStr, uint32_t aFlags,
 NS_IMETHODIMP
 nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
                         nsAString& aToStr) {
-  RefPtr<Document> document = nsContentUtils::CreateInertHTMLDocument(nullptr);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:blank");
+  nsCOMPtr<nsIPrincipal> principal =
+      mozilla::NullPrincipal::CreateWithoutOriginAttributes();
+  RefPtr<Document> document;
+  nsresult rv =
+      NS_NewDOMDocument(getter_AddRefs(document), u""_ns, u""_ns, nullptr, uri,
+                        uri, principal, true, nullptr, DocumentFlavorHTML);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!document) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);
+  rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsTreeSanitizer sanitizer(aFlags);
