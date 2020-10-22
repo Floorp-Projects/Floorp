@@ -16,11 +16,9 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Add messages as existing resources");
   const messages = ["a", "b", "c"];
@@ -58,11 +56,9 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Add messages as existing resources");
   const existingMessages = ["a", "b", "c"];
@@ -106,11 +102,9 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Add messages as existing resources");
   const existingMessages = ["a", "b", "c"];
@@ -149,11 +143,9 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Register first listener to get all available resources");
   const availableResources = [];
@@ -213,11 +205,9 @@ add_task(async function() {
 async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Add messages as existing resources");
   const existingMessages = ["a", "b", "c"];
@@ -280,11 +270,9 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   info("Register first listener to get all available resources");
   const availableResources = [];

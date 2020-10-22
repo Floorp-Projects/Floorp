@@ -39,11 +39,9 @@ add_task(async function() {
 
 async function testNetworkEventStackTraceResources(requestStub) {
   const tab = await addTab(TEST_URI);
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   const networkEvents = new Map();
   const stackTraces = new Map();
