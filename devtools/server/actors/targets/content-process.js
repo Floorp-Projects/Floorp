@@ -25,6 +25,7 @@ const {
   contentProcessTargetSpec,
 } = require("devtools/shared/specs/targets/content-process");
 const Targets = require("devtools/server/actors/targets/index");
+const Resources = require("devtools/server/actors/resources/index");
 
 loader.lazyRequireGetter(
   this,
@@ -85,6 +86,8 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     // and we won't be able to call removeObserver correctly.
     this.destroyObserver = this.destroy.bind(this);
     Services.obs.addObserver(this.destroyObserver, "xpcom-shutdown");
+
+    this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
   },
 
   targetType: Targets.TYPES.FRAME,
@@ -146,6 +149,7 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
       consoleActor: this._consoleActor.actorID,
       threadActor: this.threadActor.actorID,
       memoryActor: this.memoryActor.actorID,
+      processID: Services.appinfo.processID,
 
       traits: {
         networkMonitor: false,
@@ -194,10 +198,54 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     this.ensureWorkerList().workerPauser.setPauseServiceWorkers(request.origin);
   },
 
+  /**
+   * These two methods will create and destroy resource watchers
+   * for each resource type. This will end up calling `notifyResourceAvailable`
+   * whenever new resources are observed.
+   *
+   * We have these shortcut methods in this module, because BrowsingContextTargetActor has to expose them.
+   * And so we align all target actors to follow the same API.
+   */
+  _watchTargetResources(resourceTypes) {
+    return Resources.watchResources(this, resourceTypes);
+  },
+
+  _unwatchTargetResources(resourceTypes) {
+    return Resources.unwatchResources(this, resourceTypes);
+  },
+
+  addWatcherDataEntry(type, entries) {
+    if (type == "resources") {
+      this._watchTargetResources(entries);
+    }
+  },
+
+  removeWatcherDataEntry(type, entries) {
+    if (type == "resources") {
+      this._unwatchTargetResources(entries);
+    }
+  },
+
+  /**
+   * Called by Watchers, when new resources are available.
+   *
+   * @param Array<json> resources
+   *        List of all available resources. A resource is a JSON object piped over to the client.
+   *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
+   */
+  notifyResourceAvailable(resources) {
+    if (this.isDestroyed()) {
+      // Don't try to emit if the actor was destroyed.
+      return;
+    }
+    this.emit("resource-available-form", resources);
+  },
+
   destroy: function() {
     if (this.isDestroyed()) {
       return;
     }
+    Resources.unwatchAllTargetResources(this);
 
     // Notify the client that this target is being destroyed.
     // So that we can destroy the target front and all its children.
