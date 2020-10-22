@@ -58,8 +58,48 @@ extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 class PDMFactoryImpl final {
  public:
   PDMFactoryImpl() {
+    if (XRE_IsGPUProcess()) {
+      InitGpuPDMs();
+    } else if (XRE_IsRDDProcess()) {
+      InitRddPDMs();
+    } else {
+      InitDefaultPDMs();
+    }
+  }
+
+ private:
+  void InitGpuPDMs() {
 #ifdef XP_WIN
-    WMFDecoderModule::Init();
+    if (!IsWin7AndPre2000Compatible()) {
+      WMFDecoderModule::Init();
+    }
+#endif
+  }
+
+  void InitRddPDMs() {
+#ifdef XP_WIN
+    if (!IsWin7AndPre2000Compatible()) {
+      WMFDecoderModule::Init();
+    }
+#endif
+#ifdef MOZ_APPLEMEDIA
+    AppleDecoderModule::Init();
+#endif
+#ifdef MOZ_FFVPX
+    FFVPXRuntimeLinker::Init();
+#endif
+#ifdef MOZ_FFMPEG
+    if (StaticPrefs::media_rdd_ffmpeg_enabled()) {
+      FFmpegRuntimeLinker::Init();
+    }
+#endif
+  }
+
+  void InitDefaultPDMs() {
+#ifdef XP_WIN
+    if (!IsWin7AndPre2000Compatible()) {
+      WMFDecoderModule::Init();
+    }
 #endif
 #ifdef MOZ_APPLEMEDIA
     AppleDecoderModule::Init();
@@ -68,14 +108,10 @@ class PDMFactoryImpl final {
     OmxDecoderModule::Init();
 #endif
 #ifdef MOZ_FFVPX
-    if (!XRE_IsRDDProcess() || StaticPrefs::media_rdd_ffvpx_enabled()) {
-      FFVPXRuntimeLinker::Init();
-    }
+    FFVPXRuntimeLinker::Init();
 #endif
 #ifdef MOZ_FFMPEG
-    if (!XRE_IsRDDProcess() || StaticPrefs::media_rdd_ffmpeg_enabled()) {
-      FFmpegRuntimeLinker::Init();
-    }
+    FFmpegRuntimeLinker::Init();
 #endif
     if (XRE_IsContentProcess()) {
       RemoteDecoderManagerChild::Init();
