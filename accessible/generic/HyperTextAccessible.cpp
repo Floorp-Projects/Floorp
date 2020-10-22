@@ -853,6 +853,11 @@ int32_t HyperTextAccessible::FindParagraphEndOffset(uint32_t aOffset) {
       // ParagraphBoundaryRule only returns a text leaf if it contains a line
       // break.
       matchOffset = boundaryRule.GetLastMatchTextOffset() + 1;
+    } else if (matchAcc->Role() != roles::WHITESPACE && matchAcc != child) {
+      // We found a block boundary that wasn't our origin. We want to stop
+      // right on it, not after it, since we don't want to include the content
+      // of the block.
+      matchOffset = 0;
     } else {
       matchOffset = nsAccUtils::TextLength(matchAcc);
     }
