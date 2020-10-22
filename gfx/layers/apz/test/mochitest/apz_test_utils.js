@@ -317,9 +317,10 @@ async function promiseApzFlushedRepaints() {
 //     { 'file': 'file_3.html', 'onload': function(w) { w.subtestDone(); } }
 //   ];
 //
-// Each subtest should call the subtestDone() function when it is done, to
-// indicate that the window should be torn down and the next text should run.
-// The subtestDone() function is injected into the subtest's window by this
+// Each subtest should call one of the subtestDone() or subtestFailed()
+// functions when it is done, to indicate that the window should be torn
+// down and the next test should run.
+// These functions are injected into the subtest's window by this
 // function prior to loading the subtest. For convenience, the |is| and |ok|
 // functions provided by SimpleTest are also mapped into the subtest's window.
 // For other things from the parent, the subtest can use window.opener.<whatever>
@@ -335,6 +336,11 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       "apz.subtest",
       /* default = */ ""
     );
+
+    function advanceSubtestExecutionWithFailure(msg) {
+      SimpleTest.ok(false, msg);
+      advanceSubtestExecution();
+    }
 
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
@@ -417,6 +423,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       function spawnTest(aFile) {
         w = window.open("", "_blank");
         w.subtestDone = advanceSubtestExecution;
+        w.subtestFailed = advanceSubtestExecutionWithFailure;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
         w.dump = function(msg) {
