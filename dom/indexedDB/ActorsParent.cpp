@@ -21514,18 +21514,11 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
   IDB_TRY_INSPECT(const auto& stmt,
                   aConnection->BorrowCachedStatement(firstQuery));
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId));
 
   if (usingKeyRange) {
-    rv = DatabaseOperationBase::BindKeyRangeToStatement(
-        GetOptionalKeyRange().ref(), &*stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DatabaseOperationBase::BindKeyRangeToStatement(
+        GetOptionalKeyRange().ref(), &*stmt));
   }
 
   // Now we need to make the query for ContinueOp.
