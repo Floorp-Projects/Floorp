@@ -380,11 +380,18 @@ class Mitmproxy(Playback):
                 with open(path, "r") as f:
                     data = json.load(f)
                     return {
-                        "confidence": {
-                            "values": data["confidence"],
+                        "replay-confidence": {
+                            "values": data["replay-confidence"],
                             "subtest-prefix-type": False,
                             "unit": "%",
                             "shouldAlert": True,
+                            "lowerIsBetter": False
+                        },
+                        "recording-proportion-used": {
+                            "values": data["recording-proportion-used"],
+                            "subtest-prefix-type": False,
+                            "unit": "%",
+                            "shouldAlert": False,
                             "lowerIsBetter": False
                         },
                         "not-replayed": {
