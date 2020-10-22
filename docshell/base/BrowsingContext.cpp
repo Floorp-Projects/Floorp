@@ -2152,29 +2152,34 @@ void BrowsingContext::DidSet(FieldIndex<IDX_GVInaudibleAutoplayRequestStatus>) {
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_IsActive>, bool aOldValue) {
-  if (!IsTop() || aOldValue == GetIsActive() ||
-      !StaticPrefs::dom_suspend_inactive_enabled()) {
+  if (!IsTop() || aOldValue == GetIsActive()) {
     return;
   }
+  Group()->UpdateToplevelsSuspendedIfNeeded();
+}
 
-  if (!GetIsActive() && !Group()->GetToplevelsSuspended()) {
-    // If all toplevels in our group are inactive, suspend the group.
-    bool allInactive = true;
-    nsTArray<RefPtr<BrowsingContext>>& toplevels = Group()->Toplevels();
-    for (const auto& context : toplevels) {
-      if (context->GetIsActive()) {
-        allInactive = false;
-        break;
-      }
-    }
+bool BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
+                             bool aNewValue, ContentParent* aSource) {
+  return IsTop() && CheckOnlyOwningProcessCanSet(aSource);
+}
 
-    if (allInactive) {
-      Group()->SetToplevelsSuspended(true);
-    }
-  } else if (GetIsActive() && Group()->GetToplevelsSuspended()) {
-    // Unsuspend the group since we now have an active toplevel
-    Group()->SetToplevelsSuspended(false);
+void BrowsingContext::DidSet(FieldIndex<IDX_HasMainMediaController>,
+                             bool aOldValue) {
+  if (!IsTop() || aOldValue == GetHasMainMediaController()) {
+    return;
   }
+  Group()->UpdateToplevelsSuspendedIfNeeded();
+}
+
+bool BrowsingContext::InactiveForSuspend() const {
+  if (!StaticPrefs::dom_suspend_inactive_enabled()) {
+    return false;
+  }
+  // We should suspend a page only when it's inactive and doesn't have a main
+  // media controller. Having a main controller in context means it might be
+  // playing media, or waiting media keys to control media (could be not playing
+  // anything currently)
+  return !GetIsActive() && !GetHasMainMediaController();
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_DisplayMode>,

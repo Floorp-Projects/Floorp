@@ -440,6 +440,12 @@ void MediaControlService::ControllerManager::MainControllerMetadataChanged(
 void MediaControlService::ControllerManager::UpdateMainControllerInternal(
     MediaController* aController) {
   MOZ_ASSERT(NS_IsMainThread());
+  if (aController) {
+    aController->Select();
+  }
+  if (mMainController) {
+    mMainController->Unselect();
+  }
   mMainController = aController;
 
   if (!mMainController) {
