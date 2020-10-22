@@ -766,7 +766,7 @@ def _get_android_run_parser():
                         help='Do not wait for application to start before returning '
                              '(default: False)')
     parser.add_argument('--enable-fission', action='store_true',
-                       help='Run the program with Fission (site isolation) enabled.')
+                        help='Run the program with Fission (site isolation) enabled.')
     parser.add_argument('--fail-if-running', action='store_true', default=False,
                         help='Fail if application is already running (default: False)')
     parser.add_argument('--restart', action='store_true', default=False,
@@ -930,7 +930,7 @@ class RunProgram(MachCommandBase):
             args = ['--profile', shlex_quote(target_profile)]
 
         if enable_fission:
-          env.append('MOZ_FORCE_ENABLE_FISSION=1')
+            env.append('MOZ_FORCE_ENABLE_FISSION=1')
 
         extras = {}
         for i, e in enumerate(env):
