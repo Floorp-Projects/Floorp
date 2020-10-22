@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Згарнуць прапанаваныя лагіны</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Прапанаваныя лагіны</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Адправіць дадзеныя на гэты сайт паўторна?</string>
+    <string name="mozac_feature_prompt_repost_message">Абнаўленне гэтай старонкі можа паўтарыць апошнія дзеянні, напрыклад, адправіць плацеж або размясціць каментарый двойчы.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Паўторна адправіць дадзеныя</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Адмяніць</string>
 </resources>

@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Reducir las datas d\'annunzia proponidas</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Datas d\'annunzia proponidas</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Anc ina giada trametter las datas a questa website?</string>
+    <string name="mozac_feature_prompt_repost_message">Cun actualisar questa pagina vegnan eventualmain duplitgadas acziuns recentas (sco far in pajament u publitgar duas giadas in commentari).</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Trametter anc ina giada</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Interrumper</string>
 </resources>
