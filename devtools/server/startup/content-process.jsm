@@ -13,8 +13,8 @@
  * The actual server startup itself is in this JSM so that code can be cached.
  */
 
-/* exported init */
-const EXPORTED_SYMBOLS = ["init"];
+/* exported initContentProcessTarget */
+const EXPORTED_SYMBOLS = ["initContentProcessTarget"];
 
 let gLoader;
 
@@ -63,7 +63,7 @@ function setupServer(mm) {
   return gLoader;
 }
 
-function init(msg) {
+function initContentProcessTarget(msg) {
   const mm = msg.target;
   const prefix = msg.data.prefix;
   const watcherActorID = msg.data.watcherActorID;
