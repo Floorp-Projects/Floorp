@@ -210,7 +210,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   virtual AbortSignalImpl* GetSignalImpl() const = 0;
 
   // AbortFollower
-  void Abort() override;
+  void RunAbortAlgorithm() override;
 
   already_AddRefed<Promise> ConsumeBody(JSContext* aCx,
                                         BodyConsumer::ConsumeType aType,

@@ -94,11 +94,11 @@ class AbortSignalMainThread final : public AbortSignalImpl {
 NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignalMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AbortSignalMainThread)
-  tmp->Unfollow();
+  // This is filled with new operations shortly.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AbortSignalMainThread)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFollowingSignal)
+  // This is filled with new operations shortly.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortSignalMainThread)
@@ -135,7 +135,7 @@ class AbortSignalProxy final : public AbortFollower {
       MOZ_ASSERT(NS_IsMainThread());
       AbortSignalImpl* signalImpl =
           mProxy->GetOrCreateSignalImplForMainThread();
-      signalImpl->Abort();
+      signalImpl->SignalAbort();
       return NS_OK;
     }
   };
@@ -151,7 +151,8 @@ class AbortSignalProxy final : public AbortFollower {
     Follow(aSignalImpl);
   }
 
-  void Abort() override {
+  // AbortFollower
+  void RunAbortAlgorithm() override {
     RefPtr<AbortSignalProxyRunnable> runnable =
         new AbortSignalProxyRunnable(this);
     mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
@@ -1467,7 +1468,7 @@ template void FetchBody<Response>::MaybeTeeReadableStreamBody(
     ErrorResult& aRv);
 
 template <class Derived>
-void FetchBody<Derived>::Abort() {
+void FetchBody<Derived>::RunAbortAlgorithm() {
   if (!mReadableStreamBody) {
     return;
   }
@@ -1484,9 +1485,9 @@ void FetchBody<Derived>::Abort() {
   AbortStream(cx, body, result);
 }
 
-template void FetchBody<Request>::Abort();
+template void FetchBody<Request>::RunAbortAlgorithm();
 
-template void FetchBody<Response>::Abort();
+template void FetchBody<Response>::RunAbortAlgorithm();
 
 }  // namespace dom
 }  // namespace mozilla
