@@ -61,8 +61,8 @@
     <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s 在您关闭所有隐私标签页或退出应用后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。</string>
-    <string name="private_browsing_common_myths">隐私浏览功能的常见误解</string>
+    <string name="private_browsing_placeholder_description_2">%1$s 会在关闭所有隐私标签页或退出应用时，清除您的搜索记录与浏览历史。虽然这样仍无法对网站和电信运营商匿名，但还是可以更简单地防止其他使用此设备的人得知您的上网活动。</string>
+    <string name="private_browsing_common_myths">正确认识隐私浏览功能</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
 
@@ -1167,7 +1167,7 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">标准（默认）</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">少拦截一些跟踪器，页面将正可常加载。</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">少拦截一些跟踪器，页面将可正常加载。</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">严格（推荐）</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
