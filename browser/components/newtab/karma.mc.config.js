@@ -164,6 +164,12 @@ module.exports = function(config) {
               functions: 100,
               branches: 0,
             },
+            "content-src/lib/link-menu-options.js": {
+              statements: 96,
+              lines: 96,
+              functions: 96,
+              branches: 70,
+            },
             "content-src/aboutwelcome/**/*.jsx": {
               statements: 50,
               lines: 50,
