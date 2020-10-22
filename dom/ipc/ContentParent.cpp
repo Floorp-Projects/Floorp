@@ -2414,6 +2414,9 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
   base::ProcessId procId =
       base::GetProcId(mSubprocess->GetChildProcessHandle());
   Open(mSubprocess->TakeChannel(), procId);
+
+  ContentProcessManager::GetSingleton()->AddContentProcess(this);
+
 #ifdef MOZ_CODE_COVERAGE
   Unused << SendShareCodeCoverageMutex(
       CodeCoverageHandler::Get()->GetMutexHandle(procId));
@@ -2427,8 +2430,6 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
     ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
     return false;
   }
-
-  ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
   mHangMonitorActor = ProcessHangMonitor::AddProcess(this);
 
