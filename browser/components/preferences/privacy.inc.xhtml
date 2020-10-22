@@ -68,6 +68,10 @@
                     <image class="content-blocking-social-media-image"/>
                     <label data-l10n-id="content-blocking-social-media-trackers"/>
                   </hbox>
+                  <hbox class="extra-information-label cross-site-cookies-option" hidden="true">
+                    <image class="content-blocking-cookies-image"/>
+                    <label data-l10n-id="content-blocking-cross-site-cookies"/>
+                  </hbox>
                   <hbox class="extra-information-label third-party-tracking-cookies-option" hidden="true">
                     <image class="content-blocking-cookies-image"/>
                     <label data-l10n-id="content-blocking-cross-site-tracking-cookies"/>
@@ -142,6 +146,10 @@
                     <image class="content-blocking-cookies-image"/>
                     <label data-l10n-id="content-blocking-cross-site-tracking-cookies"/>
                   </hbox>
+                  <hbox class="extra-information-label cross-site-cookies-option" hidden="true">
+                    <image class="content-blocking-cookies-image"/>
+                    <label data-l10n-id="content-blocking-cross-site-cookies"/>
+                  </hbox>
                   <hbox class="extra-information-label pb-trackers-option" hidden="true">
                     <image class="content-blocking-trackers-image"/>
                     <label data-l10n-id="content-blocking-private-windows"/>
@@ -196,7 +204,7 @@
                       <label class="content-blocking-warning-title" data-l10n-id="content-blocking-warning-title"/>
                     </hbox>
                     <description class="indent">
-                      <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-and-isolating-etp-warning-description"></html:span>
+                      <html:span class="tail-with-learn-more content-blocking-warning-description" data-l10n-id="content-blocking-and-isolating-etp-warning-description"></html:span>
                       <label id="" class="learnMore contentBlockWarningLink" data-l10n-id="content-blocking-warning-learn-how" is="text-link"/>
                     </description>
                   </vbox>
@@ -233,7 +241,7 @@
                                 preference="network.cookie.cookieBehavior">
                         <menupopup>
                           <menuitem id="blockCookiesSocialMedia" data-l10n-id="sitedata-option-block-cross-site-trackers" value="trackers"/>
-                          <menuitem data-l10n-id="sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate" value="trackers-plus-isolate"/>
+                          <menuitem id="isolateCookiesSocialMedia" data-l10n-id="sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate" value="trackers-plus-isolate"/>
                           <menuitem data-l10n-id="sitedata-option-block-unvisited" value="unvisited"/>
                           <menuitem data-l10n-id="sitedata-option-block-all-third-party" value="all-third-parties"/>
                           <menuitem data-l10n-id="sitedata-option-block-all" value="always"/>
@@ -300,7 +308,7 @@
                     <label class="content-blocking-warning-title" data-l10n-id="content-blocking-warning-title"/>
                   </hbox>
                   <description class="indent">
-                    <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-and-isolating-etp-warning-description"></html:span>
+                    <html:span class="tail-with-learn-more content-blocking-warning-description" data-l10n-id="content-blocking-and-isolating-etp-warning-description"></html:span>
                     <label id="" class="learnMore contentBlockWarningLink" data-l10n-id="content-blocking-warning-learn-how" is="text-link"/>
                   </description>
                 </vbox>
