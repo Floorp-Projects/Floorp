@@ -32,6 +32,7 @@ typedef intptr_t GLintptr;
 #define GL_RGBA32F 0x8814
 #define GL_RGBA8 0x8058
 #define GL_R8 0x8229
+#define GL_R16 0x822A
 #define GL_RGBA32I 0x8D82
 #define GL_BGRA8 0x93A1
 #define GL_RG8 0x822B
