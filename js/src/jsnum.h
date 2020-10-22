@@ -238,8 +238,6 @@ MOZ_ALWAYS_INLINE MOZ_MUST_USE bool ToInt32OrBigInt(JSContext* cx,
   return ToInt32OrBigIntSlow(cx, vp);
 }
 
-MOZ_MUST_USE bool num_parseInt(JSContext* cx, unsigned argc, Value* vp);
-
 } /* namespace js */
 
 /*
