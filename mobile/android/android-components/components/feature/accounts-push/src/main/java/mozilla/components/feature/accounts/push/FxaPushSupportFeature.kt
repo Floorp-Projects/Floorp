@@ -114,12 +114,8 @@ internal class AccountObserver(
     private val logger = Logger(AccountObserver::class.java.simpleName)
     private val verificationDelegate = VerificationDelegate(context, push.config.disableRateLimit)
     private val constellationObserver = ConstellationObserver(push, verificationDelegate)
-    private val pushReset = OneTimeFxaPushReset(context, push)
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-
-        pushReset.resetSubscriptionIfNeeded(account)
-
         // We need a new subscription only when we have a new account.
         // The subscription is removed when an account logs out.
         if (authType != AuthType.Existing && authType != AuthType.Recovered) {
@@ -332,44 +328,6 @@ internal class VerificationDelegate(
 
         internal const val PERIODIC_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000L // 24 hours
         internal const val MAX_REQUEST_IN_INTERVAL = 500 // 500 requests in 24 hours
-    }
-}
-
-/**
- * Resets the fxa push scope (and therefore push subscription) if it does not follow the new format.
- *
- * This is needed only for our existing push users and can be removed when we're more confident our users are
- * all migrated.
- *
- * Implementation Notes: In order to support a new performance fix related to push and
- * [FxaAccountManager] we need to use a new push scope format. This class checks if we have the old
- * format, and removes it if so, thereby generating a new push scope with the new format.
- */
-class OneTimeFxaPushReset(
-    private val context: Context,
-    private val pushFeature: AutoPushFeature
-) {
-
-    /**
-     * Resets the push subscription if the old subscription format is used.
-     */
-    fun resetSubscriptionIfNeeded(account: OAuthAccount) {
-        val pushScope = preference(context).getString(PREF_FXA_SCOPE, null) ?: return
-
-        if (pushScope.contains(FxaPushSupportFeature.PUSH_SCOPE_PREFIX)) {
-            return
-        }
-
-        val newPushScope = FxaPushSupportFeature.PUSH_SCOPE_PREFIX + pushScope
-
-        pushFeature.unsubscribe(pushScope)
-        pushFeature.subscribe(newPushScope) { subscription ->
-            CoroutineScope(Dispatchers.Main).launch {
-                account.deviceConstellation().setDevicePushSubscription(subscription.into())
-            }
-        }
-
-        preference(context).edit().putString(PREF_FXA_SCOPE, newPushScope).apply()
     }
 }
 
