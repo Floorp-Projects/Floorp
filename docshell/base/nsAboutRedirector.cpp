@@ -241,6 +241,24 @@ nsAboutRedirector::GetURIFlags(nsIURI* aURI, uint32_t* aResult) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
+NS_IMETHODIMP
+nsAboutRedirector::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsAutoCString name;
+  nsresult rv = NS_GetAboutModuleName(aURI, name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (const auto& redir : kRedirMap) {
+    if (name.EqualsASCII(redir.id)) {
+      return NS_NewURI(chromeURI, redir.url);
+    }
+  }
+
+  NS_ERROR("nsAboutRedirector called for unknown case");
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
 nsresult nsAboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID,
                                    void** aResult) {
   RefPtr<nsAboutRedirector> about = new nsAboutRedirector();

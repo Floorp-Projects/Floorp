@@ -2,27 +2,84 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const policiesToTest = {
-  BlockAboutAddons: "about:addons",
-  BlockAboutConfig: "about:config",
-  BlockAboutProfiles: "about:profiles",
-  BlockAboutSupport: "about:support",
-};
+const ABOUT_CONTRACT = "@mozilla.org/network/protocol/about;1?what=";
+
+const policiesToTest = [
+  {
+    policies: {
+      BlockAboutAddons: true,
+    },
+    urls: ["about:addons"],
+  },
+  {
+    policies: {
+      BlockAboutConfig: true,
+    },
+    urls: ["about:config", "chrome://global/content/config.xhtml"],
+  },
+  {
+    policies: {
+      BlockAboutProfiles: true,
+    },
+    urls: ["about:profiles"],
+  },
+  {
+    policies: {
+      BlockAboutSupport: true,
+    },
+    urls: ["about:support"],
+  },
+  {
+    policies: {
+      DisableDeveloperTools: true,
+    },
+    urls: [
+      "about:devtools",
+      "about:debugging",
+      "about:devtools-toolbox",
+      "about:profiling",
+    ],
+  },
+  {
+    policies: {
+      DisablePrivateBrowsing: true,
+    },
+    urls: ["about:privatebrowsing"],
+  },
+  {
+    policies: {
+      DisableTelemetry: true,
+    },
+    urls: ["about:telemetry"],
+  },
+  {
+    policies: {
+      PasswordManagerEnabled: false,
+    },
+    urls: ["about:logins"],
+  },
+];
 
 add_task(async function testAboutTask() {
-  for (let policy in policiesToTest) {
+  for (let policyToTest of policiesToTest) {
     let policyJSON = { policies: {} };
-    policyJSON.policies[policy] = true;
-    await testPageBlockedByPolicy(policyJSON, policiesToTest[policy]);
+    policyJSON.policies = policyToTest.policies;
+    for (let url of policyToTest.urls) {
+      if (url.startsWith("about")) {
+        let feature = url.split(":")[1];
+        let aboutModule = Cc[ABOUT_CONTRACT + feature].getService(
+          Ci.nsIAboutModule
+        );
+        let chromeURL = aboutModule.getChromeURI(Services.io.newURI(url)).spec;
+        await testPageBlockedByPolicy(policyJSON, chromeURL);
+      }
+      await testPageBlockedByPolicy(policyJSON, url);
+    }
   }
-  let policyJSON = { policies: {} };
-  policyJSON.policies.PasswordManagerEnabled = false;
-  await testPageBlockedByPolicy(policyJSON, "about:logins");
 });
 
 async function testPageBlockedByPolicy(policyJSON, page) {
-  await setupPolicyEngineWithJson(policyJSON);
-
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson(policyJSON);
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {
@@ -35,16 +92,6 @@ async function testPageBlockedByPolicy(policyJSON, page) {
           ),
           content.document.documentURI +
             " should start with about:neterror?e=blockedByPolicy"
-        );
-
-        // There is currently a testing-specific race condition that causes this test
-        // to fail, but it is not a problem if we test after the first page load.
-        // Until the race condition is fixed, just make sure to test this *after*
-        // testing the page load.
-        is(
-          Services.policies.isAllowed(innerPage),
-          false,
-          `Policy Engine should report ${innerPage} as not allowed`
         );
       });
     }
