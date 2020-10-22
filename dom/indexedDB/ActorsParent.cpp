@@ -15109,8 +15109,6 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
   DatabaseConnection::CachedStatement deleteUniqueStmt;
   DatabaseConnection::CachedStatement deleteStmt;
 
-  nsresult rv;
-
   for (uint32_t index = 0; index < count; index++) {
     const IndexDataValue& indexValue = aIndexValues[index];
 
@@ -15133,30 +15131,18 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
 
     const auto borrowedStmt = stmt.Borrow();
 
-    rv = borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
-                                       indexValue.mIndexId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(borrowedStmt->BindInt64ByName(kStmtParamNameIndexId,
+                                          indexValue.mIndexId));
 
-    rv = indexValue.mPosition.BindToStatement(&*borrowedStmt,
-                                              kStmtParamNameValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(indexValue.mPosition.BindToStatement(&*borrowedStmt,
+                                                 kStmtParamNameValue));
 
     if (!indexValue.mUnique) {
-      rv = aObjectStoreKey.BindToStatement(&*borrowedStmt,
-                                           kStmtParamNameObjectDataKey);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
+                                              kStmtParamNameObjectDataKey));
     }
 
-    rv = borrowedStmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(borrowedStmt->Execute());
   }
 
   return NS_OK;
