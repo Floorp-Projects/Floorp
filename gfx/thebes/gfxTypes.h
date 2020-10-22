@@ -130,4 +130,20 @@ FontMatchType& FontMatchType::operator|=(const FontMatchType& aOther) {
   return *this;
 }
 
+struct HwStretchingSupport {
+  uint32_t mBoth;
+  uint32_t mWindowOnly;
+  uint32_t mFullScreenOnly;
+  uint32_t mNone;
+  uint32_t mError;
+
+  HwStretchingSupport()
+      : mBoth(0), mWindowOnly(0), mFullScreenOnly(0), mNone(0), mError(0) {}
+
+  bool IsFullySupported() const {
+    return mBoth > 0 && mWindowOnly == 0 && mFullScreenOnly == 0 &&
+           mNone == 0 && mError == 0;
+  }
+};
+
 #endif /* GFX_TYPES_H */
