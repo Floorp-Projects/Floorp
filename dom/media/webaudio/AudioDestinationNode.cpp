@@ -196,7 +196,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
             mSampleRate,
             StaticPrefs::dom_media_silence_duration_for_audibility()),
         mSuspended(false),
-        mLastInputAudible(false) {
+        mIsAudible(false) {
     MOZ_ASSERT(aNode);
   }
 
@@ -211,18 +211,18 @@ class DestinationNodeEngine final : public AudioNodeEngine {
     }
 
     mAudibilityMonitor.Process(aInput);
-    bool isInputAudible = mAudibilityMonitor.RecentlyAudible();
-
-    if (isInputAudible != mLastInputAudible) {
-      mLastInputAudible = isInputAudible;
+    bool isAudible =
+        mAudibilityMonitor.RecentlyAudible() && aOutput->mVolume > 0.0;
+    if (isAudible != mIsAudible) {
+      mIsAudible = isAudible;
       RefPtr<AudioNodeTrack> track = aTrack;
-      auto r = [track, isInputAudible]() -> void {
+      auto r = [track, isAudible]() -> void {
         MOZ_ASSERT(NS_IsMainThread());
         RefPtr<AudioNode> node = track->Engine()->NodeMainThread();
         if (node) {
           RefPtr<AudioDestinationNode> destinationNode =
               static_cast<AudioDestinationNode*>(node.get());
-          destinationNode->NotifyDataAudibleStateChanged(isInputAudible);
+          destinationNode->NotifyDataAudibleStateChanged(isAudible);
         }
       };
 
@@ -250,7 +250,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
     if (aIndex == SUSPENDED) {
       mSuspended = !!aParam;
       if (mSuspended) {
-        mLastInputAudible = false;
+        mIsAudible = false;
       }
     }
   }
@@ -269,7 +269,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
   float mVolume;
   AudibilityMonitor mAudibilityMonitor;
   bool mSuspended;
-  bool mLastInputAudible;
+  bool mIsAudible;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
