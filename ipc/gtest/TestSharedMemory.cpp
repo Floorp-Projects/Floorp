@@ -13,6 +13,15 @@
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
 
+#ifdef XP_LINUX
+#  include <errno.h>
+#  include <linux/magic.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <sys/statfs.h>
+#  include <sys/utsname.h>
+#endif
+
 #ifdef XP_WIN
 #  include <windows.h>
 #endif
@@ -289,6 +298,43 @@ TEST(IPCSharedMemory, BasicIsZero)
   auto* mem = reinterpret_cast<char*>(shm->memory());
   for (size_t i = 0; i < kSize; ++i) {
     ASSERT_EQ(mem[i], 0) << "offset " << i;
+  }
+}
+#endif
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+// Test that memfd_create is used where expected.
+//
+// More precisely: if memfd_create support is expected, verify that
+// shared memory isn't subject to a filesystem size limit.
+TEST(IPCSharedMemory, IsMemfd)
+{
+  static constexpr int kMajor = 3;
+  static constexpr int kMinor = 17;
+
+  struct utsname uts;
+  ASSERT_EQ(uname(&uts), 0) << strerror(errno);
+  ASSERT_STREQ(uts.sysname, "Linux");
+  int major, minor;
+  ASSERT_EQ(sscanf(uts.release, "%d.%d", &major, &minor), 2);
+  bool expectMemfd = major > kMajor || (major == kMajor && minor >= kMinor);
+
+  base::SharedMemory shm;
+  ASSERT_TRUE(shm.Create(1));
+  UniqueFileHandle fd = shm.TakeHandle();
+  ASSERT_TRUE(fd);
+
+  struct statfs fs;
+  ASSERT_EQ(fstatfs(fd.get(), &fs), 0) << strerror(errno);
+  EXPECT_EQ(fs.f_type, TMPFS_MAGIC);
+  static constexpr decltype(fs.f_blocks) kNoLimit = 0;
+  if (expectMemfd) {
+    EXPECT_EQ(fs.f_blocks, kNoLimit);
+  } else {
+    // On older kernels, we expect the memfd / no-limit test to fail.
+    // (In theory it could succeed if backported memfd support exists;
+    // if that ever happens, this check can be removed.)
+    EXPECT_NE(fs.f_blocks, kNoLimit);
   }
 }
 #endif
