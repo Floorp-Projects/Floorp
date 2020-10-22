@@ -181,7 +181,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         // Pipe all the messages from content process actors back to the client
         // through the parent process connection.
         onPacket: connection.send.bind(connection),
-        onClosed() {},
       };
       childTransport.ready();
 

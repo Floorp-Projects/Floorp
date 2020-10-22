@@ -139,7 +139,6 @@ function newSubconnection(prefix) {
   const { conn, transport } = newConnection(prefix);
   transport.hooks = {
     onPacket: packet => gMainConnection.send(packet),
-    onClosed: () => {},
   };
   gMainConnection.setForwarding(prefix, transport);
 
