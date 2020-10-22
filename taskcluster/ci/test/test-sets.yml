@@ -498,18 +498,6 @@ android-hw-aarch64-qr:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
 
-android-hw-arm7-raptor:
-    - raptor-speedometer-geckoview
-    - raptor-speedometer-refbrow
-    - raptor-speedometer-fenix
-    - raptor-speedometer-fennec68
-
-android-hw-aarch64-raptor:
-    - raptor-speedometer-geckoview
-    - raptor-speedometer-refbrow
-    - raptor-speedometer-fenix
-    - raptor-speedometer-fennec68
-
 android-hw-arm7-raptor-cpu-memory:
     - raptor-speedometer-geckoview-cpu-memory
     - raptor-scn-cpu-memory-idle-geckoview
