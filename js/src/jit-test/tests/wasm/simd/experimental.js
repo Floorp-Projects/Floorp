@@ -63,25 +63,4 @@ function V128StoreExpr(addr, v) {
             SimdPrefix, V128StoreCode, 4, varU32(0)];
 }
 
-// Zero-extending SIMD load, https://github.com/WebAssembly/simd/pull/237
-
-for ( let [opcode, k, log2align, cons, cast] of [[V128Load32ZeroCode, 4, 2, Int32Array, Number],
-                                                 [V128Load64ZeroCode, 2, 3, BigInt64Array, BigInt]] ) {
-    var ins = wasmEval(moduleWithSections([
-        sigSection([v2vSig]),
-        declSection([0]),
-        memorySection(1),
-        exportSection([{funcIndex: 0, name: "run"},
-                       {memIndex: 0, name: "mem"}]),
-        bodySection([
-            funcBody({locals:[],
-                      body: [...V128StoreExpr(0, [I32ConstCode, varU32(16),
-                                                  SimdPrefix, varU32(opcode), log2align, varU32(0)])]})])]));
-
-    var mem = new cons(ins.exports.mem.buffer);
-    mem[k] = cast(37);
-    ins.exports.run();
-    var result = get(mem, 0, k);
-    assertSame(result, iota(k).map((v) => v == 0 ? 37 : 0));
-}
-
+// (Currently no tests here but there were some in the past and there will be more in the future.)

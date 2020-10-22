@@ -1700,6 +1700,33 @@ mem64[37] = 83n;
 ins.exports.load_splat_v64x2(37*8);
 assertSame(get(mem64, 0, 2), [83, 83]);
 
+// Load and zero
+//
+// Operand is memory address of scalar
+// Result is v128 in memory
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "load32_zero") (param $addr i32)
+      (v128.store (i32.const 0) (v128.load32_zero (local.get $addr))))
+    (func (export "load64_zero") (param $addr i32)
+      (v128.store (i32.const 0) (v128.load64_zero (local.get $addr)))))`);
+
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+mem32[37] = 0x12345678;
+mem32[38] = 0xffffffff;
+mem32[39] = 0xfffffffe;
+mem32[40] = 0xfffffffd;
+ins.exports.load32_zero(37*4);
+assertSame(get(mem32, 0, 4), [0x12345678, 0, 0, 0]);
+
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+mem64[37] = 0x12345678abcdef01n;
+mem64[38] = 0xffffffffffffffffn;
+ins.exports.load64_zero(37*8);
+assertSame(get(mem64, 0, 2), [0x12345678abcdef01n, 0n]);
+
 // Load and extend
 //
 // Operand is memory address of 64-bit scalar representing 8, 4, or 2 values
