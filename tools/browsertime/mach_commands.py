@@ -581,38 +581,3 @@ class MachBrowsertime(MachCommandBase):
         if default_args == 1:
             return 1
         return self.node([browsertime_path()] + default_args + args)
-
-    @Command('visualmetrics', category='testing',
-             description='Run visualmetrics.py')
-    @CommandArgument('video')
-    @CommandArgument('args', nargs=argparse.REMAINDER)
-    def visualmetrics(self, video, args):
-        self._set_log_level(True)
-        self.activate_virtualenv()
-
-        # Turn '/path/to/video/1.mp4' into '/path/to/video' and '1'.
-        d, base = os.path.split(video)
-        index, _ = os.path.splitext(base)
-
-        # TODO: write a '--logfile' as well.
-        args = ['--dir',  # Images are written to `/path/to/video/images` (following browsertime).
-                mozpath.join(d, 'images', index),
-                '--video',
-                video,
-                '--orange',
-                '--perceptual',
-                '--contentful',
-                '--force',
-                '--renderignore',
-                '5',
-                '--json',
-                '--viewport',
-                '-q',
-                '75',
-                '-vvvv']
-        return self.run_process(
-            [visualmetrics_path()] + args,
-            append_env=self.append_env(),
-            pass_thru=True,
-            ensure_exit_code=False,  # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topsrcdir))
