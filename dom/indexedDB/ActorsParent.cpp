@@ -20697,29 +20697,20 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsresult rv = objectStoreHasIndexes
-                    ? DeleteObjectStoreDataTableRowsWithIndexes(
-                          aConnection, mParams.objectStoreId(), Nothing())
-                    : aConnection->ExecuteCachedStatement(
-                          "DELETE FROM object_data "
-                          "WHERE object_store_id = :object_store_id;"_ns,
-                          [this](mozIStorageStatement& stmt) {
-                            nsresult rv = stmt.BindInt64ByIndex(
-                                0, mParams.objectStoreId());
-                            if (NS_WARN_IF(NS_FAILED(rv))) {
-                              return rv;
-                            }
+  IDB_TRY(objectStoreHasIndexes
+              ? DeleteObjectStoreDataTableRowsWithIndexes(
+                    aConnection, mParams.objectStoreId(), Nothing())
+              : aConnection->ExecuteCachedStatement(
+                    "DELETE FROM object_data "
+                    "WHERE object_store_id = :object_store_id;"_ns,
+                    [this](mozIStorageStatement& stmt) -> nsresult {
+                      IDB_TRY(
+                          stmt.BindInt64ByIndex(0, mParams.objectStoreId()));
 
-                            return NS_OK;
-                          });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+                      return NS_OK;
+                    }));
 
-  rv = autoSave.Commit();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(autoSave.Commit());
 
   return NS_OK;
 }
