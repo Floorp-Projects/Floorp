@@ -494,10 +494,8 @@ function synthesizeNativeTouch(
 //   where advancing the row counter moves forward in time, and each column
 //   represents a single "finger" (or touch input). Each row must have exactly
 //   the same number of columns, and the number of columns must match the length
-//   of the aTouchIds parameter. However, rows are allowed to be null, this
-//   represents a yield point, where the function yields back to the caller for
-//   additional processing at that point in the touch sequence.
-//   For each non-null row, each entry is either an object with x and y fields,
+//   of the aTouchIds parameter.
+//   For each row, each entry is either an object with x and y fields,
 //   or a null. A null value indicates that the "finger" should be "lifted"
 //   (i.e. send a touchend for that touch input). A non-null value therefore
 //   indicates the position of the touch input.
@@ -506,7 +504,7 @@ function synthesizeNativeTouch(
 // aObserver is the observer that will get registered on the very last
 //   synthesizeNativeTouch call this function makes.
 // aTouchIds is an array holding the touch ID values of each "finger".
-function* synthesizeNativeTouchSequences(
+function synthesizeNativeTouchSequences(
   aTarget,
   aPositions,
   aObserver = null,
@@ -515,11 +513,9 @@ function* synthesizeNativeTouchSequences(
   // We use lastNonNullValue to figure out which synthesizeNativeTouch call
   // will be the last one we make, so that we can register aObserver on it.
   var lastNonNullValue = -1;
-  var yields = 0;
   for (let i = 0; i < aPositions.length; i++) {
     if (aPositions[i] == null) {
-      yields++;
-      continue;
+      throw new Error(`aPositions[${i}] was unexpectedly null`);
     }
     if (aPositions[i].length != aTouchIds.length) {
       throw new Error(
@@ -529,7 +525,7 @@ function* synthesizeNativeTouchSequences(
     }
     for (let j = 0; j < aTouchIds.length; j++) {
       if (aPositions[i][j] != null) {
-        lastNonNullValue = (i - yields) * aTouchIds.length + j;
+        lastNonNullValue = i * aTouchIds.length + j;
       }
     }
   }
@@ -553,13 +549,7 @@ function* synthesizeNativeTouchSequences(
   currentPositions.fill(null);
 
   // Iterate over the position data now, and generate the touches requested
-  yields = 0;
   for (let i = 0; i < aPositions.length; i++) {
-    if (aPositions[i] == null) {
-      yields++;
-      yield i;
-      continue;
-    }
     for (let j = 0; j < aTouchIds.length; j++) {
       if (aPositions[i][j] == null) {
         // null means lift the finger
@@ -568,7 +558,7 @@ function* synthesizeNativeTouchSequences(
         } else {
           // synthesize the touch-up. If this is the last call we're going to
           // make, pass the observer as well
-          var thisIndex = (i - yields) * aTouchIds.length + j;
+          var thisIndex = i * aTouchIds.length + j;
           var observer = lastSynthesizeCall == thisIndex ? aObserver : null;
           synthesizeNativeTouch(
             aTarget,
@@ -617,17 +607,9 @@ function synthesizeNativeTouchDrag(
     positions.push([pos]);
   }
   positions.push([{ x: aX + aDeltaX, y: aY + aDeltaY }]);
-  var continuation = synthesizeNativeTouchSequences(
-    aTarget,
-    positions,
-    aObserver,
-    [aTouchId]
-  );
-  var yielded = continuation.next();
-  while (!yielded.done) {
-    yielded = continuation.next();
-  }
-  return yielded.value;
+  return synthesizeNativeTouchSequences(aTarget, positions, aObserver, [
+    aTouchId,
+  ]);
 }
 
 function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
@@ -910,7 +892,7 @@ async function promiseNativeMouseDrag(
 // Synthesizes a native touch sequence of events corresponding to a pinch-zoom-in
 // at the given focus point. The focus point must be specified in CSS coordinates
 // relative to the document body.
-function* pinchZoomInTouchSequence(focusX, focusY) {
+function pinchZoomInTouchSequence(focusX, focusY) {
   // prettier-ignore
   var zoom_in = [
       [ { x: focusX - 25, y: focusY - 50 }, { x: focusX + 25, y: focusY + 50 } ],
@@ -922,7 +904,7 @@ function* pinchZoomInTouchSequence(focusX, focusY) {
   ];
 
   var touchIds = [0, 1];
-  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+  return synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 }
 
 // Returns a promise that is resolved when the observer service dispatches a
@@ -960,13 +942,7 @@ async function pinchZoomInWithTouch(focusX, focusY) {
   let transformEndPromise = promiseTopic("APZ:TransformEnd");
 
   // Dispatch all the touch events
-  let generator = pinchZoomInTouchSequence(focusX, focusY);
-  while (true) {
-    let yieldResult = generator.next();
-    if (yieldResult.done) {
-      break;
-    }
-  }
+  pinchZoomInTouchSequence(focusX, focusY);
 
   // Wait for TransformEnd to fire.
   await transformEndPromise;
@@ -985,18 +961,7 @@ async function synthesizeNativeTouchAndWaitForTransformEnd(
   let transformEndPromise = promiseTopic("APZ:TransformEnd");
 
   // Dispatch all the touch events
-  let generator = synthesizeNativeTouchSequences(
-    document.body,
-    touchSequence,
-    null,
-    touchIds
-  );
-  while (true) {
-    let yieldResult = generator.next();
-    if (yieldResult.done) {
-      break;
-    }
-  }
+  synthesizeNativeTouchSequences(document.body, touchSequence, null, touchIds);
 
   // Wait for TransformEnd to fire.
   await transformEndPromise;
