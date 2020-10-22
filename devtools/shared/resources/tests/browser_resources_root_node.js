@@ -21,11 +21,9 @@ add_task(async function() {
   // Open a test tab
   const tab = await addTab("data:text/html,Root Node tests");
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
 
   const browser = gBrowser.selectedBrowser;
 
@@ -77,11 +75,9 @@ add_task(async function() {
 add_task(async function testRootNodeFrontIsCorrect() {
   const tab = await addTab("data:text/html,<div id=div1>");
 
-  const {
-    client,
-    resourceWatcher,
-    targetList,
-  } = await initResourceWatcherAndTarget(tab);
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
   const browser = gBrowser.selectedBrowser;
 
   info("Call watchResources([ROOT_NODE], ...)");
