@@ -11,12 +11,8 @@ from datetime import datetime, timedelta
 import six
 
 
-TASK_DURATION_URL = (
-    "https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json"
-)
-GRAPH_QUANTILES_URL = (
-    "https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv"
-)
+TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
+GRAPH_QUANTILES_URL = 'https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv'
 from .estimates import TASK_DURATION_CACHE, GRAPH_QUANTILE_CACHE, TASK_DURATION_TAG_FILE
 
 
@@ -27,9 +23,7 @@ def check_downloaded_history(tag_file, duration_cache, quantile_cache):
     try:
         with open(tag_file) as f:
             duration_tags = json.load(f)
-        download_date = datetime.strptime(
-            duration_tags.get("download_date"), "%Y-%M-%d"
-        )
+        download_date = datetime.strptime(duration_tags.get('download_date'), '%Y-%M-%d')
         if download_date < datetime.now() - timedelta(days=7):
             return False
     except (IOError, ValueError):
@@ -54,9 +48,7 @@ def download_task_history_data(cache_dir):
     task_duration_tag_file = os.path.join(cache_dir, TASK_DURATION_TAG_FILE)
     graph_quantile_cache = os.path.join(cache_dir, GRAPH_QUANTILE_CACHE)
 
-    if check_downloaded_history(
-        task_duration_tag_file, task_duration_cache, graph_quantile_cache
-    ):
+    if check_downloaded_history(task_duration_tag_file, task_duration_cache, graph_quantile_cache):
         return
 
     try:
@@ -70,11 +62,7 @@ def download_task_history_data(cache_dir):
         r = requests.get(TASK_DURATION_URL, stream=True)
     except requests.exceptions.RequestException as exc:
         # This is fine, the durations just won't be in the preview window.
-        print(
-            "Error fetching task duration cache from {}: {}".format(
-                TASK_DURATION_URL, exc
-            )
-        )
+        print("Error fetching task duration cache from {}: {}".format(TASK_DURATION_URL, exc))
         return
 
     # The data retrieved from google storage is a newline-separated
@@ -84,27 +72,25 @@ def download_task_history_data(cache_dir):
         duration_data.append(json.loads(line))
 
     # Reformat duration data to avoid list of dicts, as this is slow in the preview window
-    duration_data = {d["name"]: d["mean_duration_seconds"] for d in duration_data}
+    duration_data = {d['name']: d['mean_duration_seconds'] for d in duration_data}
 
-    with open(task_duration_cache, "w") as f:
+    with open(task_duration_cache, 'w') as f:
         json.dump(duration_data, f, indent=4)
 
     try:
         r = requests.get(GRAPH_QUANTILES_URL, stream=True)
     except requests.exceptions.RequestException as exc:
         # This is fine, the percentile just won't be in the preview window.
-        print(
-            "Error fetching task group percentiles from {}: {}".format(
-                GRAPH_QUANTILES_URL, exc
-            )
-        )
+        print("Error fetching task group percentiles from {}: {}".format(GRAPH_QUANTILES_URL, exc))
         return
 
-    with open(graph_quantile_cache, "w") as f:
+    with open(graph_quantile_cache, 'w') as f:
         f.write(six.ensure_text(r.content))
 
-    with open(task_duration_tag_file, "w") as f:
-        json.dump({"download_date": datetime.now().strftime("%Y-%m-%d")}, f, indent=4)
+    with open(task_duration_tag_file, 'w') as f:
+        json.dump({
+            'download_date': datetime.now().strftime('%Y-%m-%d')
+            }, f, indent=4)
 
 
 def make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=None):
@@ -123,9 +109,9 @@ def make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=None):
     with open(graph_cache) as f:
         graph = json.load(f)
     graph = {
-        name: list(defn["dependencies"].values())
+        name: list(defn['dependencies'].values())
         for name, defn in graph.items()
         if name in target_task_set
     }
-    with open(dep_cache, "w") as f:
+    with open(dep_cache, 'w') as f:
         json.dump(graph, f, indent=4)

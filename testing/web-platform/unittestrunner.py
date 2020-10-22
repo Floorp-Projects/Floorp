@@ -81,23 +81,12 @@ class ReplaceRequirements(object):
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--no-tools",
-        dest="tools",
-        action="store_false",
-        default=True,
-        help="Don't run the tools unittests",
-    )
-    parser.add_argument(
-        "--no-wptrunner",
-        dest="wptrunner",
-        action="store_false",
-        default=True,
-        help="Don't run the wptrunner unittests",
-    )
-    parser.add_argument(
-        "tox_kwargs", nargs=argparse.REMAINDER, help="Arguments to pass through to tox"
-    )
+    parser.add_argument("--no-tools", dest="tools", action="store_false",
+                        default=True, help="Don't run the tools unittests")
+    parser.add_argument("--no-wptrunner", dest="wptrunner", action="store_false",
+                        default=True, help="Don't run the wptrunner unittests")
+    parser.add_argument("tox_kwargs", nargs=argparse.REMAINDER,
+                        help="Arguments to pass through to tox")
     return parser
 
 
@@ -106,15 +95,18 @@ def run(top_src_dir, tools=True, wptrunner=True, tox_kwargs=None, **kwargs):
     if tox_kwargs is None:
         tox_kwargs = []
     if tools:
-        tox_paths.append(
-            os.path.join(top_src_dir, "testing", "web-platform", "tests", "tools")
-        )
+        tox_paths.append(os.path.join(top_src_dir,
+                                      "testing",
+                                      "web-platform",
+                                      "tests",
+                                      "tools"))
     if wptrunner:
-        tox_paths.append(
-            os.path.join(
-                top_src_dir, "testing", "web-platform", "tests", "tools", "wptrunner"
-            )
-        )
+        tox_paths.append(os.path.join(top_src_dir,
+                                      "testing",
+                                      "web-platform",
+                                      "tests",
+                                      "tools",
+                                      "wptrunner"))
 
     success = True
 

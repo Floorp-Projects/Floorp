@@ -8,13 +8,14 @@ from marionette_harness import MarionetteTestCase, expectedFailure, skip
 
 
 class TestReport(MarionetteTestCase):
+
     def test_pass(self):
         assert True
 
     def test_fail(self):
         assert False
 
-    @skip("Skip Message")
+    @skip('Skip Message')
     def test_skip(self):
         assert False
 

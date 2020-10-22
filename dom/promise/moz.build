@@ -8,34 +8,34 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom += [
-    "Promise-inl.h",
-    "Promise.h",
-    "PromiseDebugging.h",
-    "PromiseNativeHandler.h",
-    "PromiseWorkerProxy.h",
+    'Promise-inl.h',
+    'Promise.h',
+    'PromiseDebugging.h',
+    'PromiseNativeHandler.h',
+    'PromiseWorkerProxy.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Promise.cpp",
-    "PromiseDebugging.cpp",
-    "PromiseNativeHandler.cpp",
+    'Promise.cpp',
+    'PromiseDebugging.cpp',
+    'PromiseNativeHandler.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "../base",
-    "../ipc",
-    "/js/xpconnect/src",
+    '../base',
+    '../ipc',
+    '/js/xpconnect/src',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

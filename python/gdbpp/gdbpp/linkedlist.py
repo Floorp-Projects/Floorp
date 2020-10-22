@@ -16,7 +16,7 @@ from gdbpp import GeckoPrettyPrinter
 # - For our pretty printer, we only want to pretty-print the LinkedList object
 #   itself.  We do not want to start printing every item in the list whenever
 #   we run into a LinkedListElement<T>.
-@GeckoPrettyPrinter("mozilla::LinkedList", "^mozilla::LinkedList<.*>$")
+@GeckoPrettyPrinter('mozilla::LinkedList', '^mozilla::LinkedList<.*>$')
 class linkedlist_printer(object):
     def __init__(self, value):
         self.value = value
@@ -32,19 +32,19 @@ class linkedlist_printer(object):
         # Walk mNext until we loop back around to the sentinel.  The sentinel
         # item always exists and in the zero-length base-case mNext == sentinel,
         # so extract that immediately and update it throughout the loop.
-        sentinel = self.value["sentinel"]
+        sentinel = self.value['sentinel']
         pSentinel = sentinel.address
-        pNext = sentinel["mNext"]
+        pNext = sentinel['mNext']
         i = 0
         while pSentinel != pNext:
             list_elem = pNext.dereference()
             list_value = pNext.cast(self.t_ptr_type)
-            yield ("%d" % i, list_value)
-            pNext = list_elem["mNext"]
+            yield ('%d' % i, list_value)
+            pNext = list_elem['mNext']
             i += 1
 
     def to_string(self):
         return str(self.value.type)
 
     def display_hint(self):
-        return "array"
+        return 'array'

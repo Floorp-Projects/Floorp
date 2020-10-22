@@ -17,27 +17,25 @@ transforms = TransformSequence()
 @transforms.add
 def add_task_info(config, jobs):
     for job in jobs:
-        dep_task = job["primary-dependency"]
-        del job["primary-dependency"]
+        dep_task = job['primary-dependency']
+        del job['primary-dependency']
 
         # Add a dependency on the build task.
-        job["dependencies"] = {"build": dep_task.label}
+        job['dependencies'] = {'build': dep_task.label}
         # Label the job to match the build task it's uploading from.
-        job["label"] = dep_task.label.replace("build-", "upload-generated-sources-")
+        job['label'] = dep_task.label.replace("build-", "upload-generated-sources-")
         # Copy over some bits of metdata from the build task.
-        dep_th = dep_task.task["extra"]["treeherder"]
-        job.setdefault("attributes", {})
-        job["attributes"]["build_platform"] = dep_task.attributes.get("build_platform")
-        if dep_task.attributes.get("shippable"):
-            job["attributes"]["shippable"] = True
-        plat = "{}/{}".format(
-            dep_th["machine"]["platform"], dep_task.attributes.get("build_type")
-        )
-        job["treeherder"]["platform"] = plat
-        job["treeherder"]["tier"] = dep_th["tier"]
-        if dep_th["symbol"] != "N":
-            job["treeherder"]["symbol"] = "Ugs{}".format(dep_th["symbol"])
-        job["run-on-projects"] = dep_task.attributes.get("run_on_projects")
-        job["optimization"] = dep_task.optimization
+        dep_th = dep_task.task['extra']['treeherder']
+        job.setdefault('attributes', {})
+        job['attributes']['build_platform'] = dep_task.attributes.get('build_platform')
+        if dep_task.attributes.get('shippable'):
+            job['attributes']['shippable'] = True
+        plat = '{}/{}'.format(dep_th['machine']['platform'], dep_task.attributes.get('build_type'))
+        job['treeherder']['platform'] = plat
+        job['treeherder']['tier'] = dep_th['tier']
+        if dep_th['symbol'] != "N":
+            job['treeherder']['symbol'] = "Ugs{}".format(dep_th['symbol'])
+        job['run-on-projects'] = dep_task.attributes.get('run_on_projects')
+        job['optimization'] = dep_task.optimization
 
         yield job

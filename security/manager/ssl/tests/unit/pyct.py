@@ -54,24 +54,17 @@ class SCT(object):
         # issuer_key_hash (32 bytes of SHA-256 hash of the issuing
         #                  public key, as DER-encoded SPKI)
         # tbs_certificate (3-byte-length-prefixed data)
-        timestamp = pack("!Q", self.timestamp)
+        timestamp = pack('!Q', self.timestamp)
         hasher = hashlib.sha256()
         hasher.update(encoder.encode(self.issuerKey.asSubjectPublicKeyInfo()))
         issuer_key_hash = hasher.digest()
-        len_prefix = pack("!L", len(self.tbsCertificate))[1:]
-        data = (
-            b"\0\0"
-            + timestamp
-            + b"\0\1"
-            + issuer_key_hash
-            + len_prefix
-            + self.tbsCertificate
-            + b"\0\0"
-        )
+        len_prefix = pack('!L', len(self.tbsCertificate))[1:]
+        data = b'\0\0' + timestamp + b'\0\1' + issuer_key_hash + len_prefix + \
+               self.tbsCertificate + b'\0\0'
         if isinstance(self.key, pykey.ECCKey):
-            signatureByte = b"\3"
+            signatureByte = b'\3'
         elif isinstance(self.key, pykey.RSAKey):
-            signatureByte = b"\1"
+            signatureByte = b'\1'
         else:
             raise InvalidKeyError(self.key)
         # sign returns a hex string like "'<hex bytes>'H", but we want
@@ -91,13 +84,6 @@ class SCT(object):
         hasher = hashlib.sha256()
         hasher.update(encoder.encode(self.key.asSubjectPublicKeyInfo()))
         key_id = hasher.digest()
-        signature_len_prefix = pack("!H", len(signature))
-        return (
-            b"\0"
-            + key_id
-            + timestamp
-            + b"\0\0\4"
-            + signatureByte
-            + signature_len_prefix
-            + signature
-        )
+        signature_len_prefix = pack('!H', len(signature))
+        return b'\0' + key_id + timestamp + b'\0\0\4' + signatureByte + \
+               signature_len_prefix + signature

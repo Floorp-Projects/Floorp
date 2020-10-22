@@ -33,29 +33,28 @@ def loader(kind, path, config, params, loaded_tasks):
     Other kind implementations can use a different loader function to
     produce inputs and hand them to `transform_inputs`.
     """
-
     def jobs():
-        defaults = config.get("job-defaults")
-        for name, job in six.iteritems(config.get("jobs", {})):
+        defaults = config.get('job-defaults')
+        for name, job in six.iteritems(config.get('jobs', {})):
             if defaults:
                 job = merge(defaults, job)
-            job["job-from"] = "kind.yml"
+            job['job-from'] = 'kind.yml'
             yield name, job
 
-        for filename in config.get("jobs-from", []):
+        for filename in config.get('jobs-from', []):
             tasks = load_yaml(path, filename)
 
-            file_defaults = tasks.pop("job-defaults", None)
+            file_defaults = tasks.pop('job-defaults', None)
             if defaults:
                 file_defaults = merge(defaults, file_defaults or {})
 
             for name, job in six.iteritems(tasks):
                 if file_defaults:
                     job = merge(file_defaults, job)
-                job["job-from"] = filename
+                job['job-from'] = filename
                 yield name, job
 
     for name, job in jobs():
-        job["name"] = name
+        job['name'] = name
         logger.debug("Generating tasks for {} {}".format(kind, name))
         yield job

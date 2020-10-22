@@ -15,6 +15,7 @@ no_default = object()
 
 
 class log_action(object):
+
     def __init__(self, *args):
         self.args = {}
 
@@ -30,8 +31,7 @@ class log_action(object):
             Unicode("thread"),
             Int("pid", default=None),
             Unicode("source"),
-            Unicode("component"),
-        ]
+            Unicode("component")]
 
         for arg in args:
             if arg.default is no_default:
@@ -58,8 +58,8 @@ class log_action(object):
             data = converter.convert(*args, **kwargs)
             return f(self, data)
 
-        if hasattr(f, "__doc__"):
-            setattr(inner, "__doc__", f.__doc__)
+        if hasattr(f, '__doc__'):
+            setattr(inner, '__doc__', f.__doc__)
 
         return inner
 
@@ -68,9 +68,7 @@ class log_action(object):
         values = {}
         values.update(kwargs)
 
-        positional_no_default = [
-            item for item in self.args_no_default if item not in values
-        ]
+        positional_no_default = [item for item in self.args_no_default if item not in values]
 
         num_no_default = len(positional_no_default)
 
@@ -83,9 +81,8 @@ class log_action(object):
         for i, name in enumerate(positional_no_default):
             values[name] = args[i]
 
-        positional_with_default = [
-            self.args_with_default[i] for i in range(len(args) - num_no_default)
-        ]
+        positional_with_default = [self.args_with_default[i]
+                                   for i in range(len(args) - num_no_default)]
 
         for i, name in enumerate(positional_with_default):
             if name in values:
@@ -101,7 +98,8 @@ class log_action(object):
             if key in self.args:
                 out_value = self.args[key](value)
                 if out_value is not missing:
-                    if key in self.optional_args and value == self.args[key].default:
+                    if (key in self.optional_args and
+                            value == self.args[key].default):
                         pass
                     else:
                         data[key] = out_value
@@ -111,13 +109,13 @@ class log_action(object):
         return data
 
     def convert_known(self, **kwargs):
-        known_kwargs = {
-            name: value for name, value in six.iteritems(kwargs) if name in self.args
-        }
+        known_kwargs = {name: value for name, value in six.iteritems(kwargs)
+                        if name in self.args}
         return self.convert(**known_kwargs)
 
 
 class DataType(object):
+
     def __init__(self, name, default=no_default, optional=False):
         self.name = name
         self.default = default
@@ -136,10 +134,8 @@ class DataType(object):
         try:
             return self.convert(value)
         except Exception:
-            raise ValueError(
-                "Failed to convert value %s of type %s for field %s to type %s"
-                % (value, type(value).__name__, self.name, self.__class__.__name__)
-            )
+            raise ValueError("Failed to convert value %s of type %s for field %s to type %s" %
+                             (value, type(value).__name__, self.name, self.__class__.__name__))
 
 
 class ContainerType(DataType):
@@ -168,6 +164,7 @@ class ContainerType(DataType):
 
 
 class Unicode(DataType):
+
     def convert(self, data):
         if isinstance(data, six.text_type):
             return data
@@ -177,6 +174,7 @@ class Unicode(DataType):
 
 
 class TestId(DataType):
+
     def convert(self, data):
         if isinstance(data, six.text_type):
             return data
@@ -192,17 +190,8 @@ class TestId(DataType):
 
 
 class Status(DataType):
-    allowed = [
-        "PASS",
-        "FAIL",
-        "OK",
-        "ERROR",
-        "TIMEOUT",
-        "CRASH",
-        "ASSERT",
-        "PRECONDITION_FAILED",
-        "SKIP",
-    ]
+    allowed = ["PASS", "FAIL", "OK", "ERROR", "TIMEOUT", "CRASH", "ASSERT", "PRECONDITION_FAILED",
+               "SKIP"]
 
     def convert(self, data):
         value = data.upper()
@@ -212,39 +201,29 @@ class Status(DataType):
 
 
 class SubStatus(Status):
-    allowed = [
-        "PASS",
-        "FAIL",
-        "ERROR",
-        "TIMEOUT",
-        "ASSERT",
-        "PRECONDITION_FAILED",
-        "NOTRUN",
-        "SKIP",
-    ]
+    allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "ASSERT", "PRECONDITION_FAILED", "NOTRUN",
+               "SKIP"]
 
 
 class Dict(ContainerType):
+
     def _format_item_type(self, item_type):
         superfmt = super(Dict, self)._format_item_type
 
         if isinstance(item_type, dict):
             if len(item_type) != 1:
-                raise ValueError(
-                    "Dict item type specifier must contain a single entry."
-                )
+                raise ValueError("Dict item type specifier must contain a single entry.")
             key_type, value_type = list(item_type.items())[0]
             return superfmt(key_type), superfmt(value_type)
         return Any(None), superfmt(item_type)
 
     def convert(self, data):
         key_type, value_type = self.item_type
-        return {
-            key_type.convert(k): value_type.convert(v) for k, v in dict(data).items()
-        }
+        return {key_type.convert(k): value_type.convert(v) for k, v in dict(data).items()}
 
 
 class List(ContainerType):
+
     def convert(self, data):
         # while dicts and strings _can_ be cast to lists,
         # doing so is likely not intentional behaviour
@@ -260,26 +239,30 @@ class TestList(DataType):
 
     def convert(self, data):
         if isinstance(data, (list, tuple)):
-            data = {"default": data}
+            data = {'default': data}
         return Dict({Unicode: List(Unicode)}).convert(data)
 
 
 class Int(DataType):
+
     def convert(self, data):
         return int(data)
 
 
 class Any(DataType):
+
     def convert(self, data):
         return data
 
 
 class Boolean(DataType):
+
     def convert(self, data):
         return bool(data)
 
 
 class Tuple(ContainerType):
+
     def _format_item_type(self, item_type):
         superfmt = super(Tuple, self)._format_item_type
 
@@ -289,12 +272,9 @@ class Tuple(ContainerType):
 
     def convert(self, data):
         if len(data) != len(self.item_type):
-            raise ValueError(
-                "Expected %i items got %i" % (len(self.item_type), len(data))
-            )
-        return tuple(
-            item_type.convert(value) for item_type, value in zip(self.item_type, data)
-        )
+            raise ValueError("Expected %i items got %i" % (len(self.item_type), len(data)))
+        return tuple(item_type.convert(value)
+                     for item_type, value in zip(self.item_type, data))
 
 
 class Nullable(ContainerType):

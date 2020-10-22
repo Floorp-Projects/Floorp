@@ -4,93 +4,93 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "SVG")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'SVG')
 
-if CONFIG["ENABLE_TESTS"]:
+if CONFIG['ENABLE_TESTS']:
     MOCHITEST_MANIFESTS += [
-        "tests/mochitest.ini",
-    ]
+        'tests/mochitest.ini',
+]
     MOCHITEST_CHROME_MANIFESTS += [
-        "tests/chrome.ini",
-    ]
+        'tests/chrome.ini',
+]
 
 EXPORTS.mozilla += [
-    "CSSClipPathInstance.h",
-    "FilterInstance.h",
-    "ISVGDisplayableFrame.h",
-    "ISVGSVGFrame.h",
-    "SVGClipPathFrame.h",
-    "SVGContainerFrame.h",
-    "SVGContextPaint.h",
-    "SVGFilterInstance.h",
-    "SVGForeignObjectFrame.h",
-    "SVGGeometryFrame.h",
-    "SVGGradientFrame.h",
-    "SVGImageContext.h",
-    "SVGImageFrame.h",
-    "SVGIntegrationUtils.h",
-    "SVGMaskFrame.h",
-    "SVGObserverUtils.h",
-    "SVGOuterSVGFrame.h",
-    "SVGPaintServerFrame.h",
-    "SVGTextFrame.h",
-    "SVGUseFrame.h",
-    "SVGUtils.h",
+    'CSSClipPathInstance.h',
+    'FilterInstance.h',
+    'ISVGDisplayableFrame.h',
+    'ISVGSVGFrame.h',
+    'SVGClipPathFrame.h',
+    'SVGContainerFrame.h',
+    'SVGContextPaint.h',
+    'SVGFilterInstance.h',
+    'SVGForeignObjectFrame.h',
+    'SVGGeometryFrame.h',
+    'SVGGradientFrame.h',
+    'SVGImageContext.h',
+    'SVGImageFrame.h',
+    'SVGIntegrationUtils.h',
+    'SVGMaskFrame.h',
+    'SVGObserverUtils.h',
+    'SVGOuterSVGFrame.h',
+    'SVGPaintServerFrame.h',
+    'SVGTextFrame.h',
+    'SVGUseFrame.h',
+    'SVGUtils.h'
 ]
 
 UNIFIED_SOURCES += [
-    "CSSClipPathInstance.cpp",
-    "CSSFilterInstance.cpp",
-    "FilterInstance.cpp",
-    "SVGAFrame.cpp",
-    "SVGClipPathFrame.cpp",
-    "SVGContainerFrame.cpp",
-    "SVGContextPaint.cpp",
-    "SVGFEContainerFrame.cpp",
-    "SVGFEImageFrame.cpp",
-    "SVGFELeafFrame.cpp",
-    "SVGFEUnstyledLeafFrame.cpp",
-    "SVGFilterFrame.cpp",
-    "SVGFilterInstance.cpp",
-    "SVGForeignObjectFrame.cpp",
-    "SVGGeometryFrame.cpp",
-    "SVGGFrame.cpp",
-    "SVGGradientFrame.cpp",
-    "SVGImageContext.cpp",
-    "SVGImageFrame.cpp",
-    "SVGInnerSVGFrame.cpp",
-    "SVGIntegrationUtils.cpp",
-    "SVGMarkerFrame.cpp",
-    "SVGMaskFrame.cpp",
-    "SVGObserverUtils.cpp",
-    "SVGOuterSVGFrame.cpp",
-    "SVGPaintServerFrame.cpp",
-    "SVGPatternFrame.cpp",
-    "SVGStopFrame.cpp",
-    "SVGSwitchFrame.cpp",
-    "SVGSymbolFrame.cpp",
-    "SVGTextFrame.cpp",
-    "SVGUseFrame.cpp",
-    "SVGUtils.cpp",
-    "SVGViewFrame.cpp",
-    "SVGViewportFrame.cpp",
+    'CSSClipPathInstance.cpp',
+    'CSSFilterInstance.cpp',
+    'FilterInstance.cpp',
+    'SVGAFrame.cpp',
+    'SVGClipPathFrame.cpp',
+    'SVGContainerFrame.cpp',
+    'SVGContextPaint.cpp',
+    'SVGFEContainerFrame.cpp',
+    'SVGFEImageFrame.cpp',
+    'SVGFELeafFrame.cpp',
+    'SVGFEUnstyledLeafFrame.cpp',
+    'SVGFilterFrame.cpp',
+    'SVGFilterInstance.cpp',
+    'SVGForeignObjectFrame.cpp',
+    'SVGGeometryFrame.cpp',
+    'SVGGFrame.cpp',
+    'SVGGradientFrame.cpp',
+    'SVGImageContext.cpp',
+    'SVGImageFrame.cpp',
+    'SVGInnerSVGFrame.cpp',
+    'SVGIntegrationUtils.cpp',
+    'SVGMarkerFrame.cpp',
+    'SVGMaskFrame.cpp',
+    'SVGObserverUtils.cpp',
+    'SVGOuterSVGFrame.cpp',
+    'SVGPaintServerFrame.cpp',
+    'SVGPatternFrame.cpp',
+    'SVGStopFrame.cpp',
+    'SVGSwitchFrame.cpp',
+    'SVGSymbolFrame.cpp',
+    'SVGTextFrame.cpp',
+    'SVGUseFrame.cpp',
+    'SVGUtils.cpp',
+    'SVGViewFrame.cpp',
+    'SVGViewportFrame.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "../../widget",
-    "../base",
-    "../generic",
-    "../painting",
-    "../style",
-    "../xul",
-    "/dom/base",
-    "/dom/svg",
+    '../../widget',
+    '../base',
+    '../generic',
+    '../painting',
+    '../style',
+    '../xul',
+    '/dom/base',
+    '/dom/svg',
 ]
 
 RESOURCE_FILES += [
-    "svg.css",
+    'svg.css',
 ]

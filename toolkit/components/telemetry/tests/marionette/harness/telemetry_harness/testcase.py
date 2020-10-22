@@ -48,15 +48,13 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
     def disable_telemetry(self):
         """Disable the Firefox Data Collection and Use in the current browser."""
         self.marionette.instance.profile.set_persistent_preferences(
-            {"datareporting.healthreport.uploadEnabled": False}
-        )
+            {"datareporting.healthreport.uploadEnabled": False})
         self.marionette.set_pref("datareporting.healthreport.uploadEnabled", False)
 
     def enable_telemetry(self):
         """Enable the Firefox Data Collection and Use in the current browser."""
         self.marionette.instance.profile.set_persistent_preferences(
-            {"datareporting.healthreport.uploadEnabled": True}
-        )
+            {"datareporting.healthreport.uploadEnabled": True})
         self.marionette.set_pref("datareporting.healthreport.uploadEnabled", True)
 
     @contextlib.contextmanager
@@ -100,7 +98,9 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         self.assertNotEqual(value, "")
 
         # Check for client ID that is used when Telemetry upload is disabled
-        self.assertNotEqual(value, CANARY_CLIENT_ID, msg="UUID is CANARY CLIENT ID")
+        self.assertNotEqual(
+            value, CANARY_CLIENT_ID, msg="UUID is CANARY CLIENT ID"
+        )
 
         self.assertIsNotNone(
             re.match(UUID_PATTERN, value),
@@ -150,9 +150,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Call wait_for_pings() with the given action_func and ping_filter and
         return the first result.
         """
-        [ping] = self.wait_for_pings(
-            action_func, ping_filter, 1, ping_server=ping_server
-        )
+        [ping] = self.wait_for_pings(action_func, ping_filter, 1, ping_server=ping_server)
         return ping
 
     def restart_browser(self):
@@ -188,7 +186,9 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             addons = Addons(self.marionette)
             addon_id = addons.install(addon_path, temp=True)
         except MarionetteException as e:
-            self.fail("{} - Error installing addon: {} - ".format(e.cause, e.message))
+            self.fail(
+                "{} - Error installing addon: {} - ".format(e.cause, e.message)
+            )
         else:
             self.addon_ids.append(addon_id)
 

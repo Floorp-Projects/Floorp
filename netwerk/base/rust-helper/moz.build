@@ -4,9 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    CbindgenHeader("rust_helper.h", inputs=["/netwerk/base/rust-helper"])
+if CONFIG['COMPILE_ENVIRONMENT']:
+    CbindgenHeader('rust_helper.h', inputs=['/netwerk/base/rust-helper'])
 
     EXPORTS.mozilla.net += [
-        "!rust_helper.h",
+        '!rust_helper.h',
     ]

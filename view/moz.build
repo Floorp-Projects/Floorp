@@ -4,21 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Web Painting")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Web Painting')
 
 EXPORTS += [
-    "nsView.h",
-    "nsViewManager.h",
+    'nsView.h',
+    'nsViewManager.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsView.cpp",
-    "nsViewManager.cpp",
+    'nsView.cpp',
+    'nsViewManager.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']

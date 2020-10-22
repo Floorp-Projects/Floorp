@@ -30,18 +30,14 @@ from mozlog.formatters import (
 from mozlog.handlers import StreamHandler
 
 formatters = {
-    "mach": MachFormatter,
-    "errorsummary": ErrorSummaryFormatter,
+    'mach': MachFormatter,
+    'errorsummary': ErrorSummaryFormatter,
 }
 
 FORMATS = {
     # A list of tuples consisting of (name, options, expected string).
-    "PASS": [
-        (
-            "mach",
-            {},
-            dedent(
-                """
+    'PASS': [
+        ('mach', {}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: OK
@@ -57,14 +53,8 @@ FORMATS = {
             Expected results: 4
             Unexpected results: 0
             OK
-            """
-            ).lstrip("\n"),
-        ),
-        (
-            "mach",
-            {"verbose": True},
-            dedent(
-                """
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: OK
@@ -81,16 +71,11 @@ FORMATS = {
             Expected results: 4
             Unexpected results: 0
             OK
-            """
-            ).lstrip("\n"),
-        ),
+            """).lstrip('\n')),
     ],
-    "FAIL": [
-        (
-            "mach",
-            {},
-            dedent(
-                """
+
+    'FAIL': [
+        ('mach', {}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
@@ -123,14 +108,8 @@ FORMATS = {
               TIMEOUT another subtest
             test_baz
               UNEXPECTED-PASS test_baz
-            """
-            ).lstrip("\n"),
-        ),
-        (
-            "mach",
-            {"verbose": True},
-            dedent(
-                """
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
@@ -163,16 +142,11 @@ FORMATS = {
               TIMEOUT another subtest
             test_baz
               UNEXPECTED-PASS test_baz
-            """
-            ).lstrip("\n"),
-        ),
+            """).lstrip('\n')),
     ],
-    "PRECONDITION_FAILED": [
-        (
-            "mach",
-            {},
-            dedent(
-                """
+
+    'PRECONDITION_FAILED': [
+        ('mach', {}, dedent("""
              0:00.00 SUITE_START: running 2 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
@@ -195,14 +169,8 @@ FORMATS = {
               PRECONDITION_FAILED test_foo
             test_bar
               PRECONDITION_FAILED another subtest
-            """
-            ).lstrip("\n"),
-        ),
-        (
-            "mach",
-            {"verbose": True},
-            dedent(
-                """
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
              0:00.00 SUITE_START: running 2 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
@@ -226,16 +194,11 @@ FORMATS = {
               PRECONDITION_FAILED test_foo
             test_bar
               PRECONDITION_FAILED another subtest
-            """
-            ).lstrip("\n"),
-        ),
+            """).lstrip('\n')),
     ],
-    "KNOWN-INTERMITTENT": [
-        (
-            "mach",
-            {},
-            dedent(
-                """
+
+    'KNOWN-INTERMITTENT': [
+        ('mach', {}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: FAIL
@@ -260,14 +223,8 @@ FORMATS = {
             test_bar
               KNOWN-INTERMITTENT-PASS a subtest
             OK
-            """
-            ).lstrip("\n"),
-        ),
-        (
-            "mach",
-            {"verbose": True},
-            dedent(
-                """
+            """).lstrip('\n')),
+        ('mach', {'verbose': True}, dedent("""
              0:00.00 SUITE_START: running 3 tests
              0:00.00 TEST_START: test_foo
              0:00.00 TEST_END: FAIL
@@ -293,24 +250,17 @@ FORMATS = {
             test_bar
               KNOWN-INTERMITTENT-PASS a subtest
             OK
-            """
-            ).lstrip("\n"),
-        ),
+            """).lstrip('\n')),
     ],
-    "ERRORSUMMARY": [
-        (
-            "errorsummary",
-            {},
-            dedent(
-                """
+
+    'ERRORSUMMARY': [
+        ('errorsummary', {}, dedent("""
             {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
             {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
             {"group": "manifestA", "status": "ERROR", "duration": 70, "action": "group_result", "line": 9}
             {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
-            """
-            ).lstrip("\n"),
-        ),
-    ],
+            """).lstrip('\n')),
+    ]
 }
 
 
@@ -326,10 +276,11 @@ def ids(test):
 
 @pytest.fixture(autouse=True)
 def timestamp(monkeypatch):
+
     def fake_time(*args, **kwargs):
         return 0
 
-    monkeypatch.setattr(MachFormatter, "_time", fake_time)
+    monkeypatch.setattr(MachFormatter, '_time', fake_time)
 
 
 @pytest.fixture
@@ -340,25 +291,26 @@ def get_logger():
     def inner(name, **fmt_args):
         buf = StringIO()
         fmt = formatters[name](**fmt_args)
-        logger = StructuredLogger("test_logger")
+        logger = StructuredLogger('test_logger')
         logger.add_handler(StreamHandler(buf, fmt))
         return logger
 
     return inner
 
 
-@pytest.mark.parametrize("name,opts,expected", FORMATS["PASS"], ids=ids("PASS"))
+@pytest.mark.parametrize("name,opts,expected", FORMATS['PASS'],
+                         ids=ids('PASS'))
 def test_pass(get_logger, name, opts, expected):
     logger = get_logger(name, **opts)
 
-    logger.suite_start(["test_foo", "test_bar", "test_baz"])
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "OK")
-    logger.test_start("test_bar")
-    logger.test_status("test_bar", "a subtest", "PASS")
-    logger.test_end("test_bar", "OK")
-    logger.test_start("test_baz")
-    logger.test_end("test_baz", "FAIL", "FAIL", "expected 0 got 1")
+    logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'OK')
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'PASS')
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'FAIL', 'FAIL', 'expected 0 got 1')
     logger.suite_end()
 
     buf = logger.handlers[0].stream
@@ -368,28 +320,25 @@ def test_pass(get_logger, name, opts, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize("name,opts,expected", FORMATS["FAIL"], ids=ids("FAIL"))
+@pytest.mark.parametrize("name,opts,expected", FORMATS['FAIL'],
+                         ids=ids('FAIL'))
 def test_fail(get_logger, name, opts, expected):
     stack = """
     SimpleTest.is@SimpleTest/SimpleTest.js:312:5
     @caps/tests/mochitest/test_bug246699.html:53:1
-""".strip(
-        "\n"
-    )
+""".strip('\n')
 
     logger = get_logger(name, **opts)
 
-    logger.suite_start(["test_foo", "test_bar", "test_baz"])
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "FAIL", "PASS", "expected 0 got 1")
-    logger.test_start("test_bar")
-    logger.test_status(
-        "test_bar", "a subtest", "FAIL", "PASS", "expected 0 got 1", stack
-    )
-    logger.test_status("test_bar", "another subtest", "TIMEOUT")
-    logger.test_end("test_bar", "OK")
-    logger.test_start("test_baz")
-    logger.test_end("test_baz", "PASS", "FAIL")
+    logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'FAIL', 'PASS', 'expected 0 got 1')
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'FAIL', 'PASS', 'expected 0 got 1', stack)
+    logger.test_status('test_bar', 'another subtest', 'TIMEOUT')
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'PASS', 'FAIL')
     logger.suite_end()
 
     buf = logger.handlers[0].stream
@@ -399,19 +348,18 @@ def test_fail(get_logger, name, opts, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    "name,opts,expected", FORMATS["PRECONDITION_FAILED"], ids=ids("PRECONDITION_FAILED")
-)
+@pytest.mark.parametrize("name,opts,expected", FORMATS['PRECONDITION_FAILED'],
+                         ids=ids('PRECONDITION_FAILED'))
 def test_precondition_failed(get_logger, name, opts, expected):
     logger = get_logger(name, **opts)
 
-    logger.suite_start(["test_foo", "test_bar"])
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "PRECONDITION_FAILED")
-    logger.test_start("test_bar")
-    logger.test_status("test_bar", "a subtest", "PASS")
-    logger.test_status("test_bar", "another subtest", "PRECONDITION_FAILED")
-    logger.test_end("test_bar", "OK")
+    logger.suite_start(['test_foo', 'test_bar'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'PRECONDITION_FAILED')
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'PASS')
+    logger.test_status('test_bar', 'another subtest', 'PRECONDITION_FAILED')
+    logger.test_end('test_bar', 'OK')
     logger.suite_end()
 
     buf = logger.handlers[0].stream
@@ -421,24 +369,21 @@ def test_precondition_failed(get_logger, name, opts, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    "name,opts,expected", FORMATS["KNOWN-INTERMITTENT"], ids=ids("KNOWN-INTERMITTENT")
-)
+@pytest.mark.parametrize("name,opts,expected", FORMATS['KNOWN-INTERMITTENT'],
+                         ids=ids('KNOWN-INTERMITTENT'))
 def test_known_intermittent(get_logger, name, opts, expected):
     logger = get_logger(name, **opts)
 
-    logger.suite_start(["test_foo", "test_bar", "test_baz"])
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "FAIL", "PASS", known_intermittent=["FAIL"])
-    logger.test_start("test_bar")
-    logger.test_status(
-        "test_bar", "a subtest", "PASS", "FAIL", known_intermittent=["PASS"]
-    )
-    logger.test_end("test_bar", "OK")
-    logger.test_start("test_baz")
-    logger.test_end(
-        "test_baz", "FAIL", "FAIL", "expected 0 got 1", known_intermittent=["PASS"]
-    )
+    logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'FAIL', 'PASS', known_intermittent=['FAIL'])
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'PASS', 'FAIL',
+                       known_intermittent=['PASS'])
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'FAIL', 'FAIL', 'expected 0 got 1',
+                    known_intermittent=['PASS'])
     logger.suite_end()
 
     buf = logger.handlers[0].stream
@@ -448,34 +393,31 @@ def test_known_intermittent(get_logger, name, opts, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize(
-    "name,opts,expected", FORMATS["ERRORSUMMARY"], ids=ids("ERRORSUMMARY")
-)
+@pytest.mark.parametrize("name,opts,expected", FORMATS['ERRORSUMMARY'],
+                         ids=ids('ERRORSUMMARY'))
 def test_errorsummary(monkeypatch, get_logger, name, opts, expected):
 
-    ts = {"ts": 0}  # need to use dict since 'nonlocal' doesn't exist on PY2
+    ts = {'ts': 0}  # need to use dict since 'nonlocal' doesn't exist on PY2
 
     def fake_time():
-        ts["ts"] += 0.01
-        return ts["ts"]
+        ts['ts'] += 0.01
+        return ts['ts']
 
-    monkeypatch.setattr(time, "time", fake_time)
+    monkeypatch.setattr(time, 'time', fake_time)
     logger = get_logger(name, **opts)
 
-    logger.suite_start(
-        {
-            "manifestA": ["test_foo", "test_bar", "test_baz"],
-            "manifestB": ["test_something"],
-        }
-    )
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "SKIP")
-    logger.test_start("test_bar")
-    logger.test_end("test_bar", "OK")
-    logger.test_start("test_something")
-    logger.test_end("test_something", "OK")
-    logger.test_start("test_baz")
-    logger.test_end("test_baz", "PASS", "FAIL")
+    logger.suite_start({
+        'manifestA': ['test_foo', 'test_bar', 'test_baz'],
+        'manifestB': ['test_something'],
+    })
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'SKIP')
+    logger.test_start('test_bar')
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_something')
+    logger.test_end('test_something', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'PASS', 'FAIL')
     logger.suite_end()
 
     buf = logger.handlers[0].stream
@@ -493,11 +435,14 @@ def test_errorsummary(monkeypatch, get_logger, name, opts, expected):
 
 
 class FormatterTest(unittest.TestCase):
+
     def setUp(self):
         self.position = 0
-        self.logger = StructuredLogger("test_%s" % type(self).__name__)
+        self.logger = StructuredLogger(
+            "test_%s" % type(self).__name__)
         self.output_file = StringIO()
-        self.handler = StreamHandler(self.output_file, self.get_formatter())
+        self.handler = StreamHandler(
+            self.output_file, self.get_formatter())
         self.logger.add_handler(self.handler)
 
     def set_position(self, pos=None):
@@ -507,8 +452,7 @@ class FormatterTest(unittest.TestCase):
 
     def get_formatter(self):
         raise NotImplementedError(
-            "FormatterTest subclasses must implement get_formatter"
-        )
+            "FormatterTest subclasses must implement get_formatter")
 
     @property
     def loglines(self):
@@ -517,98 +461,98 @@ class FormatterTest(unittest.TestCase):
 
 
 class TestHTMLFormatter(FormatterTest):
+
     def get_formatter(self):
         return HTMLFormatter()
 
     def test_base64_string(self):
         self.logger.suite_start([])
         self.logger.test_start("string_test")
-        self.logger.test_end("string_test", "FAIL", extra={"data": "foobar"})
+        self.logger.test_end("string_test", "FAIL",
+                             extra={"data": "foobar"})
         self.logger.suite_end()
-        self.assertIn("data:text/html;charset=utf-8;base64,Zm9vYmFy", self.loglines[-3])
+        self.assertIn("data:text/html;charset=utf-8;base64,Zm9vYmFy",
+                      self.loglines[-3])
 
     def test_base64_unicode(self):
         self.logger.suite_start([])
         self.logger.test_start("unicode_test")
-        self.logger.test_end("unicode_test", "FAIL", extra={"data": unichr(0x02A9)})
+        self.logger.test_end("unicode_test", "FAIL",
+                             extra={"data": unichr(0x02A9)})
         self.logger.suite_end()
-        self.assertIn("data:text/html;charset=utf-8;base64,yqk=", self.loglines[-3])
+        self.assertIn("data:text/html;charset=utf-8;base64,yqk=",
+                      self.loglines[-3])
 
     def test_base64_other(self):
         self.logger.suite_start([])
         self.logger.test_start("int_test")
-        self.logger.test_end("int_test", "FAIL", extra={"data": {"foo": "bar"}})
+        self.logger.test_end("int_test", "FAIL",
+                             extra={"data": {"foo": "bar"}})
         self.logger.suite_end()
-        self.assertIn(
-            "data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
-            self.loglines[-3],
-        )
+        self.assertIn("data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
+                      self.loglines[-3])
 
 
 class TestTBPLFormatter(FormatterTest):
+
     def get_formatter(self):
         return TbplFormatter()
 
     def test_unexpected_message(self):
         self.logger.suite_start([])
         self.logger.test_start("timeout_test")
-        self.logger.test_end("timeout_test", "TIMEOUT", message="timed out")
-        self.assertIn(
-            "TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out", self.loglines
-        )
+        self.logger.test_end("timeout_test",
+                             "TIMEOUT",
+                             message="timed out")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
+                      self.loglines)
         self.logger.suite_end()
 
     def test_default_unexpected_end_message(self):
         self.logger.suite_start([])
         self.logger.test_start("timeout_test")
-        self.logger.test_end("timeout_test", "TIMEOUT")
-        self.assertIn(
-            "TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK", self.loglines
-        )
+        self.logger.test_end("timeout_test",
+                             "TIMEOUT")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
+                      self.loglines)
         self.logger.suite_end()
 
     def test_default_unexpected_status_message(self):
         self.logger.suite_start([])
         self.logger.test_start("timeout_test")
-        self.logger.test_status("timeout_test", "subtest", status="TIMEOUT")
-        self.assertIn(
-            "TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
-            self.loglines,
-        )
+        self.logger.test_status("timeout_test",
+                                "subtest",
+                                status="TIMEOUT")
+        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
+                      self.loglines)
         self.logger.test_end("timeout_test", "OK")
         self.logger.suite_end()
 
     def test_known_intermittent_end(self):
         self.logger.suite_start([])
         self.logger.test_start("intermittent_test")
-        self.logger.test_end(
-            "intermittent_test",
-            status="FAIL",
-            expected="PASS",
-            known_intermittent=["FAIL"],
-        )
+        self.logger.test_end("intermittent_test",
+                             status="FAIL",
+                             expected="PASS",
+                             known_intermittent=["FAIL"])
         # test_end log format:
         # "TEST-KNOWN-INTERMITTENT-<STATUS> | <test> | took <duration>ms"
         # where duration may be different each time
-        self.assertIn(
-            "TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | took ", self.loglines[2]
-        )
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | took ",
+                      self.loglines[2])
         self.assertIn("ms", self.loglines[2])
         self.logger.suite_end()
 
     def test_known_intermittent_status(self):
         self.logger.suite_start([])
         self.logger.test_start("intermittent_test")
-        self.logger.test_status(
-            "intermittent_test",
-            "subtest",
-            status="FAIL",
-            expected="PASS",
-            known_intermittent=["FAIL"],
-        )
-        self.assertIn(
-            "TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | subtest", self.loglines
-        )
+        self.logger.test_status("intermittent_test",
+                                "subtest",
+                                status="FAIL",
+                                expected="PASS",
+                                known_intermittent=["FAIL"])
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | subtest",
+                      self.loglines)
         self.logger.test_end("intermittent_test", "OK")
         self.logger.suite_end()
 
@@ -616,7 +560,9 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.suite_start([])
         self.logger.test_start("test1")
         self.set_position()
-        self.logger.test_status("test1", "subtest", status="PASS", expected="FAIL")
+        self.logger.test_status("test1", "subtest",
+                                status="PASS",
+                                expected="FAIL")
         self.logger.test_end("test1", "OK")
         self.logger.suite_end()
 
@@ -626,38 +572,40 @@ class TestTBPLFormatter(FormatterTest):
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn("TEST-INFO | 1234: exit 0", self.loglines)
+        self.assertIn('TEST-INFO | 1234: exit 0', self.loglines)
 
-    @unittest.skipUnless(os.name == "posix", "posix only")
+    @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn("TEST-INFO | 1234: killed by SIGTERM", self.loglines)
+        self.assertIn('TEST-INFO | 1234: killed by SIGTERM', self.loglines)
 
 
 class TestTBPLFormatterWithShutdown(FormatterTest):
+
     def get_formatter(self):
         return TbplFormatter(summary_on_shutdown=True)
 
     def test_suite_summary_on_shutdown(self):
         self.logger.suite_start([])
         self.logger.test_start("summary_test")
-        self.logger.test_status(
-            "summary_test", "subtest", "FAIL", "PASS", known_intermittent=["FAIL"]
-        )
+        self.logger.test_status("summary_test",
+                                "subtest",
+                                "FAIL",
+                                "PASS",
+                                known_intermittent=["FAIL"])
         self.logger.test_end("summary_test", "FAIL", "OK", known_intermittent=["FAIL"])
         self.logger.suite_end()
         self.logger.shutdown()
 
         self.assertIn("suite 1: 2/2 (2 known intermittent tests)", self.loglines)
         self.assertIn("Known Intermittent tests:", self.loglines)
-        self.assertIn(
-            "TEST-KNOWN-INTERMITTENT-FAIL | summary_test | subtest", self.loglines
-        )
+        self.assertIn("TEST-KNOWN-INTERMITTENT-FAIL | summary_test | subtest", self.loglines)
 
 
 class TestMachFormatter(FormatterTest):
+
     def get_formatter(self):
         return MachFormatter(disable_colors=True)
 
@@ -679,13 +627,10 @@ class TestMachFormatter(FormatterTest):
 
         self.assertIn("Ran 3 checks (3 tests)", self.loglines)
         self.assertIn("Expected results: 1", self.loglines)
-        self.assertIn(
-            """
+        self.assertIn("""
 Unexpected results: 2
   test: 2 (1 fail, 1 pass)
-""".strip(),
-            "\n".join(self.loglines),
-        )
+""".strip(), "\n".join(self.loglines))
         self.assertNotIn("test1", self.loglines)
         self.assertIn("UNEXPECTED-PASS test2", self.loglines)
         self.assertIn("FAIL test3", self.loglines)
@@ -699,7 +644,8 @@ Unexpected results: 2
         self.logger.test_end("test1", status="OK", expected="OK")
 
         self.logger.test_start("test2")
-        self.logger.test_status("test2", "subtest1", status="TIMEOUT", expected="PASS")
+        self.logger.test_status("test2", "subtest1",
+                                status="TIMEOUT", expected="PASS")
         self.logger.test_end("test2", status="TIMEOUT", expected="OK")
 
         self.set_position()
@@ -707,14 +653,11 @@ Unexpected results: 2
 
         self.assertIn("Ran 5 checks (3 subtests, 2 tests)", self.loglines)
         self.assertIn("Expected results: 2", self.loglines)
-        self.assertIn(
-            """
+        self.assertIn("""
 Unexpected results: 3
   test: 1 (1 timeout)
   subtest: 2 (1 fail, 1 timeout)
-""".strip(),
-            "\n".join(self.loglines),
-        )
+""".strip(), "\n".join(self.loglines))
 
     def test_summary_ok(self):
         self.logger.suite_start([])
@@ -725,7 +668,8 @@ Unexpected results: 3
         self.logger.test_end("test1", status="OK", expected="OK")
 
         self.logger.test_start("test2")
-        self.logger.test_status("test2", "subtest1", status="PASS", expected="PASS")
+        self.logger.test_status("test2", "subtest1",
+                                status="PASS", expected="PASS")
         self.logger.test_end("test2", status="OK", expected="OK")
 
         self.set_position()
@@ -740,22 +684,23 @@ Unexpected results: 3
         self.assertIn("Started process `1234`", self.loglines[0])
 
     def test_process_start_with_command(self):
-        self.logger.process_start(1234, command="test cmd")
+        self.logger.process_start(1234, command='test cmd')
         self.assertIn("Started process `1234` (test cmd)", self.loglines[0])
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn("1234: exit 0", self.loglines[0])
+        self.assertIn('1234: exit 0', self.loglines[0])
 
-    @unittest.skipUnless(os.name == "posix", "posix only")
+    @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn("1234: killed by SIGTERM", self.loglines[0])
+        self.assertIn('1234: killed by SIGTERM', self.loglines[0])
 
 
 class TestGroupingFormatter(FormatterTest):
+
     def get_formatter(self):
         return GroupingFormatter()
 
@@ -768,13 +713,11 @@ class TestGroupingFormatter(FormatterTest):
         self.logger.test_end("test1", status="OK")
 
         self.logger.test_start("test2")
-        self.logger.test_status(
-            "test2",
-            "subtest2",
-            status="FAIL",
-            expected="PASS",
-            known_intermittent=["FAIL"],
-        )
+        self.logger.test_status("test2",
+                                "subtest2",
+                                status="FAIL",
+                                expected="PASS",
+                                known_intermittent=["FAIL"])
         self.logger.test_end("test2", status="FAIL", expected="OK")
 
         self.set_position()
@@ -787,27 +730,27 @@ class TestGroupingFormatter(FormatterTest):
         self.assertIn("  \u25B6 FAIL [expected OK] test2", self.loglines)
         self.assertIn(
             "  \u25B6 FAIL [expected PASS, known intermittent [FAIL] test2, subtest2",
-            self.loglines,
+            self.loglines
         )
 
 
 class TestXUnitFormatter(FormatterTest):
+
     def get_formatter(self):
         return XUnitFormatter()
 
     def log_as_xml(self):
-        return ET.fromstring("\n".join(self.loglines))
+        return ET.fromstring('\n'.join(self.loglines))
 
     def test_stacktrace_is_present(self):
         self.logger.suite_start([])
         self.logger.test_start("test1")
         self.logger.test_end(
-            "test1", "fail", message="Test message", stack="this\nis\na\nstack"
-        )
+            "test1", "fail", message="Test message", stack='this\nis\na\nstack')
         self.logger.suite_end()
 
         root = self.log_as_xml()
-        self.assertIn("this\nis\na\nstack", root.find("testcase/failure").text)
+        self.assertIn('this\nis\na\nstack', root.find('testcase/failure').text)
 
     def test_failure_message(self):
         self.logger.suite_start([])
@@ -816,9 +759,8 @@ class TestXUnitFormatter(FormatterTest):
         self.logger.suite_end()
 
         root = self.log_as_xml()
-        self.assertEquals(
-            "Expected OK, got FAIL", root.find("testcase/failure").get("message")
-        )
+        self.assertEquals('Expected OK, got FAIL', root.find(
+            'testcase/failure').get('message'))
 
     def test_suite_attrs(self):
         self.logger.suite_start([])
@@ -827,11 +769,11 @@ class TestXUnitFormatter(FormatterTest):
         self.logger.suite_end()
 
         root = self.log_as_xml()
-        self.assertEqual(root.get("skips"), "0")
-        self.assertEqual(root.get("failures"), "0")
-        self.assertEqual(root.get("errors"), "0")
-        self.assertEqual(root.get("tests"), "1")
-        self.assertEqual(root.get("time"), "0.00")
+        self.assertEqual(root.get('skips'), '0')
+        self.assertEqual(root.get('failures'), '0')
+        self.assertEqual(root.get('errors'), '0')
+        self.assertEqual(root.get('tests'), '1')
+        self.assertEqual(root.get('time'), '0.00')
 
     def test_time_is_not_rounded(self):
         # call formatter directly, it is easier here
@@ -839,14 +781,13 @@ class TestXUnitFormatter(FormatterTest):
         formatter.suite_start(dict(time=55000))
         formatter.test_start(dict(time=55100))
         formatter.test_end(
-            dict(time=55558, test="id", message="message", status="PASS")
-        )
+            dict(time=55558, test='id', message='message', status='PASS'))
         xml_string = formatter.suite_end(dict(time=55559))
 
         root = ET.fromstring(xml_string)
-        self.assertEqual(root.get("time"), "0.56")
-        self.assertEqual(root.find("testcase").get("time"), "0.46")
+        self.assertEqual(root.get('time'), '0.56')
+        self.assertEqual(root.find('testcase').get('time'), '0.46')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

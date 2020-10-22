@@ -1,17 +1,14 @@
 import traceback
 
-
 def WebIDLTest(parser, harness):
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             [Global, Exposed=TestConstructorGlobal]
             interface TestConstructorGlobal {
               constructor();
             };
-        """
-        )
+        """)
 
         results = parser.finish()
     except:
@@ -22,14 +19,12 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             [Global, Exposed=TestNamedConstructorGlobal,
              NamedConstructor=FooBar]
             interface TestNamedConstructorGlobal {
             };
-        """
-        )
+        """)
         results = parser.finish()
     except:
         threw = True
@@ -39,14 +34,12 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             [NamedConstructor=FooBar, Global,
              Exposed=TestNamedConstructorGlobal]
             interface TestNamedConstructorGlobal {
             };
-        """
-        )
+        """)
         results = parser.finish()
     except:
         threw = True
@@ -56,14 +49,12 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             [Global, Exposed=TestHTMLConstructorGlobal]
             interface TestHTMLConstructorGlobal {
               [HTMLConstructor] constructor();
             };
-        """
-        )
+        """)
 
         results = parser.finish()
     except:

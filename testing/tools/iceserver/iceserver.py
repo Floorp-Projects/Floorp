@@ -7,7 +7,7 @@ import ipaddr
 import socket
 import hmac
 import hashlib
-import passlib.utils  # for saslprep
+import passlib.utils # for saslprep
 import copy
 import random
 import operator
@@ -58,23 +58,20 @@ SOFTWARE = 0x8022
 ALTERNATE_SERVER = 0x8023
 FINGERPRINT = 0x8028
 
-
 def unpack_uint(bytes_buf):
     result = 0
     for byte in bytes_buf:
         result = (result << 8) + byte
     return result
 
-
 def pack_uint(value, width):
     if value < 0:
         raise ValueError("Invalid value: {}".format(value))
-    buf = bytearray([0] * width)
+    buf = bytearray([0]*width)
     for i in range(0, width):
-        buf[i] = (value >> (8 * (width - i - 1))) & 0xFF
+        buf[i] = (value >> (8*(width - i - 1))) & 0xFF
 
     return buf
-
 
 def unpack(bytes_buf, format_array):
     results = ()
@@ -82,7 +79,6 @@ def unpack(bytes_buf, format_array):
         results = results + (unpack_uint(bytes_buf[0:width]),)
         bytes_buf = bytes_buf[width:]
     return results
-
 
 def pack(values, format_array):
     if len(values) != len(format_array):
@@ -92,12 +88,10 @@ def pack(values, format_array):
         buf.extend(pack_uint(values[i], format_array[i]))
     return buf
 
-
 def bitwise_pack(source, dest, start_bit, num_bits):
     if num_bits <= 0 or num_bits > start_bit + 1:
-        raise ValueError(
-            "Invalid num_bits: {}, start_bit = {}".format(num_bits, start_bit)
-        )
+        raise ValueError("Invalid num_bits: {}, start_bit = {}"
+                         .format(num_bits, start_bit))
     last_bit = start_bit - num_bits + 1
     source = source >> last_bit
     dest = dest << num_bits
@@ -119,7 +113,7 @@ class StunAttribute(object):
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     """
 
-    __attr_header_fmt = [2, 2]
+    __attr_header_fmt = [2,2]
     __attr_header_size = reduce(operator.add, __attr_header_fmt)
 
     def __init__(self, attr_type=0, buf=bytearray()):
@@ -131,20 +125,20 @@ class StunAttribute(object):
         buf.extend(self.data)
         # add padding if necessary
         if len(buf) % 4:
-            buf.extend([0] * (4 - (len(buf) % 4)))
+            buf.extend([0]*(4 - (len(buf) % 4)))
         return buf
 
     def parse(self, buf):
-        if self.__attr_header_size > len(buf):
-            raise Exception("truncated at attribute: incomplete header")
+        if self.__attr_header_size  > len(buf):
+            raise Exception('truncated at attribute: incomplete header')
 
         self.attr_type, length = unpack(buf, self.__attr_header_fmt)
         length += self.__attr_header_size
 
         if length > len(buf):
-            raise Exception("truncated at attribute: incomplete contents")
+            raise Exception('truncated at attribute: incomplete contents')
 
-        self.data = buf[self.__attr_header_size : length]
+        self.data = buf[self.__attr_header_size:length]
 
         # verify padding
         while length % 4:
@@ -170,17 +164,17 @@ class StunMessage(object):
         self.transaction_id = 0
         self.attributes = []
 
-    #      0                   1                   2                   3
-    #      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    #     |0 0|M M M M M|C|M M M|C|M M M M|         Message Length        |
-    #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    #     |                         Magic Cookie                          |
-    #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    #     |                                                               |
-    #     |                     Transaction ID (96 bits)                  |
-    #     |                                                               |
-    #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#      0                   1                   2                   3
+#      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     |0 0|M M M M M|C|M M M|C|M M M M|         Message Length        |
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     |                         Magic Cookie                          |
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     |                                                               |
+#     |                     Transaction ID (96 bits)                  |
+#     |                                                               |
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     __header_fmt = [2, 2, 4, 12]
     __header_size = reduce(operator.add, __header_fmt)
 
@@ -192,8 +186,7 @@ class StunMessage(object):
             return min_buf_size
 
         message_type, length, cookie, self.transaction_id = unpack(
-            buf, self.__header_fmt
-        )
+                buf, self.__header_fmt)
         min_buf_size += length
         if len(buf) < min_buf_size:
             return min_buf_size
@@ -206,9 +199,9 @@ class StunMessage(object):
         self.method = bitwise_pack(message_type, self.method, 3, 4)
 
         if cookie != self.cookie:
-            raise Exception("Invalid cookie: {}".format(cookie))
+            raise Exception('Invalid cookie: {}'.format(cookie))
 
-        buf = buf[self.__header_size : min_buf_size]
+        buf = buf[self.__header_size:min_buf_size]
         while len(buf):
             attr = StunAttribute()
             length = attr.parse(buf)
@@ -231,35 +224,35 @@ class StunMessage(object):
         message_type = bitwise_pack(self.msg_class, message_type, 0, 1)
         message_type = bitwise_pack(self.method, message_type, 3, 4)
 
-        message = pack(
-            (message_type, len(attrs), self.cookie, self.transaction_id),
-            self.__header_fmt,
-        )
+        message = pack((message_type,
+                        len(attrs),
+                        self.cookie,
+                        self.transaction_id), self.__header_fmt)
         message.extend(attrs)
 
         return message
 
     def add_error_code(self, code, phrase=None):
-        #      0                   1                   2                   3
-        #      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-        #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-        #     |           Reserved, should be 0         |Class|     Number    |
-        #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-        #     |      Reason Phrase (variable)                                ..
-        #     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#      0                   1                   2                   3
+#      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     |           Reserved, should be 0         |Class|     Number    |
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     |      Reason Phrase (variable)                                ..
+#     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         error_code_fmt = [3, 1]
         error_code = pack((code // 100, code % 100), error_code_fmt)
         if phrase != None:
             error_code.extend(bytearray(phrase))
         self.attributes.append(StunAttribute(ERROR_CODE, error_code))
 
-    #     0                   1                   2                   3
-    #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    #    |x x x x x x x x|    Family     |         X-Port                |
-    #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    #    |                X-Address (Variable)
-    #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#     0                   1                   2                   3
+#     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+#    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#    |x x x x x x x x|    Family     |         X-Port                |
+#    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#    |                X-Address (Variable)
+#    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     __xor_v4addr_fmt = [1, 1, 2, 4]
     __xor_v6addr_fmt = [1, 1, 2, 16]
     __xor_v4addr_size = reduce(operator.add, __xor_v4addr_fmt)
@@ -287,7 +280,8 @@ class StunMessage(object):
             xaddr = self.get_xaddr(int(ip_address), IPV6)
             xor_address = pack((0, IPV6, xport, xaddr), self.__xor_v6addr_fmt)
         else:
-            raise ValueError("Invalid ip version: {}".format(ip_address.version))
+            raise ValueError("Invalid ip version: {}"
+                             .format(ip_address.version))
 
         self.attributes.append(StunAttribute(attr_type, xor_address))
 
@@ -305,23 +299,20 @@ class StunMessage(object):
         if not addr_attr:
             return None
 
-        padding, family, xport, xaddr = unpack(addr_attr.data, self.__xor_v4addr_fmt)
+        padding, family, xport, xaddr = unpack(addr_attr.data,
+                                               self.__xor_v4addr_fmt)
         addr_ctor = IPv4Address
         if family == IPV6:
             from twisted.internet.address import IPv6Address
-
-            padding, family, xport, xaddr = unpack(
-                addr_attr.data, self.__xor_v6addr_fmt
-            )
+            padding, family, xport, xaddr = unpack(addr_attr.data,
+                                                   self.__xor_v6addr_fmt)
             addr_ctor = IPv6Address
         elif family != IPV4:
             raise ValueError("Invalid family: {}".format(family))
 
-        return addr_ctor(
-            "UDP",
-            str(ipaddr.IPAddress(self.get_xaddr(xaddr, family))),
-            self.get_xport(xport),
-        )
+        return addr_ctor('UDP',
+                         str(ipaddr.IPAddress(self.get_xaddr(xaddr, family))),
+                         self.get_xport(xport))
 
     def add_nonce(self, nonce):
         self.attributes.append(StunAttribute(NONCE, bytearray(nonce)))
@@ -332,7 +323,7 @@ class StunMessage(object):
     def calculate_message_digest(self, username, realm, password):
         digest_buf = self.build(MESSAGE_INTEGRITY)
         # Trim off the MESSAGE-INTEGRITY attr
-        digest_buf = digest_buf[: len(digest_buf) - 24]
+        digest_buf = digest_buf[:len(digest_buf) - 24]
         password = passlib.utils.saslprep(six.text_type(password))
         key_string = "{}:{}:{}".format(username, realm, password)
         md5 = hashlib.md5()
@@ -356,7 +347,7 @@ class StunMessage(object):
         return str(username.data)
 
     def add_message_integrity(self, username, realm, password):
-        dummy_value = bytearray([0] * 20)
+        dummy_value = bytearray([0]*20)
         self.attributes.append(StunAttribute(MESSAGE_INTEGRITY, dummy_value))
         digest = self.calculate_message_digest(username, realm, password)
         self.find(MESSAGE_INTEGRITY).data = digest
@@ -371,7 +362,7 @@ class Allocation(protocol.DatagramProtocol):
     """
 
     def __init__(self, other_transport_handler, allocator_address, username):
-        self.permissions = set()  # str, int tuples
+        self.permissions = set() # str, int tuples
         # Handler to use when sending stuff that arrives on the allocation
         self.other_transport_handler = other_transport_handler
         self.allocator_address = allocator_address
@@ -383,11 +374,8 @@ class Allocation(protocol.DatagramProtocol):
         host = address[0]
         port = address[1]
         if not host in self.permissions:
-            print(
-                "Dropping packet from {}:{}, no permission on allocation {}".format(
-                    host, port, self.transport.getHost()
-                )
-            )
+            print("Dropping packet from {}:{}, no permission on allocation {}"
+                  .format(host, port, self.transport.getHost()))
             return
 
         data_indication = StunMessage()
@@ -396,14 +384,12 @@ class Allocation(protocol.DatagramProtocol):
         data_indication.transaction_id = random.getrandbits(96)
 
         # Only handles UDP allocations. Doubtful that we need more than this.
-        data_indication.add_xor_address(
-            IPv4Address("UDP", host, port), XOR_PEER_ADDRESS
-        )
+        data_indication.add_xor_address(IPv4Address('UDP', host, port),
+                                        XOR_PEER_ADDRESS)
         data_indication.add_data(data)
 
-        self.other_transport_handler.write(
-            data_indication.build(), self.allocator_address
-        )
+        self.other_transport_handler.write(data_indication.build(),
+                                           self.allocator_address)
 
     def close(self):
         self.port.stopListening()
@@ -440,13 +426,13 @@ class StunHandler(object):
             if stun_message.method == SEND:
                 self.handle_send_indication(stun_message)
             else:
-                print(
-                    "Dropping unknown indication method: {}".format(stun_message.method)
-                )
+                print("Dropping unknown indication method: {}"
+                      .format(stun_message.method))
             return None
 
         if stun_message.msg_class != REQUEST:
-            print("Dropping STUN response, method: {}".format(stun_message.method))
+            print("Dropping STUN response, method: {}"
+                  .format(stun_message.method))
             return None
 
         if stun_message.method == BINDING:
@@ -459,53 +445,49 @@ class StunHandler(object):
             return self.handle_permission(stun_message).build()
         else:
             return self.make_error_response(
-                stun_message,
-                400,
-                ("Unsupported STUN request, method: {}".format(stun_message.method)),
-            ).build()
+                    stun_message,
+                    400,
+                    ("Unsupported STUN request, method: {}"
+                     .format(stun_message.method))).build()
 
     def get_allocation_tuple(self):
-        return (
-            self.client_address.host,
-            self.client_address.port,
-            self.transport_handler.transport.getHost().type,
-            self.transport_handler.transport.getHost().host,
-            self.transport_handler.transport.getHost().port,
-        )
+        return (self.client_address.host,
+                self.client_address.port,
+                self.transport_handler.transport.getHost().type,
+                self.transport_handler.transport.getHost().host,
+                self.transport_handler.transport.getHost().port)
 
     def handle_allocation(self, request):
         allocate_response = self.check_long_term_auth(request)
         if allocate_response.msg_class == SUCCESS_RESPONSE:
             if self.get_allocation_tuple() in allocations:
                 return self.make_error_response(
-                    request,
-                    437,
-                    (
-                        "Duplicate allocation request for tuple {}".format(
-                            self.get_allocation_tuple()
-                        )
-                    ),
-                )
+                        request,
+                        437,
+                        ("Duplicate allocation request for tuple {}"
+                         .format(self.get_allocation_tuple())))
 
-            allocation = Allocation(
-                self.transport_handler, self.client_address, request.get_username()
-            )
+            allocation = Allocation(self.transport_handler,
+                                    self.client_address,
+                                    request.get_username())
 
-            allocate_response.add_xor_address(
-                allocation.transport.getHost(), XOR_RELAYED_ADDRESS
-            )
+            allocate_response.add_xor_address(allocation.transport.getHost(),
+                                              XOR_RELAYED_ADDRESS)
 
             lifetime = request.get_lifetime()
             if lifetime == None:
                 return self.make_error_response(
-                    request, 400, "Missing lifetime attribute in allocation request"
-                )
+                        request,
+                        400,
+                        "Missing lifetime attribute in allocation request")
 
             lifetime = min(lifetime, 3600)
             allocate_response.add_lifetime(lifetime)
             allocation.expiry = time.time() + lifetime
 
-            allocate_response.add_message_integrity(turn_user, turn_realm, turn_pass)
+            allocate_response.add_message_integrity(turn_user,
+                                                    turn_realm,
+                                                    turn_pass)
             allocations[self.get_allocation_tuple()] = allocation
         return allocate_response
 
@@ -516,37 +498,32 @@ class StunHandler(object):
                 allocation = allocations[self.get_allocation_tuple()]
             except KeyError:
                 return self.make_error_response(
-                    request,
-                    437,
-                    (
-                        "Refresh request for non-existing allocation, tuple {}".format(
-                            self.get_allocation_tuple()
-                        )
-                    ),
-                )
+                        request,
+                        437,
+                        ("Refresh request for non-existing allocation, tuple {}"
+                         .format(self.get_allocation_tuple())))
 
             if allocation.username != request.get_username():
                 return self.make_error_response(
-                    request,
-                    441,
-                    (
-                        "Refresh request with wrong user, exp {}, got {}".format(
-                            allocation.username, request.get_username()
-                        )
-                    ),
-                )
+                        request,
+                        441,
+                        ("Refresh request with wrong user, exp {}, got {}"
+                         .format(allocation.username, request.get_username())))
 
             lifetime = request.get_lifetime()
             if lifetime == None:
                 return self.make_error_response(
-                    request, 400, "Missing lifetime attribute in allocation request"
-                )
+                        request,
+                        400,
+                        "Missing lifetime attribute in allocation request")
 
             lifetime = min(lifetime, 3600)
             refresh_response.add_lifetime(lifetime)
             allocation.expiry = time.time() + lifetime
 
-            refresh_response.add_message_integrity(turn_user, turn_realm, turn_pass)
+            refresh_response.add_message_integrity(turn_user,
+                                                   turn_realm,
+                                                   turn_pass)
         return refresh_response
 
     def handle_permission(self, request):
@@ -556,34 +533,29 @@ class StunHandler(object):
                 allocation = allocations[self.get_allocation_tuple()]
             except KeyError:
                 return self.make_error_response(
-                    request,
-                    437,
-                    (
-                        "No such allocation for permission request, tuple {}".format(
-                            self.get_allocation_tuple()
-                        )
-                    ),
-                )
+                        request,
+                        437,
+                        ("No such allocation for permission request, tuple {}"
+                         .format(self.get_allocation_tuple())))
 
             if allocation.username != request.get_username():
                 return self.make_error_response(
-                    request,
-                    441,
-                    (
-                        "Permission request with wrong user, exp {}, got {}".format(
-                            allocation.username, request.get_username()
-                        )
-                    ),
-                )
+                        request,
+                        441,
+                        ("Permission request with wrong user, exp {}, got {}"
+                         .format(allocation.username, request.get_username())))
 
             # TODO: Handle multiple XOR-PEER-ADDRESS
             peer_address = request.get_xor_address(XOR_PEER_ADDRESS)
             if not peer_address:
                 return self.make_error_response(
-                    request, 400, "Missing XOR-PEER-ADDRESS on permission request"
-                )
+                        request,
+                        400,
+                        "Missing XOR-PEER-ADDRESS on permission request")
 
-            permission_response.add_message_integrity(turn_user, turn_realm, turn_pass)
+            permission_response.add_message_integrity(turn_user,
+                                                      turn_realm,
+                                                      turn_pass)
             allocation.permissions.add(peer_address.host)
 
         return permission_response
@@ -592,11 +564,8 @@ class StunHandler(object):
         try:
             allocation = allocations[self.get_allocation_tuple()]
         except KeyError:
-            print(
-                "Dropping send indication; no allocation for tuple {}".format(
-                    self.get_allocation_tuple()
-                )
-            )
+            print("Dropping send indication; no allocation for tuple {}"
+                  .format(self.get_allocation_tuple()))
             return
 
         peer_address = indication.get_xor_address(XOR_PEER_ADDRESS)
@@ -614,16 +583,12 @@ class StunHandler(object):
             return
 
         if not peer_address.host in allocation.permissions:
-            print(
-                "Dropping send indication, no permission for {} on tuple {}".format(
-                    peer_address.host, self.get_allocation_tuple()
-                )
-            )
+            print("Dropping send indication, no permission for {} on tuple {}"
+                  .format(peer_address.host, self.get_allocation_tuple()))
             return
 
-        allocation.transport.write(
-            data_attr.data, (peer_address.host, peer_address.port)
-        )
+        allocation.transport.write(data_attr.data,
+                                   (peer_address.host, peer_address.port))
 
     def make_success_response(self, request):
         response = copy.deepcopy(request)
@@ -658,19 +623,21 @@ class StunHandler(object):
         nonce = request.find(NONCE)
         if not username or not realm or not nonce:
             return self.make_error_response(
-                request, 400, "Missing either USERNAME, NONCE, or REALM"
-            )
+                    request,
+                    400,
+                    "Missing either USERNAME, NONCE, or REALM")
 
         if str(username.data) != turn_user:
             return self.make_challenge_response(
-                request, "Wrong user {}, exp {}".format(username.data, turn_user)
-            )
+                    request,
+                    "Wrong user {}, exp {}".format(username.data, turn_user))
 
-        expected_message_digest = request.calculate_message_digest(
-            turn_user, turn_realm, turn_pass
-        )
+        expected_message_digest = request.calculate_message_digest(turn_user,
+                                                                  turn_realm,
+                                                                  turn_pass)
         if message_integrity.data != expected_message_digest:
-            return self.make_challenge_response(request, "Incorrect message disgest")
+            return self.make_challenge_response(request,
+                                                "Incorrect message disgest")
 
         return self.make_success_response(request)
 
@@ -682,7 +649,8 @@ class UdpStunHandler(protocol.DatagramProtocol):
 
     def datagramReceived(self, data, address):
         stun_handler = StunHandler(self)
-        stun_handler.data_received(data, IPv4Address("UDP", address[0], address[1]))
+        stun_handler.data_received(data,
+                                   IPv4Address('UDP', address[0], address[1]))
 
     def write(self, data, address):
         self.transport.write(str(data), (address.host, address.port))
@@ -717,13 +685,13 @@ class TcpStunHandler(protocol.Protocol):
         # Destroy allocations that this connection made
         for key, allocation in allocations.items():
             if allocation.other_transport_handler == self:
-                print("Closing allocation due to dropped connection: {}".format(key))
+                print("Closing allocation due to dropped connection: {}"
+                      .format(key))
                 del allocations[key]
                 allocation.close()
 
     def write(self, data, address):
         self.transport.write(str(data))
-
 
 def get_default_route(family):
     dummy_socket = socket.socket(family, socket.SOCK_DGRAM)
@@ -736,17 +704,15 @@ def get_default_route(family):
     dummy_socket.close()
     return default_route
 
-
-turn_user = "foo"
-turn_pass = "bar"
-turn_realm = "mozilla.invalid"
+turn_user="foo"
+turn_pass="bar"
+turn_realm="mozilla.invalid"
 allocations = {}
 v4_address = get_default_route(socket.AF_INET)
 try:
     v6_address = get_default_route(socket.AF_INET6)
 except:
     v6_address = ""
-
 
 def prune_allocations():
     now = time.time()
@@ -756,14 +722,11 @@ def prune_allocations():
             del allocations[key]
             allocation.close()
 
-
 CERT_FILE = "selfsigned.crt"
 KEY_FILE = "private.key"
 
-
 def create_self_signed_cert(name):
     from OpenSSL import crypto
-
     if os.path.isfile(CERT_FILE) and os.path.isfile(KEY_FILE):
         return
 
@@ -781,29 +744,30 @@ def create_self_signed_cert(name):
     cert.get_subject().CN = name
     cert.set_serial_number(1000)
     cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
+    cert.gmtime_adj_notAfter(10*365*24*60*60)
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(k)
-    cert.sign(k, "sha1")
+    cert.sign(k, 'sha1')
 
-    open(CERT_FILE, "wt").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(KEY_FILE, "wt").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
-
+    open(CERT_FILE, "wt").write(
+        crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(KEY_FILE, "wt").write(
+        crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
 
 if __name__ == "__main__":
     random.seed()
 
     if platform.system() == "Windows":
-        # Windows is finicky about allowing real interfaces to talk to loopback.
-        interface_4 = v4_address
-        interface_6 = v6_address
-        hostname = socket.gethostname()
+      # Windows is finicky about allowing real interfaces to talk to loopback.
+      interface_4 = v4_address
+      interface_6 = v6_address
+      hostname = socket.gethostname()
     else:
-        # Our linux builders do not have a hostname that resolves to the real
-        # interface.
-        interface_4 = "127.0.0.1"
-        interface_6 = "::1"
-        hostname = "localhost"
+      # Our linux builders do not have a hostname that resolves to the real
+      # interface.
+      interface_4 = "127.0.0.1"
+      interface_6 = "::1"
+      hostname = "localhost"
 
     reactor.listenUDP(3478, UdpStunHandler(), interface=interface_4)
     reactor.listenTCP(3478, TcpStunHandlerFactory(), interface=interface_4)
@@ -817,60 +781,45 @@ if __name__ == "__main__":
     try:
         from twisted.internet import ssl
         from OpenSSL import SSL
-
         create_self_signed_cert(hostname)
-        tls_context_factory = ssl.DefaultOpenSSLContextFactory(
-            KEY_FILE, CERT_FILE, SSL.TLSv1_2_METHOD
-        )
-        reactor.listenSSL(
-            5349, TcpStunHandlerFactory(), tls_context_factory, interface=interface_4
-        )
+        tls_context_factory = ssl.DefaultOpenSSLContextFactory(KEY_FILE, CERT_FILE, SSL.TLSv1_2_METHOD)
+        reactor.listenSSL(5349, TcpStunHandlerFactory(), tls_context_factory, interface=interface_4)
 
         try:
-            reactor.listenSSL(
-                5349,
-                TcpStunHandlerFactory(),
-                tls_context_factory,
-                interface=interface_6,
-            )
+            reactor.listenSSL(5349, TcpStunHandlerFactory(), tls_context_factory, interface=interface_6)
         except:
             pass
 
-        f = open(CERT_FILE, "r")
-        lines = f.readlines()
-        lines.pop(0)
-        # Remove BEGIN CERTIFICATE
-        lines.pop()
-        # Remove END CERTIFICATE
-        lines = map(string.strip, lines)
-        certbase64 = string.join(lines, "")
+        f = open(CERT_FILE, 'r');
+        lines = f.readlines();
+        lines.pop(0); # Remove BEGIN CERTIFICATE
+        lines.pop(); # Remove END CERTIFICATE
+        lines = map(string.strip, lines);
+        certbase64 = string.join(lines, '');
 
         turns_url = ', "turns:' + hostname + '"'
         cert_prop = ', "cert":"' + certbase64 + '"'
     except:
-        turns_url = ""
-        cert_prop = ""
+        turns_url = ''
+        cert_prop = ''
         pass
 
     allocation_pruner = LoopingCall(prune_allocations)
     allocation_pruner.start(1)
 
     template = Template(
-        '[\
+'[\
 {"urls":["stun:$hostname", "stun:$hostname?transport=tcp"]}, \
 {"username":"$user","credential":"$pwd","urls": \
 ["turn:$hostname", "turn:$hostname?transport=tcp" $turns_url] \
-$cert_prop}]'  # Hack to make it easier to override cert checks
-    )
+$cert_prop}]' # Hack to make it easier to override cert checks
+)
 
-    print(
-        template.substitute(
-            user=turn_user,
-            pwd=turn_pass,
-            hostname=hostname,
-            turns_url=turns_url,
-            cert_prop=cert_prop,
-        )
-    )
+    print(template.substitute(user=turn_user,
+                              pwd=turn_pass,
+                              hostname=hostname,
+                              turns_url=turns_url,
+                              cert_prop=cert_prop))
 
     reactor.run()
+

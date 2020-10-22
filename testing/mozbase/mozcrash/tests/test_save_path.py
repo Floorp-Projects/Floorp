@@ -45,17 +45,17 @@ def test_save_path_envvar(check_for_crashes, minidump_files, tmpdir):
     """Test that the MINDUMP_SAVE_PATH environment variable works."""
     save_path = tmpdir.mkdir("saved")
 
-    os.environ["MINIDUMP_SAVE_PATH"] = fspath(save_path)
+    os.environ['MINIDUMP_SAVE_PATH'] = fspath(save_path)
     try:
         assert 1 == check_for_crashes(dump_save_path=None)
     finally:
-        del os.environ["MINIDUMP_SAVE_PATH"]
+        del os.environ['MINIDUMP_SAVE_PATH']
 
     assert save_path.join(minidump_files[0]["dmp"].basename).check()
     assert save_path.join(minidump_files[0]["extra"].basename).check()
 
 
-@pytest.mark.parametrize("minidump_files", [3], indirect=True)
+@pytest.mark.parametrize('minidump_files', [3], indirect=True)
 def test_save_multiple(check_for_crashes, minidump_files, tmpdir):
     """Test that all minidumps are saved."""
     save_path = tmpdir.mkdir("saved")
@@ -67,5 +67,5 @@ def test_save_multiple(check_for_crashes, minidump_files, tmpdir):
         assert save_path.join(minidump_files[i]["extra"].basename).check()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

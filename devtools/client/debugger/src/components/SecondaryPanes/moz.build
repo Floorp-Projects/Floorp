@@ -4,19 +4,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "Breakpoints",
-    "Frames",
+    'Breakpoints',
+    'Frames',
 ]
 
 CompiledModules(
-    "CommandBar.js",
-    "DOMMutationBreakpoints.js",
-    "EventListeners.js",
-    "Expressions.js",
-    "index.js",
-    "Scopes.js",
-    "Thread.js",
-    "Threads.js",
-    "WhyPaused.js",
-    "XHRBreakpoints.js",
+    'CommandBar.js',
+    'DOMMutationBreakpoints.js',
+    'EventListeners.js',
+    'Expressions.js',
+    'index.js',
+    'Scopes.js',
+    'Thread.js',
+    'Threads.js',
+    'WhyPaused.js',
+    'XHRBreakpoints.js',
 )

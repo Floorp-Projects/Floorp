@@ -77,10 +77,7 @@ def main(output, *filenames):
             # of Histogram{First,Last}* easier.  Otherwise, we'd have to special
             # case the first and last histogram in the group.
             print("  HistogramFirst%s," % group_type, file=output)
-            print(
-                "  Histogram{0}DUMMY1 = HistogramFirst{0} - 1,".format(group_type),
-                file=output,
-            )
+            print("  Histogram{0}DUMMY1 = HistogramFirst{0} - 1,".format(group_type), file=output)
 
         for histogram in histograms:
             if histogram.record_on_os(buildconfig.substs["OS_TARGET"]):
@@ -89,21 +86,14 @@ def main(output, *filenames):
         if group_type is not None:
             assert isinstance(group_type, str)
             print("  Histogram%sDUMMY2," % group_type, file=output)
-            print(
-                "  HistogramLast{0} = Histogram{0}DUMMY2 - 1,".format(group_type),
-                file=output,
-            )
+            print("  HistogramLast{0} = Histogram{0}DUMMY2 - 1,".format(group_type), file=output)
 
     print("  HistogramCount,", file=output)
 
     for (key, value) in sorted(seen_group_types.items()):
         if value:
-            print(
-                "  Histogram{0}Count = HistogramLast{0} - HistogramFirst{0} + 1,".format(
-                    key
-                ),
-                file=output,
-            )
+            print("  Histogram{0}Count = HistogramLast{0} - HistogramFirst{0} + 1,"
+                  .format(key), file=output)
         else:
             print("  HistogramFirst%s = 0," % key, file=output)
             print("  HistogramLast%s = 0," % key, file=output)
@@ -113,36 +103,26 @@ def main(output, *filenames):
 
     # Write categorical label enums.
     categorical = filter(lambda h: h.kind() == "categorical", all_histograms)
-    categorical = filter(
-        lambda h: h.record_on_os(buildconfig.substs["OS_TARGET"]), categorical
-    )
+    categorical = filter(lambda h: h.record_on_os(buildconfig.substs["OS_TARGET"]), categorical)
     enums = [("LABELS_" + h.name(), h.labels(), h.name()) for h in categorical]
     for name, labels, _ in enums:
         print("\nenum class %s : uint32_t {" % name, file=output)
         print("  %s" % ",\n  ".join(labels), file=output)
         print("};", file=output)
 
-    print(
-        "\ntemplate<class T> struct IsCategoricalLabelEnum : std::false_type {};",
-        file=output,
-    )
+    print("\ntemplate<class T> struct IsCategoricalLabelEnum : std::false_type {};", file=output)
     for name, _, _ in enums:
-        print(
-            "template<> struct IsCategoricalLabelEnum<%s> : std::true_type {};" % name,
-            file=output,
-        )
+        print("template<> struct IsCategoricalLabelEnum<%s> : std::true_type {};" % name,
+              file=output)
 
     print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
     for name, _, id in enums:
-        print(
-            "template<> struct CategoricalLabelId<%s> : "
-            "std::integral_constant<uint32_t, %s> {};" % (name, id),
-            file=output,
-        )
+        print("template<> struct CategoricalLabelId<%s> : "
+              "std::integral_constant<uint32_t, %s> {};" % (name, id), file=output)
 
     # Footer.
     print(footer, file=output)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

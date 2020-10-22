@@ -4,17 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram("ipdlunittest", linkage="dependent")
+GeckoProgram('ipdlunittest', linkage='dependent')
 
 SOURCES += [
-    "TestIPDL.cpp",
+    'TestIPDL.cpp',
 ]
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/toolkit/xre",
-    "/xpcom/base",
+    '/toolkit/xre',
+    '/xpcom/base',
 ]
 
-if CONFIG["CC_TYPE"] == "clang-cl":
-    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

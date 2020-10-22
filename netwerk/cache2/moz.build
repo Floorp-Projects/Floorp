@@ -4,59 +4,59 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Networking: Cache")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Networking: Cache')
 
 XPIDL_SOURCES += [
-    "nsICacheEntry.idl",
-    "nsICacheEntryDoomCallback.idl",
-    "nsICacheEntryOpenCallback.idl",
-    "nsICacheStorage.idl",
-    "nsICacheStorageService.idl",
-    "nsICacheStorageVisitor.idl",
-    "nsICacheTesting.idl",
+    'nsICacheEntry.idl',
+    'nsICacheEntryDoomCallback.idl',
+    'nsICacheEntryOpenCallback.idl',
+    'nsICacheStorage.idl',
+    'nsICacheStorageService.idl',
+    'nsICacheStorageVisitor.idl',
+    'nsICacheTesting.idl',
 ]
 
-XPIDL_MODULE = "necko_cache2"
+XPIDL_MODULE = 'necko_cache2'
 
 EXPORTS += [
-    "CacheObserver.h",
-    "CacheStorageService.h",
+    'CacheObserver.h',
+    'CacheStorageService.h',
 ]
 
 SOURCES += [
-    "AppCacheStorage.cpp",
-    "CacheStorage.cpp",
+    'AppCacheStorage.cpp',
+    'CacheStorage.cpp',
 ]
 
 
 UNIFIED_SOURCES += [
-    "CacheEntry.cpp",
-    "CacheFile.cpp",
-    "CacheFileChunk.cpp",
-    "CacheFileContextEvictor.cpp",
-    "CacheFileInputStream.cpp",
-    "CacheFileIOManager.cpp",
-    "CacheFileMetadata.cpp",
-    "CacheFileOutputStream.cpp",
-    "CacheFileUtils.cpp",
-    "CacheHashUtils.cpp",
-    "CacheIndex.cpp",
-    "CacheIndexContextIterator.cpp",
-    "CacheIndexIterator.cpp",
-    "CacheIOThread.cpp",
-    "CacheLog.cpp",
-    "CacheObserver.cpp",
-    "CacheStorageService.cpp",
-    "OldWrappers.cpp",
+    'CacheEntry.cpp',
+    'CacheFile.cpp',
+    'CacheFileChunk.cpp',
+    'CacheFileContextEvictor.cpp',
+    'CacheFileInputStream.cpp',
+    'CacheFileIOManager.cpp',
+    'CacheFileMetadata.cpp',
+    'CacheFileOutputStream.cpp',
+    'CacheFileUtils.cpp',
+    'CacheHashUtils.cpp',
+    'CacheIndex.cpp',
+    'CacheIndexContextIterator.cpp',
+    'CacheIndexIterator.cpp',
+    'CacheIOThread.cpp',
+    'CacheLog.cpp',
+    'CacheObserver.cpp',
+    'CacheStorageService.cpp',
+    'OldWrappers.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/netwerk/base",
-    "/netwerk/cache",
+    '/netwerk/base',
+    '/netwerk/cache',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

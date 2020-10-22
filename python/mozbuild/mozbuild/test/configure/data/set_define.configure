@@ -4,48 +4,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option("--set-foo", help="set foo")
+option('--set-foo', help='set foo')
 
-
-@depends("--set-foo")
+@depends('--set-foo')
 def foo(value):
     if value:
         return True
 
-
-set_define("FOO", foo)
-
-
-option("--set-bar", help="set bar")
+set_define('FOO', foo)
 
 
-@depends("--set-bar")
+option('--set-bar', help='set bar')
+
+@depends('--set-bar')
 def bar(value):
     return bool(value)
 
-
-set_define("BAR", bar)
-
-
-option("--set-value", nargs=1, help="set value")
+set_define('BAR', bar)
 
 
-@depends("--set-value")
+option('--set-value', nargs=1, help='set value')
+
+@depends('--set-value')
 def set_value(value):
     if value:
         return value[0]
 
-
-set_define("VALUE", set_value)
-
-
-option("--set-name", nargs=1, help="set name")
+set_define('VALUE', set_value)
 
 
-@depends("--set-name")
+option('--set-name', nargs=1, help='set name')
+
+@depends('--set-name')
 def set_name(value):
     if value:
         return value[0]
-
 
 set_define(set_name, True)

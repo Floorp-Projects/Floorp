@@ -4,57 +4,53 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
 
     SOURCES += [
         # This file contains a |using namespace mozilla;| statement
-        "WindowsDllBlocklist.cpp",
+        'WindowsDllBlocklist.cpp',
     ]
 
     UNIFIED_SOURCES += [
-        "Authenticode.cpp",
-        "LoaderObserver.cpp",
-        "ModuleLoadFrame.cpp",
-        "WindowsFallbackLoaderAPI.cpp",
+        'Authenticode.cpp',
+        'LoaderObserver.cpp',
+        'ModuleLoadFrame.cpp',
+        'WindowsFallbackLoaderAPI.cpp',
     ]
 
 OS_LIBS += [
-    "crypt32",
-    "ntdll",
-    "version",
-    "wintrust",
+    'crypt32',
+    'ntdll',
+    'version',
+    'wintrust',
 ]
 
 DELAYLOAD_DLLS += [
-    "crypt32.dll",
-    "wintrust.dll",
+    'crypt32.dll',
+    'wintrust.dll',
 ]
 
 EXPORTS.mozilla += [
-    "Authenticode.h",
-    "LoaderAPIInterfaces.h",
-    "ModuleLoadInfo.h",
-    "WindowsDllBlocklist.h",
-    "WindowsDllBlocklistCommon.h",
+    'Authenticode.h',
+    'LoaderAPIInterfaces.h',
+    'ModuleLoadInfo.h',
+    'WindowsDllBlocklist.h',
+    'WindowsDllBlocklistCommon.h',
 ]
 
 EXPORTS.mozilla.glue += [
-    "WindowsDllServices.h",
+    'WindowsDllServices.h',
 ]
 
 # Generate DLL Blocklists
-blocklist_header_types = ["A11y", "Launcher", "Legacy", "Test"]
-blocklist_file_leaf_tpl = "WindowsDllBlocklist{0}Defs.h"
-blocklist_files = tuple(
-    [blocklist_file_leaf_tpl.format(type) for type in blocklist_header_types]
-)
+blocklist_header_types = ['A11y', 'Launcher', 'Legacy', 'Test']
+blocklist_file_leaf_tpl = 'WindowsDllBlocklist{0}Defs.h'
+blocklist_files = tuple([blocklist_file_leaf_tpl.format(type)
+                         for type in blocklist_header_types])
 
-GeneratedFile(
-    *blocklist_files,
-    script="gen_dll_blocklist_defs.py",
-    entry_point="gen_blocklists",
-    inputs=["WindowsDllBlocklistDefs.in"]
-)
-EXPORTS.mozilla += ["!" + hdr for hdr in blocklist_files]
+GeneratedFile(*blocklist_files, script='gen_dll_blocklist_defs.py',
+              entry_point='gen_blocklists',
+              inputs=['WindowsDllBlocklistDefs.in'])
+EXPORTS.mozilla += ['!' + hdr for hdr in blocklist_files]
 
-FINAL_LIBRARY = "mozglue"
+FINAL_LIBRARY = 'mozglue'

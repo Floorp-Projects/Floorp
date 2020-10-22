@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "nsImageModule.h",
+    'nsImageModule.h',
 ]
 
 SOURCES += [
-    "nsImageModule.cpp",
+    'nsImageModule.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/image",
-    "/image/encoders/bmp",
-    "/image/encoders/ico",
-    "/image/encoders/jpeg",
-    "/image/encoders/png",
+    '/image',
+    '/image/encoders/bmp',
+    '/image/encoders/ico',
+    '/image/encoders/jpeg',
+    '/image/encoders/png',
 ]

@@ -18,12 +18,12 @@ class ExpressionParserTest(unittest.TestCase):
         self.assertEqual(parse("100"), 100)
         self.assertEqual(parse("true"), True)
         self.assertEqual(parse("false"), False)
-        self.assertEqual("", parse('""'))
-        self.assertEqual(parse('"foo bar"'), "foo bar")
-        self.assertEqual(parse("'foo bar'"), "foo bar")
+        self.assertEqual('', parse('""'))
+        self.assertEqual(parse('"foo bar"'), 'foo bar')
+        self.assertEqual(parse("'foo bar'"), 'foo bar')
         self.assertEqual(parse("foo", foo=1), 1)
         self.assertEqual(parse("bar", bar=True), True)
-        self.assertEqual(parse("abc123", abc123="xyz"), "xyz")
+        self.assertEqual(parse("abc123", abc123="xyz"), 'xyz')
 
     def test_equality(self):
 
@@ -37,12 +37,12 @@ class ExpressionParserTest(unittest.TestCase):
         self.assertTrue(parse('"text" != "other text"'))
         self.assertTrue(parse("foo == true", foo=True))
         self.assertTrue(parse("foo == 1", foo=1))
-        self.assertTrue(parse('foo == "bar"', foo="bar"))
+        self.assertTrue(parse('foo == "bar"', foo='bar'))
         self.assertTrue(parse("foo == bar", foo=True, bar=True))
         self.assertTrue(parse("true == foo", foo=True))
         self.assertTrue(parse("foo != true", foo=False))
         self.assertTrue(parse("foo != 2", foo=1))
-        self.assertTrue(parse('foo != "bar"', foo="abc"))
+        self.assertTrue(parse('foo != "bar"', foo='abc'))
         self.assertTrue(parse("foo != bar", foo=True, bar=False))
         self.assertTrue(parse("true != foo", foo=False))
         self.assertTrue(parse("!false"))
@@ -57,7 +57,7 @@ class ExpressionParserTest(unittest.TestCase):
     def test_parentheses(self):
         self.assertTrue(parse("(true)"))
         self.assertEqual(parse("(10)"), 10)
-        self.assertEqual(parse('("foo")'), "foo")
+        self.assertEqual(parse('("foo")'), 'foo')
         self.assertEqual(parse("(foo)", foo=1), 1)
         self.assertTrue(parse("(true == true)"), True)
         self.assertTrue(parse("(true != false)"))
@@ -81,9 +81,7 @@ class ExpressionParserTest(unittest.TestCase):
         self.assertTrue(parse("false == false # it does"))
         self.assertTrue(parse("false != true # it doesnt"))
         self.assertTrue(parse('"string with #" == "string with #" # really, it does'))
-        self.assertTrue(
-            parse('"string with #" != "string with # but not the same" # no match!')
-        )
+        self.assertTrue(parse('"string with #" != "string with # but not the same" # no match!'))
 
     def test_not(self):
         """
@@ -155,5 +153,5 @@ class ExpressionParserTest(unittest.TestCase):
         self.assertTrue(parse("'abc' >= 'abc'"))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

@@ -6,6 +6,7 @@ from .structuredlog import StructuredLogger, log_levels
 
 
 class UnstructuredHandler(logging.Handler):
+
     def __init__(self, name=None, level=logging.NOTSET):
         self.structured = StructuredLogger(name)
         logging.Handler.__init__(self, level=level)
@@ -22,13 +23,11 @@ class UnstructuredHandler(logging.Handler):
 
 
 class LoggingWrapper(object):
+
     def __init__(self, wrapped):
         self.wrapped = wrapped
-        self.wrapped.addHandler(
-            UnstructuredHandler(
-                self.wrapped.name, logging.getLevelName(self.wrapped.level)
-            )
-        )
+        self.wrapped.addHandler(UnstructuredHandler(self.wrapped.name,
+                                                    logging.getLevelName(self.wrapped.level)))
 
     def add_handler(self, handler):
         self.addHandler(handler)

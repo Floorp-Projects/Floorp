@@ -10,6 +10,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestElementSizeChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestElementSizeChrome, self).setUp()
 
@@ -23,8 +24,8 @@ class TestElementSizeChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestElementSizeChrome, self).tearDown()
 
     def test_payload(self):
-        rect = self.marionette.find_element(By.ID, "textInput").rect
-        self.assertTrue(rect["x"] > 0)
-        self.assertTrue(rect["y"] > 0)
-        self.assertTrue(rect["width"] > 0)
-        self.assertTrue(rect["height"] > 0)
+        rect = self.marionette.find_element(By.ID, 'textInput').rect
+        self.assertTrue(rect['x'] > 0)
+        self.assertTrue(rect['y'] > 0)
+        self.assertTrue(rect['width'] > 0)
+        self.assertTrue(rect['height'] > 0)

@@ -19,15 +19,15 @@ from mozbuild.telemetry import (
     verify_statedir,
 )
 
-BUILD_TELEMETRY_URL = "https://incoming.telemetry.mozilla.org/{endpoint}"
-SUBMIT_ENDPOINT = "submit/eng-workflow/build/1/{ping_uuid}"
-STATUS_ENDPOINT = "status"
+BUILD_TELEMETRY_URL = 'https://incoming.telemetry.mozilla.org/{endpoint}'
+SUBMIT_ENDPOINT = 'submit/eng-workflow/build/1/{ping_uuid}'
+STATUS_ENDPOINT = 'status'
 
 
 def delete_expired_files(directory, days=30):
-    """Discards files in a directory older than a specified number
+    '''Discards files in a directory older than a specified number
     of days
-    """
+    '''
     now = datetime.datetime.now()
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
@@ -42,9 +42,9 @@ def delete_expired_files(directory, days=30):
 
 
 def check_edge_server_status(session):
-    """Returns True if the Telemetry Edge Server
+    '''Returns True if the Telemetry Edge Server
     is ready to accept data
-    """
+    '''
     status_url = BUILD_TELEMETRY_URL.format(endpoint=STATUS_ENDPOINT)
     response = session.get(status_url)
     if response.status_code != 200:
@@ -53,9 +53,9 @@ def check_edge_server_status(session):
 
 
 def send_telemetry_ping(session, data, ping_uuid):
-    """Sends a single build telemetry ping to the
+    '''Sends a single build telemetry ping to the
     edge server, returning the response object
-    """
+    '''
     resource_url = SUBMIT_ENDPOINT.format(ping_uuid=str(ping_uuid))
     url = BUILD_TELEMETRY_URL.format(endpoint=resource_url)
     response = session.post(url, json=data)
@@ -64,9 +64,9 @@ def send_telemetry_ping(session, data, ping_uuid):
 
 
 def submit_telemetry_data(outgoing, submitted):
-    """Sends information about `./mach build` invocations to
+    '''Sends information about `./mach build` invocations to
     the Telemetry pipeline
-    """
+    '''
     with requests.Session() as session:
         # Confirm the server is OK
         if not check_edge_server_status(session):
@@ -76,14 +76,14 @@ def submit_telemetry_data(outgoing, submitted):
         for filename in os.listdir(outgoing):
             path = os.path.join(outgoing, filename)
 
-            if os.path.isdir(path) or not path.endswith(".json"):
-                logging.info("skipping item {}".format(path))
+            if os.path.isdir(path) or not path.endswith('.json'):
+                logging.info('skipping item {}'.format(path))
                 continue
 
             ping_uuid = os.path.splitext(filename)[0]  # strip ".json" to get ping UUID
 
             try:
-                with open(path, "r") as f:
+                with open(path, 'r') as f:
                     data = json.load(f)
 
                 # Verify the data matches the schema
@@ -93,7 +93,7 @@ def submit_telemetry_data(outgoing, submitted):
 
                 response = send_telemetry_ping(session, data, ping_uuid)
                 if response.status_code != 200:
-                    msg = "response code {code} sending {uuid} to telemetry: {body}".format(
+                    msg = 'response code {code} sending {uuid} to telemetry: {body}'.format(
                         body=response.content,
                         code=response.status_code,
                         uuid=ping_uuid,
@@ -102,25 +102,27 @@ def submit_telemetry_data(outgoing, submitted):
                     continue
 
                 # Move from "outgoing" to "submitted"
-                os.rename(
-                    os.path.join(outgoing, filename), os.path.join(submitted, filename)
-                )
+                os.rename(os.path.join(outgoing, filename),
+                          os.path.join(submitted, filename))
 
-                logging.info("successfully posted {} to telemetry".format(ping_uuid))
+                logging.info('successfully posted {} to telemetry'.format(ping_uuid))
 
             except ValueError as ve:
                 # ValueError is thrown if JSON cannot be decoded
-                logging.exception("exception parsing JSON at %s: %s" % (path, str(ve)))
+                logging.exception('exception parsing JSON at %s: %s'
+                                  % (path, str(ve)))
                 os.remove(path)
 
             except voluptuous.Error as e:
                 # Invalid is thrown if some data does not fit
                 # the correct Schema
-                logging.exception("invalid data found at %s: %s" % (path, e.message))
+                logging.exception('invalid data found at %s: %s'
+                                  % (path, e.message))
                 os.remove(path)
 
             except Exception as e:
-                logging.error("exception posting to telemetry " "server: %s" % str(e))
+                logging.error('exception posting to telemetry '
+                              'server: %s' % str(e))
                 break
 
     delete_expired_files(submitted)
@@ -128,9 +130,9 @@ def submit_telemetry_data(outgoing, submitted):
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("usage: python submit_telemetry_data.py <statedir>")
+        print('usage: python submit_telemetry_data.py <statedir>')
         sys.exit(1)
 
     statedir = sys.argv[1]
@@ -139,11 +141,9 @@ if __name__ == "__main__":
         outgoing, submitted, telemetry_log = verify_statedir(statedir)
 
         # Configure logging
-        logging.basicConfig(
-            filename=telemetry_log,
-            format="%(asctime)s %(message)s",
-            level=logging.DEBUG,
-        )
+        logging.basicConfig(filename=telemetry_log,
+                            format='%(asctime)s %(message)s',
+                            level=logging.DEBUG)
 
         sys.exit(submit_telemetry_data(outgoing, submitted))
 

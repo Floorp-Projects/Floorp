@@ -8,6 +8,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestTitleChrome, self).setUp()
 
@@ -22,9 +23,7 @@ class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
         win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
         self.marionette.switch_to_window(win)
 
-        expected_title = self.marionette.execute_script(
-            """
+        expected_title = self.marionette.execute_script("""
             return window.document.documentElement.getAttribute('title');
-        """
-        )
+        """)
         self.assertEqual(self.marionette.title, expected_title)

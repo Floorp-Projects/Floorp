@@ -38,30 +38,28 @@ class PurgeExtensionServiceWorkersOnPrefDisabled(MarionetteTestCase):
     def install_extension_with_service_worker(self):
         addons = Addons(self.marionette)
         test_extension_path = os.path.join(
-            os.path.dirname(self.filepath), "data", EXT_DIR_PATH
+            os.path.dirname(self.filepath),
+            "data",
+            EXT_DIR_PATH
         )
         addons.install(test_extension_path, temp=True)
         self.test_extension_base_url = self.get_extension_url()
         Wait(self.marionette).until(
             lambda _: self.is_extension_service_worker_registered,
-            message="Wait the extension service worker to be registered",
+            message="Wait the extension service worker to be registered"
         )
 
     def get_extension_url(self, path="/"):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script(
-                """
+            return self.marionette.execute_script("""
               let policy = WebExtensionPolicy.getByID(arguments[0]);
               return policy.getURL(arguments[1])
-            """,
-                script_args=(self.test_extension_id, path),
-            )
+            """, script_args=(self.test_extension_id, path))
 
     @property
     def is_extension_service_worker_registered(self):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script(
-                """
+            return self.marionette.execute_script("""
                 let serviceWorkerManager = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
                     Ci.nsIServiceWorkerManager
                 );
@@ -77,6 +75,4 @@ class PurgeExtensionServiceWorkersOnPrefDisabled(MarionetteTestCase):
                     }
                 }
                 return false;
-            """,
-                script_args=(self.test_extension_base_url,),
-            )
+            """, script_args=(self.test_extension_base_url,))

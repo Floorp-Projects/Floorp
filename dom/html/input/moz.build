@@ -5,35 +5,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "ButtonInputTypes.h",
-    "CheckableInputTypes.h",
-    "ColorInputType.h",
-    "DateTimeInputTypes.h",
-    "FileInputType.h",
-    "HiddenInputType.h",
-    "InputType.h",
-    "NumericInputTypes.h",
-    "SingleLineTextInputTypes.h",
+    'ButtonInputTypes.h',
+    'CheckableInputTypes.h',
+    'ColorInputType.h',
+    'DateTimeInputTypes.h',
+    'FileInputType.h',
+    'HiddenInputType.h',
+    'InputType.h',
+    'NumericInputTypes.h',
+    'SingleLineTextInputTypes.h',
 ]
 
 UNIFIED_SOURCES += [
-    "CheckableInputTypes.cpp",
-    "DateTimeInputTypes.cpp",
-    "FileInputType.cpp",
-    "InputType.cpp",
-    "NumericInputTypes.cpp",
-    "SingleLineTextInputTypes.cpp",
+    'CheckableInputTypes.cpp',
+    'DateTimeInputTypes.cpp',
+    'FileInputType.cpp',
+    'InputType.cpp',
+    'NumericInputTypes.cpp',
+    'SingleLineTextInputTypes.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/html",
-    "/layout/forms",
+    '/dom/base',
+    '/dom/html',
+    '/layout/forms',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
+

@@ -13,26 +13,19 @@ from mozharness.base.log import OutputParser, WARNING, INFO, CRITICAL, ERROR
 from mozharness.mozilla.automation import TBPL_WARNING, TBPL_FAILURE, TBPL_RETRY
 from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 
-SUITE_CATEGORIES = ["mochitest", "reftest", "xpcshell"]
+SUITE_CATEGORIES = ['mochitest', 'reftest', 'xpcshell']
 
 
-def tbox_print_summary(
-    pass_count, fail_count, known_fail_count=None, crashed=False, leaked=False
-):
+def tbox_print_summary(pass_count, fail_count, known_fail_count=None,
+                       crashed=False, leaked=False):
     emphasize_fail_text = '<em class="testfail">%s</em>'
 
-    if (
-        pass_count < 0
-        or fail_count < 0
-        or (known_fail_count is not None and known_fail_count < 0)
-    ):
-        summary = emphasize_fail_text % "T-FAIL"
-    elif (
-        pass_count == 0
-        and fail_count == 0
-        and (known_fail_count == 0 or known_fail_count is None)
-    ):
-        summary = emphasize_fail_text % "T-FAIL"
+    if pass_count < 0 or fail_count < 0 or \
+            (known_fail_count is not None and known_fail_count < 0):
+        summary = emphasize_fail_text % 'T-FAIL'
+    elif pass_count == 0 and fail_count == 0 and \
+            (known_fail_count == 0 or known_fail_count is None):
+        summary = emphasize_fail_text % 'T-FAIL'
     else:
         str_fail_count = str(fail_count)
         if fail_count > 0:
@@ -45,12 +38,13 @@ def tbox_print_summary(
         summary += "&nbsp;%s" % emphasize_fail_text % "CRASH"
     # Format the leak status.
     if leaked is not False:
-        summary += "&nbsp;%s" % emphasize_fail_text % ((leaked and "LEAK") or "L-FAIL")
+        summary += "&nbsp;%s" % emphasize_fail_text % (
+            (leaked and "LEAK") or "L-FAIL")
     return summary
 
 
 class TestSummaryOutputParserHelper(OutputParser):
-    def __init__(self, regex=re.compile(r"(passed|failed|todo): (\d+)"), **kwargs):
+    def __init__(self, regex=re.compile(r'(passed|failed|todo): (\d+)'), **kwargs):
         self.regex = regex
         self.failed = 0
         self.passed = 0
@@ -114,30 +108,29 @@ class DesktopUnittestOutputParser(OutputParser):
         # but is here to make pylint happy
         self.worst_log_level = INFO
         super(DesktopUnittestOutputParser, self).__init__(**kwargs)
-        self.summary_suite_re = TinderBoxPrintRe.get("%s_summary" % suite_category, {})
-        self.harness_error_re = TinderBoxPrintRe["harness_error"]["minimum_regex"]
-        self.full_harness_error_re = TinderBoxPrintRe["harness_error"]["full_regex"]
-        self.harness_retry_re = TinderBoxPrintRe["harness_error"]["retry_regex"]
+        self.summary_suite_re = TinderBoxPrintRe.get('%s_summary' % suite_category, {})
+        self.harness_error_re = TinderBoxPrintRe['harness_error']['minimum_regex']
+        self.full_harness_error_re = TinderBoxPrintRe['harness_error']['full_regex']
+        self.harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
         self.fail_count = -1
         self.pass_count = -1
         # known_fail_count does not exist for some suites
-        self.known_fail_count = self.summary_suite_re.get("known_fail_group") and -1
+        self.known_fail_count = self.summary_suite_re.get('known_fail_group') and -1
         self.crashed, self.leaked = False, False
         self.tbpl_status = TBPL_SUCCESS
 
     def parse_single_line(self, line):
         if self.summary_suite_re:
-            summary_m = self.summary_suite_re["regex"].match(line)  # pass/fail/todo
+            summary_m = self.summary_suite_re['regex'].match(line)  # pass/fail/todo
             if summary_m:
-                message = " %s" % line
+                message = ' %s' % line
                 log_level = INFO
                 # remove all the none values in groups() so this will work
                 # with all suites including mochitest browser-chrome
-                summary_match_list = [
-                    group for group in summary_m.groups() if group is not None
-                ]
+                summary_match_list = [group for group in summary_m.groups()
+                                      if group is not None]
                 r = summary_match_list[0]
-                if self.summary_suite_re["pass_group"] in r:
+                if self.summary_suite_re['pass_group'] in r:
                     if len(summary_match_list) > 1:
                         self.pass_count = int(summary_match_list[-1])
                     else:
@@ -146,24 +139,23 @@ class DesktopUnittestOutputParser(OutputParser):
                         # pass and fail count in the pass case.
                         self.pass_count = 1
                         self.fail_count = 0
-                elif self.summary_suite_re["fail_group"] in r:
+                elif self.summary_suite_re['fail_group'] in r:
                     self.fail_count = int(summary_match_list[-1])
                     if self.fail_count > 0:
-                        message += "\n One or more unittests failed."
+                        message += '\n One or more unittests failed.'
                         log_level = WARNING
                 # If self.summary_suite_re['known_fail_group'] == None,
                 # then r should not match it, # so this test is fine as is.
-                elif self.summary_suite_re["known_fail_group"] in r:
+                elif self.summary_suite_re['known_fail_group'] in r:
                     self.known_fail_count = int(summary_match_list[-1])
                 self.log(message, log_level)
                 return  # skip harness check and base parse_single_line
         harness_match = self.harness_error_re.search(line)
         if harness_match:
-            self.warning(" %s" % line)
+            self.warning(' %s' % line)
             self.worst_log_level = self.worst_level(WARNING, self.worst_log_level)
-            self.tbpl_status = self.worst_level(
-                TBPL_WARNING, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
             full_harness_match = self.full_harness_error_re.search(line)
             if full_harness_match:
                 r = full_harness_match.group(1)
@@ -175,11 +167,10 @@ class DesktopUnittestOutputParser(OutputParser):
                     self.leaked = True
             return  # skip base parse_single_line
         if self.harness_retry_re.search(line):
-            self.critical(" %s" % line)
+            self.critical(' %s' % line)
             self.worst_log_level = self.worst_level(CRITICAL, self.worst_log_level)
-            self.tbpl_status = self.worst_level(
-                TBPL_RETRY, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.tbpl_status = self.worst_level(TBPL_RETRY, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
             return  # skip base parse_single_line
         super(DesktopUnittestOutputParser, self).parse_single_line(line)
 
@@ -187,9 +178,8 @@ class DesktopUnittestOutputParser(OutputParser):
         success_codes = success_codes or [0]
 
         if self.num_errors:  # mozharness ran into a script error
-            self.tbpl_status = self.worst_level(
-                TBPL_FAILURE, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
 
         """
           We can run evaluate_parser multiple times, it will duplicate failures
@@ -197,7 +187,7 @@ class DesktopUnittestOutputParser(OutputParser):
           When we have a previous summary, we want to do:
             1) reset state so we only evaluate the current results
         """
-        joined_summary = {"pass_count": self.pass_count}
+        joined_summary = {'pass_count': self.pass_count}
         if previous_summary:
             self.tbpl_status = TBPL_SUCCESS
             self.worst_log_level = INFO
@@ -209,27 +199,23 @@ class DesktopUnittestOutputParser(OutputParser):
         # (no fail summary line was found)
         if self.fail_count != 0:
             self.worst_log_level = self.worst_level(WARNING, self.worst_log_level)
-            self.tbpl_status = self.worst_level(
-                TBPL_WARNING, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
 
         # Account for the possibility that no test summary was output.
-        if (
-            self.pass_count <= 0
-            and self.fail_count <= 0
-            and (self.known_fail_count is None or self.known_fail_count <= 0)
-            and os.environ.get("TRY_SELECTOR") != "coverage"
-        ):
-            self.error("No tests run or test summary not found")
-            self.worst_log_level = self.worst_level(WARNING, self.worst_log_level)
-            self.tbpl_status = self.worst_level(
-                TBPL_WARNING, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+        if (self.pass_count <= 0 and self.fail_count <= 0 and
+           (self.known_fail_count is None or self.known_fail_count <= 0) and
+           os.environ.get('TRY_SELECTOR') != 'coverage'):
+            self.error('No tests run or test summary not found')
+            self.worst_log_level = self.worst_level(WARNING,
+                                                    self.worst_log_level)
+            self.tbpl_status = self.worst_level(TBPL_WARNING,
+                                                self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
 
         if return_code not in success_codes:
-            self.tbpl_status = self.worst_level(
-                TBPL_FAILURE, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
-            )
+            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
 
         # we can trust in parser.worst_log_level in either case
         return (self.tbpl_status, self.worst_log_level, joined_summary)
@@ -240,11 +226,9 @@ class DesktopUnittestOutputParser(OutputParser):
         # the log more then once.  I figured this method should stay isolated as
         # it is only here for tbpl highlighted summaries and is not part of
         # result status IIUC.
-        summary = tbox_print_summary(
-            self.pass_count,
-            self.fail_count,
-            self.known_fail_count,
-            self.crashed,
-            self.leaked,
-        )
+        summary = tbox_print_summary(self.pass_count,
+                                     self.fail_count,
+                                     self.known_fail_count,
+                                     self.crashed,
+                                     self.leaked)
         self.info("TinderboxPrint: %s<br/>%s\n" % (suite_name, summary))

@@ -23,7 +23,7 @@ class BufferHandler(BaseHandler):
         self.inner = inner
         self.message_limit = message_limit
         if buffered_actions is None:
-            buffered_actions = ["log", "test_status"]
+            buffered_actions = ['log', 'test_status']
         self.buffered_actions = set(buffered_actions)
         self._buffering = True
 
@@ -33,20 +33,17 @@ class BufferHandler(BaseHandler):
         else:
             self._buffer = []
 
-        self.message_handler.register_message_handlers(
-            "buffer",
-            {
-                "on": self._enable_buffering,
-                "off": self._disable_buffering,
-                "flush": self._flush_buffered,
-                "clear": self._clear_buffer,
-            },
-        )
+        self.message_handler.register_message_handlers("buffer", {
+            "on": self._enable_buffering,
+            "off": self._disable_buffering,
+            "flush": self._flush_buffered,
+            "clear": self._clear_buffer,
+        })
 
     def __call__(self, data):
-        action = data["action"]
-        if "bypass_mozlog_buffer" in data:
-            data.pop("bypass_mozlog_buffer")
+        action = data['action']
+        if 'bypass_mozlog_buffer' in data:
+            data.pop('bypass_mozlog_buffer')
             self.inner(data)
             return
         if not self._buffering or action not in self.buffered_actions:
@@ -79,10 +76,10 @@ class BufferHandler(BaseHandler):
 
     def _flush_buffered(self):
         """Logs the contents of the current buffer"""
-        for msg in self._buffer[self._buffer_pos :]:
+        for msg in self._buffer[self._buffer_pos:]:
             if msg is not None:
                 self.inner(msg)
-        for msg in self._buffer[: self._buffer_pos]:
+        for msg in self._buffer[:self._buffer_pos]:
             if msg is not None:
                 self.inner(msg)
         return self._clear_buffer()

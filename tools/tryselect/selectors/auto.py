@@ -11,18 +11,18 @@ from ..push import push_to_try
 
 
 TRY_AUTO_PARAMETERS = {
-    "optimize_strategies": "taskgraph.optimize:tryselect.bugbug_debug_disperse",
-    "optimize_target_tasks": True,
-    "target_tasks_method": "try_auto",
-    "test_manifest_loader": "bugbug",
-    "try_mode": "try_auto",
-    "try_task_config": {},
+    'optimize_strategies': 'taskgraph.optimize:tryselect.bugbug_debug_disperse',
+    'optimize_target_tasks': True,
+    'target_tasks_method': 'try_auto',
+    'test_manifest_loader': 'bugbug',
+    'try_mode': 'try_auto',
+    'try_task_config': {},
 }
 
 
 class AutoParser(BaseTryParser):
-    name = "auto"
-    common_groups = ["push"]
+    name = 'auto'
+    common_groups = ['push']
     task_configs = [
         "artifact",
         "env",
@@ -31,22 +31,19 @@ class AutoParser(BaseTryParser):
         "worker-overrides",
     ]
     arguments = [
-        [
-            ["--strategy"],
-            {
-                "default": None,
-                "help": "Override the default optimization strategy. Valid values "
-                "are the experimental strategies defined at the bottom of "
-                "`taskcluster/taskgraph/optimize/__init__.py`.",
-            },
-        ],
+        [['--strategy'],
+         {'default': None,
+          'help': 'Override the default optimization strategy. Valid values '
+                  'are the experimental strategies defined at the bottom of '
+                  '`taskcluster/taskgraph/optimize/__init__.py`.'
+          }],
     ]
 
     def validate(self, args):
         super(AutoParser, self).validate(args)
 
         if args.strategy:
-            if ":" not in args.strategy:
+            if ':' not in args.strategy:
                 args.strategy = "taskgraph.optimize:tryselect.{}".format(args.strategy)
 
             try:
@@ -58,27 +55,19 @@ class AutoParser(BaseTryParser):
                 self.error("object at '{}' must be a dict".format(args.strategy))
 
 
-def run(
-    message="{msg}",
-    push=True,
-    closed_tree=False,
-    strategy=None,
-    try_config=None,
-    **ignored
-):
-    msg = message.format(msg="Tasks automatically selected.")
+def run(message='{msg}', push=True, closed_tree=False, strategy=None, try_config=None, **ignored):
+    msg = message.format(msg='Tasks automatically selected.')
 
     params = TRY_AUTO_PARAMETERS.copy()
     if try_config:
-        params["try_task_config"] = try_config
+        params['try_task_config'] = try_config
 
     if strategy:
-        params["optimize_strategies"] = strategy
+        params['optimize_strategies'] = strategy
 
     task_config = {
-        "version": 2,
-        "parameters": params,
+        'version': 2,
+        'parameters': params,
     }
-    return push_to_try(
-        "auto", msg, try_task_config=task_config, push=push, closed_tree=closed_tree
-    )
+    return push_to_try('auto', msg, try_task_config=task_config,
+                       push=push, closed_tree=closed_tree)

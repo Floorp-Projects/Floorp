@@ -4,6 +4,6 @@
 
 
 def main(output, locale=None):
-    assert locale is not None
+    assert(locale is not None)
     output.write("[locale]\n")
     output.write("locale={}\n".format(locale))

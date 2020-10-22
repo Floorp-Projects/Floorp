@@ -3,25 +3,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "messages",
-    "previews",
-    "request-blocking",
-    "request-details",
-    "request-list",
-    "search",
+    'messages',
+    'previews',
+    'request-blocking',
+    'request-details',
+    'request-list',
+    'search',
 ]
 
 DevToolsModules(
-    "App.js",
-    "CustomRequestPanel.js",
-    "DropHarHandler.js",
-    "MonitorPanel.js",
-    "NetworkActionBar.js",
-    "SecurityState.js",
-    "SourceEditor.js",
-    "StatisticsPanel.js",
-    "StatusBar.js",
-    "StatusCode.js",
-    "TabboxPanel.js",
-    "Toolbar.js",
+    'App.js',
+    'CustomRequestPanel.js',
+    'DropHarHandler.js',
+    'MonitorPanel.js',
+    'NetworkActionBar.js',
+    'SecurityState.js',
+    'SourceEditor.js',
+    'StatisticsPanel.js',
+    'StatusBar.js',
+    'StatusCode.js',
+    'TabboxPanel.js',
+    'Toolbar.js',
 )

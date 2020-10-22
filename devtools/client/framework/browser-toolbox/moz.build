@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser.ini",
+    'test/browser.ini',
 ]
 
 DevToolsModules(
-    "Launcher.jsm",
+    'Launcher.jsm',
 )

@@ -4,25 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Async Tooling")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
 SOURCES += [
-    "FinalizationWitnessService.cpp",
+  'FinalizationWitnessService.cpp',
 ]
 
 XPIDL_SOURCES += [
-    "nsIFinalizationWitnessService.idl",
+  'nsIFinalizationWitnessService.idl',
 ]
 
-XPIDL_MODULE = "toolkit_finalizationwitness"
+XPIDL_MODULE = 'toolkit_finalizationwitness'
 
 EXPORTS.mozilla += [
-    "FinalizationWitnessService.h",
+    'FinalizationWitnessService.h',
 ]
 
 LOCAL_INCLUDES += [
-    "/js/xpconnect/loader",
+    '/js/xpconnect/loader',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

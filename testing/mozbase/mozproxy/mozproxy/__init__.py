@@ -26,7 +26,8 @@ else:
 
 
 def get_playback(config):
-    """Returns an instance of the right Playback class"""
+    """ Returns an instance of the right Playback class
+    """
     sys.path.insert(0, mozharness_dir)
     sys.path.insert(0, mozproxy_dir)
     sys.path.insert(0, mozproxy_src_dir)

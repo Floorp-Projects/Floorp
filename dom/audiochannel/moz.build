@@ -8,25 +8,25 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 XPIDL_SOURCES += [
-    "nsIAudioChannelAgent.idl",
+    'nsIAudioChannelAgent.idl',
 ]
 
-XPIDL_MODULE = "dom_audiochannel"
+XPIDL_MODULE = 'dom_audiochannel'
 
 EXPORTS += [
-    "AudioChannelAgent.h",
-    "AudioChannelService.h",
+    'AudioChannelAgent.h',
+    'AudioChannelService.h',
 ]
 
 UNIFIED_SOURCES += [
-    "AudioChannelAgent.cpp",
-    "AudioChannelService.cpp",
+    'AudioChannelAgent.cpp',
+    'AudioChannelService.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/base/",
+    '/dom/base/',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

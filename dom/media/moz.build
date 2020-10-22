@@ -3,400 +3,406 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
+include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
 
-with Files("*"):
-    BUG_COMPONENT = ("Core", "Audio/Video")
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
 
-with Files("test/**"):
-    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+with Files('test/**'):
+    BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
-with Files("gtest/TestGMP*"):
-    BUG_COMPONENT = ("Core", "Audio/Video: GMP")
+with Files('gtest/TestGMP*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video: GMP')
 
-with Files("tests/**"):
-    BUG_COMPONENT = ("Core", "WebRTC")
+with Files('tests/**'):
+    BUG_COMPONENT = ('Core', 'WebRTC')
 
-component_signaling = ("Core", "WebRTC: Signaling")
-with Files("IdpSandbox.jsm"):
+component_signaling = ('Core', 'WebRTC: Signaling')
+with Files('IdpSandbox.jsm'):
     BUG_COMPONENT = component_signaling
-with Files("PeerConnection*"):
+with Files('PeerConnection*'):
     BUG_COMPONENT = component_signaling
 
-component_av = ("Core", "WebRTC: Audio/Video")
-with Files("GetUserMedia*"):
+component_av = ('Core', 'WebRTC: Audio/Video')
+with Files('GetUserMedia*'):
     BUG_COMPONENT = component_av
 
 DIRS += [
-    "doctor",
-    "eme",
-    "encoder",
-    "fake-cdm",
-    "flac",
-    "gmp",
-    "gmp-plugin-openh264",
-    "imagecapture",
-    "ipc",
-    "mediacapabilities",
-    "mediacontrol",
-    "mediasink",
-    "mediasource",
-    "mediasession",
-    "mp3",
-    "ogg",
-    "platforms",
-    "systemservices",
-    "wave",
-    "webaudio",
-    "webm",
-    "webrtc",
-    "webspeech",
-    "webvtt",
+    'doctor',
+    'eme',
+    'encoder',
+    'fake-cdm',
+    'flac',
+    'gmp',
+    'gmp-plugin-openh264',
+    'imagecapture',
+    'ipc',
+    'mediacapabilities',
+    'mediacontrol',
+    'mediasink',
+    'mediasource',
+    'mediasession',
+    'mp3',
+    'ogg',
+    'platforms',
+    'systemservices',
+    'wave',
+    'webaudio',
+    'webm',
+    'webrtc',
+    'webspeech',
+    'webvtt',
 ]
 
-if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
-    DIRS += ["hls"]
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+    DIRS += ['hls']
 
-if CONFIG["MOZ_FMP4"]:
-    DIRS += ["mp4"]
+if CONFIG['MOZ_FMP4']:
+    DIRS += ['mp4']
 
-if CONFIG["MOZ_WEBRTC"]:
-    DIRS += ["bridge"]
+if CONFIG['MOZ_WEBRTC']:
+    DIRS += ['bridge']
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
-if CONFIG["FUZZING_INTERFACES"]:
-    TEST_DIRS += ["fuzz"]
+if CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+        'fuzz'
+    ]
 
-if CONFIG["MOZ_WEBRTC_SIGNALING"]:
-    if CONFIG["FUZZING_INTERFACES"]:
-        TEST_DIRS += ["webrtc/tests/fuzztests"]
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'webrtc/tests/fuzztests'
+        ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
-    "webrtc/tests/mochitests/identity/mochitest.ini",
+    'test/mochitest.ini',
+    'webrtc/tests/mochitests/identity/mochitest.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "mediacontrol/tests/browser.ini",
-    "mediasession/test/browser.ini",
+    'mediacontrol/tests/browser.ini',
+    'mediasession/test/browser.ini',
 ]
 
-if CONFIG["MOZ_WEBRTC"]:
-    MOCHITEST_MANIFESTS += ["webrtc/tests/mochitests/mochitest.ini"]
+if CONFIG['MOZ_WEBRTC']:
+    MOCHITEST_MANIFESTS += ['webrtc/tests/mochitests/mochitest.ini']
 
 XPIDL_SOURCES += [
-    "nsIAudioDeviceInfo.idl",
-    "nsIAutoplay.idl",
-    "nsIDOMNavigatorUserMedia.idl",
-    "nsIMediaManager.idl",
+    'nsIAudioDeviceInfo.idl',
+    'nsIAutoplay.idl',
+    'nsIDOMNavigatorUserMedia.idl',
+    'nsIMediaManager.idl',
 ]
 
-XPIDL_MODULE = "dom_media"
+XPIDL_MODULE = 'dom_media'
 
 EXPORTS += [
-    "../../third_party/rust/audio_thread_priority/audio_thread_priority.h",
-    "ADTSDecoder.h",
-    "ADTSDemuxer.h",
-    "AsyncLogger.h",
-    "AudibilityMonitor.h",
-    "AudioBufferUtils.h",
-    "AudioChannelFormat.h",
-    "AudioCompactor.h",
-    "AudioConfig.h",
-    "AudioConverter.h",
-    "AudioDeviceInfo.h",
-    "AudioDriftCorrection.h",
-    "AudioMixer.h",
-    "AudioPacketizer.h",
-    "AudioRingBuffer.h",
-    "AudioSampleFormat.h",
-    "AudioSegment.h",
-    "AudioStream.h",
-    "AudioThreadRegistry.h",
-    "AutoplayPolicy.h",
-    "BackgroundVideoDecodingPermissionObserver.h",
-    "Benchmark.h",
-    "BitReader.h",
-    "BitWriter.h",
-    "BufferMediaResource.h",
-    "BufferReader.h",
-    "ByteWriter.h",
-    "ChannelMediaDecoder.h",
-    "CrossGraphPort.h",
-    "CubebUtils.h",
-    "DecoderTraits.h",
-    "DOMMediaStream.h",
-    "DriftCompensation.h",
-    "DynamicResampler.h",
-    "FileBlockCache.h",
-    "ForwardedInputTrack.h",
-    "FrameStatistics.h",
-    "GVAutoplayPermissionRequest.h",
-    "GVAutoplayRequestStatusIPC.h",
-    "GVAutoplayRequestUtils.h",
-    "ImageToI420.h",
-    "Intervals.h",
-    "MediaCache.h",
-    "MediaContainerType.h",
-    "MediaData.h",
-    "MediaDataDemuxer.h",
-    "MediaDecoder.h",
-    "MediaDecoderOwner.h",
-    "MediaDecoderStateMachine.h",
-    "MediaEventSource.h",
-    "MediaFormatReader.h",
-    "MediaInfo.h",
-    "MediaMetadataManager.h",
-    "MediaMIMETypes.h",
-    "MediaPlaybackDelayPolicy.h",
-    "MediaPromiseDefs.h",
-    "MediaQueue.h",
-    "MediaRecorder.h",
-    "MediaResource.h",
-    "MediaResourceCallback.h",
-    "MediaResult.h",
-    "MediaSegment.h",
-    "MediaShutdownManager.h",
-    "MediaSpan.h",
-    "MediaStatistics.h",
-    "MediaStreamWindowCapturer.h",
-    "MediaTimer.h",
-    "MediaTrack.h",
-    "MediaTrackGraph.h",
-    "MediaTrackList.h",
-    "MediaTrackListener.h",
-    "MemoryBlockCache.h",
-    "MPSCQueue.h",
-    "nsIDocumentActivity.h",
-    "PrincipalChangeObserver.h",
-    "PrincipalHandle.h",
-    "QueueObject.h",
-    "SeekJob.h",
-    "SeekTarget.h",
-    "SelfRef.h",
-    "SharedBuffer.h",
-    "ThreadPoolCOMListener.h",
-    "TimeUnits.h",
-    "Tracing.h",
-    "VideoFrameContainer.h",
-    "VideoLimits.h",
-    "VideoSegment.h",
-    "VideoUtils.h",
-    "VorbisUtils.h",
-    "WavDumper.h",
-    "XiphExtradata.h",
+    '../../third_party/rust/audio_thread_priority/audio_thread_priority.h',
+    'ADTSDecoder.h',
+    'ADTSDemuxer.h',
+    'AsyncLogger.h',
+    'AudibilityMonitor.h',
+    'AudioBufferUtils.h',
+    'AudioChannelFormat.h',
+    'AudioCompactor.h',
+    'AudioConfig.h',
+    'AudioConverter.h',
+    'AudioDeviceInfo.h',
+    'AudioDriftCorrection.h',
+    'AudioMixer.h',
+    'AudioPacketizer.h',
+    'AudioRingBuffer.h',
+    'AudioSampleFormat.h',
+    'AudioSegment.h',
+    'AudioStream.h',
+    'AudioThreadRegistry.h',
+    'AutoplayPolicy.h',
+    'BackgroundVideoDecodingPermissionObserver.h',
+    'Benchmark.h',
+    'BitReader.h',
+    'BitWriter.h',
+    'BufferMediaResource.h',
+    'BufferReader.h',
+    'ByteWriter.h',
+    'ChannelMediaDecoder.h',
+    'CrossGraphPort.h',
+    'CubebUtils.h',
+    'DecoderTraits.h',
+    'DOMMediaStream.h',
+    'DriftCompensation.h',
+    'DynamicResampler.h',
+    'FileBlockCache.h',
+    'ForwardedInputTrack.h',
+    'FrameStatistics.h',
+    'GVAutoplayPermissionRequest.h',
+    'GVAutoplayRequestStatusIPC.h',
+    'GVAutoplayRequestUtils.h',
+    'ImageToI420.h',
+    'Intervals.h',
+    'MediaCache.h',
+    'MediaContainerType.h',
+    'MediaData.h',
+    'MediaDataDemuxer.h',
+    'MediaDecoder.h',
+    'MediaDecoderOwner.h',
+    'MediaDecoderStateMachine.h',
+    'MediaEventSource.h',
+    'MediaFormatReader.h',
+    'MediaInfo.h',
+    'MediaMetadataManager.h',
+    'MediaMIMETypes.h',
+    'MediaPlaybackDelayPolicy.h',
+    'MediaPromiseDefs.h',
+    'MediaQueue.h',
+    'MediaRecorder.h',
+    'MediaResource.h',
+    'MediaResourceCallback.h',
+    'MediaResult.h',
+    'MediaSegment.h',
+    'MediaShutdownManager.h',
+    'MediaSpan.h',
+    'MediaStatistics.h',
+    'MediaStreamWindowCapturer.h',
+    'MediaTimer.h',
+    'MediaTrack.h',
+    'MediaTrackGraph.h',
+    'MediaTrackList.h',
+    'MediaTrackListener.h',
+    'MemoryBlockCache.h',
+    'MPSCQueue.h',
+    'nsIDocumentActivity.h',
+    'PrincipalChangeObserver.h',
+    'PrincipalHandle.h',
+    'QueueObject.h',
+    'SeekJob.h',
+    'SeekTarget.h',
+    'SelfRef.h',
+    'SharedBuffer.h',
+    'ThreadPoolCOMListener.h',
+    'TimeUnits.h',
+    'Tracing.h',
+    'VideoFrameContainer.h',
+    'VideoLimits.h',
+    'VideoSegment.h',
+    'VideoUtils.h',
+    'VorbisUtils.h',
+    'WavDumper.h',
+    'XiphExtradata.h',
 ]
 
 EXPORTS.mozilla += [
-    "MediaManager.h",
-    "UnderrunHandler.h",
+    'MediaManager.h',
+    'UnderrunHandler.h',
 ]
 
 EXPORTS.mozilla.media.webrtc += [
-    "webrtc/WebrtcGlobal.h",
-    "webrtc/WebrtcIPCTraits.h",
+    'webrtc/WebrtcGlobal.h',
+    'webrtc/WebrtcIPCTraits.h',
 ]
 
-if not CONFIG["MOZ_WEBRTC"]:
-    EXPORTS.transport += [
-        "webrtc/transport/runnable_utils.h",
-    ]
+if not CONFIG['MOZ_WEBRTC']:
+  EXPORTS.transport += [
+      'webrtc/transport/runnable_utils.h',
+  ]
 
 EXPORTS.mozilla.dom += [
-    "AudioDeviceInfo.h",
-    "AudioStreamTrack.h",
-    "AudioTrack.h",
-    "AudioTrackList.h",
-    "CanvasCaptureMediaStream.h",
-    "GetUserMediaRequest.h",
-    "MediaDeviceInfo.h",
-    "MediaDevices.h",
-    "MediaStreamError.h",
-    "MediaStreamTrack.h",
-    "TextTrack.h",
-    "TextTrackCue.h",
-    "TextTrackCueList.h",
-    "TextTrackList.h",
-    "TextTrackRegion.h",
-    "VideoPlaybackQuality.h",
-    "VideoStreamTrack.h",
-    "VideoTrack.h",
-    "VideoTrackList.h",
-    "webrtc/MediaTransportChild.h",
-    "webrtc/MediaTransportParent.h",
+    'AudioDeviceInfo.h',
+    'AudioStreamTrack.h',
+    'AudioTrack.h',
+    'AudioTrackList.h',
+    'CanvasCaptureMediaStream.h',
+    'GetUserMediaRequest.h',
+    'MediaDeviceInfo.h',
+    'MediaDevices.h',
+    'MediaStreamError.h',
+    'MediaStreamTrack.h',
+    'TextTrack.h',
+    'TextTrackCue.h',
+    'TextTrackCueList.h',
+    'TextTrackList.h',
+    'TextTrackRegion.h',
+    'VideoPlaybackQuality.h',
+    'VideoStreamTrack.h',
+    'VideoTrack.h',
+    'VideoTrackList.h',
+    'webrtc/MediaTransportChild.h',
+    'webrtc/MediaTransportParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ADTSDecoder.cpp",
-    "ADTSDemuxer.cpp",
-    "AudioCaptureTrack.cpp",
-    "AudioChannelFormat.cpp",
-    "AudioCompactor.cpp",
-    "AudioConfig.cpp",
-    "AudioConverter.cpp",
-    "AudioDeviceInfo.cpp",
-    "AudioRingBuffer.cpp",
-    "AudioSegment.cpp",
-    "AudioStream.cpp",
-    "AudioStreamTrack.cpp",
-    "AudioTrack.cpp",
-    "AudioTrackList.cpp",
-    "AutoplayPolicy.cpp",
-    "BackgroundVideoDecodingPermissionObserver.cpp",
-    "BaseMediaResource.cpp",
-    "Benchmark.cpp",
-    "BitReader.cpp",
-    "BitWriter.cpp",
-    "CanvasCaptureMediaStream.cpp",
-    "ChannelMediaDecoder.cpp",
-    "ChannelMediaResource.cpp",
-    "CloneableWithRangeMediaResource.cpp",
-    "CrossGraphPort.cpp",
-    "DOMMediaStream.cpp",
-    "DynamicResampler.cpp",
-    "FileBlockCache.cpp",
-    "FileMediaResource.cpp",
-    "ForwardedInputTrack.cpp",
-    "GetUserMediaRequest.cpp",
-    "GraphDriver.cpp",
-    "GraphRunner.cpp",
-    "GVAutoplayPermissionRequest.cpp",
-    "ImageToI420.cpp",
-    "MediaCache.cpp",
-    "MediaContainerType.cpp",
-    "MediaData.cpp",
-    "MediaDecoder.cpp",
-    "MediaDecoderStateMachine.cpp",
-    "MediaDeviceInfo.cpp",
-    "MediaDevices.cpp",
-    "MediaFormatReader.cpp",
-    "MediaInfo.cpp",
-    "MediaManager.cpp",
-    "MediaMIMETypes.cpp",
-    "MediaPlaybackDelayPolicy.cpp",
-    "MediaRecorder.cpp",
-    "MediaResource.cpp",
-    "MediaShutdownManager.cpp",
-    "MediaStreamError.cpp",
-    "MediaStreamTrack.cpp",
-    "MediaStreamWindowCapturer.cpp",
-    "MediaTimer.cpp",
-    "MediaTrack.cpp",
-    "MediaTrackGraph.cpp",
-    "MediaTrackList.cpp",
-    "MediaTrackListener.cpp",
-    "MemoryBlockCache.cpp",
-    "QueueObject.cpp",
-    "ReaderProxy.cpp",
-    "SeekJob.cpp",
-    "TextTrack.cpp",
-    "TextTrackCue.cpp",
-    "TextTrackCueList.cpp",
-    "TextTrackList.cpp",
-    "TextTrackRegion.cpp",
-    "Tracing.cpp",
-    "VideoFrameContainer.cpp",
-    "VideoPlaybackQuality.cpp",
-    "VideoSegment.cpp",
-    "VideoStreamTrack.cpp",
-    "VideoTrack.cpp",
-    "VideoTrackList.cpp",
-    "VideoUtils.cpp",
-    "WebVTTListener.cpp",
-    "XiphExtradata.cpp",
+    'ADTSDecoder.cpp',
+    'ADTSDemuxer.cpp',
+    'AudioCaptureTrack.cpp',
+    'AudioChannelFormat.cpp',
+    'AudioCompactor.cpp',
+    'AudioConfig.cpp',
+    'AudioConverter.cpp',
+    'AudioDeviceInfo.cpp',
+    'AudioRingBuffer.cpp',
+    'AudioSegment.cpp',
+    'AudioStream.cpp',
+    'AudioStreamTrack.cpp',
+    'AudioTrack.cpp',
+    'AudioTrackList.cpp',
+    'AutoplayPolicy.cpp',
+    'BackgroundVideoDecodingPermissionObserver.cpp',
+    'BaseMediaResource.cpp',
+    'Benchmark.cpp',
+    'BitReader.cpp',
+    'BitWriter.cpp',
+    'CanvasCaptureMediaStream.cpp',
+    'ChannelMediaDecoder.cpp',
+    'ChannelMediaResource.cpp',
+    'CloneableWithRangeMediaResource.cpp',
+    'CrossGraphPort.cpp',
+    'DOMMediaStream.cpp',
+    'DynamicResampler.cpp',
+    'FileBlockCache.cpp',
+    'FileMediaResource.cpp',
+    'ForwardedInputTrack.cpp',
+    'GetUserMediaRequest.cpp',
+    'GraphDriver.cpp',
+    'GraphRunner.cpp',
+    'GVAutoplayPermissionRequest.cpp',
+    'ImageToI420.cpp',
+    'MediaCache.cpp',
+    'MediaContainerType.cpp',
+    'MediaData.cpp',
+    'MediaDecoder.cpp',
+    'MediaDecoderStateMachine.cpp',
+    'MediaDeviceInfo.cpp',
+    'MediaDevices.cpp',
+    'MediaFormatReader.cpp',
+    'MediaInfo.cpp',
+    'MediaManager.cpp',
+    'MediaMIMETypes.cpp',
+    'MediaPlaybackDelayPolicy.cpp',
+    'MediaRecorder.cpp',
+    'MediaResource.cpp',
+    'MediaShutdownManager.cpp',
+    'MediaStreamError.cpp',
+    'MediaStreamTrack.cpp',
+    'MediaStreamWindowCapturer.cpp',
+    'MediaTimer.cpp',
+    'MediaTrack.cpp',
+    'MediaTrackGraph.cpp',
+    'MediaTrackList.cpp',
+    'MediaTrackListener.cpp',
+    'MemoryBlockCache.cpp',
+    'QueueObject.cpp',
+    'ReaderProxy.cpp',
+    'SeekJob.cpp',
+    'TextTrack.cpp',
+    'TextTrackCue.cpp',
+    'TextTrackCueList.cpp',
+    'TextTrackList.cpp',
+    'TextTrackRegion.cpp',
+    'Tracing.cpp',
+    'VideoFrameContainer.cpp',
+    'VideoPlaybackQuality.cpp',
+    'VideoSegment.cpp',
+    'VideoStreamTrack.cpp',
+    'VideoTrack.cpp',
+    'VideoTrackList.cpp',
+    'VideoUtils.cpp',
+    'WebVTTListener.cpp',
+    'XiphExtradata.cpp',
 ]
 
-if CONFIG["OS_TARGET"] == "Linux":
-    UNIFIED_SOURCES += ["UnderrunHandlerLinux.cpp"]
+if CONFIG['OS_TARGET'] == 'Linux':
+    UNIFIED_SOURCES += [ 'UnderrunHandlerLinux.cpp' ]
 else:
-    UNIFIED_SOURCES += ["UnderrunHandlerNoop.cpp"]
+    UNIFIED_SOURCES += [ 'UnderrunHandlerNoop.cpp']
 
-if CONFIG["OS_TARGET"] == "WINNT":
-    EXPORTS.mozilla.audio += [
-        "AudioNotificationReceiver.h",
-        "AudioNotificationSender.h",
-    ]
-    SOURCES += [
-        "AudioNotificationReceiver.cpp",
-        "AudioNotificationSender.cpp",
-        "ThreadPoolCOMListener.cpp",
-    ]
+if CONFIG['OS_TARGET'] == 'WINNT':
+  EXPORTS.mozilla.audio += [
+      'AudioNotificationReceiver.h',
+      'AudioNotificationSender.h',
+  ]
+  SOURCES += [
+      'AudioNotificationReceiver.cpp',
+      'AudioNotificationSender.cpp',
+      'ThreadPoolCOMListener.cpp',
+  ]
 
 # CubebUtils.cpp needs to be built separately due to what appears to be some kind
 # of compiler bug on Android 4.2 x86 opt. See bug 1408459.
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 SOURCES += [
-    "CubebUtils.cpp",
-    "DecoderTraits.cpp",
+    'CubebUtils.cpp',
+    'DecoderTraits.cpp',
 ]
 
 # Some codec-related code uses multi-character constants, which GCC and clang
 # warn about. Suppress turning this warning into an error.
-SOURCES["DecoderTraits.cpp"].flags += ["-Wno-error=multichar"]
+SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
 
-if CONFIG["MOZ_WEBRTC"]:
+if CONFIG['MOZ_WEBRTC']:
     XPCOM_MANIFESTS += [
-        "components.conf",
+        'components.conf',
     ]
 
     EXTRA_JS_MODULES.media += [
-        "PeerConnection.jsm",
+        'PeerConnection.jsm',
     ]
 
 EXTRA_JS_MODULES.media += [
-    "IdpSandbox.jsm",
-    "PeerConnectionIdp.jsm",
+    'IdpSandbox.jsm',
+    'PeerConnectionIdp.jsm',
 ]
 
 LOCAL_INCLUDES += [
-    "/caps",
-    "/docshell/base",
-    "/dom/base",
-    "/layout/generic",
-    "/layout/xul",
-    "/media/libyuv/libyuv/include",
-    "/netwerk/base",
-    "/toolkit/content/tests/browser/",
+    '/caps',
+    '/docshell/base',
+    '/dom/base',
+    '/layout/generic',
+    '/layout/xul',
+    '/media/libyuv/libyuv/include',
+    '/netwerk/base',
+    '/toolkit/content/tests/browser/',
 ]
 
-if CONFIG["MOZ_WEBRTC"]:
+if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
-        "/dom/media/webrtc/common",
-        "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
+        '/dom/media/webrtc/common',
+        '/third_party/libwebrtc',
+        '/third_party/libwebrtc/webrtc',
     ]
 
-DEFINES["MOZILLA_INTERNAL_API"] = True
-DEFINES["TRACING"] = True
+DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['TRACING'] = True
 
-if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
-    DEFINES["MOZ_ANDROID_HLS_SUPPORT"] = True
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+    DEFINES['MOZ_ANDROID_HLS_SUPPORT'] = True
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
+if CONFIG['COMPILE_ENVIRONMENT']:
     EXPORTS += [
-        "!audioipc_client_ffi_generated.h",
-        "!audioipc_server_ffi_generated.h",
+        '!audioipc_client_ffi_generated.h',
+        '!audioipc_server_ffi_generated.h',
     ]
 
-    CbindgenHeader("audioipc_client_ffi_generated.h", inputs=["/media/audioipc/client"])
+    CbindgenHeader('audioipc_client_ffi_generated.h',
+                   inputs=['/media/audioipc/client'])
 
-    CbindgenHeader("audioipc_server_ffi_generated.h", inputs=["/media/audioipc/server"])
+    CbindgenHeader('audioipc_server_ffi_generated.h',
+                   inputs=['/media/audioipc/server'])
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 # Suppress some GCC warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
-        "-Wno-error=attributes",
-        "-Wno-error=shadow",
+        '-Wno-error=attributes',
+        '-Wno-error=shadow',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

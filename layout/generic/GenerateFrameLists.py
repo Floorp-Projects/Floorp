@@ -25,9 +25,7 @@ def generate_frame_id_list_h(output, *ignore):
     output.write(HEADER)
     for group in groups:
         for frame in group:
-            output.write(
-                "FRAME_ID(%s, %s, %s)\n" % (frame.cls, frame.ty, frame.leafness)
-            )
+            output.write("FRAME_ID(%s, %s, %s)\n" % (frame.cls, frame.ty, frame.leafness))
     for frame in FRAME_CLASSES:
         if not frame.is_concrete:
             output.write("ABSTRACT_FRAME_ID(%s)\n" % frame.cls)
@@ -37,6 +35,4 @@ def generate_frame_type_list_h(output, *ignore):
     groups = grouped_frame_classes()
     output.write(HEADER)
     for group in groups:
-        output.write(
-            "FRAME_TYPE(%s, %s, %s)\n" % (group[0].ty, group[0].cls, group[-1].cls)
-        )
+        output.write("FRAME_TYPE(%s, %s, %s)\n" % (group[0].ty, group[0].cls, group[-1].cls))

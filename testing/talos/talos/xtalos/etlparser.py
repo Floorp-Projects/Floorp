@@ -34,21 +34,19 @@ NAME_SUBSTITUTIONS = [
     # Substitution happens after combinations like \t \s \n ... are replaced
     # with their real representations. So, prepend them with extra backslash.
     # Read more: https://docs.python.org/2.7/library/re.html#re.sub
-    (re.compile(r"{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}"), "{uuid}"),
-    (re.compile(r"talos\\tests\\tp5n\\.*"), r"talos\\tests\{tp5n_files}"),
-    (re.compile(r"nvidia corporation\\3d vision\\.*"), "{nvidia_3d_vision}"),
-    (re.compile(r"cltbld\.t-w732-ix-\d+\.\d+"), "{cltbld}"),
-    (
-        re.compile(r"venv\\lib\\site-packages\\pip\\_vendor\\.*"),
-        r"venv\lib\\site-packages\\{pip_vendor}",
-    ),
+    (re.compile(r'{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}'), '{uuid}'),
+    (re.compile(r'talos\\tests\\tp5n\\.*'), r'talos\\tests\{tp5n_files}'),
+    (re.compile(r'nvidia corporation\\3d vision\\.*'), '{nvidia_3d_vision}'),
+    (re.compile(r'cltbld\.t-w732-ix-\d+\.\d+'), '{cltbld}'),
+    (re.compile(r'venv\\lib\\site-packages\\pip\\_vendor\\.*'),
+     r'venv\lib\\site-packages\\{pip_vendor}'),
 ]
 stages = ["startup", "normal", "shutdown"]
 net_events = {
     "TcpDataTransferReceive": "recv",
     "UdpEndpointReceiveMessages": "recv",
     "TcpDataTransferSend": "send",
-    "UdpEndpointSendMessages": "send",
+    "UdpEndpointSendMessages": "send"
 }
 gThreads = {}
 gConnectionIDs = {}
@@ -57,7 +55,7 @@ gBrowserPID = None
 
 
 def uploadFile(filename):
-    mud = os.environ.get("MOZ_UPLOAD_DIR", None)
+    mud = os.environ.get('MOZ_UPLOAD_DIR', None)
     if mud:
         print("uploading raw file %s via blobber" % filename)
         mud_filename = os.path.join(mud, filename)
@@ -120,9 +118,8 @@ def getIndex(eventName, *colNames):
 
 def readFile(filename):
     print("etlparser: in readfile: %s" % filename)
-    data = csv.reader(
-        open(filename, "rb"), delimiter=",", quotechar='"', skipinitialspace=True
-    )
+    data = csv.reader(open(filename, 'rb'), delimiter=',', quotechar='"',
+                      skipinitialspace=True)
     data = filterOutHeader(data)
     return data
 
@@ -146,38 +143,34 @@ def fileSummary(row, stage, retVal):
     thread_extra = ""
     if gThreads[row[THREAD_ID_INDEX]] == "main":
         thread_extra = " (main)"
-    key_tuple = (
-        row[fname_index],
-        "%s%s" % (row[THREAD_ID_INDEX], thread_extra),
-        stages[stage],
-    )
-    total_tuple = (
-        row[fname_index],
-        "%s%s" % (row[THREAD_ID_INDEX], thread_extra),
-        "all",
-    )
+    key_tuple = (row[fname_index],
+                 "%s%s" % (row[THREAD_ID_INDEX], thread_extra),
+                 stages[stage])
+    total_tuple = (row[fname_index],
+                   "%s%s" % (row[THREAD_ID_INDEX], thread_extra),
+                   "all")
 
     if key_tuple not in retVal:
         retVal[key_tuple] = {
             "DiskReadBytes": 0,
             "DiskReadCount": 0,
             "DiskWriteBytes": 0,
-            "DiskWriteCount": 0,
+            "DiskWriteCount": 0
         }
         retVal[total_tuple] = retVal[key_tuple]
 
     if event == "FileIoRead":
-        retVal[key_tuple]["DiskReadCount"] += 1
-        retVal[total_tuple]["DiskReadCount"] += 1
+        retVal[key_tuple]['DiskReadCount'] += 1
+        retVal[total_tuple]['DiskReadCount'] += 1
         idx = getIndex(event, DISKBYTES_COL)
-        retVal[key_tuple]["DiskReadBytes"] += int(row[idx], 16)
-        retVal[total_tuple]["DiskReadBytes"] += int(row[idx], 16)
+        retVal[key_tuple]['DiskReadBytes'] += int(row[idx], 16)
+        retVal[total_tuple]['DiskReadBytes'] += int(row[idx], 16)
     elif event == "FileIoWrite":
-        retVal[key_tuple]["DiskWriteCount"] += 1
-        retVal[total_tuple]["DiskWriteCount"] += 1
+        retVal[key_tuple]['DiskWriteCount'] += 1
+        retVal[total_tuple]['DiskWriteCount'] += 1
         idx = getIndex(event, DISKBYTES_COL)
-        retVal[key_tuple]["DiskWriteBytes"] += int(row[idx], 16)
-        retVal[total_tuple]["DiskWriteBytes"] += int(row[idx], 16)
+        retVal[key_tuple]['DiskWriteBytes'] += int(row[idx], 16)
+        retVal[total_tuple]['DiskWriteBytes'] += int(row[idx], 16)
 
 
 def etl2csv(xperf_path, etl_filename, debug=False):
@@ -189,19 +182,19 @@ def etl2csv(xperf_path, etl_filename, debug=False):
     (large files == high memory + cpu)
     """
 
-    xperf_cmd = [
-        xperf_path,
-        "-merge",
-        "%s.user" % etl_filename,
-        "%s.kernel" % etl_filename,
-        etl_filename,
-    ]
+    xperf_cmd = [xperf_path,
+                 '-merge',
+                 '%s.user' % etl_filename,
+                 '%s.kernel' % etl_filename,
+                 etl_filename]
     if debug:
         print("executing '%s'" % subprocess.list2cmdline(xperf_cmd))
     subprocess.call(xperf_cmd)
 
-    csv_filename = "%s.csv" % etl_filename
-    xperf_cmd = [xperf_path, "-i", etl_filename, "-o", csv_filename]
+    csv_filename = '%s.csv' % etl_filename
+    xperf_cmd = [xperf_path,
+                 '-i', etl_filename,
+                 '-o', csv_filename]
     if debug:
         print("executing '%s'" % subprocess.list2cmdline(xperf_cmd))
     subprocess.call(xperf_cmd)
@@ -228,7 +221,8 @@ def getBrowserPID():
 
 
 def trackThread(row, browserPID):
-    event, proc, tid = row[EVENTNAME_INDEX], row[PROCESS_INDEX], row[THREAD_ID_INDEX]
+    event, proc, tid = \
+        row[EVENTNAME_INDEX], row[PROCESS_INDEX], row[THREAD_ID_INDEX]
     if event in ["T-DCStart", "T-Start"]:
         procName, procID = re.search("^(.*) \(\s*(\d+)\)$", proc).group(1, 2)
         if procID == str(browserPID):
@@ -248,13 +242,12 @@ def trackThreadFileIO(row, io, stage):
     th, stg = gThreads[tid], stages[stage]
     sizeIdx = getIndex(event, DISKBYTES_COL)
     bytes = int(row[sizeIdx], 16)
-    io[(th, stg, "file_%s_ops" % opType)] = (
+    io[(th, stg, "file_%s_ops" % opType)] = \
         io.get((th, stg, "file_%s_ops" % opType), 0) + 1
-    )
-    io[(th, stg, "file_%s_bytes" % opType)] = (
+    io[(th, stg, "file_%s_bytes" % opType)] = \
         io.get((th, stg, "file_%s_bytes" % opType), 0) + bytes
-    )
-    io[(th, stg, "file_io_bytes")] = io.get((th, stg, "file_io_bytes"), 0) + bytes
+    io[(th, stg, "file_io_bytes")] = \
+        io.get((th, stg, "file_io_bytes"), 0) + bytes
 
 
 def trackThreadNetIO(row, io, stage):
@@ -268,7 +261,8 @@ def trackThreadNetIO(row, io, stage):
         match = re.match("[\w-]+\/([\w-]+)?", event)
         if not match:
             raise xtalos.XTalosError(
-                "Could not find a regular expression match for event: {}".format(event)
+                "Could not find a regular expression match for event: {}"
+                .format(event)
             )
         netEvt = match.group(1)
 
@@ -279,10 +273,10 @@ def trackThreadNetIO(row, io, stage):
             # using BYTESSENT_COL, so we try both
             lenIdx = getIndex(event, NUMBYTES_COL, BYTESSENT_COL)
             bytes = int(row[lenIdx])
-            io[(th, stg, "net_%s_bytes" % opType)] = (
+            io[(th, stg, "net_%s_bytes" % opType)] = \
                 io.get((th, stg, "net_%s_bytes" % opType), 0) + bytes
-            )
-            io[(th, stg, "net_io_bytes")] = io.get((th, stg, "net_io_bytes"), 0) + bytes
+            io[(th, stg, "net_io_bytes")] = \
+                io.get((th, stg, "net_io_bytes"), 0) + bytes
 
 
 def updateStage(row, stage):
@@ -333,24 +327,15 @@ def checkWhitelist(filename, whitelist):
     return False
 
 
-def etlparser(
-    xperf_path,
-    etl_filename,
-    processID,
-    approot=None,
-    configFile=None,
-    outputFile=None,
-    whitelist_file=None,
-    error_filename=None,
-    all_stages=False,
-    all_threads=False,
-    debug=False,
-):
+def etlparser(xperf_path, etl_filename, processID, approot=None,
+              configFile=None, outputFile=None, whitelist_file=None,
+              error_filename=None, all_stages=False, all_threads=False,
+              debug=False):
     global NAME_SUBSTITUTIONS
 
     # setup output file
     if outputFile:
-        outFile = open(outputFile, "w")
+        outFile = open(outputFile, 'w')
     else:
         outFile = sys.stdout
 
@@ -366,12 +351,12 @@ def etlparser(
             trackProcess(row, processID)
         elif event in ["T-DCStart", "T-Start", "T-DCEnd", "T-End"]:
             trackThread(row, getBrowserPID())
-        elif (
-            event in ["FileIoRead", "FileIoWrite"] and row[THREAD_ID_INDEX] in gThreads
-        ):
+        elif event in ["FileIoRead", "FileIoWrite"] and \
+                row[THREAD_ID_INDEX] in gThreads:
             fileSummary(row, stage, files)
             trackThreadFileIO(row, io, stage)
-        elif event.endswith("Event/Classic") and row[THREAD_ID_INDEX] in gThreads:
+        elif event.endswith("Event/Classic") and \
+                row[THREAD_ID_INDEX] in gThreads:
             stage = updateStage(row, stage)
         elif event.startswith("Microsoft-Windows-TCPIP"):
             trackThreadNetIO(row, io, stage)
@@ -394,29 +379,24 @@ def etlparser(
 
     whitelist = loadWhitelist(whitelist_file)
 
-    header = "filename, tid, stage, readcount, readbytes, writecount," " writebytes"
+    header = ("filename, tid, stage, readcount, readbytes, writecount,"
+              " writebytes")
     outFile.write(header + "\n")
 
     # Filter out stages, threads, and whitelisted files that we're not
     # interested in
-    filekeys = filter(
-        lambda x: (all_stages or x[2] == stages[0])
-        and (all_threads or x[1].endswith("(main)"))
-        and (all_stages and x[2] != stages[0] or not checkWhitelist(x[0], whitelist)),
-        files.iterkeys(),
-    )
+    filekeys = filter(lambda x: (all_stages or x[2] == stages[0]) and
+                                (all_threads or x[1].endswith("(main)")) and
+                                (all_stages and x[2] != stages[0] or
+                                 not checkWhitelist(x[0], whitelist)),
+                      files.iterkeys())
     if debug:
         # in debug, we want stages = [startup+normal] and all threads, not just (main)
         # we will use this data to upload fileIO info to blobber only for debug mode
-        outputData = filter(
-            lambda x: (all_stages or x[2] in [stages[0], stages[1]])
-            and (
-                all_stages
-                and x[2] not in [stages[0], stages[1]]
-                or not checkWhitelist(x[0], whitelist)
-            ),
-            files.iterkeys(),
-        )
+        outputData = filter(lambda x: (all_stages or x[2] in [stages[0], stages[1]]) and
+                                      (all_stages and x[2] not in [stages[0], stages[1]] or
+                                       not checkWhitelist(x[0], whitelist)),
+                            files.iterkeys())
     else:
         outputData = filekeys
 
@@ -426,10 +406,10 @@ def etlparser(
             row[0],
             row[1],
             row[2],
-            files[row]["DiskReadCount"],
-            files[row]["DiskReadBytes"],
-            files[row]["DiskWriteCount"],
-            files[row]["DiskWriteBytes"],
+            files[row]['DiskReadCount'],
+            files[row]['DiskReadBytes'],
+            files[row]['DiskWriteCount'],
+            files[row]['DiskWriteBytes']
         )
         outFile.write(output)
 
@@ -444,28 +424,28 @@ def etlparser(
     whitelist_path = None
     wl_temp = {}
     dirname = os.path.dirname(__file__)
-    if os.path.exists(os.path.join(dirname, "xperf_whitelist.json")):
-        whitelist_path = os.path.join(dirname, "xperf_whitelist.json")
-    elif os.path.exists(os.path.join(dirname, "xtalos")) and os.path.exists(
-        os.path.join(dirname, "xtalos", "xperf_whitelist.json")
-    ):
-        whitelist_path = os.path.join(dirname, "xtalos", "xperf_whitelist.json")
+    if os.path.exists(os.path.join(dirname, 'xperf_whitelist.json')):
+        whitelist_path = os.path.join(dirname, 'xperf_whitelist.json')
+    elif os.path.exists(os.path.join(dirname, 'xtalos')) and \
+            os.path.exists(os.path.join(dirname, 'xtalos',
+                                        'xperf_whitelist.json')):
+        whitelist_path = os.path.join(dirname, 'xtalos', 'xperf_whitelist.json')
 
     wl_temp = {}
     if whitelist_path:
-        with open(whitelist_path, "r") as fHandle:
+        with open(whitelist_path, 'r') as fHandle:
             wl_temp = json.load(fHandle)
 
     # Approot is the full path where the application is located at
     # We depend on it for dependentlibs.list to ignore files required for
     # normal startup.
     if approot:
-        if os.path.exists("%s\\dependentlibs.list" % approot):
-            with open("%s\\dependentlibs.list" % approot, "r") as fhandle:
+        if os.path.exists('%s\\dependentlibs.list' % approot):
+            with open('%s\\dependentlibs.list' % approot, 'r') as fhandle:
                 libs = fhandle.readlines()
 
             for lib in libs:
-                wl_temp["{firefox}\\%s" % lib.strip()] = {"ignore": True}
+                wl_temp['{firefox}\\%s' % lib.strip()] = {'ignore': True}
 
     # Windows isn't case sensitive, this protects us against mismatched
     # systems.
@@ -478,22 +458,22 @@ def etlparser(
         filename = original_filename = row[0]
         filename = filename.lower()
         # take care of 'program files (x86)' matching 'program files'
-        filename = filename.replace(" (x86)", "")
+        filename = filename.replace(" (x86)", '')
 
-        paths = ["profile", "firefox", "desktop", "talos"]
+        paths = ['profile', 'firefox', 'desktop', 'talos']
         for path in paths:
-            pathname = "%s\\" % path
+            pathname = '%s\\' % path
             parts = filename.split(pathname)
             if len(parts) >= 2:
                 filename = "{%s}\\%s" % (path, pathname.join(parts[1:]))
 
-        parts = filename.split("\\installtime")
+        parts = filename.split('\\installtime')
         if len(parts) >= 2:
             filename = "%s\\{time}" % parts[0]
 
         # NOTE: this is Prefetch or prefetch, not case sensitive operating
         # system
-        parts = filename.split("refetch")
+        parts = filename.split('refetch')
         if len(parts) >= 2:
             filename = "%srefetch\\{prefetch}.pf" % parts[0]
 
@@ -501,56 +481,52 @@ def etlparser(
             filename = re.sub(pattern, substitution, filename)
 
         if filename in wl:
-            if "ignore" in wl[filename] and wl[filename]["ignore"]:
+            if 'ignore' in wl[filename] and wl[filename]['ignore']:
                 continue
 
-        # too noisy
-        #            if wl[filename]['minbytes'] > (files[row]['DiskReadBytes'] +\
-        #                   files[row]['DiskWriteBytes']):
-        #                print "%s: read %s bytes, less than expected minimum: %s"
-        #                       % (filename, (files[row]['DiskReadBytes'] +
-        #                                     files[row]['DiskWriteBytes']),
-        #                          wl[filename]['minbytes'])
+# too noisy
+#            if wl[filename]['minbytes'] > (files[row]['DiskReadBytes'] +\
+#                   files[row]['DiskWriteBytes']):
+#                print "%s: read %s bytes, less than expected minimum: %s"
+#                       % (filename, (files[row]['DiskReadBytes'] +
+#                                     files[row]['DiskWriteBytes']),
+#                          wl[filename]['minbytes'])
 
-        # don't report in first round
-        #            elif wl[filename]['maxbytes'] < (files[row]['DiskReadBytes'] +\
-        #                   files[row]['DiskWriteBytes']):
-        #                errors.append("%s: read %s bytes, more than expected maximum:"
-        #                              " %s"
-        #                              % (filename, (files[row]['DiskReadBytes'] +
-        #                                 files[row]['DiskWriteBytes']),
-        #                              wl[filename]['maxbytes']))
+# don't report in first round
+#            elif wl[filename]['maxbytes'] < (files[row]['DiskReadBytes'] +\
+#                   files[row]['DiskWriteBytes']):
+#                errors.append("%s: read %s bytes, more than expected maximum:"
+#                              " %s"
+#                              % (filename, (files[row]['DiskReadBytes'] +
+#                                 files[row]['DiskWriteBytes']),
+#                              wl[filename]['maxbytes']))
 
-        # too noisy
-        #            elif wl[filename]['mincount'] > (files[row]['DiskReadCount'] +\
-        #                   files[row]['DiskWriteCount']):
-        #                print "%s: %s accesses, less than expected minimum: %s"
-        #                       % (filename, (files[row]['DiskReadCount'] +
-        #                                     files[row]['DiskWriteCount']),
-        #                          wl[filename]['mincount'])
+# too noisy
+#            elif wl[filename]['mincount'] > (files[row]['DiskReadCount'] +\
+#                   files[row]['DiskWriteCount']):
+#                print "%s: %s accesses, less than expected minimum: %s"
+#                       % (filename, (files[row]['DiskReadCount'] +
+#                                     files[row]['DiskWriteCount']),
+#                          wl[filename]['mincount'])
 
-        # don't report in first round
-        #            elif wl[filename]['maxcount'] < (files[row]['DiskReadCount'] +\
-        #                   files[row]['DiskWriteCount']):
-        #                errors.append("%s: %s accesses, more than expected maximum:"
-        #                              " %s"
-        #                              % (filename, (files[row]['DiskReadCount'] +
-        #                                            files[row]['DiskWriteCount']),
-        #                                 wl[filename]['maxcount']))
+# don't report in first round
+#            elif wl[filename]['maxcount'] < (files[row]['DiskReadCount'] +\
+#                   files[row]['DiskWriteCount']):
+#                errors.append("%s: %s accesses, more than expected maximum:"
+#                              " %s"
+#                              % (filename, (files[row]['DiskReadCount'] +
+#                                            files[row]['DiskWriteCount']),
+#                                 wl[filename]['maxcount']))
         else:
-            errors.append(
-                "File '%s' (normalized from '%s') was accessed and we were not expecting"
-                " it.  DiskReadCount: %s, DiskWriteCount: %s,"
-                " DiskReadBytes: %s, DiskWriteBytes: %s"
-                % (
-                    filename,
-                    original_filename,
-                    files[row]["DiskReadCount"],
-                    files[row]["DiskWriteCount"],
-                    files[row]["DiskReadBytes"],
-                    files[row]["DiskWriteBytes"],
-                )
-            )
+            errors.append("File '%s' (normalized from '%s') was accessed and we were not expecting"
+                          " it.  DiskReadCount: %s, DiskWriteCount: %s,"
+                          " DiskReadBytes: %s, DiskWriteBytes: %s"
+                          % (filename,
+                             original_filename,
+                             files[row]['DiskReadCount'],
+                             files[row]['DiskWriteCount'],
+                             files[row]['DiskReadBytes'],
+                             files[row]['DiskWriteBytes']))
 
     if errors:
         # output specific errors to be picked up by tbpl parser
@@ -562,8 +538,8 @@ def etlparser(
         # We detect if browser_failures.txt exists to exit and turn the job
         # orange
         if error_filename:
-            with open(error_filename, "w") as errorFile:
-                errorFile.write("\n".join(errors))
+            with open(error_filename, 'w') as errorFile:
+                errorFile.write('\n'.join(errors))
 
         if debug:
             uploadFile(etl_filename)
@@ -573,34 +549,32 @@ def etlparser_from_config(config_file, **kwargs):
     """start from a YAML config file"""
 
     # option defaults
-    args = {
-        "xperf_path": "xperf.exe",
-        "etl_filename": "test.etl",
-        "outputFile": "etl_output.csv",
-        "processID": None,
-        "approot": None,
-        "whitelist_file": None,
-        "error_filename": None,
-        "all_stages": False,
-        "all_threads": False,
-    }
+    args = {'xperf_path': 'xperf.exe',
+            'etl_filename': 'test.etl',
+            'outputFile': 'etl_output.csv',
+            'processID': None,
+            'approot': None,
+            'whitelist_file': None,
+            'error_filename': None,
+            'all_stages': False,
+            'all_threads': False
+            }
     args.update(kwargs)
 
     # override from YAML config file
     args = xtalos.options_from_config(args, config_file)
 
     # ensure process ID is given
-    if not args.get("processID"):
+    if not args.get('processID'):
         raise xtalos.XTalosError("No process ID option given")
 
     # ensure path to xperf given
-    if not os.path.exists(args["xperf_path"]):
-        raise xtalos.XTalosError(
-            "ERROR: xperf_path '%s' does not exist" % args["xperf_path"]
-        )
+    if not os.path.exists(args['xperf_path']):
+        raise xtalos.XTalosError("ERROR: xperf_path '%s' does not exist"
+                                 % args['xperf_path'])
 
     # update args with config file
-    args["configFile"] = config_file
+    args['configFile'] = config_file
 
     # call etlparser
     etlparser(**args)
@@ -618,19 +592,10 @@ def main(args=sys.argv[1:]):
         parser.error("No process ID argument given")
 
     # call API
-    etlparser(
-        args.xperf_path,
-        args.etl_filename,
-        args.processID,
-        args.approot,
-        args.configFile,
-        args.outputFile,
-        args.whitelist_file,
-        args.error_filename,
-        args.all_stages,
-        args.all_threads,
-        debug=args.debug_level >= xtalos.DEBUG_INFO,
-    )
+    etlparser(args.xperf_path, args.etl_filename, args.processID, args.approot,
+              args.configFile, args.outputFile, args.whitelist_file,
+              args.error_filename, args.all_stages, args.all_threads,
+              debug=args.debug_level >= xtalos.DEBUG_INFO)
 
 
 if __name__ == "__main__":

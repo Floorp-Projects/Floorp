@@ -5,77 +5,76 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "nsAccessibleRelation.cpp",
-    "xpcAccessibilityService.cpp",
-    "xpcAccessible.cpp",
-    "xpcAccessibleApplication.cpp",
-    "xpcAccessibleDocument.cpp",
-    "xpcAccessibleGeneric.cpp",
-    "xpcAccessibleHyperLink.cpp",
-    "xpcAccessibleHyperText.cpp",
-    "xpcAccessibleImage.cpp",
-    "xpcAccessibleSelectable.cpp",
-    "xpcAccessibleTable.cpp",
-    "xpcAccessibleTableCell.cpp",
-    "xpcAccessibleTextRange.cpp",
-    "xpcAccessibleValue.cpp",
+    'nsAccessibleRelation.cpp',
+    'xpcAccessibilityService.cpp',
+    'xpcAccessible.cpp',
+    'xpcAccessibleApplication.cpp',
+    'xpcAccessibleDocument.cpp',
+    'xpcAccessibleGeneric.cpp',
+    'xpcAccessibleHyperLink.cpp',
+    'xpcAccessibleHyperText.cpp',
+    'xpcAccessibleImage.cpp',
+    'xpcAccessibleSelectable.cpp',
+    'xpcAccessibleTable.cpp',
+    'xpcAccessibleTableCell.cpp',
+    'xpcAccessibleTextRange.cpp',
+    'xpcAccessibleValue.cpp',
 ]
 
 SOURCES += [
-    "!xpcAccEvents.cpp",
+    '!xpcAccEvents.cpp',
 ]
 
 EXPORTS += [
-    "!xpcAccEvents.h",
-    "xpcAccessibilityService.h",
+    '!xpcAccEvents.h',
+    'xpcAccessibilityService.h',
 ]
 
 LOCAL_INCLUDES += [
-    "/accessible/base",
-    "/accessible/generic",
+    '/accessible/base',
+    '/accessible/generic',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
-        "/accessible/atk",
+        '/accessible/atk',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/accessible/windows/msaa",
+        '/accessible/windows/msaa',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/accessible/ipc",
-        "/accessible/ipc/other",
-        "/accessible/mac",
+        '/accessible/ipc',
+        '/accessible/ipc/other',
+        '/accessible/mac',
     ]
-    UNIFIED_SOURCES += ["xpcAccessibleMacInterface.mm"]
+    UNIFIED_SOURCES += [
+        'xpcAccessibleMacInterface.mm'
+    ]
     EXPORTS += [
-        "xpcAccessibleMacInterface.h",
+        'xpcAccessibleMacInterface.h',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/accessible/android",
+        '/accessible/android',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/other",
+        '/accessible/other',
     ]
 
 
 GeneratedFile(
-    "xpcAccEvents.h",
-    "xpcAccEvents.cpp",
-    script="AccEventGen.py",
-    entry_point="gen_files",
+    'xpcAccEvents.h', 'xpcAccEvents.cpp',
+    script='AccEventGen.py', entry_point='gen_files',
     inputs=[
-        "AccEvents.conf",
-    ],
-)
+        'AccEvents.conf',
+    ])
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

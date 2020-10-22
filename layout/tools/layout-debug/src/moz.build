@@ -5,20 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsILayoutDebuggingTools.idl",
+    'nsILayoutDebuggingTools.idl',
 ]
 
-XPIDL_MODULE = "layout_debug"
+XPIDL_MODULE = 'layout_debug'
 
 UNIFIED_SOURCES += [
-    "nsLayoutDebugCLH.cpp",
-    "nsLayoutDebuggingTools.cpp",
+    'nsLayoutDebugCLH.cpp',
+    'nsLayoutDebuggingTools.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

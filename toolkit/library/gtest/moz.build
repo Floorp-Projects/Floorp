@@ -4,23 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = "dist/bin/gtest"
+FINAL_TARGET = 'dist/bin/gtest'
 
-if CONFIG["ENABLE_TESTS"]:
+if CONFIG['ENABLE_TESTS']:
     USE_LIBS += [
-        "gkrust-gtest",
+        'gkrust-gtest',
     ]
 
-    if CONFIG["OS_ARCH"] == "WINNT":
+    if CONFIG['OS_ARCH'] == 'WINNT':
         UNIFIED_SOURCES += [
-            "TestUCRTDepends.cpp",
+            'TestUCRTDepends.cpp',
         ]
 
 USE_LIBS += [
-    "static:xul",
+    'static:xul',
 ]
 
-Libxul(
-    "xul-gtest",
-    output_category=None if CONFIG["LINK_GTEST_DURING_COMPILE"] else "gtest",
-)
+Libxul('xul-gtest',
+       output_category=None if CONFIG['LINK_GTEST_DURING_COMPILE'] else 'gtest')

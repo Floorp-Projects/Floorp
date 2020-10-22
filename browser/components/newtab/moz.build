@@ -8,36 +8,36 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/abouthomecache/browser.ini",
-    "test/browser/browser.ini",
+  'test/browser/abouthomecache/browser.ini',
+  'test/browser/browser.ini',
 ]
 
-SPHINX_TREES["docs"] = "docs"
-SPHINX_TREES["content-src/asrouter/docs"] = "content-src/asrouter/docs"
+SPHINX_TREES['docs'] = 'docs'
+SPHINX_TREES['content-src/asrouter/docs'] = 'content-src/asrouter/docs'
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/xpcshell/xpcshell.ini",
+    'test/xpcshell/xpcshell.ini',
 ]
 
 XPIDL_SOURCES += [
-    "nsIAboutNewTabService.idl",
+    'nsIAboutNewTabService.idl',
 ]
 
-XPIDL_MODULE = "browser-newtab"
+XPIDL_MODULE = 'browser-newtab'
 
 EXTRA_JS_MODULES += [
-    "AboutNewTabService.jsm",
+    'AboutNewTabService.jsm',
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "aboutwelcome/AboutWelcomeChild.jsm",
-    "aboutwelcome/AboutWelcomeParent.jsm",
-    "actors/ASRouterChild.jsm",
-    "actors/ASRouterParent.jsm",
+    'aboutwelcome/AboutWelcomeChild.jsm',
+    'aboutwelcome/AboutWelcomeParent.jsm',
+    'actors/ASRouterChild.jsm',
+    'actors/ASRouterParent.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']

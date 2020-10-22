@@ -38,7 +38,8 @@ class L10n(object):
         :raises: :exc:`NoSuchElementException`
         """
         body = {"urls": dtd_urls, "id": entity_id}
-        return self._marionette._send_message("L10n:LocalizeEntity", body, key="value")
+        return self._marionette._send_message("L10n:LocalizeEntity",
+                                              body, key="value")
 
     def localize_property(self, properties_urls, property_id):
         """Retrieve the localized string for the specified property id.
@@ -51,6 +52,5 @@ class L10n(object):
         :raises: :exc:`NoSuchElementException`
         """
         body = {"urls": properties_urls, "id": property_id}
-        return self._marionette._send_message(
-            "L10n:LocalizeProperty", body, key="value"
-        )
+        return self._marionette._send_message("L10n:LocalizeProperty",
+                                              body, key="value")

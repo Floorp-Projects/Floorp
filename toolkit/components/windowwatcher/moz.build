@@ -4,49 +4,49 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Window Management")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Window Management')
 
-TEST_DIRS += ["test"]
+TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    "nsIDialogParamBlock.idl",
-    "nsIOpenWindowInfo.idl",
-    "nsIPromptCollection.idl",
-    "nsIPromptFactory.idl",
-    "nsIPromptService.idl",
-    "nsIWindowWatcher.idl",
-    "nsPIPromptService.idl",
-    "nsPIWindowWatcher.idl",
+    'nsIDialogParamBlock.idl',
+    'nsIOpenWindowInfo.idl',
+    'nsIPromptCollection.idl',
+    'nsIPromptFactory.idl',
+    'nsIPromptService.idl',
+    'nsIWindowWatcher.idl',
+    'nsPIPromptService.idl',
+    'nsPIWindowWatcher.idl',
 ]
 
-XPIDL_MODULE = "windowwatcher"
+XPIDL_MODULE = 'windowwatcher'
 
 EXPORTS += [
-    "nsOpenWindowInfo.h",
-    "nsPromptUtils.h",
-    "nsWindowWatcher.h",
+    'nsOpenWindowInfo.h',
+    'nsPromptUtils.h',
+    'nsWindowWatcher.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsAutoWindowStateHelper.cpp",
-    "nsOpenWindowInfo.cpp",
-    "nsWindowWatcher.cpp",
+    'nsAutoWindowStateHelper.cpp',
+    'nsOpenWindowInfo.cpp',
+    'nsWindowWatcher.cpp',
 ]
 
-if CONFIG["MOZ_XUL"]:
+if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
-        "nsDialogParamBlock.cpp",
+        'nsDialogParamBlock.cpp',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 # For nsJSUtils
 LOCAL_INCLUDES += [
-    "/docshell/base",
-    "/dom/base",
+    '/docshell/base',
+    '/dom/base',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

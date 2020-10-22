@@ -17,6 +17,7 @@ from marionette_harness import MarionetteTestCase
 
 
 class BaseProfileManagement(MarionetteTestCase):
+
     def setUp(self):
         super(BaseProfileManagement, self).setUp()
 
@@ -39,6 +40,7 @@ class BaseProfileManagement(MarionetteTestCase):
 
 
 class WorkspaceProfileManagement(BaseProfileManagement):
+
     def setUp(self):
         super(WorkspaceProfileManagement, self).setUp()
 
@@ -56,6 +58,7 @@ class WorkspaceProfileManagement(BaseProfileManagement):
 
 
 class ExternalProfileMixin(object):
+
     def setUp(self):
         super(ExternalProfileMixin, self).setUp()
 
@@ -74,6 +77,7 @@ class ExternalProfileMixin(object):
 
 
 class TestQuitRestartWithoutWorkspace(BaseProfileManagement):
+
     def test_quit_keeps_same_profile(self):
         self.marionette.quit()
         self.marionette.start_session()
@@ -102,6 +106,7 @@ class TestQuitRestartWithoutWorkspace(BaseProfileManagement):
 
 
 class TestQuitRestartWithWorkspace(WorkspaceProfileManagement):
+
     def test_quit_keeps_same_profile(self):
         self.marionette.quit()
         self.marionette.start_session()
@@ -134,14 +139,14 @@ class TestQuitRestartWithWorkspace(WorkspaceProfileManagement):
 
 
 class TestSwitchProfileFailures(BaseProfileManagement):
+
     def test_raise_for_switching_profile_while_instance_is_running(self):
-        with self.assertRaisesRegexp(
-            errors.MarionetteException, "instance is not running"
-        ):
+        with self.assertRaisesRegexp(errors.MarionetteException, "instance is not running"):
             self.marionette.instance.switch_profile()
 
 
 class TestSwitchProfileWithoutWorkspace(ExternalProfileMixin, BaseProfileManagement):
+
     def setUp(self):
         super(TestSwitchProfileWithoutWorkspace, self).setUp()
 
@@ -191,9 +196,7 @@ class TestSwitchProfileWithoutWorkspace(ExternalProfileMixin, BaseProfileManagem
         self.marionette.instance.switch_profile(clone_from=self.external_profile)
         self.marionette.start_session()
 
-        self.assertIn(
-            os.path.basename(self.external_profile.profile), self.profile_path
-        )
+        self.assertIn(os.path.basename(self.external_profile.profile), self.profile_path)
         self.assertTrue(os.path.exists(self.external_profile.profile))
 
     def test_replace_with_current_profile(self):
@@ -219,6 +222,7 @@ class TestSwitchProfileWithoutWorkspace(ExternalProfileMixin, BaseProfileManagem
 
 
 class TestSwitchProfileWithWorkspace(ExternalProfileMixin, WorkspaceProfileManagement):
+
     def setUp(self):
         super(TestSwitchProfileWithWorkspace, self).setUp()
 
@@ -247,7 +251,5 @@ class TestSwitchProfileWithWorkspace(ExternalProfileMixin, WorkspaceProfileManag
 
         self.assertNotEqual(self.profile_path, self.orig_profile_path)
         self.assertIn(self.workspace, self.profile_path)
-        self.assertIn(
-            os.path.basename(self.external_profile.profile), self.profile_path
-        )
+        self.assertIn(os.path.basename(self.external_profile.profile), self.profile_path)
         self.assertTrue(os.path.exists(self.external_profile.profile))

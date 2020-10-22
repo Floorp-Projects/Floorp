@@ -7,102 +7,102 @@
 # Build mozglue as a shared lib on Windows, OSX and Android. But not for
 # embedders!
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
-if CONFIG["JS_STANDALONE"] and not CONFIG["MOZ_MEMORY"]:
-    Library("mozglue")
-elif CONFIG["OS_TARGET"] in ("WINNT", "Darwin", "Android"):
-    SharedLibrary("mozglue")
+if CONFIG['JS_STANDALONE'] and not CONFIG['MOZ_MEMORY']:
+    Library('mozglue')
+elif CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
+    SharedLibrary('mozglue')
 else:
-    Library("mozglue")
+    Library('mozglue')
 
-if CONFIG["OS_TARGET"] == "Android":
-    LDFLAGS += ["-Wl,--version-script,%s/mozglue.ver" % SRCDIR]
+if CONFIG['OS_TARGET'] == 'Android':
+    LDFLAGS += ['-Wl,--version-script,%s/mozglue.ver' % SRCDIR]
     SOURCES += [
-        "BionicGlue.cpp",
+        'BionicGlue.cpp',
     ]
 
-if CONFIG["MOZ_ASAN"]:
+if CONFIG['MOZ_ASAN']:
     SOURCES += [
-        "AsanOptions.cpp",
+        'AsanOptions.cpp',
     ]
 
-if CONFIG["MOZ_UBSAN"]:
+if CONFIG['MOZ_UBSAN']:
     SOURCES += [
-        "UbsanOptions.cpp",
+        'UbsanOptions.cpp',
     ]
 
-if CONFIG["MOZ_TSAN"]:
+if CONFIG['MOZ_TSAN']:
     SOURCES += [
-        "TsanOptions.cpp",
+        'TsanOptions.cpp',
     ]
 
-if CONFIG["OS_TARGET"] == "WINNT":
-    if CONFIG["MOZ_MEMORY"]:
-        DEFFILE = "mozglue.def"
+if CONFIG['OS_TARGET'] == 'WINNT':
+    if CONFIG['MOZ_MEMORY']:
+        DEFFILE = 'mozglue.def'
     # We'll break the DLL blocklist if we immediately load user32.dll.
     # For the same reason, we delayload winmm.dll which statically links
     # user32.dll.
     DELAYLOAD_DLLS += [
-        "user32.dll",
-        "winmm.dll",
+        'user32.dll',
+        'winmm.dll',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+if CONFIG['MOZ_WIDGET_TOOLKIT']:
 
-    if CONFIG["MOZ_MEMORY"] and FORCE_SHARED_LIB:
+    if CONFIG['MOZ_MEMORY'] and FORCE_SHARED_LIB:
         pass
         # TODO: SHARED_LIBRARY_LIBS go here
     else:
         # Temporary, until bug 662814 lands
         NoVisibilityFlags()
         SOURCES += [
-            "dummy.cpp",
+            'dummy.cpp',
         ]
 
-    if CONFIG["OS_TARGET"] == "WINNT":
+    if CONFIG['OS_TARGET'] == 'WINNT':
         LOCAL_INCLUDES += [
-            "/memory/build",
+            '/memory/build',
         ]
 
     EXPORTS.mozilla += [
-        "arm.h",
-        "mips.h",
-        "ppc.h",
-        "SSE.h",
+        'arm.h',
+        'mips.h',
+        'ppc.h',
+        'SSE.h',
     ]
 
-    if CONFIG["CPU_ARCH"].startswith("x86"):
+    if CONFIG['CPU_ARCH'].startswith('x86'):
         SOURCES += [
-            "SSE.cpp",
+            'SSE.cpp',
         ]
 
-    if CONFIG["CPU_ARCH"] == "arm":
+    if CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
-            "arm.cpp",
+            'arm.cpp',
         ]
 
-    if CONFIG["CPU_ARCH"].startswith("mips"):
+    if CONFIG['CPU_ARCH'].startswith('mips'):
         SOURCES += [
-            "mips.cpp",
+            'mips.cpp',
         ]
 
-    if CONFIG["CPU_ARCH"].startswith("ppc"):
+    if CONFIG['CPU_ARCH'].startswith('ppc'):
         SOURCES += [
-            "ppc.cpp",
+            'ppc.cpp',
         ]
 
-    if CONFIG["MOZ_LINKER"]:
+    if CONFIG['MOZ_LINKER']:
         USE_LIBS += [
-            "zlib",
+            'zlib',
         ]
 
 USE_LIBS += [
-    "mfbt",
+    'mfbt',
 ]
 
-LIBRARY_DEFINES["IMPL_MFBT"] = True
-LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
+LIBRARY_DEFINES['IMPL_MFBT'] = True
+LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
 
-if CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG['OS_TARGET'] == 'Darwin':
     # On OSX 10.10.3, a dead lock happens in some cases involving dynamic
     # symbol resolution for symbols that jemalloc itself uses. While it
     # might be possible to find a way to avoid all such symbol resolutions,
@@ -110,11 +110,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
     # to pthread_self from tsd_init_check_recursion, which is necessary
     # because somehow clang doesn't want to accept the __thread keyword
     # for TLS.
-    LDFLAGS += ["-Wl,-bind_at_load"]
+    LDFLAGS += ['-Wl,-bind_at_load']
 
-if CONFIG["MOZ_LINKER"] and CONFIG["CPU_ARCH"] == "arm":
-    LDFLAGS += ["-Wl,-version-script,%s/arm-eabi-filter" % SRCDIR]
+if CONFIG['MOZ_LINKER'] and CONFIG['CPU_ARCH'] == 'arm':
+    LDFLAGS += ['-Wl,-version-script,%s/arm-eabi-filter' % SRCDIR]
 
 DIST_INSTALL = True
 
-include("replace_malloc.mozbuild")
+include('replace_malloc.mozbuild')

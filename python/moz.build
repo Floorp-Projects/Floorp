@@ -5,70 +5,70 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Default extra components to build config
-with Files("**"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("devtools/**"):
-    BUG_COMPONENT = ("DevTools", "General")
+with Files('devtools/**'):
+    BUG_COMPONENT = ('DevTools', 'General')
 
-with Files("gdbpp/**"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('gdbpp/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("lldbutils/**"):
-    BUG_COMPONENT = ("Core", "General")
+with Files('lldbutils/**'):
+    BUG_COMPONENT = ('Core', 'General')
 
-with Files("mach/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Mach Core")
+with Files('mach/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'Mach Core')
 
-with Files("mozboot/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Bootstrap Configuration")
+with Files('mozboot/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'Bootstrap Configuration')
 
-with Files("mozbuild/**"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('mozbuild/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("mozlint/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Linting and Formatting")
+with Files('mozlint/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'Linting and Formatting')
 
-with Files("mozversioncontrol/**"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('mozversioncontrol/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("l10n/**"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('l10n/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("mozrelease/**"):
-    BUG_COMPONENT = ("Release Engineering", "General")
+with Files('mozrelease/**'):
+    BUG_COMPONENT = ('Release Engineering', 'General')
 
-with Files("mach_commands.py"):
-    BUG_COMPONENT = ("Testing", "Python Test")
+with Files('mach_commands.py'):
+    BUG_COMPONENT = ('Testing', 'Python Test')
 
-with Files("mozperftest/**"):
-    BUG_COMPONENT = ("Testing", "mozperftest")
+with Files('mozperftest/**'):
+    BUG_COMPONENT = ('Testing', 'mozperftest')
 
 
 SPHINX_PYTHON_PACKAGE_DIRS += [
-    "mach",
-    "mozbuild/mozbuild",
-    "mozbuild/mozpack",
-    "mozlint/mozlint",
-    "mozversioncontrol/mozversioncontrol",
+    'mach',
+    'mozbuild/mozbuild',
+    'mozbuild/mozpack',
+    'mozlint/mozlint',
+    'mozversioncontrol/mozversioncontrol',
 ]
 
-with Files("**.py"):
-    SCHEDULES.inclusive += ["docs"]
+with Files('**.py'):
+    SCHEDULES.inclusive += ['docs']
 
-SPHINX_TREES["/mach"] = "mach/docs"
-SPHINX_TREES["/python"] = "docs"
+SPHINX_TREES['/mach'] = 'mach/docs'
+SPHINX_TREES['/python'] = 'docs'
 
-with Files("mach/docs/**"):
-    SCHEDULES.exclusive = ["docs"]
+with Files('mach/docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "mach/mach/test/python.ini",
-    "mozboot/mozboot/test/python.ini",
-    "mozbuild/mozbuild/test/python.ini",
-    "mozbuild/mozpack/test/python.ini",
-    "mozlint/test/python.ini",
-    "mozrelease/test/python.ini",
-    "mozterm/test/python.ini",
-    "mozversioncontrol/test/python.ini",
+    'mach/mach/test/python.ini',
+    'mozboot/mozboot/test/python.ini',
+    'mozbuild/mozbuild/test/python.ini',
+    'mozbuild/mozpack/test/python.ini',
+    'mozlint/test/python.ini',
+    'mozrelease/test/python.ini',
+    'mozterm/test/python.ini',
+    'mozversioncontrol/test/python.ini',
 ]

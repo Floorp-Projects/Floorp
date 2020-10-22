@@ -11,6 +11,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestNoSuchWindowContent, self).setUp()
 

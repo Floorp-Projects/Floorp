@@ -19,17 +19,16 @@ def leave_snap_repackage_dependencies_only(config, jobs):
         # tasks, source doesn't depend on any build task at all. This hack should
         # go away when we rewrite beetmover transforms to allow more flexibility in deps
 
-        job["dependencies"] = {
+        job['dependencies'] = {
             key: value
-            for key, value in job["dependencies"].items()
-            if key == "release-snap-repackage"
+            for key, value in job['dependencies'].items()
+            if key == 'release-snap-repackage'
         }
 
-        job["worker"]["upstream-artifacts"] = [
+        job['worker']['upstream-artifacts'] = [
             upstream_artifact
-            for upstream_artifact in job["worker"]["upstream-artifacts"]
-            if upstream_artifact["taskId"]["task-reference"]
-            == "<release-snap-repackage>"
+            for upstream_artifact in job['worker']['upstream-artifacts']
+            if upstream_artifact['taskId']['task-reference'] == '<release-snap-repackage>'
         ]
 
         yield job
@@ -38,6 +37,6 @@ def leave_snap_repackage_dependencies_only(config, jobs):
 @transforms.add
 def set_custom_treeherder_job_name(config, jobs):
     for job in jobs:
-        job.get("treeherder", {})["symbol"] = "Snap(BM)"
+        job.get('treeherder', {})['symbol'] = 'Snap(BM)'
 
         yield job

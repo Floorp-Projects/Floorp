@@ -5,40 +5,40 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "AccessibleNode.h",
+    'AccessibleNode.h',
 ]
 
 UNIFIED_SOURCES += [
-    "AccessibleNode.cpp",
+    'AccessibleNode.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/accessible/base",
-    "/accessible/generic",
+    '/accessible/base',
+    '/accessible/generic',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
-        "/accessible/atk",
+        '/accessible/atk',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/accessible/windows/ia2",
-        "/accessible/windows/msaa",
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/accessible/mac",
+        '/accessible/mac',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/accessible/android",
+        '/accessible/android',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/other",
+        '/accessible/other',
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

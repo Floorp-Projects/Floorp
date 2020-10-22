@@ -16,61 +16,60 @@ from mozunit import main, MockedOpen
 class TestParameters(unittest.TestCase):
 
     vals = {
-        "app_version": "app_version",
-        "backstop": False,
-        "base_repository": "base_repository",
-        "build_date": 0,
-        "build_number": 0,
-        "do_not_optimize": [],
-        "existing_tasks": {},
-        "filters": [],
-        "head_ref": "head_ref",
-        "head_repository": "head_repository",
-        "head_rev": "head_rev",
-        "hg_branch": "hg_branch",
-        "level": "level",
-        "message": "message",
-        "moz_build_date": "moz_build_date",
-        "next_version": "next_version",
-        "optimize_strategies": None,
-        "optimize_target_tasks": False,
-        "owner": "owner",
-        "phabricator_diff": "phabricator_diff",
-        "project": "project",
-        "pushdate": 0,
-        "pushlog_id": "pushlog_id",
-        "release_enable_emefree": False,
-        "release_enable_partner_repack": False,
-        "release_enable_partner_attribution": False,
-        "release_eta": None,
-        "release_history": {},
-        "release_partners": [],
-        "release_partner_config": None,
-        "release_partner_build_number": 1,
-        "release_type": "release_type",
-        "release_product": None,
-        "required_signoffs": [],
-        "signoff_urls": {},
-        "target_tasks_method": "target_tasks_method",
-        "test_manifest_loader": "default",
-        "tasks_for": "tasks_for",
-        "try_mode": "try_mode",
-        "try_options": None,
-        "try_task_config": {},
-        "version": "version",
+        'app_version': 'app_version',
+        'backstop': False,
+        'base_repository': 'base_repository',
+        'build_date': 0,
+        'build_number': 0,
+        'do_not_optimize': [],
+        'existing_tasks': {},
+        'filters': [],
+        'head_ref': 'head_ref',
+        'head_repository': 'head_repository',
+        'head_rev': 'head_rev',
+        'hg_branch': 'hg_branch',
+        'level': 'level',
+        'message': 'message',
+        'moz_build_date': 'moz_build_date',
+        'next_version': 'next_version',
+        'optimize_strategies': None,
+        'optimize_target_tasks': False,
+        'owner': 'owner',
+        'phabricator_diff': 'phabricator_diff',
+        'project': 'project',
+        'pushdate': 0,
+        'pushlog_id': 'pushlog_id',
+        'release_enable_emefree': False,
+        'release_enable_partner_repack': False,
+        'release_enable_partner_attribution': False,
+        'release_eta': None,
+        'release_history': {},
+        'release_partners': [],
+        'release_partner_config': None,
+        'release_partner_build_number': 1,
+        'release_type': 'release_type',
+        'release_product': None,
+        'required_signoffs': [],
+        'signoff_urls': {},
+        'target_tasks_method': 'target_tasks_method',
+        'test_manifest_loader': 'default',
+        'tasks_for': 'tasks_for',
+        'try_mode': 'try_mode',
+        'try_options': None,
+        'try_task_config': {},
+        'version': 'version',
     }
 
     def test_Parameters_immutable(self):
         p = Parameters(**self.vals)
 
         def assign():
-            p["head_ref"] = 20
-
+            p['head_ref'] = 20
         self.assertRaises(Exception, assign)
 
     def test_Parameters_missing_KeyError(self):
         p = Parameters(**self.vals)
-        self.assertRaises(KeyError, lambda: p["z"])
+        self.assertRaises(KeyError, lambda: p['z'])
 
     def test_Parameters_invalid_KeyError(self):
         """even if the value is present, if it's not a valid property, raise KeyError"""
@@ -79,7 +78,7 @@ class TestParameters(unittest.TestCase):
 
     def test_Parameters_get(self):
         p = Parameters(head_ref=10, level=20)
-        self.assertEqual(p["head_ref"], 10)
+        self.assertEqual(p['head_ref'], 10)
 
     def test_Parameters_check(self):
         p = Parameters(**self.vals)
@@ -101,11 +100,15 @@ class TestParameters(unittest.TestCase):
 
     def test_load_parameters_file_yaml(self):
         with MockedOpen({"params.yml": "some: data\n"}):
-            self.assertEqual(load_parameters_file("params.yml"), {"some": "data"})
+            self.assertEqual(
+                    load_parameters_file('params.yml'),
+                    {'some': 'data'})
 
     def test_load_parameters_file_json(self):
         with MockedOpen({"params.json": '{"some": "data"}'}):
-            self.assertEqual(load_parameters_file("params.json"), {"some": "data"})
+            self.assertEqual(
+                    load_parameters_file('params.json'),
+                    {'some': 'data'})
 
     def test_load_parameters_override(self):
         """
@@ -113,8 +116,8 @@ class TestParameters(unittest.TestCase):
         the generated parameters.
         """
         self.assertEqual(
-            load_parameters_file("", overrides={"some": "data"}), {"some": "data"}
-        )
+            load_parameters_file('', overrides={'some': 'data'}),
+            {'some': 'data'})
 
     def test_load_parameters_override_file(self):
         """
@@ -123,23 +126,17 @@ class TestParameters(unittest.TestCase):
         """
         with MockedOpen({"params.json": '{"some": "data"}'}):
             self.assertEqual(
-                load_parameters_file("params.json", overrides={"some": "other"}),
-                {"some": "other"},
-            )
+                load_parameters_file('params.json', overrides={'some': 'other'}),
+                {'some': 'other'})
 
 
 class TestCommParameters(unittest.TestCase):
-    vals = dict(
-        list(
-            {
-                "comm_base_repository": "comm_base_repository",
-                "comm_head_ref": "comm_head_ref",
-                "comm_head_repository": "comm_head_repository",
-                "comm_head_rev": "comm_head_rev",
-            }.items()
-        )
-        + list(TestParameters.vals.items())
-    )
+    vals = dict(list({
+        'comm_base_repository': 'comm_base_repository',
+        'comm_head_ref': 'comm_head_ref',
+        'comm_head_repository': 'comm_head_repository',
+        'comm_head_rev': 'comm_head_rev',
+    }.items()) + list(TestParameters.vals.items()))
 
     def test_Parameters_check(self):
         """
@@ -153,7 +150,7 @@ class TestCommParameters(unittest.TestCase):
         If any of the comm parameters are specified, all of them must be specified.
         """
         vals = self.vals.copy()
-        del vals["comm_base_repository"]
+        del vals['comm_base_repository']
         p = Parameters(**vals)
         self.assertRaises(Exception, p.check)
 
@@ -166,5 +163,5 @@ class TestCommParameters(unittest.TestCase):
         self.assertRaises(Exception, p.check)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -4,26 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoSimplePrograms(
-    [
-        "SmokeDMD",
-    ],
-    linkage=None,
-)
+GeckoSimplePrograms([
+    'SmokeDMD',
+], linkage=None)
 
 # See the comment at the top of SmokeDMD.cpp:RunTests().
-if CONFIG["CXX_TYPE"] == "clang-cl":
-    CXXFLAGS += ["-Og-"]
+if CONFIG['CXX_TYPE'] == 'clang-cl':
+    CXXFLAGS += ['-Og-']
 else:
-    CXXFLAGS += ["-O0"]
+    CXXFLAGS += ['-O0']
 
-DEFINES["MOZ_NO_MOZALLOC"] = True
+DEFINES['MOZ_NO_MOZALLOC'] = True
 
 DisableStlWrapping()
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell.ini",
+    'xpcshell.ini',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

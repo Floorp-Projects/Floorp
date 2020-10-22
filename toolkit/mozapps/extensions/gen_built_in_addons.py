@@ -20,9 +20,9 @@ from mozpack.manifests import InstallManifest
 # extract lists of install files. These vary depending on which backend we're
 # using, so nonexistent manifests are ignored.
 manifest_paths = (
-    ("", "_build_manifests/install/dist_bin"),
-    ("", "faster/install_dist_bin"),
-    ("browser", "faster/install_dist_bin_browser"),
+    ('', '_build_manifests/install/dist_bin'),
+    ('', 'faster/install_dist_bin'),
+    ('browser', 'faster/install_dist_bin_browser'),
 )
 
 
@@ -63,21 +63,16 @@ def get_child(base, path):
 
 def main(output, *args):
     parser = argparse.ArgumentParser(
-        description="Produces a JSON manifest of built-in add-ons"
-    )
-    parser.add_argument(
-        "--features",
-        type=str,
-        dest="featuresdir",
-        action="store",
-        help=("The distribution sub-directory " "containing feature add-ons"),
-    )
+        description='Produces a JSON manifest of built-in add-ons')
+    parser.add_argument('--features', type=str, dest='featuresdir',
+                        action='store', help=('The distribution sub-directory '
+                                              'containing feature add-ons'))
     args = parser.parse_args(args)
 
     registry, inputs = get_registry(manifest_paths)
 
     dicts = {}
-    for path in registry.match("dictionaries/*.dic"):
+    for path in registry.match('dictionaries/*.dic'):
         base, ext = os.path.splitext(mozpath.basename(path))
         dicts[base] = path
 
@@ -87,7 +82,7 @@ def main(output, *args):
 
     if args.featuresdir:
         features = set()
-        for p in registry.match("%s/*" % args.featuresdir):
+        for p in registry.match('%s/*' % args.featuresdir):
             features.add(mozpath.basename(get_child(args.featuresdir, p)))
 
         listing["system"] = sorted(features)
@@ -97,5 +92,5 @@ def main(output, *args):
     return inputs
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

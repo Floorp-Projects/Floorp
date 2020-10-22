@@ -8,19 +8,19 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom += [
-    "Permissions.h",
-    "PermissionStatus.h",
+    'Permissions.h',
+    'PermissionStatus.h',
 ]
 
 UNIFIED_SOURCES += [
-    "PermissionObserver.cpp",
-    "Permissions.cpp",
-    "PermissionStatus.cpp",
-    "PermissionUtils.cpp",
+    'PermissionObserver.cpp',
+    'Permissions.cpp',
+    'PermissionStatus.cpp',
+    'PermissionUtils.cpp',
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

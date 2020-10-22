@@ -3,11 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "src",
+    'src',
 ]
 
-DevToolsModules("initializer.js", "panel.js")
+DevToolsModules(
+    'initializer.js',
+    'panel.js'
+)
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini'
+]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell.ini'
+]

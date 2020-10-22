@@ -2,4 +2,4 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-FINAL_TARGET = "random-final-target"
+FINAL_TARGET = 'random-final-target'

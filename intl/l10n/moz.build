@@ -5,52 +5,53 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.intl += [
-    "FluentBindings.h",
-    "FluentBundle.h",
-    "FluentResource.h",
-    "Localization.h",
+    'FluentBindings.h',
+    'FluentBundle.h',
+    'FluentResource.h',
+    'Localization.h',
 ]
 
 UNIFIED_SOURCES += [
-    "FluentBundle.cpp",
-    "FluentResource.cpp",
-    "L10nRegistry.cpp",
-    "Localization.cpp",
+    'FluentBundle.cpp',
+    'FluentResource.cpp',
+    'L10nRegistry.cpp',
+    'Localization.cpp',
 ]
 
 EXTRA_JS_MODULES += [
-    "L10nRegistry.jsm",
-    "Localization.jsm",
+    'L10nRegistry.jsm',
+    'Localization.jsm',
 ]
 
 TESTING_JS_MODULES += [
-    "FluentSyntax.jsm",
+    'FluentSyntax.jsm',
 ]
 
 TEST_DIRS += [
-    "rust/gtest",
+    'rust/gtest',
 ]
 
 XPIDL_SOURCES += [
-    "mozILocalization.idl",
+    'mozILocalization.idl',
 ]
 
-XPIDL_MODULE = "locale"
+XPIDL_MODULE = 'locale'
 
 LOCAL_INCLUDES += [
-    "/dom/base",
+    '/dom/base',
 ]
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    CbindgenHeader("fluent_ffi_generated.h", inputs=["/intl/l10n/rust/fluent-ffi"])
+if CONFIG['COMPILE_ENVIRONMENT']:
+    CbindgenHeader('fluent_ffi_generated.h',
+                   inputs=['/intl/l10n/rust/fluent-ffi'])
 
     EXPORTS.mozilla.intl += [
-        "!fluent_ffi_generated.h",
+        '!fluent_ffi_generated.h',
     ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
 
-SPHINX_TREES["/l10n"] = "docs"
+SPHINX_TREES['/l10n'] = 'docs'
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

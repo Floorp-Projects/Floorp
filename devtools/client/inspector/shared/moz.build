@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "compatibility-user-settings.js",
-    "highlighters-overlay.js",
-    "node-reps.js",
-    "node-types.js",
-    "style-change-tracker.js",
-    "style-inspector-menu.js",
-    "tooltips-overlay.js",
-    "utils.js",
-    "walker-event-listener.js",
+    'compatibility-user-settings.js',
+    'highlighters-overlay.js',
+    'node-reps.js',
+    'node-types.js',
+    'style-change-tracker.js',
+    'style-inspector-menu.js',
+    'tooltips-overlay.js',
+    'utils.js',
+    'walker-event-listener.js'
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

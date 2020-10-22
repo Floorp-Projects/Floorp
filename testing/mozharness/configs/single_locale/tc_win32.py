@@ -7,8 +7,9 @@ config = {
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "DIST": "%(abs_obj_dir)s",
         "L10NBASEDIR": "../../l10n",
-        "TOOLTOOL_CACHE": os.environ.get("TOOLTOOL_CACHE"),
-        "EN_US_PACKAGE_NAME": "target.zip",
+        'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE'),
+        'EN_US_PACKAGE_NAME': 'target.zip',
     },
-    "tooltool_manifest_src": "browser/config/tooltool-manifests/win32/releng.manifest",
+
+    'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/releng.manifest",
 }

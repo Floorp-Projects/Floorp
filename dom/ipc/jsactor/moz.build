@@ -5,38 +5,38 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "JSActor.h",
-    "JSActorManager.h",
-    "JSActorService.h",
-    "JSProcessActorChild.h",
-    "JSProcessActorParent.h",
-    "JSProcessActorProtocol.h",
-    "JSWindowActorChild.h",
-    "JSWindowActorParent.h",
-    "JSWindowActorProtocol.h",
+    'JSActor.h',
+    'JSActorManager.h',
+    'JSActorService.h',
+    'JSProcessActorChild.h',
+    'JSProcessActorParent.h',
+    'JSProcessActorProtocol.h',
+    'JSWindowActorChild.h',
+    'JSWindowActorParent.h',
+    'JSWindowActorProtocol.h',
 ]
 
 EXPORTS += [
-    "nsQueryActor.h",
+    'nsQueryActor.h',
 ]
 
 UNIFIED_SOURCES += [
-    "JSActor.cpp",
-    "JSActorManager.cpp",
-    "JSActorService.cpp",
-    "JSProcessActorChild.cpp",
-    "JSProcessActorParent.cpp",
-    "JSProcessActorProtocol.cpp",
-    "JSWindowActorChild.cpp",
-    "JSWindowActorParent.cpp",
-    "JSWindowActorProtocol.cpp",
+    'JSActor.cpp',
+    'JSActorManager.cpp',
+    'JSActorService.cpp',
+    'JSProcessActorChild.cpp',
+    'JSProcessActorParent.cpp',
+    'JSProcessActorProtocol.cpp',
+    'JSWindowActorChild.cpp',
+    'JSWindowActorParent.cpp',
+    'JSWindowActorProtocol.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/js/xpconnect/loader",
-    "/js/xpconnect/src",
+    '/js/xpconnect/loader',
+    '/js/xpconnect/src',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

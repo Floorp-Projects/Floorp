@@ -7,65 +7,65 @@
 external_dirs = []
 
 DIRS += [
-    "lgpllibs",
-    "rlbox",
-    "rlbox_lucet_sandbox",
-    "sqlite",
+    'lgpllibs',
+    'rlbox',
+    'rlbox_lucet_sandbox',
+    'sqlite',
 ]
-if not CONFIG["MOZ_SYSTEM_JPEG"]:
-    external_dirs += ["media/libjpeg"]
+if not CONFIG['MOZ_SYSTEM_JPEG']:
+    external_dirs += ['media/libjpeg']
 
 DIRS += [
-    "/third_party/prio",
-    "/third_party/msgpack",
-    "/third_party/sipcc",
+    '/third_party/prio',
+    '/third_party/msgpack',
+    '/third_party/sipcc',
 ]
 
 # There's no "native" brotli or woff2 yet, but probably in the future...
-external_dirs += ["modules/brotli"]
-external_dirs += ["modules/woff2"]
+external_dirs += ['modules/brotli']
+external_dirs += ['modules/woff2']
 
-external_dirs += ["modules/xz-embedded"]
+external_dirs += ['modules/xz-embedded']
 
-if CONFIG["MOZ_VORBIS"]:
-    external_dirs += ["media/libvorbis"]
+if CONFIG['MOZ_VORBIS']:
+    external_dirs += ['media/libvorbis']
 
-if CONFIG["MOZ_TREMOR"]:
-    external_dirs += ["media/libtremor"]
+if CONFIG['MOZ_TREMOR']:
+    external_dirs += ['media/libtremor']
 
-if CONFIG["MOZ_WEBM_ENCODER"]:
-    external_dirs += ["media/libmkv"]
+if CONFIG['MOZ_WEBM_ENCODER']:
+    external_dirs += ['media/libmkv']
 
-if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
-    external_dirs += ["media/libvpx"]
+if not CONFIG['MOZ_SYSTEM_LIBVPX']:
+    external_dirs += ['media/libvpx']
 
-if CONFIG["MOZ_AV1"]:
-    external_dirs += ["media/libaom"]
-    external_dirs += ["media/libdav1d"]
+if CONFIG['MOZ_AV1']:
+    external_dirs += ['media/libaom']
+    external_dirs += ['media/libdav1d']
 
-if not CONFIG["MOZ_SYSTEM_PNG"]:
-    external_dirs += ["media/libpng"]
+if not CONFIG['MOZ_SYSTEM_PNG']:
+    external_dirs += ['media/libpng']
 
-if not CONFIG["MOZ_SYSTEM_WEBP"]:
-    external_dirs += ["media/libwebp"]
+if not CONFIG['MOZ_SYSTEM_WEBP']:
+    external_dirs += ['media/libwebp']
 
-if CONFIG["CPU_ARCH"] == "arm":
-    external_dirs += ["media/openmax_dl/dl"]
+if CONFIG['CPU_ARCH'] == 'arm':
+    external_dirs += ['media/openmax_dl/dl']
 
-if CONFIG["MOZ_FFVPX"]:
-    external_dirs += ["media/ffvpx"]
+if CONFIG['MOZ_FFVPX']:
+    external_dirs += ['media/ffvpx']
 
 external_dirs += [
-    "media/kiss_fft",
-    "media/libcubeb",
-    "media/libnestegg",
-    "media/libogg",
-    "media/libopus",
-    "media/libtheora",
-    "media/libspeex_resampler",
-    "media/libsoundtouch",
-    "media/mp4parse-rust",
-    "media/psshparser",
+    'media/kiss_fft',
+    'media/libcubeb',
+    'media/libnestegg',
+    'media/libogg',
+    'media/libopus',
+    'media/libtheora',
+    'media/libspeex_resampler',
+    'media/libsoundtouch',
+    'media/mp4parse-rust',
+    'media/psshparser'
 ]
 
-DIRS += ["../../" + i for i in external_dirs]
+DIRS += ['../../' + i for i in external_dirs]

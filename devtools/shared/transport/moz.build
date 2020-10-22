@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 DevToolsModules(
-    "child-transport.js",
-    "js-window-actor-transport.js",
-    "local-transport.js",
-    "packets.js",
-    "stream-utils.js",
-    "transport.js",
-    "websocket-transport.js",
-    "worker-transport.js",
+    'child-transport.js',
+    'js-window-actor-transport.js',
+    'local-transport.js',
+    'packets.js',
+    'stream-utils.js',
+    'transport.js',
+    'websocket-transport.js',
+    'worker-transport.js',
 )

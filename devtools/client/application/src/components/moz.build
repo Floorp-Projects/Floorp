@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "routing",
-    "manifest",
-    "service-workers",
-    "ui",
+    'routing',
+    'manifest',
+    'service-workers',
+    'ui',
 ]
 
 DevToolsModules(
-    "App.js",
+    'App.js',
 )

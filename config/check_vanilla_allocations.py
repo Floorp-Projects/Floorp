@@ -62,40 +62,39 @@ has_failed = False
 
 
 def fail(msg):
-    print("TEST-UNEXPECTED-FAIL | check_vanilla_allocations.py |", msg)
+    print('TEST-UNEXPECTED-FAIL | check_vanilla_allocations.py |', msg)
     global has_failed
     has_failed = True
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--aggressive",
-        action="store_true",
-        help="also check for malloc, calloc, realloc and free",
-    )
-    parser.add_argument("file", type=str, help="name of the file to check")
+    parser.add_argument('--aggressive', action='store_true',
+                        help='also check for malloc, calloc, realloc and free')
+    parser.add_argument('file', type=str,
+                        help='name of the file to check')
     args = parser.parse_args()
 
     # Run |nm|.  Options:
     # -u: show only undefined symbols
     # -C: demangle symbol names
     # -A: show an object filename for each undefined symbol
-    nm = buildconfig.substs.get("NM") or "nm"
-    cmd = [nm, "-u", "-C", "-A", args.file]
-    lines = subprocess.check_output(
-        cmd, universal_newlines=True, stderr=subprocess.PIPE
-    ).split("\n")
+    nm = buildconfig.substs.get('NM') or 'nm'
+    cmd = [nm, '-u', '-C', '-A', args.file]
+    lines = subprocess.check_output(cmd, universal_newlines=True,
+                                    stderr=subprocess.PIPE).split('\n')
 
     # alloc_fns contains all the vanilla allocation/free functions that we look
     # for. Regexp chars are escaped appropriately.
 
     alloc_fns = [
         # Matches |operator new(unsigned T)|, where |T| is |int| or |long|.
-        r"operator new\(unsigned",
+        r'operator new\(unsigned',
+
         # Matches |operator new[](unsigned T)|, where |T| is |int| or |long|.
-        r"operator new\[\]\(unsigned",
-        r"memalign",
+        r'operator new\[\]\(unsigned',
+
+        r'memalign',
         # These three aren't available on all Linux configurations.
         # r'posix_memalign',
         # r'aligned_alloc',
@@ -103,17 +102,23 @@ def main():
     ]
 
     if args.aggressive:
-        alloc_fns += [r"malloc", r"calloc", r"realloc", r"free", r"strdup"]
+        alloc_fns += [
+            r'malloc',
+            r'calloc',
+            r'realloc',
+            r'free',
+            r'strdup'
+        ]
 
     # This is like alloc_fns, but regexp chars are not escaped.
-    alloc_fns_unescaped = [fn.replace("\\", "") for fn in alloc_fns]
+    alloc_fns_unescaped = [fn.replace('\\', '') for fn in alloc_fns]
 
     # This regexp matches the relevant lines in the output of |nm|, which look
     # like the following.
     #
     #   js/src/libjs_static.a:Utility.o:              U malloc
     #
-    alloc_fns_re = r"([^:/ ]+):\s+U (" + r"|".join(alloc_fns) + r")"
+    alloc_fns_re = r'([^:/ ]+):\s+U (' + r'|'.join(alloc_fns) + r')'
 
     # This tracks which allocation/free functions have been seen in
     # util/Utility.cpp.
@@ -131,7 +136,7 @@ def main():
 
         # The stdc++compat library has an implicit call to operator new in
         # thread::_M_start_thread.
-        if "stdc++compat" in filename:
+        if 'stdc++compat' in filename:
             continue
 
         # The memory allocator code contains calls to memalign. These are ok, so
@@ -153,15 +158,15 @@ def main():
         # From intl/icu/source/common/umutex.h:
         # On Linux, the default constructor of std::condition_variable_any
         # produces an in-line reference to global operator new(), [...].
-        if filename == "umutex.o":
+        if filename == 'umutex.o':
             continue
 
         # Ignore allocations from decimal conversion functions inside mozglue.
-        if filename == "Decimal.o":
+        if filename == 'Decimal.o':
             continue
 
         fn = m.group(2)
-        if filename == "Utility.o":
+        if filename == 'Utility.o':
             util_Utility_cpp.add(fn)
         else:
             # An allocation is present in a non-special file.  Fail!
@@ -179,51 +184,45 @@ def main():
 
     # This should never happen, but check just in case.
     if util_Utility_cpp:
-        fail(
-            "unexpected allocation fns used in util/Utility.cpp: "
-            + ", ".join(util_Utility_cpp)
-        )
+        fail('unexpected allocation fns used in util/Utility.cpp: ' +
+             ', '.join(util_Utility_cpp))
 
     # If we found any improper references to allocation functions, try to use
     # DWARF debug info to get more accurate line number information about the
     # bad calls. This is a lot slower than 'nm -A', and it is not always
     # precise when building with --enable-optimized.
     if emit_line_info:
-        print("check_vanilla_allocations.py: Source lines with allocation calls:")
-        print(
-            "check_vanilla_allocations.py: Accurate in unoptimized builds; "
-            "util/Utility.cpp expected."
-        )
+        print('check_vanilla_allocations.py: Source lines with allocation calls:')
+        print('check_vanilla_allocations.py: Accurate in unoptimized builds; '
+              'util/Utility.cpp expected.')
 
         # Run |nm|.  Options:
         # -u: show only undefined symbols
         # -C: demangle symbol names
         # -l: show line number information for each undefined symbol
-        cmd = ["nm", "-u", "-C", "-l", args.file]
-        lines = subprocess.check_output(
-            cmd, universal_newlines=True, stderr=subprocess.PIPE
-        ).split("\n")
+        cmd = ['nm', '-u', '-C', '-l', args.file]
+        lines = subprocess.check_output(cmd, universal_newlines=True,
+                                        stderr=subprocess.PIPE).split('\n')
 
         # This regexp matches the relevant lines in the output of |nm -l|,
         # which look like the following.
         #
         #       U malloc util/Utility.cpp:117
         #
-        alloc_lines_re = r"U ((" + r"|".join(alloc_fns) + r").*)\s+(\S+:\d+)$"
+        alloc_lines_re = r'U ((' + r'|'.join(alloc_fns) + r').*)\s+(\S+:\d+)$'
 
         for line in lines:
             m = re.search(alloc_lines_re, line)
             if m:
-                print(
-                    "check_vanilla_allocations.py:", m.group(1), "called at", m.group(3)
-                )
+                print('check_vanilla_allocations.py:',
+                      m.group(1), 'called at', m.group(3))
 
     if has_failed:
         sys.exit(1)
 
-    print("TEST-PASS | check_vanilla_allocations.py | ok")
+    print('TEST-PASS | check_vanilla_allocations.py | ok')
     sys.exit(0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

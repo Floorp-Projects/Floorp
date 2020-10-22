@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "FilterBar",
-    "Input",
-    "Output",
+    'FilterBar',
+    'Input',
+    'Output',
 ]
 
 DevToolsModules(
-    "App.js",
-    "SideBar.js",
+    'App.js',
+    'SideBar.js',
 )

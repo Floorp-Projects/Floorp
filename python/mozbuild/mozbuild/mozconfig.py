@@ -16,18 +16,18 @@ from mozboot.mozconfig import find_mozconfig
 from mozpack import path as mozpath
 from mozbuild.util import ensure_subprocess_env
 
-MOZCONFIG_BAD_EXIT_CODE = """
+MOZCONFIG_BAD_EXIT_CODE = '''
 Evaluation of your mozconfig exited with an error. This could be triggered
 by a command inside your mozconfig failing. Please change your mozconfig
 to not error and/or to catch errors in executed commands.
-""".strip()
+'''.strip()
 
-MOZCONFIG_BAD_OUTPUT = """
+MOZCONFIG_BAD_OUTPUT = '''
 Evaluation of your mozconfig produced unexpected output.  This could be
 triggered by a command inside your mozconfig failing or producing some warnings
 or error messages. Please change your mozconfig to not error and/or to catch
 errors in executed commands.
-""".strip()
+'''.strip()
 
 
 class MozconfigLoadException(Exception):
@@ -40,26 +40,19 @@ class MozconfigLoadException(Exception):
         self.path = path
         self.output = output
 
-        message = (
-            dedent(
-                """
+        message = dedent("""
         Error loading mozconfig: {path}
 
         {message}
-        """
-            )
-            .format(path=self.path, message=message)
-            .lstrip()
-        )
+        """).format(path=self.path, message=message).lstrip()
 
         if self.output:
-            message += dedent(
-                """
+            message += dedent("""
             mozconfig output:
 
             {output}
-            """
-            ).format(output="\n".join([six.ensure_text(s) for s in self.output]))
+            """).format(output="\n".join(
+                [six.ensure_text(s) for s in self.output]))
 
         Exception.__init__(self, message)
 
@@ -67,25 +60,18 @@ class MozconfigLoadException(Exception):
 class MozconfigLoader(object):
     """Handles loading and parsing of mozconfig files."""
 
-    RE_MAKE_VARIABLE = re.compile(
-        """
+    RE_MAKE_VARIABLE = re.compile('''
         ^\s*                    # Leading whitespace
         (?P<var>[a-zA-Z_0-9]+)  # Variable name
         \s* [?:]?= \s*          # Assignment operator surrounded by optional
                                 # spaces
-        (?P<value>.*$)""",  # Everything else (likely the value)
-        re.VERBOSE,
-    )
+        (?P<value>.*$)''',      # Everything else (likely the value)
+                                  re.VERBOSE)
 
-    IGNORE_SHELL_VARIABLES = {"_", "BASH_ARGV", "BASH_ARGV0", "BASH_ARGC"}
+    IGNORE_SHELL_VARIABLES = {'_', 'BASH_ARGV', 'BASH_ARGV0', 'BASH_ARGC'}
 
     ENVIRONMENT_VARIABLES = {
-        "CC",
-        "CXX",
-        "CFLAGS",
-        "CXXFLAGS",
-        "LDFLAGS",
-        "MOZ_OBJDIR",
+        'CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS', 'MOZ_OBJDIR',
     }
 
     AUTODETECT = object()
@@ -97,7 +83,7 @@ class MozconfigLoader(object):
     def _loader_script(self):
         our_dir = os.path.abspath(os.path.dirname(__file__))
 
-        return os.path.join(our_dir, "mozconfig_loader")
+        return os.path.join(our_dir, 'mozconfig_loader')
 
     def read_mozconfig(self, path=None):
         """Read the contents of a mozconfig into a data structure.
@@ -115,65 +101,55 @@ class MozconfigLoader(object):
             path = find_mozconfig(self.topsrcdir)
 
         result = {
-            "path": path,
-            "topobjdir": None,
-            "configure_args": None,
-            "make_flags": None,
-            "make_extra": None,
-            "env": None,
-            "vars": None,
+            'path': path,
+            'topobjdir': None,
+            'configure_args': None,
+            'make_flags': None,
+            'make_extra': None,
+            'env': None,
+            'vars': None,
         }
 
         if path is None:
-            if "MOZ_OBJDIR" in os.environ:
-                result["topobjdir"] = os.environ["MOZ_OBJDIR"]
+            if 'MOZ_OBJDIR' in os.environ:
+                result['topobjdir'] = os.environ['MOZ_OBJDIR']
             return result
 
         path = mozpath.normsep(path)
 
-        result["configure_args"] = []
-        result["make_extra"] = []
-        result["make_flags"] = []
+        result['configure_args'] = []
+        result['make_extra'] = []
+        result['make_flags'] = []
 
         # Since mozconfig_loader is a shell script, running it "normally"
         # actually leads to two shell executions on Windows. Avoid this by
         # directly calling sh mozconfig_loader.
-        shell = "sh"
-        if "MOZILLABUILD" in os.environ:
-            shell = os.environ["MOZILLABUILD"] + "/msys/bin/sh"
-        if sys.platform == "win32":
-            shell = shell + ".exe"
+        shell = 'sh'
+        if 'MOZILLABUILD' in os.environ:
+            shell = os.environ['MOZILLABUILD'] + '/msys/bin/sh'
+        if sys.platform == 'win32':
+            shell = shell + '.exe'
 
-        command = [
-            shell,
-            mozpath.normsep(self._loader_script),
-            mozpath.normsep(self.topsrcdir),
-            path,
-            sys.executable,
-            mozpath.join(mozpath.dirname(self._loader_script), "action", "dump_env.py"),
-        ]
+        command = [shell, mozpath.normsep(self._loader_script),
+                   mozpath.normsep(self.topsrcdir), path, sys.executable,
+                   mozpath.join(mozpath.dirname(self._loader_script),
+                                'action', 'dump_env.py')]
 
         try:
             env = dict(os.environ)
-            env["PYTHONIOENCODING"] = "utf-8"
+            env['PYTHONIOENCODING'] = 'utf-8'
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
-            output = six.ensure_text(
-                subprocess.check_output(
-                    command,
-                    stderr=subprocess.STDOUT,
-                    cwd=self.topsrcdir,
-                    env=ensure_subprocess_env(env),
-                    universal_newlines=True,
-                )
-            )
+            output = six.ensure_text(subprocess.check_output(
+                command, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
+                env=ensure_subprocess_env(env), universal_newlines=True))
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
 
             # Output before actual execution shouldn't be relevant.
             try:
-                index = lines.index("------END_BEFORE_SOURCE")
-                lines = lines[index + 1 :]
+                index = lines.index('------END_BEFORE_SOURCE')
+                lines = lines[index + 1:]
             except ValueError:
                 pass
 
@@ -186,11 +162,10 @@ class MozconfigLoader(object):
             # well-formedness of the shell output; when these fail, it
             # generally means there was a problem with the output, but we
             # include the assertion traceback just to be sure.
-            print("Assertion failed in _parse_loader_output:")
+            print('Assertion failed in _parse_loader_output:')
             traceback.print_exc()
-            raise MozconfigLoadException(
-                path, MOZCONFIG_BAD_OUTPUT, output.splitlines()
-            )
+            raise MozconfigLoadException(path, MOZCONFIG_BAD_OUTPUT,
+                                         output.splitlines())
 
         def diff_vars(vars_before, vars_after):
             set1 = set(vars_before.keys()) - self.IGNORE_SHELL_VARIABLES
@@ -199,21 +174,22 @@ class MozconfigLoader(object):
             removed = set1 - set2
             maybe_modified = set1 & set2
             changed = {
-                "added": {},
-                "removed": {},
-                "modified": {},
-                "unmodified": {},
+                'added': {},
+                'removed': {},
+                'modified': {},
+                'unmodified': {},
             }
 
             for key in added:
-                changed["added"][key] = vars_after[key]
+                changed['added'][key] = vars_after[key]
 
             for key in removed:
-                changed["removed"][key] = vars_before[key]
+                changed['removed'][key] = vars_before[key]
 
             for key in maybe_modified:
                 if vars_before[key] != vars_after[key]:
-                    changed["modified"][key] = (vars_before[key], vars_after[key])
+                    changed['modified'][key] = (
+                        vars_before[key], vars_after[key])
                 elif key in self.ENVIRONMENT_VARIABLES:
                     # In order for irrelevant environment variable changes not
                     # to incur in re-running configure, only a set of
@@ -221,55 +197,51 @@ class MozconfigLoader(object):
                     # unmodified. Otherwise, changes such as using a different
                     # terminal window, or even rebooting, would trigger
                     # reconfigures.
-                    changed["unmodified"][key] = vars_after[key]
+                    changed['unmodified'][key] = vars_after[key]
 
             return changed
 
-        result["env"] = diff_vars(parsed["env_before"], parsed["env_after"])
+        result['env'] = diff_vars(parsed['env_before'], parsed['env_after'])
 
         # Environment variables also appear as shell variables, but that's
         # uninteresting duplication of information. Filter them out.
-        def filt(x, y):
-            return {k: v for k, v in x.items() if k not in y}
-
-        result["vars"] = diff_vars(
-            filt(parsed["vars_before"], parsed["env_before"]),
-            filt(parsed["vars_after"], parsed["env_after"]),
+        def filt(x, y): return {k: v for k, v in x.items() if k not in y}
+        result['vars'] = diff_vars(
+            filt(parsed['vars_before'], parsed['env_before']),
+            filt(parsed['vars_after'], parsed['env_after'])
         )
 
-        result["configure_args"] = [self._expand(o) for o in parsed["ac"]]
+        result['configure_args'] = [self._expand(o) for o in parsed['ac']]
 
-        if "MOZ_OBJDIR" in parsed["env_before"]:
-            result["topobjdir"] = parsed["env_before"]["MOZ_OBJDIR"]
+        if 'MOZ_OBJDIR' in parsed['env_before']:
+            result['topobjdir'] = parsed['env_before']['MOZ_OBJDIR']
 
-        mk = [self._expand(o) for o in parsed["mk"]]
+        mk = [self._expand(o) for o in parsed['mk']]
 
         for o in mk:
             match = self.RE_MAKE_VARIABLE.match(o)
 
             if match is None:
-                result["make_extra"].append(o)
+                result['make_extra'].append(o)
                 continue
 
-            name, value = match.group("var"), match.group("value")
+            name, value = match.group('var'), match.group('value')
 
-            if name == "MOZ_MAKE_FLAGS":
-                result["make_flags"] = value.split()
+            if name == 'MOZ_MAKE_FLAGS':
+                result['make_flags'] = value.split()
                 continue
 
-            if name == "MOZ_OBJDIR":
-                result["topobjdir"] = value
-                if parsed["env_before"].get("MOZ_PROFILE_GENERATE") == "1":
+            if name == 'MOZ_OBJDIR':
+                result['topobjdir'] = value
+                if parsed['env_before'].get('MOZ_PROFILE_GENERATE') == '1':
                     # If MOZ_OBJDIR is specified in the mozconfig, we need to
                     # make sure that the '/instrumented' directory gets appended
                     # for the first build to avoid an objdir mismatch when
                     # running 'mach package' on Windows.
-                    result["topobjdir"] = mozpath.join(
-                        result["topobjdir"], "instrumented"
-                    )
+                    result['topobjdir'] = mozpath.join(result['topobjdir'], 'instrumented')
                 continue
 
-            result["make_extra"].append(o)
+            result['make_extra'].append(o)
 
         return result
 
@@ -290,23 +262,23 @@ class MozconfigLoader(object):
             if not line:
                 continue
 
-            if line.startswith("------BEGIN_"):
+            if line.startswith('------BEGIN_'):
                 assert current_type is None
                 assert current is None
                 assert not in_variable
-                current_type = line[len("------BEGIN_") :]
+                current_type = line[len('------BEGIN_'):]
                 current = []
                 continue
 
-            if line.startswith("------END_"):
+            if line.startswith('------END_'):
                 assert not in_variable
-                section = line[len("------END_") :]
+                section = line[len('------END_'):]
                 assert current_type == section
 
-                if current_type == "AC_OPTION":
-                    ac_options.append("\n".join(current))
-                elif current_type == "MK_OPTION":
-                    mk_options.append("\n".join(current))
+                if current_type == 'AC_OPTION':
+                    ac_options.append('\n'.join(current))
+                elif current_type == 'MK_OPTION':
+                    mk_options.append('\n'.join(current))
 
                 current = None
                 current_type = None
@@ -315,10 +287,10 @@ class MozconfigLoader(object):
             assert current_type is not None
 
             vars_mapping = {
-                "BEFORE_SOURCE": before_source,
-                "AFTER_SOURCE": after_source,
-                "ENV_BEFORE_SOURCE": env_before_source,
-                "ENV_AFTER_SOURCE": env_after_source,
+                'BEFORE_SOURCE': before_source,
+                'AFTER_SOURCE': after_source,
+                'ENV_BEFORE_SOURCE': env_before_source,
+                'ENV_AFTER_SOURCE': env_after_source,
             }
 
             if current_type in vars_mapping:
@@ -351,20 +323,20 @@ class MozconfigLoader(object):
                     # Reached the end of a multi-line variable.
                     if line.endswith("'") and not line.endswith("\\'"):
                         current.append(line[:-1])
-                        value = "\n".join(current)
+                        value = '\n'.join(current)
                         in_variable = None
                     else:
                         current.append(line)
                         continue
                 else:
-                    equal_pos = line.find("=")
+                    equal_pos = line.find('=')
 
                     if equal_pos < 1:
                         # TODO log warning?
                         continue
 
                     name = line[0:equal_pos]
-                    value = line[equal_pos + 1 :]
+                    value = line[equal_pos + 1:]
 
                     if len(value):
                         has_quote = value[0] == "'"
@@ -391,13 +363,13 @@ class MozconfigLoader(object):
             current.append(line)
 
         return {
-            "mk": mk_options,
-            "ac": ac_options,
-            "vars_before": before_source,
-            "vars_after": after_source,
-            "env_before": env_before_source,
-            "env_after": env_after_source,
+            'mk': mk_options,
+            'ac': ac_options,
+            'vars_before': before_source,
+            'vars_after': after_source,
+            'env_before': env_before_source,
+            'env_after': env_after_source,
         }
 
     def _expand(self, s):
-        return s.replace("@TOPSRCDIR@", self.topsrcdir)
+        return s.replace('@TOPSRCDIR@', self.topsrcdir)

@@ -9,32 +9,32 @@ from __future__ import absolute_import
 from gdbpp import GeckoPrettyPrinter
 
 
-@GeckoPrettyPrinter("nsWeakPtr", "^nsCOMPtr<nsIWeakReference>$")
+@GeckoPrettyPrinter('nsWeakPtr', '^nsCOMPtr<nsIWeakReference>$')
 class weak_ptr_printer(object):
     def __init__(self, value):
         self.value = value
 
     def to_string(self):
-        proxy = self.value["mRawPtr"]
+        proxy = self.value['mRawPtr']
         if not proxy:
-            return "[(%s) 0x0]" % proxy.type
+            return '[(%s) 0x0]' % proxy.type
 
         ref_type = proxy.dynamic_type
-        weak_ptr = proxy.cast(ref_type).dereference()["mReferent"]
+        weak_ptr = proxy.cast(ref_type).dereference()['mReferent']
         if not weak_ptr:
-            return "[(%s) %s]" % (weak_ptr.type, weak_ptr)
+            return '[(%s) %s]' % (weak_ptr.type, weak_ptr)
 
-        return "[(%s) %s]" % (weak_ptr.dynamic_type, weak_ptr)
+        return '[(%s) %s]' % (weak_ptr.dynamic_type, weak_ptr)
 
 
-@GeckoPrettyPrinter("mozilla::StaticAutoPtr", "^mozilla::StaticAutoPtr<.*>$")
-@GeckoPrettyPrinter("mozilla::StaticRefPtr", "^mozilla::StaticRefPtr<.*>$")
-@GeckoPrettyPrinter("nsAutoPtr", "^nsAutoPtr<.*>$")
-@GeckoPrettyPrinter("nsCOMPtr", "^nsCOMPtr<.*>$")
-@GeckoPrettyPrinter("RefPtr", "^RefPtr<.*>$")
+@GeckoPrettyPrinter('mozilla::StaticAutoPtr', '^mozilla::StaticAutoPtr<.*>$')
+@GeckoPrettyPrinter('mozilla::StaticRefPtr', '^mozilla::StaticRefPtr<.*>$')
+@GeckoPrettyPrinter('nsAutoPtr', '^nsAutoPtr<.*>$')
+@GeckoPrettyPrinter('nsCOMPtr', '^nsCOMPtr<.*>$')
+@GeckoPrettyPrinter('RefPtr', '^RefPtr<.*>$')
 class smartptr_printer(object):
     def __init__(self, value):
-        self.value = value["mRawPtr"]
+        self.value = value['mRawPtr']
 
     def to_string(self):
         if not self.value:
@@ -42,13 +42,13 @@ class smartptr_printer(object):
         else:
             type_name = str(self.value.dereference().dynamic_type.pointer())
 
-        return "[(%s) %s]" % (type_name, str(self.value))
+        return '[(%s) %s]' % (type_name, str(self.value))
 
 
-@GeckoPrettyPrinter("UniquePtr", "^mozilla::UniquePtr<.*>$")
+@GeckoPrettyPrinter('UniquePtr', '^mozilla::UniquePtr<.*>$')
 class uniqueptr_printer(object):
     def __init__(self, value):
-        self.value = value["mTuple"]["mFirstA"]
+        self.value = value['mTuple']['mFirstA']
 
     def to_string(self):
         if not self.value:
@@ -56,4 +56,4 @@ class uniqueptr_printer(object):
         else:
             type_name = str(self.value.dereference().dynamic_type.pointer())
 
-        return "[(%s) %s]" % (type_name, str(self.value))
+        return '[(%s) %s]' % (type_name, str(self.value))

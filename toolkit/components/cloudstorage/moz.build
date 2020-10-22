@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "tests/unit/xpcshell.ini",
+    'tests/unit/xpcshell.ini',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES += [
-    "CloudStorage.jsm",
+    'CloudStorage.jsm',
 ]
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'General')

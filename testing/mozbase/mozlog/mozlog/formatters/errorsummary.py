@@ -12,15 +12,14 @@ from .base import BaseFormatter
 
 
 class ErrorSummaryFormatter(BaseFormatter):
+
     def __init__(self):
         self.test_to_group = {}
-        self.groups = defaultdict(
-            lambda: {
-                "status": None,
-                "start": None,
-                "end": None,
-            }
-        )
+        self.groups = defaultdict(lambda: {
+            "status": None,
+            "start": None,
+            "end": None,
+        })
         self.line_count = 0
 
     def __call__(self, data):
@@ -34,16 +33,14 @@ class ErrorSummaryFormatter(BaseFormatter):
         return "%s\n" % json.dumps(data)
 
     def _output_test(self, test, subtest, item):
-        data = {
-            "test": test,
-            "subtest": subtest,
-            "group": self.test_to_group.get(test, ""),
-            "status": item["status"],
-            "expected": item["expected"],
-            "message": item.get("message"),
-            "stack": item.get("stack"),
-            "known_intermittent": item.get("known_intermittent", []),
-        }
+        data = {"test": test,
+                "subtest": subtest,
+                "group": self.test_to_group.get(test, ''),
+                "status": item["status"],
+                "expected": item["expected"],
+                "message": item.get("message"),
+                "stack": item.get("stack"),
+                "known_intermittent": item.get("known_intermittent", [])}
         return self._output("test_result", data)
 
     def _update_group_result(self, group, item):
@@ -68,14 +65,11 @@ class ErrorSummaryFormatter(BaseFormatter):
 
     def suite_end(self, data):
         return "".join(
-            self._output(
-                "group_result",
-                {
-                    "group": group,
-                    "status": info["status"],
-                    "duration": info["end"] - info["start"],
-                },
-            )
+            self._output("group_result", {
+                "group": group,
+                "status": info["status"],
+                "duration": info["end"] - info["start"],
+            })
             for group, info in self.groups.items()
         )
 
@@ -109,16 +103,15 @@ class ErrorSummaryFormatter(BaseFormatter):
         if item["level"] not in ("ERROR", "CRITICAL"):
             return
 
-        data = {"level": item["level"], "message": item["message"]}
+        data = {"level": item["level"],
+                "message": item["message"]}
         return self._output("log", data)
 
     def crash(self, item):
-        data = {
-            "test": item.get("test"),
-            "signature": item["signature"],
-            "stackwalk_stdout": item.get("stackwalk_stdout"),
-            "stackwalk_stderr": item.get("stackwalk_stderr"),
-        }
+        data = {"test": item.get("test"),
+                "signature": item["signature"],
+                "stackwalk_stdout": item.get("stackwalk_stdout"),
+                "stackwalk_stderr": item.get("stackwalk_stderr")}
         return self._output("crash", data)
 
     def lint(self, item):
@@ -129,6 +122,6 @@ class ErrorSummaryFormatter(BaseFormatter):
             "lineno": item["lineno"],
             "column": item.get("column"),
             "rule": item.get("rule"),
-            "linter": item.get("linter"),
+            "linter": item.get("linter")
         }
         self._output("lint", data)

@@ -5,111 +5,111 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 srcs = [
-    "archivereader.cpp",
-    "updater.cpp",
+    'archivereader.cpp',
+    'updater.cpp',
 ]
 
 have_progressui = 0
 
-if CONFIG["MOZ_VERIFY_MAR_SIGNATURE"]:
+if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     USE_LIBS += [
-        "verifymar",
+        'verifymar',
     ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     have_progressui = 1
     srcs += [
-        "loaddlls.cpp",
-        "progressui_win.cpp",
+        'loaddlls.cpp',
+        'progressui_win.cpp',
     ]
-    RCINCLUDE = "%supdater.rc" % updater_rel_path
-    DEFINES["UNICODE"] = True
-    DEFINES["_UNICODE"] = True
+    RCINCLUDE = '%supdater.rc' % updater_rel_path
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True
 
     # Pick up nsWindowsRestart.cpp
     LOCAL_INCLUDES += [
-        "/toolkit/xre",
+        '/toolkit/xre',
     ]
     OS_LIBS += [
-        "comctl32",
-        "ws2_32",
-        "shell32",
-        "shlwapi",
-        "crypt32",
-        "advapi32",
+        'comctl32',
+        'ws2_32',
+        'shell32',
+        'shlwapi',
+        'crypt32',
+        'advapi32',
     ]
 
 USE_LIBS += [
-    "bspatch",
-    "mar",
-    "updatecommon",
-    "xz-embedded",
+    'bspatch',
+    'mar',
+    'updatecommon',
+    'xz-embedded',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     have_progressui = 1
     srcs += [
-        "progressui_gtk.cpp",
+        'progressui_gtk.cpp',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     have_progressui = 1
     srcs += [
-        "launchchild_osx.mm",
-        "progressui_osx.mm",
+        'launchchild_osx.mm',
+        'progressui_osx.mm',
     ]
     OS_LIBS += [
-        "-framework Cocoa",
-        "-framework Security",
-        "-framework SystemConfiguration",
+        '-framework Cocoa',
+        '-framework Security',
+        '-framework SystemConfiguration',
     ]
     UNIFIED_SOURCES += [
-        "/toolkit/xre/updaterfileutils_osx.mm",
+        '/toolkit/xre/updaterfileutils_osx.mm',
     ]
     LOCAL_INCLUDES += [
-        "/toolkit/xre",
+        '/toolkit/xre',
     ]
 
 if have_progressui == 0:
     srcs += [
-        "progressui_null.cpp",
+        'progressui_null.cpp',
     ]
 
 SOURCES += sorted(srcs)
 
-if CONFIG["MOZ_TSAN"]:
+if CONFIG['MOZ_TSAN']:
     # Since mozglue is not linked to the updater,
     # we need to include our own TSan suppression list.
     SOURCES += [
-        "TsanOptions.cpp",
+        'TsanOptions.cpp',
     ]
 
-DEFINES["NS_NO_XPCOM"] = True
+DEFINES['NS_NO_XPCOM'] = True
 DisableStlWrapping()
-for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION"):
+for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 LOCAL_INCLUDES += [
-    "/toolkit/mozapps/update/common",
-    "/xpcom/base",  # for nsVersionComparator.cpp
+    '/toolkit/mozapps/update/common',
+    '/xpcom/base', # for nsVersionComparator.cpp
 ]
 
 DELAYLOAD_DLLS += [
-    "crypt32.dll",
-    "comctl32.dll",
-    "userenv.dll",
-    "wsock32.dll",
+    'crypt32.dll',
+    'comctl32.dll',
+    'userenv.dll',
+    'wsock32.dll',
 ]
 
-if CONFIG["CC_TYPE"] == "clang-cl":
-    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
-elif CONFIG["OS_ARCH"] == "WINNT":
-    WIN32_EXE_LDFLAGS += ["-municode"]
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    WIN32_EXE_LDFLAGS += ['-municode']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    OS_LIBS += CONFIG["TK_LIBS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    OS_LIBS += CONFIG['TK_LIBS']
 
-if CONFIG["CC_TYPE"] == "gcc":
-    CXXFLAGS += ["-Wno-format-truncation"]
+if CONFIG['CC_TYPE'] == 'gcc':
+    CXXFLAGS += ['-Wno-format-truncation']

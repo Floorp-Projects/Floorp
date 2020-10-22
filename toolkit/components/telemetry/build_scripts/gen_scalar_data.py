@@ -7,7 +7,11 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from mozparsers.shared_telemetry_utils import StringTable, static_assert, ParserError
+from mozparsers.shared_telemetry_utils import (
+    StringTable,
+    static_assert,
+    ParserError
+)
 from mozparsers import parse_scalars
 
 import json
@@ -32,16 +36,8 @@ file_footer = """\
 """
 
 
-def write_scalar_info(
-    scalar,
-    output,
-    name_index,
-    expiration_index,
-    store_index,
-    store_count,
-    key_count,
-    key_index,
-):
+def write_scalar_info(scalar, output, name_index, expiration_index, store_index, store_count,
+                      key_count, key_index):
     """Writes a scalar entry to the output file.
 
     :param scalar: a ScalarType instance describing the scalar.
@@ -50,22 +46,19 @@ def write_scalar_info(
     :param expiration_index: the index of the expiration version in the strings table.
     """
     if scalar.record_on_os(buildconfig.substs["OS_TARGET"]):
-        print(
-            "  {{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }},".format(
-                scalar.nsITelemetry_kind,
-                name_index,
-                expiration_index,
-                scalar.dataset,
-                " | ".join(scalar.record_in_processes_enum),
-                "true" if scalar.keyed else "false",
-                key_count,
-                key_index,
-                " | ".join(scalar.products_enum),
-                store_count,
-                store_index,
-            ),
-            file=output,
-        )
+        print("  {{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }},"
+              .format(scalar.nsITelemetry_kind,
+                      name_index,
+                      expiration_index,
+                      scalar.dataset,
+                      " | ".join(scalar.record_in_processes_enum),
+                      "true" if scalar.keyed else "false",
+                      key_count,
+                      key_index,
+                      " | ".join(scalar.products_enum),
+                      store_count,
+                      store_index),
+              file=output)
 
 
 def write_scalar_tables(scalars, output):
@@ -93,7 +86,7 @@ def write_scalar_tables(scalars, output):
         store_index = 0
         if stores == ["main"]:
             # if count == 1 && offset == UINT16_MAX -> only main store
-            store_index = "UINT16_MAX"
+            store_index = 'UINT16_MAX'
         else:
             store_index = total_store_count
             store_table.append((s.label, string_table.stringIndexes(stores)))
@@ -107,23 +100,14 @@ def write_scalar_tables(scalars, output):
             total_key_count += len(keys)
 
         # Write the scalar info entry.
-        write_scalar_info(
-            s,
-            output,
-            name_index,
-            exp_index,
-            store_index,
-            len(stores),
-            len(keys),
-            key_index,
-        )
+        write_scalar_info(s, output, name_index, exp_index, store_index, len(stores),
+                          len(keys), key_index)
     print("};", file=output)
 
     string_table_name = "gScalarsStringTable"
     string_table.writeDefinition(output, string_table_name)
-    static_assert(
-        output, "sizeof(%s) <= UINT32_MAX" % string_table_name, "index overflow"
-    )
+    static_assert(output, "sizeof(%s) <= UINT32_MAX" % string_table_name,
+                  "index overflow")
 
     print("\nconstexpr uint32_t gScalarKeysTable[] = {", file=output)
     for name, indexes in keys_table:
@@ -139,9 +123,8 @@ def write_scalar_tables(scalars, output):
     for name, indexes in store_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
-    static_assert(
-        output, "sizeof(%s) <= UINT16_MAX" % store_table_name, "index overflow"
-    )
+    static_assert(output, "sizeof(%s) <= UINT16_MAX" % store_table_name,
+                  "index overflow")
 
 
 def parse_scalar_definitions(filenames):
@@ -157,7 +140,7 @@ def parse_scalar_definitions(filenames):
 
 
 def generate_JSON_definitions(output, *filenames):
-    """Write the scalar definitions to a JSON file.
+    """ Write the scalar definitions to a JSON file.
 
     :param output: the file to write the content to.
     :param filenames: a list of filenames provided by the build system.
@@ -172,22 +155,18 @@ def generate_JSON_definitions(output, *filenames):
         if category not in scalar_definitions:
             scalar_definitions[category] = OrderedDict()
 
-        scalar_definitions[category][scalar.name] = OrderedDict(
-            {
-                "kind": scalar.nsITelemetry_kind,
-                "keyed": scalar.keyed,
-                "keys": scalar.keys,
-                "record_on_release": True
-                if scalar.dataset_short == "opt-out"
-                else False,
-                # We don't expire dynamic-builtin scalars: they're only meant for
-                # use in local developer builds anyway. They will expire when rebuilding.
-                "expired": False,
-                "stores": scalar.record_into_store,
-                "expires": scalar.expires,
-                "products": scalar.products,
-            }
-        )
+        scalar_definitions[category][scalar.name] = OrderedDict({
+            'kind': scalar.nsITelemetry_kind,
+            'keyed': scalar.keyed,
+            'keys': scalar.keys,
+            'record_on_release': True if scalar.dataset_short == 'opt-out' else False,
+            # We don't expire dynamic-builtin scalars: they're only meant for
+            # use in local developer builds anyway. They will expire when rebuilding.
+            'expired': False,
+            'stores': scalar.record_into_store,
+            'expires': scalar.expires,
+            'products': scalar.products,
+        })
 
     json.dump(scalar_definitions, output)
 
@@ -203,5 +182,5 @@ def main(output, *filenames):
     print(file_footer, file=output)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])
