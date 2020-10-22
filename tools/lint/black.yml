@@ -2,11 +2,45 @@
 black:
     description: Reformat python
     exclude:
+        - browser/components/migration/tests/marionette/test_refresh_firefox.py
+        - build/pgo/genpgocert.py
+        - config/check_macroassembler_style.py
         - gfx/harfbuzz/src/meson.build
+        - js/src/devtools/rootAnalysis/t/testlib.py
+        - js/src/util/make_unicode.py
         - layout/style/ServoCSSPropList.mako.py
+        - mobile/android/mach_commands.py
+        - python/mozbuild/mozbuild/mach_commands.py
+        - python/mozbuild/mozbuild/telemetry.py
+        - python/mozbuild/mozbuild/test/backend/test_build.py
+        - python/mozbuild/mozbuild/test/backend/test_recursivemake.py
+        - python/mozbuild/mozbuild/test/codecoverage/test_lcov_rewrite.py
         - python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build
+        - taskcluster/taskgraph/transforms/bouncer_aliases.py
+        - taskcluster/taskgraph/transforms/mar_signing.py
+        - taskcluster/taskgraph/transforms/repackage_signing_partner.py
+        - testing/addtest.py
+        - testing/mochitest/mochitest_options.py
+        - testing/mozbase/mozpower/tests/test_macintelpower.py
+        - testing/mozharness/mozharness/mozilla/building/buildbase.py
+        - testing/mozharness/mozharness/mozilla/testing/errors.py
+        - testing/mozharness/mozharness/mozilla/testing/raptor.py
         - testing/mozharness/configs/test/test_malformed.py
+        - testing/mozharness/mozharness/mozilla/testing/testbase.py
+        - testing/mozharness/scripts/desktop_unittest.py
+        - testing/mozharness/scripts/marionette.py
+        - testing/mozharness/scripts/release/bouncer_check.py
+        - testing/mozharness/scripts/release/update-verify-config-creator.py
+        - testing/talos/talos/test.py
+        - testing/talos/talos/unittests/test_xtalos.py
+        - testing/web-platform/metamerge.py
         - testing/web-platform/tests
+        - toolkit/components/telemetry/build_scripts/mozparsers/parse_histograms.py
+        - tools/browsertime/mach_commands.py
+        - tools/power/mach_commands.py
+        - tools/tryselect/selectors/coverage.py
+        - tools/update-packaging/test_make_incremental_updates.py
+        - xpcom/components/gen_static_components.py
     extensions:
         - build
         - configure

@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import, unicode_literals, print_function
 
 import io
@@ -49,7 +50,7 @@ add_task(async function test_TODO() {
         filename = os.path.basename(self.test)
 
         if not os.path.isfile(manifest_file):
-            print("Could not open manifest file {}".format(manifest_file))
+            print('Could not open manifest file {}'.format(manifest_file))
             return
         write_to_ini_file(manifest_file, filename)
 
@@ -63,29 +64,22 @@ class MochitestCreator(Creator):
 
     def _get_template_contents(self):
         mochitest_templates = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "mochitest", "static")
+            os.path.join(os.path.dirname(__file__), 'mochitest', 'static')
         )
         template_file_name = None
 
         template_file_name = self.templates.get(self.suite)
 
         if template_file_name is None:
-            print(
-                "Sorry, `addtest` doesn't currently know how to add {}".format(
-                    self.suite
-                )
-            )
+            print("Sorry, `addtest` doesn't currently know how to add {}".format(self.suite))
             return None
 
         template_file_name = template_file_name % {"doc": self.doc}
 
         template_file = os.path.join(mochitest_templates, template_file_name)
         if not os.path.isfile(template_file):
-            print(
-                "Sorry, `addtest` doesn't currently know how to add {} with document type {}".format(  # NOQA: E501
-                    self.suite, self.doc
-                )
-            )
+            print("Sorry, `addtest` doesn't currently know how to add {} with document type {}"
+                  .format(self.suite, self.doc))
             return None
 
         with open(template_file) as f:
@@ -96,13 +90,13 @@ class MochitestCreator(Creator):
         guessed_ini = {
             "mochitest-plain": "mochitest.ini",
             "mochitest-chrome": "chrome.ini",
-            "mochitest-browser-chrome": "browser.ini",
+            "mochitest-browser-chrome": "browser.ini"
         }[self.suite]
         manifest_file = os.path.join(os.path.dirname(self.test), guessed_ini)
         filename = os.path.basename(self.test)
 
         if not os.path.isfile(manifest_file):
-            print("Could not open manifest file {}".format(manifest_file))
+            print('Could not open manifest file {}'.format(manifest_file))
             return
 
         write_to_ini_file(manifest_file, filename)
@@ -141,32 +135,20 @@ class WebPlatformTestsCreator(Creator):
 
     @classmethod
     def get_parser(cls, parser):
-        parser.add_argument(
-            "--long-timeout",
-            action="store_true",
-            help="Test should be given a long timeout "
-            "(typically 60s rather than 10s, but varies depending on environment)",
-        )
-        parser.add_argument(
-            "-m", "--reference", dest="ref", help="Path to the reference file"
-        )
-        parser.add_argument(
-            "--mismatch", action="store_true", help="Create a mismatch reftest"
-        )
-        parser.add_argument(
-            "--wait",
-            action="store_true",
-            help="Create a reftest that waits until takeScreenshot() is called",
-        )
+        parser.add_argument("--long-timeout", action="store_true",
+                            help="Test should be given a long timeout "
+                            "(typically 60s rather than 10s, but varies depending on environment)")
+        parser.add_argument("-m", "--reference", dest="ref", help="Path to the reference file")
+        parser.add_argument("--mismatch", action="store_true",
+                            help="Create a mismatch reftest")
+        parser.add_argument("--wait", action="store_true",
+                            help="Create a reftest that waits until takeScreenshot() is called")
 
     def check_args(self):
         if self.wpt_type(self.test) is None:
-            print(
-                """Test path %s is not in wpt directories:
+            print("""Test path %s is not in wpt directories:
 testing/web-platform/tests for tests that may be shared
-testing/web-platform/mozilla/tests for Gecko-only tests"""
-                % self.test
-            )
+testing/web-platform/mozilla/tests for Gecko-only tests""" % self.test)
             return False
 
         if not self.reftest:
@@ -196,11 +178,8 @@ testing/web-platform/mozilla/tests for Gecko-only tests"""
             yield (ref_path, self._get_template_contents(reference=True))
 
     def _get_template_contents(self, reference=False):
-        args = {
-            "documentElement": "<html class=reftest-wait>\n"
-            if self.kwargs["wait"]
-            else ""
-        }
+        args = {"documentElement": "<html class=reftest-wait>\n"
+                if self.kwargs["wait"] else ""}
 
         if self.test.rsplit(".", 1)[1] == "js":
             template = self.template_js
@@ -213,14 +192,9 @@ testing/web-platform/mozilla/tests for Gecko-only tests"""
 
             if self.reftest:
                 if not reference:
-                    args = {
-                        "match": "match" if not self.kwargs["mismatch"] else "mismatch",
-                        "ref": (
-                            self.ref_url(self.kwargs["ref"])
-                            if self.kwargs["ref"]
-                            else '""'
-                        ),
-                    }
+                    args = {"match": "match" if not self.kwargs["mismatch"] else "mismatch",
+                            "ref": (self.ref_url(self.kwargs["ref"])
+                                    if self.kwargs["ref"] else '""')}
                     template += self.template_body_reftest % args
                     if self.kwargs["wait"]:
                         template += self.template_body_reftest_wait
@@ -262,7 +236,7 @@ testing/web-platform/mozilla/tests for Gecko-only tests"""
                 # Path is an absolute URL relative to the tests root
                 if path.startswith("/_mozilla/"):
                     base = self.local_path
-                    path = path[len("/_mozilla/") :]
+                    path = path[len("/_mozilla/"):]
                 else:
                     base = self.upstream_path
                     path = path[1:]
@@ -275,8 +249,7 @@ testing/web-platform/mozilla/tests for Gecko-only tests"""
                 return path
             else:
                 test_rel_path = self.src_rel_path(
-                    os.path.join(os.path.dirname(self.test), path)
-                )
+                    os.path.join(os.path.dirname(self.test), path))
                 if self.wpt_type(test_rel_path) is not None:
                     return test_rel_path
         # Returning None indicates that the path wasn't valid
@@ -315,38 +288,36 @@ def write_to_ini_file(manifest_file, filename):
     manifest = manifestparser.TestManifest(manifests=[manifest_file])
     insert_before = None
 
-    if any(t["name"] == filename for t in manifest.tests):
+    if any(t['name'] == filename for t in manifest.tests):
         print("{} is already in the manifest.".format(filename))
         return
 
     for test in manifest.tests:
-        if test.get("name") > filename:
-            insert_before = test.get("name")
+        if test.get('name') > filename:
+            insert_before = test.get('name')
             break
 
     with open(manifest_file, "r") as f:
         contents = f.readlines()
 
-    filename = "[{}]\n".format(filename)
+    filename = '[{}]\n'.format(filename)
 
     if not insert_before:
         contents.append(filename)
     else:
-        insert_before = "[{}]".format(insert_before)
+        insert_before = '[{}]'.format(insert_before)
         for i in range(len(contents)):
             if contents[i].startswith(insert_before):
                 contents.insert(i, filename)
                 break
 
-    with io.open(manifest_file, "w", newline="\n") as f:
+    with io.open(manifest_file, "w", newline='\n') as f:
         f.write("".join(contents))
 
 
-TEST_CREATORS = {
-    "mochitest": MochitestCreator,
-    "web-platform-tests": WebPlatformTestsCreator,
-    "xpcshell": XpcshellCreator,
-}
+TEST_CREATORS = {"mochitest": MochitestCreator,
+                 "web-platform-tests": WebPlatformTestsCreator,
+                 "xpcshell": XpcshellCreator}
 
 
 def creator_for_suite(suite):
