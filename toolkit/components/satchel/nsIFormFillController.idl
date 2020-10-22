@@ -34,23 +34,9 @@ interface nsIFormFillController : nsISupports
    */
   readonly attribute boolean passwordPopupAutomaticallyOpened;
 
-  /*
-   * Start controlling form fill behavior for the given document
-   *
-   * @param document - The document to attach to
-   * @param popup - The popup to show when autocomplete results are available
-   */
-  [can_run_script]
-  void attachToDocument(in Document document, in nsIAutoCompletePopup popup);
-  [can_run_script]
+  // Only used by tests.
   void attachPopupElementToDocument(in Document document, in Element popup);
-
-  /*
-   * Stop controlling form fill behavior for the given browser
-   *
-   * @param document - The document to detach from
-   */
-  [can_run_script] void detachFromDocument(in Document document);
+  void detachFromDocument(in Document document);
 
   /*
    * Mark the specified <input> element as being managed by password manager.
@@ -73,6 +59,4 @@ interface nsIFormFillController : nsISupports
    * Open the autocomplete popup, if possible.
    */
   [can_run_script] void showPopup();
-
-  [can_run_script] void handleFormEvent(in Event aEvent);
 };

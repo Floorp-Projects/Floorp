@@ -119,21 +119,6 @@ let JSWINDOWACTORS = {
 
     child: {
       moduleURI: "resource://gre/actors/AutoCompleteChild.jsm",
-      events: {
-        DOMContentLoaded: {},
-        pageshow: { capture: true },
-        pagehide: { capture: true },
-        unload: { capture: true },
-        focus: { capture: true },
-        blur: { capture: true },
-        mousedown: { capture: true },
-        input: { capture: true },
-        keydown: { capture: true },
-        keypress: { capture: true, mozSystemGroup: true },
-        compositionstart: { capture: true },
-        compositionend: { capture: true },
-        contextmenu: { capture: true },
-      },
     },
 
     allFrames: true,
