@@ -2194,11 +2194,14 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DisplayMode>,
   PreOrderWalk([&](BrowsingContext* aContext) {
     if (nsIDocShell* shell = aContext->GetDocShell()) {
       if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->MediaFeatureValuesChangedAllDocuments(
+        pc->MediaFeatureValuesChanged(
             {MediaFeatureChangeReason::DisplayModeChange},
-            // We're already iterating through sub documents
-            // so no need to do it again.
-            nsPresContext::RecurseIntoInProcessSubDocuments::No);
+            // We're already iterating through sub documents, so we don't need
+            // to propagate the change again.
+            //
+            // Images and other resources don't change their display-mode
+            // evaluation, display-mode is a property of the browsing context.
+            MediaFeatureChangePropagation::JustThisDocument);
       }
     }
   });
