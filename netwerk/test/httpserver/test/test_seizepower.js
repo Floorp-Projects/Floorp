@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "PORT", function() {
 var srv;
 
 function run_test() {
+  Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
   srv = createServer();
 
   srv.registerPathHandler("/raw-data", handleRawData);
@@ -25,7 +26,10 @@ function run_test() {
 
   srv.start(-1);
 
-  runRawTests(tests, testComplete(srv));
+  runRawTests(tests, function() {
+    Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
+    testComplete(srv)();
+  });
 }
 
 function checkException(fun, err, msg) {

@@ -137,6 +137,7 @@ union NetAddr {
 
   bool IsIPAddrAny() const;
   bool IsLoopbackAddr() const;
+  bool IsLoopBackAddressWithoutIPv6Mapping() const;
   bool IsIPAddrV4() const;
   bool IsIPAddrV4Mapped() const;
   bool IsIPAddrLocal() const;
@@ -232,6 +233,8 @@ void PRNetAddrToNetAddr(const PRNetAddr* prAddr, NetAddr* addr);
 // Copies the contents of a NetAddr to a PRNetAddr.
 // Does not do a ptr safety check!
 void NetAddrToPRNetAddr(const NetAddr* addr, PRNetAddr* prAddr);
+
+bool IsLoopbackHostname(const nsACString& aAsciiHost);
 
 }  // namespace net
 }  // namespace mozilla
