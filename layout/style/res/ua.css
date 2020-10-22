@@ -455,10 +455,6 @@ div:-moz-native-anonymous.moz-accessiblecaret.none {
   display: none;
 }
 
-div:-moz-native-anonymous.moz-accessiblecaret.hidden {
-  visibility: hidden;
-}
-
 @media (min-resolution: 1.5dppx) {
   div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
     background-image: url("resource://gre-resources/accessiblecaret-normal@1.5x.png");
