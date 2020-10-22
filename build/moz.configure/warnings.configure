@@ -221,6 +221,11 @@ check_and_add_gcc_warning('-Werror=implicit-function-declaration')
 # New in clang 11. We can't really do anything about this warning.
 check_and_add_gcc_warning('-Wno-psabi')
 
+# Disable broken missing-braces warning on old clang versions
+check_and_add_gcc_warning(
+    '-Wno-missing-braces',
+    when=depends(c_compiler)(lambda c: c.type == 'clang' and c.version < '6.0'))
+
 
 # Please keep these last in this file
 add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_flags.cflags)
