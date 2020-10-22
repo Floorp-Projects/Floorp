@@ -34,7 +34,7 @@ class OpenTypeFEAT : public Table {
     uint32_t offset;
     uint16_t flags;
     static const uint16_t HAS_DEFAULT_SETTING = 0x4000;
-    static const uint16_t RESERVED = 0x3F00;
+    static const uint16_t RESERVED = 0x3700;
     static const uint16_t DEFAULT_SETTING = 0x00FF;
     uint16_t label;
   };
