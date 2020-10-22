@@ -198,6 +198,11 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     if (this.isDestroyed()) {
       return;
     }
+
+    // Notify the client that this target is being destroyed.
+    // So that we can destroy the target front and all its children.
+    this.emit("tabDetached");
+
     Actor.prototype.destroy.call(this);
 
     // Tell the live lists we aren't watching any more.

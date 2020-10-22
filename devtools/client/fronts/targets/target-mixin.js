@@ -595,6 +595,12 @@ function TargetMixin(parentClass) {
     _addListeners() {
       this.client.on("closed", this.destroy);
 
+      // `tabDetached` is sent by all target targets types: frame, process and workers.
+      // This is sent when the target is destroyed:
+      // * the target context destroys itself (the tab closes for ex, or the worker shuts down)
+      //   in this case, it may be the connector that send this event in the name of the target actor
+      // * the target actor is destroyed, but the target context stays up and running (for ex, when we call Watcher.unwatchTargets)
+      // * the DevToolsServerConnection closes (client closes the connection)
       this.on("tabDetached", this.destroy);
     }
 
