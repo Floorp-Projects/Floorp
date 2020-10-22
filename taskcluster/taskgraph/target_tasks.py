@@ -1167,10 +1167,10 @@ def target_tasks_condprof(full_task_graph, parameters, graph_config):
 @_target_task('system_symbols')
 def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
     """
-    Select tasks for uploading system-symbols.
+    Select tasks for scraping and uploading system symbols.
     """
     for name, task in six.iteritems(full_task_graph.tasks):
-        if task.kind == "system-symbols-upload":
+        if task.kind in ["system-symbols", "system-symbols-upload"]:
             yield name
 
 
