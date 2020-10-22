@@ -720,8 +720,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                            mozilla::dom::CallerType aCallerType,
                            mozilla::ErrorResult& aError);
 
-  RefPtr<mozilla::dom::WakeLock> mWakeLock;
-
   friend class HashchangeCallback;
   friend class mozilla::dom::BarProp;
 
