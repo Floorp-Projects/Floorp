@@ -82,6 +82,7 @@ class PresShell;
 class RestyleManager;
 class StaticPresData;
 struct MediaFeatureChange;
+enum class MediaFeatureChangePropagation : uint8_t;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -283,24 +284,15 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void ContentLanguageChanged();
 
-  enum class RecurseIntoInProcessSubDocuments : bool { No, Yes };
-
-  /**
-   * Handle changes in the values of media features (used in media queries).
-   */
-  void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange);
-
   /** Returns whether any media query changed. */
   bool FlushPendingMediaFeatureValuesChanged();
 
   /**
-   * Calls MediaFeatureValuesChanged for this pres context and all descendant
-   * subdocuments that have a pres context. This should be used for media
-   * features that must be updated in all subdocuments e.g. display-mode.
+   * Schedule a media feature change for this document, and potentially for
+   * other subdocuments and images (depending on the arguments).
    */
-  void MediaFeatureValuesChangedAllDocuments(
-      const mozilla::MediaFeatureChange&,
-      RecurseIntoInProcessSubDocuments = RecurseIntoInProcessSubDocuments::Yes);
+  void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange&,
+                                 mozilla::MediaFeatureChangePropagation);
 
   /**
    * Updates the size mode on all remote children and recursively notifies this
