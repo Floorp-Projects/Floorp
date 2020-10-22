@@ -55,29 +55,19 @@ class TestTimeouts(MarionetteTestCase):
         button = self.marionette.find_element(By.ID, "createDivButton")
         button.click()
         self.marionette.timeout.implicit = 8
-        self.assertEqual(
-            HTMLElement, type(self.marionette.find_element(By.ID, "newDiv"))
-        )
+        self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "newDiv")))
 
     def test_search_timeout_found(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         button = self.marionette.find_element(By.ID, "createDivButton")
         button.click()
-        self.assertRaises(
-            NoSuchElementException, self.marionette.find_element, By.ID, "newDiv"
-        )
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "newDiv")
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
     def test_reset_timeout(self):
-        timeouts = [
-            getattr(self.marionette.timeout, f)
-            for f in (
-                "implicit",
-                "page_load",
-                "script",
-            )
-        ]
+        timeouts = [getattr(self.marionette.timeout, f) for f in (
+            'implicit', 'page_load', 'script',)]
 
         def do_check(callback):
             for timeout in timeouts:
@@ -105,11 +95,7 @@ class TestTimeouts(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         self.marionette.timeout.script = 1
-        self.assertTrue(
-            self.marionette.execute_async_script(
-                """
+        self.assertTrue(self.marionette.execute_async_script("""
              var callback = arguments[arguments.length - 1];
              setTimeout(function() { callback(true); }, 500);
-             """
-            )
-        )
+             """))

@@ -2,11 +2,11 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 DIRS += [
-    "bar",
+    'bar',
 ]
 
-USE_LIBS += ["foo"]
+USE_LIBS += ['foo']
 
-OS_LIBS += ["-lbar"]
+OS_LIBS += ['-lbar']
 
-Library("bar")
+Library('bar')

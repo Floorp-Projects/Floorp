@@ -14,27 +14,25 @@ import io
 
 
 def get_build_entries(root_path):
-    """Iterates through the root_path, creating a list for each file and
-    directory. Excludes any file paths ending with channel-prefs.js.
+    """ Iterates through the root_path, creating a list for each file and
+        directory. Excludes any file paths ending with channel-prefs.js.
     """
     rel_file_path_set = set()
     rel_dir_path_set = set()
     for root, dirs, files in os.walk(root_path):
         for file_name in files:
-            parent_dir_rel_path = root[len(root_path) + 1 :]
+            parent_dir_rel_path = root[len(root_path)+1:]
             rel_path_file = os.path.join(parent_dir_rel_path, file_name)
             rel_path_file = rel_path_file.replace("\\", "/")
-            if not (
-                rel_path_file.endswith("channel-prefs.js")
-                or rel_path_file.endswith("update-settings.ini")
-                or rel_path_file.find("distribution/") != -1
-            ):
+            if not (rel_path_file.endswith("channel-prefs.js") or
+                    rel_path_file.endswith("update-settings.ini") or
+                    rel_path_file.find("distribution/") != -1):
                 rel_file_path_set.add(rel_path_file)
 
         for dir_name in dirs:
-            parent_dir_rel_path = root[len(root_path) + 1 :]
+            parent_dir_rel_path = root[len(root_path)+1:]
             rel_path_dir = os.path.join(parent_dir_rel_path, dir_name)
-            rel_path_dir = rel_path_dir.replace("\\", "/") + "/"
+            rel_path_dir = rel_path_dir.replace("\\", "/")+"/"
             if rel_path_dir.find("distribution/") == -1:
                 rel_dir_path_set.add(rel_path_dir)
 
@@ -47,26 +45,26 @@ def get_build_entries(root_path):
 
 
 def generate_precomplete(root_path):
-    """Creates the precomplete file containing the remove and rmdir
-    application update instructions. The given directory is used
-    for the location to enumerate and to create the precomplete file.
+    """ Creates the precomplete file containing the remove and rmdir
+        application update instructions. The given directory is used
+        for the location to enumerate and to create the precomplete file.
     """
     rel_path_precomplete = "precomplete"
     # If inside a Mac bundle use the root of the bundle for the path.
     if os.path.basename(root_path) == "Resources":
-        root_path = os.path.abspath(os.path.join(root_path, "../../"))
+        root_path = os.path.abspath(os.path.join(root_path, '../../'))
         rel_path_precomplete = "Contents/Resources/precomplete"
 
     precomplete_file_path = os.path.join(root_path, rel_path_precomplete)
     # Open the file so it exists before building the list of files and open it
     # in binary mode to prevent OS specific line endings.
-    precomplete_file = io.open(precomplete_file_path, mode="wt", newline="\n")
+    precomplete_file = io.open(precomplete_file_path, mode="wt", newline='\n')
     rel_file_path_list, rel_dir_path_list = get_build_entries(root_path)
     for rel_file_path in rel_file_path_list:
-        precomplete_file.write('remove "' + rel_file_path + '"\n')
+        precomplete_file.write("remove \""+rel_file_path+"\"\n")
 
     for rel_dir_path in rel_dir_path_list:
-        precomplete_file.write('rmdir "' + rel_dir_path + '"\n')
+        precomplete_file.write("rmdir \""+rel_dir_path+"\"\n")
 
     precomplete_file.close()
 

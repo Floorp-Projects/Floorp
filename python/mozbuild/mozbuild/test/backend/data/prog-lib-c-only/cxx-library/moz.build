@@ -2,9 +2,9 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SharedLibrary("cxx-library")
+SharedLibrary('cxx-library')
 
 SOURCES = [
-    "c-source.c",
-    "cxx-library.cpp",
+    'c-source.c',
+    'cxx-library.cpp',
 ]

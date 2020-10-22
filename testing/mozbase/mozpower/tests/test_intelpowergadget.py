@@ -21,18 +21,16 @@ def test_ipg_pathsplitting(ipg_obj):
     """Tests that the output file path and prefix was properly split.
     This test assumes that it is in the same directory as the conftest.py file.
     """
-    assert (
-        ipg_obj.output_dir_path == os.path.abspath(os.path.dirname(__file__)) + "/files"
-    )
-    assert ipg_obj.output_file_prefix == "raptor-tp6-amazon-firefox_powerlog"
+    assert ipg_obj.output_dir_path == os.path.abspath(os.path.dirname(__file__)) + '/files'
+    assert ipg_obj.output_file_prefix == 'raptor-tp6-amazon-firefox_powerlog'
 
 
 def test_ipg_get_output_file_path(ipg_obj):
     """Tests that the output file path is constantly changing
     based on the file_counter value.
     """
-    test_path = "/test_path/"
-    test_ext = ".txt"
+    test_path = '/test_path/'
+    test_ext = '.txt'
     ipg_obj._file_counter = 1
     ipg_obj._output_dir_path = test_path
     ipg_obj._output_file_ext = test_ext
@@ -46,12 +44,12 @@ def test_ipg_get_output_file_path(ipg_obj):
 
 
 def test_ipg_start_and_stop(ipg_obj):
-    """Tests that the IPG thread can start and stop properly."""
-
+    """Tests that the IPG thread can start and stop properly.
+    """
     def subprocess_side_effect(*args, **kwargs):
         time.sleep(1)
 
-    with mock.patch("subprocess.check_output") as m:
+    with mock.patch('subprocess.check_output') as m:
         m.side_effect = subprocess_side_effect
 
         # Start recording IPG measurements
@@ -91,7 +89,7 @@ def test_ipg_rh_combine_cumulatives(ipg_rh_obj):
         [0, 1, 2, 3, 4, 5],
         [0, 1, 2, 3, 4, 5],
         [0, 1, 2, 3, 4, 5],
-        [0, 1, 2, 3, 4, 5],
+        [0, 1, 2, 3, 4, 5]
     ]
 
     combined_cumulatives = ipg_rh_obj._combine_cumulative_rows(cumulatives_to_combine)
@@ -101,7 +99,7 @@ def test_ipg_rh_combine_cumulatives(ipg_rh_obj):
 
     # Check that the cumulative values are monotonically increasing
     for count, val in enumerate(combined_cumulatives[:-1]):
-        assert combined_cumulatives[count + 1] - val >= 0
+        assert combined_cumulatives[count+1] - val >= 0
 
 
 def test_ipg_rh_clean_file(ipg_rh_obj):
@@ -110,7 +108,7 @@ def test_ipg_rh_clean_file(ipg_rh_obj):
     """
     file = ipg_rh_obj._output_files[0]
     linecount = 0
-    with open(file, "r") as f:
+    with open(file, 'r') as f:
         for line in f:
             linecount += 1
 
@@ -124,7 +122,7 @@ def test_ipg_rh_clean_file(ipg_rh_obj):
     assert os.path.exists(clean_file)
 
     clean_rows = []
-    with open(clean_file, "r") as f:
+    with open(clean_file, 'r') as f:
         for line in f:
             if line.strip():
                 clean_rows.append(line)
@@ -166,7 +164,7 @@ def test_ipg_rh_clean_ipg_data(ipg_rh_obj):
     # were added.
     expected_merged_line_count = 0
     for file in clean_files:
-        with open(file, "r") as f:
+        with open(file, 'r') as f:
             for count, line in enumerate(f):
                 if count == 0:
                     continue
@@ -174,7 +172,7 @@ def test_ipg_rh_clean_ipg_data(ipg_rh_obj):
                     expected_merged_line_count += 1
 
     merged_line_count = 0
-    with open(merged_output_path, "r") as f:
+    with open(merged_output_path, 'r') as f:
         for count, line in enumerate(f):
             if count == 0:
                 continue
@@ -187,23 +185,22 @@ def test_ipg_rh_clean_ipg_data(ipg_rh_obj):
 
     # Check that the clean data rows are ordered in increasing time
     times_in_seconds = []
-    for sys_time in clean_data["System Time"]:
-        split_sys_time = sys_time.split(":")
-        hour_min_sec = ":".join(split_sys_time[:-1])
-        millis = float(split_sys_time[-1]) / 1000
+    for sys_time in clean_data['System Time']:
+        split_sys_time = sys_time.split(':')
+        hour_min_sec = ':'.join(split_sys_time[:-1])
+        millis = float(split_sys_time[-1])/1000
 
-        timestruct = time.strptime(hour_min_sec, "%H:%M:%S")
+        timestruct = time.strptime(hour_min_sec, '%H:%M:%S')
         times_in_seconds.append(
             datetime.timedelta(
                 hours=timestruct.tm_hour,
                 minutes=timestruct.tm_min,
-                seconds=timestruct.tm_sec,
-            ).total_seconds()
-            + millis
+                seconds=timestruct.tm_sec
+            ).total_seconds() + millis
         )
 
     for count, val in enumerate(times_in_seconds[:-1]):
-        assert times_in_seconds[count + 1] - val >= 0
+        assert times_in_seconds[count+1] - val >= 0
 
 
 def test_ipg_rh_format_to_perfherder_with_no_results(ipg_rh_obj):
@@ -227,45 +224,35 @@ def test_ipg_rh_format_to_perfherder_without_cutoff(ipg_rh_obj):
 
     # Check that the expected entries exist
     assert len(formatted_data.keys()) == 5
-    assert "utilization" in formatted_data and "power-usage" in formatted_data
+    assert 'utilization' in formatted_data and 'power-usage' in formatted_data
 
-    assert (
-        formatted_data["power-usage"]["test"]
-        == ipg_rh_obj._output_file_prefix + "-cumulative"
-    )
-    assert (
-        formatted_data["utilization"]["test"]
-        == ipg_rh_obj._output_file_prefix + "-utilization"
-    )
-    assert (
-        formatted_data["frequency-gpu"]["test"]
-        == ipg_rh_obj._output_file_prefix + "-frequency-gpu"
-    )
-    assert (
-        formatted_data["frequency-cpu"]["test"]
-        == ipg_rh_obj._output_file_prefix + "-frequency-cpu"
-    )
-    assert (
-        formatted_data["power-watts"]["test"]
-        == ipg_rh_obj._output_file_prefix + "-watts"
-    )
+    assert formatted_data['power-usage']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-cumulative'
+    assert formatted_data['utilization']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-utilization'
+    assert formatted_data['frequency-gpu']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-frequency-gpu'
+    assert formatted_data['frequency-cpu']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-frequency-cpu'
+    assert formatted_data['power-watts']['test'] == \
+        ipg_rh_obj._output_file_prefix + '-watts'
 
     for measure in formatted_data:
         # Make sure that the data exists
-        assert len(formatted_data[measure]["values"]) >= 1
+        assert len(formatted_data[measure]['values']) >= 1
 
-        for valkey in formatted_data[measure]["values"]:
+        for valkey in formatted_data[measure]['values']:
             # Make sure the names were simplified
-            assert "(" not in valkey
-            assert ")" not in valkey
+            assert '(' not in valkey
+            assert ')' not in valkey
 
     # Check that gpu utilization doesn't exist but cpu does
-    utilization_vals = formatted_data["utilization"]["values"]
-    assert "cpu" in utilization_vals
-    assert "gpu" not in utilization_vals
+    utilization_vals = formatted_data['utilization']['values']
+    assert 'cpu' in utilization_vals
+    assert 'gpu' not in utilization_vals
 
-    expected_fields = ["processor-cores", "processor-package", "gpu", "dram"]
-    consumption_vals = formatted_data["power-usage"]["values"]
+    expected_fields = ['processor-cores', 'processor-package', 'gpu', 'dram']
+    consumption_vals = formatted_data['power-usage']['values']
 
     consumption_vals_measures = list(consumption_vals.keys())
 
@@ -285,14 +272,14 @@ def test_ipg_rh_format_to_perfherder_with_cutoff(ipg_rh_obj):
 
     # Check that the formatted data was cutoff at the correct point,
     # expecting that only the first row of merged will exist.
-    utilization_vals = formatted_data["utilization"]["values"]
-    assert utilization_vals["cpu"] == 14
+    utilization_vals = formatted_data['utilization']['values']
+    assert utilization_vals['cpu'] == 14
 
     # Expected vals are ordered in this way: [processor, cores, dram, gpu]
     expected_vals = [6.517, 5.847, 0.244, 0.006]
     consumption_vals = [
-        formatted_data["power-usage"]["values"][measure]
-        for measure in formatted_data["power-usage"]["values"]
+        formatted_data['power-usage']['values'][measure]
+        for measure in formatted_data['power-usage']['values']
     ]
     assert not list(set(expected_vals) - set(consumption_vals))
 
@@ -301,7 +288,7 @@ def test_ipg_rh_missingoutputfile(ipg_rh_obj):
     """Tests that the IPGMissingOutputFileError is raised
     when a bad file path is passed to _clean_ipg_file.
     """
-    bad_files = ["non-existent-file"]
+    bad_files = ['non-existent-file']
     with pytest.raises(IPGMissingOutputFileError):
         ipg_rh_obj._clean_ipg_file(bad_files[0])
 
@@ -315,8 +302,8 @@ def test_ipg_rh_emptyfile(ipg_rh_obj):
     a file exists, but does not contain any results in
     it.
     """
-    base_path = os.path.abspath(os.path.dirname(__file__)) + "/files/"
-    bad_files = [base_path + "emptyfile.txt"]
+    base_path = os.path.abspath(os.path.dirname(__file__)) + '/files/'
+    bad_files = [base_path + 'emptyfile.txt']
     with pytest.raises(IPGEmptyFileError):
         ipg_rh_obj._clean_ipg_file(bad_files[0])
 
@@ -329,8 +316,8 @@ def test_ipg_rh_valuetypeerrorfile(ipg_rh_obj):
     """Tests that the IPGUnknownValueTypeError is raised
     when a bad entry is encountered in a file that is cleaned.
     """
-    base_path = os.path.abspath(os.path.dirname(__file__)) + "/files/"
-    bad_files = [base_path + "valueerrorfile.txt"]
+    base_path = os.path.abspath(os.path.dirname(__file__)) + '/files/'
+    bad_files = [base_path + 'valueerrorfile.txt']
     with pytest.raises(IPGUnknownValueTypeError):
         ipg_rh_obj._clean_ipg_file(bad_files[0])
 
@@ -339,5 +326,5 @@ def test_ipg_rh_valuetypeerrorfile(ipg_rh_obj):
         ipg_rh_obj.clean_ipg_data()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

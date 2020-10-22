@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "HeadersPanelContextMenu.js",
-    "PropertiesViewContextMenu.js",
-    "RequestBlockingContextMenu.js",
-    "RequestListContextMenu.js",
-    "RequestListHeaderContextMenu.js",
-    "WaterfallBackground.js",
+    'HeadersPanelContextMenu.js',
+    'PropertiesViewContextMenu.js',
+    'RequestBlockingContextMenu.js',
+    'RequestListContextMenu.js',
+    'RequestListHeaderContextMenu.js',
+    'WaterfallBackground.js',
 )

@@ -4,25 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = "dist/bin/gmp-fake/1.0"
+FINAL_TARGET = 'dist/bin/gmp-fake/1.0'
 
 FINAL_TARGET_FILES += [
-    "manifest.json",
+    'manifest.json',
 ]
 
 SOURCES += [
-    "cdm-fake.cpp",
-    "cdm-test-decryptor.cpp",
-    "cdm-test-storage.cpp",
+        'cdm-fake.cpp',
+        'cdm-test-decryptor.cpp',
+        'cdm-test-storage.cpp',
 ]
 
-DEFINES["CDM_IMPLEMENTATION"] = True
+DEFINES['CDM_IMPLEMENTATION'] = True
 
 SharedLibrary("fake")
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
-        "ole32",
+        'ole32',
     ]
 
 USE_STATIC_LIBS = True

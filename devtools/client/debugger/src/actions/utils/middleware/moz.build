@@ -3,14 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += []
+DIRS += [
+
+]
 
 CompiledModules(
-    "context.js",
-    "history.js",
-    "log.js",
-    "promise.js",
-    "thunk.js",
-    "timing.js",
-    "wait-service.js",
+    'context.js',
+    'history.js',
+    'log.js',
+    'promise.js',
+    'thunk.js',
+    'timing.js',
+    'wait-service.js',
 )

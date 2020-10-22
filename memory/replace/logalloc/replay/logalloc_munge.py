@@ -69,39 +69,40 @@ def split_log_line(line):
         #
         # The original format didn't include the tid, so we try to parse
         # lines whether they have one or not.
-        pid, func_call = line.split(" ", 1)
-        call, result = func_call.split(")")
-        func, args = call.split("(")
-        args = args.split(",") if args else []
+        pid, func_call = line.split(' ', 1)
+        call, result = func_call.split(')')
+        func, args = call.split('(')
+        args = args.split(',') if args else []
         if result:
-            if result[0] != "=":
-                raise Ignored("Malformed input")
+            if result[0] != '=':
+                raise Ignored('Malformed input')
             result = result[1:]
-        if " " in func:
-            tid, func = func.split(" ", 1)
+        if ' ' in func:
+            tid, func = func.split(' ', 1)
         else:
             tid = pid
         return pid, tid, func, args, result
     except Exception:
-        raise Ignored("Malformed input")
+        raise Ignored('Malformed input')
 
 
 NUM_ARGUMENTS = {
-    "jemalloc_stats": 0,
-    "free": 1,
-    "malloc": 1,
-    "posix_memalign": 2,
-    "aligned_alloc": 2,
-    "calloc": 2,
-    "realloc": 2,
-    "memalign": 2,
-    "valloc": 1,
+    'jemalloc_stats': 0,
+    'free': 1,
+    'malloc': 1,
+    'posix_memalign': 2,
+    'aligned_alloc': 2,
+    'calloc': 2,
+    'realloc': 2,
+    'memalign': 2,
+    'valloc': 1,
 }
 
 
 def main():
     pids = IdMapping()
-    processes = defaultdict(lambda: {"pointers": IdMapping(), "tids": IdMapping()})
+    processes = defaultdict(lambda: {'pointers': IdMapping(),
+                                     'tids': IdMapping()})
     for line in sys.stdin:
         line = line.strip()
 
@@ -112,40 +113,38 @@ def main():
             pid = pids[int(pid)]
 
             process = processes[pid]
-            tid = process["tids"][int(tid)]
+            tid = process['tids'][int(tid)]
 
-            pointers = process["pointers"]
+            pointers = process['pointers']
 
             if func not in NUM_ARGUMENTS:
-                raise Ignored("Unknown function")
+                raise Ignored('Unknown function')
 
             if len(args) != NUM_ARGUMENTS[func]:
-                raise Ignored("Malformed input")
+                raise Ignored('Malformed input')
 
-            if func in ("jemalloc_stats", "free") and result:
-                raise Ignored("Malformed input")
+            if func in ('jemalloc_stats', 'free') and result:
+                raise Ignored('Malformed input')
 
-            if func in ("free", "realloc"):
+            if func in ('free', 'realloc'):
                 ptr = int(args[0], 16)
                 if ptr and ptr not in pointers:
-                    raise Ignored("Did not see an alloc for pointer")
+                    raise Ignored('Did not see an alloc for pointer')
                 args[0] = "#%d" % pointers[ptr]
                 del pointers[ptr]
 
             if result:
                 result = int(result, 16)
                 if not result:
-                    raise Ignored("Result is NULL")
+                    raise Ignored('Result is NULL')
                 result = "#%d" % pointers[result]
 
-            print(
-                "%d %d %s(%s)%s"
-                % (pid, tid, func, ",".join(args), "=%s" % result if result else "")
-            )
+            print('%d %d %s(%s)%s' % (pid, tid, func, ','.join(args),
+                                      '=%s' % result if result else ''))
 
         except Exception as e:
             print('Ignored "%s": %s' % (line, e.message), file=sys.stderr)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

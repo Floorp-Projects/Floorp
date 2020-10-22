@@ -5,47 +5,47 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "nsNetCID.h",
+    'nsNetCID.h',
 ]
 
 SOURCES += [
-    "nsNetModule.cpp",
+    'nsNetModule.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/extensions/auth",
-    "/netwerk/base",
-    "/netwerk/cache",
-    "/netwerk/dns",
-    "/netwerk/mime",
-    "/netwerk/protocol/about",
-    "/netwerk/protocol/data",
-    "/netwerk/protocol/file",
-    "/netwerk/protocol/ftp",
-    "/netwerk/protocol/http",
-    "/netwerk/protocol/res",
-    "/netwerk/protocol/viewsource",
-    "/netwerk/protocol/websocket",
-    "/netwerk/socket",
-    "/netwerk/streamconv",
-    "/netwerk/streamconv/converters",
+    '/extensions/auth',
+    '/netwerk/base',
+    '/netwerk/cache',
+    '/netwerk/dns',
+    '/netwerk/mime',
+    '/netwerk/protocol/about',
+    '/netwerk/protocol/data',
+    '/netwerk/protocol/file',
+    '/netwerk/protocol/ftp',
+    '/netwerk/protocol/http',
+    '/netwerk/protocol/res',
+    '/netwerk/protocol/viewsource',
+    '/netwerk/protocol/websocket',
+    '/netwerk/socket',
+    '/netwerk/streamconv',
+    '/netwerk/streamconv/converters',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
-        "/netwerk/protocol/gio",
+        '/netwerk/protocol/gio',
     ]
 
 
 LOCAL_INCLUDES += [
-    "!/netwerk/dns",
-    "/modules/brotli/dec",
+    '!/netwerk/dns',
+    '/modules/brotli/dec',
 ]

@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIStructuredFieldValues.idl",
+    'nsIStructuredFieldValues.idl',
 ]
 
-XPIDL_MODULE = "http-sfv"
+XPIDL_MODULE = 'http-sfv'
 
-EXPORTS.mozilla.net += ["SFVService.h"]
+EXPORTS.mozilla.net += ['SFVService.h']
 
-SOURCES += ["SFVService.cpp"]
+SOURCES += ['SFVService.cpp']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

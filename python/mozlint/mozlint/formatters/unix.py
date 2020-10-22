@@ -13,7 +13,6 @@ class UnixFormatter(object):
     `<FILENAME>:<LINE>[:<COL>]: <RULE> <LEVEL>: <MESSAGE>`.
 
     """
-
     fmt = "{path}:{lineno}:{column} {rule} {level}: {message}"
 
     def __call__(self, result):
@@ -24,7 +23,7 @@ class UnixFormatter(object):
                 assert isinstance(err, Issue)
 
                 slots = attr.asdict(err)
-                slots["path"] = slots["relpath"]
+                slots["path"] = slots['relpath']
                 slots["column"] = "%d:" % slots["column"] if slots["column"] else ""
                 slots["rule"] = slots["rule"] or slots["linter"]
 

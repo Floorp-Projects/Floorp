@@ -4,277 +4,271 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("../components/telemetry/telemetry-constants.mozbuild")
+include('../components/telemetry/telemetry-constants.mozbuild')
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    TEST_DIRS += ["test/win"]
+if CONFIG['OS_ARCH'] == 'WINNT':
+    TEST_DIRS += ['test/win']
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
-MARIONETTE_UNIT_MANIFESTS += ["test/marionette/marionette.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+MARIONETTE_UNIT_MANIFESTS += ['test/marionette/marionette.ini']
 
 XPIDL_SOURCES += [
-    "nsINativeAppSupport.idl",
-    "nsIXREDirProvider.idl",
+    'nsINativeAppSupport.idl',
+    'nsIXREDirProvider.idl',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     XPIDL_SOURCES += [
-        "nsIWinAppHelper.idl",
+        'nsIWinAppHelper.idl',
     ]
 
-XPIDL_MODULE = "xulapp"
+XPIDL_MODULE = 'xulapp'
 
 EXPORTS += [
-    "nsAppRunner.h",
-    "nsIAppStartupNotifier.h",
+    'nsAppRunner.h',
+    'nsIAppStartupNotifier.h',
 ]
 
 EXPORTS.mozilla += [
-    "AutoSQLiteLifetime.h",
-    "Bootstrap.h",
-    "CmdLineAndEnvUtils.h",
-    "SafeMode.h",
-    "UntrustedModulesData.h",
+    'AutoSQLiteLifetime.h',
+    'Bootstrap.h',
+    'CmdLineAndEnvUtils.h',
+    'SafeMode.h',
+    'UntrustedModulesData.h',
 ]
 
-if CONFIG["MOZ_INSTRUMENT_EVENT_LOOP"]:
-    EXPORTS += ["EventTracer.h"]
+if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
+    EXPORTS += ['EventTracer.h']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
-        "AssembleCmdLine.h",
-        "DllPrefetchExperimentRegistryInfo.h",
-        "ModuleVersionInfo.h",
-        "PolicyChecks.h",
-        "UntrustedModulesProcessor.h",
-        "WinDllServices.h",
-        "WinTokenUtils.h",
+        'AssembleCmdLine.h',
+        'DllPrefetchExperimentRegistryInfo.h',
+        'ModuleVersionInfo.h',
+        'PolicyChecks.h',
+        'UntrustedModulesProcessor.h',
+        'WinDllServices.h',
+        'WinTokenUtils.h',
     ]
     UNIFIED_SOURCES += [
-        "/toolkit/mozapps/update/common/updateutils_win.cpp",
-        "DllPrefetchExperimentRegistryInfo.cpp",
-        "ModuleEvaluator.cpp",
-        "ModuleVersionInfo.cpp",
-        "nsNativeAppSupportWin.cpp",
-        "UntrustedModulesData.cpp",
-        "UntrustedModulesProcessor.cpp",
-        "WinDllServices.cpp",
-        "WinTokenUtils.cpp",
+        '/toolkit/mozapps/update/common/updateutils_win.cpp',
+        'DllPrefetchExperimentRegistryInfo.cpp',
+        'ModuleEvaluator.cpp',
+        'ModuleVersionInfo.cpp',
+        'nsNativeAppSupportWin.cpp',
+        'UntrustedModulesData.cpp',
+        'UntrustedModulesProcessor.cpp',
+        'WinDllServices.cpp',
+        'WinTokenUtils.cpp',
     ]
-    DEFINES["PROXY_PRINTING"] = 1
+    DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        "../components/printingui",
+        '../components/printingui',
     ]
-    if CONFIG["MOZ_LAUNCHER_PROCESS"]:
+    if CONFIG['MOZ_LAUNCHER_PROCESS']:
         EXPORTS.mozilla += [
-            "LauncherRegistryInfo.h",
+          'LauncherRegistryInfo.h',
         ]
         UNIFIED_SOURCES += [
-            "LauncherRegistryInfo.cpp",
+          'LauncherRegistryInfo.cpp',
         ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
-        "MacApplicationDelegate.mm",
-        "MacAutoreleasePool.mm",
-        "MacLaunchHelper.mm",
-        "nsCommandLineServiceMac.mm",
-        "nsNativeAppSupportCocoa.mm",
-        "updaterfileutils_osx.mm",
+        'MacApplicationDelegate.mm',
+        'MacAutoreleasePool.mm',
+        'MacLaunchHelper.mm',
+        'nsCommandLineServiceMac.mm',
+        'nsNativeAppSupportCocoa.mm',
+        'updaterfileutils_osx.mm',
     ]
-    DEFINES["PROXY_PRINTING"] = 1
+    DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        "../components/printingui",
+        '../components/printingui',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     UNIFIED_SOURCES += [
-        "nsNativeAppSupportDefault.cpp",
-        "UIKitDirProvider.mm",
+        'nsNativeAppSupportDefault.cpp',
+        'UIKitDirProvider.mm',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
-        "nsNativeAppSupportUnix.cpp",
+        'nsNativeAppSupportUnix.cpp',
     ]
 else:
     UNIFIED_SOURCES += [
-        "nsNativeAppSupportDefault.cpp",
+        'nsNativeAppSupportDefault.cpp',
     ]
 
-if CONFIG["MOZ_HAS_REMOTE"]:
+if CONFIG['MOZ_HAS_REMOTE']:
     LOCAL_INCLUDES += [
-        "../components/remote",
+        '../components/remote',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
-        "nsGDKErrorHandler.cpp",
+        'nsGDKErrorHandler.cpp',
     ]
 
-if CONFIG["MOZ_X11"]:
-    EXPORTS += ["nsX11ErrorHandler.h"]
+if CONFIG['MOZ_X11']:
+    EXPORTS += ['nsX11ErrorHandler.h']
     UNIFIED_SOURCES += [
-        "nsX11ErrorHandler.cpp",
+        'nsX11ErrorHandler.cpp',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
-        "nsAndroidStartup.cpp",
+        'nsAndroidStartup.cpp',
     ]
 
 UNIFIED_SOURCES += [
-    "/toolkit/mozapps/update/common/commonupdatedir.cpp",
-    "AutoSQLiteLifetime.cpp",
-    "Bootstrap.cpp",
-    "CmdLineAndEnvUtils.cpp",
-    "CreateAppData.cpp",
-    "nsAppStartupNotifier.cpp",
-    "nsConsoleWriter.cpp",
-    "nsEmbeddingModule.cpp",
-    "nsNativeAppSupportBase.cpp",
-    "nsSigHandlers.cpp",
-    "nsXREDirProvider.cpp",
+    '/toolkit/mozapps/update/common/commonupdatedir.cpp',
+    'AutoSQLiteLifetime.cpp',
+    'Bootstrap.cpp',
+    'CmdLineAndEnvUtils.cpp',
+    'CreateAppData.cpp',
+    'nsAppStartupNotifier.cpp',
+    'nsConsoleWriter.cpp',
+    'nsEmbeddingModule.cpp',
+    'nsNativeAppSupportBase.cpp',
+    'nsSigHandlers.cpp',
+    'nsXREDirProvider.cpp',
 ]
 
 # nsAppRunner.cpp and ProfileReset.cpp cannot be built in unified mode because
 # they pull in OS X system headers.
 # nsEmbedFunctions.cpp cannot be built in unified mode because it pulls in X11 headers.
 SOURCES += [
-    "../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
-    "nsAppRunner.cpp",
-    "nsEmbedFunctions.cpp",
-    "ProfileReset.cpp",
+    '../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
+    'nsAppRunner.cpp',
+    'nsEmbedFunctions.cpp',
+    'ProfileReset.cpp',
 ]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
-        "glxtest.cpp",
+        'glxtest.cpp',
     ]
 
-if CONFIG["MOZ_INSTRUMENT_EVENT_LOOP"]:
+if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
     UNIFIED_SOURCES += [
-        "EventTracer.cpp",
+        'EventTracer.cpp',
     ]
 
-if CONFIG["MOZ_UPDATER"]:
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+if CONFIG['MOZ_UPDATER']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
         UNIFIED_SOURCES += [
-            "nsUpdateDriver.cpp",
+            'nsUpdateDriver.cpp',
         ]
 
-if CONFIG["MOZ_PDF_PRINTING"]:
-    DEFINES["PROXY_PRINTING"] = 1
+if CONFIG['MOZ_PDF_PRINTING']:
+    DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
-        "../components/printingui",
+        '../components/printingui',
     ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["MOZ_X11"]:
-    DEFINES["USE_GLX_TEST"] = True
+if CONFIG['MOZ_X11']:
+    DEFINES['USE_GLX_TEST'] = True
 
-for var in (
-    "MOZ_APP_NAME",
-    "MOZ_APP_BASENAME",
-    "MOZ_APP_DISPLAYNAME",
-    "MOZ_APP_VENDOR",
-    "MOZ_APP_VERSION",
-    "OS_TARGET",
-    "MOZ_WIDGET_TOOLKIT",
-):
+for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
+            'MOZ_APP_VENDOR', 'MOZ_APP_VERSION', 'OS_TARGET',
+            'MOZ_WIDGET_TOOLKIT'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"] and CONFIG["OS_ARCH"] == "WINNT":
-    DEFINES["MOZ_DEFAULT_BROWSER_AGENT"] = CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]
+if CONFIG['MOZ_DEFAULT_BROWSER_AGENT'] and CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['MOZ_DEFAULT_BROWSER_AGENT'] = CONFIG['MOZ_DEFAULT_BROWSER_AGENT']
 
-if CONFIG["MOZ_UPDATER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
-    DEFINES["MOZ_UPDATER"] = True
+if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    DEFINES['MOZ_UPDATER'] = True
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    DEFINES["WIN32_LEAN_AND_MEAN"] = True
-    DEFINES["UNICODE"] = True
-    DEFINES["_UNICODE"] = True
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['WIN32_LEAN_AND_MEAN'] = True
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    DEFINES["ANDROID_PACKAGE_NAME"] = '"%s"' % CONFIG["ANDROID_PACKAGE_NAME"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
 
-if CONFIG["TARGET_XPCOM_ABI"]:
-    DEFINES["TARGET_OS_ABI"] = '"%s_%s"' % (
-        CONFIG["OS_TARGET"],
-        CONFIG["TARGET_XPCOM_ABI"],
-    )
+if CONFIG['TARGET_XPCOM_ABI']:
+    DEFINES['TARGET_OS_ABI'] = '"%s_%s"' % (CONFIG['OS_TARGET'],
+                                            CONFIG['TARGET_XPCOM_ABI'])
 
-if CONFIG["OS_ARCH"] == "Linux" and "lib64" in CONFIG["libdir"]:
-    DEFINES["HAVE_USR_LIB64_DIR"] = True
+if CONFIG['OS_ARCH'] == 'Linux' and 'lib64' in CONFIG['libdir']:
+    DEFINES['HAVE_USR_LIB64_DIR'] = True
 
-DEFINES["GRE_MILESTONE"] = CONFIG["GRE_MILESTONE"]
-DEFINES["MOZ_APP_VERSION_DISPLAY"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]
+DEFINES['GRE_MILESTONE'] = CONFIG['GRE_MILESTONE']
+DEFINES['MOZ_APP_VERSION_DISPLAY'] = CONFIG['MOZ_APP_VERSION_DISPLAY']
 
-for var in ("APP_VERSION", "APP_ID"):
-    DEFINES[var] = CONFIG["MOZ_%s" % var]
+for var in ('APP_VERSION', 'APP_ID'):
+    DEFINES[var] = CONFIG['MOZ_%s' % var]
 
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
 
 LOCAL_INCLUDES += [
-    "../../other-licenses/nsis/Contrib/CityHash/cityhash",
-    "../components/find",
-    "../components/printingui/ipc",
-    "../components/windowwatcher",
-    "../mozapps/update/common",
-    "../profile",
-    "/config",
-    "/dom/base",
-    "/dom/commandhandler",
-    "/dom/ipc",
-    "/dom/webbrowserpersist",
-    "/testing/gtest/mozilla",
-    "/toolkit/crashreporter",
-    "/xpcom/build",
+    '../../other-licenses/nsis/Contrib/CityHash/cityhash',
+    '../components/find',
+    '../components/printingui/ipc',
+    '../components/windowwatcher',
+    '../mozapps/update/common',
+    '../profile',
+    '/config',
+    '/dom/base',
+    '/dom/commandhandler',
+    '/dom/ipc',
+    '/dom/webbrowserpersist',
+    '/testing/gtest/mozilla',
+    '/toolkit/crashreporter',
+    '/xpcom/build',
 ]
 
-if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
-        "/security/sandbox/chromium",
-        "/security/sandbox/chromium-shim",
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
     ]
 
-if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "Linux":
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'Linux':
     USE_LIBS += [
-        "mozsandbox",
+        'mozsandbox',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/widget",
-        "/widget/cocoa",
-        "/xpcom/base",
+        '/widget',
+        '/widget/cocoa',
+        '/xpcom/base',
     ]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
-CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
+CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
-DEFINES["TOPOBJDIR"] = TOPOBJDIR
-FINAL_TARGET_PP_FILES += ["platform.ini"]
+DEFINES['TOPOBJDIR'] = TOPOBJDIR
+FINAL_TARGET_PP_FILES += [
+    'platform.ini'
+]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["MOZ_IPDL_TESTS"]:
-    DEFINES["MOZ_IPDL_TESTS"] = True
+if CONFIG['MOZ_IPDL_TESTS']:
+    DEFINES['MOZ_IPDL_TESTS'] = True
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["test/gtest"]
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['test/gtest']

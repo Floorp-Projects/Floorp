@@ -34,40 +34,24 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Utility to print, set, or "
-        + "check the path to image being used as "
-        + "the desktop background image. By "
-        + "default, prints the path to the "
-        + "current desktop background image."
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="print verbose debugging information",
-        default=False,
-    )
+    parser = argparse.ArgumentParser(description="Utility to print, set, or " +
+                                     "check the path to image being used as " +
+                                     "the desktop background image. By " +
+                                     "default, prints the path to the " +
+                                     "current desktop background image.")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="print verbose debugging information",
+                        default=False)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-s",
-        "--set-background-image",
-        dest="newBackgroundImagePath",
-        required=False,
-        help="path to the new background image to set. A zero "
-        + "exit code indicates no errors occurred.",
-        default=None,
-    )
-    group.add_argument(
-        "-c",
-        "--check-background-image",
-        dest="checkBackgroundImagePath",
-        required=False,
-        help="check if the provided background image path "
-        + "matches the provided path. A zero exit code "
-        + "indicates the paths match.",
-        default=None,
-    )
+    group.add_argument("-s", "--set-background-image",
+                       dest='newBackgroundImagePath', required=False,
+                       help="path to the new background image to set. A zero " +
+                       "exit code indicates no errors occurred.", default=None)
+    group.add_argument("-c", "--check-background-image",
+                       dest='checkBackgroundImagePath', required=False,
+                       help="check if the provided background image path " +
+                       "matches the provided path. A zero exit code " +
+                       "indicates the paths match.", default=None)
     args = parser.parse_args()
 
     # Using logging for verbose output
@@ -75,14 +59,12 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.CRITICAL)
-    logger = logging.getLogger("desktopImage")
+    logger = logging.getLogger('desktopImage')
 
     # Print what we're going to do
     if args.checkBackgroundImagePath is not None:
-        logger.debug(
-            "checking provided desktop image %s matches current "
-            "image" % args.checkBackgroundImagePath
-        )
+        logger.debug("checking provided desktop image %s matches current "
+                     "image" % args.checkBackgroundImagePath)
     elif args.newBackgroundImagePath is not None:
         logger.debug("setting image to %s " % args.newBackgroundImagePath)
     else:
@@ -139,8 +121,7 @@ def main():
 
         status = False
         (status, error) = ws.setDesktopImageURL_forScreen_options_error_(
-            newImageURL, focussedScreen, None, None
-        )
+                newImageURL, focussedScreen, None, None)
         if not status:
             raise RuntimeError("setDesktopImageURL error")
 
@@ -164,7 +145,7 @@ def getCurrentDesktopImageURL(focussedScreen, workspace, logger):
     return imageURL
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if not main():
         sys.exit(1)
     else:

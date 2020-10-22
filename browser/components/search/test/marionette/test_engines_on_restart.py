@@ -10,13 +10,12 @@ from marionette_harness.marionette_test import MarionetteTestCase
 
 
 class TestEnginesOnRestart(MarionetteTestCase):
+
     def setUp(self):
         super(TestEnginesOnRestart, self).setUp()
-        self.marionette.enforce_gecko_prefs(
-            {
-                "browser.search.log": True,
-            }
-        )
+        self.marionette.enforce_gecko_prefs({
+            'browser.search.log': True,
+        })
 
     def get_default_search_engine(self):
         """Retrieve the identifier of the default search engine."""

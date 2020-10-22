@@ -185,9 +185,9 @@ class SymFileManager:
                     # some have the form "address space symbol".
                     # The letter has a meaning, but we ignore it.
                     if line[addressLength + 2] == " ":
-                        symbol = line[addressLength + 3 :].rstrip()
+                        symbol = line[addressLength + 3:].rstrip()
                     else:
-                        symbol = line[addressLength + 1 :].rstrip()
+                        symbol = line[addressLength + 1:].rstrip()
                     symbolMap[address] = symbol
                     publicCount += 1
         except Exception:

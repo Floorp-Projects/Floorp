@@ -4,13 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("fuzzer-runner")
+Library('fuzzer-runner')
 
 SOURCES += [
-    "FuzzerRunner.cpp",
+    'FuzzerRunner.cpp',
 ]
 EXPORTS += [
-    "FuzzerRunner.h",
+    'FuzzerRunner.h',
 ]
 
 FINAL_LIBRARY = "xul"

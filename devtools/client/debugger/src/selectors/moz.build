@@ -3,18 +3,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += []
+DIRS += [
+
+]
 
 CompiledModules(
-    "breakpointAtLocation.js",
-    "breakpoints.js",
-    "breakpointSources.js",
-    "getCallStackFrames.js",
-    "inComponent.js",
-    "index.js",
-    "isLineInScope.js",
-    "isSelectedFrameVisible.js",
-    "pause.js",
-    "visibleBreakpoints.js",
-    "visibleColumnBreakpoints.js",
+    'breakpointAtLocation.js',
+    'breakpoints.js',
+    'breakpointSources.js',
+    'getCallStackFrames.js',
+    'inComponent.js',
+    'index.js',
+    'isLineInScope.js',
+    'isSelectedFrameVisible.js',
+    'pause.js',
+    'visibleBreakpoints.js',
+    'visibleColumnBreakpoints.js',
 )

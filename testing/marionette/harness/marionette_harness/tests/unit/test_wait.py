@@ -16,6 +16,7 @@ from marionette_harness import MarionetteTestCase
 
 
 class TickingClock(object):
+
     def __init__(self, incr=1):
         self.ticks = 0
         self.increment = incr
@@ -30,6 +31,7 @@ class TickingClock(object):
 
 
 class SequenceClock(object):
+
     def __init__(self, times):
         self.times = times
         self.i = 0
@@ -45,6 +47,7 @@ class SequenceClock(object):
 
 
 class MockMarionette(object):
+
     def __init__(self):
         self.waited = 0
 
@@ -88,6 +91,7 @@ def now(clock, end):
 
 
 class SystemClockTest(MarionetteTestCase):
+
     def setUp(self):
         super(SystemClockTest, self).setUp()
         self.clock = wait.SystemClock()
@@ -106,6 +110,7 @@ class SystemClockTest(MarionetteTestCase):
 
 
 class FormalWaitTest(MarionetteTestCase):
+
     def setUp(self):
         super(FormalWaitTest, self).setUp()
         self.m = MockMarionette()
@@ -173,6 +178,7 @@ class FormalWaitTest(MarionetteTestCase):
 
 
 class PredicatesTest(MarionetteTestCase):
+
     def test_until(self):
         c = wait.SystemClock()
         self.assertFalse(wait.until_pred(c, six.MAXSIZE))
@@ -180,6 +186,7 @@ class PredicatesTest(MarionetteTestCase):
 
 
 class WaitUntilTest(MarionetteTestCase):
+
     def setUp(self):
         super(WaitUntilTest, self).setUp()
 
@@ -263,16 +270,14 @@ class WaitUntilTest(MarionetteTestCase):
         self.assertEqual(self.clock.ticks, 2)
 
     def test_timeout_elapsed_duration(self):
-        with self.assertRaisesRegexp(
-            errors.TimeoutException, "Timed out after 2.0 seconds"
-        ):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 2.0 seconds"):
             self.wt.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
 
     def test_timeout_elapsed_rounding(self):
         wt = Wait(self.m, clock=SequenceClock([1, 0.01, 1]), timeout=0)
-        with self.assertRaisesRegexp(
-            errors.TimeoutException, "Timed out after 1.0 seconds"
-        ):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 1.0 seconds"):
             wt.until(lambda x: x.true(), is_true=now)
 
     def test_timeout_elapsed_interval_by_delayed_condition_return(self):
@@ -280,9 +285,8 @@ class WaitUntilTest(MarionetteTestCase):
             self.clock.sleep(11)
             return mn.false()
 
-        with self.assertRaisesRegexp(
-            errors.TimeoutException, "Timed out after 11.0 seconds"
-        ):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 11.0 seconds"):
             self.wt.until(callback)
         # With a delayed conditional return > timeout, only 1 iteration is
         # possible
@@ -290,12 +294,11 @@ class WaitUntilTest(MarionetteTestCase):
 
     def test_timeout_with_delayed_condition_return(self):
         def callback(mn):
-            self.clock.sleep(0.5)
+            self.clock.sleep(.5)
             return mn.false()
 
-        with self.assertRaisesRegexp(
-            errors.TimeoutException, "Timed out after 10.0 seconds"
-        ):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 10.0 seconds"):
             self.wt.until(callback)
         # With a delayed conditional return < interval, 10 iterations should be
         # possible
@@ -306,9 +309,8 @@ class WaitUntilTest(MarionetteTestCase):
             self.clock.sleep(2)
             return mn.false()
 
-        with self.assertRaisesRegexp(
-            errors.TimeoutException, "Timed out after 10.0 seconds"
-        ):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 10.0 seconds"):
             self.wt.until(callback)
         # With a delayed return of the conditional which takes twice that long than the interval,
         # half of the iterations should be possible

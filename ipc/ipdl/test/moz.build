@@ -6,7 +6,7 @@
 
 # we ignore MOZ_IPDL_TESTS for the IPDL-compiler-only tests, since they're
 # quick and painless
-DIRS += ["ipdl"]
+DIRS += ['ipdl']
 
-if CONFIG["MOZ_IPDL_TESTS"]:
-    DIRS += ["cxx"]
+if CONFIG['MOZ_IPDL_TESTS']:
+    DIRS += ['cxx']

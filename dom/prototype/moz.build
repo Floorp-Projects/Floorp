@@ -8,18 +8,18 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XUL")
 
 EXPORTS.mozilla.dom += [
-    "PrototypeDocumentContentSink.h",
+    'PrototypeDocumentContentSink.h',
 ]
 
 SOURCES += [
-    "PrototypeDocumentContentSink.cpp",
+    'PrototypeDocumentContentSink.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/xul",
+    '/dom/base',
+    '/dom/xul',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

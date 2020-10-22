@@ -44,6 +44,7 @@ def render_template(shell, context):
 
 @CommandProvider
 class BuiltinCommands(MachCommandBase):
+
     @memoized_property
     def command_handlers(self):
         """A dictionary of command handlers keyed by command name."""
@@ -127,22 +128,15 @@ class BuiltinCommands(MachCommandBase):
             commands_info.append(self._get_handler_info(self.command_handlers[c]))
         return commands_info
 
-    @Command("mach-commands", category="misc", description="List all mach commands.")
+    @Command('mach-commands', category='misc',
+             description='List all mach commands.')
     def run_commands(self):
         print("\n".join(self.commands))
 
-    @Command(
-        "mach-debug-commands",
-        category="misc",
-        description="Show info about available mach commands.",
-    )
-    @CommandArgument(
-        "match",
-        metavar="MATCH",
-        default=None,
-        nargs="?",
-        help="Only display commands containing given substring.",
-    )
+    @Command('mach-debug-commands', category='misc',
+             description='Show info about available mach commands.')
+    @CommandArgument('match', metavar='MATCH', default=None, nargs='?',
+                     help='Only display commands containing given substring.')
     def run_debug_commands(self, match=None):
         import inspect
 
@@ -151,35 +145,31 @@ class BuiltinCommands(MachCommandBase):
                 continue
 
             cls = handler.cls
-            method = getattr(cls, getattr(handler, "method"))
+            method = getattr(cls, getattr(handler, 'method'))
 
             print(command)
-            print("=" * len(command))
-            print("")
-            print("File: %s" % inspect.getsourcefile(method))
-            print("Class: %s" % cls.__name__)
-            print("Method: %s" % handler.method)
-            print("")
+            print('=' * len(command))
+            print('')
+            print('File: %s' % inspect.getsourcefile(method))
+            print('Class: %s' % cls.__name__)
+            print('Method: %s' % handler.method)
+            print('')
 
-    @Command(
-        "mach-completion",
-        category="misc",
-        description="Prints a list of completion strings for the specified command.",
-    )
-    @CommandArgument(
-        "args", default=None, nargs=argparse.REMAINDER, help="Command to complete."
-    )
+    @Command('mach-completion', category='misc',
+             description='Prints a list of completion strings for the specified command.')
+    @CommandArgument('args', default=None, nargs=argparse.REMAINDER,
+                     help="Command to complete.")
     def run_completion(self, args):
         if not args:
             print("\n".join(self.commands))
             return
 
-        is_help = "help" in args
+        is_help = 'help' in args
         command = None
         for i, arg in enumerate(args):
             if arg in self.commands:
                 command = arg
-                args = args[i + 1 :]
+                args = args[i+1:]
                 break
 
         # If no command is typed yet, just offer the commands.
@@ -199,7 +189,7 @@ class BuiltinCommands(MachCommandBase):
             print("\n".join(targets))
             return
 
-        targets.append("help")
+        targets.append('help')
         targets.extend(chain(*self._get_handler_options(handler).keys()))
         print("\n".join(targets))
 
@@ -215,18 +205,10 @@ class BuiltinCommands(MachCommandBase):
 
         return value
 
-    @SubCommand(
-        "mach-completion",
-        "bash",
-        description="Print mach completion script for bash shell",
-    )
-    @CommandArgument(
-        "-f",
-        "--file",
-        dest="outfile",
-        default=None,
-        help="File path to save completion script.",
-    )
+    @SubCommand('mach-completion', 'bash',
+                description="Print mach completion script for bash shell")
+    @CommandArgument("-f", "--file", dest="outfile", default=None,
+                     help="File path to save completion script.")
     def completion_bash(self, outfile):
         commands_subcommands = []
         case_options = []
@@ -239,16 +221,12 @@ class BuiltinCommands(MachCommandBase):
                     options.append(self._zsh_describe(opt, None).strip('"'))
 
             if options:
-                case_options.append(
-                    "\n".join(
-                        [
-                            "            ({})".format(cmd.name),
-                            '            opts="${{opts}} {}"'.format(" ".join(options)),
-                            "            ;;",
-                            "",
-                        ]
-                    )
-                )
+                case_options.append("\n".join([
+                    "            ({})".format(cmd.name),
+                    '            opts="${{opts}} {}"'.format(" ".join(options)),
+                    "            ;;",
+                    "",
+                ]))
 
             # Build case statement for subcommand options.
             for sub in cmd.subcommands:
@@ -258,44 +236,28 @@ class BuiltinCommands(MachCommandBase):
                         options.append(self._zsh_describe(opt, None))
 
                 if options:
-                    case_options.append(
-                        "\n".join(
-                            [
-                                '            ("{} {}")'.format(
-                                    sub.name, sub.subcommand
-                                ),
-                                '            opts="${{opts}} {}"'.format(
-                                    " ".join(options)
-                                ),
-                                "            ;;",
-                                "",
-                            ]
-                        )
-                    )
+                    case_options.append("\n".join([
+                        '            ("{} {}")'.format(sub.name, sub.subcommand),
+                        '            opts="${{opts}} {}"'.format(" ".join(options)),
+                        "            ;;",
+                        ""
+                    ]))
 
             # Build case statement for subcommands.
             subcommands = [
                 self._zsh_describe(s.subcommand, None) for s in cmd.subcommands
             ]
             if subcommands:
-                commands_subcommands.append(
-                    '[{}]=" {} "'.format(
-                        cmd.name, " ".join([h.subcommand for h in cmd.subcommands])
-                    )
+                commands_subcommands.append('[{}]=" {} "'.format(
+                    cmd.name, " ".join([h.subcommand for h in cmd.subcommands]))
                 )
 
-                case_subcommands.append(
-                    "\n".join(
-                        [
-                            "            ({})".format(cmd.name),
-                            '            subs="${{subs}} {}"'.format(
-                                " ".join(subcommands)
-                            ),
-                            "            ;;",
-                            "",
-                        ]
-                    )
-                )
+                case_subcommands.append("\n".join([
+                    "            ({})".format(cmd.name),
+                    '            subs="${{subs}} {}"'.format(" ".join(subcommands)),
+                    "            ;;",
+                    "",
+                ]))
 
         globalopts = [opt for opt_strs in self.global_options for opt in opt_strs]
         context = {
@@ -306,28 +268,22 @@ class BuiltinCommands(MachCommandBase):
             "globalopts": " ".join(sorted(globalopts)),
         }
 
-        outfile = open(outfile, "w") if outfile else sys.stdout
+        outfile = open(outfile, 'w') if outfile else sys.stdout
         print(render_template("bash", context), file=outfile)
 
-    @SubCommand(
-        "mach-completion",
-        "zsh",
-        description="Print mach completion script for zsh shell",
-    )
-    @CommandArgument(
-        "-f",
-        "--file",
-        dest="outfile",
-        default=None,
-        help="File path to save completion script.",
-    )
+    @SubCommand('mach-completion', 'zsh',
+                description="Print mach completion script for zsh shell")
+    @CommandArgument("-f", "--file", dest="outfile", default=None,
+                     help="File path to save completion script.")
     def completion_zsh(self, outfile):
         commands_descriptions = []
         commands_subcommands = []
         case_options = []
         case_subcommands = []
         for i, cmd in enumerate(self.commands_info):
-            commands_descriptions.append(self._zsh_describe(cmd.name, cmd.description))
+            commands_descriptions.append(
+                self._zsh_describe(cmd.name, cmd.description)
+            )
 
             # Build case statement for options.
             options = []
@@ -336,16 +292,12 @@ class BuiltinCommands(MachCommandBase):
                     options.append(self._zsh_describe(opt, description))
 
             if options:
-                case_options.append(
-                    "\n".join(
-                        [
-                            "            ({})".format(cmd.name),
-                            "            opts+=({})".format(" ".join(options)),
-                            "            ;;",
-                            "",
-                        ]
-                    )
-                )
+                case_options.append("\n".join([
+                    "            ({})".format(cmd.name),
+                    "            opts+=({})".format(" ".join(options)),
+                    "            ;;",
+                    ""
+                ]))
 
             # Build case statement for subcommand options.
             for sub in cmd.subcommands:
@@ -355,38 +307,28 @@ class BuiltinCommands(MachCommandBase):
                         options.append(self._zsh_describe(opt, description))
 
                 if options:
-                    case_options.append(
-                        "\n".join(
-                            [
-                                "            ({} {})".format(sub.name, sub.subcommand),
-                                "            opts+=({})".format(" ".join(options)),
-                                "            ;;",
-                                "",
-                            ]
-                        )
-                    )
+                    case_options.append("\n".join([
+                        "            ({} {})".format(sub.name, sub.subcommand),
+                        "            opts+=({})".format(" ".join(options)),
+                        "            ;;",
+                        ""
+                    ]))
 
             # Build case statement for subcommands.
             subcommands = [
                 self._zsh_describe(s.subcommand, s.description) for s in cmd.subcommands
             ]
             if subcommands:
-                commands_subcommands.append(
-                    '[{}]=" {} "'.format(
-                        cmd.name, " ".join([h.subcommand for h in cmd.subcommands])
-                    )
+                commands_subcommands.append('[{}]=" {} "'.format(
+                    cmd.name, " ".join([h.subcommand for h in cmd.subcommands]))
                 )
 
-                case_subcommands.append(
-                    "\n".join(
-                        [
-                            "            ({})".format(cmd.name),
-                            "            subs+=({})".format(" ".join(subcommands)),
-                            "            ;;",
-                            "",
-                        ]
-                    )
-                )
+                case_subcommands.append("\n".join([
+                    "            ({})".format(cmd.name),
+                    "            subs+=({})".format(" ".join(subcommands)),
+                    "            ;;",
+                    ""
+                ]))
 
         globalopts = []
         for opt_strings, description in self.global_options.items():
@@ -401,27 +343,20 @@ class BuiltinCommands(MachCommandBase):
             "globalopts": " ".join(sorted(globalopts)),
         }
 
-        outfile = open(outfile, "w") if outfile else sys.stdout
+        outfile = open(outfile, 'w') if outfile else sys.stdout
         print(render_template("zsh", context), file=outfile)
 
-    @SubCommand(
-        "mach-completion",
-        "fish",
-        description="Print mach completion script for fish shell",
-    )
-    @CommandArgument(
-        "-f",
-        "--file",
-        dest="outfile",
-        default=None,
-        help="File path to save completion script.",
-    )
+    @SubCommand('mach-completion', 'fish',
+                description="Print mach completion script for fish shell")
+    @CommandArgument("-f", "--file", dest="outfile", default=None,
+                     help="File path to save completion script.")
     def completion_fish(self, outfile):
+
         def _append_opt_strs(comp, opt_strs):
             for opt in opt_strs:
-                if opt.startswith("--"):
+                if opt.startswith('--'):
                     comp += " -l {}".format(opt[2:])
-                elif opt.startswith("-"):
+                elif opt.startswith('-'):
                     comp += " -s {}".format(opt[1:])
             return comp
 
@@ -451,9 +386,7 @@ class BuiltinCommands(MachCommandBase):
             for opt_strs, description in cmd.options.items():
                 comp = (
                     "complete -c mach -A -n '__fish_mach_complete_command {} {}' "
-                    "-d '{}'".format(
-                        cmd.name, subcommands, description.replace("'", "\\'")
-                    )
+                    "-d '{}'".format(cmd.name, subcommands, description.replace("'", "\\'"))
                 )
                 comp = _append_opt_strs(comp, opt_strs)
                 cmds_opts.append(comp)
@@ -463,9 +396,7 @@ class BuiltinCommands(MachCommandBase):
                 for opt_strs, description in sub.options.items():
                     comp = (
                         "complete -c mach -A -n '__fish_mach_complete_subcommand {} {}' "
-                        "-d '{}'".format(
-                            sub.name, sub.subcommand, description.replace("'", "\\'")
-                        )
+                        "-d '{}'".format(sub.name, sub.subcommand, description.replace("'", "\\'"))
                     )
                     comp = _append_opt_strs(comp, opt_strs)
                     cmds_opts.append(comp)
@@ -474,9 +405,7 @@ class BuiltinCommands(MachCommandBase):
                 description = description.replace("'", "\\'")
                 comp = (
                     "complete -c mach -A -n '__fish_mach_complete_command {} {}' "
-                    "-d '{}' -a {}".format(
-                        cmd.name, subcommands, description, sub.subcommand
-                    )
+                    "-d '{}' -a {}".format(cmd.name, subcommands, description, sub.subcommand)
                 )
                 cmds_opts.append(comp)
 
@@ -490,5 +419,5 @@ class BuiltinCommands(MachCommandBase):
             "global_option_completions": "\n".join(globalopts),
         }
 
-        outfile = open(outfile, "w") if outfile else sys.stdout
+        outfile = open(outfile, 'w') if outfile else sys.stdout
         print(render_template("fish", context), file=outfile)

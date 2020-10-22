@@ -15,17 +15,17 @@
 #                         non-mac (toolkit/themes/shared/non-mac)
 # mobile                  native UIs that do not use XUL for UI
 
-toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
-app = CONFIG["MOZ_BUILD_APP"]
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+app = CONFIG['MOZ_BUILD_APP']
 
-if toolkit == "cocoa":
-    DIRS += ["osx"]
-elif toolkit == "gtk":
-    DIRS += ["linux"]
-elif app == "mobile/android":
-    DIRS += ["mobile"]
+if toolkit == 'cocoa':
+    DIRS += ['osx']
+elif toolkit == 'gtk':
+    DIRS += ['linux']
+elif app == 'mobile/android':
+    DIRS += ['mobile']
 else:
-    DIRS += ["windows"]
+    DIRS += ['windows']
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Themes")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Themes')

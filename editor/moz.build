@@ -5,31 +5,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "libeditor",
-    "spellchecker",
-    "txmgr",
-    "composer",
+    'libeditor',
+    'spellchecker',
+    'txmgr',
+    'composer',
 ]
 
 XPIDL_SOURCES += [
-    "nsIDocumentStateListener.idl",
-    "nsIEditActionListener.idl",
-    "nsIEditor.idl",
-    "nsIEditorMailSupport.idl",
-    "nsIEditorObserver.idl",
-    "nsIEditorSpellCheck.idl",
-    "nsIHTMLAbsPosEditor.idl",
-    "nsIHTMLEditor.idl",
-    "nsIHTMLInlineTableEditor.idl",
-    "nsIHTMLObjectResizer.idl",
-    "nsITableEditor.idl",
+    'nsIDocumentStateListener.idl',
+    'nsIEditActionListener.idl',
+    'nsIEditor.idl',
+    'nsIEditorMailSupport.idl',
+    'nsIEditorObserver.idl',
+    'nsIEditorSpellCheck.idl',
+    'nsIHTMLAbsPosEditor.idl',
+    'nsIHTMLEditor.idl',
+    'nsIHTMLInlineTableEditor.idl',
+    'nsIHTMLObjectResizer.idl',
+    'nsITableEditor.idl',
 ]
 
-XPIDL_MODULE = "editor"
+XPIDL_MODULE = 'editor'
 
 TESTING_JS_MODULES += [
-    "AsyncSpellCheckTestHelper.jsm",
+    'AsyncSpellCheckTestHelper.jsm',
 ]
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM: Editor")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'DOM: Editor')

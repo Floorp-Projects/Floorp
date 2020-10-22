@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "actions",
-    "components",
-    "reducers",
-    "utils",
+    'actions',
+    'components',
+    'reducers',
+    'utils',
 ]
 
 DevToolsModules(
-    "grid-inspector.js",
-    "types.js",
+    'grid-inspector.js',
+    'types.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']

@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = "_tests/xpcshell/browser/components/migration/tests/unit"
+FINAL_TARGET = '_tests/xpcshell/browser/components/migration/tests/unit'
 
-Program("InsertIEHistory")
+Program('InsertIEHistory')
 OS_LIBS += [
-    "ole32",
+    'ole32',
 ]
 SOURCES += [
-    "InsertIEHistory.cpp",
+    'InsertIEHistory.cpp',
 ]
 
 NO_PGO = True

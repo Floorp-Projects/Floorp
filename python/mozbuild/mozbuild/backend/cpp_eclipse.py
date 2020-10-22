@@ -12,7 +12,9 @@ import subprocess
 from xml.sax.saxutils import quoteattr
 from .common import CommonBackend
 
-from ..frontend.data import ComputedFlags
+from ..frontend.data import (
+    ComputedFlags,
+)
 from mozbuild.base import ExecutionSummary
 
 # TODO Have ./mach eclipse generate the workspace and index it:
@@ -22,50 +24,44 @@ from mozbuild.base import ExecutionSummary
 
 
 class CppEclipseBackend(CommonBackend):
-    """Backend that generates Cpp Eclipse project files."""
+    """Backend that generates Cpp Eclipse project files.
+    """
 
     def __init__(self, environment):
-        if os.name == "nt":
-            raise Exception(
-                "Eclipse is not supported on Windows. "
-                "Consider using Visual Studio instead."
-            )
+        if os.name == 'nt':
+            raise Exception('Eclipse is not supported on Windows. '
+                            'Consider using Visual Studio instead.')
         super(CppEclipseBackend, self).__init__(environment)
 
     def _init(self):
         CommonBackend._init(self)
 
         self._args_for_dirs = {}
-        self._project_name = "Gecko"
+        self._project_name = 'Gecko'
         self._workspace_dir = self._get_workspace_path()
-        self._workspace_lang_dir = os.path.join(
-            self._workspace_dir, ".metadata/.plugins/org.eclipse.cdt.core"
-        )
+        self._workspace_lang_dir = os.path.join(self._workspace_dir, '.metadata/.plugins/org.eclipse.cdt.core')
         self._project_dir = os.path.join(self._workspace_dir, self._project_name)
         self._overwriting_workspace = os.path.isdir(self._workspace_dir)
 
-        self._macbundle = self.environment.substs["MOZ_MACBUNDLE_NAME"]
-        self._appname = self.environment.substs["MOZ_APP_NAME"]
-        self._bin_suffix = self.environment.substs["BIN_SUFFIX"]
-        self._cxx = self.environment.substs["CXX"]
+        self._macbundle = self.environment.substs['MOZ_MACBUNDLE_NAME']
+        self._appname = self.environment.substs['MOZ_APP_NAME']
+        self._bin_suffix = self.environment.substs['BIN_SUFFIX']
+        self._cxx = self.environment.substs['CXX']
         # Note: We need the C Pre Processor (CPP) flags, not the CXX flags
-        self._cppflags = self.environment.substs.get("CPPFLAGS", "")
+        self._cppflags = self.environment.substs.get('CPPFLAGS', '')
 
     def summary(self):
         return ExecutionSummary(
-            "CppEclipse backend executed in {execution_time:.2f}s\n"
+            'CppEclipse backend executed in {execution_time:.2f}s\n'
             'Generated Cpp Eclipse workspace in "{workspace:s}".\n'
-            "If missing, import the project using File > Import > General > Existing Project into workspace\n"
-            "\n"
-            "Run with: eclipse -data {workspace:s}\n",
+            'If missing, import the project using File > Import > General > Existing Project into workspace\n'
+            '\n'
+            'Run with: eclipse -data {workspace:s}\n',
             execution_time=self._execution_time,
-            workspace=self._workspace_dir,
-        )
+            workspace=self._workspace_dir)
 
     def _get_workspace_path(self):
-        return CppEclipseBackend.get_workspace_path(
-            self.environment.topsrcdir, self.environment.topobjdir
-        )
+        return CppEclipseBackend.get_workspace_path(self.environment.topsrcdir, self.environment.topobjdir)
 
     @staticmethod
     def get_workspace_path(topsrcdir, topobjdir):
@@ -77,19 +73,18 @@ class CppEclipseBackend(CommonBackend):
         return os.path.join(srcdir_parent, workspace_dirname)
 
     def consume_object(self, obj):
-        reldir = getattr(obj, "relsrcdir", None)
+        reldir = getattr(obj, 'relsrcdir', None)
 
         # Note that unlike VS, Eclipse' indexer seem to crawl the headers and
         # isn't picky about the local includes.
         if isinstance(obj, ComputedFlags):
             args = self._args_for_dirs.setdefault(
-                "tree/" + reldir, {"includes": [], "defines": []}
-            )
+                'tree/' + reldir, {'includes': [], 'defines': []})
             # use the same args for any objdirs we include:
-            if reldir == "dom/bindings":
-                self._args_for_dirs.setdefault("generated-webidl", args)
-            if reldir == "ipc/ipdl":
-                self._args_for_dirs.setdefault("generated-ipdl", args)
+            if reldir == 'dom/bindings':
+                self._args_for_dirs.setdefault('generated-webidl', args)
+            if reldir == 'ipc/ipdl':
+                self._args_for_dirs.setdefault('generated-ipdl', args)
 
             includes = args["includes"]
             if "BASE_INCLUDES" in obj.flags and obj.flags["BASE_INCLUDES"]:
@@ -106,68 +101,54 @@ class CppEclipseBackend(CommonBackend):
         return True
 
     def consume_finished(self):
-        settings_dir = os.path.join(self._project_dir, ".settings")
-        launch_dir = os.path.join(self._project_dir, "RunConfigurations")
+        settings_dir = os.path.join(self._project_dir, '.settings')
+        launch_dir = os.path.join(self._project_dir, 'RunConfigurations')
         workspace_settings_dir = os.path.join(
-            self._workspace_dir, ".metadata/.plugins/org.eclipse.core.runtime/.settings"
-        )
+            self._workspace_dir, '.metadata/.plugins/org.eclipse.core.runtime/.settings')
 
-        for dir_name in [
-            self._project_dir,
-            settings_dir,
-            launch_dir,
-            workspace_settings_dir,
-            self._workspace_lang_dir,
-        ]:
+        for dir_name in [self._project_dir, settings_dir, launch_dir, workspace_settings_dir, self._workspace_lang_dir]:
             try:
                 os.makedirs(dir_name)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
-        project_path = os.path.join(self._project_dir, ".project")
-        with open(project_path, "w") as fh:
+        project_path = os.path.join(self._project_dir, '.project')
+        with open(project_path, 'w') as fh:
             self._write_project(fh)
 
-        cproject_path = os.path.join(self._project_dir, ".cproject")
-        with open(cproject_path, "w") as fh:
+        cproject_path = os.path.join(self._project_dir, '.cproject')
+        with open(cproject_path, 'w') as fh:
             self._write_cproject(fh)
 
-        language_path = os.path.join(settings_dir, "language.settings.xml")
-        with open(language_path, "w") as fh:
+        language_path = os.path.join(settings_dir, 'language.settings.xml')
+        with open(language_path, 'w') as fh:
             self._write_language_settings(fh)
 
-        workspace_language_path = os.path.join(
-            self._workspace_lang_dir, "language.settings.xml"
-        )
-        with open(workspace_language_path, "w") as fh:
+        workspace_language_path = os.path.join(self._workspace_lang_dir, 'language.settings.xml')
+        with open(workspace_language_path, 'w') as fh:
             workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
             workspace_lang_settings = workspace_lang_settings.replace(
-                "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags
-            )
+                "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags)
             fh.write(workspace_lang_settings)
 
         self._write_launch_files(launch_dir)
 
         core_resources_prefs_path = os.path.join(
-            workspace_settings_dir, "org.eclipse.core.resources.prefs"
-        )
-        with open(core_resources_prefs_path, "w") as fh:
+            workspace_settings_dir, 'org.eclipse.core.resources.prefs')
+        with open(core_resources_prefs_path, 'w') as fh:
             fh.write(STATIC_CORE_RESOURCES_PREFS)
 
         core_runtime_prefs_path = os.path.join(
-            workspace_settings_dir, "org.eclipse.core.runtime.prefs"
-        )
-        with open(core_runtime_prefs_path, "w") as fh:
+            workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
+        with open(core_runtime_prefs_path, 'w') as fh:
             fh.write(STATIC_CORE_RUNTIME_PREFS)
 
-        ui_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.prefs")
-        with open(ui_prefs_path, "w") as fh:
+        ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
+        with open(ui_prefs_path, 'w') as fh:
             fh.write(STATIC_UI_PREFS)
 
-        cdt_ui_prefs_path = os.path.join(
-            workspace_settings_dir, "org.eclipse.cdt.ui.prefs"
-        )
+        cdt_ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.ui.prefs')
         cdt_ui_prefs = STATIC_CDT_UI_PREFS
         # Here we generate the code formatter that will show up in the UI with
         # the name "Mozilla".  The formatter is stored as a single line of XML
@@ -176,17 +157,14 @@ class CppEclipseBackend(CommonBackend):
         XML_PREF_TEMPLATE = """<setting id\="@PREF_NAME@" value\="@PREF_VAL@"/>\\n"""
         for line in FORMATTER_SETTINGS.splitlines():
             [pref, val] = line.split("=")
-            cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@", pref).replace(
-                "@PREF_VAL@", val
-            )
+            cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@",
+                                                      pref).replace("@PREF_VAL@", val)
         cdt_ui_prefs += "</profile>\\n</profiles>\\n"
-        with open(cdt_ui_prefs_path, "w") as fh:
+        with open(cdt_ui_prefs_path, 'w') as fh:
             fh.write(cdt_ui_prefs)
 
-        cdt_core_prefs_path = os.path.join(
-            workspace_settings_dir, "org.eclipse.cdt.core.prefs"
-        )
-        with open(cdt_core_prefs_path, "w") as fh:
+        cdt_core_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.core.prefs')
+        with open(cdt_core_prefs_path, 'w') as fh:
             cdt_core_prefs = STATIC_CDT_CORE_PREFS
             # When we generated the code formatter called "Mozilla" above, we
             # also set it to be the active formatter.  When a formatter is set
@@ -195,10 +173,8 @@ class CppEclipseBackend(CommonBackend):
             cdt_core_prefs += FORMATTER_SETTINGS
             fh.write(cdt_core_prefs)
 
-        editor_prefs_path = os.path.join(
-            workspace_settings_dir, "org.eclipse.ui.editors.prefs"
-        )
-        with open(editor_prefs_path, "w") as fh:
+        editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs")
+        with open(editor_prefs_path, 'w') as fh:
             fh.write(EDITOR_SETTINGS)
 
         # Now import the project into the workspace
@@ -216,37 +192,25 @@ class CppEclipseBackend(CommonBackend):
 
         try:
             subprocess.check_call(
-                [
-                    "eclipse",
-                    "-application",
-                    "-nosplash",
-                    "org.eclipse.cdt.managedbuilder.core.headlessbuild",
-                    "-data",
-                    self._workspace_dir,
-                    "-importAll",
-                    self._project_dir,
-                ]
-            )
+                             ["eclipse", "-application", "-nosplash",
+                              "org.eclipse.cdt.managedbuilder.core.headlessbuild",
+                              "-data", self._workspace_dir, "-importAll", self._project_dir])
         except OSError as e:
             # Remove the workspace directory so we re-generate it and
             # try to import again when the backend is invoked again.
             shutil.rmtree(self._workspace_dir)
 
             if e.errno == errno.ENOENT:
-                raise Exception(
-                    "Failed to launch eclipse to import project. "
-                    "Ensure 'eclipse' is in your PATH and try again"
-                )
+                raise Exception("Failed to launch eclipse to import project. "
+                                "Ensure 'eclipse' is in your PATH and try again")
             else:
                 raise
         finally:
             self._remove_noindex()
 
     def _write_noindex(self):
-        noindex_path = os.path.join(
-            self._project_dir, ".settings/org.eclipse.cdt.core.prefs"
-        )
-        with open(noindex_path, "w") as fh:
+        noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
+        with open(noindex_path, 'w') as fh:
             fh.write(NOINDEX_TEMPLATE)
 
     def _remove_noindex(self):
@@ -257,9 +221,7 @@ class CppEclipseBackend(CommonBackend):
         for f in glob.glob(os.path.join(self._workspace_lang_dir, "Gecko.*.pdom")):
             os.remove(f)
 
-        noindex_path = os.path.join(
-            self._project_dir, ".settings/org.eclipse.cdt.core.prefs"
-        )
+        noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
         # This may fail if the entire tree has been removed; that's fine.
         try:
             os.remove(noindex_path)
@@ -269,10 +231,8 @@ class CppEclipseBackend(CommonBackend):
 
     def _write_language_settings(self, fh):
         def add_abs_include_path(absinclude):
-            assert absinclude[:3] == "-I/"
-            return LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE.replace(
-                "@INCLUDE_PATH@", absinclude[2:]
-            )
+            assert(absinclude[:3] == "-I/")
+            return LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE.replace("@INCLUDE_PATH@", absinclude[2:])
 
         def add_objdir_include_path(relpath):
             p = os.path.join(self.environment.topobjdir, relpath)
@@ -300,19 +260,17 @@ class CppEclipseBackend(CommonBackend):
         dirsettings_template = LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER
 
         # Add OS_COMPILE_CXXFLAGS args (same as OS_COMPILE_CFLAGS):
-        dirsettings_template = dirsettings_template.replace(
-            "@PREINCLUDE_FILE_PATH@",
-            os.path.join(self.environment.topobjdir, "dist/include/mozilla-config.h"),
-        )
-        dirsettings_template += add_define("MOZILLA_CLIENT", "1")
+        dirsettings_template = dirsettings_template.replace('@PREINCLUDE_FILE_PATH@', os.path.join(
+            self.environment.topobjdir, 'dist/include/mozilla-config.h'))
+        dirsettings_template += add_define('MOZILLA_CLIENT', '1')
 
         # Add EXTRA_INCLUDES args:
-        dirsettings_template += add_objdir_include_path("dist/include")
+        dirsettings_template += add_objdir_include_path('dist/include')
 
         # Add OS_INCLUDES args:
         # XXX media/webrtc/trunk/webrtc's moz.builds reset this.
-        dirsettings_template += add_objdir_include_path("dist/include/nspr")
-        dirsettings_template += add_objdir_include_path("dist/include/nss")
+        dirsettings_template += add_objdir_include_path('dist/include/nspr')
+        dirsettings_template += add_objdir_include_path('dist/include/nss')
 
         # Finally, add anything else that makes things work better.
         #
@@ -335,16 +293,16 @@ class CppEclipseBackend(CommonBackend):
         # file can be used to our advantage so that the first indexing of
         # important headers has the defines we want.
         #
-        dirsettings_template += add_objdir_include_path("ipc/ipdl/_ipdlheaders")
-        dirsettings_template += add_define("MOZILLA_INTERNAL_API", "1")
+        dirsettings_template += add_objdir_include_path('ipc/ipdl/_ipdlheaders')
+        dirsettings_template += add_define('MOZILLA_INTERNAL_API', '1')
 
         for path, args in self._args_for_dirs.items():
             dirsettings = dirsettings_template
-            dirsettings = dirsettings.replace("@RELATIVE_PATH@", path)
+            dirsettings = dirsettings.replace('@RELATIVE_PATH@', path)
             for i in args["includes"]:
                 dirsettings += add_abs_include_path(i)
             for d in args["defines"]:
-                assert d[:2] == u"-D" or d[:2] == u"-U"
+                assert(d[:2] == u"-D" or d[:2] == u"-U")
                 if d[:2] == u"-U":
                     # gfx/harfbuzz/src uses -UDEBUG, at least on Mac
                     # netwerk/sctp/src uses -U__APPLE__ on Mac
@@ -360,28 +318,25 @@ class CppEclipseBackend(CommonBackend):
             dirsettings += LANGUAGE_SETTINGS_TEMPLATE_DIR_FOOTER
             fh.write(dirsettings)
 
-        fh.write(
-            LANGUAGE_SETTINGS_TEMPLATE_FOOTER.replace(
-                "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags
-            )
-        )
+        fh.write(LANGUAGE_SETTINGS_TEMPLATE_FOOTER.replace(
+            "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags))
 
     def _write_launch_files(self, launch_dir):
-        bin_dir = os.path.join(self.environment.topobjdir, "dist")
+        bin_dir = os.path.join(self.environment.topobjdir, 'dist')
 
         # TODO Improve binary detection
         if self._macbundle:
-            exe_path = os.path.join(bin_dir, self._macbundle, "Contents/MacOS")
+            exe_path = os.path.join(bin_dir, self._macbundle, 'Contents/MacOS')
         else:
-            exe_path = os.path.join(bin_dir, "bin")
+            exe_path = os.path.join(bin_dir, 'bin')
 
         exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
 
-        main_gecko_launch = os.path.join(launch_dir, "gecko.launch")
-        with open(main_gecko_launch, "w") as fh:
+        main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
+        with open(main_gecko_launch, 'w') as fh:
             launch = GECKO_LAUNCH_CONFIG_TEMPLATE
-            launch = launch.replace("@LAUNCH_PROGRAM@", exe_path)
-            launch = launch.replace("@LAUNCH_ARGS@", "-P -no-remote")
+            launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
+            launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
             fh.write(launch)
 
         # TODO Add more launch configs (and delegate calls to mach)
@@ -389,26 +344,20 @@ class CppEclipseBackend(CommonBackend):
     def _write_project(self, fh):
         project = PROJECT_TEMPLATE
 
-        project = project.replace("@PROJECT_NAME@", self._project_name)
-        project = project.replace("@PROJECT_TOPSRCDIR@", self.environment.topsrcdir)
-        project = project.replace(
-            "@GENERATED_IPDL_FILES@",
-            os.path.join(self.environment.topobjdir, "ipc", "ipdl"),
-        )
-        project = project.replace(
-            "@GENERATED_WEBIDL_FILES@",
-            os.path.join(self.environment.topobjdir, "dom", "bindings"),
-        )
+        project = project.replace('@PROJECT_NAME@', self._project_name)
+        project = project.replace('@PROJECT_TOPSRCDIR@', self.environment.topsrcdir)
+        project = project.replace('@GENERATED_IPDL_FILES@', os.path.join(
+            self.environment.topobjdir, "ipc", "ipdl"))
+        project = project.replace('@GENERATED_WEBIDL_FILES@', os.path.join(
+            self.environment.topobjdir, "dom", "bindings"))
         fh.write(project)
 
     def _write_cproject(self, fh):
         cproject_header = CPROJECT_TEMPLATE_HEADER
         cproject_header = cproject_header.replace(
-            "@PROJECT_TOPSRCDIR@", self.environment.topobjdir
-        )
+            '@PROJECT_TOPSRCDIR@', self.environment.topobjdir)
         cproject_header = cproject_header.replace(
-            "@MACH_COMMAND@", os.path.join(self.environment.topsrcdir, "mach")
-        )
+            '@MACH_COMMAND@', os.path.join(self.environment.topsrcdir, 'mach'))
         fh.write(cproject_header)
         fh.write(CPROJECT_TEMPLATE_FOOTER)
 

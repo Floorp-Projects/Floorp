@@ -6,10 +6,10 @@
 def main(header, propFile):
     mappings = {}
 
-    with open(propFile, "r") as f:
+    with open(propFile, 'r') as f:
         for line in f:
             line = line.strip()
-            if not line.startswith("#"):
+            if not line.startswith('#'):
                 parts = line.split("=", 1)
                 if len(parts) == 2 and len(parts[0]) > 0:
                     mappings[parts[0].strip()] = parts[1].strip()
@@ -19,8 +19,6 @@ def main(header, propFile):
     header.write("// This is a generated file. Please do not edit.\n")
     header.write("// Please edit the corresponding .properties file instead.\n")
 
-    entries = [
-        '{ "%s", "%s", %d }' % (key, mappings[key], len(mappings[key]))
-        for key in sorted(keys)
-    ]
-    header.write(",\n".join(entries) + "\n")
+    entries = ['{ "%s", "%s", %d }'
+               % (key, mappings[key], len(mappings[key])) for key in sorted(keys)]
+    header.write(',\n'.join(entries) + '\n')

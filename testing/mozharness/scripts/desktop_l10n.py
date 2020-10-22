@@ -28,7 +28,6 @@ from mozharness.mozilla.l10n.locales import LocalesMixin
 
 try:
     import simplejson as json
-
     assert json
 except ImportError:
     import json
@@ -43,57 +42,41 @@ FAILURE_STR = "Failed"
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
+class DesktopSingleLocale(LocalesMixin, AutomationMixin,
+                          VCSMixin, BaseScript):
     """Manages desktop repacks"""
-
-    config_options = [
-        [
-            [
-                "--locale",
-            ],
-            {
-                "action": "extend",
-                "dest": "locales",
-                "type": "string",
-                "help": "Specify the locale(s) to sign and update. Optionally pass"
-                " revision separated by colon, en-GB:default.",
-            },
-        ],
-        [
-            [
-                "--tag-override",
-            ],
-            {
-                "action": "store",
-                "dest": "tag_override",
-                "type": "string",
-                "help": "Override the tags set for all repos",
-            },
-        ],
-        [
-            [
-                "--en-us-installer-url",
-            ],
-            {
-                "action": "store",
-                "dest": "en_us_installer_url",
-                "type": "string",
-                "help": "Specify the url of the en-us binary",
-            },
-        ],
-    ]
+    config_options = [[
+        ['--locale', ],
+        {"action": "extend",
+         "dest": "locales",
+         "type": "string",
+         "help": "Specify the locale(s) to sign and update. Optionally pass"
+                 " revision separated by colon, en-GB:default."}
+    ], [
+        ['--tag-override', ],
+        {"action": "store",
+         "dest": "tag_override",
+         "type": "string",
+         "help": "Override the tags set for all repos"}
+    ], [
+        ['--en-us-installer-url', ],
+        {"action": "store",
+         "dest": "en_us_installer_url",
+         "type": "string",
+         "help": "Specify the url of the en-us binary"}
+    ]]
 
     def __init__(self, require_config_file=True):
         # fxbuild style:
         buildscript_kwargs = {
-            "all_actions": [
+            'all_actions': [
                 "clone-locales",
                 "list-locales",
                 "setup",
                 "repack",
                 "summary",
             ],
-            "config": {
+            'config': {
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
                 "log_name": "single_locale",
@@ -124,23 +107,20 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         config = self.config
         abs_dirs = self.query_abs_dirs()
 
-        bootstrap_env = self.query_env(
-            partial_env=config.get("bootstrap_env"), replace_dict=abs_dirs
-        )
+        bootstrap_env = self.query_env(partial_env=config.get("bootstrap_env"),
+                                       replace_dict=abs_dirs)
 
-        bootstrap_env["L10NBASEDIR"] = abs_dirs["abs_l10n_dir"]
+        bootstrap_env['L10NBASEDIR'] = abs_dirs['abs_l10n_dir']
         if self.query_is_nightly():
             # we might set update_channel explicitly
-            if config.get("update_channel"):
-                update_channel = config["update_channel"]
+            if config.get('update_channel'):
+                update_channel = config['update_channel']
             else:  # Let's just give the generic channel based on branch.
-                update_channel = "nightly-%s" % (config["branch"],)
+                update_channel = "nightly-%s" % (config['branch'],)
             if not isinstance(update_channel, bytes):
                 update_channel = update_channel.encode("utf-8")
             bootstrap_env["MOZ_UPDATE_CHANNEL"] = update_channel
-            self.info(
-                "Update channel set to: {}".format(bootstrap_env["MOZ_UPDATE_CHANNEL"])
-            )
+            self.info("Update channel set to: {}".format(bootstrap_env["MOZ_UPDATE_CHANNEL"]))
         self.bootstrap_env = bootstrap_env
         return self.bootstrap_env
 
@@ -154,9 +134,9 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         # check if there are any extra option from the platform configuration
         # and append them to the env
 
-        if "upload_env_extra" in config:
-            for extra in config["upload_env_extra"]:
-                upload_env[extra] = config["upload_env_extra"][extra]
+        if 'upload_env_extra' in config:
+            for extra in config['upload_env_extra']:
+                upload_env[extra] = config['upload_env_extra'][extra]
 
         self.upload_env = upload_env
         return self.upload_env
@@ -168,27 +148,26 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
 
     def _query_make_variable(self, variable, make_args=None):
         """returns the value of make echo-variable-<variable>
-        it accepts extra make arguements (make_args)
+           it accepts extra make arguements (make_args)
         """
         dirs = self.query_abs_dirs()
         make_args = make_args or []
         target = ["echo-variable-%s" % variable] + make_args
-        cwd = dirs["abs_locales_dir"]
-        raw_output = self._get_output_from_make(
-            target, cwd=cwd, env=self.query_bootstrap_env()
-        )
+        cwd = dirs['abs_locales_dir']
+        raw_output = self._get_output_from_make(target, cwd=cwd,
+                                                env=self.query_bootstrap_env())
         # we want to log all the messages from make
         output = []
         for line in raw_output.split("\n"):
             output.append(line.strip())
         output = " ".join(output).strip()
-        self.info("echo-variable-%s: %s" % (variable, output))
+        self.info('echo-variable-%s: %s' % (variable, output))
         return output
 
     def _map(self, func, items):
         """runs func for any item in items, calls the add_failure() for each
-        error. It assumes that function returns 0 when successful.
-        returns a two element tuple with (success_count, total_count)"""
+           error. It assumes that function returns 0 when successful.
+           returns a two element tuple with (success_count, total_count)"""
         success_count = 0
         total_count = len(items)
         name = func.__name__
@@ -199,7 +178,7 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
                 success_count += 1
             else:
                 #  func failed...
-                message = "failure: %s(%s)" % (name, item)
+                message = 'failure: %s(%s)' % (name, item)
                 self.add_failure(item, message)
         return (success_count, total_count)
 
@@ -217,33 +196,32 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         self.make_unpack_en_US()
 
     def _run_make_in_config_dir(self):
-        """this step creates nsinstall, needed my make_wget_en_US()"""
+        """this step creates nsinstall, needed my make_wget_en_US()
+        """
         dirs = self.query_abs_dirs()
-        config_dir = os.path.join(dirs["abs_obj_dir"], "config")
+        config_dir = os.path.join(dirs['abs_obj_dir'], 'config')
         env = self.query_bootstrap_env()
-        return self._make(target=["export"], cwd=config_dir, env=env)
+        return self._make(target=['export'], cwd=config_dir, env=env)
 
     def _copy_mozconfig(self):
         """copies the mozconfig file into abs_src_dir/.mozconfig
-        and logs the content
+           and logs the content
         """
         config = self.config
         dirs = self.query_abs_dirs()
         src = get_mozconfig_path(self, config, dirs)
-        dst = os.path.join(dirs["abs_src_dir"], ".mozconfig")
+        dst = os.path.join(dirs['abs_src_dir'], '.mozconfig')
         self.copyfile(src, dst)
         self.read_from_file(dst, verbose=True)
 
     def _mach(self, target, env, halt_on_failure=True, output_parser=None):
         dirs = self.query_abs_dirs()
         mach = self._get_mach_executable()
-        return self.run_command(
-            mach + target,
-            halt_on_failure=True,
-            env=env,
-            cwd=dirs["abs_src_dir"],
-            output_parser=None,
-        )
+        return self.run_command(mach + target,
+                                halt_on_failure=True,
+                                env=env,
+                                cwd=dirs['abs_src_dir'],
+                                output_parser=None)
 
     def _mach_configure(self):
         """calls mach configure"""
@@ -252,86 +230,73 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         return self._mach(target=target, env=env)
 
     def _get_mach_executable(self):
-        return [sys.executable, "mach"]
+        return [sys.executable, 'mach']
 
     def _get_make_executable(self):
         config = self.config
         dirs = self.query_abs_dirs()
-        if config.get("enable_mozmake"):  # e.g. windows
-            make = r"/".join([dirs["abs_src_dir"], "mozmake.exe"])
+        if config.get('enable_mozmake'):  # e.g. windows
+            make = r"/".join([dirs['abs_src_dir'], 'mozmake.exe'])
             # mysterious subprocess errors, let's try to fix this path...
-            make = make.replace("\\", "/")
+            make = make.replace('\\', '/')
             make = [make]
         else:
-            make = ["make"]
+            make = ['make']
         return make
 
-    def _make(
-        self,
-        target,
-        cwd,
-        env,
-        error_list=MakefileErrorList,
-        halt_on_failure=True,
-        output_parser=None,
-    ):
+    def _make(self, target, cwd, env, error_list=MakefileErrorList,
+              halt_on_failure=True, output_parser=None):
         """Runs make. Returns the exit code"""
         make = self._get_make_executable()
         if target:
             make = make + target
-        return self.run_command(
-            make,
-            cwd=cwd,
-            env=env,
-            error_list=error_list,
-            halt_on_failure=halt_on_failure,
-            output_parser=output_parser,
-        )
+        return self.run_command(make,
+                                cwd=cwd,
+                                env=env,
+                                error_list=error_list,
+                                halt_on_failure=halt_on_failure,
+                                output_parser=output_parser)
 
-    def _get_output_from_make(
-        self, target, cwd, env, halt_on_failure=True, ignore_errors=False
-    ):
+    def _get_output_from_make(self, target, cwd, env, halt_on_failure=True, ignore_errors=False):
         """runs make and returns the output of the command"""
         make = self._get_make_executable()
-        return self.get_output_from_command(
-            make + target,
-            cwd=cwd,
-            env=env,
-            silent=True,
-            halt_on_failure=halt_on_failure,
-            ignore_errors=ignore_errors,
-        )
+        return self.get_output_from_command(make + target,
+                                            cwd=cwd,
+                                            env=env,
+                                            silent=True,
+                                            halt_on_failure=halt_on_failure,
+                                            ignore_errors=ignore_errors)
 
     def make_unpack_en_US(self):
         """wrapper for make unpack"""
         config = self.config
         dirs = self.query_abs_dirs()
         env = self.query_bootstrap_env()
-        cwd = os.path.join(dirs["abs_obj_dir"], config["locales_dir"])
+        cwd = os.path.join(dirs['abs_obj_dir'], config['locales_dir'])
         return self._make(target=["unpack"], cwd=cwd, env=env)
 
     def make_wget_en_US(self):
         """wrapper for make wget-en-US"""
         env = self.query_bootstrap_env()
         dirs = self.query_abs_dirs()
-        cwd = dirs["abs_locales_dir"]
+        cwd = dirs['abs_locales_dir']
         return self._make(target=["wget-en-US"], cwd=cwd, env=env)
 
     def make_upload(self, locale):
         """wrapper for make upload command"""
         env = self.query_l10n_env()
         dirs = self.query_abs_dirs()
-        target = ["upload", "AB_CD=%s" % (locale)]
-        cwd = dirs["abs_locales_dir"]
-        parser = MakeUploadOutputParser(config=self.config, log_obj=self.log_obj)
-        retval = self._make(
-            target=target, cwd=cwd, env=env, halt_on_failure=False, output_parser=parser
-        )
+        target = ['upload', 'AB_CD=%s' % (locale)]
+        cwd = dirs['abs_locales_dir']
+        parser = MakeUploadOutputParser(config=self.config,
+                                        log_obj=self.log_obj)
+        retval = self._make(target=target, cwd=cwd, env=env,
+                            halt_on_failure=False, output_parser=parser)
         if retval == SUCCESS:
-            self.info("Upload successful (%s)" % locale)
+            self.info('Upload successful (%s)' % locale)
             ret = SUCCESS
         else:
-            self.error("failed to upload %s" % locale)
+            self.error('failed to upload %s' % locale)
             ret = FAILURE
 
         if ret == FAILURE:
@@ -347,25 +312,17 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
             target_path = os.path.join(upload_target, locale)
             self.mkdir_p(target_path)
             glob_name = "*.%s.*" % locale
-            matches = (
-                glob.glob(os.path.join(upload_target, glob_name))
-                + glob.glob(os.path.join(upload_target, "update", glob_name))
-                + glob.glob(os.path.join(upload_target, "*", "xpi", glob_name))
-                + glob.glob(os.path.join(upload_target, "install", "sea", glob_name))
-                + glob.glob(os.path.join(upload_target, "setup.exe"))
-                + glob.glob(os.path.join(upload_target, "setup-stub.exe"))
-            )
-            targets_exts = [
-                "tar.bz2",
-                "dmg",
-                "langpack.xpi",
-                "checksums",
-                "zip",
-                "installer.exe",
-                "installer-stub.exe",
-            ]
+            matches = (glob.glob(os.path.join(upload_target, glob_name)) +
+                       glob.glob(os.path.join(upload_target, 'update', glob_name)) +
+                       glob.glob(os.path.join(upload_target, '*', 'xpi', glob_name)) +
+                       glob.glob(os.path.join(upload_target, 'install', 'sea', glob_name)) +
+                       glob.glob(os.path.join(upload_target, 'setup.exe')) +
+                       glob.glob(os.path.join(upload_target, 'setup-stub.exe')))
+            targets_exts = ["tar.bz2", "dmg", "langpack.xpi",
+                            "checksums", "zip",
+                            "installer.exe", "installer-stub.exe"]
             targets = [(".%s" % (ext,), "target.%s" % (ext,)) for ext in targets_exts]
-            targets.extend([(f, f) for f in ("setup.exe", "setup-stub.exe")])
+            targets.extend([(f, f) for f in ('setup.exe', 'setup-stub.exe')])
             for f in matches:
                 possible_targets = [
                     (tail, target_file)
@@ -378,10 +335,10 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
                     targets.remove(possible_targets[0])
                 else:
                     # wasn't valid (or already matched)
-                    raise RuntimeError(
-                        "Unexpected matching file name encountered: %s" % f
-                    )
-                self.move(os.path.join(f), os.path.join(target_path, target_file))
+                    raise RuntimeError("Unexpected matching file name encountered: %s"
+                                       % f)
+                self.move(os.path.join(f),
+                          os.path.join(target_path, target_file))
             self.log("Converted uploads for %s to simple names" % locale)
         return ret
 
@@ -390,22 +347,18 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         # created during locale generation, but we can grab them by echoing the
         # UPLOAD_FILES variable for each locale.
         env = self.query_l10n_env()
-        target = [
-            "echo-variable-UPLOAD_FILES",
-            "echo-variable-CHECKSUM_FILES",
-            "AB_CD=%s" % locale,
-        ]
+        target = ['echo-variable-UPLOAD_FILES', 'echo-variable-CHECKSUM_FILES',
+                  'AB_CD=%s' % locale]
         dirs = self.query_abs_dirs()
-        cwd = dirs["abs_locales_dir"]
+        cwd = dirs['abs_locales_dir']
         # Bug 1242771 - echo-variable-UPLOAD_FILES via mozharness fails when stderr is found
         #    we should ignore stderr as unfortunately it's expected when parsing for values
-        output = self._get_output_from_make(
-            target=target, cwd=cwd, env=env, ignore_errors=True
-        )
+        output = self._get_output_from_make(target=target, cwd=cwd, env=env,
+                                            ignore_errors=True)
         self.info('UPLOAD_FILES is "%s"' % output)
         files = shlex.split(output)
         if not files:
-            self.error("failed to get upload file list for locale %s" % locale)
+            self.error('failed to get upload file list for locale %s' % locale)
             return FAILURE
 
         self.upload_files[locale] = [
@@ -416,18 +369,17 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
     def make_installers(self, locale):
         """wrapper for make installers-(locale)"""
         env = self.query_l10n_env()
-        env["PYTHONIOENCODING"] = "utf-8"
+        env['PYTHONIOENCODING'] = 'utf-8'
         self._copy_mozconfig()
         dirs = self.query_abs_dirs()
-        cwd = os.path.join(dirs["abs_locales_dir"])
-        target = [
-            "installers-%s" % locale,
-        ]
-        return self._make(target=target, cwd=cwd, env=env, halt_on_failure=False)
+        cwd = os.path.join(dirs['abs_locales_dir'])
+        target = ["installers-%s" % locale, ]
+        return self._make(target=target, cwd=cwd,
+                          env=env, halt_on_failure=False)
 
     def repack_locale(self, locale):
         """wraps the logic for make installers and generating
-        complete updates."""
+           complete updates."""
 
         # run make installers
         if self.make_installers(locale) != SUCCESS:
@@ -455,12 +407,12 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
     def _get_tooltool_auth_file(self):
         # set the default authentication file based on platform; this
         # corresponds to where puppet puts the token
-        if "tooltool_authentication_file" in self.config:
-            fn = self.config["tooltool_authentication_file"]
+        if 'tooltool_authentication_file' in self.config:
+            fn = self.config['tooltool_authentication_file']
         elif self._is_windows():
-            fn = r"c:\builds\relengapi.tok"
+            fn = r'c:\builds\relengapi.tok'
         else:
-            fn = "/builds/relengapi.tok"
+            fn = '/builds/relengapi.tok'
 
         # if the file doesn't exist, don't pass it to tooltool (it will just
         # fail).  In taskcluster, this will work OK as the relengapi-proxy will
@@ -473,46 +425,43 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin, VCSMixin, BaseScript):
         env = self.query_bootstrap_env()
         config = self.config
         dirs = self.query_abs_dirs()
-        toolchains = os.environ.get("MOZ_TOOLCHAINS")
-        manifest_src = os.environ.get("TOOLTOOL_MANIFEST")
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
+        manifest_src = os.environ.get('TOOLTOOL_MANIFEST')
         if not manifest_src:
-            manifest_src = config.get("tooltool_manifest_src")
+            manifest_src = config.get('tooltool_manifest_src')
         if not manifest_src and not toolchains:
             return
         python = sys.executable
 
         cmd = [
-            python,
-            "-u",
-            os.path.join(dirs["abs_src_dir"], "mach"),
-            "artifact",
-            "toolchain",
-            "-v",
-            "--retry",
-            "4",
-            "--artifact-manifest",
-            os.path.join(dirs["abs_src_dir"], "toolchains.json"),
+            python, '-u',
+            os.path.join(dirs['abs_src_dir'], 'mach'),
+            'artifact',
+            'toolchain',
+            '-v',
+            '--retry', '4',
+            '--artifact-manifest',
+            os.path.join(dirs['abs_src_dir'], 'toolchains.json'),
         ]
         if manifest_src:
-            cmd.extend(
-                [
-                    "--tooltool-manifest",
-                    os.path.join(dirs["abs_src_dir"], manifest_src),
-                ]
-            )
+            cmd.extend([
+                '--tooltool-manifest',
+                os.path.join(dirs['abs_src_dir'], manifest_src),
+            ])
             auth_file = self._get_tooltool_auth_file()
             if auth_file and os.path.exists(auth_file):
-                cmd.extend(["--authentication-file", auth_file])
-        cache = config["bootstrap_env"].get("TOOLTOOL_CACHE")
+                cmd.extend(['--authentication-file', auth_file])
+        cache = config['bootstrap_env'].get('TOOLTOOL_CACHE')
         if cache:
-            cmd.extend(["--cache-dir", cache])
+            cmd.extend(['--cache-dir', cache])
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
-        self.run_command(cmd, cwd=dirs["abs_src_dir"], halt_on_failure=True, env=env)
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
+                         env=env)
 
 
 # main {{{
-if __name__ == "__main__":
+if __name__ == '__main__':
     single_locale = DesktopSingleLocale()
     single_locale.run_and_exit()

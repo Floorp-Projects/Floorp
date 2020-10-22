@@ -1,1 +1,1 @@
-HOST_RUST_PROGRAMS += ["some"]
+HOST_RUST_PROGRAMS += ['some']

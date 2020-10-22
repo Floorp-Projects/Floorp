@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "dom-mutation-breakpoints.js",
-    "index.js",
-    "targets.js",
+    'dom-mutation-breakpoints.js',
+    'index.js',
+    'targets.js',
 )
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Framework")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Framework')

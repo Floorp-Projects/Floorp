@@ -5,86 +5,86 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "accessibility",
-    "addon",
-    "compatibility",
-    "descriptors",
-    "emulation",
-    "highlighters",
-    "inspector",
-    "network-monitor",
-    "object",
-    "resources",
-    "targets",
-    "utils",
-    "watcher",
-    "webconsole",
-    "worker",
+    'accessibility',
+    'addon',
+    'compatibility',
+    'descriptors',
+    'emulation',
+    'highlighters',
+    'inspector',
+    'network-monitor',
+    'object',
+    'resources',
+    'targets',
+    'utils',
+    'watcher',
+    'webconsole',
+    'worker',
 ]
 
 DevToolsModules(
-    "animation-type-longhand.js",
-    "animation.js",
-    "array-buffer.js",
-    "breakpoint.js",
-    "changes.js",
-    "common.js",
-    "css-properties.js",
-    "device.js",
-    "environment.js",
-    "errordocs.js",
-    "frame.js",
-    "framerate.js",
-    "heap-snapshot-file.js",
-    "highlighters.css",
-    "highlighters.js",
-    "layout.js",
-    "manifest.js",
-    "memory.js",
-    "object.js",
-    "pause-scoped.js",
-    "perf.js",
-    "performance-recording.js",
-    "performance.js",
-    "preference.js",
-    "process.js",
-    "reflow.js",
-    "root.js",
-    "screenshot.js",
-    "source.js",
-    "storage.js",
-    "string.js",
-    "styles.js",
-    "stylesheets.js",
-    "thread.js",
-    "watcher.js",
-    "webbrowser.js",
-    "webconsole.js",
+    'animation-type-longhand.js',
+    'animation.js',
+    'array-buffer.js',
+    'breakpoint.js',
+    'changes.js',
+    'common.js',
+    'css-properties.js',
+    'device.js',
+    'environment.js',
+    'errordocs.js',
+    'frame.js',
+    'framerate.js',
+    'heap-snapshot-file.js',
+    'highlighters.css',
+    'highlighters.js',
+    'layout.js',
+    'manifest.js',
+    'memory.js',
+    'object.js',
+    'pause-scoped.js',
+    'perf.js',
+    'performance-recording.js',
+    'performance.js',
+    'preference.js',
+    'process.js',
+    'reflow.js',
+    'root.js',
+    'screenshot.js',
+    'source.js',
+    'storage.js',
+    'string.js',
+    'styles.js',
+    'stylesheets.js',
+    'thread.js',
+    'watcher.js',
+    'webbrowser.js',
+    'webconsole.js',
 )
 
-with Files("animation.js"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Animations")
+with Files('animation.js'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Animations')
 
-with Files("breakpoint.js"):
-    BUG_COMPONENT = ("DevTools", "Debugger")
+with Files('breakpoint.js'):
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
-with Files("css-properties.js"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Rules")
+with Files('css-properties.js'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
 
-with Files("memory.js"):
-    BUG_COMPONENT = ("DevTools", "Memory")
+with Files('memory.js'):
+    BUG_COMPONENT = ('DevTools', 'Memory')
 
-with Files("performance*"):
-    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
+with Files('performance*'):
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
 
-with Files("source.js"):
-    BUG_COMPONENT = ("DevTools", "Debugger")
+with Files('source.js'):
+    BUG_COMPONENT = ('DevTools', 'Debugger')
 
-with Files("storage.js"):
-    BUG_COMPONENT = ("DevTools", "Storage Inspector")
+with Files('storage.js'):
+    BUG_COMPONENT = ('DevTools', 'Storage Inspector')
 
-with Files("stylesheets.js"):
-    BUG_COMPONENT = ("DevTools", "Style Editor")
+with Files('stylesheets.js'):
+    BUG_COMPONENT = ('DevTools', 'Style Editor')
 
-with Files("webconsole.js"):
-    BUG_COMPONENT = ("DevTools", "Console")
+with Files('webconsole.js'):
+    BUG_COMPONENT = ('DevTools', 'Console')

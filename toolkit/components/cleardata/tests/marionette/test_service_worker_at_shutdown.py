@@ -17,9 +17,7 @@ class ServiceWorkerAtShutdownTestCase(MarionetteTestCase):
         super(ServiceWorkerAtShutdownTestCase, self).tearDown()
 
     def install_service_worker(self):
-        install_url = self.marionette.absolute_url(
-            "serviceworker/install_serviceworker.html"
-        )
+        install_url = self.marionette.absolute_url("serviceworker/install_serviceworker.html")
         self.marionette.navigate(install_url)
         Wait(self.marionette).until(lambda _: self.is_service_worker_registered)
 
@@ -33,8 +31,7 @@ class ServiceWorkerAtShutdownTestCase(MarionetteTestCase):
     @property
     def is_service_worker_registered(self):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script(
-                """
+            return self.marionette.execute_script("""
                 let serviceWorkerManager = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
                     Ci.nsIServiceWorkerManager
                 );
@@ -53,6 +50,4 @@ class ServiceWorkerAtShutdownTestCase(MarionetteTestCase):
                     }
                 }
                 return false;
-            """,
-                script_args=(self.marionette.absolute_url(""),),
-            )
+            """, script_args=(self.marionette.absolute_url(""),))

@@ -5,73 +5,73 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.a11y += [
-    "Accessible.h",
-    "DocAccessible.h",
-    "HyperTextAccessible.h",
-    "OuterDocAccessible.h",
+    'Accessible.h',
+    'DocAccessible.h',
+    'HyperTextAccessible.h',
+    'OuterDocAccessible.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Accessible.cpp",
-    "ApplicationAccessible.cpp",
-    "ARIAGridAccessible.cpp",
-    "BaseAccessibles.cpp",
-    "DocAccessible.cpp",
-    "FormControlAccessible.cpp",
-    "HyperTextAccessible.cpp",
-    "ImageAccessible.cpp",
-    "OuterDocAccessible.cpp",
-    "RootAccessible.cpp",
-    "TableAccessible.cpp",
-    "TableCellAccessible.cpp",
-    "TextLeafAccessible.cpp",
+    'Accessible.cpp',
+    'ApplicationAccessible.cpp',
+    'ARIAGridAccessible.cpp',
+    'BaseAccessibles.cpp',
+    'DocAccessible.cpp',
+    'FormControlAccessible.cpp',
+    'HyperTextAccessible.cpp',
+    'ImageAccessible.cpp',
+    'OuterDocAccessible.cpp',
+    'RootAccessible.cpp',
+    'TableAccessible.cpp',
+    'TableCellAccessible.cpp',
+    'TextLeafAccessible.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/accessible/base",
-    "/accessible/html",
-    "/accessible/xpcom",
-    "/accessible/xul",
-    "/dom/base",
-    "/dom/xul",
-    "/layout/generic",
-    "/layout/xul",
+    '/accessible/base',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/dom/base',
+    '/dom/xul',
+    '/layout/generic',
+    '/layout/xul',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
+        '/accessible/ipc/win',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
+        '/accessible/ipc/other',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
-        "/accessible/atk",
+        '/accessible/atk',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/accessible/windows/ia2",
-        "/accessible/windows/msaa",
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/accessible/mac",
+        '/accessible/mac',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/accessible/android",
+        '/accessible/android',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/other",
+        '/accessible/other',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

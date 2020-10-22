@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "console-api.js",
-    "console-file-activity.js",
-    "console-reflow.js",
-    "console-service.js",
-    "content-process.js",
-    "document-events.js",
+    'console-api.js',
+    'console-file-activity.js',
+    'console-reflow.js',
+    'console-service.js',
+    'content-process.js',
+    'document-events.js',
 )

@@ -8,15 +8,15 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-Library("browsercomps")
-FINAL_LIBRARY = "xul"
+Library('browsercomps')
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../about",
-    "../migration",
-    "../sessionstore",
-    "../shell",
+    '../about',
+    '../migration',
+    '../sessionstore',
+    '../shell',
 ]

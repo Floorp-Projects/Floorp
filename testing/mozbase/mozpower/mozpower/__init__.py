@@ -21,13 +21,13 @@ from .powerbase import IPGExecutableMissingError, PlatformUnsupportedError
 
 
 __all__ = [
-    "IPGEmptyFileError",
-    "IPGExecutableMissingError",
-    "IPGMissingOutputFileError",
-    "IPGTimeoutError",
-    "IPGUnknownValueTypeError",
-    "MissingProcessorInfoError",
-    "MozPower",
-    "OsCpuComboMissingError",
-    "PlatformUnsupportedError",
+    'IPGEmptyFileError',
+    'IPGExecutableMissingError',
+    'IPGMissingOutputFileError',
+    'IPGTimeoutError',
+    'IPGUnknownValueTypeError',
+    'MissingProcessorInfoError',
+    'MozPower',
+    'OsCpuComboMissingError',
+    'PlatformUnsupportedError',
 ]

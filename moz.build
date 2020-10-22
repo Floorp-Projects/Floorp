@@ -4,199 +4,199 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("AUTHORS"):
-    BUG_COMPONENT = ("mozilla.org", "Licensing")
+with Files('AUTHORS'):
+    BUG_COMPONENT = ('mozilla.org', 'Licensing')
 
-with Files("LICENSE"):
-    BUG_COMPONENT = ("mozilla.org", "Licensing")
+with Files('LICENSE'):
+    BUG_COMPONENT = ('mozilla.org', 'Licensing')
 
-with Files("aclocal.m4"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('aclocal.m4'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("Cargo.*"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('Cargo.*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("client.*"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('client.*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("CLOBBER"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('CLOBBER'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("*configure*"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('*configure*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files("docs/**"):
     BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
-    SCHEDULES.exclusive = ["docs"]
+    SCHEDULES.exclusive = ['docs']
 
-with Files("mach"):
-    BUG_COMPONENT = ("Firefox Build System", "Mach Core")
+with Files('mach'):
+    BUG_COMPONENT = ('Firefox Build System', 'Mach Core')
 
-with Files("*moz*"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('*moz*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("GNUmakefile"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('GNUmakefile'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("*gradle*"):
-    BUG_COMPONENT = ("GeckoView", "General")
-    SCHEDULES.exclusive = ["android"]
+with Files('*gradle*'):
+    BUG_COMPONENT = ('GeckoView', 'General')
+    SCHEDULES.exclusive = ['android']
 
-with Files("*.json"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('*.json'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files("**/l10n.toml"):
-    BUG_COMPONENT = ("Core", "Localization")
+with Files('**/l10n.toml'):
+    BUG_COMPONENT = ('Core', 'Localization')
     FINAL = True
 
-with Files("README.txt"):
-    BUG_COMPONENT = ("Core", "General")
+with Files('README.txt'):
+    BUG_COMPONENT = ('Core', 'General')
 
 with Files("nsprpub/**"):
     BUG_COMPONENT = ("NSPR", "NSPR")
 
-with Files("**/Makefile.in"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('**/Makefile.in'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
     FINAL = True
 
 with Files("**/*.rst"):
-    SCHEDULES.inclusive += ["docs"]
+    SCHEDULES.inclusive += ['docs']
 
 with Files("**/*.md"):
-    SCHEDULES.inclusive += ["docs"]
+    SCHEDULES.inclusive += ['docs']
 
 with Files("**/*.rs"):
-    SCHEDULES.inclusive += ["rusttests"]
+    SCHEDULES.inclusive += ['rusttests']
 
 with Files("**/reftest.list"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["reftest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['reftest']
 
 with Files("**/reftest-qr.list"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["reftest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['reftest']
 
 with Files("**/crashtest*.list"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["crashtest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['crashtest']
 
 with Files("**/a11y.ini"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["mochitest-a11y"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest-a11y']
 
 with Files("**/mochitest.ini"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["mochitest-plain"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest-plain']
 
 with Files("**/browser.ini"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["mochitest-browser-chrome"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest-browser-chrome']
 
 with Files("**/test*/**browser_*"):
-    SCHEDULES.exclusive = ["mochitest-browser-chrome"]
+    SCHEDULES.exclusive = ['mochitest-browser-chrome']
 
 with Files("**/chrome.ini"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["mochitest-chrome"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest-chrome']
 
 with Files("**/xpcshell.ini"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["xpcshell"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['xpcshell']
 
 with Files("**/reftest*/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["reftest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['reftest']
 
 with Files("**/crashtest*/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["crashtest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['crashtest']
 
 with Files("**/mochitest*/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["mochitest"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest']
 
 with Files("**/xpcshell/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
-    SCHEDULES.exclusive = ["xpcshell"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['xpcshell']
 
 with Files("**/tests/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/test/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/unit/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/browser/tools/mozscreenshots/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/devtools/shared/test-helpers/**"):
-    SCHEDULES.inclusive += ["test-verify", "test-verify-gpu"]
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 CONFIGURE_SUBST_FILES += [
-    "config/autoconf.mk",
-    "config/emptyvars.mk",
+    'config/autoconf.mk',
+    'config/emptyvars.mk',
 ]
 
-if CONFIG["ENABLE_CLANG_PLUGIN"]:
-    DIRS += ["build/clang-plugin"]
+if CONFIG['ENABLE_CLANG_PLUGIN']:
+    DIRS += ['build/clang-plugin']
 
 DIRS += [
-    "build",
-    "config",
-    "python",
-    "testing",
-    "third_party/python",
+    'build',
+    'config',
+    'python',
+    'testing',
+    'third_party/python',
 ]
 
-if not CONFIG["JS_STANDALONE"]:
-    DIRS += ["taskcluster"]
+if not CONFIG['JS_STANDALONE']:
+    DIRS += ['taskcluster']
 
-if not CONFIG["JS_STANDALONE"] or not CONFIG["MOZ_BUILD_APP"]:
+if not CONFIG['JS_STANDALONE'] or not CONFIG['MOZ_BUILD_APP']:
     CONFIGURE_DEFINE_FILES += [
-        "mozilla-config.h",
+        'mozilla-config.h',
     ]
     EXPORTS += [
-        "!buildid.h",
-        "!mozilla-config.h",
-        "!source-repo.h",
+        '!buildid.h',
+        '!mozilla-config.h',
+        '!source-repo.h',
     ]
 
     GENERATED_FILES += [
-        "buildid.h",
-        "source-repo.h",
+        'buildid.h',
+        'source-repo.h',
     ]
 
-    GENERATED_FILES["buildid.h"].script = "build/variables.py:buildid_header"
-    GENERATED_FILES["source-repo.h"].script = "build/variables.py:source_repo_header"
+    GENERATED_FILES['buildid.h'].script = 'build/variables.py:buildid_header'
+    GENERATED_FILES['source-repo.h'].script = 'build/variables.py:source_repo_header'
 
 DIRS += [
-    "mfbt",
+    'mfbt',
 ]
 
-if CONFIG["MOZ_BUILD_APP"]:
+if CONFIG['MOZ_BUILD_APP']:
     # Bring in the configuration for the configured application.
-    include("/" + CONFIG["MOZ_BUILD_APP"] + "/app.mozbuild")
+    include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
 else:
-    include("/toolkit/toolkit.mozbuild")
+    include('/toolkit/toolkit.mozbuild')
 
-OBJDIR_PP_FILES[".cargo"] += [".cargo/config.in"]
+OBJDIR_PP_FILES['.cargo'] += ['.cargo/config.in']
 
-DEFINES["top_srcdir"] = TOPSRCDIR
+DEFINES['top_srcdir'] = TOPSRCDIR
 
-SPHINX_TREES["contributing"] = "docs/contributing"
+SPHINX_TREES['contributing'] = 'docs/contributing'
 
-SPHINX_TREES["code-quality"] = "docs/code-quality"
+SPHINX_TREES['code-quality'] = 'docs/code-quality'
 
-SPHINX_TREES["testing-rust-code"] = "docs/testing-rust-code"
+SPHINX_TREES['testing-rust-code'] = 'docs/testing-rust-code'
 
-SPHINX_TREES["writing-rust-code"] = "docs/writing-rust-code"
+SPHINX_TREES['writing-rust-code'] = 'docs/writing-rust-code'
 
-SPHINX_TREES["bug-mgmt"] = "docs/bug-mgmt"
+SPHINX_TREES['bug-mgmt'] = 'docs/bug-mgmt'
 
-SPHINX_TREES["setup"] = "docs/setup"
+SPHINX_TREES['setup'] = 'docs/setup'
 
-SPHINX_TREES["crash-reporting"] = "docs/crash-reporting"
+SPHINX_TREES['crash-reporting'] = 'docs/crash-reporting'
 
-include("build/templates.mozbuild")
+include('build/templates.mozbuild')

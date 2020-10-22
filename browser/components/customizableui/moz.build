@@ -5,23 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "content",
+    'content',
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 TESTING_JS_MODULES += [
-    "test/CustomizableUITestUtils.jsm",
+    'test/CustomizableUITestUtils.jsm',
 ]
 
 EXTRA_JS_MODULES += [
-    "CustomizableUI.jsm",
-    "CustomizableWidgets.jsm",
-    "CustomizeMode.jsm",
-    "DragPositionManager.jsm",
-    "PanelMultiView.jsm",
-    "SearchWidgetTracker.jsm",
+    'CustomizableUI.jsm',
+    'CustomizableWidgets.jsm',
+    'CustomizeMode.jsm',
+    'DragPositionManager.jsm',
+    'PanelMultiView.jsm',
+    'SearchWidgetTracker.jsm',
 ]
 
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')

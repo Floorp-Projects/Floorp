@@ -54,34 +54,34 @@ def add_command_arguments(config, tasks):
                     )
                     upstream_artifact = "target.installer.exe"
                 else:
-                    upstream_label = (
-                        "repackage-signing-l10n-{locale}-{platform}/opt".format(
-                            locale=locale, platform=platform
-                        )
+                    upstream_label = "repackage-signing-l10n-{locale}-{platform}/opt".format(
+                        locale=locale, platform=platform
                     )
                     upstream_artifact = "{locale}/target.installer.exe".format(
                         locale=locale
                     )
                 if upstream_label not in config.kind_dependencies_tasks:
                     raise Exception(
-                        "Can't find upstream task for {} {}".format(platform, locale)
+                        "Can't find upstream task for {} {}".format(
+                            platform, locale
+                        )
                     )
                 upstream = config.kind_dependencies_tasks[upstream_label]
 
                 # set the dependencies to just what we need rather than all of l10n
                 dependencies.update({upstream.label: upstream.label})
 
-                fetches[upstream_label].add((upstream_artifact, stage_platform, locale))
+                fetches[upstream_label].add(
+                    (upstream_artifact, stage_platform, locale)
+                )
 
                 artifact_part = "{platform}/{locale}/target.installer.exe".format(
                     platform=stage_platform, locale=locale
                 )
-                artifact = (
-                    "releng/partner/{partner}/{sub_partner}/{artifact_part}".format(
-                        partner=partner_config["campaign"],
-                        sub_partner=partner_config["content"],
-                        artifact_part=artifact_part,
-                    )
+                artifact = "releng/partner/{partner}/{sub_partner}/{artifact_part}".format(
+                    partner=partner_config["campaign"],
+                    sub_partner=partner_config["content"],
+                    artifact_part=artifact_part,
                 )
                 # config for script
                 # TODO - generalise input & output ??

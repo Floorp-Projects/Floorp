@@ -4,19 +4,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "Actor",
-    "Front",
+    'Actor',
+    'Front',
 ]
 
 DevToolsModules(
-    "Actor.js",
-    "Front.js",
-    "lazy-pool.js",
-    "Pool.js",
-    "Request.js",
-    "Response.js",
-    "types.js",
-    "utils.js",
+    'Actor.js',
+    'Front.js',
+    'lazy-pool.js',
+    'Pool.js',
+    'Request.js',
+    'Response.js',
+    'types.js',
+    'utils.js',
 )
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']

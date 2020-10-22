@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "nsi-console-listener-watcher.js",
+    'nsi-console-listener-watcher.js',
 )
 
-with Files("nsi-console-listener-watcher.js"):
-    BUG_COMPONENT = ("DevTools", "Console")
+with Files('nsi-console-listener-watcher.js'):
+    BUG_COMPONENT = ('DevTools', 'Console')

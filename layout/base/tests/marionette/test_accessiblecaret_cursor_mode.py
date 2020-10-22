@@ -22,30 +22,27 @@ from marionette_harness.marionette_test import (
 
 
 class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
-    """Test cases for AccessibleCaret under cursor mode.
+    '''Test cases for AccessibleCaret under cursor mode.
 
     We call the blinking cursor (nsCaret) as cursor, and call AccessibleCaret as
     caret for short.
 
-    """
-
+    '''
     # Element IDs.
-    _input_id = "input"
-    _input_padding_id = "input-padding"
-    _textarea_id = "textarea"
-    _textarea_one_line_id = "textarea-one-line"
-    _contenteditable_id = "contenteditable"
+    _input_id = 'input'
+    _input_padding_id = 'input-padding'
+    _textarea_id = 'textarea'
+    _textarea_one_line_id = 'textarea-one-line'
+    _contenteditable_id = 'contenteditable'
 
     # Test html files.
-    _cursor_html = "layout/test_carets_cursor.html"
+    _cursor_html = 'layout/test_carets_cursor.html'
 
     def setUp(self):
         # Code to execute before every test is running.
         super(AccessibleCaretCursorModeTestCase, self).setUp()
-        self.caret_tested_pref = "layout.accessiblecaret.enabled"
-        self.hide_carets_for_mouse = (
-            "layout.accessiblecaret.hide_carets_for_mouse_input"
-        )
+        self.caret_tested_pref = 'layout.accessiblecaret.enabled'
+        self.hide_carets_for_mouse = 'layout.accessiblecaret.hide_carets_for_mouse_input'
         self.prefs = {
             self.caret_tested_pref: True,
             self.hide_carets_for_mouse: False,
@@ -67,7 +64,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         target_content = sel.content
         target_content = target_content[:1] + content_to_add + target_content[1:]
 
@@ -83,9 +80,8 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         el.tap(cursor0_x, cursor0_y)
 
         # Move first caret.
-        self.actions.flick(
-            el, first_caret0_x, first_caret0_y, first_caret1_x, first_caret1_y
-        ).perform()
+        self.actions.flick(el, first_caret0_x, first_caret0_y,
+                           first_caret1_x, first_caret1_y).perform()
 
         self.actions.send_keys(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
@@ -97,7 +93,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         target_content = sel.content + content_to_add
 
         # Tap the front of the input to make first caret appear.
@@ -107,7 +103,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
 
         # Move first caret to the bottom-right corner of the element.
         src_x, src_y = sel.first_caret_location()
-        dest_x, dest_y = el.rect["width"], el.rect["height"]
+        dest_x, dest_y = el.rect['width'], el.rect['height']
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
         self.actions.send_keys(content_to_add).perform()
@@ -120,7 +116,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         target_content = content_to_add + sel.content
 
         # Get first caret location at the front.
@@ -147,7 +143,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         non_target_content = content_to_add + sel.content + string.ascii_letters
 
         el.tap()
@@ -177,7 +173,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         non_target_content = sel.content + content_to_add
 
         # Goal: the cursor position is not changed after dragging the caret down
@@ -196,13 +192,11 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     @parameterized(_input_padding_id, el_id=_input_padding_id)
     @parameterized(_textarea_one_line_id, el_id=_textarea_one_line_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
-    def test_caret_not_jump_to_front_when_dragging_up_to_editable_content_boundary(
-        self, el_id
-    ):
+    def test_caret_not_jump_to_front_when_dragging_up_to_editable_content_boundary(self, el_id):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         non_target_content = content_to_add + sel.content
 
         # Goal: the cursor position is not changed after dragging the caret down
@@ -219,24 +213,24 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.assertNotEqual(non_target_content, sel.content)
 
     def test_drag_caret_from_front_to_end_across_columns(self):
-        self.open_test_html("layout/test_carets_columns.html")
-        el = self.marionette.find_element(By.ID, "columns-inner")
+        self.open_test_html('layout/test_carets_columns.html')
+        el = self.marionette.find_element(By.ID, 'columns-inner')
         sel = SelectionManager(el)
-        content_to_add = "!"
+        content_to_add = '!'
         target_content = sel.content + content_to_add
 
         # Goal: the cursor position can be changed by dragging the caret from
         # the front to the end of the content.
 
         # Tap to make the cursor appear.
-        before_image_1 = self.marionette.find_element(By.ID, "before-image-1")
+        before_image_1 = self.marionette.find_element(By.ID, 'before-image-1')
         before_image_1.tap()
 
         # Tap the front of the content to make first caret appear.
         sel.move_cursor_to_front()
         el.tap(*sel.cursor_location())
         src_x, src_y = sel.first_caret_location()
-        dest_x, dest_y = el.rect["width"], el.rect["height"]
+        dest_x, dest_y = el.rect['width'], el.rect['height']
 
         # Drag the first caret to the bottom-right corner of the element.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
@@ -248,8 +242,8 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, self._contenteditable_id)
         sel = SelectionManager(el)
-        content_to_add_1 = "!"
-        content_to_add_2 = "\n\n"
+        content_to_add_1 = '!'
+        content_to_add_2 = '\n\n'
         target_content = content_to_add_1 + content_to_add_2 + sel.content
 
         # Goal: the cursor position can be changed by dragging the caret from
@@ -263,7 +257,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         dest_x, dest_y = sel.first_caret_location()
 
         # Append new line to the front of the content.
-        el.send_keys(content_to_add_2)
+        el.send_keys(content_to_add_2);
 
         # Tap to make first caret appear.
         el.tap()

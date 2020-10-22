@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Temporarily disabled. See bug 1256495.
-# test_certificates = (
+#test_certificates = (
 #    'ca.pem',
 #    'ee_int-v1-BC-cA.pem',
 #    'ee_int-v1-BC-not-cA.pem',
@@ -55,7 +55,7 @@
 #    'ss-v4-BC-cA.pem',
 #    'ss-v4-BC-not-cA.pem',
 #    'ss-v4-noBC.pem',
-# )
+#)
 #
-# for test_certificate in test_certificates:
+#for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)

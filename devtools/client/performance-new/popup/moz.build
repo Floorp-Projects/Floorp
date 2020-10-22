@@ -4,10 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "background.jsm.js",
-    "menu-button.jsm.js",
-    "panel.jsm.js",
+    'background.jsm.js',
+    'menu-button.jsm.js',
+    'panel.jsm.js',
 )
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

@@ -10,29 +10,31 @@ from .attributes import keymatch
 
 # platform family is extracted from build platform by taking the alphabetic prefix
 # and then translating win -> windows
-_platform_re = re.compile(r"^[a-z]*")
-_renames = {"win": "windows"}
+_platform_re = re.compile(r'^[a-z]*')
+_renames = {
+    'win': 'windows'
+}
 
 
 _archive_formats = {
-    "linux": ".tar.bz2",
-    "macosx": ".tar.gz",
-    "windows": ".zip",
+    'linux': '.tar.bz2',
+    'macosx': '.tar.gz',
+    'windows': '.zip',
 }
 
 _executable_extension = {
-    "linux": "",
-    "macosx": "",
-    "windows": ".exe",
+    'linux': '',
+    'macosx': '',
+    'windows': '.exe',
 }
 
 _architectures = {
-    r"linux\b.*": "x86",
-    r"linux64\b.*": "x86_64",
-    r"macosx64\b.*": "x86_64",
-    r"win32\b.*": "x86",
-    r"win64\b(?!-aarch64).*": "x86_64",
-    r"win64-aarch64\b.*": "aarch64",
+    r'linux\b.*': 'x86',
+    r'linux64\b.*': 'x86_64',
+    r'macosx64\b.*': 'x86_64',
+    r'win32\b.*': 'x86',
+    r'win64\b(?!-aarch64).*': 'x86_64',
+    r'win64-aarch64\b.*': 'aarch64',
 }
 
 
@@ -56,6 +58,4 @@ def architecture(build_platform):
     matches = keymatch(_architectures, build_platform)
     if len(matches) == 1:
         return matches[0]
-    raise Exception(
-        "Could not determine architecture of platform `{}`.".format(build_platform)
-    )
+    raise Exception("Could not determine architecture of platform `{}`.".format(build_platform))

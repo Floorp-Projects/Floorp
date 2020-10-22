@@ -5,38 +5,38 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "mozHunspell.cpp",
-    "mozHunspellFileMgrHost.cpp",
-    "RemoteSpellCheckEngineChild.cpp",
-    "RemoteSpellCheckEngineParent.cpp",
+    'mozHunspell.cpp',
+    'mozHunspellFileMgrHost.cpp',
+    'RemoteSpellCheckEngineChild.cpp',
+    'RemoteSpellCheckEngineParent.cpp',
 ]
 
-DEFINES["HUNSPELL_STATIC"] = True
+DEFINES['HUNSPELL_STATIC'] = True
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../src",
-    "/dom/base",
-    "/extensions/spellcheck/src",
+    '../src',
+    '/dom/base',
+    '/extensions/spellcheck/src',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
-include("common.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
+include('common.mozbuild')
 
 HunspellIncludes()
 
 IPDL_SOURCES = [
-    "PRemoteSpellcheckEngine.ipdl",
+    'PRemoteSpellcheckEngine.ipdl',
 ]
 
 EXPORTS.mozilla += [
-    "RemoteSpellCheckEngineChild.h",
-    "RemoteSpellCheckEngineParent.h",
+     'RemoteSpellCheckEngineChild.h',
+     'RemoteSpellCheckEngineParent.h',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [
         # We force-include mozHunspellAllocator.h from third-party code.
-        "-Wno-undefined-var-template",
+        '-Wno-undefined-var-template',
     ]

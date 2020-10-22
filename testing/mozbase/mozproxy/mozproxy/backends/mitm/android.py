@@ -12,7 +12,10 @@ from subprocess import PIPE
 
 import mozinfo
 from mozproxy.backends.mitm.mitm import Mitmproxy
-from mozproxy.utils import download_file_from_url, tooltool_download, LOG
+from mozproxy.utils import (
+    download_file_from_url,
+    tooltool_download,
+    LOG)
 
 # path for mitmproxy certificate, generated auto after mitmdump is started
 # on local machine it is 'HOME', however it is different on production machines
@@ -51,8 +54,8 @@ class MitmproxyAndroid(Mitmproxy):
             # when running locally, it is found in the Firefox desktop build (..obj../dist/bin)
             self.certutil_path = os.path.join(os.environ["MOZ_HOST_BIN"], "certutil")
             if not (
-                os.path.isfile(self.certutil_path)
-                and os.access(self.certutil_path, os.X_OK)
+                    os.path.isfile(self.certutil_path)
+                    and os.access(self.certutil_path, os.X_OK)
             ):
                 raise Exception(
                     "Abort: unable to execute certutil: {}".format(self.certutil_path)

@@ -47,75 +47,75 @@ def get_contents(path):
     return contents
 
 
-def get_version(product_dir="browser"):
-    version_path = os.path.join(GECKO, product_dir, "config", "version_display.txt")
+def get_version(product_dir='browser'):
+    version_path = os.path.join(GECKO, product_dir, 'config',
+                                'version_display.txt')
     return get_contents(version_path)
 
 
-def get_app_version(product_dir="browser"):
-    app_version_path = os.path.join(GECKO, product_dir, "config", "version.txt")
+def get_app_version(product_dir='browser'):
+    app_version_path = os.path.join(GECKO, product_dir, 'config',
+                                    'version.txt')
     return get_contents(app_version_path)
 
 
-base_schema = Schema(
-    {
-        Required("app_version"): text_type,
-        Required("backstop"): bool,
-        Required("base_repository"): text_type,
-        Required("build_date"): int,
-        Required("build_number"): int,
-        Inclusive("comm_base_repository", "comm"): text_type,
-        Inclusive("comm_head_ref", "comm"): text_type,
-        Inclusive("comm_head_repository", "comm"): text_type,
-        Inclusive("comm_head_rev", "comm"): text_type,
-        Required("do_not_optimize"): [text_type],
-        Required("existing_tasks"): {text_type: text_type},
-        Required("filters"): [text_type],
-        Required("head_ref"): text_type,
-        Required("head_repository"): text_type,
-        Required("head_rev"): text_type,
-        Required("hg_branch"): text_type,
-        Required("level"): text_type,
-        Required("message"): text_type,
-        Required("moz_build_date"): text_type,
-        Required("next_version"): Any(None, text_type),
-        Required("optimize_strategies"): Any(None, text_type),
-        Required("optimize_target_tasks"): bool,
-        Required("owner"): text_type,
-        Required("phabricator_diff"): Any(None, text_type),
-        Required("project"): text_type,
-        Required("pushdate"): int,
-        Required("pushlog_id"): text_type,
-        Required("release_enable_emefree"): bool,
-        Required("release_enable_partner_repack"): bool,
-        Required("release_enable_partner_attribution"): bool,
-        Required("release_eta"): Any(None, text_type),
-        Required("release_history"): {text_type: dict},
-        Required("release_partners"): Any(None, [text_type]),
-        Required("release_partner_config"): Any(None, dict),
-        Required("release_partner_build_number"): int,
-        Required("release_type"): text_type,
-        Required("release_product"): Any(None, text_type),
-        Required("required_signoffs"): [text_type],
-        Required("signoff_urls"): dict,
-        # target-kind is not included, since it should never be
-        # used at run-time
-        Required("target_tasks_method"): text_type,
-        Required("tasks_for"): text_type,
-        Required("test_manifest_loader"): text_type,
-        Required("try_mode"): Any(None, text_type),
-        Required("try_options"): Any(None, dict),
-        Required("try_task_config"): dict,
-        Required("version"): text_type,
-    }
-)
+base_schema = Schema({
+    Required('app_version'): text_type,
+    Required('backstop'): bool,
+    Required('base_repository'): text_type,
+    Required('build_date'): int,
+    Required('build_number'): int,
+    Inclusive('comm_base_repository', 'comm'): text_type,
+    Inclusive('comm_head_ref', 'comm'): text_type,
+    Inclusive('comm_head_repository', 'comm'): text_type,
+    Inclusive('comm_head_rev', 'comm'): text_type,
+    Required('do_not_optimize'): [text_type],
+    Required('existing_tasks'): {text_type: text_type},
+    Required('filters'): [text_type],
+    Required('head_ref'): text_type,
+    Required('head_repository'): text_type,
+    Required('head_rev'): text_type,
+    Required('hg_branch'): text_type,
+    Required('level'): text_type,
+    Required('message'): text_type,
+    Required('moz_build_date'): text_type,
+    Required('next_version'): Any(None, text_type),
+    Required('optimize_strategies'): Any(None, text_type),
+    Required('optimize_target_tasks'): bool,
+    Required('owner'): text_type,
+    Required('phabricator_diff'): Any(None, text_type),
+    Required('project'): text_type,
+    Required('pushdate'): int,
+    Required('pushlog_id'): text_type,
+    Required('release_enable_emefree'): bool,
+    Required('release_enable_partner_repack'): bool,
+    Required('release_enable_partner_attribution'): bool,
+    Required('release_eta'): Any(None, text_type),
+    Required('release_history'): {text_type: dict},
+    Required('release_partners'): Any(None, [text_type]),
+    Required('release_partner_config'): Any(None, dict),
+    Required('release_partner_build_number'): int,
+    Required('release_type'): text_type,
+    Required('release_product'): Any(None, text_type),
+    Required('required_signoffs'): [text_type],
+    Required('signoff_urls'): dict,
+    # target-kind is not included, since it should never be
+    # used at run-time
+    Required('target_tasks_method'): text_type,
+    Required('tasks_for'): text_type,
+    Required('test_manifest_loader'): text_type,
+    Required('try_mode'): Any(None, text_type),
+    Required('try_options'): Any(None, dict),
+    Required('try_task_config'): dict,
+    Required('version'): text_type,
+})
 
 
 COMM_PARAMETERS = [
-    "comm_base_repository",
-    "comm_head_ref",
-    "comm_head_repository",
-    "comm_head_rev",
+    'comm_base_repository',
+    'comm_head_ref',
+    'comm_head_repository',
+    'comm_head_rev',
 ]
 
 
@@ -149,57 +149,55 @@ class Parameters(ReadOnlyDict):
         seconds_from_epoch = int((now - epoch).total_seconds())
 
         defaults = {
-            "app_version": get_app_version(),
-            "backstop": False,
-            "base_repository": "https://hg.mozilla.org/mozilla-unified",
-            "build_date": seconds_from_epoch,
-            "build_number": 1,
-            "do_not_optimize": [],
-            "existing_tasks": {},
-            "filters": ["target_tasks_method"],
-            "head_ref": get_head_ref(),
-            "head_repository": "https://hg.mozilla.org/mozilla-central",
-            "head_rev": get_head_ref(),
-            "hg_branch": "default",
-            "level": "3",
-            "message": "",
-            "moz_build_date": six.ensure_text(now.strftime("%Y%m%d%H%M%S")),
-            "next_version": None,
-            "optimize_strategies": None,
-            "optimize_target_tasks": True,
-            "owner": "nobody@mozilla.com",
-            "phabricator_diff": None,
-            "project": "mozilla-central",
-            "pushdate": seconds_from_epoch,
-            "pushlog_id": "0",
-            "release_enable_emefree": False,
-            "release_enable_partner_repack": False,
-            "release_enable_partner_attribution": False,
-            "release_eta": "",
-            "release_history": {},
-            "release_partners": [],
-            "release_partner_config": None,
-            "release_partner_build_number": 1,
-            "release_product": None,
-            "release_type": "nightly",
-            "required_signoffs": [],
-            "signoff_urls": {},
-            "target_tasks_method": "default",
-            "tasks_for": "hg-push",
-            "test_manifest_loader": "default",
-            "try_mode": None,
-            "try_options": None,
-            "try_task_config": {},
-            "version": get_version(),
+            'app_version': get_app_version(),
+            'backstop': False,
+            'base_repository': 'https://hg.mozilla.org/mozilla-unified',
+            'build_date': seconds_from_epoch,
+            'build_number': 1,
+            'do_not_optimize': [],
+            'existing_tasks': {},
+            'filters': ['target_tasks_method'],
+            'head_ref': get_head_ref(),
+            'head_repository': 'https://hg.mozilla.org/mozilla-central',
+            'head_rev': get_head_ref(),
+            'hg_branch': 'default',
+            'level': '3',
+            'message': '',
+            'moz_build_date': six.ensure_text(now.strftime("%Y%m%d%H%M%S")),
+            'next_version': None,
+            'optimize_strategies': None,
+            'optimize_target_tasks': True,
+            'owner': 'nobody@mozilla.com',
+            'phabricator_diff': None,
+            'project': 'mozilla-central',
+            'pushdate': seconds_from_epoch,
+            'pushlog_id': '0',
+            'release_enable_emefree': False,
+            'release_enable_partner_repack': False,
+            'release_enable_partner_attribution': False,
+            'release_eta': '',
+            'release_history': {},
+            'release_partners': [],
+            'release_partner_config': None,
+            'release_partner_build_number': 1,
+            'release_product': None,
+            'release_type': 'nightly',
+            'required_signoffs': [],
+            'signoff_urls': {},
+            'target_tasks_method': 'default',
+            'tasks_for': 'hg-push',
+            'test_manifest_loader': 'default',
+            'try_mode': None,
+            'try_options': None,
+            'try_task_config': {},
+            'version': get_version(),
         }
 
         if set(COMM_PARAMETERS) & set(kwargs):
-            defaults.update(
-                {
-                    "comm_base_repository": "https://hg.mozilla.org/comm-central",
-                    "comm_head_repository": "https://hg.mozilla.org/comm-central",
-                }
-            )
+            defaults.update({
+                'comm_base_repository': 'https://hg.mozilla.org/comm-central',
+                'comm_head_repository': 'https://hg.mozilla.org/comm-central',
+            })
 
         for name, default in defaults.items():
             if name not in kwargs:
@@ -208,10 +206,8 @@ class Parameters(ReadOnlyDict):
         return kwargs
 
     def check(self):
-        schema = (
-            base_schema if self.strict else base_schema.extend({}, extra=ALLOW_EXTRA)
-        )
-        validate_schema(schema, self.copy(), "Invalid parameters:")
+        schema = base_schema if self.strict else base_schema.extend({}, extra=ALLOW_EXTRA)
+        validate_schema(schema, self.copy(), 'Invalid parameters:')
 
     def __getitem__(self, k):
         try:
@@ -224,7 +220,7 @@ class Parameters(ReadOnlyDict):
         Determine whether this graph is being built on a try project or for
         `mach try fuzzy`.
         """
-        return "try" in self["project"] or self["try_mode"] == "try_select"
+        return 'try' in self['project'] or self['try_mode'] == 'try_select'
 
     def file_url(self, path, pretty=False):
         """
@@ -236,16 +232,16 @@ class Parameters(ReadOnlyDict):
             file, or the raw file version.
         :return text_type: The URL displaying the given path.
         """
-        if path.startswith("comm/"):
-            path = path[len("comm/") :]
-            repo = self["comm_head_repository"]
-            rev = self["comm_head_rev"]
+        if path.startswith('comm/'):
+            path = path[len('comm/'):]
+            repo = self['comm_head_repository']
+            rev = self['comm_head_rev']
         else:
-            repo = self["head_repository"]
-            rev = self["head_rev"]
+            repo = self['head_repository']
+            rev = self['head_rev']
 
-        endpoint = "file" if pretty else "raw-file"
-        return "{}/{}/{}/{}".format(repo, endpoint, rev, path)
+        endpoint = 'file' if pretty else 'raw-file'
+        return '{}/{}/{}/{}'.format(repo, endpoint, rev, path)
 
     def release_level(self):
         """
@@ -253,7 +249,7 @@ class Parameters(ReadOnlyDict):
 
         :return six.text_type: One of "production" or "staging".
         """
-        return release_level(self["project"])
+        return release_level(self['project'])
 
 
 def load_parameters_file(filename, strict=True, overrides=None, trust_domain=None):
@@ -295,15 +291,15 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
             task_id = find_task_id(index)
 
         if task_id:
-            filename = get_artifact_url(task_id, "public/parameters.yml")
+            filename = get_artifact_url(task_id, 'public/parameters.yml')
         logger.info("Loading parameters from {}".format(filename))
         resp = requests.get(filename, stream=True)
         resp.raise_for_status()
         f = resp.raw
 
-    if filename.endswith(".yml"):
+    if filename.endswith('.yml'):
         kwargs = yaml.load_stream(f)
-    elif filename.endswith(".json"):
+    elif filename.endswith('.json'):
         kwargs = json.load(f)
     else:
         raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))
@@ -323,5 +319,4 @@ def parameters_loader(filename, strict=True, overrides=None):
         )
         parameters.check()
         return parameters
-
     return get_parameters

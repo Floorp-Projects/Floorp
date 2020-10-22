@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Security")
+with Files('**'):
+  BUG_COMPONENT = ('Firefox', 'Security')
 
 EXTRA_JS_MODULES += [
-    "DoHConfig.jsm",
-    "DoHController.jsm",
-    "DoHHeuristics.jsm",
-    "TRRPerformance.jsm",
+  'DoHConfig.jsm',
+  'DoHController.jsm',
+  'DoHHeuristics.jsm',
+  'TRRPerformance.jsm',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']

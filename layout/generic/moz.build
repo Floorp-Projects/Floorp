@@ -4,284 +4,280 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("nsBlock*"):
+with Files('nsBlock*'):
     # Parts of these files are really Layout: Floats
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("Block*"):
+with Files('Block*'):
     # Parts of these files are really Layout: Floats
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("nsColumn*"):
-    BUG_COMPONENT = ("Core", "Layout: Columns")
+with Files('nsColumn*'):
+    BUG_COMPONENT = ('Core', 'Layout: Columns')
 
-with Files("Column*"):
-    BUG_COMPONENT = ("Core", "Layout: Columns")
+with Files('Column*'):
+    BUG_COMPONENT = ('Core', 'Layout: Columns')
 
-with Files("nsLine*"):
+with Files('nsLine*'):
     # Parts of these files are really Layout: Floats
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("nsInlineFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+with Files('nsInlineFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("BRFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+with Files('BRFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("WBRFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+with Files('WBRFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("nsBulletFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+with Files('nsBulletFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("nsFirstLetterFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
+with Files('nsFirstLetterFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
-with Files("MathML*"):
-    BUG_COMPONENT = ("Core", "MathML")
+with Files('MathML*'):
+    BUG_COMPONENT = ('Core', 'MathML')
 
-with Files("Text*"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+with Files('Text*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 
-with Files("nsText*"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+with Files('nsText*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 
-with Files("nsFrameSetFrame*"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+with Files('nsFrameSetFrame*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 
-with Files("nsSubDocumentFrame*"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+with Files('nsSubDocumentFrame*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 
-with Files("nsFlex*"):
-    BUG_COMPONENT = ("Core", "Layout: Flexbox")
+with Files('nsFlex*'):
+    BUG_COMPONENT = ('Core', 'Layout: Flexbox')
 
-with Files("nsFloatManager.*"):
-    BUG_COMPONENT = ("Core", "Layout: Floats")
+with Files('nsFloatManager.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Floats')
 
-with Files("nsIntervalSet.*"):
-    BUG_COMPONENT = ("Core", "Layout: Floats")
+with Files('nsIntervalSet.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Floats')
 
-with Files("nsGrid*"):
-    BUG_COMPONENT = ("Core", "Layout: Grid")
+with Files('nsGrid*'):
+    BUG_COMPONENT = ('Core', 'Layout: Grid')
 
-with Files("nsHTMLCanvasFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+with Files('nsHTMLCanvasFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 
-with Files("nsImage*"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+with Files('nsImage*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 
-with Files("nsAbsoluteContainingBlock.*"):
-    BUG_COMPONENT = ("Core", "Layout: Positioned")
+with Files('nsAbsoluteContainingBlock.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 
-with Files("Sticky*"):
-    BUG_COMPONENT = ("Core", "Layout: Positioned")
+with Files('Sticky*'):
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 
-with Files("nsRuby*"):
-    BUG_COMPONENT = ("Core", "Layout: Ruby")
+with Files('nsRuby*'):
+    BUG_COMPONENT = ('Core', 'Layout: Ruby')
 
-with Files("Ruby*"):
-    BUG_COMPONENT = ("Core", "Layout: Ruby")
+with Files('Ruby*'):
+    BUG_COMPONENT = ('Core', 'Layout: Ruby')
 
-with Files("*Scroll*"):
-    BUG_COMPONENT = ("Core", "Layout: Scrolling and Overflow")
+with Files('*Scroll*'):
+    BUG_COMPONENT = ('Core', 'Layout: Scrolling and Overflow')
 
-with Files("nsFont*"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+with Files('nsFont*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 
-with Files("nsPluginFrame.*"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
+with Files('nsPluginFrame.*'):
+    BUG_COMPONENT = ('Core', 'Plug-ins')
 
-with Files("nsVideoFrame.*"):
-    BUG_COMPONENT = ("Core", "Audio/Video")
+with Files('nsVideoFrame.*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS += [
-    "JustificationUtils.h",
-    "nsAtomicContainerFrame.h",
-    "nsCanvasFrame.h",
-    "nsContainerFrame.h",
-    "nsDirection.h",
-    "nsFrameList.h",
-    "nsFrameSelection.h",
-    "nsFrameState.h",
-    "nsFrameStateBits.h",
-    "nsHTMLParts.h",
-    "nsIAnonymousContentCreator.h",
-    "nsIFrame.h",
-    "nsIFrameInlines.h",
-    "nsILineIterator.h",
-    "nsIObjectFrame.h",
-    "nsIScrollableFrame.h",
-    "nsIScrollPositionListener.h",
-    "nsIStatefulFrame.h",
-    "nsLineBox.h",
-    "nsPageSequenceFrame.h",
-    "nsPlaceholderFrame.h",
-    "nsPluginFrame.h",
-    "nsQueryFrame.h",
-    "nsRubyBaseContainerFrame.h",
-    "nsRubyBaseFrame.h",
-    "nsRubyFrame.h",
-    "nsRubyTextContainerFrame.h",
-    "nsRubyTextFrame.h",
-    "nsSplittableFrame.h",
-    "nsSubDocumentFrame.h",
-    "nsTextFrame.h",
-    "nsTextFrameUtils.h",
-    "nsTextRunTransformations.h",
-    "RubyUtils.h",
-    "ScrollAnimationBezierPhysics.h",
-    "ScrollAnimationMSDPhysics.h",
-    "ScrollAnimationPhysics.h",
-    "ScrollbarActivity.h",
-    "ScrollSnap.h",
-    "TextDrawTarget.h",
-    "Visibility.h",
+    'JustificationUtils.h',
+    'nsAtomicContainerFrame.h',
+    'nsCanvasFrame.h',
+    'nsContainerFrame.h',
+    'nsDirection.h',
+    'nsFrameList.h',
+    'nsFrameSelection.h',
+    'nsFrameState.h',
+    'nsFrameStateBits.h',
+    'nsHTMLParts.h',
+    'nsIAnonymousContentCreator.h',
+    'nsIFrame.h',
+    'nsIFrameInlines.h',
+    'nsILineIterator.h',
+    'nsIObjectFrame.h',
+    'nsIScrollableFrame.h',
+    'nsIScrollPositionListener.h',
+    'nsIStatefulFrame.h',
+    'nsLineBox.h',
+    'nsPageSequenceFrame.h',
+    'nsPlaceholderFrame.h',
+    'nsPluginFrame.h',
+    'nsQueryFrame.h',
+    'nsRubyBaseContainerFrame.h',
+    'nsRubyBaseFrame.h',
+    'nsRubyFrame.h',
+    'nsRubyTextContainerFrame.h',
+    'nsRubyTextFrame.h',
+    'nsSplittableFrame.h',
+    'nsSubDocumentFrame.h',
+    'nsTextFrame.h',
+    'nsTextFrameUtils.h',
+    'nsTextRunTransformations.h',
+    'RubyUtils.h',
+    'ScrollAnimationBezierPhysics.h',
+    'ScrollAnimationMSDPhysics.h',
+    'ScrollAnimationPhysics.h',
+    'ScrollbarActivity.h',
+    'ScrollSnap.h',
+    'TextDrawTarget.h',
+    'Visibility.h',
 ]
 
 EXPORTS.mozilla += [
-    "!FrameIdList.h",
-    "!FrameTypeList.h",
-    "AnonymousContentKey.h",
-    "AspectRatio.h",
-    "AutoCopyListener.h",
-    "ColumnUtils.h",
-    "CSSAlignUtils.h",
-    "CSSOrderAwareFrameIterator.h",
-    "LayoutMessageUtils.h",
-    "PrintedSheetFrame.h",
-    "ReflowInput.h",
-    "ReflowOutput.h",
-    "ScrollbarPreferences.h",
-    "ScrollOrigin.h",
-    "ScrollPositionUpdate.h",
-    "ViewportFrame.h",
-    "WritingModes.h",
+    '!FrameIdList.h',
+    '!FrameTypeList.h',
+    'AnonymousContentKey.h',
+    'AspectRatio.h',
+    'AutoCopyListener.h',
+    'ColumnUtils.h',
+    'CSSAlignUtils.h',
+    'CSSOrderAwareFrameIterator.h',
+    'LayoutMessageUtils.h',
+    'PrintedSheetFrame.h',
+    'ReflowInput.h',
+    'ReflowOutput.h',
+    'ScrollbarPreferences.h',
+    'ScrollOrigin.h',
+    'ScrollPositionUpdate.h',
+    'ViewportFrame.h',
+    'WritingModes.h',
 ]
 
 EXPORTS.mozilla.layout += [
-    "FrameChildList.h",
-    "ScrollAnchorContainer.h",
+    'FrameChildList.h',
+    'ScrollAnchorContainer.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BlockReflowInput.cpp",
-    "BRFrame.cpp",
-    "ColumnSetWrapperFrame.cpp",
-    "ColumnUtils.cpp",
-    "CSSAlignUtils.cpp",
-    "CSSOrderAwareFrameIterator.cpp",
-    "DetailsFrame.cpp",
-    "FrameChildList.cpp",
-    "MathMLTextRunFactory.cpp",
-    "nsAbsoluteContainingBlock.cpp",
-    "nsBackdropFrame.cpp",
-    "nsBlockFrame.cpp",
-    "nsBlockReflowContext.cpp",
-    "nsBulletFrame.cpp",
-    "nsCanvasFrame.cpp",
-    "nsColumnSetFrame.cpp",
-    "nsContainerFrame.cpp",
-    "nsFirstLetterFrame.cpp",
-    "nsFlexContainerFrame.cpp",
-    "nsFloatManager.cpp",
-    "nsFontInflationData.cpp",
-    "nsFrameList.cpp",
-    "nsFrameSelection.cpp",
-    "nsFrameSetFrame.cpp",
-    "nsFrameState.cpp",
-    "nsGfxScrollFrame.cpp",
-    "nsGridContainerFrame.cpp",
-    "nsHTMLCanvasFrame.cpp",
-    "nsIFrame.cpp",
-    "nsImageFrame.cpp",
-    "nsImageMap.cpp",
-    "nsInlineFrame.cpp",
-    "nsIntervalSet.cpp",
-    "nsLeafFrame.cpp",
-    "nsLineBox.cpp",
-    "nsLineLayout.cpp",
-    "nsPageContentFrame.cpp",
-    "nsPageFrame.cpp",
-    "nsPageSequenceFrame.cpp",
-    "nsPlaceholderFrame.cpp",
-    "nsRubyBaseContainerFrame.cpp",
-    "nsRubyBaseFrame.cpp",
-    "nsRubyContentFrame.cpp",
-    "nsRubyFrame.cpp",
-    "nsRubyTextContainerFrame.cpp",
-    "nsRubyTextFrame.cpp",
-    "nsSplittableFrame.cpp",
-    "nsSubDocumentFrame.cpp",
-    "nsTextFrame.cpp",
-    "nsTextFrameUtils.cpp",
-    "nsTextRunTransformations.cpp",
-    "nsVideoFrame.cpp",
-    "PrintedSheetFrame.cpp",
-    "ReflowInput.cpp",
-    "ReflowOutput.cpp",
-    "RubyUtils.cpp",
-    "ScrollAnchorContainer.cpp",
-    "ScrollAnimationBezierPhysics.cpp",
-    "ScrollAnimationMSDPhysics.cpp",
-    "ScrollbarActivity.cpp",
-    "ScrollPositionUpdate.cpp",
-    "ScrollSnap.cpp",
-    "ScrollVelocityQueue.cpp",
-    "StickyScrollContainer.cpp",
-    "TextOverflow.cpp",
-    "ViewportFrame.cpp",
-    "WBRFrame.cpp",
+    'BlockReflowInput.cpp',
+    'BRFrame.cpp',
+    'ColumnSetWrapperFrame.cpp',
+    'ColumnUtils.cpp',
+    'CSSAlignUtils.cpp',
+    'CSSOrderAwareFrameIterator.cpp',
+    'DetailsFrame.cpp',
+    'FrameChildList.cpp',
+    'MathMLTextRunFactory.cpp',
+    'nsAbsoluteContainingBlock.cpp',
+    'nsBackdropFrame.cpp',
+    'nsBlockFrame.cpp',
+    'nsBlockReflowContext.cpp',
+    'nsBulletFrame.cpp',
+    'nsCanvasFrame.cpp',
+    'nsColumnSetFrame.cpp',
+    'nsContainerFrame.cpp',
+    'nsFirstLetterFrame.cpp',
+    'nsFlexContainerFrame.cpp',
+    'nsFloatManager.cpp',
+    'nsFontInflationData.cpp',
+    'nsFrameList.cpp',
+    'nsFrameSelection.cpp',
+    'nsFrameSetFrame.cpp',
+    'nsFrameState.cpp',
+    'nsGfxScrollFrame.cpp',
+    'nsGridContainerFrame.cpp',
+    'nsHTMLCanvasFrame.cpp',
+    'nsIFrame.cpp',
+    'nsImageFrame.cpp',
+    'nsImageMap.cpp',
+    'nsInlineFrame.cpp',
+    'nsIntervalSet.cpp',
+    'nsLeafFrame.cpp',
+    'nsLineBox.cpp',
+    'nsLineLayout.cpp',
+    'nsPageContentFrame.cpp',
+    'nsPageFrame.cpp',
+    'nsPageSequenceFrame.cpp',
+    'nsPlaceholderFrame.cpp',
+    'nsRubyBaseContainerFrame.cpp',
+    'nsRubyBaseFrame.cpp',
+    'nsRubyContentFrame.cpp',
+    'nsRubyFrame.cpp',
+    'nsRubyTextContainerFrame.cpp',
+    'nsRubyTextFrame.cpp',
+    'nsSplittableFrame.cpp',
+    'nsSubDocumentFrame.cpp',
+    'nsTextFrame.cpp',
+    'nsTextFrameUtils.cpp',
+    'nsTextRunTransformations.cpp',
+    'nsVideoFrame.cpp',
+    'PrintedSheetFrame.cpp',
+    'ReflowInput.cpp',
+    'ReflowOutput.cpp',
+    'RubyUtils.cpp',
+    'ScrollAnchorContainer.cpp',
+    'ScrollAnimationBezierPhysics.cpp',
+    'ScrollAnimationMSDPhysics.cpp',
+    'ScrollbarActivity.cpp',
+    'ScrollPositionUpdate.cpp',
+    'ScrollSnap.cpp',
+    'ScrollVelocityQueue.cpp',
+    'StickyScrollContainer.cpp',
+    'TextOverflow.cpp',
+    'ViewportFrame.cpp',
+    'WBRFrame.cpp'
 ]
 
 # nsPluginFrame.cpp needs to be built separately because of name clashes in the OS X headers.
 SOURCES += [
-    "nsPluginFrame.cpp",
+    'nsPluginFrame.cpp',
 ]
 
-GeneratedFile(
-    "FrameIdList.h",
-    script="GenerateFrameLists.py",
-    entry_point="generate_frame_id_list_h",
-    inputs=["FrameClasses.py"],
-)
-GeneratedFile(
-    "FrameTypeList.h",
-    script="GenerateFrameLists.py",
-    entry_point="generate_frame_type_list_h",
-    inputs=["FrameClasses.py"],
-)
+GeneratedFile('FrameIdList.h',
+              script='GenerateFrameLists.py',
+              entry_point='generate_frame_id_list_h',
+              inputs=['FrameClasses.py'])
+GeneratedFile('FrameTypeList.h',
+              script='GenerateFrameLists.py',
+              entry_point='generate_frame_type_list_h',
+              inputs=['FrameClasses.py'])
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../../dom/plugins/base",
-    "../base",
-    "../forms",
-    "../painting",
-    "../style",
-    "../tables",
-    "../xul",
-    "/docshell/base",
-    "/dom/base",
-    "/dom/html",
-    "/dom/xul",
+    '../../dom/plugins/base',
+    '../base',
+    '../forms',
+    '../painting',
+    '../style',
+    '../tables',
+    '../xul',
+    '/docshell/base',
+    '/dom/base',
+    '/dom/html',
+    '/dom/xul',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 CONTENT_ACCESSIBLE_FILES.html = [
-    "folder.png",
+    'folder.png',
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

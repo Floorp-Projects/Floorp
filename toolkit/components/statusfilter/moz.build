@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM: Navigation")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'DOM: Navigation')
 
 SOURCES += [
-    "nsBrowserStatusFilter.cpp",
+    'nsBrowserStatusFilter.cpp',
 ]
 
 EXPORTS += [
-    "nsBrowserStatusFilter.h",
+    'nsBrowserStatusFilter.h',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

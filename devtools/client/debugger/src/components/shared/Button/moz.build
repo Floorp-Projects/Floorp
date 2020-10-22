@@ -4,12 +4,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "styles",
+    'styles',
 ]
 
 CompiledModules(
-    "CloseButton.js",
-    "CommandBarButton.js",
-    "index.js",
-    "PaneToggleButton.js",
+    'CloseButton.js',
+    'CommandBarButton.js',
+    'index.js',
+    'PaneToggleButton.js',
 )
+

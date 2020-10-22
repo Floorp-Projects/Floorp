@@ -8,19 +8,21 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "MathML")
 
 EXPORTS.mozilla.dom += [
-    "MathMLElement.h",
+    'MathMLElement.h',
 ]
 
 UNIFIED_SOURCES += [
-    "MathMLElement.cpp",
-    "MathMLElementFactory.cpp",
+    'MathMLElement.cpp',
+    'MathMLElementFactory.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/base",
+    '/dom/base',
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += [
+    'tests/mochitest/mochitest.ini'
+]

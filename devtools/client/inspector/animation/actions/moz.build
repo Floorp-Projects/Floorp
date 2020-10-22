@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "animations.js",
-    "index.js",
+    'animations.js',
+    'index.js',
 )

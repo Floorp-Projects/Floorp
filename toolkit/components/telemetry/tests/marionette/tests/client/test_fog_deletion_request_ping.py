@@ -41,9 +41,7 @@ class TestDeletionRequestPing(FOGTestCase):
         let FOG = Components.classes["@mozilla.org/toolkit/glean;1"]
             .createInstance(Components.interfaces.nsIFOG);
         FOG.setTagPings("{}");
-        """.format(
-            debug_tag
-        )
+        """.format(debug_tag)
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script(textwrap.dedent(tagging_script))
         self.search_in_new_tab("python unittest")

@@ -13,14 +13,16 @@ from pathlib import Path
 
 
 def get_parser_options(moz_app_version):
-    app_version_major = moz_app_version.split(".", 1)[0]
+    app_version_major = moz_app_version.split('.', 1)[0]
     return {
         "allow_reserved": False,
-        "custom_is_expired": lambda expires: expires == "expired"
-        or expires != "never"
-        and int(expires) <= int(app_version_major),
-        "custom_validate_expires": lambda expires: expires in ("expired", "never")
-        or re.fullmatch(r"\d\d+", expires, flags=re.ASCII),
+        "custom_is_expired":
+            lambda expires:
+                expires == "expired" or expires != "never" and int(
+                    expires) <= int(app_version_major),
+        "custom_validate_expires":
+            lambda expires:
+                expires in ("expired", "never") or re.fullmatch(r"\d\d+", expires, flags=re.ASCII),
     }
 
 
@@ -48,5 +50,5 @@ def main(output_fd, _metrics_index, *args):
     rust.output_rust(all_objs.value, output_fd, options)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

@@ -87,9 +87,7 @@ def type_name(obj):
             if not len(getattr(obj, name)) and suffix == "Keys":
                 return class_name(obj.type) + "::<NoExtraKeys>"
             else:
-                return "{}::<{}>".format(
-                    class_name(obj.type), util.Camelize(obj.name) + suffix
-                )
+                return "{}::<{}>".format(class_name(obj.type), util.Camelize(obj.name) + suffix)
     return class_name(obj.type)
 
 
@@ -122,7 +120,7 @@ def output_rust(objs, output_fd, options={}):
     """
 
     # Monkeypatch a util.snake_case function for the templates to use
-    util.snake_case = lambda value: value.replace(".", "_").replace("-", "_")
+    util.snake_case = lambda value: value.replace('.', '_').replace('-', '_')
     # Monkeypatch util.get_jinja2_template to find templates nearby
 
     def get_local_template(template_name, filters=()):
@@ -160,19 +158,15 @@ def output_rust(objs, output_fd, options={}):
     # No particular order is required, but I have these in common_metric_data.rs
     # order just to be organized.
     common_metric_data_args = [
-        "name",
-        "category",
-        "send_in_pings",
-        "lifetime",
-        "disabled",
-        "dynamic_label",
+        'name',
+        'category',
+        'send_in_pings',
+        'lifetime',
+        'disabled',
+        'dynamic_label',
     ]
 
-    output_fd.write(
-        template.render(
-            all_objs=objs,
-            common_metric_data_args=common_metric_data_args,
-            extra_args=util.extra_args,
-        )
-    )
+    output_fd.write(template.render(
+        all_objs=objs, common_metric_data_args=common_metric_data_args,
+        extra_args=util.extra_args))
     output_fd.write("\n")

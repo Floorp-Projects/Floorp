@@ -33,40 +33,33 @@ from mozharness.mozilla.automation import TBPL_RETRY, TBPL_FAILURE, TBPL_WARNING
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
-    code_coverage_config_options,
+    code_coverage_config_options
 )
 
 
 scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__)))
-external_tools_path = os.path.join(scripts_path, "external_tools")
+external_tools_path = os.path.join(scripts_path, 'external_tools')
 
 TalosErrorList = PythonErrorList + [
-    {"regex": re.compile(r"""run-as: Package '.*' is unknown"""), "level": DEBUG},
-    {"substr": r"""FAIL: Graph server unreachable""", "level": CRITICAL},
-    {"substr": r"""FAIL: Busted:""", "level": CRITICAL},
-    {"substr": r"""FAIL: failed to cleanup""", "level": ERROR},
-    {"substr": r"""erfConfigurator.py: Unknown error""", "level": CRITICAL},
-    {"substr": r"""talosError""", "level": CRITICAL},
-    {
-        "regex": re.compile(r"""No machine_name called '.*' can be found"""),
-        "level": CRITICAL,
-    },
-    {
-        "substr": r"""No such file or directory: 'browser_output.txt'""",
-        "level": CRITICAL,
-        "explanation": "Most likely the browser failed to launch, or the test was otherwise "
-        "unsuccessful in even starting.",
-    },
+    {'regex': re.compile(r'''run-as: Package '.*' is unknown'''), 'level': DEBUG},
+    {'substr': r'''FAIL: Graph server unreachable''', 'level': CRITICAL},
+    {'substr': r'''FAIL: Busted:''', 'level': CRITICAL},
+    {'substr': r'''FAIL: failed to cleanup''', 'level': ERROR},
+    {'substr': r'''erfConfigurator.py: Unknown error''', 'level': CRITICAL},
+    {'substr': r'''talosError''', 'level': CRITICAL},
+    {'regex': re.compile(r'''No machine_name called '.*' can be found'''), 'level': CRITICAL},
+    {'substr': r"""No such file or directory: 'browser_output.txt'""",
+     'level': CRITICAL,
+     'explanation': "Most likely the browser failed to launch, or the test was otherwise "
+     "unsuccessful in even starting."},
 ]
 
 # TODO: check for running processes on script invocation
 
 
 class TalosOutputParser(OutputParser):
-    minidump_regex = re.compile(
-        r'''talosError: "error executing: '(\S+) (\S+) (\S+)'"'''
-    )
-    RE_PERF_DATA = re.compile(r".*PERFHERDER_DATA:\s+(\{.*\})")
+    minidump_regex = re.compile(r'''talosError: "error executing: '(\S+) (\S+) (\S+)'"''')
+    RE_PERF_DATA = re.compile(r'.*PERFHERDER_DATA:\s+(\{.*\})')
     worst_tbpl_status = TBPL_SUCCESS
 
     def __init__(self, **kwargs):
@@ -75,13 +68,15 @@ class TalosOutputParser(OutputParser):
         self.found_perf_data = []
 
     def update_worst_log_and_tbpl_levels(self, log_level, tbpl_level):
-        self.worst_log_level = self.worst_level(log_level, self.worst_log_level)
+        self.worst_log_level = self.worst_level(log_level,
+                                                self.worst_log_level)
         self.worst_tbpl_status = self.worst_level(
-            tbpl_level, self.worst_tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
+            tbpl_level, self.worst_tbpl_status,
+            levels=TBPL_WORST_LEVEL_TUPLE
         )
 
     def parse_single_line(self, line):
-        """In Talos land, every line that starts with RETURN: needs to be
+        """ In Talos land, every line that starts with RETURN: needs to be
         printed with a TinderboxPrint:"""
         if line.startswith("RETURN:"):
             line.replace("RETURN:", "TinderboxPrint:")
@@ -94,150 +89,106 @@ class TalosOutputParser(OutputParser):
             self.found_perf_data.append(m.group(1))
 
         # now let's check if we should retry
-        harness_retry_re = TinderBoxPrintRe["harness_error"]["retry_regex"]
+        harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
         if harness_retry_re.search(line):
-            self.critical(" %s" % line)
+            self.critical(' %s' % line)
             self.update_worst_log_and_tbpl_levels(CRITICAL, TBPL_RETRY)
             return  # skip base parse_single_line
         super(TalosOutputParser, self).parse_single_line(line)
 
 
-class Talos(
-    TestingMixin, MercurialScript, TooltoolMixin, Python3Virtualenv, CodeCoverageMixin
-):
+class Talos(TestingMixin, MercurialScript, TooltoolMixin,
+            Python3Virtualenv, CodeCoverageMixin):
     """
     install and run Talos tests
     """
-
-    config_options = (
-        [
-            [
-                ["--use-talos-json"],
-                {
-                    "action": "store_true",
-                    "dest": "use_talos_json",
-                    "default": False,
-                    "help": "Use talos config from talos.json",
-                },
-            ],
-            [
-                ["--suite"],
-                {
-                    "action": "store",
-                    "dest": "suite",
-                    "help": "Talos suite to run (from talos json)",
-                },
-            ],
-            [
-                ["--system-bits"],
-                {
-                    "action": "store",
-                    "dest": "system_bits",
-                    "type": "choice",
-                    "default": "32",
-                    "choices": ["32", "64"],
-                    "help": "Testing 32 or 64 (for talos json plugins)",
-                },
-            ],
-            [
-                ["--add-option"],
-                {
-                    "action": "extend",
-                    "dest": "talos_extra_options",
-                    "default": None,
-                    "help": "extra options to talos",
-                },
-            ],
-            [
-                ["--gecko-profile"],
-                {
-                    "dest": "gecko_profile",
-                    "action": "store_true",
-                    "default": False,
-                    "help": "Whether or not to profile the test run and save the profile results",
-                },
-            ],
-            [
-                ["--gecko-profile-interval"],
-                {
-                    "dest": "gecko_profile_interval",
-                    "type": "int",
-                    "default": 0,
-                    "help": "The interval between samples taken by the profiler (milliseconds)",
-                },
-            ],
-            [
-                ["--disable-e10s"],
-                {
-                    "dest": "e10s",
-                    "action": "store_false",
-                    "default": True,
-                    "help": "Run without multiple processes (e10s).",
-                },
-            ],
-            [
-                ["--enable-webrender"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_webrender",
-                    "default": False,
-                    "help": "Enable the WebRender compositor in Gecko.",
-                },
-            ],
-            [
-                ["--enable-fission"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_fission",
-                    "default": False,
-                    "help": "Enable Fission (site isolation) in Gecko.",
-                },
-            ],
-            [
-                ["--setpref"],
-                {
-                    "action": "append",
-                    "metavar": "PREF=VALUE",
-                    "dest": "extra_prefs",
-                    "default": [],
-                    "help": "Set a browser preference. May be used multiple times.",
-                },
-            ],
-        ]
-        + testing_config_options
-        + copy.deepcopy(code_coverage_config_options)
-    )
+    config_options = [
+        [["--use-talos-json"],
+         {"action": "store_true",
+          "dest": "use_talos_json",
+          "default": False,
+          "help": "Use talos config from talos.json"
+          }],
+        [["--suite"],
+         {"action": "store",
+          "dest": "suite",
+          "help": "Talos suite to run (from talos json)"
+          }],
+        [["--system-bits"],
+         {"action": "store",
+          "dest": "system_bits",
+          "type": "choice",
+          "default": "32",
+          "choices": ['32', '64'],
+          "help": "Testing 32 or 64 (for talos json plugins)"
+          }],
+        [["--add-option"],
+         {"action": "extend",
+          "dest": "talos_extra_options",
+          "default": None,
+          "help": "extra options to talos"
+          }],
+        [["--gecko-profile"], {
+            "dest": "gecko_profile",
+            "action": "store_true",
+            "default": False,
+            "help": "Whether or not to profile the test run and save the profile results"
+        }],
+        [["--gecko-profile-interval"], {
+            "dest": "gecko_profile_interval",
+            "type": "int",
+            "default": 0,
+            "help": "The interval between samples taken by the profiler (milliseconds)"
+        }],
+        [["--disable-e10s"], {
+            "dest": "e10s",
+            "action": "store_false",
+            "default": True,
+            "help": "Run without multiple processes (e10s)."
+        }],
+        [["--enable-webrender"], {
+            "action": "store_true",
+            "dest": "enable_webrender",
+            "default": False,
+            "help": "Enable the WebRender compositor in Gecko.",
+        }],
+        [["--enable-fission"], {
+            "action": "store_true",
+            "dest": "enable_fission",
+            "default": False,
+            "help": "Enable Fission (site isolation) in Gecko.",
+        }],
+        [["--setpref"], {
+            "action": "append",
+            "metavar": "PREF=VALUE",
+            "dest": "extra_prefs",
+            "default": [],
+            "help": "Set a browser preference. May be used multiple times.",
+         }],
+    ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):
-        kwargs.setdefault("config_options", self.config_options)
-        kwargs.setdefault(
-            "all_actions",
-            [
-                "clobber",
-                "download-and-extract",
-                "populate-webroot",
-                "create-virtualenv",
-                "install",
-                "run-tests",
-            ],
-        )
-        kwargs.setdefault(
-            "default_actions",
-            [
-                "clobber",
-                "download-and-extract",
-                "populate-webroot",
-                "create-virtualenv",
-                "install",
-                "run-tests",
-            ],
-        )
-        kwargs.setdefault("config", {})
+        kwargs.setdefault('config_options', self.config_options)
+        kwargs.setdefault('all_actions', ['clobber',
+                                          'download-and-extract',
+                                          'populate-webroot',
+                                          'create-virtualenv',
+                                          'install',
+                                          'run-tests',
+                                          ])
+        kwargs.setdefault('default_actions', ['clobber',
+                                              'download-and-extract',
+                                              'populate-webroot',
+                                              'create-virtualenv',
+                                              'install',
+                                              'run-tests',
+                                              ])
+        kwargs.setdefault('config', {})
         super(Talos, self).__init__(**kwargs)
 
-        self.workdir = self.query_abs_dirs()["abs_work_dir"]  # convenience
+        self.workdir = self.query_abs_dirs()['abs_work_dir']  # convenience
 
-        self.run_local = self.config.get("run_local")
+        self.run_local = self.config.get('run_local')
         self.installer_url = self.config.get("installer_url")
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
@@ -245,10 +196,9 @@ class Talos(
         self.repo_path = self.config.get("repo_path")
         self.obj_path = self.config.get("obj_path")
         self.tests = None
-        self.gecko_profile = self.config.get(
-            "gecko_profile"
-        ) or "--gecko-profile" in self.config.get("talos_extra_options", [])
-        self.gecko_profile_interval = self.config.get("gecko_profile_interval")
+        self.gecko_profile = self.config.get('gecko_profile') or \
+            "--gecko-profile" in self.config.get("talos_extra_options", [])
+        self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
         self.benchmark_zip = None
         self.webextensions_zip = None
@@ -261,10 +211,10 @@ class Talos(
         gecko_results = []
         # finally, if gecko_profile is set, we add that to the talos options
         if self.gecko_profile:
-            gecko_results.append("--gecko-profile")
+            gecko_results.append('--gecko-profile')
             if self.gecko_profile_interval:
                 gecko_results.extend(
-                    ["--gecko-profile-interval", str(self.gecko_profile_interval)]
+                    ['--gecko-profile-interval', str(self.gecko_profile_interval)]
                 )
         return gecko_results
 
@@ -272,12 +222,9 @@ class Talos(
         if self.abs_dirs:
             return self.abs_dirs
         abs_dirs = super(Talos, self).query_abs_dirs()
-        abs_dirs["abs_blob_upload_dir"] = os.path.join(
-            abs_dirs["abs_work_dir"], "blobber_upload_dir"
-        )
-        abs_dirs["abs_test_install_dir"] = os.path.join(
-            abs_dirs["abs_work_dir"], "tests"
-        )
+        abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+                                                       'blobber_upload_dir')
+        abs_dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
@@ -286,7 +233,7 @@ class Talos(
         if self.talos_json_config:
             return self.talos_json_config
         if not self.talos_json:
-            self.talos_json = os.path.join(self.talos_path, "talos.json")
+            self.talos_json = os.path.join(self.talos_path, 'talos.json')
         self.talos_json_config = parse_config_file(self.talos_json)
         self.info(pprint.pformat(self.talos_json_config))
         return self.talos_json_config
@@ -311,7 +258,7 @@ class Talos(
     def merge_paths(self, lhs, rhs):
         backtracks = 0
         for subdir in rhs:
-            if subdir == "..":
+            if subdir == '..':
                 backtracks += 1
             else:
                 break
@@ -322,21 +269,21 @@ class Talos(
         absolute paths containing domains derived from the original source's
         domain. This helps us better simulate real-world cases for fission
         """
-        if not filename.endswith(".html"):
+        if not filename.endswith('.html'):
             return
 
         directory_pieces = self.split_path(directory)
-        while directory_pieces and directory_pieces[0] != "fis":
+        while directory_pieces and directory_pieces[0] != 'fis':
             directory_pieces = directory_pieces[1:]
         path = os.path.join(directory, filename)
 
         # XXX: ugh, is there a better way to account for multiple encodings than just
         # trying each of them?
-        encodings = ["utf-8", "latin-1"]
+        encodings = ['utf-8', 'latin-1']
         iframe_pattern = re.compile(r'(iframe.*")(\.\./.*\.html)"')
         for encoding in encodings:
             try:
-                with io.open(path, "r", encoding=encoding) as f:
+                with io.open(path, 'r', encoding=encoding) as f:
                     content = f.read()
 
                 def replace_iframe_src(match):
@@ -345,18 +292,13 @@ class Talos(
                     merged = self.merge_paths(directory_pieces, split)
                     host = merged[3]
                     site_origin_hash = self.make_talos_domain(host)
-                    new_url = 'http://%s/%s"' % (
-                        site_origin_hash,
-                        string.join(merged, "/"),
-                    )
-                    self.info(
-                        "Replacing %s with %s in iframe inside %s"
-                        % (match.group(2), new_url, path)
-                    )
-                    return match.group(1) + new_url
+                    new_url = 'http://%s/%s"' % (site_origin_hash, string.join(merged, '/'))
+                    self.info("Replacing %s with %s in iframe inside %s" %
+                              (match.group(2), new_url, path))
+                    return (match.group(1) + new_url)
 
                 content = re.sub(iframe_pattern, replace_iframe_src, content)
-                with io.open(path, "w", encoding=encoding) as f:
+                with io.open(path, 'w', encoding=encoding) as f:
                     f.write(content)
                 break
             except UnicodeDecodeError:
@@ -369,10 +311,8 @@ class Talos(
         if self.pagesets_name:
             return self.pagesets_name
         if self.query_talos_json_config() and self.suite is not None:
-            self.pagesets_name = self.talos_json_config["suites"][self.suite].get(
-                "pagesets_name"
-            )
-            self.pagesets_name_manifest = "tp5n-pageset.manifest"
+            self.pagesets_name = self.talos_json_config['suites'][self.suite].get('pagesets_name')
+            self.pagesets_name_manifest = 'tp5n-pageset.manifest'
             return self.pagesets_name
 
     def query_benchmark_zip(self):
@@ -382,10 +322,8 @@ class Talos(
         if self.benchmark_zip:
             return self.benchmark_zip
         if self.query_talos_json_config() and self.suite is not None:
-            self.benchmark_zip = self.talos_json_config["suites"][self.suite].get(
-                "benchmark_zip"
-            )
-            self.benchmark_zip_manifest = "jetstream-benchmark.manifest"
+            self.benchmark_zip = self.talos_json_config['suites'][self.suite].get('benchmark_zip')
+            self.benchmark_zip_manifest = 'jetstream-benchmark.manifest'
             return self.benchmark_zip
 
     def query_webextensions_zip(self):
@@ -395,10 +333,9 @@ class Talos(
         if self.webextensions_zip:
             return self.webextensions_zip
         if self.query_talos_json_config() and self.suite is not None:
-            self.webextensions_zip = self.talos_json_config["suites"][self.suite].get(
-                "webextensions_zip"
-            )
-            self.webextensions_zip_manifest = "webextensions.manifest"
+            self.webextensions_zip = \
+                self.talos_json_config['suites'][self.suite].get('webextensions_zip')
+            self.webextensions_zip_manifest = 'webextensions.manifest'
             return self.webextensions_zip
 
     def get_suite_from_test(self):
@@ -407,18 +344,14 @@ class Talos(
         # find suite name
         suite_name = None
         if self.query_talos_json_config():
-            if "-a" in self.config["talos_extra_options"]:
-                test_name_index = self.config["talos_extra_options"].index("-a") + 1
-            if "--activeTests" in self.config["talos_extra_options"]:
-                test_name_index = (
-                    self.config["talos_extra_options"].index("--activeTests") + 1
-                )
-            if test_name_index < len(self.config["talos_extra_options"]):
-                test_name = self.config["talos_extra_options"][test_name_index]
-                for talos_suite in self.talos_json_config["suites"]:
-                    if test_name in self.talos_json_config["suites"][talos_suite].get(
-                        "tests"
-                    ):
+            if '-a' in self.config['talos_extra_options']:
+                test_name_index = self.config['talos_extra_options'].index('-a') + 1
+            if '--activeTests' in self.config['talos_extra_options']:
+                test_name_index = self.config['talos_extra_options'].index('--activeTests') + 1
+            if test_name_index < len(self.config['talos_extra_options']):
+                test_name = self.config['talos_extra_options'][test_name_index]
+                for talos_suite in self.talos_json_config['suites']:
+                    if test_name in self.talos_json_config['suites'][talos_suite].get('tests'):
                         suite_name = talos_suite
             if not suite_name:
                 # no suite found to contain the specified test, error out
@@ -430,16 +363,13 @@ class Talos(
     def validate_suite(self):
         """ Ensure suite name is a valid talos suite. """
         if self.query_talos_json_config() and self.suite is not None:
-            if self.suite not in self.talos_json_config.get("suites"):
-                self.fatal(
-                    "Suite '%s' is not valid (not found in talos json config)"
-                    % self.suite
-                )
+            if self.suite not in self.talos_json_config.get('suites'):
+                self.fatal("Suite '%s' is not valid (not found in talos json config)" % self.suite)
 
     def talos_options(self, args=None, **kw):
         """return options to talos"""
         # binary path
-        binary_path = self.binary_path or self.config.get("binary_path")
+        binary_path = self.binary_path or self.config.get('binary_path')
         if not binary_path:
             msg = """Talos requires a path to the binary.  You can specify binary_path or add
             download-and-extract to your action list."""
@@ -448,172 +378,144 @@ class Talos(
         # talos options
         options = []
         # talos can't gather data if the process name ends with '.exe'
-        if binary_path.endswith(".exe"):
+        if binary_path.endswith('.exe'):
             binary_path = binary_path[:-4]
         # options overwritten from **kw
-        kw_options = {"executablePath": binary_path}
-        if "suite" in self.config:
-            kw_options["suite"] = self.config["suite"]
-        if self.config.get("title"):
-            kw_options["title"] = self.config["title"]
+        kw_options = {'executablePath': binary_path}
+        if 'suite' in self.config:
+            kw_options['suite'] = self.config['suite']
+        if self.config.get('title'):
+            kw_options['title'] = self.config['title']
         if self.symbols_path:
-            kw_options["symbolsPath"] = self.symbols_path
+            kw_options['symbolsPath'] = self.symbols_path
 
         kw_options.update(kw)
         # talos expects tests to be in the format (e.g.) 'ts:tp5:tsvg'
-        tests = kw_options.get("activeTests")
+        tests = kw_options.get('activeTests')
         if tests and not isinstance(tests, basestring):
-            tests = ":".join(tests)  # Talos expects this format
-            kw_options["activeTests"] = tests
+            tests = ':'.join(tests)  # Talos expects this format
+            kw_options['activeTests'] = tests
         for key, value in kw_options.items():
-            options.extend(["--%s" % key, value])
+            options.extend(['--%s' % key, value])
         # configure profiling options
         options.extend(self.query_gecko_profile_options())
         # extra arguments
         if args is not None:
             options += args
-        if "talos_extra_options" in self.config:
-            options += self.config["talos_extra_options"]
-        if self.config.get("code_coverage", False):
-            options.extend(["--code-coverage"])
-        if self.config["extra_prefs"]:
-            options.extend(
-                ["--setpref={}".format(p) for p in self.config["extra_prefs"]]
-            )
-        if self.config["enable_webrender"]:
-            options.extend(["--enable-webrender"])
+        if 'talos_extra_options' in self.config:
+            options += self.config['talos_extra_options']
+        if self.config.get('code_coverage', False):
+            options.extend(['--code-coverage'])
+        if self.config['extra_prefs']:
+            options.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
+        if self.config['enable_webrender']:
+            options.extend(['--enable-webrender'])
         # enabling fission can come from the --enable-fission cmd line argument; or in CI
         # it comes from a taskcluster transform which adds a --setpref for fission.autostart
-        if (
-            self.config["enable_fission"]
-            or "fission.autostart=true" in self.config["extra_prefs"]
-        ):
-            options.extend(["--enable-fission"])
+        if self.config['enable_fission'] or "fission.autostart=true" in self.config['extra_prefs']:
+            options.extend(['--enable-fission'])
 
         return options
 
     def populate_webroot(self):
         """Populate the production test machines' webroots"""
         self.talos_path = os.path.join(
-            self.query_abs_dirs()["abs_test_install_dir"], "talos"
+            self.query_abs_dirs()['abs_test_install_dir'], 'talos'
         )
 
         # need to determine if talos pageset is required to be downloaded
-        if self.config.get("run_local") and "talos_extra_options" in self.config:
+        if self.config.get('run_local') and 'talos_extra_options' in self.config:
             # talos initiated locally, get and verify test/suite from cmd line
             self.talos_path = os.path.dirname(self.talos_json)
-            if (
-                "-a" in self.config["talos_extra_options"]
-                or "--activeTests" in self.config["talos_extra_options"]
-            ):
+            if ('-a' in self.config['talos_extra_options'] or
+                '--activeTests' in self.config['talos_extra_options']):
                 # test name (-a or --activeTests) specified, find out what suite it is a part of
                 self.suite = self.get_suite_from_test()
-            elif "--suite" in self.config["talos_extra_options"]:
+            elif '--suite' in self.config['talos_extra_options']:
                 # --suite specified, get suite from cmd line and ensure is valid
-                suite_name_index = (
-                    self.config["talos_extra_options"].index("--suite") + 1
-                )
-                if suite_name_index < len(self.config["talos_extra_options"]):
-                    self.suite = self.config["talos_extra_options"][suite_name_index]
+                suite_name_index = self.config['talos_extra_options'].index('--suite') + 1
+                if suite_name_index < len(self.config['talos_extra_options']):
+                    self.suite = self.config['talos_extra_options'][suite_name_index]
                     self.validate_suite()
                 else:
                     self.fatal("Suite name not provided")
         else:
             # talos initiated in production via mozharness
-            self.suite = self.config["suite"]
+            self.suite = self.config['suite']
 
         tooltool_artifacts = []
-        src_talos_pageset_dest = os.path.join(self.talos_path, "talos", "tests")
+        src_talos_pageset_dest = os.path.join(self.talos_path, 'talos', 'tests')
         # unfortunately this path has to be short and can't be descriptive, because
         # on Windows we tend to already push the boundaries of the max path length
         # constraint. This will contain the tp5 pageset, but adjusted to have
         # absolute URLs on iframes for the purposes of better modeling things for
         # fission.
-        src_talos_pageset_multidomain_dest = os.path.join(
-            self.talos_path, "talos", "fis"
-        )
-        webextension_dest = os.path.join(self.talos_path, "talos", "webextensions")
+        src_talos_pageset_multidomain_dest = os.path.join(self.talos_path,
+                                                          'talos',
+                                                          'fis')
+        webextension_dest = os.path.join(self.talos_path, 'talos', 'webextensions')
 
         if self.query_pagesets_name():
-            tooltool_artifacts.append(
-                {
-                    "name": self.pagesets_name,
-                    "manifest": self.pagesets_name_manifest,
-                    "dest": src_talos_pageset_dest,
-                }
-            )
-            tooltool_artifacts.append(
-                {
-                    "name": self.pagesets_name,
-                    "manifest": self.pagesets_name_manifest,
-                    "dest": src_talos_pageset_multidomain_dest,
-                    "postprocess": self.replace_relative_iframe_paths,
-                }
-            )
+            tooltool_artifacts.append({'name': self.pagesets_name,
+                                       'manifest': self.pagesets_name_manifest,
+                                       'dest': src_talos_pageset_dest})
+            tooltool_artifacts.append({'name': self.pagesets_name,
+                                       'manifest': self.pagesets_name_manifest,
+                                       'dest': src_talos_pageset_multidomain_dest,
+                                       'postprocess': self.replace_relative_iframe_paths})
 
         if self.query_benchmark_zip():
-            tooltool_artifacts.append(
-                {
-                    "name": self.benchmark_zip,
-                    "manifest": self.benchmark_zip_manifest,
-                    "dest": src_talos_pageset_dest,
-                }
-            )
+            tooltool_artifacts.append({'name': self.benchmark_zip,
+                                       'manifest': self.benchmark_zip_manifest,
+                                       'dest': src_talos_pageset_dest})
 
         if self.query_webextensions_zip():
-            tooltool_artifacts.append(
-                {
-                    "name": self.webextensions_zip,
-                    "manifest": self.webextensions_zip_manifest,
-                    "dest": webextension_dest,
-                }
-            )
+            tooltool_artifacts.append({'name': self.webextensions_zip,
+                                       'manifest': self.webextensions_zip_manifest,
+                                       'dest': webextension_dest})
 
         # now that have the suite name, check if artifact is required, if so download it
         # the --no-download option will override this
         for artifact in tooltool_artifacts:
-            if "--no-download" not in self.config.get("talos_extra_options", []):
+            if '--no-download' not in self.config.get('talos_extra_options', []):
                 self.info("Downloading %s with tooltool..." % artifact)
 
-                archive = os.path.join(artifact["dest"], artifact["name"])
-                output_dir_path = re.sub(r"\.zip$", "", archive)
+                archive = os.path.join(artifact['dest'], artifact['name'])
+                output_dir_path = re.sub(r'\.zip$', '', archive)
                 if not os.path.exists(archive):
-                    manifest_file = os.path.join(self.talos_path, artifact["manifest"])
+                    manifest_file = os.path.join(self.talos_path, artifact['manifest'])
                     self.tooltool_fetch(
                         manifest_file,
-                        output_dir=artifact["dest"],
-                        cache=self.config.get("tooltool_cache"),
+                        output_dir=artifact['dest'],
+                        cache=self.config.get('tooltool_cache')
                     )
-                    unzip = self.query_exe("unzip")
-                    unzip_cmd = [unzip, "-q", "-o", archive, "-d", artifact["dest"]]
+                    unzip = self.query_exe('unzip')
+                    unzip_cmd = [unzip, '-q', '-o', archive, '-d', artifact['dest']]
                     self.run_command(unzip_cmd, halt_on_failure=True)
 
-                    if "postprocess" in artifact:
+                    if 'postprocess' in artifact:
                         for subdir, dirs, files in os.walk(output_dir_path):
                             for file in files:
-                                artifact["postprocess"](subdir, file)
+                                artifact['postprocess'](subdir, file)
                 else:
                     self.info("%s already available" % artifact)
 
             else:
-                self.info(
-                    "Not downloading %s because the no-download option was specified"
-                    % artifact
-                )
+                self.info("Not downloading %s because the no-download option was specified" %
+                          artifact)
 
         # if running webkit tests locally, need to copy webkit source into talos/tests
-        if self.config.get("run_local") and (
-            "stylebench" in self.suite or "motionmark" in self.suite
-        ):
+        if self.config.get('run_local') and ('stylebench' in self.suite or
+                                             'motionmark' in self.suite):
             self.get_webkit_source()
 
     def get_webkit_source(self):
         # in production the build system auto copies webkit source into place;
         # but when run locally we need to do this manually, so that talos can find it
-        src = os.path.join(self.repo_path, "third_party", "webkit", "PerformanceTests")
-        dest = os.path.join(
-            self.talos_path, "talos", "tests", "webkit", "PerformanceTests"
-        )
+        src = os.path.join(self.repo_path, 'third_party', 'webkit',
+                           'PerformanceTests')
+        dest = os.path.join(self.talos_path, 'talos', 'tests', 'webkit',
+                            'PerformanceTests')
 
         if os.path.exists(dest):
             shutil.rmtree(dest)
@@ -629,7 +531,7 @@ class Talos(
 
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
         return super(Talos, self).download_and_extract(
-            suite_categories=["common", "talos"]
+            suite_categories=['common', 'talos']
         )
 
     def create_virtualenv(self, **kwargs):
@@ -642,17 +544,17 @@ class Talos(
 
         if self.run_local and os.path.exists(_virtualenv_path):
             self.info("Virtualenv already exists, skipping creation")
-            _python_interp = self.config.get("exes")["python"]
+            _python_interp = self.config.get('exes')['python']
 
-            if "win" in self.platform_name():
-                _path = os.path.join(_virtualenv_path, "Lib", "site-packages")
+            if 'win' in self.platform_name():
+                _path = os.path.join(_virtualenv_path,
+                                     'Lib',
+                                     'site-packages')
             else:
-                _path = os.path.join(
-                    _virtualenv_path,
-                    "lib",
-                    os.path.basename(_python_interp),
-                    "site-packages",
-                )
+                _path = os.path.join(_virtualenv_path,
+                                     'lib',
+                                     os.path.basename(_python_interp),
+                                     'site-packages')
 
             sys.path.append(_path)
             return
@@ -661,15 +563,15 @@ class Talos(
         # install mozbase first, so we use in-tree versions
         if not self.run_local:
             mozbase_requirements = os.path.join(
-                self.query_abs_dirs()["abs_test_install_dir"],
-                "config",
-                "mozbase_requirements.txt",
+                self.query_abs_dirs()['abs_test_install_dir'],
+                'config',
+                'mozbase_requirements.txt'
             )
         else:
             mozbase_requirements = os.path.join(
                 os.path.dirname(self.talos_path),
-                "config",
-                "mozbase_source_requirements.txt",
+                'config',
+                'mozbase_source_requirements.txt'
             )
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
@@ -680,7 +582,8 @@ class Talos(
         # talos in harness requires what else is
         # listed in talos requirements.txt file.
         self.install_module(
-            requirements=[os.path.join(self.talos_path, "requirements.txt")]
+            requirements=[os.path.join(self.talos_path,
+                                       'requirements.txt')]
         )
 
     def _validate_treeherder_data(self, parser):
@@ -688,16 +591,13 @@ class Talos(
         import jsonschema
 
         if len(parser.found_perf_data) != 1:
-            self.critical(
-                "PERFHERDER_DATA was seen %d times, expected 1."
-                % len(parser.found_perf_data)
-            )
+            self.critical("PERFHERDER_DATA was seen %d times, expected 1."
+                          % len(parser.found_perf_data))
             parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
             return
 
-        schema_path = os.path.join(
-            external_tools_path, "performance-artifact-schema.json"
-        )
+        schema_path = os.path.join(external_tools_path,
+                                   'performance-artifact-schema.json')
         self.info("Validating PERFHERDER_DATA against %s" % schema_path)
         try:
             with open(schema_path) as f:
@@ -709,7 +609,7 @@ class Talos(
             parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
 
     def _artifact_perf_data(self, parser, dest):
-        src = os.path.join(self.query_abs_dirs()["abs_work_dir"], "local.json")
+        src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'local.json')
         try:
             shutil.copyfile(src, dest)
         except Exception:
@@ -725,69 +625,61 @@ class Talos(
         # XXX temporary python version check
         python = self.query_python_path()
         self.run_command([python, "--version"])
-        parser = TalosOutputParser(
-            config=self.config, log_obj=self.log_obj, error_list=TalosErrorList
-        )
+        parser = TalosOutputParser(config=self.config, log_obj=self.log_obj,
+                                   error_list=TalosErrorList)
         env = {}
-        env["MOZ_UPLOAD_DIR"] = self.query_abs_dirs()["abs_blob_upload_dir"]
+        env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
         if not self.run_local:
-            env["MINIDUMP_STACKWALK"] = self.query_minidump_stackwalk()
-        env["MINIDUMP_SAVE_PATH"] = self.query_abs_dirs()["abs_blob_upload_dir"]
-        env["RUST_BACKTRACE"] = "full"
-        if not os.path.isdir(env["MOZ_UPLOAD_DIR"]):
-            self.mkdir_p(env["MOZ_UPLOAD_DIR"])
+            env['MINIDUMP_STACKWALK'] = self.query_minidump_stackwalk()
+        env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
+        env['RUST_BACKTRACE'] = 'full'
+        if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
+            self.mkdir_p(env['MOZ_UPLOAD_DIR'])
         env = self.query_env(partial_env=env, log_level=INFO)
         # adjust PYTHONPATH to be able to use talos as a python package
-        if "PYTHONPATH" in env:
-            env["PYTHONPATH"] = self.talos_path + os.pathsep + env["PYTHONPATH"]
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] = self.talos_path + os.pathsep + env['PYTHONPATH']
         else:
-            env["PYTHONPATH"] = self.talos_path
+            env['PYTHONPATH'] = self.talos_path
 
         if self.repo_path is not None:
-            env["MOZ_DEVELOPER_REPO_DIR"] = self.repo_path
+            env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
-            env["MOZ_DEVELOPER_OBJ_DIR"] = self.obj_path
+            env['MOZ_DEVELOPER_OBJ_DIR'] = self.obj_path
 
         # TODO: consider getting rid of this as we should be default to stylo now
-        env["STYLO_FORCE_ENABLED"] = "1"
+        env['STYLO_FORCE_ENABLED'] = '1'
 
         # sets a timeout for how long talos should run without output
-        output_timeout = self.config.get("talos_output_timeout", 3600)
+        output_timeout = self.config.get('talos_output_timeout', 3600)
         # run talos tests
-        run_tests = os.path.join(self.talos_path, "talos", "run_tests.py")
+        run_tests = os.path.join(self.talos_path, 'talos', 'run_tests.py')
 
-        mozlog_opts = ["--log-tbpl-level=debug"]
-        if not self.run_local and "suite" in self.config:
-            fname_pattern = "%s_%%s.log" % self.config["suite"]
-            mozlog_opts.append(
-                "--log-errorsummary=%s"
-                % os.path.join(env["MOZ_UPLOAD_DIR"], fname_pattern % "errorsummary")
-            )
-            mozlog_opts.append(
-                "--log-raw=%s"
-                % os.path.join(env["MOZ_UPLOAD_DIR"], fname_pattern % "raw")
-            )
+        mozlog_opts = ['--log-tbpl-level=debug']
+        if not self.run_local and 'suite' in self.config:
+            fname_pattern = '%s_%%s.log' % self.config['suite']
+            mozlog_opts.append('--log-errorsummary=%s'
+                               % os.path.join(env['MOZ_UPLOAD_DIR'],
+                                              fname_pattern % 'errorsummary'))
+            mozlog_opts.append('--log-raw=%s'
+                               % os.path.join(env['MOZ_UPLOAD_DIR'],
+                                              fname_pattern % 'raw'))
 
         def launch_in_debug_mode(cmdline):
             cmdline = set(cmdline)
-            debug_opts = {"--debug", "--debugger", "--debugger_args"}
+            debug_opts = {'--debug', '--debugger', '--debugger_args'}
 
             return bool(debug_opts.intersection(cmdline))
 
         command = [python, run_tests] + options + mozlog_opts
         if launch_in_debug_mode(command):
-            talos_process = subprocess.Popen(
-                command, cwd=self.workdir, env=env, bufsize=0
-            )
+            talos_process = subprocess.Popen(command, cwd=self.workdir, env=env, bufsize=0)
             talos_process.wait()
         else:
-            self.return_code = self.run_command(
-                command,
-                cwd=self.workdir,
-                output_timeout=output_timeout,
-                output_parser=parser,
-                env=env,
-            )
+            self.return_code = self.run_command(command, cwd=self.workdir,
+                                                output_timeout=output_timeout,
+                                                output_parser=parser,
+                                                env=env)
         if parser.minidump_output:
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
@@ -805,12 +697,13 @@ class Talos(
                 tbpl_level = TBPL_RETRY
 
             parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
-        elif "--no-upload-results" not in options:
+        elif '--no-upload-results' not in options:
             if not self.gecko_profile:
                 self._validate_treeherder_data(parser)
                 if not self.run_local:
                     # copy results to upload dir so they are included as an artifact
-                    dest = os.path.join(env["MOZ_UPLOAD_DIR"], "perfherder-data.json")
+                    dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
                     self._artifact_perf_data(parser, dest)
 
-        self.record_status(parser.worst_tbpl_status, level=parser.worst_log_level)
+        self.record_status(parser.worst_tbpl_status,
+                           level=parser.worst_log_level)

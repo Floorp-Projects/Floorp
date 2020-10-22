@@ -4,65 +4,65 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["win"]
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DIRS += ['win']
     LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
-        "/accessible/windows/ia2",
-        "/accessible/windows/msaa",
+        '/accessible/ipc/win',
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
 else:
-    DIRS += ["other", "extension"]
+    DIRS += ['other', 'extension']
     LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
+        '/accessible/ipc/other',
     ]
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
         LOCAL_INCLUDES += [
-            "/accessible/atk",
+            '/accessible/atk',
         ]
-    elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         LOCAL_INCLUDES += [
-            "/accessible/mac",
+            '/accessible/mac',
         ]
-    elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         LOCAL_INCLUDES += [
-            "/accessible/android",
+            '/accessible/android',
         ]
     else:
         LOCAL_INCLUDES += [
-            "/accessible/other",
+            '/accessible/other',
         ]
 
 EXPORTS.mozilla.a11y += [
-    "IPCTypes.h",
+    'IPCTypes.h',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["ACCESSIBILITY"]:
+if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.a11y += [
-        "DocAccessibleChildBase.h",
-        "DocAccessibleParent.h",
-        "ProxyAccessibleBase.h",
-        "ProxyAccessibleShared.h",
+        'DocAccessibleChildBase.h',
+        'DocAccessibleParent.h',
+        'ProxyAccessibleBase.h',
+        'ProxyAccessibleShared.h',
     ]
 
     UNIFIED_SOURCES += [
-        "DocAccessibleChildBase.cpp",
-        "DocAccessibleParent.cpp",
-        "ProxyAccessibleBase.cpp",
+        'DocAccessibleChildBase.cpp',
+        'DocAccessibleParent.cpp',
+        'ProxyAccessibleBase.cpp',
     ]
 
     LOCAL_INCLUDES += [
-        "/accessible/base",
-        "/accessible/generic",
-        "/accessible/xpcom",
+        '/accessible/base',
+        '/accessible/generic',
+        '/accessible/xpcom',
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

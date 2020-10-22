@@ -1,3 +1,4 @@
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +7,6 @@
 from __future__ import absolute_import
 
 from talos import filter
-
 # NOTE: we have a circular dependency with output.py when we import results
 import simplejson as json
 from talos import utils
@@ -33,10 +33,10 @@ class Output(object):
     def __call__(self):
         suites = []
         test_results = {
-            "framework": {
-                "name": self.results.results[0].framework,
+            'framework': {
+                'name': self.results.results[0].framework,
             },
-            "suites": suites,
+            'suites': suites,
         }
 
         for test in self.results.results:
@@ -45,10 +45,10 @@ class Output(object):
             if not test.using_xperf:
                 subtests = []
                 suite = {
-                    "name": test.name(),
-                    "extraOptions": self.results.extra_options or [],
-                    "subtests": subtests,
-                    "shouldAlert": test.test_config.get("suite_should_alert", True),
+                    'name': test.name(),
+                    'extraOptions': self.results.extra_options or [],
+                    'subtests': subtests,
+                    'shouldAlert': test.test_config.get('suite_should_alert', True)
                 }
 
                 suites.append(suite)
@@ -60,17 +60,16 @@ class Output(object):
                     # XXX this will not work for manifests which list
                     # the same page name twice. It also ignores cycles
                     for page, val in result.raw_values():
-                        if page == "NULL":
+                        if page == 'NULL':
                             page = test.name()
                             if tsresult is None:
                                 tsresult = r = self.tsresult_class()
-                                r.results = [
-                                    {"index": 0, "page": test.name(), "runs": val}
-                                ]
+                                r.results = [{'index': 0, 'page': test.name(),
+                                              'runs': val}]
                             else:
                                 r = tsresult.results[0]
-                                if r["page"] == test.name():
-                                    r["runs"].extend(val)
+                                if r['page'] == test.name():
+                                    r['runs'].extend(val)
                         replicates.setdefault(page, []).extend(val)
 
                 tresults = [tsresult] if tsresult else test.results
@@ -80,9 +79,9 @@ class Output(object):
                 for result in tresults:
                     results = []
                     for r in result.results:
-                        page = r["page"]
+                        page = r['page']
                         if page in merged_results:
-                            merged_results[page]["runs"].extend(r["runs"])
+                            merged_results[page]['runs'].extend(r['runs'])
                         else:
                             merged_results[page] = r
                             results.append(r)
@@ -90,59 +89,60 @@ class Output(object):
                     result.results = results
 
                 for result in tresults:
-                    filtered_results = result.values(
-                        suite["name"], test.test_config["filters"]
-                    )
-                    vals.extend([[i["value"], j] for i, j in filtered_results])
+                    filtered_results = \
+                        result.values(suite['name'],
+                                      test.test_config['filters'])
+                    vals.extend([[i['value'], j] for i, j in filtered_results])
                     subtest_index = 0
                     for val, page in filtered_results:
-                        if page == "NULL":
+                        if page == 'NULL':
                             # no real subtests
                             page = test.name()
                         subtest = {
-                            "name": page,
-                            "value": val["filtered"],
-                            "replicates": replicates[page],
+                            'name': page,
+                            'value': val['filtered'],
+                            'replicates': replicates[page],
                         }
                         # if results are from a comparison test i.e. perf-reftest, it will also
                         # contain replicates for 'base' and 'reference'; we wish to keep those
                         # to reference; actual results were calculated as the difference of those
-                        base_runs = result.results[subtest_index].get("base_runs", None)
-                        ref_runs = result.results[subtest_index].get("ref_runs", None)
+                        base_runs = result.results[subtest_index].get('base_runs', None)
+                        ref_runs = result.results[subtest_index].get('ref_runs', None)
                         if base_runs and ref_runs:
-                            subtest["base_replicates"] = base_runs
-                            subtest["ref_replicates"] = ref_runs
+                            subtest['base_replicates'] = base_runs
+                            subtest['ref_replicates'] = ref_runs
 
                         subtests.append(subtest)
                         subtest_index += 1
 
-                        if test.test_config.get("lower_is_better") is not None:
-                            subtest["lowerIsBetter"] = test.test_config[
-                                "lower_is_better"
-                            ]
-                        if test.test_config.get("alert_threshold") is not None:
-                            subtest["alertThreshold"] = test.test_config[
-                                "alert_threshold"
-                            ]
-                        if test.test_config.get("subtest_alerts") is not None:
-                            subtest["shouldAlert"] = test.test_config["subtest_alerts"]
-                        if test.test_config.get("alert_threshold") is not None:
-                            subtest["alertThreshold"] = test.test_config[
-                                "alert_threshold"
-                            ]
-                        if test.test_config.get("unit"):
-                            subtest["unit"] = test.test_config["unit"]
+                        if test.test_config.get('lower_is_better') is not None:
+                            subtest['lowerIsBetter'] = \
+                                test.test_config['lower_is_better']
+                        if test.test_config.get('alert_threshold') is not None:
+                            subtest['alertThreshold'] = \
+                                test.test_config['alert_threshold']
+                        if test.test_config.get('subtest_alerts') is not None:
+                            subtest['shouldAlert'] = \
+                                test.test_config['subtest_alerts']
+                        if test.test_config.get('alert_threshold') is not None:
+                            subtest['alertThreshold'] = \
+                                test.test_config['alert_threshold']
+                        if test.test_config.get('unit'):
+                            subtest['unit'] = test.test_config['unit']
 
                 # if there is only one subtest, carry alerting setting from the suite
                 if len(subtests) == 1:
-                    subtests[0]["shouldAlert"] = suite["shouldAlert"]
+                    subtests[0]['shouldAlert'] = suite['shouldAlert']
                 # if there is more than one subtest, calculate a summary result
                 elif len(subtests) > 1:
-                    suite["value"] = self.construct_results(vals, testname=test.name())
-                if test.test_config.get("lower_is_better") is not None:
-                    suite["lowerIsBetter"] = test.test_config["lower_is_better"]
-                if test.test_config.get("alert_threshold") is not None:
-                    suite["alertThreshold"] = test.test_config["alert_threshold"]
+                    suite['value'] = self.construct_results(
+                        vals, testname=test.name())
+                if test.test_config.get('lower_is_better') is not None:
+                    suite['lowerIsBetter'] = \
+                        test.test_config['lower_is_better']
+                if test.test_config.get('alert_threshold') is not None:
+                    suite['alertThreshold'] = \
+                        test.test_config['alert_threshold']
 
             # counters results_aux data
             counter_subtests = []
@@ -156,42 +156,38 @@ class Output(object):
 
                     # mainthread IO is a list of filenames and accesses, we do
                     # not report this as a counter
-                    if "mainthreadio" in name:
+                    if 'mainthreadio' in name:
                         continue
 
                     # responsiveness has it's own metric, not the mean
                     # TODO: consider doing this for all counters
-                    if "responsiveness" == name:
+                    if 'responsiveness' == name:
                         subtest = {
-                            "name": name,
-                            "value": filter.responsiveness_Metric(vals),
+                            'name': name,
+                            'value': filter.responsiveness_Metric(vals)
                         }
                         counter_subtests.append(subtest)
                         continue
 
                     subtest = {
-                        "name": name,
-                        "value": 0.0,
+                        'name': name,
+                        'value': 0.0,
                     }
                     counter_subtests.append(subtest)
 
                     if test.using_xperf:
                         if len(vals) > 0:
-                            subtest["value"] = vals[0]
+                            subtest['value'] = vals[0]
                     else:
                         # calculate mean value
                         if len(vals) > 0:
                             varray = [float(v) for v in vals]
-                            subtest["value"] = filter.mean(varray)
+                            subtest['value'] = filter.mean(varray)
             if counter_subtests:
-                suites.append(
-                    {
-                        "name": test.name(),
-                        "extraOptions": self.results.extra_options or [],
-                        "subtests": counter_subtests,
-                        "shouldAlert": test.test_config.get("suite_should_alert", True),
-                    }
-                )
+                suites.append({'name': test.name(),
+                               'extraOptions': self.results.extra_options or [],
+                               'subtests': counter_subtests,
+                               'shouldAlert': test.test_config.get('suite_should_alert', True)})
         return test_results
 
     def output(self, results, results_url):
@@ -204,10 +200,10 @@ class Output(object):
         results_url_split = utils.urlsplit(results_url)
         results_scheme, results_server, results_path, _, _ = results_url_split
 
-        if results_scheme in ("http", "https"):
+        if results_scheme in ('http', 'https'):
             self.post(results, results_server, results_path, results_scheme)
-        elif results_scheme == "file":
-            with open(results_path, "w") as f:
+        elif results_scheme == 'file':
+            with open(results_path, 'w') as f:
                 for result in results:
                     f.write("%s\n" % result)
         else:
@@ -218,16 +214,12 @@ class Output(object):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        if "gecko-profile" not in self.results.extra_options:
-            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results, ignore_nan=True))
-        if results_scheme in ("file"):
-            json.dump(
-                results,
-                open(results_path, "w"),
-                indent=2,
-                sort_keys=True,
-                ignore_nan=True,
-            )
+        if 'gecko-profile' not in self.results.extra_options:
+            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results,
+                                                        ignore_nan=True))
+        if results_scheme in ('file'):
+            json.dump(results, open(results_path, 'w'), indent=2,
+                      sort_keys=True, ignore_nan=True)
 
     def post(self, results, server, path, scheme):
         raise NotImplementedError("Abstract base class")
@@ -235,13 +227,14 @@ class Output(object):
     @classmethod
     def shortName(cls, name):
         """short name for counters"""
-        names = {"% Processor Time": "%cpu", "XRes": "xres"}
+        names = {"% Processor Time": "%cpu",
+                 "XRes": "xres"}
         return names.get(name, name)
 
     @classmethod
     def isMemoryMetric(cls, resultName):
         """returns if the result is a memory metric"""
-        memory_metric = ["xres"]  # measured in bytes
+        memory_metric = ['xres']  # measured in bytes
         return bool([i for i in memory_metric if i in resultName])
 
     @classmethod
@@ -261,7 +254,7 @@ class Output(object):
         """
         benchmark_score: ares6/jetstream self reported as 'geomean'
         """
-        results = [i for i, j in val_list if j == "geomean"]
+        results = [i for i, j in val_list if j == 'geomean']
         return filter.mean(results)
 
     @classmethod
@@ -305,28 +298,27 @@ class Output(object):
         # We receive 76 entries per test, which ads up to 380. We want to use
         # the 5 test entries, not the rest.
         if len(results) != 380:
-            raise Exception(
-                "StyleBench requires 380 entries, found: %s instead" % len(results)
-            )
+            raise Exception("StyleBench requires 380 entries, found: %s instead"
+                            % len(results))
 
         results = results[75::76]
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 
     def construct_results(self, vals, testname):
-        if "responsiveness" in testname:
+        if 'responsiveness' in testname:
             return filter.responsiveness_Metric([val for (val, page) in vals])
-        elif testname.startswith("v8_7"):
+        elif testname.startswith('v8_7'):
             return self.v8_Metric(vals)
-        elif testname.startswith("kraken"):
+        elif testname.startswith('kraken'):
             return self.JS_Metric(vals)
-        elif testname.startswith("ares6"):
+        elif testname.startswith('ares6'):
             return self.benchmark_score(vals)
-        elif testname.startswith("jetstream"):
+        elif testname.startswith('jetstream'):
             return self.benchmark_score(vals)
-        elif testname.startswith("speedometer"):
+        elif testname.startswith('speedometer'):
             return self.speedometer_score(vals)
-        elif testname.startswith("stylebench"):
+        elif testname.startswith('stylebench'):
             return self.stylebench_score(vals)
         elif len(vals) > 1:
             return filter.geometric_mean([i for i, j in vals])

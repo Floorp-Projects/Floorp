@@ -1,6 +1,9 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SOURCES += ["foo1.c", "foo2.c"]
+SOURCES += [
+    'foo1.c',
+    'foo2.c'
+]
 
-FINAL_LIBRARY = "foo"
+FINAL_LIBRARY = 'foo'

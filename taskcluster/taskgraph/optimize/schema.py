@@ -17,28 +17,28 @@ default_optimizations = (
     # always run this task (default)
     None,
     # always optimize this task
-    {"always": None},
+    {'always': None},
     # optimize strategy aliases for build kind
-    {"build": list(schedules.ALL_COMPONENTS)},
+    {'build': list(schedules.ALL_COMPONENTS)},
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
-    {"index-search": [text_type]},
+    {'index-search': [text_type]},
     # never optimize this task
-    {"never": None},
+    {'never': None},
     # skip the task except for every Nth push
-    {"skip-unless-expanded": None},
-    {"skip-unless-backstop": None},
+    {'skip-unless-expanded': None},
+    {'skip-unless-backstop': None},
     # skip this task if none of the given file patterns match
-    {"skip-unless-changed": [text_type]},
+    {'skip-unless-changed': [text_type]},
     # skip this task if unless the change files' SCHEDULES contains any of these components
-    {"skip-unless-schedules": list(schedules.ALL_COMPONENTS)},
+    {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
     # optimize strategy aliases for the test kind
-    {"test": list(schedules.ALL_COMPONENTS)},
-    {"test-inclusive": list(schedules.ALL_COMPONENTS)},
+    {'test': list(schedules.ALL_COMPONENTS)},
+    {'test-inclusive': list(schedules.ALL_COMPONENTS)},
     # optimize strategy alias for test-verify tasks
-    {"test-verify": list(schedules.ALL_COMPONENTS)},
+    {'test-verify': list(schedules.ALL_COMPONENTS)},
     # optimize strategy alias for upload-symbols tasks
-    {"upload-symbols": None},
+    {'upload-symbols': None},
 )
 
 OptimizationSchema = voluptuous.Any(*default_optimizations)
@@ -57,4 +57,4 @@ def set_optimization_schema(schema_tuple):
         logger.info("OptimizationSchema updated.")
         OptimizationSchema = voluptuous.Any(*schema_tuple)
     else:
-        raise Exception("Can only call set_optimization_schema once.")
+        raise Exception('Can only call set_optimization_schema once.')

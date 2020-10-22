@@ -12,6 +12,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestElementsChrome, self).setUp()
 
@@ -26,17 +27,13 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestElementsChrome, self).tearDown()
 
     def test_id(self):
-        el = self.marionette.execute_script(
-            "return window.document.getElementById('textInput');"
-        )
+        el = self.marionette.execute_script("return window.document.getElementById('textInput');")
         found_el = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_that_we_can_find_elements_from_css_selectors(self):
-        el = self.marionette.execute_script(
-            "return window.document.getElementById('textInput');"
-        )
+        el = self.marionette.execute_script("return window.document.getElementById('textInput');")
         found_el = self.marionette.find_element(By.CSS_SELECTOR, "#textInput")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
@@ -56,61 +53,43 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
 
     def test_tag_name(self):
         el = self.marionette.execute_script(
-            "return window.document.getElementsByTagName('vbox')[0];"
-        )
+            "return window.document.getElementsByTagName('vbox')[0];")
         found_el = self.marionette.find_element(By.TAG_NAME, "vbox")
-        self.assertEquals("vbox", found_el.tag_name)
+        self.assertEquals('vbox', found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_class_name(self):
         el = self.marionette.execute_script(
-            "return window.document.getElementsByClassName('asdf')[0];"
-        )
+            "return window.document.getElementsByClassName('asdf')[0];")
         found_el = self.marionette.find_element(By.CLASS_NAME, "asdf")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_xpath(self):
-        el = self.marionette.execute_script(
-            "return window.document.getElementById('testBox');"
-        )
+        el = self.marionette.execute_script("return window.document.getElementById('testBox');")
         found_el = self.marionette.find_element(By.XPATH, "id('testBox')")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_not_found(self):
         self.marionette.timeout.implicit = 1
-        self.assertRaises(
-            NoSuchElementException,
-            self.marionette.find_element,
-            By.ID,
-            "I'm not on the page",
-        )
+        self.assertRaises(NoSuchElementException,
+                          self.marionette.find_element, By.ID, "I'm not on the page")
         self.marionette.timeout.implicit = 0
-        self.assertRaises(
-            NoSuchElementException,
-            self.marionette.find_element,
-            By.ID,
-            "I'm not on the page",
-        )
+        self.assertRaises(NoSuchElementException,
+                          self.marionette.find_element, By.ID, "I'm not on the page")
 
     def test_timeout(self):
-        self.assertRaises(
-            NoSuchElementException, self.marionette.find_element, By.ID, "myid"
-        )
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "myid")
         self.marionette.timeout.implicit = 4
-        self.marionette.execute_script(
-            """
+        self.marionette.execute_script("""
             window.setTimeout(function () {
               var b = window.document.createXULElement('button');
               b.id = 'myid';
               document.getElementById('things').appendChild(b);
-            }, 1000); """
-        )
+            }, 1000); """)
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "myid")))
-        self.marionette.execute_script(
-            """
+        self.marionette.execute_script("""
             var elem = window.document.getElementById('things');
-            elem.removeChild(window.document.getElementById('myid')); """
-        )
+            elem.removeChild(window.document.getElementById('myid')); """)

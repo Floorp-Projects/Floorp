@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla += [
-    "Sandbox.h",
-    "SandboxPolicyContent.h",
-    "SandboxPolicyFlash.h",
-    "SandboxPolicyGMP.h",
-    "SandboxPolicyRDD.h",
-    "SandboxPolicyUtility.h",
+    'Sandbox.h',
+    'SandboxPolicyContent.h',
+    'SandboxPolicyFlash.h',
+    'SandboxPolicyGMP.h',
+    'SandboxPolicyRDD.h',
+    'SandboxPolicyUtility.h'
 ]
 
 SOURCES += [
-    "Sandbox.mm",
+    'Sandbox.mm',
 ]
 
-Library("mozsandbox")
+Library('mozsandbox');

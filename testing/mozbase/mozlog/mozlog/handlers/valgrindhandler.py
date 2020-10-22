@@ -9,6 +9,7 @@ import re
 
 
 class ValgrindHandler(BaseHandler):
+
     def __init__(self, inner):
         BaseHandler.__init__(self, inner)
         self.inner = inner
@@ -21,7 +22,7 @@ class ValgrindHandler(BaseHandler):
 
 
 class ValgrindFilter(object):
-    """
+    '''
     A class for handling Valgrind output.
 
     Valgrind errors look like this:
@@ -51,31 +52,34 @@ class ValgrindFilter(object):
     the count of these lines doesn't match the error count found during
     parsing, then the parsing has missed one or more errors and we can fail
     appropriately.
-    """
+    '''
 
     def __init__(self):
         # The regexps in this list match all of Valgrind's errors. Note that
         # Valgrind is English-only, so we don't have to worry about
         # localization.
-        self.re_error = re.compile(
-            r"==\d+== ("
-            + r"(Use of uninitialised value of size \d+)|"
-            + r"(Conditional jump or move depends on uninitialised value\(s\))|"
-            + r"(Syscall param .* contains uninitialised byte\(s\))|"
-            + r"(Syscall param .* points to (unaddressable|uninitialised) byte\(s\))|"
-            + r"((Unaddressable|Uninitialised) byte\(s\) found during client check request)|"
-            + r"(Invalid free\(\) / delete / delete\[\] / realloc\(\))|"
-            + r"(Mismatched free\(\) / delete / delete \[\])|"
-            + r"(Invalid (read|write) of size \d+)|"
-            + r"(Jump to the invalid address stated on the next line)|"
-            + r"(Source and destination overlap in .*)|"
-            + r"(.* bytes in .* blocks are .* lost)"
-            + r")"
-        )
+        self.re_error = \
+            re.compile(
+                r'==\d+== (' +
+                r'(Use of uninitialised value of size \d+)|' +
+                r'(Conditional jump or move depends on uninitialised value\(s\))|' +
+                r'(Syscall param .* contains uninitialised byte\(s\))|' +
+                r'(Syscall param .* points to (unaddressable|uninitialised) byte\(s\))|' +
+                r'((Unaddressable|Uninitialised) byte\(s\) found during client check request)|' +
+                r'(Invalid free\(\) / delete / delete\[\] / realloc\(\))|' +
+                r'(Mismatched free\(\) / delete / delete \[\])|' +
+                r'(Invalid (read|write) of size \d+)|' +
+                r'(Jump to the invalid address stated on the next line)|' +
+                r'(Source and destination overlap in .*)|' +
+                r'(.* bytes in .* blocks are .* lost)' +
+                r')'
+            )
         # Match identifer chars, plus ':' for namespaces, and '\?' in order to
         # match "???" which Valgrind sometimes produces.
-        self.re_stack_entry = re.compile(r"^==\d+==.*0x[A-Z0-9]+: ([A-Za-z0-9_:\?]+)")
-        self.re_suppression = re.compile(r" *<insert_a_suppression_name_here>")
+        self.re_stack_entry = \
+            re.compile(r'^==\d+==.*0x[A-Z0-9]+: ([A-Za-z0-9_:\?]+)')
+        self.re_suppression = \
+            re.compile(r' *<insert_a_suppression_name_here>')
         self.error_count = 0
         self.suppression_count = 0
         self.number_of_stack_entries_to_get = 0
@@ -85,10 +89,10 @@ class ValgrindFilter(object):
     # Takes a message and returns a message
     def __call__(self, msg):
         # Pass through everything that isn't plain text
-        if msg["action"] != "log":
+        if msg['action'] != 'log':
             return msg
 
-        line = msg["message"]
+        line = msg['message']
         output_message = None
         if self.number_of_stack_entries_to_get == 0:
             # Look for the start of a Valgrind error.
@@ -109,11 +113,11 @@ class ValgrindFilter(object):
             if m:
                 self.curr_failure_msg += m.group(1)
             else:
-                self.curr_failure_msg += "?!?"
+                self.curr_failure_msg += '?!?'
 
             self.number_of_stack_entries_to_get -= 1
             if self.number_of_stack_entries_to_get != 0:
-                self.curr_failure_msg += " / "
+                self.curr_failure_msg += ' / '
             else:
                 # We've finished getting the first few stack entries.  Emit
                 # the failure action, comprising the primary message and the
@@ -122,14 +126,13 @@ class ValgrindFilter(object):
                 # else to get them from.
                 output_message = {  # Mandatory fields
                     u"action": "valgrind_error",
-                    u"time": msg["time"],
+                    u"time":   msg["time"],
                     u"thread": msg["thread"],
-                    u"pid": msg["pid"],
+                    u"pid":    msg["pid"],
                     u"source": msg["source"],
                     # valgrind_error specific fields
-                    u"primary": self.curr_failure_msg,
-                    u"secondary": self.buffered_lines,
-                }
+                    u"primary":   self.curr_failure_msg,
+                    u"secondary": self.buffered_lines}
                 self.curr_failure_msg = ""
                 self.buffered_lines = []
 

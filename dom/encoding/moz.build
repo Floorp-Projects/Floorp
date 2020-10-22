@@ -8,22 +8,22 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
 EXPORTS.mozilla.dom += [
-    "TextDecoder.h",
-    "TextEncoder.h",
+    'TextDecoder.h',
+    'TextEncoder.h',
 ]
 
 UNIFIED_SOURCES += [
-    "TextDecoder.cpp",
-    "TextEncoder.cpp",
+    'TextDecoder.cpp',
+    'TextEncoder.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/intl/locale",
+    '/intl/locale',
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.ini",
+    'test/mochitest.ini',
 ]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

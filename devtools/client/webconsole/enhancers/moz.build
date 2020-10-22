@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "actor-releaser.js",
-    "batching.js",
-    "css-error-reporting.js",
-    "message-cache-clearing.js",
-    "net-provider.js",
+    'actor-releaser.js',
+    'batching.js',
+    'css-error-reporting.js',
+    'message-cache-clearing.js',
+    'net-provider.js',
 )

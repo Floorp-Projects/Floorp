@@ -21,42 +21,32 @@ from .logging import LoggingMixin
 # Perform detection of operating system environment. This is used by command
 # execution. We only do this once to save redundancy. Yes, this can fail module
 # loading. That is arguably OK.
-if "SHELL" in os.environ:
-    _current_shell = os.environ["SHELL"]
-elif "MOZILLABUILD" in os.environ:
-    _current_shell = os.environ["MOZILLABUILD"] + "/msys/bin/sh.exe"
-elif "COMSPEC" in os.environ:
-    _current_shell = os.environ["COMSPEC"]
+if 'SHELL' in os.environ:
+    _current_shell = os.environ['SHELL']
+elif 'MOZILLABUILD' in os.environ:
+    _current_shell = os.environ['MOZILLABUILD'] + '/msys/bin/sh.exe'
+elif 'COMSPEC' in os.environ:
+    _current_shell = os.environ['COMSPEC']
 else:
-    raise Exception("Could not detect environment shell!")
+    raise Exception('Could not detect environment shell!')
 
 _in_msys = False
 
-if os.environ.get("MSYSTEM", None) in ("MINGW32", "MINGW64"):
+if os.environ.get('MSYSTEM', None) in ('MINGW32', 'MINGW64'):
     _in_msys = True
 
-    if not _current_shell.lower().endswith(".exe"):
-        _current_shell += ".exe"
+    if not _current_shell.lower().endswith('.exe'):
+        _current_shell += '.exe'
 
 
 class ProcessExecutionMixin(LoggingMixin):
     """Mix-in that provides process execution functionality."""
 
     def run_process(
-        self,
-        args=None,
-        cwd=None,
-        append_env=None,
-        explicit_env=None,
-        log_name=None,
-        log_level=logging.INFO,
-        line_handler=None,
-        require_unix_environment=False,
-        ensure_exit_code=0,
-        ignore_children=False,
-        pass_thru=False,
-        python_unbuffered=True,
-    ):
+            self, args=None, cwd=None, append_env=None, explicit_env=None,
+            log_name=None, log_level=logging.INFO, line_handler=None,
+            require_unix_environment=False, ensure_exit_code=0,
+            ignore_children=False, pass_thru=False, python_unbuffered=True):
         """Runs a single process to completion.
 
         Takes a list of arguments to run where the first item is the
@@ -95,20 +85,20 @@ class ProcessExecutionMixin(LoggingMixin):
         """
         args = self._normalize_command(args, require_unix_environment)
 
-        self.log(logging.INFO, "new_process", {"args": " ".join(args)}, "{args}")
+        self.log(logging.INFO, 'new_process', {'args': ' '.join(args)}, '{args}')
 
         def handleLine(line):
             # Converts str to unicode on Python 2 and bytes to str on Python 3.
             if isinstance(line, bytes):
-                line = line.decode(sys.stdout.encoding or "utf-8", "replace")
+                line = line.decode(sys.stdout.encoding or 'utf-8', 'replace')
 
             if line_handler:
                 line_handler(line)
 
-            if line.startswith("BUILDTASK") or not log_name:
+            if line.startswith('BUILDTASK') or not log_name:
                 return
 
-            self.log(log_level, log_name, {"line": line.rstrip()}, "{line}")
+            self.log(log_level, log_name, {'line': line.rstrip()}, '{line}')
 
         use_env = {}
         if explicit_env:
@@ -120,9 +110,9 @@ class ProcessExecutionMixin(LoggingMixin):
                 use_env.update(append_env)
 
         if python_unbuffered:
-            use_env["PYTHONUNBUFFERED"] = "1"
+            use_env['PYTHONUNBUFFERED'] = '1'
 
-        self.log(logging.DEBUG, "process", {"env": str(use_env)}, "Environment: {env}")
+        self.log(logging.DEBUG, 'process', {'env': str(use_env)}, 'Environment: {env}')
 
         use_env = ensure_subprocess_env(use_env)
         if pass_thru:
@@ -138,14 +128,10 @@ class ProcessExecutionMixin(LoggingMixin):
                 except KeyboardInterrupt:
                     pass
         else:
-            p = ProcessHandlerMixin(
-                args,
-                cwd=cwd,
-                env=use_env,
-                processOutputLine=[handleLine],
-                universal_newlines=True,
-                ignore_children=ignore_children,
-            )
+            p = ProcessHandlerMixin(args, cwd=cwd, env=use_env,
+                                    processOutputLine=[handleLine],
+                                    universal_newlines=True,
+                                    ignore_children=ignore_children)
             p.run()
             p.processOutput()
             status = None
@@ -170,9 +156,7 @@ class ProcessExecutionMixin(LoggingMixin):
             ensure_exit_code = 0
 
         if status != ensure_exit_code:
-            raise Exception(
-                "Process executed with non-0 exit code %d: %s" % (status, args)
-            )
+            raise Exception('Process executed with non-0 exit code %d: %s' % (status, args))
 
         return status
 
@@ -191,7 +175,7 @@ class ProcessExecutionMixin(LoggingMixin):
             return args
 
         # Always munge Windows-style into Unix style for the command.
-        prog = args[0].replace("\\", "/")
+        prog = args[0].replace('\\', '/')
 
         # PyMake removes the C: prefix. But, things seem to work here
         # without it. Not sure what that's about.
@@ -200,4 +184,4 @@ class ProcessExecutionMixin(LoggingMixin):
         # '-c' and pass all the arguments as one argument because that is
         # how sh works.
         cline = subprocess.list2cmdline([prog] + args[1:])
-        return [_current_shell, "-c", cline]
+        return [_current_shell, '-c', cline]

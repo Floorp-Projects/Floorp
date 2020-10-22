@@ -5,6 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCALIZED_FILES.dictionaries += [
-    "en-US/hunspell/*.aff",
-    "en-US/hunspell/*.dic",
+    'en-US/hunspell/*.aff',
+    'en-US/hunspell/*.dic',
 ]

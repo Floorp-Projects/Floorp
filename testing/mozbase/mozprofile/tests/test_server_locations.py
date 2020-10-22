@@ -9,13 +9,9 @@ from __future__ import absolute_import
 import mozunit
 import pytest
 
-from mozprofile.permissions import (
-    ServerLocations,
-    MissingPrimaryLocationError,
-    MultiplePrimaryLocationsError,
-    BadPortLocationError,
-    LocationsSyntaxError,
-)
+from mozprofile.permissions import ServerLocations, \
+    MissingPrimaryLocationError, MultiplePrimaryLocationsError, \
+    BadPortLocationError, LocationsSyntaxError
 
 
 LOCATIONS = """# This is the primary location from which tests run.
@@ -53,10 +49,9 @@ def compare_location(location, scheme, host, port, options):
 @pytest.fixture
 def create_temp_file(tmpdir):
     def inner(contents):
-        f = tmpdir.mkdtemp().join("locations.txt")
+        f = tmpdir.mkdtemp().join('locations.txt')
         f.write(contents)
         return f.strpath
-
     return inner
 
 
@@ -70,26 +65,26 @@ def test_server_locations(create_temp_file):
     # ensure that they're what we expect
     assert len(locations) == 6
     i = iter(locations)
-    compare_location(next(i), "http", "mochi.test", "8888", ["primary", "privileged"])
-    compare_location(next(i), "http", "127.0.0.1", "80", ["privileged"])
-    compare_location(next(i), "http", "127.0.0.1", "8888", ["privileged"])
-    compare_location(next(i), "https", "test", "80", ["privileged"])
-    compare_location(next(i), "http", "example.org", "80", ["privileged"])
-    compare_location(next(i), "http", "test1.example.org", "8888", ["privileged"])
+    compare_location(next(i), 'http', 'mochi.test', '8888', ['primary', 'privileged'])
+    compare_location(next(i), 'http', '127.0.0.1', '80', ['privileged'])
+    compare_location(next(i), 'http', '127.0.0.1', '8888', ['privileged'])
+    compare_location(next(i), 'https', 'test', '80', ['privileged'])
+    compare_location(next(i), 'http', 'example.org', '80', ['privileged'])
+    compare_location(next(i), 'http', 'test1.example.org', '8888', ['privileged'])
 
-    locations.add_host("mozilla.org")
+    locations.add_host('mozilla.org')
     assert len(locations) == 7
-    compare_location(next(i), "http", "mozilla.org", "80", ["privileged"])
+    compare_location(next(i), 'http', 'mozilla.org', '80', ['privileged'])
 
     # test some errors
     with pytest.raises(MultiplePrimaryLocationsError):
-        locations.add_host("primary.test", options="primary")
+        locations.add_host('primary.test', options='primary')
 
     # assert we don't throw DuplicateLocationError
-    locations.add_host("127.0.0.1")
+    locations.add_host('127.0.0.1')
 
     with pytest.raises(BadPortLocationError):
-        locations.add_host("127.0.0.1", port="abc")
+        locations.add_host('127.0.0.1', port='abc')
 
     # test some errors in locations file
     f = create_temp_file(LOCATIONS_NO_PRIMARY)
@@ -132,13 +127,13 @@ def test_server_locations_callback(create_temp_file):
     assert len(c.last_locations) == 6
 
     # validate arbitrary one
-    compare_location(c.last_locations[2], "http", "127.0.0.1", "8888", ["privileged"])
+    compare_location(c.last_locations[2], 'http', '127.0.0.1', '8888', ['privileged'])
 
-    locations.add_host("a.b.c")
+    locations.add_host('a.b.c')
 
     # callback should be just for one location
     assert len(c.last_locations) == 1
-    compare_location(c.last_locations[0], "http", "a.b.c", "80", ["privileged"])
+    compare_location(c.last_locations[0], 'http', 'a.b.c', '80', ['privileged'])
 
     # read a second file, which should generate a callback with both
     # locations.
@@ -147,5 +142,5 @@ def test_server_locations_callback(create_temp_file):
     assert len(c.last_locations) == 2
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

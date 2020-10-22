@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["unit"]
+DIRS += ['unit']
 
 TEST_DIRS += [
-    "gtest",
-    "mochitest",
+    'gtest',
+    'mochitest',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-if not CONFIG["MOZ_NO_SMART_CARDS"]:
-    XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell-smartcards.ini"]
+if not CONFIG['MOZ_NO_SMART_CARDS']:
+    XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell-smartcards.ini']

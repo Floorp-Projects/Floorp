@@ -4,20 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ['tests']
 
 UNIFIED_SOURCES += [
-    "nsRFPService.cpp",
-    "RelativeTimeline.cpp",
+    'nsRFPService.cpp',
+    'RelativeTimeline.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-EXPORTS += ["nsRFPService.h"]
+EXPORTS += [
+    'nsRFPService.h'
+]
 EXPORTS.mozilla += [
-    "RelativeTimeline.h",
+    'RelativeTimeline.h',
 ]
 
 EXTRA_JS_MODULES += [
-    "RFPHelper.jsm",
+    'RFPHelper.jsm',
 ]

@@ -18,17 +18,11 @@ from marionette_harness import MarionetteTestCase, skip
 
 single = "data:text/html,{}".format(quote("<input type=file>"))
 multiple = "data:text/html,{}".format(quote("<input type=file multiple>"))
-upload = lambda url: "data:text/html,{}".format(
-    quote(
-        """
+upload = lambda url: "data:text/html,{}".format(quote("""
     <form action='{}' method=post enctype='multipart/form-data'>
      <input type=file>
      <input type=submit>
-    </form>""".format(
-            url
-        )
-    )
-)
+    </form>""".format(url)))
 
 
 class TestFileUpload(MarionetteTestCase):
@@ -102,7 +96,8 @@ class TestFileUpload(MarionetteTestCase):
             self.input.send_keys("rochefort")
 
     def test_upload(self):
-        self.marionette.navigate(upload(self.marionette.absolute_url("file_upload")))
+        self.marionette.navigate(
+            upload(self.marionette.absolute_url("file_upload")))
         url = self.marionette.get_url()
 
         with tempfile() as f:
@@ -113,29 +108,23 @@ class TestFileUpload(MarionetteTestCase):
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda m: m.get_url() != url,
-            message="URL didn't change after submitting a file upload",
-        )
+            message="URL didn't change after submitting a file upload")
         self.assertIn("multipart/form-data", self.body.text)
 
     def test_change_event(self):
         self.marionette.navigate(single)
-        self.marionette.execute_script(
-            """
+        self.marionette.execute_script("""
             window.changeEvs = [];
             let el = arguments[arguments.length - 1];
             el.addEventListener("change", ev => window.changeEvs.push(ev));
             console.log(window.changeEvs.length);
-            """,
-            script_args=(self.input,),
-            sandbox=None,
-        )
+            """, script_args=(self.input,), sandbox=None)
 
         with tempfile() as f:
             self.input.send_keys(f.name)
 
         nevs = self.marionette.execute_script(
-            "return window.changeEvs.length", sandbox=None
-        )
+            "return window.changeEvs.length", sandbox=None)
         self.assertEqual(1, nevs)
 
     def find_inputs(self):
@@ -152,8 +141,7 @@ class TestFileUpload(MarionetteTestCase):
     @property
     def body(self):
         return Wait(self.marionette).until(
-            expected.element_present(By.TAG_NAME, "body")
-        )
+            expected.element_present(By.TAG_NAME, "body"))
 
     def get_file_names(self, el):
         fl = self.get_files(el)
@@ -161,8 +149,7 @@ class TestFileUpload(MarionetteTestCase):
 
     def get_files(self, el):
         return self.marionette.execute_script(
-            "return arguments[0].files", script_args=[el]
-        )
+            "return arguments[0].files", script_args=[el])
 
     def assertFileNamesEqual(self, act, exp):
         # File array returned from browser doesn't contain full path names,

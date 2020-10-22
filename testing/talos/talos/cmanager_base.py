@@ -20,7 +20,8 @@ class CounterManager(object):
         """
         for counter in counters:
             if counter in self.allCounters:
-                self.registeredCounters[counter] = [self.allCounters[counter], []]
+                self.registeredCounters[counter] = \
+                    [self.allCounters[counter], []]
 
     def getCounterValue(self, counterName):
         """Returns the last value of the counter 'counterName'"""

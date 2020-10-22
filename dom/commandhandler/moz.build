@@ -8,31 +8,31 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 EXPORTS += [
-    "nsBaseCommandController.h",
-    "nsCommandManager.h",
-    "nsCommandParams.h",
-    "nsControllerCommandTable.h",
+    'nsBaseCommandController.h',
+    'nsCommandManager.h',
+    'nsCommandParams.h',
+    'nsControllerCommandTable.h',
 ]
 
 XPIDL_SOURCES += [
-    "nsICommandManager.idl",
-    "nsICommandParams.idl",
-    "nsIControllerCommand.idl",
-    "nsIControllerCommandTable.idl",
-    "nsIControllerContext.idl",
+    'nsICommandManager.idl',
+    'nsICommandParams.idl',
+    'nsIControllerCommand.idl',
+    'nsIControllerCommandTable.idl',
+    'nsIControllerContext.idl',
 ]
 
-XPIDL_MODULE = "commandhandler"
+XPIDL_MODULE = 'commandhandler'
 
 UNIFIED_SOURCES += [
-    "nsBaseCommandController.cpp",
-    "nsCommandManager.cpp",
-    "nsCommandParams.cpp",
-    "nsControllerCommandTable.cpp",
+    'nsBaseCommandController.cpp',
+    'nsCommandManager.cpp',
+    'nsCommandParams.cpp',
+    'nsControllerCommandTable.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/base",
+    '/dom/base',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

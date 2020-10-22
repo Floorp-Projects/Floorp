@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Networking: HTTP")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Networking: HTTP')
 
-TEST_DIRS += ["tests/gtest"]
+TEST_DIRS += ['tests/gtest']
 
 SOURCES += [
-    "DHCPUtils.cpp",
-    "nsWindowsDHCPClient.cpp",
-    "WindowsNetworkFunctionsWrapper.cpp",
+    'DHCPUtils.cpp',
+    'nsWindowsDHCPClient.cpp',
+    'WindowsNetworkFunctionsWrapper.cpp'
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

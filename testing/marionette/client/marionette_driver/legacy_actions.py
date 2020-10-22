@@ -37,7 +37,7 @@ class Actions(object):
         self.current_id = None
 
     def press(self, element, x=None, y=None):
-        """
+        '''
         Sends a 'touchstart' event to this element.
 
         If no coordinates are given, it will be targeted at the center of the
@@ -49,13 +49,13 @@ class Actions(object):
          corner of the element.
         :param y: Optional, y-coordinate to tap, relative to the top-left
          corner of the element.
-        """
+        '''
         element = element.id
-        self.action_chain.append(["press", element, x, y])
+        self.action_chain.append(['press', element, x, y])
         return self
 
     def release(self):
-        """
+        '''
         Sends a 'touchend' event to this element.
 
         May only be called if :func:`press` has already be called on this element.
@@ -67,24 +67,24 @@ class Actions(object):
         period between press and release that will trigger a contextmenu,
         then the 'contextmenu' menu event will be fired instead of the
         touch/mouse events.
-        """
-        self.action_chain.append(["release"])
+        '''
+        self.action_chain.append(['release'])
         return self
 
     def move(self, element):
-        """
+        '''
         Sends a 'touchmove' event at the center of the target element.
 
         :param element: Element to move towards.
 
         May only be called if :func:`press` has already be called.
-        """
+        '''
         element = element.id
-        self.action_chain.append(["move", element])
+        self.action_chain.append(['move', element])
         return self
 
     def move_by_offset(self, x, y):
-        """
+        '''
         Sends 'touchmove' event to the given x, y coordinates relative to the
         top-left of the currently touched element.
 
@@ -94,33 +94,33 @@ class Actions(object):
          top-left corner of the element.
         :param y: Specifies y-coordinate of move event, relative to the
          top-left corner of the element.
-        """
-        self.action_chain.append(["moveByOffset", x, y])
+        '''
+        self.action_chain.append(['moveByOffset', x, y])
         return self
 
     def wait(self, time=None):
-        """
+        '''
         Waits for specified time period.
 
         :param time: Time in seconds to wait. If time is None then this has no effect
                      for a single action chain. If used inside a multi-action chain,
                      then time being None indicates that we should wait for all other
                      currently executing actions that are part of the chain to complete.
-        """
-        self.action_chain.append(["wait", time])
+        '''
+        self.action_chain.append(['wait', time])
         return self
 
     def cancel(self):
-        """
+        '''
         Sends 'touchcancel' event to the target of the original 'touchstart' event.
 
         May only be called if :func:`press` has already be called.
-        """
-        self.action_chain.append(["cancel"])
+        '''
+        self.action_chain.append(['cancel'])
         return self
 
     def tap(self, element, x=None, y=None):
-        """
+        '''
         Performs a quick tap on the target element.
 
         :param element: The element to tap.
@@ -136,14 +136,14 @@ class Actions(object):
         ::
 
           action.press(element, x, y).release()
-        """
+        '''
         element = element.id
-        self.action_chain.append(["press", element, x, y])
-        self.action_chain.append(["release"])
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
         return self
 
     def double_tap(self, element, x=None, y=None):
-        """
+        '''
         Performs a double tap on the target element.
 
         :param element: The element to double tap.
@@ -151,16 +151,16 @@ class Actions(object):
          top-left corner of the element.
         :param y: Optional, y-coordinate of double tap, relative to the
          top-left corner of the element.
-        """
+        '''
         element = element.id
-        self.action_chain.append(["press", element, x, y])
-        self.action_chain.append(["release"])
-        self.action_chain.append(["press", element, x, y])
-        self.action_chain.append(["release"])
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['release'])
         return self
 
     def click(self, element, button=MouseButton.LEFT, count=1):
-        """
+        '''
         Performs a click with additional parameters to allow for double clicking,
         right click, middle click, etc.
 
@@ -168,37 +168,37 @@ class Actions(object):
         :param button: The mouse button to click (indexed from 0, left to right).
         :param count: Optional, the count of clicks to synthesize (for double
                       click events).
-        """
+        '''
         el = element.id
-        self.action_chain.append(["click", el, button, count])
+        self.action_chain.append(['click', el, button, count])
         return self
 
     def context_click(self, element):
-        """
+        '''
         Performs a context click on the specified element.
 
         :param element: The element to context click.
-        """
+        '''
         return self.click(element, button=MouseButton.RIGHT)
 
     def middle_click(self, element):
-        """
+        '''
         Performs a middle click on the specified element.
 
         :param element: The element to middle click.
-        """
+        '''
         return self.click(element, button=MouseButton.MIDDLE)
 
     def double_click(self, element):
-        """
+        '''
         Performs a double click on the specified element.
 
         :param element: The element to double click.
-        """
+        '''
         return self.click(element, count=2)
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
-        """
+        '''
         Performs a flick gesture on the target element.
 
         :param element: The element to perform the flick gesture on.
@@ -212,24 +212,24 @@ class Actions(object):
          corner of the element.
         :param duration: Time needed for the flick gesture for complete (in
          milliseconds).
-        """
+        '''
         element = element.id
         elapsed = 0
         time_increment = 10
         if time_increment >= duration:
             time_increment = duration
-        move_x = time_increment * 1.0 / duration * (x2 - x1)
-        move_y = time_increment * 1.0 / duration * (y2 - y1)
-        self.action_chain.append(["press", element, x1, y1])
+        move_x = time_increment*1.0/duration * (x2 - x1)
+        move_y = time_increment*1.0/duration * (y2 - y1)
+        self.action_chain.append(['press', element, x1, y1])
         while elapsed < duration:
             elapsed += time_increment
-            self.action_chain.append(["moveByOffset", move_x, move_y])
-            self.action_chain.append(["wait", time_increment / 1000])
-        self.action_chain.append(["release"])
+            self.action_chain.append(['moveByOffset', move_x, move_y])
+            self.action_chain.append(['wait', time_increment/1000])
+        self.action_chain.append(['release'])
         return self
 
     def long_press(self, element, time_in_seconds, x=None, y=None):
-        """
+        '''
         Performs a long press gesture on the target element.
 
         :param element: The element to press.
@@ -245,11 +245,11 @@ class Actions(object):
 
           action.press(element, x, y).wait(time_in_seconds).release()
 
-        """
+        '''
         element = element.id
-        self.action_chain.append(["press", element, x, y])
-        self.action_chain.append(["wait", time_in_seconds])
-        self.action_chain.append(["release"])
+        self.action_chain.append(['press', element, x, y])
+        self.action_chain.append(['wait', time_in_seconds])
+        self.action_chain.append(['release'])
         return self
 
     def key_down(self, key_code):
@@ -259,7 +259,7 @@ class Actions(object):
 
         :param key_code: The key to press as a result of this action.
         """
-        self.action_chain.append(["keyDown", key_code])
+        self.action_chain.append(['keyDown', key_code])
         return self
 
     def key_up(self, key_code):
@@ -269,7 +269,7 @@ class Actions(object):
 
         :param key_up: The key to release as a result of this action.
         """
-        self.action_chain.append(["keyUp", key_code])
+        self.action_chain.append(['keyUp', key_code])
         return self
 
     def perform(self):
@@ -277,13 +277,11 @@ class Actions(object):
         execution and clears the current chain of actions."""
         body = {"chain": self.action_chain, "nextId": self.current_id}
         try:
-            self.current_id = self.marionette._send_message(
-                "Marionette:ActionChain", body, key="value"
-            )
+            self.current_id = self.marionette._send_message("Marionette:ActionChain",
+                                                            body, key="value")
         except errors.UnknownCommandException:
-            self.current_id = self.marionette._send_message(
-                "actionChain", body, key="value"
-            )
+            self.current_id = self.marionette._send_message("actionChain",
+                                                            body, key="value")
         self.action_chain = []
         return self
 

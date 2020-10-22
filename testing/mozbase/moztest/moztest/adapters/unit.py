@@ -24,7 +24,8 @@ def get_test_class_name(test):
     passed in structured loggers. You can override the default by
     implementing a "get_test_class_name" method on you TestCase subclass.
     """
-    return "%s.%s" % (test.__class__.__module__, test.__class__.__name__)
+    return "%s.%s" % (test.__class__.__module__,
+                      test.__class__.__name__)
 
 
 def get_test_method_name(test):
@@ -40,10 +41,11 @@ def get_test_method_name(test):
 
 
 class StructuredTestResult(TextTestResult):
+
     def __init__(self, *args, **kwargs):
-        self.logger = kwargs.pop("logger")
+        self.logger = kwargs.pop('logger')
         self.test_list = kwargs.pop("test_list", [])
-        self.result_callbacks = kwargs.pop("result_callbacks", [])
+        self.result_callbacks = kwargs.pop('result_callbacks', [])
         self.passed = 0
         self.testsRun = 0
         TextTestResult.__init__(self, *args, **kwargs)
@@ -103,70 +105,75 @@ class StructuredTestResult(TextTestResult):
         return "".join(lines)
 
     def _get_class_method_name(self, test):
-        if hasattr(test, "get_test_class_name"):
+        if hasattr(test, 'get_test_class_name'):
             class_name = test.get_test_class_name()
         else:
             class_name = get_test_class_name(test)
 
-        if hasattr(test, "get_test_method_name"):
+        if hasattr(test, 'get_test_method_name'):
             method_name = test.get_test_method_name()
         else:
             method_name = get_test_method_name(test)
 
-        return {"class_name": class_name, "method_name": method_name}
+        return {
+            'class_name': class_name,
+            'method_name': method_name
+        }
 
     def addError(self, test, err):
         self.errors.append((test, self._exc_info_to_string(err, test)))
         extra = self.call_callbacks(test, "ERROR")
         extra.update(self._get_class_method_name(test))
-        self.logger.test_end(
-            test.id(),
-            "ERROR",
-            message=self._extract_err_message(err),
-            expected="PASS",
-            stack=self._extract_stacktrace(err, test),
-            extra=extra,
-        )
+        self.logger.test_end(test.id(),
+                             "ERROR",
+                             message=self._extract_err_message(err),
+                             expected="PASS",
+                             stack=self._extract_stacktrace(err, test),
+                             extra=extra)
 
     def addFailure(self, test, err):
         extra = self.call_callbacks(test, "FAIL")
         extra.update(self._get_class_method_name(test))
-        self.logger.test_end(
-            test.id(),
-            "FAIL",
-            message=self._extract_err_message(err),
-            expected="PASS",
-            stack=self._extract_stacktrace(err, test),
-            extra=extra,
-        )
+        self.logger.test_end(test.id(),
+                             "FAIL",
+                             message=self._extract_err_message(err),
+                             expected="PASS",
+                             stack=self._extract_stacktrace(err, test),
+                             extra=extra)
 
     def addSuccess(self, test):
         extra = self._get_class_method_name(test)
-        self.logger.test_end(test.id(), "PASS", expected="PASS", extra=extra)
+        self.logger.test_end(test.id(),
+                             "PASS",
+                             expected="PASS",
+                             extra=extra)
 
     def addExpectedFailure(self, test, err):
         extra = self.call_callbacks(test, "FAIL")
         extra.update(self._get_class_method_name(test))
-        self.logger.test_end(
-            test.id(),
-            "FAIL",
-            message=self._extract_err_message(err),
-            expected="FAIL",
-            stack=self._extract_stacktrace(err, test),
-            extra=extra,
-        )
+        self.logger.test_end(test.id(),
+                             "FAIL",
+                             message=self._extract_err_message(err),
+                             expected="FAIL",
+                             stack=self._extract_stacktrace(err, test),
+                             extra=extra)
 
     def addUnexpectedSuccess(self, test):
         extra = self.call_callbacks(test, "PASS")
         extra.update(self._get_class_method_name(test))
-        self.logger.test_end(test.id(), "PASS", expected="FAIL", extra=extra)
+        self.logger.test_end(test.id(),
+                             "PASS",
+                             expected="FAIL",
+                             extra=extra)
 
     def addSkip(self, test, reason):
         extra = self.call_callbacks(test, "SKIP")
         extra.update(self._get_class_method_name(test))
-        self.logger.test_end(
-            test.id(), "SKIP", message=reason, expected="PASS", extra=extra
-        )
+        self.logger.test_end(test.id(),
+                             "SKIP",
+                             message=reason,
+                             expected="PASS",
+                             extra=extra)
 
 
 class StructuredTestRunner(unittest.TextTestRunner):
@@ -188,13 +195,11 @@ class StructuredTestRunner(unittest.TextTestRunner):
         unittest.TextTestRunner.__init__(self, **kwargs)
 
     def _makeResult(self):
-        return self.resultclass(
-            self.stream,
-            self.descriptions,
-            self.verbosity,
-            logger=self.logger,
-            test_list=self.test_list,
-        )
+        return self.resultclass(self.stream,
+                                self.descriptions,
+                                self.verbosity,
+                                logger=self.logger,
+                                test_list=self.test_list)
 
     def run(self, test):
         """Run the given test case or test suite."""
@@ -202,17 +207,17 @@ class StructuredTestRunner(unittest.TextTestRunner):
         result.failfast = self.failfast
         result.buffer = self.buffer
         startTime = time.time()
-        startTestRun = getattr(result, "startTestRun", None)
+        startTestRun = getattr(result, 'startTestRun', None)
         if startTestRun is not None:
             startTestRun()
         try:
             test(result)
         finally:
-            stopTestRun = getattr(result, "stopTestRun", None)
+            stopTestRun = getattr(result, 'stopTestRun', None)
             if stopTestRun is not None:
                 stopTestRun()
         stopTime = time.time()
-        if hasattr(result, "time_taken"):
+        if hasattr(result, 'time_taken'):
             result.time_taken = stopTime - startTime
 
         return result

@@ -28,9 +28,7 @@ class HgCommit:
     def __init__(self, parent1, parent2):
         self.parents = []
         if parent1 == NULL_PARENT_REV:
-            raise Exception(
-                "Encountered a hg changeset with no parents! We don't handle this...."
-            )
+            raise Exception("Encountered a hg changeset with no parents! We don't handle this....")
         self.parents.append(parent1)
         if parent2 != NULL_PARENT_REV:
             self.parents.append(parent2)
@@ -51,9 +49,8 @@ def load_git_repository():
     commit_map = dict()
     # First, scan the tags for "mozilla-xxx" that keep track of manually synchronized changes
     sync_tags = filter(
-        lambda ref: ref.startswith("refs/tags/mozilla-"),
-        list(downstream_git_repo.references),
-    )
+        lambda ref: ref.startswith('refs/tags/mozilla-'),
+        list(downstream_git_repo.references))
     for desc in sync_tags:
         commit = downstream_git_repo.lookup_reference(desc).peel()
         # cut out the revision hash from the output
@@ -64,8 +61,7 @@ def load_git_repository():
     # Next, scan the commits for a specific message format
     re_commitmsg = re.compile(
         r"^\[(ghsync|wrupdater)\] From https://hg.mozilla.org/mozilla-central/rev/([0-9a-fA-F]+)$",
-        re.MULTILINE,
-    )
+        re.MULTILINE)
     for commit in downstream_git_repo.walk(downstream_git_repo.head.target):
         m = re_commitmsg.search(commit.message)
         if not m:
@@ -93,17 +89,13 @@ def find_newest_commit(commit_map):
 
 
 def get_single_rev(revset):
-    output = subprocess.check_output(
-        ["hg", "log", "-r", revset, "--template", "{node}"]
-    )
+    output = subprocess.check_output(['hg', 'log', '-r', revset, '--template', '{node}'])
     output = str(output, "ascii")
     return output
 
 
 def get_multiple_revs(revset, template):
-    output = subprocess.check_output(
-        ["hg", "log", "-r", revset, "--template", template + "\\n"]
-    )
+    output = subprocess.check_output(['hg', 'log', '-r', revset, '--template', template + '\\n'])
     for line in output.splitlines():
         yield str(line, "ascii")
 
@@ -115,7 +107,7 @@ def get_base_hg_rev(commit_map):
 
 
 def load_hg_commits(commits, query):
-    for cset in get_multiple_revs(query, "{node} {p1node} {p2node}"):
+    for cset in get_multiple_revs(query, '{node} {p1node} {p2node}'):
         tokens = cset.split()
         commits[tokens[0]] = HgCommit(tokens[1], tokens[2])
     return commits
@@ -140,43 +132,30 @@ def get_real_base_hg_rev(hg_data, commit_map):
     # Then we find their common ancestor, which will be some ancestor of base_hg_rev
     # from which those codelines.
     if len(tails) == 0:
-        common_ancestor = get_single_rev(".")
+        common_ancestor = get_single_rev('.')
     else:
-        common_ancestor = get_single_rev("ancestor(" + ",".join(tails) + ")")
+        common_ancestor = get_single_rev('ancestor(' + ','.join(tails) + ')')
     eprint("Found common ancestor of tail revisions: %s" % common_ancestor)
 
     # And then we find the newest git commit whose hg-equivalent is an ancestor of
     # that common ancestor, to make sure we are starting from a known hg/git
     # commit pair.
     for git_commit in sorted(commit_map.values(), key=timeof, reverse=True):
-        new_base = get_single_rev(
-            "ancestor(" + common_ancestor + "," + git_commit.hg_rev + ")"
-        )
+        new_base = get_single_rev('ancestor(' + common_ancestor + ',' + git_commit.hg_rev + ')')
         if new_base == common_ancestor:
             eprint(
-                "Pre-existing git commit %s from hg rev %s is descendant of common ancestor; %s"
-                % (
-                    git_commit.commit_obj.id,
-                    git_commit.hg_rev,
-                    "walking back further...",
-                )
-            )
+                "Pre-existing git commit %s from hg rev %s is descendant of common ancestor; %s" %
+                (git_commit.commit_obj.id, git_commit.hg_rev, "walking back further..."))
             continue
         if new_base != git_commit.hg_rev:
             eprint(
                 "Pre-existing git commit %s from hg rev %s is on sibling branch"
-                " of common ancestor; %s"
-                % (
-                    git_commit.commit_obj.id,
-                    git_commit.hg_rev,
-                    "walking back further...",
-                )
-            )
+                " of common ancestor; %s" %
+                (git_commit.commit_obj.id, git_commit.hg_rev, "walking back further..."))
             continue
         eprint(
-            "Pre-existing git commit %s from hg rev %s is sufficiently old; stopping walk"
-            % (git_commit.commit_obj.id, git_commit.hg_rev)
-        )
+            "Pre-existing git commit %s from hg rev %s is sufficiently old; stopping walk" %
+            (git_commit.commit_obj.id, git_commit.hg_rev))
         common_ancestor = new_base
         break
 
@@ -253,10 +232,10 @@ def build_tree(builder, treedata):
 
 
 def author_to_signature(author):
-    pieces = author.strip().split("<")
-    if len(pieces) != 2 or pieces[1][-1] != ">":
+    pieces = author.strip().split('<')
+    if len(pieces) != 2 or pieces[1][-1] != '>':
         # We could probably handle this better
-        return pygit2.Signature(author, "")
+        return pygit2.Signature(author, '')
     name = pieces[0].strip()
     email = pieces[1][:-1].strip()
     return pygit2.Signature(name, email)
@@ -266,7 +245,7 @@ def real_commit(hg_rev, parent1, parent2):
     filetree = dict()
     manifest = mozilla_hg_repo.manifest(rev=hg_rev)
     for (nodeid, permission, executable, symlink, filename) in manifest:
-        if not filename.startswith(relative_path.encode("utf-8")):
+        if not filename.startswith(relative_path.encode('utf-8')):
             continue
         if symlink:
             filemode = pygit2.GIT_FILEMODE_LINK
@@ -276,9 +255,9 @@ def real_commit(hg_rev, parent1, parent2):
             filemode = pygit2.GIT_FILEMODE_BLOB
         filecontent = mozilla_hg_repo.cat([filename], rev=hg_rev)
         subtree = filetree
-        for component in filename.split(b"/")[2:-1]:
+        for component in filename.split(b'/')[2:-1]:
             subtree = subtree.setdefault(component.decode("latin-1"), dict())
-        filename = filename.split(b"/")[-1]
+        filename = filename.split(b'/')[-1]
         subtree[filename.decode("latin-1")] = (filemode, filecontent)
 
     builder = downstream_git_repo.TreeBuilder()
@@ -299,10 +278,8 @@ def real_commit(hg_rev, parent1, parent2):
     hg_rev_obj = mozilla_hg_repo.log(revrange=hg_rev, limit=1)[0]
     commit_author = hg_rev_obj[4].decode("latin-1")
     commit_message = hg_rev_obj[5].decode("latin-1")
-    commit_message += (
-        "\n\n[ghsync] From https://hg.mozilla.org/mozilla-central/rev/%s" % hg_rev
-        + "\n"
-    )
+    commit_message += '\n\n[ghsync] From https://hg.mozilla.org/mozilla-central/rev/%s'\
+        % hg_rev + '\n'
 
     parents = [parent1]
     if parent2 is not None:
@@ -311,7 +288,7 @@ def real_commit(hg_rev, parent1, parent2):
         None,
         author_to_signature(commit_author),
         # TODO(kats): use a more appropriate email
-        pygit2.Signature("github-sync", "graphics-team@mozilla.staktrace.com"),
+        pygit2.Signature('github-sync', 'graphics-team@mozilla.staktrace.com'),
         commit_message,
         tree_oid,
         parents,
@@ -340,10 +317,7 @@ def build_git_commits(rev):
     if len(hg_commits[rev].parents) == 1:
         git_parent = build_git_commits(hg_commits[rev].parents[0])
         if not hg_commits[rev].touches_sync_code:
-            eprint(
-                "WARNING: Found rev %s that is non-merge and not related to the target"
-                % rev
-            )
+            eprint("WARNING: Found rev %s that is non-merge and not related to the target" % rev)
             return git_parent
         eprint("Building git equivalent for %s on top of %s" % (rev, git_parent))
         commit_obj = try_commit(rev, git_parent)
@@ -358,14 +332,12 @@ def build_git_commits(rev):
         if not hg_commits[rev].touches_sync_code:
             debugprint(
                 "  %s is merge with no parents or doesn't touch WR, returning %s"
-                % (rev, git_parent)
-            )
+                % (rev, git_parent))
             return git_parent
 
         eprint(
             "WARNING: Found merge rev %s whose parents have identical target code"
-            ", but modifies the target" % rev
-        )
+            ", but modifies the target" % rev)
         eprint("Building git equivalent for %s on top of %s" % (rev, git_parent))
         commit_obj = try_commit(rev, git_parent)
         hg_to_git_commit_map[rev] = GitCommit(rev, commit_obj)
@@ -373,10 +345,7 @@ def build_git_commits(rev):
         return commit_obj.oid
 
     # An actual merge
-    eprint(
-        "Building git equivalent for %s on top of %s, %s"
-        % (rev, git_parent_1, git_parent_2)
-    )
+    eprint("Building git equivalent for %s on top of %s, %s" % (rev, git_parent_1, git_parent_2))
     commit_obj = try_commit(rev, git_parent_1, git_parent_2)
     hg_to_git_commit_map[rev] = GitCommit(rev, commit_obj)
     debugprint("  built %s as %s" % (rev, commit_obj.oid))
@@ -401,7 +370,7 @@ if len(sys.argv) < 3:
 local_checkout_path = sys.argv[1]
 relative_path = sys.argv[2]
 mozilla_hg_path = os.getcwd()
-NULL_PARENT_REV = "0000000000000000000000000000000000000000"
+NULL_PARENT_REV = '0000000000000000000000000000000000000000'
 
 downstream_git_repo = pygit2.Repository(pygit2.discover_repository(local_checkout_path))
 mozilla_hg_repo = hglib.open(mozilla_hg_path)
@@ -411,13 +380,13 @@ if base_hg_rev is None:
     eprint("Found no sync commits or 'mozilla-xxx' tags")
     exit(1)
 
-hg_commits = load_hg_commits(dict(), "only(.," + base_hg_rev + ")")
+hg_commits = load_hg_commits(dict(), 'only(.,' + base_hg_rev + ')')
 eprint("Initial set has %s changesets" % len(hg_commits))
 base_hg_rev = get_real_base_hg_rev(hg_commits, hg_to_git_commit_map)
 eprint("Using hg rev %s as common ancestor of all interesting changesets" % base_hg_rev)
 
 # Refresh hg_commits with our wider dataset
-hg_tip = get_single_rev(".")
+hg_tip = get_single_rev('.')
 wider_range = "%s::%s" % (base_hg_rev, hg_tip)
 hg_commits = load_hg_commits(hg_commits, wider_range)
 eprint("Updated set has %s changesets" % len(hg_commits))
@@ -425,28 +394,20 @@ eprint("Updated set has %s changesets" % len(hg_commits))
 if DEBUG:
     eprint("Graph of descendants of %s" % base_hg_rev)
     output = subprocess.check_output(
-        [
-            "hg",
-            "log",
-            "--graph",
-            "-r",
-            "descendants(" + base_hg_rev + ")",
-            "--template",
-            "{node} {desc|firstline}\\n",
-        ]
-    )
+        ['hg', 'log', '--graph',
+         '-r', 'descendants(' + base_hg_rev + ')',
+         '--template', '{node} {desc|firstline}\\n'])
     for line in output.splitlines():
-        eprint(line.decode("utf-8", "ignore"))
+        eprint(line.decode('utf-8', 'ignore'))
 
 # Also flag any changes that touch the project
-query = "(" + wider_range + ') & file("glob:' + relative_path + '/**")'
-for cset in get_multiple_revs(query, "{node}"):
+query = '(' + wider_range + ') & file("glob:' + relative_path + '/**")'
+for cset in get_multiple_revs(query, '{node}'):
     debugprint("Changeset %s modifies %s" % (cset, relative_path))
     hg_commits[cset].touches_sync_code = True
 eprint(
-    "Identified %s changesets that touch the target code"
-    % sum([1 if v.touches_sync_code else 0 for (k, v) in hg_commits.items()])
-)
+    "Identified %s changesets that touch the target code" %
+    sum([1 if v.touches_sync_code else 0 for (k, v) in hg_commits.items()]))
 
 prune_boring(hg_tip)
 
@@ -463,16 +424,12 @@ for (rev, cset) in hg_commits.items():
 if DEBUG:
     eprint("--- Other changesets (not really interesting) ---")
     for (rev, cset) in hg_commits.items():
-        if not (
-            cset.touches_sync_code
-            or len(cset.parents) > 1
-            or rev in hg_to_git_commit_map
-        ):
+        if not (cset.touches_sync_code or len(cset.parents) > 1 or rev in hg_to_git_commit_map):
             eprint(pretty_print(rev, cset))
 
 git_tip = build_git_commits(hg_tip)
 if git_tip is None:
     eprint("No new changesets generated, exiting.")
 else:
-    downstream_git_repo.create_reference("refs/heads/github-sync", git_tip, force=True)
+    downstream_git_repo.create_reference('refs/heads/github-sync', git_tip, force=True)
     eprint("Updated github-sync branch to %s, done!" % git_tip)

@@ -4,55 +4,55 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "XML")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'XML')
 
-MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/mochitest/browser.ini']
 
 XPIDL_SOURCES += [
-    "nsIExpatSink.idl",
+    'nsIExpatSink.idl',
 ]
 
-XPIDL_MODULE = "htmlparser"
+XPIDL_MODULE = 'htmlparser'
 
 EXPORTS += [
-    "nsElementTable.h",
-    "nsHTMLTagList.h",
-    "nsHTMLTags.h",
-    "nsIContentSink.h",
-    "nsIDTD.h",
-    "nsIFragmentContentSink.h",
-    "nsIHTMLContentSink.h",
-    "nsIParser.h",
-    "nsITokenizer.h",
-    "nsParserBase.h",
-    "nsParserCIID.h",
-    "nsParserConstants.h",
-    "nsScannerString.h",
+    'nsElementTable.h',
+    'nsHTMLTagList.h',
+    'nsHTMLTags.h',
+    'nsIContentSink.h',
+    'nsIDTD.h',
+    'nsIFragmentContentSink.h',
+    'nsIHTMLContentSink.h',
+    'nsIParser.h',
+    'nsITokenizer.h',
+    'nsParserBase.h',
+    'nsParserCIID.h',
+    'nsParserConstants.h',
+    'nsScannerString.h',
 ]
 
 UNIFIED_SOURCES += [
-    "CNavDTD.cpp",
-    "CParserContext.cpp",
-    "nsElementTable.cpp",
-    "nsExpatDriver.cpp",
-    "nsHTMLTags.cpp",
-    "nsHTMLTokenizer.cpp",
-    "nsParser.cpp",
-    "nsParserModule.cpp",
-    "nsParserMsgUtils.cpp",
-    "nsScanner.cpp",
-    "nsScannerString.cpp",
+    'CNavDTD.cpp',
+    'CParserContext.cpp',
+    'nsElementTable.cpp',
+    'nsExpatDriver.cpp',
+    'nsHTMLTags.cpp',
+    'nsHTMLTokenizer.cpp',
+    'nsParser.cpp',
+    'nsParserModule.cpp',
+    'nsParserMsgUtils.cpp',
+    'nsScanner.cpp',
+    'nsScannerString.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

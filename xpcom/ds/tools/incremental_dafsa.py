@@ -183,8 +183,7 @@ class SuffixCursor:
         Return True if such a node is found."""
         return self._query(
             end_of_prefix.character,
-            lambda node: node.is_replacement_for_prefix_end_node(end_of_prefix),
-        )
+            lambda node: node.is_replacement_for_prefix_end_node(end_of_prefix))
 
     def find_inside_of_prefix_replacement(self, prefix_node: Node):
         """Find the next matching suffix node that replaces a node within the prefix.
@@ -192,8 +191,7 @@ class SuffixCursor:
         Return True if such a node is found."""
         return self._query(
             prefix_node.character,
-            lambda node: node.is_replacement_for_prefix_node(prefix_node),
-        )
+            lambda node: node.is_replacement_for_prefix_node(prefix_node))
 
 
 class DafsaAppendStateMachine:
@@ -314,8 +312,7 @@ class DafsaAppendStateMachine:
                 # Removes the link between the unique part of the prefix and the
                 # shared part of the prefix.
                 self.stack[self.first_fork_index].remove_parent(
-                    self.stack[self.first_fork_index - 1]
-                )
+                    self.stack[self.first_fork_index - 1])
                 self.suffix_overlaps_prefix = True
 
         if self.first_fork_index is None:
@@ -437,12 +434,11 @@ class DafsaAppendStateMachine:
                 self.prefix_index,
                 # if suffix_overlaps_parent, the parent link was removed
                 # earlier in the word-adding process.
-                remove_parent_link=not self.suffix_overlaps_prefix,
-            )
+                remove_parent_link=not self.suffix_overlaps_prefix)
         else:
             front_node = self.stack[self.prefix_index]
 
-        new_text = self.word[self.prefix_index : self.suffix_cursor.index - 1]
+        new_text = self.word[self.prefix_index: self.suffix_cursor.index - 1]
         for character in new_text:
             new_node = Node(character)
             front_node.add_child(new_node)

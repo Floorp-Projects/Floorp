@@ -3,15 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "TestDLLBlocklist.cpp",
-    "TestNativeNtGTest.cpp",
+    'TestDLLBlocklist.cpp',
+    'TestNativeNtGTest.cpp',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
 TEST_DIRS += [
-    "TestDllBlocklist_AllowByVersion",
-    "TestDllBlocklist_MatchByName",
-    "TestDllBlocklist_MatchByVersion",
-    "TestDllBlocklist_NoOpEntryPoint",
+    'TestDllBlocklist_AllowByVersion',
+    'TestDllBlocklist_MatchByName',
+    'TestDllBlocklist_MatchByVersion',
+    'TestDllBlocklist_NoOpEntryPoint',
 ]
+

@@ -5,34 +5,34 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "../SandboxLogging.cpp",
-    "SandboxCrash.cpp",
-    "SandboxPrefBridge.cpp",
+    '../SandboxLogging.cpp',
+    'SandboxCrash.cpp',
+    'SandboxPrefBridge.cpp',
 ]
 
 SOURCES += [
-    "../../chromium/base/strings/safe_sprintf.cc",
+    '../../chromium/base/strings/safe_sprintf.cc',
 ]
 
 # Avoid Chromium logging dependency, because this is going into
 # libxul.  See also the comment in SandboxLogging.h.
-SOURCES["../../chromium/base/strings/safe_sprintf.cc"].flags += ["-DNDEBUG"]
+SOURCES['../../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 
 # Need this for mozilla::ipc::FileDescriptor etc.
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     # Need this for safe_sprintf.h used by SandboxLogging.h,
     # but it has to be after ipc/chromium/src.
-    "/security/sandbox/chromium",
-    "/security/sandbox/linux",
+    '/security/sandbox/chromium',
+    '/security/sandbox/linux',
 ]
 
 USE_LIBS += [
-    "mozsandbox",
+    'mozsandbox',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

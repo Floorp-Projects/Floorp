@@ -22,19 +22,19 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    title="Cancel All",
-    name="cancel-all",
-    symbol="cAll",
+    title='Cancel All',
+    name='cancel-all',
+    symbol='cAll',
     description=(
-        "Cancel all running and pending tasks created by the decision task "
-        "this action task is associated with."
+        'Cancel all running and pending tasks created by the decision task '
+        'this action task is associated with.'
     ),
     order=400,
-    context=[],
+    context=[]
 )
 def cancel_all_action(parameters, graph_config, input, task_group_id, task_id):
     def do_cancel_task(task_id):
-        logger.info("Cancelling task {}".format(task_id))
+        logger.info('Cancelling task {}'.format(task_id))
         try:
             cancel_task(task_id, use_proxy=True)
         except requests.HTTPError as e:
@@ -43,19 +43,12 @@ def cancel_all_action(parameters, graph_config, input, task_group_id, task_id):
                 # cannot be cancelled at this time, but it's also not running
                 # anymore, so we can ignore this error.
                 logger.info(
-                    "Task {} is past its deadline and cannot be cancelled.".format(
-                        task_id
-                    )
-                )
+                    'Task {} is past its deadline and cannot be cancelled.'.format(task_id))
                 return
             raise
 
-    own_task_id = os.environ.get("TASK_ID", "")
-    to_cancel = [
-        t
-        for t in list_task_group_incomplete_task_ids(task_group_id)
-        if t != own_task_id
-    ]
+    own_task_id = os.environ.get('TASK_ID', '')
+    to_cancel = [t for t in list_task_group_incomplete_task_ids(task_group_id) if t != own_task_id]
 
     logger.info("Cancelling {} tasks".format(len(to_cancel)))
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:

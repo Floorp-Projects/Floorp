@@ -1,1 +1,1 @@
-RUST_PROGRAMS += ["none"]
+RUST_PROGRAMS += ['none']

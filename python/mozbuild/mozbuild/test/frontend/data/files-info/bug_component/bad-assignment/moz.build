@@ -1,2 +1,2 @@
-with Files("*"):
-    BUG_COMPONENT = "bad value"
+with Files('*'):
+    BUG_COMPONENT = 'bad value'

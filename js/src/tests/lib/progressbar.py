@@ -5,31 +5,25 @@ import sys
 
 from datetime import datetime, timedelta
 
-if sys.platform.startswith("win"):
+if sys.platform.startswith('win'):
     from .terminal_win import Terminal
 else:
     from .terminal_unix import Terminal
 
 
 class NullProgressBar(object):
-    def update(self, current, data):
-        pass
+    def update(self, current, data): pass
 
-    def poke(self):
-        pass
+    def poke(self): pass
 
-    def finish(self, complete=True):
-        pass
+    def finish(self, complete=True): pass
 
-    def beginline(self):
-        pass
+    def beginline(self): pass
 
-    def message(self, msg):
-        sys.stdout.write(msg + "\n")
+    def message(self, msg): sys.stdout.write(msg + '\n')
 
     @staticmethod
-    def update_granularity():
-        return timedelta.max
+    def update_granularity(): return timedelta.max
 
 
 class ProgressBar(object):
@@ -68,31 +62,30 @@ class ProgressBar(object):
         self.atLineStart = False
 
         # Build counters string.
-        sys.stdout.write("\r[")
+        sys.stdout.write('\r[')
         for layout in self.counters_fmt:
-            Terminal.set_color(layout["color"])
-            sys.stdout.write(
-                ("{:" + str(self.limit_digits) + "d}").format(data[layout["value"]])
-            )
+            Terminal.set_color(layout['color'])
+            sys.stdout.write(('{:' + str(self.limit_digits) + 'd}').format(
+                data[layout['value']]))
             Terminal.reset_color()
             if layout != self.counters_fmt[-1]:
-                sys.stdout.write("|")
+                sys.stdout.write('|')
             else:
-                sys.stdout.write("] ")
+                sys.stdout.write('] ')
 
         # Build the bar.
         pct = int(100.0 * current / self.limit)
-        sys.stdout.write("{:3d}% ".format(pct))
+        sys.stdout.write('{:3d}% '.format(pct))
 
         barlen = int(1.0 * self.barlen * current / self.limit) - 1
-        bar = "=" * barlen + ">" + " " * (self.barlen - barlen - 1)
-        sys.stdout.write(bar + "|")
+        bar = '=' * barlen + '>' + ' ' * (self.barlen - barlen - 1)
+        sys.stdout.write(bar + '|')
 
         # Update the bar.
         now = datetime.now()
         dt = now - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
-        sys.stdout.write("{:6.1f}s".format(dt))
+        sys.stdout.write('{:6.1f}s'.format(dt))
         Terminal.clear_right()
 
         # Force redisplay, since we didn't write a \n.
@@ -109,24 +102,22 @@ class ProgressBar(object):
 
     def finish(self, complete=True):
         if not self.prior:
-            sys.stdout.write(
-                "No test run... You can try adding"
-                " --run-slow-tests or --run-skipped to run more tests\n"
-            )
+            sys.stdout.write('No test run... You can try adding'
+                             ' --run-slow-tests or --run-skipped to run more tests\n')
             return
         final_count = self.limit if complete else self.prior[0]
         self.update(final_count, self.prior[1])
-        sys.stdout.write("\n")
+        sys.stdout.write('\n')
 
     def beginline(self):
         if not self.atLineStart:
-            sys.stdout.write("\n")
+            sys.stdout.write('\n')
             self.atLineStart = True
 
     def message(self, msg):
         self.beginline()
         sys.stdout.write(msg)
-        sys.stdout.write("\n")
+        sys.stdout.write('\n')
 
     @staticmethod
     def conservative_isatty():
@@ -138,7 +129,6 @@ class ProgressBar(object):
         """
         try:
             import android  # NOQA: F401
-
             return False
         except ImportError:
             return sys.stdout.isatty()

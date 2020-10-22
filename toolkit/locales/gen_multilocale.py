@@ -15,5 +15,5 @@ def main(output, *locales):
     print(",".join(locales), file=output)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

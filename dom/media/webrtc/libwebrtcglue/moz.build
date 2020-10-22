@@ -3,35 +3,35 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
+include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
 
 LOCAL_INCLUDES += [
-    "!/ipc/ipdl/_ipdlheaders",
-    "/dom/media/gmp",  # for GMPLog.h,
-    "/dom/media/webrtc",
-    "/ipc/chromium/src",
-    "/media/libyuv/libyuv/include",
-    "/media/webrtc",
-    "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    '!/ipc/ipdl/_ipdlheaders',
+    '/dom/media/gmp', # for GMPLog.h,
+    '/dom/media/webrtc',
+    '/ipc/chromium/src',
+    '/media/libyuv/libyuv/include',
+    '/media/webrtc',
+    '/third_party/libwebrtc',
+    '/third_party/libwebrtc/webrtc',
 ]
 
 UNIFIED_SOURCES += [
-    "AudioConduit.cpp",
-    "GmpVideoCodec.cpp",
-    "MediaDataCodec.cpp",
-    "RtpSourceObserver.cpp",
-    "VideoConduit.cpp",
-    "VideoStreamFactory.cpp",
-    "WebrtcGmpVideoCodec.cpp",
-    "WebrtcMediaDataDecoderCodec.cpp",
-    "WebrtcMediaDataEncoderCodec.cpp",
+    'AudioConduit.cpp',
+    'GmpVideoCodec.cpp',
+    'MediaDataCodec.cpp',
+    'RtpSourceObserver.cpp',
+    'VideoConduit.cpp',
+    'VideoStreamFactory.cpp',
+    'WebrtcGmpVideoCodec.cpp',
+    'WebrtcMediaDataDecoderCodec.cpp',
+    'WebrtcMediaDataEncoderCodec.cpp',
 ]
 
-if CONFIG["OS_TARGET"] == "Android":
+if CONFIG['OS_TARGET'] == 'Android':
     UNIFIED_SOURCES += [
-        "MediaCodecVideoCodec.cpp",
-        "WebrtcMediaCodecVP8VideoCodec.cpp",
+        'MediaCodecVideoCodec.cpp',
+        'WebrtcMediaCodecVP8VideoCodec.cpp',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

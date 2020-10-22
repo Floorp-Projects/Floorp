@@ -5,67 +5,68 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "APKOpen.h",
+    'APKOpen.h',
 ]
 
-EXPORTS.mozilla += ["Ashmem.h"]
+EXPORTS.mozilla += ['Ashmem.h']
 
 SOURCES += [
-    "APKOpen.cpp",
-    "Ashmem.cpp",
-    "NativeCrypto.cpp",
-    "nsGeckoUtils.cpp",
-    "pbkdf2_sha256.c",
-    "SharedMemNatives.cpp",
+    'APKOpen.cpp',
+    'Ashmem.cpp',
+    'NativeCrypto.cpp',
+    'nsGeckoUtils.cpp',
+    'pbkdf2_sha256.c',
+    'SharedMemNatives.cpp',
 ]
 
-if CONFIG["MOZ_CRASHREPORTER"]:
+if CONFIG['MOZ_CRASHREPORTER']:
     USE_LIBS += [
-        "minidump-analyzer",
+        'minidump-analyzer',
     ]
 
     LOCAL_INCLUDES += [
-        "/toolkit/crashreporter/minidump-analyzer",
+        '/toolkit/crashreporter/minidump-analyzer',
     ]
 
-FINAL_LIBRARY = "mozglue"
+FINAL_LIBRARY = 'mozglue'
 
-for var in ("ANDROID_PACKAGE_NAME", "ANDROID_CPU_ARCH"):
+for var in ('ANDROID_PACKAGE_NAME',
+            'ANDROID_CPU_ARCH'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-if CONFIG["MOZ_FOLD_LIBS"]:
-    DEFINES["MOZ_FOLD_LIBS"] = True
+if CONFIG['MOZ_FOLD_LIBS']:
+    DEFINES['MOZ_FOLD_LIBS'] = True
 
 LOCAL_INCLUDES += [
-    "!/build",
-    "../linker",
-    "/ipc/chromium/src",
-    "/nsprpub/lib/ds",
-    "/nsprpub/lib/libc/include",
-    "/nsprpub/pr/include",
-    "/security/nss/lib/base",
-    "/security/nss/lib/certdb",
-    "/security/nss/lib/cryptohi",
-    "/security/nss/lib/dev",
-    "/security/nss/lib/freebl",
-    "/security/nss/lib/nss",
-    "/security/nss/lib/pk11wrap",
-    "/security/nss/lib/pkcs7",
-    "/security/nss/lib/pki",
-    "/security/nss/lib/smime",
-    "/security/nss/lib/softoken",
-    "/security/nss/lib/ssl",
-    "/security/nss/lib/util",
-    "/third_party/sqlite3/src",
-    "/toolkit/components/startup",
-    "/xpcom/build",
+    '!/build',
+    '../linker',
+    '/ipc/chromium/src',
+    '/nsprpub/lib/ds',
+    '/nsprpub/lib/libc/include',
+    '/nsprpub/pr/include',
+    '/security/nss/lib/base',
+    '/security/nss/lib/certdb',
+    '/security/nss/lib/cryptohi',
+    '/security/nss/lib/dev',
+    '/security/nss/lib/freebl',
+    '/security/nss/lib/nss',
+    '/security/nss/lib/pk11wrap',
+    '/security/nss/lib/pkcs7',
+    '/security/nss/lib/pki',
+    '/security/nss/lib/smime',
+    '/security/nss/lib/softoken',
+    '/security/nss/lib/ssl',
+    '/security/nss/lib/util',
+    '/third_party/sqlite3/src',
+    '/toolkit/components/startup',
+    '/xpcom/build',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-DEFINES["XPCOM_GLUE"] = True
+DEFINES['XPCOM_GLUE'] = True
 
 USE_LIBS += [
-    "xpcomglue",
+    'xpcomglue',
 ]

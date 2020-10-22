@@ -6,37 +6,34 @@
 # of huff_incoming.txt also lives in this directory as an example).
 import sys
 
-
 def char_cmp(x, y):
-    rv = cmp(x["nbits"], y["nbits"])
+    rv = cmp(x['nbits'], y['nbits'])
     if not rv:
-        rv = cmp(x["bpat"], y["bpat"])
+        rv = cmp(x['bpat'], y['bpat'])
     if not rv:
-        rv = cmp(x["ascii"], y["ascii"])
+        rv = cmp(x['ascii'], y['ascii'])
     return rv
-
 
 characters = []
 
 for line in sys.stdin:
     line = line.rstrip()
-    obracket = line.rfind("[")
-    nbits = int(line[obracket + 1 : -1])
+    obracket = line.rfind('[')
+    nbits = int(line[obracket + 1:-1])
 
-    oparen = line.find(" (")
-    ascii = int(line[oparen + 2 : oparen + 5].strip())
+    oparen = line.find(' (')
+    ascii = int(line[oparen + 2:oparen + 5].strip())
 
-    bar = line.find("|", oparen)
-    space = line.find(" ", bar)
-    bpat = line[bar + 1 : space].strip().rstrip("|")
+    bar = line.find('|', oparen)
+    space = line.find(' ', bar)
+    bpat = line[bar + 1:space].strip().rstrip('|')
 
-    characters.append({"ascii": ascii, "nbits": nbits, "bpat": bpat})
+    characters.append({'ascii': ascii, 'nbits': nbits, 'bpat': bpat})
 
 characters.sort(cmp=char_cmp)
 raw_entries = []
 for c in characters:
-    raw_entries.append((c["ascii"], c["bpat"]))
-
+    raw_entries.append((c['ascii'], c['bpat']))
 
 class DefaultList(list):
     def __init__(self, default=None):
@@ -55,18 +52,16 @@ class DefaultList(list):
         self.__ensure_size(idx + 1)
         super(DefaultList, self).__setitem__(idx, val)
 
-
 def expand_to_8bit(bstr):
     while len(bstr) < 8:
-        bstr += "0"
+        bstr += '0'
     return int(bstr, 2)
-
 
 table = DefaultList()
 for r in raw_entries:
     ascii, bpat = r
     ascii = int(ascii)
-    bstrs = bpat.split("|")
+    bstrs = bpat.split('|')
     curr_table = table
     while len(bstrs) > 1:
         idx = expand_to_8bit(bstrs[0])
@@ -76,68 +71,68 @@ for r in raw_entries:
         bstrs.pop(0)
 
     idx = expand_to_8bit(bstrs[0])
-    curr_table[idx] = {
-        "prefix_len": len(bstrs[0]),
-        "mask": int(bstrs[0], 2),
-        "value": ascii,
-    }
+    curr_table[idx] = {'prefix_len': len(bstrs[0]),
+                        'mask': int(bstrs[0], 2),
+                        'value': ascii}
 
 
-def output_table(table, name_suffix=""):
+def output_table(table, name_suffix=''):
     max_prefix_len = 0
     for i, t in enumerate(table):
         if isinstance(t, dict):
-            if t["prefix_len"] > max_prefix_len:
-                max_prefix_len = t["prefix_len"]
+            if t['prefix_len'] > max_prefix_len:
+                max_prefix_len = t['prefix_len']
         elif t is not None:
-            output_table(t, "%s_%s" % (name_suffix, i))
+            output_table(t, '%s_%s' % (name_suffix, i))
 
-    tablename = "HuffmanIncoming%s" % (name_suffix if name_suffix else "Root",)
-    entriestable = tablename.replace("HuffmanIncoming", "HuffmanIncomingEntries")
-    nexttable = tablename.replace("HuffmanIncoming", "HuffmanIncomingNextTables")
-    sys.stdout.write("static const HuffmanIncomingEntry %s[] = {\n" % (entriestable,))
+    tablename = 'HuffmanIncoming%s' % (name_suffix if name_suffix else 'Root',)
+    entriestable = tablename.replace('HuffmanIncoming', 'HuffmanIncomingEntries')
+    nexttable = tablename.replace('HuffmanIncoming', 'HuffmanIncomingNextTables')
+    sys.stdout.write('static const HuffmanIncomingEntry %s[] = {\n' %
+                     (entriestable,))
     prefix_len = 0
     value = 0
     i = 0
     while i < 256:
         t = table[i]
         if isinstance(t, dict):
-            value = t["value"]
-            prefix_len = t["prefix_len"]
+            value = t['value']
+            prefix_len = t['prefix_len']
         elif t is not None:
             break
 
-        sys.stdout.write("  { %s, %s }" % (value, prefix_len))
-        sys.stdout.write(",\n")
+        sys.stdout.write('  { %s, %s }' %
+                         (value, prefix_len))
+        sys.stdout.write(',\n')
         i += 1
 
     indexOfFirstNextTable = i
     if i < 256:
-        sys.stdout.write("};\n")
-        sys.stdout.write("\n")
-        sys.stdout.write("static const HuffmanIncomingTable* %s[] = {\n" % (nexttable,))
+        sys.stdout.write('};\n')
+        sys.stdout.write('\n')
+        sys.stdout.write('static const HuffmanIncomingTable* %s[] = {\n' %
+                         (nexttable,))
         while i < 256:
-            subtable = "%s_%s" % (name_suffix, i)
-            ptr = "&HuffmanIncoming%s" % (subtable,)
-            sys.stdout.write("  %s" % (ptr))
-            sys.stdout.write(",\n")
+            subtable = '%s_%s' % (name_suffix, i)
+            ptr = '&HuffmanIncoming%s' % (subtable,)
+            sys.stdout.write('  %s' %
+                             (ptr))
+            sys.stdout.write(',\n')
             i += 1
     else:
-        nexttable = "nullptr"
+        nexttable = 'nullptr'
 
-    sys.stdout.write("};\n")
-    sys.stdout.write("\n")
-    sys.stdout.write("static const HuffmanIncomingTable %s = {\n" % (tablename,))
-    sys.stdout.write("  %s,\n" % (entriestable,))
-    sys.stdout.write("  %s,\n" % (nexttable,))
-    sys.stdout.write("  %s,\n" % (indexOfFirstNextTable,))
-    sys.stdout.write("  %s\n" % (max_prefix_len,))
-    sys.stdout.write("};\n")
-    sys.stdout.write("\n")
+    sys.stdout.write('};\n')
+    sys.stdout.write('\n')
+    sys.stdout.write('static const HuffmanIncomingTable %s = {\n' % (tablename,))
+    sys.stdout.write('  %s,\n' % (entriestable,))
+    sys.stdout.write('  %s,\n' % (nexttable,))
+    sys.stdout.write('  %s,\n' % (indexOfFirstNextTable,))
+    sys.stdout.write('  %s\n' % (max_prefix_len,))
+    sys.stdout.write('};\n')
+    sys.stdout.write('\n')
 
-
-sys.stdout.write(
-    """/*
+sys.stdout.write('''/*
  * THIS FILE IS AUTO-GENERATED. DO NOT EDIT!
  */
 #ifndef mozilla__net__Http2HuffmanIncoming_h
@@ -188,15 +183,12 @@ struct HuffmanIncomingTable {
   }
 };
 
-"""
-)
+''')
 
 output_table(table)
 
-sys.stdout.write(
-    """} // namespace net
+sys.stdout.write('''} // namespace net
 } // namespace mozilla
 
 #endif // mozilla__net__Http2HuffmanIncoming_h
-"""
-)
+''')

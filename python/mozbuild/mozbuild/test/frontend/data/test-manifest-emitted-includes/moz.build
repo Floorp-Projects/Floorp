@@ -1,1 +1,1 @@
-REFTEST_MANIFESTS += ["reftest.list"]
+REFTEST_MANIFESTS += ['reftest.list']
