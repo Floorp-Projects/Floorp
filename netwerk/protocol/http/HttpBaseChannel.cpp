@@ -169,6 +169,7 @@ HttpBaseChannel::HttpBaseChannel()
       mTransferSize(0),
       mRequestSize(0),
       mDecodedBodySize(0),
+      mSupportsHTTP3(false),
       mEncodedBodySize(0),
       mRequestContextID(0),
       mContentWindowId(0),
@@ -1565,6 +1566,12 @@ HttpBaseChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
 NS_IMETHODIMP
 HttpBaseChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
   *aEncodedBodySize = mEncodedBodySize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetSupportsHTTP3(bool* aSupportsHTTP3) {
+  *aSupportsHTTP3 = mSupportsHTTP3;
   return NS_OK;
 }
 
