@@ -184,6 +184,7 @@ void nsServerSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
     mCondition = NS_ERROR_UNEXPECTED;
     return;
   }
+  PR_SetFDInheritable(clientFD, false);
 
   NetAddr clientAddr(&prClientAddr);
   // Accept succeeded, create socket transport and notify consumer
@@ -351,6 +352,8 @@ nsServerSocket::InitWithAddress(const PRNetAddr* aAddr, int32_t aBackLog) {
     NS_WARNING("unable to create server socket");
     return ErrorAccordingToNSPR(PR_GetError());
   }
+
+  PR_SetFDInheritable(mFD, false);
 
   PRSocketOptionData opt;
 
