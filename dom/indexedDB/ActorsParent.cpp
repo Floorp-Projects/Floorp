@@ -7155,10 +7155,7 @@ nsresult DatabaseConnection::StartSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::StartSavepoint", DOM);
 
-  const nsresult rv = ExecuteCachedStatement(SAVEPOINT_CLAUSE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement(SAVEPOINT_CLAUSE));
 
   mUpdateRefcountFunction->StartSavepoint();
 
@@ -7178,10 +7175,7 @@ nsresult DatabaseConnection::ReleaseSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReleaseSavepoint", DOM);
 
-  nsresult rv = ExecuteCachedStatement("RELEASE "_ns SAVEPOINT_CLAUSE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement("RELEASE "_ns SAVEPOINT_CLAUSE));
 
   mUpdateRefcountFunction->ReleaseSavepoint();
 
