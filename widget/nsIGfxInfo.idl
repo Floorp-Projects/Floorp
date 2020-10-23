@@ -213,9 +213,11 @@ interface nsIGfxInfo : nsISupports
   [noscript, notxpcom] void GetData();
 
   /**
-   * Maximum refresh rate among detected monitors. -1 if unknown.
+   * Maximum refresh rate among detected monitors. -1 if unknown. aMixed is set
+   * to true if we know there are multiple displays and they have different
+   * refresh rates, else false.
    */
-  [noscript, notxpcom] long GetMaxRefreshRate();
+  [noscript, notxpcom] long GetMaxRefreshRate(out boolean aMixed);
 
   [implicit_jscontext]
   jsval getInfo();
