@@ -163,21 +163,26 @@ var IdentityHandler = {
   },
 };
 
-class ProgressTracker {
+class Tracker {
   constructor(aModule) {
-    this.progressFilter = Cc[
-      "@mozilla.org/appshell/component/browser-status-filter;1"
-    ].createInstance(Ci.nsIWebProgress);
+    this._module = aModule;
+  }
 
-    const flags =
-      Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
-      Ci.nsIWebProgress.NOTIFY_LOCATION;
-    this.progressFilter.addProgressListener(this, flags);
+  get eventDispatcher() {
+    return this._module.eventDispatcher;
+  }
 
-    const { browser } = aModule;
-    browser.addProgressListener(this.progressFilter, flags);
+  get browser() {
+    return this._module.browser;
+  }
 
-    const window = browser.ownerGlobal;
+  QueryInterface = ChromeUtils.generateQI(["nsIWebProgressListener"]);
+}
+
+class ProgressTracker extends Tracker {
+  constructor(aModule) {
+    super(aModule);
+    const window = aModule.browser.ownerGlobal;
     this.pageLoadProbe = new HistogramStopwatch("GV_PAGE_LOAD_MS", window);
     this.pageReloadProbe = new HistogramStopwatch("GV_PAGE_RELOAD_MS", window);
     this.pageLoadProgressProbe = new HistogramStopwatch(
@@ -187,16 +192,6 @@ class ProgressTracker {
 
     this.clear();
     this._eventReceived = null;
-    this._module = aModule;
-  }
-
-  destroy() {
-    this.progressFilter.removeProgressListener(this);
-    this._module.browser.removeProgressListener(this.progressFilter);
-  }
-
-  get eventDispatcher() {
-    return this._module.eventDispatcher;
   }
 
   start(aUri) {
@@ -204,8 +199,7 @@ class ProgressTracker {
 
     if (this._eventReceived) {
       // A request was already in process, let's cancel it
-      this.pageLoadProgressProbe.cancel();
-      this.stop();
+      this.stop(/* isSuccess */ false);
     }
 
     this._eventReceived = new Set();
@@ -232,8 +226,19 @@ class ProgressTracker {
     data.uri = aUri;
   }
 
-  stop() {
+  stop(aIsSuccess) {
     debug`ProgressTracker stop`;
+
+    if (!this._eventReceived) {
+      // No request in progress
+      return;
+    }
+
+    if (aIsSuccess) {
+      this.pageLoadProgressProbe.finish();
+    } else {
+      this.pageLoadProgressProbe.cancel();
+    }
 
     const data = this._data;
     data.pageStop = true;
@@ -242,50 +247,39 @@ class ProgressTracker {
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    debug`onStateChange: isTopLevel=${aWebProgress.isTopLevel},
+    debug`ProgressTracker onStateChange: isTopLevel=${aWebProgress.isTopLevel},
                           flags=${aStateFlags}, status=${aStatus}`;
 
     if (!aWebProgress || !aWebProgress.isTopLevel) {
       return;
     }
 
-    const uri = aRequest.QueryInterface(Ci.nsIChannel).URI.displaySpec;
+    const { displaySpec } = aRequest.QueryInterface(Ci.nsIChannel).URI;
 
     if (aRequest.URI.schemeIs("about")) {
       return;
     }
 
-    debug`onStateChange: uri=${uri}`;
+    debug`ProgressTracker onStateChange: uri=${displaySpec}`;
 
-    let isPageReload = false;
-    if (aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
-      isPageReload = true;
-    }
+    const isPageReload =
+      (aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) != 0;
+    const probe = isPageReload ? this.pageReloadProbe : this.pageLoadProbe;
 
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-      if (!isPageReload) {
-        this.pageLoadProbe.start();
-      } else {
-        this.pageReloadProbe.start();
-      }
-      this.start(uri);
-    } else if (
-      aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-      !aWebProgress.isLoadingDocument
-    ) {
-      if (!isPageReload) {
-        this.pageLoadProbe.finish();
-      } else {
-        this.pageReloadProbe.finish();
-      }
-      this.stop();
-    } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_REDIRECTING) {
-      if (!isPageReload) {
-        this.pageLoadProbe.start();
-      } else {
-        this.pageReloadProbe.start();
-      }
-      this.start(uri);
+    const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) != 0;
+    const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) != 0;
+    const isRedirecting =
+      (aStateFlags & Ci.nsIWebProgressListener.STATE_REDIRECTING) != 0;
+
+    if (isStart) {
+      probe.start();
+      this.start(displaySpec);
+    } else if (isStop && !aWebProgress.isLoadingDocument) {
+      probe.finish();
+      this.stop(aStatus == Cr.NS_OK);
+    } else if (isRedirecting) {
+      probe.start();
+      this.start(displaySpec);
     }
   }
 
@@ -299,17 +293,15 @@ class ProgressTracker {
       return;
     }
 
-    debug`onLocationChange: location=${aLocationURI.displaySpec},
+    debug`ProgressTracker onLocationChange: location=${aLocationURI.displaySpec},
                              flags=${aFlags}`;
 
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      this.stop();
+      this.stop(/* isSuccess */ false);
     } else {
       this.changeLocation(aLocationURI.displaySpec);
     }
   }
-
-  QueryInterface = ChromeUtils.generateQI(["nsIWebProgressListener"]);
 
   handleEvent(aEvent) {
     if (!this._eventReceived || this._eventReceived.has(aEvent.name)) {
@@ -410,25 +402,110 @@ class ProgressTracker {
     });
 
     data.prev = progress;
+  }
+}
 
-    if (progress >= 100) {
-      this.pageLoadProgressProbe.finish();
+class StateTracker extends Tracker {
+  constructor(aModule) {
+    super(aModule);
+    this._inProgress = false;
+    this._uri = null;
+  }
+
+  start(aUri) {
+    this._inProgress = true;
+    this._uri = aUri;
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:PageStart",
+      uri: aUri,
+    });
+  }
+
+  stop(aIsSuccess) {
+    if (!this._inProgress) {
+      // No request in progress
+      return;
+    }
+
+    this._inProgress = false;
+    this._uri = null;
+
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:PageStop",
+      success: aIsSuccess,
+    });
+
+    BrowserUtils.recordSiteOriginTelemetry(
+      Services.wm.getEnumerator("navigator:geckoview"),
+      true
+    );
+  }
+
+  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    debug`StateTracker onStateChange: isTopLevel=${aWebProgress.isTopLevel},
+                          flags=${aStateFlags}, status=${aStatus}
+                          loadType=${aWebProgress.loadType}`;
+
+    if (!aWebProgress.isTopLevel) {
+      return;
+    }
+
+    const { displaySpec } = aRequest.QueryInterface(Ci.nsIChannel).URI;
+    const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) != 0;
+    const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) != 0;
+
+    if (isStart) {
+      this.start(displaySpec);
+    } else if (isStop && !aWebProgress.isLoadingDocument) {
+      this.stop(aStatus == Cr.NS_OK);
     }
   }
 }
 
-class GeckoViewProgress extends GeckoViewModule {
-  onInit() {
-    debug`onInit`;
+class SecurityTracker extends Tracker {
+  constructor(aModule) {
+    super(aModule);
     this._hostChanged = false;
   }
 
+  onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+    debug`SecurityTracker onLocationChange: location=${aLocationURI.displaySpec},
+                             flags=${aFlags}`;
+
+    this._hostChanged = true;
+  }
+
+  onSecurityChange(aWebProgress, aRequest, aState) {
+    debug`onSecurityChange`;
+
+    // Don't need to do anything if the data we use to update the UI hasn't changed
+    if (this._state === aState && !this._hostChanged) {
+      return;
+    }
+
+    this._state = aState;
+    this._hostChanged = false;
+
+    const identity = IdentityHandler.checkIdentity(aState, this.browser);
+
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:SecurityChanged",
+      identity,
+    });
+  }
+}
+
+class GeckoViewProgress extends GeckoViewModule {
   onEnable() {
     debug`onEnable`;
 
-    this._progressTracker = new ProgressTracker(this);
     this._fireInitialLoad();
     this._initialAboutBlank = true;
+
+    this._progressTracker = new ProgressTracker(this);
+    this._securityTracker = new SecurityTracker(this);
+    this._stateTracker = new StateTracker(this);
+
     const flags =
       Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
       Ci.nsIWebProgress.NOTIFY_SECURITY |
@@ -444,9 +521,6 @@ class GeckoViewProgress extends GeckoViewModule {
 
   onDisable() {
     debug`onDisable`;
-
-    this._progressTracker.destroy();
-    this._progressTracker = null;
 
     if (this.progressFilter) {
       this.progressFilter.removeProgressListener(this);
@@ -480,57 +554,29 @@ class GeckoViewProgress extends GeckoViewModule {
     }
   }
 
-  onSettingsUpdate() {
-    const settings = this.settings;
-    debug`onSettingsUpdate: ${settings}`;
-  }
-
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    debug`onStateChange: isTopLevel=${aWebProgress.isTopLevel},
-                          flags=${aStateFlags}, status=${aStatus}
-                          loadType=${aWebProgress.loadType}`;
-
-    if (!aWebProgress.isTopLevel) {
-      return;
-    }
-
-    const { displaySpec, spec } = aRequest.QueryInterface(Ci.nsIChannel).URI;
-    const isSuccess = aStatus == Cr.NS_OK;
-    const isStart = (aStateFlags & Ci.nsIWebProgressListener.STATE_START) != 0;
-    const isStop = (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) != 0;
-
-    debug`onStateChange: uri=${spec} isSuccess=${isSuccess}
-           isStart=${isStart} isStop=${isStop}`;
-
+  onStateChange(...args) {
     // GeckoView never gets PageStart or PageStop for about:blank because we
     // set nodefaultsrc to true unconditionally so we can assume here that
     // we're starting a page load for a non-blank page (or a consumer-initiated
     // about:blank load).
     this._initialAboutBlank = false;
 
-    if (isStart) {
-      this._inProgress = true;
-      const message = {
-        type: "GeckoView:PageStart",
-        uri: displaySpec,
-      };
+    this._progressTracker.onStateChange(...args);
+    this._stateTracker.onStateChange(...args);
+  }
 
-      this.eventDispatcher.sendRequest(message);
-    } else if (isStop && !aWebProgress.isLoadingDocument) {
-      this._inProgress = false;
-
-      const message = {
-        type: "GeckoView:PageStop",
-        success: isSuccess,
-      };
-
-      this.eventDispatcher.sendRequest(message);
-
-      BrowserUtils.recordSiteOriginTelemetry(
-        Services.wm.getEnumerator("navigator:geckoview"),
-        true
-      );
+  onSecurityChange(...args) {
+    // We don't report messages about the initial about:blank
+    if (this._initialAboutBlank) {
+      return;
     }
+
+    this._securityTracker.onSecurityChange(...args);
+  }
+
+  onLocationChange(...args) {
+    this._securityTracker.onLocationChange(...args);
+    this._progressTracker.onLocationChange(...args);
   }
 
   // The initial about:blank load events are unreliable because docShell starts
@@ -556,39 +602,6 @@ class GeckoViewProgress extends GeckoViewModule {
     });
   }
 
-  onSecurityChange(aWebProgress, aRequest, aState) {
-    debug`onSecurityChange`;
-
-    // Don't need to do anything if the data we use to update the UI hasn't changed
-    if (this._state === aState && !this._hostChanged) {
-      return;
-    }
-
-    // We don't report messages about the initial about:blank
-    if (this._initialAboutBlank) {
-      return;
-    }
-
-    this._state = aState;
-    this._hostChanged = false;
-
-    const identity = IdentityHandler.checkIdentity(aState, this.browser);
-
-    const message = {
-      type: "GeckoView:SecurityChanged",
-      identity,
-    };
-
-    this.eventDispatcher.sendRequest(message);
-  }
-
-  onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    debug`onLocationChange: location=${aLocationURI.displaySpec},
-                             flags=${aFlags}`;
-
-    this._hostChanged = true;
-  }
-
   // nsIObserver event handler
   observe(aSubject, aTopic, aData) {
     debug`observe: topic=${aTopic}`;
@@ -596,14 +609,12 @@ class GeckoViewProgress extends GeckoViewModule {
     switch (aTopic) {
       case "oop-frameloader-crashed": {
         const browser = aSubject.ownerElement;
-        if (!browser || browser != this.browser || !this._inProgress) {
+        if (!browser || browser != this.browser) {
           return;
         }
 
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:PageStop",
-          success: false,
-        });
+        this._progressTracker?.stop(/* isSuccess */ false);
+        this._stateTracker?.stop(/* isSuccess */ false);
       }
     }
   }
