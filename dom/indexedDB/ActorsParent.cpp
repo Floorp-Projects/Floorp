@@ -660,34 +660,22 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
       // overwriting the WAL with 0 during active periods.
       "PRAGMA secure_delete = OFF;"_ns;
 
-  nsresult rv = aConnection.ExecuteSimpleSQL(kBuiltInPragmas);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aConnection.ExecuteSimpleSQL(kBuiltInPragmas));
 
-  nsAutoCString pragmaStmt;
-  pragmaStmt.AssignLiteral("PRAGMA synchronous = ");
-
-  if (IndexedDatabaseManager::FullSynchronous()) {
-    pragmaStmt.AppendLiteral("FULL");
-  } else {
-    pragmaStmt.AppendLiteral("NORMAL");
-  }
-  pragmaStmt.Append(';');
-
-  rv = aConnection.ExecuteSimpleSQL(pragmaStmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aConnection.ExecuteSimpleSQL(nsAutoCString{
+      "PRAGMA synchronous = "_ns +
+      (IndexedDatabaseManager::FullSynchronous() ? "FULL"_ns : "NORMAL"_ns) +
+      ";"_ns}));
 
 #ifndef IDB_MOBILE
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    rv = aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns);
-    if (rv != NS_ERROR_FILE_TOO_BIG && NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns))
+            .mapErr([](const nsresult rv) {
+              return rv == NS_ERROR_FILE_TOO_BIG ? NS_OK : rv;
+            }));
   }
 #endif  // IDB_MOBILE
 
