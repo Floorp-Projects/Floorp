@@ -3758,6 +3758,20 @@ impl Renderer {
             self.cpu_profiles.push_back(cpu_profile);
         }
 
+        if thread_is_being_profiled() {
+            let duration = Duration::new(0,0);
+            let message = (self.profile.get_or(profiler::DRAW_CALLS, 0.0) as usize).to_string();
+            add_text_marker(cstr!("NumDrawCalls"), &message, duration);
+        }
+
+        results.stats.texture_upload_mb = self.profile.get_or(profiler::TEXTURE_UPLOADS_MEM, 0.0);
+        self.frame_counter += 1;
+        results.stats.resource_upload_time = self.resource_upload_time;
+        self.resource_upload_time = 0.0;
+        results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
+        self.gpu_cache_upload_time = 0.0;
+
+        // Note: this clears the values in self.profile.
         self.profiler.set_counters(&mut self.profile);
 
         // Note: profile counters must be set before this or they will count for next frame.
@@ -3779,19 +3793,6 @@ impl Renderer {
         if self.debug_flags.contains(DebugFlags::ECHO_DRIVER_MESSAGES) {
             self.device.echo_driver_messages();
         }
-
-        if thread_is_being_profiled() {
-            let duration = Duration::new(0,0);
-            let message = (self.profile.get_or(profiler::DRAW_CALLS, 0.0) as usize).to_string();
-            add_text_marker(cstr!("NumDrawCalls"), &message, duration);
-        }
-
-        results.stats.texture_upload_mb = self.profile.get_or(profiler::TEXTURE_UPLOADS_MEM, 0.0);
-        self.frame_counter += 1;
-        results.stats.resource_upload_time = self.resource_upload_time;
-        self.resource_upload_time = 0.0;
-        results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
-        self.gpu_cache_upload_time = 0.0;
 
         if let Some(debug_renderer) = self.debug.try_get_mut() {
             let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
