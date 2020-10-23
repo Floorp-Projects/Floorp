@@ -6024,7 +6024,7 @@
 # Is support for CSS masonry layout enabled?
 - name: layout.css.grid-template-masonry-value.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
