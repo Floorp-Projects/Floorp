@@ -7,6 +7,7 @@ function run_test() {
   test_methods_presence();
   test_methods_calling();
   test_constructors();
+  test_direction_adaptation();
   test_rtf_formatBestUnit();
 
   ok(true);
@@ -56,6 +57,34 @@ function test_constructors() {
       Services.intl[constructor]();
     }, /class constructors must be invoked with |new|/);
   });
+}
+
+function test_direction_adaptation() {
+  {
+    let { direction } = Services.intl.getLocaleInfo("en-US");
+    equal(direction, "ltr", "Should get ltr for English.");
+  }
+  Services.prefs.setIntPref("intl.uidirection", 1);
+  {
+    let { direction } = Services.intl.getLocaleInfo("en-US");
+    equal(direction, "rtl", "Should now get rtl for English.");
+  }
+  Services.prefs.clearUserPref("intl.uidirection");
+  {
+    let { direction } = Services.intl.getLocaleInfo("en-US");
+    equal(direction, "ltr", "Should get ltr for English again.");
+  }
+
+  Services.prefs.setCharPref("intl.l10n.pseudo", "bidi");
+  {
+    let { direction } = Services.intl.getLocaleInfo("en-US");
+    equal(direction, "rtl", "Should get rtl after enabling pseudolocale.");
+  }
+  Services.prefs.clearUserPref("intl.l10n.pseudo");
+  {
+    let { direction } = Services.intl.getLocaleInfo("en-US");
+    equal(direction, "ltr", "Should finally have ltr for English again.");
+  }
 }
 
 function testRTFBestUnit(anchor, value, expected) {

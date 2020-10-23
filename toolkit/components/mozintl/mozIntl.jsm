@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const mozIntlHelper = Cc["@mozilla.org/mozintlhelper;1"].getService(
   Ci.mozIMozIntlHelper
@@ -763,9 +766,26 @@ class MozIntl {
   RelativeTimeFormat = MozRelativeTimeFormat;
 
   constructor() {
-    // XXX: We should add an observer on
-    //      intl:app-locales-changed to invalidate
-    //      the cache.
+    this._cache = {};
+    Services.obs.addObserver(this, "intl:app-locales-changed", true);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_forcedDir",
+      "intl.uidirection",
+      -1,
+      () => this.observe()
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_pseudo",
+      "intl.l10n.pseudo",
+      "",
+      () => this.observe()
+    );
+  }
+
+  observe() {
+    // Clear cache when things change.
     this._cache = {};
   }
 
@@ -790,7 +810,13 @@ class MozIntl {
       mozIntlHelper.addGetLocaleInfo(this._cache);
     }
 
-    return this._cache.getLocaleInfo(getLocales(locales), ...args);
+    let info = this._cache.getLocaleInfo(getLocales(locales), ...args);
+    if (this._pseudo == "bidi") {
+      info.direction = "rtl";
+    } else if (this._forcedDir != -1) {
+      info.direction = this._forcedDir == 1 ? "rtl" : "ltr";
+    }
+    return info;
   }
 
   getAvailableLocaleDisplayNames(type) {
@@ -952,6 +978,10 @@ class MozIntl {
 MozIntl.prototype.classID = Components.ID(
   "{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}"
 );
-MozIntl.prototype.QueryInterface = ChromeUtils.generateQI(["mozIMozIntl"]);
+MozIntl.prototype.QueryInterface = ChromeUtils.generateQI([
+  "mozIMozIntl",
+  "nsIObserver",
+  "nsISupportsWeakReference",
+]);
 
 var EXPORTED_SYMBOLS = ["MozIntl"];
