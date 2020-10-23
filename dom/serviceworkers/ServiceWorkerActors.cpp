@@ -16,26 +16,6 @@
 namespace mozilla {
 namespace dom {
 
-PServiceWorkerChild* AllocServiceWorkerChild() {
-  MOZ_CRASH("should not be called");
-}
-
-bool DeallocServiceWorkerChild(PServiceWorkerChild* aActor) {
-  auto actor = static_cast<ServiceWorkerChild*>(aActor);
-  delete actor;
-  return true;
-}
-
-PServiceWorkerParent* AllocServiceWorkerParent() {
-  return new ServiceWorkerParent();
-}
-
-bool DeallocServiceWorkerParent(PServiceWorkerParent* aActor) {
-  auto actor = static_cast<ServiceWorkerParent*>(aActor);
-  delete actor;
-  return true;
-}
-
 void InitServiceWorkerParent(PServiceWorkerParent* aActor,
                              const IPCServiceWorkerDescriptor& aDescriptor) {
   auto actor = static_cast<ServiceWorkerParent*>(aActor);
