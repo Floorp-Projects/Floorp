@@ -297,6 +297,7 @@ class nsPrintJob final : public nsIObserver,
   bool mHasEverPrinted = false;
   bool mProgressDialogIsShown = false;
   bool mDidLoadDataForPrinting = false;
+  bool mDoingInitialReflow = false;
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;
   bool mIsForModalWindow = false;

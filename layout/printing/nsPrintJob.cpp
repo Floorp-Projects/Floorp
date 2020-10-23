@@ -1484,20 +1484,28 @@ nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
   // Attach progressListener to catch network requests.
   mDidLoadDataForPrinting = false;
 
-  nsCOMPtr<nsIWebProgress> webProgress =
-      do_QueryInterface(printData->mPrintObject->mDocShell);
-  webProgress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
-                                   nsIWebProgress::NOTIFY_STATE_REQUEST);
+  {
+    AutoRestore<bool> restore{mDoingInitialReflow};
+    mDoingInitialReflow = true;
 
-  MOZ_TRY(ReflowDocList(printData->mPrintObject, DoSetPixelScale()));
+    nsCOMPtr<nsIWebProgress> webProgress =
+        do_QueryInterface(printData->mPrintObject->mDocShell);
+    webProgress->AddProgressListener(static_cast<nsIWebProgressListener*>(this),
+                                     nsIWebProgress::NOTIFY_STATE_REQUEST);
 
-  FirePrintPreviewUpdateEvent();
+    MOZ_TRY(ReflowDocList(printData->mPrintObject, DoSetPixelScale()));
+
+    FirePrintPreviewUpdateEvent();
+  }
 
   MaybeResumePrintAfterResourcesLoaded(aHandleError);
   return NS_OK;
 }
 
 bool nsPrintJob::ShouldResumePrint() const {
+  if (mDoingInitialReflow) {
+    return false;
+  }
   Document* doc = mPrt->mPrintObject->mDocument;
   MOZ_ASSERT(doc);
   NS_ENSURE_TRUE(doc, true);
