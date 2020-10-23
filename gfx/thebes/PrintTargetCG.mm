@@ -21,7 +21,11 @@ PrintTargetCG::PrintTargetCG(PMPrintSession aPrintSession, PMPageFormat aPageFor
       mPrintSettings(aPrintSettings) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  MOZ_ASSERT(mPrintSession && mPageFormat && mPrintSettings);
+
   ::PMRetain(mPrintSession);
+  ::PMRetain(mPageFormat);
+  ::PMRetain(mPrintSettings);
 
   // TODO: Add memory reporting like gfxQuartzSurface.
   // RecordMemoryUsed(mSize.height * 4 + sizeof(gfxQuartzSurface));
@@ -32,7 +36,9 @@ PrintTargetCG::PrintTargetCG(PMPrintSession aPrintSession, PMPageFormat aPageFor
 PrintTargetCG::~PrintTargetCG() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mPrintSession) ::PMRelease(mPrintSession);
+  ::PMRelease(mPrintSession);
+  ::PMRelease(mPageFormat);
+  ::PMRelease(mPrintSettings);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

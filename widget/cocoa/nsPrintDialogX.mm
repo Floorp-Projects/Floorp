@@ -39,16 +39,22 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   MOZ_ASSERT(aSettings, "aSettings must not be null");
 
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
-  if (!settingsX) return NS_ERROR_FAILURE;
+  if (!settingsX) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
 
-  // Set the printer name and then read the saved printer settings
-  // from prefs. Reading printer-specific prefs requires the printer
-  // name to be set.
-  settingsX->SetPrinterNameFromPrintInfo();
+  // Read the saved printer settings from prefs. (This relies on the printer name
+  // stored in settingsX to read the printer-specific prefs.)
   printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
+
+  NSPrintInfo* printInfo = settingsX->CreatePrintInfo(/* aWithScaling = */ true);
+  if (NS_WARN_IF(!printInfo)) {
+    return NS_ERROR_FAILURE;
+  }
+  [printInfo autorelease];
 
   // Set the print job title
   nsAutoString docName;
@@ -60,12 +66,12 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
         NULL, reinterpret_cast<const UniChar*>(adjustedTitle.BeginReading()),
         adjustedTitle.Length());
     if (cfTitleString) {
-      ::PMPrintSettingsSetJobName(settingsX->GetPMPrintSettings(), cfTitleString);
+      auto pmPrintSettings = static_cast<PMPrintSettings>([printInfo PMPrintSettings]);
+      ::PMPrintSettingsSetJobName(pmPrintSettings, cfTitleString);
+      [printInfo updateFromPMPrintSettings];
       CFRelease(cfTitleString);
     }
   }
-
-  NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
 
   // Put the print info into the current print operation, since that's where
   // [panel runModal] will look for it. We create the view because otherwise
@@ -89,73 +95,30 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   int button = [panel runModal];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
-  NSPrintInfo* copy = [[[NSPrintOperation currentOperation] printInfo] copy];
-  if (!copy) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  // Retrieve a printInfo with the updated settings. (The NSPrintOperation operates on a
+  // copy, so the object we passed in will not have been modified.)
+  NSPrintInfo* result = [[NSPrintOperation currentOperation] printInfo];
+  if (!result) {
+    return NS_ERROR_FAILURE;
   }
 
   [NSPrintOperation setCurrentOperation:nil];
   [tmpView release];
 
-  if (button != NSFileHandlingPanelOKButton) return NS_ERROR_ABORT;
-
-  settingsX->SetCocoaPrintInfo(copy);
-  settingsX->InitUnwriteableMargin();
-
-  // Save settings unless saving is pref'd off
-  if (Preferences::GetBool("print.save_print_settings", false)) {
-    printSettingsSvc->SavePrintSettingsToPrefs(settingsX, true,
-                                               nsIPrintSettings::kInitSaveNativeData);
-  }
-
-  // Get coordinate space resolution for converting paper size units to inches
-  NSWindow* win = [[NSApplication sharedApplication] mainWindow];
-  if (win) {
-    NSDictionary* devDesc = [win deviceDescription];
-    if (devDesc) {
-      NSSize res = [[devDesc objectForKey:NSDeviceResolution] sizeValue];
-      float scale = [win backingScaleFactor];
-      if (scale > 0) {
-        settingsX->SetInchesScale(res.width / scale, res.height / scale);
-      }
-    }
+  if (button != NSFileHandlingPanelOKButton) {
+    return NS_ERROR_ABORT;
   }
 
   // Export settings.
   [viewController exportSettings];
 
-  // If "ignore scaling" is checked, overwrite scaling factor with 1.
-  bool isShrinkToFitChecked;
-  settingsX->GetShrinkToFit(&isShrinkToFitChecked);
-  if (isShrinkToFitChecked) {
-    NSMutableDictionary* dict = [copy dictionary];
-    if (dict) {
-      [dict setObject:[NSNumber numberWithFloat:1] forKey:NSPrintScalingFactor];
-    }
-    // Set the scaling factor to 100% in the NSPrintInfo
-    // object so that it will not affect the paper size
-    // retrieved from the PMPageFormat routines.
-    [copy setScalingFactor:1.0];
-  } else {
-    aSettings->SetScaling([copy scalingFactor]);
-  }
+  // Update our settings object based on the user's choices in the dialog.
+  settingsX->SetFromPrintInfo(result);
 
-  // Set the adjusted paper size now that we've updated
-  // the scaling factor.
-  settingsX->InitAdjustedPaperSize();
-
-  [copy release];
-
-  PMPrintSettings nativePrintSettings = settingsX->GetPMPrintSettings();
-  UInt32 firstPage, lastPage;
-  OSStatus status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
-  if (status == noErr) {
-    status = ::PMGetLastPage(nativePrintSettings, &lastPage);
-    if (status == noErr && lastPage != UINT32_MAX) {
-      aSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-      aSettings->SetStartPageRange(firstPage);
-      aSettings->SetEndPageRange(lastPage);
-    }
+  // Save settings unless saving is pref'd off
+  if (Preferences::GetBool("print.save_print_settings", false)) {
+    printSettingsSvc->SavePrintSettingsToPrefs(settingsX, true,
+                                               nsIPrintSettings::kInitSaveNativeData);
   }
 
   return NS_OK;
@@ -172,15 +135,23 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aNSSettings));
-  if (!settingsX) return NS_ERROR_FAILURE;
+  if (!settingsX) {
+    return NS_ERROR_FAILURE;
+  }
 
-  NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
+  NSPrintInfo* printInfo = settingsX->CreatePrintInfo(/* aWithScaling = */ true);
+  if (NS_WARN_IF(!printInfo)) {
+    return NS_ERROR_FAILURE;
+  }
+  [printInfo autorelease];
+
   NSPageLayout* pageLayout = [NSPageLayout pageLayout];
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   int button = [pageLayout runModalWithPrintInfo:printInfo];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   if (button == NSFileHandlingPanelOKButton) {
+    settingsX->SetFromPrintInfo(printInfo);
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (printSettingsService && Preferences::GetBool("print.save_print_settings", false)) {
