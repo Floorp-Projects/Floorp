@@ -398,6 +398,14 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
 #pragma mark - MOXAccessible protocol
 
+- (NSNumber*)moxIndexForChildUIElement:(id)child {
+  return @([[self moxUnignoredChildren] indexOfObject:child]);
+}
+
+- (id)moxTopLevelUIElement {
+  return [self moxWindow];
+}
+
 - (id)moxHitTest:(NSPoint)point {
   return GetObjectOrRepresentedView(self);
 }

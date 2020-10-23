@@ -208,7 +208,10 @@ void ProcessPendingGetURLAppleEvents() {
 
   nsCOMPtr<nsIFile> workingDir;
   rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
-  if (NS_FAILED(rv)) return NO;
+  if (NS_FAILED(rv)) {
+    // Couldn't find a working dir. Uh oh. Good job cmdline::Init can cope.
+    workingDir = nullptr;
+  }
 
   const char* argv[3] = {nullptr, "-file", filePath.get()};
   rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
@@ -383,8 +386,10 @@ void ProcessPendingGetURLAppleEvents() {
   nsCOMPtr<nsIFile> workingDir;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
   if (NS_FAILED(rv)) {
-    return NO;
+    // Couldn't find a working dir. Uh oh. Good job cmdline::Init can cope.
+    workingDir = nullptr;
   }
+
   const char* argv[3] = {nullptr, "-url", urlString};
   rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
   if (NS_FAILED(rv)) {

@@ -666,7 +666,7 @@ interface nsIXPCComponents_Utils : nsISupports
     nsIEditorSpellCheck createSpellChecker();
 
     /* Create a commandline object. */
-    nsISupports createCommandLine();
+    nsISupports createCommandLine([optional] in nsIFile aWorkingDir);
 
     /* Create a command params object. */
     nsICommandParams createCommandParams();

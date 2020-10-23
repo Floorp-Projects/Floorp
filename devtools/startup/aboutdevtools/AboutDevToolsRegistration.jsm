@@ -31,6 +31,10 @@ AboutDevtools.prototype = {
   getURIFlags: function(uri) {
     return nsIAboutModule.ALLOW_SCRIPT;
   },
+
+  getChromeURI: function(_uri) {
+    return this.uri;
+  },
 };
 
 var EXPORTED_SYMBOLS = ["AboutDevtools"];

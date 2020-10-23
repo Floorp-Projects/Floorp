@@ -12,9 +12,6 @@ namespace ots {
 
 bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
                          bool prevent_decompression) {
-  if (GetFont()->dropped_graphite) {
-    return Drop("Skipping Graphite table");
-  }
   Buffer table(data, length);
 
   if (!table.ReadU32(&this->version)) {
@@ -205,11 +202,11 @@ bool OpenTypeSILF::SILSub::ParsePart(Buffer& table) {
   if (!table.ReadU8(&this->direction)) {
     return parent->Error("SILSub: Failed to read direction");
   }
-  if (!table.ReadU8(&this->attCollisions)) {
-    return parent->Error("SILSub: Failed to read attCollisions");
+  if (!table.ReadU8(&this->attrCollisions)) {
+    return parent->Error("SILSub: Failed to read attrCollisions");
   }
-  if (parent->version >> 16 < 5 && this->attCollisions != 0) {
-    parent->Warning("SILSub: Nonzero attCollisions (reserved before v5)");
+  if (parent->version < 0x40001 && this->attrCollisions != 0) {
+    parent->Warning("SILSub: Nonzero attrCollisions (reserved before v4.1)");
   }
   if (!table.ReadU8(&this->reserved4)) {
     return parent->Error("SILSub: Failed to read reserved4");
@@ -367,7 +364,7 @@ bool OpenTypeSILF::SILSub::SerializePart(OTSStream* out) const {
       !out->WriteU8(this->numUserDefn) ||
       !out->WriteU8(this->maxCompPerLig) ||
       !out->WriteU8(this->direction) ||
-      !out->WriteU8(this->attCollisions) ||
+      !out->WriteU8(this->attrCollisions) ||
       !out->WriteU8(this->reserved4) ||
       !out->WriteU8(this->reserved5) ||
       (parent->version >> 16 >= 2 &&

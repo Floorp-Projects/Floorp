@@ -639,14 +639,21 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   JSActorDidDestroy();
 }
 
-bool WindowGlobalChild::SameOriginWithTop() {
-  nsGlobalWindowInner* topWindow =
-      WindowContext()->TopWindowContext()->GetInnerWindow();
-  if (!topWindow) {
-    return false;
+bool WindowGlobalChild::IsSameOriginWith(
+    const dom::WindowContext* aOther) const {
+  if (aOther == WindowContext()) {
+    return true;
   }
-  return mWindowGlobal == topWindow ||
-         mDocumentPrincipal->Equals(topWindow->GetPrincipal());
+
+  MOZ_DIAGNOSTIC_ASSERT(WindowContext()->Group() == aOther->Group());
+  if (nsGlobalWindowInner* otherWin = aOther->GetInnerWindow()) {
+    return mDocumentPrincipal->Equals(otherWin->GetPrincipal());
+  }
+  return false;
+}
+
+bool WindowGlobalChild::SameOriginWithTop() {
+  return IsSameOriginWith(WindowContext()->TopWindowContext());
 }
 
 WindowGlobalChild::~WindowGlobalChild() {

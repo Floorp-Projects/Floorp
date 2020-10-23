@@ -25,8 +25,4 @@ bool OpenTypeHHEA::Parse(const uint8_t *data, size_t length) {
   return OpenTypeMetricsHeader::Parse(data, length);
 }
 
-bool OpenTypeHHEA::Serialize(OTSStream *out) {
-  return OpenTypeMetricsHeader::Serialize(out);
-}
-
 }  // namespace ots

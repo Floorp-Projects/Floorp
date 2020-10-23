@@ -617,13 +617,35 @@ bool AudioContext::IsRunning() const {
   return mAudioContextState == AudioContextState::Running;
 }
 
+already_AddRefed<Promise> AudioContext::CreatePromise(ErrorResult& aRv) {
+  // Get the relevant global for the promise from the wrapper cache because
+  // DOMEventTargetHelper::GetOwner() returns null if the document is unloaded.
+  // We know the wrapper exists because it is being used for |this| from JS.
+  // See https://github.com/heycam/webidl/issues/932 for why the relevant
+  // global is used instead of the current global.
+  nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(GetWrapper());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  /**
+   * If this's relevant global object's associated Document is not fully
+   * active then return a promise rejected with "InvalidStateError"
+   * DOMException.
+   */
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+  if (!window->IsFullyActive()) {
+    promise->MaybeRejectWithInvalidStateError(
+        "The document is not fully active.");
+  }
+  return promise.forget();
+}
+
 already_AddRefed<Promise> AudioContext::DecodeAudioData(
     const ArrayBuffer& aBuffer,
     const Optional<OwningNonNull<DecodeSuccessCallback>>& aSuccessCallback,
     const Optional<OwningNonNull<DecodeErrorCallback>>& aFailureCallback,
     ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-  RefPtr<Promise> promise;
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
@@ -635,13 +657,12 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
     return nullptr;
   }
 
-  JSAutoRealm ar(cx, obj);
-
-  promise = Promise::Create(parentObject, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<Promise> promise = CreatePromise(aRv);
+  if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
+    return promise.forget();
   }
 
+  JSAutoRealm ar(cx, obj);
   aBuffer.ComputeState();
 
   if (!aBuffer.Data()) {
@@ -912,11 +933,9 @@ nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
 }
 
 already_AddRefed<Promise> AudioContext::Suspend(ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-  RefPtr<Promise> promise;
-  promise = Promise::Create(parentObject, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<Promise> promise = CreatePromise(aRv);
+  if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
+    return promise.forget();
   }
   if (mIsOffline) {
     // XXXbz This is not reachable, since we don't implement this
@@ -942,7 +961,9 @@ void AudioContext::SuspendFromChrome() {
   if (mIsOffline || mIsShutDown) {
     return;
   }
-  SuspendInternal(nullptr, AudioContextOperationFlags::None);
+  SuspendInternal(nullptr, Preferences::GetBool("dom.audiocontext.testing")
+                               ? AudioContextOperationFlags::SendStateChange
+                               : AudioContextOperationFlags::None);
 }
 
 void AudioContext::SuspendInternal(void* aPromise,
@@ -978,15 +999,15 @@ void AudioContext::ResumeFromChrome() {
   if (mIsOffline || mIsShutDown) {
     return;
   }
-  ResumeInternal(AudioContextOperationFlags::None);
+  ResumeInternal(Preferences::GetBool("dom.audiocontext.testing")
+                     ? AudioContextOperationFlags::SendStateChange
+                     : AudioContextOperationFlags::None);
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-  RefPtr<Promise> promise;
-  promise = Promise::Create(parentObject, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<Promise> promise = CreatePromise(aRv);
+  if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
+    return promise.forget();
   }
 
   if (mIsOffline) {
@@ -1119,11 +1140,9 @@ void AudioContext::ReportBlocked() {
 }
 
 already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-  RefPtr<Promise> promise;
-  promise = Promise::Create(parentObject, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<Promise> promise = CreatePromise(aRv);
+  if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
+    return promise.forget();
   }
 
   if (mIsOffline) {
@@ -1196,19 +1215,17 @@ void AudioContext::UnregisterNode(AudioNode* aNode) {
 }
 
 already_AddRefed<Promise> AudioContext::StartRendering(ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-
   MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
+  RefPtr<Promise> promise = CreatePromise(aRv);
+  if (aRv.Failed() || promise->State() == Promise::PromiseState::Rejected) {
+    return promise.forget();
+  }
   if (mIsStarted) {
     aRv.ThrowInvalidStateError("Rendering already started");
     return nullptr;
   }
 
   mIsStarted = true;
-  RefPtr<Promise> promise = Promise::Create(parentObject, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
   mDestination->StartRendering(promise);
 
   OnStateChanged(nullptr, AudioContextState::Running);

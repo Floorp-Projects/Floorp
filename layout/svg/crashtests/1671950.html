@@ -1,0 +1,27 @@
+<html>
+<head>
+    <style>
+        * {
+            break-before: always ! important;
+        }
+    </style>
+    <script>
+      window.addEventListener('load', () => {
+        const style = document.createElement('style')
+        document.head.appendChild(style)
+        const svg_1 = document.getElementById('id_3')
+        const svg_2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        const switch_0 = document.createElementNS('http://www.w3.org/2000/svg', 'switch')
+        const c_0 = document.createElementNS('http://www.w3.org/2000/svg', 'c')
+        switch_0.appendChild(c_0)
+        svg_1.appendChild(switch_0)
+        svg_2.appendChild(svg_1)
+        document.documentElement.appendChild(svg_2)
+        style.sheet.insertRule('@-moz-document url-prefix(){*,a{all:inherit', 0)
+        SpecialPowers.wrap(window).printPreview()?.close()
+      })
+    </script>
+    <svg id='id_3'></svg>
+</head>
+</html>
+

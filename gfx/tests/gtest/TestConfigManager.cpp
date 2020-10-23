@@ -253,7 +253,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mWrForceAngle = true;
     mWrDCompWinEnabled = true;
     mWrCompositorDCompRequired = true;
-    mHwStretchingSupport = true;
+    ++mHwStretchingSupport.mBoth;
     mIsWin10OrLater = true;
     mIsNightly = true;
   }
@@ -333,7 +333,7 @@ TEST_F(GfxConfigManager, WebRenderScaledResolutionWithHwStretching) {
 }
 
 TEST_F(GfxConfigManager, WebRenderScaledResolutionNoHwStretching) {
-  mHwStretchingSupport = false;
+  ++mHwStretchingSupport.mNone;
   mScaledResolution = true;
   ConfigureWebRender();
 
@@ -599,7 +599,7 @@ TEST_F(GfxConfigManager, WebRenderNotQualifiedAndBlocklistAllowAlways) {
 
 TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   mIsNightly = false;
-  mHwStretchingSupport = false;
+  ++mHwStretchingSupport.mNone;
   mScaledResolution = true;
   mMockGfxInfo->mHasBattery.ref() = true;
   mMockGfxInfo->mVendorId = "0x8086";

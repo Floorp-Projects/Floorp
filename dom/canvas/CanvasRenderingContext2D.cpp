@@ -4503,7 +4503,6 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   }
 
   if (aSw == 0.0 || aSh == 0.0) {
-    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 

@@ -188,10 +188,11 @@ bool ProcessTTF(ots::FontFile *header,
   }
 
   if (!file.ReadU32(&font->version)) {
-    return OTS_FAILURE_MSG_HDR("error reading version tag");
+    return OTS_FAILURE_MSG_HDR("error reading sfntVersion");
   }
   if (!ots::IsValidVersionTag(font->version)) {
-      return OTS_FAILURE_MSG_HDR("invalid version tag");
+    OTS_WARNING_MSG_HDR("invalid sfntVersion: %d", font->version);
+    font->version = 0x000010000;
   }
 
   if (!file.ReadU16(&font->num_tables) ||
@@ -222,7 +223,8 @@ bool ProcessTTF(ots::FontFile *header,
 
   // entry_selector is Log2(maximum power of 2 <= numTables)
   if (font->entry_selector != max_pow2) {
-    return OTS_FAILURE_MSG_HDR("incorrect entrySelector for table directory");
+    OTS_WARNING_MSG_HDR("incorrect entrySelector for table directory");
+    font->entry_selector = max_pow2;  // Fix the value.
   }
 
   // range_shift is NumTables x 16-searchRange. We know that 16*num_tables
@@ -362,10 +364,11 @@ bool ProcessWOFF(ots::FontFile *header,
   }
 
   if (!file.ReadU32(&font->version)) {
-    return OTS_FAILURE_MSG_HDR("error reading version tag");
+    return OTS_FAILURE_MSG_HDR("error reading sfntVersion");
   }
   if (!ots::IsValidVersionTag(font->version)) {
-    return OTS_FAILURE_MSG_HDR("invalid version tag");
+    OTS_WARNING_MSG_HDR("invalid sfntVersion: %d", font->version);
+    font->version = 0x000010000;
   }
 
   uint32_t reported_length;
@@ -704,33 +707,41 @@ bool ProcessGeneric(ots::FontFile *header,
     }
   }
 
-  if (font->GetTable(OTS_TAG_CFF) || font->GetTable(OTS_TAG_CFF2)) {
-    // font with PostScript glyph
+  ots::Table *glyf = font->GetTable(OTS_TAG_GLYF);
+  ots::Table *loca = font->GetTable(OTS_TAG_LOCA);
+  ots::Table *cff  = font->GetTable(OTS_TAG_CFF);
+  ots::Table *cff2 = font->GetTable(OTS_TAG_CFF2);
+
+  if (glyf && loca) {
+    if (font->version != 0x000010000) {
+      OTS_WARNING_MSG_HDR("wrong sfntVersion for glyph data");
+      font->version = 0x000010000;
+    }
+    if (cff)
+       cff->Drop("font contains both CFF and glyf/loca tables");
+    if (cff2)
+       cff2->Drop("font contains both CFF and glyf/loca tables");
+  } else if (cff || cff2) {
     if (font->version != OTS_TAG('O','T','T','O')) {
-      return OTS_FAILURE_MSG_HDR("wrong font version for PostScript glyph data");
+      OTS_WARNING_MSG_HDR("wrong sfntVersion for glyph data");
+      font->version = OTS_TAG('O','T','T','O');
     }
-    if (font->GetTable(OTS_TAG_GLYF) || font->GetTable(OTS_TAG_LOCA)) {
-      // mixing outline formats is not recommended
-      return OTS_FAILURE_MSG_HDR("font contains both PS and TT glyphs");
-    }
-  } else {
-    if (!font->GetTable(OTS_TAG_GLYF) || !font->GetTable(OTS_TAG_LOCA)) {
-      // No TrueType glyph found.
-      //
+    if (glyf)
+       glyf->Drop("font contains both CFF and glyf tables");
+    if (loca)
+       loca->Drop("font contains both CFF and loca tables");
+  } else if (font->GetTable(OTS_TAG('C','B','D','T')) &&
+             font->GetTable(OTS_TAG('C','B','L','C'))) {
       // We don't sanitize bitmap tables, but don’t reject bitmap-only fonts if
       // we are asked to pass them thru.
-      // Also don’t reject if we are asked to pass glyf/loca thru.
-      if (!font->GetTable(OTS_TAG('C','B','D','T')) &&
-          !font->GetTable(OTS_TAG('C','B','L','C'))) {
-        return OTS_FAILURE_MSG_HDR("no supported glyph shapes table(s) present");
-      }
-    }
+  } else {
+      return OTS_FAILURE_MSG_HDR("no supported glyph data table(s) present");
   }
 
   uint16_t num_output_tables = 0;
   for (const auto &it : table_map) {
     ots::Table *table = font->GetTable(it.first);
-    if (table != NULL && table->ShouldSerialize())
+    if (table)
       num_output_tables++;
   }
 
@@ -779,7 +790,7 @@ bool ProcessGeneric(ots::FontFile *header,
       }
 
       ots::Table *table = font->GetTable(out.tag);
-      if (table != NULL && table->ShouldSerialize()) {
+      if (table) {
         output->ResetChecksum();
         if (!table->Serialize(output)) {
           return OTS_FAILURE_MSG_TAG("Failed to serialize table", out.tag);
@@ -953,7 +964,7 @@ bool Font::ParseTable(const TableEntry& table_entry, const uint8_t* data,
 
 Table* Font::GetTable(uint32_t tag) const {
   const auto &it = m_tables.find(tag);
-  if (it != m_tables.end())
+  if (it != m_tables.end() && it->second && it->second->ShouldSerialize())
     return it->second;
   return NULL;
 }
@@ -977,7 +988,6 @@ void Font::DropGraphite() {
       entry.second->Drop("Discarding Graphite table");
     }
   }
-  dropped_graphite = true;
 }
 
 void Font::DropVariations() {
@@ -994,7 +1004,6 @@ void Font::DropVariations() {
       entry.second->Drop("Discarding Variations table");
     }
   }
-  dropped_variations = true;
 }
 
 bool Table::ShouldSerialize() {
@@ -1074,10 +1083,7 @@ bool TablePassthru::Serialize(OTSStream *out) {
 bool IsValidVersionTag(uint32_t tag) {
   return tag == 0x000010000 ||
          // OpenType fonts with CFF data have 'OTTO' tag.
-         tag == OTS_TAG('O','T','T','O') ||
-         // Older Mac fonts might have 'true' or 'typ1' tag.
-         tag == OTS_TAG('t','r','u','e') ||
-         tag == OTS_TAG('t','y','p','1');
+         tag == OTS_TAG('O','T','T','O');
 }
 
 bool OTSContext::Process(OTSStream *output,

@@ -745,9 +745,51 @@ uint32_t HyperTextAccessible::FindLineBoundary(
       // Move to begin of the next line if any (arrow down and home keys),
       // otherwise end of the current line (arrow down only).
       uint32_t tmpOffset = FindOffset(aOffset, eDirNext, eSelectLine);
-      if (tmpOffset == CharacterCount()) return tmpOffset;
+      uint32_t characterCount = CharacterCount();
+      if (tmpOffset == characterCount) {
+        return tmpOffset;
+      }
 
-      return FindOffset(tmpOffset, eDirPrevious, eSelectBeginLine);
+      // Now, simulate the Home key on the next line to get its real offset.
+      uint32_t nextLineBeginOffset =
+          FindOffset(tmpOffset, eDirPrevious, eSelectBeginLine);
+      // Sometimes, there are line breaks inside embedded characters. If this
+      // is the case, the cursor is after the line break, but the offset will
+      // be that of the embedded character, which points to before the line
+      // break. We definitely want the line break included.
+      if (IsCharAt(nextLineBeginOffset, kEmbeddedObjectChar)) {
+        // We can determine if there is a line break by pressing End from
+        // the queried offset. If there is a line break, the offset will be 1
+        // greater, since this line ends with the embed. If there is not, the
+        // value will be different even if a line break follows right after the
+        // embed.
+        uint32_t thisLineEndOffset =
+            FindOffset(aOffset, eDirNext, eSelectEndLine);
+        if (thisLineEndOffset == nextLineBeginOffset + 1) {
+          // If we're querying the offset of the embedded character, we want
+          // the end offset of the parent line instead. Press End
+          // once more from the current position, which is after the embed.
+          if (nextLineBeginOffset == aOffset) {
+            uint32_t thisLineEndOffset2 =
+                FindOffset(thisLineEndOffset, eDirNext, eSelectEndLine);
+            // The above returns an offset exclusive the final line break, so we
+            // need to add 1 to it to return an inclusive end offset. Make sure
+            // we don't overshoot if we've started from another embedded
+            // character that has a line break, or landed on another embedded
+            // character, or if the result is the very end.
+            return (thisLineEndOffset2 == characterCount ||
+                    (IsCharAt(thisLineEndOffset, kEmbeddedObjectChar) &&
+                     thisLineEndOffset2 == thisLineEndOffset + 1) ||
+                    IsCharAt(thisLineEndOffset2, kEmbeddedObjectChar))
+                       ? thisLineEndOffset2
+                       : thisLineEndOffset2 + 1;
+          }
+
+          return thisLineEndOffset;
+        }
+      }
+
+      return nextLineBeginOffset;
     }
 
     case eNextLineEnd: {

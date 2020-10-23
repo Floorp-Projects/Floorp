@@ -366,7 +366,7 @@ mingw-w64:
     fetch:
         type: git
         repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
-        revision: 1b373beec6d07478ffba33726bb3bb21f32e4411
+        revision: bd8ca6c303658659496d0c440cf9f2baa8f7a5f0
 
 libunwind:
     description: libunwind source code

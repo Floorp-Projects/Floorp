@@ -34,6 +34,10 @@ AboutDevtoolsToolbox.prototype = {
       nsIAboutModule.HIDE_FROM_ABOUTABOUT
     );
   },
+
+  getChromeURI: function(_uri) {
+    return this.uri;
+  },
 };
 
 var EXPORTED_SYMBOLS = ["AboutDevtoolsToolbox"];

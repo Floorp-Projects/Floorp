@@ -64,6 +64,7 @@ activity_stream:
       "MENU_REMOVE",
       "TOP_SITES_EDIT",
       "TOP_SITES_EDIT_CLOSE",
+      "TOPSITE_SPONSOR_INFO",
       "UNPIN"]
     release_channel_collection: opt-out
     products:
