@@ -960,7 +960,7 @@ void nsMathMLContainerFrame::GetIntrinsicISizeMetrics(
       // margin, so we may end up with too much space, but, with stretchy
       // characters, this is an approximation anyway.
       nscoord width = nsLayoutUtils::IntrinsicForContainer(
-          aRenderingContext, childFrame, nsLayoutUtils::PREF_ISIZE);
+          aRenderingContext, childFrame, IntrinsicISizeType::PrefISize);
 
       childDesiredSize.Width() = width;
       childDesiredSize.mBoundingMetrics.width = width;

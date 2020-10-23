@@ -77,7 +77,7 @@ void nsPlaceholderFrame::AddInlineMinISize(
   // ...but push floats onto the list
   if (mOutOfFlowFrame->IsFloating()) {
     nscoord floatWidth = nsLayoutUtils::IntrinsicForContainer(
-        aRenderingContext, mOutOfFlowFrame, nsLayoutUtils::MIN_ISIZE);
+        aRenderingContext, mOutOfFlowFrame, IntrinsicISizeType::MinISize);
     aData->mFloats.AppendElement(
         InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
@@ -95,7 +95,7 @@ void nsPlaceholderFrame::AddInlinePrefISize(
   // ...but push floats onto the list
   if (mOutOfFlowFrame->IsFloating()) {
     nscoord floatWidth = nsLayoutUtils::IntrinsicForContainer(
-        aRenderingContext, mOutOfFlowFrame, nsLayoutUtils::PREF_ISIZE);
+        aRenderingContext, mOutOfFlowFrame, IntrinsicISizeType::PrefISize);
     aData->mFloats.AppendElement(
         InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }

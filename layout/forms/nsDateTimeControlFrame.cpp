@@ -50,7 +50,7 @@ nscoord nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) {  // display:none?
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                  nsLayoutUtils::MIN_ISIZE);
+                                                  IntrinsicISizeType::MinISize);
   } else {
     result = 0;
   }
@@ -64,8 +64,8 @@ nscoord nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) {  // display:none?
-    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                  nsLayoutUtils::PREF_ISIZE);
+    result = nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, kid, IntrinsicISizeType::PrefISize);
   } else {
     result = 0;
   }

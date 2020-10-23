@@ -5299,7 +5299,7 @@ static nscoord MinContentContribution(const GridItemInfo& aGridItem,
   }
   nscoord s = ContentContribution(
       aGridItem, aState, aRC, aCBWM, aAxis, aCache->mPercentageBasis,
-      nsLayoutUtils::MIN_ISIZE, aCache->mMinSizeClamp);
+      IntrinsicISizeType::MinISize, aCache->mMinSizeClamp);
   aCache->mMinContentContribution.emplace(s);
   return s;
 }
@@ -5318,7 +5318,7 @@ static nscoord MaxContentContribution(const GridItemInfo& aGridItem,
   }
   nscoord s = ContentContribution(
       aGridItem, aState, aRC, aCBWM, aAxis, aCache->mPercentageBasis,
-      nsLayoutUtils::PREF_ISIZE, aCache->mMinSizeClamp);
+      IntrinsicISizeType::PrefISize, aCache->mMinSizeClamp);
   aCache->mMaxContentContribution.emplace(s);
   return s;
 }
@@ -5372,7 +5372,7 @@ static nscoord MinSize(const GridItemInfo& aGridItem,
              "baseline offset should be zero when not baseline-aligned");
   nscoord sz = aGridItem.mBaselineOffset[aAxis] +
                nsLayoutUtils::MinSizeContributionForAxis(
-                   axis, aRC, child, nsLayoutUtils::MIN_ISIZE,
+                   axis, aRC, child, IntrinsicISizeType::MinISize,
                    *aCache->mPercentageBasis);
   const StyleSize& style =
       axis == eAxisHorizontal ? stylePos->mMinWidth : stylePos->mMinHeight;
@@ -5387,11 +5387,11 @@ static nscoord MinSize(const GridItemInfo& aGridItem,
       (isAuto && child->StyleDisplay()->mOverflowX == StyleOverflow::Visible)) {
     // Now calculate the "content size" part and return whichever is smaller.
     MOZ_ASSERT(isAuto || sz == NS_UNCONSTRAINEDSIZE);
-    sz = std::min(
-        sz, ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
-                                aCache->mPercentageBasis,
-                                nsLayoutUtils::MIN_ISIZE, aCache->mMinSizeClamp,
-                                nsLayoutUtils::MIN_INTRINSIC_ISIZE));
+    sz = std::min(sz, ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
+                                          aCache->mPercentageBasis,
+                                          IntrinsicISizeType::MinISize,
+                                          aCache->mMinSizeClamp,
+                                          nsLayoutUtils::MIN_INTRINSIC_ISIZE));
   }
   aCache->mMinSize.emplace(sz);
   return sz;
@@ -6368,7 +6368,7 @@ float nsGridContainerFrame::Tracks::FindUsedFlexFraction(
       // XXX optimize: bug 1194446
       auto pb = Some(aState.PercentageBasisFor(mAxis, item));
       nscoord spaceToFill = ContentContribution(item, aState, rc, wm, mAxis, pb,
-                                                nsLayoutUtils::PREF_ISIZE);
+                                                IntrinsicISizeType::PrefISize);
       const LineRange& range =
           mAxis == eLogicalAxisInline ? item.mArea.mCols : item.mArea.mRows;
       MOZ_ASSERT(range.Extent() >= 1);
@@ -8251,8 +8251,8 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
         LogicalSize percentBasis(
             aState.PercentageBasisFor(eLogicalAxisInline, *item));
         IntrinsicISizeType type = aConstraint == SizingConstraint::MaxContent
-                                      ? nsLayoutUtils::PREF_ISIZE
-                                      : nsLayoutUtils::MIN_ISIZE;
+                                      ? IntrinsicISizeType::PrefISize
+                                      : IntrinsicISizeType::MinISize;
         auto sz =
             ::ContentContribution(*item, aState, &aState.mRenderingContext, wm,
                                   masonryAxis, Some(percentBasis), type);
@@ -9178,7 +9178,7 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
     grid.mGridRowEnd = subgrid->mGridRowEnd;
   }
 
-  auto constraint = aType == nsLayoutUtils::MIN_ISIZE
+  auto constraint = aType == IntrinsicISizeType::MinISize
                         ? SizingConstraint::MinContent
                         : SizingConstraint::MaxContent;
   if (IsMasonry(eLogicalAxisInline)) {
@@ -9221,7 +9221,7 @@ nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
   if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedMinISize = StyleDisplay()->IsContainSize()
                           ? 0
-                          : IntrinsicISize(aRC, nsLayoutUtils::MIN_ISIZE);
+                          : IntrinsicISize(aRC, IntrinsicISizeType::MinISize);
   }
   return mCachedMinISize;
 }
@@ -9236,7 +9236,7 @@ nscoord nsGridContainerFrame::GetPrefISize(gfxContext* aRC) {
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedPrefISize = StyleDisplay()->IsContainSize()
                            ? 0
-                           : IntrinsicISize(aRC, nsLayoutUtils::PREF_ISIZE);
+                           : IntrinsicISize(aRC, IntrinsicISizeType::PrefISize);
   }
   return mCachedPrefISize;
 }
