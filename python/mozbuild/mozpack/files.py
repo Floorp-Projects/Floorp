@@ -388,7 +388,7 @@ class AbsoluteSymlinkFile(File):
 
         # Always verify the symlink target path exists.
         if not os.path.exists(self.path):
-            raise ErrorMessage('Symlink target path does not exist: %s' % self.path)
+            errors.fatal('Symlink target path does not exist: %s' % self.path)
 
         st = None
 
@@ -476,7 +476,7 @@ class HardlinkFile(File):
             path_st = os.stat(self.path)
         except OSError as e:
             if e.errno == errno.ENOENT:
-                raise ErrorMessage('Hard link target path does not exist: %s' % self.path)
+                errors.fatal('Hard link target path does not exist: %s' % self.path)
             else:
                 raise
 
