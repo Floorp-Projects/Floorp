@@ -336,18 +336,28 @@ static void AssertStackAlignment(MacroAssembler& masm, uint32_t alignment,
   masm.assertStackAlignment(alignment, addBeforeAssert);
 }
 
-template <class VectorT>
-static unsigned StackArgBytes(const VectorT& args) {
-  ABIArgIter<VectorT> iter(args);
+template <class VectorT, template <class VecT> class ABIArgIterT>
+static unsigned StackArgBytesHelper(const VectorT& args) {
+  ABIArgIterT<VectorT> iter(args);
   while (!iter.done()) {
     iter++;
   }
   return iter.stackBytesConsumedSoFar();
 }
 
-static unsigned StackArgBytes(const FuncType& funcType) {
+template <class VectorT>
+static unsigned StackArgBytesForNativeABI(const VectorT& args) {
+  return StackArgBytesHelper<VectorT, ABIArgIter>(args);
+}
+
+template <class VectorT>
+static unsigned StackArgBytesForWasmABI(const VectorT& args) {
+  return StackArgBytesHelper<VectorT, WasmABIArgIter>(args);
+}
+
+static unsigned StackArgBytesForWasmABI(const FuncType& funcType) {
   ArgTypeVector args(funcType);
-  return StackArgBytes(args);
+  return StackArgBytesForWasmABI(args);
 }
 
 static void Move64(MacroAssembler& masm, const Address& src,
@@ -367,12 +377,12 @@ static void Move64(MacroAssembler& masm, const Address& src,
 static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
                               Register argv, Register scratch) {
   // Copy parameters out of argv and into the registers/stack-slots specified by
-  // the system ABI.
+  // the wasm ABI.
   //
   // SetupABIArguments are only used for C++ -> wasm calls through callExport(),
   // and V128 and Ref types (other than externref) are not currently allowed.
   ArgTypeVector args(fe.funcType());
-  for (ABIArgIter iter(args); !iter.done(); iter++) {
+  for (WasmABIArgIter iter(args); !iter.done(); iter++) {
     unsigned argOffset = iter.index() * sizeof(ExportArg);
     Address src(argv, argOffset);
     MIRType type = iter.mirType();
@@ -808,9 +818,10 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.Push(scratch);
 #endif
 
-  // Reserve stack space for the call.
-  unsigned argDecrement = StackDecrementForCall(
-      WasmStackAlignment, masm.framePushed(), StackArgBytes(fe.funcType()));
+  // Reserve stack space for the wasm call.
+  unsigned argDecrement =
+      StackDecrementForCall(WasmStackAlignment, masm.framePushed(),
+                            StackArgBytesForWasmABI(fe.funcType()));
   masm.reserveStack(argDecrement);
 
   // Copy parameters out of argv and into the wasm ABI registers/stack-slots.
@@ -1003,13 +1014,13 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // left):
   // <-- retAddr | descriptor | callee | argc | this | arg1..N
 
-  unsigned normalBytesNeeded = StackArgBytes(fe.funcType());
+  unsigned normalBytesNeeded = StackArgBytesForWasmABI(fe.funcType());
 
   MIRTypeVector coerceArgTypes;
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Int32));
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
   MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
-  unsigned oolBytesNeeded = StackArgBytes(coerceArgTypes);
+  unsigned oolBytesNeeded = StackArgBytesForWasmABI(coerceArgTypes);
 
   unsigned bytesNeeded = std::max(normalBytesNeeded, oolBytesNeeded);
 
@@ -1201,7 +1212,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   // Convert all the expected values to unboxed values on the stack.
   ArgTypeVector args(fe.funcType());
-  for (ABIArgIter iter(args); !iter.done(); iter++) {
+  for (WasmABIArgIter iter(args); !iter.done(); iter++) {
     unsigned jitArgOffset =
         frameSize + JitFrameLayout::offsetOfActualArg(iter.index());
     Address argv(sp, jitArgOffset);
@@ -1382,7 +1393,9 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
     masm.bind(&oolCall);
     masm.setFramePushed(frameSize);
 
-    ABIArgMIRTypeIter argsIter(coerceArgTypes);
+    // Baseline and Ion call C++ runtime via BuiltinThunk with wasm abi, so to
+    // unify the BuiltinThunk's interface we call it here with wasm abi.
+    jit::WasmABIArgIter<MIRTypeVector> argsIter(coerceArgTypes);
 
     // argument 0: function export index.
     if (argsIter->kind() == ABIArg::GPR) {
@@ -1471,7 +1484,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.orPtr(Imm32(ExitOrJitEntryFPTag), FramePointer);
 
   // Move stack arguments to their final locations.
-  unsigned bytesNeeded = StackArgBytes(fe.funcType());
+  unsigned bytesNeeded = StackArgBytesForWasmABI(fe.funcType());
   bytesNeeded = StackDecrementForCall(WasmStackAlignment, masm.framePushed(),
                                       bytesNeeded);
   if (bytesNeeded) {
@@ -1482,7 +1495,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
             fe.funcIndex());
 
   ArgTypeVector args(fe.funcType());
-  for (ABIArgIter iter(args); !iter.done(); iter++) {
+  for (WasmABIArgIter iter(args); !iter.done(); iter++) {
     MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != scratch);
     MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != FramePointer);
     if (iter->kind() != ABIArg::Stack) {
@@ -1868,9 +1881,8 @@ static void FillArgumentArrayForExit(
 #endif
             masm.load64(src, scratch64);
             GenPrintI64(DebugChannel::Import, masm, scratch64);
-            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
-                                         scratch64, scratch, nullptr,
-                                         throwLabel);
+            GenerateBigIntInitialization(masm, sizeof(Frame), scratch64,
+                                         scratch, nullptr, throwLabel);
             masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
           } else if (type == MIRType::RefOrNull) {
             // This works also for FuncRef because it is distinguishable from a
@@ -1939,10 +1951,10 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
 
   MOZ_ASSERT(masm.framePushed() == 0);
   const unsigned sizeOfTlsSlot = sizeof(void*);
-  unsigned framePushed =
-      StackDecrementForCall(WasmStackAlignment,
-                            sizeof(Frame),  // pushed by prologue
-                            StackArgBytes(fi.funcType()) + sizeOfTlsSlot);
+  unsigned framePushed = StackDecrementForCall(
+      WasmStackAlignment,
+      sizeof(Frame),  // pushed by prologue
+      StackArgBytesForWasmABI(fi.funcType()) + sizeOfTlsSlot);
   masm.wasmReserveStackChecked(framePushed, BytecodeOffset(0));
   MOZ_ASSERT(masm.framePushed() == framePushed);
 
@@ -1956,7 +1968,7 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   // Copy our frame's stack arguments to the callee frame's stack argument.
   unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
   ArgTypeVector args(fi.funcType());
-  for (ABIArgIter i(args); !i.done(); i++) {
+  for (WasmABIArgIter i(args); !i.done(); i++) {
     if (i->kind() != ABIArg::Stack) {
       continue;
     }
@@ -2041,7 +2053,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   // The padding between stack args and argv ensures that argv is aligned. The
   // padding between argv and retaddr ensures that sp is aligned.
   unsigned argOffset =
-      AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
+      AlignBytes(StackArgBytesForNativeABI(invokeArgTypes), sizeof(double));
   // The abiArgCount includes a stack result pointer argument if needed.
   unsigned abiArgCount = ArgTypeVector(fi.funcType()).lengthWithStackResults();
   unsigned argBytes = std::max<size_t>(1, abiArgCount) * sizeof(Value);
@@ -2054,7 +2066,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                        offsets);
 
   // Fill the argument array.
-  unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
+  unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
   Register scratch2 = ABINonArgReturnReg1;
   // The scratch3 reg does not need to be non-volatile, but has to be
@@ -2262,7 +2274,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments.
-  const uint32_t offsetFromFPToCallerStackArgs = sizeof(Frame);
+  const uint32_t offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
   // The scratch3 reg does not need to be non-volatile, but has to be
@@ -2441,7 +2453,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
     MIRTypeVector coerceArgTypes;
     MOZ_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
     unsigned offsetToCoerceArgv =
-        AlignBytes(StackArgBytes(coerceArgTypes), sizeof(Value));
+        AlignBytes(StackArgBytesForWasmABI(coerceArgTypes), sizeof(Value));
     MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
     AssertStackAlignment(masm, ABIStackAlignment);
 
@@ -2573,14 +2585,14 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   uint32_t framePushed =
       StackDecrementForCall(ABIStackAlignment,
                             sizeof(Frame),  // pushed by prologue
-                            StackArgBytes(args));
+                            StackArgBytesForNativeABI(args));
 
   GenerateExitPrologue(masm, framePushed, exitReason, offsets);
 
   // Copy out and convert caller arguments, if needed.
-  unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
+  unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
-  for (ABIArgIter<ABIFunctionArgs> i(args); !i.done(); i++) {
+  for (ABIArgIter i(args); !i.done(); i++) {
     if (i->argInRegister()) {
 #ifdef JS_CODEGEN_ARM
       // Non hard-fp passes the args values in GPRs.
