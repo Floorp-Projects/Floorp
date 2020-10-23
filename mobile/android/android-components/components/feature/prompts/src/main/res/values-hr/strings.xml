@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Sažmi predložene prijave</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Predložene prijave</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Ponovno poslati podatke ovoj stranici?</string>
+    <string name="mozac_feature_prompt_repost_message">Osvježavanje ove stranice moglo bi ponoviti nedavne radnje, kao što su dvostruko plaćanje ili komentiranje.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Ponovno pošalji podatke</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Odustani</string>
 </resources>
