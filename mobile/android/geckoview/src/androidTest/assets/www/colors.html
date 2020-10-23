@@ -3,6 +3,12 @@
         <meta charset="utf-8">
         <title>Colours</title>
     </head>
-    <body style="overflow:hidden; height:100%; width:100%; margin: 0px; padding: 0px; background: linear-gradient(135deg, red, white);">
+    <!-- background contains one extra transparent.gif because we want trick the
+      contentful paint detection; We want to make sure the background is loaded
+      before the test starts so we always wait for the contentful paint timestamp
+      to exist, however, gradient isn't considered as contentful per spec, so Gecko
+      wouldn't generate a timestamp for it. Hence, we added a transparent gif
+      to the image list to trick the detection. !-->
+    <body style="overflow:hidden; height:100%; width:100%; margin: 0px; padding: 0px; background: url('/assets/www/transparent.gif'), linear-gradient(135deg, red, white);">
     </body>
 </html>
