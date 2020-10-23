@@ -563,7 +563,7 @@ nsresult TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard) {
   RefPtr<TextComposition> kungFuDeathGrip(this);
   const nsAutoString lastData(mLastData);
 
-  if (IMEStateManager::CanSendNotificationToTheMainProcess()) {
+  if (IMEStateManager::CanSendNotificationToWidget()) {
     AutoRestore<bool> saveRequestingCancel(mIsRequestingCancel);
     AutoRestore<bool> saveRequestingCommit(mIsRequestingCommit);
     if (aDiscard) {
