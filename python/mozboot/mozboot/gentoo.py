@@ -36,7 +36,6 @@ class GentooBootstrapper(
     def ensure_system_packages(self):
         self.run_as_root(['emerge', '--noreplace', '--quiet',
                           'app-arch/zip',
-                          'sys-devel/autoconf:2.1'
                           ])
 
     def ensure_browser_packages(self, artifact_mode=False):

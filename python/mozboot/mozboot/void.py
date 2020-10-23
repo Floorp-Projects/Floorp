@@ -17,7 +17,6 @@ class VoidBootstrapper(
         BaseBootstrapper):
 
     PACKAGES = [
-        'autoconf213',
         'clang',
         'make',
         'mercurial',
