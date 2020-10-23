@@ -3796,6 +3796,7 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
            Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
   storePtr(WasmTlsReg,
            Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+
   if (instanceArg.kind() == ABIArg::GPR) {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, instance)),
             instanceArg.gpr());
@@ -4655,6 +4656,18 @@ void AutoGenericRegisterScope<RegisterType>::reacquire() {
 
 template void AutoGenericRegisterScope<Register>::reacquire();
 template void AutoGenericRegisterScope<FloatRegister>::reacquire();
+
+wasm::TlsData* ExtractCallerTlsFromFrameWithTls(wasm::Frame* fp) {
+  return *reinterpret_cast<wasm::TlsData**>(
+      reinterpret_cast<uint8_t*>(fp) + sizeof(wasm::Frame) + ShadowStackSpace +
+      wasm::FrameWithTls::callerTLSOffset());
+}
+
+wasm::TlsData* ExtractCalleeTlsFromFrameWithTls(wasm::Frame* fp) {
+  return *reinterpret_cast<wasm::TlsData**>(
+      reinterpret_cast<uint8_t*>(fp) + sizeof(wasm::Frame) + ShadowStackSpace +
+      wasm::FrameWithTls::calleeTLSOffset());
+}
 
 #endif  // DEBUG
 

@@ -2585,6 +2585,7 @@ class CallSiteDesc {
   }
   uint32_t lineOrBytecode() const { return lineOrBytecode_; }
   Kind kind() const { return Kind(kind_); }
+  bool mightBeCrossInstance() const { return kind() == CallSiteDesc::Dynamic; }
 };
 
 class CallSite : public CallSiteDesc {
@@ -3304,9 +3305,12 @@ class Frame {
 static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
 
 class FrameWithTls : public Frame {
- public:
   TlsData* calleeTls_;
   TlsData* callerTls_;
+
+ public:
+  TlsData* calleeTls() { return calleeTls_; }
+  TlsData* callerTls() { return callerTls_; }
 
   constexpr static uint32_t sizeWithoutFrame() {
     return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
