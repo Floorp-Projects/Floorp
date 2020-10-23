@@ -7246,10 +7246,7 @@ nsresult DatabaseConnection::CheckpointInternal(CheckpointMode aMode) {
 
   stmtString.AppendLiteral(");");
 
-  const nsresult rv = ExecuteCachedStatement(stmtString);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement(stmtString));
 
   return NS_OK;
 }
