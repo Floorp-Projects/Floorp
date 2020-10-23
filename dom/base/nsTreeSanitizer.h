@@ -200,6 +200,12 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
   void RemoveAllAttributes(mozilla::dom::Element* aElement);
 
   /**
+   * Removes all attributes from the descendants of an element but not from
+   * the element itself.
+   */
+  void RemoveAllAttributesFromDescendants(mozilla::dom::Element* aElement);
+
+  /**
    * Log a Console Service message to indicate we removed something.
    * If you pass an element and/or attribute, their information will
    * be appended to the message.
