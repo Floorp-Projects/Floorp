@@ -4411,10 +4411,13 @@ class WasmABIArgIter : public ABIArgIterBase<VecT, WasmABIArgGenerator> {
       : ABIArgIterBase<VecT, WasmABIArgGenerator>(types) {}
 };
 
-wasm::TlsData* ExtractCalleeTlsFromFrameWithTls(wasm::Frame* fp);
-wasm::TlsData* ExtractCallerTlsFromFrameWithTls(wasm::Frame* fp);
-
 }  // namespace jit
+
+namespace wasm {
+TlsData* ExtractCalleeTlsFromFrameWithTls(Frame* fp);
+TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp);
+}  // namespace wasm
+
 }  // namespace js
 
 #endif /* jit_MacroAssembler_h */
