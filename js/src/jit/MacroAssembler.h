@@ -4410,12 +4410,11 @@ class WasmABIArgIter : public ABIArgIterBase<VecT, WasmABIArgGenerator> {
   explicit WasmABIArgIter(const VecT& types)
       : ABIArgIterBase<VecT, WasmABIArgGenerator>(types) {}
 };
-
 }  // namespace jit
 
 namespace wasm {
-TlsData* ExtractCalleeTlsFromFrameWithTls(Frame* fp);
-TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp);
+const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp);
+const TlsData* ExtractCallerTlsFromFrameWithTls(const Frame* fp);
 }  // namespace wasm
 
 }  // namespace js
