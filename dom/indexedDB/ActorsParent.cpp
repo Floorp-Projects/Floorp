@@ -6446,10 +6446,7 @@ struct CommonPopulateResponseHelper {
 
   nsresult GetKeys(mozIStorageStatement* const aStmt,
                    Key* const aOptOutSortKey) {
-    const nsresult rv = GetCommonKeys(aStmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(GetCommonKeys(aStmt));
 
     if (aOptOutSortKey) {
       *aOptOutSortKey = mPosition;
@@ -6461,10 +6458,7 @@ struct CommonPopulateResponseHelper {
   nsresult GetCommonKeys(mozIStorageStatement* const aStmt) {
     MOZ_ASSERT(mPosition.IsUnset());
 
-    nsresult rv = mPosition.SetFromStatement(aStmt, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(mPosition.SetFromStatement(aStmt, 0));
 
     IDB_LOG_MARK_PARENT_TRANSACTION_REQUEST(
         "PRELOAD: Populating response with key %s", "Populating%.0s",
@@ -6502,20 +6496,11 @@ struct IndexPopulateResponseHelper : CommonPopulateResponseHelper {
     MOZ_ASSERT(mLocaleAwarePosition.IsUnset());
     MOZ_ASSERT(mObjectStorePosition.IsUnset());
 
-    nsresult rv = CommonPopulateResponseHelper::GetCommonKeys(aStmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(CommonPopulateResponseHelper::GetCommonKeys(aStmt));
 
-    rv = mLocaleAwarePosition.SetFromStatement(aStmt, 1);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(mLocaleAwarePosition.SetFromStatement(aStmt, 1));
 
-    rv = mObjectStorePosition.SetFromStatement(aStmt, 2);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(mObjectStorePosition.SetFromStatement(aStmt, 2));
 
     if (aOptOutSortKey) {
       *aOptOutSortKey =
