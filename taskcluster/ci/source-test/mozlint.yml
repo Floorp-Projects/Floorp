@@ -455,6 +455,8 @@ perfdocs-verify:
             WORKSPACE: /builds/worker/checkouts/gecko/
     when:
         files-changed:
+            - '**/perftest.ini'
+            - 'python/mozperftest/**'
             - 'testing/**/*.ini'
             - 'testing/**/*.yml'
             - 'testing/**/*.rst'
