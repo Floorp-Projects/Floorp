@@ -229,13 +229,13 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
 #endif
 
 #ifdef DEBUG
-  NS_DebugBreak(
-      NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
-      (extraInfosString.IsEmpty() ? nsPromiseFlatCString(aExpr)
-                                  : static_cast<const nsCString&>(nsAutoCString(
-                                        aExpr + extraInfosString)))
-          .get(),
-      nsPromiseFlatCString(GetLeafName(aSourceFile)).get(), aSourceLine);
+  NS_DebugBreak(NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
+                (extraInfosString.IsEmpty()
+                     ? nsPromiseFlatCString(aExpr)
+                     : static_cast<const nsCString&>(
+                           nsAutoCString(aExpr + extraInfosString)))
+                    .get(),
+                nsPromiseFlatCString(aSourceFile).get(), aSourceLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
