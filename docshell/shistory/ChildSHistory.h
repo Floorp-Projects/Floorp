@@ -125,6 +125,7 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
 
   RefPtr<BrowsingContext> mBrowsingContext;
   nsCOMPtr<nsISHistory> mHistory;
+  // Can be removed once history-in-parent is the only way
   mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
   int32_t mIndex = -1;
   int32_t mLength = 0;
@@ -137,6 +138,10 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   AutoTArray<PendingSHistoryChange, 2> mPendingSHistoryChanges;
 
   bool mAsyncHistoryLength = false;
+
+  // Needs to start 1 above default epoch in parent
+  uint64_t mHistoryEpoch = 1;
+  bool mPendingEpoch = false;
 };
 
 }  // namespace dom

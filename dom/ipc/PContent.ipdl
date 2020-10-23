@@ -1677,7 +1677,7 @@ parent:
                         uint64_t aLoadID, nsID aChangeID, uint32_t aLoadType);
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext,
-                    int32_t aOffset) returns(int32_t requestedIndex);
+                    int32_t aOffset, uint64_t aHistoryEpoch) returns(int32_t requestedIndex);
 
     async BlobURLDataRequest(nsCString aBlobURL,
                              nsIPrincipal aTriggeringPrincipal,

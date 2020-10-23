@@ -16,6 +16,8 @@
 #include "nsDocShell.h"
 #include "nsXULAppAPI.h"
 
+extern mozilla::LazyLogModule gSHLog;
+
 namespace mozilla {
 namespace dom {
 
@@ -134,6 +136,9 @@ bool ChildSHistory::CanGo(int32_t aOffset) {
 
 void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
                        ErrorResult& aRv) {
+  CheckedInt<int32_t> index = Index();
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("nsHistory::Go(%d), current index = %d", aOffset, index.value()));
   if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
     NS_ERROR(
         "aRequireUserInteraction may only be used with an offset of -1 or 1");
@@ -141,7 +146,6 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     return;
   }
 
-  CheckedInt<int32_t> index = Index();
   while (true) {
     index += aOffset;
     if (!index.isValid()) {
@@ -150,8 +154,14 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     }
 
     // See Bug 1650095.
-    if (mozilla::SessionHistoryInParent()) {
-      break;
+    if (mozilla::SessionHistoryInParent() && !mPendingEpoch) {
+      mPendingEpoch = true;
+      RefPtr<ChildSHistory> self(this);
+      NS_DispatchToCurrentThread(
+          NS_NewRunnableFunction("UpdateEpochRunnable", [self] {
+            self->mHistoryEpoch++;
+            self->mPendingEpoch = false;
+          }));
     }
 
     // Check for user interaction if desired, except for the first and last
@@ -171,13 +181,14 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
 
 void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
                             CallerType aCallerType, ErrorResult& aRv) {
+  CheckedInt<int32_t> index = Index();
+  MOZ_LOG(
+      gSHLog, LogLevel::Debug,
+      ("nsHistory::AsyncGo(%d), current index = %d", aOffset, index.value()));
   nsresult rv = mBrowsingContext->CheckLocationChangeRateLimit(aCallerType);
   if (NS_FAILED(rv)) {
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("Rejected"));
     aRv.Throw(rv);
-    return;
-  }
-
-  if (!CanGo(aOffset)) {
     return;
   }
 
@@ -189,20 +200,32 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
 
 void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
                               ErrorResult& aRv) {
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("nsHistory::GotoIndex(%d, %d), epoch %" PRIu64, aIndex, aOffset,
+           mHistoryEpoch));
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
-    mBrowsingContext->HistoryGo(aOffset, [shistory](int32_t&& aRequestedIndex) {
-      // FIXME Should probably only do this for non-fission.
-      if (shistory) {
-        shistory->InternalSetRequestedIndex(aRequestedIndex);
-      }
-    });
+    mBrowsingContext->HistoryGo(
+        aOffset, mHistoryEpoch, [shistory](int32_t&& aRequestedIndex) {
+          // FIXME Should probably only do this for non-fission.
+          if (shistory) {
+            shistory->InternalSetRequestedIndex(aRequestedIndex);
+          }
+        });
   } else {
     aRv = mHistory->GotoIndex(aIndex);
   }
 }
 
 void ChildSHistory::RemovePendingHistoryNavigations() {
+  // Per the spec, this generally shouldn't remove all navigations - it
+  // depends if they're in the same document family or not.  We don't do
+  // that.  Also with SessionHistoryInParent, this can only abort AsyncGo's
+  // that have not yet been sent to the parent - see discussion of point
+  // 2.2 in comments in nsDocShell::UpdateURLAndHistory()
+  MOZ_LOG(
+      gSHLog, LogLevel::Debug,
+      ("RemovePendingHistoryNavigations: %zu", mPendingNavigations.length()));
   mPendingNavigations.clear();
 }
 
