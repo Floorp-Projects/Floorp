@@ -13,6 +13,7 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_print.h"
 
 using namespace mozilla;
 
@@ -143,6 +144,38 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings* aPS) {
   return NS_OK;
 }
 
+struct KnownMonochromeSetting {
+  const NSString* mName;
+  const NSString* mValue;
+};
+
+// There's no standard setting in Core Printing for monochrome. Or rather,
+// there is (PMSetColorMode) but it does nothing.
+//
+// The way to set the relevant setting is via the raw printSettings API, and it
+// depends on the print driver which key it listens to.
+//
+// So we set / look for a variety of driver-specific keys that are known to
+// work across printers.
+//
+// We set all the known settings, because the alternative to that is parsing
+// ppd files from the printer and find the relevant known choices that can
+// apply, and that is a lot more complex, similarly sketchy (requires the same
+// amount of driver-specific knowledge), and requires using deprecated CUPS
+// APIs.
+static const KnownMonochromeSetting kKnownMonochromeSettings[] = {
+    {@"ColorModel", @"Gray"},             // Generic
+    {@"BRMonoColor", @"Mono"},            // Brother
+    {@"BRPrintQuality", @"Black"},        // Brother
+    {@"INK", @"MONO"},                    // Epson
+    {@"HPColorMode", @"GrayscalePrint"},  // HP
+    {@"ColorMode", @"Mono"},              // Samsung
+    {@"PrintoutMode", @"Normal.Gray"},    // Foomatic
+    {@"ProcessColorModel", @"Mono"},      // Samsung
+    {@"ARCMode", @"CMBW"},                // Sharp
+    {@"XRXColor", @"BW"}                  // Xerox
+};
+
 void nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPageFormat) {
   // Get a printInfo based on our current properties.
   NSPrintInfo* printInfo = CreateOrCopyPrintInfo();
@@ -269,6 +302,12 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
     }
   }
 
+  if (StaticPrefs::print_mac_monochrome_enabled() && !GetPrintInColor()) {
+    for (const auto& setting : kKnownMonochromeSettings) {
+      [printSettings setObject:setting.mValue forKey:setting.mName];
+    }
+  }
+
   return printInfo;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
@@ -374,6 +413,25 @@ void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrin
   if (value) {
     mDestination = [value unsignedShortValue];
   }
+
+  const bool color = [&] {
+    if (StaticPrefs::print_mac_monochrome_enabled()) {
+      for (const auto& setting : kKnownMonochromeSettings) {
+        NSString* value = [printSettings objectForKey:setting.mName];
+        if (!value) {
+          continue;
+        }
+        if ([setting.mValue isEqualToString:value]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }();
+
+  SetPrintInColor(color);
+
+  SetIsInitializedFromPrinter(true);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
