@@ -6678,12 +6678,9 @@ nsresult DispatchAndReturnFileReferences(
   MOZ_ASSERT(quotaManager);
 
   // XXX can't we simply use NS_DISPATCH_SYNC instead of using a monitor?
-  const nsresult rv = quotaManager->IOThread()->Dispatch(
+  IDB_TRY(quotaManager->IOThread()->Dispatch(
       NS_NewRunnableFunction("GetFileReferences", std::move(lambda)),
-      NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      NS_DISPATCH_NORMAL));
 
   mozilla::MonitorAutoLock autolock(monitor);
   while (waiting) {
