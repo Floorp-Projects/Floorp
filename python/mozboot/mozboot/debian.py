@@ -33,7 +33,6 @@ class DebianBootstrapper(
     # These are common packages for all Debian-derived distros (such as
     # Ubuntu).
     COMMON_PACKAGES = [
-        'autoconf2.13',
         'build-essential',
         'nodejs',
         'unzip',

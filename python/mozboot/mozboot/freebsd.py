@@ -16,7 +16,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         self.flavor = flavor.lower()
 
         self.packages = [
-            'autoconf213',
             'gmake',
             'gtar',
             'pkgconf',
