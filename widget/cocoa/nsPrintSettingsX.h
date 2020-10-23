@@ -87,13 +87,6 @@ class nsPrintSettingsX : public nsPrintSettings {
            (mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4);
   }
 
-  // The out param has a ref count of 1 on return so caller needs to PMRelase()
-  // when done.
-  OSStatus CreateDefaultPageFormat(PMPrintSession aSession,
-                                   PMPageFormat& outFormat);
-  OSStatus CreateDefaultPrintSettings(PMPrintSession aSession,
-                                      PMPrintSettings& outSettings);
-
   // Needed to correctly track the various job dispositions (spool, preview,
   // save to file) that the user can choose via the system print dialog.
   // Unfortunately it seems to be necessary to set both the Cocoa "job
