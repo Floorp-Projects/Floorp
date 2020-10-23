@@ -12832,12 +12832,9 @@ nsresult QuotaClient::AsyncDeleteFile(FileManager* aFileManager,
   MOZ_ASSERT(mDeleteTimer);
   MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
 
-  nsresult rv = mDeleteTimer->InitWithNamedFuncCallback(
+  IDB_TRY(mDeleteTimer->InitWithNamedFuncCallback(
       DeleteTimerCallback, this, kDeleteTimeoutMs, nsITimer::TYPE_ONE_SHOT,
-      "dom::indexeddb::QuotaClient::AsyncDeleteFile");
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      "dom::indexeddb::QuotaClient::AsyncDeleteFile"));
 
   mPendingDeleteInfos.LookupOrAdd(aFileManager)->AppendElement(aFileId);
 
