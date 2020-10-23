@@ -679,6 +679,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
         issuerBytes, issuerSubjectPublicKeyInfoBytes, serialNumberBytes,
         &filterTimestamp, &crliteRevocationState);
     TimeStamp crliteLookupAfter = TimeStamp::Now();
+    bool certificateFoundValidInCRLiteFilter = false;
     if (NS_FAILED(rv)) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: CRLite call failed"));
@@ -775,10 +776,12 @@ Result NSSCertDBTrustDomain::CheckRevocation(
           mCRLiteTelemetryInfo->mLookupResult =
               CRLiteLookupResult::CertificateTooNew;
         }
-      } else if (crliteRevocationState == nsICertStorage::STATE_UNSET &&
-                 mCRLiteTelemetryInfo) {
-        mCRLiteTelemetryInfo->mLookupResult =
-            CRLiteLookupResult::CertificateValid;
+      } else if (crliteRevocationState == nsICertStorage::STATE_UNSET) {
+        certificateFoundValidInCRLiteFilter = true;
+        if (mCRLiteTelemetryInfo) {
+          mCRLiteTelemetryInfo->mLookupResult =
+              CRLiteLookupResult::CertificateValid;
+        }
       }
     }
 
@@ -803,6 +806,12 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::ERROR_REVOKED_CERTIFICATE;
       }
+    } else if (certificateFoundValidInCRLiteFilter &&
+               mCRLiteMode == CRLiteMode::Enforce) {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+              ("NSSCertDBTrustDomain::CheckRevocation: certificate covered by "
+               "CRLite, found to be valid -> skipping OCSP processing"));
+      return Success;
     }
   }
 #else
