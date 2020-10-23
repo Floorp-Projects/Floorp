@@ -705,10 +705,10 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x9640, 0x964f);
       APPEND_RANGE(0x6720, 0x677f);
 
-#ifdef EARLY_BETA_OR_EARLIER
       // Stoney
       APPEND_DEVICE(0x98e4);
 
+#ifdef EARLY_BETA_OR_EARLIER
       // Carrizo
       APPEND_RANGE(0x9870, 0x9877);
 
