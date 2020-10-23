@@ -4845,6 +4845,7 @@ nsresult nsContentUtils::ParseFragmentHTML(
 
   nsIContent* target = aTargetNode;
 
+  RefPtr<Document> inert;
   RefPtr<DocumentFragment> fragment;
   // We sanitize if the fragment occurs in a system privileged
   // context, an about: page, or if there are explicit sanitization flags.
@@ -4855,8 +4856,12 @@ nsresult nsContentUtils::ParseFragmentHTML(
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
   if (shouldSanitize) {
     if (!AllowsUnsanitizedContentForAboutNewTab(nodePrincipal)) {
-      fragment = new (aTargetNode->OwnerDoc()->NodeInfoManager())
-          DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
+      inert = nsContentUtils::CreateInertHTMLDocument(aTargetNode->OwnerDoc());
+      if (!inert) {
+        return NS_ERROR_FAILURE;
+      }
+      fragment = new (inert->NodeInfoManager())
+          DocumentFragment(inert->NodeInfoManager());
       target = fragment;
     }
   }
@@ -4931,22 +4936,7 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   MOZ_ASSERT(contentsink, "Sink doesn't QI to nsIContentSink!");
   sXMLFragmentParser->SetContentSink(contentsink);
 
-  sXMLFragmentSink->SetTargetDocument(aDocument);
-  sXMLFragmentSink->SetPreventScriptExecution(aPreventScriptExecution);
-
-  nsresult rv = sXMLFragmentParser->ParseFragment(aSourceBuffer, aTagStack);
-  if (NS_FAILED(rv)) {
-    // Drop the fragment parser and sink that might be in an inconsistent state
-    NS_IF_RELEASE(sXMLFragmentParser);
-    NS_IF_RELEASE(sXMLFragmentSink);
-    return rv;
-  }
-
-  rv = sXMLFragmentSink->FinishFragmentParsing(aReturn);
-
-  sXMLFragmentParser->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  RefPtr<Document> doc;
   nsCOMPtr<nsIPrincipal> nodePrincipal = aDocument->NodePrincipal();
 
 #ifdef DEBUG
@@ -4967,6 +4957,27 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   // an about: scheme principal.
   bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
+  if (shouldSanitize) {
+    doc = nsContentUtils::CreateInertXMLDocument(aDocument);
+  } else {
+    doc = aDocument;
+  }
+
+  sXMLFragmentSink->SetTargetDocument(doc);
+  sXMLFragmentSink->SetPreventScriptExecution(aPreventScriptExecution);
+
+  nsresult rv = sXMLFragmentParser->ParseFragment(aSourceBuffer, aTagStack);
+  if (NS_FAILED(rv)) {
+    // Drop the fragment parser and sink that might be in an inconsistent state
+    NS_IF_RELEASE(sXMLFragmentParser);
+    NS_IF_RELEASE(sXMLFragmentSink);
+    return rv;
+  }
+
+  rv = sXMLFragmentSink->FinishFragmentParsing(aReturn);
+
+  sXMLFragmentParser->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (shouldSanitize) {
     uint32_t sanitizationFlags =
