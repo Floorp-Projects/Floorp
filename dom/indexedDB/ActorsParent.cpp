@@ -13652,11 +13652,8 @@ void DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   // Must set this before dispatching otherwise we will race with the IO thread
   mState = State_DatabaseWorkOpen;
 
-  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Finish();
-    return;
-  }
+  IDB_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL), QM_VOID,
+          [this](const nsresult) { Finish(); });
 }
 
 void DeleteFilesRunnable::DirectoryLockFailed() {
