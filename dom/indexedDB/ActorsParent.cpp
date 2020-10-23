@@ -21016,12 +21016,7 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
   auto populateResponseHelper = PopulateResponseHelper<CursorType>{mOp};
   auto previousKey = aOptOutSortKey ? std::move(*aOptOutSortKey) : Key{};
 
-  {
-    const auto rv = populateResponseHelper.GetKeys(aStmt, aOptOutSortKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-  }
+  IDB_TRY(populateResponseHelper.GetKeys(aStmt, aOptOutSortKey));
 
   // aOptOutSortKey must be set iff the cursor is a unique cursor. For unique
   // cursors, we need to skip records with the same key. The SQL queries
@@ -21031,10 +21026,7 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
     return 0;
   }
 
-  const auto rv = populateResponseHelper.MaybeGetCloneInfo(aStmt, GetCursor());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(populateResponseHelper.MaybeGetCloneInfo(aStmt, GetCursor()));
 
   // CAUTION: It is important that only the part of the function above this
   // comment may fail, and modifications to the data structure (in particular
