@@ -24,7 +24,7 @@
 #include "MediaSegment.h"
 #include "jsapi/PacketDumper.h"
 
-#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "test/rtp_header_parser.h"
 
 // Should come from MediaEngine.h, but that's a pain to include here
 // because of the MOZILLA_EXTERNAL_LINKAGE stuff.

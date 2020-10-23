@@ -36,10 +36,7 @@
 #include "prthread.h"
 
 // WebRTC library includes follow
-// Video Engine
-// conflicts with #include of scoped_ptr.h
-#undef FF
-#include "webrtc/modules/video_capture/video_capture_defines.h"
+#include "modules/video_capture/video_capture_defines.h"
 
 namespace mozilla {
 

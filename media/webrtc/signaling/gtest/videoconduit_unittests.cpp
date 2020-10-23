@@ -14,8 +14,8 @@
 #include "RtpRtcpConfig.h"
 #include "WebrtcGmpVideoCodec.h"
 
-#include "webrtc/media/base/videoadapter.h"
-#include "webrtc/media/base/videosinkinterface.h"
+#include "api/video/video_sink_interface.h"
+#include "media/base/video_adapter.h"
 
 #include "MockCall.h"
 

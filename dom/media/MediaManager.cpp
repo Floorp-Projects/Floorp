@@ -68,7 +68,7 @@
 #  include "MediaEngineWebRTC.h"
 #  include "MediaEngineWebRTCAudio.h"
 #  include "browser_logging/WebRtcLog.h"
-#  include "webrtc/modules/audio_processing/include/audio_processing.h"
+#  include "modules/audio_processing/include/audio_processing.h"
 #endif
 
 #if defined(XP_WIN)

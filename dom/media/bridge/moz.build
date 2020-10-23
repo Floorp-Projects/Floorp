@@ -24,7 +24,6 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/media/webrtc/",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
 ]
 
 if CONFIG["MOZ_WEBRTC"]:

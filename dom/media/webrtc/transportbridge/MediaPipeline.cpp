@@ -46,8 +46,8 @@
 #include "jsapi/MediaTransportHandler.h"
 #include "Tracing.h"
 #include "libwebrtcglue/WebrtcImageBuffer.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)

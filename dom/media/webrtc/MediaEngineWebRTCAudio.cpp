@@ -19,13 +19,8 @@
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
 
-// scoped_ptr.h uses FF
-#ifdef FF
-#  undef FF
-#endif
-#include "webrtc/voice_engine/voice_engine_defines.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/common_audio/include/audio_util.h"
+#include "common_audio/include/audio_util.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 using namespace webrtc;
 

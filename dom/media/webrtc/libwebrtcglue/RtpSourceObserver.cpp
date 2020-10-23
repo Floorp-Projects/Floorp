@@ -6,8 +6,9 @@
 
 #include "RtpSourceObserver.h"
 #include "nsThreadUtils.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/modules/include/module_common_types.h"
+
+#include "modules/include/module_common_types.h"
+#include "system_wrappers/include/clock.h"
 
 namespace mozilla {
 

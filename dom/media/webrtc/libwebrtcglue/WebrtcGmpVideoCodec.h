@@ -44,7 +44,7 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 #include "gmp-video-host.h"
 #include "GMPVideoDecoderProxy.h"

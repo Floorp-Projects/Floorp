@@ -4,7 +4,7 @@
 
 #ifndef __RTPRTCP_CONFIG_H__
 #define __RTPRTCP_CONFIG_H__
-#include "webrtc/common_types.h"
+#include "api/rtp_headers.h"
 
 namespace mozilla {
 class RtpRtcpConfig {

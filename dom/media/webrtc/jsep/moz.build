@@ -9,7 +9,6 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc",
     "/media/webrtc",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
     "/third_party/sipcc",
 ]
 

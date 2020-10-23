@@ -11,7 +11,7 @@
 #include "AudioDeviceInfo.h"
 #include "MediaEngineWebRTC.h"
 #include "MediaTrackListener.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 namespace mozilla {
 
