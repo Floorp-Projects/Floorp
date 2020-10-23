@@ -24,7 +24,7 @@
 namespace mozilla {
 
 std::unique_ptr<TaskController> TaskController::sSingleton;
-uint64_t Task::sCurrentTaskSeqNo = 0;
+std::atomic<uint64_t> Task::sCurrentTaskSeqNo = 0;
 
 bool TaskManager::
     UpdateCachesForCurrentIterationAndReportPriorityModifierChanged(
