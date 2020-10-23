@@ -239,8 +239,12 @@ def remove(path):
     files or directories that exceed MAX_PATH(260) limitation or that ends
     with a period.
     """
-    if sys.platform in ('win32', 'cygwin') and len(path) >= 3 and \
-            path[1] == ':' and path[2] == '\\':
+    if (
+        sys.platform in ("win32", "cygwin")
+        and len(path) >= 3
+        and path[1] == ":"
+        and path[2] == "\\"
+    ):
         path = u"\\\\?\\%s" % path
 
     if os.path.isfile(path) or os.path.islink(path):
@@ -396,8 +400,7 @@ def tree(directory, sort_key=lambda x: x.lower()):
     return "\n".join(retval)
 
 
-def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None,
-          extra_search_dirs=()):
+def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None, extra_search_dirs=()):
     """A wrapper around `shutil.which` to make the behavior on Windows
     consistent with other platforms.
 
@@ -427,7 +430,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None,
         path = os.pathsep.join(path)
 
     if not path:
-        path = os.environ.get('PATH', os.defpath)
+        path = os.environ.get("PATH", os.defpath)
 
     if extra_search_dirs:
         path = os.pathsep.join([path] + list(extra_search_dirs))
@@ -578,7 +581,7 @@ def load(resource):
 
     # handle file URLs separately due to python stdlib limitations
     if resource.startswith("file://"):
-        resource = resource[len("file://"):]
+        resource = resource[len("file://") :]
 
     if not is_url(resource):
         # if no scheme is given, it is a file path
@@ -591,16 +594,16 @@ def load(resource):
 
 re_cache = {}
 # Python versions < 3.7 return r'\/' for re.escape('/').
-if re.escape('/') == '/':
-    MATCH_STAR_STAR_RE = re.compile(r'(^|/)\\\*\\\*/')
-    MATCH_STAR_STAR_END_RE = re.compile(r'(^|/)\\\*\\\*$')
+if re.escape("/") == "/":
+    MATCH_STAR_STAR_RE = re.compile(r"(^|/)\\\*\\\*/")
+    MATCH_STAR_STAR_END_RE = re.compile(r"(^|/)\\\*\\\*$")
 else:
-    MATCH_STAR_STAR_RE = re.compile(r'(^|\\\/)\\\*\\\*\\\/')
-    MATCH_STAR_STAR_END_RE = re.compile(r'(^|\\\/)\\\*\\\*$')
+    MATCH_STAR_STAR_RE = re.compile(r"(^|\\\/)\\\*\\\*\\\/")
+    MATCH_STAR_STAR_END_RE = re.compile(r"(^|\\\/)\\\*\\\*$")
 
 
 def match(path, pattern):
-    '''
+    """
     Return whether the given path matches the given pattern.
     An asterisk can be used to match any string, including the null string, in
     one part of the path:
@@ -620,13 +623,13 @@ def match(path, pattern):
     directories and subdirectories.
 
         ``foo/bar`` matches ``foo/**/bar``, or ``**/bar``
-    '''
+    """
     if not pattern:
         return True
     if pattern not in re_cache:
         p = re.escape(pattern)
-        p = MATCH_STAR_STAR_RE.sub(r'\1(?:.+/)?', p)
-        p = MATCH_STAR_STAR_END_RE.sub(r'(?:\1.+)?', p)
-        p = p.replace(r'\*', '[^/]*') + '(?:/.*)?$'
+        p = MATCH_STAR_STAR_RE.sub(r"\1(?:.+/)?", p)
+        p = MATCH_STAR_STAR_END_RE.sub(r"(?:\1.+)?", p)
+        p = p.replace(r"\*", "[^/]*") + "(?:/.*)?$"
         re_cache[pattern] = re.compile(p)
     return re_cache[pattern].match(path) is not None

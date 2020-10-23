@@ -29,19 +29,17 @@ class MachCommands(MachCommandBase):
     foo = True
     bar = False
 
-    @Command('cmd_foo', category='testing')
-    @CommandArgument(
-        '--arg', default=None,
-        help="Argument help.")
+    @Command("cmd_foo", category="testing")
+    @CommandArgument("--arg", default=None, help="Argument help.")
     def run_foo(self):
         pass
 
-    @Command('cmd_bar', category='testing',
-             conditions=[partial(is_bar, False)])
+    @Command("cmd_bar", category="testing", conditions=[partial(is_bar, False)])
     def run_bar(self):
         pass
 
-    @Command('cmd_foobar', category='testing',
-             conditions=[is_foo, partial(is_bar, True)])
+    @Command(
+        "cmd_foobar", category="testing", conditions=[is_foo, partial(is_bar, True)]
+    )
     def run_foobar(self):
         pass

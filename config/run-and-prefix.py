@@ -12,24 +12,27 @@ import os
 import subprocess
 import sys
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
-sys.stderr = os.fdopen(sys.stderr.fileno(), 'wb', 0)
+sys.stdout = os.fdopen(sys.stdout.fileno(), "wb", 0)
+sys.stderr = os.fdopen(sys.stderr.fileno(), "wb", 0)
 
-prefix = sys.argv[1].encode('utf-8')
+prefix = sys.argv[1].encode("utf-8")
 args = sys.argv[2:]
 
-p = subprocess.Popen(args, bufsize=0,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT,
-                     stdin=sys.stdin.fileno(),
-                     close_fds=False)
+p = subprocess.Popen(
+    args,
+    bufsize=0,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    stdin=sys.stdin.fileno(),
+    close_fds=False,
+)
 
 while True:
     data = p.stdout.readline()
 
-    if data == b'':
+    if data == b"":
         break
 
-    sys.stdout.write(b'%s> %s' % (prefix, data))
+    sys.stdout.write(b"%s> %s" % (prefix, data))
 
 sys.exit(p.wait())

@@ -22,8 +22,7 @@ from .phase import TPSTestPhase
 
 
 class TempFile(object):
-    """Class for temporary files that delete themselves when garbage-collected.
-    """
+    """Class for temporary files that delete themselves when garbage-collected."""
 
     def __init__(self, prefix=None):
         self.fd, self.filename = self.tmpfile = tempfile.mkstemp(prefix=prefix)
@@ -49,71 +48,71 @@ class TempFile(object):
 class TPSTestRunner(object):
 
     extra_env = {
-        'MOZ_CRASHREPORTER_DISABLE': '1',
-        'GNOME_DISABLE_CRASH_DIALOG': '1',
-        'XRE_NO_WINDOWS_CRASH_DIALOG': '1',
-        'MOZ_NO_REMOTE': '1',
-        'XPCOM_DEBUG_BREAK': 'warn',
+        "MOZ_CRASHREPORTER_DISABLE": "1",
+        "GNOME_DISABLE_CRASH_DIALOG": "1",
+        "XRE_NO_WINDOWS_CRASH_DIALOG": "1",
+        "MOZ_NO_REMOTE": "1",
+        "XPCOM_DEBUG_BREAK": "warn",
     }
 
     default_preferences = {
-        'app.update.checkInstallTime': False,
-        'app.update.disabledForTesting': True,
-        'security.turn_off_all_security_so_that_viruses_can_take_over_this_computer': True,
-        'browser.dom.window.dump.enabled': True,
-        'devtools.console.stdout.chrome': True,
-        'browser.sessionstore.resume_from_crash': False,
-        'browser.shell.checkDefaultBrowser': False,
-        'browser.tabs.warnOnClose': False,
-        'browser.warnOnQuit': False,
+        "app.update.checkInstallTime": False,
+        "app.update.disabledForTesting": True,
+        "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer": True,
+        "browser.dom.window.dump.enabled": True,
+        "devtools.console.stdout.chrome": True,
+        "browser.sessionstore.resume_from_crash": False,
+        "browser.shell.checkDefaultBrowser": False,
+        "browser.tabs.warnOnClose": False,
+        "browser.warnOnQuit": False,
         # Allow installing extensions dropped into the profile folder
-        'extensions.autoDisableScopes': 10,
-        'extensions.getAddons.get.url': 'http://127.0.0.1:4567/addons/api/%IDS%.json',
+        "extensions.autoDisableScopes": 10,
+        "extensions.getAddons.get.url": "http://127.0.0.1:4567/addons/api/%IDS%.json",
         # Our pretend addons server doesn't support metadata...
-        'extensions.getAddons.cache.enabled': False,
-        'extensions.install.requireSecureOrigin': False,
-        'extensions.update.enabled': False,
+        "extensions.getAddons.cache.enabled": False,
+        "extensions.install.requireSecureOrigin": False,
+        "extensions.update.enabled": False,
         # Don't open a dialog to show available add-on updates
-        'extensions.update.notifyUser': False,
-        'services.sync.firstSync': 'notReady',
-        'services.sync.lastversion': '1.0',
-        'services.sync.autoconnectDelay': 60 * 60 * 10,
-        'toolkit.startup.max_resumed_crashes': -1,
+        "extensions.update.notifyUser": False,
+        "services.sync.firstSync": "notReady",
+        "services.sync.lastversion": "1.0",
+        "services.sync.autoconnectDelay": 60 * 60 * 10,
+        "toolkit.startup.max_resumed_crashes": -1,
         # hrm - not sure what the release/beta channels will do?
-        'xpinstall.signatures.required': False,
-        'services.sync.testing.tps': True,
-        'engine.bookmarks.repair.enabled': False,
-        'extensions.experiments.enabled': True,
-        'webextensions.storage.sync.kinto': False,
+        "xpinstall.signatures.required": False,
+        "services.sync.testing.tps": True,
+        "engine.bookmarks.repair.enabled": False,
+        "extensions.experiments.enabled": True,
+        "webextensions.storage.sync.kinto": False,
     }
 
     debug_preferences = {
-        'services.sync.log.appender.console': 'Trace',
-        'services.sync.log.appender.dump': 'Trace',
-        'services.sync.log.appender.file.level': 'Trace',
-        'services.sync.log.appender.file.logOnSuccess': True,
-        'services.sync.log.logger': 'Trace',
-        'services.sync.log.logger.engine': 'Trace',
+        "services.sync.log.appender.console": "Trace",
+        "services.sync.log.appender.dump": "Trace",
+        "services.sync.log.appender.file.level": "Trace",
+        "services.sync.log.appender.file.logOnSuccess": True,
+        "services.sync.log.logger": "Trace",
+        "services.sync.log.logger.engine": "Trace",
     }
 
-    syncVerRe = re.compile(
-        r'Sync version: (?P<syncversion>.*)\n')
-    ffVerRe = re.compile(
-        r'Firefox version: (?P<ffver>.*)\n')
-    ffBuildIDRe = re.compile(
-        r'Firefox buildid: (?P<ffbuildid>.*)\n')
+    syncVerRe = re.compile(r"Sync version: (?P<syncversion>.*)\n")
+    ffVerRe = re.compile(r"Firefox version: (?P<ffver>.*)\n")
+    ffBuildIDRe = re.compile(r"Firefox buildid: (?P<ffbuildid>.*)\n")
 
-    def __init__(self, extensionDir,
-                 binary=None,
-                 config=None,
-                 debug=False,
-                 ignore_unused_engines=False,
-                 logfile='tps.log',
-                 mobile=False,
-                 rlock=None,
-                 resultfile='tps_result.json',
-                 testfile=None,
-                 stop_on_error=False):
+    def __init__(
+        self,
+        extensionDir,
+        binary=None,
+        config=None,
+        debug=False,
+        ignore_unused_engines=False,
+        logfile="tps.log",
+        mobile=False,
+        rlock=None,
+        resultfile="tps_result.json",
+        testfile=None,
+        stop_on_error=False,
+    ):
         self.binary = binary
         self.config = config if config else {}
         self.debug = debug
@@ -147,40 +146,39 @@ class TPSTestRunner(object):
     @mobile.setter
     def mobile(self, value):
         self._mobile = value
-        self.synctype = 'desktop' if not self._mobile else 'mobile'
+        self.synctype = "desktop" if not self._mobile else "mobile"
 
     def log(self, msg, printToConsole=False):
         """Appends a string to the logfile"""
 
-        f = open(self.logfile, 'a')
+        f = open(self.logfile, "a")
         f.write(msg)
         f.close()
         if printToConsole:
             print(msg)
 
-    def writeToResultFile(self, postdata, body=None,
-                          sendTo=['crossweave@mozilla.com']):
+    def writeToResultFile(self, postdata, body=None, sendTo=["crossweave@mozilla.com"]):
         """Writes results to test file"""
 
-        results = {'results': []}
+        results = {"results": []}
 
         if os.access(self.resultfile, os.F_OK):
-            f = open(self.resultfile, 'r')
+            f = open(self.resultfile, "r")
             results = json.loads(f.read())
             f.close()
 
-        f = open(self.resultfile, 'w')
+        f = open(self.resultfile, "w")
         if body is not None:
-            postdata['body'] = body
+            postdata["body"] = body
         if self.numpassed is not None:
-            postdata['numpassed'] = self.numpassed
+            postdata["numpassed"] = self.numpassed
         if self.numfailed is not None:
-            postdata['numfailed'] = self.numfailed
+            postdata["numfailed"] = self.numfailed
         if self.firefoxRunner and self.firefoxRunner.url:
-            postdata['firefoxrunnerurl'] = self.firefoxRunner.url
+            postdata["firefoxrunnerurl"] = self.firefoxRunner.url
 
-        postdata['sendTo'] = sendTo
-        results['results'].append(postdata)
+        postdata["sendTo"] = sendTo
+        results["results"].append(postdata)
         f.write(json.dumps(results, indent=2))
         f.close()
 
@@ -199,23 +197,28 @@ class TPSTestRunner(object):
 
     def handle_phase_failure(self, profiles):
         for profile in profiles:
-            self.log('\nDumping sync log for profile %s\n'
-                     % profiles[profile].profile)
+            self.log("\nDumping sync log for profile %s\n" % profiles[profile].profile)
             for root, dirs, files in os.walk(
-                    os.path.join(profiles[profile].profile, 'weave', 'logs')):
+                os.path.join(profiles[profile].profile, "weave", "logs")
+            ):
                 for f in files:
                     weavelog = os.path.join(
-                        profiles[profile].profile, 'weave', 'logs', f)
+                        profiles[profile].profile, "weave", "logs", f
+                    )
                     if os.access(weavelog, os.F_OK):
-                        with open(weavelog, 'r') as fh:
+                        with open(weavelog, "r") as fh:
                             for line in fh:
                                 possible_time = line[0:13]
                                 if len(possible_time) == 13 and possible_time.isdigit():
                                     time_ms = int(possible_time)
-                                    formatted = time.strftime('%Y-%m-%d %H:%M:%S',
-                                                              time.localtime(time_ms / 1000))
-                                    self.log('%s.%03d %s' % (
-                                        formatted, time_ms % 1000, line[14:]))
+                                    formatted = time.strftime(
+                                        "%Y-%m-%d %H:%M:%S",
+                                        time.localtime(time_ms / 1000),
+                                    )
+                                    self.log(
+                                        "%s.%03d %s"
+                                        % (formatted, time_ms % 1000, line[14:])
+                                    )
                                 else:
                                     self.log(line)
 
@@ -225,7 +228,7 @@ class TPSTestRunner(object):
 
         # Read and parse the test file, merge it with the contents of the config
         # file, and write the combined output to a temporary file.
-        f = open(testpath, 'r')
+        f = open(testpath, "r")
         testcontent = f.read()
         f.close()
         # We use yaml to parse the tests because it is a superset of json
@@ -234,9 +237,11 @@ class TPSTestRunner(object):
         try:
             test = yaml.safe_load(testcontent)
         except Exception:
-            test = yaml.safe_load(testcontent[testcontent.find('{'):testcontent.find('}') + 1])
+            test = yaml.safe_load(
+                testcontent[testcontent.find("{") : testcontent.find("}") + 1]
+            )
 
-        self.preferences['tps.seconds_since_epoch'] = int(time.time())
+        self.preferences["tps.seconds_since_epoch"] = int(time.time())
 
         # generate the profiles defined in the test, and a list of test phases
         profiles = {}
@@ -246,20 +251,24 @@ class TPSTestRunner(object):
 
             # create the profile if necessary
             if profilename not in profiles:
-                profiles[profilename] = Profile(preferences=self.preferences.copy(),
-                                                addons=self.extensions)
+                profiles[profilename] = Profile(
+                    preferences=self.preferences.copy(), addons=self.extensions
+                )
 
             # create the test phase
-            phaselist.append(TPSTestPhase(
-                phase,
-                profiles[profilename],
-                testname,
-                testpath,
-                self.logfile,
-                self.env,
-                self.firefoxRunner,
-                self.log,
-                ignore_unused_engines=self.ignore_unused_engines))
+            phaselist.append(
+                TPSTestPhase(
+                    phase,
+                    profiles[profilename],
+                    testname,
+                    testpath,
+                    self.logfile,
+                    self.env,
+                    self.firefoxRunner,
+                    self.log,
+                    ignore_unused_engines=self.ignore_unused_engines,
+                )
+            )
 
         # sort the phase list by name
         phaselist = sorted(phaselist, key=lambda phase: phase.phase)
@@ -268,23 +277,25 @@ class TPSTestRunner(object):
         failed = False
         for phase in phaselist:
             phase.run()
-            if phase.status != 'PASS':
+            if phase.status != "PASS":
                 failed = True
                 break
 
         for profilename in profiles:
             print("### Cleanup Profile ", profilename)
             cleanup_phase = TPSTestPhase(
-                'cleanup-' + profilename,
-                profiles[profilename], testname,
+                "cleanup-" + profilename,
+                profiles[profilename],
+                testname,
                 testpath,
                 self.logfile,
                 self.env,
                 self.firefoxRunner,
-                self.log)
+                self.log,
+            )
 
             cleanup_phase.run()
-            if cleanup_phase.status != 'PASS':
+            if cleanup_phase.status != "PASS":
                 failed = True
                 # Keep going to run the remaining cleanup phases.
 
@@ -295,55 +306,59 @@ class TPSTestRunner(object):
         f = open(self.logfile)
         logdata = f.read()
         match = self.syncVerRe.search(logdata)
-        sync_version = match.group('syncversion') if match else 'unknown'
+        sync_version = match.group("syncversion") if match else "unknown"
         match = self.ffVerRe.search(logdata)
-        firefox_version = match.group('ffver') if match else 'unknown'
+        firefox_version = match.group("ffver") if match else "unknown"
         match = self.ffBuildIDRe.search(logdata)
-        firefox_buildid = match.group('ffbuildid') if match else 'unknown'
+        firefox_buildid = match.group("ffbuildid") if match else "unknown"
         f.close()
-        if phase.status == 'PASS':
-            logdata = ''
+        if phase.status == "PASS":
+            logdata = ""
         else:
             # we only care about the log data for this specific test
-            logdata = logdata[logdata.find('Running test %s' % (str(testname))):]
+            logdata = logdata[logdata.find("Running test %s" % (str(testname))) :]
 
         result = {
-          'PASS': lambda x: ('TEST-PASS', ''),
-          'FAIL': lambda x: ('TEST-UNEXPECTED-FAIL', x.rstrip()),
-          'unknown': lambda x: ('TEST-UNEXPECTED-FAIL', 'test did not complete')
+            "PASS": lambda x: ("TEST-PASS", ""),
+            "FAIL": lambda x: ("TEST-UNEXPECTED-FAIL", x.rstrip()),
+            "unknown": lambda x: ("TEST-UNEXPECTED-FAIL", "test did not complete"),
         }[phase.status](phase.errline)
-        logstr = "\n%s | %s%s\n" % (result[0], testname, (' | %s' %
-                                                          result[1] if result[1] else ''))
+        logstr = "\n%s | %s%s\n" % (
+            result[0],
+            testname,
+            (" | %s" % result[1] if result[1] else ""),
+        )
 
         try:
             repoinfo = mozversion.get_version(self.binary)
         except Exception:
             repoinfo = {}
-        apprepo = repoinfo.get('application_repository', '')
-        appchangeset = repoinfo.get('application_changeset', '')
+        apprepo = repoinfo.get("application_repository", "")
+        appchangeset = repoinfo.get("application_changeset", "")
 
         # save logdata to a temporary file for posting to the db
         tmplogfile = None
         if logdata:
-            tmplogfile = TempFile(prefix='tps_log_')
+            tmplogfile = TempFile(prefix="tps_log_")
             tmplogfile.write(logdata)
             tmplogfile.close()
             self.errorlogs[testname] = tmplogfile
 
-        resultdata = ({'productversion': {'version': firefox_version,
-                                          'buildid': firefox_buildid,
-                                          'builddate': firefox_buildid[0:8],
-                                          'product': 'Firefox',
-                                          'repository': apprepo,
-                                          'changeset': appchangeset,
-                                          },
-                       'addonversion': {'version': sync_version,
-                                        'product': 'Firefox Sync'},
-                       'name': testname,
-                       'message': result[1],
-                       'state': result[0],
-                       'logdata': logdata
-                       })
+        resultdata = {
+            "productversion": {
+                "version": firefox_version,
+                "buildid": firefox_buildid,
+                "builddate": firefox_buildid[0:8],
+                "product": "Firefox",
+                "repository": apprepo,
+                "changeset": appchangeset,
+            },
+            "addonversion": {"version": sync_version, "product": "Firefox Sync"},
+            "name": testname,
+            "message": result[1],
+            "state": result[0],
+            "logdata": logdata,
+        }
 
         self.log(logstr, True)
         for phase in phaselist:
@@ -355,21 +370,21 @@ class TPSTestRunner(object):
         self.preferences = self.default_preferences.copy()
 
         if self.mobile:
-            self.preferences.update({'services.sync.client.type': 'mobile'})
+            self.preferences.update({"services.sync.client.type": "mobile"})
 
         # If we are using legacy Sync, then set a dummy username to force the
         # correct authentication type. Without this pref set to a value
         # without an '@' character, Sync will initialize for FxA.
-        if self.config.get('auth_type', 'fx_account') != "fx_account":
-            self.preferences.update({'services.sync.username': "dummy"})
+        if self.config.get("auth_type", "fx_account") != "fx_account":
+            self.preferences.update({"services.sync.username": "dummy"})
 
         if self.debug:
             self.preferences.update(self.debug_preferences)
 
-        if 'preferences' in self.config:
-            self.preferences.update(self.config['preferences'])
+        if "preferences" in self.config:
+            self.preferences.update(self.config["preferences"])
 
-        self.preferences['tps.config'] = json.dumps(self.config)
+        self.preferences["tps.config"] = json.dumps(self.config)
 
     def run_tests(self):
         # delete the logfile if it already exists
@@ -402,24 +417,25 @@ class TPSTestRunner(object):
             self.numpassed = 0
             self.numfailed = 1
             try:
-                self.writeToResultFile(self.postdata,
-                                       '<pre>%s</pre>' % traceback.format_exc())
+                self.writeToResultFile(
+                    self.postdata, "<pre>%s</pre>" % traceback.format_exc()
+                )
             except Exception:
                 traceback.print_exc()
         else:
             try:
 
                 if self.numfailed > 0 or self.numpassed == 0:
-                    To = self.config['email'].get('notificationlist')
+                    To = self.config["email"].get("notificationlist")
                 else:
-                    To = self.config['email'].get('passednotificationlist')
-                self.writeToResultFile(self.postdata,
-                                       sendTo=To)
+                    To = self.config["email"].get("passednotificationlist")
+                self.writeToResultFile(self.postdata, sendTo=To)
             except Exception:
                 traceback.print_exc()
                 try:
-                    self.writeToResultFile(self.postdata,
-                                           '<pre>%s</pre>' % traceback.format_exc())
+                    self.writeToResultFile(
+                        self.postdata, "<pre>%s</pre>" % traceback.format_exc()
+                    )
                 except Exception:
                     traceback.print_exc()
 
@@ -428,9 +444,9 @@ class TPSTestRunner(object):
             self.rlock.release()
 
         # dump out a summary of test results
-        print('Test Summary\n')
-        for test in self.postdata.get('tests', {}):
-            print('{} | {} | {}'.format(test['state'], test['name'], test['message']))
+        print("Test Summary\n")
+        for test in self.postdata.get("tests", {}):
+            print("{} | {} | {}".format(test["state"], test["name"], test["message"]))
 
     def run_test_group(self):
         self.results = []
@@ -441,7 +457,7 @@ class TPSTestRunner(object):
 
         # build our tps.xpi extension
         self.extensions = []
-        self.extensions.append(os.path.join(self.extensionDir, 'tps'))
+        self.extensions.append(os.path.join(self.extensionDir, "tps"))
 
         # build the test list
         try:
@@ -450,10 +466,10 @@ class TPSTestRunner(object):
             f.close()
             testfiles = json.loads(jsondata)
             testlist = []
-            for (filename, meta) in testfiles['tests'].items():
+            for (filename, meta) in testfiles["tests"].items():
                 skip_reason = meta.get("disabled")
                 if skip_reason:
-                    print('Skipping test {} - {}'.format(filename, skip_reason))
+                    print("Skipping test {} - {}".format(filename, skip_reason))
                 else:
                     testlist.append(filename)
         except ValueError:
@@ -468,30 +484,37 @@ class TPSTestRunner(object):
             result = self.run_single_test(testdir, test)
 
             if not self.productversion:
-                self.productversion = result['productversion']
+                self.productversion = result["productversion"]
             if not self.addonversion:
-                self.addonversion = result['addonversion']
+                self.addonversion = result["addonversion"]
 
-            self.results.append({'state': result['state'],
-                                 'name': result['name'],
-                                 'message': result['message'],
-                                 'logdata': result['logdata']})
-            if result['state'] == 'TEST-PASS':
+            self.results.append(
+                {
+                    "state": result["state"],
+                    "name": result["name"],
+                    "message": result["message"],
+                    "logdata": result["logdata"],
+                }
+            )
+            if result["state"] == "TEST-PASS":
                 self.numpassed += 1
             else:
                 self.numfailed += 1
                 if self.stop_on_error:
-                    print('\nTest failed with --stop-on-error specified; '
-                          'not running any more tests.\n')
+                    print(
+                        "\nTest failed with --stop-on-error specified; "
+                        "not running any more tests.\n"
+                    )
                     break
 
         self.mozhttpd.stop()
 
         # generate the postdata we'll use to post the results to the db
-        self.postdata = {'tests': self.results,
-                         'os': '%s %sbit' % (mozinfo.version, mozinfo.bits),
-                         'testtype': 'crossweave',
-                         'productversion': self.productversion,
-                         'addonversion': self.addonversion,
-                         'synctype': self.synctype,
-                         }
+        self.postdata = {
+            "tests": self.results,
+            "os": "%s %sbit" % (mozinfo.version, mozinfo.bits),
+            "testtype": "crossweave",
+            "productversion": self.productversion,
+            "addonversion": self.addonversion,
+            "synctype": self.synctype,
+        }

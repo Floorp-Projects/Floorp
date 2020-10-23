@@ -5,34 +5,34 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += [
-    'gtest',
+    "gtest",
 ]
 
 # Needed for plugin IPC types required by nsPluginHost
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 EXPORTS += [
-    'DDLogCategory.h',
-    'DDLoggedTypeTraits.h',
-    'DDLogObject.h',
-    'DDLogValue.h',
-    'DecoderDoctorDiagnostics.h',
-    'DecoderDoctorLogger.h',
+    "DDLogCategory.h",
+    "DDLoggedTypeTraits.h",
+    "DDLogObject.h",
+    "DDLogValue.h",
+    "DecoderDoctorDiagnostics.h",
+    "DecoderDoctorLogger.h",
 ]
 
 UNIFIED_SOURCES += [
-    'DDLifetime.cpp',
-    'DDLifetimes.cpp',
-    'DDLogCategory.cpp',
-    'DDLogMessage.cpp',
-    'DDLogObject.cpp',
-    'DDLogUtils.cpp',
-    'DDLogValue.cpp',
-    'DDMediaLog.cpp',
-    'DDMediaLogs.cpp',
-    'DDTimeStamp.cpp',
-    'DecoderDoctorDiagnostics.cpp',
-    'DecoderDoctorLogger.cpp',
+    "DDLifetime.cpp",
+    "DDLifetimes.cpp",
+    "DDLogCategory.cpp",
+    "DDLogMessage.cpp",
+    "DDLogObject.cpp",
+    "DDLogUtils.cpp",
+    "DDLogValue.cpp",
+    "DDMediaLog.cpp",
+    "DDMediaLogs.cpp",
+    "DDTimeStamp.cpp",
+    "DecoderDoctorDiagnostics.cpp",
+    "DecoderDoctorLogger.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

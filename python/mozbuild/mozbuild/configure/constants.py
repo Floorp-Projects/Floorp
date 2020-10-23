@@ -9,109 +9,111 @@ from collections import OrderedDict
 
 
 CompilerType = EnumString.subclass(
-    'clang',
-    'clang-cl',
-    'gcc',
-    'msvc',
+    "clang",
+    "clang-cl",
+    "gcc",
+    "msvc",
 )
 
 OS = EnumString.subclass(
-    'Android',
-    'DragonFly',
-    'FreeBSD',
-    'GNU',
-    'NetBSD',
-    'OpenBSD',
-    'OSX',
-    'SunOS',
-    'WINNT',
+    "Android",
+    "DragonFly",
+    "FreeBSD",
+    "GNU",
+    "NetBSD",
+    "OpenBSD",
+    "OSX",
+    "SunOS",
+    "WINNT",
 )
 
 Kernel = EnumString.subclass(
-    'Darwin',
-    'DragonFly',
-    'FreeBSD',
-    'kFreeBSD',
-    'Linux',
-    'NetBSD',
-    'OpenBSD',
-    'SunOS',
-    'WINNT',
+    "Darwin",
+    "DragonFly",
+    "FreeBSD",
+    "kFreeBSD",
+    "Linux",
+    "NetBSD",
+    "OpenBSD",
+    "SunOS",
+    "WINNT",
 )
 
 CPU_bitness = {
-    'aarch64': 64,
-    'Alpha': 64,
-    'arm': 32,
-    'hppa': 32,
-    'ia64': 64,
-    'm68k': 32,
-    'mips32': 32,
-    'mips64': 64,
-    'ppc': 32,
-    'ppc64': 64,
-    'riscv64': 64,
-    's390': 32,
-    's390x': 64,
-    'sh4': 32,
-    'sparc': 32,
-    'sparc64': 64,
-    'x86': 32,
-    'x86_64': 64,
+    "aarch64": 64,
+    "Alpha": 64,
+    "arm": 32,
+    "hppa": 32,
+    "ia64": 64,
+    "m68k": 32,
+    "mips32": 32,
+    "mips64": 64,
+    "ppc": 32,
+    "ppc64": 64,
+    "riscv64": 64,
+    "s390": 32,
+    "s390x": 64,
+    "sh4": 32,
+    "sparc": 32,
+    "sparc64": 64,
+    "x86": 32,
+    "x86_64": 64,
 }
 
 CPU = EnumString.subclass(*CPU_bitness.keys())
 
 Endianness = EnumString.subclass(
-    'big',
-    'little',
+    "big",
+    "little",
 )
 
 WindowsBinaryType = EnumString.subclass(
-    'win32',
-    'win64',
+    "win32",
+    "win64",
 )
 
 # The order of those checks matter
-CPU_preprocessor_checks = OrderedDict((
-    ('x86', '__i386__ || _M_IX86'),
-    ('x86_64', '__x86_64__ || _M_X64'),
-    ('arm', '__arm__ || _M_ARM'),
-    ('aarch64', '__aarch64__ || _M_ARM64'),
-    ('ia64', '__ia64__'),
-    ('s390x', '__s390x__'),
-    ('s390', '__s390__'),
-    ('ppc64', '__powerpc64__'),
-    ('ppc', '__powerpc__'),
-    ('Alpha', '__alpha__'),
-    ('hppa', '__hppa__'),
-    ('sparc64', '__sparc__ && __arch64__'),
-    ('sparc', '__sparc__'),
-    ('m68k', '__m68k__'),
-    ('mips64', '__mips64'),
-    ('mips32', '__mips__'),
-    ('riscv64', '__riscv && __riscv_xlen == 64'),
-    ('sh4', '__sh__'),
-))
+CPU_preprocessor_checks = OrderedDict(
+    (
+        ("x86", "__i386__ || _M_IX86"),
+        ("x86_64", "__x86_64__ || _M_X64"),
+        ("arm", "__arm__ || _M_ARM"),
+        ("aarch64", "__aarch64__ || _M_ARM64"),
+        ("ia64", "__ia64__"),
+        ("s390x", "__s390x__"),
+        ("s390", "__s390__"),
+        ("ppc64", "__powerpc64__"),
+        ("ppc", "__powerpc__"),
+        ("Alpha", "__alpha__"),
+        ("hppa", "__hppa__"),
+        ("sparc64", "__sparc__ && __arch64__"),
+        ("sparc", "__sparc__"),
+        ("m68k", "__m68k__"),
+        ("mips64", "__mips64"),
+        ("mips32", "__mips__"),
+        ("riscv64", "__riscv && __riscv_xlen == 64"),
+        ("sh4", "__sh__"),
+    )
+)
 
 assert sorted(CPU_preprocessor_checks.keys()) == sorted(CPU.POSSIBLE_VALUES)
 
 kernel_preprocessor_checks = {
-    'Darwin': '__APPLE__',
-    'DragonFly': '__DragonFly__',
-    'FreeBSD': '__FreeBSD__',
-    'kFreeBSD': '__FreeBSD_kernel__',
-    'Linux': '__linux__',
-    'NetBSD': '__NetBSD__',
-    'OpenBSD': '__OpenBSD__',
-    'SunOS': '__sun__',
-    'WINNT': '_WIN32 || __CYGWIN__',
+    "Darwin": "__APPLE__",
+    "DragonFly": "__DragonFly__",
+    "FreeBSD": "__FreeBSD__",
+    "kFreeBSD": "__FreeBSD_kernel__",
+    "Linux": "__linux__",
+    "NetBSD": "__NetBSD__",
+    "OpenBSD": "__OpenBSD__",
+    "SunOS": "__sun__",
+    "WINNT": "_WIN32 || __CYGWIN__",
 }
 
 assert sorted(kernel_preprocessor_checks.keys()) == sorted(Kernel.POSSIBLE_VALUES)
 
 OS_preprocessor_checks = {
-    'Android': '__ANDROID__',
+    "Android": "__ANDROID__",
 }
 
 # We intentionally don't include all possible OSes in our checks, because we

@@ -4,29 +4,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-imply_option('--enable-foo', True)
+imply_option("--enable-foo", True)
 
-option('--enable-foo', help='enable foo')
+option("--enable-foo", help="enable foo")
 
-@depends('--enable-foo', '--help')
+
+@depends("--enable-foo", "--help")
 def foo(value, help):
     if value:
         return True
 
-imply_option('--enable-bar', ('foo', 'bar'))
 
-option('--enable-bar', nargs='*', help='enable bar')
+imply_option("--enable-bar", ("foo", "bar"))
 
-@depends('--enable-bar')
+option("--enable-bar", nargs="*", help="enable bar")
+
+
+@depends("--enable-bar")
 def bar(value):
     if value:
         return value
 
-imply_option('--enable-baz', 'BAZ')
 
-option('--enable-baz', nargs=1, help='enable baz')
+imply_option("--enable-baz", "BAZ")
 
-@depends('--enable-baz')
+option("--enable-baz", nargs=1, help="enable baz")
+
+
+@depends("--enable-baz")
 def bar(value):
     if value:
         return value

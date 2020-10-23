@@ -84,20 +84,20 @@ class BuildBackend(LoggingMixin):
 
     def summary(self):
         return ExecutionSummary(
-            self.__class__.__name__.replace('Backend', '') +
-            ' backend executed in {execution_time:.2f}s\n  '
-            '{total:d} total backend files; '
-            '{created:d} created; '
-            '{updated:d} updated; '
-            '{unchanged:d} unchanged; '
-            '{deleted:d} deleted',
+            self.__class__.__name__.replace("Backend", "")
+            + " backend executed in {execution_time:.2f}s\n  "
+            "{total:d} total backend files; "
+            "{created:d} created; "
+            "{updated:d} updated; "
+            "{unchanged:d} unchanged; "
+            "{deleted:d} deleted",
             execution_time=self._execution_time,
-            total=self._created_count + self._updated_count +
-            self._unchanged_count,
+            total=self._created_count + self._updated_count + self._unchanged_count,
             created=self._created_count,
             updated=self._updated_count,
             unchanged=self._unchanged_count,
-            deleted=self._deleted_count)
+            deleted=self._deleted_count,
+        )
 
     def _init(self):
         """Hook point for child classes to perform actions during __init__.
@@ -117,29 +117,30 @@ class BuildBackend(LoggingMixin):
         """
 
         # Previously generated files.
-        list_file = mozpath.join(self.environment.topobjdir, 'backend.%s'
-                                 % self.__class__.__name__)
+        list_file = mozpath.join(
+            self.environment.topobjdir, "backend.%s" % self.__class__.__name__
+        )
         backend_output_list = set()
         if os.path.exists(list_file):
             with open(list_file) as fh:
-                backend_output_list.update(mozpath.normsep(p)
-                                           for p in fh.read().splitlines())
+                backend_output_list.update(
+                    mozpath.normsep(p) for p in fh.read().splitlines()
+                )
 
         for obj in objs:
             obj_start = time.time()
-            if (not self.consume_object(obj) and
-                    not isinstance(self, PartialBackend)):
-                raise Exception('Unhandled object of type %s' % type(obj))
+            if not self.consume_object(obj) and not isinstance(self, PartialBackend):
+                raise Exception("Unhandled object of type %s" % type(obj))
             self._execution_time += time.time() - obj_start
 
-            if (isinstance(obj, ContextDerived) and
-                    not isinstance(self, PartialBackend)):
+            if isinstance(obj, ContextDerived) and not isinstance(self, PartialBackend):
                 self.backend_input_files |= obj.context_all_paths
 
         # Pull in all loaded Python as dependencies so any Python changes that
         # could influence our output result in a rescan.
-        self.backend_input_files |= set(iter_modules_in_path(
-            self.environment.topsrcdir, self.environment.topobjdir))
+        self.backend_input_files |= set(
+            iter_modules_in_path(self.environment.topsrcdir, self.environment.topobjdir)
+        )
 
         finished_start = time.time()
         self.consume_finished()
@@ -150,11 +151,12 @@ class BuildBackend(LoggingMixin):
         for path in delete_files:
             full_path = mozpath.join(self.environment.topobjdir, path)
             try:
-                with io.open(full_path, mode='r', encoding='utf-8') as existing:
+                with io.open(full_path, mode="r", encoding="utf-8") as existing:
                     old_content = existing.read()
                     if old_content:
                         self.file_diffs[full_path] = simple_diff(
-                            full_path, old_content.splitlines(), None)
+                            full_path, old_content.splitlines(), None
+                        )
             except IOError:
                 pass
             try:
@@ -173,17 +175,18 @@ class BuildBackend(LoggingMixin):
         # Write out the list of backend files generated, if it changed.
         if backend_output_list != self._backend_output_files:
             with self._write_file(list_file) as fh:
-                fh.write('\n'.join(sorted(self._backend_output_files)))
+                fh.write("\n".join(sorted(self._backend_output_files)))
         else:
             # Always update its mtime if we're not in dry-run mode.
             if not self.dry_run:
-                with open(list_file, 'a'):
+                with open(list_file, "a"):
                     os.utime(list_file, None)
 
         # Write out the list of input files for the backend
-        with self._write_file('%s.in' % list_file) as fh:
-            fh.write('\n'.join(sorted(
-                mozpath.normsep(f) for f in self.backend_input_files)))
+        with self._write_file("%s.in" % list_file) as fh:
+            fh.write(
+                "\n".join(sorted(mozpath.normsep(f) for f in self.backend_input_files))
+            )
 
     @abstractmethod
     def consume_object(self, obj):
@@ -221,28 +224,32 @@ class BuildBackend(LoggingMixin):
         created here.
         """
 
-        app = config.substs['MOZ_BUILD_APP']
-        if app == 'mobile/android':
+        app = config.substs["MOZ_BUILD_APP"]
+        if app == "mobile/android":
             # In order to take effect, .purgecaches sentinels would need to be
             # written to the Android device file system.
             return
 
-        root = mozpath.join(config.topobjdir, 'dist', 'bin')
+        root = mozpath.join(config.topobjdir, "dist", "bin")
 
-        if app == 'browser':
-            root = mozpath.join(config.topobjdir, 'dist', 'bin', 'browser')
+        if app == "browser":
+            root = mozpath.join(config.topobjdir, "dist", "bin", "browser")
 
         purgecaches_dirs = [root]
-        if app == 'browser' and 'cocoa' == config.substs['MOZ_WIDGET_TOOLKIT']:
-            bundledir = mozpath.join(config.topobjdir, 'dist',
-                                     config.substs['MOZ_MACBUNDLE_NAME'],
-                                     'Contents', 'Resources',
-                                     'browser')
+        if app == "browser" and "cocoa" == config.substs["MOZ_WIDGET_TOOLKIT"]:
+            bundledir = mozpath.join(
+                config.topobjdir,
+                "dist",
+                config.substs["MOZ_MACBUNDLE_NAME"],
+                "Contents",
+                "Resources",
+                "browser",
+            )
             purgecaches_dirs.append(bundledir)
 
         for dir in purgecaches_dirs:
-            with open(mozpath.join(dir, '.purgecaches'), 'wt') as f:
-                f.write('\n')
+            with open(mozpath.join(dir, ".purgecaches"), "wt") as f:
+                f.write("\n")
 
     def post_build(self, config, output, jobs, verbose, status):
         """Called late during 'mach build' execution, after `build(...)` has finished.
@@ -265,7 +272,7 @@ class BuildBackend(LoggingMixin):
         return status
 
     @contextmanager
-    def _write_file(self, path=None, fh=None, readmode='rU'):
+    def _write_file(self, path=None, fh=None, readmode="rU"):
         """Context manager to write a file.
 
         This is a glorified wrapper around FileAvoidWrite with integration to
@@ -279,8 +286,9 @@ class BuildBackend(LoggingMixin):
 
         if path is not None:
             assert fh is None
-            fh = FileAvoidWrite(path, capture_diff=True, dry_run=self.dry_run,
-                                readmode=readmode)
+            fh = FileAvoidWrite(
+                path, capture_diff=True, dry_run=self.dry_run, readmode=readmode
+            )
         else:
             assert fh is not None
 
@@ -293,7 +301,9 @@ class BuildBackend(LoggingMixin):
 
         yield fh
 
-        self._backend_output_files.add(mozpath.relpath(fh.name, self.environment.topobjdir))
+        self._backend_output_files.add(
+            mozpath.relpath(fh.name, self.environment.topobjdir)
+        )
         existed, updated = fh.close()
         if fh.diff:
             self.file_diffs[fh.name] = fh.diff
@@ -306,24 +316,27 @@ class BuildBackend(LoggingMixin):
 
     @contextmanager
     def _get_preprocessor(self, obj):
-        '''Returns a preprocessor with a few predefined values depending on
+        """Returns a preprocessor with a few predefined values depending on
         the given BaseConfigSubstitution(-like) object, and all the substs
-        in the current environment.'''
+        in the current environment."""
         pp = Preprocessor()
         srcdir = mozpath.dirname(obj.input_path)
-        pp.context.update({
-            k: ' '.join(v) if isinstance(v, list) else v
-            for k, v in six.iteritems(obj.config.substs)
-        })
+        pp.context.update(
+            {
+                k: " ".join(v) if isinstance(v, list) else v
+                for k, v in six.iteritems(obj.config.substs)
+            }
+        )
         pp.context.update(
             top_srcdir=obj.topsrcdir,
             topobjdir=obj.topobjdir,
             srcdir=srcdir,
             srcdir_rel=mozpath.relpath(srcdir, mozpath.dirname(obj.output_path)),
-            relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or '.',
-            DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path)) or '.',
+            relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or ".",
+            DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path))
+            or ".",
         )
-        pp.do_filter('attemptSubstitution')
+        pp.do_filter("attemptSubstitution")
         pp.setMarker(None)
         with self._write_file(obj.output_path) as fh:
             pp.out = fh
@@ -345,7 +358,7 @@ def HybridBackend(*backends):
     """
     assert len(backends) >= 2
     assert all(issubclass(b, PartialBackend) for b in backends[:-1])
-    assert not(issubclass(backends[-1], PartialBackend))
+    assert not (issubclass(backends[-1], PartialBackend))
     assert all(issubclass(b, BuildBackend) for b in backends)
 
     class TheHybridBackend(BuildBackend):
@@ -360,20 +373,26 @@ def HybridBackend(*backends):
             for backend in self._backends:
                 backend.consume_finished()
 
-            for attr in ('_execution_time', '_created_count', '_updated_count',
-                         '_unchanged_count', '_deleted_count'):
-                setattr(self, attr,
-                        sum(getattr(b, attr) for b in self._backends))
+            for attr in (
+                "_execution_time",
+                "_created_count",
+                "_updated_count",
+                "_unchanged_count",
+                "_deleted_count",
+            ):
+                setattr(self, attr, sum(getattr(b, attr) for b in self._backends))
 
             for b in self._backends:
                 self.file_diffs.update(b.file_diffs)
-                for attr in ('backend_input_files', '_backend_output_files'):
+                for attr in ("backend_input_files", "_backend_output_files"):
                     files = getattr(self, attr)
                     files |= getattr(b, attr)
 
-    name = '+'.join(itertools.chain(
-        (b.__name__.replace('Backend', '') for b in backends[:-1]),
-        (b.__name__ for b in backends[-1:])
-    ))
+    name = "+".join(
+        itertools.chain(
+            (b.__name__.replace("Backend", "") for b in backends[:-1]),
+            (b.__name__ for b in backends[-1:]),
+        )
+    )
 
     return type(str(name), (TheHybridBackend,), {})

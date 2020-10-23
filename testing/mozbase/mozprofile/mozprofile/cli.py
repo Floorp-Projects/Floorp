@@ -18,7 +18,13 @@ from .prefs import Preferences
 from .profile import FirefoxProfile
 from .profile import Profile
 
-__all__ = ['MozProfileCLI', 'cli', 'KeyValueParseError', 'parse_key_value', 'parse_preferences']
+__all__ = [
+    "MozProfileCLI",
+    "cli",
+    "KeyValueParseError",
+    "parse_key_value",
+    "parse_preferences",
+]
 
 
 class KeyValueParseError(Exception):
@@ -29,7 +35,7 @@ class KeyValueParseError(Exception):
         Exception.__init__(self, msg)
 
 
-def parse_key_value(strings, separator='=', context='key, value'):
+def parse_key_value(strings, separator="=", context="key, value"):
     """Parse string-serialized key-value pairs in the form of `key = value`.
 
     Args:
@@ -47,12 +53,13 @@ def parse_key_value(strings, separator='=', context='key, value'):
     missing = [string for string in strings if separator not in string]
     if missing:
         raise KeyValueParseError(
-            "Error: syntax error in %s: %s" %
-            (context, ','.join(missing)), errors=missing)
+            "Error: syntax error in %s: %s" % (context, ",".join(missing)),
+            errors=missing,
+        )
     return [string.split(separator, 1) for string in strings]
 
 
-def parse_preferences(prefs, context='--setpref='):
+def parse_preferences(prefs, context="--setpref="):
     """Parse preferences specified on the command line.
 
     Args:
@@ -74,7 +81,7 @@ def parse_preferences(prefs, context='--setpref='):
 class MozProfileCLI(object):
     """The Command Line Interface for ``mozprofile``."""
 
-    module = 'mozprofile'
+    module = "mozprofile"
     profile_class = Profile
 
     def __init__(self, args=sys.argv[1:], add_options=None):
@@ -86,28 +93,46 @@ class MozProfileCLI(object):
 
     def add_options(self, parser):
 
-        parser.add_option("-p", "--profile", dest="profile",
-                          help="The path to the profile to operate on. "
-                          "If none, creates a new profile in temp directory")
-        parser.add_option("-a", "--addon", dest="addons",
-                          action="append", default=[],
-                          help="Addon paths to install. Can be a filepath, "
-                          "a directory containing addons, or a url")
-        parser.add_option("--pref", dest="prefs",
-                          action='append', default=[],
-                          help="A preference to set. "
-                          "Must be a key-value pair separated by a ':'")
-        parser.add_option("--preferences", dest="prefs_files",
-                          action='append', default=[],
-                          metavar="FILE",
-                          help="read preferences from a JSON or INI file. "
-                          "For INI, use 'file.ini:section' to specify a particular section.")
+        parser.add_option(
+            "-p",
+            "--profile",
+            dest="profile",
+            help="The path to the profile to operate on. "
+            "If none, creates a new profile in temp directory",
+        )
+        parser.add_option(
+            "-a",
+            "--addon",
+            dest="addons",
+            action="append",
+            default=[],
+            help="Addon paths to install. Can be a filepath, "
+            "a directory containing addons, or a url",
+        )
+        parser.add_option(
+            "--pref",
+            dest="prefs",
+            action="append",
+            default=[],
+            help="A preference to set. " "Must be a key-value pair separated by a ':'",
+        )
+        parser.add_option(
+            "--preferences",
+            dest="prefs_files",
+            action="append",
+            default=[],
+            metavar="FILE",
+            help="read preferences from a JSON or INI file. "
+            "For INI, use 'file.ini:section' to specify a particular section.",
+        )
 
     def profile_args(self):
         """arguments to instantiate the profile class"""
-        return dict(profile=self.options.profile,
-                    addons=self.options.addons,
-                    preferences=self.preferences())
+        return dict(
+            profile=self.options.profile,
+            addons=self.options.addons,
+            preferences=self.preferences(),
+        )
 
     def preferences(self):
         """profile preferences"""
@@ -120,7 +145,7 @@ class MozProfileCLI(object):
             prefs.add_file(prefs_file)
 
         # change CLI preferences into 2-tuples
-        cli_prefs = parse_key_value(self.options.prefs, separator=':')
+        cli_prefs = parse_key_value(self.options.prefs, separator=":")
 
         # string preferences
         prefs.add(cli_prefs, cast=True)
@@ -131,7 +156,7 @@ class MozProfileCLI(object):
         """create the profile"""
 
         kwargs = self.profile_args()
-        kwargs['restore'] = restore
+        kwargs["restore"] = restore
         return self.profile_class(**kwargs)
 
 
@@ -140,12 +165,20 @@ def cli(args=sys.argv[1:]):
 
     # add a view method for this cli method only
     def add_options(parser):
-        parser.add_option('--view', dest='view',
-                          action='store_true', default=False,
-                          help="view summary of profile following invocation")
-        parser.add_option('--firefox', dest='firefox_profile',
-                          action='store_true', default=False,
-                          help="use FirefoxProfile defaults")
+        parser.add_option(
+            "--view",
+            dest="view",
+            action="store_true",
+            default=False,
+            help="view summary of profile following invocation",
+        )
+        parser.add_option(
+            "--firefox",
+            dest="firefox_profile",
+            action="store_true",
+            default=False,
+            help="use FirefoxProfile defaults",
+        )
 
     # process the command line
     cli = MozProfileCLI(args, add_options)
@@ -169,5 +202,5 @@ def cli(args=sys.argv[1:]):
         print(profile.profile)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

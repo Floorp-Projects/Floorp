@@ -1,4 +1,4 @@
 config = {
-    'platform': 'win64',
-    'mozconfig_platform': 'win64',
+    "platform": "win64",
+    "mozconfig_platform": "win64",
 }

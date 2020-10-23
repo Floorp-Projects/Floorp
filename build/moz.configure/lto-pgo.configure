@@ -6,121 +6,134 @@
 
 # PGO
 # ==============================================================
-llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
-                           allow_missing=True,
-                           paths=toolchain_search_path)
+llvm_profdata = check_prog(
+    "LLVM_PROFDATA", ["llvm-profdata"], allow_missing=True, paths=toolchain_search_path
+)
 
-option('--enable-profile-generate',
-       env='MOZ_PROFILE_GENERATE',
-       nargs='?',
-       choices=('cross',),
-       help='Build a PGO instrumented binary')
+option(
+    "--enable-profile-generate",
+    env="MOZ_PROFILE_GENERATE",
+    nargs="?",
+    choices=("cross",),
+    help="Build a PGO instrumented binary",
+)
 
-imply_option('MOZ_PGO',
-             depends_if('--enable-profile-generate')(lambda _: True))
+imply_option("MOZ_PGO", depends_if("--enable-profile-generate")(lambda _: True))
 
-set_config('MOZ_PROFILE_GENERATE',
-           depends_if('--enable-profile-generate')(lambda _: True))
+set_config(
+    "MOZ_PROFILE_GENERATE", depends_if("--enable-profile-generate")(lambda _: True)
+)
 
-set_define('MOZ_PROFILE_GENERATE',
-           depends_if('--enable-profile-generate')(lambda _: True))
+set_define(
+    "MOZ_PROFILE_GENERATE", depends_if("--enable-profile-generate")(lambda _: True)
+)
 
-add_old_configure_assignment('MOZ_PROFILE_GENERATE', 1,
-                             when='--enable-profile-generate')
+add_old_configure_assignment(
+    "MOZ_PROFILE_GENERATE", 1, when="--enable-profile-generate"
+)
 
-option('--enable-profile-use',
-       env='MOZ_PROFILE_USE',
-       nargs='?',
-       choices=('cross',),
-       help='Use a generated profile during the build')
+option(
+    "--enable-profile-use",
+    env="MOZ_PROFILE_USE",
+    nargs="?",
+    choices=("cross",),
+    help="Use a generated profile during the build",
+)
 
-option('--with-pgo-profile-path',
-       help='Path to the directory with unmerged profile data to use during the build',
-       nargs=1)
+option(
+    "--with-pgo-profile-path",
+    help="Path to the directory with unmerged profile data to use during the build",
+    nargs=1,
+)
 
-imply_option('MOZ_PGO',
-             depends_if('--enable-profile-use')(lambda _: True))
+imply_option("MOZ_PGO", depends_if("--enable-profile-use")(lambda _: True))
 
-set_config('MOZ_PROFILE_USE',
-           depends_if('--enable-profile-use')(lambda _: True))
+set_config("MOZ_PROFILE_USE", depends_if("--enable-profile-use")(lambda _: True))
 
 
-@depends('--with-pgo-profile-path', '--enable-profile-use', llvm_profdata, check_build_environment)
-@imports('os')
+@depends(
+    "--with-pgo-profile-path",
+    "--enable-profile-use",
+    llvm_profdata,
+    check_build_environment,
+)
+@imports("os")
 def pgo_profile_path(path, pgo_use, profdata, build_env):
     topobjdir = build_env.topobjdir
-    if topobjdir.endswith('/js/src'):
+    if topobjdir.endswith("/js/src"):
         topobjdir = topobjdir[:-7]
 
     if not path:
-        return os.path.join(topobjdir,  'instrumented', 'merged.profdata')
+        return os.path.join(topobjdir, "instrumented", "merged.profdata")
     if path and not pgo_use:
-        die('Pass --enable-profile-use to use --with-pgo-profile-path.')
+        die("Pass --enable-profile-use to use --with-pgo-profile-path.")
     if path and not profdata:
-        die('LLVM_PROFDATA must be set to process the pgo profile.')
+        die("LLVM_PROFDATA must be set to process the pgo profile.")
     if not os.path.isfile(path[0]):
-        die('Argument to --with-pgo-profile-path must be a file.')
+        die("Argument to --with-pgo-profile-path must be a file.")
     if not os.path.isabs(path[0]):
-        die('Argument to --with-pgo-profile-path must be an absolute path.')
+        die("Argument to --with-pgo-profile-path must be an absolute path.")
     return path[0]
 
 
-set_config('PGO_PROFILE_PATH', pgo_profile_path)
+set_config("PGO_PROFILE_PATH", pgo_profile_path)
+
 
 @depends(c_compiler, pgo_profile_path, target_is_windows)
-@imports('multiprocessing')
-@imports(_from='__builtin__', _import='min')
+@imports("multiprocessing")
+@imports(_from="__builtin__", _import="min")
 def pgo_flags(compiler, profdata, target_is_windows):
-    if compiler.type == 'gcc':
+    if compiler.type == "gcc":
         return namespace(
-            gen_cflags=['-fprofile-generate'],
-            gen_ldflags=['-fprofile-generate'],
-            use_cflags=['-fprofile-use', '-fprofile-correction',
-                        '-Wcoverage-mismatch'],
-            use_ldflags=['-fprofile-use'],
+            gen_cflags=["-fprofile-generate"],
+            gen_ldflags=["-fprofile-generate"],
+            use_cflags=["-fprofile-use", "-fprofile-correction", "-Wcoverage-mismatch"],
+            use_ldflags=["-fprofile-use"],
         )
 
-    if compiler.type in ('clang-cl', 'clang'):
-        prefix = ''
-        if compiler.type == 'clang-cl':
-            prefix = '/clang:'
+    if compiler.type in ("clang-cl", "clang"):
+        prefix = ""
+        if compiler.type == "clang-cl":
+            prefix = "/clang:"
             gen_ldflags = None
         else:
-            gen_ldflags = ['-fprofile-generate']
+            gen_ldflags = ["-fprofile-generate"]
 
-        gen_cflags = [prefix + '-fprofile-generate']
+        gen_cflags = [prefix + "-fprofile-generate"]
         if target_is_windows:
             # native llvm-profdata.exe on Windows can't read profile data
             # if name compression is enabled (which cross-compiling enables
             # by default)
-            gen_cflags += ['-mllvm', '-enable-name-compression=false']
+            gen_cflags += ["-mllvm", "-enable-name-compression=false"]
 
         return namespace(
             gen_cflags=gen_cflags,
             gen_ldflags=gen_ldflags,
-            use_cflags=[prefix + '-fprofile-use=%s' % profdata,
-                        # Some error messages about mismatched profile data
-                        # come in via -Wbackend-plugin, so disable those too.
-                        '-Wno-error=backend-plugin'],
+            use_cflags=[
+                prefix + "-fprofile-use=%s" % profdata,
+                # Some error messages about mismatched profile data
+                # come in via -Wbackend-plugin, so disable those too.
+                "-Wno-error=backend-plugin",
+            ],
             use_ldflags=[],
         )
 
 
-set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
-set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
-set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
-set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
+set_config("PROFILE_GEN_CFLAGS", pgo_flags.gen_cflags)
+set_config("PROFILE_GEN_LDFLAGS", pgo_flags.gen_ldflags)
+set_config("PROFILE_USE_CFLAGS", pgo_flags.use_cflags)
+set_config("PROFILE_USE_LDFLAGS", pgo_flags.use_ldflags)
 
-option('--with-pgo-jarlog',
-       help='Use the provided jarlog file when packaging during a profile-use '
-            'build',
-       nargs=1)
+option(
+    "--with-pgo-jarlog",
+    help="Use the provided jarlog file when packaging during a profile-use " "build",
+    nargs=1,
+)
 
-set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
+set_config("PGO_JARLOG_PATH", depends_if("--with-pgo-jarlog")(lambda p: p))
 
 
-@depends('MOZ_PGO', '--enable-profile-use', '--enable-profile-generate',
-         c_compiler)
+@depends("MOZ_PGO", "--enable-profile-use", "--enable-profile-generate", c_compiler)
 def moz_pgo_rust(pgo, profile_use, profile_generate, c_compiler):
     if not pgo:
         return
@@ -130,38 +143,51 @@ def moz_pgo_rust(pgo, profile_use, profile_generate, c_compiler):
         return
 
     if profile_use and profile_generate:
-        die('Cannot build with --enable-profile-use and --enable-profile-generate.')
+        die("Cannot build with --enable-profile-use and --enable-profile-generate.")
 
-    want_cross = (len(profile_use) and profile_use[0] == 'cross') \
-                 or (len(profile_generate) and profile_generate[0] == 'cross')
+    want_cross = (len(profile_use) and profile_use[0] == "cross") or (
+        len(profile_generate) and profile_generate[0] == "cross"
+    )
 
     if not want_cross:
         return
 
-    if c_compiler.type == 'gcc':
-        die('Cannot use cross-language PGO with GCC.')
+    if c_compiler.type == "gcc":
+        die("Cannot use cross-language PGO with GCC.")
 
     return True
 
-set_config('MOZ_PGO_RUST', moz_pgo_rust)
+
+set_config("MOZ_PGO_RUST", moz_pgo_rust)
 
 # LTO
 # ==============================================================
 
-option('--enable-lto',
-       env='MOZ_LTO',
-       nargs='?',
-       choices=('full', 'thin', 'cross'),
-       help='Enable LTO')
+option(
+    "--enable-lto",
+    env="MOZ_LTO",
+    nargs="?",
+    choices=("full", "thin", "cross"),
+    help="Enable LTO",
+)
 
-option(env='MOZ_LD64_KNOWN_GOOD',
-       nargs=1,
-       help='Indicate that ld64 is free of symbol aliasing bugs.')
+option(
+    env="MOZ_LD64_KNOWN_GOOD",
+    nargs=1,
+    help="Indicate that ld64 is free of symbol aliasing bugs.",
+)
 
-imply_option('MOZ_LD64_KNOWN_GOOD', depends_if('MOZ_AUTOMATION')(lambda _: True))
+imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True))
 
-@depends('--enable-lto', c_compiler, 'MOZ_LD64_KNOWN_GOOD', target, '--enable-profile-generate')
-@imports('multiprocessing')
+
+@depends(
+    "--enable-lto",
+    c_compiler,
+    "MOZ_LD64_KNOWN_GOOD",
+    target,
+    "--enable-profile-generate",
+)
+@imports("multiprocessing")
 def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
     cflags = []
     ldflags = []
@@ -170,41 +196,48 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
 
     if value:
         if instrumented_build:
-            log.warning('Disabling LTO because --enable-profile-generate is specified')
+            log.warning("Disabling LTO because --enable-profile-generate is specified")
             return
 
         enabled = True
         # `cross` implies `thin`, but with Rust code participating in LTO
         # as well.  Make that a little more explicit.
-        if len(value) and value[0].lower() == 'cross':
-            if c_compiler.type == 'gcc':
-                die('Cross-language LTO is not supported with GCC.')
+        if len(value) and value[0].lower() == "cross":
+            if c_compiler.type == "gcc":
+                die("Cross-language LTO is not supported with GCC.")
 
             rust_lto = True
-            value = ['thin']
+            value = ["thin"]
 
-        if target.kernel == 'Darwin' and target.os == 'OSX' \
-           and len(value) and value[0].lower() == 'cross' and not ld64_known_good:
-            die('The Mac linker is known to have a bug that affects cross-language '
-                'LTO.  If you know that your linker is free from this bug, please '
-                'set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run '
-                'configure.')
+        if (
+            target.kernel == "Darwin"
+            and target.os == "OSX"
+            and len(value)
+            and value[0].lower() == "cross"
+            and not ld64_known_good
+        ):
+            die(
+                "The Mac linker is known to have a bug that affects cross-language "
+                "LTO.  If you know that your linker is free from this bug, please "
+                "set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run "
+                "configure."
+            )
 
-        if c_compiler.type == 'clang':
-            if len(value) and value[0].lower() == 'full':
+        if c_compiler.type == "clang":
+            if len(value) and value[0].lower() == "full":
                 cflags.append("-flto")
                 ldflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
                 ldflags.append("-flto=thin")
-        elif c_compiler.type == 'clang-cl':
-            if len(value) and value[0].lower() == 'full':
+        elif c_compiler.type == "clang-cl":
+            if len(value) and value[0].lower() == "full":
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
             # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
             # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
-            cflags.append("-fuse-ld=lld");
+            cflags.append("-fuse-ld=lld")
 
             # Explicitly set the CPU to optimize for so the linker doesn't
             # choose a poor default.  Rust compilation by default uses the
@@ -220,19 +253,19 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
             # specifically schedule code for the pentium4's deep pipeline, so
             # that probably contributes to it being an OK default for our
             # purposes.
-            if target.cpu == 'x86':
-                ldflags.append('-mllvm:-mcpu=pentium4')
+            if target.cpu == "x86":
+                ldflags.append("-mllvm:-mcpu=pentium4")
             # This is also the CPU that Rust uses.  The LLVM source code
             # recommends this as the "generic 64-bit specific x86 processor model":
             #
             # https://github.com/llvm/llvm-project/blob/e7694f34ab6a12b8bb480cbfcb396d0a64fe965f/llvm/lib/Target/X86/X86.td#L1165-L1187
-            if target.cpu == 'x86_64':
-                ldflags.append('-mllvm:-mcpu=x86-64')
+            if target.cpu == "x86_64":
+                ldflags.append("-mllvm:-mcpu=x86-64")
             # We do not need special flags for arm64.  Hooray for fixed-length
             # instruction sets.
         else:
             num_cores = multiprocessing.cpu_count()
-            if len(value) and value[0].lower() == 'full':
+            if len(value) and value[0].lower() == "full":
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
@@ -244,12 +277,12 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
         # Tell LTO not to inline functions above a certain size, to mitigate
         # binary size growth while still getting good performance.
         # (For hot functions, PGO will put a multiplier on this limit.)
-        if target.os == 'WINNT':
-            ldflags.append('-mllvm:-import-instr-limit=10');
-        elif target.os == 'OSX':
-            ldflags.append('-Wl,-mllvm,-import-instr-limit=10');
-        elif c_compiler.type == 'clang':
-            ldflags.append('-Wl,-plugin-opt=-import-instr-limit=10');
+        if target.os == "WINNT":
+            ldflags.append("-mllvm:-import-instr-limit=10")
+        elif target.os == "OSX":
+            ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
+        elif c_compiler.type == "clang":
+            ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
 
     return namespace(
         enabled=enabled,
@@ -259,11 +292,11 @@ def lto(value, c_compiler, ld64_known_good, target, instrumented_build):
     )
 
 
-add_old_configure_assignment('MOZ_LTO', lto.enabled)
-set_config('MOZ_LTO', lto.enabled)
-set_define('MOZ_LTO', lto.enabled)
-set_config('MOZ_LTO_CFLAGS', lto.cflags)
-set_config('MOZ_LTO_LDFLAGS', lto.ldflags)
-set_config('MOZ_LTO_RUST_CROSS', lto.rust_lto)
-add_old_configure_assignment('MOZ_LTO_CFLAGS', lto.cflags)
-add_old_configure_assignment('MOZ_LTO_LDFLAGS', lto.ldflags)
+add_old_configure_assignment("MOZ_LTO", lto.enabled)
+set_config("MOZ_LTO", lto.enabled)
+set_define("MOZ_LTO", lto.enabled)
+set_config("MOZ_LTO_CFLAGS", lto.cflags)
+set_config("MOZ_LTO_LDFLAGS", lto.ldflags)
+set_config("MOZ_LTO_RUST_CROSS", lto.rust_lto)
+add_old_configure_assignment("MOZ_LTO_CFLAGS", lto.cflags)
+add_old_configure_assignment("MOZ_LTO_LDFLAGS", lto.ldflags)

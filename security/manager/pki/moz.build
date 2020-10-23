@@ -4,31 +4,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['resources']
+DIRS += ["resources"]
 
 UNIFIED_SOURCES += [
-    'nsNSSDialogHelper.cpp',
-    'nsNSSDialogs.cpp',
+    "nsNSSDialogHelper.cpp",
+    "nsNSSDialogs.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 LOCAL_INCLUDES += [
-    '!/dist/public/nss',
+    "!/dist/public/nss",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
-        '-Wextra',
+        "-Wextra",
         # -Wextra enables this warning, but it's too noisy to be useful.
-        '-Wno-missing-field-initializers',
+        "-Wno-missing-field-initializers",
     ]
 
     # Gecko headers aren't warning-free enough for us to enable these warnings.
     CXXFLAGS += [
-        '-Wno-unused-parameter',
+        "-Wno-unused-parameter",
     ]

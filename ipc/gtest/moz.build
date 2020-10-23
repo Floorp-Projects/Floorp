@@ -4,13 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('ipctest')
+Library("ipctest")
 
 SOURCES += [
-    'TestLogging.cpp',
-    'TestSharedMemory.cpp',
+    "TestLogging.cpp",
+    "TestSharedMemory.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

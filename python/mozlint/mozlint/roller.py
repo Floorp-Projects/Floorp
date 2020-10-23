@@ -19,7 +19,11 @@ from multiprocessing.queues import Queue
 from subprocess import CalledProcessError
 
 import mozpack.path as mozpath
-from mozversioncontrol import get_repository_object, MissingUpstreamRepo, InvalidRepoPath
+from mozversioncontrol import (
+    get_repository_object,
+    MissingUpstreamRepo,
+    InvalidRepoPath,
+)
 
 from .errors import LintersNotConfigured
 from .parser import Parser
@@ -32,29 +36,29 @@ orig_sigint = signal.getsignal(signal.SIGINT)
 
 logger = logging.getLogger("mozlint")
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s.%(msecs)d %(lintname)s (%(pid)s) | %(message)s",
-                              "%H:%M:%S")
+formatter = logging.Formatter(
+    "%(asctime)s.%(msecs)d %(lintname)s (%(pid)s) | %(message)s", "%H:%M:%S"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
 def _run_worker(config, paths, **lintargs):
-    log = logging.LoggerAdapter(logger, {
-        "lintname": config.get("name"),
-        "pid": os.getpid()
-    })
-    lintargs['log'] = log
-    result = ResultSummary(lintargs['root'])
+    log = logging.LoggerAdapter(
+        logger, {"lintname": config.get("name"), "pid": os.getpid()}
+    )
+    lintargs["log"] = log
+    result = ResultSummary(lintargs["root"])
 
     if SHUTDOWN:
         return result
 
     # Override warnings setup for code review
     # Only activating when code_review_warnings is set on a linter.yml in use
-    if os.environ.get('CODE_REVIEW') == '1' and config.get('code_review_warnings'):
-        lintargs['show_warnings'] = True
+    if os.environ.get("CODE_REVIEW") == "1" and config.get("code_review_warnings"):
+        lintargs["show_warnings"] = True
 
-    func = supported_types[config['type']]
+    func = supported_types[config["type"]]
     start_time = time.time()
     try:
         res = func(paths, config, **lintargs) or []
@@ -70,10 +74,10 @@ def _run_worker(config, paths, **lintargs):
 
     if not isinstance(res, (list, tuple)):
         if res:
-            result.failed_run.add(config['name'])
+            result.failed_run.add(config["name"])
     else:
         for r in res:
-            if not lintargs.get('show_warnings') and r.level == 'warning':
+            if not lintargs.get("show_warnings") and r.level == "warning":
                 result.suppressed_warnings[r.path] += 1
                 continue
 
@@ -89,8 +93,9 @@ class InterruptableQueue(Queue):
     This is needed to gracefully handle KeyboardInterrupts when a worker is
     blocking on ProcessPoolExecutor's call queue.
     """
+
     def __init__(self, *args, **kwargs):
-        kwargs['ctx'] = get_context()
+        kwargs["ctx"] = get_context()
         super(InterruptableQueue, self).__init__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
@@ -137,7 +142,10 @@ class LintRoller(object):
                  version control or cwd.
     :param lintargs: Arguments to pass to the underlying linter(s).
     """
-    MAX_PATHS_PER_JOB = 50  # set a max size to prevent command lines that are too long on Windows
+
+    MAX_PATHS_PER_JOB = (
+        50  # set a max size to prevent command lines that are too long on Windows
+    )
 
     def __init__(self, root, exclude=None, **lintargs):
         self.parse = Parser(root)
@@ -148,7 +156,7 @@ class LintRoller(object):
 
         self.linters = []
         self.lintargs = lintargs
-        self.lintargs['root'] = root
+        self.lintargs["root"] = root
 
         # result state
         self.result = ResultSummary(root)
@@ -156,7 +164,7 @@ class LintRoller(object):
         self.root = root
         self.exclude = exclude or []
 
-        if lintargs.get('show_verbose'):
+        if lintargs.get("show_verbose"):
             logger.setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.WARNING)
@@ -171,7 +179,7 @@ class LintRoller(object):
 
         for linter in chain(*[self.parse(p) for p in paths]):
             # Add in our global excludes
-            linter.setdefault('exclude', []).extend(self.exclude)
+            linter.setdefault("exclude", []).extend(self.exclude)
             self.linters.append(linter)
 
     def setup(self):
@@ -180,24 +188,29 @@ class LintRoller(object):
             raise LintersNotConfigured
 
         for linter in self.linters:
-            if 'setup' not in linter:
+            if "setup" not in linter:
                 continue
 
             try:
                 setupargs = copy.deepcopy(self.lintargs)
-                setupargs['name'] = linter['name']
-                res = findobject(linter['setup'])(**setupargs)
+                setupargs["name"] = linter["name"]
+                res = findobject(linter["setup"])(**setupargs)
             except Exception:
                 traceback.print_exc()
                 res = 1
 
             if res:
-                self.result.failed_setup.add(linter['name'])
+                self.result.failed_setup.add(linter["name"])
 
         if self.result.failed_setup:
-            print("error: problem with lint setup, skipping {}".format(
-                    ', '.join(sorted(self.result.failed_setup))))
-            self.linters = [l for l in self.linters if l['name'] not in self.result.failed_setup]
+            print(
+                "error: problem with lint setup, skipping {}".format(
+                    ", ".join(sorted(self.result.failed_setup))
+                )
+            )
+            self.linters = [
+                l for l in self.linters if l["name"] not in self.result.failed_setup
+            ]
             return 1
         return 0
 
@@ -207,17 +220,24 @@ class LintRoller(object):
 
         """A job is of the form (<linter:dict>, <paths:list>)."""
         for linter in self.linters:
-            if any(os.path.isfile(p) and mozpath.match(p, pattern)
-                    for pattern in linter.get('support-files', []) for p in vcs_paths):
+            if any(
+                os.path.isfile(p) and mozpath.match(p, pattern)
+                for pattern in linter.get("support-files", [])
+                for p in vcs_paths
+            ):
                 lpaths = __get_current_paths()
-                print("warning: {} support-file modified, linting entire tree "
-                      "(press ctrl-c to cancel)".format(linter['name']))
+                print(
+                    "warning: {} support-file modified, linting entire tree "
+                    "(press ctrl-c to cancel)".format(linter["name"])
+                )
             else:
                 lpaths = paths.union(vcs_paths)
 
             lpaths = list(lpaths) or __get_current_paths(os.getcwd())
-            chunk_size = min(self.MAX_PATHS_PER_JOB, int(ceil(len(lpaths) / num_procs))) or 1
-            if linter['type'] == 'global':
+            chunk_size = (
+                min(self.MAX_PATHS_PER_JOB, int(ceil(len(lpaths) / num_procs))) or 1
+            )
+            if linter["type"] == "global":
                 # Global linters lint the entire tree in one job.
                 chunk_size = len(lpaths) or 1
             assert chunk_size > 0
@@ -233,9 +253,7 @@ class LintRoller(object):
         # Merge this job's results with our global ones.
         self.result.update(future.result())
 
-    def roll(self, paths=None,
-             outgoing=None, workdir=None, rev=None,
-             num_procs=None):
+    def roll(self, paths=None, outgoing=None, workdir=None, rev=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
 
         :param paths: An iterable of files and/or directories to lint.
@@ -258,23 +276,29 @@ class LintRoller(object):
             paths = set(paths)
 
         if not self.vcs and (workdir or outgoing):
-            print("error: '{}' is not a known repository, can't use "
-                  "--workdir or --outgoing".format(self.lintargs['root']))
+            print(
+                "error: '{}' is not a known repository, can't use "
+                "--workdir or --outgoing".format(self.lintargs["root"])
+            )
 
         # Calculate files from VCS
         vcs_paths = set()
         try:
             if workdir:
-                vcs_paths.update(self.vcs.get_changed_files('AM', mode=workdir))
+                vcs_paths.update(self.vcs.get_changed_files("AM", mode=workdir))
             if rev:
-                vcs_paths.update(self.vcs.get_changed_files('AM', rev=rev))
+                vcs_paths.update(self.vcs.get_changed_files("AM", rev=rev))
             if outgoing:
                 try:
-                    vcs_paths.update(self.vcs.get_outgoing_files('AM', upstream=outgoing))
+                    vcs_paths.update(
+                        self.vcs.get_outgoing_files("AM", upstream=outgoing)
+                    )
                 except MissingUpstreamRepo:
-                    print("warning: could not find default push, specify a remote for --outgoing")
+                    print(
+                        "warning: could not find default push, specify a remote for --outgoing"
+                    )
         except CalledProcessError as e:
-            print("error running: {}".format(' '.join(e.cmd)))
+            print("error running: {}".format(" ".join(e.cmd)))
             if e.output:
                 print(e.output)
 
@@ -284,8 +308,12 @@ class LintRoller(object):
 
         # Make sure all paths are absolute. Join `paths` to cwd and `vcs_paths` to root.
         paths = set(map(os.path.abspath, paths))
-        vcs_paths = set([os.path.join(self.root, p) if not os.path.isabs(p) else p
-                         for p in vcs_paths])
+        vcs_paths = set(
+            [
+                os.path.join(self.root, p) if not os.path.isabs(p) else p
+                for p in vcs_paths
+            ]
+        )
 
         num_procs = num_procs or cpu_count()
         jobs = list(self._generate_jobs(paths, vcs_paths, num_procs))

@@ -6,7 +6,7 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
-    SCHEDULES.exclusive = ['windows']
+    SCHEDULES.exclusive = ["windows"]
 
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
@@ -26,171 +26,171 @@ with Files("OSK*"):
 with Files("*TSFTextStore*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]
 
 EXPORTS += [
-    'nsdefs.h',
-    'WindowHook.h',
-    'WinUtils.h',
+    "nsdefs.h",
+    "WindowHook.h",
+    "WinUtils.h",
 ]
 
 EXPORTS.mozilla += [
-    'ShellHeaderOnlyUtils.h',
-    'UrlmonHeaderOnlyUtils.h',
-    'WindowsConsole.h',
-    'WinHeaderOnlyUtils.h',
+    "ShellHeaderOnlyUtils.h",
+    "UrlmonHeaderOnlyUtils.h",
+    "WindowsConsole.h",
+    "WinHeaderOnlyUtils.h",
 ]
 
 EXPORTS.mozilla.widget += [
-    'AudioSession.h',
-    'CompositorWidgetChild.h',
-    'CompositorWidgetParent.h',
-    'InProcessWinCompositorWidget.h',
-    'WinCompositorWidget.h',
-    'WinCompositorWindowThread.h',
-    'WinContentSystemParameters.h',
-    'WindowsEMF.h',
-    'WindowsSMTCProvider.h',
-    'WinMessages.h',
-    'WinModifierKeyState.h',
-    'WinNativeEventData.h',
+    "AudioSession.h",
+    "CompositorWidgetChild.h",
+    "CompositorWidgetParent.h",
+    "InProcessWinCompositorWidget.h",
+    "WinCompositorWidget.h",
+    "WinCompositorWindowThread.h",
+    "WinContentSystemParameters.h",
+    "WindowsEMF.h",
+    "WindowsSMTCProvider.h",
+    "WinMessages.h",
+    "WinModifierKeyState.h",
+    "WinNativeEventData.h",
 ]
 
 UNIFIED_SOURCES += [
-    'AudioSession.cpp',
-    'CompositorWidgetChild.cpp',
-    'GfxInfo.cpp',
-    'IconLoaderHelperWin.cpp',
-    'IEnumFE.cpp',
-    'IMMHandler.cpp',
-    'InkCollector.cpp',
-    'JumpListItem.cpp',
-    'KeyboardLayout.cpp',
-    'LSPAnnotator.cpp',
-    'nsAppShell.cpp',
-    'nsClipboard.cpp',
-    'nsColorPicker.cpp',
-    'nsDataObj.cpp',
-    'nsDataObjCollection.cpp',
-    'nsDragService.cpp',
-    'nsLookAndFeel.cpp',
-    'nsNativeBasicThemeWin.cpp',
-    'nsNativeDragSource.cpp',
-    'nsNativeDragTarget.cpp',
-    'nsNativeThemeWin.cpp',
-    'nsSound.cpp',
-    'nsToolkit.cpp',
-    'nsUserIdleServiceWin.cpp',
-    'nsUXThemeData.cpp',
-    'nsWindow.cpp',
-    'nsWindowBase.cpp',
-    'nsWindowDbg.cpp',
-    'nsWindowGfx.cpp',
-    'nsWinGesture.cpp',
-    'ProcInfo.cpp',
-    'RemoteBackbuffer.cpp',
-    'ScreenHelperWin.cpp',
-    'SystemStatusBar.cpp',
-    'TaskbarPreview.cpp',
-    'TaskbarPreviewButton.cpp',
-    'TaskbarTabPreview.cpp',
-    'TaskbarWindowPreview.cpp',
-    'WidgetTraceEvent.cpp',
-    'WinCompositorWindowThread.cpp',
-    'WindowHook.cpp',
-    'WindowsConsole.cpp',
-    'WinIMEHandler.cpp',
-    'WinPointerEvents.cpp',
-    'WinTaskbar.cpp',
-    'WinTextEventDispatcherListener.cpp',
-    'WinUtils.cpp',
+    "AudioSession.cpp",
+    "CompositorWidgetChild.cpp",
+    "GfxInfo.cpp",
+    "IconLoaderHelperWin.cpp",
+    "IEnumFE.cpp",
+    "IMMHandler.cpp",
+    "InkCollector.cpp",
+    "JumpListItem.cpp",
+    "KeyboardLayout.cpp",
+    "LSPAnnotator.cpp",
+    "nsAppShell.cpp",
+    "nsClipboard.cpp",
+    "nsColorPicker.cpp",
+    "nsDataObj.cpp",
+    "nsDataObjCollection.cpp",
+    "nsDragService.cpp",
+    "nsLookAndFeel.cpp",
+    "nsNativeBasicThemeWin.cpp",
+    "nsNativeDragSource.cpp",
+    "nsNativeDragTarget.cpp",
+    "nsNativeThemeWin.cpp",
+    "nsSound.cpp",
+    "nsToolkit.cpp",
+    "nsUserIdleServiceWin.cpp",
+    "nsUXThemeData.cpp",
+    "nsWindow.cpp",
+    "nsWindowBase.cpp",
+    "nsWindowDbg.cpp",
+    "nsWindowGfx.cpp",
+    "nsWinGesture.cpp",
+    "ProcInfo.cpp",
+    "RemoteBackbuffer.cpp",
+    "ScreenHelperWin.cpp",
+    "SystemStatusBar.cpp",
+    "TaskbarPreview.cpp",
+    "TaskbarPreviewButton.cpp",
+    "TaskbarTabPreview.cpp",
+    "TaskbarWindowPreview.cpp",
+    "WidgetTraceEvent.cpp",
+    "WinCompositorWindowThread.cpp",
+    "WindowHook.cpp",
+    "WindowsConsole.cpp",
+    "WinIMEHandler.cpp",
+    "WinPointerEvents.cpp",
+    "WinTaskbar.cpp",
+    "WinTextEventDispatcherListener.cpp",
+    "WinUtils.cpp",
 ]
 
 # The following files cannot be built in unified mode because of name clashes.
 SOURCES += [
-    'CompositorWidgetParent.cpp',
-    'InProcessWinCompositorWidget.cpp',
-    'JumpListBuilder.cpp',
-    'MediaKeysEventSourceFactory.cpp',
-    'nsBidiKeyboard.cpp',
-    'nsFilePicker.cpp',
-    'nsSharePicker.cpp',
-    'nsWidgetFactory.cpp',
-    'OSKInputPaneManager.cpp',
-    'WinCompositorWidget.cpp',
-    'WinContentSystemParameters.cpp',
-    'WindowsSMTCProvider.cpp',
-    'WindowsUIUtils.cpp',
-    'WinMouseScrollHandler.cpp',
+    "CompositorWidgetParent.cpp",
+    "InProcessWinCompositorWidget.cpp",
+    "JumpListBuilder.cpp",
+    "MediaKeysEventSourceFactory.cpp",
+    "nsBidiKeyboard.cpp",
+    "nsFilePicker.cpp",
+    "nsSharePicker.cpp",
+    "nsWidgetFactory.cpp",
+    "OSKInputPaneManager.cpp",
+    "WinCompositorWidget.cpp",
+    "WinContentSystemParameters.cpp",
+    "WindowsSMTCProvider.cpp",
+    "WindowsUIUtils.cpp",
+    "WinMouseScrollHandler.cpp",
 ]
 
 # These files redefine the winsdk api version macro and we don't want it to leak to other files.
 SOURCES += [
-    'DirectManipulationOwner.cpp',
+    "DirectManipulationOwner.cpp",
 ]
 
 # Needs INITGUID and we don't allow INITGUID in unified sources since bug 970429.
 SOURCES += [
-    'InputDeviceUtils.cpp',
+    "InputDeviceUtils.cpp",
 ]
 
-if CONFIG['NS_PRINTING']:
+if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
-        'nsDeviceContextSpecWin.cpp',
-        'nsPrintDialogUtil.cpp',
-        'nsPrintDialogWin.cpp',
-        'nsPrinterWin.cpp',
-        'nsPrintSettingsServiceWin.cpp',
-        'nsPrintSettingsWin.cpp',
+        "nsDeviceContextSpecWin.cpp",
+        "nsPrintDialogUtil.cpp",
+        "nsPrintDialogWin.cpp",
+        "nsPrinterWin.cpp",
+        "nsPrintSettingsServiceWin.cpp",
+        "nsPrintSettingsWin.cpp",
     ]
 
-if CONFIG['MOZ_ENABLE_SKIA_PDF']:
+if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
     UNIFIED_SOURCES += [
-        'WindowsEMF.cpp',
+        "WindowsEMF.cpp",
     ]
 
-if CONFIG['NS_ENABLE_TSF']:
+if CONFIG["NS_ENABLE_TSF"]:
     SOURCES += [
-        'TSFTextStore.cpp',
+        "TSFTextStore.cpp",
     ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['MOZ_ENABLE_SKIA_PDF']:
-  LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
+    LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
 LOCAL_INCLUDES += [
-    '/layout/forms',
-    '/layout/generic',
-    '/layout/style',
-    '/layout/xul',
-    '/toolkit/xre',
-    '/widget',
-    '/widget/headless',
-    '/xpcom/base',
+    "/layout/forms",
+    "/layout/generic",
+    "/layout/style",
+    "/layout/xul",
+    "/toolkit/xre",
+    "/widget",
+    "/widget/headless",
+    "/xpcom/base",
 ]
 
-DEFINES['MOZ_UNICODE'] = True
+DEFINES["MOZ_UNICODE"] = True
 
-for var in ('MOZ_ENABLE_D3D10_LAYER'):
+for var in "MOZ_ENABLE_D3D10_LAYER":
     if CONFIG[var]:
         DEFINES[var] = True
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
 OS_LIBS += [
-    'rpcrt4',
-    'urlmon',
+    "rpcrt4",
+    "urlmon",
 ]
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     SOURCES += [
-        'ToastNotification.cpp',
-        'ToastNotificationHandler.cpp',
+        "ToastNotification.cpp",
+        "ToastNotificationHandler.cpp",
     ]

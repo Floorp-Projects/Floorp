@@ -4,29 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_MODULE = 'Bits'
+XPIDL_MODULE = "Bits"
 
 XPIDL_SOURCES += [
-    'nsIBits.idl',
+    "nsIBits.idl",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-if CONFIG['MOZ_BITS_DOWNLOAD']:
-  EXPORTS += [
-    'Bits.h'
-  ]
-  UNIFIED_SOURCES += [
-    'Bits.cpp'
-  ]
+if CONFIG["MOZ_BITS_DOWNLOAD"]:
+    EXPORTS += ["Bits.h"]
+    UNIFIED_SOURCES += ["Bits.cpp"]
 
 EXTRA_JS_MODULES += [
-    'Bits.jsm',
+    "Bits.jsm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Application Update')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Application Update")

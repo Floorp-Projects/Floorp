@@ -4,30 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPI_NAME = 'specialpowers'
+XPI_NAME = "specialpowers"
 
 USE_EXTENSION_MANIFEST = True
 
 FINAL_TARGET_FILES += [
-    'api.js',
-    'manifest.json',
-    'schema.json',
+    "api.js",
+    "manifest.json",
+    "schema.json",
 ]
 
 FINAL_TARGET_FILES.content += [
-    '../modules/Assert.jsm',
-    'content/MockColorPicker.jsm',
-    'content/MockFilePicker.jsm',
-    'content/MockPermissionPrompt.jsm',
-    'content/SpecialPowersChild.jsm',
-    'content/SpecialPowersEventUtils.jsm',
-    'content/SpecialPowersParent.jsm',
-    'content/SpecialPowersSandbox.jsm',
-    'content/WrapPrivileged.jsm',
+    "../modules/Assert.jsm",
+    "content/MockColorPicker.jsm",
+    "content/MockFilePicker.jsm",
+    "content/MockPermissionPrompt.jsm",
+    "content/SpecialPowersChild.jsm",
+    "content/SpecialPowersEventUtils.jsm",
+    "content/SpecialPowersParent.jsm",
+    "content/SpecialPowersSandbox.jsm",
+    "content/WrapPrivileged.jsm",
 ]
 
 TESTING_JS_MODULES += [
-    'content/MockFilePicker.jsm',
+    "content/MockFilePicker.jsm",
 ]
 
 with Files("**"):

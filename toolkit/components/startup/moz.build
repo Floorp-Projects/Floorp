@@ -4,21 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public']
+DIRS += ["public"]
 
 EXPORTS.mozilla += [
-    'StartupTimeline.h',
+    "StartupTimeline.h",
 ]
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 UNIFIED_SOURCES += [
-    'nsAppStartup.cpp',
-    'StartupTimeline.cpp',
+    "nsAppStartup.cpp",
+    "StartupTimeline.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")

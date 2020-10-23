@@ -10,25 +10,24 @@ from mozunit import main
 
 
 class TestSymbols(unittest.TestCase):
-
     def test_split_no_group(self):
-        self.assertEqual(split_symbol('xy'), ('?', 'xy'))
+        self.assertEqual(split_symbol("xy"), ("?", "xy"))
 
     def test_split_with_group(self):
-        self.assertEqual(split_symbol('ab(xy)'), ('ab', 'xy'))
+        self.assertEqual(split_symbol("ab(xy)"), ("ab", "xy"))
 
     def test_join_no_group(self):
-        self.assertEqual(join_symbol('?', 'xy'), 'xy')
+        self.assertEqual(join_symbol("?", "xy"), "xy")
 
     def test_join_with_group(self):
-        self.assertEqual(join_symbol('ab', 'xy'), 'ab(xy)')
+        self.assertEqual(join_symbol("ab", "xy"), "ab(xy)")
 
     def test_add_suffix_no_group(self):
-        self.assertEqual(add_suffix('xy', 1), 'xy1')
+        self.assertEqual(add_suffix("xy", 1), "xy1")
 
     def test_add_suffix_with_group(self):
-        self.assertEqual(add_suffix('ab(xy)', 1), 'ab(xy1)')
+        self.assertEqual(add_suffix("ab(xy)", 1), "ab(xy1)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

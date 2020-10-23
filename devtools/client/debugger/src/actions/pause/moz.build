@@ -3,27 +3,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-
-]
+DIRS += []
 
 CompiledModules(
-    'breakOnNext.js',
-    'commands.js',
-    'continueToHere.js',
-    'expandScopes.js',
-    'fetchFrames.js',
-    'fetchScopes.js',
-    'index.js',
-    'inlinePreview.js',
-    'mapDisplayNames.js',
-    'mapFrames.js',
-    'mapScopes.js',
-    'paused.js',
-    'pauseOnExceptions.js',
-    'previewPausedLocation.js',
-    'resumed.js',
-    'selectFrame.js',
-    'highlightCalls.js',
-    'skipPausing.js',
+    "breakOnNext.js",
+    "commands.js",
+    "continueToHere.js",
+    "expandScopes.js",
+    "fetchFrames.js",
+    "fetchScopes.js",
+    "index.js",
+    "inlinePreview.js",
+    "mapDisplayNames.js",
+    "mapFrames.js",
+    "mapScopes.js",
+    "paused.js",
+    "pauseOnExceptions.js",
+    "previewPausedLocation.js",
+    "resumed.js",
+    "selectFrame.js",
+    "highlightCalls.js",
+    "skipPausing.js",
 )

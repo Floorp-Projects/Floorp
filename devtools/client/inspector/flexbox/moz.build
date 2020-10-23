@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
-    'components',
-    'reducers',
+    "actions",
+    "components",
+    "reducers",
 ]
 
 DevToolsModules(
-    'flexbox.js',
-    'types.js',
+    "flexbox.js",
+    "types.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]

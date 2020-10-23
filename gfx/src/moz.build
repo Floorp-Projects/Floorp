@@ -5,93 +5,93 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIFontEnumerator.idl',
+    "nsIFontEnumerator.idl",
 ]
 
-XPIDL_MODULE = 'gfx'
+XPIDL_MODULE = "gfx"
 
-DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
+DEFINES["MOZ_APP_VERSION"] = '"%s"' % CONFIG["MOZ_APP_VERSION"]
 
 EXPORTS += [
-    'DriverCrashGuard.h',
-    'FilterDescription.h',
-    'FilterSupport.h',
-    'gfxCrashReporterUtils.h',
-    'gfxTelemetry.h',
-    'nsBoundingMetrics.h',
-    'nsColor.h',
-    'nsColorNameList.h',
-    'nsColorNames.h',
-    'nsCoord.h',
-    'nsDeviceContext.h',
-    'nsFont.h',
-    'nsFontMetrics.h',
-    'nsGfxCIID.h',
-    'nsITheme.h',
-    'nsMargin.h',
-    'nsPoint.h',
-    'nsRect.h',
-    'nsRectAbsolute.h',
-    'nsRegion.h',
-    'nsRegionFwd.h',
-    'nsSize.h',
-    'nsTransform2D.h',
-    'RegionBuilder.h',
-    'X11UndefineNone.h'
+    "DriverCrashGuard.h",
+    "FilterDescription.h",
+    "FilterSupport.h",
+    "gfxCrashReporterUtils.h",
+    "gfxTelemetry.h",
+    "nsBoundingMetrics.h",
+    "nsColor.h",
+    "nsColorNameList.h",
+    "nsColorNames.h",
+    "nsCoord.h",
+    "nsDeviceContext.h",
+    "nsFont.h",
+    "nsFontMetrics.h",
+    "nsGfxCIID.h",
+    "nsITheme.h",
+    "nsMargin.h",
+    "nsPoint.h",
+    "nsRect.h",
+    "nsRectAbsolute.h",
+    "nsRegion.h",
+    "nsRegionFwd.h",
+    "nsSize.h",
+    "nsTransform2D.h",
+    "RegionBuilder.h",
+    "X11UndefineNone.h",
 ]
 
 EXPORTS.mozilla += [
-    'AppUnits.h',
-    'ArrayView.h',
-    'FontPropertyTypes.h',
-    'RelativeLuminanceUtils.h',
+    "AppUnits.h",
+    "ArrayView.h",
+    "FontPropertyTypes.h",
+    "RelativeLuminanceUtils.h",
 ]
 
 EXPORTS.mozilla.gfx += [
-    'CompositorHitTestInfo.h',
-    'TiledRegion.h',
+    "CompositorHitTestInfo.h",
+    "TiledRegion.h",
 ]
 
-if CONFIG['MOZ_X11']:
-    EXPORTS.mozilla += ['X11Util.h']
+if CONFIG["MOZ_X11"]:
+    EXPORTS.mozilla += ["X11Util.h"]
     SOURCES += [
-        'X11Util.cpp',
+        "X11Util.cpp",
     ]
 
 UNIFIED_SOURCES += [
-    'DriverCrashGuard.cpp',
-    'FilterSupport.cpp',
-    'gfxCrashReporterUtils.cpp',
-    'gfxTelemetry.cpp',
-    'nsColor.cpp',
-    'nsFont.cpp',
-    'nsFontMetrics.cpp',
-    'nsRect.cpp',
-    'nsRegion.cpp',
-    'nsThebesFontEnumerator.cpp',
-    'nsTransform2D.cpp',
-    'TiledRegion.cpp',
+    "DriverCrashGuard.cpp",
+    "FilterSupport.cpp",
+    "gfxCrashReporterUtils.cpp",
+    "gfxTelemetry.cpp",
+    "nsColor.cpp",
+    "nsFont.cpp",
+    "nsFontMetrics.cpp",
+    "nsRect.cpp",
+    "nsRegion.cpp",
+    "nsThebesFontEnumerator.cpp",
+    "nsTransform2D.cpp",
+    "TiledRegion.cpp",
 ]
 
 # nsDeviceContext.cpp cannot be built in unified mode because it pulls in OS X system headers.
 SOURCES += [
-    'nsDeviceContext.cpp',
+    "nsDeviceContext.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/dom/ipc',  # for ContentChild.h
+    "/dom/ipc",  # for ContentChild.h
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]

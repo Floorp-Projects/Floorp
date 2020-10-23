@@ -15,5 +15,5 @@ def set_job_try_name(config, jobs):
     attribute based on the job name.
     """
     for job in jobs:
-        job.setdefault('attributes', {}).setdefault('job_try_name', job['name'])
+        job.setdefault("attributes", {}).setdefault("job_try_name", job["name"])
         yield job

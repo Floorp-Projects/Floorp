@@ -2,12 +2,12 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 SOURCES += [
-    'bar1.cc',
-    'bar2.cc',
+    "bar1.cc",
+    "bar2.cc",
 ]
 
 DIRS += [
-    'bar_helper',
+    "bar_helper",
 ]
 
-FINAL_LIBRARY = 'bar'
+FINAL_LIBRARY = "bar"

@@ -15,11 +15,11 @@ from marionette_harness import marionette_test
 def inline(doc):
     return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
+
 static_element = inline("""<p>foo</p>""")
 static_elements = static_element + static_element
 
-remove_element_by_tag_name = \
-    """var el = document.getElementsByTagName('{}')[0];
+remove_element_by_tag_name = """var el = document.getElementsByTagName('{}')[0];
     document.getElementsByTagName("body")[0].remove(el);"""
 
 hidden_element = inline("<p style='display: none'>hidden</p>")
@@ -30,17 +30,22 @@ unselected_element = inline("<option>unselected</option>")
 enabled_element = inline("<input>")
 disabled_element = inline("<input disabled>")
 
+
 def no_such_element(marionette):
     return marionette.find_element(By.ID, "nosuchelement")
+
 
 def no_such_elements(marionette):
     return marionette.find_elements(By.ID, "nosuchelement")
 
+
 def p(marionette):
     return marionette.find_element(By.TAG_NAME, "p")
 
+
 def ps(marionette):
     return marionette.find_elements(By.TAG_NAME, "p")
+
 
 class TestExpected(marionette_test.MarionetteTestCase):
     def test_element_present_func(self):

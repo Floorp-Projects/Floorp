@@ -16,16 +16,23 @@ from mach.decorators import (
 from mozbuild.base import MachCommandBase
 from mozbuild.util import mkdir
 
+
 def get_test_parser():
     import runtests
+
     return runtests.get_parser
+
 
 @CommandProvider
 class WebIDLProvider(MachCommandBase):
-    @Command('webidl-example', category='misc',
-             description='Generate example files for a WebIDL interface.')
-    @CommandArgument('interface', nargs='+',
-                     help='Interface(s) whose examples to generate.')
+    @Command(
+        "webidl-example",
+        category="misc",
+        description="Generate example files for a WebIDL interface.",
+    )
+    @CommandArgument(
+        "interface", nargs="+", help="Interface(s) whose examples to generate."
+    )
     def webidl_example(self, interface):
         from mozwebidlcodegen import BuildSystemWebIDL
 
@@ -33,11 +40,14 @@ class WebIDLProvider(MachCommandBase):
         for i in interface:
             manager.generate_example_files(i)
 
-    @Command('webidl-parser-test', category='testing', parser=get_test_parser,
-             description='Run WebIDL tests (Interface Browser parser).')
+    @Command(
+        "webidl-parser-test",
+        category="testing",
+        parser=get_test_parser,
+        description="Run WebIDL tests (Interface Browser parser).",
+    )
     def webidl_test(self, **kwargs):
-        sys.path.insert(0, os.path.join(self.topsrcdir, 'other-licenses',
-                        'ply'))
+        sys.path.insert(0, os.path.join(self.topsrcdir, "other-licenses", "ply"))
 
         # Ensure the topobjdir exists. On a Taskcluster test run there won't be
         # an objdir yet.
@@ -57,4 +67,5 @@ class WebIDLProvider(MachCommandBase):
         sys.path.insert(0, self.topobjdir)
 
         import runtests
+
         return runtests.run_tests(kwargs["tests"], verbose=kwargs["verbose"])

@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsITypeAheadFind.idl',
+    "nsITypeAheadFind.idl",
 ]
 
-XPIDL_MODULE = 'fastfind'
+XPIDL_MODULE = "fastfind"
 
 SOURCES += [
-    'nsTypeAheadFind.cpp',
+    "nsTypeAheadFind.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Find Toolbar")

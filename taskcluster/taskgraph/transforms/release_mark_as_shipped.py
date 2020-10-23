@@ -16,18 +16,24 @@ def make_task_description(config, jobs):
     release_config = get_release_config(config)
     for job in jobs:
         resolve_keyed_by(
-            job, 'worker-type', item_name=job['name'],
-            **{'release-level': config.params.release_level()}
+            job,
+            "worker-type",
+            item_name=job["name"],
+            **{"release-level": config.params.release_level()}
         )
         resolve_keyed_by(
-            job, 'scopes', item_name=job['name'],
-            **{'release-level': config.params.release_level()}
+            job,
+            "scopes",
+            item_name=job["name"],
+            **{"release-level": config.params.release_level()}
         )
 
-        job['worker']['release-name'] = '{product}-{version}-build{build_number}'.format(
-            product=job['shipping-product'].capitalize(),
-            version=release_config['version'],
-            build_number=release_config['build_number']
+        job["worker"][
+            "release-name"
+        ] = "{product}-{version}-build{build_number}".format(
+            product=job["shipping-product"].capitalize(),
+            version=release_config["version"],
+            build_number=release_config["build_number"],
         )
 
         yield job

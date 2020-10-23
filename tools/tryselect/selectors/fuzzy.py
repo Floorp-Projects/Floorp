@@ -21,7 +21,10 @@ from mozterm import Terminal
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, generate_try_task_config
-from ..util.manage_estimates import download_task_history_data, make_trimmed_taskgraph_cache
+from ..util.manage_estimates import (
+    download_task_history_data,
+    make_trimmed_taskgraph_cache,
+)
 
 from taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
@@ -30,7 +33,7 @@ terminal = Terminal()
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/selectors/preview.py')
+PREVIEW_SCRIPT = os.path.join(build.topsrcdir, "tools/tryselect/selectors/preview.py")
 
 FZF_NOT_FOUND = """
 Could not find the `fzf` binary.
@@ -81,99 +84,120 @@ For more shortcuts, see {t.italic_white}mach help try fuzzy{t.normal} and {t.ita
 """.strip()
 
 fzf_shortcuts = {
-    'ctrl-a': 'select-all',
-    'ctrl-d': 'deselect-all',
-    'ctrl-t': 'toggle-all',
-    'alt-bspace': 'beginning-of-line+kill-line',
-    '?': 'toggle-preview',
+    "ctrl-a": "select-all",
+    "ctrl-d": "deselect-all",
+    "ctrl-t": "toggle-all",
+    "alt-bspace": "beginning-of-line+kill-line",
+    "?": "toggle-preview",
 }
 
 fzf_header_shortcuts = [
-    ('select', 'tab'),
-    ('accept', 'enter'),
-    ('cancel', 'ctrl-c'),
-    ('select-all', 'ctrl-a'),
-    ('cursor-up', 'up'),
-    ('cursor-down', 'down'),
+    ("select", "tab"),
+    ("accept", "enter"),
+    ("cancel", "ctrl-c"),
+    ("select-all", "ctrl-a"),
+    ("cursor-up", "up"),
+    ("cursor-down", "down"),
 ]
 
 
 class FuzzyParser(BaseTryParser):
-    name = 'fuzzy'
+    name = "fuzzy"
     arguments = [
-        [['-q', '--query'],
-         {'metavar': 'STR',
-          'action': 'append',
-          'default': [],
-          'help': "Use the given query instead of entering the selection "
-                  "interface. Equivalent to typing <query><ctrl-a><enter> "
-                  "from the interface. Specifying multiple times schedules "
-                  "the union of computed tasks.",
-          }],
-        [['-i', '--interactive'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Force running fzf interactively even when using presets or "
-                  "queries with -q/--query."
-          }],
-        [['-x', '--and'],
-         {'dest': 'intersection',
-          'action': 'store_true',
-          'default': False,
-          'help': "When specifying queries on the command line with -q/--query, "
-                  "use the intersection of tasks rather than the union. This is "
-                  "especially useful for post filtering presets.",
-          }],
-        [['-e', '--exact'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Enable exact match mode. Terms will use an exact match "
-                  "by default, and terms prefixed with ' will become fuzzy."
-          }],
-        [['-u', '--update'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Update fzf before running.",
-          }],
-        [['-s', '--show-estimates'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Show task duration estimates.",
-          }],
-        [['--disable-target-task-filter'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Some tasks run on mozilla-central but are filtered out "
-                  "of the default list due to resource constraints. This flag "
-                  "disables this filtering."
-          }],
+        [
+            ["-q", "--query"],
+            {
+                "metavar": "STR",
+                "action": "append",
+                "default": [],
+                "help": "Use the given query instead of entering the selection "
+                "interface. Equivalent to typing <query><ctrl-a><enter> "
+                "from the interface. Specifying multiple times schedules "
+                "the union of computed tasks.",
+            },
+        ],
+        [
+            ["-i", "--interactive"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Force running fzf interactively even when using presets or "
+                "queries with -q/--query.",
+            },
+        ],
+        [
+            ["-x", "--and"],
+            {
+                "dest": "intersection",
+                "action": "store_true",
+                "default": False,
+                "help": "When specifying queries on the command line with -q/--query, "
+                "use the intersection of tasks rather than the union. This is "
+                "especially useful for post filtering presets.",
+            },
+        ],
+        [
+            ["-e", "--exact"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Enable exact match mode. Terms will use an exact match "
+                "by default, and terms prefixed with ' will become fuzzy.",
+            },
+        ],
+        [
+            ["-u", "--update"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Update fzf before running.",
+            },
+        ],
+        [
+            ["-s", "--show-estimates"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Show task duration estimates.",
+            },
+        ],
+        [
+            ["--disable-target-task-filter"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Some tasks run on mozilla-central but are filtered out "
+                "of the default list due to resource constraints. This flag "
+                "disables this filtering.",
+            },
+        ],
     ]
-    common_groups = ['push', 'task', 'preset']
+    common_groups = ["push", "task", "preset"]
     task_configs = [
-        'artifact',
-        'browsertime',
-        'chemspill-prio',
-        'disable-pgo',
-        'env',
-        'gecko-profile',
-        'path',
-        'pernosco',
-        'rebuild',
-        'routes',
-        'worker-overrides',
+        "artifact",
+        "browsertime",
+        "chemspill-prio",
+        "disable-pgo",
+        "env",
+        "gecko-profile",
+        "path",
+        "pernosco",
+        "rebuild",
+        "routes",
+        "worker-overrides",
     ]
 
 
 def run_cmd(cmd, cwd=None):
-    is_win = platform.system() == 'Windows'
+    is_win = platform.system() == "Windows"
     return subprocess.call(cmd, cwd=cwd, shell=True if is_win else False)
 
 
 def run_fzf_install_script(fzf_path):
-    if platform.system() == 'Windows':
-        cmd = ['bash', '-c', './install --bin']
+    if platform.system() == "Windows":
+        cmd = ["bash", "-c", "./install --bin"]
     else:
-        cmd = ['./install', '--bin']
+        cmd = ["./install", "--bin"]
 
     if run_cmd(cmd, cwd=fzf_path):
         print(FZF_INSTALL_FAILED)
@@ -181,7 +205,7 @@ def run_fzf_install_script(fzf_path):
 
 
 def should_force_fzf_update(fzf_bin):
-    cmd = [fzf_bin, '--version']
+    cmd = [fzf_bin, "--version"]
     try:
         fzf_version = subprocess.check_output(cmd)
     except subprocess.CalledProcessError:
@@ -193,7 +217,7 @@ def should_force_fzf_update(fzf_bin):
 
     # 0.20.0 introduced passing selections through a temporary file,
     # which is good for large ctrl-a actions.
-    if StrictVersion(fzf_version) < StrictVersion('0.20.0'):
+    if StrictVersion(fzf_version) < StrictVersion("0.20.0"):
         print("fzf version is old, forcing update.")
         return True
     return False
@@ -206,27 +230,31 @@ def fzf_bootstrap(update=False):
     `install` script. If update is True, we will pull the repository and re-run
     the install script.
     """
-    fzf_bin = find_executable('fzf')
+    fzf_bin = find_executable("fzf")
     if fzf_bin and should_force_fzf_update(fzf_bin):
         update = True
 
     if fzf_bin and not update:
         return fzf_bin
 
-    fzf_path = os.path.join(get_state_dir(), 'fzf')
+    fzf_path = os.path.join(get_state_dir(), "fzf")
 
     # Bug 1623197: We only want to run fzf's `install` if it's not in the $PATH
     # Swap to os.path.commonpath when we're not on Py2
     if fzf_bin and update and not fzf_bin.startswith(fzf_path):
-        print("fzf installed somewhere other than {}, please update manually".format(fzf_path))
+        print(
+            "fzf installed somewhere other than {}, please update manually".format(
+                fzf_path
+            )
+        )
         sys.exit(1)
 
     def get_fzf():
-        return find_executable('fzf', os.path.join(fzf_path, 'bin'))
+        return find_executable("fzf", os.path.join(fzf_path, "bin"))
 
     if os.path.isdir(fzf_path):
         if update:
-            ret = run_cmd(['git', 'pull'], cwd=fzf_path)
+            ret = run_cmd(["git", "pull"], cwd=fzf_path)
             if ret:
                 print("Update fzf failed.")
                 sys.exit(1)
@@ -242,15 +270,15 @@ def fzf_bootstrap(update=False):
 
     if not update:
         install = input("Could not detect fzf, install it now? [y/n]: ")
-        if install.lower() != 'y':
+        if install.lower() != "y":
             return
 
-    if not find_executable('git'):
+    if not find_executable("git"):
         print("Git not found.")
         print(FZF_INSTALL_FAILED)
         sys.exit(1)
 
-    cmd = ['git', 'clone', '--depth', '1', 'https://github.com/junegunn/fzf.git']
+    cmd = ["git", "clone", "--depth", "1", "https://github.com/junegunn/fzf.git"]
     if subprocess.call(cmd, cwd=os.path.dirname(fzf_path)):
         print(FZF_INSTALL_FAILED)
         sys.exit(1)
@@ -264,19 +292,27 @@ def fzf_bootstrap(update=False):
 def format_header():
     shortcuts = []
     for action, key in fzf_header_shortcuts:
-        shortcuts.append('{t.white}{action}{t.normal}: {t.yellow}<{key}>{t.normal}'.format(
-                         t=terminal, action=action, key=key))
-    return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
+        shortcuts.append(
+            "{t.white}{action}{t.normal}: {t.yellow}<{key}>{t.normal}".format(
+                t=terminal, action=action, key=key
+            )
+        )
+    return FZF_HEADER.format(shortcuts=", ".join(shortcuts), t=terminal)
 
 
 def run_fzf(cmd, tasks):
     env = dict(os.environ)
-    env.update({'PYTHONPATH': os.pathsep.join([p for p in sys.path if 'requests' in p])})
-    proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-        env=ensure_subprocess_env(env), universal_newlines=True
+    env.update(
+        {"PYTHONPATH": os.pathsep.join([p for p in sys.path if "requests" in p])}
     )
-    out = proc.communicate('\n'.join(tasks))[0].splitlines()
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        env=ensure_subprocess_env(env),
+        universal_newlines=True,
+    )
+    out = proc.communicate("\n".join(tasks))[0].splitlines()
 
     selected = []
     query = None
@@ -286,10 +322,22 @@ def run_fzf(cmd, tasks):
     return query, selected
 
 
-def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
-        parameters=None, save_query=False, push=True, message='{msg}',
-        test_paths=None, exact=False, closed_tree=False, show_estimates=False,
-        disable_target_task_filter=False):
+def run(
+    update=False,
+    query=None,
+    intersect_query=None,
+    try_config=None,
+    full=False,
+    parameters=None,
+    save_query=False,
+    push=True,
+    message="{msg}",
+    test_paths=None,
+    exact=False,
+    closed_tree=False,
+    show_estimates=False,
+    disable_target_task_filter=False,
+):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -297,21 +345,21 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         return 1
 
     check_working_directory(push)
-    tg = generate_tasks(parameters,
-                        full=full,
-                        disable_target_task_filter=disable_target_task_filter)
+    tg = generate_tasks(
+        parameters, full=full, disable_target_task_filter=disable_target_task_filter
+    )
     all_tasks = sorted(tg.tasks.keys())
 
     # graph_Cache created by generate_tasks, recreate the path to that file.
-    cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
+    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
     if full:
-        graph_cache = os.path.join(cache_dir, 'full_task_graph')
-        dep_cache = os.path.join(cache_dir, 'full_task_dependencies')
-        target_set = os.path.join(cache_dir, 'full_task_set')
+        graph_cache = os.path.join(cache_dir, "full_task_graph")
+        dep_cache = os.path.join(cache_dir, "full_task_dependencies")
+        target_set = os.path.join(cache_dir, "full_task_set")
     else:
-        graph_cache = os.path.join(cache_dir, 'target_task_graph')
-        dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
-        target_set = os.path.join(cache_dir, 'target_task_set')
+        graph_cache = os.path.join(cache_dir, "target_task_graph")
+        dep_cache = os.path.join(cache_dir, "target_task_dependencies")
+        target_set = os.path.join(cache_dir, "target_task_set")
 
     if show_estimates:
         download_task_history_data(cache_dir=cache_dir)
@@ -327,35 +375,45 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         if not all_tasks:
             return 1
 
-    key_shortcuts = [k + ':' + v for k, v in six.iteritems(fzf_shortcuts)]
+    key_shortcuts = [k + ":" + v for k, v in six.iteritems(fzf_shortcuts)]
     base_cmd = [
-        fzf, '-m',
-        '--bind', ','.join(key_shortcuts),
-        '--header', format_header(),
-        '--preview-window=right:30%',
-        '--print-query',
+        fzf,
+        "-m",
+        "--bind",
+        ",".join(key_shortcuts),
+        "--header",
+        format_header(),
+        "--preview-window=right:30%",
+        "--print-query",
     ]
 
     if show_estimates:
-        base_cmd.extend([
-            '--preview', '{} {} -g {} -s -c {} -t "{{+f}}"'.format(
-                sys.executable, PREVIEW_SCRIPT, dep_cache, cache_dir),
-        ])
+        base_cmd.extend(
+            [
+                "--preview",
+                '{} {} -g {} -s -c {} -t "{{+f}}"'.format(
+                    sys.executable, PREVIEW_SCRIPT, dep_cache, cache_dir
+                ),
+            ]
+        )
     else:
-        base_cmd.extend([
-            '--preview', '{} {} -t "{{+f}}"'.format(sys.executable, PREVIEW_SCRIPT),
-        ])
+        base_cmd.extend(
+            [
+                "--preview",
+                '{} {} -t "{{+f}}"'.format(sys.executable, PREVIEW_SCRIPT),
+            ]
+        )
 
     if exact:
-        base_cmd.append('--exact')
+        base_cmd.append("--exact")
 
     selected = set()
     queries = []
 
     def get_tasks(query_arg=None, candidate_tasks=all_tasks):
         cmd = base_cmd[:]
-        if query_arg and query_arg != 'INTERACTIVE':
-            cmd.extend(['-f', query_arg])
+        if query_arg and query_arg != "INTERACTIVE":
+            cmd.extend(["-f", query_arg])
 
         query_str, tasks = run_fzf(cmd, sorted(candidate_tasks))
         queries.append(query_str)
@@ -386,13 +444,13 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
     msg = "Fuzzy"
     args = ["query={}".format(q) for q in queries]
     if test_paths:
-        args.append("paths={}".format(':'.join(test_paths)))
+        args.append("paths={}".format(":".join(test_paths)))
     if args:
-        msg = "{} {}".format(msg, '&'.join(args))
-    return push_to_try('fuzzy',
-                       message.format(msg=msg),
-                       try_task_config=generate_try_task_config('fuzzy',
-                                                                selected,
-                                                                try_config),
-                       push=push,
-                       closed_tree=closed_tree)
+        msg = "{} {}".format(msg, "&".join(args))
+    return push_to_try(
+        "fuzzy",
+        message.format(msg=msg),
+        try_task_config=generate_try_task_config("fuzzy", selected, try_config),
+        push=push,
+        closed_tree=closed_tree,
+    )

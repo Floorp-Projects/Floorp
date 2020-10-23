@@ -4,47 +4,44 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('*'):
-    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
+with Files("*"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
-EXPORTS.mozilla += [
-    'ApplicationReputation.h',
-    'LoginReputationIPC.h'
-]
+EXPORTS.mozilla += ["ApplicationReputation.h", "LoginReputationIPC.h"]
 
 XPIDL_SOURCES += [
-    'nsIApplicationReputation.idl',
-    'nsILoginReputation.idl',
+    "nsIApplicationReputation.idl",
+    "nsILoginReputation.idl",
 ]
 
-XPIDL_MODULE = 'reputationservice'
+XPIDL_MODULE = "reputationservice"
 
 UNIFIED_SOURCES += [
-    'ApplicationReputation.cpp',
-    'ApplicationReputationTelemetryUtils.cpp',
-    'chromium/chrome/common/safe_browsing/csd.pb.cc',
-    'LoginReputation.cpp',
-    'LoginReputationIPC.cpp',
+    "ApplicationReputation.cpp",
+    "ApplicationReputationTelemetryUtils.cpp",
+    "chromium/chrome/common/safe_browsing/csd.pb.cc",
+    "LoginReputation.cpp",
+    "LoginReputationIPC.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '../protobuf',
-    '/ipc/chromium/src',
-    'chromium',
+    "../protobuf",
+    "/ipc/chromium/src",
+    "chromium",
 ]
 
-DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
-DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['test/gtest']
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["test/gtest"]

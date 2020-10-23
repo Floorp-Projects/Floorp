@@ -14,12 +14,11 @@ from mozbuild.base import MachCommandBase
 
 @CommandProvider
 class ConditionsProvider(MachCommandBase):
-    @Command('cmd_foo', category='testing')
+    @Command("cmd_foo", category="testing")
     def run_foo(self):
         pass
 
-    @Command('cmd_bar', category='testing')
-    @CommandArgument('--baz', action="store_true",
-                     help='Run with baz')
+    @Command("cmd_bar", category="testing")
+    @CommandArgument("--baz", action="store_true", help="Run with baz")
     def run_bar(self, baz=None):
         pass

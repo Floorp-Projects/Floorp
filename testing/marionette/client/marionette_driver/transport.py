@@ -46,7 +46,9 @@ class Command(Message):
         self.params = params
 
     def __str__(self):
-        return "<Command id={0}, name={1}, params={2}>".format(self.id, self.name, self.params)
+        return "<Command id={0}, name={1}, params={2}>".format(
+            self.id, self.name, self.params
+        )
 
     def to_msg(self):
         msg = [Command.TYPE, self.id, self.name, self.params]
@@ -69,7 +71,9 @@ class Response(Message):
         self.result = result
 
     def __str__(self):
-        return "<Response id={0}, error={1}, result={2}>".format(self.id, self.error, self.result)
+        return "<Response id={0}, error={1}, result={2}>".format(
+            self.id, self.error, self.result
+        )
 
     def to_msg(self):
         msg = [Response.TYPE, self.id, self.error, self.result]
@@ -94,6 +98,7 @@ class TcpTransport(object):
     depending on the protocol level offered by the remote server, varies.
     Supported protocol levels are `min_protocol_level` and above.
     """
+
     max_packet_length = 4096
     min_protocol_level = 3
 
@@ -164,7 +169,7 @@ class TcpTransport(object):
             sep = data.find(b":")
             if sep > -1:
                 length = data[0:sep]
-                remaining = data[sep + 1:]
+                remaining = data[sep + 1 :]
 
                 if len(remaining) == int(length):
                     if unmarshal:
@@ -183,7 +188,9 @@ class TcpTransport(object):
 
                 bytes_to_recv = int(length) - len(remaining)
 
-        raise socket.timeout("Connection timed out after {}s".format(self.socket_timeout))
+        raise socket.timeout(
+            "Connection timed out after {}s".format(self.socket_timeout)
+        )
 
     def connect(self):
         """Connect to the server and process the hello message we expect
@@ -217,7 +224,9 @@ class TcpTransport(object):
         protocol = hello.get("marionetteProtocol")
 
         if application_type != "gecko":
-            raise ValueError("Application type '{}' is not supported".format(application_type))
+            raise ValueError(
+                "Application type '{}' is not supported".format(application_type)
+            )
 
         if not isinstance(protocol, int) or protocol < self.min_protocol_level:
             msg = "Earliest supported protocol level is '{}' but got '{}'"
@@ -248,8 +257,11 @@ class TcpTransport(object):
         while totalsent < len(payload):
             sent = self._sock.send(payload[totalsent:])
             if sent == 0:
-                raise IOError("Socket error after sending {0} of {1} bytes"
-                              .format(totalsent, len(payload)))
+                raise IOError(
+                    "Socket error after sending {0} of {1} bytes".format(
+                        totalsent, len(payload)
+                    )
+                )
             else:
                 totalsent += sent
 

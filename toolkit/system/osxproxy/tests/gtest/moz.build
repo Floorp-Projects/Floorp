@@ -5,14 +5,14 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestProxyBypassRules.cpp',
+    "TestProxyBypassRules.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/toolkit/system/osxproxy',
+    "/toolkit/system/osxproxy",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wshadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wshadow"]

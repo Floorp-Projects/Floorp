@@ -29,27 +29,30 @@ from mozunit import (
 
 
 OUR_DIR = mozpath.abspath(mozpath.dirname(__file__))
-TOPSRCDIR = mozpath.normpath(mozpath.join(OUR_DIR, '..', '..', '..', '..'))
+TOPSRCDIR = mozpath.normpath(mozpath.join(OUR_DIR, "..", "..", "..", ".."))
 
 
 class TestWebIDLCodegenManager(unittest.TestCase):
     TEST_STEMS = {
-        'Child',
-        'Parent',
-        'ExampleBinding',
-        'TestEvent',
+        "Child",
+        "Parent",
+        "ExampleBinding",
+        "TestEvent",
     }
 
     @property
     def _static_input_paths(self):
-        s = {mozpath.join(OUR_DIR, p) for p in os.listdir(OUR_DIR)
-             if p.endswith('.webidl')}
+        s = {
+            mozpath.join(OUR_DIR, p)
+            for p in os.listdir(OUR_DIR)
+            if p.endswith(".webidl")
+        }
 
         return s
 
     @property
     def _config_path(self):
-        config = mozpath.join(TOPSRCDIR, 'dom', 'bindings', 'Bindings.conf')
+        config = mozpath.join(TOPSRCDIR, "dom", "bindings", "Bindings.conf")
         self.assertTrue(os.path.exists(config))
 
         return config
@@ -58,7 +61,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp)
 
-        cache_dir = mozpath.join(tmp, 'cache')
+        cache_dir = mozpath.join(tmp, "cache")
         os.mkdir(cache_dir)
 
         ip = self._static_input_paths
@@ -74,11 +77,11 @@ class TestWebIDLCodegenManager(unittest.TestCase):
             config_path=self._config_path,
             webidl_root=cache_dir,
             inputs=inputs,
-            exported_header_dir=mozpath.join(tmp, 'exports'),
-            codegen_dir=mozpath.join(tmp, 'codegen'),
-            state_path=mozpath.join(tmp, 'state.json'),
-            make_deps_path=mozpath.join(tmp, 'codegen.pp'),
-            make_deps_target='codegen.pp',
+            exported_header_dir=mozpath.join(tmp, "exports"),
+            codegen_dir=mozpath.join(tmp, "codegen"),
+            state_path=mozpath.join(tmp, "state.json"),
+            make_deps_path=mozpath.join(tmp, "codegen.pp"),
+            make_deps_target="codegen.pp",
             cache_dir=cache_dir,
         )
 
@@ -89,19 +92,21 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         """Loading a state file with a too new version resets state."""
         args = self._get_manager_args()
 
-        p = args['state_path']
+        p = args["state_path"]
 
-        with io.open(p, 'w', newline='\n') as fh:
-            json.dump({
-                'version': WebIDLCodegenManagerState.VERSION + 1,
-                'foobar': '1',
-            }, fh)
+        with io.open(p, "w", newline="\n") as fh:
+            json.dump(
+                {
+                    "version": WebIDLCodegenManagerState.VERSION + 1,
+                    "foobar": "1",
+                },
+                fh,
+            )
 
         manager = WebIDLCodegenManager(**args)
 
-        self.assertEqual(manager._state['version'],
-                         WebIDLCodegenManagerState.VERSION)
-        self.assertNotIn('foobar', manager._state)
+        self.assertEqual(manager._state["version"], WebIDLCodegenManagerState.VERSION)
+        self.assertNotIn("foobar", manager._state)
 
     def test_generate_build_files(self):
         """generate_build_files() does the right thing from empty."""
@@ -124,32 +129,36 @@ class TestWebIDLCodegenManager(unittest.TestCase):
             self.assertIn(mozpath.join(manager._codegen_dir, f), output)
 
         for s in self.TEST_STEMS:
-            self.assertTrue(os.path.isfile(mozpath.join(
-                manager._exported_header_dir, '%sBinding.h' % s)))
-            self.assertTrue(os.path.isfile(mozpath.join(
-                manager._codegen_dir, '%sBinding.cpp' % s)))
+            self.assertTrue(
+                os.path.isfile(
+                    mozpath.join(manager._exported_header_dir, "%sBinding.h" % s)
+                )
+            )
+            self.assertTrue(
+                os.path.isfile(mozpath.join(manager._codegen_dir, "%sBinding.cpp" % s))
+            )
 
         self.assertTrue(os.path.isfile(manager._state_path))
 
-        with io.open(manager._state_path, 'r') as fh:
+        with io.open(manager._state_path, "r") as fh:
             state = json.load(fh)
-            self.assertEqual(state['version'], 3)
-            self.assertIn('webidls', state)
+            self.assertEqual(state["version"], 3)
+            self.assertIn("webidls", state)
 
-            child = state['webidls']['Child.webidl']
-            self.assertEqual(len(child['inputs']), 2)
-            self.assertEqual(len(child['outputs']), 2)
-            self.assertEqual(child['sha1'], 'c41527cad3bc161fa6e7909e48fa11f9eca0468b')
+            child = state["webidls"]["Child.webidl"]
+            self.assertEqual(len(child["inputs"]), 2)
+            self.assertEqual(len(child["outputs"]), 2)
+            self.assertEqual(child["sha1"], "c41527cad3bc161fa6e7909e48fa11f9eca0468b")
 
     def test_generate_build_files_load_state(self):
         """State should be equivalent when instantiating a new instance."""
         args = self._get_manager_args()
         m1 = WebIDLCodegenManager(**args)
-        self.assertEqual(len(m1._state['webidls']), 0)
+        self.assertEqual(len(m1._state["webidls"]), 0)
         m1.generate_build_files()
 
         m2 = WebIDLCodegenManager(**args)
-        self.assertGreater(len(m2._state['webidls']), 2)
+        self.assertGreater(len(m2._state["webidls"]), 2)
         self.assertEqual(m1._state, m2._state)
 
     def test_no_change_no_writes(self):
@@ -172,7 +181,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         m1.generate_build_files()
 
         rm_count = 0
-        for p in m1._state['webidls']['Child.webidl']['outputs']:
+        for p in m1._state["webidls"]["Child.webidl"]["outputs"]:
             rm_count += 1
             os.unlink(p)
 
@@ -192,14 +201,14 @@ class TestWebIDLCodegenManager(unittest.TestCase):
 
         child_path = None
         for p in m1._input_paths:
-            if p.endswith('Child.webidl'):
+            if p.endswith("Child.webidl"):
                 child_path = p
                 break
 
         self.assertIsNotNone(child_path)
-        child_content = io.open(child_path, 'r').read()
+        child_content = io.open(child_path, "r").read()
 
-        with MockedOpen({child_path: child_content + '\n/* */'}):
+        with MockedOpen({child_path: child_content + "\n/* */"}):
             m2 = WebIDLCodegenManager(**args)
             result = m2.generate_build_files()
             self.assertEqual(result.inputs, set([child_path]))
@@ -215,15 +224,15 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         parent_path = None
         child_path = None
         for p in m1._input_paths:
-            if p.endswith('Parent.webidl'):
+            if p.endswith("Parent.webidl"):
                 parent_path = p
-            elif p.endswith('Child.webidl'):
+            elif p.endswith("Child.webidl"):
                 child_path = p
 
         self.assertIsNotNone(parent_path)
-        parent_content = io.open(parent_path, 'r').read()
+        parent_content = io.open(parent_path, "r").read()
 
-        with MockedOpen({parent_path: parent_content + '\n/* */'}):
+        with MockedOpen({parent_path: parent_content + "\n/* */"}):
             m2 = WebIDLCodegenManager(**args)
             result = m2.generate_build_files()
             self.assertEqual(result.inputs, {child_path, parent_path})
@@ -241,22 +250,22 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         # Hacking imp to accept a MockedFile doesn't appear possible. So for
         # the first iteration we read from a temp file. The second iteration
         # doesn't need to import, so we are fine with a mocked file.
-        fake_path = mozpath.join(OUR_DIR, 'fakemodule.py')
-        with NamedTemporaryFile('wt') as fh:
-            fh.write('# Original content')
+        fake_path = mozpath.join(OUR_DIR, "fakemodule.py")
+        with NamedTemporaryFile("wt") as fh:
+            fh.write("# Original content")
             fh.flush()
-            mod = imp.load_source('mozwebidlcodegen.fakemodule', fh.name)
+            mod = imp.load_source("mozwebidlcodegen.fakemodule", fh.name)
             mod.__file__ = fake_path
 
             args = self._get_manager_args()
             m1 = WebIDLCodegenManager(**args)
-            with MockedOpen({fake_path: '# Original content'}):
+            with MockedOpen({fake_path: "# Original content"}):
                 try:
                     result = m1.generate_build_files()
                     l = len(result.inputs)
 
-                    with io.open(fake_path, 'wt', newline='\n') as fh:
-                        fh.write('# Modified content')
+                    with io.open(fake_path, "wt", newline="\n") as fh:
+                        fh.write("# Modified content")
 
                     m2 = WebIDLCodegenManager(**args)
                     result = m2.generate_build_files()
@@ -265,7 +274,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
                     result = m2.generate_build_files()
                     self.assertEqual(len(result.inputs), 0)
                 finally:
-                    del sys.modules['mozwebidlcodegen.fakemodule']
+                    del sys.modules["mozwebidlcodegen.fakemodule"]
 
     def test_copy_input(self):
         """Ensure a copied .webidl file is handled properly."""
@@ -279,22 +288,22 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         m1.generate_build_files()
 
         old_path = None
-        for p in args['inputs'][0]:
-            if p.endswith('Parent.webidl'):
+        for p in args["inputs"][0]:
+            if p.endswith("Parent.webidl"):
                 old_path = p
                 break
         self.assertIsNotNone(old_path)
 
-        new_path = mozpath.join(args['cache_dir'], 'Parent.webidl')
+        new_path = mozpath.join(args["cache_dir"], "Parent.webidl")
         shutil.copy2(old_path, new_path)
 
-        args['inputs'][0].remove(old_path)
-        args['inputs'][0].add(new_path)
+        args["inputs"][0].remove(old_path)
+        args["inputs"][0].add(new_path)
 
         m2 = WebIDLCodegenManager(**args)
         result = m2.generate_build_files()
         self.assertEqual(len(result.updated), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

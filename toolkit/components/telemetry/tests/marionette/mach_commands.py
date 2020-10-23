@@ -53,7 +53,7 @@ def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
 
     parser.verify_usage(args)
 
-    os.environ['MOZ_IGNORE_NSS_SHUTDOWN_LEAKS'] = '1'
+    os.environ["MOZ_IGNORE_NSS_SHUTDOWN_LEAKS"] = "1"
 
     if not args.logger:
         args.logger = commandline.setup_logging(
@@ -84,13 +84,18 @@ class TelemetryTest(MachCommandBase):
             try:
                 kwargs["binary"] = self.get_binary_path("app")
             except BinaryNotFoundException as e:
-                self.log(logging.ERROR, 'telemetry-tests-client',
-                         {'error': str(e)},
-                         'ERROR: {error}')
-                self.log(logging.INFO, 'telemetry-tests-client',
-                         {'help': e.help()},
-                         '{help}')
+                self.log(
+                    logging.ERROR,
+                    "telemetry-tests-client",
+                    {"error": str(e)},
+                    "ERROR: {error}",
+                )
+                self.log(
+                    logging.INFO, "telemetry-tests-client", {"help": e.help()}, "{help}"
+                )
                 return 1
         if not kwargs.get("server_root"):
-            kwargs["server_root"] = "toolkit/components/telemetry/tests/marionette/harness/www"
+            kwargs[
+                "server_root"
+            ] = "toolkit/components/telemetry/tests/marionette/harness/www"
         return run_telemetry(tests, topsrcdir=self.topsrcdir, **kwargs)

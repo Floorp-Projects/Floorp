@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'content-process-script.js',
-    'content-process.js',
-    'content-process.jsm',
-    'frame.js',
-    'worker.js',
+    "content-process-script.js",
+    "content-process.js",
+    "content-process.jsm",
+    "frame.js",
+    "worker.js",
 )

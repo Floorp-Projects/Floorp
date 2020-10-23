@@ -7,18 +7,16 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-LOCAL_INCLUDES += [
-    '/third_party/msgpack/include'
-]
+LOCAL_INCLUDES += ["/third_party/msgpack/include"]
 
 EXPORTS.mozilla.dom += [
-    'PrioEncoder.h',
+    "PrioEncoder.h",
 ]
 
 UNIFIED_SOURCES += [
-    'PrioEncoder.cpp',
+    "PrioEncoder.cpp",
 ]
 
-TEST_DIRS += ['test/gtest']
+TEST_DIRS += ["test/gtest"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

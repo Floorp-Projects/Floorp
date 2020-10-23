@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'generated',
+    "generated",
 ]
 
 DevToolsModules(
-    'color-db.js',
-    'color.js',
-    'constants.js',
-    'lexer.js',
-    'parsing-utils.js',
-    'properties-db.js',
+    "color-db.js",
+    "color.js",
+    "constants.js",
+    "lexer.js",
+    "parsing-utils.js",
+    "properties-db.js",
 )

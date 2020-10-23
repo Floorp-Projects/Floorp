@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'batching.js',
-    'event-telemetry.js',
-    'prefs.js',
-    'recording.js',
-    'request-blocking.js',
-    'throttling.js',
+    "batching.js",
+    "event-telemetry.js",
+    "prefs.js",
+    "recording.js",
+    "request-blocking.js",
+    "throttling.js",
 )

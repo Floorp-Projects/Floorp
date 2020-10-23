@@ -5,11 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'Fuzzyfox.cpp',
+    "Fuzzyfox.cpp",
 ]
 
-EXPORTS.mozilla += [
-    'Fuzzyfox.h'
-]
+EXPORTS.mozilla += ["Fuzzyfox.h"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

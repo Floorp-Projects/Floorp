@@ -9,7 +9,7 @@ NOT_LEAF = "NotLeaf"
 DYNAMIC_LEAF = "DynamicLeaf"
 
 
-class FrameClass():
+class FrameClass:
     def __init__(self, cls):
         self.cls = cls
 
