@@ -73,26 +73,39 @@ browsertime-tp6:
         - yahoo-news
         - yandex
         - youtube
-    tier: 3
+    tier:
+        by-app:
+            firefox:
+                by-subtest:
+                    amazon: 1
+                    google-mail: 1
+                    google-slides: 1
+                    imgur: 1
+                    tumblr: 1
+                    twitch: 1
+                    twitter: 1
+                    default: 2
+            default: 3
     apps: ['firefox', 'chrome', 'chromium']
     variants:
         by-app:
             firefox: ['fission']
             default: []
     pageload: cold
+    fission-tier: 2
     fission-run-on-projects: ["mozilla-central"]
     run-on-projects:
         by-app:
             firefox:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
-                    linux.*shippable[^-qr].*: ["mozilla-central"]
+                    linux.*shippable.*: ["autoland", "mozilla-central"]
                     default: []
             default: []
     limit-platforms:
         by-app:
             chrome:
-                - .*shippable[^-qr].*
+                - linux.*shippable[^-qr].*
             chromium:
                 - .*shippable[^-qr].*
             default: []
