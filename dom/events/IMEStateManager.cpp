@@ -1585,13 +1585,13 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
            "BrowserParent::GetFocused()=0x%p, sFocusedIMEBrowserParent=0x%p, "
            "aBrowserParent == BrowserParent::GetFocused()=%s, "
            "aBrowserParent == sFocusedIMEBrowserParent=%s, "
-           "CanSendNotificationToTheMainProcess()=%s",
+           "CanSendNotificationToWidget()=%s",
            ToChar(aNotification.mMessage), aWidget, aBrowserParent,
            sFocusedIMEWidget, BrowserParent::GetFocused(),
            sFocusedIMEBrowserParent.get(),
            GetBoolName(aBrowserParent == BrowserParent::GetFocused()),
            GetBoolName(aBrowserParent == sFocusedIMEBrowserParent),
-           GetBoolName(CanSendNotificationToTheMainProcess())));
+           GetBoolName(CanSendNotificationToWidget())));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1601,7 +1601,7 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
 
   switch (aNotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS: {
-      MOZ_ASSERT(CanSendNotificationToTheMainProcess());
+      MOZ_ASSERT(CanSendNotificationToWidget());
 
       // If focus notification comes from a remote browser which already lost
       // focus, we shouldn't accept the focus notification.  Then, following
@@ -1670,7 +1670,7 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
       nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
       sFocusedIMEWidget = nullptr;
       sFocusedIMEBrowserParent = nullptr;
-      return CanSendNotificationToTheMainProcess()
+      return CanSendNotificationToWidget()
                  ? focusedIMEWidget->NotifyIME(
                        IMENotification(NOTIFY_IME_OF_BLUR))
                  : NS_OK;
@@ -1701,7 +1701,7 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
              "is ignored because it's not for current focused IME widget"));
         return NS_OK;
       }
-      if (!CanSendNotificationToTheMainProcess()) {
+      if (!CanSendNotificationToWidget()) {
         return NS_OK;
       }
       nsCOMPtr<nsIWidget> widget(aWidget);
