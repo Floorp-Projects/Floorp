@@ -1653,8 +1653,10 @@ nsSHistory::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
 }
 
 nsresult nsSHistory::GotoIndex(int32_t aIndex,
-                               nsTArray<LoadEntryResult>& aLoadResults) {
-  return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResults);
+                               nsTArray<LoadEntryResult>& aLoadResults,
+                               bool aSameEpoch) {
+  return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResults,
+                   aSameEpoch);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1682,28 +1684,59 @@ nsresult nsSHistory::LoadNextPossibleEntry(
 
 nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
                                uint32_t aHistCmd,
-                               nsTArray<LoadEntryResult>& aLoadResults) {
+                               nsTArray<LoadEntryResult>& aLoadResults,
+                               bool aSameEpoch) {
+  MOZ_LOG(gSHistoryLog, LogLevel::Debug,
+          ("LoadEntry(%d, 0x%lx, %u)", aIndex, aLoadType, aHistCmd));
   if (!mRootBC) {
     return NS_ERROR_FAILURE;
   }
 
   if (aIndex < 0 || aIndex >= Length()) {
+    MOZ_LOG(gSHistoryLog, LogLevel::Debug, ("Index out of range"));
     // The index is out of range
     return NS_ERROR_FAILURE;
   }
 
   // This is a normal local history navigation.
-  // Keep note of requested history index in mRequestedIndex.
-  mRequestedIndex = aIndex;
 
   nsCOMPtr<nsISHEntry> prevEntry;
   nsCOMPtr<nsISHEntry> nextEntry;
   GetEntryAtIndex(mIndex, getter_AddRefs(prevEntry));
-  GetEntryAtIndex(mRequestedIndex, getter_AddRefs(nextEntry));
+  GetEntryAtIndex(aIndex, getter_AddRefs(nextEntry));
   if (!nextEntry || !prevEntry) {
     mRequestedIndex = -1;
     return NS_ERROR_FAILURE;
   }
+
+  if (mozilla::SessionHistoryInParent()) {
+    if (aHistCmd == HIST_CMD_GOTOINDEX) {
+      // https://html.spec.whatwg.org/#history-traversal:
+      // To traverse the history
+      // "If entry has a different Document object than the current entry, then
+      // run the following substeps: Remove any tasks queued by the history
+      // traversal task source..."
+      //
+      // aSameEpoch is true only if the navigations would have been
+      // generated in the same spin of the event loop (i.e. history.go(-2);
+      // history.go(-1)) and from the same content process.
+      if (aSameEpoch) {
+        bool same_doc = false;
+        prevEntry->SharesDocumentWith(nextEntry, &same_doc);
+        if (!same_doc) {
+          MOZ_LOG(
+              gSHistoryLog, LogLevel::Debug,
+              ("Aborting GotoIndex %d - same epoch and not same doc", aIndex));
+          // Ignore this load. Before SessionHistoryInParent, this would
+          // have been dropped in InternalLoad after we filter out SameDoc
+          // loads.
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+  // Keep note of requested history index in mRequestedIndex; after all bailouts
+  mRequestedIndex = aIndex;
 
   // Remember that this entry is getting loaded at this point in the sequence
 
