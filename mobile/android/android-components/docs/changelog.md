@@ -14,6 +14,10 @@ permalink: /changelog/
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Exposes GeckoView `CompositorController#ClearColor` as Setting
 
+* **browser-engine-system**
+  * ⚠️ **This is a breaking change**: Renames `blackListFile` to `blocklistFile`.
+  * ⚠️ **This is a breaking change**: Renames `whiteListFile` to `safelistFile`.
+
 * **concept-engine**
   * ⚠️ Removed `TrackingCategory`.`SHIMMED`, for user usability reasons, we are going to mark SHIMMED categories as blocked, to follow the same pattern as Firefox desktop for more information see [#8769](https://github.com/mozilla-mobile/android-components/issues/8769)
 
@@ -2913,7 +2917,7 @@ permalink: /changelog/
   * Added custom notification icon for `FetchDownloadManager`.
 
 * **feature-app-links**
-  * Added whitelist for schemes of URLs to open with an external app. This defaults to `mailto`, `market`, `sms` and `tel`.
+  * Added safelist for schemes of URLs to open with an external app. This defaults to `mailto`, `market`, `sms` and `tel`.
 
 * **feature-accounts**
   * ⚠️ **This is a breaking change**: Public API for interacting with `FxaAccountManager` and sync changes

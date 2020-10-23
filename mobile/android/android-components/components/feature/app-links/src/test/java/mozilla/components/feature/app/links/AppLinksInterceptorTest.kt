@@ -161,21 +161,21 @@ class AppLinksInterceptorTest {
     }
 
     @Test
-    fun `black listed schemes request not intercepted when triggered by user clicking on a link`() {
+    fun `block listed schemes request not intercepted when triggered by user clicking on a link`() {
         val engineSession: EngineSession = mock()
-        val blacklistedScheme = "blacklisted"
+        val blocklistedScheme = "blocklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = true,
-            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { true },
             useCases = mockUseCases
         )
 
-        val blackListedUrl = "$blacklistedScheme://example.com"
-        val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl, null)
-        whenever(mockGetRedirect.invoke(blackListedUrl)).thenReturn(blacklistedRedirect)
-        var response = feature.onLoadRequest(engineSession, blackListedUrl, null, true, false, false, false, false)
+        val blocklistedUrl = "$blocklistedScheme://example.com"
+        val blocklistedRedirect = AppLinkRedirect(Intent.parseUri(blocklistedUrl, 0), blocklistedUrl, null)
+        whenever(mockGetRedirect.invoke(blocklistedUrl)).thenReturn(blocklistedRedirect)
+        var response = feature.onLoadRequest(engineSession, blocklistedUrl, null, true, false, false, false, false)
         assertEquals(null, response)
     }
 
@@ -241,12 +241,12 @@ class AppLinksInterceptorTest {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"
         val notSupportedScheme = "not_supported"
-        val blacklistedScheme = "blacklisted"
+        val blocklistedScheme = "blocklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = false,
             engineSupportedSchemes = setOf(supportedScheme),
-            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
             useCases = mockUseCases
         )
@@ -259,7 +259,7 @@ class AppLinksInterceptorTest {
     }
 
     @Test
-    fun `blacklisted schemes request always ignored even if the engine does not support it`() {
+    fun `blocklisted schemes request always ignored even if the engine does not support it`() {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"
         val notSupportedScheme = "not_supported"
@@ -284,12 +284,12 @@ class AppLinksInterceptorTest {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"
         val notSupportedScheme = "not_supported"
-        val blacklistedScheme = "blacklisted"
+        val blocklistedScheme = "blocklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = false,
             engineSupportedSchemes = setOf(supportedScheme),
-            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { true },
             useCases = mockUseCases
         )
@@ -306,12 +306,12 @@ class AppLinksInterceptorTest {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"
         val notSupportedScheme = "not_supported"
-        val blacklistedScheme = "blacklisted"
+        val blocklistedScheme = "blocklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = true,
             engineSupportedSchemes = setOf(supportedScheme),
-            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
             useCases = mockUseCases
         )
@@ -329,12 +329,12 @@ class AppLinksInterceptorTest {
         val engineSession: EngineSession = mock()
         val supportedScheme = "supported"
         val notSupportedScheme = "not_supported"
-        val blacklistedScheme = "blacklisted"
+        val blocklistedScheme = "blocklisted"
         val feature = AppLinksInterceptor(
             context = mockContext,
             interceptLinkClicks = true,
             engineSupportedSchemes = setOf(supportedScheme),
-            alwaysDeniedSchemes = setOf(blacklistedScheme),
+            alwaysDeniedSchemes = setOf(blocklistedScheme),
             launchInApp = { false },
             useCases = mockUseCases
         )

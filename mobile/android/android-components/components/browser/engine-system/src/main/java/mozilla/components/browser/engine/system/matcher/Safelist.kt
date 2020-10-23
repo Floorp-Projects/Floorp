@@ -10,23 +10,23 @@ import android.util.JsonReader
 import java.util.ArrayList
 
 /**
- * Stores white-listed URIs for individual hosts.
+ * Stores safe-listed URIs for individual hosts.
  */
-internal class WhiteList {
-    private val rootNode: WhiteListTrie = WhiteListTrie.createRootNode()
+internal class Safelist {
+    private val rootNode: SafelistTrie = SafelistTrie.createRootNode()
 
     /**
-     * Adds the provided whitelist for the provided host.
+     * Adds the provided safelist for the provided host.
      *
      * @param host the reversed host URI ("foo.com".reverse())
-     * @param whitelist a [Trie] representing the white-listed URIs
+     * @param safelist a [Trie] representing the safe-listed URIs
      */
-    fun put(host: ReversibleString, whitelist: Trie) {
-        rootNode.putWhiteList(host, whitelist)
+    fun put(host: ReversibleString, safelist: Trie) {
+        rootNode.putSafelist(host, safelist)
     }
 
     /**
-     * Checks if the given resource is white-listed for the given host.
+     * Checks if the given resource is safe-listed for the given host.
      *
      * @param host the host URI as string ("foo.com")
      * @param host the resources URI as string ("bar.com")
@@ -36,7 +36,7 @@ internal class WhiteList {
     }
 
     /**
-     * Checks if the given resource is white-listed for the given host.
+     * Checks if the given resource is safe-listed for the given host.
      *
      * @param hostUri the host URI
      * @param resource the resources URI
@@ -53,9 +53,9 @@ internal class WhiteList {
     }
 
     private fun contains(site: ReversibleString, resource: ReversibleString, revHostTrie: Trie): Boolean {
-        val next = revHostTrie.children.get(site.charAt(0).toInt()) as? WhiteListTrie ?: return false
+        val next = revHostTrie.children.get(site.charAt(0).toInt()) as? SafelistTrie ?: return false
 
-        if (next.whitelist?.findNode(resource) != null) {
+        if (next.safelist?.findNode(resource) != null) {
             return true
         }
 
@@ -83,21 +83,21 @@ internal class WhiteList {
 
     companion object {
         /**
-         * Parses json for white-listed URIs.
+         * Parses json for safe-listed URIs.
          *
          * @param reader a JsonReader
-         * @return the white list.
+         * @return the safe list.
          */
         @Suppress("NestedBlockDepth")
-        fun fromJson(reader: JsonReader): WhiteList {
-            val whiteList = WhiteList()
+        fun fromJson(reader: JsonReader): Safelist {
+            val safelist = Safelist()
             reader.beginObject()
 
             while (reader.hasNext()) {
                 reader.skipValue()
                 reader.beginObject()
 
-                val whitelistTrie = Trie.createRootNode()
+                val safelistTrie = Trie.createRootNode()
                 val propertyList = ArrayList<String>()
                 while (reader.hasNext()) {
                     val itemName = reader.nextName()
@@ -110,66 +110,66 @@ internal class WhiteList {
                     } else if (itemName == "resources") {
                         reader.beginArray()
                         while (reader.hasNext()) {
-                            whitelistTrie.put(reader.nextString().reverse())
+                            safelistTrie.put(reader.nextString().reverse())
                         }
                         reader.endArray()
                     }
                 }
-                propertyList.forEach { whiteList.put(it.reverse(), whitelistTrie) }
+                propertyList.forEach { safelist.put(it.reverse(), safelistTrie) }
                 reader.endObject()
             }
             reader.endObject()
-            return whiteList
+            return safelist
         }
     }
 }
 
 /**
- * A [Trie] implementation which stores a white list (another [Trie]).
+ * A [Trie] implementation which stores a safe list (another [Trie]).
  */
-internal class WhiteListTrie private constructor(character: Char, parent: WhiteListTrie?) : Trie(character, parent) {
-    var whitelist: Trie? = null
+internal class SafelistTrie private constructor(character: Char, parent: SafelistTrie?) : Trie(character, parent) {
+    var safelist: Trie? = null
 
     override fun createNode(character: Char, parent: Trie): Trie {
-        return WhiteListTrie(character, parent as WhiteListTrie)
+        return SafelistTrie(character, parent as SafelistTrie)
     }
 
     /**
      * Adds new nodes (recursively) for all chars in the provided string and stores
-     * the provide whitelist Trie.
+     * the provide safelist Trie.
      *
      * @param string the string for which a node should be added.
-     * @param whitelist the whitelist to store.
+     * @param safelist the safelist to store.
      * @return the newly created node or the existing one.
      */
-    fun putWhiteList(string: String, whitelist: Trie) {
-        this.putWhiteList(string.reversible(), whitelist)
+    fun putSafelist(string: String, safelist: Trie) {
+        this.putSafelist(string.reversible(), safelist)
     }
 
     /**
      * Adds new nodes (recursively) for all chars in the provided string and stores
-     * the provide whitelist Trie.
+     * the provide safelist Trie.
      *
      * @param string the string for which a node should be added.
-     * @param whitelist the whitelist to store.
+     * @param safelist the safelist to store.
      * @return the newly created node or the existing one.
      */
-    fun putWhiteList(string: ReversibleString, whitelist: Trie) {
-        val node = super.put(string) as WhiteListTrie
+    fun putSafelist(string: ReversibleString, safelist: Trie) {
+        val node = super.put(string) as SafelistTrie
 
-        if (node.whitelist != null) {
-            throw IllegalStateException("Whitelist already set for node $string")
+        if (node.safelist != null) {
+            throw IllegalStateException("Safelist already set for node $string")
         }
 
-        node.whitelist = whitelist
+        node.safelist = safelist
     }
 
     companion object {
         /**
          * Creates a new root node.
          */
-        fun createRootNode(): WhiteListTrie {
-            return WhiteListTrie(Character.MIN_VALUE, null)
+        fun createRootNode(): SafelistTrie {
+            return SafelistTrie(Character.MIN_VALUE, null)
         }
     }
 }

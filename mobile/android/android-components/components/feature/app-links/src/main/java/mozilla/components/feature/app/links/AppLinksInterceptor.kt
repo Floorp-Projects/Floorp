@@ -79,9 +79,9 @@ class AppLinksInterceptor(
             // or if we're already on the site then let's not go to an external app.
             ((!hasUserGesture && !isAllowedRedirect && !isDirectNavigation) ||
                 isSameDomain(lastUri, uri)) && engineSupportsScheme -> true
-            // If scheme not in whitelist then follow user preference
+            // If scheme not in safelist then follow user preference
             (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
-            // Never go to an external app when scheme is in blacklist
+            // Never go to an external app when scheme is in blocklist
             alwaysDeniedSchemes.contains(uriScheme) -> true
             else -> false
         }

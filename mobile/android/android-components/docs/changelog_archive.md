@@ -509,7 +509,7 @@ permalink: /changelog/archive
   * `VisitType` is now part of `HistoryTrackingDelegate`'s `onVisited` method signature
 
 * **feature-session**
-  * `HistoryDelegate` now implements a blacklist of URI schemas.
+  * `HistoryDelegate` now implements a blocklist of URI schemas.
 
 * **browser-engine-gecko-nightly**
   * Implement `allowAutoplayMedia` in terms of `autoplayDefault`.

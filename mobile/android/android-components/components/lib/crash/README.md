@@ -87,7 +87,7 @@ SentryService(
 
 [Socorro](https://wiki.mozilla.org/Socorro) is the name for the [Mozilla Crash Stats](https://crash-stats.mozilla.org/) project.
 
-⚠️ Note: Socorro filters crashes by "app name". New app names need to be whitelisted for the server to accept the crash. [File a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro) if you would like to get your app added to the whitelist.
+⚠️ Note: Socorro filters crashes by "app name". New app names need to be safelisted for the server to accept the crash. [File a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro) if you would like to get your app added to the safelist.
 
 Add a `MozillaSocorroService` instance to your `CrashReporter` in order to upload crashes to Socorro:
 

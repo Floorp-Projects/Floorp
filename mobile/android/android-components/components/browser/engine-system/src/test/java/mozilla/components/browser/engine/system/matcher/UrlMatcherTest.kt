@@ -184,7 +184,7 @@ class UrlMatcherTest {
     }
     """
 
-    val WHITE_LIST = """{
+    val SAFE_LIST = """{
       "SocialTest1": {
         "properties": [
           "www.socialtest1.com"
@@ -198,7 +198,7 @@ class UrlMatcherTest {
     fun createMatcher() {
         val matcher = UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                StringReader(WHITE_LIST))
+                StringReader(SAFE_LIST))
 
         // Check returns correct category
         val (matchesAds, categoryAds) = matcher.matches("http://adtest1.com", "http://www.adtest1.com")
@@ -235,7 +235,7 @@ class UrlMatcherTest {
         assertTrue(matchesAnalytics)
         assertEquals(categoryAnalytics, ANALYTICS)
 
-        // Check that white list worked
+        // Check that safe list worked
         assertTrue(matcher.matches("http://socialtest1.com", "http://www.socialtest1.com").first)
         assertFalse(matcher.matches("http://socialtest1.de", "http://www.socialtest1.com").first)
 
@@ -259,7 +259,7 @@ class UrlMatcherTest {
     fun setCategoriesEnabled() {
         val matcher = spy(UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                StringReader(WHITE_LIST),
+                StringReader(SAFE_LIST),
                 setOf("Advertising", "Analytics"))
         )
 
@@ -276,7 +276,7 @@ class UrlMatcherTest {
     fun webFontsNotBlockedByDefault() {
         val matcher = UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
-                StringReader(WHITE_LIST),
+                StringReader(SAFE_LIST),
                 setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT))
 
         assertFalse(

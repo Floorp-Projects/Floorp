@@ -828,8 +828,8 @@ class SystemEngineView @JvmOverloads constructor(
             URL_MATCHER?.setCategoriesEnabled(categories) ?: run {
                 URL_MATCHER = UrlMatcher.createMatcher(
                         resources,
-                        R.raw.domain_blacklist,
-                        R.raw.domain_whitelist,
+                        R.raw.domain_blocklist,
+                        R.raw.domain_safelist,
                         categories)
                 }
 

@@ -62,9 +62,9 @@ private const val FILE_REGEX = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
  *
  * @param applicationContext The application [Context].
  * @param appName A human-readable app name. This name is used on crash-stats.mozilla.com to filter crashes by app.
- *                The name needs to be whitelisted for the server to accept the crash.
+ *                The name needs to be safelisted for the server to accept the crash.
  *                [File a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Socorro) if you would like to get your
- *                app added to the whitelist.
+ *                app added to the safelist.
  * @param appId The application ID assigned by Socorro server.
  * @param version The engine version.
  * @param buildId The engine build ID.
