@@ -160,14 +160,15 @@ function test_close_client_while_sending_requests() {
     type: "hello",
   });
 
-  const expectReply = defer();
-  gClient.expectReply("root", function(response) {
-    Assert.equal(response.error, "connectionClosed");
-    Assert.equal(
-      response.message,
-      "server side packet can't be received as the connection just closed."
-    );
-    expectReply.resolve();
+  const expectReply = new Promise(resolve => {
+    gClient.expectReply("root", function(response) {
+      Assert.equal(response.error, "connectionClosed");
+      Assert.equal(
+        response.message,
+        "server side packet can't be received as the connection just closed."
+      );
+      resolve();
+    });
   });
 
   gClient.close().then(() => {
@@ -207,7 +208,7 @@ function test_close_client_while_sending_requests() {
           );
         }
       )
-      .then(() => expectReply.promise)
+      .then(() => expectReply)
       .then(run_next_test);
   });
 }

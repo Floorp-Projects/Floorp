@@ -53,7 +53,6 @@
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
-const defer = require("devtools/shared/defer");
 
 const { inspectorSpec } = require("devtools/shared/specs/inspector");
 
@@ -130,28 +129,27 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return this._walkerPromise;
     }
 
-    const deferred = defer();
-    this._walkerPromise = deferred.promise;
+    this._walkerPromise = new Promise(resolve => {
+      const domReady = () => {
+        const targetActor = this.targetActor;
+        this.walker = WalkerActor(this.conn, targetActor, options);
+        this.manage(this.walker);
+        this.walker.once("destroyed", () => {
+          this._walkerPromise = null;
+          this._pageStylePromise = null;
+        });
+        resolve(this.walker);
+      };
 
-    const domReady = () => {
-      const targetActor = this.targetActor;
-      this.walker = WalkerActor(this.conn, targetActor, options);
-      this.manage(this.walker);
-      this.walker.once("destroyed", () => {
-        this._walkerPromise = null;
-        this._pageStylePromise = null;
-      });
-      deferred.resolve(this.walker);
-    };
-
-    if (this.window.document.readyState === "loading") {
-      this.window.addEventListener("DOMContentLoaded", domReady, {
-        capture: true,
-        once: true,
-      });
-    } else {
-      domReady();
-    }
+      if (this.window.document.readyState === "loading") {
+        this.window.addEventListener("DOMContentLoaded", domReady, {
+          capture: true,
+          once: true,
+        });
+      } else {
+        domReady();
+      }
+    });
 
     return this._walkerPromise;
   },

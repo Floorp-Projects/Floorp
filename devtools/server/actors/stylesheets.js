@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci, Cu } = require("chrome");
-const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { fetch } = require("devtools/shared/DevToolsUtils");
@@ -386,18 +385,16 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return this._cssRules;
     }
 
-    const deferred = defer();
-
-    const onSheetLoaded = event => {
-      this.ownerNode.removeEventListener("load", onSheetLoaded);
-
-      deferred.resolve(this.rawSheet.cssRules);
-    };
-
-    this.ownerNode.addEventListener("load", onSheetLoaded);
-
     // cache so we don't add many listeners if this is called multiple times.
-    this._cssRules = deferred.promise;
+    this._cssRules = new Promise(resolve => {
+      const onSheetLoaded = event => {
+        this.ownerNode.removeEventListener("load", onSheetLoaded);
+
+        resolve(this.rawSheet.cssRules);
+      };
+
+      this.ownerNode.addEventListener("load", onSheetLoaded);
+    });
 
     return this._cssRules;
   },
