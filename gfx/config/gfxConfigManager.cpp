@@ -347,12 +347,14 @@ void gfxConfigManager::ConfigureWebRender() {
                                  "FEATURE_FAILURE_DCOMP_PREF_DISABLED"_ns);
   }
 
+#ifndef NIGHTLY_BUILD
   if (!mIsWin10OrLater) {
     // XXX relax win version to windows 8.
     mFeatureWrDComp->Disable(FeatureStatus::Unavailable,
                              "Requires Windows 10 or later",
                              "FEATURE_FAILURE_DCOMP_NOT_WIN10"_ns);
   }
+#endif
 
   mFeatureWrDComp->MaybeSetFailed(
       mFeatureWr->IsEnabled(), FeatureStatus::Unavailable, "Requires WebRender",
