@@ -3267,7 +3267,6 @@ class Frame {
 
   uint8_t* rawCaller() const { return callerFP_; }
   TlsData* tls() const { return tls_; }
-  Instance* instance() const { return tls()->instance; }
 
   Frame* wasmCaller() const {
     MOZ_ASSERT(!callerIsExitOrJitEntryFP());
@@ -3427,7 +3426,7 @@ class DebugFrame {
   static DebugFrame* from(Frame* fp);
   Frame& frame() { return frame_; }
   uint32_t funcIndex() const { return funcIndex_; }
-  Instance* instance() const { return frame_.instance(); }
+  Instance* instance() const;
   GlobalObject* global() const;
   bool hasGlobal(const GlobalObject* global) const;
   JSObject* environmentChain() const;
