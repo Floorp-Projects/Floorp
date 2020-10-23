@@ -16072,14 +16072,9 @@ nsresult FactoryOp::QuotaManagerOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::QuotaManagerPending);
 
-  if (NS_WARN_IF(!QuotaManager::Get())) {
-    return NS_ERROR_FAILURE;
-  }
+  IDB_TRY(OkIf(QuotaManager::Get()), NS_ERROR_FAILURE);
 
-  nsresult rv = OpenDirectory();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(OpenDirectory());
 
   return NS_OK;
 }
