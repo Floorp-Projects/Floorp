@@ -220,9 +220,7 @@ class ScriptInfo(defaultdict):
                 for plat in "default", "linux", "mac", "win":
                     if plat not in value:
                         continue
-                    options += (
-                        f"{plat.capitalize()} options:\n\n{_render(value[plat])}\n\n"
-                    )
+                    options += f":{plat.capitalize()} options:\n\n::\n\n{_render(value[plat])}\n"
             else:
                 d[field] = _render(value)
 
@@ -230,10 +228,11 @@ class ScriptInfo(defaultdict):
         info = _INFO % d
         if "tags" in self:
             info += f":tags: {','.join(self['tags'])}\n"
+        info += options
         info += f"\n**{self['description']}**\n"
         if "longDescription" in self:
             info += f"\n{self['longDescription']}\n"
-        info += options
+
         return info
 
     def __missing__(self, key):
