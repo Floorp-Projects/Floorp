@@ -27,28 +27,6 @@ void InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor) {
   actor->Init();
 }
 
-PServiceWorkerRegistrationChild* AllocServiceWorkerRegistrationChild() {
-  MOZ_CRASH("should not be called");
-}
-
-bool DeallocServiceWorkerRegistrationChild(
-    PServiceWorkerRegistrationChild* aActor) {
-  auto actor = static_cast<ServiceWorkerRegistrationChild*>(aActor);
-  delete actor;
-  return true;
-}
-
-PServiceWorkerRegistrationParent* AllocServiceWorkerRegistrationParent() {
-  return new ServiceWorkerRegistrationParent();
-}
-
-bool DeallocServiceWorkerRegistrationParent(
-    PServiceWorkerRegistrationParent* aActor) {
-  auto actor = static_cast<ServiceWorkerRegistrationParent*>(aActor);
-  delete actor;
-  return true;
-}
-
 void InitServiceWorkerRegistrationParent(
     PServiceWorkerRegistrationParent* aActor,
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {

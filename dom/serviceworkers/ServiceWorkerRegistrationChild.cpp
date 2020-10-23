@@ -39,8 +39,9 @@ IPCResult ServiceWorkerRegistrationChild::RecvFireUpdateFound() {
 }
 
 // static
-ServiceWorkerRegistrationChild* ServiceWorkerRegistrationChild::Create() {
-  ServiceWorkerRegistrationChild* actor = new ServiceWorkerRegistrationChild();
+RefPtr<ServiceWorkerRegistrationChild>
+ServiceWorkerRegistrationChild::Create() {
+  RefPtr actor = new ServiceWorkerRegistrationChild;
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -54,7 +55,6 @@ ServiceWorkerRegistrationChild* ServiceWorkerRegistrationChild::Create() {
         [helper] { helper->Actor()->MaybeStartTeardown(); });
 
     if (NS_WARN_IF(!actor->mIPCWorkerRef)) {
-      delete actor;
       return nullptr;
     }
   }
