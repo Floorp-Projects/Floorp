@@ -4027,11 +4027,11 @@ const js::SrcNote* js::GetSrcNote(JSContext* cx, JSScript* script,
   return GetSrcNote(cx->caches().gsnCache, script, pc);
 }
 
-unsigned js::PCToLineNumber(unsigned startLine, unsigned startCol,
-                            SrcNote* notes, jsbytecode* code, jsbytecode* pc,
+unsigned js::PCToLineNumber(unsigned startLine, SrcNote* notes,
+                            jsbytecode* code, jsbytecode* pc,
                             unsigned* columnp) {
   unsigned lineno = startLine;
-  unsigned column = startCol;
+  unsigned column = 0;
 
   /*
    * Walk through source notes accumulating their deltas, keeping track of
@@ -4049,7 +4049,7 @@ unsigned js::PCToLineNumber(unsigned startLine, unsigned startCol,
 
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
-      lineno = SrcNote::SetLine::getLine(sn, startLine);
+      lineno = SrcNote::SetLine::getLine(sn);
       column = 0;
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
@@ -4075,8 +4075,8 @@ unsigned js::PCToLineNumber(JSScript* script, jsbytecode* pc,
     return 0;
   }
 
-  return PCToLineNumber(script->lineno(), script->column(), script->notes(),
-                        script->code(), pc, columnp);
+  return PCToLineNumber(script->lineno(), script->notes(), script->code(), pc,
+                        columnp);
 }
 
 jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
@@ -4103,7 +4103,7 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
     offset += sn->delta();
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
-      lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+      lineno = SrcNote::SetLine::getLine(sn);
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
     }
@@ -4122,7 +4122,7 @@ JS_FRIEND_API unsigned js::GetScriptLineExtent(JSScript* script) {
     auto sn = *iter;
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
-      lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+      lineno = SrcNote::SetLine::getLine(sn);
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
     }

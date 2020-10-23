@@ -178,7 +178,7 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
         sn = *iter;
         SrcNoteType type = sn->type();
         if (type == SrcNoteType::SetLine) {
-          lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+          lineno = SrcNote::SetLine::getLine(sn);
         } else if (type == SrcNoteType::NewLine) {
           lineno++;
         }
