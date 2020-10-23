@@ -51,7 +51,7 @@ def configure_mach(config, job, taskdesc):
     worker = job['worker']
 
     additional_prefix = []
-    if job['worker-type'].endswith('1014'):
+    if worker['os'] == 'macosx':
         additional_prefix = [
             'LC_ALL=en_US.UTF-8',
             'LANG=en_US.UTF-8'
@@ -62,10 +62,7 @@ def configure_mach(config, job, taskdesc):
         del run['python-version']
 
         if worker['os'] == 'macosx' and python == 3:
-            # OSX hosts can't seem to find python 3 on their own
-            python = '/tools/python37/bin/python3.7'
-            if job['worker-type'].endswith('1014'):
-                python = '/usr/local/bin/python3'
+            python = '/usr/local/bin/python3'
 
         python = str(python)
         try:
