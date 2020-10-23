@@ -691,6 +691,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       CASES_FOR_lseek:
         return Allow();
 
+      CASES_FOR_getdents:
+        return Allow();
+
       CASES_FOR_ftruncate:
       case __NR_fallocate:
         return mMayCreateShmem ? Allow() : InvalidSyscall();
@@ -1226,7 +1229,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       CASES_FOR_select:
         return Allow();
 
-      CASES_FOR_getdents:
       case __NR_writev:
 #ifdef DESKTOP
       case __NR_pwrite64:
