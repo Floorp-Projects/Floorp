@@ -88,7 +88,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
   bool toFile;
   settings->GetPrintToFile(&toFile);
 
-  NSPrintInfo* printInfo = settings->CreatePrintInfo();
+  NSPrintInfo* printInfo = settings->CreateOrCopyPrintInfo();
   if (!printInfo) {
     return NS_ERROR_FAILURE;
   }

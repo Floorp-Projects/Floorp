@@ -55,6 +55,11 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs) {
   mDestination = rhs.mDestination;
   mDisposition = rhs.mDisposition;
 
+  // We don't copy mSystemPrintInfo here, so any copied printSettings will start out
+  // without a wrapped printInfo, just using our internal settings. The system
+  // printInfo is used *only* by the nsPrintSettingsX to which it was originally
+  // passed (when the user ran a system print UI dialog).
+
   return *this;
 }
 
@@ -88,7 +93,14 @@ nsresult nsPrintSettingsX::ReadPageFormatFromPrefs() {
 nsresult nsPrintSettingsX::WritePageFormatToPrefs() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSPrintInfo* printInfo = CreatePrintInfo();
+  // XXX See jwatt's comment https://phabricator.services.mozilla.com/D94026#inline-534089:
+  // I feel like we should make WritePageFormatToPrefs a no-op if mSystemPrintInfo isn't set,
+  // but I'm not sure. We'll be saving the other settings to prefs, after all.
+  // But then I guess we have no way to know whether we should call ReadPageFormatFromPrefs or not
+  // in nsPrintSettingsServiceX::ReadPrefs, so I guess we have to set it just to avoid setting that
+  // read reading a stale PMPageFormat.
+
+  NSPrintInfo* printInfo = CreateOrCopyPrintInfo();
   if (NS_WARN_IF(!printInfo)) {
     return NS_ERROR_FAILURE;
   }
@@ -133,7 +145,7 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings* aPS) {
 
 void nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPageFormat) {
   // Get a printInfo based on our current properties.
-  NSPrintInfo* printInfo = CreatePrintInfo();
+  NSPrintInfo* printInfo = CreateOrCopyPrintInfo();
   if (NS_WARN_IF(!printInfo)) {
     return;
   }
@@ -146,8 +158,17 @@ void nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPageFormat) {
   [printInfo release];
 }
 
-NSPrintInfo* nsPrintSettingsX::CreatePrintInfo(bool aWithScaling) {
+NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  // If we have a printInfo that came from the system print UI, use it so that
+  // any printer-specific settings we don't know about will still be used.
+  if (mSystemPrintInfo) {
+    NSPrintInfo* sysPrintInfo = [mSystemPrintInfo copy];
+    // Any required scaling will be done by Gecko, so we don't want it here.
+    [sysPrintInfo setScalingFactor:1.0f];
+    return sysPrintInfo;
+  }
 
   // Note that the app shared `sharedPrintInfo` object is special!  The system
   // print dialog and print settings dialog update it with the values chosen
@@ -273,11 +294,29 @@ void nsPrintSettingsX::SetPageFormatFromPrintInfo(const NSPrintInfo* aPrintInfo)
   SetIsInitializedFromPrinter(true);
 }
 
-void nsPrintSettingsX::SetFromPrintInfo(const NSPrintInfo* aPrintInfo) {
+void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrintInfo) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Set page-size/margins. This also ensures the initedFromPrinter flag is set.
   SetPageFormatFromPrintInfo(aPrintInfo);
+
+  if (aAdoptPrintInfo) {
+    // Keep a reference to the printInfo; it may have settings that we don't know how to handle
+    // otherwise.
+    if (mSystemPrintInfo != aPrintInfo) {
+      if (mSystemPrintInfo) {
+        [mSystemPrintInfo release];
+      }
+      mSystemPrintInfo = aPrintInfo;
+      [mSystemPrintInfo retain];
+    }
+  } else {
+    // Clear any stored printInfo.
+    if (mSystemPrintInfo) {
+      [mSystemPrintInfo release];
+      mSystemPrintInfo = nullptr;
+    }
+  }
 
   nsCocoaUtils::GetStringForNSString([[aPrintInfo printer] name], mPrinter);
 
