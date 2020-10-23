@@ -48,9 +48,9 @@ static LazyLogModule sDeviceContextSpecXLog("DeviceContextSpecX");
 // nsDeviceContentSpecX
 
 nsDeviceContextSpecX::nsDeviceContextSpecX()
-    : mPrintSession(NULL),
-      mPageFormat(kPMNoPageFormat),
-      mPrintSettings(kPMNoPrintSettings)
+    : mPrintSession(nullptr),
+      mPageFormat(nullptr),
+      mPrintSettings(nullptr)
 #ifdef MOZ_ENABLE_SKIA_PDF
       ,
       mPrintViaSkPDF(false)
@@ -61,7 +61,15 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 nsDeviceContextSpecX::~nsDeviceContextSpecX() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mPrintSession) ::PMRelease(mPrintSession);
+  if (mPrintSession) {
+    ::PMRelease(mPrintSession);
+  }
+  if (mPageFormat) {
+    ::PMRelease(mPageFormat);
+  }
+  if (mPrintSettings) {
+    ::PMRelease(mPrintSettings);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -73,26 +81,25 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   RefPtr<nsPrintSettingsX> settings(do_QueryObject(aPS));
-  if (!settings) return NS_ERROR_NO_INTERFACE;
+  if (!settings) {
+    return NS_ERROR_NO_INTERFACE;
+  }
 
   bool toFile;
   settings->GetPrintToFile(&toFile);
 
-  if (toFile) {
-    settings->SetDispositionSaveToFile();
+  NSPrintInfo* printInfo = settings->CreatePrintInfo();
+  if (!printInfo) {
+    return NS_ERROR_FAILURE;
   }
-
-  bool toPrinter = !toFile && !aIsPrintPreview;
-  if (!toPrinter) {
-    double width, height;
-    settings->GetFilePageSize(&width, &height);
-    settings->SetCocoaPaperSize(width, height);
-  }
-
-  mPrintSession = settings->GetPMPrintSession();
+  mPrintSession = static_cast<PMPrintSession>([printInfo PMPrintSession]);
+  mPageFormat = static_cast<PMPageFormat>([printInfo PMPageFormat]);
+  mPrintSettings = static_cast<PMPrintSettings>([printInfo PMPrintSettings]);
+  MOZ_ASSERT(mPrintSession && mPageFormat && mPrintSettings);
   ::PMRetain(mPrintSession);
-  mPageFormat = settings->GetPMPageFormat();
-  mPrintSettings = settings->GetPMPrintSettings();
+  ::PMRetain(mPageFormat);
+  ::PMRetain(mPrintSettings);
+  [printInfo release];
 
 #ifdef MOZ_ENABLE_SKIA_PDF
   nsAutoString printViaPdf;
