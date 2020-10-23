@@ -11,8 +11,8 @@
 #include "PlatformDecoderModule.h"
 #include "VideoConduit.h"
 #include "WebrtcImageBuffer.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 namespace webrtc {
 class DecodedImageCallback;

@@ -16,11 +16,11 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "api/video/video_frame.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "rtc_base/keep_ref_until_done.h"
+#include "system_wrappers/include/clock.h"
 
 // The number of frame buffers VideoFrameConverter may create before returning
 // errors.

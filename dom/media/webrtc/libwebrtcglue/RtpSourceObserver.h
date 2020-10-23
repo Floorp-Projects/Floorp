@@ -12,8 +12,10 @@
 
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
-#include "webrtc/common_types.h"
 #include "jsapi/RTCStatsReport.h"
+
+#include "api/rtp_headers.h"
+#include "modules/include/module_common_types.h"
 
 // Unit Test class
 namespace test {

@@ -217,7 +217,6 @@ LOCAL_INCLUDES += [
     "/dom/storage",
     "/netwerk/base",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
     "/xpcom/build",
 ]
 

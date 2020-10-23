@@ -6,7 +6,6 @@
 #define MEDIA_DATA_CODEC_H_
 
 #include "MediaConduitInterface.h"
-#include "webrtc/common_types.h"
 
 namespace mozilla {
 

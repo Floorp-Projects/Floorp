@@ -1,6 +1,6 @@
 #include <RtpSourceObserver.h>
 #include "RTCStatsReport.h"
-#include "webrtc/modules/include/module_common_types.h"
+#include "modules/include/module_common_types.h"
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 

@@ -11,7 +11,7 @@
 #include "PlatformEncoderModule.h"
 #include "WebrtcGmpVideoCodec.h"
 #include "common_video/include/bitrate_adjuster.h"
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 namespace mozilla {
 

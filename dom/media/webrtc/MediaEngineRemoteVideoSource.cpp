@@ -16,8 +16,8 @@
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace mozilla {
 

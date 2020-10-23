@@ -22,7 +22,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 
-#include "webrtc/api/rtpparameters.h"
+#include "api/rtp_parameters.h"
 
 #include "jsep/JsepTrack.h"
 #include "jsep/JsepTransport.h"
