@@ -13,7 +13,6 @@ namespace dom {
 // PServiceWorker
 
 class IPCServiceWorkerDescriptor;
-class PServiceWorkerChild;
 class PServiceWorkerParent;
 
 void InitServiceWorkerParent(PServiceWorkerParent* aActor,
@@ -28,18 +27,7 @@ void InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
 // PServiceWorkerRegistration
 
 class IPCServiceWorkerRegistrationDescriptor;
-class PServiceWorkerRegistrationChild;
 class PServiceWorkerRegistrationParent;
-
-PServiceWorkerRegistrationChild* AllocServiceWorkerRegistrationChild();
-
-bool DeallocServiceWorkerRegistrationChild(
-    PServiceWorkerRegistrationChild* aActor);
-
-PServiceWorkerRegistrationParent* AllocServiceWorkerRegistrationParent();
-
-bool DeallocServiceWorkerRegistrationParent(
-    PServiceWorkerRegistrationParent* aActor);
 
 void InitServiceWorkerRegistrationParent(
     PServiceWorkerRegistrationParent* aActor,

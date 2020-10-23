@@ -16,7 +16,7 @@ class ServiceWorkerRegistrationChild;
 
 class RemoteServiceWorkerRegistrationImpl final
     : public ServiceWorkerRegistration::Inner {
-  ServiceWorkerRegistrationChild* mActor;
+  RefPtr<ServiceWorkerRegistrationChild> mActor;
   ServiceWorkerRegistration* mOuter;
   bool mShutdown;
 
