@@ -24,6 +24,7 @@ pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
     pub events: HashMap<MetricId, Vec<(Instant, Option<HashMap<i32, String>>)>>,
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
+    pub string_lists: HashMap<MetricId, Vec<String>>,
 }
 
 /// Uniquely identifies a single metric within its metric type.
