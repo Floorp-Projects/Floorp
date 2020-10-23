@@ -22,8 +22,9 @@ void ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 // static
-ServiceWorkerContainerChild* ServiceWorkerContainerChild::Create() {
-  ServiceWorkerContainerChild* actor = new ServiceWorkerContainerChild();
+already_AddRefed<ServiceWorkerContainerChild>
+ServiceWorkerContainerChild::Create() {
+  RefPtr actor = new ServiceWorkerContainerChild;
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -36,12 +37,11 @@ ServiceWorkerContainerChild* ServiceWorkerContainerChild::Create() {
         workerPrivate, "ServiceWorkerContainerChild",
         [helper] { helper->Actor()->MaybeStartTeardown(); });
     if (NS_WARN_IF(!actor->mIPCWorkerRef)) {
-      delete actor;
       return nullptr;
     }
   }
 
-  return actor;
+  return actor.forget();
 }
 
 ServiceWorkerContainerChild::ServiceWorkerContainerChild()

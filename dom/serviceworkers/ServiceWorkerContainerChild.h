@@ -12,6 +12,8 @@
 namespace mozilla {
 namespace dom {
 
+class RemoteServiceWorkerContainerImpl;
+
 class IPCWorkerRef;
 
 class ServiceWorkerContainerChild final : public PServiceWorkerContainerChild {
@@ -21,13 +23,15 @@ class ServiceWorkerContainerChild final : public PServiceWorkerContainerChild {
 
   ServiceWorkerContainerChild();
 
+  ~ServiceWorkerContainerChild() = default;
+
   // PServiceWorkerContainerChild
   void ActorDestroy(ActorDestroyReason aReason) override;
 
  public:
-  static ServiceWorkerContainerChild* Create();
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerChild, override);
 
-  ~ServiceWorkerContainerChild() = default;
+  static already_AddRefed<ServiceWorkerContainerChild> Create();
 
   void SetOwner(RemoteServiceWorkerContainerImpl* aOwner);
 

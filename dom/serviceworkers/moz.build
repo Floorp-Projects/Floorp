@@ -18,6 +18,8 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerChild.h',
     'ServiceWorkerCloneData.h',
     'ServiceWorkerContainer.h',
+    'ServiceWorkerContainerChild.h',
+    'ServiceWorkerContainerParent.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
     'ServiceWorkerInfo.h',

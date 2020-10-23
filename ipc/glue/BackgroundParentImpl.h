@@ -368,10 +368,8 @@ class BackgroundParentImpl : public PBackgroundParent,
       PServiceWorkerParent* aActor,
       const IPCServiceWorkerDescriptor& aDescriptor) override;
 
-  PServiceWorkerContainerParent* AllocPServiceWorkerContainerParent() override;
-
-  bool DeallocPServiceWorkerContainerParent(
-      PServiceWorkerContainerParent*) override;
+  already_AddRefed<PServiceWorkerContainerParent>
+  AllocPServiceWorkerContainerParent() final;
 
   mozilla::ipc::IPCResult RecvPServiceWorkerContainerConstructor(
       PServiceWorkerContainerParent* aActor) override;
