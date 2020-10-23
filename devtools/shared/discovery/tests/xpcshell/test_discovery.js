@@ -6,7 +6,6 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
 const { setTimeout, clearTimeout } = ChromeUtils.import(
@@ -130,29 +129,29 @@ add_task(async function() {
 });
 
 function scanForChange(service, changeType) {
-  const deferred = defer();
-  const timer = setTimeout(() => {
-    deferred.reject(new Error("Reply never arrived"));
-  }, discovery.replyTimeout + 500);
-  discovery.on(service + "-device-" + changeType, function onChange() {
-    discovery.off(service + "-device-" + changeType, onChange);
-    clearTimeout(timer);
-    deferred.resolve();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Reply never arrived"));
+    }, discovery.replyTimeout + 500);
+    discovery.on(service + "-device-" + changeType, function onChange() {
+      discovery.off(service + "-device-" + changeType, onChange);
+      clearTimeout(timer);
+      resolve();
+    });
+    discovery.scan();
   });
-  discovery.scan();
-  return deferred.promise;
 }
 
 function scanForNoChange(service, changeType) {
-  const deferred = defer();
-  const timer = setTimeout(() => {
-    deferred.resolve();
-  }, discovery.replyTimeout + 500);
-  discovery.on(service + "-device-" + changeType, function onChange() {
-    discovery.off(service + "-device-" + changeType, onChange);
-    clearTimeout(timer);
-    deferred.reject(new Error("Unexpected change occurred"));
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      resolve();
+    }, discovery.replyTimeout + 500);
+    discovery.on(service + "-device-" + changeType, function onChange() {
+      discovery.off(service + "-device-" + changeType, onChange);
+      clearTimeout(timer);
+      reject(new Error("Unexpected change occurred"));
+    });
+    discovery.scan();
   });
-  discovery.scan();
-  return deferred.promise;
 }
