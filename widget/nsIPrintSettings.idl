@@ -193,7 +193,7 @@ interface nsIPrintSettings : nsISupports
   attribute short   paperSizeUnit; /* paper is in inches or mm */
 
   attribute boolean printReversed;
-  attribute boolean printInColor;  /* a false means grayscale */
+  [infallible] attribute boolean printInColor;  /* a false means grayscale */
   attribute long    orientation;   /*  see orientation consts */
   attribute long    numCopies;
 
