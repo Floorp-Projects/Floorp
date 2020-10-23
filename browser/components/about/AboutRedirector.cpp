@@ -241,6 +241,21 @@ AboutRedirector::GetURIFlags(nsIURI* aURI, uint32_t* result) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
+NS_IMETHODIMP
+AboutRedirector::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsAutoCString name = GetAboutModuleName(aURI);
+
+  for (const auto& redir : kRedirMap) {
+    if (name.Equals(redir.id)) {
+      return NS_NewURI(chromeURI, redir.url);
+    }
+  }
+
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
 nsresult AboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID,
                                  void** result) {
   AboutRedirector* about = new AboutRedirector();

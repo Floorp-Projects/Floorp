@@ -6,6 +6,9 @@
 
 #include "LayersTypes.h"
 
+#include <cinttypes>
+#include "nsPrintfCString.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -34,6 +37,10 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
       MOZ_ASSERT_UNREACHABLE("unknown layers backend");
       return "unknown";
   }
+}
+
+std::ostream& operator<<(std::ostream& aStream, const LayersId& aId) {
+  return aStream << nsPrintfCString("0x%" PRIx64, aId.mId).get();
 }
 
 EventRegions::EventRegions() : mDTCRequiresTargetConfirmation(false) {}

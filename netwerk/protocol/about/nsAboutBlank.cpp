@@ -38,6 +38,11 @@ nsAboutBlank::GetURIFlags(nsIURI* aURI, uint32_t* result) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAboutBlank::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
 nsresult nsAboutBlank::Create(nsISupports* aOuter, REFNSIID aIID,
                               void** aResult) {
   RefPtr<nsAboutBlank> about = new nsAboutBlank();

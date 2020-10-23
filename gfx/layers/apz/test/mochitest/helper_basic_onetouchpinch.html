@@ -10,7 +10,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
-async function* test() {
+async function test() {
   let visResEvt = new EventCounter(window.visualViewport, "resize");
   let visScrEvt = new EventCounter(window.visualViewport, "scroll");
   // Our internal visual viewport events aren't restricted to the visual view-
@@ -43,7 +43,7 @@ async function* test() {
   ];
 
   var touchIds = [0];
-  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+  synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.
   await transformEndPromise;
@@ -77,7 +77,7 @@ async function* test() {
 }
 
 waitUntilApzStable()
-.then(runAsyncContinuation(test))
+.then(test)
 .then(subtestDone, subtestFailed);
 
   </script>

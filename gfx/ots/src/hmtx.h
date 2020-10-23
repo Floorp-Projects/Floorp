@@ -15,9 +15,6 @@ class OpenTypeHMTX : public OpenTypeMetricsTable {
  public:
   explicit OpenTypeHMTX(Font *font, uint32_t tag)
       : OpenTypeMetricsTable(font, tag, tag, OTS_TAG_HHEA) { }
-
-  bool Parse(const uint8_t *data, size_t length);
-  bool Serialize(OTSStream *out);
 };
 
 }  // namespace ots

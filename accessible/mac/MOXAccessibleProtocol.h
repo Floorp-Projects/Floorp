@@ -345,6 +345,9 @@
 // AXCellForColumnAndRow
 - (id _Nullable)moxCellForColumnAndRow:(NSArray* _Nonnull)columnAndRow;
 
+// AXIndexForChildUIElement
+- (NSNumber* _Nullable)moxIndexForChildUIElement:(id _Nonnull)child;
+
 @end
 
 // This protocol maps text marker and text marker range parameters to

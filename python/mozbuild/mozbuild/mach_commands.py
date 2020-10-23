@@ -765,6 +765,8 @@ def _get_android_run_parser():
     parser.add_argument('--no-wait', action='store_true', default=False,
                         help='Do not wait for application to start before returning '
                              '(default: False)')
+    parser.add_argument('--enable-fission', action='store_true',
+                        help='Run the program with Fission (site isolation) enabled.')
     parser.add_argument('--fail-if-running', action='store_true', default=False,
                         help='Fail if application is already running (default: False)')
     parser.add_argument('--restart', action='store_true', default=False,
@@ -816,7 +818,7 @@ def _get_desktop_run_parser():
     group.add_argument('--enable-crash-reporter', action='store_true',
                        help='Run the program with the crash reporter enabled.')
     group.add_argument('--enable-fission', action='store_true',
-                       help='Run the program with fission (site isolation) enabled.')
+                       help='Run the program with Fission (site isolation) enabled.')
     group.add_argument('--setpref', action='append', default=[],
                        help='Set the specified pref before starting the program. Can be set '
                        'multiple times. Prefs can also be set in ~/.mozbuild/machrc in the '
@@ -881,7 +883,8 @@ class RunProgram(MachCommandBase):
         return self._run_desktop(**kwargs)
 
     def _run_android(self, app='org.mozilla.geckoview_example', intent=None, env=[], profile=None,
-                     url=None, no_install=None, no_wait=None, fail_if_running=None, restart=None):
+                     url=None, no_install=None, no_wait=None, fail_if_running=None, restart=None,
+                     enable_fission=False):
         from mozrunner.devices.android_device import (verify_android_device,
                                                       _get_device,
                                                       InstallIntent)
@@ -925,6 +928,9 @@ class RunProgram(MachCommandBase):
                          'Using profile from target "{target_profile}"')
 
             args = ['--profile', shlex_quote(target_profile)]
+
+        if enable_fission:
+            env.append('MOZ_FORCE_ENABLE_FISSION=1')
 
         extras = {}
         for i, e in enumerate(env):

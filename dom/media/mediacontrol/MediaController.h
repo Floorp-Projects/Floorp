@@ -145,6 +145,11 @@ class MediaController final : public DOMEventTargetHelper,
 
   bool IsBeingUsedInPIPModeOrFullscreen() const;
 
+  // These methods are used to select/unselect the media controller as a main
+  // controller.
+  void Select() const;
+  void Unselect() const;
+
  private:
   ~MediaController();
   void HandleActualPlaybackStateChanged() override;

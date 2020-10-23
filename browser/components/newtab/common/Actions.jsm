@@ -26,6 +26,7 @@ this.globalImportContext = globalImportContext;
 // }
 const actionTypes = {};
 for (const type of [
+  "ABOUT_SPONSORED_TOP_SITES",
   "ADDONS_INFO_REQUEST",
   "ADDONS_INFO_RESPONSE",
   "ARCHIVE_FROM_POCKET",

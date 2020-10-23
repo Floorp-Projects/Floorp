@@ -77,8 +77,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void AddKeepAlive();
   void RemoveKeepAlive();
 
-  bool GetToplevelsSuspended() { return mToplevelsSuspended; }
-  void SetToplevelsSuspended(bool aSuspended);
+  // Call when we want to check if we should suspend or resume all top level
+  // contexts.
+  void UpdateToplevelsSuspendedIfNeeded();
 
   // Get a reference to the list of toplevel contexts in this
   // BrowsingContextGroup.
@@ -157,6 +158,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void MaybeDestroy();
   void Destroy();
 
+  bool ShouldSuspendAllTopLevelContexts() const;
+
   uint64_t mId;
 
   uint32_t mKeepAliveCount = 0;
@@ -178,8 +181,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // The set of toplevel browsing contexts in the current BrowsingContextGroup.
   nsTArray<RefPtr<BrowsingContext>> mToplevels;
 
-  // Whether or not all toplevels in this group have been suspended
-  bool mToplevelsSuspended;
+  //  Whether or not all toplevels in this group should be suspended
+  bool mToplevelsSuspended = false;
 
   // DocGroups are thread-safe, and not able to be cycle collected,
   // but we still keep strong pointers. When all Documents are removed

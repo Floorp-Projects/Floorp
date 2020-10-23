@@ -29,8 +29,10 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ArrayAlgorithm.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Logging.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 namespace dom {
@@ -200,6 +202,9 @@ void JSActorService::RegisterChromeEventTarget(EventTarget* aTarget) {
   for (auto iter = mWindowActorDescriptors.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->RegisterListenersFor(aTarget);
   }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  obs->NotifyObservers(aTarget, "chrome-event-target-created", nullptr);
 }
 
 /* static */

@@ -152,7 +152,6 @@ class AndroidMixin(object):
             AF_FILE = os.path.join(sdk_path, "advancedFeatures.ini")
             with open(AF_FILE, 'w') as f:
                 f.write("GLESDynamicVersion=on\n")
-            self.info("set GLESDynamicVersion=on in %s" % AF_FILE)
 
         # extra diagnostics for kvm acceleration
         emu = self.config.get('emulator_process_name')

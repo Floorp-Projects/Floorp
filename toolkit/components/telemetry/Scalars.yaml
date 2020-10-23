@@ -3167,6 +3167,22 @@ telemetry:
       - 'main'
       - 'content'
 
+  environment_didnt_change:
+    bug_numbers:
+      - 1483477
+    description: >
+      The number of times the Telemetry Environment notified listeners of environment changes
+      despite the old and new environment contents being equal.
+    expires: "89"
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    products:
+      - 'firefox'
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 telemetry.discarded:
   accumulations:
     bug_numbers:

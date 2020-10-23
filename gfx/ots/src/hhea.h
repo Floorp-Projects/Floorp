@@ -16,7 +16,6 @@ class OpenTypeHHEA : public OpenTypeMetricsHeader {
       : OpenTypeMetricsHeader(font, tag, tag) { }
 
   bool Parse(const uint8_t *data, size_t length);
-  bool Serialize(OTSStream *out);
 };
 
 }  // namespace ots

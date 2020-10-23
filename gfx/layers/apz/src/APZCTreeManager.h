@@ -538,7 +538,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   void SetTestSampleTime(const Maybe<TimeStamp>& aTime);
 
  private:
-  Maybe<TimeStamp> mTestSampleTime;
+  mutable DataMutex<Maybe<TimeStamp>> mTestSampleTime;
 
  public:
   // Represents the results of an APZ hit test.
