@@ -2440,22 +2440,26 @@ void BackgroundRequestChild::HandleResponse(
 
   nsTArray<StructuredCloneReadInfoChild> cloneReadInfos;
 
-  if (!aResponse.IsEmpty()) {
-    const uint32_t count = aResponse.Length();
+  IDB_TRY(OkIf(cloneReadInfos.SetCapacity(aResponse.Length(), fallible)),
+          QM_VOID, ([&aResponse, this](const auto) {
+            // Since we are under memory pressure, release aResponse early.
+            aResponse.Clear();
 
-    cloneReadInfos.SetCapacity(count);
+            DispatchErrorEvent(mRequest, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+                               AcquireTransaction());
 
-    std::transform(
-        std::make_move_iterator(aResponse.begin()),
-        std::make_move_iterator(aResponse.end()),
-        MakeBackInserter(cloneReadInfos),
-        [database = mTransaction->Database(),
-         this](SerializedStructuredCloneReadInfo&& serializedCloneInfo) {
-          return DeserializeStructuredCloneReadInfo(
-              std::move(serializedCloneInfo), database,
-              [this] { return std::move(*GetNextCloneData()); });
-        });
-  }
+            MOZ_ASSERT(mTransaction->IsAborted());
+          }));
+
+  std::transform(std::make_move_iterator(aResponse.begin()),
+                 std::make_move_iterator(aResponse.end()),
+                 MakeBackInserter(cloneReadInfos),
+                 [database = mTransaction->Database(), this](
+                     SerializedStructuredCloneReadInfo&& serializedCloneInfo) {
+                   return DeserializeStructuredCloneReadInfo(
+                       std::move(serializedCloneInfo), database,
+                       [this] { return std::move(*GetNextCloneData()); });
+                 });
 
   SetResultAndDispatchSuccessEvent(mRequest, AcquireTransaction(),
                                    cloneReadInfos);
