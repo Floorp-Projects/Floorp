@@ -56,12 +56,6 @@ function indirectCallCannotGC(fullCaller, fullVariable)
     if (/CallDestroyScriptHook/.test(caller))
         return true;
 
-    // template method called during marking and hence cannot GC
-    if (name == "op" && caller.includes("bool js::WeakMap<Key, Value, HashPolicy>::keyNeedsMark(JSObject*)"))
-    {
-        return true;
-    }
-
     // Call through a 'callback' function pointer, in a place where we're going
     // to be throwing a JS exception.
     if (name == "callback" && caller.includes("js::ErrorToException"))
