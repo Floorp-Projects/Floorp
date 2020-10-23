@@ -8868,6 +8868,12 @@
   value: 144.0f
   mirror: always
 
+# Whether support for monochrome printing is enabled on mac.
+- name: print.mac.monochrome.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------
