@@ -10,15 +10,15 @@ let source = `
     let B = "B";
 
     class C {
-        // START--------------v
-                   'field_str';
-        'field_str_with_init' = 1;
-                           [A];
-                          [B] = 2;
-                      static x;
-                     static y = 3;
-         static [A + "static"];
-        static [B + "static"] = 4;
+        // START----v
+                    'field_str';
+                    'field_str_with_init' = 1;
+                    [A];
+                    [B] = 2;
+             static x;
+             static y = 3;
+             static [A + "static"];
+             static [B + "static"] = 4;
         // END
     }
 `;
@@ -43,7 +43,7 @@ for (var i = 0; i < NumInitializers; ++i) {
 
     // Check the initializer lambda has expected line/column
     assertEq(script.startLine, START + 1 + i);
-    assertEq(script.startColumn, 30);
+    assertEq(script.startColumn, 20);
 
     // Check that source length matches expectations.
     assertEq(script.startColumn + script.sourceLength + ';'.length, lineText.length);

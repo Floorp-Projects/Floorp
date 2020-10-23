@@ -7192,8 +7192,10 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       classInitializedMembers.instanceFields++;
     }
 
-    FunctionNodeType initializer = fieldInitializerOpt(
-        propName, propAtom, classInitializedMembers, isStatic, hasHeritage);
+    TokenPos propNamePos(propNameOffset, pos().end);
+    FunctionNodeType initializer =
+        fieldInitializerOpt(propNamePos, propName, propAtom,
+                            classInitializedMembers, isStatic, hasHeritage);
     if (!initializer) {
       return false;
     }
@@ -7930,25 +7932,13 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
-    Node propName, const ParserAtom* propAtom,
+    TokenPos propNamePos, Node propName, const ParserAtom* propAtom,
     ClassInitializedMembers& classInitializedMembers, bool isStatic,
     HasHeritage hasHeritage) {
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
     return null();
-  }
-
-  TokenPos firstTokenPos;
-  if (hasInitializer) {
-    firstTokenPos = pos();
-  } else {
-    // the location of the "initializer" should be a zero-width span:
-    // class C {
-    //   x /* here */ ;
-    // }
-    uint32_t endPos = pos().end;
-    firstTokenPos = TokenPos(endPos, endPos);
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::FieldInitializer;
@@ -7959,7 +7949,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
 
   // Create the top-level field initializer node.
-  FunctionNodeType funNode = handler_.newFunction(syntaxKind, firstTokenPos);
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, propNamePos);
   if (!funNode) {
     return null();
   }
@@ -7967,7 +7957,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
   FunctionBox* funbox =
-      newFunctionBox(funNode, nullptr, flags, firstTokenPos.begin, directives,
+      newFunctionBox(funNode, nullptr, flags, propNamePos.begin, directives,
                      generatorKind, asyncKind, TopLevelFunction::No);
   if (!funbox) {
     return null();
@@ -7978,11 +7968,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
   // which is incorrect for fields without initializers (pos() points to the
   // field identifier)
-  uint32_t firstTokenLine, firstTokenColumn;
-  tokenStream.computeLineAndColumn(firstTokenPos.begin, &firstTokenLine,
-                                   &firstTokenColumn);
-
-  funbox->setStart(firstTokenPos.begin, firstTokenLine, firstTokenColumn);
+  setFunctionStartAtPosition(funbox, propNamePos);
 
   // Push a SourceParseContext on to the stack.
   ParseContext* outerpc = pc_;
@@ -7994,7 +7980,6 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   pc_->functionScope().useAsVarScope(pc_);
 
   Node initializerExpr;
-  TokenPos wholeInitializerPos;
   if (hasInitializer) {
     // Parse the expression for the field initializer.
     {
@@ -8006,16 +7991,14 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     }
 
     handler_.checkAndSetIsDirectRHSAnonFunction(initializerExpr);
-
-    wholeInitializerPos = pos();
-    wholeInitializerPos.begin = firstTokenPos.begin;
   } else {
-    initializerExpr = handler_.newRawUndefinedLiteral(firstTokenPos);
+    initializerExpr = handler_.newRawUndefinedLiteral(propNamePos);
     if (!initializerExpr) {
       return null();
     }
-    wholeInitializerPos = firstTokenPos;
   }
+
+  TokenPos wholeInitializerPos(propNamePos.begin, pos().end);
 
   // Update the end position of the parse node.
   handler_.setEndPosition(funNode, wholeInitializerPos.end);
