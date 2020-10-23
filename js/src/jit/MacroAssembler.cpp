@@ -3758,6 +3758,9 @@ std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
 
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                                           const wasm::CalleeDesc& callee) {
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
+
   // Load the callee, before the caller's registers are clobbered.
   uint32_t globalDataOffset = callee.importGlobalDataOffset();
   loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, code),
@@ -3776,6 +3779,9 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
   // Switch to the callee's TLS and pinned registers and make the call.
   loadWasmGlobalPtr(globalDataOffset + offsetof(wasm::FuncImportTls, tls),
                     WasmTlsReg);
+
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
   loadWasmPinnedRegsFromTls();
 
   return call(desc, ABINonArgReg0);
@@ -3786,6 +3792,10 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
     wasm::SymbolicAddress builtin, wasm::FailureMode failureMode) {
   MOZ_ASSERT(instanceArg != ABIArg());
 
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
   if (instanceArg.kind() == ABIArg::GPR) {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, instance)),
             instanceArg.gpr());
@@ -3851,6 +3861,10 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
       addPtr(index, scratch);
     }
     loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
+    storePtr(WasmTlsReg,
+             Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
+    storePtr(WasmTlsReg,
+             Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
     return call(desc, scratch);
   }
 
@@ -3892,7 +3906,11 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
     addPtr(index, scratch);
   }
 
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
   loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, tls)), WasmTlsReg);
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
 
   Label nonNull;
   branchTest32(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
