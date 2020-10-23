@@ -1137,38 +1137,27 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
 
   AUTO_PROFILER_LABEL("GetStorageConnection", DOM);
 
-  bool exists;
-  nsresult rv = aDatabaseFile.Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_INSPECT(const bool& exists,
+                  MOZ_TO_RESULT_INVOKE(aDatabaseFile, Exists));
 
-  if (NS_WARN_IF(!exists)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  IDB_TRY(OkIf(exists), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   IDB_TRY_INSPECT(const auto& dbFileUrl,
                   GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId));
 
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_INSPECT(
+      const auto& storageService,
+      ToResultGet<nsCOMPtr<mozIStorageService>>(
+          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  IDB_TRY_UNWRAP(nsCOMPtr<mozIStorageConnection> connection,
-                 OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId));
+  IDB_TRY_UNWRAP(
+      nsCOMPtr<mozIStorageConnection> connection,
+      OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId));
 
-  rv = SetDefaultPragmas(*connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(SetDefaultPragmas(*connection));
 
-  rv = SetJournalMode(*connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(SetJournalMode(*connection));
 
   return WrapMovingNotNullUnchecked(std::move(connection));
 }
@@ -1184,10 +1173,9 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
   MOZ_ASSERT(aDirectoryLockId >= 0);
 
   nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
-  if (NS_WARN_IF(!dbFile)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+
+  IDB_TRY(OkIf(dbFile), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   return GetStorageConnection(*dbFile, aDirectoryLockId, aTelemetryId);
 }
