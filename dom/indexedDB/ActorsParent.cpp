@@ -7472,12 +7472,9 @@ nsresult DatabaseConnection::DisableQuotaChecks() {
   if (!mQuotaObject) {
     MOZ_ASSERT(!mJournalQuotaObject);
 
-    nsresult rv = (*mStorageConnection)
-                      ->GetQuotaObjects(getter_AddRefs(mQuotaObject),
-                                        getter_AddRefs(mJournalQuotaObject));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY((*mStorageConnection)
+                ->GetQuotaObjects(getter_AddRefs(mQuotaObject),
+                                  getter_AddRefs(mJournalQuotaObject)));
 
     MOZ_ASSERT(mQuotaObject);
     MOZ_ASSERT(mJournalQuotaObject);
