@@ -166,9 +166,7 @@ bool ServiceWorkerRegistrationProxy::MatchesDescriptor(
 
 ServiceWorkerRegistrationProxy::ServiceWorkerRegistrationProxy(
     const ServiceWorkerRegistrationDescriptor& aDescriptor)
-    : mActor(nullptr),
-      mEventTarget(GetCurrentSerialEventTarget()),
-      mDescriptor(aDescriptor) {}
+    : mEventTarget(GetCurrentSerialEventTarget()), mDescriptor(aDescriptor) {}
 
 void ServiceWorkerRegistrationProxy::Init(
     ServiceWorkerRegistrationParent* aActor) {

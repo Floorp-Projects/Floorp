@@ -33,8 +33,10 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerParent.h',
     'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
+    'ServiceWorkerRegistrationChild.h',
     'ServiceWorkerRegistrationDescriptor.h',
     'ServiceWorkerRegistrationInfo.h',
+    'ServiceWorkerRegistrationParent.h',
     'ServiceWorkerShutdownState.h',
     'ServiceWorkerUtils.h',
 ]

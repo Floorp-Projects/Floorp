@@ -653,15 +653,11 @@ BackgroundChildImpl::AllocPServiceWorkerContainerChild() {
   return mozilla::dom::ServiceWorkerContainerChild::Create();
 }
 
-PServiceWorkerRegistrationChild*
+already_AddRefed<PServiceWorkerRegistrationChild>
 BackgroundChildImpl::AllocPServiceWorkerRegistrationChild(
     const IPCServiceWorkerRegistrationDescriptor&) {
-  return dom::AllocServiceWorkerRegistrationChild();
-}
-
-bool BackgroundChildImpl::DeallocPServiceWorkerRegistrationChild(
-    PServiceWorkerRegistrationChild* aActor) {
-  return dom::DeallocServiceWorkerRegistrationChild(aActor);
+  MOZ_CRASH("Shouldn't be called.");
+  return {};
 }
 
 dom::PEndpointForReportChild* BackgroundChildImpl::AllocPEndpointForReportChild(

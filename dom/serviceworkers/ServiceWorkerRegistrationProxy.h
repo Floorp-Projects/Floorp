@@ -22,7 +22,7 @@ class ServiceWorkerRegistrationParent;
 class ServiceWorkerRegistrationProxy final
     : public ServiceWorkerRegistrationListener {
   // Background thread only
-  ServiceWorkerRegistrationParent* mActor;
+  RefPtr<ServiceWorkerRegistrationParent> mActor;
 
   // Written on background thread and read on main thread
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
