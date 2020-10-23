@@ -1092,7 +1092,10 @@ Search.prototype = {
 
     // Match an alias only when it has a space after it.  If there's no trailing
     // space, then continue to treat it as part of the search string.
-    if (UrlbarPrefs.get("update2") && !query.startsWith(" ")) {
+    if (
+      UrlbarPrefs.get("update2") &&
+      !UrlbarTokenizer.REGEXP_SPACES_START.test(query)
+    ) {
       return false;
     }
 
