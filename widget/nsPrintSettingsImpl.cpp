@@ -224,7 +224,7 @@ NS_IMETHODIMP nsPrintSettings::SetNumPagesPerSheet(int32_t aNumPagesPerSheet) {
 }
 
 NS_IMETHODIMP nsPrintSettings::GetPrintToFile(bool* aPrintToFile) {
-  // NS_ENSURE_ARG_POINTER(aPrintToFile);
+  NS_ENSURE_ARG_POINTER(aPrintToFile);
   *aPrintToFile = mPrintToFile;
   return NS_OK;
 }
@@ -264,24 +264,24 @@ NS_IMETHODIMP nsPrintSettings::SetPrintPageDelay(int32_t aPrintPageDelay) {
 NS_IMETHODIMP nsPrintSettings::GetIsInitializedFromPrinter(
     bool* aIsInitializedFromPrinter) {
   NS_ENSURE_ARG_POINTER(aIsInitializedFromPrinter);
-  *aIsInitializedFromPrinter = (bool)mIsInitedFromPrinter;
+  *aIsInitializedFromPrinter = mIsInitedFromPrinter;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetIsInitializedFromPrinter(
     bool aIsInitializedFromPrinter) {
-  mIsInitedFromPrinter = (bool)aIsInitializedFromPrinter;
+  mIsInitedFromPrinter = aIsInitializedFromPrinter;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPrintSettings::GetIsInitializedFromPrefs(
     bool* aInitializedFromPrefs) {
   NS_ENSURE_ARG_POINTER(aInitializedFromPrefs);
-  *aInitializedFromPrefs = (bool)mIsInitedFromPrefs;
+  *aInitializedFromPrefs = mIsInitedFromPrefs;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetIsInitializedFromPrefs(
     bool aInitializedFromPrefs) {
-  mIsInitedFromPrefs = (bool)aInitializedFromPrefs;
+  mIsInitedFromPrefs = aInitializedFromPrefs;
   return NS_OK;
 }
 

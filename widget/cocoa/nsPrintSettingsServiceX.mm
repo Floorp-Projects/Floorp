@@ -24,100 +24,8 @@ nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, Print
     return NS_ERROR_FAILURE;
   }
 
-  double adjustedWidth, adjustedHeight;
-  settingsX->GetAdjustedPaperSize(&adjustedWidth, &adjustedHeight);
-  data->adjustedPaperWidth() = adjustedWidth;
-  data->adjustedPaperHeight() = adjustedHeight;
-
-  if (XRE_IsParentProcess()) {
-    return SerializeToPrintDataParent(aSettings, data);
-  }
-
-  return NS_OK;
-}
-
-nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                                             PrintData* data) {
-  RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
-  if (NS_WARN_IF(!settingsX)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSPrintInfo* printInfo = settingsX->GetCocoaPrintInfo();
-  if (NS_WARN_IF(!printInfo)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NSDictionary* dict = [printInfo dictionary];
-  if (NS_WARN_IF(!dict)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We do NOT get the printer name from the printInfo dictionary, because it
-  // would not correctly represent the Save to PDF pseudo-destination. The base
-  // implementation will have set it directly from our internally-stored name
-  // already.
-
-  NSString* faxNumber = [dict objectForKey:NSPrintFaxNumber];
-  if (faxNumber) {
-    nsCocoaUtils::GetStringForNSString(faxNumber, data->faxNumber());
-  }
-
-  NSURL* printToFileURL = [dict objectForKey:NSPrintJobSavingURL];
-  if (printToFileURL) {
-    if ([printToFileURL isFileURL]) {
-      nsCocoaUtils::GetStringForNSString([printToFileURL path], data -> toFileName());
-    } else {
-      MOZ_ASSERT_UNREACHABLE("expected a file URL");
-    }
-  }
-
-  NSDate* printTime = [dict objectForKey:NSPrintTime];
-  if (printTime) {
-    NSTimeInterval timestamp = [printTime timeIntervalSinceReferenceDate];
-    data->printTime() = timestamp;
-  }
-
-  NSString* disposition = [dict objectForKey:NSPrintJobDisposition];
-  if (disposition) {
-    nsCocoaUtils::GetStringForNSString(disposition, data->disposition());
-  }
-
-  NSString* paperName = [dict objectForKey:NSPrintPaperName];
-  if (paperName) {
-    nsCocoaUtils::GetStringForNSString(paperName, data->paperId());
-  }
-
-  float scalingFactor = [[dict objectForKey:NSPrintScalingFactor] floatValue];
-  data->scalingFactor() = scalingFactor;
-
-  int32_t orientation;
-  if ([printInfo orientation] == NSPaperOrientationPortrait) {
-    orientation = nsIPrintSettings::kPortraitOrientation;
-  } else {
-    orientation = nsIPrintSettings::kLandscapeOrientation;
-  }
-  data->orientation() = orientation;
-
-  float widthScale, heightScale;
-  settingsX->GetInchesScale(&widthScale, &heightScale);
-  if (orientation == nsIPrintSettings::kLandscapeOrientation) {
-    data->widthScale() = heightScale;
-    data->heightScale() = widthScale;
-  } else {
-    data->widthScale() = widthScale;
-    data->heightScale() = heightScale;
-  }
-
-  data->numCopies() = [[dict objectForKey:NSPrintCopies] intValue];
-  data->mustCollate() = [[dict objectForKey:NSPrintMustCollate] boolValue];
-  data->printReversed() = [[dict objectForKey:NSPrintReversePageOrder] boolValue];
-  data->pagesAcross() = [[dict objectForKey:NSPrintPagesAcross] unsignedShortValue];
-  data->pagesDown() = [[dict objectForKey:NSPrintPagesDown] unsignedShortValue];
-  data->detailedErrorReporting() = [[dict objectForKey:NSPrintDetailedErrorReporting] boolValue];
-  data->addHeaderAndFooter() = [[dict objectForKey:NSPrintHeaderAndFooter] boolValue];
-  data->fileNameExtensionHidden() =
-      [[dict objectForKey:NSPrintJobSavingFileNameExtensionHidden] boolValue];
+  settingsX->GetDisposition(data->disposition());
+  settingsX->GetDestination(&data->destination());
 
   return NS_OK;
 }
@@ -130,31 +38,30 @@ nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
     return rv;
   }
 
-  if (data.orientation() == nsIPrintSettings::kPortraitOrientation) {
-    settings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-  } else {
-    settings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
-  }
-
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(settings));
   if (NS_WARN_IF(!settingsX)) {
     return NS_ERROR_FAILURE;
   }
-  settingsX->SetAdjustedPaperSize(data.adjustedPaperWidth(), data.adjustedPaperHeight());
+
+  settingsX->SetDisposition(data.disposition());
+  settingsX->SetDestination(data.destination());
 
   return NS_OK;
 }
 
 nsresult nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
                                             uint32_t aFlags) {
-  nsresult rv;
-
-  rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
+  DebugOnly<nsresult> rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::ReadPrefs() failed");
 
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX) return NS_ERROR_NO_INTERFACE;
-  rv = printSettingsX->ReadPageFormatFromPrefs();
+  if (!printSettingsX) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  // ReadPageFormatFromPrefs may fail (e.g. prefs are missing/broken) but we can
+  // safely ignore that and just leave existing/default values in the settings.
+  Unused << printSettingsX->ReadPageFormatFromPrefs();
 
   return NS_OK;
 }
@@ -195,7 +102,9 @@ nsresult nsPrintSettingsServiceX::WritePrefs(nsIPrintSettings* aPS, const nsAStr
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::WritePrefs() failed");
 
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
-  if (!printSettingsX) return NS_ERROR_NO_INTERFACE;
+  if (!printSettingsX) {
+    return NS_ERROR_NO_INTERFACE;
+  }
   rv = printSettingsX->WritePageFormatToPrefs();
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsX::WritePageFormatToPrefs() failed");
 

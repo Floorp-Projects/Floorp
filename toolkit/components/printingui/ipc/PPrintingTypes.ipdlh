@@ -83,36 +83,12 @@ struct PrintData {
    */
   CStringKeyValue[] GTKPrintSettings;
 
-  /**
-   * OS X specific things.
+  /*
+   * macOS-specific things:
+   * What the Cocoa print system is supposed to do with the job.
    */
-  nsString printJobName;
-  bool printAllPages;
-  bool mustCollate;
   nsString disposition;
-  /** TODO: Is there an "unsigned short" primitive? **/
-  short pagesAcross;
-  short pagesDown;
-  double printTime;
-  bool detailedErrorReporting;
-  nsString faxNumber;
-  bool addHeaderAndFooter;
-  bool fileNameExtensionHidden;
-  /*
-   * Holds the scaling factor from the Print dialog when shrink
-   * to fit is not used. This is needed by the child when it
-   * isn't using remote printing. When shrink to fit is enabled
-   * (default), print dialog code ensures this value is 1.0.
-   */
-  float scalingFactor;
-  /*
-   * Scaling factor for converting from OS X native paper size
-   * units to inches.
-   */
-  float widthScale;
-  float heightScale;
-  double adjustedPaperWidth;
-  double adjustedPaperHeight;
+  uint16_t destination;
 };
 
 } // namespace embedding
