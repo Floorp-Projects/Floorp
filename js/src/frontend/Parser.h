@@ -1274,7 +1274,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   FunctionNodeType privateMethodInitializer(const ParserAtom* propAtom,
                                             const ParserAtom* storedMethodAtom);
   FunctionNodeType fieldInitializerOpt(
-      Node name, const ParserAtom* atom,
+      TokenPos propNamePos, Node name, const ParserAtom* atom,
       ClassInitializedMembers& classInitializedMembers, bool isStatic,
       HasHeritage hasHeritage);
   FunctionNodeType synthesizeConstructor(const ParserAtom* className,
