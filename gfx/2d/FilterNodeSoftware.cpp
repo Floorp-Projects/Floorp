@@ -796,7 +796,14 @@ FilterNodeSoftware::GetInputDataSourceSurface(
     IntRect srcRect = aTransparencyPaddedSourceRect->Intersect(aRect);
     surface =
         GetDataSurfaceInRect(surface, surfaceRect, srcRect, EDGE_MODE_NONE);
-    surfaceRect = srcRect;
+    if (surface) {
+      surfaceRect = srcRect;
+    } else {
+      // Padding the surface with transparency failed, probably due to size
+      // restrictions. Since |surface| is now null, set the surfaceRect to
+      // empty so that we're consistent.
+      surfaceRect.SetEmpty();
+    }
   }
 
   RefPtr<DataSourceSurface> result =
