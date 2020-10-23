@@ -22,13 +22,15 @@ class ServiceWorkerChild final : public PServiceWorkerChild {
 
   ServiceWorkerChild();
 
+  ~ServiceWorkerChild() = default;
+
   // PServiceWorkerChild
   void ActorDestroy(ActorDestroyReason aReason) override;
 
  public:
-  static ServiceWorkerChild* Create();
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerChild, override);
 
-  ~ServiceWorkerChild() = default;
+  static RefPtr<ServiceWorkerChild> Create();
 
   void SetOwner(RemoteServiceWorkerImpl* aOwner);
 

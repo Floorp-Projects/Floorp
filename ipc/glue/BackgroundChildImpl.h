@@ -243,10 +243,8 @@ class BackgroundChildImpl : public PBackgroundChild,
   virtual PMIDIManagerChild* AllocPMIDIManagerChild() override;
   virtual bool DeallocPMIDIManagerChild(PMIDIManagerChild*) override;
 
-  virtual PServiceWorkerChild* AllocPServiceWorkerChild(
-      const IPCServiceWorkerDescriptor&) override;
-
-  virtual bool DeallocPServiceWorkerChild(PServiceWorkerChild*) override;
+  already_AddRefed<PServiceWorkerChild> AllocPServiceWorkerChild(
+      const IPCServiceWorkerDescriptor&);
 
   virtual PServiceWorkerContainerChild* AllocPServiceWorkerContainerChild()
       override;
