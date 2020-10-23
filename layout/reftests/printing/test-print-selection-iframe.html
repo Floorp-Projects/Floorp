@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html reftest-print-range="selection">
+<head>
+  <meta charset="utf-8">
+  <link href="print.css" rel="stylesheet">
+  <script>
+    function selectNodeById(id) {
+      var node = document.getElementById(id);
+      var rng = document.createRange();
+      rng.selectNode(node);
+      window.getSelection().addRange(rng);
+    }
+  </script>
+</head>
+<body onload="selectNodeById('selection')">
+  <p>This text should not be there</p>
+  <p id="selection">This text should appear on page 1</p>
+  <iframe src="data:text/html,"></iframe>
+</body>
+</html>
