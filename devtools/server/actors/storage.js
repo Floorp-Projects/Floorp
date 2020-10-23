@@ -109,13 +109,11 @@ var storageTypePool = new Map();
  *        The wait time in milliseconds.
  */
 function sleep(time) {
-  const deferred = defer();
-
-  setTimeout(() => {
-    deferred.resolve(null);
-  }, time);
-
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(null);
+    }, time);
+  });
 }
 
 // Helper methods to create a storage actor.
@@ -2782,23 +2780,22 @@ var indexedDBHelpers = {
    */
   async getDBMetaData(host, principal, name, storage) {
     const request = this.openWithPrincipal(principal, name, storage);
-    const success = defer();
+    return new Promise(resolve => {
+      request.onsuccess = event => {
+        const db = event.target.result;
+        const dbData = new DatabaseMetadata(host, db, storage);
+        db.close();
 
-    request.onsuccess = event => {
-      const db = event.target.result;
-      const dbData = new DatabaseMetadata(host, db, storage);
-      db.close();
-
-      success.resolve(this.backToChild("getDBMetaData", dbData));
-    };
-    request.onerror = ({ target }) => {
-      console.error(
-        `Error opening indexeddb database ${name} for host ${host}`,
-        target.error
-      );
-      success.resolve(this.backToChild("getDBMetaData", null));
-    };
-    return success.promise;
+        resolve(this.backToChild("getDBMetaData", dbData));
+      };
+      request.onerror = ({ target }) => {
+        console.error(
+          `Error opening indexeddb database ${name} for host ${host}`,
+          target.error
+        );
+        resolve(this.backToChild("getDBMetaData", null));
+      };
+    });
   },
 
   splitNameAndStorage: function(name) {
@@ -3196,70 +3193,72 @@ var indexedDBHelpers = {
   getObjectStoreData(host, principal, dbName, storage, requestOptions) {
     const { name } = this.splitNameAndStorage(dbName);
     const request = this.openWithPrincipal(principal, name, storage);
-    const success = defer();
-    let { objectStore, id, index, offset, size } = requestOptions;
-    const data = [];
-    let db;
 
-    if (!size || size > MAX_STORE_OBJECT_COUNT) {
-      size = MAX_STORE_OBJECT_COUNT;
-    }
+    return new Promise((resolve, reject) => {
+      let { objectStore, id, index, offset, size } = requestOptions;
+      const data = [];
+      let db;
 
-    request.onsuccess = event => {
-      db = event.target.result;
-
-      const transaction = db.transaction(objectStore, "readonly");
-      let source = transaction.objectStore(objectStore);
-      if (index && index != "name") {
-        source = source.index(index);
+      if (!size || size > MAX_STORE_OBJECT_COUNT) {
+        size = MAX_STORE_OBJECT_COUNT;
       }
 
-      source.count().onsuccess = event2 => {
-        const objectsSize = [];
-        const count = event2.target.result;
-        objectsSize.push({
-          key: host + dbName + objectStore + index,
-          count: count,
-        });
+      request.onsuccess = event => {
+        db = event.target.result;
 
-        if (!offset) {
-          offset = 0;
-        } else if (offset > count) {
-          db.close();
-          success.resolve([]);
-          return;
+        const transaction = db.transaction(objectStore, "readonly");
+        let source = transaction.objectStore(objectStore);
+        if (index && index != "name") {
+          source = source.index(index);
         }
 
-        if (id) {
-          source.get(id).onsuccess = event3 => {
+        source.count().onsuccess = event2 => {
+          const objectsSize = [];
+          const count = event2.target.result;
+          objectsSize.push({
+            key: host + dbName + objectStore + index,
+            count: count,
+          });
+
+          if (!offset) {
+            offset = 0;
+          } else if (offset > count) {
             db.close();
-            success.resolve([{ name: id, value: event3.target.result }]);
-          };
-        } else {
-          source.openCursor().onsuccess = event4 => {
-            const cursor = event4.target.result;
+            resolve([]);
+            return;
+          }
 
-            if (!cursor || data.length >= size) {
+          if (id) {
+            source.get(id).onsuccess = event3 => {
               db.close();
-              success.resolve({
-                data: data,
-                objectsSize: objectsSize,
-              });
-              return;
-            }
-            if (offset-- <= 0) {
-              data.push({ name: cursor.key, value: cursor.value });
-            }
-            cursor.continue();
-          };
-        }
+              resolve([{ name: id, value: event3.target.result }]);
+            };
+          } else {
+            source.openCursor().onsuccess = event4 => {
+              const cursor = event4.target.result;
+
+              if (!cursor || data.length >= size) {
+                db.close();
+                resolve({
+                  data: data,
+                  objectsSize: objectsSize,
+                });
+                return;
+              }
+              if (offset-- <= 0) {
+                data.push({ name: cursor.key, value: cursor.value });
+              }
+              cursor.continue();
+            };
+          }
+        };
       };
-    };
-    request.onerror = () => {
-      db.close();
-      success.resolve([]);
-    };
-    return success.promise;
+
+      request.onerror = () => {
+        db.close();
+        resolve([]);
+      };
+    });
   },
 
   /**
