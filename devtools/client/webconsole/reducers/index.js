@@ -16,7 +16,7 @@ const {
 const { history } = require("devtools/client/webconsole/reducers/history");
 const {
   default: objectInspector,
-} = require("devtools/client/shared/components/reps/object-inspector/reducer");
+} = require("devtools/client/shared/components/object-inspector/reducer");
 
 exports.reducers = {
   autocomplete,

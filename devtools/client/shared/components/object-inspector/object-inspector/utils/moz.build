@@ -4,11 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'reps',
-    'shared',
-]
-
 DevToolsModules(
+    'client.js',
     'index.js',
+    'load-properties.js',
+    'node.js',
+    'selection.js',
 )

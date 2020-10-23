@@ -9,7 +9,7 @@ const { mount } = require("enzyme");
 const {
   createNode,
   NODE_TYPES,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const { Rep } = require(`devtools/client/shared/components/reps/reps/rep`);
 const {

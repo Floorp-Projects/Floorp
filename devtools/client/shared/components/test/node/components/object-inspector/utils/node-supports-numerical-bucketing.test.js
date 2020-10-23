@@ -6,7 +6,7 @@ const {
   createNode,
   makeNodesForEntries,
   nodeSupportsNumericalBucketing,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const createRootNode = stub =>
   createNode({

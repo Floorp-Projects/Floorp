@@ -10,7 +10,7 @@ const {
 } = require("devtools/client/shared/components/reps/reps/constants");
 const {
   createNode,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const functionStubs = require("devtools/client/shared/components/test/node/stubs/reps/function");
 const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");

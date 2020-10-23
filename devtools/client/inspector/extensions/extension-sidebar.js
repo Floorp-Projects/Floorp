@@ -14,7 +14,7 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const extensionsSidebarReducer = require("devtools/client/inspector/extensions/reducers/sidebar");
 const {
   default: objectInspectorReducer,
-} = require("devtools/client/shared/components/reps/object-inspector/reducer");
+} = require("devtools/client/shared/components/object-inspector/reducer");
 
 const ExtensionSidebarComponent = createFactory(
   require("devtools/client/inspector/extensions/components/ExtensionSidebar")
