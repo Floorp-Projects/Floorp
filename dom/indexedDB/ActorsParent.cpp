@@ -6749,28 +6749,24 @@ class DeserializeIndexValueHelper final : public Runnable {
     JSContext* const cx = jsapi.cx();
 
     JS::Rooted<JSObject*> global(cx, GetSandbox(cx));
-    if (NS_WARN_IF(!global)) {
-      OperationCompleted(NS_ERROR_FAILURE);
-      return NS_OK;
-    }
+
+    IDB_TRY(OkIf(global), NS_OK,
+            [this](const NotOk) { OperationCompleted(NS_ERROR_FAILURE); });
 
     const JSAutoRealm ar(cx, global);
 
     JS::Rooted<JS::Value> value(cx);
-    const nsresult rv = DeserializeIndexValue(cx, &value);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      OperationCompleted(rv);
-      return NS_OK;
-    }
+    IDB_TRY(DeserializeIndexValue(cx, &value), NS_OK,
+            [this](const nsresult rv) { OperationCompleted(rv); });
 
     ErrorResult errorResult;
     IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
                                           mLocale, cx, value, &mUpdateInfoArray,
                                           &errorResult);
-    if (NS_WARN_IF(errorResult.Failed())) {
-      OperationCompleted(errorResult.StealNSResult());
-      return NS_OK;
-    }
+    IDB_TRY(OkIf(!errorResult.Failed()), NS_OK,
+            ([this, &errorResult](const NotOk) {
+              OperationCompleted(errorResult.StealNSResult());
+            }));
 
     OperationCompleted(NS_OK);
     return NS_OK;
