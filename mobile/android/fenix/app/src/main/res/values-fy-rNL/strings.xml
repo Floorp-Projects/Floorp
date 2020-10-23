@@ -217,6 +217,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Mear ynfo</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">In nij Firefox-ljepblêd iepenje</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Sykje</string>
     <!-- Text preview for larger sized widgets -->
@@ -627,6 +629,8 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Ljepblêden iepenje</string>
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Namme kolleksje</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fuortsmite</string>
 
@@ -1616,6 +1620,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Helje it measte út %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Klik foar mear details</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Sammelje de dingen dy\'t wichtich foar jo binne</string>

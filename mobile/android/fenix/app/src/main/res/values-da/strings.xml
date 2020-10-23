@@ -212,6 +212,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Læs mere</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Åbn et nyt Firefox-faneblad</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Søg</string>
     <!-- Text preview for larger sized widgets -->
@@ -1605,6 +1608,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Få det meste ud af %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Tryk for at se flere detaljer</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Saml de ting, der betyder noget for dig</string>

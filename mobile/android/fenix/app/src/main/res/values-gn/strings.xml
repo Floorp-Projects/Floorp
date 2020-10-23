@@ -219,6 +219,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Kuaave</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Embojuruja Firefox rendayke pyahu</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Heka</string>
 
@@ -635,6 +637,8 @@
     <string name="collection_rename">Emoambue atygua réra</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Embojuruja tendayke</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Ñembyatyha réra</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Mboguete</string>
 
@@ -1645,6 +1649,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Eguenohẽ %s-gui eikotevẽva.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Eikutu ápe eikuaave hag̃ua</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Embyaty umi mba’ekuéra ehayhu añetéva</string>
