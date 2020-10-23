@@ -48,7 +48,7 @@ class JitSource(gdb.Command):
         self.dont_repeat()
 
     def disable_breakpoints(self):
-        self.disabled_breakpoints = [b for b in gdb.breakpoints() if b.enabled()]
+        self.disabled_breakpoints = [b for b in gdb.breakpoints() if b.enabled]
         for b in self.disabled_breakpoints:
             b.enabled = False
 
