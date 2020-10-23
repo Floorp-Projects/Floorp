@@ -1220,7 +1220,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         val newSession = delegateNewSession()
         sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
-        // about:blank
+        // Initial about:blank
         newSession.waitForPageStop()
         // NEW_SESSION_CHILD_HTML_PATH
         newSession.waitForPageStop()
@@ -1664,8 +1664,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 extension.metaData.baseUrl, startsWith("moz-extension://"))
 
         val url = extension.metaData.baseUrl + "page.html"
-        val isRemote = sessionRule.getPrefs("extensions.webextensions.remote")[0] as Boolean
-        processSwitchingTest(url, isRemote)
+        processSwitchingTest(url)
 
         sessionRule.waitForResult(controller.uninstall(extension))
     }
@@ -1675,7 +1674,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         processSwitchingTest("about:config")
     }
 
-    fun processSwitchingTest(url: String, isRemoteExtension: Boolean = false) {
+    private fun processSwitchingTest(url: String) {
         val settings = sessionRule.runtime.settings
         val aboutConfigEnabled = settings.aboutConfigEnabled
         settings.aboutConfigEnabled = true
@@ -1698,36 +1697,33 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // This loads in the parent process
         mainSession.loadUri(url)
-        // Switching processes involves loading about:blank
-        sessionRule.waitForPageStops(2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
         // This will load a page in the child
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitForPageStops(2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
 
         mainSession.loadUri(url)
-        sessionRule.waitForPageStops(2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
-        // History navigation to or from the extension process does not trigger
-        // an about:blank load
         sessionRule.session.goBack()
-        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
 
         sessionRule.session.goBack()
-        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
         sessionRule.session.goBack()
-        sessionRule.waitForPageStops(if (isRemoteExtension) 1 else 2)
+        sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO2_HTML_PATH))
 
