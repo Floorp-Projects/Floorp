@@ -2,22 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function test_searchEngine() {
+const engineDomain = "s.example.com";
+add_task(async function setup() {
   let engine = await Services.search.addEngineWithDetails("SearchEngine", {
     method: "GET",
-    template: "http://s.example.com/search",
+    template: `http://${engineDomain}/search`,
     searchGetParams: "q={searchTerms}",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
-
-  let uri = NetUtil.newURI("http://s.example.com/search?q=Terms");
+  Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("browser.urlbar.restyleSearches");
+    Services.search.removeEngine(engine);
+  });
+});
+add_task(async function test_searchEngine() {
+  let uri = Services.io.newURI(`http://${engineDomain}/search?q=Terms`);
   await PlacesTestUtils.addVisits({
     uri,
     title: "Terms - SearchEngine Search",
   });
 
   info("Past search terms should be styled.");
-  Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
+
   await check_autocomplete({
     search: "term",
     matches: [
@@ -28,6 +34,13 @@ add_task(async function test_searchEngine() {
         style: ["favicon"],
       }),
     ],
+  });
+
+  info(
+    "Searching for a superset of the search string in history should not restyle."
+  );
+  await check_autocomplete({
+    search: "Terms Foo",
   });
 
   info("Bookmarked past searches should not be restyled");
@@ -55,6 +68,23 @@ add_task(async function test_searchEngine() {
     search: "term",
     matches: [{ uri, title: "Terms - SearchEngine Search" }],
   });
+  Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
 
   await cleanup();
+});
+
+add_task(async function test_extraneousParameters() {
+  info("SERPs in history with extraneous parameters should not be restyled.");
+  let uri = Services.io.newURI(
+    `http://${engineDomain}/search?q=Terms&p=2&type=img`
+  );
+  await PlacesTestUtils.addVisits({
+    uri,
+    title: "Terms - SearchEngine Search",
+  });
+
+  await check_autocomplete({
+    search: "term",
+    matches: [{ uri, title: "Terms - SearchEngine Search" }],
+  });
 });

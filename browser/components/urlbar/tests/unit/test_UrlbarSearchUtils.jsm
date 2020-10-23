@@ -189,6 +189,36 @@ add_task(async function test_builtin_aliased_search_engine_match() {
   Assert.ok(engine);
 });
 
+add_task(async function test_serps_are_equivalent() {
+  info("Subset URL has extraneous parameters.");
+  let url1 = "https://example.com/search?q=test&type=images";
+  let url2 = "https://example.com/search?q=test";
+  Assert.ok(!UrlbarSearchUtils.serpsAreEquivalent(url1, url2));
+  info("Superset URL has extraneous parameters.");
+  Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url2, url1));
+
+  info("Same keys, different values.");
+  url1 = "https://example.com/search?q=test&type=images";
+  url2 = "https://example.com/search?q=test123&type=maps";
+  Assert.ok(!UrlbarSearchUtils.serpsAreEquivalent(url1, url2));
+  Assert.ok(!UrlbarSearchUtils.serpsAreEquivalent(url2, url1));
+
+  info("Subset matching isn't strict (URL is subset of itself).");
+  Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url1, url1));
+
+  info("Origin and pathname are ignored.");
+  url1 = "https://example.com/search?q=test";
+  url2 = "https://example-1.com/maps?q=test";
+  Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url1, url2));
+  Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url2, url1));
+
+  info("Params can be optionally ignored");
+  url1 = "https://example.com/search?q=test&abc=123&foo=bar";
+  url2 = "https://example.com/search?q=test";
+  Assert.ok(!UrlbarSearchUtils.serpsAreEquivalent(url1, url2));
+  Assert.ok(UrlbarSearchUtils.serpsAreEquivalent(url1, url2, ["abc", "foo"]));
+});
+
 function promiseSearchTopic(expectedVerb) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observe(subject, topic, verb) {
