@@ -79,12 +79,18 @@ class IMEStateManager {
   }
 
   /**
-   * If CanSendNotificationToTheMainProcess() returns false (it should occur
-   * only in a content process), we shouldn't notify the main process of
+   * If CanSendNotificationToWidget() returns false (it should occur
+   * only in a content process), we shouldn't notify the widget of
    * any focused editor changes since the content process was blurred.
+   * Also, even if content process, widget has native text event dispatcher such
+   * as Android, it still notify it.
    */
-  static bool CanSendNotificationToTheMainProcess() {
+  static bool CanSendNotificationToWidget() {
+#ifdef MOZ_WIDGET_ANDROID
+    return true;
+#else
     return !sCleaningUpForStoppingIMEStateManagement;
+#endif
   }
 
   /**
