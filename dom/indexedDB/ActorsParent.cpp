@@ -7042,10 +7042,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   AUTO_PROFILER_LABEL("DatabaseConnection::BeginWriteTransaction", DOM);
 
   // Release our read locks.
-  nsresult rv = ExecuteCachedStatement("ROLLBACK;"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement("ROLLBACK;"_ns));
 
   mInReadTransaction = false;
 
@@ -7055,12 +7052,9 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     RefPtr<UpdateRefcountFunction> function =
         new UpdateRefcountFunction(this, **mFileManager);
 
-    rv = (*mStorageConnection)
-             ->CreateFunction("update_refcount"_ns,
-                              /* aNumArguments */ 2, function);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY((*mStorageConnection)
+                ->CreateFunction("update_refcount"_ns,
+                                 /* aNumArguments */ 2, function));
 
     mUpdateRefcountFunction = std::move(function);
   }
@@ -7072,30 +7066,29 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   IDB_TRY_INSPECT(const auto& beginStmt,
                   BorrowCachedStatement("BEGIN IMMEDIATE;"_ns));
 
-  rv = beginStmt->Execute();
-  if (rv == NS_ERROR_STORAGE_BUSY) {
-    NS_WARNING(
-        "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
-        "transaction, retrying for up to 10 seconds");
+  IDB_TRY(ToResult(beginStmt->Execute()).orElse([&beginStmt](nsresult rv) {
+    if (rv == NS_ERROR_STORAGE_BUSY) {
+      NS_WARNING(
+          "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
+          "transaction, retrying for up to 10 seconds");
 
-    // Another thread must be using the database. Wait up to 10 seconds for
-    // that to complete.
-    const TimeStamp start = TimeStamp::NowLoRes();
+      // Another thread must be using the database. Wait up to 10 seconds for
+      // that to complete.
+      const TimeStamp start = TimeStamp::NowLoRes();
 
-    while (true) {
-      PR_Sleep(PR_MillisecondsToInterval(100));
+      while (true) {
+        PR_Sleep(PR_MillisecondsToInterval(100));
 
-      rv = beginStmt->Execute();
-      if (rv != NS_ERROR_STORAGE_BUSY ||
-          TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
-        break;
+        rv = beginStmt->Execute();
+        if (rv != NS_ERROR_STORAGE_BUSY ||
+            TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
+          break;
+        }
       }
     }
-  }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    return Result<Ok, nsresult>{rv};
+  }));
 
   mInWriteTransaction = true;
 
