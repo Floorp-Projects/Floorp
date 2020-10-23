@@ -50,7 +50,7 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   // stored in settingsX to read the printer-specific prefs.)
   printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
 
-  NSPrintInfo* printInfo = settingsX->CreatePrintInfo(/* aWithScaling = */ true);
+  NSPrintInfo* printInfo = settingsX->CreateOrCopyPrintInfo(/* aWithScaling = */ true);
   if (NS_WARN_IF(!printInfo)) {
     return NS_ERROR_FAILURE;
   }
@@ -113,7 +113,10 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   [viewController exportSettings];
 
   // Update our settings object based on the user's choices in the dialog.
-  settingsX->SetFromPrintInfo(result);
+  // We tell settingsX to adopt this printInfo so that it will be used to run print job,
+  // so that any printer-specific custom settings from print dialog extension panels
+  // will be carried through.
+  settingsX->SetFromPrintInfo(result, /* aAdoptPrintInfo = */ true);
 
   // Save settings unless saving is pref'd off
   if (Preferences::GetBool("print.save_print_settings", false)) {
@@ -139,7 +142,7 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
     return NS_ERROR_FAILURE;
   }
 
-  NSPrintInfo* printInfo = settingsX->CreatePrintInfo(/* aWithScaling = */ true);
+  NSPrintInfo* printInfo = settingsX->CreateOrCopyPrintInfo(/* aWithScaling = */ true);
   if (NS_WARN_IF(!printInfo)) {
     return NS_ERROR_FAILURE;
   }
@@ -151,7 +154,10 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   if (button == NSFileHandlingPanelOKButton) {
-    settingsX->SetFromPrintInfo(printInfo);
+    // The Page Setup dialog does not include non-standard settings that need to be preserved,
+    // separate from what the base printSettings object handles, so we do not need it to adopt
+    // the printInfo object here.
+    settingsX->SetFromPrintInfo(printInfo, /* aAdoptPrintInfo = */ false);
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (printSettingsService && Preferences::GetBool("print.save_print_settings", false)) {

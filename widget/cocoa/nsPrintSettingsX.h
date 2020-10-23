@@ -45,14 +45,25 @@ class nsPrintSettingsX : public nsPrintSettings {
   // by Gecko and we don't want the Cocoa print system to impose scaling again
   // on the output, but if we're retrieving the info in order to populate the
   // system print UI, then we do want to know about it.
-  NSPrintInfo* CreatePrintInfo(bool aWithScaling = false);
+  NSPrintInfo* CreateOrCopyPrintInfo(bool aWithScaling = false);
 
   // Update our internal settings to reflect the properties of the given
   // NSPrintInfo.
-  void SetFromPrintInfo(const NSPrintInfo* aPrintInfo);
+  //
+  // If aAdoptPrintInfo is set, the given NSPrintInfo will be retained and
+  // returned by subsequent CreateOrCopyPrintInfo calls, which is required
+  // for custom settings from the OS print dialog to be passed through to
+  // print jobs. However, this means that subsequent changes to print settings
+  // via the generic nsPrintSettings methods will NOT be reflected in the
+  // resulting NSPrintInfo.
+  void SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrintInfo);
 
  protected:
-  virtual ~nsPrintSettingsX(){};
+  virtual ~nsPrintSettingsX() {
+    if (mSystemPrintInfo) {
+      [mSystemPrintInfo release];
+    }
+  };
 
   nsPrintSettingsX& operator=(const nsPrintSettingsX& rhs);
 
@@ -90,6 +101,16 @@ class nsPrintSettingsX : public nsPrintSettings {
   // various workflows such as "Save to Web Receipts" to work.
   nsString mDisposition;
   uint16_t mDestination;
+
+  // If the user has used the system print UI, we retain a reference to its
+  // printInfo because it may contain settings that we don't know how to handle
+  // and that will be lost if we round-trip through nsPrintSettings fields.
+  // We'll use this printInfo if asked to run a print job.
+  //
+  // This "wrapped" printInfo is NOT serialized or copied when printSettings
+  // objects are passed around; it is used only by the settings object to which
+  // it was originally passed.
+  NSPrintInfo* mSystemPrintInfo = nullptr;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintSettingsX, NS_PRINTSETTINGSX_IID)
