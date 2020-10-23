@@ -595,8 +595,8 @@ nscoord nsVideoFrame::GetMinISize(gfxContext* aRenderingContext) {
     // "controls" attribute is present.
     nsIFrame* kid = mFrames.LastChild();
     if (!StyleDisplay()->IsContainSize() && kid) {
-      result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                    nsLayoutUtils::MIN_ISIZE);
+      result = nsLayoutUtils::IntrinsicForContainer(
+          aRenderingContext, kid, IntrinsicISizeType::MinISize);
     } else {
       result = 0;
     }
@@ -617,8 +617,8 @@ nscoord nsVideoFrame::GetPrefISize(gfxContext* aRenderingContext) {
     // "controls" attribute is present.
     nsIFrame* kid = mFrames.LastChild();
     if (!StyleDisplay()->IsContainSize() && kid) {
-      result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                    nsLayoutUtils::PREF_ISIZE);
+      result = nsLayoutUtils::IntrinsicForContainer(
+          aRenderingContext, kid, IntrinsicISizeType::PrefISize);
     } else {
       result = 0;
     }
