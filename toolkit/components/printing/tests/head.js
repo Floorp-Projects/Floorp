@@ -321,6 +321,15 @@ class PrintHelper {
     return new Promise(resolve => this.win.requestAnimationFrame(resolve));
   }
 
+  mockFilePickerCancel() {
+    if (!pickerMocked) {
+      pickerMocked = true;
+      MockFilePicker.init(window);
+      registerCleanupFunction(() => MockFilePicker.cleanup());
+    }
+    MockFilePicker.returnValue = MockFilePicker.returnCancel;
+  }
+
   mockFilePicker(filename) {
     if (!pickerMocked) {
       pickerMocked = true;

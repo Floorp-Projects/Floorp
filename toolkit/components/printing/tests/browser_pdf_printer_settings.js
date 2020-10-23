@@ -39,3 +39,49 @@ add_task(async function testPDFPrinterSettings() {
     await SpecialPowers.popPrefEnv();
   });
 });
+
+add_task(async function testPDFCancel() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    helper.mockFilePickerCancel();
+    let form = helper.doc.querySelector("#print");
+    let getDisabledStates = () => [...form.elements].map(el => el.disabled);
+    let initialDisabledStates = getDisabledStates();
+
+    ok(
+      initialDisabledStates.some(disabled => !disabled),
+      "At least one enabled form element before submitting"
+    );
+    let getShownDisabledStates = new Promise(resolve => {
+      MockFilePicker.showCallback = () => resolve(getDisabledStates());
+    });
+
+    EventUtils.sendKey("return", helper.win);
+
+    let shownDisabledStates = await getShownDisabledStates;
+    ok(shownDisabledStates, "Got disabled states while shown");
+    ok(
+      shownDisabledStates.every(disabled => disabled),
+      "All elements were disabled when showing picker"
+    );
+
+    let saveButton = form.querySelector("#print-button");
+    await BrowserTestUtils.waitForAttributeRemoval("disabled", saveButton);
+    helper.assertDialogOpen();
+
+    is(
+      getDisabledStates().every(
+        (disabledState, index) => disabledState === initialDisabledStates[index]
+      ),
+      true,
+      "Previous disabled states match after returning to preview"
+    );
+
+    // Close the dialog with Escape.
+    await helper.withClosingFn(() => {
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, helper.win);
+    });
+
+    helper.assertDialogClosed();
+  });
+});
