@@ -11,11 +11,16 @@ from make_incremental_updates import PatchInfo, MarFileEntry
 
 class TestPatchInfo(unittest.TestCase):
     def setUp(self):
-        self.work_dir = 'work_dir'
-        self.file_exclusion_list = ['update.manifest', 'updatev2.manifest', 'updatev3.manifest']
-        self.path_exclusion_list = ['/readme.txt']
+        self.work_dir = "work_dir"
+        self.file_exclusion_list = [
+            "update.manifest",
+            "updatev2.manifest",
+            "updatev3.manifest",
+        ]
+        self.path_exclusion_list = ["/readme.txt"]
         self.patch_info = PatchInfo(
-            self.work_dir, self.file_exclusion_list, self.path_exclusion_list)
+            self.work_dir, self.file_exclusion_list, self.path_exclusion_list
+        )
 
     def testPatchInfo(self):
         self.assertEquals(self.work_dir, self.patch_info.work_dir)
@@ -26,51 +31,68 @@ class TestPatchInfo(unittest.TestCase):
         self.assertEquals(self.path_exclusion_list, self.patch_info.path_exclusion_list)
 
     def test_append_add_instruction(self):
-        self.patch_info.append_add_instruction('file.test')
+        self.patch_info.append_add_instruction("file.test")
         self.assertEquals(['add "file.test"'], self.patch_info.manifestv2)
         self.assertEquals(['add "file.test"'], self.patch_info.manifestv3)
 
     def test_append_add_if_instruction(self):
-        self.patch_info.append_add_instruction('distribution/extensions/extension/file.test')
+        self.patch_info.append_add_instruction(
+            "distribution/extensions/extension/file.test"
+        )
         self.assertEquals(
-            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'],  # NOQA: E501
-            self.patch_info.manifestv2)
+            [
+                'add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'  # NOQA: E501
+            ],
+            self.patch_info.manifestv2,
+        )
         self.assertEquals(
-            ['add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'],  # NOQA: E501
-            self.patch_info.manifestv3)
+            [
+                'add-if "distribution/extensions/extension" "distribution/extensions/extension/file.test"'  # NOQA: E501
+            ],
+            self.patch_info.manifestv3,
+        )
 
     def test_append_add_if_not_instruction(self):
-        self.patch_info.append_add_if_not_instruction('file.test')
+        self.patch_info.append_add_if_not_instruction("file.test")
         self.assertEquals([], self.patch_info.manifestv2)
-        self.assertEquals(['add-if-not "file.test" "file.test"'], self.patch_info.manifestv3)
+        self.assertEquals(
+            ['add-if-not "file.test" "file.test"'], self.patch_info.manifestv3
+        )
 
     def test_append_patch_instruction(self):
-        self.patch_info.append_patch_instruction('file.test', 'patchname')
+        self.patch_info.append_patch_instruction("file.test", "patchname")
         self.assertEquals(['patch "patchname" "file.test"'], self.patch_info.manifestv2)
         self.assertEquals(['patch "patchname" "file.test"'], self.patch_info.manifestv3)
 
     def test_append_patch_if_instruction(self):
         self.patch_info.append_patch_instruction(
-            'distribution/extensions/extension/file.test', 'patchname')
+            "distribution/extensions/extension/file.test", "patchname"
+        )
         self.assertEquals(
-            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'],  # NOQA: E501
-            self.patch_info.manifestv2)
+            [
+                'patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'  # NOQA: E501
+            ],
+            self.patch_info.manifestv2,
+        )
         self.assertEquals(
-            ['patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'],  # NOQA: E501
-            self.patch_info.manifestv3)
+            [
+                'patch-if "distribution/extensions/extension" "patchname" "distribution/extensions/extension/file.test"'  # NOQA: E501
+            ],
+            self.patch_info.manifestv3,
+        )
 
     def test_append_remove_instruction(self):
-        self.patch_info.append_remove_instruction('file.test')
+        self.patch_info.append_remove_instruction("file.test")
         self.assertEquals(['remove "file.test"'], self.patch_info.manifestv2)
         self.assertEquals(['remove "file.test"'], self.patch_info.manifestv3)
 
     def test_append_rmdir_instruction(self):
-        self.patch_info.append_remove_instruction('dirtest/')
+        self.patch_info.append_remove_instruction("dirtest/")
         self.assertEquals(['rmdir "dirtest/"'], self.patch_info.manifestv2)
         self.assertEquals(['rmdir "dirtest/"'], self.patch_info.manifestv3)
 
     def test_append_rmrfdir_instruction(self):
-        self.patch_info.append_remove_instruction('dirtest/*')
+        self.patch_info.append_remove_instruction("dirtest/*")
         self.assertEquals(['rmrfdir "dirtest/"'], self.patch_info.manifestv2)
         self.assertEquals(['rmrfdir "dirtest/"'], self.patch_info.manifestv3)
 
@@ -80,8 +102,10 @@ class TestPatchInfo(unittest.TestCase):
     """
 
     def test_build_marfile_entry_hash(self):
-        self.assertEquals(({}, set([]), set([])),
-                          self.patch_info.build_marfile_entry_hash('root_path'))
+        self.assertEquals(
+            ({}, set([]), set([])),
+            self.patch_info.build_marfile_entry_hash("root_path"),
+        )
 
 
 """ FIXME touches the filesystem, need refactoring
@@ -112,13 +136,14 @@ class TestMarFileEntry(unittest.TestCase):
 
 class TestMakeIncrementalUpdates(unittest.TestCase):
     def setUp(self):
-        work_dir = '.'
+        work_dir = "."
         self.patch_info = PatchInfo(
             work_dir,
-            ['update.manifest', 'updatev2.manifest', 'updatev3.manifest'],
-            ['/readme.txt'])
-        root_path = '/'
-        filename = 'test.file'
+            ["update.manifest", "updatev2.manifest", "updatev3.manifest"],
+            ["/readme.txt"],
+        )
+        root_path = "/"
+        filename = "test.file"
         self.mar_file_entry = MarFileEntry(root_path, filename)
 
     """ FIXME makes direct shell calls, need refactoring
@@ -162,14 +187,25 @@ class TestMakeIncrementalUpdates(unittest.TestCase):
     """
 
     def test_decode_filename(self):
-        expected = {'locale': 'lang', 'platform': 'platform',
-                    'product': 'product', 'version': '1.0', 'type': 'complete'}
-        self.assertEquals(expected, mkup.decode_filename('product-1.0.lang.platform.complete.mar'))
-        self.assertEquals(expected, mkup.decode_filename('platform/lang/product-1.0.complete.mar'))
+        expected = {
+            "locale": "lang",
+            "platform": "platform",
+            "product": "product",
+            "version": "1.0",
+            "type": "complete",
+        }
+        self.assertEquals(
+            expected, mkup.decode_filename("product-1.0.lang.platform.complete.mar")
+        )
+        self.assertEquals(
+            expected, mkup.decode_filename("platform/lang/product-1.0.complete.mar")
+        )
         with self.assertRaises(Exception) as cm:
-            mkup.decode_filename('fail')
-        self.assertTrue(cm.exception.args[0].startswith('could not parse filepath fail:'))
+            mkup.decode_filename("fail")
+        self.assertTrue(
+            cm.exception.args[0].startswith("could not parse filepath fail:")
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
