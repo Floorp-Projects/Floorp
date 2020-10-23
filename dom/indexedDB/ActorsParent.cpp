@@ -8140,10 +8140,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
   RefPtr<DatabaseConnection> connection = new DatabaseConnection(
       std::move(storageConnection), aDatabase.GetFileManagerPtr());
 
-  nsresult rv = connection->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(connection->Init());
 
   dbInfo->mConnection = connection;
 
