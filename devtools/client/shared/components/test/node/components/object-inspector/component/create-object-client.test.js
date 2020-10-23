@@ -13,7 +13,7 @@ const {
   createNode,
   makeNodesForEntries,
   makeNumericalBuckets,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const gripRepStubs = require(`devtools/client/shared/components/test/node/stubs/reps/grip`);
 const gripArrayRepStubs = require(`devtools/client/shared/components/test/node/stubs/reps/grip-array`);

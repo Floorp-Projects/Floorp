@@ -167,7 +167,7 @@ devtools.jar:
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)
     content/shared/components/SmartTrace.css (shared/components/SmartTrace.css)
     content/shared/components/Tree.css (shared/components/Tree.css)
-    content/shared/components/reps/object-inspector/components/ObjectInspector.css (shared/components/reps/object-inspector/components/ObjectInspector.css)
+    content/shared/components/object-inspector/components/ObjectInspector.css (shared/components/object-inspector/components/ObjectInspector.css)
     content/shared/components/reps/reps.css (shared/components/reps/reps.css)
     content/shared/components/reps/images/input.svg (shared/components/reps/images/input.svg)
     content/shared/components/reps/images/jump-definition.svg (shared/components/reps/images/jump-definition.svg)

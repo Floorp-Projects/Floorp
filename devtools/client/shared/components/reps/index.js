@@ -11,7 +11,7 @@ const {
   REPS,
   getRep,
 } = require("devtools/client/shared/components/reps/reps/rep");
-const objectInspector = require("devtools/client/shared/components/reps/object-inspector/index");
+const objectInspector = require("devtools/client/shared/components/object-inspector/index");
 
 const {
   parseURLEncodedText,

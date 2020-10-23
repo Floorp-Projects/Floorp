@@ -14,7 +14,7 @@ const {
   getChildren,
   getValue,
   makeNodesForProperties,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 function createRootNodeWithAccessorProperty(accessorStub) {
   const node = { name: "root", path: "rootpath" };

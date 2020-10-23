@@ -21,13 +21,13 @@ const {
  * Redux store utils
  * @module utils/create-store
  */
-const objectInspector = require("devtools/client/shared/components/reps/object-inspector/index");
+const objectInspector = require("devtools/client/shared/components/object-inspector/index");
 const {
   getLoadedProperties,
   getLoadedPropertyKeys,
   getExpandedPaths,
   getExpandedPathKeys,
-} = require("devtools/client/shared/components/reps/object-inspector/reducer");
+} = require("devtools/client/shared/components/object-inspector/reducer");
 
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 
