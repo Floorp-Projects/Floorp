@@ -2042,6 +2042,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // We use executeSoon because we don't want to block those operations
     // by sending packets in the middle of them.
     DevToolsUtils.executeSoon(() => {
+      if (this.isDestroyed()) {
+        return;
+      }
       this.emit("newSource", {
         source: source.form(),
       });
