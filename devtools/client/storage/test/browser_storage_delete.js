@@ -64,6 +64,7 @@ add_task(async function() {
       );
     });
 
+    info("Awaiting for store-objects-edit event");
     await eventWait;
 
     ok(
