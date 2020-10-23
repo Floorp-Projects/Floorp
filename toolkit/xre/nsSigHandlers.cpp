@@ -150,9 +150,9 @@ static void fpehandler(int signum, siginfo_t* si, void* context) {
   }
 
 #    ifdef XP_MACOSX
+#      if defined(__i386__) || defined(__amd64__)
   ucontext_t* uc = (ucontext_t*)context;
 
-#      if defined(__i386__) || defined(__amd64__)
   _STRUCT_FP_CONTROL* ctrl = &uc->uc_mcontext->__fs.__fpu_fcw;
   ctrl->__invalid = ctrl->__denorm = ctrl->__zdiv = ctrl->__ovrfl =
       ctrl->__undfl = ctrl->__precis = 1;
