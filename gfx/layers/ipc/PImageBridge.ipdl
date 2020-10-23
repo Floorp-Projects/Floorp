@@ -49,7 +49,7 @@ parent:
   // it is scheduled in the ImageBridgeChild's message queue in order to ensure
   // that all of the messages from the parent side have been received and processed
   // before sending closing the channel.
-  sync WillClose();
+  async WillClose();
 
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
   async PMediaSystemResourceManager();
