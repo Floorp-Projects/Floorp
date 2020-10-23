@@ -16950,14 +16950,11 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   MOZ_ASSERT(info->mMetadata != mMetadata);
   mMetadata = info->mMetadata.clonePtr();
 
-  Maybe<uint64_t> newVersion = Some(mRequestedVersion);
+  const Maybe<uint64_t> newVersion = Some(mRequestedVersion);
 
-  nsresult rv = SendVersionChangeMessages(info, mDatabase.maybeDeref(),
-                                          mMetadata->mCommonMetadata.version(),
-                                          newVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(SendVersionChangeMessages(info, mDatabase.maybeDeref(),
+                                    mMetadata->mCommonMetadata.version(),
+                                    newVersion));
 
   mVersionChangeTransaction = std::move(transaction);
 
