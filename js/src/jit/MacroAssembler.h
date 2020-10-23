@@ -260,6 +260,11 @@ static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
+constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
+    wasm::FrameWithTls::callerTLSOffset() + ShadowStackSpace;
+constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
+    wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
+
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
