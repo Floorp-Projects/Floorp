@@ -27,6 +27,28 @@ win64-nasm:
         toolchain:
             - linux64-clang-mingw-x64
 
+macosx64-nasm:
+    description: "nasm macosx64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(nasm)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+    run:
+        script: build-nasm.sh
+        arguments: ['macosx64']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - nasm-2.14.02
+        toolchain:
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11-macosx-cross
+
 linux64-nasm:
     description: "nasm linux64 build"
     attributes:
