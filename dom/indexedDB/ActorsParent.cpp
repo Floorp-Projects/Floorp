@@ -12530,31 +12530,19 @@ nsCOMPtr<nsIFile> FileManager::EnsureJournalDirectory() {
   MOZ_ASSERT(!NS_IsMainThread());
 
   auto journalDirectory = GetFileForPath(*mJournalDirectoryPath);
-  if (NS_WARN_IF(!journalDirectory)) {
-    return nullptr;
-  }
+  IDB_TRY(OkIf(journalDirectory), nullptr);
 
-  bool exists;
-  nsresult rv = journalDirectory->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  IDB_TRY_INSPECT(const bool& exists,
+                  MOZ_TO_RESULT_INVOKE(journalDirectory, Exists), nullptr);
 
   if (exists) {
-    bool isDirectory;
-    rv = journalDirectory->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    IDB_TRY_INSPECT(const bool& isDirectory,
+                    MOZ_TO_RESULT_INVOKE(journalDirectory, IsDirectory),
+                    nullptr);
 
-    if (NS_WARN_IF(!isDirectory)) {
-      return nullptr;
-    }
+    IDB_TRY(OkIf(isDirectory), nullptr);
   } else {
-    rv = journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    IDB_TRY(journalDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755), nullptr);
   }
 
   return journalDirectory;
