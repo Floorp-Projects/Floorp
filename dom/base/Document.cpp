@@ -12325,6 +12325,12 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
     return nullptr;
   }
 
+  // If the node is disconnected, this is a bug in the selection code, but it
+  // can happen with shadow DOM so handle it.
+  if (NS_WARN_IF(!aOrigNode->IsInComposedDoc())) {
+    return nullptr;
+  }
+
   nsTArray<int32_t> indexArray;
   const nsINode* current = aOrigNode;
   while (const nsINode* parent = current->GetParentNode()) {
