@@ -7,6 +7,41 @@
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../shared/test/shared-head.js */
 
+// Sometimes HTML pages have a `clear` function that cleans up the storage they
+// created. To make sure it's always called, we are registering as a cleanup
+// function, but since this needs to run before tabs are closed, we need to
+// do this registration before importing `shared-head`, since declaration
+// order matters.
+registerCleanupFunction(async () => {
+  const browser = gBrowser.selectedBrowser;
+  const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
+  for (const context of contexts) {
+    await SpecialPowers.spawn(context, [], async () => {
+      const win = content.wrappedJSObject;
+
+      // Some windows (e.g., about: URLs) don't have storage available
+      try {
+        win.localStorage.clear();
+        win.sessionStorage.clear();
+      } catch (ex) {
+        // ignore
+      }
+
+      if (win.clear) {
+        await win.clear();
+      }
+    });
+  }
+
+  Services.cookies.removeAll();
+
+  // Close tabs and force memory collection to happen
+  while (gBrowser.tabs.length > 1) {
+    await closeTabAndToolbox(gBrowser.selectedTab);
+  }
+  forceCollections();
+});
+
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
@@ -59,34 +94,12 @@ registerCleanupFunction(() => {
 async function openTab(url, options = {}) {
   const tab = await addTab(url, options);
 
-  // Setup the async storages in main window and for all its iframes
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    /**
-     * Get all windows including frames recursively.
-     *
-     * @param {Window} [baseWindow]
-     *        The base window at which to start looking for child windows
-     *        (optional).
-     * @return {Set}
-     *         A set of windows.
-     */
-    function getAllWindows(baseWindow) {
-      const windows = new Set();
+  const browser = gBrowser.selectedBrowser;
+  const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
 
-      const _getAllWindows = function(win) {
-        windows.add(win.wrappedJSObject);
-
-        for (let i = 0; i < win.length; i++) {
-          _getAllWindows(win[i]);
-        }
-      };
-      _getAllWindows(baseWindow);
-
-      return windows;
-    }
-
-    const windows = getAllWindows(content);
-    for (const win of windows) {
+  for (const context of contexts) {
+    await SpecialPowers.spawn(context, [], async () => {
+      const win = content.wrappedJSObject;
       const readyState = win.document.readyState;
       info(`Found a window: ${readyState}`);
       if (readyState != "complete") {
@@ -101,8 +114,8 @@ async function openTab(url, options = {}) {
       if (win.setup) {
         await win.setup();
       }
-    }
-  });
+    });
+  }
 
   return tab;
 }
@@ -212,60 +225,6 @@ function forceCollections() {
   Cu.forceGC();
   Cu.forceCC();
   Cu.forceShrinkingGC();
-}
-
-/**
- * Cleans up and finishes the test
- */
-async function finishTests() {
-  while (gBrowser.tabs.length > 1) {
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-      /**
-       * Get all windows including frames recursively.
-       *
-       * @param {Window} [baseWindow]
-       *        The base window at which to start looking for child windows
-       *        (optional).
-       * @return {Set}
-       *         A set of windows.
-       */
-      function getAllWindows(baseWindow) {
-        const windows = new Set();
-
-        const _getAllWindows = function(win) {
-          windows.add(win.wrappedJSObject);
-
-          for (let i = 0; i < win.length; i++) {
-            _getAllWindows(win[i]);
-          }
-        };
-        _getAllWindows(baseWindow);
-
-        return windows;
-      }
-
-      const windows = getAllWindows(content);
-      for (const win of windows) {
-        // Some windows (e.g., about: URLs) don't have storage available
-        try {
-          win.localStorage.clear();
-          win.sessionStorage.clear();
-        } catch (ex) {
-          // ignore
-        }
-
-        if (win.clear) {
-          await win.clear();
-        }
-      }
-    });
-
-    await closeTabAndToolbox(gBrowser.selectedTab);
-  }
-
-  Services.cookies.removeAll();
-  forceCollections();
-  finish();
 }
 
 // Sends a click event on the passed DOM node in an async manner

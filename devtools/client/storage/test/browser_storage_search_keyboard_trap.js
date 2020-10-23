@@ -12,6 +12,4 @@ add_task(async function() {
     containsFocus(gPanelWindow.document, gUI.searchBox),
     "Focus is in a searchbox"
   );
-
-  await finishTests();
 });

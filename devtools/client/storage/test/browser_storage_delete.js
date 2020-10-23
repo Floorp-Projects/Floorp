@@ -72,6 +72,4 @@ add_task(async function() {
       `There is no row '${rowName}' in ${treeItemName} after deletion`
     );
   }
-
-  await finishTests();
 });
