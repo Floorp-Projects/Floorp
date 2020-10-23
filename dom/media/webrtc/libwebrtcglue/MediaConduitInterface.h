@@ -20,16 +20,12 @@
 
 #include "ImageContainer.h"
 
-#include "webrtc/call/call.h"
-#include "webrtc/common_types.h"
-#include "webrtc/common_types.h"
-#include "webrtc/api/video/video_frame_buffer.h"
-#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
-#include "webrtc/modules/audio_device/include/fake_audio_device.h"
-#include "webrtc/modules/audio_mixer/audio_mixer_impl.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/voice_engine/include/voe_base.h"
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/video/video_frame_buffer.h"
+#include "call/call.h"
+#include "modules/audio_device/include/fake_audio_device.h"
+#include "modules/audio_mixer/audio_mixer_impl.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 #include <vector>
 #include <set>

@@ -21,15 +21,13 @@
 
 #include "pk11pub.h"
 
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_encoder_factory.h"
-
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "webrtc/voice_engine/include/voe_errors.h"
-#include "webrtc/voice_engine/voice_engine_impl.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "modules/voice_engine/include/voe_errors.h"
+#include "modules/voice_engine/voice_engine_impl.h"
+#include "system_wrappers/include/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"

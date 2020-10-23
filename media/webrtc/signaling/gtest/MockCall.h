@@ -6,8 +6,8 @@
 #define MOCK_CALL_H_
 
 #include "mozilla/Assertions.h"
-#include <webrtc/api/call/audio_sink.h>
-#include <webrtc/call/call.h>
+#include <api/call/audio_sink.h>
+#include <call/call.h>
 
 using namespace webrtc;
 

@@ -9,8 +9,7 @@
 
 #include "MediaPipelineFilter.h"
 
-#include "webrtc/common_types.h"
-#include "webrtc/api/rtpparameters.h"
+#include "api/rtpparameters.h"
 #include "mozilla/Logging.h"
 
 // defined in MediaPipeline.cpp

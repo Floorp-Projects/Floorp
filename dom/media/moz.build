@@ -344,7 +344,6 @@ if CONFIG["MOZ_WEBRTC"]:
     LOCAL_INCLUDES += [
         "/dom/media/webrtc/common",
         "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
     ]
 
 DEFINES["MOZILLA_INTERNAL_API"] = True

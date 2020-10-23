@@ -6,9 +6,9 @@
 
 #include "VideoEngine.h"
 #include "video_engine/desktop_capture_impl.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "system_wrappers/include/clock.h"
 #ifdef WEBRTC_ANDROID
-#  include "webrtc/modules/video_capture/video_capture.h"
+#  include "modules/video_capture/video_capture.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
