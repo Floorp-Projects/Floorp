@@ -11,6 +11,12 @@ const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SEARCH_PREF = "browser.search.separatePrivateDefault.ui.enabled";
 
+// We make sure that restriction tokens and search terms are correctly
+// recognized when they are separated by each of these different types of spaces
+// and combinations of spaces.  U+3000 is the ideographic space in CJK and is
+// commonly used by CJK speakers.
+const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
+
 add_task(async function setup() {
   // Install a test engine so we're sure of ENGINE_NAME.
   let engine = await addTestSuggestionsEngine();
@@ -516,24 +522,32 @@ add_task(async function() {
   // Note that we use the alias from AliasEngine in the query. Since we're using
   // a restriction token, we expect that the default engine be used.
   for (let token of Object.values(UrlbarTokenizer.RESTRICT)) {
-    for (query of [`${token} alias query`, `query ${token}`]) {
-      let expectedQuery =
-        token == UrlbarTokenizer.RESTRICT.SEARCH &&
-        query.startsWith(UrlbarTokenizer.RESTRICT.SEARCH)
-          ? query.substring(2)
-          : query;
-      context = createContext(query, { isPrivate: false });
-      info(`Searching for "${query}", expecting "${expectedQuery}"`);
-      await check_results({
-        context,
-        matches: [
-          makeSearchResult(context, {
-            engineName: ENGINE_NAME,
-            query: expectedQuery,
-            heuristic: true,
-          }),
-        ],
-      });
+    for (let spaces of TEST_SPACES) {
+      for (query of [
+        token + spaces + "alias query",
+        "query" + spaces + token,
+      ]) {
+        info(
+          "Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) })
+        );
+        let expectedQuery =
+          token == UrlbarTokenizer.RESTRICT.SEARCH &&
+          query.startsWith(UrlbarTokenizer.RESTRICT.SEARCH)
+            ? query.substring(1).trimStart()
+            : query;
+        context = createContext(query, { isPrivate: false });
+        info(`Searching for "${query}", expecting "${expectedQuery}"`);
+        await check_results({
+          context,
+          matches: [
+            makeSearchResult(context, {
+              engineName: ENGINE_NAME,
+              query: expectedQuery,
+              heuristic: true,
+            }),
+          ],
+        });
+      }
     }
   }
   Services.prefs.clearUserPref("browser.urlbar.update2");
@@ -543,24 +557,27 @@ add_task(async function() {
     "Leading search-mode restriction tokens are removed from the search result."
   );
   for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
-    query = `${token} query`;
-    let expectedQuery = query.substring(2);
-    context = createContext(query, { isPrivate: false });
-    info(`Searching for "${query}", expecting "${expectedQuery}"`);
-    let payload = {
-      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      heuristic: true,
-      query: expectedQuery,
-      alias: token,
-    };
-    if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
-      payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
-      payload.engineName = ENGINE_NAME;
+    for (let spaces of TEST_SPACES) {
+      query = token + spaces + "query";
+      info("Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) }));
+      let expectedQuery = query.substring(1).trimStart();
+      context = createContext(query, { isPrivate: false });
+      info(`Searching for "${query}", expecting "${expectedQuery}"`);
+      let payload = {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        heuristic: true,
+        query: expectedQuery,
+        alias: token,
+      };
+      if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
+        payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+        payload.engineName = ENGINE_NAME;
+      }
+      await check_results({
+        context,
+        matches: [makeSearchResult(context, payload)],
+      });
     }
-    await check_results({
-      context,
-      matches: [makeSearchResult(context, payload)],
-    });
   }
 
   info(
@@ -568,24 +585,27 @@ add_task(async function() {
   );
   Services.prefs.setBoolPref("keyword.enabled", false);
   for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
-    query = `${token} query`;
-    let expectedQuery = query.substring(2);
-    context = createContext(query, { isPrivate: false });
-    info(`Searching for "${query}", expecting "${expectedQuery}"`);
-    let payload = {
-      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      heuristic: true,
-      query: expectedQuery,
-      alias: token,
-    };
-    if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
-      payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
-      payload.engineName = ENGINE_NAME;
+    for (let spaces of TEST_SPACES) {
+      query = token + spaces + "query";
+      info("Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) }));
+      let expectedQuery = query.substring(1).trimStart();
+      context = createContext(query, { isPrivate: false });
+      info(`Searching for "${query}", expecting "${expectedQuery}"`);
+      let payload = {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        heuristic: true,
+        query: expectedQuery,
+        alias: token,
+      };
+      if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
+        payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+        payload.engineName = ENGINE_NAME;
+      }
+      await check_results({
+        context,
+        matches: [makeSearchResult(context, payload)],
+      });
     }
-    await check_results({
-      context,
-      matches: [makeSearchResult(context, payload)],
-    });
   }
   Services.prefs.clearUserPref("keyword.enabled");
 
@@ -596,22 +616,38 @@ add_task(async function() {
     if (UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(token)) {
       continue;
     }
-    query = `${token} query`;
-    let expectedQuery = query;
-    context = createContext(query, { isPrivate: false });
-    info(`Searching for "${query}", expecting "${expectedQuery}"`);
-    await check_results({
-      context,
-      matches: [
-        makeSearchResult(context, {
-          heuristic: true,
-          query: expectedQuery,
-          engineName: ENGINE_NAME,
-        }),
-      ],
-    });
+    for (let spaces of TEST_SPACES) {
+      query = token + spaces + "query";
+      info("Testing: " + JSON.stringify({ query, spaces: codePoints(spaces) }));
+      let expectedQuery = query;
+      context = createContext(query, { isPrivate: false });
+      info(`Searching for "${query}", expecting "${expectedQuery}"`);
+      await check_results({
+        context,
+        matches: [
+          makeSearchResult(context, {
+            heuristic: true,
+            query: expectedQuery,
+            engineName: ENGINE_NAME,
+          }),
+        ],
+      });
+    }
   }
   Services.prefs.clearUserPref("browser.urlbar.update2");
 
   await Services.search.removeEngine(engine2);
 });
+
+/**
+ * Returns an array of code points in the given string.  Each code point is
+ * returned as a hexidecimal string.
+ *
+ * @param {string} str
+ *   The code points of this string will be returned.
+ * @returns {array}
+ *   Array of code points in the string, where each is a hexidecimal string.
+ */
+function codePoints(str) {
+  return str.split("").map(s => s.charCodeAt(0).toString(16));
+}

@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -169,7 +170,10 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
           // over at this point.
           if (
             UrlbarPrefs.get("update2") &&
-            lowerCaseSearchString.startsWith(alias + " ")
+            lowerCaseSearchString.startsWith(alias) &&
+            UrlbarTokenizer.REGEXP_SPACES_START.test(
+              lowerCaseSearchString.substring(alias.length)
+            )
           ) {
             return null;
           }
