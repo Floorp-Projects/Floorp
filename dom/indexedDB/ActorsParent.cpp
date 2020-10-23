@@ -17323,27 +17323,18 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
 
   Transaction().SetActiveOnConnectionThread();
 
-  nsresult rv = aConnection->BeginWriteTransaction();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aConnection->BeginWriteTransaction());
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  IDB_TRY(aConnection->ExecuteCachedStatement(
       "UPDATE database SET version = :version;"_ns,
-      [this](mozIStorageStatement& updateStmt) {
-        nsresult rv =
-            updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      ([this](
+           mozIStorageStatement& updateStmt) -> mozilla::Result<Ok, nsresult> {
+        IDB_TRY(updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion)));
 
-        return NS_OK;
-      });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return Ok{};
+      })));
 
   return NS_OK;
 }
