@@ -2590,8 +2590,8 @@ namespace js {
 extern unsigned PCToLineNumber(JSScript* script, jsbytecode* pc,
                                unsigned* columnp = nullptr);
 
-extern unsigned PCToLineNumber(unsigned startLine, SrcNote* notes,
-                               jsbytecode* code, jsbytecode* pc,
+extern unsigned PCToLineNumber(unsigned startLine, unsigned startCol,
+                               SrcNote* notes, jsbytecode* code, jsbytecode* pc,
                                unsigned* columnp = nullptr);
 
 /*
