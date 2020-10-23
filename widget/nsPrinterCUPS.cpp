@@ -6,6 +6,7 @@
 #include "nsPrinterCUPS.h"
 
 #include "mozilla/GkRustUtils.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "nsTHashtable.h"
 #include "nsPaper.h"
 #include "nsPrinterBase.h"
@@ -199,10 +200,10 @@ bool nsPrinterCUPS::SupportsDuplex() const {
 
 bool nsPrinterCUPS::SupportsMonochrome() const {
 #ifdef XP_MACOSX
-  // On Cocoa/CorePrinting there's no driver-independent API to switch a printer
-  // from color to monochrome printing, so we can't claim to support it if we
-  // support color.
-  return !SupportsColor();
+  if (!SupportsColor()) {
+    return true;
+  }
+  return StaticPrefs::print_mac_monochrome_enabled();
 #else
   return true;
 #endif
