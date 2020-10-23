@@ -264,7 +264,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       queryContext.searchString,
       firstToken
     );
-    if (!query.startsWith(" ")) {
+    if (!UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
       return null;
     }
 

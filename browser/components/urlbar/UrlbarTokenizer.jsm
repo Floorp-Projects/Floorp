@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 var UrlbarTokenizer = {
   // Regex matching on whitespaces.
   REGEXP_SPACES: /\s+/,
+  REGEXP_SPACES_START: /^\s+/,
 
   // Regex used to guess url-like strings.
   // These are not expected to be 100% correct, we accept some user mistypes
