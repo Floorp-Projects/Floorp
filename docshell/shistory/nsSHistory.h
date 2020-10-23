@@ -16,6 +16,7 @@
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/UniquePtr.h"
 
@@ -160,7 +161,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   nsresult Reload(uint32_t aReloadFlags,
                   nsTArray<LoadEntryResult>& aLoadResults);
   nsresult ReloadCurrentEntry(nsTArray<LoadEntryResult>& aLoadResults);
-  nsresult GotoIndex(int32_t aIndex, nsTArray<LoadEntryResult>& aLoadResults);
+  nsresult GotoIndex(int32_t aIndex, nsTArray<LoadEntryResult>& aLoadResults,
+                     bool aSameEpoch = false);
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
@@ -187,6 +189,17 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   // replacing entries.
   void UpdateRootBrowsingContextState();
 
+  void GetEpoch(uint64_t& aEpoch,
+                mozilla::Maybe<mozilla::dom::ContentParentId>& aId) const {
+    aEpoch = mEpoch;
+    aId = mEpochParentId;
+  }
+  void SetEpoch(uint64_t aEpoch,
+                mozilla::Maybe<mozilla::dom::ContentParentId> aId) {
+    mEpoch = aEpoch;
+    mEpochParentId = aId;
+  }
+
  protected:
   virtual ~nsSHistory();
 
@@ -205,7 +218,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                     nsTArray<LoadEntryResult>& aLoadResult);
 
   nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
-                     nsTArray<LoadEntryResult>& aLoadResults);
+                     nsTArray<LoadEntryResult>& aLoadResults,
+                     bool aSameEpoch = false);
 
 #ifdef DEBUG
   nsresult PrintHistory();
@@ -267,6 +281,14 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   // Max viewers allowed total, across all SHistory objects
   static int32_t sHistoryMaxTotalViewers;
+
+  // The epoch (and id) tell us what navigations occured within the same
+  // event-loop spin in the child.  We need to know this in order to
+  // implement spec requirements for dropping pending navigations when we
+  // do a history navigation, if it's not same-document.  Content processes
+  // update the epoch via a runnable on each ::Go (including AsyncGo).
+  uint64_t mEpoch = 0;
+  mozilla::Maybe<mozilla::dom::ContentParentId> mEpochParentId;
 };
 
 // CallerWillNotifyHistoryIndexAndLengthChanges is used to prevent

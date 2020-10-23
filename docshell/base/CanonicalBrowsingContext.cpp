@@ -696,7 +696,8 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory() {
 }
 
 void CanonicalBrowsingContext::HistoryGo(
-    int32_t aOffset, std::function<void(int32_t&&)>&& aResolver) {
+    int32_t aOffset, uint64_t aHistoryEpoch, Maybe<ContentParentId> aContentId,
+    std::function<void(int32_t&&)>&& aResolver) {
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (!shistory) {
     return;
@@ -705,20 +706,44 @@ void CanonicalBrowsingContext::HistoryGo(
   CheckedInt<int32_t> index = shistory->GetRequestedIndex() >= 0
                                   ? shistory->GetRequestedIndex()
                                   : shistory->Index();
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("HistoryGo(%d->%d) epoch %" PRIu64 "/id %" PRIu64, aOffset,
+           (index + aOffset).value(), aHistoryEpoch,
+           (uint64_t)(aContentId.isSome() ? aContentId.value() : 0)));
   index += aOffset;
   if (!index.isValid()) {
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("Invalid index"));
     return;
   }
 
   // FIXME userinteraction bits may needs tweaks here.
 
+  // Implement aborting additional history navigations from within the same
+  // event spin of the content process.
+
+  uint64_t epoch;
+  bool sameEpoch = false;
+  Maybe<ContentParentId> id;
+  shistory->GetEpoch(epoch, id);
+
+  if (aContentId == id && epoch >= aHistoryEpoch) {
+    sameEpoch = true;
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("Same epoch/id"));
+  }
+  // Don't update the epoch until we know if the target index is valid
+
   // GoToIndex checks that index is >= 0 and < length.
   nsTArray<nsSHistory::LoadEntryResult> loadResults;
-  nsresult rv = shistory->GotoIndex(index.value(), loadResults);
+  nsresult rv = shistory->GotoIndex(index.value(), loadResults, sameEpoch);
   if (NS_FAILED(rv)) {
+    MOZ_LOG(gSHLog, LogLevel::Debug,
+            ("Dropping HistoryGo - bad index or same epoch (not in same doc)"));
     return;
   }
-
+  if (epoch < aHistoryEpoch || aContentId != id) {
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("Set epoch"));
+    shistory->SetEpoch(aHistoryEpoch, aContentId);
+  }
   aResolver(shistory->GetRequestedIndex());
   nsSHistory::LoadURIs(loadResults);
 }

@@ -22,6 +22,10 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+extern LazyLogModule gSHistoryLog;
+
+#define LOG(format) MOZ_LOG(gSHistoryLog, mozilla::LogLevel::Debug, format)
+
 //
 //  History class implementation
 //
@@ -133,6 +137,7 @@ void nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
 }
 
 void nsHistory::Go(int32_t aDelta, CallerType aCallerType, ErrorResult& aRv) {
+  LOG(("nsHistory::Go(%d)", aDelta));
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));
   if (!win || !win->HasActiveDocument()) {
     return aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
