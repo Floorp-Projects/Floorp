@@ -13797,10 +13797,8 @@ nsresult Maintenance::DirectoryOpen() {
 
   mState = State::DirectoryWorkOpen;
 
-  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
+  IDB_TRY(quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL),
+          NS_ERROR_FAILURE);
 
   return NS_OK;
 }
