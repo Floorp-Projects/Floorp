@@ -49,6 +49,7 @@ data class DownloadState(
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
 
+    val directoryPath: String get() = Environment.getExternalStoragePublicDirectory(destinationDirectory).path
     /**
      * Status that represents every state that a download can be in.
      */

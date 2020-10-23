@@ -12,6 +12,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Environment
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -78,12 +79,12 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.MockitoAnnotations.initMocks
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowNotificationManager
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import kotlin.random.Random
@@ -1461,6 +1462,20 @@ class AbstractFetchDownloadServiceTest {
         testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         // one of the notifications it is the group notification only for devices the support it
         assertEquals(2, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `createDirectoryIfNeeded - MUST create directory when it does not exists`() = runBlocking {
+        val download = DownloadState(destinationDirectory = Environment.DIRECTORY_DOWNLOADS, url = "")
+
+        val file = File(download.directoryPath)
+        file.delete()
+
+        assertFalse(file.exists())
+
+        service.createDirectoryIfNeeded(download)
+
+        assertTrue(file.exists())
     }
 
     @Test

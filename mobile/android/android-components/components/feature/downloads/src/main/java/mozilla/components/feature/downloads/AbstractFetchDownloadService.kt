@@ -825,7 +825,16 @@ abstract class AbstractFetchDownloadService : Service() {
     @Suppress("Deprecation")
     @VisibleForTesting
     internal fun useFileStreamLegacy(download: DownloadState, append: Boolean, block: (OutputStream) -> Unit) {
+        createDirectoryIfNeeded(download)
         FileOutputStream(File(download.filePath), append).use(block)
+    }
+
+    @VisibleForTesting
+    internal fun createDirectoryIfNeeded(download: DownloadState) {
+        val directory = File(download.directoryPath)
+        if (!directory.exists()) {
+            directory.mkdir()
+        }
     }
 
     companion object {
