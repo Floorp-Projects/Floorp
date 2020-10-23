@@ -38,6 +38,7 @@
 #include "mozilla/dom/RemoteWorkerServiceParent.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
+#include "mozilla/dom/ServiceWorkerContainerParent.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
@@ -1255,7 +1256,6 @@ already_AddRefed<PServiceWorkerParent>
 BackgroundParentImpl::AllocPServiceWorkerParent(
     const IPCServiceWorkerDescriptor&) {
   return MakeAndAddRef<ServiceWorkerParent>();
-  ;
 }
 
 IPCResult BackgroundParentImpl::RecvPServiceWorkerConstructor(
@@ -1265,14 +1265,9 @@ IPCResult BackgroundParentImpl::RecvPServiceWorkerConstructor(
   return IPC_OK();
 }
 
-PServiceWorkerContainerParent*
+already_AddRefed<PServiceWorkerContainerParent>
 BackgroundParentImpl::AllocPServiceWorkerContainerParent() {
-  return dom::AllocServiceWorkerContainerParent();
-}
-
-bool BackgroundParentImpl::DeallocPServiceWorkerContainerParent(
-    PServiceWorkerContainerParent* aActor) {
-  return dom::DeallocServiceWorkerContainerParent(aActor);
+  return MakeAndAddRef<mozilla::dom::ServiceWorkerContainerParent>();
 }
 
 mozilla::ipc::IPCResult

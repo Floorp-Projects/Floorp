@@ -21,16 +21,7 @@ void InitServiceWorkerParent(PServiceWorkerParent* aActor,
 
 // PServiceWorkerContainer
 
-class PServiceWorkerContainerChild;
 class PServiceWorkerContainerParent;
-
-PServiceWorkerContainerChild* AllocServiceWorkerContainerChild();
-
-bool DeallocServiceWorkerContainerChild(PServiceWorkerContainerChild* aActor);
-
-PServiceWorkerContainerParent* AllocServiceWorkerContainerParent();
-
-bool DeallocServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
 
 void InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor);
 

@@ -6,6 +6,8 @@
 
 #include "RemoteServiceWorkerContainerImpl.h"
 
+#include <utility>
+
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "ServiceWorkerContainerChild.h"
@@ -195,7 +197,7 @@ void RemoteServiceWorkerContainerImpl::GetReady(
 }
 
 RemoteServiceWorkerContainerImpl::RemoteServiceWorkerContainerImpl()
-    : mActor(nullptr), mOuter(nullptr), mShutdown(false) {
+    : mOuter(nullptr), mShutdown(false) {
   PBackgroundChild* parentActor =
       BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!parentActor)) {
@@ -203,7 +205,8 @@ RemoteServiceWorkerContainerImpl::RemoteServiceWorkerContainerImpl()
     return;
   }
 
-  ServiceWorkerContainerChild* actor = ServiceWorkerContainerChild::Create();
+  RefPtr<ServiceWorkerContainerChild> actor =
+      ServiceWorkerContainerChild::Create();
   if (NS_WARN_IF(!actor)) {
     Shutdown();
     return;
@@ -217,7 +220,7 @@ RemoteServiceWorkerContainerImpl::RemoteServiceWorkerContainerImpl()
   }
   MOZ_DIAGNOSTIC_ASSERT(sentActor == actor);
 
-  mActor = actor;
+  mActor = std::move(actor);
   mActor->SetOwner(this);
 }
 

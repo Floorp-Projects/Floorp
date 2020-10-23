@@ -246,11 +246,8 @@ class BackgroundChildImpl : public PBackgroundChild,
   already_AddRefed<PServiceWorkerChild> AllocPServiceWorkerChild(
       const IPCServiceWorkerDescriptor&);
 
-  virtual PServiceWorkerContainerChild* AllocPServiceWorkerContainerChild()
-      override;
-
-  virtual bool DeallocPServiceWorkerContainerChild(
-      PServiceWorkerContainerChild*) override;
+  already_AddRefed<PServiceWorkerContainerChild>
+  AllocPServiceWorkerContainerChild();
 
   virtual PServiceWorkerRegistrationChild* AllocPServiceWorkerRegistrationChild(
       const IPCServiceWorkerRegistrationDescriptor&) override;
