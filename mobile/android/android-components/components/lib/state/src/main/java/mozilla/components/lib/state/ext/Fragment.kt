@@ -44,7 +44,7 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
             // without a `Context` and this can cause a variety of issues/crashes.
             // See: https://github.com/mozilla-mobile/android-components/issues/4125
             //
-            // To avoid this, we check whether the fragment is added. If it's not added then we run
+            // To avoid this, we check whether the fragment is detached. If it's detached then we run
             // in exactly that moment between fragment detach and view detach.
             // It would be better if we could use `viewLifecycleOwner` which is bound to
             // onCreateView() and onDestroyView() of the fragment. But:
@@ -54,7 +54,11 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
             //   See: https://github.com/mozilla-mobile/android-components/issues/3828
             // Once those two issues get resolved we can remove the `isAdded` check and use
             // `viewLifecycleOwner.lifecycleScope` instead of the view scope.
-            if (fragment.isAdded) {
+            //
+            // In a previous version we used `isAdded` here. But in certain situations it reported
+            // false even though the fragment was not detached. Therefore we switched to explicitly
+            // check with `isDetached`.
+            if (!fragment.isDetached) {
                 block(state)
             }
         }
@@ -91,7 +95,7 @@ fun <S : State, A : Action> Fragment.consumeFlow(
             .filter {
                 // We ignore state updates if the fragment is not added anymore.
                 // See comment in [consumeFrom] above.
-                fragment.isAdded
+                !fragment.isDetached
             }
 
         block(flow)

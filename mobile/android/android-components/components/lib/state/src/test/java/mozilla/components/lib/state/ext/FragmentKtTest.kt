@@ -94,7 +94,7 @@ class FragmentKtTest {
 
     @Test
     @Synchronized
-    fun `consumeFrom does not run when fragment is not added`() {
+    fun `consumeFrom does not run when fragment is detached`() {
         val fragment = mock<Fragment>()
         val view = mock<View>()
         val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
@@ -110,7 +110,7 @@ class FragmentKtTest {
         doReturn(view).`when`(fragment).view
         doReturn(owner.lifecycle).`when`(fragment).lifecycle
 
-        doReturn(true).`when`(fragment).isAdded
+        doReturn(false).`when`(fragment).isDetached
 
         fragment.consumeFrom(store) { state ->
             receivedValue = state.counter
@@ -130,7 +130,7 @@ class FragmentKtTest {
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(25, receivedValue)
 
-        doReturn(false).`when`(fragment).isAdded
+        doReturn(true).`when`(fragment).isDetached
 
         latch = CountDownLatch(1)
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -142,7 +142,7 @@ class FragmentKtTest {
         assertFalse(latch.await(1, TimeUnit.SECONDS))
         assertEquals(25, receivedValue)
 
-        doReturn(true).`when`(fragment).isAdded
+        doReturn(false).`when`(fragment).isDetached
 
         latch = CountDownLatch(1)
         store.dispatch(TestAction.IncrementAction).joinBlocking()
