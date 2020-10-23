@@ -57,7 +57,7 @@ class GfxInfo : public GfxInfoBase {
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
 
   nsresult Init() override;
-  NS_IMETHOD_(int32_t) GetMaxRefreshRate() override;
+  NS_IMETHOD_(int32_t) GetMaxRefreshRate(bool* aMixed) override;
 
   uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
   uint32_t OperatingSystemBuild() override { return mWindowsBuildNumber; }

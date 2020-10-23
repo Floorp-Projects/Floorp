@@ -78,12 +78,20 @@ GfxInfo::GetHasBattery(bool* aHasBattery) {
   return NS_OK;
 }
 
-int32_t GfxInfo::GetMaxRefreshRate() {
-  int32_t refreshRate = -1;
-  for (auto displayInfo : mDisplayInfo) {
-    refreshRate = std::max(refreshRate, int32_t(displayInfo.mRefreshRate));
+int32_t GfxInfo::GetMaxRefreshRate(bool* aMixed) {
+  int32_t maxRefreshRate = -1;
+  if (aMixed) {
+    *aMixed = false;
   }
-  return refreshRate;
+
+  for (auto displayInfo : mDisplayInfo) {
+    int32_t refreshRate = int32_t(displayInfo.mRefreshRate);
+    if (aMixed && maxRefreshRate > 0 && maxRefreshRate != refreshRate) {
+      *aMixed = true;
+    }
+    maxRefreshRate = std::max(maxRefreshRate, refreshRate);
+  }
+  return maxRefreshRate;
 }
 
 NS_IMETHODIMP
