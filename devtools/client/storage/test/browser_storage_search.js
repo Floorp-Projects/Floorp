@@ -112,8 +112,6 @@ add_task(async function() {
   runTests(testcases);
   showColumn("value", false);
   runTests(testcasesAfterHiding);
-
-  await finishTests();
 });
 
 function runTests(testcases) {

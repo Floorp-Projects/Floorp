@@ -20,5 +20,4 @@ add_task(async function() {
   await typeWithTerminator("Tue, 25 Dec 2040 12:00:00 GMT", "KEY_Tab");
   await typeWithTerminator("false", "KEY_Tab");
   await typeWithTerminator("false", "KEY_Tab");
-  await finishTests();
 });

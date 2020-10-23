@@ -71,8 +71,6 @@ add_task(async function() {
   await gUI.once("store-objects-cleared");
 
   await checkState([[["sessionStorage", "http://test1.example.org"], []]]);
-
-  await finishTests();
 });
 
 async function setSessionStorageItem(key, value) {

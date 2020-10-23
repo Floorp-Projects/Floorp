@@ -248,6 +248,4 @@ add_task(async function() {
 
     await findVariableViewProperties(item[1], item[2]);
   }
-
-  await finishTests();
 });

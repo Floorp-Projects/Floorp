@@ -63,6 +63,4 @@ add_task(async function() {
       ["test5", "test6"],
     ],
   ]);
-
-  await finishTests();
 });

@@ -15,6 +15,4 @@ add_task(async function() {
   await performAdd(["sessionStorage", "http://test1.example.org"]);
   await performAdd(["sessionStorage", "http://test1.example.org"]);
   await performAdd(["sessionStorage", "http://test1.example.org"]);
-
-  await finishTests();
 });
