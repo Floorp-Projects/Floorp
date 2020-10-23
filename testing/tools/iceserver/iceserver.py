@@ -243,7 +243,7 @@ class StunMessage(object):
         error_code_fmt = [3, 1]
         error_code = pack((code // 100, code % 100), error_code_fmt)
         if phrase != None:
-            error_code.extend(bytearray(phrase))
+            error_code.extend(bytearray(phrase, "utf-8"))
         self.attributes.append(StunAttribute(ERROR_CODE, error_code))
 
 #     0                   1                   2                   3
@@ -315,10 +315,10 @@ class StunMessage(object):
                          self.get_xport(xport))
 
     def add_nonce(self, nonce):
-        self.attributes.append(StunAttribute(NONCE, bytearray(nonce)))
+        self.attributes.append(StunAttribute(NONCE, bytearray(nonce, "utf-8")))
 
     def add_realm(self, realm):
-        self.attributes.append(StunAttribute(REALM, bytearray(realm)))
+        self.attributes.append(StunAttribute(REALM, bytearray(realm, "utf-8")))
 
     def calculate_message_digest(self, username, realm, password):
         digest_buf = self.build(MESSAGE_INTEGRITY)
@@ -327,7 +327,7 @@ class StunMessage(object):
         password = passlib.utils.saslprep(six.text_type(password))
         key_string = "{}:{}:{}".format(username, realm, password)
         md5 = hashlib.md5()
-        md5.update(key_string)
+        md5.update(bytearray(key_string, "utf-8"))
         key = md5.digest()
         return bytearray(hmac.new(key, digest_buf, hashlib.sha1).digest())
 
@@ -404,11 +404,11 @@ class StunHandler(object):
 
     def __init__(self, transport_handler):
         self.client_address = None
-        self.data = str()
+        self.data = bytearray()
         self.transport_handler = transport_handler
 
     def data_received(self, data, address):
-        self.data += bytearray(data)
+        self.data += data
         while True:
             stun_message = StunMessage()
             parsed_len = stun_message.parse(self.data)
@@ -627,7 +627,7 @@ class StunHandler(object):
                     400,
                     "Missing either USERNAME, NONCE, or REALM")
 
-        if str(username.data) != turn_user:
+        if username.data.decode("utf-8") != turn_user:
             return self.make_challenge_response(
                     request,
                     "Wrong user {}, exp {}".format(username.data, turn_user))
@@ -653,7 +653,7 @@ class UdpStunHandler(protocol.DatagramProtocol):
                                    IPv4Address('UDP', address[0], address[1]))
 
     def write(self, data, address):
-        self.transport.write(str(data), (address.host, address.port))
+        self.transport.write(bytes(data), (address.host, address.port))
 
 
 class TcpStunHandlerFactory(protocol.Factory):
@@ -683,15 +683,19 @@ class TcpStunHandler(protocol.Protocol):
     def connectionLost(self, reason):
         print("Lost connection from {}".format(self.address))
         # Destroy allocations that this connection made
+        keys_to_delete = []
         for key, allocation in allocations.items():
             if allocation.other_transport_handler == self:
                 print("Closing allocation due to dropped connection: {}"
                       .format(key))
-                del allocations[key]
+                keys_to_delete.append(key)
                 allocation.close()
 
+        for key in keys_to_delete:
+            del allocations[key]
+
     def write(self, data, address):
-        self.transport.write(str(data))
+        self.transport.write(bytes(data))
 
 def get_default_route(family):
     dummy_socket = socket.socket(family, socket.SOCK_DGRAM)
@@ -716,11 +720,15 @@ except:
 
 def prune_allocations():
     now = time.time()
+    keys_to_delete = []
     for key, allocation in allocations.items():
         if allocation.expiry < now:
             print("Allocation expired: {}".format(key))
-            del allocations[key]
+            keys_to_delete.append(key)
             allocation.close()
+
+    for key in keys_to_delete:
+        del allocations[key]
 
 CERT_FILE = "selfsigned.crt"
 KEY_FILE = "private.key"
@@ -790,12 +798,12 @@ if __name__ == "__main__":
         except:
             pass
 
-        f = open(CERT_FILE, 'r');
-        lines = f.readlines();
-        lines.pop(0); # Remove BEGIN CERTIFICATE
-        lines.pop(); # Remove END CERTIFICATE
-        lines = map(string.strip, lines);
-        certbase64 = string.join(lines, '');
+        f = open(CERT_FILE, 'r')
+        lines = f.readlines()
+        lines.pop(0) # Remove BEGIN CERTIFICATE
+        lines.pop() # Remove END CERTIFICATE
+        lines = map(string.strip, lines)
+        certbase64 = string.join(lines, '')
 
         turns_url = ', "turns:' + hostname + '"'
         cert_prop = ', "cert":"' + certbase64 + '"'
