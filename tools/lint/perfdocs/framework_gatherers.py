@@ -231,27 +231,7 @@ class MozperftestGatherer(FrameworkGatherer):
         return self._test_list
 
     def build_test_description(self, title, test_description="", suite_name=""):
-        result, tab_flag = "", False
-        desc = str(self.script_infos[title])
-        category = ("Owner: ", "Test Name: ", "Usage:", "Description:")
-
-        for s in desc.split("\n"):
-            if s.startswith(category):
-                result += "| " + s + "\n"
-                if s in category[2:]:
-                    result += "\n"
-                    tab_flag = False
-            else:
-                if tab_flag and s:
-                    result += "  " + s + "\n"
-                else:
-                    result += s + "\n"
-
-            if s == category[2]:
-                result += "::\n\n"
-                tab_flag = True
-
-        return [result]
+        return [str(self.script_infos[title])]
 
     def build_suite_section(self, title, content):
         return self._build_section_with_header(title, content, header_type="H4")

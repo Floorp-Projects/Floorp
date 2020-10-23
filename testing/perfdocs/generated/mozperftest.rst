@@ -27,7 +27,6 @@ perftest_browser_xhtml_dom.js
 **Measures the size of the DOM**
 
 
-
 netwerk/test/perf
 -----------------
 Performance tests from the 'network/test/perf' folder.
@@ -40,7 +39,6 @@ perftest_http3_cloudflareblog.js
 
 **User-journey live site test for cloudflare blog.**
 
-
 perftest_http3_facebook_scroll.js
 =================================
 
@@ -48,7 +46,6 @@ perftest_http3_facebook_scroll.js
 :name: facebook-scroll
 
 **Measures the number of requests per second after a scroll.**
-
 
 perftest_http3_google_image.js
 ==============================
@@ -58,7 +55,6 @@ perftest_http3_google_image.js
 
 **Measures the number of images per second after a scroll.**
 
-
 perftest_http3_google_search.js
 ===============================
 
@@ -66,7 +62,6 @@ perftest_http3_google_search.js
 :name: g-search
 
 **User-journey live site test for google search**
-
 
 perftest_http3_lucasquicfetch.js
 ================================
@@ -76,7 +71,6 @@ perftest_http3_lucasquicfetch.js
 
 **Measures the amount of time it takes to load a set of images.**
 
-
 perftest_http3_youtube_watch.js
 ===============================
 
@@ -85,7 +79,6 @@ perftest_http3_youtube_watch.js
 
 **Measures quality of the video being played.**
 
-
 perftest_http3_youtube_watch_scroll.js
 ======================================
 
@@ -93,7 +86,6 @@ perftest_http3_youtube_watch_scroll.js
 :name: youtube-scroll
 
 **Measures quality of the video being played.**
-
 
 
 netwerk/test/unit
@@ -106,9 +98,9 @@ test_http3_perf.js
 :owner: Network Team
 :name: http3 raw
 :tags: network,http3,quic
+:Default options:
 
-**XPCShell tests that verifies the lib integration against a local server**
-Default options:
+::
 
  --perfherder
  --perfherder-metrics name:speed,unit:bps
@@ -116,7 +108,7 @@ Default options:
  --verbose
  --try-platform linux, mac
 
-
+**XPCShell tests that verifies the lib integration against a local server**
 
 
 testing/performance
@@ -131,7 +123,6 @@ perftest_bbc_link.js
 
 **Measures time to load BBC homepage**
 
-
 perftest_facebook.js
 ====================
 
@@ -139,7 +130,6 @@ perftest_facebook.js
 :name: Facebook
 
 **Measures time to log in to Facebook**
-
 
 perftest_jsconf_cold.js
 =======================
@@ -149,7 +139,6 @@ perftest_jsconf_cold.js
 
 **Measures time to load JSConf page (cold)**
 
-
 perftest_jsconf_warm.js
 =======================
 
@@ -158,7 +147,6 @@ perftest_jsconf_warm.js
 
 **Measures time to load JSConf page (warm)**
 
-
 perftest_politico_link.js
 =========================
 
@@ -166,7 +154,6 @@ perftest_politico_link.js
 :name: Politico Link
 
 **Measures time to load Politico homepage**
-
 
 perftest_android_view.js
 ========================
@@ -178,7 +165,6 @@ perftest_android_view.js
 
 This test launches the appropriate android app, simulating a opening a link through VIEW intent workflow. The application is launched with the intent action android.intent.action.VIEW loading a trivially simple website. The reported metric is the time from process start to navigationStart, reported as processLaunchToNavStart
 
-
 perftest_youtube_link.js
 ========================
 
@@ -186,7 +172,6 @@ perftest_youtube_link.js
 :name: YouTube Link
 
 **Measures time to load YouTube video**
-
 
 perftest_android_main.js
 ========================
@@ -198,7 +183,6 @@ perftest_android_main.js
 
 This test launches Fenix to its main activity (HomeActivity). The application logs "Fully Drawn" when the activity is drawn. Using the android log transformer we measure the time from process start to this event.
 
-
 perftest_pageload.js
 ====================
 
@@ -206,7 +190,6 @@ perftest_pageload.js
 :name: pageload
 
 **Measures time to load mozilla page**
-
 
 
 If you have any questions, please see this `wiki page <https://wiki.mozilla.org/TestEngineering/Performance#Where_to_find_us>`_.
