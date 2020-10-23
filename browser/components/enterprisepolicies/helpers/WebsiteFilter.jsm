@@ -105,14 +105,18 @@ let WebsiteFilter = {
 
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let contentType = loadInfo.externalContentPolicyType;
+    let url = contentLocation.spec;
+    if (contentLocation.scheme == "view-source") {
+      url = contentLocation.pathQueryRef;
+    }
     if (
       contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT ||
       contentType == Ci.nsIContentPolicy.TYPE_SUBDOCUMENT
     ) {
-      if (this._blockPatterns.matches(contentLocation.spec.toLowerCase())) {
+      if (this._blockPatterns.matches(url.toLowerCase())) {
         if (
           !this._exceptionsPatterns ||
-          !this._exceptionsPatterns.matches(contentLocation.spec.toLowerCase())
+          !this._exceptionsPatterns.matches(url.toLowerCase())
         ) {
           return Ci.nsIContentPolicy.REJECT_POLICY;
         }
