@@ -3032,42 +3032,34 @@ nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
     // odd, though.
     if (isCellSelected || rootElementOfBackgroundColor->IsAnyOfHTMLElements(
                               nsGkAtoms::table, nsGkAtoms::tr)) {
-      SelectedTableCellScanner scanner(*SelectionRefPtr());
-      if (scanner.IsInTableCellSelectionMode()) {
+      IgnoredErrorResult ignoredError;
+      RefPtr<Element> cellElement =
+          GetFirstSelectedTableCellElement(ignoredError);
+      if (cellElement) {
         if (setColor) {
-          for (const OwningNonNull<Element>& cellElement :
-               scanner.ElementsRef()) {
-            // `MOZ_KnownLive(cellElement)` is safe because of `scanner`
-            // is stack only class and keeps grabbing it until it's destroyed.
+          while (cellElement) {
             nsresult rv = SetAttributeWithTransaction(
-                MOZ_KnownLive(cellElement), *nsGkAtoms::bgcolor, aColor);
-            if (NS_WARN_IF(Destroyed())) {
-              return NS_ERROR_EDITOR_DESTROYED;
-            }
+                *cellElement, *nsGkAtoms::bgcolor, aColor);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "EditorBase::::SetAttributeWithTransaction(nsGkAtoms::"
                   "bgcolor) failed");
               return rv;
             }
+            cellElement = GetNextSelectedTableCellElement(ignoredError);
           }
           return NS_OK;
         }
-        for (const OwningNonNull<Element>& cellElement :
-             scanner.ElementsRef()) {
-          // `MOZ_KnownLive(cellElement)` is safe because of `scanner`
-          // is stack only class and keeps grabbing it until it's destroyed.
-          nsresult rv = RemoveAttributeWithTransaction(
-              MOZ_KnownLive(cellElement), *nsGkAtoms::bgcolor);
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
+        while (cellElement) {
+          nsresult rv =
+              RemoveAttributeWithTransaction(*cellElement, *nsGkAtoms::bgcolor);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::bgcolor)"
                 " failed");
             return rv;
           }
+          cellElement = GetNextSelectedTableCellElement(ignoredError);
         }
         return NS_OK;
       }
