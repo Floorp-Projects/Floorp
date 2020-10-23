@@ -10,7 +10,7 @@ include IPCServiceWorkerRegistrationDescriptor;
 namespace mozilla {
 namespace dom {
 
-protocol PServiceWorkerContainer
+refcounted protocol PServiceWorkerContainer
 {
   manager PBackground;
 

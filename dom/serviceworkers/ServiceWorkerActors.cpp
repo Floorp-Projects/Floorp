@@ -22,27 +22,6 @@ void InitServiceWorkerParent(PServiceWorkerParent* aActor,
   actor->Init(aDescriptor);
 }
 
-PServiceWorkerContainerChild* AllocServiceWorkerContainerChild() {
-  MOZ_CRASH("should not be called");
-}
-
-bool DeallocServiceWorkerContainerChild(PServiceWorkerContainerChild* aActor) {
-  auto actor = static_cast<ServiceWorkerContainerChild*>(aActor);
-  delete actor;
-  return true;
-}
-
-PServiceWorkerContainerParent* AllocServiceWorkerContainerParent() {
-  return new ServiceWorkerContainerParent();
-}
-
-bool DeallocServiceWorkerContainerParent(
-    PServiceWorkerContainerParent* aActor) {
-  auto actor = static_cast<ServiceWorkerContainerParent*>(aActor);
-  delete actor;
-  return true;
-}
-
 void InitServiceWorkerContainerParent(PServiceWorkerContainerParent* aActor) {
   auto actor = static_cast<ServiceWorkerContainerParent*>(aActor);
   actor->Init();

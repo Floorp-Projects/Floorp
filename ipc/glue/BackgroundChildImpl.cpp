@@ -43,6 +43,7 @@
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
+#include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -647,14 +648,9 @@ BackgroundChildImpl::AllocPServiceWorkerChild(
   return {};
 }
 
-PServiceWorkerContainerChild*
+already_AddRefed<PServiceWorkerContainerChild>
 BackgroundChildImpl::AllocPServiceWorkerContainerChild() {
-  return dom::AllocServiceWorkerContainerChild();
-}
-
-bool BackgroundChildImpl::DeallocPServiceWorkerContainerChild(
-    PServiceWorkerContainerChild* aActor) {
-  return dom::DeallocServiceWorkerContainerChild(aActor);
+  return mozilla::dom::ServiceWorkerContainerChild::Create();
 }
 
 PServiceWorkerRegistrationChild*

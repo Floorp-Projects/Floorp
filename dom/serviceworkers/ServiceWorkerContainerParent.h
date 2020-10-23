@@ -19,6 +19,8 @@ class ServiceWorkerContainerParent final
     : public PServiceWorkerContainerParent {
   RefPtr<ServiceWorkerContainerProxy> mProxy;
 
+  ~ServiceWorkerContainerParent();
+
   // PServiceWorkerContainerParent
   void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -42,8 +44,9 @@ class ServiceWorkerContainerParent final
                                        GetReadyResolver&& aResolver) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerParent, override);
+
   ServiceWorkerContainerParent();
-  ~ServiceWorkerContainerParent();
 
   void Init();
 };
