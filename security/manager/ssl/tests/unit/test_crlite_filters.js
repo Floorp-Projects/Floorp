@@ -62,8 +62,8 @@ async function syncAndDownload(filters) {
 
   for (let filter of filters) {
     const filename =
-      "test-filter." + (filter.type == "diff" ? "stash" : "crlite");
-    const file = do_get_file(`test_cert_storage_direct/${filename}`);
+      filter.type == "diff" ? "20201017-1-filter.stash" : "20201017-0-filter";
+    const file = do_get_file(`test_crlite_filters/${filename}`);
     const fileBytes = readFile(file);
 
     const record = {
@@ -74,7 +74,7 @@ async function syncAndDownload(filters) {
         hash: getHash(fileBytes),
         size: fileBytes.length,
         filename,
-        location: `security-state-workspace/cert-revocations/test_cert_storage_direct/${filename}`,
+        location: `security-state-workspace/cert-revocations/test_crlite_filters/${filename}`,
         mimetype: "application/octet-stream",
       },
       incremental: filter.type == "diff",
@@ -393,23 +393,13 @@ add_task(
     let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
       Ci.nsIX509CertDB
     );
-    let validCertIssuer = constructCertFromFile(
-      "test_cert_storage_direct/valid-cert-issuer.pem"
-    );
-    let revokedCertIssuer = constructCertFromFile(
-      "test_cert_storage_direct/revoked-cert-issuer.pem"
-    );
-    let revokedInStashIssuer = constructCertFromFile(
-      "test_cert_storage_direct/revoked-in-stash-issuer.pem"
-    );
+    let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
     let noSCTCertIssuer = constructCertFromFile(
-      "test_cert_storage_direct/no-sct-issuer.pem"
+      "test_crlite_filters/no-sct-issuer.pem"
     );
 
     let crliteEnrollmentRecords = [
-      getCRLiteEnrollmentRecordFor(validCertIssuer),
-      getCRLiteEnrollmentRecordFor(revokedCertIssuer),
-      getCRLiteEnrollmentRecordFor(revokedInStashIssuer),
+      getCRLiteEnrollmentRecordFor(issuerCert),
       getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
     ];
 
@@ -423,61 +413,62 @@ add_task(
     });
 
     let result = await syncAndDownload([
-      { timestamp: "2019-01-19T00:00:00Z", type: "full", id: "0000" },
+      { timestamp: "2020-10-17T00:00:00Z", type: "full", id: "0000" },
     ]);
     equal(
       result,
-      "finished;2019-01-19T00:00:00Z-full",
+      "finished;2020-10-17T00:00:00Z-full",
       "CRLite filter download should have run"
     );
 
-    let validCert = constructCertFromFile(
-      "test_cert_storage_direct/valid-cert.pem"
-    );
+    let validCert = constructCertFromFile("test_crlite_filters/valid.pem");
+    // NB: by not specifying Ci.nsIX509CertDB.FLAG_LOCAL_ONLY, this tests that
+    // the implementation does not fall back to OCSP fetching, because if it
+    // did, the implementation would attempt to connect to a server outside the
+    // test infrastructure, which would result in a crash in the test
+    // environment, which would be treated as a test failure.
     await checkCertErrorGenericAtTime(
       certdb,
       validCert,
       PRErrorCodeSuccess,
       certificateUsageSSLServer,
-      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "skynew.jp",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "vpn.worldofspeed.org",
+      0
     );
 
-    let revokedCert = constructCertFromFile(
-      "test_cert_storage_direct/revoked-cert.pem"
-    );
+    let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
     await checkCertErrorGenericAtTime(
       certdb,
       revokedCert,
       SEC_ERROR_REVOKED_CERTIFICATE,
       certificateUsageSSLServer,
-      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "schunk-group.com",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "us-datarecovery.com",
+      0
     );
 
     // Before any stashes are downloaded, this should verify successfully.
     let revokedInStashCert = constructCertFromFile(
-      "test_cert_storage_direct/revoked-in-stash-cert.pem"
+      "test_crlite_filters/revoked-in-stash.pem"
     );
     await checkCertErrorGenericAtTime(
       certdb,
       revokedInStashCert,
       PRErrorCodeSuccess,
       certificateUsageSSLServer,
-      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "gold-g2-valid-cert-demo.swisssign.net",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "stokedmoto.com",
+      0
     );
 
     result = await syncAndDownload([
-      { timestamp: "2019-01-20T00:00:00Z", type: "full", id: "0000" },
+      { timestamp: "2020-10-17T00:00:00Z", type: "full", id: "0000" },
       {
-        timestamp: "2019-01-20T06:00:00Z",
+        timestamp: "2020-10-17T03:00:00Z",
         type: "diff",
         id: "0001",
         parent: "0000",
@@ -487,7 +478,7 @@ add_task(
     equal(status, "finished", "CRLite filter download should have run");
     deepEqual(
       filters,
-      ["2019-01-20T00:00:00Z-full", "2019-01-20T06:00:00Z-diff"],
+      ["2020-10-17T00:00:00Z-full", "2020-10-17T03:00:00Z-diff"],
       "Should have downloaded the expected CRLite filters"
     );
 
@@ -497,10 +488,10 @@ add_task(
       revokedInStashCert,
       SEC_ERROR_REVOKED_CERTIFICATE,
       certificateUsageSSLServer,
-      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "gold-g2-valid-cert-demo.swisssign.net",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "stokedmoto.com",
+      0
     );
 
     // The other certificates should still get the same results as they did before.
@@ -509,10 +500,10 @@ add_task(
       validCert,
       PRErrorCodeSuccess,
       certificateUsageSSLServer,
-      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "skynew.jp",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "vpn.worldofspeed.org",
+      0
     );
 
     await checkCertErrorGenericAtTime(
@@ -520,22 +511,18 @@ add_task(
       revokedCert,
       SEC_ERROR_REVOKED_CERTIFICATE,
       certificateUsageSSLServer,
-      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "schunk-group.com",
-      Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+      "us-datarecovery.com",
+      0
     );
 
     // This certificate has no embedded SCTs, so it is not guaranteed to be in
     // CT, so CRLite can't be guaranteed to give the correct answer, so it is
-    // not consulted.
-    let noSCTCert = constructCertFromFile(
-      "test_cert_storage_direct/no-sct.pem"
-    );
-    // Currently OCSP will always be consulted for certificates that are not
-    // revoked in CRLite, but if/when OCSP gets skipped for all certificates
-    // covered by CRLite, this test will ensure that certificates without
-    // embedded SCTs will cause OCSP to be consulted.
+    // not consulted, and the implementation falls back to OCSP. Since the real
+    // OCSP responder can't be reached, this results in a
+    // SEC_ERROR_OCSP_SERVER_ERROR.
+    let noSCTCert = constructCertFromFile("test_crlite_filters/no-sct.pem");
     // NB: this will cause an OCSP request to be sent to localhost:80, but
     // since an OCSP responder shouldn't be running on that port, this should
     // fail safely.
@@ -547,7 +534,7 @@ add_task(
       noSCTCert,
       SEC_ERROR_OCSP_SERVER_ERROR,
       certificateUsageSSLServer,
-      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
       "mail233.messagelabs.com",
       0
@@ -559,21 +546,25 @@ add_task(
     // If the earliest certificate timestamp is within the merge delay of the
     // logs for the filter we have, it won't be looked up, and thus won't be
     // revoked.
-    // The earliest timestamp in this certificate is in May 2018, whereas the
-    // filter timestamp is in Janurary 2019, so setting the merge delay to this
-    // large value simluates the situation being tested.
+    // The earliest timestamp in this certificate is in August 2020, whereas
+    // the filter timestamp is in October 2020, so setting the merge delay to
+    // this large value simluates the situation being tested.
     Services.prefs.setIntPref(
       "security.pki.crlite_ct_merge_delay_seconds",
-      60 * 60 * 24 * 360
+      60 * 60 * 24 * 60
     );
+    // Since setting the merge delay parameter this way effectively makes this
+    // certificate "too new" to be covered by the filter, the implementation
+    // would fall back to OCSP fetching. Since this would result in a crash and
+    // test failure, the Ci.nsIX509CertDB.FLAG_LOCAL_ONLY is used.
     await checkCertErrorGenericAtTime(
       certdb,
       revokedCert,
       PRErrorCodeSuccess,
       certificateUsageSSLServer,
-      new Date("2019-11-20T00:00:00Z").getTime() / 1000,
+      new Date("2020-10-20T00:00:00Z").getTime() / 1000,
       false,
-      "schunk-group.com",
+      "us-datarecovery.com",
       Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
     );
     Services.prefs.clearUserPref("security.pki.crlite_ct_merge_delay_seconds");
