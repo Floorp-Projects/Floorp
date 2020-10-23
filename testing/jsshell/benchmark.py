@@ -123,6 +123,7 @@ class Benchmark(object):
             'processOutputLine': self.process_line,
             'stream': sys.stdout,
             'env': env,
+            'universal_newlines': True
         }
         proc = ProcessHandler(**process_args)
         proc.run()
