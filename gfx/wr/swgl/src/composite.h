@@ -693,16 +693,23 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
                            float srcDU, const vec2_scalar& chromaUV,
                            float chromaDU, sampler2D_impl sampler[3],
                            int colorDepth) {
+  // Casting to int loses some precision while stepping that can offset the
+  // image, so shift the values by some extra bits of precision to minimize
+  // this. We support up to 16 bits of image size, 7 bits of quantization,
+  // and 1 bit for sign, which leaves 8 bits left for extra precision.
+  const int STEP_BITS = 8;
+
   // Calculate varying and constant interp data for Y plane.
-  I32 yU = cast(init_interp(srcUV.x, srcDU));
+  I32 yU = cast(init_interp(srcUV.x, srcDU) * (1 << STEP_BITS));
   int32_t yV = int32_t(srcUV.y);
 
   // Calculate varying and constant interp data for chroma planes.
-  I32 cU = cast(init_interp(chromaUV.x, chromaDU));
+  I32 cU = cast(init_interp(chromaUV.x, chromaDU) * (1 << STEP_BITS));
   int32_t cV = int32_t(chromaUV.y);
 
-  int32_t yDU = int32_t(4 * srcDU);
-  int32_t cDU = int32_t(4 * chromaDU);
+  // We need to skip 4 pixels per chunk.
+  int32_t yDU = int32_t((4 << STEP_BITS) * srcDU);
+  int32_t cDU = int32_t((4 << STEP_BITS) * chromaDU);
 
   if (sampler[0].format == TextureFormat::R16) {
     // Sample each YUV plane, rescale it to fit in low 8 bits of word, and then
@@ -714,11 +721,14 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     int rescaleBits = (colorDepth - 1) - 8;
     for (; span >= 4; span -= 4) {
       auto yPx =
-          textureLinearPackedR16(&sampler[0], ivec2(yU, yV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[0], ivec2(yU >> STEP_BITS, yV)) >>
+          rescaleBits;
       auto uPx =
-          textureLinearPackedR16(&sampler[1], ivec2(cU, cV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[1], ivec2(cU >> STEP_BITS, cV)) >>
+          rescaleBits;
       auto vPx =
-          textureLinearPackedR16(&sampler[2], ivec2(cU, cV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[2], ivec2(cU >> STEP_BITS, cV)) >>
+          rescaleBits;
       unaligned_store(dest, YUVConverter<COLOR_SPACE>::convert(zip(yPx, yPx),
                                                                zip(uPx, vPx)));
       dest += 4;
@@ -728,11 +738,14 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     if (span > 0) {
       // Handle any remaining pixels...
       auto yPx =
-          textureLinearPackedR16(&sampler[0], ivec2(yU, yV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[0], ivec2(yU >> STEP_BITS, yV)) >>
+          rescaleBits;
       auto uPx =
-          textureLinearPackedR16(&sampler[1], ivec2(cU, cV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[1], ivec2(cU >> STEP_BITS, cV)) >>
+          rescaleBits;
       auto vPx =
-          textureLinearPackedR16(&sampler[2], ivec2(cU, cV)) >> rescaleBits;
+          textureLinearPackedR16(&sampler[2], ivec2(cU >> STEP_BITS, cV)) >>
+          rescaleBits;
       partial_store_span(
           dest,
           YUVConverter<COLOR_SPACE>::convert(zip(yPx, yPx), zip(uPx, vPx)),
@@ -759,10 +772,11 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     for (; span >= 4; span -= 4) {
       // Sample each YUV plane and then transform them by the appropriate color
       // space.
-      auto yPx =
-          textureLinearRowR8(&sampler[0], yU, yOffsetV, yStrideV, yFracV);
-      auto uvPx = textureLinearRowPairedR8(&sampler[1], &sampler[2], cU,
-                                           cOffsetV, cStrideV, cFracV);
+      auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+                                    yStrideV, yFracV);
+      auto uvPx =
+          textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
+                                   cOffsetV, cStrideV, cFracV);
       unaligned_store(dest, YUVConverter<COLOR_SPACE>::convert(yPx, uvPx));
       dest += 4;
       yU += yDU;
@@ -770,10 +784,11 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     }
     if (span > 0) {
       // Handle any remaining pixels...
-      auto yPx =
-          textureLinearRowR8(&sampler[0], yU, yOffsetV, yStrideV, yFracV);
-      auto uvPx = textureLinearRowPairedR8(&sampler[1], &sampler[2], cU,
-                                           cOffsetV, cStrideV, cFracV);
+      auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+                                    yStrideV, yFracV);
+      auto uvPx =
+          textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
+                                   cOffsetV, cStrideV, cFracV);
       partial_store_span(dest, YUVConverter<COLOR_SPACE>::convert(yPx, uvPx),
                          span);
     }
