@@ -3908,7 +3908,7 @@ nsresult HTMLEditor::GetCellContext(Element** aTable, Element** aCell,
 }
 
 NS_IMETHODIMP HTMLEditor::GetFirstSelectedCell(
-    nsRange** aFirstSelectedRange, Element** aFirstSelectedCellElement) {
+    Element** aFirstSelectedCellElement) {
   if (NS_WARN_IF(!aFirstSelectedCellElement)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -3919,9 +3919,6 @@ NS_IMETHODIMP HTMLEditor::GetFirstSelectedCell(
   }
 
   *aFirstSelectedCellElement = nullptr;
-  if (aFirstSelectedRange) {
-    *aFirstSelectedRange = nullptr;
-  }
 
   ErrorResult error;
   RefPtr<Element> firstSelectedCellElement =
@@ -3936,13 +3933,6 @@ NS_IMETHODIMP HTMLEditor::GetFirstSelectedCell(
     return NS_OK;
   }
   firstSelectedCellElement.forget(aFirstSelectedCellElement);
-
-  if (aFirstSelectedRange) {
-    // Returns the first range only when the caller requested the range.
-    RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
-    MOZ_ASSERT(firstRange);
-    firstRange.forget(aFirstSelectedRange);
-  }
 
   return NS_OK;
 }
@@ -3981,7 +3971,7 @@ already_AddRefed<Element> HTMLEditor::GetFirstSelectedTableCellElement(
 }
 
 NS_IMETHODIMP HTMLEditor::GetNextSelectedCell(
-    nsRange** aNextSelectedCellRange, Element** aNextSelectedCellElement) {
+    Element** aNextSelectedCellElement) {
   if (NS_WARN_IF(!aNextSelectedCellElement)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -3992,9 +3982,6 @@ NS_IMETHODIMP HTMLEditor::GetNextSelectedCell(
   }
 
   *aNextSelectedCellElement = nullptr;
-  if (aNextSelectedCellRange) {
-    *aNextSelectedCellRange = nullptr;
-  }
 
   ErrorResult error;
   RefPtr<Element> nextSelectedCellElement =
@@ -4009,11 +3996,6 @@ NS_IMETHODIMP HTMLEditor::GetNextSelectedCell(
     return NS_OK;
   }
 
-  if (aNextSelectedCellRange) {
-    MOZ_ASSERT(mSelectedCellIndex > 0);
-    *aNextSelectedCellRange =
-        do_AddRef(SelectionRefPtr()->GetRangeAt(mSelectedCellIndex - 1)).take();
-  }
   nextSelectedCellElement.forget(aNextSelectedCellElement);
   return NS_OK;
 }
