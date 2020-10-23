@@ -1017,6 +1017,10 @@ static void CollectCertTelemetry(
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_CRLITE_RESULT::LibraryFailure);
       break;
+    case CRLiteLookupResult::CertRevokedByStash:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_CRLITE_RESULT::CertRevokedByStash);
+      break;
     case CRLiteLookupResult::NeverChecked:
       break;
     default:
