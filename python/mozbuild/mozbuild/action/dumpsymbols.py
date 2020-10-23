@@ -53,6 +53,7 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     elif os_arch == 'Darwin':
         cpu = {
             'x86': 'i386',
+            'aarch64': 'arm64',
         }.get(buildconfig.substs['TARGET_CPU'], buildconfig.substs['TARGET_CPU'])
         sym_store_args.extend(['-c', '-a', cpu, '--vcs-info'])
     elif os_arch == 'Linux':
