@@ -112,7 +112,7 @@ export class CollapsibleSection extends React.PureComponent {
     this.props.dispatch(
       ac.UserEvent({
         event: userEvent,
-        source: this.props.source,
+        source: this.props.eventSource,
       })
     );
   }
@@ -259,7 +259,7 @@ export class CollapsibleSection extends React.PureComponent {
               <SectionMenu
                 id={id}
                 extraOptions={extraMenuOptions}
-                eventSource={eventSource}
+                source={eventSource}
                 showPrefName={showPrefName}
                 privacyNoticeURL={privacyNoticeURL}
                 collapsed={collapsed}
