@@ -716,28 +716,21 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
                   CreateAndExecuteSingleStepStatement(
                       aConnection, journalModeQueryStart + journalModeWAL));
 
-  nsCString journalMode;
-  nsresult rv = stmt->GetUTF8String(0, journalMode);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(
+      const auto& journalMode,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 0));
 
   if (journalMode.Equals(journalModeWAL)) {
     // WAL mode successfully enabled. Maybe set limits on its size here.
     if (kMaxWALPages >= 0) {
-      rv = aConnection.ExecuteSimpleSQL("PRAGMA wal_autocheckpoint = "_ns +
-                                        IntToCString(kMaxWALPages));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      IDB_TRY(aConnection.ExecuteSimpleSQL("PRAGMA wal_autocheckpoint = "_ns +
+                                           IntToCString(kMaxWALPages)));
     }
   } else {
     NS_WARNING("Failed to set WAL mode, falling back to normal journal mode.");
 #ifdef IDB_MOBILE
-    rv = aConnection.ExecuteSimpleSQL(journalModeQueryStart + "truncate"_ns);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(
+        aConnection.ExecuteSimpleSQL(journalModeQueryStart + "truncate"_ns));
 #endif
   }
 
