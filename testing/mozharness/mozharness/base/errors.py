@@ -66,6 +66,7 @@ GitErrorList = BaseErrorList + [
 
 PythonErrorList = BaseErrorList + [
     {'regex': re.compile(r'''Warning:.*Error: '''), 'level': WARNING},
+    {'regex': re.compile(r'''package.*> Error:'''), 'level': ERROR},
     {'substr': r'''Traceback (most recent call last)''', 'level': ERROR},
     {'substr': r'''SyntaxError: ''', 'level': ERROR},
     {'substr': r'''TypeError: ''', 'level': ERROR},

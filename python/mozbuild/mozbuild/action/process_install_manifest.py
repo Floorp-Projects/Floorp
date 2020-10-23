@@ -13,6 +13,7 @@ from mozpack.copier import (
     FileCopier,
     FileRegistry,
 )
+from mozpack.errors import errors
 from mozpack.files import (
     BaseFile,
     FileFinder,
@@ -64,10 +65,11 @@ def process_manifest(destdir, paths, track,
     manifest.populate_registry(
         copier, defines_override=defines, link_policy=link_policy
     )
-    result = copier.copy(destdir,
-                         remove_unaccounted=remove_unaccounted,
-                         remove_all_directory_symlinks=remove_all_directory_symlinks,
-                         remove_empty_directories=remove_empty_directories)
+    with errors.accumulate():
+        result = copier.copy(destdir,
+                             remove_unaccounted=remove_unaccounted,
+                             remove_all_directory_symlinks=remove_all_directory_symlinks,
+                             remove_empty_directories=remove_empty_directories)
 
     if track:
         # We should record files that we actually copied.
