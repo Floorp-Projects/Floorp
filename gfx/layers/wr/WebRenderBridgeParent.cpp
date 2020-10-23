@@ -1815,14 +1815,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvForceComposite() {
     return IPC_OK();
   }
 
-  TimeStamp start = TimeStamp::Now();
-  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId(), VsyncId(),
-                                                start);
-
-  wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
-  fastTxn.InvalidateRenderedFrame();
-  fastTxn.GenerateFrame();
-  mApi->SendTransaction(fastTxn);
+  ScheduleForcedGenerateFrame();
   return IPC_OK();
 }
 
