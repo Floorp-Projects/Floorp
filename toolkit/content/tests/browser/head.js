@@ -172,6 +172,12 @@ class DateTimeTestHelper {
     this.tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
     let bc = gBrowser.selectedBrowser;
     if (inFrame) {
+      await SpecialPowers.spawn(bc, [], async function() {
+        const iframe = content.document.querySelector("iframe");
+        // Ensure the iframe's position is correct before doing any
+        // other operations
+        iframe.getBoundingClientRect();
+      });
       bc = bc.browsingContext.children[0];
     }
     await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, bc);
