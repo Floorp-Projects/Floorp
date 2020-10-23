@@ -16219,8 +16219,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   MOZ_ASSERT(mDirectoryLock->Id() >= 0);
   mDirectoryLockId = mDirectoryLock->Id();
 
-  nsresult rv = DirectoryOpen();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  IDB_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) {
     SetFailureCodeIfUnset(rv);
 
     // The caller holds a strong reference to us, no need for a self reference
@@ -16228,9 +16227,7 @@ void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
 
     mState = State::SendingResults;
     MOZ_ALWAYS_SUCCEEDS(Run());
-
-    return;
-  }
+  });
 }
 
 void FactoryOp::DirectoryLockFailed() {
