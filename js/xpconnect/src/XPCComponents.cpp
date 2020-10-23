@@ -2436,9 +2436,16 @@ nsXPCComponents_Utils::CreateSpellChecker(nsIEditorSpellCheck** aSpellChecker) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateCommandLine(nsISupports** aCommandLine) {
+nsXPCComponents_Utils::CreateCommandLine(nsIFile* aWorkingDir,
+                                         nsISupports** aCommandLine) {
   NS_ENSURE_ARG_POINTER(aCommandLine);
   nsCOMPtr<nsISupports> commandLine = new nsCommandLine();
+  if (aWorkingDir) {
+    nsCOMPtr<nsICommandLineRunner> runner = do_QueryInterface(commandLine);
+    char* argv[] = {nullptr};
+    runner->Init(0, argv, aWorkingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  }
+
   commandLine.forget(aCommandLine);
   return NS_OK;
 }

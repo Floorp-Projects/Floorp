@@ -2041,8 +2041,14 @@ bool gfxWindowsPlatform::CheckVariationFontSupport() {
 
 void gfxWindowsPlatform::GetPlatformDisplayInfo(
     mozilla::widget::InfoObject& aObj) {
-  aObj.DefineProperty("HardwareStretching",
-                      DeviceManagerDx::Get()->CheckHardwareStretchingSupport());
+  HwStretchingSupport stretch;
+  DeviceManagerDx::Get()->CheckHardwareStretchingSupport(stretch);
+
+  nsPrintfCString stretchValue(
+      "both=%u window-only=%u full-screen-only=%u none=%u error=%u",
+      stretch.mBoth, stretch.mWindowOnly, stretch.mFullScreenOnly,
+      stretch.mNone, stretch.mError);
+  aObj.DefineProperty("HardwareStretching", stretchValue.get());
 
   ScaledResolutionSet scaled;
   GetScaledResolutions(scaled);

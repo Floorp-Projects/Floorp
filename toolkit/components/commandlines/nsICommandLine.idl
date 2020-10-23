@@ -110,6 +110,8 @@ interface nsICommandLine : nsISupports
    * The working directory for this command line. Use this property instead
    * of the working directory for the current process, since a redirected
    * command line may have had a different working directory.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if the working directory was not specified.
    */
   readonly attribute nsIFile workingDirectory;
 
@@ -117,8 +119,11 @@ interface nsICommandLine : nsISupports
    * Resolve a file-path argument into an nsIFile. This method gracefully
    * handles relative or absolute file paths, according to the working
    * directory of this command line.
+   * If the path is relative and there is no working directory available,
+   * this may return null.
    *
-   * @param aArgument  The command-line argument to resolve.
+   * @param aArgument  The path to resolve.
+   *
    */
   nsIFile resolveFile(in AString aArgument);
 

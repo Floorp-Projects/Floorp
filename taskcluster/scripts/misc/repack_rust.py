@@ -172,10 +172,9 @@ def verify_sha(filename, sha):
     '''Verify that the checksum file matches the given sha digest.'''
     sha_filename = filename + '.sha256'
     with open(sha_filename) as f:
-        checksum, name = f.readline().split()
-        if name != filename:
-            raise ValueError('Checksum file lists a different filename!'
-                             '\n%s vs %s' % (name, filename))
+        # Older sha256 files would contain `sha filename`, but more recent
+        # ones only contain `sha`.
+        checksum = f.readline().split()[0]
         if checksum != sha:
             raise ValueError('Checksum mismatch in %s' % filename)
         return True

@@ -424,9 +424,6 @@ GlatEntry::SerializePart(OTSStream* out) const {
 // -----------------------------------------------------------------------------
 
 bool OpenTypeGLAT::Parse(const uint8_t* data, size_t length) {
-  if (GetFont()->dropped_graphite) {
-    return Drop("Skipping Graphite table");
-  }
   Buffer table(data, length);
   uint32_t version;
   if (!table.ReadU32(&version)) {

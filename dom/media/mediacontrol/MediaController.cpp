@@ -537,5 +537,17 @@ CopyableTArray<MediaControlKey> MediaController::GetSupportedMediaKeys() const {
   return mSupportedKeys;
 }
 
+void MediaController::Select() const {
+  if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(Id())) {
+    Unused << bc->SetHasMainMediaController(true);
+  }
+}
+
+void MediaController::Unselect() const {
+  if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(Id())) {
+    Unused << bc->SetHasMainMediaController(false);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

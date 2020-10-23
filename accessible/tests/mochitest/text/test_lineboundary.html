@@ -171,6 +171,41 @@
                        [ [ 0, 0, kEmbedChar, 0, 1 ],
                          [ 1, 1, kEmbedChar, 1, 2 ] ]);
 
+      // Embedded char containing a line break breaks line offsets in parent.
+      testTextAtOffset([ "brInEmbed" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d", 0, 5],
+                         [3, 5, kEmbedChar + " d", 2, 5] ]);
+      testTextAtOffset([ "brInEmbedAndBefore" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 3, "b " + kEmbedChar, 2, 5],
+                         [4, 4, "b " + kEmbedChar + " e", 2, 7],
+                         [5, 7, kEmbedChar + " e", 4, 7] ]);
+      testTextAtOffset([ "brInEmbedAndAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d\n", 0, 6],
+                         [3, 5, kEmbedChar + " d\n", 2, 6],
+                         [6, 7, "e", 6, 7] ]);
+      testTextAtOffset([ "brInEmbedAndBlockElementAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 2, "a " + kEmbedChar, 0, 3],
+                         [3, 4, kEmbedChar, 3, 4] ]);
+      testTextAtOffset([ "brInEmbedThenTextThenBlockElement" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + " d", 0, 5],
+                         [3, 4, kEmbedChar + " d", 2, 5],
+                         [5, 6, kEmbedChar, 5, 6] ]);
+      testTextAtOffset([ "noBrInEmbedButOneBefore" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 7, "b " + kEmbedChar + " d", 2, 7] ]);
+      testTextAtOffset([ "noBrInEmbedButOneAfter" ], BOUNDARY_LINE_START,
+                       [ [0, 3, "a " + kEmbedChar + "\n", 0, 4],
+                         [4, 5, "c", 4, 5] ]);
+      testTextAtOffset([ "twoEmbedsWithBRs" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a " + kEmbedChar, 0, 3],
+                         [2, 2, "a " + kEmbedChar + kEmbedChar, 0, 4],
+                         [3, 3, kEmbedChar + kEmbedChar + " f", 2, 6],
+                         [4, 6, kEmbedChar + " f", 3, 6] ]);
+
       SimpleTest.finish();
     }
 
@@ -270,6 +305,13 @@ two words
     <p>Block</p>
     <ul><li>Li</li></ul>
   </div>
-  </body>
+  <div id="brInEmbed" contenteditable>a <a href="https://mozilla.org/">b<br>c</a> d</div>
+  <div id="brInEmbedAndBefore">a<br>b <a href="https://mozilla.org/">c<br>d</a> e</div>
+  <div id="brInEmbedAndAfter">a <a href="https://mozilla.org/">b<br>c</a> d<br>e</div>
+  <div id="brInEmbedAndBlockElementAfter">a <a href="https://mozilla.org/">b<br>c</a><p>d</p></div>
+  <div id="brInEmbedThenTextThenBlockElement">a <a href="https://mozilla.org/">b<br>c</a> d<p>e</p></div>
+  <div id="noBrInEmbedButOneBefore">a<br>b <a href="https://mozilla.org/">c</a> d</div>
+  <div id="noBrInEmbedButOneAfter">a <a href="https://mozilla.org/">b</a><br>c</div>
+  <div id="twoEmbedsWithBRs">a <a href="https://mozilla.org">b<br>c</a><a href="https://mozilla.org">d<br>e</a> f</div>
 </body>
 </html>

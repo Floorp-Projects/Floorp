@@ -8,11 +8,11 @@ add_task(async function testUpdateSoundIndicatorWhenMediaPlaybackChanges() {
   await initMediaPlaybackDocument(tab, "audio.ogg");
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when audio stops playing`);
-  await pauseAudio(tab);
+  await pauseMedia(tab);
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("remove tab");
@@ -25,7 +25,7 @@ add_task(async function testUpdateSoundIndicatorWhenMediaBecomeSilent() {
   await initMediaPlaybackDocument(tab, "audioEndedDuringPlaying.webm");
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when audio becomes silent`);
@@ -41,11 +41,11 @@ add_task(async function testSoundIndicatorWouldWorkForMediaWithoutPreload() {
   await initMediaPlaybackDocument(tab, "audio.ogg", { preload: "none" });
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when audio stops playing`);
-  await pauseAudio(tab);
+  await pauseMedia(tab);
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("remove tab");
@@ -58,7 +58,7 @@ add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
   await initMediaPlaybackDocument(tab, "audio.ogg");
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear after navigating tab to blank page`);
@@ -75,11 +75,11 @@ add_task(async function testSoundIndicatorForAudioStream() {
   await initMediaStreamPlaybackDocument(tab);
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when audio stops playing`);
-  await pauseAudio(tab);
+  await pauseMedia(tab);
   await waitForTabSoundIndicatorDisappears(tab);
 
   info("remove tab");
@@ -92,16 +92,16 @@ add_task(async function testPerformPlayOnMediaLoadingNewSource() {
   await initMediaPlaybackDocument(tab, "audio.ogg");
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when audio stops playing`);
-  await pauseAudio(tab);
+  await pauseMedia(tab);
   await waitForTabSoundIndicatorDisappears(tab);
 
   info(`reset media src and play it again should make sound indicator appear`);
   await assignNewSourceForAudio(tab, "audio.ogg");
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info("remove tab");
@@ -114,7 +114,7 @@ add_task(async function testSoundIndicatorShouldDisappearWhenAbortingMedia() {
   await initMediaPlaybackDocument(tab, "audio.ogg");
 
   info(`sound indicator should appear when audible audio starts playing`);
-  await playAudio(tab);
+  await playMedia(tab);
   await waitForTabSoundIndicatorAppears(tab);
 
   info(`sound indicator should disappear when aborting audio source`);
@@ -125,46 +125,74 @@ add_task(async function testSoundIndicatorShouldDisappearWhenAbortingMedia() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testNoSoundIndicatorForMediaWithoutAudioTrack() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab({ needObserver: true });
+  await initMediaPlaybackDocument(tab, "noaudio.webm", { createVideo: true });
+
+  info(`no sound indicator should show for playing media without audio track`);
+  await playMedia(tab, { resolveOnEnded: true });
+  ok(!tab.observer.hasEverUpdated(), "didn't ever update sound indicator");
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
-function initMediaPlaybackDocument(tab, fileName, { preload } = {}) {
+function initMediaPlaybackDocument(
+  tab,
+  fileName,
+  { preload, createVideo } = {}
+) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
-    [fileName, preload],
-    async (fileName, preload) => {
-      content.audio = content.document.createElement("audio");
-      if (preload) {
-        content.audio.preload = preload;
+    [fileName, preload, createVideo],
+    async (fileName, preload, createVideo) => {
+      if (createVideo) {
+        content.media = content.document.createElement("video");
+      } else {
+        content.media = content.document.createElement("audio");
       }
-      content.audio.src = fileName;
+      if (preload) {
+        content.media.preload = preload;
+      }
+      content.media.src = fileName;
     }
   );
 }
 
 function initMediaStreamPlaybackDocument(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
-    content.audio = content.document.createElement("audio");
-    content.audio.srcObject = new content.AudioContext().createMediaStreamDestination().stream;
+    content.media = content.document.createElement("audio");
+    content.media.srcObject = new content.AudioContext().createMediaStreamDestination().stream;
   });
 }
 
-function playAudio(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
-    await content.audio.play();
-  });
+function playMedia(tab, { resolveOnEnded } = {}) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [resolveOnEnded],
+    async resolveOnEnded => {
+      await content.media.play();
+      if (resolveOnEnded) {
+        await new Promise(r => (content.media.onended = r));
+      }
+    }
+  );
 }
 
-function pauseAudio(tab) {
+function pauseMedia(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
-    content.audio.pause();
+    content.media.pause();
   });
 }
 
 function assignNewSourceForAudio(tab, fileName) {
   return SpecialPowers.spawn(tab.linkedBrowser, [fileName], async fileName => {
-    content.audio.src = "";
-    content.audio.removeAttribute("src");
-    content.audio.src = fileName;
+    content.media.src = "";
+    content.media.removeAttribute("src");
+    content.media.src = fileName;
   });
 }

@@ -37,11 +37,13 @@ default_win32_winnt=0x601
 
 cd $GECKO_PATH
 
-patch_file="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
+patch_file1="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
+patch_file2="$(pwd)/taskcluster/scripts/misc/mingw-dwrite_3.patch"
 
 prepare() {
   pushd $MOZ_FETCHES_DIR/mingw-w64
-  patch -p1 <$patch_file
+  patch -p1 <$patch_file1
+  patch -p1 <$patch_file2
   popd
 }
 

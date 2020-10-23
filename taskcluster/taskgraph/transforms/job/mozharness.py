@@ -233,8 +233,8 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
                defaults=mozharness_defaults)
 def mozharness_on_generic_worker(config, job, taskdesc):
     assert (
-        job["worker"]["os"] == "windows"
-    ), "only supports windows right now: {}".format(job["label"])
+        job["worker"]["os"] in ("windows", "macosx")
+    ), "only supports windows and macOS right now: {}".format(job["label"])
 
     run = job['run']
 
@@ -286,24 +286,33 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     if config.params.is_try():
         env['TRY_COMMIT_MSG'] = config.params['message'] or 'no commit message'
 
-    if not job['attributes']['build_platform'].startswith('win'):
+    if not job['attributes']['build_platform'].startswith(('win', 'macosx')):
         raise Exception(
-            "Task generation for mozharness build jobs currently only supported on Windows"
+            "Task generation for mozharness build jobs currently only supported on "
+            "Windows and macOS"
         )
 
-    mh_command = [
+    if job['worker']['os'] == 'windows':
+        mh_command = [
             'c:/mozilla-build/python/python.exe',
             '%GECKO_PATH%/testing/{}'.format(run.pop('script')),
-    ]
+        ]
+    else:
+        mh_command = [
+            '$GECKO_PATH/mach',
+            'python',
+            '$GECKO_PATH/testing/{}'.format(run.pop('script')),
+        ]
 
     for path in run.pop('config-paths', []):
         mh_command.append('--extra-config-path %GECKO_PATH%/{}'.format(path))
 
     for cfg in run.pop('config'):
-        mh_command.append('--config ' + cfg)
+        mh_command.extend(('--config', cfg))
     if run.pop('use-magic-mh-args'):
-        mh_command.append('--branch ' + config.params['project'])
-    mh_command.append(r'--work-dir %cd:Z:=z:%\workspace')
+        mh_command.extend(('--branch', config.params['project']))
+    if job['worker']['os'] == 'windows':
+        mh_command.extend(('--work-dir', r'%cd:Z:=z:%\workspace'))
     for action in run.pop('actions', []):
         mh_command.append('--' + action)
 
@@ -313,12 +322,24 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--custom-build-variant')
         mh_command.append(run.pop('custom-build-variant-cfg'))
 
+    if job['worker']['os'] == 'macosx':
+        # Ideally, we'd use shellutil.quote, but that would single-quote
+        # $GECKO_PATH, which would defeat having the variable in the command
+        # in the first place, as it wouldn't be expanded.
+        # In practice, arguments are expected not to contain characters that
+        # would require quoting.
+        mh_command = ' '.join(mh_command)
+
     run['using'] = 'run-task'
     run['command'] = mh_command
     run.pop('secrets')
     run.pop('requires-signed-builds')
     run.pop('job-script', None)
     configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
+
+    # Everything past this point is Windows-specific.
+    if job['worker']['os'] == 'macosx':
+        return
 
     # TODO We should run the mozharness script with `mach python` so these
     # modules are automatically available, but doing so somehow caused hangs in
