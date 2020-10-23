@@ -204,7 +204,7 @@ private suspend fun loadSearchEnginesFromList(
     coroutineContext: CoroutineContext
 ): List<SearchEngine> {
     val assets = context.assets
-    val reader = SearchEngineReader()
+    val reader = SearchEngineReader(type = SearchEngine.Type.BUNDLED)
 
     val deferredSearchEngines = mutableListOf<Deferred<SearchEngine>>()
 

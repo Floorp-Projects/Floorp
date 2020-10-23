@@ -19,7 +19,6 @@ import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class BundledSearchEnginesStorageTest {
-
     @Test
     fun `Load search engines for en-US from assets`() = runBlocking {
         val storage = BundledSearchEnginesStorage(testContext)
@@ -175,5 +174,25 @@ class BundledSearchEnginesStorageTest {
                 throw AssertionError("Search engine $identifier in list")
             }
         }
+    }
+
+    @Test
+    fun `Verify values of Google search engine`() = runBlocking {
+        val storage = BundledSearchEnginesStorage(testContext)
+
+        val engines = storage.load(RegionState("US", "US"), Locale("en", "US"))
+        val searchEngines = engines.list
+
+        assertEquals(5, searchEngines.size)
+
+        val google = searchEngines.find { it.name == "Google" }
+        assertNotNull(google!!)
+
+        assertEquals("google-b-1-m", google.id)
+        assertEquals("Google", google.name)
+        assertEquals(SearchEngine.Type.BUNDLED, google.type)
+        assertNotNull(google.icon)
+        assertEquals("https://www.google.com/complete/search?client=firefox&q={searchTerms}", google.suggestUrl)
+        assertTrue(google.resultUrls.isNotEmpty())
     }
 }

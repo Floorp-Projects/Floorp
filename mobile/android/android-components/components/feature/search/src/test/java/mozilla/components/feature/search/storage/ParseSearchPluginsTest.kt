@@ -5,6 +5,7 @@
 package mozilla.components.feature.search.storage
 
 import android.text.TextUtils
+import mozilla.components.browser.state.search.SearchEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -22,7 +23,9 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
     @Throws(Exception::class)
     fun parser() {
         val stream = FileInputStream(File(basePath, searchEngineIdentifier))
-        val searchEngine = SearchEngineReader().loadStream(searchEngineIdentifier, stream)
+        val searchEngine = SearchEngineReader(type = SearchEngine.Type.BUNDLED)
+            .loadStream(searchEngineIdentifier, stream)
+
         assertEquals(searchEngineIdentifier, searchEngine.id)
 
         assertNotNull(searchEngine.name)

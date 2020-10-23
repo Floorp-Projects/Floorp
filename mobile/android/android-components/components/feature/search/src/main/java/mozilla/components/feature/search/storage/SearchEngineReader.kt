@@ -25,9 +25,14 @@ internal const val IMAGE_URI_PREFIX = "data:image/png;base64,"
 
 /**
  * A simple XML reader for search engine plugins.
+ *
+ * @param type the [SearchEngine.Type] that the read [SearchEngine]s will get assigned.
  */
-internal class SearchEngineReader {
+internal class SearchEngineReader(
+    private val type: SearchEngine.Type
+) {
     private class SearchEngineBuilder(
+        private val type: SearchEngine.Type,
         private val identifier: String
     ) {
         var resultsUrls: MutableList<String> = mutableListOf()
@@ -39,7 +44,7 @@ internal class SearchEngineReader {
             id = identifier,
             name = name!!,
             icon = icon!!,
-            type = SearchEngine.Type.CUSTOM,
+            type = type,
             resultUrls = resultsUrls,
             suggestUrl = suggestUrl
         )
@@ -58,7 +63,7 @@ internal class SearchEngineReader {
      */
     @Throws(IOException::class, XmlPullParserException::class)
     fun loadStream(identifier: String, stream: InputStream): SearchEngine {
-        val builder = SearchEngineBuilder(identifier)
+        val builder = SearchEngineBuilder(type, identifier)
 
         val parser = XmlPullParserFactory.newInstance().newPullParser()
         parser.setInput(InputStreamReader(stream, StandardCharsets.UTF_8))

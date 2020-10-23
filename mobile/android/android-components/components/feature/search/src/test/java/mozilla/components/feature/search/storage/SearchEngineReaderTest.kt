@@ -29,7 +29,7 @@ class SearchEngineReaderTest {
 
         val storage = CustomSearchEngineStorage(testContext)
         val writer = SearchEngineWriter()
-        val reader = SearchEngineReader()
+        val reader = SearchEngineReader(type = SearchEngine.Type.CUSTOM)
         val file = storage.getSearchFile(searchEngine.id)
         writer.saveSearchEngineXML(searchEngine, file)
         val readSearchEngine = reader.loadFile(searchEngine.id, file)
@@ -48,7 +48,7 @@ class SearchEngineReaderTest {
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf("https://www.example.com/search")
         )
-        val reader = SearchEngineReader()
+        val reader = SearchEngineReader(type = SearchEngine.Type.CUSTOM)
         val invalidFile = AtomicFile(File("", ""))
         reader.loadFile(searchEngine.id, invalidFile)
     }

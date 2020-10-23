@@ -26,7 +26,7 @@ internal class CustomSearchEngineStorage(
     private val context: Context,
     private val coroutineContext: CoroutineContext = Dispatchers.IO
 ) : SearchMiddleware.CustomStorage {
-    private val reader = SearchEngineReader()
+    private val reader = SearchEngineReader(SearchEngine.Type.CUSTOM)
     private val writer = SearchEngineWriter()
 
     override suspend fun loadSearchEngineList(): List<SearchEngine> = withContext(coroutineContext) {
