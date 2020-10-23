@@ -5858,6 +5858,26 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
 
 enum struct Idempotency { Yes, No };
 
+template <typename R>
+Result<Maybe<R>, nsresult> IdempotentFilter(const nsresult aRv) {
+  if (aRv == NS_ERROR_FILE_NOT_FOUND ||
+      aRv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    return Maybe<R>{};
+  }
+
+  return Err(aRv);
+}
+
+template <typename R>
+auto MakeMaybeIdempotentFilter(const Idempotency aIdempotent)
+    -> Result<Maybe<R>, nsresult> (*)(nsresult) {
+  if (aIdempotent == Idempotency::Yes) {
+    return IdempotentFilter<R>;
+  }
+
+  return [](const nsresult rv) { return Result<Maybe<R>, nsresult>{Err(rv)}; };
+}
+
 // Delete a file, decreasing the quota usage as appropriate. If the file no
 // longer exists but aIdempotent is true, success is returned, although quota
 // usage can't be decreased. (With the assumption being that the file was
@@ -5871,37 +5891,49 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  nsresult rv;
-  int64_t fileSize;
-  if (aQuotaManager) {
-    rv = aFile.GetFileSize(&fileSize);
-    if (aIdempotent == Idempotency::Yes &&
-        (rv == NS_ERROR_FILE_NOT_FOUND ||
-         rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
-      return NS_OK;
-    }
+  IDB_TRY_INSPECT(
+      const auto& fileSize,
+      ([aQuotaManager, &aFile,
+        aIdempotent]() -> Result<Maybe<int64_t>, nsresult> {
+        if (aQuotaManager) {
+          IDB_TRY_INSPECT(
+              const Maybe<int64_t>& fileSize,
+              MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
+                  .map([](const int64_t val) { return Some(val); })
+                  .orElse(MakeMaybeIdempotentFilter<int64_t>(aIdempotent)));
 
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+          // XXX Can we really assert that the file size is not 0 if
+          // it existed? This might be violated by external
+          // influences.
+          MOZ_ASSERT(!fileSize || fileSize.value() >= 0);
 
-    MOZ_ASSERT(fileSize >= 0);
-  }
+          return fileSize;
+        }
 
-  rv = aFile.Remove(false);
-  if (aIdempotent == Idempotency::Yes &&
-      (rv == NS_ERROR_FILE_NOT_FOUND ||
-       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+        return Some(int64_t(0));
+      }()));
+
+  if (!fileSize) {
     return NS_OK;
   }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  IDB_TRY_INSPECT(const auto& didExist,
+                  ToResult(aFile.Remove(false))
+                      .map(Some<Ok>)
+                      .orElse(MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
+
+  if (!didExist) {
+    // XXX If we get here, this means that the file still existed when we
+    // queried its size, but no longer when we tried to remove it. Not sure if
+    // this should really be silently accepted in idempotent mode.
+    return NS_OK;
   }
 
-  if (aQuotaManager && fileSize > 0) {
+  if (fileSize.value() > 0) {
+    MOZ_ASSERT(aQuotaManager);
+
     aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroupAndOrigin,
-                                          Client::IDB, fileSize);
+                                          Client::IDB, fileSize.value());
   }
 
   return NS_OK;
@@ -5944,15 +5976,11 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 
   IDB_TRY_INSPECT(const auto& file, CloneFileAndAppend(*aDirectory, aFilename));
 
-  nsresult rv = file->Remove(true);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    return NS_OK;
-  }
+  IDB_TRY_INSPECT(
+      const auto& didExist,
+      ToResult(file->Remove(true)).map(Some<Ok>).orElse(IdempotentFilter<Ok>));
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  Unused << didExist;
 
   return NS_OK;
 }
