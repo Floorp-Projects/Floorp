@@ -6,3 +6,4 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 WINDOWS_NASM = 'win64-nasm'
 LINUX_NASM = 'linux64-nasm'
+MACOS_NASM = 'macosx64-nasm'
