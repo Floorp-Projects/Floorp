@@ -16,14 +16,6 @@ class IPCServiceWorkerDescriptor;
 class PServiceWorkerChild;
 class PServiceWorkerParent;
 
-PServiceWorkerChild* AllocServiceWorkerChild();
-
-bool DeallocServiceWorkerChild(PServiceWorkerChild* aActor);
-
-PServiceWorkerParent* AllocServiceWorkerParent();
-
-bool DeallocServiceWorkerParent(PServiceWorkerParent* aActor);
-
 void InitServiceWorkerParent(PServiceWorkerParent* aActor,
                              const IPCServiceWorkerDescriptor& aDescriptor);
 

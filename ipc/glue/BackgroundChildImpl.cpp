@@ -35,6 +35,7 @@
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
+#include "mozilla/dom/ServiceWorkerChild.h"
 #include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
@@ -639,14 +640,11 @@ bool BackgroundChildImpl::DeallocPWebAuthnTransactionChild(
   return true;
 }
 
-PServiceWorkerChild* BackgroundChildImpl::AllocPServiceWorkerChild(
+already_AddRefed<PServiceWorkerChild>
+BackgroundChildImpl::AllocPServiceWorkerChild(
     const IPCServiceWorkerDescriptor&) {
-  return dom::AllocServiceWorkerChild();
-}
-
-bool BackgroundChildImpl::DeallocPServiceWorkerChild(
-    PServiceWorkerChild* aActor) {
-  return dom::DeallocServiceWorkerChild(aActor);
+  MOZ_CRASH("Shouldn't be called.");
+  return {};
 }
 
 PServiceWorkerContainerChild*

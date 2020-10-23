@@ -19,6 +19,8 @@ class ServiceWorkerParent final : public PServiceWorkerParent {
   RefPtr<ServiceWorkerProxy> mProxy;
   bool mDeleteSent;
 
+  ~ServiceWorkerParent();
+
   // PServiceWorkerParent
   void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -29,8 +31,9 @@ class ServiceWorkerParent final : public PServiceWorkerParent {
       const ClientInfoAndState& aSource) override;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerParent, override);
+
   ServiceWorkerParent();
-  ~ServiceWorkerParent();
 
   void Init(const IPCServiceWorkerDescriptor& aDescriptor);
 
