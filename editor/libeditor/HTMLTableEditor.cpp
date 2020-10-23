@@ -3907,24 +3907,43 @@ nsresult HTMLEditor::GetCellContext(Element** aTable, Element** aCell,
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLEditor::GetSelectedCells(
-    nsTArray<RefPtr<Element>>& aOutSelectedCellElements) {
-  MOZ_ASSERT(aOutSelectedCellElements.IsEmpty());
+NS_IMETHODIMP HTMLEditor::GetFirstSelectedCell(
+    nsRange** aFirstSelectedRange, Element** aFirstSelectedCellElement) {
+  if (NS_WARN_IF(!aFirstSelectedCellElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  SelectedTableCellScanner scanner(*SelectionRefPtr());
-  if (!scanner.IsInTableCellSelectionMode()) {
-    return NS_OK;
+  *aFirstSelectedCellElement = nullptr;
+  if (aFirstSelectedRange) {
+    *aFirstSelectedRange = nullptr;
   }
 
-  aOutSelectedCellElements.SetCapacity(scanner.ElementsRef().Length());
-  for (const OwningNonNull<Element>& cellElement : scanner.ElementsRef()) {
-    aOutSelectedCellElements.AppendElement(cellElement);
+  ErrorResult error;
+  RefPtr<Element> firstSelectedCellElement =
+      GetFirstSelectedTableCellElement(error);
+  if (error.Failed()) {
+    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
+    return EditorBase::ToGenericNSResult(error.StealNSResult());
   }
+
+  if (!firstSelectedCellElement) {
+    // Just not found.  Don't return error.
+    return NS_OK;
+  }
+  firstSelectedCellElement.forget(aFirstSelectedCellElement);
+
+  if (aFirstSelectedRange) {
+    // Returns the first range only when the caller requested the range.
+    RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+    MOZ_ASSERT(firstRange);
+    firstRange.forget(aFirstSelectedRange);
+  }
+
   return NS_OK;
 }
 
@@ -3959,6 +3978,44 @@ already_AddRefed<Element> HTMLEditor::GetFirstSelectedTableCellElement(
   mSelectedCellIndex = 1;
 
   return selectedCell.forget();
+}
+
+NS_IMETHODIMP HTMLEditor::GetNextSelectedCell(
+    nsRange** aNextSelectedCellRange, Element** aNextSelectedCellElement) {
+  if (NS_WARN_IF(!aNextSelectedCellElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aNextSelectedCellElement = nullptr;
+  if (aNextSelectedCellRange) {
+    *aNextSelectedCellRange = nullptr;
+  }
+
+  ErrorResult error;
+  RefPtr<Element> nextSelectedCellElement =
+      GetNextSelectedTableCellElement(error);
+  if (error.Failed()) {
+    NS_WARNING("HTMLEditor::GetNextSelectedTableCellElement() failed");
+    return EditorBase::ToGenericNSResult(error.StealNSResult());
+  }
+
+  if (!nextSelectedCellElement) {
+    // not more range, or met a range which does not select <td> nor <th>.
+    return NS_OK;
+  }
+
+  if (aNextSelectedCellRange) {
+    MOZ_ASSERT(mSelectedCellIndex > 0);
+    *aNextSelectedCellRange =
+        do_AddRef(SelectionRefPtr()->GetRangeAt(mSelectedCellIndex - 1)).take();
+  }
+  nextSelectedCellElement.forget(aNextSelectedCellElement);
+  return NS_OK;
 }
 
 already_AddRefed<Element> HTMLEditor::GetNextSelectedTableCellElement(

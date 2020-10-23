@@ -420,6 +420,23 @@ interface nsITableEditor : nsISupports
   uint32_t getSelectedCellsType(in Element aElement);
 
   /**
+   * getFirstSelectedCell() returns a <td> or <th> element if first range of
+   * Selection selects only one table cell element (i.e., startContainer and
+   * endContainer are same <tr> element and startOffset + 1 equals endOffset).
+   * If first range of Selection does not select a table cell element, this
+   * returns null.  However, if Selection has no range, this throws an
+   * exception.
+   *
+   * @param aFirstRangeOfSelection [OUT] Returns the first range of Selection
+   *                               only when this returns a <td> or <th>
+   *                               element.  Otherwise, returns null.
+   * @return                       A <td> or <th> element if first range of
+   *                               Selection selects only one table cell
+   *                               element.
+   */
+  Element getFirstSelectedCell(out Range aFirstRangeOfSelection);
+
+  /**
    * getFirstSelectedCellInTable() returns a cell element, its row index and
    * its column index if first range of Selection selects a cell.  Note that
    * that "selects a cell" means that the range container is a <tr> element
@@ -441,14 +458,26 @@ interface nsITableEditor : nsISupports
   Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
   /**
-   * getSelectedCells() returns an array of `<td>` and `<th>` elements which
-   * are selected in **any** `<table>` elements (i.e., some cells may be
-   * in different `<table>` element).
-   * If first range does not select a table cell element, this returns empty
-   * array because editor considers that selection is not in table cell
-   * selection mode.
-   * If second or later ranges do not select only a table cell element, this
-   * ignores the ranges.
+   * getNextSelectedCell() is a stateful method to retrieve selected table
+   * cell elements which are selected by 2nd or later ranges of Selection.
+   * When you call getFirstSelectedCell(), it resets internal counter of
+   * this method.  Then, following calls of getNextSelectedCell() scans the
+   * remaining ranges of Selection.  If a range selects a <td> or <th>
+   * element, returns the cell element.  If a range selects an element but
+   * neither <td> nor <th> element, this ignores the range.  If a range is
+   * in a text node, returns null without throwing exception, but stops
+   * scanning the remaining ranges even you call this again.
+   * Note that this may cross <table> boundaries since this method just
+   * scans all ranges of Selection.  Therefore, returning cells which
+   * belong to different <table> elements.
+   *
+   * @param aNextSelectedCellRange [OUT] Returns null if this method returns
+   *                               null.  Otherwise, i.e., found a range which
+   *                               selects a <td> or <th> element, returns the
+   *                               range.
+   * @return                       A <td> or <th> element if one of remaining
+   *                               ranges selects a <td> or <th> element unless
+   *                               this does not meet a range in a text node.
    */
-  Array<Element> getSelectedCells();
+  Element getNextSelectedCell(out Range aNextSelectedCellRange);
 };
