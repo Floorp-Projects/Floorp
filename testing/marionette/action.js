@@ -367,7 +367,7 @@ action.PointerOrigin.get = function(obj) {
     let name = capitalize(obj);
     assert.in(name, this, pprint`Unknown pointer-move origin: ${obj}`);
     origin = this[name];
-  } else if (!element.isDOMElement(obj)) {
+  } else if (!element.isElement(obj)) {
     throw new error.InvalidArgumentError(
       "Expected 'origin' to be undefined, " +
         '"viewport", "pointer", ' +
@@ -408,18 +408,18 @@ action.PointerType.get = function(str) {
  * input ID and the device state for that input source, with one entry
  * for each active input source.
  *
- * Initialized in listener.js.
+ * Re-initialized in listener.js.
  */
-action.inputStateMap = undefined;
+action.inputStateMap = new Map();
 
 /**
  * List of {@link action.Action} associated with current session.  Used to
  * manage dispatching events when resetting the state of the input sources.
  * Reset operations are assumed to be idempotent.
  *
- * Initialized in listener.js
+ * Re-initialized in listener.js
  */
-action.inputsToCancel = undefined;
+action.inputsToCancel = [];
 
 /**
  * Represents device state for an input source.
@@ -1496,7 +1496,7 @@ function inViewPort(x, y, win) {
 }
 
 function getElementCenter(el, win) {
-  if (element.isDOMElement(el)) {
+  if (element.isElement(el)) {
     if (action.specCompatPointerOrigin) {
       return element.getInViewCentrePoint(el.getClientRects()[0], win);
     }
