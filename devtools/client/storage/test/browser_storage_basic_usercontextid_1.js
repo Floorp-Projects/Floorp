@@ -155,6 +155,4 @@ add_task(async function() {
 
   testTree(testCases);
   await testTables(testCases);
-
-  await finishTests();
 });

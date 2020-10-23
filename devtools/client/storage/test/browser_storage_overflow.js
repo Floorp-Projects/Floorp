@@ -26,8 +26,6 @@ add_task(async function() {
 
   info("Run the tests with tall DevTools");
   await runTests();
-
-  await finishTests();
 });
 
 async function runTests() {
