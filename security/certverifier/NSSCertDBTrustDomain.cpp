@@ -796,6 +796,10 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
                "failed"));
+      if (mCRLiteTelemetryInfo) {
+        mCRLiteTelemetryInfo->mLookupResult =
+            CRLiteLookupResult::LibraryFailure;
+      }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
       }
@@ -803,6 +807,10 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckRevocation: IsCertRevokedByStash "
                "returned true"));
+      if (mCRLiteTelemetryInfo) {
+        mCRLiteTelemetryInfo->mLookupResult =
+            CRLiteLookupResult::CertRevokedByStash;
+      }
       if (mCRLiteMode == CRLiteMode::Enforce) {
         return Result::ERROR_REVOKED_CERTIFICATE;
       }
