@@ -350,7 +350,6 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def ensure_homebrew_system_packages(self, install_mercurial):
         packages = [
-            'autoconf@2.13',
             'git',
             'gnu-tar',
             'node',
@@ -420,7 +419,6 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def ensure_macports_system_packages(self, install_mercurial):
         packages = [
-            'autoconf213',
             'gnutar',
             'watchman',
             'nodejs8'

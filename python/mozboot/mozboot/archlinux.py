@@ -26,7 +26,6 @@ class ArchlinuxBootstrapper(
     '''Archlinux experimental bootstrapper.'''
 
     SYSTEM_PACKAGES = [
-        'autoconf2.13',
         'base-devel',
         'nodejs',
         'unzip',
