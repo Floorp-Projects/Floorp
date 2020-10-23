@@ -582,8 +582,8 @@ void nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(
     // XXX This includes margin while Reflow currently doesn't consider
     // margin, so we may end up with too much space, but, with stretchy
     // characters, this is an approximation anyway.
-    width += nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                                  nsLayoutUtils::PREF_ISIZE);
+    width += nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, childFrame, IntrinsicISizeType::PrefISize);
 
     if (i < mSeparatorsCount) {
       width +=

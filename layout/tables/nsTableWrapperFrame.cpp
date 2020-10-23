@@ -305,12 +305,12 @@ static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
 /* virtual */
 nscoord nsTableWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
+      aRenderingContext, InnerTableFrame(), IntrinsicISizeType::MinISize);
   DISPLAY_MIN_INLINE_SIZE(this, iSize);
   if (mCaptionFrames.NotEmpty()) {
     nscoord capISize = nsLayoutUtils::IntrinsicForContainer(
         aRenderingContext, mCaptionFrames.FirstChild(),
-        nsLayoutUtils::MIN_ISIZE);
+        IntrinsicISizeType::MinISize);
     if (HasSideCaption()) {
       iSize += capISize;
     } else {
@@ -328,7 +328,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_PREF_INLINE_SIZE(this, maxISize);
 
   maxISize = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, InnerTableFrame(), nsLayoutUtils::PREF_ISIZE);
+      aRenderingContext, InnerTableFrame(), IntrinsicISizeType::PrefISize);
   if (mCaptionFrames.NotEmpty()) {
     uint8_t captionSide = GetCaptionSide();
     switch (captionSide) {
@@ -336,7 +336,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
       case NS_STYLE_CAPTION_SIDE_RIGHT: {
         nscoord capMin = nsLayoutUtils::IntrinsicForContainer(
             aRenderingContext, mCaptionFrames.FirstChild(),
-            nsLayoutUtils::MIN_ISIZE);
+            IntrinsicISizeType::MinISize);
         maxISize += capMin;
       } break;
       default: {
@@ -345,12 +345,12 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
           // Don't let the caption's pref isize expand the table's pref
           // isize.
-          iwt = nsLayoutUtils::MIN_ISIZE;
+          iwt = IntrinsicISizeType::MinISize;
         } else {
           NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
                            captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
                        "unexpected caption side");
-          iwt = nsLayoutUtils::PREF_ISIZE;
+          iwt = IntrinsicISizeType::PrefISize;
         }
         nscoord capPref = nsLayoutUtils::IntrinsicForContainer(
             aRenderingContext, mCaptionFrames.FirstChild(), iwt);

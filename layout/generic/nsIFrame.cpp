@@ -5721,7 +5721,7 @@ nscoord nsIFrame::GetPrefISize(gfxContext* aRenderingContext) {
 void nsIFrame::AddInlineMinISize(gfxContext* aRenderingContext,
                                  nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
+      aRenderingContext, this, IntrinsicISizeType::MinISize);
   aData->DefaultAddInlineMinISize(this, isize);
 }
 
@@ -5729,7 +5729,7 @@ void nsIFrame::AddInlineMinISize(gfxContext* aRenderingContext,
 void nsIFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
                                   nsIFrame::InlinePrefISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, this, nsLayoutUtils::PREF_ISIZE);
+      aRenderingContext, this, IntrinsicISizeType::PrefISize);
   aData->DefaultAddInlinePrefISize(isize);
 }
 

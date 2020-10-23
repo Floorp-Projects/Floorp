@@ -369,7 +369,7 @@ nscoord nsFieldSetFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
-  result = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
+  result = GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
   return result;
 }
 
@@ -377,7 +377,7 @@ nscoord nsFieldSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_PREF_INLINE_SIZE(this, result);
 
-  result = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
+  result = GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
   return result;
 }
 

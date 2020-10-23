@@ -133,7 +133,7 @@ nscoord nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   } else {
     nsIFrame* kid = mFrames.FirstChild();
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                  nsLayoutUtils::MIN_ISIZE);
+                                                  IntrinsicISizeType::MinISize);
   }
   return result;
 }
@@ -145,8 +145,8 @@ nscoord nsHTMLButtonControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
     result = 0;
   } else {
     nsIFrame* kid = mFrames.FirstChild();
-    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                  nsLayoutUtils::PREF_ISIZE);
+    result = nsLayoutUtils::IntrinsicForContainer(
+        aRenderingContext, kid, IntrinsicISizeType::PrefISize);
   }
   return result;
 }

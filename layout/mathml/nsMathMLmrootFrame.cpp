@@ -346,9 +346,9 @@ void nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
 
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nscoord baseWidth = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, baseFrame, nsLayoutUtils::PREF_ISIZE);
+      aRenderingContext, baseFrame, IntrinsicISizeType::PrefISize);
   nscoord indexWidth = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, indexFrame, nsLayoutUtils::PREF_ISIZE);
+      aRenderingContext, indexFrame, IntrinsicISizeType::PrefISize);
   nscoord sqrWidth = mSqrChar.GetMaxWidth(
       this, aRenderingContext->GetDrawTarget(), fontSizeInflation);
 

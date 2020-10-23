@@ -99,7 +99,8 @@ nsresult nsFirstLetterFrame::GetChildFrameContainingOffset(
 /* virtual */
 void nsFirstLetterFrame::AddInlineMinISize(
     gfxContext* aRenderingContext, nsIFrame::InlineMinISizeData* aData) {
-  DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::MIN_ISIZE);
+  DoInlineIntrinsicISize(aRenderingContext, aData,
+                         IntrinsicISizeType::MinISize);
 }
 
 // Needed for non-floating first-letter frames and for the continuations
@@ -107,7 +108,8 @@ void nsFirstLetterFrame::AddInlineMinISize(
 /* virtual */
 void nsFirstLetterFrame::AddInlinePrefISize(
     gfxContext* aRenderingContext, nsIFrame::InlinePrefISizeData* aData) {
-  DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::PREF_ISIZE);
+  DoInlineIntrinsicISize(aRenderingContext, aData,
+                         IntrinsicISizeType::PrefISize);
   aData->mLineIsEmpty = false;
 }
 

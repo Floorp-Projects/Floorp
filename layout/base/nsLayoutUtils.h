@@ -1404,8 +1404,6 @@ class nsLayoutUtils {
    * size by reducing the *content size* (flooring at zero).  This is used for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
    */
-  static const auto MIN_ISIZE = mozilla::IntrinsicISizeType::MinISize;
-  static const auto PREF_ISIZE = mozilla::IntrinsicISizeType::PrefISize;
   enum {
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02,  // returns NS_INTRINSIC_ISIZE_UNKNOWN if so

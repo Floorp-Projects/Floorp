@@ -4675,7 +4675,7 @@ static nscoord AddIntrinsicSizeOffset(
   result = NSCoordSaturatingAdd(result, coordOutsideSize);
 
   nscoord size;
-  if (aType == nsLayoutUtils::MIN_ISIZE &&
+  if (aType == IntrinsicISizeType::MinISize &&
       ::IsReplacedBoxResolvedAgainstZero(aFrame, aStyleSize, aStyleMaxSize)) {
     // XXX bug 1463700: this doesn't handle calc() according to spec
     result = 0;  // let |min| handle padding/border/margin
@@ -4742,7 +4742,6 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   MOZ_ASSERT(aFrame, "null frame");
   MOZ_ASSERT(aFrame->GetParent(),
              "IntrinsicForAxis called on frame not in tree");
-  MOZ_ASSERT(aType == MIN_ISIZE || aType == PREF_ISIZE, "bad type");
   MOZ_ASSERT(aFrame->GetParent()->Type() != LayoutFrameType::GridContainer ||
                  aPercentageBasis.isSome(),
              "grid layout should always pass a percentage basis");
@@ -4752,7 +4751,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   nsIFrame::IndentBy(stderr, gNoiseIndent);
   aFrame->ListTag(stderr);
   printf_stderr(" %s %s intrinsic size for container:\n",
-                aType == MIN_ISIZE ? "min" : "pref",
+                aType == IntrinsicISizeType::MinISize ? "min" : "pref",
                 horizontalAxis ? "horizontal" : "vertical");
 #endif
 
@@ -4873,15 +4872,16 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
         result = aFrame->BSize();
       }
     } else {
-      result = aType == MIN_ISIZE ? aFrame->GetMinISize(aRenderingContext)
-                                  : aFrame->GetPrefISize(aRenderingContext);
+      result = aType == IntrinsicISizeType::MinISize
+                   ? aFrame->GetMinISize(aRenderingContext)
+                   : aFrame->GetPrefISize(aRenderingContext);
     }
 #ifdef DEBUG_INTRINSIC_WIDTH
     --gNoiseIndent;
     nsIFrame::IndentBy(stderr, gNoiseIndent);
     aFrame->ListTag(stderr);
     printf_stderr(" %s %s intrinsic size from frame is %d.\n",
-                  aType == MIN_ISIZE ? "min" : "pref",
+                  aType == IntrinsicISizeType::MinISize ? "min" : "pref",
                   horizontalAxis ? "horizontal" : "vertical", result);
 #endif
 
@@ -5009,7 +5009,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   nsIFrame::IndentBy(stderr, gNoiseIndent);
   aFrame->ListTag(stderr);
   printf_stderr(" %s %s intrinsic size for container is %d twips.\n",
-                aType == MIN_ISIZE ? "min" : "pref",
+                aType == IntrinsicISizeType::MinISize ? "min" : "pref",
                 horizontalAxis ? "horizontal" : "vertical", result);
 #endif
 
@@ -5042,8 +5042,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   nsIFrame::IndentBy(stderr, gNoiseIndent);
   aFrame->ListTag(stderr);
   printf_stderr(" %s min-isize for %s WM:\n",
-                aType == MIN_ISIZE ? "min" : "pref",
-                aWM.IsVertical() ? "vertical" : "horizontal");
+                aType == IntrinsicISizeType::MinISize ? "min" : "pref",
+                aAxis == eAxisVertical ? "vertical" : "horizontal");
 #endif
 
   // Note: this method is only meant for grid/flex items.
@@ -5108,7 +5108,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
     nsIFrame::IndentBy(stderr, gNoiseIndent);
     aFrame->ListTag(stderr);
     printf_stderr(" %s min-isize is indefinite.\n",
-                  aType == MIN_ISIZE ? "min" : "pref");
+                  aType == IntrinsicISizeType::MinISize ? "min" : "pref");
 #endif
     return NS_UNCONSTRAINEDSIZE;
   }
@@ -5136,7 +5136,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   nsIFrame::IndentBy(stderr, gNoiseIndent);
   aFrame->ListTag(stderr);
   printf_stderr(" %s min-isize is %d twips.\n",
-                aType == MIN_ISIZE ? "min" : "pref", result);
+                aType == IntrinsicISizeType::MinISize ? "min" : "pref", result);
 #endif
 
   return result;

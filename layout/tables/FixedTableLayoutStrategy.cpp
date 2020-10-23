@@ -93,7 +93,7 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
               styleISize->AsExtremumLength() ==
                   StyleExtremumLength::MinContent))) {
           nscoord cellISize = nsLayoutUtils::IntrinsicForContainer(
-              aRenderingContext, cellFrame, nsLayoutUtils::MIN_ISIZE);
+              aRenderingContext, cellFrame, IntrinsicISizeType::MinISize);
           if (colSpan > 1) {
             // If a column-spanning cell is in the first row, split up
             // the space evenly.  (XXX This isn't quite right if some of
@@ -239,13 +239,13 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
               styleISize->AsExtremumLength() ==
                   StyleExtremumLength::MinContent))) {
           // XXX This should use real percentage padding
-          // Note that the difference between MIN_ISIZE and PREF_ISIZE
+          // Note that the difference between MinISize and PrefISize
           // shouldn't matter for any of these values of styleISize; use
           // MIN_ISIZE for symmetry with GetMinISize above, just in case
           // there is a difference.
           colISize = nsLayoutUtils::IntrinsicForContainer(
               aReflowInput.mRenderingContext, cellFrame,
-              nsLayoutUtils::MIN_ISIZE);
+              IntrinsicISizeType::MinISize);
         } else if (styleISize->ConvertsToPercentage()) {
           // XXX This should use real percentage padding
           float pct = styleISize->ToPercentage();

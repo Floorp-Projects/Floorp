@@ -2710,7 +2710,7 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
 void nsImageFrame::AddInlineMinISize(gfxContext* aRenderingContext,
                                      nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
-      aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
+      aRenderingContext, this, IntrinsicISizeType::MinISize);
   bool canBreak = !IsInAutoWidthTableCellForQuirk(this);
   aData->DefaultAddInlineMinISize(this, isize, canBreak);
 }
