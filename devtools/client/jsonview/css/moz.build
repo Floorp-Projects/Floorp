@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'general.css',
-    'headers-panel.css',
-    'json-panel.css',
-    'main.css',
-    'search-box.css',
-    'text-panel.css',
-    'toolbar.css'
+    "general.css",
+    "headers-panel.css",
+    "json-panel.css",
+    "main.css",
+    "search-box.css",
+    "text-panel.css",
+    "toolbar.css",
 )

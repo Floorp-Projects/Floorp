@@ -28,23 +28,27 @@ import sys
 import re
 
 if sys.version_info >= (3, 0):
+
     def u(s):
         return s
 
     def unicode(x):
-        if hasattr(x, '__unicode__'):
+        if hasattr(x, "__unicode__"):
             return x.__unicode__()
         return str(x)
+
+
 else:
+
     def u(s):
         return unicode(s)
+
     unicode = unicode
 
 
 class NamespaceMetaclass(type):
-
     def __getattr__(self, name):
-        if name[:1] == '_':
+        if name[:1] == "_":
             raise AttributeError(name)
         if self == Namespace:
             raise ValueError("Namespace class is abstract")
@@ -53,16 +57,14 @@ class NamespaceMetaclass(type):
             raise AttributeError(name)
         classattr = {}
         if self.__stickyname__:
-            classattr['xmlname'] = name
+            classattr["xmlname"] = name
         cls = type(name, (self.__tagclass__,), classattr)
         setattr(self, name, cls)
         return cls
 
 
 class Tag(list):
-
     class Attr(object):
-
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
 
@@ -72,6 +74,7 @@ class Tag(list):
 
     def __unicode__(self):
         return self.unicode(indent=0)
+
     __str__ = __unicode__
 
     def unicode(self, indent=2):
@@ -84,19 +87,23 @@ class Tag(list):
         return "<%r tag object %d>" % (name, id(self))
 
 
-Namespace = NamespaceMetaclass('Namespace', (object, ), {
-    '__tagspec__': None,
-    '__tagclass__': Tag,
-    '__stickyname__': False,
-})
+Namespace = NamespaceMetaclass(
+    "Namespace",
+    (object,),
+    {
+        "__tagspec__": None,
+        "__tagclass__": Tag,
+        "__stickyname__": False,
+    },
+)
 
 
 class HtmlTag(Tag):
-
     def unicode(self, indent=2):
         l = []
         HtmlVisitor(l.append, indent, shortempty=False).visit(self)
         return u("").join(l)
+
 
 # exported plain html namespace
 
@@ -104,24 +111,29 @@ class HtmlTag(Tag):
 class html(Namespace):
     __tagclass__ = HtmlTag
     __stickyname__ = True
-    __tagspec__ = dict([(x, 1) for x in (
-        'a,abbr,acronym,address,applet,area,b,bdo,big,blink,'
-        'blockquote,body,br,button,caption,center,cite,code,col,'
-        'colgroup,comment,dd,del,dfn,dir,div,dl,dt,em,embed,'
-        'fieldset,font,form,frameset,h1,h2,h3,h4,h5,h6,head,html,'
-        'i,iframe,img,input,ins,kbd,label,legend,li,link,listing,'
-        'map,marquee,menu,meta,multicol,nobr,noembed,noframes,'
-        'noscript,object,ol,optgroup,option,p,pre,q,s,script,'
-        'select,small,span,strike,strong,style,sub,sup,table,'
-        'tbody,td,textarea,tfoot,th,thead,title,tr,tt,u,ul,xmp,'
-        'base,basefont,frame,hr,isindex,param,samp,var'
-    ).split(',') if x])
+    __tagspec__ = dict(
+        [
+            (x, 1)
+            for x in (
+                "a,abbr,acronym,address,applet,area,b,bdo,big,blink,"
+                "blockquote,body,br,button,caption,center,cite,code,col,"
+                "colgroup,comment,dd,del,dfn,dir,div,dl,dt,em,embed,"
+                "fieldset,font,form,frameset,h1,h2,h3,h4,h5,h6,head,html,"
+                "i,iframe,img,input,ins,kbd,label,legend,li,link,listing,"
+                "map,marquee,menu,meta,multicol,nobr,noembed,noframes,"
+                "noscript,object,ol,optgroup,option,p,pre,q,s,script,"
+                "select,small,span,strike,strong,style,sub,sup,table,"
+                "tbody,td,textarea,tfoot,th,thead,title,tr,tt,u,ul,xmp,"
+                "base,basefont,frame,hr,isindex,param,samp,var"
+            ).split(",")
+            if x
+        ]
+    )
 
     class Style(object):
-
         def __init__(self, **kw):
             for x, y in kw.items():
-                x = x.replace('_', '-')
+                x = x.replace("_", "-")
                 setattr(self, x, y)
 
 
@@ -182,24 +194,24 @@ class SimpleUnicodeVisitor(object):
         except IndexError:
             tag.parent = None
         self.visited[id(tag)] = 1
-        tagname = getattr(tag, 'xmlname', tag.__class__.__name__)
+        tagname = getattr(tag, "xmlname", tag.__class__.__name__)
         if self.curindent and not self._isinline(tagname):
-            self.write("\n" + u(' ') * self.curindent)
+            self.write("\n" + u(" ") * self.curindent)
         if tag:
             self.curindent += self.indent
-            self.write(u('<%s%s>') % (tagname, self.attributes(tag)))
+            self.write(u("<%s%s>") % (tagname, self.attributes(tag)))
             self.parents.append(tag)
             for x in tag:
                 self.visit(x)
             self.parents.pop()
-            self.write(u('</%s>') % tagname)
+            self.write(u("</%s>") % tagname)
             self.curindent -= self.indent
         else:
             nameattr = tagname + self.attributes(tag)
             if self._issingleton(tagname):
-                self.write(u('<%s/>') % (nameattr,))
+                self.write(u("<%s/>") % (nameattr,))
             else:
-                self.write(u('<%s></%s>') % (nameattr, tagname))
+                self.write(u("<%s></%s>") % (nameattr, tagname))
 
     def attributes(self, tag):
         # serialize attributes
@@ -214,9 +226,9 @@ class SimpleUnicodeVisitor(object):
         return u("").join(l)
 
     def repr_attribute(self, attrs, name):
-        if name[:2] != '__':
+        if name[:2] != "__":
             value = getattr(attrs, name)
-            if name.endswith('_'):
+            if name.endswith("_"):
                 name = name[:-1]
             if isinstance(value, raw):
                 insert = value.uniobj
@@ -231,8 +243,8 @@ class SimpleUnicodeVisitor(object):
         except AttributeError:
             return []
         else:
-            stylelist = [x + ': ' + y for x, y in styledict.items()]
-            return [u(' style="%s"') % u('; ').join(stylelist)]
+            stylelist = [x + ": " + y for x, y in styledict.items()]
+            return [u(' style="%s"') % u("; ").join(stylelist)]
 
     def _issingleton(self, tagname):
         """can (and will) be overridden in subclasses"""
@@ -245,16 +257,27 @@ class SimpleUnicodeVisitor(object):
 
 class HtmlVisitor(SimpleUnicodeVisitor):
 
-    single = dict([(x, 1) for x in
-                   ('br,img,area,param,col,hr,meta,link,base,'
-                    'input,frame').split(',')])
-    inline = dict([(x, 1) for x in
-                   ('a abbr acronym b basefont bdo big br cite code dfn em font '
-                    'i img input kbd label q s samp select small span strike '
-                    'strong sub sup textarea tt u var'.split(' '))])
+    single = dict(
+        [
+            (x, 1)
+            for x in ("br,img,area,param,col,hr,meta,link,base," "input,frame").split(
+                ","
+            )
+        ]
+    )
+    inline = dict(
+        [
+            (x, 1)
+            for x in (
+                "a abbr acronym b basefont bdo big br cite code dfn em font "
+                "i img input kbd label q s samp select small span strike "
+                "strong sub sup textarea tt u var".split(" ")
+            )
+        ]
+    )
 
     def repr_attribute(self, attrs, name):
-        if name == 'class_':
+        if name == "class_":
             value = getattr(attrs, name)
             if value is None:
                 return
@@ -268,11 +291,13 @@ class HtmlVisitor(SimpleUnicodeVisitor):
 
 
 class _escape:
-
     def __init__(self):
         self.escape = {
-            u('"'): u('&quot;'), u('<'): u('&lt;'), u('>'): u('&gt;'),
-            u('&'): u('&amp;'), u("'"): u('&apos;'),
+            u('"'): u("&quot;"),
+            u("<"): u("&lt;"),
+            u(">"): u("&gt;"),
+            u("&"): u("&amp;"),
+            u("'"): u("&apos;"),
         }
         self.charef_rex = re.compile(u("|").join(self.escape.keys()))
 

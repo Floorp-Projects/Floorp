@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'nsPNGEncoder.cpp',
+    "nsPNGEncoder.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/image',
+    "/image",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

@@ -14,36 +14,33 @@ from mozharness.base.script import PostScriptAction
 from mozharness.base.transfer import TransferMixin
 
 try_config_options = [
-    [["--try-message"],
-     {"action": "store",
-      "dest": "try_message",
-      "default": None,
-      "help": "try syntax string to select tests to run",
-      }],
+    [
+        ["--try-message"],
+        {
+            "action": "store",
+            "dest": "try_message",
+            "default": None,
+            "help": "try syntax string to select tests to run",
+        },
+    ],
 ]
 
 test_flavors = {
-    'browser-chrome': {},
-    'chrome': {},
-    'devtools-chrome': {},
-    'mochitest': {},
-    'xpcshell': {},
-    'reftest': {
-        "path": lambda x: os.path.join("tests", "reftest", "tests", x)
-    },
-    'crashtest': {
-        "path": lambda x: os.path.join("tests", "reftest", "tests", x)
-    },
-    'remote': {
-        "path": lambda x: os.path.join("remote", "test", "browser", x)
-    },
-    'web-platform-tests': {
+    "browser-chrome": {},
+    "chrome": {},
+    "devtools-chrome": {},
+    "mochitest": {},
+    "xpcshell": {},
+    "reftest": {"path": lambda x: os.path.join("tests", "reftest", "tests", x)},
+    "crashtest": {"path": lambda x: os.path.join("tests", "reftest", "tests", x)},
+    "remote": {"path": lambda x: os.path.join("remote", "test", "browser", x)},
+    "web-platform-tests": {
         "path": lambda x: os.path.join("tests", x.split("testing" + os.path.sep)[1])
     },
-    'web-platform-tests-reftests': {
+    "web-platform-tests-reftests": {
         "path": lambda x: os.path.join("tests", x.split("testing" + os.path.sep)[1])
     },
-    'web-platform-tests-wdspec': {
+    "web-platform-tests-wdspec": {
         "path": lambda x: os.path.join("tests", x.split("testing" + os.path.sep)[1])
     },
 }
@@ -56,30 +53,33 @@ class TryToolsMixin(TransferMixin):
     harness_extra_args = None
     try_test_paths = {}
     known_try_arguments = {
-        '--tag': ({
-            'action': 'append',
-            'dest': 'tags',
-            'default': None,
-        }, (
-            'browser-chrome',
-            'chrome',
-            'devtools-chrome',
-            'marionette',
-            'mochitest',
-            'web-plaftform-tests',
-            'xpcshell',
-        )),
+        "--tag": (
+            {
+                "action": "append",
+                "dest": "tags",
+                "default": None,
+            },
+            (
+                "browser-chrome",
+                "chrome",
+                "devtools-chrome",
+                "marionette",
+                "mochitest",
+                "web-plaftform-tests",
+                "xpcshell",
+            ),
+        ),
     }
 
     def _extract_try_message(self):
         msg = None
         if "try_message" in self.config and self.config["try_message"]:
             msg = self.config["try_message"]
-        elif 'TRY_COMMIT_MSG' in os.environ:
-            msg = os.environ['TRY_COMMIT_MSG']
+        elif "TRY_COMMIT_MSG" in os.environ:
+            msg = os.environ["TRY_COMMIT_MSG"]
 
         if not msg:
-            self.warning('Try message not found.')
+            self.warning("Try message not found.")
         return msg
 
     def _extract_try_args(self, msg):
@@ -88,17 +88,17 @@ class TryToolsMixin(TransferMixin):
             return None
         all_try_args = None
         for line in msg.splitlines():
-            if 'try: ' in line:
+            if "try: " in line:
                 # Autoland adds quotes to try strings that will confuse our
                 # args later on.
                 if line.startswith('"') and line.endswith('"'):
                     line = line[1:-1]
                 # Allow spaces inside of [filter expressions]
-                try_message = line.strip().split('try: ', 1)
-                all_try_args = re.findall(r'(?:\[.*?\]|\S)+', try_message[1])
+                try_message = line.strip().split("try: ", 1)
+                all_try_args = re.findall(r"(?:\[.*?\]|\S)+", try_message[1])
                 break
         if not all_try_args:
-            self.warning('Try syntax not found in: %s.' % msg)
+            self.warning("Try syntax not found in: %s." % msg)
         return all_try_args
 
     def try_message_has_flag(self, flag, message=None):
@@ -106,7 +106,7 @@ class TryToolsMixin(TransferMixin):
         Returns True if --`flag` is present in message.
         """
         parser = argparse.ArgumentParser()
-        parser.add_argument('--' + flag, action='store_true')
+        parser.add_argument("--" + flag, action="store_true")
         message = message or self._extract_try_message()
         if not message:
             return False
@@ -116,16 +116,16 @@ class TryToolsMixin(TransferMixin):
 
     def _is_try(self):
         repo_path = None
-        get_branch = self.config.get('branch', repo_path)
+        get_branch = self.config.get("branch", repo_path)
         if get_branch is not None:
-            on_try = ('try' in get_branch or 'Try' in get_branch)
+            on_try = "try" in get_branch or "Try" in get_branch
         elif os.environ is not None:
-            on_try = ('TRY_COMMIT_MSG' in os.environ)
+            on_try = "TRY_COMMIT_MSG" in os.environ
         else:
             on_try = False
         return on_try
 
-    @PostScriptAction('download-and-extract')
+    @PostScriptAction("download-and-extract")
     def set_extra_try_arguments(self, action, success=None):
         """Finds a commit message and parses it for extra arguments to pass to the test
         harness command line and test paths used to filter manifests.
@@ -144,27 +144,36 @@ class TryToolsMixin(TransferMixin):
             return
 
         parser = argparse.ArgumentParser(
-            description=('Parse an additional subset of arguments passed to try syntax'
-                         ' and forward them to the underlying test harness command.'))
+            description=(
+                "Parse an additional subset of arguments passed to try syntax"
+                " and forward them to the underlying test harness command."
+            )
+        )
 
         label_dict = {}
 
         def label_from_val(val):
             if val in label_dict:
                 return label_dict[val]
-            return '--%s' % val.replace('_', '-')
+            return "--%s" % val.replace("_", "-")
 
         for label, (opts, _) in self.known_try_arguments.iteritems():
-            if 'action' in opts and opts['action'] not in ('append', 'store',
-                                                           'store_true', 'store_false'):
-                self.fatal('Try syntax does not support passing custom or store_const '
-                           'arguments to the harness process.')
-            if 'dest' in opts:
-                label_dict[opts['dest']] = label
+            if "action" in opts and opts["action"] not in (
+                "append",
+                "store",
+                "store_true",
+                "store_false",
+            ):
+                self.fatal(
+                    "Try syntax does not support passing custom or store_const "
+                    "arguments to the harness process."
+                )
+            if "dest" in opts:
+                label_dict[opts["dest"]] = label
 
             parser.add_argument(label, **opts)
 
-        parser.add_argument('--try-test-paths', nargs='*')
+        parser.add_argument("--try-test-paths", nargs="*")
         (args, _) = parser.parse_known_args(all_try_args)
         self.try_test_paths = self._group_test_paths(args.try_test_paths)
         del args.try_test_paths
@@ -183,9 +192,9 @@ class TryToolsMixin(TransferMixin):
                         # A store_true or store_false argument.
                         out_args[f].append(label)
                     elif isinstance(value, list):
-                        out_args[f].extend(['%s=%s' % (label, el) for el in value])
+                        out_args[f].extend(["%s=%s" % (label, el) for el in value])
                     else:
-                        out_args[f].append('%s=%s' % (label, value))
+                        out_args[f].append("%s=%s" % (label, value))
 
         self.harness_extra_args = dict(out_args)
 
@@ -207,18 +216,25 @@ class TryToolsMixin(TransferMixin):
             args = self.harness_extra_args.get(flavor, [])[:]
 
         if self.try_test_paths.get(flavor):
-            self.info('TinderboxPrint: Tests will be run from the following '
-                      'files: %s.' % ','.join(self.try_test_paths[flavor]))
-            args.extend(['--this-chunk=1', '--total-chunks=1'])
+            self.info(
+                "TinderboxPrint: Tests will be run from the following "
+                "files: %s." % ",".join(self.try_test_paths[flavor])
+            )
+            args.extend(["--this-chunk=1", "--total-chunks=1"])
 
             path_func = test_flavors[flavor].get("path", lambda x: x)
-            tests = [path_func(os.path.normpath(item)) for item in self.try_test_paths[flavor]]
+            tests = [
+                path_func(os.path.normpath(item))
+                for item in self.try_test_paths[flavor]
+            ]
         else:
             tests = []
 
         if args or tests:
-            self.info('TinderboxPrint: The following arguments were forwarded from mozharness '
-                      'to the test command:\nTinderboxPrint: \t%s -- %s' %
-                      (" ".join(args), " ".join(tests)))
+            self.info(
+                "TinderboxPrint: The following arguments were forwarded from mozharness "
+                "to the test command:\nTinderboxPrint: \t%s -- %s"
+                % (" ".join(args), " ".join(tests))
+            )
 
         return args, tests

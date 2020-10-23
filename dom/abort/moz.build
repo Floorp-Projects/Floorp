@@ -7,18 +7,18 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]
 
 EXPORTS.mozilla.dom += [
-    'AbortController.h',
-    'AbortSignal.h',
+    "AbortController.h",
+    "AbortSignal.h",
 ]
 
 UNIFIED_SOURCES += [
-    'AbortController.cpp',
-    'AbortSignal.cpp',
+    "AbortController.cpp",
+    "AbortSignal.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

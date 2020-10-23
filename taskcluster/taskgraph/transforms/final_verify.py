@@ -20,17 +20,17 @@ def add_command(config, tasks):
 
         final_verify_configs = []
         for upstream in sorted(task.get("dependencies", {}).keys()):
-            if 'update-verify-config' in upstream:
+            if "update-verify-config" in upstream:
                 final_verify_configs.append(
                     "<{}/public/build/update-verify.cfg>".format(upstream),
                 )
-        task['run'] = {
-            'using': 'run-task',
-            'cwd': '{checkout}',
-            'command': {
-                'artifact-reference': 'tools/update-verify/release/final-verification.sh '
-                                      + ' '.join(final_verify_configs),
+        task["run"] = {
+            "using": "run-task",
+            "cwd": "{checkout}",
+            "command": {
+                "artifact-reference": "tools/update-verify/release/final-verification.sh "
+                + " ".join(final_verify_configs),
             },
-            'sparse-profile': 'update-verify',
+            "sparse-profile": "update-verify",
         }
         yield task

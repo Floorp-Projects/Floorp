@@ -8,24 +8,24 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
 EXPORTS.mozilla.dom += [
-    'U2F.h',
-    'U2FAuthenticator.h',
+    "U2F.h",
+    "U2FAuthenticator.h",
 ]
 
 UNIFIED_SOURCES += [
-    'U2F.cpp',
+    "U2F.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/dom/crypto',
-    '/dom/webauthn',
-    '/security/manager/ssl',
+    "/dom/base",
+    "/dom/crypto",
+    "/dom/webauthn",
+    "/security/manager/ssl",
 ]
 
-MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

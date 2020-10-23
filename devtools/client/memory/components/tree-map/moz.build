@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'canvas-utils.js',
-    'color-coarse-type.js',
-    'drag-zoom.js',
-    'draw.js',
-    'start.js',
+    "canvas-utils.js",
+    "color-coarse-type.js",
+    "drag-zoom.js",
+    "draw.js",
+    "start.js",
 )

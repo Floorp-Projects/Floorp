@@ -4,25 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 
-XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ['mochitest/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["mochitest/browser.ini"]
 
 TESTING_JS_MODULES += [
-    'HandlerServiceTestUtils.jsm',
+    "HandlerServiceTestUtils.jsm",
 ]
 
-GeckoSimplePrograms([
-    'WriteArgument',
-], linkage=None)
+GeckoSimplePrograms(
+    [
+        "WriteArgument",
+    ],
+    linkage=None,
+)
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     TEST_HARNESS_FILES.xpcshell.uriloader.exthandler.tests.unit += [
-        '!WriteArgument%s' % CONFIG['BIN_SUFFIX']
+        "!WriteArgument%s" % CONFIG["BIN_SUFFIX"]
     ]
 
 USE_LIBS += [
-    'nspr',
+    "nspr",
 ]

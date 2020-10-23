@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import re
 import string
 
-tag_re = r'<([a-z]+[^>/]*)(/?>)([^<]*)(?:</[a-z]+>)?'
+tag_re = r"<([a-z]+[^>/]*)(/?>)([^<]*)(?:</[a-z]+>)?"
 attr_re = r'\s+([a-z]+)="([\&\;\.a-zA-Z0-9]+)"'
 prefix = ""
 
@@ -14,12 +14,12 @@ messages = {}
 
 
 def is_entity(s):
-    return s.startswith('&') and s.endswith(';')
+    return s.startswith("&") and s.endswith(";")
 
 
 def convert_camel_case(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1-\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1-\2", s1).lower()
 
 
 def construct_l10n_id(val, attrs):
@@ -30,15 +30,15 @@ def construct_l10n_id(val, attrs):
     else:
         core = None
         for k in attrs:
-            v = attrs[k][1:-1].strip(string.digits).split('.')
+            v = attrs[k][1:-1].strip(string.digits).split(".")
             if not core:
                 if v[-1].lower() == k:
-                    core = '.'.join(v[:-1])
+                    core = ".".join(v[:-1])
                 else:
-                    core = '.'.join(v)
+                    core = ".".join(v)
         if core:
             id = core
-    id = id.replace('.', '-')
+    id = id.replace(".", "-")
     id = convert_camel_case(id)
     if prefix:
         id = "{}-{}".format(prefix, id)
@@ -88,21 +88,18 @@ def tagrepl(m):
     tag = re.sub(attr_re, attrrepl, m.group(0))
     if is_l10n:
         l10n_id = construct_l10n_id(l10n_val, l10n_attrs)
-        messages[l10n_id] = {
-            "value": l10n_val,
-            "attrs": l10n_attrs
-        }
-        indent = get_indent(tag[0:len(m.group(1)) + 1 - vector])
-        tag = \
-            tag[0:len(m.group(1)) + 1 - vector] + \
-            indent + \
-            'data-l10n-id="' + \
-            l10n_id + \
-            '"' + \
-            m.group(2) + \
-            (m.group(3) if not l10n_val else "") + \
-            tag[len(m.group(1)) + 1 + len(m.group(2)) +
-                len(m.group(3)) - vector:]
+        messages[l10n_id] = {"value": l10n_val, "attrs": l10n_attrs}
+        indent = get_indent(tag[0 : len(m.group(1)) + 1 - vector])
+        tag = (
+            tag[0 : len(m.group(1)) + 1 - vector]
+            + indent
+            + 'data-l10n-id="'
+            + l10n_id
+            + '"'
+            + m.group(2)
+            + (m.group(3) if not l10n_val else "")
+            + tag[len(m.group(1)) + 1 + len(m.group(2)) + len(m.group(3)) - vector :]
+        )
     return tag
 
 
@@ -116,5 +113,5 @@ def collect_messages(xul_source, in_prefix):
     return (new_source, messages)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

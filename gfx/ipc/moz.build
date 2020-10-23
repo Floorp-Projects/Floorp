@@ -4,90 +4,87 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Graphics: Layers')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Graphics: Layers")
 
-EXPORTS.mozilla += [
-    'D3DMessageUtils.h',
-    'GfxMessageUtils.h'
-]
+EXPORTS.mozilla += ["D3DMessageUtils.h", "GfxMessageUtils.h"]
 
 EXPORTS.mozilla.gfx += [
-    'CrossProcessPaint.h',
-    'GPUChild.h',
-    'GPUParent.h',
-    'GPUProcessHost.h',
-    'GPUProcessImpl.h',
-    'GPUProcessListener.h',
-    'GPUProcessManager.h',
-    'SharedDIB.h',
-    'VsyncBridgeChild.h',
-    'VsyncBridgeParent.h',
-    'VsyncIOThreadHolder.h',
+    "CrossProcessPaint.h",
+    "GPUChild.h",
+    "GPUParent.h",
+    "GPUProcessHost.h",
+    "GPUProcessImpl.h",
+    "GPUProcessListener.h",
+    "GPUProcessManager.h",
+    "SharedDIB.h",
+    "VsyncBridgeChild.h",
+    "VsyncBridgeParent.h",
+    "VsyncIOThreadHolder.h",
 ]
 
 EXPORTS.mozilla.layers += [
-    'CompositorOptions.h',
-    'CompositorSession.h',
-    'InProcessCompositorSession.h',
-    'RemoteCompositorSession.h',
+    "CompositorOptions.h",
+    "CompositorSession.h",
+    "InProcessCompositorSession.h",
+    "RemoteCompositorSession.h",
 ]
 
 EXPORTS.mozilla.widget += [
-    'CompositorWidgetVsyncObserver.h',
+    "CompositorWidgetVsyncObserver.h",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXPORTS.mozilla.gfx += [
-        'SharedDIBSurface.h',
-        'SharedDIBWin.h',
+        "SharedDIBSurface.h",
+        "SharedDIBWin.h",
     ]
     UNIFIED_SOURCES += [
-        'SharedDIBSurface.cpp',
-        'SharedDIBWin.cpp',
+        "SharedDIBSurface.cpp",
+        "SharedDIBWin.cpp",
     ]
 
 UNIFIED_SOURCES += [
-    'CompositorSession.cpp',
-    'CompositorWidgetVsyncObserver.cpp',
-    'CrossProcessPaint.cpp',
-    'D3DMessageUtils.cpp',
-    'GPUChild.cpp',
-    'GPUProcessHost.cpp',
-    'GPUProcessImpl.cpp',
-    'GPUProcessManager.cpp',
-    'InProcessCompositorSession.cpp',
-    'RemoteCompositorSession.cpp',
-    'SharedDIB.cpp',
-    'VsyncBridgeChild.cpp',
-    'VsyncBridgeParent.cpp',
-    'VsyncIOThreadHolder.cpp',
+    "CompositorSession.cpp",
+    "CompositorWidgetVsyncObserver.cpp",
+    "CrossProcessPaint.cpp",
+    "D3DMessageUtils.cpp",
+    "GPUChild.cpp",
+    "GPUProcessHost.cpp",
+    "GPUProcessImpl.cpp",
+    "GPUProcessManager.cpp",
+    "InProcessCompositorSession.cpp",
+    "RemoteCompositorSession.cpp",
+    "SharedDIB.cpp",
+    "VsyncBridgeChild.cpp",
+    "VsyncBridgeParent.cpp",
+    "VsyncIOThreadHolder.cpp",
 ]
 
 SOURCES += [
-    'GPUParent.cpp',
+    "GPUParent.cpp",
 ]
 
 IPDL_SOURCES = [
-    'GraphicsMessages.ipdlh',
-    'PVsyncBridge.ipdl',
+    "GraphicsMessages.ipdlh",
+    "PVsyncBridge.ipdl",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
-    'PGPU.ipdl',
+    "PGPU.ipdl",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/ipc',
-    '/toolkit/crashreporter',
-    '/xpcom/threads',
+    "/dom/ipc",
+    "/toolkit/crashreporter",
+    "/xpcom/threads",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]

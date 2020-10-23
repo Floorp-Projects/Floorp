@@ -8,21 +8,21 @@ import filecmp
 import os
 
 
-MOZ_MYCONFIG_ERROR = '''
+MOZ_MYCONFIG_ERROR = """
 The MOZ_MYCONFIG environment variable to define the location of mozconfigs
 is deprecated. If you wish to define the mozconfig path via an environment
 variable, use MOZCONFIG instead.
-'''.strip()
+""".strip()
 
-MOZCONFIG_LEGACY_PATH_ERROR = '''
+MOZCONFIG_LEGACY_PATH_ERROR = """
 You currently have a mozconfig at %s. This implicit location is no longer
 supported. Please move it to %s/.mozconfig or set an explicit path
 via the $MOZCONFIG environment variable.
-'''.strip()
+""".strip()
 
-DEFAULT_TOPSRCDIR_PATHS = ('.mozconfig', 'mozconfig')
-DEPRECATED_TOPSRCDIR_PATHS = ('mozconfig.sh', 'myconfig.sh')
-DEPRECATED_HOME_PATHS = ('.mozconfig', '.mozconfig.sh', '.mozmyconfig.sh')
+DEFAULT_TOPSRCDIR_PATHS = (".mozconfig", "mozconfig")
+DEPRECATED_TOPSRCDIR_PATHS = ("mozconfig.sh", "myconfig.sh")
+DEPRECATED_HOME_PATHS = (".mozconfig", ".mozconfig.sh", ".mozmyconfig.sh")
 
 
 class MozconfigFindException(Exception):
@@ -34,10 +34,10 @@ class MozconfigBuilder(object):
         self._lines = []
 
     def append(self, block):
-        self._lines.extend([line.strip() for line in block.split('\n') if line.strip()])
+        self._lines.extend([line.strip() for line in block.split("\n") if line.strip()])
 
     def generate(self):
-        return '\n'.join(self._lines)
+        return "\n".join(self._lines)
 
 
 def find_mozconfig(topsrcdir, env=os.environ):
@@ -55,18 +55,21 @@ def find_mozconfig(topsrcdir, env=os.environ):
     including conditions from #3 above.
     """
     # Check for legacy methods first.
-    if 'MOZ_MYCONFIG' in env:
+    if "MOZ_MYCONFIG" in env:
         raise MozconfigFindException(MOZ_MYCONFIG_ERROR)
 
-    env_path = env.get('MOZCONFIG', None) or None
+    env_path = env.get("MOZCONFIG", None) or None
     if env_path is not None:
         if not os.path.isabs(env_path):
             potential_roots = [topsrcdir, os.getcwd()]
             # Attempt to eliminate duplicates for e.g.
             # self.topsrcdir == os.curdir.
             potential_roots = set(os.path.abspath(p) for p in potential_roots)
-            existing = [root for root in potential_roots
-                        if os.path.exists(os.path.join(root, env_path))]
+            existing = [
+                root
+                for root in potential_roots
+                if os.path.exists(os.path.join(root, env_path))
+            ]
             if len(existing) > 1:
                 # There are multiple files, but we might have a setup like:
                 #
@@ -79,37 +82,47 @@ def find_mozconfig(topsrcdir, env=os.environ):
                 # and be configuring from the objdir.  So even though we
                 # have multiple existing files, they are actually the same
                 # file.
-                mozconfigs = [os.path.join(root, env_path)
-                              for root in existing]
-                if not all(map(lambda p1, p2: filecmp.cmp(p1, p2, shallow=False),
-                               mozconfigs[:-1], mozconfigs[1:])):
+                mozconfigs = [os.path.join(root, env_path) for root in existing]
+                if not all(
+                    map(
+                        lambda p1, p2: filecmp.cmp(p1, p2, shallow=False),
+                        mozconfigs[:-1],
+                        mozconfigs[1:],
+                    )
+                ):
                     raise MozconfigFindException(
-                        'MOZCONFIG environment variable refers to a path that ' +
-                        'exists in more than one of ' + ', '.join(potential_roots) +
-                        '. Remove all but one.')
+                        "MOZCONFIG environment variable refers to a path that "
+                        + "exists in more than one of "
+                        + ", ".join(potential_roots)
+                        + ". Remove all but one."
+                    )
             elif not existing:
                 raise MozconfigFindException(
-                    'MOZCONFIG environment variable refers to a path that ' +
-                    'does not exist in any of ' + ', '.join(potential_roots))
+                    "MOZCONFIG environment variable refers to a path that "
+                    + "does not exist in any of "
+                    + ", ".join(potential_roots)
+                )
 
             env_path = os.path.join(existing[0], env_path)
         elif not os.path.exists(env_path):  # non-relative path
             raise MozconfigFindException(
-                'MOZCONFIG environment variable refers to a path that '
-                'does not exist: ' + env_path)
+                "MOZCONFIG environment variable refers to a path that "
+                "does not exist: " + env_path
+            )
 
         if not os.path.isfile(env_path):
             raise MozconfigFindException(
-                'MOZCONFIG environment variable refers to a '
-                'non-file: ' + env_path)
+                "MOZCONFIG environment variable refers to a " "non-file: " + env_path
+            )
 
-    srcdir_paths = [os.path.join(topsrcdir, p) for p in
-                    DEFAULT_TOPSRCDIR_PATHS]
+    srcdir_paths = [os.path.join(topsrcdir, p) for p in DEFAULT_TOPSRCDIR_PATHS]
     existing = [p for p in srcdir_paths if os.path.isfile(p)]
 
     if env_path is None and len(existing) > 1:
-        raise MozconfigFindException('Multiple default mozconfig files '
-                                     'present. Remove all but one. ' + ', '.join(existing))
+        raise MozconfigFindException(
+            "Multiple default mozconfig files "
+            "present. Remove all but one. " + ", ".join(existing)
+        )
 
     path = None
 
@@ -122,17 +135,16 @@ def find_mozconfig(topsrcdir, env=os.environ):
     if path is not None:
         return os.path.abspath(path)
 
-    deprecated_paths = [os.path.join(topsrcdir, s) for s in
-                        DEPRECATED_TOPSRCDIR_PATHS]
+    deprecated_paths = [os.path.join(topsrcdir, s) for s in DEPRECATED_TOPSRCDIR_PATHS]
 
-    home = env.get('HOME', None)
+    home = env.get("HOME", None)
     if home is not None:
-        deprecated_paths.extend([os.path.join(home, s) for s in
-                                 DEPRECATED_HOME_PATHS])
+        deprecated_paths.extend([os.path.join(home, s) for s in DEPRECATED_HOME_PATHS])
 
     for path in deprecated_paths:
         if os.path.exists(path):
             raise MozconfigFindException(
-                MOZCONFIG_LEGACY_PATH_ERROR % (path, topsrcdir))
+                MOZCONFIG_LEGACY_PATH_ERROR % (path, topsrcdir)
+            )
 
     return None

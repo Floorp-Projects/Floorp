@@ -4,25 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Normandy Client')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Normandy Client")
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    'ShieldContentProcess.jsm',
+    "ShieldContentProcess.jsm",
 ]
 
 TESTING_JS_MODULES += [
-    'test/NormandyTestUtils.jsm',
+    "test/NormandyTestUtils.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-SPHINX_TREES['normandy'] = 'docs'
+SPHINX_TREES["normandy"] = "docs"
 
-TEST_DIRS += ['test/browser']
+TEST_DIRS += ["test/browser"]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]

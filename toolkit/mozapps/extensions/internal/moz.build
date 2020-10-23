@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.addons += [
-    'AddonRepository.jsm',
-    'AddonSettings.jsm',
-    'AddonUpdateChecker.jsm',
-    'Content.js',
-    'ProductAddonChecker.jsm',
-    'XPIDatabase.jsm',
-    'XPIInstall.jsm',
-    'XPIProvider.jsm',
+    "AddonRepository.jsm",
+    "AddonSettings.jsm",
+    "AddonUpdateChecker.jsm",
+    "Content.js",
+    "ProductAddonChecker.jsm",
+    "XPIDatabase.jsm",
+    "XPIInstall.jsm",
+    "XPIProvider.jsm",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES.addons += [
-        'GMPProvider.jsm',
-        'PluginProvider.jsm',
+        "GMPProvider.jsm",
+        "PluginProvider.jsm",
     ]
 
 TESTING_JS_MODULES += [
-    'AddonTestUtils.jsm',
+    "AddonTestUtils.jsm",
 ]

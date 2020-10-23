@@ -16,11 +16,12 @@ GLOBAL_SUPPORT_FILES = []
 
 class Parser(object):
     """Reads and validates lint configuration files."""
+
     required_attributes = (
-        'name',
-        'description',
-        'type',
-        'payload',
+        "name",
+        "description",
+        "type",
+        "payload",
     )
 
     def __init__(self, root):
@@ -30,7 +31,7 @@ class Parser(object):
         return self.parse(path)
 
     def _validate(self, linter):
-        relpath = os.path.relpath(linter['path'], self.root)
+        relpath = os.path.relpath(linter["path"], self.root)
 
         missing_attrs = []
         for attr in self.required_attributes:
@@ -38,26 +39,34 @@ class Parser(object):
                 missing_attrs.append(attr)
 
         if missing_attrs:
-            raise LinterParseError(relpath, "Missing required attribute(s): "
-                                            "{}".format(','.join(missing_attrs)))
+            raise LinterParseError(
+                relpath,
+                "Missing required attribute(s): " "{}".format(",".join(missing_attrs)),
+            )
 
-        if linter['type'] not in supported_types:
-            raise LinterParseError(relpath, "Invalid type '{}'".format(linter['type']))
+        if linter["type"] not in supported_types:
+            raise LinterParseError(relpath, "Invalid type '{}'".format(linter["type"]))
 
-        for attr in ('include', 'exclude', 'support-files'):
+        for attr in ("include", "exclude", "support-files"):
             if attr not in linter:
                 continue
 
-            if not isinstance(linter[attr], list) or \
-                    not all(isinstance(a, str) for a in linter[attr]):
-                raise LinterParseError(relpath, "The {} directive must be a "
-                                                "list of strings!".format(attr))
+            if not isinstance(linter[attr], list) or not all(
+                isinstance(a, str) for a in linter[attr]
+            ):
+                raise LinterParseError(
+                    relpath,
+                    "The {} directive must be a " "list of strings!".format(attr),
+                )
             invalid_paths = set()
             for path in linter[attr]:
-                if '*' in path:
-                    if attr == 'include':
-                        raise LinterParseError(relpath, "Paths in the include directive cannot "
-                                                        "contain globs:\n  {}".format(path))
+                if "*" in path:
+                    if attr == "include":
+                        raise LinterParseError(
+                            relpath,
+                            "Paths in the include directive cannot "
+                            "contain globs:\n  {}".format(path),
+                        )
                     continue
 
                 abspath = path
@@ -65,21 +74,27 @@ class Parser(object):
                     abspath = os.path.join(self.root, path)
 
                 if not os.path.exists(abspath):
-                    invalid_paths.add('  ' + path)
+                    invalid_paths.add("  " + path)
 
             if invalid_paths:
-                raise LinterParseError(relpath, "The {} directive contains the following "
-                                                "paths that don't exist:\n{}".format(
-                                                    attr, '\n'.join(sorted(invalid_paths))))
+                raise LinterParseError(
+                    relpath,
+                    "The {} directive contains the following "
+                    "paths that don't exist:\n{}".format(
+                        attr, "\n".join(sorted(invalid_paths))
+                    ),
+                )
 
-        if 'setup' in linter:
-            if linter['setup'].count(':') != 1:
-                raise LinterParseError(relpath, "The setup attribute '{!r}' must have the "
-                                                "form 'module:object'".format(
-                                                    linter['setup']))
+        if "setup" in linter:
+            if linter["setup"].count(":") != 1:
+                raise LinterParseError(
+                    relpath,
+                    "The setup attribute '{!r}' must have the "
+                    "form 'module:object'".format(linter["setup"]),
+                )
 
-        if 'extensions' in linter:
-            linter['extensions'] = [e.strip('.') for e in linter['extensions']]
+        if "extensions" in linter:
+            linter["extensions"] = [e.strip(".") for e in linter["extensions"]]
 
     def parse(self, path):
         """Read a linter and return its LINTER definition.
@@ -91,8 +106,10 @@ class Parser(object):
         if not os.path.isfile(path):
             raise LinterNotFound(path)
 
-        if not path.endswith('.yml'):
-            raise LinterParseError(path, "Invalid filename, linters must end with '.yml'!")
+        if not path.endswith(".yml"):
+            raise LinterParseError(
+                path, "Invalid filename, linters must end with '.yml'!"
+            )
 
         with open(path) as fh:
             configs = list(yaml.safe_load_all(fh))
@@ -103,11 +120,13 @@ class Parser(object):
         linters = []
         for config in configs:
             for name, linter in config.items():
-                linter['name'] = name
-                linter['path'] = path
+                linter["name"] = name
+                linter["path"] = path
                 self._validate(linter)
-                linter.setdefault('support-files', []).extend(GLOBAL_SUPPORT_FILES + [path])
-                linter.setdefault('include', ['.'])
+                linter.setdefault("support-files", []).extend(
+                    GLOBAL_SUPPORT_FILES + [path]
+                )
+                linter.setdefault("include", ["."])
                 linters.append(linter)
 
         return linters

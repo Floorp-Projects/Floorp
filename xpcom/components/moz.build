@@ -5,73 +5,76 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsICategoryManager.idl',
-    'nsIClassInfo.idl',
-    'nsIComponentManager.idl',
-    'nsIComponentRegistrar.idl',
-    'nsIFactory.idl',
-    'nsIModule.idl',
-    'nsIServiceManager.idl',
+    "nsICategoryManager.idl",
+    "nsIClassInfo.idl",
+    "nsIComponentManager.idl",
+    "nsIComponentRegistrar.idl",
+    "nsIFactory.idl",
+    "nsIModule.idl",
+    "nsIServiceManager.idl",
 ]
 
-XPIDL_MODULE = 'xpcom_components'
+XPIDL_MODULE = "xpcom_components"
 
 EXPORTS += [
-    'nsCategoryCache.h',
-    'nsCategoryManagerUtils.h',
-    'nsComponentManagerUtils.h',
-    'nsServiceManagerUtils.h',
+    "nsCategoryCache.h",
+    "nsCategoryManagerUtils.h",
+    "nsComponentManagerUtils.h",
+    "nsServiceManagerUtils.h",
 ]
 
 EXPORTS.mozilla += [
-    'GenericFactory.h',
-    'Module.h',
-    'ModuleUtils.h',
+    "GenericFactory.h",
+    "Module.h",
+    "ModuleUtils.h",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla += [
-        '!Components.h',
+        "!Components.h",
     ]
 
     GeneratedFile(
-        'Components.h', 'StaticComponentData.h', 'StaticComponents.cpp',
-        script='gen_static_components.py',
-        inputs=['!manifest-lists.json', 'StaticComponents.cpp.in'])
+        "Components.h",
+        "StaticComponentData.h",
+        "StaticComponents.cpp",
+        script="gen_static_components.py",
+        inputs=["!manifest-lists.json", "StaticComponents.cpp.in"],
+    )
 
 UNIFIED_SOURCES += [
-    'GenericFactory.cpp',
-    'ManifestParser.cpp',
-    'nsCategoryCache.cpp',
-    'nsCategoryManager.cpp',
-    'nsComponentManager.cpp',
-    'nsComponentManagerUtils.cpp',
+    "GenericFactory.cpp",
+    "ManifestParser.cpp",
+    "nsCategoryCache.cpp",
+    "nsCategoryManager.cpp",
+    "nsComponentManager.cpp",
+    "nsComponentManagerUtils.cpp",
 ]
 
 SOURCES += [
-    '!StaticComponents.cpp',
+    "!StaticComponents.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '!..',
-    '../base',
-    '../build',
-    '../ds',
-    '/chrome',
-    '/js/xpconnect/loader',
-    '/layout/build',
-    '/modules/libjar',
+    "!..",
+    "../base",
+    "../build",
+    "../ds",
+    "/chrome",
+    "/js/xpconnect/loader",
+    "/layout/build",
+    "/modules/libjar",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    CXXFLAGS += CONFIG['TK_CFLAGS']
-    if CONFIG['MOZ_ENABLE_DBUS']:
-        CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
+    if CONFIG["MOZ_ENABLE_DBUS"]:
+        CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

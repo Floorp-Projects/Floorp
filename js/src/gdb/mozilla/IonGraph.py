@@ -36,7 +36,8 @@ class jsvmPrinterCache(object):
 
     def initialize(self):
         self.d = {}
-        self.d['char'] = gdb.lookup_type('char')
+        self.d["char"] = gdb.lookup_type("char")
+
 
 # Dummy class used to store the content of the type cache in the context of the
 # iongraph command, which uses the jsvmLSprinter.
@@ -56,18 +57,18 @@ class jsvmLSprinter(object):
         self.cache = cache.mod_IonGraph
 
     def to_string(self):
-        next = self.value['head_']
-        tail = self.value['tail_']
+        next = self.value["head_"]
+        tail = self.value["tail_"]
         if next == 0:
             return ""
         res = ""
         while next != tail:
             chars = (next + 1).cast(self.cache.char.pointer())
-            res = res + chars.string('ascii', 'ignore', next['length'])
-            next = next['next']
-        length = next['length'] - self.value['unused_']
+            res = res + chars.string("ascii", "ignore", next["length"])
+            next = next["next"]
+        length = next["length"] - self.value["unused_"]
         chars = (next + 1).cast(self.cache.char.pointer())
-        res = res + chars.string('ascii', 'ignore', length)
+        res = res + chars.string("ascii", "ignore", length)
         return res
 
 
@@ -94,7 +95,8 @@ class IonGraphBinParameter(gdb.Parameter):
 
     def __init__(self):
         super(IonGraphBinParameter, self).__init__(
-            "iongraph-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME)
+            "iongraph-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME
+        )
         self.value = os.getenv("GDB_IONGRAPH", "")
         if self.value == "":
             self.value = search_in_path("iongraph")
@@ -111,7 +113,9 @@ class DotBinParameter(gdb.Parameter):
         return "Path to dot binary set to: %s" % value
 
     def __init__(self):
-        super(DotBinParameter, self).__init__("dot-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME)
+        super(DotBinParameter, self).__init__(
+            "dot-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME
+        )
         self.value = os.getenv("GDB_DOT", "")
         if self.value == "":
             self.value = search_in_path("dot")
@@ -129,7 +133,8 @@ class PngViewerBinParameter(gdb.Parameter):
 
     def __init__(self):
         super(PngViewerBinParameter, self).__init__(
-            "pngviewer-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME)
+            "pngviewer-bin", gdb.COMMAND_SUPPORT, gdb.PARAM_FILENAME
+        )
         self.value = os.getenv("GDB_PNGVIEWER", "")
         if self.value == "":
             self.value = search_in_path("xdg-open")
@@ -147,7 +152,8 @@ class IonGraphCommand(gdb.Command):
 
     def __init__(self):
         super(IonGraphCommand, self).__init__(
-            "iongraph", gdb.COMMAND_DATA, gdb.COMPLETE_EXPRESSION)
+            "iongraph", gdb.COMMAND_DATA, gdb.COMPLETE_EXPRESSION
+        )
         self.typeCache = ModuleCache()
 
     def invoke(self, mirGenExpr, from_tty):
@@ -160,26 +166,68 @@ class IonGraphCommand(gdb.Command):
         # jsonPrinter (containing the result of the output), and the jsonSpewer
         # (continaining methods for spewing the graph).
         mirGen = gdb.parse_and_eval(mirGenExpr)
-        jsonPrinter = mirGen['gs_']['jsonPrinter_']
-        jsonSpewer = mirGen['gs_']['jsonSpewer_']
-        graph = mirGen['graph_']
+        jsonPrinter = mirGen["gs_"]["jsonPrinter_"]
+        jsonSpewer = mirGen["gs_"]["jsonSpewer_"]
+        graph = mirGen["graph_"]
 
         # These commands are doing side-effects which are saving the state of
         # the compiled code on the LSprinter dedicated for logging. Fortunately,
         # if you are using these gdb command, this probably means that other
         # ways of getting this content failed you already, so making a mess in
         # these logging strings should not cause much issues.
-        gdb.parse_and_eval('(*(%s*)(%s)).clear()' % (jsonPrinter.type, jsonPrinter.address,))
-        gdb.parse_and_eval('(*(%s*)(%s)).beginFunction((JSScript*)0)' %
-                           (jsonSpewer.type, jsonSpewer.address,))
-        gdb.parse_and_eval('(*(%s*)(%s)).beginPass("gdb")' %
-                           (jsonSpewer.type, jsonSpewer.address,))
-        gdb.parse_and_eval('(*(%s*)(%s)).spewMIR((%s)%s)' %
-                           (jsonSpewer.type, jsonSpewer.address, graph.type, graph,))
-        gdb.parse_and_eval('(*(%s*)(%s)).spewLIR((%s)%s)' %
-                           (jsonSpewer.type, jsonSpewer.address, graph.type, graph,))
-        gdb.parse_and_eval('(*(%s*)(%s)).endPass()' % (jsonSpewer.type, jsonSpewer.address,))
-        gdb.parse_and_eval('(*(%s*)(%s)).endFunction()' % (jsonSpewer.type, jsonSpewer.address,))
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).clear()"
+            % (
+                jsonPrinter.type,
+                jsonPrinter.address,
+            )
+        )
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).beginFunction((JSScript*)0)"
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+            )
+        )
+        gdb.parse_and_eval(
+            '(*(%s*)(%s)).beginPass("gdb")'
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+            )
+        )
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).spewMIR((%s)%s)"
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+                graph.type,
+                graph,
+            )
+        )
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).spewLIR((%s)%s)"
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+                graph.type,
+                graph,
+            )
+        )
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).endPass()"
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+            )
+        )
+        gdb.parse_and_eval(
+            "(*(%s*)(%s)).endFunction()"
+            % (
+                jsonSpewer.type,
+                jsonSpewer.address,
+            )
+        )
 
         # Dump the content of the LSprinter containing the JSON view of the
         # graph into a python string.
@@ -203,13 +251,15 @@ class IonGraphCommand(gdb.Command):
 
         # start all processes in a shell-like equivalent of:
         #   iongraph < json | dot > tmp.png; xdg-open tmp.png
-        i = subprocess.Popen([iongraph.value, '--funcnum', '0', '--passnum', '0',
-                              '--out-mir', '-', '-'], stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        d = subprocess.Popen([dot.value, '-Tpng'], stdin=i.stdout, stdout=png)
+        i = subprocess.Popen(
+            [iongraph.value, "--funcnum", "0", "--passnum", "0", "--out-mir", "-", "-"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        d = subprocess.Popen([dot.value, "-Tpng"], stdin=i.stdout, stdout=png)
 
         # Write the json file as the input of the iongraph command.
-        i.stdin.write(jsonStr.encode('utf8'))
+        i.stdin.write(jsonStr.encode("utf8"))
         i.stdin.close()
         i.stdout.close()
 

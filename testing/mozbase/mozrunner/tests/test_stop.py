@@ -39,5 +39,5 @@ def test_stop_process_custom_signal(runner):
     assert runner.wait(1) == returncode
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

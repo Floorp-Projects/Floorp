@@ -31,8 +31,7 @@ try:
 except ImportError:
     from queue import Queue
 
-logging.basicConfig(
-    stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 try:
@@ -41,7 +40,8 @@ try:
 except:
     # the past - http://hg.mozilla.org/build/tools/file/default/buildfarm/utils/mar.py
     sys.path.append(
-        path.join(path.dirname(path.realpath(__file__)), "../buildfarm/utils"))
+        path.join(path.dirname(path.realpath(__file__)), "../buildfarm/utils")
+    )
     from mar import BZ2MarFile
 
 SEVENZIP = "7za"
@@ -57,18 +57,22 @@ def extractExe(filename, tempdir):
         # We don't actually care about output, put we redirect to a tempfile
         # to avoid deadlocking in wait() when stdout=PIPE
         fd = tempfile.TemporaryFile()
-        proc = subprocess.Popen([SEVENZIP, 'x', '-o%s' % tempdir, filename],
-                                stdout=fd, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(
+            [SEVENZIP, "x", "-o%s" % tempdir, filename],
+            stdout=fd,
+            stderr=subprocess.STDOUT,
+        )
         proc.wait()
     except subprocess.CalledProcessError:
         # Not all EXEs are 7-zip files, so we have to ignore extraction errors
         pass
 
+
 # The keys here are matched against the last 3 characters of filenames.
 # The values are callables that accept two string arguments.
 EXTRACTORS = {
-    '.mar': extractMar,
-    '.exe': extractExe,
+    ".mar": extractMar,
+    ".exe": extractExe,
 }
 
 
@@ -91,14 +95,14 @@ def rchmod(d, mode=0o755):
 
 def maybe_extract(filename):
     """If an extractor is found for `filename', extracts it to a temporary
-       directory and chmods it. The consumer is responsible for removing
-       the extracted files, if desired."""
+    directory and chmods it. The consumer is responsible for removing
+    the extracted files, if desired."""
     ext = path.splitext(filename)[1]
     if ext not in EXTRACTORS.keys():
         return None
     # Append the full filepath to the tempdir
     tempdir_root = tempfile.mkdtemp()
-    tempdir = path.join(tempdir_root, filename.lstrip('/'))
+    tempdir = path.join(tempdir_root, filename.lstrip("/"))
     os.makedirs(tempdir)
     EXTRACTORS[ext](filename, tempdir)
     rchmod(tempdir_root)
@@ -108,6 +112,7 @@ def maybe_extract(filename):
 def process(item, command):
     def format_time(t):
         return time.strftime("%H:%M:%S", time.localtime(t))
+
     # Buffer output to avoid interleaving of multiple workers'
     logs = []
     args = [item]
@@ -134,8 +139,9 @@ def process(item, command):
         logs.append(fd.read().rstrip())
         end = time.time()
         elapsed = end - start
-        logs.append("END %s (%d seconds elapsed): %s\n" % (
-            format_time(end), elapsed, item))
+        logs.append(
+            "END %s (%d seconds elapsed): %s\n" % (format_time(end), elapsed, item)
+        )
         # Now that we've got all of our output, print it. It's important that
         # the logging module is used for this, because "print" is not
         # thread-safe.
@@ -151,21 +157,23 @@ def worker(command, errors):
             errors.put(item)
         item = q.get()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # getopt is used in favour of optparse to enable "--" as a separator
     # between the command and list of files. optparse doesn't allow that.
     from getopt import getopt
-    options, args = getopt(sys.argv[1:], 'j:h', ['help'])
+
+    options, args = getopt(sys.argv[1:], "j:h", ["help"])
 
     concurrency = 1
     for o, a in options:
-        if o == '-j':
+        if o == "-j":
             concurrency = int(a)
-        elif o in ('-h', '--help'):
+        elif o in ("-h", "--help"):
             log.info(__doc__)
             sys.exit(0)
 
-    if len(args) < 3 or '--' not in args:
+    if len(args) < 3 or "--" not in args:
         log.error(__doc__)
         sys.exit(1)
 

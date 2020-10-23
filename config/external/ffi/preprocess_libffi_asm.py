@@ -18,9 +18,9 @@ def main(output, input_asm, ffi_h, ffi_config_h, defines, includes):
     includes = shlex.split(includes)
     # CPP uses -E which generates #line directives. -EP suppresses them.
     # -TC forces the compiler to treat the input as C.
-    cpp = buildconfig.substs['CPP'] + ['-EP'] + ['-TC']
+    cpp = buildconfig.substs["CPP"] + ["-EP"] + ["-TC"]
     input_asm = mozpath.relpath(input_asm, os.getcwd())
     args = cpp + defines + includes + [input_asm]
-    print(' '.join(args))
+    print(" ".join(args))
     preprocessed = subprocess.check_output(args)
     output.write(preprocessed)

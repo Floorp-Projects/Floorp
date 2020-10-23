@@ -18,19 +18,19 @@ def remove_build_dependency_in_beetmover_source(config, jobs):
         # tasks, source doesn't depend on any build task at all. This hack should
         # go away when we rewrite beetmover transforms to allow more flexibility in deps
         # Essentially, we should use multi_dep for beetmover.
-        for depname in job['dependencies']:
-            if 'signing' not in depname:
-                del job['dependencies'][depname]
+        for depname in job["dependencies"]:
+            if "signing" not in depname:
+                del job["dependencies"][depname]
                 break
         else:
             raise Exception("Can't find build dep in beetmover source!")
 
-        all_upstream_artifacts = job['worker']['upstream-artifacts']
+        all_upstream_artifacts = job["worker"]["upstream-artifacts"]
         upstream_artifacts_without_build = [
             upstream_artifact
             for upstream_artifact in all_upstream_artifacts
-            if upstream_artifact['taskId']['task-reference'] != '<{}>'.format(depname)
+            if upstream_artifact["taskId"]["task-reference"] != "<{}>".format(depname)
         ]
-        job['worker']['upstream-artifacts'] = upstream_artifacts_without_build
+        job["worker"]["upstream-artifacts"] = upstream_artifacts_without_build
 
         yield job

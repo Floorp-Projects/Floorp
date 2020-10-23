@@ -5,17 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIHttpServer.idl',
+    "nsIHttpServer.idl",
 ]
 
-XPIDL_MODULE = 'test_necko'
+XPIDL_MODULE = "test_necko"
 
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 
 EXTRA_COMPONENTS += [
-    'httpd.js',
+    "httpd.js",
 ]
 
 TESTING_JS_MODULES += [
-    'httpd.js',
+    "httpd.js",
 ]

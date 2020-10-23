@@ -13,14 +13,14 @@ from functools import reduce
 
 
 def check_run(args, path):
-    print(' '.join(args) + ' in ' + path, file=sys.stderr)
+    print(" ".join(args) + " in " + path, file=sys.stderr)
     subprocess.run(args, cwd=path, check=True)
 
 
 def run_in(path, args, extra_env=None):
-    '''
+    """
     Runs the given commands in the directory specified by <path>.
-    '''
+    """
     env = dict(os.environ)
     env.update(extra_env or {})
     check_run(args, path)
@@ -29,43 +29,50 @@ def run_in(path, args, extra_env=None):
 
 def build_tar_package(tar, name, base, directories):
     name = os.path.realpath(name)
-    run_in(base, [tar,
-                  '-c',
-                  '-%s' % ('J' if '.xz' in name else 'j'),
-                  '-f',
-                  name] + directories)
+    run_in(
+        base,
+        [tar, "-c", "-%s" % ("J" if ".xz" in name else "j"), "-f", name] + directories,
+    )
 
 
 def is_git_repo(dir):
-    '''Check whether the given directory is a git repository.'''
+    """Check whether the given directory is a git repository."""
     from subprocess import CalledProcessError
+
     try:
-        check_run(['git', 'rev-parse'], dir)
+        check_run(["git", "rev-parse"], dir)
         return True
     except CalledProcessError:
         return False
 
 
 def git_clone(main_dir, url, clone_dir, commit):
-    '''
+    """
     Clones the repository from <url> into <clone_dir>, and brings the
     repository to the state of <commit>.
-    '''
-    run_in(main_dir, ['git', 'clone', url, clone_dir])
-    run_in(clone_dir, ['git', 'checkout', commit])
+    """
+    run_in(main_dir, ["git", "clone", url, clone_dir])
+    run_in(clone_dir, ["git", "checkout", commit])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', required=True,
-                        type=argparse.FileType('r'),
-                        help='Infer configuration file')
-    parser.add_argument('-b', '--base-dir',
-                        help="Base directory for code and build artifacts")
-    parser.add_argument('--clean', action='store_true',
-                        help='Clean the build directory')
-    parser.add_argument('--skip-tar', action='store_true',
-                        help='Skip tar packaging stage')
+    parser.add_argument(
+        "-c",
+        "--config",
+        required=True,
+        type=argparse.FileType("r"),
+        help="Infer configuration file",
+    )
+    parser.add_argument(
+        "-b", "--base-dir", help="Base directory for code and build artifacts"
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Clean the build directory"
+    )
+    parser.add_argument(
+        "--skip-tar", action="store_true", help="Skip tar packaging stage"
+    )
 
     args = parser.parse_args()
 
@@ -75,20 +82,20 @@ if __name__ == '__main__':
     if args.base_dir:
         base_dir = args.base_dir
     else:
-        base_dir = reduce(os.path.join,
-                          [os.sep + 'builds', 'worker',
-                           'workspace', 'moz-toolchain'])
-    infer_dir = os.path.join(base_dir, 'infer')
-    source_dir = os.path.join(infer_dir, 'src')
-    build_dir = os.path.join(infer_dir, 'build')
+        base_dir = reduce(
+            os.path.join, [os.sep + "builds", "worker", "workspace", "moz-toolchain"]
+        )
+    infer_dir = os.path.join(base_dir, "infer")
+    source_dir = os.path.join(infer_dir, "src")
+    build_dir = os.path.join(infer_dir, "build")
 
     if args.clean:
         shutil.rmtree(build_dir)
         os.sys.exit(0)
 
     config = json.load(args.config)
-    infer_revision = config['infer_revision']
-    infer_repo = config['infer_repo']
+    infer_revision = config["infer_revision"]
+    infer_repo = config["infer_repo"]
 
     for folder in [infer_dir, source_dir, build_dir]:
         os.makedirs(folder, exist_ok=True)
@@ -102,31 +109,44 @@ if __name__ == '__main__':
     # apply a few patches
     dir_path = os.path.dirname(os.path.realpath(__file__))
     # clean the git directory by reseting all changes
-    git_commands = [['clean', '-f'], ['reset', '--hard']]
+    git_commands = [["clean", "-f"], ["reset", "--hard"]]
     for command in git_commands:
-        run_in(source_dir, ['git']+command)
-    for p in config.get('patches', []):
-        run_in(source_dir, ['git', 'apply', os.path.join(dir_path, p)])
+        run_in(source_dir, ["git"] + command)
+    for p in config.get("patches", []):
+        run_in(source_dir, ["git", "apply", os.path.join(dir_path, p)])
     # configure opam
-    run_in(source_dir, ['opam', 'init', '--no-setup', '--disable-sandboxing'])
+    run_in(source_dir, ["opam", "init", "--no-setup", "--disable-sandboxing"])
     # build infer
-    run_in(source_dir, ['./build-infer.sh', 'java'],
-           extra_env={'NO_CMAKE_STRIP': '1'})
+    run_in(source_dir, ["./build-infer.sh", "java"], extra_env={"NO_CMAKE_STRIP": "1"})
 
-    package_name = 'infer'
+    package_name = "infer"
     infer_package = os.path.join(os.getcwd(), package_name)
     # We need to create a package with all of the depended libraries injected in it
-    run_in(source_dir, ['make', 'install-with-libs', 'BUILD_MODE=opt',
-                        'PATCHELF=patchelf', 'DESTDIR={}'.format(infer_package),
-                        'libdir_relative_to_bindir=../lib'])
+    run_in(
+        source_dir,
+        [
+            "make",
+            "install-with-libs",
+            "BUILD_MODE=opt",
+            "PATCHELF=patchelf",
+            "DESTDIR={}".format(infer_package),
+            "libdir_relative_to_bindir=../lib",
+        ],
+    )
 
-
-    infer_package_with_pref = os.path.join(infer_package, 'usr')
+    infer_package_with_pref = os.path.join(infer_package, "usr")
     if not args.skip_tar:
-        os.rename(os.path.join(infer_package_with_pref, 'local'),
-                  os.path.join(infer_package_with_pref, 'infer'))
-        build_tar_package('tar', '%s.tar.xz' % (package_name),
-                          infer_package_with_pref,
-                          [os.path.join('infer', 'bin'),
-                           os.path.join('infer', 'lib'),
-                           os.path.join('infer', 'share')])
+        os.rename(
+            os.path.join(infer_package_with_pref, "local"),
+            os.path.join(infer_package_with_pref, "infer"),
+        )
+        build_tar_package(
+            "tar",
+            "%s.tar.xz" % (package_name),
+            infer_package_with_pref,
+            [
+                os.path.join("infer", "bin"),
+                os.path.join("infer", "lib"),
+                os.path.join("infer", "share"),
+            ],
+        )

@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, '..', '..', '..')))
+GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
 
 # Maximum number of dependencies a single task can have
 # https://firefox-ci-tc.services.mozilla.com/docs/reference/platform/queue/task-schema

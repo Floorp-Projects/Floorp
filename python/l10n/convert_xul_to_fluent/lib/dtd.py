@@ -13,10 +13,7 @@ def get_dtds(sources, base_path):
     for source in sources:
         dtd = get_dtd(source, base_path)
         for entry in dtd:
-            entries[entry] = {
-                "value": dtd[entry],
-                "file": source
-            }
+            entries[entry] = {"value": dtd[entry], "file": source}
     return entries
 
 

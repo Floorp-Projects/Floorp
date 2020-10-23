@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Widget: Cocoa')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 EXTRA_COMPONENTS += [
-    'MacTouchBar.js',
-    'MacTouchBar.manifest',
+    "MacTouchBar.js",
+    "MacTouchBar.manifest",
 ]
 
-SPHINX_TREES['/browser/touchbar'] = 'docs'
+SPHINX_TREES["/browser/touchbar"] = "docs"

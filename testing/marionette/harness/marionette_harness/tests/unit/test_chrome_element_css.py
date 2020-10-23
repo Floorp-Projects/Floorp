@@ -10,14 +10,15 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestChromeElementCSS(MarionetteTestCase):
-
     def get_element_computed_style(self, element, property):
-        return self.marionette.execute_script("""
+        return self.marionette.execute_script(
+            """
             const [el, prop] = arguments;
             const elStyle = window.getComputedStyle(el);
             return elStyle[prop];""",
             script_args=(element, property),
-            sandbox=None)
+            sandbox=None,
+        )
 
     def test_we_can_get_css_value_on_chrome_element(self):
         with self.marionette.using_context("chrome"):
@@ -26,6 +27,7 @@ class TestChromeElementCSS(MarionetteTestCase):
             self.assertIn("chrome://", favicon_image)
             identity_box = self.marionette.find_element(By.ID, "identity-box")
             expected_bg_colour = self.get_element_computed_style(
-                identity_box, "backgroundColor")
+                identity_box, "backgroundColor"
+            )
             actual_bg_colour = identity_box.value_of_css_property("background-color")
             self.assertEqual(expected_bg_colour, actual_bg_colour)

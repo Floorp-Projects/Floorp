@@ -50,7 +50,7 @@ def create_entry(metric_id, type_id, idx):
     """
     The 3 pieces of information of a metric encoded into a single 64-bit integer.
     """
-    return (metric_id << INDEX_BITS | type_id << (INDEX_BITS+ID_BITS) | idx)
+    return metric_id << INDEX_BITS | type_id << (INDEX_BITS + ID_BITS) | idx
 
 
 def metric_identifier(category, metric_name):
@@ -95,13 +95,12 @@ def output_js(objs, output_fd, options={}):
     template_filename = "js.jinja2"
 
     template = util.get_jinja2_template(
-        template_filename,
-        filters=(
-            ("type_name", type_name),
-        )
+        template_filename, filters=(("type_name", type_name),)
     )
 
-    assert INDEX_BITS + ID_BITS < ENTRY_WIDTH, "INDEX_BITS or ID_BITS are larger than allowed"
+    assert (
+        INDEX_BITS + ID_BITS < ENTRY_WIDTH
+    ), "INDEX_BITS or ID_BITS are larger than allowed"
 
     get_metric_id = generate_metric_ids(objs)
     # Mapping from a metric's identifier to the entry (metric ID | type id | index)
@@ -132,46 +131,49 @@ def output_js(objs, output_fd, options={}):
 
     # Create a lookup table for the metric categories only
     category_string_table = category_string_table.writeToString("gCategoryStringTable")
-    category_map = [(bytearray(category, 'ascii'), id) for (category, id) in categories]
+    category_map = [(bytearray(category, "ascii"), id) for (category, id) in categories]
     name_phf = PerfectHash(category_map, 64)
     category_by_name_lookup = name_phf.cxx_codegen(
-        name='CategoryByNameLookup',
+        name="CategoryByNameLookup",
         entry_type="category_entry_t",
         lower_entry=lambda x: str(x[1]),
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
         return_type="static Maybe<uint32_t>",
-        return_entry="return category_result_check(aKey, entry);")
+        return_entry="return category_result_check(aKey, entry);",
+    )
 
     # Create a lookup table for metric's identifiers.
     metric_string_table = metric_string_table.writeToString("gMetricStringTable")
     metric_map = [
-        (
-            bytearray(metric_name, 'ascii'),
-            metric_id
-        ) for (metric_name, metric_id) in metric_id_mapping.items()
+        (bytearray(metric_name, "ascii"), metric_id)
+        for (metric_name, metric_id) in metric_id_mapping.items()
     ]
     metric_phf = PerfectHash(metric_map, 64)
     metric_by_name_lookup = metric_phf.cxx_codegen(
-        name='MetricByNameLookup',
+        name="MetricByNameLookup",
         entry_type="metric_entry_t",
         lower_entry=lambda x: str(x[1]),
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
         return_type="static Maybe<uint32_t>",
-        return_entry="return metric_result_check(aKey, entry);")
+        return_entry="return metric_result_check(aKey, entry);",
+    )
 
-    output_fd.write(template.render(
-        categories=categories,
-        metric_id_mapping=metric_id_mapping,
-        metric_type_ids=metric_type_ids,
-        entry_width=ENTRY_WIDTH,
-        index_bits=INDEX_BITS,
-        id_bits=ID_BITS,
-        category_string_table=category_string_table,
-        category_by_name_lookup=category_by_name_lookup,
-        metric_string_table=metric_string_table,
-        metric_by_name_lookup=metric_by_name_lookup))
+    output_fd.write(
+        template.render(
+            categories=categories,
+            metric_id_mapping=metric_id_mapping,
+            metric_type_ids=metric_type_ids,
+            entry_width=ENTRY_WIDTH,
+            index_bits=INDEX_BITS,
+            id_bits=ID_BITS,
+            category_string_table=category_string_table,
+            category_by_name_lookup=category_by_name_lookup,
+            metric_string_table=metric_string_table,
+            metric_by_name_lookup=metric_by_name_lookup,
+        )
+    )
     output_fd.write("\n")

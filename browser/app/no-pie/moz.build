@@ -4,25 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Program(CONFIG['MOZ_APP_NAME'])
+Program(CONFIG["MOZ_APP_NAME"])
 
 SOURCES += [
-    'NoPie.c',
+    "NoPie.c",
 ]
 
 # For some reason, LTO messes things up. We don't care anyways.
 CFLAGS += [
-    '-fno-lto',
+    "-fno-lto",
 ]
 
 # Use OS_LIBS instead of LDFLAGS to "force" the flag to come after -pie
 # from MOZ_PROGRAM_LDFLAGS.
-if CONFIG['CC_TYPE'] == 'clang':
+if CONFIG["CC_TYPE"] == "clang":
     # clang < 5.0 doesn't support -no-pie.
-    OS_LIBS += [
-        '-nopie'
-    ]
+    OS_LIBS += ["-nopie"]
 else:
-    OS_LIBS += [
-        '-no-pie'
-    ]
+    OS_LIBS += ["-no-pie"]

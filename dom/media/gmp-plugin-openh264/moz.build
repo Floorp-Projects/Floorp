@@ -6,21 +6,21 @@
 
 # largely a copy of dom/media/gmp-fake/moz.build
 
-FINAL_TARGET = 'dist/bin/gmp-fakeopenh264/1.0'
+FINAL_TARGET = "dist/bin/gmp-fakeopenh264/1.0"
 
 FINAL_TARGET_FILES += [
-    'fakeopenh264.info',
+    "fakeopenh264.info",
 ]
 
 SOURCES += [
-    'gmp-fake-openh264.cpp',
+    "gmp-fake-openh264.cpp",
 ]
 
 SharedLibrary("fakeopenh264")
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
-        'ole32',
+        "ole32",
     ]
 
 USE_STATIC_LIBS = True

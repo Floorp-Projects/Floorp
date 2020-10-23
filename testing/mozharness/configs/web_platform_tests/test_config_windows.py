@@ -15,18 +15,16 @@ config = {
         "--host-cert-path=%(test_path)s/tests/tools/certs/web-platform.test.pem",
         "--certutil-binary=%(test_install_path)s/bin/certutil",
     ],
-
     "exes": {
-        'python': sys.executable,
-        'hg': 'c:/mozilla-build/hg/hg',
+        "python": sys.executable,
+        "hg": "c:/mozilla-build/hg/hg",
     },
-
     "default_actions": [
-        'clobber',
-        'download-and-extract',
-        'create-virtualenv',
-        'pull',
-        'install',
-        'run-tests',
+        "clobber",
+        "download-and-extract",
+        "create-virtualenv",
+        "pull",
+        "install",
+        "run-tests",
     ],
 }

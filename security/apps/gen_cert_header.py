@@ -11,7 +11,7 @@ def _file_byte_generator(filename):
         # a single-element array will fail cert verifcation just as an
         # empty array would.
         if not contents:
-            return ['\0']
+            return ["\0"]
 
         return contents
 
@@ -19,7 +19,7 @@ def _file_byte_generator(filename):
 def _create_header(array_name, cert_bytes):
     hexified = ["0x%02x" % byte for byte in cert_bytes]
 
-    substs = {'array_name': array_name, 'bytes': ', '.join(hexified)}
+    substs = {"array_name": array_name, "bytes": ", ".join(hexified)}
     return "const uint8_t %(array_name)s[] = {\n%(bytes)s\n};\n" % substs
 
 
@@ -29,13 +29,14 @@ def _create_header(array_name, cert_bytes):
 #   def arrayName(header, cert_filename):
 #     header.write(_create_header("arrayName", cert_filename))
 array_names = [
-    'xpcshellRoot',
-    'addonsPublicRoot',
-    'addonsPublicIntermediate',
-    'addonsStageRoot',
+    "xpcshellRoot",
+    "addonsPublicRoot",
+    "addonsPublicIntermediate",
+    "addonsStageRoot",
 ]
 
 for n in array_names:
     # Make sure the lambda captures the right string.
     globals()[n] = lambda header, cert_filename, name=n: header.write(
-        _create_header(name, _file_byte_generator(cert_filename)))
+        _create_header(name, _file_byte_generator(cert_filename))
+    )

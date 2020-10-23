@@ -160,5 +160,14 @@ from .adb import ADBError, ADBProcessError, ADBTimeoutError
 from .adb import ADBProcess, ADBCommand, ADBHost, ADBDevice, ADBDeviceFactory
 from .adb_android import ADBAndroid
 
-__all__ = ['ADBError', 'ADBProcessError', 'ADBTimeoutError',
-           'ADBProcess', 'ADBCommand', 'ADBHost', 'ADBDevice', 'ADBAndroid', 'ADBDeviceFactory']
+__all__ = [
+    "ADBError",
+    "ADBProcessError",
+    "ADBTimeoutError",
+    "ADBProcess",
+    "ADBCommand",
+    "ADBHost",
+    "ADBDevice",
+    "ADBAndroid",
+    "ADBDeviceFactory",
+]

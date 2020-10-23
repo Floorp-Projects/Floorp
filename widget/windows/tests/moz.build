@@ -6,24 +6,23 @@
 
 GeckoCppUnitTests(
     [
-      'TestUriValidation',
+        "TestUriValidation",
     ],
-    linkage=None
+    linkage=None,
 )
 
-LOCAL_INCLUDES += [
-]
+LOCAL_INCLUDES += []
 
 OS_LIBS += [
-  'oleaut32',
-  'ole32',
-  'shell32',
-  'shlwapi',
-  'urlmon',
+    "oleaut32",
+    "ole32",
+    "shell32",
+    "shlwapi",
+    "urlmon",
 ]
 
-if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] in ('gcc', 'clang'):
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
     # This allows us to use wmain as the entry point on mingw
     LDFLAGS += [
-        '-municode',
+        "-municode",
     ]

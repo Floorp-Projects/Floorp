@@ -15,15 +15,14 @@ transforms = TransformSequence()
 
 
 MOZ_ANDROID_FAT_AAR_ENV_MAP = {
-    'android-api-16-shippable': 'MOZ_ANDROID_FAT_AAR_ARMEABI_V7A',
-    'android-aarch64-shippable': 'MOZ_ANDROID_FAT_AAR_ARM64_V8A',
-    'android-x86-shippable': 'MOZ_ANDROID_FAT_AAR_X86',
-    'android-x86_64-shippable': 'MOZ_ANDROID_FAT_AAR_X86_64',
-
-    'android-api-16-opt': 'MOZ_ANDROID_FAT_AAR_ARMEABI_V7A',
-    'android-aarch64-opt': 'MOZ_ANDROID_FAT_AAR_ARM64_V8A',
-    'android-x86-opt': 'MOZ_ANDROID_FAT_AAR_X86',
-    'android-x86_64-opt': 'MOZ_ANDROID_FAT_AAR_X86_64',
+    "android-api-16-shippable": "MOZ_ANDROID_FAT_AAR_ARMEABI_V7A",
+    "android-aarch64-shippable": "MOZ_ANDROID_FAT_AAR_ARM64_V8A",
+    "android-x86-shippable": "MOZ_ANDROID_FAT_AAR_X86",
+    "android-x86_64-shippable": "MOZ_ANDROID_FAT_AAR_X86_64",
+    "android-api-16-opt": "MOZ_ANDROID_FAT_AAR_ARMEABI_V7A",
+    "android-aarch64-opt": "MOZ_ANDROID_FAT_AAR_ARM64_V8A",
+    "android-x86-opt": "MOZ_ANDROID_FAT_AAR_X86",
+    "android-x86_64-opt": "MOZ_ANDROID_FAT_AAR_X86_64",
 }
 
 
@@ -31,39 +30,44 @@ MOZ_ANDROID_FAT_AAR_ENV_MAP = {
 def set_fetches_and_locations(config, jobs):
     """Set defaults, including those that differ per worker implementation"""
     for job in jobs:
-        dependencies = copy.deepcopy(job['dependencies'])
+        dependencies = copy.deepcopy(job["dependencies"])
 
         for platform, label in dependencies.items():
-            job['dependencies'] = {'build': label}
+            job["dependencies"] = {"build": label}
 
             aar_location = _get_aar_location(config, job, platform)
             prefix = get_artifact_prefix(job)
-            if not prefix.endswith('/'):
-                prefix = prefix + '/'
+            if not prefix.endswith("/"):
+                prefix = prefix + "/"
             if aar_location.startswith(prefix):
-                aar_location = aar_location[len(prefix):]
+                aar_location = aar_location[len(prefix) :]
 
-            job.setdefault('fetches', {}).setdefault(platform, []).append({
-                'artifact': aar_location,
-                'extract': False,
-            })
+            job.setdefault("fetches", {}).setdefault(platform, []).append(
+                {
+                    "artifact": aar_location,
+                    "extract": False,
+                }
+            )
 
-            aar_file_name = aar_location.split('/')[-1]
+            aar_file_name = aar_location.split("/")[-1]
             env_var = MOZ_ANDROID_FAT_AAR_ENV_MAP[platform]
-            job['worker']['env'][env_var] = aar_file_name
+            job["worker"]["env"][env_var] = aar_file_name
 
-        job['dependencies'] = dependencies
+        job["dependencies"] = dependencies
 
         yield job
 
 
 def _get_aar_location(config, job, platform):
-    artifacts_locations = get_geckoview_upstream_artifacts(config, job, platform=platform)
+    artifacts_locations = get_geckoview_upstream_artifacts(
+        config, job, platform=platform
+    )
     aar_locations = [
-        path for path in artifacts_locations[0]['paths']
-        if path.endswith('.aar')
+        path for path in artifacts_locations[0]["paths"] if path.endswith(".aar")
     ]
     if len(aar_locations) != 1:
-        raise ValueError('Only a single AAR must be given. Got: {}'.format(aar_locations))
+        raise ValueError(
+            "Only a single AAR must be given. Got: {}".format(aar_locations)
+        )
 
     return aar_locations[0]

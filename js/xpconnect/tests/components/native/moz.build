@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'xpctest_private.h',
+    "xpctest_private.h",
 ]
 
 UNIFIED_SOURCES += [
-    'xpctest_attributes.cpp',
-    'xpctest_cenums.cpp',
-    'xpctest_module.cpp',
-    'xpctest_params.cpp',
-    'xpctest_returncode.cpp',
+    "xpctest_attributes.cpp",
+    "xpctest_cenums.cpp",
+    "xpctest_module.cpp",
+    "xpctest_params.cpp",
+    "xpctest_returncode.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

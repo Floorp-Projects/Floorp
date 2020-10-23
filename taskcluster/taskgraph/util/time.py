@@ -10,9 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import re
 import datetime
 
-PATTERN = re.compile(
-    '((?:\d+)?\.?\d+) *([a-z]+)'
-)
+PATTERN = re.compile("((?:\d+)?\.?\d+) *([a-z]+)")
 
 
 def seconds(value):
@@ -44,12 +42,12 @@ def years(value):
 
 
 ALIASES = {}
-ALIASES['seconds'] = ALIASES['second'] = ALIASES['s'] = seconds
-ALIASES['minutes'] = ALIASES['minute'] = ALIASES['min'] = minutes
-ALIASES['hours'] = ALIASES['hour'] = ALIASES['h'] = hours
-ALIASES['days'] = ALIASES['day'] = ALIASES['d'] = days
-ALIASES['months'] = ALIASES['month'] = ALIASES['mo'] = months
-ALIASES['years'] = ALIASES['year'] = ALIASES['y'] = years
+ALIASES["seconds"] = ALIASES["second"] = ALIASES["s"] = seconds
+ALIASES["minutes"] = ALIASES["minute"] = ALIASES["min"] = minutes
+ALIASES["hours"] = ALIASES["hour"] = ALIASES["h"] = hours
+ALIASES["days"] = ALIASES["day"] = ALIASES["d"] = days
+ALIASES["months"] = ALIASES["month"] = ALIASES["mo"] = months
+ALIASES["years"] = ALIASES["year"] = ALIASES["y"] = years
 
 
 class InvalidString(Exception):
@@ -61,11 +59,11 @@ class UnknownTimeMeasurement(Exception):
 
 
 def value_of(input_str):
-    '''
+    """
     Convert a string to a json date in the future
     :param str input_str: (ex: 1d, 2d, 6years, 2 seconds)
     :returns: Unit given in seconds
-    '''
+    """
 
     matches = PATTERN.search(input_str)
 
@@ -76,9 +74,8 @@ def value_of(input_str):
 
     if unit not in ALIASES:
         raise UnknownTimeMeasurement(
-            '{} is not a valid time measure use one of {}'.format(
-                unit,
-                sorted(ALIASES.keys())
+            "{} is not a valid time measure use one of {}".format(
+                unit, sorted(ALIASES.keys())
             )
         )
 
@@ -86,12 +83,12 @@ def value_of(input_str):
 
 
 def json_time_from_now(input_str, now=None, datetime_format=False):
-    '''
+    """
     :param str input_str: Input string (see value of)
     :param datetime now: Optionally set the definition of `now`
     :param boolean datetime_format: Set `True` to get a `datetime` output
     :returns: JSON string representation of time in future.
-    '''
+    """
 
     if now is None:
         now = datetime.datetime.utcnow()
@@ -105,17 +102,17 @@ def json_time_from_now(input_str, now=None, datetime_format=False):
         # ISO dates until 'Z' (for timezone) is added...
         # the [:23] ensures only whole seconds or milliseconds are included,
         # not microseconds (see bug 1381801)
-        return time.isoformat()[:23] + 'Z'
+        return time.isoformat()[:23] + "Z"
 
 
 def current_json_time(datetime_format=False):
-    '''
+    """
     :param boolean datetime_format: Set `True` to get a `datetime` output
     :returns: JSON string representation of the current time.
-    '''
+    """
     if datetime_format is True:
         return datetime.datetime.utcnow()
     else:
         # the [:23] ensures only whole seconds or milliseconds are included,
         # not microseconds (see bug 1381801)
-        return datetime.datetime.utcnow().isoformat()[:23] + 'Z'
+        return datetime.datetime.utcnow().isoformat()[:23] + "Z"

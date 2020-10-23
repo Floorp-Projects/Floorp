@@ -5,25 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
-    'components',
-    'models',
-    'reducers',
-    'utils',
-    'views',
+    "actions",
+    "components",
+    "models",
+    "reducers",
+    "utils",
+    "views",
 ]
 
 DevToolsModules(
-    'constants.js',
-    'new-rules.js',
-    'rules.js',
-    'types.js',
+    "constants.js",
+    "new-rules.js",
+    "rules.js",
+    "types.js",
 )
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser_part1.ini',
-    'test/browser_part2.ini',
+    "test/browser_part1.ini",
+    "test/browser_part2.ini",
 ]
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Inspector: Rules")

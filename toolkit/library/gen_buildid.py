@@ -17,11 +17,12 @@ import os
 
 def main(output, input_file):
     with open(input_file) as fh:
-        if buildconfig.substs['EXPAND_LIBS_LIST_STYLE'] == 'linkerscript':
+        if buildconfig.substs["EXPAND_LIBS_LIST_STYLE"] == "linkerscript":
+
             def cleanup(line):
                 assert line.startswith('INPUT("')
                 assert line.endswith('")')
-                return line[len('INPUT("'):-len('")')]
+                return line[len('INPUT("') : -len('")')]
 
             objs = [cleanup(l.strip()) for l in fh.readlines()]
         else:
@@ -29,10 +30,11 @@ def main(output, input_file):
 
     pp = Preprocessor()
     pp.out = StringIO()
-    pp.do_include(os.path.join(buildconfig.topobjdir, 'buildid.h'))
-    buildid = pp.context['MOZ_BUILDID']
-    output.write(
-        'extern const char gToolkitBuildID[] = "%s";' % buildid
+    pp.do_include(os.path.join(buildconfig.topobjdir, "buildid.h"))
+    buildid = pp.context["MOZ_BUILDID"]
+    output.write('extern const char gToolkitBuildID[] = "%s";' % buildid)
+    return set(
+        os.path.join("build", o)
+        for o in objs
+        if os.path.splitext(os.path.basename(o))[0] != "buildid"
     )
-    return set(os.path.join('build', o) for o in objs
-               if os.path.splitext(os.path.basename(o))[0] != 'buildid')

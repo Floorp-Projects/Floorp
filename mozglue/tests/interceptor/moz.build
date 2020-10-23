@@ -6,35 +6,35 @@
 
 GeckoCppUnitTests(
     [
-      'TestDllInterceptor',
-      'TestIATPatcher',
-      'TestMMPolicy',
+        "TestDllInterceptor",
+        "TestIATPatcher",
+        "TestMMPolicy",
     ],
-    linkage=None
+    linkage=None,
 )
 
-if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] in ("x86", "x86_64"):
     # Cross-process interceptors not yet supported on aarch64
     GeckoCppUnitTests(
         [
-          'TestDllInterceptorCrossProcess',
+            "TestDllInterceptorCrossProcess",
         ],
-        linkage=None
+        linkage=None,
     )
 
 OS_LIBS += [
-    'ntdll',
-    'ole32',
-    'shlwapi',
-    'user32',
+    "ntdll",
+    "ole32",
+    "shlwapi",
+    "user32",
 ]
 
 DELAYLOAD_DLLS += [
-    'shlwapi.dll',
+    "shlwapi.dll",
 ]
 
-if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] in ('gcc', 'clang'):
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
     # This allows us to use wmain as the entry point on mingw
     LDFLAGS += [
-        '-municode',
+        "-municode",
     ]

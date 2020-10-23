@@ -5,27 +5,27 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestBuffer.cpp',
-    'TestLinkedList.cpp',
-    'TestReverseIterator.cpp',
-    'TestSpan.cpp',
+    "TestBuffer.cpp",
+    "TestLinkedList.cpp",
+    "TestReverseIterator.cpp",
+    "TestSpan.cpp",
 ]
 
 SOURCES += [
-    'TestAlgorithm.cpp',
-    'TestInitializedOnce.cpp',
-    'TestMainThreadWeakPtr.cpp',
-    'TestResultExtensions.cpp',
+    "TestAlgorithm.cpp",
+    "TestInitializedOnce.cpp",
+    "TestMainThreadWeakPtr.cpp",
+    "TestResultExtensions.cpp",
 ]
 
-if not CONFIG['MOZILLA_OFFICIAL']:
+if not CONFIG["MOZILLA_OFFICIAL"]:
     UNIFIED_SOURCES += [
         # MOZ_DBG is not defined in MOZILLA_OFFICIAL builds.
-        'TestMozDbg.cpp',
+        "TestMozDbg.cpp",
     ]
 
-#LOCAL_INCLUDES += [
+# LOCAL_INCLUDES += [
 #    '../../base',
-#]
+# ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

@@ -8,11 +8,11 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 EXPORTS += [
-    'nsJSProtocolHandler.h',
+    "nsJSProtocolHandler.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsJSProtocolHandler.cpp',
+    "nsJSProtocolHandler.cpp",
 ]
 
 LOCAL_INCLUDES += [
@@ -20,8 +20,8 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]

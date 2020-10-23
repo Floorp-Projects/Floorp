@@ -10,9 +10,11 @@ SETTLE_WAIT_TIME = 30
 # Amount of times to run through the test suite
 ITERATIONS = 5
 
-__all__ = ["MAX_TABS",
-           "PER_TAB_PAUSE",
-           "SETTLE_WAIT_TIME",
-           "ITERATIONS",
-           "webservers",
-           "process_perf_data"]
+__all__ = [
+    "MAX_TABS",
+    "PER_TAB_PAUSE",
+    "SETTLE_WAIT_TIME",
+    "ITERATIONS",
+    "webservers",
+    "process_perf_data",
+]

@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Printing')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Printing")
 
-DIRS += ['ipc']
+DIRS += ["ipc"]
 
-if CONFIG['NS_PRINTING']:
+if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
-        'nsPrintingPromptService.cpp',
+        "nsPrintingPromptService.cpp",
     ]
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows' or CONFIG['MOZ_PDF_PRINTING']:
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows" or CONFIG["MOZ_PDF_PRINTING"]:
         UNIFIED_SOURCES += [
-            'nsPrintProgress.cpp',
-            'nsPrintProgressParams.cpp',
+            "nsPrintProgress.cpp",
+            "nsPrintProgressParams.cpp",
         ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

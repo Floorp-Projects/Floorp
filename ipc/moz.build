@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'app',
-    'chromium',
-    'glue',
-    'ipdl',
-    'testshell',
+    "app",
+    "chromium",
+    "glue",
+    "ipdl",
+    "testshell",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['mscom']
+if CONFIG["OS_ARCH"] == "WINNT":
+    DIRS += ["mscom"]
 
 TEST_DIRS += [
-    'gtest',
+    "gtest",
 ]
 
 with Files("**"):

@@ -12,7 +12,6 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestSession(MarionetteTestCase):
-
     def setUp(self):
         super(TestSession, self).setUp()
 

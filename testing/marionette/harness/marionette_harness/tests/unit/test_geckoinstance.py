@@ -10,18 +10,18 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestGeckoInstance(MarionetteTestCase):
-
     def test_create(self):
         """Test that the correct gecko instance is determined."""
         for app in apps:
             # If app has been specified we directly return the appropriate instance class
-            self.assertEqual(type(GeckoInstance.create(app=app, bin="n/a")),
-                             apps[app])
+            self.assertEqual(type(GeckoInstance.create(app=app, bin="n/a")), apps[app])
 
         # Unknown applications and binaries should fail
-        self.assertRaises(NotImplementedError, GeckoInstance.create,
-                          app="n/a", bin=self.marionette.bin)
-        self.assertRaises(NotImplementedError, GeckoInstance.create,
-                          bin="n/a")
-        self.assertRaises(NotImplementedError, GeckoInstance.create,
-                          bin=None)
+        self.assertRaises(
+            NotImplementedError,
+            GeckoInstance.create,
+            app="n/a",
+            bin=self.marionette.bin,
+        )
+        self.assertRaises(NotImplementedError, GeckoInstance.create, bin="n/a")
+        self.assertRaises(NotImplementedError, GeckoInstance.create, bin=None)

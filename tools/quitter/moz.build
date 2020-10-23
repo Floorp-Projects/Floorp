@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPI_NAME = 'quitter'
+XPI_NAME = "quitter"
 
 USE_EXTENSION_MANIFEST = True
 
 FINAL_TARGET_FILES += [
-    'background.js',
-    'contentscript.js',
-    'manifest.json',
-    'parent.js',
-    'schema.json',
+    "background.js",
+    "contentscript.js",
+    "manifest.json",
+    "parent.js",
+    "schema.json",
 ]

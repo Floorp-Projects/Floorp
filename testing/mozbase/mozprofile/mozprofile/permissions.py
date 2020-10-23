@@ -17,16 +17,20 @@ from six import string_types
 from six.moves.urllib import parse
 import six
 
-__all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
-           'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
-           'LocationsSyntaxError', 'Location', 'ServerLocations',
-           'Permissions']
+__all__ = [
+    "MissingPrimaryLocationError",
+    "MultiplePrimaryLocationsError",
+    "DEFAULT_PORTS",
+    "DuplicateLocationError",
+    "BadPortLocationError",
+    "LocationsSyntaxError",
+    "Location",
+    "ServerLocations",
+    "Permissions",
+]
 
 # http://hg.mozilla.org/mozilla-central/file/b871dfb2186f/build/automation.py.in#l28
-DEFAULT_PORTS = {'http': '8888',
-                 'https': '4443',
-                 'ws': '4443',
-                 'wss': '4443'}
+DEFAULT_PORTS = {"http": "8888", "https": "4443", "ws": "4443", "wss": "4443"}
 
 
 class LocationError(Exception):
@@ -86,7 +90,7 @@ class LocationsSyntaxError(Exception):
 class Location(object):
     """Represents a location line in server-locations.txt."""
 
-    attrs = ('scheme', 'host', 'port')
+    attrs = ("scheme", "host", "port")
 
     def __init__(self, scheme, host, port, options):
         for attr in self.attrs:
@@ -99,16 +103,17 @@ class Location(object):
 
     def isEqual(self, location):
         """compare scheme://host:port, but ignore options"""
-        return len([i for i in self.attrs
-                    if getattr(self, i) == getattr(location, i)]) == len(self.attrs)
+        return len(
+            [i for i in self.attrs if getattr(self, i) == getattr(location, i)]
+        ) == len(self.attrs)
 
     __eq__ = isEqual
 
     def url(self):
-        return '%s://%s:%s' % (self.scheme, self.host, self.port)
+        return "%s://%s:%s" % (self.scheme, self.host, self.port)
 
     def __str__(self):
-        return '%s  %s' % (self.url(), ','.join(self.options))
+        return "%s  %s" % (self.url(), ",".join(self.options))
 
 
 class ServerLocations(object):
@@ -141,9 +146,9 @@ class ServerLocations(object):
         if self.add_callback and not suppress_callback:
             self.add_callback([location])
 
-    def add_host(self, host, port='80', scheme='http', options='privileged'):
+    def add_host(self, host, port="80", scheme="http", options="privileged"):
         if isinstance(options, string_types):
-            options = options.split(',')
+            options = options.split(",")
         self.add(Location(scheme, host, port, options))
 
     def read(self, filename, check_for_primary=True):
@@ -177,21 +182,21 @@ class ServerLocations(object):
             # split the server from the options
             try:
                 server, options = line.rsplit(None, 1)
-                options = options.split(',')
+                options = options.split(",")
             except ValueError:
                 server = line
                 options = []
 
             # parse the server url
-            if '://' not in server:
-                server = 'http://' + server
+            if "://" not in server:
+                server = "http://" + server
             scheme, netloc, path, query, fragment = parse.urlsplit(server)
             # get the host and port
             try:
-                host, port = netloc.rsplit(':', 1)
+                host, port = netloc.rsplit(":", 1)
             except ValueError:
                 host = netloc
-                port = DEFAULT_PORTS.get(scheme, '80')
+                port = DEFAULT_PORTS.get(scheme, "80")
 
             try:
                 location = Location(scheme, host, port, options)
@@ -203,8 +208,7 @@ class ServerLocations(object):
 
         # ensure that a primary is found
         if check_for_primary and not self.hasPrimary:
-            raise LocationsSyntaxError(lineno + 1,
-                                       MissingPrimaryLocationError())
+            raise LocationsSyntaxError(lineno + 1, MissingPrimaryLocationError())
 
         if self.add_callback:
             self.add_callback(new_locations)
@@ -238,7 +242,8 @@ class Permissions(object):
 
         # SQL copied from
         # http://searchfox.org/mozilla-central/source/extensions/permissions/PermissionManager.cpp
-        cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS moz_hosts (
               id INTEGER PRIMARY KEY
              ,origin TEXT
              ,type TEXT
@@ -246,7 +251,8 @@ class Permissions(object):
              ,expireType INTEGER
              ,expireTime INTEGER
              ,modificationTime INTEGER
-           )""")
+           )"""
+        )
 
         rows = cursor.execute("PRAGMA table_info(moz_hosts)")
         count = len(rows.fetchall())
@@ -271,7 +277,7 @@ class Permissions(object):
 
         for location in locations:
             # set the permissions
-            permissions = {'allowXULXBL': 'noxul' not in location.options}
+            permissions = {"allowXULXBL": "noxul" not in location.options}
             for perm, allow in six.iteritems(permissions):
                 if allow:
                     permission_type = 1
@@ -284,12 +290,12 @@ class Permissions(object):
                     # suffice for the permissions which the test runners will
                     # want to insert into the system.
                     origin = location.scheme + "://" + location.host
-                    if (location.scheme != 'http' or location.port != '80') and \
-                       (location.scheme != 'https' or location.port != '443'):
-                        origin += ':' + str(location.port)
+                    if (location.scheme != "http" or location.port != "80") and (
+                        location.scheme != "https" or location.port != "443"
+                    ):
+                        origin += ":" + str(location.port)
 
-                    cursor.execute(statement,
-                                   (origin, perm, permission_type))
+                    cursor.execute(statement, (origin, perm, permission_type))
                 else:
                     # The database is still using a legacy system based on hosts
                     # We can insert the permission as a host
@@ -297,8 +303,7 @@ class Permissions(object):
                     # XXX This codepath should not be hit, as tests are run with
                     # fresh profiles. However, if it was hit, permissions would
                     # not be added to the database correctly (bug 1183185).
-                    cursor.execute(statement,
-                                   (location.host, perm, permission_type))
+                    cursor.execute(statement, (location.host, perm, permission_type))
 
         # Commit and close
         permDB.commit()
@@ -326,8 +331,7 @@ class Permissions(object):
         proxy = DEFAULT_PORTS.copy()
 
         # We need to proxy every server but the primary one.
-        origins = ["'%s'" % l.url()
-                   for l in self._locations]
+        origins = ["'%s'" % l.url() for l in self._locations]
         origins = ", ".join(origins)
         proxy["origins"] = origins
 
@@ -348,7 +352,8 @@ class Permissions(object):
         # - Writing out the prefs will escape things via JSON serialization;
         # - The prefs file reader will unescape backslashes;
         # - The JS engine parser will unescape backslashes.
-        pacURL = """data:text/plain,
+        pacURL = (
+            """data:text/plain,
 var knownOrigins = (function () {
   return [%(origins)s].reduce(function(t, h) { t[h] = true; return t; }, {})
 })();
@@ -391,7 +396,9 @@ function FindProxyForURL(url, host)
   if (!(origin in knownOrigins))
     return 'DIRECT';
   return proxyForScheme[originalScheme] || 'DIRECT';
-}""" % proxy
+}"""
+            % proxy
+        )
         pacURL = "".join(pacURL.splitlines())
 
         prefs = []

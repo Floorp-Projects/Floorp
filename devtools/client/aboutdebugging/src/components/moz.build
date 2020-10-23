@@ -3,19 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'connect',
-    'debugtarget',
-    'shared',
-    'sidebar',
+    "connect",
+    "debugtarget",
+    "shared",
+    "sidebar",
 ]
 
 DevToolsModules(
-    'App.js',
-    'CompatibilityWarning.js',
-    'ConnectionPromptSetting.js',
-    'ProfilerDialog.js',
-    'RuntimeActions.js',
-    'RuntimeInfo.js',
-    'RuntimePage.js',
-    'ServiceWorkersWarning.js',
+    "App.js",
+    "CompatibilityWarning.js",
+    "ConnectionPromptSetting.js",
+    "ProfilerDialog.js",
+    "RuntimeActions.js",
+    "RuntimeInfo.js",
+    "RuntimePage.js",
+    "ServiceWorkersWarning.js",
 )

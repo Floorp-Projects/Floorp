@@ -21,9 +21,8 @@ from six import StringIO
 from manifestparser import read_ini
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def parse_manifest():
-
     def inner(string, **kwargs):
         buf = StringIO()
         buf.write(dedent(string))
@@ -34,19 +33,22 @@ def parse_manifest():
 
 
 def test_inline_comments(parse_manifest):
-    result = parse_manifest("""
+    result = parse_manifest(
+        """
     [test_felinicity.py]
     kittens = true # This test requires kittens
     cats = false#but not cats
-    """)[0][1]
+    """
+    )[0][1]
 
     # make sure inline comments get stripped out, but comments without a space in front don't
-    assert result['kittens'] == 'true'
-    assert result['cats'] == "false#but not cats"
+    assert result["kittens"] == "true"
+    assert result["cats"] == "false#but not cats"
 
 
 def test_line_continuation(parse_manifest):
-    result = parse_manifest("""
+    result = parse_manifest(
+        """
     [test_caninicity.py]
     breeds =
       sheppard
@@ -60,11 +62,12 @@ def test_line_continuation(parse_manifest):
           yep
     birds=nope
       fish=nope
-    """)
-    assert result[0][1]['breeds'].split() == ['sheppard', 'retriever', 'terrier']
-    assert result[1][1]['cats'] == 'yep'
-    assert result[1][1]['dogs'].split() == ['yep', 'yep']
-    assert result[1][1]['birds'].split() == ['nope', 'fish=nope']
+    """
+    )
+    assert result[0][1]["breeds"].split() == ["sheppard", "retriever", "terrier"]
+    assert result[1][1]["cats"] == "yep"
+    assert result[1][1]["dogs"].split() == ["yep", "yep"]
+    assert result[1][1]["birds"].split() == ["nope", "fish=nope"]
 
 
 def test_dupes_error(parse_manifest):
@@ -90,25 +93,25 @@ def test_defaults_handling(parse_manifest):
     """
 
     result = parse_manifest(manifest)[0][1]
-    assert result['flower'] == 'rose'
-    assert result['skip-if'] == 'true'
+    assert result["flower"] == "rose"
+    assert result["skip-if"] == "true"
 
     result = parse_manifest(
         manifest,
         defaults={
-            'flower': 'tulip',
-            'colour': 'pink',
-            'skip-if': 'false',
+            "flower": "tulip",
+            "colour": "pink",
+            "skip-if": "false",
         },
     )[0][1]
-    assert result['flower'] == 'rose'
-    assert result['colour'] == 'pink'
-    assert result['skip-if'] == '(false) || (true)'
+    assert result["flower"] == "rose"
+    assert result["colour"] == "pink"
+    assert result["skip-if"] == "(false) || (true)"
 
-    result = parse_manifest(manifest.replace('DEFAULT', 'default'))[0][1]
-    assert result['flower'] == 'rose'
-    assert result['skip-if'] == 'true'
+    result = parse_manifest(manifest.replace("DEFAULT", "default"))[0][1]
+    assert result["flower"] == "rose"
+    assert result["skip-if"] == "true"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

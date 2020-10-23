@@ -8,15 +8,15 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Widget")
 
 SOURCES += [
-    'GfxInfo.cpp',
-    'nsAppShell.mm',
-    'nsLookAndFeel.mm',
-    'nsScreenManager.mm',
-    'nsWidgetFactory.mm',
-    'nsWindow.mm',
+    "GfxInfo.cpp",
+    "nsAppShell.mm",
+    "nsLookAndFeel.mm",
+    "nsScreenManager.mm",
+    "nsWidgetFactory.mm",
+    "nsWindow.mm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
-    '/widget',
+    "/widget",
 ]

@@ -2,7 +2,7 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-GENERATED_FILES += [ 'bar.c', 'foo.c' ]
+GENERATED_FILES += ["bar.c", "foo.c"]
 
-bar = GENERATED_FILES['bar.c']
-bar.script = 'nonexistent-script.py'
+bar = GENERATED_FILES["bar.c"]
+bar.script = "nonexistent-script.py"
