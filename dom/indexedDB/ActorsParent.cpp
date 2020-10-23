@@ -15278,16 +15278,13 @@ nsresult DatabaseOperationBase::AutoSetProgressHandler::Register(
   MOZ_ASSERT(aDatabaseOp);
   MOZ_ASSERT(!mConnection);
 
-  nsCOMPtr<mozIStorageProgressHandler> oldProgressHandler;
+  IDB_TRY_UNWRAP(
+      const DebugOnly oldProgressHandler,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageProgressHandler>,
+                                 aConnection, SetProgressHandler,
+                                 kStorageProgressGranularity, aDatabaseOp));
 
-  nsresult rv =
-      aConnection.SetProgressHandler(kStorageProgressGranularity, aDatabaseOp,
-                                     getter_AddRefs(oldProgressHandler));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(!oldProgressHandler);
+  MOZ_ASSERT(!oldProgressHandler.inspect());
 
   mConnection = SomeRef(aConnection);
 #ifdef DEBUG
