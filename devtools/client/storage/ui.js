@@ -315,32 +315,16 @@ class StorageUI {
   }
 
   async _onResourceListAvailable(resources) {
-    const {
-      COOKIE,
-      LOCAL_STORAGE,
-      SESSION_STORAGE,
-      EXTENSION_STORAGE,
-      CACHE_STORAGE,
-      INDEXED_DB,
-    } = this._toolbox.resourceWatcher.TYPES;
-
     const storages = {};
 
     for (const resource of resources) {
-      const { resourceType } = resource;
-      if (resourceType == COOKIE) {
-        storages.cookies = resource;
-      } else if (resourceType == LOCAL_STORAGE) {
-        storages.localStorage = resource;
-      } else if (resourceType == SESSION_STORAGE) {
-        storages.sessionStorage = resource;
-      } else if (resourceType == EXTENSION_STORAGE) {
-        storages.extensionStorage = resource;
-      } else if (resourceType == CACHE_STORAGE) {
-        storages.Cache = resource;
-      } else if (resourceType == INDEXED_DB) {
-        storages.indexedDB = resource;
+      const { resourceKey } = resource;
+      // NOTE: We might be getting more than 1 resource per storage type when
+      //       we have remote frames, so we need an array to store these.
+      if (!storages[resourceKey]) {
+        storages[resourceKey] = [];
       }
+      storages[resourceKey].push(resource);
     }
 
     try {
@@ -374,6 +358,23 @@ class StorageUI {
   }
 
   destroy() {
+    const { resourceWatcher } = this._toolbox;
+    resourceWatcher.unwatchResources(
+      [
+        resourceWatcher.TYPES.COOKIE,
+        resourceWatcher.TYPES.CACHE_STORAGE,
+        resourceWatcher.TYPES.EXTENSION_STORAGE,
+        resourceWatcher.TYPES.INDEXED_DB,
+        resourceWatcher.TYPES.LOCAL_STORAGE,
+        resourceWatcher.TYPES.SESSION_STORAGE,
+      ],
+      {
+        onAvailable: this._onResourceListAvailable,
+        onUpdated: this._onResourceListUpdated,
+        onDestroyed: this._onResourceListDestroyed,
+      }
+    );
+
     this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
     this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
@@ -468,8 +469,13 @@ class StorageUI {
   }
 
   getCurrentFront() {
-    const type = this.table.datatype;
-    return this.storageTypes[type];
+    const { datatype, host } = this.table;
+    return this._getStorage(datatype, host);
+  }
+
+  _getStorage(type, host) {
+    const storageType = this.storageTypes[type];
+    return storageType.find(x => host in x.hosts);
   }
 
   /**
@@ -786,8 +792,7 @@ class StorageUI {
   async fetchStorageObjects(type, host, names, reason) {
     const fetchOpts =
       reason === REASON.NEXT_50_ITEMS ? { offset: this.itemOffset } : {};
-    const storageType = this.storageTypes[type];
-
+    const storage = this._getStorage(type, host);
     this.sidebarToggledOpen = null;
 
     if (
@@ -818,15 +823,11 @@ class StorageUI {
           }
         }
 
-        await this._readSupportsTraits(type);
+        await this._readSupportsTraits(type, host);
         await this.resetColumns(type, host, subType);
       }
 
-      const { data } = await storageType.getStoreObjects(
-        host,
-        names,
-        fetchOpts
-      );
+      const { data } = await storage.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
         await this.populateTable(data, reason);
       } else if (reason === REASON.POPULATE) {
@@ -846,8 +847,10 @@ class StorageUI {
    * Note: setting actorSupportsXYZ properties on the UI instance is incorrect
    * because the value depends on each storage type. See Bug 1654998.
    */
-  async _readSupportsTraits(type) {
-    const { traits } = this.storageTypes[type];
+  async _readSupportsTraits(type, host) {
+    const storage = this._getStorage(type, host);
+
+    const { traits } = storage;
     if (traits.hasSupportsTraits) {
       this.actorSupportsAddItem = traits.supportsAddItem;
       this.actorSupportsRemoveItem = traits.supportsRemoveItem;
@@ -903,6 +906,27 @@ class StorageUI {
    *        StorageFront.listStores call.
    */
   async populateStorageTree(storageTypes) {
+    const populateTreeFromResource = (type, resource) => {
+      for (const host in resource.hosts) {
+        const label = this.getReadableLabelFromHostname(host);
+        this.tree.add([type, { id: host, label: label, type: "url" }]);
+        for (const name of resource.hosts[host]) {
+          try {
+            const names = JSON.parse(name);
+            this.tree.add([type, host, ...names]);
+            if (!this.tree.selectedItem) {
+              this.tree.selectedItem = [type, host, names[0], names[1]];
+            }
+          } catch (ex) {
+            // Do Nothing
+          }
+        }
+        if (!this.tree.selectedItem) {
+          this.tree.selectedItem = [type, host];
+        }
+      }
+    };
+
     // When can we expect the "store-objects-updated" event?
     //   -> TreeWidget setter `selectedItem` emits a "select" event
     //   -> on tree "select" event, this module calls `onHostSelect`
@@ -930,27 +954,15 @@ class StorageUI {
       }
 
       this.tree.add([{ id: type, label: typeLabel, type: "store" }]);
-      if (!storageTypes[type].hosts) {
-        continue;
-      }
-      this.storageTypes[type] = storageTypes[type];
-      for (const host in storageTypes[type].hosts) {
-        const label = this.getReadableLabelFromHostname(host);
-        this.tree.add([type, { id: host, label: label, type: "url" }]);
-        for (const name of storageTypes[type].hosts[host]) {
-          try {
-            const names = JSON.parse(name);
-            this.tree.add([type, host, ...names]);
-            if (!this.tree.selectedItem) {
-              this.tree.selectedItem = [type, host, names[0], names[1]];
-            }
-          } catch (ex) {
-            // Do Nothing
-          }
+
+      const resourcesWithHosts = storageTypes[type].filter(x => x.hosts);
+      for (const resource of resourcesWithHosts) {
+        if (!this.storageTypes[type]) {
+          this.storageTypes[type] = [];
         }
-        if (!this.tree.selectedItem) {
-          this.tree.selectedItem = [type, host];
-        }
+        this.storageTypes[type].push(resource);
+
+        populateTreeFromResource(type, resource);
       }
     }
 
