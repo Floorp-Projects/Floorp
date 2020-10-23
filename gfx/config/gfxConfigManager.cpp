@@ -176,11 +176,20 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
                                      "INTEL_BATTERY_REQUIRES_DCOMP"_ns);
       }
 
-      int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate();
+      bool mixed;
+      int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
       if (maxRefreshRate > 60) {
         mFeatureWrQualified->Disable(FeatureStatus::Blocked,
-                                    "Monitor refresh rate too high",
-                                    "REFRESH_RATE_TOO_HIGH"_ns);
+                                     "Monitor refresh rate too high",
+                                     "REFRESH_RATE_TOO_HIGH"_ns);
+      }
+    } else if (adapterVendorID == u"0x10de") {
+      bool mixed = false;
+      int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
+      if (maxRefreshRate > 60 && mixed) {
+        mFeatureWrQualified->Disable(FeatureStatus::Blocked,
+                                     "Monitor refresh rate too high/mixed",
+                                     "NVIDIA_REFRESH_RATE_MIXED"_ns);
       }
     }
   }
