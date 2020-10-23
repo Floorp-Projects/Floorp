@@ -162,6 +162,43 @@ class SearchUtils {
   }
 
   /**
+   * Compares the query parameters of two SERPs to see if one is equivalent to
+   * the other. URL `x` is equivalent to URL `y` if
+   *   (a) `y` contains at least all the query parameters contained in `x`, and
+   *   (b) The values of the query parameters contained in both `x` and `y `are
+   *       the same.
+   *
+   * @param {string} historySerp
+   *   The SERP from history whose params should be contained in
+   *   `generatedSerp`.
+   * @param {string} generatedSerp
+   *   The search URL we would generate for a search result with the same search
+   *   string used in `historySerp`.
+   * @param {array} [ignoreParams]
+   *   A list of params to ignore in the matching, i.e. params that can be
+   *   contained in `historySerp` but not be in `generatedSerp`.
+   * @returns {boolean} True if `historySerp` can be deduped by `generatedSerp`.
+   *
+   * @note This function does not compare the SERPs' origins or pathnames.
+   *   `historySerp` can have a different origin and/or pathname than
+   *   `generatedSerp` and still be considered equivalent.
+   */
+  serpsAreEquivalent(historySerp, generatedSerp, ignoreParams = []) {
+    let historyParams = new URL(historySerp).searchParams;
+    let generatedParams = new URL(generatedSerp).searchParams;
+    if (
+      !Array.from(historyParams.entries()).every(
+        ([key, value]) =>
+          ignoreParams.includes(key) || value === generatedParams.get(key)
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Gets the aliases of an engine.  For the user's convenience, we recognize
    * token versions of all non-token aliases.  For example, if the user has an
    * alias of "foo", then we recognize both "foo" and "@foo" as aliases for
