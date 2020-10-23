@@ -103,7 +103,7 @@ class ActionSequence(object):
             action["duration"] = duration
         if origin is not None:
             if isinstance(origin, HTMLElement):
-                action["origin"] = {WEB_ELEMENT_KEY: origin.id}
+                action["origin"] = {origin.kind: origin.id}
             else:
                 action["origin"] = origin
         self._actions.append(action)
@@ -198,10 +198,11 @@ class HTMLElement(object):
 
     identifiers = (CHROME_ELEMENT_KEY, FRAME_KEY, WINDOW_KEY, WEB_ELEMENT_KEY)
 
-    def __init__(self, marionette, id):
+    def __init__(self, marionette, id, kind=WEB_ELEMENT_KEY):
         self.marionette = marionette
         assert(id is not None)
         self.id = id
+        self.kind = kind
 
     def __str__(self):
         return self.id
@@ -347,13 +348,13 @@ class HTMLElement(object):
     def _from_json(cls, json, marionette):
         if isinstance(json, dict):
             if WEB_ELEMENT_KEY in json:
-                return cls(marionette, json[WEB_ELEMENT_KEY])
+                return cls(marionette, json[WEB_ELEMENT_KEY], WEB_ELEMENT_KEY)
             elif CHROME_ELEMENT_KEY in json:
-                return cls(marionette, json[CHROME_ELEMENT_KEY])
+                return cls(marionette, json[CHROME_ELEMENT_KEY], CHROME_ELEMENT_KEY)
             elif FRAME_KEY in json:
-                return cls(marionette, json[FRAME_KEY])
+                return cls(marionette, json[FRAME_KEY], FRAME_KEY)
             elif WINDOW_KEY in json:
-                return cls(marionette, json[WINDOW_KEY])
+                return cls(marionette, json[WINDOW_KEY], WINDOW_KEY)
         raise ValueError("Unrecognised web element")
 
 

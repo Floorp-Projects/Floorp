@@ -1930,10 +1930,6 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
  *     Not yet available in current context.
  */
 GeckoDriver.prototype.performActions = async function(cmd) {
-  assert.content(
-    this.context,
-    "Command 'performActions' is not yet available in chrome context"
-  );
   assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
@@ -1943,6 +1939,11 @@ GeckoDriver.prototype.performActions = async function(cmd) {
     await this.getActor().performActions(actions, this.capabilities);
     return;
   }
+
+  assert.content(
+    this.context,
+    "Command 'performActions' is not yet available in chrome context"
+  );
 
   await this.listener.performActions({ actions }, this.capabilities);
 };
@@ -1958,7 +1959,6 @@ GeckoDriver.prototype.performActions = async function(cmd) {
  *     Not available in current context.
  */
 GeckoDriver.prototype.releaseActions = async function() {
-  assert.content(this.context);
   assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
@@ -1967,6 +1967,10 @@ GeckoDriver.prototype.releaseActions = async function() {
     return;
   }
 
+  assert.content(
+    this.context,
+    "Command 'releaseActions' is not yet available in chrome context"
+  );
   await this.listener.releaseActions();
 };
 
