@@ -753,6 +753,7 @@ WEBIDL_FILES = [
     'PerformanceNavigationTiming.webidl',
     'PerformanceObserver.webidl',
     'PerformanceObserverEntryList.webidl',
+    'PerformancePaintTiming.webidl',
     'PerformanceResourceTiming.webidl',
     'PerformanceServerTiming.webidl',
     'PerformanceTiming.webidl',
