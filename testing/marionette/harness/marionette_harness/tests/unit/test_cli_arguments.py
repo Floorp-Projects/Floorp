@@ -10,7 +10,6 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestCommandLineArguments(MarionetteTestCase):
-
     def setUp(self):
         super(TestCommandLineArguments, self).setUp()
 
@@ -29,11 +28,13 @@ class TestCommandLineArguments(MarionetteTestCase):
         self.marionette.start_session()
 
         with self.marionette.using_context("chrome"):
-            safe_mode = self.marionette.execute_script("""
+            safe_mode = self.marionette.execute_script(
+                """
               Cu.import("resource://gre/modules/Services.jsm");
 
               return Services.appinfo.inSafeMode;
-            """)
+            """
+            )
             self.assertTrue(safe_mode, "Safe Mode has not been enabled")
 
     def test_startup_timeout(self):

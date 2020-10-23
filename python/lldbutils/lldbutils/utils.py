@@ -9,23 +9,23 @@ def format_char(c):
         return "\\a"
     elif c == 0x08:
         return "\\b"
-    elif c == 0x0c:
+    elif c == 0x0C:
         return "\\f"
-    elif c == 0x0a:
+    elif c == 0x0A:
         return "\\n"
-    elif c == 0x0d:
+    elif c == 0x0D:
         return "\\r"
     elif c == 0x09:
         return "\\t"
-    elif c == 0x0b:
+    elif c == 0x0B:
         return "\\v"
-    elif c == 0x5c:
+    elif c == 0x5C:
         return "\\"
     elif c == 0x22:
-        return "\\\""
+        return '\\"'
     elif c == 0x27:
         return "\\'"
-    elif c < 0x20 or c >= 0x80 and c <= 0xff:
+    elif c < 0x20 or c >= 0x80 and c <= 0xFF:
         return "\\x%02x" % c
     elif c >= 0x0100:
         return "\\u%04x" % c
@@ -39,20 +39,22 @@ def format_string(lldb_value, length=100):
     ptr = lldb_value.GetValueAsUnsigned(0)
     char_type = lldb_value.GetType().GetPointeeType()
     if char_type.GetByteSize() == 1:
-        s = "\""
+        s = '"'
         size = 1
-        mask = 0xff
+        mask = 0xFF
     elif char_type.GetByteSize() == 2:
-        s = "u\""
+        s = 'u"'
         size = 2
-        mask = 0xffff
+        mask = 0xFFFF
     else:
         return "(cannot format string with char type %s)" % char_type.GetName()
     i = 0
     terminated = False
     while i < length:
         c = (
-            lldb_value.CreateValueFromAddress("x", ptr + i * size, char_type).GetValueAsUnsigned(0)
+            lldb_value.CreateValueFromAddress(
+                "x", ptr + i * size, char_type
+            ).GetValueAsUnsigned(0)
             & mask
         )
         if c == 0:
@@ -60,7 +62,7 @@ def format_string(lldb_value, length=100):
             break
         s += format_char(c)
         i = i + 1
-    s += "\""
+    s += '"'
     if not terminated and i != length:
         s += "..."
     return s
@@ -72,8 +74,12 @@ def dereference(lldb_value):
     if lldb_value.TypeIsPointerType():
         return lldb_value.Dereference()
     name = lldb_value.GetType().GetUnqualifiedType().GetName()
-    if name.startswith("nsCOMPtr<") or name.startswith("RefPtr<") or \
-       name.startswith("nsAutoPtr<") or name.startswith("already_AddRefed<"):
+    if (
+        name.startswith("nsCOMPtr<")
+        or name.startswith("RefPtr<")
+        or name.startswith("nsAutoPtr<")
+        or name.startswith("already_AddRefed<")
+    ):
         return lldb_value.GetChildMemberWithName("mRawPtr")
     if name.startswith("mozilla::RefPtr<"):
         return lldb_value.GetChildMemberWithName("ptr")

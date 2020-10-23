@@ -5,33 +5,33 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
+    BUG_COMPONENT = ("Core", "DOM: Security")
 
-#TEST_DIRS += [ 'tests' ]
+# TEST_DIRS += [ 'tests' ]
 
-MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 
 
 EXPORTS.mozilla.dom += [
-  'Sanitizer.h',
+    "Sanitizer.h",
 ]
 
 UNIFIED_SOURCES += [
-  'Sanitizer.cpp',
+    "Sanitizer.cpp",
 ]
 
 LOCAL_INCLUDES += [
-  '/dom/base',
-  '/dom/bindings',
-  '/dom/html',
+    "/dom/base",
+    "/dom/bindings",
+    "/dom/html",
 ]
 
-#include('/ipc/chromium/chromium-config.mozbuild')
-#include('/tools/fuzzing/libfuzzer-config.mozbuild')
+# include('/ipc/chromium/chromium-config.mozbuild')
+# include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-#if CONFIG['FUZZING_INTERFACES']:
+# if CONFIG['FUZZING_INTERFACES']:
 #    TEST_DIRS += [
 #            'fuzztest'
 #    ]

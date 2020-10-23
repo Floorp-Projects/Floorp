@@ -7,10 +7,19 @@ from __future__ import absolute_import
 
 from logging import getLogger as getSysLogger
 from logging import *
+
 # Some of the build slave environments don't see the following when doing
 # 'from logging import *'
 # see https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c35
-from logging import getLoggerClass, addLevelName, setLoggerClass, shutdown, debug, info, basicConfig
+from logging import (
+    getLoggerClass,
+    addLevelName,
+    setLoggerClass,
+    shutdown,
+    debug,
+    info,
+    basicConfig,
+)
 import json
 
 _default_level = INFO
@@ -24,12 +33,12 @@ KNOWN_FAIL = _default_level + 4
 FAIL = _default_level + 5
 CRASH = _default_level + 6
 # Define associated text of log levels
-addLevelName(START, 'TEST-START')
-addLevelName(END, 'TEST-END')
-addLevelName(PASS, 'TEST-PASS')
-addLevelName(KNOWN_FAIL, 'TEST-KNOWN-FAIL')
-addLevelName(FAIL, 'TEST-UNEXPECTED-FAIL')
-addLevelName(CRASH, 'PROCESS-CRASH')
+addLevelName(START, "TEST-START")
+addLevelName(END, "TEST-END")
+addLevelName(PASS, "TEST-PASS")
+addLevelName(KNOWN_FAIL, "TEST-KNOWN-FAIL")
+addLevelName(FAIL, "TEST-UNEXPECTED-FAIL")
+addLevelName(CRASH, "PROCESS-CRASH")
 
 
 class MozLogger(_LoggerClass):
@@ -68,11 +77,11 @@ class MozLogger(_LoggerClass):
         if params is None:
             params = {}
 
-        level = params.get('_level', _default_level)
+        level = params.get("_level", _default_level)
         if isinstance(level, int):
-            params['_level'] = getLevelName(level)
+            params["_level"] = getLevelName(level)
         else:
-            params['_level'] = level
+            params["_level"] = level
             level = getLevelName(level.upper())
 
             # If the logger is fed a level number unknown to the logging
@@ -82,13 +91,13 @@ class MozLogger(_LoggerClass):
             if not isinstance(level, int):
                 level = _default_level
 
-        params['action'] = action
+        params["action"] = action
 
         # The can message be None. This is expected, and shouldn't cause
         # unstructured formatters to fail.
-        message = params.get('_message')
+        message = params.get("_message")
 
-        self.log(level, message, extra={'params': params})
+        self.log(level, message, extra={"params": params})
 
 
 class JSONFormatter(Formatter):
@@ -97,22 +106,22 @@ class JSONFormatter(Formatter):
     def format(self, record):
         # Default values determined by logger metadata
         output = {
-            '_time': int(round(record.created * 1000, 0)),
-            '_namespace': record.name,
-            '_level': getLevelName(record.levelno),
+            "_time": int(round(record.created * 1000, 0)),
+            "_namespace": record.name,
+            "_level": getLevelName(record.levelno),
         }
 
         # If this message was created by a call to log_structured,
         # anything specified by the caller's params should act as
         # an override.
-        output.update(getattr(record, 'params', {}))
+        output.update(getattr(record, "params", {}))
 
-        if record.msg and output.get('_message') is None:
+        if record.msg and output.get("_message") is None:
             # For compatibility with callers using the printf like
             # API exposed by python logging, call the default formatter.
-            output['_message'] = Formatter.format(self, record)
+            output["_message"] = Formatter.format(self, record)
 
-        return json.dumps(output, indent=output.get('indent'))
+        return json.dumps(output, indent=output.get("indent"))
 
 
 class MozFormatter(Formatter):
@@ -121,8 +130,9 @@ class MozFormatter(Formatter):
     If a different format is desired, this can be explicitly
     overriden with the log handler's setFormatter() method
     """
+
     level_length = 0
-    max_level_length = len('TEST-START')
+    max_level_length = len("TEST-START")
 
     def __init__(self, include_timestamp=False):
         """
@@ -143,10 +153,10 @@ class MozFormatter(Formatter):
                 self.level_length = len(record.levelname)
         else:
             pad = self.level_length - len(record.levelname) + 1
-        sep = '|'.rjust(pad)
-        fmt = '%(name)s %(levelname)s ' + sep + ' %(message)s'
+        sep = "|".rjust(pad)
+        fmt = "%(name)s %(levelname)s " + sep + " %(message)s"
         if self.include_timestamp:
-            fmt = '%(asctime)s ' + fmt
+            fmt = "%(asctime)s " + fmt
         # this protected member is used to define the format
         # used by the base Formatter's method
         self._fmt = fmt
@@ -170,9 +180,11 @@ def getLogger(name, handler=None):
 
     if name in Logger.manager.loggerDict:
         if handler:
-            raise ValueError('The handler parameter requires ' +
-                             'that a logger by this name does ' +
-                             'not already exist')
+            raise ValueError(
+                "The handler parameter requires "
+                + "that a logger by this name does "
+                + "not already exist"
+            )
         return Logger.manager.loggerDict[name]
 
     logger = getSysLogger(name)

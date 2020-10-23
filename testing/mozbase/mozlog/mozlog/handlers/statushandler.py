@@ -10,12 +10,16 @@ from collections import (
 )
 
 
-RunSummary = namedtuple("RunSummary",
-                        ("unexpected_statuses",
-                         "expected_statuses",
-                         "known_intermittent_statuses",
-                         "log_level_counts",
-                         "action_counts"))
+RunSummary = namedtuple(
+    "RunSummary",
+    (
+        "unexpected_statuses",
+        "expected_statuses",
+        "known_intermittent_statuses",
+        "log_level_counts",
+        "action_counts",
+    ),
+)
 
 
 class StatusHandler(object):
@@ -37,19 +41,19 @@ class StatusHandler(object):
         self.no_tests_run_count = 0
 
     def __call__(self, data):
-        action = data['action']
+        action = data["action"]
         known_intermittent = data.get("known_intermittent", [])
         self.action_counts[action] += 1
 
-        if action == 'log':
-            if data['level'] == 'ERROR' and data['message'] == 'No tests ran':
+        if action == "log":
+            if data["level"] == "ERROR" and data["message"] == "No tests ran":
                 self.no_tests_run_count += 1
-            self.log_level_counts[data['level']] += 1
+            self.log_level_counts[data["level"]] += 1
 
-        if action in ('test_status', 'test_end'):
-            status = data['status']
+        if action in ("test_status", "test_end"):
+            status = data["status"]
             # Don't count known_intermittent status as unexpected
-            if 'expected' in data and status not in known_intermittent:
+            if "expected" in data and status not in known_intermittent:
                 self.unexpected_statuses[status] += 1
             else:
                 self.expected_statuses[status] += 1
@@ -85,5 +89,5 @@ class StatusHandler(object):
             dict(self.expected_statuses),
             dict(self.known_intermittent_statuses),
             dict(self.log_level_counts),
-            dict(self.action_counts)
+            dict(self.action_counts),
         )

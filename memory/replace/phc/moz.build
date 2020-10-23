@@ -4,33 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ReplaceMalloc('phc')
+ReplaceMalloc("phc")
 
-DEFINES['MOZ_NO_MOZALLOC'] = True
+DEFINES["MOZ_NO_MOZALLOC"] = True
 
 LOCAL_INCLUDES += [
-    '../logalloc',
-    '/memory/build',
+    "../logalloc",
+    "/memory/build",
 ]
 
 EXPORTS += [
-    'PHC.h',
+    "PHC.h",
 ]
 
 UNIFIED_SOURCES += [
-    'PHC.cpp',
+    "PHC.cpp",
 ]
 
-if not CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
+if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
     SOURCES += [
-        '../logalloc/FdPrintf.cpp',
-        '/mozglue/misc/StackWalk.cpp',
+        "../logalloc/FdPrintf.cpp",
+        "/mozglue/misc/StackWalk.cpp",
     ]
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         OS_LIBS += [
-            'dbghelp',
+            "dbghelp",
         ]
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]
 
 DisableStlWrapping()

@@ -4,103 +4,102 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_LIBRARY = 'mozglue'
+FINAL_LIBRARY = "mozglue"
 
 EXPORTS.mozilla += [
-    'AutoProfilerLabel.h',
-    'decimal/Decimal.h',
-    'decimal/DoubleConversion.h',
-    'MmapFaultHandler.h',
-    'PlatformConditionVariable.h',
-    'PlatformMutex.h',
-    'Printf.h',
-    'StackWalk.h',
-    'TimeStamp.h',
+    "AutoProfilerLabel.h",
+    "decimal/Decimal.h",
+    "decimal/DoubleConversion.h",
+    "MmapFaultHandler.h",
+    "PlatformConditionVariable.h",
+    "PlatformMutex.h",
+    "Printf.h",
+    "StackWalk.h",
+    "TimeStamp.h",
 ]
 
 EXPORTS.mozilla.glue += [
-    'Debug.h',
-    'WinUtils.h',
+    "Debug.h",
+    "WinUtils.h",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS.mozilla += [
-        'PreXULSkeletonUI.h',
-        'StackWalk_windows.h',
-        'TimeStamp_windows.h',
-        'WindowsDpiAwareness.h',
+        "PreXULSkeletonUI.h",
+        "StackWalk_windows.h",
+        "TimeStamp_windows.h",
+        "WindowsDpiAwareness.h",
     ]
 
 SOURCES += [
-    'AutoProfilerLabel.cpp',
-    'MmapFaultHandler.cpp',
-    'Printf.cpp',
-    'StackWalk.cpp',
-    'TimeStamp.cpp',
+    "AutoProfilerLabel.cpp",
+    "MmapFaultHandler.cpp",
+    "Printf.cpp",
+    "StackWalk.cpp",
+    "TimeStamp.cpp",
 ]
 
-OS_LIBS += CONFIG['REALTIME_LIBS']
+OS_LIBS += CONFIG["REALTIME_LIBS"]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     DIRS += [
-        'interceptor',
+        "interceptor",
     ]
     EXPORTS += [
-        'nsWindowsDllInterceptor.h',
+        "nsWindowsDllInterceptor.h",
     ]
     EXPORTS.mozilla += [
-        'DynamicallyLinkedFunctionPtr.h',
-        'ImportDir.h',
-        'NativeNt.h',
-        'WindowsMapRemoteView.h',
-        'WindowsProcessMitigations.h',
+        "DynamicallyLinkedFunctionPtr.h",
+        "ImportDir.h",
+        "NativeNt.h",
+        "WindowsMapRemoteView.h",
+        "WindowsProcessMitigations.h",
     ]
     EXPORTS.mozilla.glue += [
-        'WindowsUnicode.h',
+        "WindowsUnicode.h",
     ]
     SOURCES += [
-        'PreXULSkeletonUI.cpp',
-        'TimeStamp_windows.cpp',
-        'WindowsMapRemoteView.cpp',
-        'WindowsProcessMitigations.cpp',
-        'WindowsUnicode.cpp',
+        "PreXULSkeletonUI.cpp",
+        "TimeStamp_windows.cpp",
+        "WindowsMapRemoteView.cpp",
+        "WindowsProcessMitigations.cpp",
+        "WindowsUnicode.cpp",
     ]
-    OS_LIBS += ['dbghelp']
-elif CONFIG['HAVE_CLOCK_MONOTONIC']:
+    OS_LIBS += ["dbghelp"]
+elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
     SOURCES += [
-        'TimeStamp_posix.cpp',
+        "TimeStamp_posix.cpp",
     ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
+elif CONFIG["OS_ARCH"] == "Darwin":
     SOURCES += [
-        'TimeStamp_darwin.cpp',
+        "TimeStamp_darwin.cpp",
     ]
-elif CONFIG['COMPILE_ENVIRONMENT']:
-    error('No TimeStamp implementation on this platform.  Build will not succeed')
+elif CONFIG["COMPILE_ENVIRONMENT"]:
+    error("No TimeStamp implementation on this platform.  Build will not succeed")
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
-        'ConditionVariable_windows.cpp',
-        'Mutex_windows.cpp',
+        "ConditionVariable_windows.cpp",
+        "Mutex_windows.cpp",
     ]
 else:
     SOURCES += [
-        'ConditionVariable_posix.cpp',
-        'Mutex_posix.cpp',
+        "ConditionVariable_posix.cpp",
+        "Mutex_posix.cpp",
     ]
 
-if CONFIG['MOZ_LINKER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG["MOZ_LINKER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     LOCAL_INCLUDES += [
-        '/mozglue/linker',
+        "/mozglue/linker",
     ]
 
 SOURCES += [
-    'decimal/Decimal.cpp',
+    "decimal/Decimal.cpp",
 ]
 
-if CONFIG['CC_TYPE'] == 'clang':
+if CONFIG["CC_TYPE"] == "clang":
     # Suppress warnings from third-party V8 Decimal code.
-    SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
+    SOURCES["decimal/Decimal.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
-for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
+for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
-    

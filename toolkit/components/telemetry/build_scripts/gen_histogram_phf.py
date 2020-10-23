@@ -44,24 +44,31 @@ def main(output, *filenames):
 
     try:
         histograms = list(parse_histograms.from_files(filenames))
-        histograms = [h for h in histograms if h.record_on_os(buildconfig.substs["OS_TARGET"])]
+        histograms = [
+            h for h in histograms if h.record_on_os(buildconfig.substs["OS_TARGET"])
+        ]
     except ParserError as ex:
         print("\nError processing histograms:\n" + str(ex) + "\n")
         sys.exit(1)
 
-    histograms = [(bytearray(hist.name(), 'ascii'), idx) for (idx, hist) in enumerate(histograms)]
+    histograms = [
+        (bytearray(hist.name(), "ascii"), idx) for (idx, hist) in enumerate(histograms)
+    ]
     name_phf = PerfectHash(histograms, PHFSIZE)
 
-    output.write(name_phf.cxx_codegen(
-        name='HistogramIDByNameLookup',
-        entry_type="uint32_t",
-        lower_entry=lambda x: str(x[1]),
-        key_type="const nsACString&",
-        key_bytes="aKey.BeginReading()",
-        key_length="aKey.Length()"))
+    output.write(
+        name_phf.cxx_codegen(
+            name="HistogramIDByNameLookup",
+            entry_type="uint32_t",
+            lower_entry=lambda x: str(x[1]),
+            key_type="const nsACString&",
+            key_bytes="aKey.BeginReading()",
+            key_length="aKey.Length()",
+        )
+    )
 
     output.write(footer)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

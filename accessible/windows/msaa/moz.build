@@ -5,71 +5,71 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'IUnknownImpl.h',
+    "IUnknownImpl.h",
 ]
 
 EXPORTS.mozilla.a11y += [
-    'AccessibleWrap.h',
-    'Compatibility.h',
-    'HyperTextAccessibleWrap.h',
-    'LazyInstantiator.h',
-    'MsaaIdGenerator.h',
-    'nsWinUtils.h',
+    "AccessibleWrap.h",
+    "Compatibility.h",
+    "HyperTextAccessibleWrap.h",
+    "LazyInstantiator.h",
+    "MsaaIdGenerator.h",
+    "nsWinUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'AccessibleWrap.cpp',
-    'ApplicationAccessibleWrap.cpp',
-    'ARIAGridAccessibleWrap.cpp',
-    'Compatibility.cpp',
-    'CompatibilityUIA.cpp',
-    'DocAccessibleWrap.cpp',
-    'EnumVariant.cpp',
-    'GeckoCustom.cpp',
-    'HTMLTableAccessibleWrap.cpp',
-    'HTMLWin32ObjectAccessible.cpp',
-    'HyperTextAccessibleWrap.cpp',
-    'ImageAccessibleWrap.cpp',
-    'IUnknownImpl.cpp',
-    'MsaaIdGenerator.cpp',
-    'nsWinUtils.cpp',
-    'Platform.cpp',
-    'RootAccessibleWrap.cpp',
-    'TextLeafAccessibleWrap.cpp',
+    "AccessibleWrap.cpp",
+    "ApplicationAccessibleWrap.cpp",
+    "ARIAGridAccessibleWrap.cpp",
+    "Compatibility.cpp",
+    "CompatibilityUIA.cpp",
+    "DocAccessibleWrap.cpp",
+    "EnumVariant.cpp",
+    "GeckoCustom.cpp",
+    "HTMLTableAccessibleWrap.cpp",
+    "HTMLWin32ObjectAccessible.cpp",
+    "HyperTextAccessibleWrap.cpp",
+    "ImageAccessibleWrap.cpp",
+    "IUnknownImpl.cpp",
+    "MsaaIdGenerator.cpp",
+    "nsWinUtils.cpp",
+    "Platform.cpp",
+    "RootAccessibleWrap.cpp",
+    "TextLeafAccessibleWrap.cpp",
 ]
 
 SOURCES += [
     # This file cannot be built in unified mode because it redefines _WIN32_WINNT
-    'LazyInstantiator.cpp',
+    "LazyInstantiator.cpp",
     # This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
-    'ServiceProvider.cpp',
+    "ServiceProvider.cpp",
 ]
 
 OS_LIBS += [
-    'ntdll',
+    "ntdll",
 ]
 
-if CONFIG['MOZ_XUL']:
+if CONFIG["MOZ_XUL"]:
     UNIFIED_SOURCES += [
-        'XULListboxAccessibleWrap.cpp',
-        'XULMenuAccessibleWrap.cpp',
-        'XULTreeGridAccessibleWrap.cpp',
+        "XULListboxAccessibleWrap.cpp",
+        "XULMenuAccessibleWrap.cpp",
+        "XULTreeGridAccessibleWrap.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/accessible/base',
-    '/accessible/generic',
-    '/accessible/html',
-    '/accessible/ipc',
-    '/accessible/ipc/win',
-    '/accessible/windows',
-    '/accessible/windows/ia2',
-    '/accessible/windows/sdn',
-    '/accessible/windows/uia',
-    '/accessible/xpcom',
-    '/accessible/xul',
-    '/dom/base',
-    '/layout/style',
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/ipc",
+    "/accessible/ipc/win",
+    "/accessible/windows",
+    "/accessible/windows/ia2",
+    "/accessible/windows/sdn",
+    "/accessible/windows/uia",
+    "/accessible/xpcom",
+    "/accessible/xul",
+    "/dom/base",
+    "/layout/style",
 ]
 
 # The Windows MIDL code generator creates things like:
@@ -77,9 +77,9 @@ LOCAL_INCLUDES += [
 #   #endif !_MIDL_USE_GUIDDEF_
 #
 # which clang-cl complains about.  MSVC doesn't, so turn this warning off.
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    CXXFLAGS += ['-Wno-extra-tokens']
+if CONFIG["CC_TYPE"] == "clang-cl":
+    CXXFLAGS += ["-Wno-extra-tokens"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

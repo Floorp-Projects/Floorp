@@ -65,7 +65,9 @@ def merge_bugbug_replies(data, new_data):
     "bugbug-reduced-manifests-config-selection",
     args=(CT_MEDIUM, False, True, None, 1, True),
 )
-@register_strategy("bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, FALLBACK))
+@register_strategy(
+    "bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, FALLBACK)
+)
 @register_strategy(
     "bugbug-reduced-manifests-fallback-last-10-pushes",
     args=(0.3, False, True, FALLBACK, 10),
@@ -106,19 +108,18 @@ class BugBugPushSchedules(OptimizationStrategy):
         self.timedout = False
 
     def should_remove_task(self, task, params, importance):
-        project = params['project']
+        project = params["project"]
 
         if project not in ("autoland", "try"):
             return False
 
-        current_push_id = int(params['pushlog_id'])
+        current_push_id = int(params["pushlog_id"])
 
-        branch = urlsplit(params['head_repository']).path.strip('/')
-        rev = params['head_rev']
+        branch = urlsplit(params["head_repository"]).path.strip("/")
+        rev = params["head_rev"]
 
         if self.timedout:
-            return registry[self.fallback].should_remove_task(
-                    task, params, importance)
+            return registry[self.fallback].should_remove_task(task, params, importance)
 
         data = {}
 
@@ -151,7 +152,7 @@ class BugBugPushSchedules(OptimizationStrategy):
             if confidence >= self.confidence_threshold
         )
 
-        test_manifests = task.attributes.get('test_manifests')
+        test_manifests = task.attributes.get("test_manifests")
         if test_manifests is None or self.tasks_only:
             if data.get("known_tasks") and task.label not in data["known_tasks"]:
                 return False
@@ -192,13 +193,13 @@ class BugBugPushSchedules(OptimizationStrategy):
 
             confidence = groups[manifest]
             if confidence >= CT_HIGH:
-                importance[manifest] = 'high'
+                importance[manifest] = "high"
             elif confidence >= CT_MEDIUM:
-                importance[manifest] = 'medium'
+                importance[manifest] = "medium"
             elif confidence >= CT_LOW:
-                importance[manifest] = 'low'
+                importance[manifest] = "low"
             else:
-                importance[manifest] = 'lowest'
+                importance[manifest] = "lowest"
 
         return False
 
@@ -208,17 +209,25 @@ class SkipUnlessDebug(OptimizationStrategy):
     """Only run debug platforms."""
 
     def should_remove_task(self, task, params, arg):
-        return "build_type" in task.attributes and task.attributes["build_type"] != "debug"
+        return (
+            "build_type" in task.attributes and task.attributes["build_type"] != "debug"
+        )
 
 
 @register_strategy("platform-disperse")
 @register_strategy("platform-disperse-no-unseen", args=(None, 0))
-@register_strategy("platform-disperse-only-one", args=({
-    'high': 1,
-    'medium': 1,
-    'low': 1,
-    'lowest': 0,
-}, 0))
+@register_strategy(
+    "platform-disperse-only-one",
+    args=(
+        {
+            "high": 1,
+            "medium": 1,
+            "low": 1,
+            "lowest": 0,
+        },
+        0,
+    ),
+)
 class DisperseGroups(OptimizationStrategy):
     """Disperse groups across test configs.
 
@@ -249,10 +258,10 @@ class DisperseGroups(OptimizationStrategy):
     """
 
     DEFAULT_TARGET_COUNTS = {
-        'high': 3,
-        'medium': 2,
-        'low': 1,
-        'lowest': 0,
+        "high": 3,
+        "medium": 2,
+        "low": 1,
+        "lowest": 0,
     }
     DEFAULT_UNSEEN_MODIFIER = 1
 
@@ -274,8 +283,8 @@ class DisperseGroups(OptimizationStrategy):
 
         # Build the test configuration key.
         key = test_platform
-        if 'unittest_variant' in task.attributes:
-            key += "-" + task.attributes['unittest_variant']
+        if "unittest_variant" in task.attributes:
+            key += "-" + task.attributes["unittest_variant"]
 
         if not task.attributes["e10s"]:
             key += "-1proc"

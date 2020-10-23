@@ -12,6 +12,7 @@ import six
 
 class NullTerminal(object):
     """Replacement for `blessings.Terminal()` that does no formatting."""
+
     number_of_colors = 0
     width = 0
     height = 0
@@ -25,13 +26,14 @@ class NullTerminal(object):
 
     class NullCallableString(six.text_type):
         """A dummy callable Unicode stolen from blessings"""
+
         def __new__(cls):
-            new = six.text_type.__new__(cls, '')
+            new = six.text_type.__new__(cls, "")
             return new
 
         def __call__(self, *args):
             if len(args) != 1 or isinstance(args[0], int):
-                return ''
+                return ""
             return args[0]
 
     def __getattr__(self, attr):

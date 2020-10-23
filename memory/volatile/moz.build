@@ -6,26 +6,26 @@
 NoVisibilityFlags()
 
 EXPORTS.mozilla += [
-    'VolatileBuffer.h',
+    "VolatileBuffer.h",
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
+if CONFIG["OS_TARGET"] == "Android":
     UNIFIED_SOURCES += [
-        'VolatileBufferAshmem.cpp',
+        "VolatileBufferAshmem.cpp",
     ]
-elif CONFIG['OS_TARGET'] == 'Darwin':
+elif CONFIG["OS_TARGET"] == "Darwin":
     UNIFIED_SOURCES += [
-        'VolatileBufferOSX.cpp',
+        "VolatileBufferOSX.cpp",
     ]
-elif CONFIG['OS_TARGET'] == 'WINNT':
+elif CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
-        'VolatileBufferWindows.cpp',
+        "VolatileBufferWindows.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'VolatileBufferFallback.cpp',
+        "VolatileBufferFallback.cpp",
     ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ["tests"]

@@ -4,230 +4,230 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('js-config.mozbuild')
-include('js-cxxflags.mozbuild')
+include("js-config.mozbuild")
+include("js-cxxflags.mozbuild")
 
 # Directory metadata
-component_engine = ('Core', 'JavaScript Engine')
-component_gc     = ('Core', 'JavaScript: GC')
-component_intl   = ('Core', 'JavaScript: Internationalization API')
-component_jit    = ('Core', 'JavaScript Engine: JIT')
-component_stl    = ('Core', 'JavaScript: Standard Library')
-component_wasm   = ('Core', 'Javascript: Web Assembly')
+component_engine = ("Core", "JavaScript Engine")
+component_gc = ("Core", "JavaScript: GC")
+component_intl = ("Core", "JavaScript: Internationalization API")
+component_jit = ("Core", "JavaScript Engine: JIT")
+component_stl = ("Core", "JavaScript: Standard Library")
+component_wasm = ("Core", "Javascript: Web Assembly")
 
 FILES_PER_UNIFIED_FILE = 6
 
 # Prevent redefining FILES_PER_UNIFIED_FILE in each sub-directory of js. This
 # will not escape this directory.
-export('FILES_PER_UNIFIED_FILE')
+export("FILES_PER_UNIFIED_FILE")
 
-with Files('*'):
+with Files("*"):
     BUG_COMPONENT = component_engine
 
-with Files('wasm/**'):
+with Files("wasm/**"):
     BUG_COMPONENT = component_wasm
-with Files('builtin/**'):
+with Files("builtin/**"):
     BUG_COMPONENT = component_stl
-with Files('ctypes/**'):
-    BUG_COMPONENT = ('Core', 'js-ctypes')
-with Files('gc/**'):
+with Files("ctypes/**"):
+    BUG_COMPONENT = ("Core", "js-ctypes")
+with Files("gc/**"):
     BUG_COMPONENT = component_gc
-with Files('jit/**'):
+with Files("jit/**"):
     BUG_COMPONENT = component_jit
 
 # File-specific metadata
-for gcfile in ['devtools/rootAnalysis', 'devtools/gc-ubench', 'devtools/gctrace']:
+for gcfile in ["devtools/rootAnalysis", "devtools/gc-ubench", "devtools/gctrace"]:
     with Files(gcfile):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsdate.*', 'jsnum.*']:
+for stlfile in ["jsdate.*", "jsnum.*"]:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
-with Files('builtin/intl/*'):
+with Files("builtin/intl/*"):
     BUG_COMPONENT = component_intl
 
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    CONFIGURE_SUBST_FILES += ['rust/extra-bindgen-flags']
+if CONFIG["ENABLE_WASM_CRANELIFT"]:
+    CONFIGURE_SUBST_FILES += ["rust/extra-bindgen-flags"]
 
-if not CONFIG['JS_DISABLE_SHELL']:
+if not CONFIG["JS_DISABLE_SHELL"]:
     DIRS += [
-        'rust',
-        'shell',
+        "rust",
+        "shell",
     ]
 
     TEST_DIRS += [
-        'gdb',
-        'jsapi-tests',
-        'tests',
+        "gdb",
+        "jsapi-tests",
+        "tests",
     ]
 
-    if CONFIG['FUZZING_INTERFACES']:
+    if CONFIG["FUZZING_INTERFACES"]:
         TEST_DIRS += [
-            'fuzz-tests',
+            "fuzz-tests",
         ]
 
-if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
     # In addition to regular coverage provided by trace-pc-guard,
     # LibFuzzer can use trace-cmp to instrument various compare instructions.
     # Only use this feature on source files that do a lot of constant
     # comparisons that would otherwise be hard to guess by LibFuzzer,
     # as it comes with a larger overhead (requires -use_value_profile=1).
-    include('/tools/fuzzing/libfuzzer-flags.mozbuild')
+    include("/tools/fuzzing/libfuzzer-flags.mozbuild")
 
     # Any files that are targeted by LibFuzzer should be added here so they can
     # be built with the necessary instrumentation flags, rather than just building
     # the whole JS engine with instrumentation, to reduce the amount of noise.
     SOURCES += [
-        'vm/StructuredClone.cpp',
+        "vm/StructuredClone.cpp",
     ]
-    SOURCES['vm/StructuredClone.cpp'].flags += libfuzzer_flags
+    SOURCES["vm/StructuredClone.cpp"].flags += libfuzzer_flags
 else:
     UNIFIED_SOURCES += [
-        'vm/StructuredClone.cpp',
+        "vm/StructuredClone.cpp",
     ]
 
 CONFIGURE_SUBST_FILES += [
-    'devtools/rootAnalysis/Makefile',
+    "devtools/rootAnalysis/Makefile",
 ]
 CONFIGURE_DEFINE_FILES += [
-    'js-confdefs.h',
+    "js-confdefs.h",
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if not CONFIG["JS_STANDALONE"]:
     CONFIGURE_SUBST_FILES += [
-        '../../config/autoconf-js.mk',
-        '../../config/emptyvars-js.mk',
+        "../../config/autoconf-js.mk",
+        "../../config/emptyvars-js.mk",
     ]
 
 CONFIGURE_DEFINE_FILES += [
-    'js-config.h',
+    "js-config.h",
 ]
 
-if CONFIG['HAVE_DTRACE']:
-    GeneratedFile('javascript-trace.h')
-    EXPORTS += ['!javascript-trace.h']
+if CONFIG["HAVE_DTRACE"]:
+    GeneratedFile("javascript-trace.h")
+    EXPORTS += ["!javascript-trace.h"]
 
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
 EXPORTS += [
-    '!js-config.h',
-    'jsapi.h',
-    'jsfriendapi.h',
-    'jspubtd.h',
-    'jstypes.h',
+    "!js-config.h",
+    "jsapi.h",
+    "jsfriendapi.h",
+    "jspubtd.h",
+    "jstypes.h",
 ]
 
 EXPORTS.js += [
-    '../public/AllocationLogging.h',
-    '../public/AllocationRecording.h',
-    '../public/AllocPolicy.h',
-    '../public/Array.h',
-    '../public/ArrayBuffer.h',
-    '../public/ArrayBufferMaybeShared.h',
-    '../public/BigInt.h',
-    '../public/BuildId.h',
-    '../public/CallArgs.h',
-    '../public/CallNonGenericMethod.h',
-    '../public/CharacterEncoding.h',
-    '../public/Class.h',
-    '../public/ComparisonOperators.h',
-    '../public/CompilationAndEvaluation.h',
-    '../public/CompileOptions.h',
-    '../public/ContextOptions.h',
-    '../public/Conversions.h',
-    '../public/Date.h',
-    '../public/Debug.h',
-    '../public/Equality.h',
-    '../public/ErrorReport.h',
-    '../public/Exception.h',
-    '../public/ForOfIterator.h',
-    '../public/GCAnnotations.h',
-    '../public/GCAPI.h',
-    '../public/GCHashTable.h',
-    '../public/GCPolicyAPI.h',
-    '../public/GCTypeMacros.h',
-    '../public/GCVariant.h',
-    '../public/GCVector.h',
-    '../public/HashTable.h',
-    '../public/HeapAPI.h',
-    '../public/Id.h',
-    '../public/Initialization.h',
-    '../public/JSON.h',
-    '../public/LocaleSensitive.h',
-    '../public/MemoryFunctions.h',
-    '../public/MemoryMetrics.h',
-    '../public/Modules.h',
-    '../public/Object.h',
-    '../public/OffThreadScriptCompilation.h',
-    '../public/Principals.h',
-    '../public/Printf.h',
-    '../public/ProfilingCategory.h',
-    '../public/ProfilingFrameIterator.h',
-    '../public/ProfilingStack.h',
-    '../public/Promise.h',
-    '../public/PropertyDescriptor.h',
-    '../public/PropertySpec.h',
-    '../public/ProtoKey.h',
-    '../public/Proxy.h',
-    '../public/Realm.h',
-    '../public/RealmOptions.h',
-    '../public/RefCounted.h',
-    '../public/RegExp.h',
-    '../public/RegExpFlags.h',
-    '../public/RequiredDefines.h',
-    '../public/Result.h',
-    '../public/RootingAPI.h',
-    '../public/SavedFrameAPI.h',
-    '../public/ScalarType.h',
-    '../public/SharedArrayBuffer.h',
-    '../public/SliceBudget.h',
-    '../public/SourceText.h',
-    '../public/StableStringChars.h',
-    '../public/Stream.h',
-    '../public/String.h',
-    '../public/StructuredClone.h',
-    '../public/SweepingAPI.h',
-    '../public/Symbol.h',
-    '../public/TraceKind.h',
-    '../public/TraceLoggerAPI.h',
-    '../public/TracingAPI.h',
-    '../public/Transcoding.h',
-    '../public/TypeDecls.h',
-    '../public/UbiNode.h',
-    '../public/UbiNodeBreadthFirst.h',
-    '../public/UbiNodeCensus.h',
-    '../public/UbiNodeDominatorTree.h',
-    '../public/UbiNodePostOrder.h',
-    '../public/UbiNodeShortestPaths.h',
-    '../public/UbiNodeUtils.h',
-    '../public/UniquePtr.h',
-    '../public/Utility.h',
-    '../public/Value.h',
-    '../public/ValueArray.h',
-    '../public/Vector.h',
-    '../public/Warnings.h',
-    '../public/WasmModule.h',
-    '../public/WeakMapPtr.h',
-    '../public/Wrapper.h',
+    "../public/AllocationLogging.h",
+    "../public/AllocationRecording.h",
+    "../public/AllocPolicy.h",
+    "../public/Array.h",
+    "../public/ArrayBuffer.h",
+    "../public/ArrayBufferMaybeShared.h",
+    "../public/BigInt.h",
+    "../public/BuildId.h",
+    "../public/CallArgs.h",
+    "../public/CallNonGenericMethod.h",
+    "../public/CharacterEncoding.h",
+    "../public/Class.h",
+    "../public/ComparisonOperators.h",
+    "../public/CompilationAndEvaluation.h",
+    "../public/CompileOptions.h",
+    "../public/ContextOptions.h",
+    "../public/Conversions.h",
+    "../public/Date.h",
+    "../public/Debug.h",
+    "../public/Equality.h",
+    "../public/ErrorReport.h",
+    "../public/Exception.h",
+    "../public/ForOfIterator.h",
+    "../public/GCAnnotations.h",
+    "../public/GCAPI.h",
+    "../public/GCHashTable.h",
+    "../public/GCPolicyAPI.h",
+    "../public/GCTypeMacros.h",
+    "../public/GCVariant.h",
+    "../public/GCVector.h",
+    "../public/HashTable.h",
+    "../public/HeapAPI.h",
+    "../public/Id.h",
+    "../public/Initialization.h",
+    "../public/JSON.h",
+    "../public/LocaleSensitive.h",
+    "../public/MemoryFunctions.h",
+    "../public/MemoryMetrics.h",
+    "../public/Modules.h",
+    "../public/Object.h",
+    "../public/OffThreadScriptCompilation.h",
+    "../public/Principals.h",
+    "../public/Printf.h",
+    "../public/ProfilingCategory.h",
+    "../public/ProfilingFrameIterator.h",
+    "../public/ProfilingStack.h",
+    "../public/Promise.h",
+    "../public/PropertyDescriptor.h",
+    "../public/PropertySpec.h",
+    "../public/ProtoKey.h",
+    "../public/Proxy.h",
+    "../public/Realm.h",
+    "../public/RealmOptions.h",
+    "../public/RefCounted.h",
+    "../public/RegExp.h",
+    "../public/RegExpFlags.h",
+    "../public/RequiredDefines.h",
+    "../public/Result.h",
+    "../public/RootingAPI.h",
+    "../public/SavedFrameAPI.h",
+    "../public/ScalarType.h",
+    "../public/SharedArrayBuffer.h",
+    "../public/SliceBudget.h",
+    "../public/SourceText.h",
+    "../public/StableStringChars.h",
+    "../public/Stream.h",
+    "../public/String.h",
+    "../public/StructuredClone.h",
+    "../public/SweepingAPI.h",
+    "../public/Symbol.h",
+    "../public/TraceKind.h",
+    "../public/TraceLoggerAPI.h",
+    "../public/TracingAPI.h",
+    "../public/Transcoding.h",
+    "../public/TypeDecls.h",
+    "../public/UbiNode.h",
+    "../public/UbiNodeBreadthFirst.h",
+    "../public/UbiNodeCensus.h",
+    "../public/UbiNodeDominatorTree.h",
+    "../public/UbiNodePostOrder.h",
+    "../public/UbiNodeShortestPaths.h",
+    "../public/UbiNodeUtils.h",
+    "../public/UniquePtr.h",
+    "../public/Utility.h",
+    "../public/Value.h",
+    "../public/ValueArray.h",
+    "../public/Vector.h",
+    "../public/Warnings.h",
+    "../public/WasmModule.h",
+    "../public/WeakMapPtr.h",
+    "../public/Wrapper.h",
 ]
 
 # This lives in mozglue/baseprofiler but we re-publish ourselves to support
 # standalone SpiderMonkey configurations.
 EXPORTS.js += [
-    '../../mozglue/baseprofiler/public/ProfilingCategoryList.h',
+    "../../mozglue/baseprofiler/public/ProfilingCategoryList.h",
 ]
 
 # Public APIs that are experimental: the precise contour of the APIs may still
 # change, but they're at least plausible first passes at designing something.
 # We expose them as-is, buyer beware.
 EXPORTS.js.experimental += [
-    '../public/experimental/CodeCoverage.h',
-    '../public/experimental/Intl.h',
-    '../public/experimental/JitInfo.h',
-    '../public/experimental/SourceHook.h',
-    '../public/experimental/TypedData.h',
+    "../public/experimental/CodeCoverage.h",
+    "../public/experimental/Intl.h",
+    "../public/experimental/JitInfo.h",
+    "../public/experimental/SourceHook.h",
+    "../public/experimental/TypedData.h",
 ]
 
 # Friend APIs are APIs that either basically SpiderMonkey-internal, or their
@@ -236,15 +236,15 @@ EXPORTS.js.experimental += [
 # a clean design.  Use this only if you absolutely must, and feel free to
 # propose clean APIs to replace what's here!
 EXPORTS.js.friend += [
-    '../public/friend/DOMProxy.h',
-    '../public/friend/DumpFunctions.h',
-    '../public/friend/ErrorMessages.h',
-    '../public/friend/ErrorNumbers.msg',
-    '../public/friend/JSMEnvironment.h',
-    '../public/friend/StackLimits.h',
-    '../public/friend/UsageStatistics.h',
-    '../public/friend/WindowProxy.h',
-    '../public/friend/XrayJitInfo.h',
+    "../public/friend/DOMProxy.h",
+    "../public/friend/DumpFunctions.h",
+    "../public/friend/ErrorMessages.h",
+    "../public/friend/ErrorNumbers.msg",
+    "../public/friend/JSMEnvironment.h",
+    "../public/friend/StackLimits.h",
+    "../public/friend/UsageStatistics.h",
+    "../public/friend/WindowProxy.h",
+    "../public/friend/XrayJitInfo.h",
 ]
 
 # "Shadow" API defines the internal layout of public JSAPI types like |JSObject|
@@ -262,177 +262,177 @@ EXPORTS.js.friend += [
 # to back actual implementations *with* these shadow definitions to eliminate
 # this requirement.)
 EXPORTS.js.shadow += [
-    '../public/shadow/Function.h',
-    '../public/shadow/Object.h',
-    '../public/shadow/ObjectGroup.h',
-    '../public/shadow/Realm.h',
-    '../public/shadow/Shape.h',
-    '../public/shadow/String.h',
-    '../public/shadow/Symbol.h',
-    '../public/shadow/Zone.h',
+    "../public/shadow/Function.h",
+    "../public/shadow/Object.h",
+    "../public/shadow/ObjectGroup.h",
+    "../public/shadow/Realm.h",
+    "../public/shadow/Shape.h",
+    "../public/shadow/String.h",
+    "../public/shadow/Symbol.h",
+    "../public/shadow/Zone.h",
 ]
 
 UNIFIED_SOURCES += [
-    'builtin/Array.cpp',
-    'builtin/AtomicsObject.cpp',
-    'builtin/BigInt.cpp',
-    'builtin/Boolean.cpp',
-    'builtin/DataViewObject.cpp',
-    'builtin/Eval.cpp',
-    'builtin/FinalizationRegistryObject.cpp',
-    'builtin/JSON.cpp',
-    'builtin/MapObject.cpp',
-    'builtin/ModuleObject.cpp',
-    'builtin/Object.cpp',
-    'builtin/Profilers.cpp',
-    'builtin/Promise.cpp',
-    'builtin/Reflect.cpp',
-    'builtin/ReflectParse.cpp',
-    'builtin/Stream.cpp',
-    'builtin/streams/MiscellaneousOperations.cpp',
-    'builtin/streams/PipeToState.cpp',
-    'builtin/streams/PullIntoDescriptor.cpp',
-    'builtin/streams/QueueingStrategies.cpp',
-    'builtin/streams/QueueWithSizes.cpp',
-    'builtin/streams/ReadableStream.cpp',
-    'builtin/streams/ReadableStreamBYOBReader.cpp',
-    'builtin/streams/ReadableStreamDefaultController.cpp',
-    'builtin/streams/ReadableStreamDefaultControllerOperations.cpp',
-    'builtin/streams/ReadableStreamDefaultReader.cpp',
-    'builtin/streams/ReadableStreamInternals.cpp',
-    'builtin/streams/ReadableStreamOperations.cpp',
-    'builtin/streams/ReadableStreamReader.cpp',
-    'builtin/streams/StreamAPI.cpp',
-    'builtin/streams/TeeState.cpp',
-    'builtin/streams/WritableStream.cpp',
-    'builtin/streams/WritableStreamDefaultController.cpp',
-    'builtin/streams/WritableStreamDefaultControllerOperations.cpp',
-    'builtin/streams/WritableStreamDefaultWriter.cpp',
-    'builtin/streams/WritableStreamOperations.cpp',
-    'builtin/streams/WritableStreamWriterOperations.cpp',
-    'builtin/String.cpp',
-    'builtin/Symbol.cpp',
-    'builtin/TestingFunctions.cpp',
-    'builtin/WeakMapObject.cpp',
-    'builtin/WeakRefObject.cpp',
-    'builtin/WeakSetObject.cpp',
-    'ds/Bitmap.cpp',
-    'ds/LifoAlloc.cpp',
-    'ds/MemoryProtectionExceptionHandler.cpp',
-    'jsapi.cpp',
-    'jsdate.cpp',
-    'jsexn.cpp',
-    'jsfriendapi.cpp',
-    'jsnum.cpp',
-    'proxy/BaseProxyHandler.cpp',
-    'proxy/CrossCompartmentWrapper.cpp',
-    'proxy/DeadObjectProxy.cpp',
-    'proxy/DOMProxy.cpp',
-    'proxy/OpaqueCrossCompartmentWrapper.cpp',
-    'proxy/Proxy.cpp',
-    'proxy/ScriptedProxyHandler.cpp',
-    'proxy/SecurityWrapper.cpp',
-    'proxy/Wrapper.cpp',
-    'threading/Mutex.cpp',
-    'threading/ProtectedData.cpp',
-    'threading/Thread.cpp',
-    'util/AllocationLogging.cpp',
-    'util/AllocPolicy.cpp',
-    'util/CompleteFile.cpp',
-    'util/DumpFunctions.cpp',
-    'util/NativeStack.cpp',
-    'util/Printf.cpp',
-    'util/StringBuffer.cpp',
-    'util/StructuredSpewer.cpp',
-    'util/Text.cpp',
-    'util/Unicode.cpp',
-    'vm/Activation.cpp',
-    'vm/ArgumentsObject.cpp',
-    'vm/ArrayBufferObject.cpp',
-    'vm/ArrayBufferObjectMaybeShared.cpp',
-    'vm/ArrayBufferViewObject.cpp',
-    'vm/AsyncFunction.cpp',
-    'vm/AsyncIteration.cpp',
-    'vm/BigIntType.cpp',
-    'vm/BuildId.cpp',
-    'vm/BuiltinObjectKind.cpp',
-    'vm/BytecodeLocation.cpp',
-    'vm/BytecodeUtil.cpp',
-    'vm/Caches.cpp',
-    'vm/CallNonGenericMethod.cpp',
-    'vm/CharacterEncoding.cpp',
-    'vm/CodeCoverage.cpp',
-    'vm/Compartment.cpp',
-    'vm/CompilationAndEvaluation.cpp',
-    'vm/Compression.cpp',
-    'vm/DateTime.cpp',
-    'vm/EnvironmentObject.cpp',
-    'vm/EqualityOperations.cpp',
-    'vm/ErrorMessages.cpp',
-    'vm/ErrorObject.cpp',
-    'vm/ErrorReporting.cpp',
-    'vm/Exception.cpp',
-    'vm/ForOfIterator.cpp',
-    'vm/FrameIter.cpp',
-    'vm/FunctionFlags.cpp',
-    'vm/GeckoProfiler.cpp',
-    'vm/GeneratorObject.cpp',
-    'vm/GlobalObject.cpp',
-    'vm/HelperThreads.cpp',
-    'vm/Id.cpp',
-    'vm/Initialization.cpp',
-    'vm/Instrumentation.cpp',
-    'vm/Iteration.cpp',
-    'vm/JitActivation.cpp',
-    'vm/JSAtom.cpp',
-    'vm/JSContext.cpp',
-    'vm/JSFunction.cpp',
-    'vm/JSObject.cpp',
-    'vm/JSONParser.cpp',
-    'vm/JSONPrinter.cpp',
-    'vm/JSScript.cpp',
-    'vm/List.cpp',
-    'vm/MemoryMetrics.cpp',
-    'vm/Modules.cpp',
-    'vm/NativeObject.cpp',
-    'vm/ObjectGroup.cpp',
-    'vm/OffThreadPromiseRuntimeState.cpp',
-    'vm/OffThreadScriptCompilation.cpp',
-    'vm/PIC.cpp',
-    'vm/PlainObject.cpp',
-    'vm/Printer.cpp',
-    'vm/Probes.cpp',
-    'vm/PromiseLookup.cpp',
-    'vm/ProxyObject.cpp',
-    'vm/Realm.cpp',
-    'vm/ReceiverGuard.cpp',
-    'vm/RegExpObject.cpp',
-    'vm/RegExpStatics.cpp',
-    'vm/Runtime.cpp',
-    'vm/SavedStacks.cpp',
-    'vm/Scope.cpp',
-    'vm/SelfHosting.cpp',
-    'vm/Shape.cpp',
-    'vm/SharedArrayObject.cpp',
-    'vm/SharedImmutableStringsCache.cpp',
-    'vm/SourceHook.cpp',
-    'vm/Stack.cpp',
-    'vm/StringType.cpp',
-    'vm/SymbolType.cpp',
-    'vm/TaggedProto.cpp',
-    'vm/ThrowMsgKind.cpp',
-    'vm/Time.cpp',
-    'vm/ToSource.cpp',
-    'vm/TypedArrayObject.cpp',
-    'vm/TypeInference.cpp',
-    'vm/UbiNode.cpp',
-    'vm/UbiNodeCensus.cpp',
-    'vm/UbiNodeShortestPaths.cpp',
-    'vm/UsageStatistics.cpp',
-    'vm/Value.cpp',
-    'vm/Warnings.cpp',
-    'vm/WindowProxy.cpp',
-    'vm/Xdr.cpp',
+    "builtin/Array.cpp",
+    "builtin/AtomicsObject.cpp",
+    "builtin/BigInt.cpp",
+    "builtin/Boolean.cpp",
+    "builtin/DataViewObject.cpp",
+    "builtin/Eval.cpp",
+    "builtin/FinalizationRegistryObject.cpp",
+    "builtin/JSON.cpp",
+    "builtin/MapObject.cpp",
+    "builtin/ModuleObject.cpp",
+    "builtin/Object.cpp",
+    "builtin/Profilers.cpp",
+    "builtin/Promise.cpp",
+    "builtin/Reflect.cpp",
+    "builtin/ReflectParse.cpp",
+    "builtin/Stream.cpp",
+    "builtin/streams/MiscellaneousOperations.cpp",
+    "builtin/streams/PipeToState.cpp",
+    "builtin/streams/PullIntoDescriptor.cpp",
+    "builtin/streams/QueueingStrategies.cpp",
+    "builtin/streams/QueueWithSizes.cpp",
+    "builtin/streams/ReadableStream.cpp",
+    "builtin/streams/ReadableStreamBYOBReader.cpp",
+    "builtin/streams/ReadableStreamDefaultController.cpp",
+    "builtin/streams/ReadableStreamDefaultControllerOperations.cpp",
+    "builtin/streams/ReadableStreamDefaultReader.cpp",
+    "builtin/streams/ReadableStreamInternals.cpp",
+    "builtin/streams/ReadableStreamOperations.cpp",
+    "builtin/streams/ReadableStreamReader.cpp",
+    "builtin/streams/StreamAPI.cpp",
+    "builtin/streams/TeeState.cpp",
+    "builtin/streams/WritableStream.cpp",
+    "builtin/streams/WritableStreamDefaultController.cpp",
+    "builtin/streams/WritableStreamDefaultControllerOperations.cpp",
+    "builtin/streams/WritableStreamDefaultWriter.cpp",
+    "builtin/streams/WritableStreamOperations.cpp",
+    "builtin/streams/WritableStreamWriterOperations.cpp",
+    "builtin/String.cpp",
+    "builtin/Symbol.cpp",
+    "builtin/TestingFunctions.cpp",
+    "builtin/WeakMapObject.cpp",
+    "builtin/WeakRefObject.cpp",
+    "builtin/WeakSetObject.cpp",
+    "ds/Bitmap.cpp",
+    "ds/LifoAlloc.cpp",
+    "ds/MemoryProtectionExceptionHandler.cpp",
+    "jsapi.cpp",
+    "jsdate.cpp",
+    "jsexn.cpp",
+    "jsfriendapi.cpp",
+    "jsnum.cpp",
+    "proxy/BaseProxyHandler.cpp",
+    "proxy/CrossCompartmentWrapper.cpp",
+    "proxy/DeadObjectProxy.cpp",
+    "proxy/DOMProxy.cpp",
+    "proxy/OpaqueCrossCompartmentWrapper.cpp",
+    "proxy/Proxy.cpp",
+    "proxy/ScriptedProxyHandler.cpp",
+    "proxy/SecurityWrapper.cpp",
+    "proxy/Wrapper.cpp",
+    "threading/Mutex.cpp",
+    "threading/ProtectedData.cpp",
+    "threading/Thread.cpp",
+    "util/AllocationLogging.cpp",
+    "util/AllocPolicy.cpp",
+    "util/CompleteFile.cpp",
+    "util/DumpFunctions.cpp",
+    "util/NativeStack.cpp",
+    "util/Printf.cpp",
+    "util/StringBuffer.cpp",
+    "util/StructuredSpewer.cpp",
+    "util/Text.cpp",
+    "util/Unicode.cpp",
+    "vm/Activation.cpp",
+    "vm/ArgumentsObject.cpp",
+    "vm/ArrayBufferObject.cpp",
+    "vm/ArrayBufferObjectMaybeShared.cpp",
+    "vm/ArrayBufferViewObject.cpp",
+    "vm/AsyncFunction.cpp",
+    "vm/AsyncIteration.cpp",
+    "vm/BigIntType.cpp",
+    "vm/BuildId.cpp",
+    "vm/BuiltinObjectKind.cpp",
+    "vm/BytecodeLocation.cpp",
+    "vm/BytecodeUtil.cpp",
+    "vm/Caches.cpp",
+    "vm/CallNonGenericMethod.cpp",
+    "vm/CharacterEncoding.cpp",
+    "vm/CodeCoverage.cpp",
+    "vm/Compartment.cpp",
+    "vm/CompilationAndEvaluation.cpp",
+    "vm/Compression.cpp",
+    "vm/DateTime.cpp",
+    "vm/EnvironmentObject.cpp",
+    "vm/EqualityOperations.cpp",
+    "vm/ErrorMessages.cpp",
+    "vm/ErrorObject.cpp",
+    "vm/ErrorReporting.cpp",
+    "vm/Exception.cpp",
+    "vm/ForOfIterator.cpp",
+    "vm/FrameIter.cpp",
+    "vm/FunctionFlags.cpp",
+    "vm/GeckoProfiler.cpp",
+    "vm/GeneratorObject.cpp",
+    "vm/GlobalObject.cpp",
+    "vm/HelperThreads.cpp",
+    "vm/Id.cpp",
+    "vm/Initialization.cpp",
+    "vm/Instrumentation.cpp",
+    "vm/Iteration.cpp",
+    "vm/JitActivation.cpp",
+    "vm/JSAtom.cpp",
+    "vm/JSContext.cpp",
+    "vm/JSFunction.cpp",
+    "vm/JSObject.cpp",
+    "vm/JSONParser.cpp",
+    "vm/JSONPrinter.cpp",
+    "vm/JSScript.cpp",
+    "vm/List.cpp",
+    "vm/MemoryMetrics.cpp",
+    "vm/Modules.cpp",
+    "vm/NativeObject.cpp",
+    "vm/ObjectGroup.cpp",
+    "vm/OffThreadPromiseRuntimeState.cpp",
+    "vm/OffThreadScriptCompilation.cpp",
+    "vm/PIC.cpp",
+    "vm/PlainObject.cpp",
+    "vm/Printer.cpp",
+    "vm/Probes.cpp",
+    "vm/PromiseLookup.cpp",
+    "vm/ProxyObject.cpp",
+    "vm/Realm.cpp",
+    "vm/ReceiverGuard.cpp",
+    "vm/RegExpObject.cpp",
+    "vm/RegExpStatics.cpp",
+    "vm/Runtime.cpp",
+    "vm/SavedStacks.cpp",
+    "vm/Scope.cpp",
+    "vm/SelfHosting.cpp",
+    "vm/Shape.cpp",
+    "vm/SharedArrayObject.cpp",
+    "vm/SharedImmutableStringsCache.cpp",
+    "vm/SourceHook.cpp",
+    "vm/Stack.cpp",
+    "vm/StringType.cpp",
+    "vm/SymbolType.cpp",
+    "vm/TaggedProto.cpp",
+    "vm/ThrowMsgKind.cpp",
+    "vm/Time.cpp",
+    "vm/ToSource.cpp",
+    "vm/TypedArrayObject.cpp",
+    "vm/TypeInference.cpp",
+    "vm/UbiNode.cpp",
+    "vm/UbiNodeCensus.cpp",
+    "vm/UbiNodeShortestPaths.cpp",
+    "vm/UsageStatistics.cpp",
+    "vm/Value.cpp",
+    "vm/Warnings.cpp",
+    "vm/WindowProxy.cpp",
+    "vm/Xdr.cpp",
 ]
 
 # builtin/RegExp.cpp cannot be built in unified mode because it causes huge
@@ -446,149 +446,147 @@ UNIFIED_SOURCES += [
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
-    'builtin/RegExp.cpp',
-    'jsmath.cpp',
-    'util/DoubleToString.cpp',
-    'util/Utility.cpp',
-    'vm/Interpreter.cpp',
-    'vm/ProfilingStack.cpp',
+    "builtin/RegExp.cpp",
+    "jsmath.cpp",
+    "util/DoubleToString.cpp",
+    "util/Utility.cpp",
+    "vm/Interpreter.cpp",
+    "vm/ProfilingStack.cpp",
 ]
 
-if CONFIG['JS_HAS_INTL_API']:
+if CONFIG["JS_HAS_INTL_API"]:
     UNIFIED_SOURCES += [
-        'builtin/intl/Collator.cpp',
-        'builtin/intl/CommonFunctions.cpp',
-        'builtin/intl/DateTimeFormat.cpp',
-        'builtin/intl/DisplayNames.cpp',
-        'builtin/intl/IntlObject.cpp',
-        'builtin/intl/LanguageTag.cpp',
-        'builtin/intl/LanguageTagGenerated.cpp',
-        'builtin/intl/ListFormat.cpp',
-        'builtin/intl/Locale.cpp',
-        'builtin/intl/NumberFormat.cpp',
-        'builtin/intl/PluralRules.cpp',
-        'builtin/intl/RelativeTimeFormat.cpp',
-        'builtin/intl/SharedIntlData.cpp',
+        "builtin/intl/Collator.cpp",
+        "builtin/intl/CommonFunctions.cpp",
+        "builtin/intl/DateTimeFormat.cpp",
+        "builtin/intl/DisplayNames.cpp",
+        "builtin/intl/IntlObject.cpp",
+        "builtin/intl/LanguageTag.cpp",
+        "builtin/intl/LanguageTagGenerated.cpp",
+        "builtin/intl/ListFormat.cpp",
+        "builtin/intl/Locale.cpp",
+        "builtin/intl/NumberFormat.cpp",
+        "builtin/intl/PluralRules.cpp",
+        "builtin/intl/RelativeTimeFormat.cpp",
+        "builtin/intl/SharedIntlData.cpp",
     ]
 
-if CONFIG['MOZ_INSTRUMENTS']:
+if CONFIG["MOZ_INSTRUMENTS"]:
     SOURCES += [
-        'devtools/Instruments.cpp',
+        "devtools/Instruments.cpp",
     ]
 
-if CONFIG['ENABLE_TRACE_LOGGING']:
+if CONFIG["ENABLE_TRACE_LOGGING"]:
     SOURCES += [
-        'vm/TraceLogging.cpp',
-        'vm/TraceLoggingGraph.cpp',
-        'vm/TraceLoggingTypes.cpp',
+        "vm/TraceLogging.cpp",
+        "vm/TraceLoggingGraph.cpp",
+        "vm/TraceLoggingTypes.cpp",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
-        'threading/windows/CpuCount.cpp',
-        'threading/windows/WindowsThread.cpp',
+        "threading/windows/CpuCount.cpp",
+        "threading/windows/WindowsThread.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'threading/posix/CpuCount.cpp',
-        'threading/posix/PosixThread.cpp',
+        "threading/posix/CpuCount.cpp",
+        "threading/posix/PosixThread.cpp",
     ]
 
-if CONFIG['JS_HAS_CTYPES']:
+if CONFIG["JS_HAS_CTYPES"]:
     SOURCES += [
-        'ctypes/CTypes.cpp',
-        'ctypes/Library.cpp',
+        "ctypes/CTypes.cpp",
+        "ctypes/Library.cpp",
     ]
-    if not CONFIG['MOZ_SYSTEM_FFI']:
+    if not CONFIG["MOZ_SYSTEM_FFI"]:
         LOCAL_INCLUDES += [
-            '!ctypes/libffi/include',
-            'ctypes/libffi/src/%s' % CONFIG['FFI_TARGET_DIR'],
+            "!ctypes/libffi/include",
+            "ctypes/libffi/src/%s" % CONFIG["FFI_TARGET_DIR"],
         ]
 
-if CONFIG['MOZ_VTUNE']:
+if CONFIG["MOZ_VTUNE"]:
     SOURCES += [
-        'vtune/ittnotify_static.c',
-        'vtune/jitprofiling.c',
-        'vtune/VTuneWrapper.cpp',
+        "vtune/ittnotify_static.c",
+        "vtune/jitprofiling.c",
+        "vtune/VTuneWrapper.cpp",
     ]
-    SOURCES['vtune/ittnotify_static.c'].flags += [
-        '-Wno-varargs',
-        '-Wno-unknown-pragmas'
+    SOURCES["vtune/ittnotify_static.c"].flags += [
+        "-Wno-varargs",
+        "-Wno-unknown-pragmas",
     ]
-    if CONFIG['CC_TYPE'] == 'gcc':
-        SOURCES['vtune/ittnotify_static.c'].flags += [
-            '-Wno-stringop-overflow'
-        ]
+    if CONFIG["CC_TYPE"] == "gcc":
+        SOURCES["vtune/ittnotify_static.c"].flags += ["-Wno-stringop-overflow"]
 
-DIRS += [
-    'build',
-    'debugger',
-    'frontend',
-    'gc',
-    'irregexp',
-    'jit',
-    'wasm']
+DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "wasm"]
 
-if CONFIG['JS_JITSPEW']:
-    DIRS += ['zydis']
+if CONFIG["JS_JITSPEW"]:
+    DIRS += ["zydis"]
 
-FINAL_LIBRARY = 'js'
+FINAL_LIBRARY = "js"
 
 selfhosted_inputs = [
-    '../public/friend/ErrorNumbers.msg',
-    'builtin/TypedArrayConstants.h',
-    'builtin/SelfHostingDefines.h',
-    'builtin/Utilities.js',
-    'builtin/Array.js',
-    'builtin/AsyncFunction.js',
-    'builtin/AsyncIteration.js',
-    'builtin/BigInt.js',
-    'builtin/Classes.js',
-    'builtin/Date.js',
-    'builtin/Error.js',
-    'builtin/Function.js',
-    'builtin/Generator.js',
-    'builtin/Iterator.js',
-    'builtin/Map.js',
-    'builtin/Module.js',
-    'builtin/Number.js',
-    'builtin/Object.js',
-    'builtin/Promise.js',
-    'builtin/Reflect.js',
-    'builtin/RegExp.js',
-    'builtin/RegExpGlobalReplaceOpt.h.js',
-    'builtin/RegExpLocalReplaceOpt.h.js',
-    'builtin/String.js',
-    'builtin/Set.js',
-    'builtin/Sorting.js',
-    'builtin/TypedArray.js',
-    'builtin/WeakMap.js',
-    'builtin/WeakSet.js'
-] + ([
-    'builtin/intl/NumberingSystemsGenerated.h',
-    'builtin/intl/Collator.js',
-    'builtin/intl/CommonFunctions.js',
-    'builtin/intl/CurrencyDataGenerated.js',
-    'builtin/intl/DateTimeFormat.js',
-    'builtin/intl/DisplayNames.js',
-    'builtin/intl/IntlObject.js',
-    'builtin/intl/ListFormat.js',
-    'builtin/intl/NumberFormat.js',
-    'builtin/intl/PluralRules.js',
-    'builtin/intl/RelativeTimeFormat.js',
-    'builtin/intl/SanctionedSimpleUnitIdentifiersGenerated.js',
-] if CONFIG['JS_HAS_INTL_API'] else [])
+    "../public/friend/ErrorNumbers.msg",
+    "builtin/TypedArrayConstants.h",
+    "builtin/SelfHostingDefines.h",
+    "builtin/Utilities.js",
+    "builtin/Array.js",
+    "builtin/AsyncFunction.js",
+    "builtin/AsyncIteration.js",
+    "builtin/BigInt.js",
+    "builtin/Classes.js",
+    "builtin/Date.js",
+    "builtin/Error.js",
+    "builtin/Function.js",
+    "builtin/Generator.js",
+    "builtin/Iterator.js",
+    "builtin/Map.js",
+    "builtin/Module.js",
+    "builtin/Number.js",
+    "builtin/Object.js",
+    "builtin/Promise.js",
+    "builtin/Reflect.js",
+    "builtin/RegExp.js",
+    "builtin/RegExpGlobalReplaceOpt.h.js",
+    "builtin/RegExpLocalReplaceOpt.h.js",
+    "builtin/String.js",
+    "builtin/Set.js",
+    "builtin/Sorting.js",
+    "builtin/TypedArray.js",
+    "builtin/WeakMap.js",
+    "builtin/WeakSet.js",
+] + (
+    [
+        "builtin/intl/NumberingSystemsGenerated.h",
+        "builtin/intl/Collator.js",
+        "builtin/intl/CommonFunctions.js",
+        "builtin/intl/CurrencyDataGenerated.js",
+        "builtin/intl/DateTimeFormat.js",
+        "builtin/intl/DisplayNames.js",
+        "builtin/intl/IntlObject.js",
+        "builtin/intl/ListFormat.js",
+        "builtin/intl/NumberFormat.js",
+        "builtin/intl/PluralRules.js",
+        "builtin/intl/RelativeTimeFormat.js",
+        "builtin/intl/SanctionedSimpleUnitIdentifiersGenerated.js",
+    ]
+    if CONFIG["JS_HAS_INTL_API"]
+    else []
+)
 
 # Prepare self-hosted JS code for embedding
-GeneratedFile('selfhosted.out.h', 'selfhosted.js',
-              script='builtin/embedjs.py',
-              entry_point='generate_selfhosted',
-              inputs=selfhosted_inputs)
+GeneratedFile(
+    "selfhosted.out.h",
+    "selfhosted.js",
+    script="builtin/embedjs.py",
+    entry_point="generate_selfhosted",
+    inputs=selfhosted_inputs,
+)
 
-if CONFIG['JS_HAS_CTYPES']:
-    if CONFIG['MOZ_SYSTEM_FFI']:
-        CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
+if CONFIG["JS_HAS_CTYPES"]:
+    if CONFIG["MOZ_SYSTEM_FFI"]:
+        CXXFLAGS += CONFIG["MOZ_FFI_CFLAGS"]
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    SOURCES['util/DoubleToString.cpp'].flags += ['-Wno-implicit-fallthrough']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    SOURCES["util/DoubleToString.cpp"].flags += ["-Wno-implicit-fallthrough"]

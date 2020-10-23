@@ -7,21 +7,19 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
 
-SPHINX_TREES['docs'] = 'docs'
+SPHINX_TREES["docs"] = "docs"
 
 DIRS += [
-    'helpers',
-    'schemas',
+    "helpers",
+    "schemas",
 ]
 
-TEST_DIRS += [
-	'tests'
-]
+TEST_DIRS += ["tests"]
 
 EXTRA_JS_MODULES.policies += [
-    'Policies.jsm',
+    "Policies.jsm",
 ]
 
-FINAL_LIBRARY = 'browsercomps'
+FINAL_LIBRARY = "browsercomps"
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]

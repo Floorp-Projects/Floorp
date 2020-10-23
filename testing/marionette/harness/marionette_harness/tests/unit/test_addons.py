@@ -16,7 +16,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestAddons(MarionetteTestCase):
-
     def setUp(self):
         super(TestAddons, self).setUp()
 
@@ -31,7 +30,8 @@ class TestAddons(MarionetteTestCase):
     @property
     def all_addon_ids(self):
         with self.marionette.using_context("chrome"):
-            addons = self.marionette.execute_async_script("""
+            addons = self.marionette.execute_async_script(
+                """
               let [resolve] = arguments;
               Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
@@ -39,14 +39,16 @@ class TestAddons(MarionetteTestCase):
                 let ids = addons.map(x => x.id);
                 resolve(ids);
               });
-            """)
+            """
+            )
 
         return set(addons)
 
     def reset_addons(self):
         with self.marionette.using_context("chrome"):
-            for addon in (self.all_addon_ids - self.preinstalled_addons):
-                addon_id = self.marionette.execute_async_script("""
+            for addon in self.all_addon_ids - self.preinstalled_addons:
+                addon_id = self.marionette.execute_async_script(
+                    """
                   let [resolve] = arguments;
                   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
@@ -55,9 +57,12 @@ class TestAddons(MarionetteTestCase):
                     addon.uninstall();
                     resolve(addon.id);
                   });
-                """, script_args=(addon,))
-                self.assertEqual(addon_id, addon,
-                                 msg="Failed to uninstall {}".format(addon))
+                """,
+                    script_args=(addon,),
+                )
+                self.assertEqual(
+                    addon_id, addon, msg="Failed to uninstall {}".format(addon)
+                )
 
     def test_temporary_install_and_remove_unsigned_addon(self):
         addon_path = os.path.join(here, "webextension-unsigned.xpi")
@@ -107,7 +112,7 @@ class TestAddons(MarionetteTestCase):
 
     def test_install_with_relative_path(self):
         with self.assertRaises(AddonInstallException):
-            self.addons.install('webextension.xpi')
+            self.addons.install("webextension.xpi")
 
     @skipIf(sys.platform != "win32", "Only makes sense on Windows")
     def test_install_mixed_separator_windows(self):

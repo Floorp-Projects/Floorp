@@ -4,25 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('nspr')
+Library("nspr")
 
-if CONFIG['MOZ_BUILD_NSPR']:
+if CONFIG["MOZ_BUILD_NSPR"]:
     DIRS += [
-        'pr',
-        'ds',
-        'libc',
+        "pr",
+        "ds",
+        "libc",
     ]
-    if CONFIG['MOZ_FOLD_LIBS']:
+    if CONFIG["MOZ_FOLD_LIBS"]:
         # When folding libraries, nspr is actually in the nss library.
         USE_LIBS += [
-            'nss',
+            "nss",
         ]
     else:
         USE_LIBS += [
-            'nspr4',
-            'plc4',
-            'plds4',
+            "nspr4",
+            "plc4",
+            "plds4",
         ]
-    EXPORTS.nspr += ['prcpucfg.h']
+    EXPORTS.nspr += ["prcpucfg.h"]
 else:
-    OS_LIBS += CONFIG['NSPR_LIBS']
+    OS_LIBS += CONFIG["NSPR_LIBS"]

@@ -10,15 +10,13 @@ with Files("**"):
 include("/ipc/chromium/chromium-config.mozbuild")
 
 DIRS += [
-    '/dom/media/webrtc/transport/third_party',
-    '/dom/media/webrtc/transport/build',
-    '/dom/media/webrtc/transport/ipc',
+    "/dom/media/webrtc/transport/third_party",
+    "/dom/media/webrtc/transport/build",
+    "/dom/media/webrtc/transport/ipc",
 ]
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
-if CONFIG['FUZZING_INTERFACES']:
-    TEST_DIRS += [
-        'fuzztest'
-    ]
+if CONFIG["FUZZING_INTERFACES"]:
+    TEST_DIRS += ["fuzztest"]

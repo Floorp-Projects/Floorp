@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-  'contrast.js',
-  'keyboard.js',
-  'text-label.js',
+    "contrast.js",
+    "keyboard.js",
+    "text-label.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Accessibility Tools')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Accessibility Tools")

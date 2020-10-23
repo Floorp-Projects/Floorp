@@ -8,27 +8,27 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom += [
-    'Worklet.h',
-    'WorkletGlobalScope.h',
-    'WorkletImpl.h',
-    'WorkletPrincipals.h',
-    'WorkletThread.h',
+    "Worklet.h",
+    "WorkletGlobalScope.h",
+    "WorkletImpl.h",
+    "WorkletPrincipals.h",
+    "WorkletThread.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Worklet.cpp',
-    'WorkletGlobalScope.cpp',
-    'WorkletImpl.cpp',
-    'WorkletPrincipals.cpp',
-    'WorkletThread.cpp',
+    "Worklet.cpp",
+    "WorkletGlobalScope.cpp",
+    "WorkletImpl.cpp",
+    "WorkletPrincipals.cpp",
+    "WorkletThread.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/js/xpconnect/src',
+    "/js/xpconnect/src",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

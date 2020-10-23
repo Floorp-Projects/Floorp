@@ -3,8 +3,7 @@
 
 config = {
     # Tests run in mozmill-ci do not use RelEng infra
-    'developer_mode': True,
-
+    "developer_mode": True,
     # mozcrash support
-    'download_symbols': 'ondemand',
+    "download_symbols": "ondemand",
 }

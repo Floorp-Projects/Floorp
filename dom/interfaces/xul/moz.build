@@ -8,17 +8,16 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XUL")
 
 XPIDL_SOURCES += [
-    'nsIDOMXULButtonElement.idl',
-    'nsIDOMXULCommandDispatcher.idl',
-    'nsIDOMXULContainerElement.idl',
-    'nsIDOMXULControlElement.idl',
-    'nsIDOMXULMenuListElement.idl',
-    'nsIDOMXULMultSelectCntrlEl.idl',
-    'nsIDOMXULRadioGroupElement.idl',
-    'nsIDOMXULRelatedElement.idl',
-    'nsIDOMXULSelectCntrlEl.idl',
-    'nsIDOMXULSelectCntrlItemEl.idl',
+    "nsIDOMXULButtonElement.idl",
+    "nsIDOMXULCommandDispatcher.idl",
+    "nsIDOMXULContainerElement.idl",
+    "nsIDOMXULControlElement.idl",
+    "nsIDOMXULMenuListElement.idl",
+    "nsIDOMXULMultSelectCntrlEl.idl",
+    "nsIDOMXULRadioGroupElement.idl",
+    "nsIDOMXULRelatedElement.idl",
+    "nsIDOMXULSelectCntrlEl.idl",
+    "nsIDOMXULSelectCntrlItemEl.idl",
 ]
 
-XPIDL_MODULE = 'dom_xul'
-
+XPIDL_MODULE = "dom_xul"

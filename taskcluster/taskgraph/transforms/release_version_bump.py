@@ -17,18 +17,23 @@ transforms = TransformSequence()
 def handle_keyed_by(config, tasks):
     """Resolve fields that can be keyed by platform, etc."""
     default_fields = [
-        'worker.push',
-        'worker.bump-files',
-        'worker-type',
+        "worker.push",
+        "worker.bump-files",
+        "worker-type",
     ]
     for task in tasks:
         fields = default_fields[:]
         for additional_field in ("l10n-bump-info", "source-repo"):
             if additional_field in task["worker"]:
-                fields.append('worker.{}'.format(additional_field))
+                fields.append("worker.{}".format(additional_field))
         for field in fields:
-            resolve_keyed_by(task, field, item_name=task['name'],
-                             **{'project': config.params['project'],
-                                'release-type': config.params['release_type']}
-                             )
+            resolve_keyed_by(
+                task,
+                field,
+                item_name=task["name"],
+                **{
+                    "project": config.params["project"],
+                    "release-type": config.params["release_type"],
+                }
+            )
         yield task

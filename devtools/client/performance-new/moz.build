@@ -4,24 +4,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'aboutprofiling',
-    'components',
-    'store',
-    'popup',
+    "aboutprofiling",
+    "components",
+    "store",
+    "popup",
 ]
 
 DevToolsModules(
-    'browser.js',
-    'initializer.js',
-    'panel.js',
-    'preference-management.js',
-    'symbolication.jsm.js',
-    'typescript-lazy-load.jsm.js',
-    'utils.js',
+    "browser.js",
+    "initializer.js",
+    "panel.js",
+    "preference-management.js",
+    "symbolication.jsm.js",
+    "typescript-lazy-load.jsm.js",
+    "utils.js",
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")

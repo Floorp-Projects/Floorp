@@ -6,58 +6,58 @@
 NoVisibilityFlags()
 
 EXPORTS.mozilla += [
-    'cxxalloc.h',
-    'mozalloc.h',
-    'mozalloc_abort.h',
-    'mozalloc_oom.h',
+    "cxxalloc.h",
+    "mozalloc.h",
+    "mozalloc_abort.h",
+    "mozalloc_oom.h",
 ]
 
-if CONFIG['WRAP_STL_INCLUDES']:
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        EXPORTS.mozilla += ['throw_gcc.h']
-    elif CONFIG['CC_TYPE'] == 'clang-cl':
-        DEFINES['_HAS_EXCEPTIONS'] = 0
+if CONFIG["WRAP_STL_INCLUDES"]:
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        EXPORTS.mozilla += ["throw_gcc.h"]
+    elif CONFIG["CC_TYPE"] == "clang-cl":
+        DEFINES["_HAS_EXCEPTIONS"] = 0
         SOURCES += [
-            'msvc_raise_wrappers.cpp',
+            "msvc_raise_wrappers.cpp",
         ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["OS_TARGET"] == "WINNT":
     # Keep this file separate to avoid #include'ing windows.h everywhere.
     SOURCES += [
-        'winheap.cpp',
+        "winheap.cpp",
     ]
 
 UNIFIED_SOURCES += [
-    'mozalloc.cpp',
-    'mozalloc_oom.cpp',
+    "mozalloc.cpp",
+    "mozalloc_oom.cpp",
 ]
 
 SOURCES += [
-    'mozalloc_abort.cpp',
+    "mozalloc_abort.cpp",
 ]
 
-if CONFIG['MOZ_MEMORY']:
+if CONFIG["MOZ_MEMORY"]:
     # In MinGW, we don't want to actually export these functions out of the library
     # as the functions in libc++ correctly forward to jemalloc and exporting them
     # produces duplicate symbol errors.
-    if not (CONFIG['CC_TYPE'] == 'clang' and CONFIG['OS_TARGET'] == 'WINNT'):
+    if not (CONFIG["CC_TYPE"] == "clang" and CONFIG["OS_TARGET"] == "WINNT"):
         SOURCES += [
-            'cxxalloc.cpp',
+            "cxxalloc.cpp",
         ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] == 'clang':
-    SOURCES['mozalloc_abort.cpp'].flags += ['-Wno-infinite-recursion']
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["CC_TYPE"] == "clang":
+    SOURCES["mozalloc_abort.cpp"].flags += ["-Wno-infinite-recursion"]
 
-FINAL_LIBRARY = 'mozglue'
+FINAL_LIBRARY = "mozglue"
 
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
-DEFINES['_GNU_SOURCE'] = True
+DEFINES["_GNU_SOURCE"] = True
 
 DisableStlWrapping()
 
 LOCAL_INCLUDES += [
-    '!/xpcom',
-    '/memory/build',
+    "!/xpcom",
+    "/memory/build",
 ]
 
 DIST_INSTALL = True

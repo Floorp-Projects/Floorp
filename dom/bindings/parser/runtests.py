@@ -9,6 +9,7 @@ import argparse
 import traceback
 import WebIDL
 
+
 class TestHarness(object):
     def __init__(self, test, verbose):
         self.test = test
@@ -52,8 +53,9 @@ class TestHarness(object):
         else:
             self.test_fail(msg + " | Got %s expected %s" % (a, b))
 
+
 def run_tests(tests, verbose):
-    testdir = os.path.join(os.path.dirname(__file__), 'tests')
+    testdir = os.path.join(os.path.dirname(__file__), "tests")
     if not tests:
         tests = glob.iglob(os.path.join(testdir, "*.py"))
     sys.path.append(testdir)
@@ -63,15 +65,14 @@ def run_tests(tests, verbose):
 
     for test in tests:
         (testpath, ext) = os.path.splitext(os.path.basename(test))
-        _test = __import__(testpath, globals(), locals(), ['WebIDLTest'])
+        _test = __import__(testpath, globals(), locals(), ["WebIDLTest"])
 
         harness = TestHarness(test, verbose)
         harness.start()
         try:
             _test.WebIDLTest.__call__(WebIDL.Parser(), harness)
         except Exception as ex:
-            harness.test_fail("Unhandled exception in test %s: %s" %
-                              (testpath, ex))
+            harness.test_fail("Unhandled exception in test %s: %s" % (testpath, ex))
             traceback.print_exc()
         finally:
             harness.finish()
@@ -81,28 +82,40 @@ def run_tests(tests, verbose):
 
     if verbose or failed_tests:
         print()
-        print('Result summary:')
-        print('Successful: %d' % all_passed)
-        print('Unexpected: %d' % \
-                sum(len(failures) for _, failures in failed_tests))
+        print("Result summary:")
+        print("Successful: %d" % all_passed)
+        print("Unexpected: %d" % sum(len(failures) for _, failures in failed_tests))
         for test, failures in failed_tests:
-            print('%s:' % test)
+            print("%s:" % test)
             for failure in failures:
-                print('TEST-UNEXPECTED-FAIL | %s' % failure)
+                print("TEST-UNEXPECTED-FAIL | %s" % failure)
     return 1 if failed_tests else 0
+
 
 def get_parser():
     usage = """%(prog)s [OPTIONS] [TESTS]
                Where TESTS are relative to the tests directory."""
     parser = argparse.ArgumentParser(usage=usage)
-    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
-                        help="Don't print passing tests.", default=None)
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
-                        help="Run tests in verbose mode.")
-    parser.add_argument('tests', nargs="*", help="Tests to run")
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_false",
+        dest="verbose",
+        help="Don't print passing tests.",
+        default=None,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        dest="verbose",
+        help="Run tests in verbose mode.",
+    )
+    parser.add_argument("tests", nargs="*", help="Tests to run")
     return parser
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     if args.verbose is None:
@@ -110,6 +123,6 @@ if __name__ == '__main__':
 
     # Make sure the current directory is in the python path so we can cache the
     # result of the webidlyacc.py generation.
-    sys.path.append('.')
+    sys.path.append(".")
 
     sys.exit(run_tests(args.tests, verbose=args.verbose))

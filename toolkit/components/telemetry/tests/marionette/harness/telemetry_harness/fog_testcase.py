@@ -23,7 +23,9 @@ class FOGTestCase(TelemetryTestCase):
         super(FOGTestCase, self).setUp(*args, **kwargs)
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            fog_present = self.marionette.execute_script("return AppConstants.NIGHTLY_BUILD;")
+            fog_present = self.marionette.execute_script(
+                "return AppConstants.NIGHTLY_BUILD;"
+            )
 
         if not fog_present:
             # Before we skip this test, we need to quit marionette and the ping

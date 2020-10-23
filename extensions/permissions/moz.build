@@ -4,39 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]
 
 TESTING_JS_MODULES += [
-    'test/PermissionTestUtils.jsm',
+    "test/PermissionTestUtils.jsm",
 ]
 
 EXPORTS.mozilla += [
-    'Permission.h',
-    'PermissionDelegateHandler.h',
-    'PermissionDelegateIPCUtils.h',
-    'PermissionManager.h',
+    "Permission.h",
+    "PermissionDelegateHandler.h",
+    "PermissionDelegateIPCUtils.h",
+    "PermissionManager.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Permission.cpp',
-    'PermissionDelegateHandler.cpp',
-    'PermissionManager.cpp',
+    "Permission.cpp",
+    "PermissionDelegateHandler.cpp",
+    "PermissionManager.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 LOCAL_INCLUDES += [
-    '/caps',
+    "/caps",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Permission Manager')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Permission Manager")

@@ -19,7 +19,7 @@ from mozpack.files import BaseFile, DeflatedFile, Dest, ManifestFile
 
 
 class FileRegistry(object):
-    '''
+    """
     Generic container to keep track of a set of BaseFile instances. It
     preserves the order under which the files are added, but doesn't keep
     track of empty directories (directories are not stored at all).
@@ -28,7 +28,7 @@ class FileRegistry(object):
 
         registry = FileRegistry()
         registry.add('foo/bar', file_instance)
-    '''
+    """
 
     def __init__(self):
         self._files = OrderedDict()
@@ -36,10 +36,10 @@ class FileRegistry(object):
         self._partial_paths_cache = {}
 
     def _partial_paths(self, path):
-        '''
+        """
         Turn "foo/bar/baz/zot" into ["foo/bar/baz", "foo/bar", "foo"].
-        '''
-        dir_name = path.rpartition('/')[0]
+        """
+        dir_name = path.rpartition("/")[0]
         if not dir_name:
             return []
 
@@ -53,109 +53,108 @@ class FileRegistry(object):
         return partial_paths
 
     def add(self, path, content):
-        '''
+        """
         Add a BaseFile instance to the container, under the given path.
-        '''
+        """
         assert isinstance(content, BaseFile)
         if path in self._files:
             return errors.error("%s already added" % path)
         if self._required_directories[path] > 0:
-            return errors.error("Can't add %s: it is a required directory" %
-                                path)
+            return errors.error("Can't add %s: it is a required directory" % path)
         # Check whether any parent of the given path is already stored
         partial_paths = self._partial_paths(path)
         for partial_path in partial_paths:
             if partial_path in self._files:
-                return errors.error("Can't add %s: %s is a file" %
-                                    (path, partial_path))
+                return errors.error("Can't add %s: %s is a file" % (path, partial_path))
         self._files[path] = content
         self._required_directories.update(partial_paths)
 
     def match(self, pattern):
-        '''
+        """
         Return the list of paths, stored in the container, matching the
         given pattern. See the mozpack.path.match documentation for a
         description of the handled patterns.
-        '''
-        if '*' in pattern:
-            return [p for p in self.paths()
-                    if mozpath.match(p, pattern)]
-        if pattern == '':
+        """
+        if "*" in pattern:
+            return [p for p in self.paths() if mozpath.match(p, pattern)]
+        if pattern == "":
             return self.paths()
         if pattern in self._files:
             return [pattern]
-        return [p for p in self.paths()
-                if mozpath.basedir(p, [pattern]) == pattern]
+        return [p for p in self.paths() if mozpath.basedir(p, [pattern]) == pattern]
 
     def remove(self, pattern):
-        '''
+        """
         Remove paths matching the given pattern from the container. See the
         mozpack.path.match documentation for a description of the handled
         patterns.
-        '''
+        """
         items = self.match(pattern)
         if not items:
-            return errors.error("Can't remove %s: %s" % (pattern,
-                                                         "not matching anything previously added"))
+            return errors.error(
+                "Can't remove %s: %s"
+                % (pattern, "not matching anything previously added")
+            )
         for i in items:
             del self._files[i]
             self._required_directories.subtract(self._partial_paths(i))
 
     def paths(self):
-        '''
+        """
         Return all paths stored in the container, in the order they were added.
-        '''
+        """
         return list(self._files)
 
     def __len__(self):
-        '''
+        """
         Return number of paths stored in the container.
-        '''
+        """
         return len(self._files)
 
     def __contains__(self, pattern):
-        raise RuntimeError("'in' operator forbidden for %s. Use contains()." %
-                           self.__class__.__name__)
+        raise RuntimeError(
+            "'in' operator forbidden for %s. Use contains()." % self.__class__.__name__
+        )
 
     def contains(self, pattern):
-        '''
+        """
         Return whether the container contains paths matching the given
         pattern. See the mozpack.path.match documentation for a description of
         the handled patterns.
-        '''
+        """
         return len(self.match(pattern)) > 0
 
     def __getitem__(self, path):
-        '''
+        """
         Return the BaseFile instance stored in the container for the given
         path.
-        '''
+        """
         return self._files[path]
 
     def __iter__(self):
-        '''
+        """
         Iterate over all (path, BaseFile instance) pairs from the container.
             for path, file in registry:
                 (...)
-        '''
+        """
         return six.iteritems(self._files)
 
     def required_directories(self):
-        '''
+        """
         Return the set of directories required by the paths in the container,
         in no particular order.  The returned directories are relative to an
         unspecified (virtual) root directory (and do not include said root
         directory).
-        '''
+        """
         return set(k for k, v in self._required_directories.items() if v > 0)
 
     def output_to_inputs_tree(self):
-        '''
+        """
         Return a dictionary mapping each output path to the set of its
         required input paths.
 
         All paths are normalized.
-        '''
+        """
         tree = {}
         for output, file in self:
             output = mozpath.normpath(output)
@@ -163,12 +162,12 @@ class FileRegistry(object):
         return tree
 
     def input_to_outputs_tree(self):
-        '''
+        """
         Return a dictionary mapping each input path to the set of
         impacted output paths.
 
         All paths are normalized.
-        '''
+        """
         tree = defaultdict(set)
         for output, file in self:
             output = mozpath.normpath(output)
@@ -179,9 +178,10 @@ class FileRegistry(object):
 
 
 class FileRegistrySubtree(object):
-    '''A proxy class to give access to a subtree of an existing FileRegistry.
+    """A proxy class to give access to a subtree of an existing FileRegistry.
 
-    Note this doesn't implement the whole FileRegistry interface.'''
+    Note this doesn't implement the whole FileRegistry interface."""
+
     def __new__(cls, base, registry):
         if not base:
             return registry
@@ -200,8 +200,10 @@ class FileRegistrySubtree(object):
         return self._registry.add(self._get_path(path), content)
 
     def match(self, pattern):
-        return [mozpath.relpath(p, self._base)
-                for p in self._registry.match(self._get_path(pattern))]
+        return [
+            mozpath.relpath(p, self._base)
+            for p in self._registry.match(self._get_path(pattern))
+        ]
 
     def remove(self, pattern):
         return self._registry.remove(self._get_path(pattern))
@@ -251,16 +253,20 @@ class FileCopyResult(object):
 
 
 class FileCopier(FileRegistry):
-    '''
+    """
     FileRegistry with the ability to copy the registered files to a separate
     directory.
-    '''
+    """
 
-    def copy(self, destination, skip_if_older=True,
-             remove_unaccounted=True,
-             remove_all_directory_symlinks=True,
-             remove_empty_directories=True):
-        '''
+    def copy(
+        self,
+        destination,
+        skip_if_older=True,
+        remove_unaccounted=True,
+        remove_all_directory_symlinks=True,
+        remove_empty_directories=True,
+    ):
+        """
         Copy all registered files to the given destination path. The given
         destination can be an existing directory, or not exist at all. It
         can't be e.g. a file.
@@ -287,12 +293,12 @@ class FileCopier(FileRegistry):
         directory symlinks.
 
         Returns a FileCopyResult that details what changed.
-        '''
+        """
         assert isinstance(destination, six.string_types)
         assert not os.path.exists(destination) or os.path.isdir(destination)
 
         result = FileCopyResult()
-        have_symlinks = hasattr(os, 'symlink')
+        have_symlinks = hasattr(os, "symlink")
         destination = os.path.normpath(destination)
 
         # We create the destination directory specially. We can't do this as
@@ -312,8 +318,10 @@ class FileCopier(FileRegistry):
         # friends.
 
         required_dirs = set([destination])
-        required_dirs |= set(os.path.normpath(os.path.join(destination, d))
-                             for d in self.required_directories())
+        required_dirs |= set(
+            os.path.normpath(os.path.join(destination, d))
+            for d in self.required_directories()
+        )
 
         # Ensure destination directories are in place and proper.
         #
@@ -354,11 +362,14 @@ class FileCopier(FileRegistry):
                 os.chmod(d, 0o777 & ~umask)
 
         if isinstance(remove_unaccounted, FileRegistry):
-            existing_files = set(os.path.normpath(os.path.join(destination, p))
-                                 for p in remove_unaccounted.paths())
-            existing_dirs = set(os.path.normpath(os.path.join(destination, p))
-                                for p in remove_unaccounted
-                                .required_directories())
+            existing_files = set(
+                os.path.normpath(os.path.join(destination, p))
+                for p in remove_unaccounted.paths()
+            )
+            existing_dirs = set(
+                os.path.normpath(os.path.join(destination, p))
+                for p in remove_unaccounted.required_directories()
+            )
             existing_dirs |= {os.path.normpath(destination)}
         else:
             # While we have remove_unaccounted, it doesn't apply to empty
@@ -381,8 +392,7 @@ class FileCopier(FileRegistry):
                             # removed and a directory created above.
                             if remove_all_directory_symlinks:
                                 os.remove(full)
-                                result.removed_files.add(
-                                    os.path.normpath(full))
+                                result.removed_files.add(os.path.normpath(full))
                             else:
                                 existing_files.add(os.path.normpath(full))
                         else:
@@ -410,7 +420,7 @@ class FileCopier(FileRegistry):
         # paths. We also employ a low water mark to prevent thread pool
         # creation if number of files is too small to benefit.
         copy_results = []
-        if sys.platform == 'win32' and len(self) > 100:
+        if sys.platform == "win32" and len(self) > 100:
             with futures.ThreadPoolExecutor(4) as e:
                 fs = []
                 for p, f in self:
@@ -434,7 +444,7 @@ class FileCopier(FileRegistry):
         if remove_unaccounted:
             for f in existing_files - dest_files:
                 # Windows requires write access to remove files.
-                if os.name == 'nt' and not os.access(f, os.W_OK):
+                if os.name == "nt" and not os.access(f, os.W_OK):
                     # It doesn't matter what we set permissions to since we
                     # will remove this file shortly.
                     os.chmod(f, 0o600)
@@ -487,8 +497,10 @@ class FileCopier(FileRegistry):
                 # If remove_unaccounted is a # FileRegistry, then we have a
                 # list of directories that may not be empty, so ignore rmdir
                 # ENOTEMPTY errors for them.
-                if (isinstance(remove_unaccounted, FileRegistry) and
-                        e.errno == errno.ENOTEMPTY):
+                if (
+                    isinstance(remove_unaccounted, FileRegistry)
+                    and e.errno == errno.ENOTEMPTY
+                ):
                     continue
                 raise
             result.removed_directories.add(d)
@@ -497,16 +509,16 @@ class FileCopier(FileRegistry):
 
 
 class Jarrer(FileRegistry, BaseFile):
-    '''
+    """
     FileRegistry with the ability to copy and pack the registered files as a
     jar file. Also acts as a BaseFile instance, to be copied with a FileCopier.
-    '''
+    """
 
     def __init__(self, compress=True):
-        '''
+        """
         Create a Jarrer instance. See mozpack.mozjar.JarWriter documentation
         for details on the compress argument.
-        '''
+        """
         self.compress = compress
         self._preload = []
         self._compress_options = {}  # Map path to compress boolean option.
@@ -518,15 +530,16 @@ class Jarrer(FileRegistry, BaseFile):
             self._compress_options[path] = compress
 
     def copy(self, dest, skip_if_older=True):
-        '''
+        """
         Pack all registered files in the given destination jar. The given
         destination jar may be a path to jar file, or a Dest instance for
         a jar file.
         If the destination jar file exists, its (compressed) contents are used
         instead of the registered BaseFile instances when appropriate.
-        '''
+        """
+
         class DeflaterDest(Dest):
-            '''
+            """
             Dest-like class, reading from a file-like object initially, but
             switching to a Deflater object if written to.
 
@@ -534,7 +547,7 @@ class Jarrer(FileRegistry, BaseFile):
                 dest.read()      # Reads original_file
                 dest.write(data) # Creates a Deflater and write data there
                 dest.read()      # Re-opens the Deflater and reads from it
-            '''
+            """
 
             def __init__(self, orig=None, compress=True):
                 self.mode = None
@@ -542,16 +555,17 @@ class Jarrer(FileRegistry, BaseFile):
                 self.compress = compress
 
             def read(self, length=-1):
-                if self.mode != 'r':
+                if self.mode != "r":
                     assert self.mode is None
-                    self.mode = 'r'
+                    self.mode = "r"
                 return self.deflater.read(length)
 
             def write(self, data):
-                if self.mode != 'w':
+                if self.mode != "w":
                     from mozpack.mozjar import Deflater
+
                     self.deflater = Deflater(self.compress)
-                    self.mode = 'w'
+                    self.mode = "w"
                 self.deflater.write(data)
 
             def exists(self):
@@ -562,6 +576,7 @@ class Jarrer(FileRegistry, BaseFile):
         assert isinstance(dest, Dest)
 
         from mozpack.mozjar import JarWriter, JarReader, JAR_BROTLI
+
         try:
             old_jar = JarReader(fileobj=dest)
         except Exception:
@@ -576,15 +591,17 @@ class Jarrer(FileRegistry, BaseFile):
                 # but need to be able to decompress those files, per
                 # UnpackFinder and formatters, we force deflate on them.
                 if compress == JAR_BROTLI and (
-                        isinstance(file, ManifestFile) or
-                        mozpath.basename(path) == 'install.rdf'):
+                    isinstance(file, ManifestFile)
+                    or mozpath.basename(path) == "install.rdf"
+                ):
                     compress = True
 
                 # If the added content already comes from a jar file, we just add
                 # the raw data from the original jar file to the new one.
                 if isinstance(file, DeflatedFile):
-                    jar.add(path, file.file, mode=file.mode,
-                            compress=file.file.compress)
+                    jar.add(
+                        path, file.file, mode=file.mode, compress=file.file.compress
+                    )
                     continue
                 # If the file is already in the old contents for this jar,
                 # we avoid compressing when the contents match, which requires
@@ -600,11 +617,11 @@ class Jarrer(FileRegistry, BaseFile):
                 jar.preload(self._preload)
 
     def open(self):
-        raise RuntimeError('unsupported')
+        raise RuntimeError("unsupported")
 
     def preload(self, paths):
-        '''
+        """
         Add the given set of paths to the list of preloaded files. See
         mozpack.mozjar.JarWriter documentation for details on jar preloading.
-        '''
+        """
         self._preload.extend(paths)

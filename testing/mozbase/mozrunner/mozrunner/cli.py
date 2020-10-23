@@ -15,11 +15,13 @@ from .utils import findInPath
 
 # Map of debugging programs to information about them
 # from http://mxr.mozilla.org/mozilla-central/source/build/automationutils.py#59
-DEBUGGERS = {'gdb': {'interactive': True,
-                     'args': ['-q', '--args'], },
-             'valgrind': {'interactive': False,
-                          'args': ['--leak-check=full']}
-             }
+DEBUGGERS = {
+    "gdb": {
+        "interactive": True,
+        "args": ["-q", "--args"],
+    },
+    "valgrind": {"interactive": False, "args": ["--leak-check=full"]},
+}
 
 
 def debugger_arguments(debugger, arguments=None, interactive=None):
@@ -44,9 +46,9 @@ def debugger_arguments(debugger, arguments=None, interactive=None):
 
     # otherwise use the dictionary values for arguments unless specified
     if arguments is None:
-        arguments = DEBUGGERS[debugger].get('args', [])
+        arguments = DEBUGGERS[debugger].get("args", [])
     if interactive is None:
-        interactive = DEBUGGERS[debugger].get('interactive', False)
+        interactive = DEBUGGERS[debugger].get("interactive", False)
     return ([executable] + arguments, interactive)
 
 
@@ -64,34 +66,60 @@ class CLI(MozProfileCLI):
             self.runner_class = runners[app]
             self.profile_class = get_app_context(app).profile_class
         except KeyError:
-            self.parser.error('Application "%s" unknown (should be one of "%s")' %
-                              (app, ', '.join(runners.keys())))
+            self.parser.error(
+                'Application "%s" unknown (should be one of "%s")'
+                % (app, ", ".join(runners.keys()))
+            )
 
     def add_options(self, parser):
         """add options to the parser"""
-        parser.description = ("Reliable start/stop/configuration of Mozilla"
-                              " Applications (Firefox, Thunderbird, etc.)")
+        parser.description = (
+            "Reliable start/stop/configuration of Mozilla"
+            " Applications (Firefox, Thunderbird, etc.)"
+        )
 
         # add profile options
         MozProfileCLI.add_options(self, parser)
 
         # add runner options
-        parser.add_option('-b', "--binary",
-                          dest="binary", help="Binary path.",
-                          metavar=None, default=None)
-        parser.add_option('--app', dest='app', default='firefox',
-                          help="Application to use [DEFAULT: %default]")
-        parser.add_option('--app-arg', dest='appArgs',
-                          default=[], action='append',
-                          help="provides an argument to the test application")
-        parser.add_option('--debugger', dest='debugger',
-                          help="run under a debugger, e.g. gdb or valgrind")
-        parser.add_option('--debugger-args', dest='debugger_args',
-                          action='store',
-                          help="arguments to the debugger")
-        parser.add_option('--interactive', dest='interactive',
-                          action='store_true',
-                          help="run the program interactively")
+        parser.add_option(
+            "-b",
+            "--binary",
+            dest="binary",
+            help="Binary path.",
+            metavar=None,
+            default=None,
+        )
+        parser.add_option(
+            "--app",
+            dest="app",
+            default="firefox",
+            help="Application to use [DEFAULT: %default]",
+        )
+        parser.add_option(
+            "--app-arg",
+            dest="appArgs",
+            default=[],
+            action="append",
+            help="provides an argument to the test application",
+        )
+        parser.add_option(
+            "--debugger",
+            dest="debugger",
+            help="run under a debugger, e.g. gdb or valgrind",
+        )
+        parser.add_option(
+            "--debugger-args",
+            dest="debugger_args",
+            action="store",
+            help="arguments to the debugger",
+        )
+        parser.add_option(
+            "--interactive",
+            dest="interactive",
+            action="store_true",
+            help="run the program interactively",
+        )
 
     # methods for running
 
@@ -101,8 +129,7 @@ class CLI(MozProfileCLI):
 
     def runner_args(self):
         """arguments to instantiate the runner class"""
-        return dict(cmdargs=self.command_args(),
-                    binary=self.options.binary)
+        return dict(cmdargs=self.command_args(), binary=self.options.binary)
 
     def create_runner(self):
         profile = self.profile_class(**self.profile_args())
@@ -125,8 +152,9 @@ class CLI(MozProfileCLI):
             debug_args = debug_args.split()
         interactive = self.options.interactive
         if self.options.debugger:
-            debug_args, interactive = debugger_arguments(self.options.debugger, debug_args,
-                                                         interactive)
+            debug_args, interactive = debugger_arguments(
+                self.options.debugger, debug_args, interactive
+            )
         return debug_args, interactive
 
     def start(self, runner):
@@ -139,7 +167,7 @@ class CLI(MozProfileCLI):
         # attach a debugger if specified
         debug_args, interactive = self.debugger_arguments()
         runner.start(debug_args=debug_args, interactive=interactive)
-        print('Starting: ' + ' '.join(runner.command))
+        print("Starting: " + " ".join(runner.command))
         try:
             runner.wait()
         except KeyboardInterrupt:
@@ -150,5 +178,5 @@ def cli(args=sys.argv[1:]):
     CLI(args).run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

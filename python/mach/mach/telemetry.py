@@ -15,7 +15,7 @@ from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
 from mozbuild.telemetry import filter_args
 import mozpack.path
 
-MACH_METRICS_PATH = os.path.abspath(os.path.join(__file__, '..', '..', 'metrics.yaml'))
+MACH_METRICS_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "metrics.yaml"))
 
 
 class NoopTelemetry(object):
@@ -27,8 +27,11 @@ class NoopTelemetry(object):
 
     def submit(self, is_bootstrap):
         if self._failed_glean_import and not is_bootstrap:
-            print("Glean could not be found, so telemetry will not be reported. "
-                  "You may need to run |mach bootstrap|.", file=sys.stderr)
+            print(
+                "Glean could not be found, so telemetry will not be reported. "
+                "You may need to run |mach bootstrap|.",
+                file=sys.stderr,
+            )
 
 
 class GleanTelemetry(object):
@@ -41,12 +44,16 @@ class GleanTelemetry(object):
     Glean isn't available. This allows consumers to report telemetry without having
     to guard against incompatible environments.
     """
-    def __init__(self, ):
+
+    def __init__(
+        self,
+    ):
         self._metrics_cache = {}
 
     def metrics(self, metrics_path):
         if metrics_path not in self._metrics_cache:
             from glean import load_metrics
+
             metrics = load_metrics(metrics_path)
             self._metrics_cache[metrics_path] = metrics
 
@@ -55,7 +62,8 @@ class GleanTelemetry(object):
     def submit(self, _):
         from pathlib import Path
         from glean import load_pings
-        pings = load_pings(Path(__file__).parent.parent / 'pings.yaml')
+
+        pings = load_pings(Path(__file__).parent.parent / "pings.yaml")
         pings.usage.submit()
 
 
@@ -69,16 +77,19 @@ def create_telemetry_from_environment(settings):
     doesn't support it.
     """
 
-    is_mach_virtualenv = (mozpack.path.normpath(sys.executable) ==
-                          mozpack.path.normpath(get_mach_virtualenv_binary(py2=six.PY2)))
+    is_mach_virtualenv = mozpack.path.normpath(sys.executable) == mozpack.path.normpath(
+        get_mach_virtualenv_binary(py2=six.PY2)
+    )
 
-    if not (is_applicable_telemetry_environment()
-            # Glean is not compatible with Python 2
-            and sys.version_info >= (3, 0)
-            # If not using the mach virtualenv (e.g.: bootstrap uses native python)
-            # then we can't guarantee that the glean package that we import is a
-            # compatible version. Therefore, don't use glean.
-            and is_mach_virtualenv):
+    if not (
+        is_applicable_telemetry_environment()
+        # Glean is not compatible with Python 2
+        and sys.version_info >= (3, 0)
+        # If not using the mach virtualenv (e.g.: bootstrap uses native python)
+        # then we can't guarantee that the glean package that we import is a
+        # compatible version. Therefore, don't use glean.
+        and is_mach_virtualenv
+    ):
         return NoopTelemetry(False)
 
     try:
@@ -89,10 +100,10 @@ def create_telemetry_from_environment(settings):
     from pathlib import Path
 
     Glean.initialize(
-        'mozilla.mach',
-        'Unknown',
+        "mozilla.mach",
+        "Unknown",
         is_telemetry_enabled(settings),
-        data_dir=Path(get_state_dir()) / 'glean',
+        data_dir=Path(get_state_dir()) / "glean",
     )
     return GleanTelemetry()
 
@@ -115,19 +126,19 @@ def report_invocation_metrics(telemetry, command):
 
 
 def is_applicable_telemetry_environment():
-    if os.environ.get('MACH_MAIN_PID') != str(os.getpid()):
+    if os.environ.get("MACH_MAIN_PID") != str(os.getpid()):
         # This is a child mach process. Since we're collecting telemetry for the parent,
         # we don't want to collect telemetry again down here.
         return False
 
-    if any(e in os.environ for e in ('MOZ_AUTOMATION', 'TASK_ID')):
+    if any(e in os.environ for e in ("MOZ_AUTOMATION", "TASK_ID")):
         return False
 
     return True
 
 
 def is_telemetry_enabled(settings):
-    if os.environ.get('DISABLE_TELEMETRY') == '1':
+    if os.environ.get("DISABLE_TELEMETRY") == "1":
         return False
 
     try:

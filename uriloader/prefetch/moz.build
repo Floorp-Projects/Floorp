@@ -8,37 +8,37 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Networking: Cache")
 
 XPIDL_SOURCES += [
-    'nsIOfflineCacheUpdate.idl',
-    'nsIPrefetchService.idl',
+    "nsIOfflineCacheUpdate.idl",
+    "nsIPrefetchService.idl",
 ]
 
-XPIDL_MODULE = 'prefetch'
+XPIDL_MODULE = "prefetch"
 
 EXPORTS.mozilla.docshell += [
-    'OfflineCacheUpdateChild.h',
-    'OfflineCacheUpdateParent.h',
+    "OfflineCacheUpdateChild.h",
+    "OfflineCacheUpdateParent.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsOfflineCacheUpdate.cpp',
-    'nsOfflineCacheUpdateService.cpp',
-    'nsPrefetchService.cpp',
-    'OfflineCacheUpdateChild.cpp',
-    'OfflineCacheUpdateGlue.cpp',
-    'OfflineCacheUpdateParent.cpp',
+    "nsOfflineCacheUpdate.cpp",
+    "nsOfflineCacheUpdateService.cpp",
+    "nsPrefetchService.cpp",
+    "OfflineCacheUpdateChild.cpp",
+    "OfflineCacheUpdateGlue.cpp",
+    "OfflineCacheUpdateParent.cpp",
 ]
 
 IPDL_SOURCES += [
-    'POfflineCacheUpdate.ipdl',
+    "POfflineCacheUpdate.ipdl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/dom/base',
+    "/dom/base",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -14,23 +14,29 @@ from .utils import LOG
 
 
 class RecordingFile:
-
     def __init__(self, path_to_zip_file):
         self._recording_zip_path = path_to_zip_file
 
-        self._base_name = os.path.splitext(os.path.basename(self._recording_zip_path))[0]
+        self._base_name = os.path.splitext(os.path.basename(self._recording_zip_path))[
+            0
+        ]
         if not os.path.splitext(path_to_zip_file)[1] == ".zip":
             LOG.error(
-                "Wrong file type! The provided recording should be a zip file. %s" %
-                path_to_zip_file)
-            raise Exception("Wrong file type! The provided recording should be a zip file.")
+                "Wrong file type! The provided recording should be a zip file. %s"
+                % path_to_zip_file
+            )
+            raise Exception(
+                "Wrong file type! The provided recording should be a zip file."
+            )
 
         # create a temp dir
         self._mozproxy_dir = os.environ["MOZPROXY_DIR"]
         self._tempdir = os.path.join(self._mozproxy_dir, self._base_name)
 
         if os.path.exists(self._tempdir):
-            LOG.info("The recording dir already exists! Resetting the existing dir and data.")
+            LOG.info(
+                "The recording dir already exists! Resetting the existing dir and data."
+            )
             shutil.rmtree(self._tempdir)
         os.mkdir(self._tempdir)
 
@@ -38,7 +44,7 @@ class RecordingFile:
         self._recording = self._get_temp_path("dump.mp")
 
         if os.path.exists(path_to_zip_file):
-            with ZipFile(path_to_zip_file, 'r') as zipObj:
+            with ZipFile(path_to_zip_file, "r") as zipObj:
                 # Extract all the contents of zip file in different directory
                 zipObj.extractall(self._tempdir)
 
@@ -55,10 +61,7 @@ class RecordingFile:
 
         else:
             LOG.info("Recording file does not exists!!! Generating base structure")
-            self._metadata = {
-                "content": [],
-                "recording_date": str(datetime.now())
-            }
+            self._metadata = {"content": [], "recording_date": str(datetime.now())}
 
     def _convert_to_new_format(self):
         # Convert zip recording to new format
@@ -68,21 +71,26 @@ class RecordingFile:
         for tmp_file in os.listdir(self._tempdir):
             if tmp_file.endswith(".mp"):
                 LOG.info("Renaming %s to dump.mp file" % tmp_file)
-                os.rename(self._get_temp_path(tmp_file),
-                          self._get_temp_path("dump.mp"))
+                os.rename(self._get_temp_path(tmp_file), self._get_temp_path("dump.mp"))
             elif tmp_file.endswith(".json"):
                 if tmp_file.startswith("mitm_netlocs_"):
                     LOG.info("Renaming %s to netlocs.json file" % tmp_file)
-                    os.rename(self._get_temp_path("%s.json" % os.path.splitext(tmp_file)[0]),
-                              self._get_temp_path("netlocs.json"))
+                    os.rename(
+                        self._get_temp_path("%s.json" % os.path.splitext(tmp_file)[0]),
+                        self._get_temp_path("netlocs.json"),
+                    )
                 else:
                     LOG.info("Renaming %s to metadata.json file" % tmp_file)
-                    os.rename(self._get_temp_path("%s.json" % os.path.splitext(tmp_file)[0]),
-                              self._get_temp_path("metadata.json"))
+                    os.rename(
+                        self._get_temp_path("%s.json" % os.path.splitext(tmp_file)[0]),
+                        self._get_temp_path("metadata.json"),
+                    )
             elif tmp_file.endswith(".png"):
                 LOG.info("Renaming %s to screenshot.png file" % tmp_file)
-                os.rename(self._get_temp_path("%s.png" % os.path.splitext(tmp_file)[0]),
-                          self._get_temp_path("screenshot.png"))
+                os.rename(
+                    self._get_temp_path("%s.png" % os.path.splitext(tmp_file)[0]),
+                    self._get_temp_path("screenshot.png"),
+                )
 
     def _get_temp_path(self, file_name):
         return os.path.join(self._tempdir, file_name)

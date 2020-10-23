@@ -9,7 +9,7 @@ import pytest
 from mozpower.powerbase import (
     PowerBase,
     IPGExecutableMissingError,
-    PlatformUnsupportedError
+    PlatformUnsupportedError,
 )
 
 
@@ -38,10 +38,9 @@ def test_powerbase_missing_methods(powermeasurer):
 
 
 def test_powerbase_get_ipg_path_mac(powermeasurer):
-    """Tests that getting the IPG path returns the expected results.
-    """
-    powermeasurer._os = 'darwin'
-    powermeasurer._cpu = 'not-intel'
+    """Tests that getting the IPG path returns the expected results."""
+    powermeasurer._os = "darwin"
+    powermeasurer._cpu = "not-intel"
 
     def os_side_effect(arg):
         """Used to get around the os.path.exists check in
@@ -50,7 +49,7 @@ def test_powerbase_get_ipg_path_mac(powermeasurer):
         """
         return True
 
-    with mock.patch('os.path.exists', return_value=True) as m:
+    with mock.patch("os.path.exists", return_value=True) as m:
         m.side_effect = os_side_effect
 
         # None is returned when a non-intel based machine is
@@ -59,7 +58,7 @@ def test_powerbase_get_ipg_path_mac(powermeasurer):
         assert ipg_path is None
 
         # Check the path returned for mac intel-based machines.
-        powermeasurer._cpu = 'intel'
+        powermeasurer._cpu = "intel"
         ipg_path = powermeasurer.get_ipg_path()
         assert ipg_path == "/Applications/Intel Power Gadget/PowerLog"
 
@@ -69,8 +68,8 @@ def test_powerbase_get_ipg_path_errors(powermeasurer):
     get_ipg_path with invalid/unsupported _os and _cpu entries.
     """
 
-    powermeasurer._cpu = 'intel'
-    powermeasurer._os = 'Not-An-OS'
+    powermeasurer._cpu = "intel"
+    powermeasurer._os = "Not-An-OS"
 
     def os_side_effect(arg):
         """Used to force the error IPGExecutableMissingError to occur
@@ -82,13 +81,13 @@ def test_powerbase_get_ipg_path_errors(powermeasurer):
     with pytest.raises(PlatformUnsupportedError):
         powermeasurer.get_ipg_path()
 
-    with mock.patch('os.path.exists', return_value=False) as m:
+    with mock.patch("os.path.exists", return_value=False) as m:
         m.side_effect = os_side_effect
 
-        powermeasurer._os = 'darwin'
+        powermeasurer._os = "darwin"
         with pytest.raises(IPGExecutableMissingError):
             powermeasurer.get_ipg_path()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

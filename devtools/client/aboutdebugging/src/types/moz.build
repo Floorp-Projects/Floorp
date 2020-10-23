@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'debug-target.js',
-    'index.js',
-    'runtime.js',
-    'ui.js',
+    "debug-target.js",
+    "index.js",
+    "runtime.js",
+    "ui.js",
 )

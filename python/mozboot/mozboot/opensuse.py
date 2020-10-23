@@ -8,49 +8,48 @@ from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
 
-class OpenSUSEBootstrapper(
-        LinuxBootstrapper, BaseBootstrapper):
-    '''openSUSE experimental bootstrapper.'''
+class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
+    """openSUSE experimental bootstrapper."""
 
     SYSTEM_PACKAGES = [
-        'autoconf213',
-        'nodejs',
-        'npm',
-        'which',
-        'rpmconf',
-        'libcurl-devel',
-        'libpulse-devel',
+        "autoconf213",
+        "nodejs",
+        "npm",
+        "which",
+        "rpmconf",
+        "libcurl-devel",
+        "libpulse-devel",
     ]
 
     BROWSER_PACKAGES = [
-        'alsa-devel',
-        'gcc-c++',
-        'gtk3-devel',
-        'dbus-1-glib-devel',
-        'gconf2-devel',
-        'glibc-devel-static',
-        'libstdc++-devel',
-        'libXt-devel',
-        'libproxy-devel',
-        'libuuid-devel',
-        'yasm',
-        'gtk2-devel',
-        'clang-devel',
-        'patterns-gnome-devel_gnome',
+        "alsa-devel",
+        "gcc-c++",
+        "gtk3-devel",
+        "dbus-1-glib-devel",
+        "gconf2-devel",
+        "glibc-devel-static",
+        "libstdc++-devel",
+        "libXt-devel",
+        "libproxy-devel",
+        "libuuid-devel",
+        "yasm",
+        "gtk2-devel",
+        "clang-devel",
+        "patterns-gnome-devel_gnome",
     ]
 
     BROWSER_GROUP_PACKAGES = [
-        'devel_C_C++',
-        'devel_gnome',
+        "devel_C_C++",
+        "devel_gnome",
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        'java-1_8_0-openjdk',
-        'wget',
+        "java-1_8_0-openjdk",
+        "wget",
     ]
 
     def __init__(self, version, dist_id, **kwargs):
-        print('Using an experimental bootstrapper for openSUSE.')
+        print("Using an experimental bootstrapper for openSUSE.")
         BaseBootstrapper.__init__(self, **kwargs)
 
     def install_system_packages(self):
@@ -72,13 +71,15 @@ class OpenSUSEBootstrapper(
         self.ensure_mobile_android_packages(artifact_mode=True)
 
     def install_mercurial(self):
-        self.run_as_root(['pip', 'install', '--upgrade', 'pip'])
-        self.run_as_root(['pip', 'install', '--upgrade', 'Mercurial'])
+        self.run_as_root(["pip", "install", "--upgrade", "pip"])
+        self.run_as_root(["pip", "install", "--upgrade", "Mercurial"])
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         from mozboot import static_analysis
+
         self.install_toolchain_static_analysis(
-            state_dir, checkout_root, static_analysis.LINUX_CLANG_TIDY)
+            state_dir, checkout_root, static_analysis.LINUX_CLANG_TIDY
+        )
 
     def ensure_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
@@ -100,18 +101,23 @@ class OpenSUSEBootstrapper(
         try:
             self.zypper_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
         except Exception as e:
-            print('Failed to install all packages.  The Android developer '
-                  'toolchain requires 32 bit binaries be enabled')
+            print(
+                "Failed to install all packages.  The Android developer "
+                "toolchain requires 32 bit binaries be enabled"
+            )
             raise e
 
         # 2. Android pieces.
         from mozboot import android
-        android.ensure_android('linux', artifact_mode=artifact_mode,
-                               no_interactive=self.no_interactive)
+
+        android.ensure_android(
+            "linux", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+        )
 
     def generate_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        return android.generate_mozconfig('linux', artifact_mode=artifact_mode)
+
+        return android.generate_mozconfig("linux", artifact_mode=artifact_mode)
 
     def generate_mobile_android_artifact_mode_mozconfig(self):
         return self.generate_mobile_android_mozconfig(artifact_mode=True)
@@ -120,34 +126,34 @@ class OpenSUSEBootstrapper(
         self.zypper_update
 
     def upgrade_mercurial(self, current):
-        self.run_as_root(['pip3', 'install', '--upgrade', 'pip'])
-        self.run_as_root(['pip3', 'install', '--upgrade', 'Mercurial'])
+        self.run_as_root(["pip3", "install", "--upgrade", "pip"])
+        self.run_as_root(["pip3", "install", "--upgrade", "Mercurial"])
 
     def ensure_nasm_packages(self, state_dir, checkout_root):
-        self.zypper_install('nasm')
+        self.zypper_install("nasm")
 
     def zypper_install(self, *packages):
-        command = ['zypper', 'install']
+        command = ["zypper", "install"]
         if self.no_interactive:
-            command.append('-n')
+            command.append("-n")
 
         command.extend(packages)
 
         self.run_as_root(command)
 
     def zypper_update(self, *packages):
-        command = ['zypper', 'update']
+        command = ["zypper", "update"]
         if self.no_interactive:
-            command.append('-n')
+            command.append("-n")
 
         command.extend(packages)
 
         self.run_as_root(command)
 
     def zypper_patterninstall(self, *packages):
-        command = ['zypper', 'install', '-t', 'pattern']
+        command = ["zypper", "install", "-t", "pattern"]
         if self.no_interactive:
-            command.append('-y')
+            command.append("-y")
 
         command.extend(packages)
 

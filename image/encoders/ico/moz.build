@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'nsICOEncoder.cpp',
+    "nsICOEncoder.cpp",
 ]
 
 # Decoders need RasterImage.h
 LOCAL_INCLUDES += [
-    '/image',
-    '/image/encoders/bmp',
-    '/image/encoders/png',
+    "/image",
+    "/image/encoders/bmp",
+    "/image/encoders/png",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

@@ -11,7 +11,6 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 
 class ProcTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.proclaunch = os.path.join(here, "proclaunch.py")
@@ -30,27 +29,37 @@ class ProcTest(unittest.TestCase):
         returncode = proc.proc.returncode
         didtimeout = proc.didTimeout
         detected = ProcessHandler.pid_exists(proc.pid)
-        output = ''
+        output = ""
         # ProcessHandler has output when store_output is set to True in the constructor
         # (this is the default)
-        if getattr(proc, 'output'):
+        if getattr(proc, "output"):
             output = proc.output
 
-        if 'returncode' in expectedfail:
-            self.assertTrue(returncode, "Detected an unexpected return code of: %s" % returncode)
+        if "returncode" in expectedfail:
+            self.assertTrue(
+                returncode, "Detected an unexpected return code of: %s" % returncode
+            )
         elif isalive:
-            self.assertEqual(returncode, None, "Detected not None return code of: %s" % returncode)
+            self.assertEqual(
+                returncode, None, "Detected not None return code of: %s" % returncode
+            )
         else:
-            self.assertNotEqual(returncode, None, "Detected unexpected None return code of")
+            self.assertNotEqual(
+                returncode, None, "Detected unexpected None return code of"
+            )
 
-        if 'didtimeout' in expectedfail:
+        if "didtimeout" in expectedfail:
             self.assertTrue(didtimeout, "Detected that process didn't time out")
         else:
             self.assertTrue(not didtimeout, "Detected that process timed out")
 
         if isalive:
-            self.assertTrue(detected, "Detected process is not running, "
-                            "process output: %s" % output)
+            self.assertTrue(
+                detected,
+                "Detected process is not running, " "process output: %s" % output,
+            )
         else:
-            self.assertTrue(not detected, "Detected process is still running, "
-                            "process output: %s" % output)
+            self.assertTrue(
+                not detected,
+                "Detected process is still running, " "process output: %s" % output,
+            )

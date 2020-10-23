@@ -5,10 +5,9 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES = [
-    'TestFeaturePolicyParser.cpp',
+    "TestFeaturePolicyParser.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
-
+FINAL_LIBRARY = "xul-gtest"

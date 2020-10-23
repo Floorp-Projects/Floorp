@@ -26,13 +26,14 @@ class MacIntelPower(PowerBase):
 
        perfherder_data = mip.get_perfherder_data()
     """
-    def __init__(self, logger_name='mozpower', **kwargs):
+
+    def __init__(self, logger_name="mozpower", **kwargs):
         """Initializes the MacIntelPower object.
 
         :param str logger_name: logging logger name. Defaults to 'mozpower'.
         :param dict kwargs: optional keyword arguments passed to IntelPowerGadget.
         """
-        PowerBase.__init__(self, logger_name=logger_name, os='darwin', cpu='intel')
+        PowerBase.__init__(self, logger_name=logger_name, os="darwin", cpu="intel")
         self.ipg = IntelPowerGadget(self.ipg_path, **kwargs)
         self.ipg_results_handler = None
         self.start_time = None
@@ -40,8 +41,7 @@ class MacIntelPower(PowerBase):
         self.perfherder_data = {}
 
     def initialize_power_measurements(self):
-        """Starts power measurement gathering through IntelPowerGadget.
-        """
+        """Starts power measurement gathering through IntelPowerGadget."""
         self._logger.info("Initializing power measurements...")
 
         # Start measuring
@@ -50,10 +50,9 @@ class MacIntelPower(PowerBase):
         # Record start time to get an approximation of run time
         self.start_time = time.time()
 
-    def finalize_power_measurements(self,
-                                    test_name='power-testing',
-                                    output_dir_path='',
-                                    **kwargs):
+    def finalize_power_measurements(
+        self, test_name="power-testing", output_dir_path="", **kwargs
+    ):
         """Stops power measurement gathering through IntelPowerGadget, cleans the data,
         and produces partial perfherder formatted data that is stored in perfherder_data.
 
@@ -77,12 +76,14 @@ class MacIntelPower(PowerBase):
             output_dir_path,
             ipg_measure_duration=self.ipg.ipg_measure_duration,
             sampling_rate=self.ipg.sampling_rate,
-            logger_name=self.logger_name
+            logger_name=self.logger_name,
         )
 
         self.ipg_results_handler.clean_ipg_data()
-        self.perfherder_data = self.ipg_results_handler.format_ipg_data_to_partial_perfherder(
-            self.end_time - self.start_time, test_name
+        self.perfherder_data = (
+            self.ipg_results_handler.format_ipg_data_to_partial_perfherder(
+                self.end_time - self.start_time, test_name
+            )
         )
 
     def get_perfherder_data(self):

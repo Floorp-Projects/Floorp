@@ -9,17 +9,19 @@ from mozlint.result import ResultSummary
 
 
 def test_issue_defaults():
-    ResultSummary.root = '/fake/root'
+    ResultSummary.root = "/fake/root"
 
-    issue = Issue(linter='linter', path='path', message='message', lineno=None)
+    issue = Issue(linter="linter", path="path", message="message", lineno=None)
     assert issue.lineno == 0
     assert issue.column is None
-    assert issue.level == 'error'
+    assert issue.level == "error"
 
-    issue = Issue(linter='linter', path='path', message='message', lineno='1', column='2')
+    issue = Issue(
+        linter="linter", path="path", message="message", lineno="1", column="2"
+    )
     assert issue.lineno == 1
     assert issue.column == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

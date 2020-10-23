@@ -2,24 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
-DIRS += [
-    'actions',
-    'components',
-    'reducers',
-    'utils'
-]
+DIRS += ["actions", "components", "reducers", "utils"]
 
 DevToolsModules(
-    'accessibility-proxy.js',
-    'accessibility-view.js',
-    'constants.js',
-    'panel.js',
-    'picker.js',
-    'provider.js',
+    "accessibility-proxy.js",
+    "accessibility-view.js",
+    "constants.js",
+    "panel.js",
+    "picker.js",
+    "provider.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Accessibility Tools')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Accessibility Tools")

@@ -27,21 +27,20 @@ log = None
 base_ad_query = {
     "from": "task",
     "limit": 1000,
-    "where": {
-        "and": []
-    },
+    "where": {"and": []},
     "select": [
         "action.start_time",
         "run.name",
         "task.artifacts",
         "task.group.id",
-        "task.id"
+        "task.id",
     ],
 }
 
 
 def socket_timeout(value=120):
     """Decorator for socket timeouts."""
+
     def _socket_timeout(func):
         @wraps(func)
         def __socket_timeout(*args, **kw):
@@ -51,7 +50,9 @@ def socket_timeout(value=120):
                 return func(*args, **kw)
             finally:
                 socket.setdefaulttimeout(old)
+
         return __socket_timeout
+
     return _socket_timeout
 
 
@@ -130,9 +131,10 @@ def _get_browsertime_results(query):
         log.info("Can't find an older site test")
         return None
 
-    log.info("Comparing videos to TASK_GROUP=%s, TASK_ID=%s" % (
-        data["task.group.id"][maxind], data["task.id"][maxind]
-    ))
+    log.info(
+        "Comparing videos to TASK_GROUP=%s, TASK_ID=%s"
+        % (data["task.group.id"][maxind], data["task.id"][maxind])
+    )
 
     # Download the browsertime videos and untar them
     tmpdir = tempfile.mkdtemp()
@@ -170,22 +172,19 @@ def _data_from_last_task(label):
 
     base_ad_query["where"]["and"] = [
         {"in": {"task.run.state": ["completed"]}},
-        {"or": [
-            {"eq": {"run.name": label_pgo}},
-            {"eq": {"run.name": label_opt}}
-        ]}
+        {"or": [{"eq": {"run.name": label_pgo}}, {"eq": {"run.name": label_opt}}]},
     ]
 
     task_group_id = os.getenv("TC_GROUP_ID", "")
     if task_group_id:
-        base_ad_query["where"]["and"].append(
-            {"eq": {"task.group.id": task_group_id}}
-        )
+        base_ad_query["where"]["and"].append({"eq": {"task.group.id": task_group_id}})
     else:
-        base_ad_query["where"]["and"].extend([
-            {"in": {"repo.branch.name": ["mozilla-central"]}},
-            {"gte": {"action.start_time": {"date": "today-week-week"}}},
-        ])
+        base_ad_query["where"]["and"].extend(
+            [
+                {"in": {"repo.branch.name": ["mozilla-central"]}},
+                {"gte": {"action.start_time": {"date": "today-week-week"}}},
+            ]
+        )
 
     return _get_browsertime_results(base_ad_query)
 
@@ -329,9 +328,7 @@ def calculate_similarity(jobs_json, fetch_dir, output):
         ]
         log.info("Found %s old videos" % str(len(old_btime_videos)))
 
-        old_sim, old_sim2d = _get_similarity(
-            old_btime_videos, new_btime_videos, output
-        )
+        old_sim, old_sim2d = _get_similarity(old_btime_videos, new_btime_videos, output)
     else:
         log.info("Failed to find an older test task")
 

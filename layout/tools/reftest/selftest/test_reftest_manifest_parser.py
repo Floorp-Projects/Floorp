@@ -15,7 +15,8 @@ def parse(get_reftest, normalize):
     reftest, options = get_reftest(tests=["dummy"])
     reftest._populate_logger(options)
     reftest.outputHandler = output.OutputHandler(
-        reftest.log, options.utilityPath, options.symbolsPath)
+        reftest.log, options.utilityPath, options.symbolsPath
+    )
 
     def resolve(path):
         path = normalize(path)
@@ -30,28 +31,28 @@ def parse(get_reftest, normalize):
 
 
 def test_parse_test_types(parse):
-    tests = parse('types.list')
-    assert tests[0]['type'] == '=='
-    assert tests[1]['type'] == '!='
-    assert tests[2]['type'] == 'load'
-    assert tests[3]['type'] == 'script'
-    assert tests[4]['type'] == 'print'
+    tests = parse("types.list")
+    assert tests[0]["type"] == "=="
+    assert tests[1]["type"] == "!="
+    assert tests[2]["type"] == "load"
+    assert tests[3]["type"] == "script"
+    assert tests[4]["type"] == "print"
 
 
 def test_parse_failure_type_interactions(parse):
     """Tests interactions between skip and fails."""
-    tests = parse('failure-type-interactions.list')
+    tests = parse("failure-type-interactions.list")
     for t in tests:
-        if 'skip' in t['name']:
-            assert t['skip']
+        if "skip" in t["name"]:
+            assert t["skip"]
         else:
-            assert not t['skip']
+            assert not t["skip"]
 
         # 0 => EXPECTED_PASS, 1 => EXPECTED_FAIL
-        if 'fails' in t['name']:
-            assert t['expected'] == 1
+        if "fails" in t["name"]:
+            assert t["expected"] == 1
         else:
-            assert t['expected'] == 0
+            assert t["expected"] == 0
 
 
 def test_parse_invalid_manifests(parse):
@@ -60,14 +61,14 @@ def test_parse_invalid_manifests(parse):
     # us from capturing the Gecko output with the capfd fixture. See:
     # https://github.com/pytest-dev/pytest/issues/5997
     with pytest.raises(SystemExit):
-        parse('invalid-defaults.list')
+        parse("invalid-defaults.list")
 
     with pytest.raises(SystemExit):
-        parse('invalid-defaults-include.list')
+        parse("invalid-defaults-include.list")
 
     with pytest.raises(SystemExit):
-        parse('invalid-include.list')
+        parse("invalid-include.list")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

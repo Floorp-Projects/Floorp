@@ -33,7 +33,7 @@ class StringTable:
         return result
 
     def stringIndexes(self, strings):
-        """ Returns a list of indexes for the provided list of strings.
+        """Returns a list of indexes for the provided list of strings.
         Adds the strings to the table if they are not in it yet.
         :param strings: list of strings to put into the table.
         """
@@ -71,6 +71,7 @@ class StringTable:
                 if s == "'":
                     return "'\\''"
                 return "'%s'" % s
+
             return ", ".join(map(toCChar, string))
 
         f.write("#if defined(_MSC_VER) && !defined(__clang__)\n")
@@ -80,13 +81,17 @@ class StringTable:
         f.write("#endif\n")
         for (string, offset) in sorted(entries, key=lambda x: x[1]):
             if "*/" in string:
-                raise ValueError("String in string table contains unexpected sequence '*/': %s" %
-                                 string)
+                raise ValueError(
+                    "String in string table contains unexpected sequence '*/': %s"
+                    % string
+                )
 
             e = explodeToCharArray(string)
             if e:
-                f.write("  /* %5d - \"%s\" */ %s, '\\0',\n"
-                        % (offset, string, explodeToCharArray(string)))
+                f.write(
+                    "  /* %5d - \"%s\" */ %s, '\\0',\n"
+                    % (offset, string, explodeToCharArray(string))
+                )
             else:
                 f.write("  /* %5d - \"%s\" */ '\\0',\n" % (offset, string))
         f.write("};\n\n")

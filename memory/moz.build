@@ -8,20 +8,20 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Memory Allocator")
 
 DIRS += [
-    'build',
+    "build",
 ]
 
 # For now, don't build mozalloc when building with --enable-project=memory
-if CONFIG['MOZ_BUILD_APP'] != 'memory':
+if CONFIG["MOZ_BUILD_APP"] != "memory":
     DIRS += [
-        'mozalloc',
+        "mozalloc",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT']:
-    DIRS += ['volatile']
+if CONFIG["MOZ_WIDGET_TOOLKIT"]:
+    DIRS += ["volatile"]
 
 # NB: gtest dir is included in toolkit/toolkit.build due to its dependency
 # on libxul.
 
-if CONFIG['MOZ_REPLACE_MALLOC']:
-    DIRS += ['replace']
+if CONFIG["MOZ_REPLACE_MALLOC"]:
+    DIRS += ["replace"]

@@ -5,23 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'injector.cpp',
+    "injector.cpp",
 ]
 
-SharedLibrary('breakpadinjector')
+SharedLibrary("breakpadinjector")
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/toolkit/crashreporter/breakpad-client',
-    '/toolkit/crashreporter/google-breakpad/src',
+    "/toolkit/crashreporter/breakpad-client",
+    "/toolkit/crashreporter/google-breakpad/src",
 ]
 
 USE_STATIC_LIBS = True
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    LDFLAGS += ['-Wl,-e,_DummyEntryPoint@12']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    LDFLAGS += ["-Wl,-e,_DummyEntryPoint@12"]
 else:
-    LDFLAGS += ['-ENTRY:DummyEntryPoint']
+    LDFLAGS += ["-ENTRY:DummyEntryPoint"]
 
 DisableStlWrapping()

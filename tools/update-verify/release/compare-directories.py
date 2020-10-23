@@ -30,36 +30,36 @@ TRANSFORMS = [
     {
         # preprocessor comments, eg //@line 6 "/builds/worker/workspace/...
         # this can be removed once each channel has a watershed above 59.0b2 (from bug 1431342)
-        'files': [
-            'defaults/pref/channel-prefs.js',
-            'Contents/Resources/defaults/pref/channel-prefs.js',
+        "files": [
+            "defaults/pref/channel-prefs.js",
+            "Contents/Resources/defaults/pref/channel-prefs.js",
         ],
-        'channel_prefix': ['aurora', 'beta', 'release', 'esr'],
-        'side': 'source',
-        'deletion': '//@line 6 "',
+        "channel_prefix": ["aurora", "beta", "release", "esr"],
+        "side": "source",
+        "deletion": '//@line 6 "',
     },
     {
         # updates from a beta to an RC build, the latter specifies the release channel
-        'files': [
-            'defaults/pref/channel-prefs.js',
-            'Contents/Resources/defaults/pref/channel-prefs.js',
+        "files": [
+            "defaults/pref/channel-prefs.js",
+            "Contents/Resources/defaults/pref/channel-prefs.js",
         ],
-        'channel_prefix': ['beta'],
-        'side': 'target',
-        'substitution': [
+        "channel_prefix": ["beta"],
+        "side": "target",
+        "substitution": [
             'pref("app.update.channel", "release");\n',
             'pref("app.update.channel", "beta");\n',
         ],
     },
     {
         # updates from an RC to a beta build
-        'files': [
-            'defaults/pref/channel-prefs.js',
-            'Contents/Resources/defaults/pref/channel-prefs.js',
+        "files": [
+            "defaults/pref/channel-prefs.js",
+            "Contents/Resources/defaults/pref/channel-prefs.js",
         ],
-        'channel_prefix': ['beta'],
-        'side': 'source',
-        'substitution': [
+        "channel_prefix": ["beta"],
+        "side": "source",
+        "substitution": [
             'pref("app.update.channel", "release");\n',
             'pref("app.update.channel", "beta");\n',
         ],
@@ -70,37 +70,37 @@ TRANSFORMS = [
         # the target side. In the 70.0+ --> 70.0+ case with a RC we won't need this, and
         # the channel munging above will make channel-prefs.js identical, allowing the code
         # to break before applying this transform.
-        'files': [
-            'defaults/pref/channel-prefs.js',
-            'Contents/Resources/defaults/pref/channel-prefs.js',
+        "files": [
+            "defaults/pref/channel-prefs.js",
+            "Contents/Resources/defaults/pref/channel-prefs.js",
         ],
-        'channel_prefix': ['aurora', 'beta', 'release', 'esr'],
-        'side': 'target',
-        'deletion': '//',
+        "channel_prefix": ["aurora", "beta", "release", "esr"],
+        "side": "target",
+        "deletion": "//",
     },
     # update-settings.ini
     {
         # updates from a beta to an RC build, the latter specifies the release channel
         # on mac, we actually have both files. The second location is the real
         # one but we copy to the first to run the linux64 updater
-        'files': ['update-settings.ini', 'Contents/Resources/update-settings.ini'],
-        'channel_prefix': ['beta'],
-        'side': 'target',
-        'substitution': [
-            'ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release\n',
-            'ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release\n',
+        "files": ["update-settings.ini", "Contents/Resources/update-settings.ini"],
+        "channel_prefix": ["beta"],
+        "side": "target",
+        "substitution": [
+            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release\n",
+            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release\n",
         ],
     },
     {
         # updates from an RC to a beta build
         # on mac, we only need to modify the legit file this time. unpack_build
         # handles the copy for the updater in both source and target
-        'files': ['Contents/Resources/update-settings.ini'],
-        'channel_prefix': ['beta'],
-        'side': 'source',
-        'substitution': [
-            'ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release\n',
-            'ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release\n',
+        "files": ["Contents/Resources/update-settings.ini"],
+        "channel_prefix": ["beta"],
+        "side": "source",
+        "substitution": [
+            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release\n",
+            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release\n",
         ],
     },
 ]
@@ -115,8 +115,8 @@ def walk_dir(path):
         all_files.extend([os.path.join(root, f) for f in files])
 
     # trim off directory prefix for easier comparison
-    all_dirs = [d[len(path)+1:] for d in all_dirs]
-    all_files = [f[len(path)+1:] for f in all_files]
+    all_dirs = [d[len(path) + 1 :] for d in all_dirs]
+    all_files = [f[len(path) + 1 :] for f in all_files]
 
     return all_dirs, all_files
 
@@ -128,16 +128,16 @@ def compare_listings(source_list, target_list, label, source_dir, target_dir):
 
     left_diff = obj1 - obj2
     if left_diff:
-        logging.error('{} only in {}:'.format(label, source_dir))
+        logging.error("{} only in {}:".format(label, source_dir))
         for d in sorted(left_diff):
-            logging.error('  {}'.format(d))
+            logging.error("  {}".format(d))
         difference_found = True
 
     right_diff = obj2 - obj1
     if right_diff:
-        logging.error('{} only in {}:'.format(label, target_dir))
+        logging.error("{} only in {}:".format(label, target_dir))
         for d in sorted(right_diff):
-            logging.error('  {}'.format(d))
+            logging.error("  {}".format(d))
         difference_found = True
 
     return difference_found
@@ -145,8 +145,8 @@ def compare_listings(source_list, target_list, label, source_dir, target_dir):
 
 def hash_file(filename):
     h = hashlib.sha256()
-    with open(filename, 'rb', buffering=0) as f:
-        for b in iter(lambda: f.read(128 * 1024), b''):
+    with open(filename, "rb", buffering=0) as f:
+        for b in iter(lambda: f.read(128 * 1024), b""):
             h.update(b)
     return h.hexdigest()
 
@@ -157,60 +157,78 @@ def compare_common_files(files, channel, source_dir, target_dir):
         source_file = os.path.join(source_dir, filename)
         target_file = os.path.join(target_dir, filename)
 
-        if os.stat(source_file).st_size != os.stat(target_file).st_size or \
-                hash_file(source_file) != hash_file(target_file):
-            logging.info('Difference found in {}'.format(filename))
+        if os.stat(source_file).st_size != os.stat(target_file).st_size or hash_file(
+            source_file
+        ) != hash_file(target_file):
+            logging.info("Difference found in {}".format(filename))
             file_contents = {
-                'source': open(source_file).readlines(),
-                'target': open(target_file).readlines(),
+                "source": open(source_file).readlines(),
+                "target": open(target_file).readlines(),
             }
 
             transforms = [
-                t for t in TRANSFORMS
-                if filename in t['files']
-                and channel.startswith(tuple(t['channel_prefix']))
+                t
+                for t in TRANSFORMS
+                if filename in t["files"]
+                and channel.startswith(tuple(t["channel_prefix"]))
             ]
             logging.debug(
-                'Got {} transform(s) to consider for {}'.format(len(transforms), filename))
+                "Got {} transform(s) to consider for {}".format(
+                    len(transforms), filename
+                )
+            )
             for transform in transforms:
-                side = transform['side']
+                side = transform["side"]
 
-                if 'deletion' in transform:
-                    d = transform['deletion']
-                    logging.debug('Trying deleting lines starting {} from {}'.format(d, side))
-                    file_contents[side] = [l for l in file_contents[side] if not l.startswith(d)]
+                if "deletion" in transform:
+                    d = transform["deletion"]
+                    logging.debug(
+                        "Trying deleting lines starting {} from {}".format(d, side)
+                    )
+                    file_contents[side] = [
+                        l for l in file_contents[side] if not l.startswith(d)
+                    ]
 
-                if 'substitution' in transform:
-                    r = transform['substitution']
-                    logging.debug('Trying replacement for {} in {}'.format(r, side))
-                    file_contents[side] = [l.replace(r[0], r[1]) for l in file_contents[side]]
+                if "substitution" in transform:
+                    r = transform["substitution"]
+                    logging.debug("Trying replacement for {} in {}".format(r, side))
+                    file_contents[side] = [
+                        l.replace(r[0], r[1]) for l in file_contents[side]
+                    ]
 
-                if file_contents['source'] == file_contents['target']:
-                    logging.info('Transforms removed all differences')
+                if file_contents["source"] == file_contents["target"]:
+                    logging.info("Transforms removed all differences")
                     break
 
-            if file_contents['source'] != file_contents['target']:
+            if file_contents["source"] != file_contents["target"]:
                 difference_found = True
-                logging.error('{} still differs after transforms, residual diff:'.format(filename))
-                for l in difflib.unified_diff(file_contents['source'], file_contents['target']):
+                logging.error(
+                    "{} still differs after transforms, residual diff:".format(filename)
+                )
+                for l in difflib.unified_diff(
+                    file_contents["source"], file_contents["target"]
+                ):
                     logging.error(l.rstrip())
 
     return difference_found
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        'Compare two directories recursively, with transformations for expected diffs')
-    parser.add_argument('source', help='Directory containing updated Firefox')
-    parser.add_argument('target', help='Directory containing expected Firefox')
-    parser.add_argument('channel', help='Update channel used')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+        "Compare two directories recursively, with transformations for expected diffs"
+    )
+    parser.add_argument("source", help="Directory containing updated Firefox")
+    parser.add_argument("target", help="Directory containing expected Firefox")
+    parser.add_argument("channel", help="Update channel used")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable verbose logging"
+    )
 
     args = parser.parse_args()
     level = logging.INFO
     if args.verbose:
         level = logging.DEBUG
-    logging.basicConfig(level=level, format='%(message)s', stream=sys.stdout)
+    logging.basicConfig(level=level, format="%(message)s", stream=sys.stdout)
 
     source = args.source
     target = args.target
@@ -218,14 +236,19 @@ if __name__ == '__main__':
         logging.error("Source and/or target directory doesn't exist")
         sys.exit(3)
 
-    logging.info('Comparing {} with {}...'.format(source, target))
+    logging.info("Comparing {} with {}...".format(source, target))
     source_dirs, source_files = walk_dir(source)
     target_dirs, target_files = walk_dir(target)
 
-    dir_list_diff = compare_listings(source_dirs, target_dirs, 'Directories', source, target)
-    file_list_diff = compare_listings(source_files, target_files, 'Files', source, target)
+    dir_list_diff = compare_listings(
+        source_dirs, target_dirs, "Directories", source, target
+    )
+    file_list_diff = compare_listings(
+        source_files, target_files, "Files", source, target
+    )
     file_diff = compare_common_files(
-        set(source_files) & set(target_files), args.channel, source, target)
+        set(source_files) & set(target_files), args.channel, source, target
+    )
 
     if file_diff:
         # Use status of 2 since python will use 1 if there is an error running the script
@@ -235,4 +258,4 @@ if __name__ == '__main__':
         # side anymore so lets FAIL
         sys.exit(2)
     else:
-        logging.info('No differences found')
+        logging.info("No differences found")

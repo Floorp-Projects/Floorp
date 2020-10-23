@@ -5,26 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.net += [
-    'DataChannelChild.h',
-    'DataChannelParent.h',
+    "DataChannelChild.h",
+    "DataChannelParent.h",
 ]
 
 EXPORTS += [
-    'nsDataChannel.h',
-    'nsDataHandler.h',
+    "nsDataChannel.h",
+    "nsDataHandler.h",
 ]
 
 UNIFIED_SOURCES += [
-    'DataChannelChild.cpp',
-    'DataChannelParent.cpp',
-    'nsDataChannel.cpp',
-    'nsDataHandler.cpp',
+    "DataChannelChild.cpp",
+    "DataChannelParent.cpp",
+    "nsDataChannel.cpp",
+    "nsDataHandler.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
-    '/netwerk/base',
+    "/netwerk/base",
 ]
-

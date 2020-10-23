@@ -5,19 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
-    'components',
-    'reducers',
-    'utils',
+    "actions",
+    "components",
+    "reducers",
+    "utils",
 ]
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 DevToolsModules(
-    'CompatibilityView.js',
-    'types.js',
+    "CompatibilityView.js",
+    "types.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Inspector: Compatibility')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Inspector: Compatibility")

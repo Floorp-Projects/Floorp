@@ -19,33 +19,35 @@ class ProgressBar(object):
         self.fullwidth = None
 
         self.barlen = 64 - self.label_width
-        self.fmt = '\r%-' + str(label_width) + 's %3d%% %-' + str(self.barlen) + 's| %6.1fs'
+        self.fmt = (
+            "\r%-" + str(label_width) + "s %3d%% %-" + str(self.barlen) + "s| %6.1fs"
+        )
 
     def update(self, value):
         self.cur = value
         pct = int(100.0 * self.cur / self.limit)
         barlen = int(1.0 * self.barlen * self.cur / self.limit) - 1
-        bar = '='*barlen + '>'
+        bar = "=" * barlen + ">"
         dt = datetime.datetime.now() - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
-        line = self.fmt % (self.label[:self.label_width], pct, bar, dt)
+        line = self.fmt % (self.label[: self.label_width], pct, bar, dt)
         self.fullwidth = len(line)
         sys.stdout.write(line)
         sys.stdout.flush()
 
     # Clear the current bar and leave the cursor at the start of the line.
     def clear(self):
-        if (self.fullwidth):
-            sys.stdout.write('\r' + ' ' * self.fullwidth + '\r')
+        if self.fullwidth:
+            sys.stdout.write("\r" + " " * self.fullwidth + "\r")
             self.fullwidth = None
 
     def finish(self):
         self.update(self.limit)
-        sys.stdout.write('\n')
+        sys.stdout.write("\n")
 
 
-if __name__ == '__main__':
-    pb = ProgressBar('test', 12)
+if __name__ == "__main__":
+    pb = ProgressBar("test", 12)
     for i in range(12):
         pb.update(i)
         time.sleep(0.5)

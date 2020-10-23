@@ -118,8 +118,11 @@ class GitTree(wptupdate.tree.GitTree):
         """Get an unused branch name in the local tree
 
         :param prefix: Prefix to use at the start of the branch name"""
-        branches = [ref[len("refs/heads/"):] for sha1, ref in self.list_refs()
-                    if ref.startswith("refs/heads/")]
+        branches = [
+            ref[len("refs/heads/") :]
+            for sha1, ref in self.list_refs()
+            if ref.startswith("refs/heads/")
+        ]
         return get_unique_name(branches, prefix)
 
 
@@ -154,11 +157,13 @@ class GeckoCommitMessage(CommitMessage):
     # slightly different because we need to parse out specific parts of the message rather
     # than just enforce a general pattern.
 
-    _bug_re = re.compile("^Bug (\d+)[^\w]*(?:Part \d+[^\w]*)?(.*?)\s*(?:r=(\w*))?$",
-                         re.IGNORECASE)
+    _bug_re = re.compile(
+        "^Bug (\d+)[^\w]*(?:Part \d+[^\w]*)?(.*?)\s*(?:r=(\w*))?$", re.IGNORECASE
+    )
 
-    _backout_re = re.compile("^(?:Back(?:ing|ed)\s+out)|Backout|(?:Revert|(?:ed|ing))",
-                             re.IGNORECASE)
+    _backout_re = re.compile(
+        "^(?:Back(?:ing|ed)\s+out)|Backout|(?:Revert|(?:ed|ing))", re.IGNORECASE
+    )
     _backout_sha1_re = re.compile("(?:\s|\:)(0-9a-f){12}")
 
     def _parse_message(self):

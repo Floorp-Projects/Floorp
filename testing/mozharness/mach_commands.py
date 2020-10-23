@@ -24,146 +24,166 @@ from mozbuild.base import MachCommandBase, MozbuildObject
 from mozbuild.base import MachCommandConditions as conditions
 from argparse import ArgumentParser
 
+
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("suite_name", nargs=1, type=str, action="store",
-                        help="Suite to run in mozharness")
-    parser.add_argument("mozharness_args", nargs=argparse.REMAINDER,
-                        help="Extra arguments to pass to mozharness")
+    parser.add_argument(
+        "suite_name",
+        nargs=1,
+        type=str,
+        action="store",
+        help="Suite to run in mozharness",
+    )
+    parser.add_argument(
+        "mozharness_args",
+        nargs=argparse.REMAINDER,
+        help="Extra arguments to pass to mozharness",
+    )
     return parser
+
 
 class MozharnessRunner(MozbuildObject):
     def __init__(self, *args, **kwargs):
         MozbuildObject.__init__(self, *args, **kwargs)
 
-
         self.test_packages_url = self._test_packages_url()
         self.installer_url = self._installer_url()
 
         desktop_unittest_config = [
-            "--config-file", lambda: self.config_path("unittests",
-                                                      "%s_unittest.py" % mozinfo.info['os']),
-            "--config-file", lambda: self.config_path("developer_config.py")]
+            "--config-file",
+            lambda: self.config_path(
+                "unittests", "%s_unittest.py" % mozinfo.info["os"]
+            ),
+            "--config-file",
+            lambda: self.config_path("developer_config.py"),
+        ]
 
         self.config = {
             "__defaults__": {
-                "config": ["--download-symbols", "ondemand",
-                           "--installer-url", self.installer_url,
-                           "--test-packages-url", self.test_packages_url]
+                "config": [
+                    "--download-symbols",
+                    "ondemand",
+                    "--installer-url",
+                    self.installer_url,
+                    "--test-packages-url",
+                    self.test_packages_url,
+                ]
             },
-
             "mochitest-valgrind": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "valgrind-plain"]
+                "config": desktop_unittest_config
+                + ["--mochitest-suite", "valgrind-plain"],
             },
             "mochitest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "plain"]
+                "config": desktop_unittest_config + ["--mochitest-suite", "plain"],
             },
             "mochitest-chrome": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "chrome"]
+                "config": desktop_unittest_config + ["--mochitest-suite", "chrome"],
             },
             "mochitest-browser-chrome": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "browser-chrome"]
+                "config": desktop_unittest_config
+                + ["--mochitest-suite", "browser-chrome"],
             },
             "mochitest-devtools-chrome": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "mochitest-devtools-chrome"]
+                "config": desktop_unittest_config
+                + ["--mochitest-suite", "mochitest-devtools-chrome"],
             },
             "mochitest-remote": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--mochitest-suite", "mochitest-remote"]
+                "config": desktop_unittest_config
+                + ["--mochitest-suite", "mochitest-remote"],
             },
             "crashtest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--reftest-suite", "crashtest"]
+                "config": desktop_unittest_config + ["--reftest-suite", "crashtest"],
             },
             "jsreftest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--reftest-suite", "jsreftest"]
+                "config": desktop_unittest_config + ["--reftest-suite", "jsreftest"],
             },
             "reftest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--reftest-suite", "reftest"]
+                "config": desktop_unittest_config + ["--reftest-suite", "reftest"],
             },
             "reftest-no-accel": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--reftest-suite", "reftest-no-accel"]
+                "config": desktop_unittest_config
+                + ["--reftest-suite", "reftest-no-accel"],
             },
             "cppunittest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--cppunittest-suite", "cppunittest"]
+                "config": desktop_unittest_config
+                + ["--cppunittest-suite", "cppunittest"],
             },
             "xpcshell": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--xpcshell-suite", "xpcshell"]
+                "config": desktop_unittest_config + ["--xpcshell-suite", "xpcshell"],
             },
             "xpcshell-addons": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--xpcshell-suite", "xpcshell-addons"]
+                "config": desktop_unittest_config
+                + ["--xpcshell-suite", "xpcshell-addons"],
             },
             "jittest": {
                 "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--jittest-suite", "jittest"]
+                "config": desktop_unittest_config + ["--jittest-suite", "jittest"],
             },
             "marionette": {
                 "script": "marionette.py",
-                "config": ["--config-file", self.config_path("marionette",
-                                                             "test_config.py")]
+                "config": [
+                    "--config-file",
+                    self.config_path("marionette", "test_config.py"),
+                ],
             },
             "web-platform-tests": {
                 "script": "web_platform_tests.py",
-                "config": ["--config-file", self.config_path("web_platform_tests",
-                                                             self.wpt_config)]
+                "config": [
+                    "--config-file",
+                    self.config_path("web_platform_tests", self.wpt_config),
+                ],
             },
         }
 
-
     def path_to_url(self, path):
-        return urljoin('file:', pathname2url(path))
+        return urljoin("file:", pathname2url(path))
 
     def _installer_url(self):
         package_re = {
             "linux": re.compile("^firefox-\d+\..+\.tar\.bz2$"),
             "win": re.compile("^firefox-\d+\..+\.installer\.exe$"),
             "mac": re.compile("^firefox-\d+\..+\.mac(?:64)?\.dmg$"),
-        }[mozinfo.info['os']]
+        }[mozinfo.info["os"]]
         dist_path = os.path.join(self.topobjdir, "dist")
-        filenames = [item for item in os.listdir(dist_path) if
-                     package_re.match(item)]
+        filenames = [item for item in os.listdir(dist_path) if package_re.match(item)]
         assert len(filenames) == 1
         return self.path_to_url(os.path.join(dist_path, filenames[0]))
 
     def _test_packages_url(self):
         dist_path = os.path.join(self.topobjdir, "dist")
-        filenames = [item for item in os.listdir(dist_path) if
-                     item.endswith('test_packages.json')]
+        filenames = [
+            item
+            for item in os.listdir(dist_path)
+            if item.endswith("test_packages.json")
+        ]
         assert len(filenames) == 1
         return self.path_to_url(os.path.join(dist_path, filenames[0]))
 
     def config_path(self, *parts):
-        return self.path_to_url(os.path.join(self.topsrcdir, "testing", "mozharness",
-                                             "configs", *parts))
+        return self.path_to_url(
+            os.path.join(self.topsrcdir, "testing", "mozharness", "configs", *parts)
+        )
 
     @property
     def wpt_config(self):
-        return "test_config.py" if mozinfo.info['os'] != "win" else "test_config_windows.py"
+        return (
+            "test_config.py"
+            if mozinfo.info["os"] != "win"
+            else "test_config_windows.py"
+        )
 
     def run_suite(self, suite, **kwargs):
         default_config = self.config.get("__defaults__")
@@ -173,10 +193,13 @@ class MozharnessRunner(MozbuildObject):
             print("Unknown suite %s" % suite)
             return 1
 
-        script = os.path.join(self.topsrcdir, "testing", "mozharness",
-                              "scripts", suite_config["script"])
-        options = [item() if callable(item) else item
-                   for item in default_config["config"] + suite_config["config"]]
+        script = os.path.join(
+            self.topsrcdir, "testing", "mozharness", "scripts", suite_config["script"]
+        )
+        options = [
+            item() if callable(item) else item
+            for item in default_config["config"] + suite_config["config"]
+        ]
 
         cmd = [script] + options
 
@@ -186,10 +209,13 @@ class MozharnessRunner(MozbuildObject):
 
 @CommandProvider
 class MozharnessCommands(MachCommandBase):
-    @Command('mozharness', category='testing',
-             description='Run tests using mozharness.',
-             conditions=[conditions.is_firefox_or_android],
-             parser=get_parser)
+    @Command(
+        "mozharness",
+        category="testing",
+        description="Run tests using mozharness.",
+        conditions=[conditions.is_firefox_or_android],
+        parser=get_parser,
+    )
     def mozharness(self, **kwargs):
         runner = self._spawn(MozharnessRunner)
         return runner.run_suite(kwargs.pop("suite_name")[0], **kwargs)

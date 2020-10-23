@@ -95,12 +95,13 @@ class CondprofileCommandProvider(MachCommandBase):
             try:
                 kw["firefox"] = self.get_binary_path()
             except BinaryNotFoundException as e:
-                self.log(logging.ERROR, 'run-condprofile',
-                         {'error': str(e)},
-                         'ERROR: {error}')
-                self.log(logging.INFO, 'run-condprofile',
-                         {'help': e.help()},
-                         '{help}')
+                self.log(
+                    logging.ERROR,
+                    "run-condprofile",
+                    {"error": str(e)},
+                    "ERROR: {error}",
+                )
+                self.log(logging.INFO, "run-condprofile", {"help": e.help()}, "{help}")
                 return 1
 
         from condprof.runner import run

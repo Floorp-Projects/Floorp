@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'middleware',
+    "middleware",
 ]
 
 DevToolsModules(
-    'create-store.js',
-    'non-react-subscriber.js',
-    'subscriber.js',
-    'visibility-handler-connect.js',
+    "create-store.js",
+    "non-react-subscriber.js",
+    "subscriber.js",
+    "visibility-handler-connect.js",
 )

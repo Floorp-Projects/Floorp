@@ -4,9 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.js.xpconnect.tests.chrome += [
-    'file_discardSystemSource.html',
-    'worker_discardSystemSource.js',
+    "file_discardSystemSource.html",
+    "worker_discardSystemSource.js",
 ]

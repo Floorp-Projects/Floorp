@@ -14,6 +14,7 @@ from mozboot.base import BaseBootstrapper
 
 def is_aarch64_host():
     from ctypes import wintypes
+
     kernel32 = ctypes.windll.kernel32
     IMAGE_FILE_MACHINE_UNKNOWN = 0
     IMAGE_FILE_MACHINE_ARM64 = 0xAA64
@@ -28,9 +29,9 @@ def is_aarch64_host():
     processMachine = wintypes.USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
     nativeMachine = wintypes.USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
 
-    gotValue = iswow64process2(currentProcess,
-                               ctypes.byref(processMachine),
-                               ctypes.byref(nativeMachine))
+    gotValue = iswow64process2(
+        currentProcess, ctypes.byref(processMachine), ctypes.byref(nativeMachine)
+    )
     # If this call fails, we have no idea.
     if not gotValue:
         return False
@@ -45,9 +46,10 @@ def get_oracle_jdk_8_path():
         import winreg as _winreg
 
     try:
-        with _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE,
-                               r'SOFTWARE\JavaSoft\Java Development Kit\1.8') as key:
-            path, _ = _winreg.QueryValueEx(key, 'JavaHome')
+        with _winreg.OpenKeyEx(
+            _winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\JavaSoft\Java Development Kit\1.8"
+        ) as key:
+            path, _ = _winreg.QueryValueEx(key, "JavaHome")
             return path
     except FileNotFoundError:
         return None
@@ -66,18 +68,20 @@ def get_adopt_open_jdk_8_path():
         # Due to the very precise version in the path, we can't just OpenKey("<static path>").
         # Instead, we need to enumerate the list of JDKs, find the one that seems to be what
         # we're looking for (JDK 1.8), then get the path from there.
-        with _winreg.OpenKeyEx(_winreg.HKEY_LOCAL_MACHINE,
-                               r'SOFTWARE\AdoptOpenJDK\JDK') as jdk_key:
+        with _winreg.OpenKeyEx(
+            _winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\AdoptOpenJDK\JDK"
+        ) as jdk_key:
             index = 0
             while True:
                 version_key_name = _winreg.EnumKey(jdk_key, index)
-                if not version_key_name.startswith('8.'):
+                if not version_key_name.startswith("8."):
                     index += 1
                     continue
 
-                with _winreg.OpenKeyEx(jdk_key,
-                                       r'{}\hotspot\MSI'.format(version_key_name)) as msi_key:
-                    path, _ = _winreg.QueryValueEx(msi_key, 'Path')
+                with _winreg.OpenKeyEx(
+                    jdk_key, r"{}\hotspot\MSI".format(version_key_name)
+                ) as msi_key:
+                    path, _ = _winreg.QueryValueEx(msi_key, "Path")
                     return path
     except (FileNotFoundError, OSError):
         return None
@@ -88,9 +92,11 @@ def get_is_windefender_disabled():
 
     try:
         with winreg.OpenKeyEx(
-                winreg.HKEY_LOCAL_MACHINE,
-                r'SOFTWARE\Microsoft\Windows Defender') as windefender_key:
-            is_antivirus_disabled, _ = winreg.QueryValueEx(windefender_key, 'DisableAntiSpyware')
+            winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows Defender"
+        ) as windefender_key:
+            is_antivirus_disabled, _ = winreg.QueryValueEx(
+                windefender_key, "DisableAntiSpyware"
+            )
             # is_antivirus_disabled is either 0 (False) or 1 (True)
             return bool(is_antivirus_disabled)
     except (FileNotFoundError, OSError):
@@ -103,8 +109,9 @@ def get_windefender_exclusion_paths():
     paths = []
     try:
         with winreg.OpenKeyEx(
-                winreg.HKEY_LOCAL_MACHINE,
-                r'SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths') as exclusions_key:
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths",
+        ) as exclusions_key:
             _, values_count, __ = winreg.QueryInfoKey(exclusions_key)
             for i in range(0, values_count):
                 path, _, __ = winreg.EnumValue(exclusions_key, i)
@@ -137,29 +144,37 @@ def is_windefender_affecting_srcdir(srcdir):
 
 
 class MozillaBuildBootstrapper(BaseBootstrapper):
-    '''Bootstrapper for MozillaBuild to install rustup.'''
+    """Bootstrapper for MozillaBuild to install rustup."""
 
     INSTALL_PYTHON_GUIDANCE = (
-        'Python is provided by MozillaBuild; ensure your MozillaBuild '
-        'installation is up to date.')
+        "Python is provided by MozillaBuild; ensure your MozillaBuild "
+        "installation is up to date."
+    )
 
     def __init__(self, no_interactive=False, no_system_changes=False):
-        BaseBootstrapper.__init__(self, no_interactive=no_interactive,
-                                  no_system_changes=no_system_changes)
+        BaseBootstrapper.__init__(
+            self, no_interactive=no_interactive, no_system_changes=no_system_changes
+        )
 
     def validate_environment(self, srcdir):
-        if self.application.startswith('mobile_android'):
-            print('WARNING!!! Building Firefox for Android on Windows is not '
-                  'fully supported. See https://bugzilla.mozilla.org/show_bug.'
-                  'cgi?id=1169873 for details.', file=sys.stderr)
+        if self.application.startswith("mobile_android"):
+            print(
+                "WARNING!!! Building Firefox for Android on Windows is not "
+                "fully supported. See https://bugzilla.mozilla.org/show_bug."
+                "cgi?id=1169873 for details.",
+                file=sys.stderr,
+            )
 
         if is_windefender_affecting_srcdir(srcdir):
-            print('Warning: the Firefox checkout directory is currently not in the '
-                  'Windows Defender exclusion list. This can cause the build process '
-                  'to be dramatically slowed or broken. To resolve this, follow the '
-                  'directions here: '
-                  'https://firefox-source-docs.mozilla.org/setup/windows_build.html'
-                  '#antivirus-performance', file=sys.stderr)
+            print(
+                "Warning: the Firefox checkout directory is currently not in the "
+                "Windows Defender exclusion list. This can cause the build process "
+                "to be dramatically slowed or broken. To resolve this, follow the "
+                "directions here: "
+                "https://firefox-source-docs.mozilla.org/setup/windows_build.html"
+                "#antivirus-performance",
+                file=sys.stderr,
+            )
 
     def install_system_packages(self):
         pass
@@ -168,7 +183,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         # Mercurial upstream sometimes doesn't upload wheels, and building
         # from source requires MS Visual C++ 9.0. So we force pip to install
         # the last version that comes with wheels.
-        self.pip_install('mercurial', '--only-binary', 'mercurial')
+        self.pip_install("mercurial", "--only-binary", "mercurial")
 
     def install_browser_packages(self, mozconfig_builder):
         pass
@@ -187,77 +202,98 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
 
         if java_path:
             from mach.util import setenv
-            setenv('PATH', '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep,
-                                           os.environ['PATH']))
+
+            setenv(
+                "PATH",
+                "{}{}{}".format(
+                    os.path.join(java_path, "bin"), os.pathsep, os.environ["PATH"]
+                ),
+            )
 
         self.ensure_java(mozconfig_builder)
 
         from mozboot import android
-        android.ensure_android('windows', artifact_mode=artifact_mode,
-                               no_interactive=self.no_interactive)
+
+        android.ensure_android(
+            "windows", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+        )
 
     def generate_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        return android.generate_mozconfig('windows', artifact_mode=artifact_mode)
+
+        return android.generate_mozconfig("windows", artifact_mode=artifact_mode)
 
     def generate_mobile_android_artifact_mode_mozconfig(self):
         return self.generate_mobile_android_mozconfig(artifact_mode=True)
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         from mozboot import static_analysis
+
         self.install_toolchain_static_analysis(
-            state_dir, checkout_root, static_analysis.WINDOWS_CLANG_TIDY)
+            state_dir, checkout_root, static_analysis.WINDOWS_CLANG_TIDY
+        )
 
     def ensure_sccache_packages(self, state_dir, checkout_root):
         from mozboot import sccache
 
         self.install_toolchain_artifact(state_dir, checkout_root, sccache.WIN64_SCCACHE)
-        self.install_toolchain_artifact(state_dir, checkout_root,
-                                        sccache.RUSTC_DIST_TOOLCHAIN,
-                                        no_unpack=True)
-        self.install_toolchain_artifact(state_dir, checkout_root,
-                                        sccache.CLANG_DIST_TOOLCHAIN,
-                                        no_unpack=True)
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True
+        )
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True
+        )
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         # On-device artifact builds are supported; on-device desktop builds are not.
         if is_aarch64_host():
-            raise Exception('You should not be performing desktop builds on an '
-                            'AArch64 device.  If you want to do artifact builds '
-                            'instead, please choose the appropriate artifact build '
-                            'option when beginning bootstrap.')
+            raise Exception(
+                "You should not be performing desktop builds on an "
+                "AArch64 device.  If you want to do artifact builds "
+                "instead, please choose the appropriate artifact build "
+                "option when beginning bootstrap."
+            )
 
         from mozboot import stylo
+
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CLANG)
-        self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CBINDGEN)
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, stylo.WINDOWS_CBINDGEN
+        )
 
     def ensure_nasm_packages(self, state_dir, checkout_root):
         from mozboot import nasm
+
         self.install_toolchain_artifact(state_dir, checkout_root, nasm.WINDOWS_NASM)
 
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
+
         # We don't have native aarch64 node available, but aarch64 windows
         # runs x86 binaries, so just use the x86 packages for such hosts.
         node_artifact = node.WIN32 if is_aarch64_host() else node.WIN64
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, node_artifact)
+        self.install_toolchain_artifact(state_dir, checkout_root, node_artifact)
 
     def ensure_dump_syms_packages(self, state_dir, checkout_root):
         from mozboot import dump_syms
 
-        self.install_toolchain_artifact(state_dir, checkout_root, dump_syms.WIN64_DUMP_SYMS)
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, dump_syms.WIN64_DUMP_SYMS
+        )
 
     def ensure_fix_stacks_packages(self, state_dir, checkout_root):
         from mozboot import fix_stacks
 
-        self.install_toolchain_artifact(state_dir, checkout_root, fix_stacks.WINDOWS_FIX_STACKS)
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, fix_stacks.WINDOWS_FIX_STACKS
+        )
 
     def ensure_minidump_stackwalk_packages(self, state_dir, checkout_root):
         from mozboot import minidump_stackwalk
 
-        self.install_toolchain_artifact(state_dir, checkout_root,
-                                        minidump_stackwalk.WINDOWS_MINIDUMP_STACKWALK)
+        self.install_toolchain_artifact(
+            state_dir, checkout_root, minidump_stackwalk.WINDOWS_MINIDUMP_STACKWALK
+        )
 
     def _update_package_manager(self):
         pass
@@ -266,7 +302,9 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         subprocess.check_call(command, stdin=sys.stdin)
 
     def pip_install(self, *packages):
-        pip_dir = os.path.join(os.environ['MOZILLABUILD'], 'python', 'Scripts', 'pip.exe')
-        command = [pip_dir, 'install', '--upgrade']
+        pip_dir = os.path.join(
+            os.environ["MOZILLABUILD"], "python", "Scripts", "pip.exe"
+        )
+        command = [pip_dir, "install", "--upgrade"]
         command.extend(packages)
         self.run(command)

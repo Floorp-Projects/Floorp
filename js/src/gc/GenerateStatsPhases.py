@@ -58,7 +58,7 @@ import re
 import collections
 
 
-class PhaseKind():
+class PhaseKind:
     def __init__(self, name, descr, bucket, children=[]):
         self.name = name
         self.descr = descr
@@ -68,107 +68,191 @@ class PhaseKind():
 
 
 # The root marking phase appears in several places in the graph.
-MarkRootsPhaseKind = PhaseKind("MARK_ROOTS", "Mark Roots", 48, [
-    PhaseKind("MARK_CCWS", "Mark Cross Compartment Wrappers", 50),
-    PhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
-    PhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
-    PhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
-    PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54)
-])
+MarkRootsPhaseKind = PhaseKind(
+    "MARK_ROOTS",
+    "Mark Roots",
+    48,
+    [
+        PhaseKind("MARK_CCWS", "Mark Cross Compartment Wrappers", 50),
+        PhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
+        PhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
+        PhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
+        PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
+    ],
+)
 
 JoinParallelTasksPhaseKind = PhaseKind("JOIN_PARALLEL_TASKS", "Join Parallel Tasks", 67)
 
 PhaseKindGraphRoots = [
     PhaseKind("MUTATOR", "Mutator Running", 0),
     PhaseKind("GC_BEGIN", "Begin Callback", 1),
-    PhaseKind("EVICT_NURSERY_FOR_MAJOR_GC", "Evict Nursery For Major GC", 70, [
-        MarkRootsPhaseKind,
-    ]),
-    PhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
-    PhaseKind("PREPARE", "Prepare For Collection", 69, [
-        PhaseKind("UNMARK", "Unmark", 7),
-        PhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
-        PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
-        PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
-        PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
-        PhaseKind("PURGE", "Purge", 5),
-        PhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
-        PhaseKind("PURGE_SOURCE_URLS", "Purge Source URLs", 73),
-        JoinParallelTasksPhaseKind
-    ]),
-    PhaseKind("MARK", "Mark", 6, [
-        MarkRootsPhaseKind,
-        PhaseKind("MARK_DELAYED", "Mark Delayed", 8)
-    ]),
-    PhaseKind("SWEEP", "Sweep", 9, [
-        PhaseKind("SWEEP_MARK", "Mark During Sweeping", 10, [
-            PhaseKind("SWEEP_MARK_INCOMING_BLACK", "Mark Incoming Black Pointers", 12),
-            PhaseKind("SWEEP_MARK_WEAK", "Mark Weak", 13, [
-                PhaseKind("SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16)
-            ]),
-            PhaseKind("SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14),
-            PhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
-        ]),
-        PhaseKind("FINALIZE_START", "Finalize Start Callbacks", 17, [
-            PhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),
-            PhaseKind("WEAK_COMPARTMENT_CALLBACK", "Per-Compartment Weak Callback", 58)
-        ]),
-        PhaseKind("UPDATE_ATOMS_BITMAP", "Sweep Atoms Bitmap", 68),
-        PhaseKind("SWEEP_ATOMS_TABLE", "Sweep Atoms Table", 18),
-        PhaseKind("SWEEP_COMPARTMENTS", "Sweep Compartments", 20, [
-            PhaseKind("SWEEP_DISCARD_CODE", "Sweep Discard Code", 21),
-            PhaseKind("SWEEP_INNER_VIEWS", "Sweep Inner Views", 22),
-            PhaseKind("SWEEP_CC_WRAPPER", "Sweep Cross Compartment Wrappers", 23),
-            PhaseKind("SWEEP_BASE_SHAPE", "Sweep Base Shapes", 24),
-            PhaseKind("SWEEP_INITIAL_SHAPE", "Sweep Initial Shapes", 25),
-            PhaseKind("SWEEP_TYPE_OBJECT", "Sweep Type Objects", 26),
-            PhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
-            PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
-            PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
-            PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
-            PhaseKind("SWEEP_FINALIZATION_REGISTRIES", "Sweep FinalizationRegistries", 74),
-            PhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
-            PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
-            PhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
-            PhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),
-            PhaseKind("SWEEP_TYPES", "Sweep type information", 30, [
-                PhaseKind("SWEEP_TYPES_BEGIN", "Sweep type tables and compilations", 31),
-                PhaseKind("SWEEP_TYPES_END", "Free type arena", 32),
-            ]),
-            JoinParallelTasksPhaseKind
-        ]),
-        PhaseKind("SWEEP_OBJECT", "Sweep Object", 33),
-        PhaseKind("SWEEP_STRING", "Sweep String", 34),
-        PhaseKind("SWEEP_SCRIPT", "Sweep Script", 35),
-        PhaseKind("SWEEP_SCOPE", "Sweep Scope", 59),
-        PhaseKind("SWEEP_REGEXP_SHARED", "Sweep RegExpShared", 61),
-        PhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
-        PhaseKind("FINALIZE_END", "Finalize End Callback", 38),
-        PhaseKind("DESTROY", "Deallocate", 39),
-        JoinParallelTasksPhaseKind
-    ]),
-    PhaseKind("COMPACT", "Compact", 40, [
-        PhaseKind("COMPACT_MOVE", "Compact Move", 41),
-        PhaseKind("COMPACT_UPDATE", "Compact Update", 42, [
+    PhaseKind(
+        "EVICT_NURSERY_FOR_MAJOR_GC",
+        "Evict Nursery For Major GC",
+        70,
+        [
             MarkRootsPhaseKind,
-            PhaseKind("COMPACT_UPDATE_CELLS", "Compact Update Cells", 43),
-            JoinParallelTasksPhaseKind
-        ]),
-    ]),
+        ],
+    ),
+    PhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
+    PhaseKind(
+        "PREPARE",
+        "Prepare For Collection",
+        69,
+        [
+            PhaseKind("UNMARK", "Unmark", 7),
+            PhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
+            PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
+            PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
+            PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
+            PhaseKind("PURGE", "Purge", 5),
+            PhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
+            PhaseKind("PURGE_SOURCE_URLS", "Purge Source URLs", 73),
+            JoinParallelTasksPhaseKind,
+        ],
+    ),
+    PhaseKind(
+        "MARK",
+        "Mark",
+        6,
+        [MarkRootsPhaseKind, PhaseKind("MARK_DELAYED", "Mark Delayed", 8)],
+    ),
+    PhaseKind(
+        "SWEEP",
+        "Sweep",
+        9,
+        [
+            PhaseKind(
+                "SWEEP_MARK",
+                "Mark During Sweeping",
+                10,
+                [
+                    PhaseKind(
+                        "SWEEP_MARK_INCOMING_BLACK", "Mark Incoming Black Pointers", 12
+                    ),
+                    PhaseKind(
+                        "SWEEP_MARK_WEAK",
+                        "Mark Weak",
+                        13,
+                        [PhaseKind("SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16)],
+                    ),
+                    PhaseKind(
+                        "SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14
+                    ),
+                    PhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
+                ],
+            ),
+            PhaseKind(
+                "FINALIZE_START",
+                "Finalize Start Callbacks",
+                17,
+                [
+                    PhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),
+                    PhaseKind(
+                        "WEAK_COMPARTMENT_CALLBACK", "Per-Compartment Weak Callback", 58
+                    ),
+                ],
+            ),
+            PhaseKind("UPDATE_ATOMS_BITMAP", "Sweep Atoms Bitmap", 68),
+            PhaseKind("SWEEP_ATOMS_TABLE", "Sweep Atoms Table", 18),
+            PhaseKind(
+                "SWEEP_COMPARTMENTS",
+                "Sweep Compartments",
+                20,
+                [
+                    PhaseKind("SWEEP_DISCARD_CODE", "Sweep Discard Code", 21),
+                    PhaseKind("SWEEP_INNER_VIEWS", "Sweep Inner Views", 22),
+                    PhaseKind(
+                        "SWEEP_CC_WRAPPER", "Sweep Cross Compartment Wrappers", 23
+                    ),
+                    PhaseKind("SWEEP_BASE_SHAPE", "Sweep Base Shapes", 24),
+                    PhaseKind("SWEEP_INITIAL_SHAPE", "Sweep Initial Shapes", 25),
+                    PhaseKind("SWEEP_TYPE_OBJECT", "Sweep Type Objects", 26),
+                    PhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
+                    PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
+                    PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
+                    PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
+                    PhaseKind(
+                        "SWEEP_FINALIZATION_REGISTRIES",
+                        "Sweep FinalizationRegistries",
+                        74,
+                    ),
+                    PhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
+                    PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
+                    PhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
+                    PhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),
+                    PhaseKind(
+                        "SWEEP_TYPES",
+                        "Sweep type information",
+                        30,
+                        [
+                            PhaseKind(
+                                "SWEEP_TYPES_BEGIN",
+                                "Sweep type tables and compilations",
+                                31,
+                            ),
+                            PhaseKind("SWEEP_TYPES_END", "Free type arena", 32),
+                        ],
+                    ),
+                    JoinParallelTasksPhaseKind,
+                ],
+            ),
+            PhaseKind("SWEEP_OBJECT", "Sweep Object", 33),
+            PhaseKind("SWEEP_STRING", "Sweep String", 34),
+            PhaseKind("SWEEP_SCRIPT", "Sweep Script", 35),
+            PhaseKind("SWEEP_SCOPE", "Sweep Scope", 59),
+            PhaseKind("SWEEP_REGEXP_SHARED", "Sweep RegExpShared", 61),
+            PhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
+            PhaseKind("FINALIZE_END", "Finalize End Callback", 38),
+            PhaseKind("DESTROY", "Deallocate", 39),
+            JoinParallelTasksPhaseKind,
+        ],
+    ),
+    PhaseKind(
+        "COMPACT",
+        "Compact",
+        40,
+        [
+            PhaseKind("COMPACT_MOVE", "Compact Move", 41),
+            PhaseKind(
+                "COMPACT_UPDATE",
+                "Compact Update",
+                42,
+                [
+                    MarkRootsPhaseKind,
+                    PhaseKind("COMPACT_UPDATE_CELLS", "Compact Update Cells", 43),
+                    JoinParallelTasksPhaseKind,
+                ],
+            ),
+        ],
+    ),
     PhaseKind("DECOMMIT", "Decommit", 72),
     PhaseKind("GC_END", "End Callback", 44),
-    PhaseKind("MINOR_GC", "All Minor GCs", 45, [
-        MarkRootsPhaseKind,
-    ]),
-    PhaseKind("EVICT_NURSERY", "Minor GCs to Evict Nursery", 46, [
-        MarkRootsPhaseKind,
-    ]),
-    PhaseKind("TRACE_HEAP", "Trace Heap", 47, [
-        MarkRootsPhaseKind,
-    ]),
-    PhaseKind("BARRIER", "Barriers", 55, [
-        PhaseKind("UNMARK_GRAY", "Unmark gray", 56)
-    ])
+    PhaseKind(
+        "MINOR_GC",
+        "All Minor GCs",
+        45,
+        [
+            MarkRootsPhaseKind,
+        ],
+    ),
+    PhaseKind(
+        "EVICT_NURSERY",
+        "Minor GCs to Evict Nursery",
+        46,
+        [
+            MarkRootsPhaseKind,
+        ],
+    ),
+    PhaseKind(
+        "TRACE_HEAP",
+        "Trace Heap",
+        47,
+        [
+            MarkRootsPhaseKind,
+        ],
+    ),
+    PhaseKind("BARRIER", "Barriers", 55, [PhaseKind("UNMARK_GRAY", "Unmark gray", 56)]),
 ]
 
 
@@ -206,9 +290,9 @@ class Phase:
         self.nextSibling = None
         self.nextInPhaseKind = None
 
-        self.path = re.sub(r'\W+', '_', phaseKind.name.lower())
+        self.path = re.sub(r"\W+", "_", phaseKind.name.lower())
         if parent is not None:
-            self.path = parent.path + '.' + self.path
+            self.path = parent.path + "." + self.path
 
 
 def expandPhases():
@@ -281,7 +365,7 @@ def generateHeader(out):
     extraPhaseKinds = [
         "NONE = LIMIT",
         "EXPLICIT_SUSPENSION = LIMIT",
-        "IMPLICIT_SUSPENSION"
+        "IMPLICIT_SUSPENSION",
     ]
     writeEnumClass(out, "PhaseKind", "uint8_t", phaseKindNames, extraPhaseKinds)
     out.write("\n")
@@ -290,11 +374,7 @@ def generateHeader(out):
     # Generate Phase enum.
     #
     phaseNames = map(lambda phase: phase.name, AllPhases)
-    extraPhases = [
-        "NONE = LIMIT",
-        "EXPLICIT_SUSPENSION = LIMIT",
-        "IMPLICIT_SUSPENSION"
-    ]
+    extraPhases = ["NONE = LIMIT", "EXPLICIT_SUSPENSION = LIMIT", "IMPLICIT_SUSPENSION"]
     writeEnumClass(out, "Phase", "uint8_t", phaseNames, extraPhases)
     out.write("\n")
 
@@ -311,8 +391,10 @@ def generateCpp(out):
     out.write("static constexpr PhaseKindTable phaseKinds = {\n")
     for phaseKind in AllPhaseKinds:
         phase = PhasesForPhaseKind[phaseKind][0]
-        out.write("    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d },\n" %
-                  (phaseKind.name, phase.name, phaseKind.bucket))
+        out.write(
+            "    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d },\n"
+            % (phaseKind.name, phase.name, phaseKind.bucket)
+        )
     out.write("};\n")
     out.write("\n")
 
@@ -326,20 +408,23 @@ def generateCpp(out):
     for phase in AllPhases:
         firstChild = phase.children[0] if phase.children else None
         phaseKind = phase.phaseKind
-        out.write("    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, \"%s\", \"%s\" },\n" %  # NOQA: E501
-                  (name(phase),
-                   name(phase.parent),
-                   name(firstChild),
-                   name(phase.nextSibling),
-                   name(phase.nextInPhaseKind),
-                   phaseKind.name,
-                   phase.depth,
-                   phaseKind.descr,
-                   phase.path))
+        out.write(
+            '    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, "%s", "%s" },\n'
+            % (  # NOQA: E501
+                name(phase),
+                name(phase.parent),
+                name(firstChild),
+                name(phase.nextSibling),
+                name(phase.nextInPhaseKind),
+                phaseKind.name,
+                phase.depth,
+                phaseKind.descr,
+                phase.path,
+            )
+        )
     out.write("};\n")
 
     #
     # Print in a comment the next available phase kind number.
     #
-    out.write("// The next available phase kind number is: %d\n" %
-              (MaxBucket + 1))
+    out.write("// The next available phase kind number is: %d\n" % (MaxBucket + 1))

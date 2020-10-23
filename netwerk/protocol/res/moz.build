@@ -5,36 +5,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIResProtocolHandler.idl',
-    'nsISubstitutingProtocolHandler.idl',
+    "nsIResProtocolHandler.idl",
+    "nsISubstitutingProtocolHandler.idl",
 ]
 
-XPIDL_MODULE = 'necko_res'
+XPIDL_MODULE = "necko_res"
 
 EXPORTS.mozilla.net += [
-    'ExtensionProtocolHandler.h',
-    'PageThumbProtocolHandler.h',
-    'SubstitutingJARURI.h',
-    'SubstitutingProtocolHandler.h',
-    'SubstitutingURL.h',
+    "ExtensionProtocolHandler.h",
+    "PageThumbProtocolHandler.h",
+    "SubstitutingJARURI.h",
+    "SubstitutingProtocolHandler.h",
+    "SubstitutingURL.h",
 ]
 
 EXPORTS += [
-    'nsResProtocolHandler.h',
+    "nsResProtocolHandler.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ExtensionProtocolHandler.cpp',
-    'nsResProtocolHandler.cpp',
-    'PageThumbProtocolHandler.cpp',
-    'SubstitutingProtocolHandler.cpp',
+    "ExtensionProtocolHandler.cpp",
+    "nsResProtocolHandler.cpp",
+    "PageThumbProtocolHandler.cpp",
+    "SubstitutingProtocolHandler.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/netwerk/base',
-    '/xpcom/base',
+    "/netwerk/base",
+    "/xpcom/base",
 ]

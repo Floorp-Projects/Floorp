@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'middleware',
+    "middleware",
 ]
 
 CompiledModules(
-    'create-store.js',
+    "create-store.js",
 )

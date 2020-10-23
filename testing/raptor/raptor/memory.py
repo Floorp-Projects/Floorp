@@ -7,12 +7,12 @@ import re
 
 
 def get_app_memory_usage(raptor):
-    app_name = raptor.config['binary']
+    app_name = raptor.config["binary"]
     total = 0
-    re_total_memory = re.compile(r'TOTAL:\s+(\d+)')
+    re_total_memory = re.compile(r"TOTAL:\s+(\d+)")
     verbose = raptor.device._verbose
     raptor.device._verbose = False
-    meminfo = raptor.device.shell_output("dumpsys meminfo %s" % app_name).split('\n')
+    meminfo = raptor.device.shell_output("dumpsys meminfo %s" % app_name).split("\n")
     raptor.device._verbose = verbose
     for line in meminfo:
         match = re_total_memory.search(line)
@@ -23,21 +23,21 @@ def get_app_memory_usage(raptor):
 
 
 def generate_android_memory_profile(raptor, test_name):
-    if not raptor.device or not raptor.config['memory_test']:
+    if not raptor.device or not raptor.config["memory_test"]:
         return
     foreground = get_app_memory_usage(raptor)
     # put app into background
     verbose = raptor.device._verbose
     raptor.device._verbose = False
-    raptor.device.shell_output("am start -a android.intent.action.MAIN "
-                               "-c android.intent.category.HOME")
+    raptor.device.shell_output(
+        "am start -a android.intent.action.MAIN " "-c android.intent.category.HOME"
+    )
     raptor.device._verbose = verbose
     background = get_app_memory_usage(raptor)
-    meminfo_data = {'type': 'memory',
-                    'test': test_name,
-                    'unit': 'KB',
-                    'values': {
-                        'foreground': foreground,
-                        'background': background
-                    }}
+    meminfo_data = {
+        "type": "memory",
+        "test": test_name,
+        "unit": "KB",
+        "values": {"foreground": foreground, "background": background},
+    }
     raptor.control_server.submit_supporting_data(meminfo_data)

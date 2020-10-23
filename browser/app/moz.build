@@ -29,90 +29,90 @@ with Files("profile/channel-prefs.js"):
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")
 
-if CONFIG['MOZ_MACBUNDLE_NAME']:
-    DIRS += ['macbuild/Contents']
+if CONFIG["MOZ_MACBUNDLE_NAME"]:
+    DIRS += ["macbuild/Contents"]
 
-if CONFIG['MOZ_NO_PIE_COMPAT']:
-    GeckoProgram(CONFIG['MOZ_APP_NAME'] + '-bin')
+if CONFIG["MOZ_NO_PIE_COMPAT"]:
+    GeckoProgram(CONFIG["MOZ_APP_NAME"] + "-bin")
 
-    DIRS += ['no-pie']
+    DIRS += ["no-pie"]
 else:
-    GeckoProgram(CONFIG['MOZ_APP_NAME'])
+    GeckoProgram(CONFIG["MOZ_APP_NAME"])
 
 SOURCES += [
-    'nsBrowserApp.cpp',
+    "nsBrowserApp.cpp",
 ]
 
 # Neither channel-prefs.js nor firefox.exe want to end up in dist/bin/browser.
 DIST_SUBDIR = ""
 
 LOCAL_INCLUDES += [
-    '!/build',
-    '/toolkit/xre',
-    '/xpcom/base',
-    '/xpcom/build',
+    "!/build",
+    "/toolkit/xre",
+    "/xpcom/base",
+    "/xpcom/build",
 ]
 
-if CONFIG['LIBFUZZER']:
-    USE_LIBS += [ 'fuzzer' ]
+if CONFIG["LIBFUZZER"]:
+    USE_LIBS += ["fuzzer"]
     LOCAL_INCLUDES += [
-        '/tools/fuzzing/libfuzzer',
+        "/tools/fuzzing/libfuzzer",
     ]
 
-if CONFIG['ENABLE_GECKODRIVER']:
-    DEFINES['MOZ_GECKODRIVER'] = True
+if CONFIG["ENABLE_GECKODRIVER"]:
+    DEFINES["MOZ_GECKODRIVER"] = True
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.
-    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    RCINCLUDE = 'splash.rc'
+if CONFIG["OS_ARCH"] == "WINNT":
+    RCINCLUDE = "splash.rc"
     DIRS += [
-        'winlauncher',
+        "winlauncher",
     ]
     USE_LIBS += [
-        'winlauncher',
+        "winlauncher",
     ]
     LOCAL_INCLUDES += [
-        '/browser/app/winlauncher',
+        "/browser/app/winlauncher",
     ]
     DELAYLOAD_DLLS += [
-        'oleaut32.dll',
-        'ole32.dll',
-        'rpcrt4.dll',
-        'version.dll',
+        "oleaut32.dll",
+        "ole32.dll",
+        "rpcrt4.dll",
+        "version.dll",
     ]
 
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        libpath_flag = '-LIBPATH:'
+    if CONFIG["CC_TYPE"] == "clang-cl":
+        libpath_flag = "-LIBPATH:"
     else:
-        libpath_flag = '-L'
+        libpath_flag = "-L"
 
     WIN32_EXE_LDFLAGS += [
-        libpath_flag + OBJDIR + '/winlauncher/freestanding',
+        libpath_flag + OBJDIR + "/winlauncher/freestanding",
     ]
 
-if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'Darwin':
+if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "Darwin":
     USE_LIBS += [
-        'mozsandbox',
+        "mozsandbox",
     ]
 
-if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
-        '/security/sandbox/chromium',
-        '/security/sandbox/chromium-shim',
+        "/security/sandbox/chromium",
+        "/security/sandbox/chromium-shim",
     ]
 
     USE_LIBS += [
-        'sandbox_s',
+        "sandbox_s",
     ]
 
     DELAYLOAD_DLLS += [
-        'winmm.dll',
-        'user32.dll',
+        "winmm.dll",
+        "user32.dll",
     ]
 
 # Control the default heap size.
@@ -123,23 +123,29 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
 # The heap will grow if need be.
 #
 # Set it to 256k.  See bug 127069.
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
-    LDFLAGS += ['/HEAP:0x40000']
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CC_TYPE"] not in ("clang", "gcc"):
+    LDFLAGS += ["/HEAP:0x40000"]
 
 DisableStlWrapping()
 
-if CONFIG['HAVE_CLOCK_MONOTONIC']:
-    OS_LIBS += CONFIG['REALTIME_LIBS']
+if CONFIG["HAVE_CLOCK_MONOTONIC"]:
+    OS_LIBS += CONFIG["REALTIME_LIBS"]
 
-if CONFIG['MOZ_LINUX_32_SSE2_STARTUP_ERROR']:
-    DEFINES['MOZ_LINUX_32_SSE2_STARTUP_ERROR'] = True
-    COMPILE_FLAGS['OS_CXXFLAGS'] = [
-        f for f in COMPILE_FLAGS.get('OS_CXXFLAGS', [])
-        if not f.startswith('-march=') and f not in ('-msse', '-msse2', '-mfpmath=sse')
+if CONFIG["MOZ_LINUX_32_SSE2_STARTUP_ERROR"]:
+    DEFINES["MOZ_LINUX_32_SSE2_STARTUP_ERROR"] = True
+    COMPILE_FLAGS["OS_CXXFLAGS"] = [
+        f
+        for f in COMPILE_FLAGS.get("OS_CXXFLAGS", [])
+        if not f.startswith("-march=") and f not in ("-msse", "-msse2", "-mfpmath=sse")
     ] + [
-        '-mno-sse', '-mno-sse2', '-mfpmath=387',
+        "-mno-sse",
+        "-mno-sse2",
+        "-mfpmath=387",
     ]
 
-for icon in ('firefox', 'document', 'newwindow', 'newtab', 'pbmode'):
-    DEFINES[icon.upper() + '_ICO'] = '"%s/%s/%s.ico"' % (
-        TOPSRCDIR, CONFIG['MOZ_BRANDING_DIRECTORY'], icon)
+for icon in ("firefox", "document", "newwindow", "newtab", "pbmode"):
+    DEFINES[icon.upper() + "_ICO"] = '"%s/%s/%s.ico"' % (
+        TOPSRCDIR,
+        CONFIG["MOZ_BRANDING_DIRECTORY"],
+        icon,
+    )

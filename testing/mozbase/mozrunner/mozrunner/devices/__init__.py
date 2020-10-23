@@ -11,5 +11,11 @@ from mozrunner.devices import emulator_battery
 from mozrunner.devices import emulator_geo
 from mozrunner.devices import emulator_screen
 
-__all__ = ['BaseEmulator', 'EmulatorAVD', 'Device',
-           'emulator_battery', 'emulator_geo', 'emulator_screen']
+__all__ = [
+    "BaseEmulator",
+    "EmulatorAVD",
+    "Device",
+    "emulator_battery",
+    "emulator_geo",
+    "emulator_screen",
+]

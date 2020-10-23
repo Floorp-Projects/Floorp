@@ -2,31 +2,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_MODULE = 'viaduct'
+XPIDL_MODULE = "viaduct"
 
 XPIDL_SOURCES += [
-    'mozIViaduct.idl',
+    "mozIViaduct.idl",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 UNIFIED_SOURCES += [
-    'fetch_msg_types.pb.cc',
-    'Viaduct.cpp',
-    'ViaductRequest.cpp',
+    "fetch_msg_types.pb.cc",
+    "Viaduct.cpp",
+    "ViaductRequest.cpp",
 ]
 
 EXPORTS.mozilla += [
-    'fetch_msg_types.pb.h',
-    'Viaduct.h',
-    'ViaductRequest.h',
+    "fetch_msg_types.pb.h",
+    "Viaduct.h",
+    "ViaductRequest.h",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
-DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

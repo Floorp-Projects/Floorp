@@ -4,45 +4,52 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@depends(build_project, '--enable-smoosh')
+
+@depends(build_project, "--enable-smoosh")
 def cbindgen_is_needed(build_project, js_enable_smoosh):
-    if build_project != 'js':
+    if build_project != "js":
         # cbindgen is needed by the style system build and webrender.
         return True
 
     # cbindgen is needed by SmooshMonkey.
     return js_enable_smoosh
 
-option(env='CBINDGEN', nargs=1, when=cbindgen_is_needed,
-       help='Path to cbindgen')
+
+option(env="CBINDGEN", nargs=1, when=cbindgen_is_needed, help="Path to cbindgen")
 
 
-@imports(_from='textwrap', _import='dedent')
+@imports(_from="textwrap", _import="dedent")
 def check_cbindgen_version(cbindgen, fatal=False):
     log.debug("trying cbindgen: %s" % cbindgen)
 
-    cbindgen_min_version = Version('0.15.0')
+    cbindgen_min_version = Version("0.15.0")
 
     # cbindgen x.y.z
-    version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])
+    version = Version(check_cmd_output(cbindgen, "--version").strip().split(" ")[1])
     log.debug("%s has version %s" % (cbindgen, version))
     if version >= cbindgen_min_version:
         return True
     if not fatal:
         return False
 
-    die(dedent('''\
+    die(
+        dedent(
+            """\
     cbindgen version {} is too old. At least version {} is required.
 
     Please update using 'cargo install cbindgen --force' or running
     './mach bootstrap', after removing the existing executable located at
     {}.
-    '''.format(version, cbindgen_min_version, cbindgen)))
+    """.format(
+                version, cbindgen_min_version, cbindgen
+            )
+        )
+    )
 
 
-@depends_if('CBINDGEN', toolchain_search_path, when=cbindgen_is_needed)
-@checking('for cbindgen')
-@imports(_from='textwrap', _import='dedent')
+@depends_if("CBINDGEN", toolchain_search_path, when=cbindgen_is_needed)
+@checking("for cbindgen")
+@imports(_from="textwrap", _import="dedent")
 def cbindgen(cbindgen_override, toolchain_search_path):
     if cbindgen_override:
         check_cbindgen_version(cbindgen_override[0], fatal=True)
@@ -50,7 +57,7 @@ def cbindgen(cbindgen_override, toolchain_search_path):
 
     candidates = []
     for path in toolchain_search_path:
-        candidate = find_program('cbindgen', [path])
+        candidate = find_program("cbindgen", [path])
         if not candidate:
             continue
         if check_cbindgen_version(candidate):
@@ -58,104 +65,136 @@ def cbindgen(cbindgen_override, toolchain_search_path):
         candidates.append(candidate)
 
     if not candidates:
-        raise FatalCheckError(dedent('''\
+        raise FatalCheckError(
+            dedent(
+                """\
         Cannot find cbindgen. Please run `mach bootstrap`,
         `cargo install cbindgen`, ensure that `cbindgen` is on your PATH,
         or point at an executable with `CBINDGEN`.
-        '''))
+        """
+            )
+        )
     check_cbindgen_version(candidates[0], fatal=True)
 
-set_config('CBINDGEN', cbindgen)
+
+set_config("CBINDGEN", cbindgen)
 
 # Bindgen can use rustfmt to format Rust file, but it's not required.
-option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')
+option(env="RUSTFMT", nargs=1, help="Path to the rustfmt program")
 
-rustfmt = check_prog('RUSTFMT', ['rustfmt'], paths=toolchain_search_path,
-                     input='RUSTFMT', allow_missing=True)
+rustfmt = check_prog(
+    "RUSTFMT",
+    ["rustfmt"],
+    paths=toolchain_search_path,
+    input="RUSTFMT",
+    allow_missing=True,
+)
 
 
-option('--with-libclang-path', nargs=1,
-       help='Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)')
-option('--with-clang-path', nargs=1,
-       help='Absolute path to a Clang binary for bindgen (version 3.9.x or above)')
+option(
+    "--with-libclang-path",
+    nargs=1,
+    help="Absolute path to a directory containing Clang/LLVM libraries for bindgen (version 3.9.x or above)",
+)
+option(
+    "--with-clang-path",
+    nargs=1,
+    help="Absolute path to a Clang binary for bindgen (version 3.9.x or above)",
+)
 
 
-@depends('--with-clang-path', c_compiler, cxx_compiler, toolchain_search_path,
-         target, macos_sdk)
-@checking('for clang for bindgen', lambda x: x.path if x else 'not found')
-def bindgen_clang_compiler(clang_path, c_compiler, cxx_compiler,
-                           toolchain_search_path, target, macos_sdk):
+@depends(
+    "--with-clang-path",
+    c_compiler,
+    cxx_compiler,
+    toolchain_search_path,
+    target,
+    macos_sdk,
+)
+@checking("for clang for bindgen", lambda x: x.path if x else "not found")
+def bindgen_clang_compiler(
+    clang_path, c_compiler, cxx_compiler, toolchain_search_path, target, macos_sdk
+):
     # When the target compiler is clang, use that, including flags.
-    if cxx_compiler.type == 'clang':
-        if clang_path and clang_path[0] not in (c_compiler.compiler,
-                                                cxx_compiler.compiler):
-            die('--with-clang-path is not valid when the target compiler is %s',
-                cxx_compiler.type)
+    if cxx_compiler.type == "clang":
+        if clang_path and clang_path[0] not in (
+            c_compiler.compiler,
+            cxx_compiler.compiler,
+        ):
+            die(
+                "--with-clang-path is not valid when the target compiler is %s",
+                cxx_compiler.type,
+            )
         return namespace(
             path=cxx_compiler.compiler,
             flags=cxx_compiler.flags,
         )
     # When the target compiler is clang-cl, use clang in the same directory,
     # and figure the right flags to use.
-    if cxx_compiler.type == 'clang-cl':
-        if clang_path and os.path.dirname(clang_path[0]) != \
-                os.path.dirname(cxx_compiler.compiler):
-            die('--with-clang-path must point to clang in the same directory '
-                'as the target compiler')
+    if cxx_compiler.type == "clang-cl":
+        if clang_path and os.path.dirname(clang_path[0]) != os.path.dirname(
+            cxx_compiler.compiler
+        ):
+            die(
+                "--with-clang-path must point to clang in the same directory "
+                "as the target compiler"
+            )
         if not clang_path:
-            clang_path = [os.path.join(os.path.dirname(cxx_compiler.compiler),
-                                       'clang')]
+            clang_path = [os.path.join(os.path.dirname(cxx_compiler.compiler), "clang")]
 
-    clang_path = find_program(clang_path[0] if clang_path else 'clang++',
-                              toolchain_search_path)
+    clang_path = find_program(
+        clang_path[0] if clang_path else "clang++", toolchain_search_path
+    )
     if not clang_path:
         return
     # Hack before bug 1617793: if the compiler is clang-cl, hack the target
-    if cxx_compiler.type == 'clang-cl':
-        target = split_triplet('%s-pc-windows-msvc' % target.raw_cpu, allow_msvc=True)
+    if cxx_compiler.type == "clang-cl":
+        target = split_triplet("%s-pc-windows-msvc" % target.raw_cpu, allow_msvc=True)
     flags = prepare_flags(target, macos_sdk)
-    info = check_compiler([clang_path] + flags, 'C++', target)
+    info = check_compiler([clang_path] + flags, "C++", target)
     return namespace(
         path=clang_path,
         flags=flags + info.flags,
     )
 
 
-@depends('--with-libclang-path', bindgen_clang_compiler,
-         host_library_name_info, host)
-@checking('for libclang for bindgen', lambda x: x if x else 'not found')
-@imports('glob')
-@imports(_from='os', _import='pathsep')
-@imports(_from='os.path', _import='split', _as='pathsplit')
-@imports('re')
+@depends("--with-libclang-path", bindgen_clang_compiler, host_library_name_info, host)
+@checking("for libclang for bindgen", lambda x: x if x else "not found")
+@imports("glob")
+@imports(_from="os", _import="pathsep")
+@imports(_from="os.path", _import="split", _as="pathsplit")
+@imports("re")
 def bindgen_libclang_path(libclang_path, clang, library_name_info, host):
     if not clang:
         if libclang_path:
-            die('--with-libclang-path is not valid without a clang compiler '
-                'for bindgen')
+            die(
+                "--with-libclang-path is not valid without a clang compiler "
+                "for bindgen"
+            )
         return
 
     # Try to ensure that the clang shared library that bindgen is going
     # to look for is actually present.  The files that we search for
     # mirror the logic in clang-sys/build.rs.
     libclang_choices = []
-    if host.os == 'WINNT':
-        libclang_choices.append('libclang.dll')
-    libclang_choices.append('%sclang%s' % (library_name_info.dll.prefix,
-                                           library_name_info.dll.suffix))
-    if host.kernel == 'Linux':
-        libclang_choices.append('libclang.so.*')
+    if host.os == "WINNT":
+        libclang_choices.append("libclang.dll")
+    libclang_choices.append(
+        "%sclang%s" % (library_name_info.dll.prefix, library_name_info.dll.suffix)
+    )
+    if host.kernel == "Linux":
+        libclang_choices.append("libclang.so.*")
 
-    if host.os == 'OpenBSD':
-        libclang_choices.append('libclang.so.*.*')
+    if host.os == "OpenBSD":
+        libclang_choices.append("libclang.so.*.*")
 
     candidates = []
     if not libclang_path:
         # Try to find libclang_path based on clang search dirs.
-        clang_search_dirs = check_cmd_output(clang.path, '-print-search-dirs')
+        clang_search_dirs = check_cmd_output(clang.path, "-print-search-dirs")
         for line in clang_search_dirs.splitlines():
-            name, _, value = line.partition(': =')
-            if host.os == 'WINNT' and name == 'programs':
+            name, _, value = line.partition(": =")
+            if host.os == "WINNT" and name == "programs":
                 # On Windows, libclang.dll is in bin/ rather than lib/,
                 # so scan the programs search dirs.
                 # To make matters complicated, clang before version 9 uses `:`
@@ -163,22 +202,22 @@ def bindgen_libclang_path(libclang_path, clang, library_name_info, host):
                 if pathsep in value:
                     candidates.extend(value.split(pathsep))
                 else:
-                    for part in value.split(':'):
+                    for part in value.split(":"):
                         # Assume that if previous "candidate" was of length 1,
                         # it's a drive letter and the current part is the rest of
                         # the corresponding full path.
                         if candidates and len(candidates[-1]) == 1:
-                            candidates[-1] += ':' + part
+                            candidates[-1] += ":" + part
                         else:
                             candidates.append(part)
-            elif host.os != 'WINNT' and name == 'libraries':
+            elif host.os != "WINNT" and name == "libraries":
                 # On other platforms, use the directories from the libraries
                 # search dirs that looks like $something/clang/$version.
                 for dir in value.split(pathsep):
                     dir, version = pathsplit(dir)
-                    if re.match(r'[0-9.]+', version):
+                    if re.match(r"[0-9.]+", version):
                         dir, name = pathsplit(dir)
-                        if name == 'clang':
+                        if name == "clang":
                             candidates.append(dir)
     else:
         candidates.append(libclang_path[0])
@@ -198,16 +237,20 @@ def bindgen_config_paths(clang, libclang, build_project):
     # Actually, we don't want to force an error if we're not building the
     # browser generally.  We therefore whitelist the projects that require
     # bindgen facilities at this point and leave it at that.
-    if build_project in ('browser', 'mobile/android'):
+    if build_project in ("browser", "mobile/android"):
         if not clang:
-            die('Could not find clang to generate run bindings for C/C++. '
-                'Please install the necessary packages, run `mach bootstrap`, '
-                'or use --with-clang-path to give the location of clang.')
+            die(
+                "Could not find clang to generate run bindings for C/C++. "
+                "Please install the necessary packages, run `mach bootstrap`, "
+                "or use --with-clang-path to give the location of clang."
+            )
 
         if not libclang:
-            die('Could not find libclang to generate rust bindings for C/C++. '
-                'Please install the necessary packages, run `mach bootstrap`, '
-                'or use --with-libclang-path to give the path containing it.')
+            die(
+                "Could not find libclang to generate rust bindings for C/C++. "
+                "Please install the necessary packages, run `mach bootstrap`, "
+                "or use --with-libclang-path to give the path containing it."
+            )
 
     if clang and libclang:
         return namespace(
@@ -219,9 +262,9 @@ def bindgen_config_paths(clang, libclang, build_project):
 
 
 @depends(bindgen_config_paths.libclang, when=bindgen_config_paths)
-@checking('that libclang is new enough', lambda s: 'yes' if s else 'no')
-@imports(_from='ctypes', _import='CDLL')
-@imports(_from='textwrap', _import='dedent')
+@checking("that libclang is new enough", lambda s: "yes" if s else "no")
+@imports(_from="ctypes", _import="CDLL")
+@imports(_from="textwrap", _import="dedent")
 def min_libclang_version(libclang):
     try:
         lib = CDLL(libclang)
@@ -230,77 +273,94 @@ def min_libclang_version(libclang):
         fun = lib.clang_getAddressSpace
         return True
     except:
-        die(dedent('''\
+        die(
+            dedent(
+                """\
         The libclang located at {} is too old (need at least 5.0).
 
         Please make sure to update it or point to a newer libclang using
         --with-libclang-path.
-        '''.format(libclang)))
+        """.format(
+                    libclang
+                )
+            )
+        )
         return False
 
 
-set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
-set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
+set_config("MOZ_LIBCLANG_PATH", bindgen_config_paths.libclang_path)
+set_config("MOZ_CLANG_PATH", bindgen_config_paths.clang_path)
 
 
-@depends(target, target_is_unix, cxx_compiler, bindgen_cflags_android,
-         bindgen_config_paths.clang_flags)
-def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
-                         clang_flags):
+@depends(
+    target,
+    target_is_unix,
+    cxx_compiler,
+    bindgen_cflags_android,
+    bindgen_config_paths.clang_flags,
+)
+def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_flags):
     args = [
-        '-x', 'c++', '-fno-sized-deallocation', '-fno-aligned-new',
-        '-DTRACING=1', '-DIMPL_LIBXUL', '-DMOZILLA_INTERNAL_API',
-        '-DRUST_BINDGEN'
+        "-x",
+        "c++",
+        "-fno-sized-deallocation",
+        "-fno-aligned-new",
+        "-DTRACING=1",
+        "-DIMPL_LIBXUL",
+        "-DMOZILLA_INTERNAL_API",
+        "-DRUST_BINDGEN",
     ]
 
     if is_unix:
-        args += ['-DOS_POSIX=1']
+        args += ["-DOS_POSIX=1"]
 
-    if target.os == 'Android':
+    if target.os == "Android":
         args += android_cflags
 
     args += {
-        'Android': ['-DOS_ANDROID=1'],
-        'DragonFly': ['-DOS_BSD=1', '-DOS_DRAGONFLY=1'],
-        'FreeBSD': ['-DOS_BSD=1', '-DOS_FREEBSD=1'],
-        'GNU': ['-DOS_LINUX=1'],
-        'NetBSD': ['-DOS_BSD=1', '-DOS_NETBSD=1'],
-        'OpenBSD': ['-DOS_BSD=1', '-DOS_OPENBSD=1'],
-        'OSX': ['-DOS_MACOSX=1', '-stdlib=libc++'],
-        'SunOS': ['-DOS_SOLARIS=1'],
-        'WINNT': [
-            '-DOS_WIN=1',
-            '-DWIN32=1',
+        "Android": ["-DOS_ANDROID=1"],
+        "DragonFly": ["-DOS_BSD=1", "-DOS_DRAGONFLY=1"],
+        "FreeBSD": ["-DOS_BSD=1", "-DOS_FREEBSD=1"],
+        "GNU": ["-DOS_LINUX=1"],
+        "NetBSD": ["-DOS_BSD=1", "-DOS_NETBSD=1"],
+        "OpenBSD": ["-DOS_BSD=1", "-DOS_OPENBSD=1"],
+        "OSX": ["-DOS_MACOSX=1", "-stdlib=libc++"],
+        "SunOS": ["-DOS_SOLARIS=1"],
+        "WINNT": [
+            "-DOS_WIN=1",
+            "-DWIN32=1",
         ],
     }.get(target.os, [])
 
-    if compiler_info.type == 'clang-cl':
+    if compiler_info.type == "clang-cl":
         args += [
             # To enable the builtin __builtin_offsetof so that CRT wouldn't
             # use reinterpret_cast in offsetof() which is not allowed inside
             # static_assert().
-            '-D_CRT_USE_BUILTIN_OFFSETOF',
+            "-D_CRT_USE_BUILTIN_OFFSETOF",
             # Enable hidden attribute (which is not supported by MSVC and
             # thus not enabled by default with a MSVC-compatibile build)
             # to exclude hidden symbols from the generated file.
-            '-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1',
+            "-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1",
         ]
 
     return args + (clang_flags or [])
 
 
-option(env='BINDGEN_CFLAGS',
-       nargs=1,
-       help='Options bindgen should pass to the C/C++ parser')
+option(
+    env="BINDGEN_CFLAGS",
+    nargs=1,
+    help="Options bindgen should pass to the C/C++ parser",
+)
 
 
-@depends(basic_bindgen_cflags, 'BINDGEN_CFLAGS')
-@checking('bindgen cflags', lambda s: s if s else 'no')
+@depends(basic_bindgen_cflags, "BINDGEN_CFLAGS")
+@checking("bindgen cflags", lambda s: s if s else "no")
 def bindgen_cflags(base_flags, extra_flags):
     flags = base_flags
     if extra_flags and len(extra_flags):
         flags += extra_flags[0].split()
-    return ' '.join(flags)
+    return " ".join(flags)
 
 
-add_old_configure_assignment('_BINDGEN_CFLAGS', bindgen_cflags)
+add_old_configure_assignment("_BINDGEN_CFLAGS", bindgen_cflags)

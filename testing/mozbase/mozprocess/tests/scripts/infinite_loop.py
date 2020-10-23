@@ -5,7 +5,7 @@ import time
 import sys
 import signal
 
-if 'deadlock' in sys.argv:
+if "deadlock" in sys.argv:
     lock = threading.Lock()
 
     def trap(sig, frame):

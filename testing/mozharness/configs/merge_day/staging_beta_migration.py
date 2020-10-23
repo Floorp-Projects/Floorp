@@ -8,13 +8,10 @@ ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 
 config = {
     "log_name": "staging_beta",
-
-    "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
+    "vcs_share_base": os.path.join(ABS_WORK_DIR, "hg-shared"),
     "from_repo_url": "ssh://hg.mozilla.org/releases/mozilla-aurora",
     "to_repo_url": "ssh://hg.mozilla.org/users/stage-ffxbld/mozilla-beta",
-
     "base_tag": "FIREFOX_BETA_%(major_version)s_BASE",
     "end_tag": "FIREFOX_BETA_%(major_version)s_END",
-
     "migration_behavior": "aurora_to_beta",
 }

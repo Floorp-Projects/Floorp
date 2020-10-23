@@ -28,6 +28,7 @@ class Addons(object):
     .. _AddonManager API: https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager
 
     """
+
     def __init__(self, marionette):
         self._mn = marionette
 
@@ -54,8 +55,7 @@ class Addons(object):
 
         body = {"path": path, "temporary": temp}
         try:
-            return self._mn._send_message("Addon:Install",
-                                          body, key="value")
+            return self._mn._send_message("Addon:Install", body, key="value")
         except errors.UnknownException as e:
             raise AddonInstallException(e)
 
@@ -74,5 +74,4 @@ class Addons(object):
         :param addon_id: The addon ID string to uninstall.
 
         """
-        self._mn._send_message("Addon:Uninstall",
-                               {"id": addon_id})
+        self._mn._send_message("Addon:Uninstall", {"id": addon_id})

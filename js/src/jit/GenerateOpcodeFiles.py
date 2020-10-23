@@ -32,7 +32,7 @@ def get_opcodes(inputs, pat):
         for line in open(inputfile):
             match = pat.match(line)
             if match:
-                op = match.group('name')
+                op = match.group("name")
                 if op in ops_set:
                     raise Exception("Duplicate opcode {} in {}".format(op, inputfile))
                 ops.append(op)
@@ -43,19 +43,24 @@ def get_opcodes(inputs, pat):
 
 def generate_header(c_out, inputs, pat, includeguard, listname):
     ops = get_opcodes(inputs, pat)
-    ops_string = '\\\n'.join(['_(' + op + ')' for op in ops])
-    c_out.write(HEADER_TEMPLATE % {
-        'ops': ops_string,
-        'includeguard': includeguard,
-        'listname': listname,
-    })
+    ops_string = "\\\n".join(["_(" + op + ")" for op in ops])
+    c_out.write(
+        HEADER_TEMPLATE
+        % {
+            "ops": ops_string,
+            "includeguard": includeguard,
+            "listname": listname,
+        }
+    )
 
 
 def generate_mir_header(c_out, *inputs):
-    pat = re.compile(r"^\s*INSTRUCTION_HEADER(_WITHOUT_TYPEPOLICY)?\((?P<name>\w+)\);?$")
-    generate_header(c_out, inputs, pat, 'jit_MOpcodesGenerated_h', 'MIR_OPCODE_LIST')
+    pat = re.compile(
+        r"^\s*INSTRUCTION_HEADER(_WITHOUT_TYPEPOLICY)?\((?P<name>\w+)\);?$"
+    )
+    generate_header(c_out, inputs, pat, "jit_MOpcodesGenerated_h", "MIR_OPCODE_LIST")
 
 
 def generate_lir_header(c_out, *inputs):
     pat = re.compile(r"^\s*LIR_HEADER\((?P<name>\w+)\);?$")
-    generate_header(c_out, inputs, pat, 'jit_LOpcodesGenerated_h', 'LIR_OPCODE_LIST')
+    generate_header(c_out, inputs, pat, "jit_LOpcodesGenerated_h", "LIR_OPCODE_LIST")

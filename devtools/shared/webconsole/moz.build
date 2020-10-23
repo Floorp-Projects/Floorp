@@ -4,10 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_TARGET'] != 'Android':
-    MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
-    XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
-    BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+if CONFIG["OS_TARGET"] != "Android":
+    MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+    BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
 # Compute where to put transpiled files into omni.ja package
 # All DevTools modules are used via resource://devtools/ URI
@@ -15,16 +15,19 @@ if CONFIG['OS_TARGET'] != 'Android':
 base = FINAL_TARGET_FILES.chrome.devtools.modules
 
 # Now, navigate to the right sub-directory into devtools root modules folder
-for dir in RELATIVEDIR.split('/'):
+for dir in RELATIVEDIR.split("/"):
     base = base[dir]
 base += ["!reserved-js-words.js"]
 
-GeneratedFile('reserved-js-words.js', script='GenerateReservedWordsJS.py',
-              inputs = ['/js/src/frontend/ReservedWords.h'])
+GeneratedFile(
+    "reserved-js-words.js",
+    script="GenerateReservedWordsJS.py",
+    inputs=["/js/src/frontend/ReservedWords.h"],
+)
 
 DevToolsModules(
-    'js-property-provider.js',
-    'network-helper.js',
-    'parser-helper.js',
-    'throttle.js',
+    "js-property-provider.js",
+    "network-helper.js",
+    "parser-helper.js",
+    "throttle.js",
 )

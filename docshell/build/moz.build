@@ -5,21 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'nsDocShellCID.h',
+    "nsDocShellCID.h",
 ]
 
 SOURCES += [
-    'nsDocShellModule.cpp',
+    "nsDocShellModule.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/docshell/shistory',
+    "/docshell/shistory",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

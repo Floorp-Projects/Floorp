@@ -6,35 +6,35 @@
 
 features = []
 
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
-        features += ['cranelift_x86']
-    elif CONFIG['JS_CODEGEN_ARM']:
-        features += ['cranelift_arm32']
-    elif CONFIG['JS_CODEGEN_ARM64']:
-        features += ['cranelift_arm64']
+if CONFIG["ENABLE_WASM_CRANELIFT"]:
+    if CONFIG["JS_CODEGEN_X64"] or CONFIG["JS_CODEGEN_X86"]:
+        features += ["cranelift_x86"]
+    elif CONFIG["JS_CODEGEN_ARM"]:
+        features += ["cranelift_arm32"]
+    elif CONFIG["JS_CODEGEN_ARM64"]:
+        features += ["cranelift_arm64"]
     else:
-        features += ['cranelift_none']
+        features += ["cranelift_none"]
 
-if CONFIG['MOZ_RUST_SIMD']:
-    features += ['simd-accel']
+if CONFIG["MOZ_RUST_SIMD"]:
+    features += ["simd-accel"]
 
-if CONFIG['JS_ENABLE_SMOOSH']:
-    features += ['smoosh']
+if CONFIG["JS_ENABLE_SMOOSH"]:
+    features += ["smoosh"]
 
-RustLibrary('jsrust', features)
+RustLibrary("jsrust", features)
 
-if CONFIG['JS_SHARED_LIBRARY']:
-    FINAL_LIBRARY = 'js'
+if CONFIG["JS_SHARED_LIBRARY"]:
+    FINAL_LIBRARY = "js"
 
-if CONFIG['OS_ARCH'] == 'Darwin':
+if CONFIG["OS_ARCH"] == "Darwin":
     # The Rust standard library references libresolv on macOS, so we need to
     # link it as a workaround. See also bug 1367932.
-    OS_LIBS += ['-lresolv']
-elif CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += ["-lresolv"]
+elif CONFIG["OS_ARCH"] == "WINNT":
     # Extra libraries used by Rust bindings libs in debug builds.
     OS_LIBS += [
-        'shell32',
-        'userenv',
-        'ws2_32',
+        "shell32",
+        "userenv",
+        "ws2_32",
     ]

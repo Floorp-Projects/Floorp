@@ -15,7 +15,9 @@ def summarize_string(valobj, internal_dict):
 def summarize_atom(valobj, internal_dict):
     target = lldb.debugger.GetSelectedTarget()
     length = valobj.GetChildMemberWithName("mLength").GetValueAsUnsigned()
-    string = target.EvaluateExpression("(char16_t*)%s.GetUTF16String()" % valobj.GetName())
+    string = target.EvaluateExpression(
+        "(char16_t*)%s.GetUTF16String()" % valobj.GetName()
+    )
     return utils.format_string(string, length)
 
 
@@ -29,7 +31,11 @@ class TArraySyntheticChildrenProvider:
         self.element_base_addr = self.header.GetValueAsUnsigned(0) + header_size
 
     def num_children(self):
-        return self.header.Dereference().GetChildMemberWithName("mLength").GetValueAsUnsigned(0)
+        return (
+            self.header.Dereference()
+            .GetChildMemberWithName("mLength")
+            .GetValueAsUnsigned(0)
+        )
 
     def get_child_index(self, name):
         try:
@@ -46,7 +52,9 @@ class TArraySyntheticChildrenProvider:
         if index >= self.num_children():
             return None
         addr = self.element_base_addr + index * self.element_size
-        return self.valobj.CreateValueFromAddress("[%d]" % index, addr, self.element_type)
+        return self.valobj.CreateValueFromAddress(
+            "[%d]" % index, addr, self.element_type
+        )
 
 
 def prefcnt(debugger, command, result, dict):
@@ -72,7 +80,9 @@ def prefcnt(debugger, command, result, dict):
     if refcnt_type == "nsAutoRefCnt":
         print(field.GetChildMemberWithName("mValue").GetValueAsUnsigned(0))
     elif refcnt_type == "nsCycleCollectingAutoRefCnt":
-        print(field.GetChildMemberWithName("mRefCntAndFlags").GetValueAsUnsigned(0) >> 2)
+        print(
+            field.GetChildMemberWithName("mRefCntAndFlags").GetValueAsUnsigned(0) >> 2
+        )
     elif refcnt_type == "mozilla::ThreadSafeAutoRefCnt":
         print(
             field.GetChildMemberWithName("mValue")
@@ -90,13 +100,13 @@ def prefcnt(debugger, command, result, dict):
 # Used to work around http://llvm.org/bugs/show_bug.cgi?id=22211
 def callfunc(debugger, command, result, dict):
     """Calls a function for which debugger information is unavailable by getting its address
-       from the symbol table.  The function is assumed to return void."""
+    from the symbol table.  The function is assumed to return void."""
 
-    if '(' not in command:
-        print('Usage: callfunc your_function(args)')
+    if "(" not in command:
+        print("Usage: callfunc your_function(args)")
         return
 
-    command_parts = command.split('(')
+    command_parts = command.split("(")
     funcname = command_parts[0].strip()
     args = command_parts[1]
 
@@ -107,30 +117,45 @@ def callfunc(debugger, command, result, dict):
         return
 
     sym = symbols[0]
-    arg_types = '()'
-    if sym.name and sym.name.startswith(funcname + '('):
-        arg_types = sym.name[len(funcname):]
+    arg_types = "()"
+    if sym.name and sym.name.startswith(funcname + "("):
+        arg_types = sym.name[len(funcname) :]
     debugger.HandleCommand(
-        "print ((void(*)%s)0x%0x)(%s" % (arg_types, sym.addr.GetLoadAddress(target), args)
+        "print ((void(*)%s)0x%0x)(%s"
+        % (arg_types, sym.addr.GetLoadAddress(target), args)
     )
 
 
 def init(debugger):
-    debugger.HandleCommand("type summary add nsAString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsACString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsFixedString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsFixedCString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsAutoString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsAutoCString -F lldbutils.general.summarize_string")
-    debugger.HandleCommand("type summary add nsAtom -F lldbutils.general.summarize_atom")
     debugger.HandleCommand(
-        "type synthetic add -x \"nsTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider"
+        "type summary add nsAString -F lldbutils.general.summarize_string"
     )
     debugger.HandleCommand(
-        "type synthetic add -x \"AutoTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider"  # NOQA: E501
+        "type summary add nsACString -F lldbutils.general.summarize_string"
     )
     debugger.HandleCommand(
-        "type synthetic add -x \"FallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider"  # NOQA: E501
+        "type summary add nsFixedString -F lldbutils.general.summarize_string"
+    )
+    debugger.HandleCommand(
+        "type summary add nsFixedCString -F lldbutils.general.summarize_string"
+    )
+    debugger.HandleCommand(
+        "type summary add nsAutoString -F lldbutils.general.summarize_string"
+    )
+    debugger.HandleCommand(
+        "type summary add nsAutoCString -F lldbutils.general.summarize_string"
+    )
+    debugger.HandleCommand(
+        "type summary add nsAtom -F lldbutils.general.summarize_atom"
+    )
+    debugger.HandleCommand(
+        'type synthetic add -x "nsTArray<" -l lldbutils.general.TArraySyntheticChildrenProvider'
+    )
+    debugger.HandleCommand(
+        'type synthetic add -x "AutoTArray<" -l lldbutils.general.TArraySyntheticChildrenProvider'  # NOQA: E501
+    )
+    debugger.HandleCommand(
+        'type synthetic add -x "FallibleTArray<" -l lldbutils.general.TArraySyntheticChildrenProvider'  # NOQA: E501
     )
     debugger.HandleCommand(
         "command script add -f lldbutils.general.prefcnt -f lldbutils.general.prefcnt prefcnt"

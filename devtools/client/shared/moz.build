@@ -4,65 +4,65 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 TEST_HARNESS_FILES.xpcshell.devtools.client.shared.test += [
-    'test/shared-redux-head.js',
+    "test/shared-redux-head.js",
 ]
 
 DIRS += [
-    'components',
-    'fluent-l10n',
-    'redux',
-    'remote-debugging',
-    'source-map',
-    'sourceeditor',
-    'vendor',
-    'widgets',
+    "components",
+    "fluent-l10n",
+    "redux",
+    "remote-debugging",
+    "source-map",
+    "sourceeditor",
+    "vendor",
+    "widgets",
 ]
 
 DevToolsModules(
-    'async-store-helper.js',
-    'autocomplete-popup.js',
-    'browser-loader-mocks.js',
-    'browser-loader.js',
-    'css-angle.js',
-    'curl.js',
-    'demangle.js',
-    'devices.js',
-    'enum.js',
-    'events.js',
-    'focus.js',
-    'getjson.js',
-    'inplace-editor.js',
-    'key-shortcuts.js',
-    'keycodes.js',
-    'link.js',
-    'node-attribute-parser.js',
-    'options-view.js',
-    'output-parser.js',
-    'poller.js',
-    'prefs.js',
-    'react-utils.js',
-    'scroll.js',
-    'source-utils.js',
-    'SplitView.jsm',
-    'stylesheet-utils.js',
-    'suggestion-picker.js',
-    'telemetry.js',
-    'theme.js',
-    'thread-utils.js',
-    'undo.js',
-    'unicode-url.js',
-    'view-source.js',
-    'WeakMapMap.js',
-    'webgl-utils.js',
-    'workers-listener.js',
-    'zoom-keys.js',
+    "async-store-helper.js",
+    "autocomplete-popup.js",
+    "browser-loader-mocks.js",
+    "browser-loader.js",
+    "css-angle.js",
+    "curl.js",
+    "demangle.js",
+    "devices.js",
+    "enum.js",
+    "events.js",
+    "focus.js",
+    "getjson.js",
+    "inplace-editor.js",
+    "key-shortcuts.js",
+    "keycodes.js",
+    "link.js",
+    "node-attribute-parser.js",
+    "options-view.js",
+    "output-parser.js",
+    "poller.js",
+    "prefs.js",
+    "react-utils.js",
+    "scroll.js",
+    "source-utils.js",
+    "SplitView.jsm",
+    "stylesheet-utils.js",
+    "suggestion-picker.js",
+    "telemetry.js",
+    "theme.js",
+    "thread-utils.js",
+    "undo.js",
+    "unicode-url.js",
+    "view-source.js",
+    "WeakMapMap.js",
+    "webgl-utils.js",
+    "workers-listener.js",
+    "zoom-keys.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "General")
 
-with Files('components/**'):
-    BUG_COMPONENT = ('DevTools', 'Shared Components')
+with Files("components/**"):
+    BUG_COMPONENT = ("DevTools", "Shared Components")

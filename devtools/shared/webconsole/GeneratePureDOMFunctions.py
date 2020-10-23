@@ -24,16 +24,18 @@ import buildconfig
 # This is an explicit list of interfaces to load [Pure] and [Constant]
 # annotation for. There are a bunch of things that are pure in other interfaces
 # that we don't care about in the context of the devtools.
-INTERFACE_ALLOWLIST = set([
-  "Document",
-  "Node",
-  "DOMTokenList",
-  "Element",
-  "Performance",
-  "URLSearchParams",
-  "FormData",
-  "Headers"
-])
+INTERFACE_ALLOWLIST = set(
+    [
+        "Document",
+        "Node",
+        "DOMTokenList",
+        "Element",
+        "Performance",
+        "URLSearchParams",
+        "FormData",
+        "Headers",
+    ]
+)
 
 FILE_TEMPLATE = """\
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -48,46 +50,45 @@ module.exports = %(pure_data)s;
 """
 
 output_file = path.join(
-  buildconfig.topsrcdir,
-  "devtools/server/actors/webconsole/webidl-pure-allowlist.js"
+    buildconfig.topsrcdir, "devtools/server/actors/webconsole/webidl-pure-allowlist.js"
 )
 
 input_file = path.join(buildconfig.topobjdir, "dom/bindings/file-lists.json")
 
 if not path.isfile(input_file):
-  raise Exception(
-    "Script must be run with a mozconfig referencing a non-artifact OBJDIR")
+    raise Exception(
+        "Script must be run with a mozconfig referencing a non-artifact OBJDIR"
+    )
 
 file_list = json.load(open(input_file))
 
 parser = WebIDL.Parser()
 for filepath in file_list["webidls"]:
-  with open(filepath, 'r', encoding="utf8") as f:
-    parser.parse(f.read(), filepath)
+    with open(filepath, "r", encoding="utf8") as f:
+        parser.parse(f.read(), filepath)
 results = parser.finish()
 
 output = {}
 for result in results:
-  if isinstance(result, WebIDL.IDLInterface):
-    iface = result.identifier.name
+    if isinstance(result, WebIDL.IDLInterface):
+        iface = result.identifier.name
 
-    for member in result.members:
-      # We only care about methods because eager evaluation assumes that
-      # all getter functions are side-effect-free.
-      if member.isMethod() and member.affects == "Nothing":
-        name = member.identifier.name
+        for member in result.members:
+            # We only care about methods because eager evaluation assumes that
+            # all getter functions are side-effect-free.
+            if member.isMethod() and member.affects == "Nothing":
+                name = member.identifier.name
 
-        if ((INTERFACE_ALLOWLIST and not iface in INTERFACE_ALLOWLIST) or
-            name.startswith("_")):
-          continue
-        if not iface in output:
-          output[iface] = []
-        if member.isStatic():
-          output[iface].append([name])
-        else:
-          output[iface].append(["prototype", name])
+                if (
+                    INTERFACE_ALLOWLIST and not iface in INTERFACE_ALLOWLIST
+                ) or name.startswith("_"):
+                    continue
+                if not iface in output:
+                    output[iface] = []
+                if member.isStatic():
+                    output[iface].append([name])
+                else:
+                    output[iface].append(["prototype", name])
 
 with open(output_file, "w") as f:
-  f.write(FILE_TEMPLATE % {
-    'pure_data': json.dumps(output, indent=2, sort_keys=True)
-  })
+    f.write(FILE_TEMPLATE % {"pure_data": json.dumps(output, indent=2, sort_keys=True)})
