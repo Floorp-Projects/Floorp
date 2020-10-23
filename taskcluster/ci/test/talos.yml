@@ -67,10 +67,6 @@ talos-bcv:
                     default: []
             (linux|windows|macos)(?!.*shippable)(?!.*-qr).*: []
             default: ['mozilla-beta', 'trunk']
-    tier:
-        by-test-platform:
-            .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
-            default: default
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -124,7 +120,7 @@ talos-damp:
     max-run-time: 5400
     variants:
         by-test-platform:
-            (windows|macos).*-qr.*: ['fission', 'webrender-sw']  # Bug 1671946 - linux64 disabled due to crash
+            (linux64|windows|macos).*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     run-on-projects:
         by-test-platform:
@@ -561,7 +557,7 @@ talos-webgl:
         by-test-platform:
             .*-ccov/.*: []
             android.*: []
-            (linux64|windows).*-qr.*: ['webgl-ipc', 'webrender-sw']  # Bug 1671948 - macos disabled due to crash
+            (linux64|windows|macos).*-qr.*: ['webgl-ipc', 'webrender-sw']
             default: ['webgl-ipc']
     run-on-projects:
         by-test-platform:
