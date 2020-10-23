@@ -363,7 +363,6 @@ class OSXBootstrapper(BaseBootstrapper):
     def ensure_homebrew_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         packages = [
-            'nasm',
             'yasm',
         ]
         self._ensure_homebrew_packages(packages)
@@ -444,7 +443,6 @@ class OSXBootstrapper(BaseBootstrapper):
     def ensure_macports_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         packages = [
-            'nasm',
             'yasm',
         ]
 
@@ -554,8 +552,8 @@ class OSXBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CBINDGEN)
 
     def ensure_nasm_packages(self, state_dir, checkout_root):
-        # installed via ensure_browser_packages
-        pass
+        from mozboot import nasm
+        self.install_toolchain_artifact(state_dir, checkout_root, nasm.MACOS_NASM)
 
     def ensure_node_packages(self, state_dir, checkout_root):
         # XXX from necessary?
