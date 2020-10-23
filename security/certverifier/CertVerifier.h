@@ -148,6 +148,7 @@ enum class CRLiteLookupResult {
   CertificateValid = 4,
   CertificateRevoked = 5,
   LibraryFailure = 6,
+  CertRevokedByStash = 7,
 };
 
 class CRLiteTelemetryInfo {
