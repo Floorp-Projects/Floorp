@@ -144,6 +144,12 @@ interface BrowsingContext {
 
   [SetterThrows] attribute DisplayMode displayMode;
 
+  /**
+   * The nsID of the browsing context in the session history.
+   */
+  [NewObject, Throws]
+  readonly attribute any historyID;
+
   readonly attribute ChildSHistory? childSessionHistory;
 
   // Resets the location change rate limit. Used for testing.

@@ -667,6 +667,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
 
+  void GetHistoryID(JSContext* aCx, JS::MutableHandle<JS::Value> aVal,
+                    ErrorResult& aError);
+
   // This should only be called on the top browsing context.
   void InitSessionHistory();
 

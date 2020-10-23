@@ -13,16 +13,7 @@ add_task(async function duplicateTab() {
       is(shEntry.docshellID.toString(), docshell.historyID.toString());
     });
   } else {
-    let historyID = await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [],
-      function() {
-        let docshell = content.window.docShell.QueryInterface(
-          Ci.nsIWebNavigation
-        );
-        return docshell.historyID.toString();
-      }
-    );
+    let historyID = tab.linkedBrowser.browsingContext.historyID;
     let shEntry = tab.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
       0
     );
@@ -41,16 +32,7 @@ add_task(async function duplicateTab() {
       is(shEntry.docshellID.toString(), docshell.historyID.toString());
     });
   } else {
-    let historyID = await SpecialPowers.spawn(
-      tab2.linkedBrowser,
-      [],
-      function() {
-        let docshell = content.window.docShell.QueryInterface(
-          Ci.nsIWebNavigation
-        );
-        return docshell.historyID.toString();
-      }
-    );
+    let historyID = tab2.linkedBrowser.browsingContext.historyID;
     let shEntry = tab2.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
       0
     );
@@ -80,19 +62,10 @@ add_task(async function contentToChromeNavigate() {
       );
     });
   } else {
-    let historyID = await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [],
-      function() {
-        let docshell = content.window.docShell.QueryInterface(
-          Ci.nsIWebNavigation
-        );
-        return docshell.historyID.toString();
-      }
-    );
+    let historyID = tab.linkedBrowser.browsingContext.historyID;
     let sh = tab.linkedBrowser.browsingContext.sessionHistory;
     is(sh.count, 1);
-    is(sh.getEntryAtIndex(0).docshellID.toString(), historyID);
+    is(sh.getEntryAtIndex(0).docshellID.toString(), historyID.toString());
   }
 
   // Force the browser to navigate to the chrome process.

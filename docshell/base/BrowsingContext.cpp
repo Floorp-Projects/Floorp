@@ -2627,6 +2627,14 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
       EventQueuePriority::Idle);
 }
 
+void BrowsingContext::GetHistoryID(JSContext* aCx,
+                                   JS::MutableHandle<JS::Value> aVal,
+                                   ErrorResult& aError) {
+  if (!xpc::ID2JSValue(aCx, GetHistoryID(), aVal)) {
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
+}
+
 void BrowsingContext::InitSessionHistory() {
   MOZ_ASSERT(!IsDiscarded());
   MOZ_ASSERT(IsTop());
