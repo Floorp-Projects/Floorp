@@ -19,6 +19,7 @@ dom/encoding/
 dom/events/
 dom/fetch/
 dom/file/
+dom/filehandle/
 dom/indexedDB/
 dom/localstorage/
 dom/quota/
