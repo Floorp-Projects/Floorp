@@ -7,7 +7,7 @@ const gripWindowStubs = require("devtools/client/shared/components/test/node/stu
 const {
   createNode,
   nodeIsWindow,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const createRootNode = value =>
   createNode({ name: "root", contents: { value } });

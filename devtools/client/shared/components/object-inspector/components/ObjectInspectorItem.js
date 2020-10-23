@@ -12,7 +12,7 @@ const {
   MODE,
 } = require("devtools/client/shared/components/reps/reps/constants");
 
-const Utils = require("devtools/client/shared/components/reps/object-inspector/utils/index");
+const Utils = require("devtools/client/shared/components/object-inspector/utils/index");
 
 const {
   getValue,

@@ -8,7 +8,7 @@ const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/
 const {
   createNode,
   nodeHasEntries,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 const createRootNode = value =>
   createNode({ name: "root", contents: { value } });

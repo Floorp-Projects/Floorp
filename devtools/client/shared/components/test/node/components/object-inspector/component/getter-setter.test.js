@@ -13,7 +13,7 @@ const {
 
 const {
   makeNodesForProperties,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
 const ObjectFront = require("devtools/client/shared/components/test/node/__mocks__/object-front");
 

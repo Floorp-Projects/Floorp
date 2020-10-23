@@ -19,10 +19,10 @@ const {
 const {
   createNode,
   NODE_TYPES,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 const {
   getExpandedPaths,
-} = require("devtools/client/shared/components/reps/object-inspector/reducer");
+} = require("devtools/client/shared/components/object-inspector/reducer");
 
 const protoStub = {
   prototype: {

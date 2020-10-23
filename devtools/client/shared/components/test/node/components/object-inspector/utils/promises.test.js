@@ -5,7 +5,7 @@
 const {
   makeNodesForPromiseProperties,
   nodeIsPromise,
-} = require("devtools/client/shared/components/reps/object-inspector/utils/node");
+} = require("devtools/client/shared/components/object-inspector/utils/node");
 
 describe("promises utils function", () => {
   it("is promise", () => {
