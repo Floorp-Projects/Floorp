@@ -73,28 +73,26 @@ function testRemoveTab() {
 
 function testAttachRemovedTab() {
   return removeTab(gTab2).then(() => {
-    const deferred = promise.defer();
+    return new Promise((resolve, reject) => {
+      gClient.on("paused", () => {
+        ok(
+          false,
+          "Attaching to an exited target actor shouldn't generate a pause."
+        );
+        reject();
+      });
 
-    gClient.on("paused", () => {
-      ok(
-        false,
-        "Attaching to an exited target actor shouldn't generate a pause."
-      );
-      deferred.reject();
+      const { actorID } = gTab2Front;
+      gTab2Front.reconfigure({}).then(null, error => {
+        ok(
+          error.message.includes(
+            `Connection closed, pending request to ${actorID}, type reconfigure failed`
+          ),
+          "Actor is gone since the tab was removed."
+        );
+        resolve();
+      });
     });
-
-    const { actorID } = gTab2Front;
-    gTab2Front.reconfigure({}).then(null, error => {
-      ok(
-        error.message.includes(
-          `Connection closed, pending request to ${actorID}, type reconfigure failed`
-        ),
-        "Actor is gone since the tab was removed."
-      );
-      deferred.resolve();
-    });
-
-    return deferred.promise;
   });
 }
 
