@@ -53,7 +53,7 @@ function checkPrefsState(wrapper, expected) {
   }
   checkMenuItem(getMenuItems(wrapper, ".help")[0], {
     role: "link",
-    label: "accessibility.documentation.label",
+    label: "Documentation…",
   });
 }
 
@@ -71,9 +71,7 @@ describe("AccessibilityPrefs component:", () => {
     expect(menuButton.is(MenuButton)).toBe(true);
 
     checkPrefsState(wrapper, {
-      prefs: [
-        { active: false, text: "accessibility.pref.scroll.into.view.label" },
-      ],
+      prefs: [{ active: false, text: "Scroll into view" }],
     });
   });
 
@@ -90,9 +88,7 @@ describe("AccessibilityPrefs component:", () => {
     );
     expect(wrapper.html()).toMatchSnapshot();
     checkPrefsState(wrapper, {
-      prefs: [
-        { active: true, text: "accessibility.pref.scroll.into.view.label" },
-      ],
+      prefs: [{ active: true, text: "Scroll into view" }],
     });
   });
 

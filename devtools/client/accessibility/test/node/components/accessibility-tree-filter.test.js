@@ -77,22 +77,22 @@ describe("AccessibilityTreeFilter component:", () => {
 
     checkFiltersState(wrapper, {
       filters: [
-        { active: true, disabled: false, text: "accessibility.filter.none" },
-        { active: false, disabled: false, text: "accessibility.filter.all2" },
+        { active: true, disabled: false, text: "None" },
+        { active: false, disabled: false, text: "All Issues" },
         {
           active: false,
           disabled: false,
-          text: "accessibility.filter.contrast",
+          text: "Contrast",
         },
         {
           active: false,
           disabled: false,
-          text: "accessibility.filter.keyboard",
+          text: "Keyboard",
         },
         {
           active: false,
           disabled: false,
-          text: "accessibility.filter.textLabel",
+          text: "Text Labels",
         },
       ],
     });
@@ -144,8 +144,8 @@ describe("AccessibilityTreeFilter component:", () => {
     expect(wrapper.html()).toMatchSnapshot();
     checkFiltersState(wrapper, {
       filters: [
-        { active: true, disabled: false, text: "accessibility.filter.none" },
-        { active: false, disabled: true, text: "accessibility.filter.all2" },
+        { active: true, disabled: false, text: "None" },
+        { active: false, disabled: true, text: "All Issues" },
       ],
     });
   });

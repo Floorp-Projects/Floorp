@@ -29,8 +29,8 @@ function testBadge(wrapper) {
   const badge = keyboardBadge.childAt(0);
   expect(badge.type()).toBe(Badge);
   expect(badge.props()).toMatchObject({
-    label: "accessibility.badge.keyboard",
-    tooltip: "accessibility.badge.keyboard.tooltip",
+    label: "keyboard",
+    tooltip: "Does not meet WCAG standards for keyboard accessibility.",
   });
 }
 

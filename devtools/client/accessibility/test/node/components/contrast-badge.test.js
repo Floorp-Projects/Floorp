@@ -87,8 +87,8 @@ describe("ContrastBadge component:", () => {
     const badge = contrastBadge.childAt(0);
     expect(badge.type()).toBe(Badge);
     expect(badge.props()).toMatchObject({
-      label: "accessibility.badge.contrast",
-      tooltip: "accessibility.badge.contrast.tooltip",
+      label: "contrast",
+      tooltip: "Does not meet WCAG standards for accessible text.",
     });
   });
 });
