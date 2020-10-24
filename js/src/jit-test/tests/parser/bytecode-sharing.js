@@ -18,7 +18,7 @@ evaluate(`function b03( ){}`)
 evaluate(`function b04() {}`)
 evaluate(`function b05(){ }`)
 assertEq(hasSameBytecodeData(b, b01), true)
-assertEq(hasSameBytecodeData(b, b02), true)
+assertEq(hasSameBytecodeData(b, b02), false)
 assertEq(hasSameBytecodeData(b, b03), false)
 assertEq(hasSameBytecodeData(b, b04), false)
 assertEq(hasSameBytecodeData(b, b05), false)
@@ -73,16 +73,16 @@ assertEq(hasSameBytecodeData(h01, h03), true)
 evaluate(`function i01(){ return\n\n\n\n\n\n\n\n0; }`)
 evaluate(`\nfunction i02(){ return\n\n\n\n\n\n\n\n0; }`)
 evaluate(`\n\n\n\n\n\n\nfunction i03(){ return\n\n\n\n\n\n\n\n0; }`)
-assertEq(hasSameBytecodeData(i01, i02), true)
-assertEq(hasSameBytecodeData(i01, i03), true)
+assertEq(hasSameBytecodeData(i01, i02), false)
+assertEq(hasSameBytecodeData(i01, i03), false)
 
 
 // Check effect of column number.
 evaluate(`function j01(){ return 0; }`)
 evaluate(` function j02(){ return 0; }`)
 evaluate(` \tfunction j03(){ return 0; }`)
-assertEq(hasSameBytecodeData(j01, j02), true)
-assertEq(hasSameBytecodeData(j01, j03), true)
+assertEq(hasSameBytecodeData(j01, j02), false)
+assertEq(hasSameBytecodeData(j01, j03), false)
 
 
 // Check different forms of functions.

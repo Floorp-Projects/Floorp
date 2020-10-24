@@ -3127,7 +3127,7 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
         break;
 
       case SrcNoteType::SetLine:
-        lineno = SrcNote::SetLine::getLine(sn, script->lineno());
+        lineno = SrcNote::SetLine::getLine(sn);
         if (!sp->jsprintf(" lineno %u", lineno)) {
           return false;
         }
