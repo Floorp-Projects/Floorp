@@ -46,9 +46,13 @@ function getWakeLockState(topic, needLock, isTabInForeground) {
         }
         ok(true, `requested '${topic}' wakelock in ${tabState}`);
       } else {
-        const lockState = powerManager.getWakeLockState(topic);
-        info(`topic=${topic}, state=${lockState}`);
-        ok(lockState == "unlocked", `doesn't request lock for '${topic}'`);
+        if (powerManager.getWakeLockState(topic) != "unlocked") {
+          await wakeLockObserved(topic, state => state == "unlocked");
+        }
+        ok(
+          powerManager.getWakeLockState(topic) == "unlocked",
+          `doesn't request lock for '${topic}'`
+        );
       }
     },
   };
