@@ -7,9 +7,10 @@
 #include "SyncObject.h"
 
 #ifdef XP_WIN
-#  include "mozilla/layers/TextureD3D11.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/layers/TextureD3D11.h"
 #endif
+#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 
 namespace mozilla {
 namespace layers {
@@ -41,7 +42,7 @@ SyncObjectClient::CreateSyncObjectClientForContentDevice(SyncHandle aHandle) {
     return nullptr;
   }
 
-  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(XRE_IsContentProcess() || !mozilla::BrowserTabsRemoteAutostart());
 
   return MakeAndAddRef<SyncObjectD3D11ClientContentDevice>(aHandle);
 #endif
