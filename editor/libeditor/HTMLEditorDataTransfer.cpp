@@ -538,12 +538,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
 
   // Are there any table elements in the list?
   // check for table cell selection mode
-  bool cellSelectionMode = false;
-  RefPtr<Element> cellElement =
-      mHTMLEditor.GetFirstSelectedTableCellElement(ignoredError);
-  if (cellElement) {
-    cellSelectionMode = true;
-  }
+  bool cellSelectionMode =
+      HTMLEditUtils::IsInTableCellSelectionMode(*mHTMLEditor.SelectionRefPtr());
 
   if (cellSelectionMode) {
     // do we have table content to paste?  If so, we want to delete
