@@ -46,7 +46,9 @@ linux64-rust-nightly:
         symbol: TL(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2020-03-18',
+            # Last nightly with version 1.48.0. See bug #1672094 why
+            # we're using this rather than the first with version 1.48.0.
+            '--channel', 'nightly-2020-10-03',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
