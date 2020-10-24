@@ -5,35 +5,35 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "Biquad.cpp",
-    "DynamicsCompressor.cpp",
-    "DynamicsCompressorKernel.cpp",
-    "FFTConvolver.cpp",
-    "HRTFDatabase.cpp",
-    "HRTFDatabaseLoader.cpp",
-    "HRTFElevation.cpp",
-    "HRTFKernel.cpp",
-    "HRTFPanner.cpp",
-    "IIRFilter.cpp",
-    "PeriodicWave.cpp",
-    "Reverb.cpp",
-    "ReverbAccumulationBuffer.cpp",
-    "ReverbConvolver.cpp",
-    "ReverbConvolverStage.cpp",
-    "ReverbInputBuffer.cpp",
-    "ZeroPole.cpp",
+    'Biquad.cpp',
+    'DynamicsCompressor.cpp',
+    'DynamicsCompressorKernel.cpp',
+    'FFTConvolver.cpp',
+    'HRTFDatabase.cpp',
+    'HRTFDatabaseLoader.cpp',
+    'HRTFElevation.cpp',
+    'HRTFKernel.cpp',
+    'HRTFPanner.cpp',
+    'IIRFilter.cpp',
+    'PeriodicWave.cpp',
+    'Reverb.cpp',
+    'ReverbAccumulationBuffer.cpp',
+    'ReverbConvolver.cpp',
+    'ReverbConvolverStage.cpp',
+    'ReverbInputBuffer.cpp',
+    'ZeroPole.cpp',
 ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
-if CONFIG["INTEL_ARCHITECTURE"]:
-    DEFINES["USE_SSE2"] = True
+if CONFIG['INTEL_ARCHITECTURE']:
+    DEFINES['USE_SSE2'] = True
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/media/webaudio",
+    '/dom/media/webaudio',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-shadow']

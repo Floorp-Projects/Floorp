@@ -4,24 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 XPIDL_SOURCES += [
-    "nsIInlineSpellChecker.idl",
+    'nsIInlineSpellChecker.idl',
 ]
 
-XPIDL_MODULE = "txtsvc"
+XPIDL_MODULE = 'txtsvc'
 
 EXPORTS.mozilla += [
-    "EditorSpellCheck.h",
-    "TextServicesDocument.h",
+    'EditorSpellCheck.h',
+    'TextServicesDocument.h',
 ]
 
 UNIFIED_SOURCES += [
-    "EditorSpellCheck.cpp",
-    "FilteredContentIterator.cpp",
-    "nsComposeTxtSrvFilter.cpp",
-    "TextServicesDocument.cpp",
+    'EditorSpellCheck.cpp',
+    'FilteredContentIterator.cpp',
+    'nsComposeTxtSrvFilter.cpp',
+    'TextServicesDocument.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

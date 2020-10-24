@@ -4,55 +4,55 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Networking")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Networking')
 
-DIRS += ["interfaces"]
+DIRS += ['interfaces']
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
-    "TCPServerSocket.h",
-    "TCPSocket.h",
-    "UDPSocket.h",
+    'TCPServerSocket.h',
+    'TCPSocket.h',
+    'UDPSocket.h',
 ]
 
 EXPORTS.mozilla.dom.network += [
-    "Connection.h",
-    "Constants.h",
-    "TCPServerSocketChild.h",
-    "TCPServerSocketParent.h",
-    "TCPSocketChild.h",
-    "TCPSocketParent.h",
-    "UDPSocketChild.h",
-    "UDPSocketParent.h",
+    'Connection.h',
+    'Constants.h',
+    'TCPServerSocketChild.h',
+    'TCPServerSocketParent.h',
+    'TCPSocketChild.h',
+    'TCPSocketParent.h',
+    'UDPSocketChild.h',
+    'UDPSocketParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Connection.cpp",
-    "ConnectionMainThread.cpp",
-    "ConnectionWorker.cpp",
-    "TCPServerSocket.cpp",
-    "TCPServerSocketChild.cpp",
-    "TCPServerSocketParent.cpp",
-    "TCPSocket.cpp",
-    "TCPSocketChild.cpp",
-    "TCPSocketParent.cpp",
-    "UDPSocket.cpp",
-    "UDPSocketChild.cpp",
-    "UDPSocketParent.cpp",
+    'Connection.cpp',
+    'ConnectionMainThread.cpp',
+    'ConnectionWorker.cpp',
+    'TCPServerSocket.cpp',
+    'TCPServerSocketChild.cpp',
+    'TCPServerSocketParent.cpp',
+    'TCPSocket.cpp',
+    'TCPSocketChild.cpp',
+    'TCPSocketParent.cpp',
+    'UDPSocket.cpp',
+    'UDPSocketChild.cpp',
+    'UDPSocketParent.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PTCPServerSocket.ipdl",
-    "PTCPSocket.ipdl",
-    "PUDPSocket.ipdl",
+    'PTCPServerSocket.ipdl',
+    'PTCPSocket.ipdl',
+    'PUDPSocket.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

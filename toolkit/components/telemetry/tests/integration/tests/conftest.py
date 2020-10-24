@@ -63,7 +63,7 @@ def fixture_marionette(binary, ping_server):
         # Clear the region detection url to
         #   * avoid net access in tests
         #   * stabilize browser.search.region to avoid an extra subsession (bug 1579840#c40)
-        "browser.region.network.url": "",
+        "browser.region.network.url": '',
         # Disable smart sizing because it changes prefs at startup. (bug 1547750)
         "browser.cache.disk.smart_size.enabled": False,
         "toolkit.telemetry.server": server_url,

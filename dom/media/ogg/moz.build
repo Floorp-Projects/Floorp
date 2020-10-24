@@ -5,26 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "OggCodecState.h",
-    "OggCodecStore.h",
-    "OggDecoder.h",
-    "OggDemuxer.h",
-    "OggRLBox.h",
-    "OggRLBoxTypes.h",
-    "OggWriter.h",
-    "OpusParser.h",
+    'OggCodecState.h',
+    'OggCodecStore.h',
+    'OggDecoder.h',
+    'OggDemuxer.h',
+    'OggRLBox.h',
+    'OggRLBoxTypes.h',
+    'OggWriter.h',
+    'OpusParser.h',
 ]
 
 UNIFIED_SOURCES += [
-    "OggCodecState.cpp",
-    "OggCodecStore.cpp",
-    "OggDecoder.cpp",
-    "OggDemuxer.cpp",
-    "OggWriter.cpp",
-    "OpusParser.cpp",
+    'OggCodecState.cpp',
+    'OggCodecStore.cpp',
+    'OggDecoder.cpp',
+    'OggDemuxer.cpp',
+    'OggWriter.cpp',
+    'OpusParser.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

@@ -10,6 +10,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestClickChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestClickChrome, self).setUp()
 
@@ -26,8 +27,8 @@ class TestClickChrome(WindowManagerMixin, MarionetteTestCase):
 
         def checked():
             return self.marionette.execute_script(
-                "return arguments[0].checked", script_args=[box]
-            )
+                "return arguments[0].checked",
+                script_args=[box])
 
         box = self.marionette.find_element(By.ID, "testBox")
         self.assertFalse(checked())

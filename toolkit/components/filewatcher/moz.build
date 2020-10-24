@@ -4,23 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "OS.File")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'OS.File')
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    EXPORTS += ["NativeFileWatcherWin.h"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS += ['NativeFileWatcherWin.h']
     UNIFIED_SOURCES += [
-        "NativeFileWatcherWin.cpp",
+        'NativeFileWatcherWin.cpp',
     ]
 else:
-    EXPORTS += ["NativeFileWatcherNotSupported.h"]
+    EXPORTS += ['NativeFileWatcherNotSupported.h']
 
-XPIDL_MODULE = "toolkit_filewatcher"
+XPIDL_MODULE = 'toolkit_filewatcher'
 
 XPIDL_SOURCES += [
-    "nsINativeFileWatcher.idl",
+    'nsINativeFileWatcher.idl',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

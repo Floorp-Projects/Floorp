@@ -3,14 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "CachePanel.js",
-    "CookiesPanel.js",
-    "HeadersPanel.js",
-    "NetworkDetailsBar.js",
-    "PropertiesView.js",
-    "RequestPanel.js",
-    "ResponsePanel.js",
-    "SecurityPanel.js",
-    "StackTracePanel.js",
-    "TimingsPanel.js",
+    'CachePanel.js',
+    'CookiesPanel.js',
+    'HeadersPanel.js',
+    'NetworkDetailsBar.js',
+    'PropertiesView.js',
+    'RequestPanel.js',
+    'ResponsePanel.js',
+    'SecurityPanel.js',
+    'StackTracePanel.js',
+    'TimingsPanel.js'
+
 )

@@ -15,9 +15,9 @@ from mozterm.widgets import Footer
 
 @pytest.fixture
 def terminal(monkeypatch):
-    blessings = pytest.importorskip("blessings")
+    blessings = pytest.importorskip('blessings')
 
-    kind = "xterm-256color"
+    kind = 'xterm-256color'
     try:
         term = Terminal(stream=StringIO(), force_styling=True, kind=kind)
     except blessings.curses.error:
@@ -25,27 +25,25 @@ def terminal(monkeypatch):
 
     # For some reason blessings returns None for width/height though a comment
     # says that shouldn't ever happen.
-    monkeypatch.setattr(term, "_height_and_width", lambda: (100, 100))
+    monkeypatch.setattr(term, '_height_and_width', lambda: (100, 100))
     return term
 
 
 def test_footer(terminal):
     footer = Footer(terminal=terminal)
-    footer.write(
-        [
-            ("dim", "foo"),
-            ("green", "bar"),
-        ]
-    )
+    footer.write([
+        ('dim', 'foo'),
+        ('green', 'bar'),
+    ])
     value = terminal.stream.getvalue()
     expected = "\x1b7\x1b[2mfoo\x1b(B\x1b[m \x1b[32mbar\x1b(B\x1b[m\x1b8"
     assert value == expected
 
     footer.clear()
-    value = terminal.stream.getvalue()[len(value) :]
+    value = terminal.stream.getvalue()[len(value):]
     expected = "\x1b[1G\x1b[K"
     assert value == expected
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

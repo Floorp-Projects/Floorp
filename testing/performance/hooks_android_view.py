@@ -17,14 +17,12 @@ from mozperftest.utils import (
 
 URL = "'https://www.example.com'"
 
-COMMON_OPTIONS = [
-    ("processStartTime", "true"),
-    ("firefox.disableBrowsertimeExtension", "true"),
-    ("firefox.android.intentArgument", "'-a'"),
-    ("firefox.android.intentArgument", "'android.intent.action.VIEW'"),
-    ("firefox.android.intentArgument", "'-d'"),
-    ("firefox.android.intentArgument", URL),
-]
+COMMON_OPTIONS = [("processStartTime", "true"),
+                  ("firefox.disableBrowsertimeExtension", "true"),
+                  ("firefox.android.intentArgument", "'-a'"),
+                  ("firefox.android.intentArgument", "'android.intent.action.VIEW'"),
+                  ("firefox.android.intentArgument", "'-d'"),
+                  ("firefox.android.intentArgument", URL)]
 
 NIGHTLY_SIM_ROUTE = "mobile.v2.fenix.nightly-simulation"
 ROUTE_SUFFIX = "artifacts/public/build/{architecture}/target.apk"
@@ -36,9 +34,8 @@ def before_iterations(kw):
     global build_generator
 
     install_list = kw.get("android_install_apk")
-    if len(install_list) == 0 or all(
-        ["fenix_nightlysim_multicommit" not in apk for apk in install_list]
-    ):
+    if (len(install_list) == 0 or
+        all(["fenix_nightlysim_multicommit" not in apk for apk in install_list])):
         return
 
     # Install gitpython
@@ -46,26 +43,22 @@ def before_iterations(kw):
     import git
 
     class _GitProgress(git.RemoteProgress):
-        def update(self, op_code, cur_count, max_count=None, message=""):
+        def update(self, op_code, cur_count, max_count=None, message=''):
             if message:
                 print(message)
 
     # Setup the local fenix github repo
     print("Cloning fenix repo...")
     fenix_repo = git.Repo.clone_from(
-        "https://github.com/mozilla-mobile/fenix",
+        'https://github.com/mozilla-mobile/fenix',
         tempfile.mkdtemp(),
-        branch="master",
-        progress=_GitProgress(),
+        branch='master',
+        progress=_GitProgress()
     )
 
     # Get the builds to test
-    architecture = (
-        "arm64-v8a" if "arm64_v8a" in kw.get("android_install_apk") else "armeabi-v7a"
-    )
-    json_ = _fetch_json(
-        get_revision_namespace_url, NIGHTLY_SIM_ROUTE, day=kw["test_date"]
-    )
+    architecture = "arm64-v8a" if "arm64_v8a" in kw.get("android_install_apk") else "armeabi-v7a"
+    json_ = _fetch_json(get_revision_namespace_url, NIGHTLY_SIM_ROUTE, day=kw["test_date"])
     namespaces = json_["namespaces"]
     revisions = [namespace["name"] for namespace in namespaces]
 
@@ -77,23 +70,17 @@ def before_iterations(kw):
             print("Commit %s is not from the Fenix master branch" % revision)
             continue
 
-        json_ = _fetch_json(
-            get_multi_tasks_url, NIGHTLY_SIM_ROUTE, revision, day=kw["test_date"]
-        )
+        json_ = _fetch_json(get_multi_tasks_url, NIGHTLY_SIM_ROUTE, revision, day=kw["test_date"])
         for task in json_["tasks"]:
             route = task["namespace"]
             task_architecture = route.split(".")[-1]
             if task_architecture == architecture:
-                tasks.append(
-                    {
-                        "timestamp": commitdate,
-                        "revision": revision,
-                        "route": route,
-                        "route_suffix": ROUTE_SUFFIX.format(
-                            architecture=task_architecture
-                        ),
-                    }
-                )
+                tasks.append({
+                    "timestamp": commitdate,
+                    "revision": revision,
+                    "route": route,
+                    "route_suffix": ROUTE_SUFFIX.format(architecture=task_architecture),
+                })
 
     # Set the number of test-iterations to the number of builds
     kw["test_iterations"] = len(tasks)

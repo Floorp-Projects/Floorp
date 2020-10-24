@@ -22,7 +22,7 @@ from mozpack.copier import (
     Jarrer,
 )
 
-"""
+'''
 Formatters are classes receiving packaging instructions and creating the
 appropriate package layout.
 
@@ -60,14 +60,14 @@ chrome.
 
 Formatters all take a FileCopier instance they will fill with the packaged
 data.
-"""
+'''
 
 
 class PiecemealFormatter(object):
-    """
+    '''
     Generic formatter that dispatches across different sub-formatters
     according to paths.
-    """
+    '''
 
     def __init__(self, copier):
         assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
@@ -83,9 +83,9 @@ class PiecemealFormatter(object):
         self._add_base(base, addon)
 
     def _get_base(self, path):
-        """
+        '''
         Return the deepest base directory containing the given path.
-        """
+        '''
         self._frozen_bases = True
         base = mozpath.basedir(path, self._sub_formatter.keys())
         relpath = mozpath.relpath(path, base) if base else path
@@ -108,7 +108,7 @@ class PiecemealFormatter(object):
         return self._sub_formatter[base].add_interfaces(relpath, content)
 
     def contains(self, path):
-        assert "*" not in path
+        assert '*' not in path
         base, relpath = self._get_base(path)
         if base is None:
             return self.copier.contains(relpath)
@@ -116,20 +116,19 @@ class PiecemealFormatter(object):
 
 
 class FlatFormatter(PiecemealFormatter):
-    """
+    '''
     Formatter for the flat package format.
-    """
+    '''
 
     def _add_base(self, base, addon=False):
         self._sub_formatter[base] = FlatSubFormatter(
-            FileRegistrySubtree(base, self.copier)
-        )
+            FileRegistrySubtree(base, self.copier))
 
 
 class FlatSubFormatter(object):
-    """
+    '''
     Sub-formatter for the flat package format.
-    """
+    '''
 
     def __init__(self, copier):
         assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
@@ -146,22 +145,24 @@ class FlatSubFormatter(object):
         if entry.base:
             name = mozpath.basename(entry.base)
         else:
-            name = "chrome"
-        path = mozpath.normpath(mozpath.join(entry.base, "%s.manifest" % name))
+            name = 'chrome'
+        path = mozpath.normpath(mozpath.join(entry.base, '%s.manifest' % name))
         if not self.copier.contains(path):
             # Add a reference to the manifest file in the parent manifest, if
             # the manifest file is not a root manifest.
             if entry.base:
                 parent = mozpath.dirname(entry.base)
                 relbase = mozpath.basename(entry.base)
-                relpath = mozpath.join(relbase, mozpath.basename(path))
+                relpath = mozpath.join(relbase,
+                                       mozpath.basename(path))
                 self.add_manifest(Manifest(parent, relpath))
             self.copier.add(path, ManifestFile(entry.base))
 
         if isinstance(entry, ManifestChrome):
             data = self._chrome_db.setdefault(entry.name, {})
             if isinstance(entry, ManifestMultiContent):
-                entries = data.setdefault(entry.type, {}).setdefault(entry.id, [])
+                entries = data.setdefault(entry.type, {}) \
+                              .setdefault(entry.id, [])
             else:
                 entries = data.setdefault(entry.type, [])
             for e in entries:
@@ -179,22 +180,21 @@ class FlatSubFormatter(object):
 
     def add_interfaces(self, path, content):
         self.copier.add(path, content)
-        self.add_manifest(
-            ManifestInterfaces(mozpath.dirname(path), mozpath.basename(path))
-        )
+        self.add_manifest(ManifestInterfaces(mozpath.dirname(path),
+                                             mozpath.basename(path)))
 
     def contains(self, path):
-        assert "*" not in path
+        assert '*' not in path
         return self.copier.contains(path)
 
 
 class JarFormatter(PiecemealFormatter):
-    """
+    '''
     Formatter for the jar package format. Assumes manifest entries related to
     chrome are registered before the chrome data files are added. Also assumes
     manifest entries for resources are registered after chrome manifest
     entries.
-    """
+    '''
 
     def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
@@ -203,52 +203,52 @@ class JarFormatter(PiecemealFormatter):
     def _add_base(self, base, addon=False):
         if addon is True:
             jarrer = Jarrer(self._compress)
-            self.copier.add(base + ".xpi", jarrer)
+            self.copier.add(base + '.xpi', jarrer)
             self._sub_formatter[base] = FlatSubFormatter(jarrer)
         else:
             self._sub_formatter[base] = JarSubFormatter(
-                FileRegistrySubtree(base, self.copier), self._compress
-            )
+                FileRegistrySubtree(base, self.copier),
+                self._compress)
 
 
 class JarSubFormatter(PiecemealFormatter):
-    """
+    '''
     Sub-formatter for the jar package format. It is a PiecemealFormatter that
     dispatches between further sub-formatter for each of the jar files it
     dispatches the chrome data to, and a FlatSubFormatter for the non-chrome
     files.
-    """
+    '''
 
     def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
         self._frozen_chrome = False
         self._compress = compress
-        self._sub_formatter[""] = FlatSubFormatter(copier)
+        self._sub_formatter[''] = FlatSubFormatter(copier)
 
     def _jarize(self, entry, relpath):
-        """
+        '''
         Transform a manifest entry in one pointing to chrome data in a jar.
         Return the corresponding chrome path and the new entry.
-        """
+        '''
         base = entry.base
         basepath = mozpath.split(relpath)[0]
         chromepath = mozpath.join(base, basepath)
-        entry = (
-            entry.rebase(chromepath)
-            .move(mozpath.join(base, "jar:%s.jar!" % basepath))
+        entry = entry.rebase(chromepath) \
+            .move(mozpath.join(base, 'jar:%s.jar!' % basepath)) \
             .rebase(base)
-        )
         return chromepath, entry
 
     def add_manifest(self, entry):
-        if isinstance(entry, ManifestChrome) and not urlparse(entry.relpath).scheme:
+        if isinstance(entry, ManifestChrome) and \
+                not urlparse(entry.relpath).scheme:
             chromepath, entry = self._jarize(entry, entry.relpath)
             assert not self._frozen_chrome
             if chromepath not in self._sub_formatter:
                 jarrer = Jarrer(self._compress)
-                self.copier.add(chromepath + ".jar", jarrer)
+                self.copier.add(chromepath + '.jar', jarrer)
                 self._sub_formatter[chromepath] = FlatSubFormatter(jarrer)
-        elif isinstance(entry, ManifestResource) and not urlparse(entry.target).scheme:
+        elif isinstance(entry, ManifestResource) and \
+                not urlparse(entry.target).scheme:
             chromepath, new_entry = self._jarize(entry, entry.target)
             if chromepath in self._sub_formatter:
                 entry = new_entry
@@ -256,9 +256,9 @@ class JarSubFormatter(PiecemealFormatter):
 
 
 class OmniJarFormatter(JarFormatter):
-    """
+    '''
     Formatter for the omnijar package format.
-    """
+    '''
 
     def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
         JarFormatter.__init__(self, copier, compress)
@@ -276,84 +276,79 @@ class OmniJarFormatter(JarFormatter):
             # omnijar.
             parent_sub_formatter = self._sub_formatter[parent_base]
             if parent_sub_formatter.is_resource(rel_base):
-                omnijar_sub_formatter = parent_sub_formatter._sub_formatter[
-                    self._omnijar_name
-                ]
+                omnijar_sub_formatter = \
+                    parent_sub_formatter._sub_formatter[self._omnijar_name]
                 self._sub_formatter[base] = FlatSubFormatter(
-                    FileRegistrySubtree(rel_base, omnijar_sub_formatter.copier)
-                )
+                    FileRegistrySubtree(rel_base, omnijar_sub_formatter.copier))
                 return
             JarFormatter._add_base(self, base, addon)
         else:
             self._sub_formatter[base] = OmniJarSubFormatter(
-                FileRegistrySubtree(base, self.copier),
-                self._omnijar_name,
-                self._compress,
-                self._non_resources,
-            )
+                FileRegistrySubtree(base, self.copier), self._omnijar_name,
+                self._compress, self._non_resources)
 
 
 class OmniJarSubFormatter(PiecemealFormatter):
-    """
+    '''
     Sub-formatter for the omnijar package format. It is a PiecemealFormatter
     that dispatches between a FlatSubFormatter for the resources data and
     another FlatSubFormatter for the other files.
-    """
+    '''
 
     def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
         PiecemealFormatter.__init__(self, copier)
         self._omnijar_name = omnijar_name
         self._compress = compress
         self._non_resources = non_resources
-        self._sub_formatter[""] = FlatSubFormatter(copier)
+        self._sub_formatter[''] = FlatSubFormatter(copier)
         jarrer = Jarrer(self._compress)
         self._sub_formatter[omnijar_name] = FlatSubFormatter(jarrer)
 
     def _get_base(self, path):
-        base = self._omnijar_name if self.is_resource(path) else ""
+        base = self._omnijar_name if self.is_resource(path) else ''
         # Only add the omnijar file if something ends up in it.
         if base and not self.copier.contains(base):
             self.copier.add(base, self._sub_formatter[base].copier)
         return base, path
 
     def add_manifest(self, entry):
-        base = ""
+        base = ''
         if not isinstance(entry, ManifestBinaryComponent):
             base = self._omnijar_name
         formatter = self._sub_formatter[base]
         return formatter.add_manifest(entry)
 
     def is_resource(self, path):
-        """
+        '''
         Return whether the given path corresponds to a resource to be put in an
         omnijar archive.
-        """
-        if any(mozpath.match(path, p.replace("*", "**")) for p in self._non_resources):
+        '''
+        if any(mozpath.match(path, p.replace('*', '**'))
+               for p in self._non_resources):
             return False
         path = mozpath.split(path)
-        if path[0] == "chrome":
-            return len(path) == 1 or path[1] != "icons"
-        if path[0] == "components":
-            return path[-1].endswith((".js", ".xpt"))
-        if path[0] == "res":
-            return len(path) == 1 or (
-                path[1] != "cursors"
-                and path[1] != "touchbar"
-                and path[1] != "MainMenu.nib"
-            )
-        if path[0] == "defaults":
-            return len(path) != 3 or not (
-                path[2] == "channel-prefs.js" and path[1] in ["pref", "preferences"]
-            )
-        if len(path) <= 2 and path[-1] == "greprefs.js":
+        if path[0] == 'chrome':
+            return len(path) == 1 or path[1] != 'icons'
+        if path[0] == 'components':
+            return path[-1].endswith(('.js', '.xpt'))
+        if path[0] == 'res':
+            return len(path) == 1 or \
+                (path[1] != 'cursors' and
+                 path[1] != 'touchbar' and
+                 path[1] != 'MainMenu.nib')
+        if path[0] == 'defaults':
+            return len(path) != 3 or \
+                not (path[2] == 'channel-prefs.js' and
+                     path[1] in ['pref', 'preferences'])
+        if len(path) <= 2 and path[-1] == 'greprefs.js':
             # Accommodate `greprefs.js` and `$ANDROID_CPU_ARCH/greprefs.js`.
             return True
         return path[0] in [
-            "modules",
-            "actors",
-            "dictionaries",
-            "hyphenation",
-            "localization",
-            "update.locale",
-            "contentaccessible",
+            'modules',
+            'actors',
+            'dictionaries',
+            'hyphenation',
+            'localization',
+            'update.locale',
+            'contentaccessible',
         ]

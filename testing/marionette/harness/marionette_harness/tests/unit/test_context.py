@@ -10,6 +10,7 @@ from marionette_harness import MarionetteTestCase
 
 
 class ContextTestCase(MarionetteTestCase):
+
     def setUp(self):
         super(ContextTestCase, self).setUp()
 
@@ -27,6 +28,7 @@ class ContextTestCase(MarionetteTestCase):
 
 
 class TestSetContext(ContextTestCase):
+
     def test_switch_context(self):
         self.marionette.set_context(self.chrome)
         self.assertEqual(self.get_context(), self.chrome)
@@ -40,6 +42,7 @@ class TestSetContext(ContextTestCase):
 
 
 class TestUsingContext(ContextTestCase):
+
     def test_set_different_context_using_with_block(self):
         with self.marionette.using_context(self.chrome):
             self.assertEqual(self.get_context(), self.chrome)
@@ -72,13 +75,13 @@ class TestUsingContext(ContextTestCase):
         self.assertEquals(self.get_context(), self.content)
 
     def test_with_using_context_decorator(self):
-        @using_context("content")
+        @using_context('content')
         def inner_content(m):
-            self.assertEquals(self.get_context(), "content")
+            self.assertEquals(self.get_context(), 'content')
 
-        @using_context("chrome")
+        @using_context('chrome')
         def inner_chrome(m):
-            self.assertEquals(self.get_context(), "chrome")
+            self.assertEquals(self.get_context(), 'chrome')
 
         inner_content(self.marionette)
         inner_chrome(self.marionette)

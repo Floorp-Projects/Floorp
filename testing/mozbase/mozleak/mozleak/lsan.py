@@ -13,14 +13,8 @@ class LSANLeaks(object):
     in allocation stacks
     """
 
-    def __init__(
-        self,
-        logger,
-        scope=None,
-        allowed=None,
-        maxNumRecordedFrames=None,
-        allowAll=False,
-    ):
+    def __init__(self, logger, scope=None, allowed=None, maxNumRecordedFrames=None,
+                 allowAll=False):
         self.logger = logger
         self.inReport = False
         self.fatalError = False
@@ -38,44 +32,26 @@ class LSANLeaks(object):
         # Don't various allocation-related stack frames, as they do not help much to
         # distinguish different leaks.
         unescapedSkipList = [
-            "malloc",
-            "js_malloc",
-            "malloc_",
-            "__interceptor_malloc",
-            "moz_xmalloc",
-            "calloc",
-            "js_calloc",
-            "calloc_",
-            "__interceptor_calloc",
-            "moz_xcalloc",
-            "realloc",
-            "js_realloc",
-            "realloc_",
-            "__interceptor_realloc",
-            "moz_xrealloc",
+            "malloc", "js_malloc", "malloc_", "__interceptor_malloc", "moz_xmalloc",
+            "calloc", "js_calloc", "calloc_", "__interceptor_calloc", "moz_xcalloc",
+            "realloc", "js_realloc", "realloc_", "__interceptor_realloc", "moz_xrealloc",
             "new",
             "js::MallocProvider",
         ]
         self.skipListRegExp = re.compile(
-            "^" + "|".join([re.escape(f) for f in unescapedSkipList]) + "$"
-        )
+            "^" + "|".join([re.escape(f) for f in unescapedSkipList]) + "$")
 
         self.startRegExp = re.compile(
-            "==\d+==ERROR: LeakSanitizer: detected memory leaks"
-        )
+            "==\d+==ERROR: LeakSanitizer: detected memory leaks")
         self.fatalErrorRegExp = re.compile(
-            "==\d+==LeakSanitizer has encountered a fatal error."
-        )
+            "==\d+==LeakSanitizer has encountered a fatal error.")
         self.symbolizerOomRegExp = re.compile(
-            "LLVMSymbolizer: error reading file: Cannot allocate memory"
-        )
+            "LLVMSymbolizer: error reading file: Cannot allocate memory")
         self.stackFrameRegExp = re.compile("    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
         self.sysLibStackFrameRegExp = re.compile(
-            "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
-        )
+            "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)")
         self.summaryRegexp = re.compile(
-            "SUMMARY: AddressSanitizer: (\d+) byte\(s\) leaked in (\d+) allocation\(s\)."
-        )
+            "SUMMARY: AddressSanitizer: (\d+) byte\(s\) leaked in (\d+) allocation\(s\).")
         self.rustRegexp = re.compile("::h[a-f0-9]{16}$")
         self.setAllowed(allowed)
 
@@ -84,8 +60,7 @@ class LSANLeaks(object):
             self.allowedRegexp = None
         else:
             self.allowedRegexp = re.compile(
-                "^" + "|".join([re.escape(f) for f in allowedLines])
-            )
+                "^" + "|".join([re.escape(f) for f in allowedLines]))
 
     def log(self, line):
         if re.match(self.startRegExp, line):
@@ -155,25 +130,19 @@ class LSANLeaks(object):
             self.summaryData = None
 
         if self.fatalError:
-            self.logger.error(
-                "LeakSanitizer | LeakSanitizer has encountered a fatal error."
-            )
+            self.logger.error("LeakSanitizer | LeakSanitizer has encountered a fatal error.")
             failures += 1
 
         if self.symbolizerError:
-            self.logger.error(
-                "LeakSanitizer | LLVMSymbolizer was unable to allocate memory.\n"
-                "This will cause leaks that "
-                "should be ignored to instead be reported as an error"
-            )
+            self.logger.error("LeakSanitizer | LLVMSymbolizer was unable to allocate memory.\n"
+                              "This will cause leaks that "
+                              "should be ignored to instead be reported as an error")
             failures += 1
 
         if self.foundFrames:
-            self.logger.info(
-                "LeakSanitizer | To show the "
-                "addresses of leaked objects add report_objects=1 to LSAN_OPTIONS\n"
-                "This can be done in testing/mozbase/mozrunner/mozrunner/utils.py"
-            )
+            self.logger.info("LeakSanitizer | To show the "
+                             "addresses of leaked objects add report_objects=1 to LSAN_OPTIONS\n"
+                             "This can be done in testing/mozbase/mozrunner/mozrunner/utils.py")
             self.logger.info("Allowed depth was %d" % self.maxNumRecordedFrames)
 
             for frames, allowed in self.foundFrames:
@@ -181,15 +150,11 @@ class LSANLeaks(object):
                 if not allowed:
                     failures += 1
 
-        if self.sawError and not (
-            self.summaryData
-            or self.foundFrames
-            or self.fatalError
-            or self.symbolizerError
-        ):
-            self.logger.error(
-                "LeakSanitizer | Memory leaks detected but no leak report generated"
-            )
+        if self.sawError and not (self.summaryData or
+                                  self.foundFrames or
+                                  self.fatalError or
+                                  self.symbolizerError):
+            self.logger.error("LeakSanitizer | Memory leaks detected but no leak report generated")
 
         self.sawError = False
 

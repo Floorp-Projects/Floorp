@@ -32,13 +32,9 @@ DEFAULT_RESPONSES = {
     },
     "artifact": {
         "status": 200,
-        "body": dedent(
-            """
+        "body": dedent("""
             pushdate: {}
-        """.format(
-                LAST_BACKSTOP_PUSHDATE
-            )
-        ),
+        """.format(LAST_BACKSTOP_PUSHDATE))
     },
     "status": {
         "status": 200,
@@ -50,12 +46,12 @@ DEFAULT_RESPONSES = {
 @pytest.fixture
 def params():
     return {
-        "branch": "integration/autoland",
-        "head_repository": "https://hg.mozilla.org/integration/autoland",
-        "head_rev": "abcdef",
-        "project": "autoland",
-        "pushdate": LAST_BACKSTOP_PUSHDATE + 1,
-        "pushlog_id": LAST_BACKSTOP_ID + 1,
+        'branch': 'integration/autoland',
+        'head_repository': 'https://hg.mozilla.org/integration/autoland',
+        'head_rev': 'abcdef',
+        'project': 'autoland',
+        'pushdate': LAST_BACKSTOP_PUSHDATE + 1,
+        'pushlog_id': LAST_BACKSTOP_ID + 1,
     }
 
 
@@ -146,11 +142,15 @@ def test_is_backstop(responses, params, response_args, extra_params, expected):
     for key in ("index", "status", "artifact"):
         if key in response_args:
             print(urls[key])
-            responses.add(responses.GET, urls[key], **response_args[key])
+            responses.add(
+                responses.GET,
+                urls[key],
+                **response_args[key]
+            )
 
     params.update(extra_params)
     assert is_backstop(params) is expected
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -3,16 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "ClassListPanel.js",
-    "Declaration.js",
-    "Declarations.js",
-    "PseudoClassPanel.js",
-    "Rule.js",
-    "Rules.js",
-    "RulesApp.js",
-    "SearchBox.js",
-    "Selector.js",
-    "SelectorHighlighter.js",
-    "SourceLink.js",
-    "Toolbar.js",
+    'ClassListPanel.js',
+    'Declaration.js',
+    'Declarations.js',
+    'PseudoClassPanel.js',
+    'Rule.js',
+    'Rules.js',
+    'RulesApp.js',
+    'SearchBox.js',
+    'Selector.js',
+    'SelectorHighlighter.js',
+    'SourceLink.js',
+    'Toolbar.js',
 )

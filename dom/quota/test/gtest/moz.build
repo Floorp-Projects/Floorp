@@ -5,17 +5,17 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES = [
-    "TestCheckedUnsafePtr.cpp",
-    "TestEncryptedStream.cpp",
-    "TestQuotaCommon.cpp",
-    "TestQuotaManager.cpp",
-    "TestUsageInfo.cpp",
+    'TestCheckedUnsafePtr.cpp',
+    'TestEncryptedStream.cpp',
+    'TestQuotaCommon.cpp',
+    'TestQuotaManager.cpp',
+    'TestUsageInfo.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
-    "/dom/quota",
+    '/dom/quota',
 ]

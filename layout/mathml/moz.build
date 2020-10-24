@@ -4,63 +4,66 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "MathML")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'MathML')
 
-if CONFIG["ENABLE_TESTS"]:
+if CONFIG['ENABLE_TESTS']:
     MOCHITEST_MANIFESTS += [
-        "tests/mochitest.ini",
-    ]
+        'tests/mochitest.ini',
+]
     MOCHITEST_CHROME_MANIFESTS += [
-        "tests/chrome.ini",
-    ]
+        'tests/chrome.ini',
+]
 
 UNIFIED_SOURCES += [
-    "nsMathMLChar.cpp",
-    "nsMathMLContainerFrame.cpp",
-    "nsMathMLFrame.cpp",
-    "nsMathMLmactionFrame.cpp",
-    "nsMathMLmencloseFrame.cpp",
-    "nsMathMLmfencedFrame.cpp",
-    "nsMathMLmfracFrame.cpp",
-    "nsMathMLmmultiscriptsFrame.cpp",
-    "nsMathMLmoFrame.cpp",
-    "nsMathMLmpaddedFrame.cpp",
-    "nsMathMLmrootFrame.cpp",
-    "nsMathMLmrowFrame.cpp",
-    "nsMathMLmspaceFrame.cpp",
-    "nsMathMLmsqrtFrame.cpp",
-    "nsMathMLmtableFrame.cpp",
-    "nsMathMLmunderoverFrame.cpp",
-    "nsMathMLOperators.cpp",
-    "nsMathMLSelectedFrame.cpp",
-    "nsMathMLsemanticsFrame.cpp",
-    "nsMathMLTokenFrame.cpp",
+    'nsMathMLChar.cpp',
+    'nsMathMLContainerFrame.cpp',
+    'nsMathMLFrame.cpp',
+    'nsMathMLmactionFrame.cpp',
+    'nsMathMLmencloseFrame.cpp',
+    'nsMathMLmfencedFrame.cpp',
+    'nsMathMLmfracFrame.cpp',
+    'nsMathMLmmultiscriptsFrame.cpp',
+    'nsMathMLmoFrame.cpp',
+    'nsMathMLmpaddedFrame.cpp',
+    'nsMathMLmrootFrame.cpp',
+    'nsMathMLmrowFrame.cpp',
+    'nsMathMLmspaceFrame.cpp',
+    'nsMathMLmsqrtFrame.cpp',
+    'nsMathMLmtableFrame.cpp',
+    'nsMathMLmunderoverFrame.cpp',
+    'nsMathMLOperators.cpp',
+    'nsMathMLSelectedFrame.cpp',
+    'nsMathMLsemanticsFrame.cpp',
+    'nsMathMLTokenFrame.cpp',
 ]
 
-EXPORTS += ["nsIMathMLFrame.h", "nsMathMLOperators.h"]
+EXPORTS += [
+    'nsIMathMLFrame.h',
+    'nsMathMLOperators.h'
+]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "../base",
-    "../generic",
-    "../painting",
-    "../style",
-    "../tables",
-    "../xul",
-    "/dom/base",
-    "/dom/mathml",
+    '../base',
+    '../generic',
+    '../painting',
+    '../style',
+    '../tables',
+    '../xul',
+    '/dom/base',
+    '/dom/mathml',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 RESOURCE_FILES.fonts += [
-    "mathfont.properties",
-    "mathfontSTIXGeneral.properties",
-    "mathfontUnicode.properties",
+    'mathfont.properties',
+    'mathfontSTIXGeneral.properties',
+    'mathfontUnicode.properties',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

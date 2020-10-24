@@ -8,9 +8,9 @@ import os
 from marionette_harness import MarionetteTestCase
 
 LABELS_SCRIPT_PRELOADER_REQUESTS = {
-    "Hit": "0",
-    "HitChild": "1",
-    "Miss": "2",
+  "Hit": "0",
+  "HitChild": "1",
+  "Miss": "2",
 }
 
 
@@ -27,12 +27,10 @@ class TestScriptPreloader(MarionetteTestCase):
         self.assertMuchGreaterThan(misses, child_hits)
 
         profile = self.marionette.profile_path
-        self.wait_for_file_change(
-            start_time, "{}/startupCache/scriptCache.bin".format(profile)
-        )
-        self.wait_for_file_change(
-            start_time, "{}/startupCache/scriptCache-child.bin".format(profile)
-        )
+        self.wait_for_file_change(start_time,
+                                  "{}/startupCache/scriptCache.bin".format(profile))
+        self.wait_for_file_change(start_time,
+                                  "{}/startupCache/scriptCache-child.bin".format(profile))
         self.marionette.restart(clean=False, in_app=True)
         histogram = self.get_histogram("SCRIPT_PRELOADER_REQUESTS")
         misses = histogram.get(LABELS_SCRIPT_PRELOADER_REQUESTS["Miss"], 0)
@@ -64,25 +62,17 @@ class TestScriptPreloader(MarionetteTestCase):
 
     def wait_for_observer_notification(self, name):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            return self.marionette.execute_script(
-                """
+            return self.marionette.execute_script("""
                 let [resolve] = arguments;
                 Services.obs.addObserver(() => resolve(), "{}");
-            """.format(
-                    name
-                )
-            )
+            """.format(name))
 
     def get_histogram(self, name):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            return self.marionette.execute_script(
-                """
+            return self.marionette.execute_script("""
                 let snapshot = Services.telemetry.getSnapshotForHistograms("main", true);
                 return snapshot.parent.{}.values;
-            """.format(
-                    name
-                )
-            )
+            """.format(name))
 
     def invalidate_caches(self):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):

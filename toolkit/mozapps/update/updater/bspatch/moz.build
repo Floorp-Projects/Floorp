@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
 
 EXPORTS += [
-    "bspatch.h",
+    'bspatch.h',
 ]
 
 SOURCES += [
-    "bspatch.cpp",
+    'bspatch.cpp',
 ]
 
 USE_LIBS += [
-    "updatecommon",
+    'updatecommon',
 ]
 
-Library("bspatch")
+Library('bspatch')

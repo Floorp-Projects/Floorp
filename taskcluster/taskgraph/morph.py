@@ -87,7 +87,9 @@ def derive_misc_task(
         "expires": target_task.task["deadline"],
         "metadata": {
             "name": label,
-            "description": "{} for {}".format(purpose, target_task.description),
+            "description": "{} for {}".format(
+                purpose, target_task.description
+            ),
             "owner": target_task.task["metadata"]["owner"],
             "source": target_task.task["metadata"]["source"],
         },
@@ -115,7 +117,7 @@ def derive_misc_task(
         task=task_def,
         dependencies=deps,
     )
-    task.task_id = slugid().decode("ascii")
+    task.task_id = slugid().decode('ascii')
     return task
 
 
@@ -182,12 +184,12 @@ def add_index_tasks(
     "index tasks" that depend on such tasks and do the index insertions
     directly, avoiding the limits on task.routes.
     """
-    logger.debug("Morphing: adding index tasks")
+    logger.debug('Morphing: adding index tasks')
 
     # Add indexes for tasks that exceed MAX_ROUTES.
     added = []
     for label, task in six.iteritems(taskgraph.tasks):
-        if len(task.task.get("routes", [])) <= MAX_ROUTES:
+        if len(task.task.get('routes', [])) <= MAX_ROUTES:
             continue
         index_paths = [
             r.split(".", 1)[1] for r in task.task["routes"] if r.startswith("index.")
@@ -205,13 +207,14 @@ def add_index_tasks(
                 index_paths=index_paths,
                 index_rank=task.task.get("extra", {}).get("index", {}).get("rank", 0),
                 purpose="index-task",
-                dependencies={"parent": task.task_id},
+                dependencies={'parent': task.task_id}
             )
         )
 
     if added:
-        taskgraph, label_to_taskid = amend_taskgraph(taskgraph, label_to_taskid, added)
-        logger.info("Added {} index tasks".format(len(added)))
+        taskgraph, label_to_taskid = amend_taskgraph(
+            taskgraph, label_to_taskid, added)
+        logger.info('Added {} index tasks'.format(len(added)))
 
     return taskgraph, label_to_taskid
 
@@ -256,12 +259,12 @@ def add_eager_cache_index_tasks(
 def add_try_task_duplicates(
     taskgraph, label_to_taskid, parameters, graph_config, decision_task_id
 ):
-    try_config = parameters["try_task_config"]
-    rebuild = try_config.get("rebuild")
+    try_config = parameters['try_task_config']
+    rebuild = try_config.get('rebuild')
     if rebuild:
         for task in six.itervalues(taskgraph.tasks):
-            if task.label in try_config.get("tasks", []):
-                task.attributes["task_duplicates"] = rebuild
+            if task.label in try_config.get('tasks', []):
+                task.attributes['task_duplicates'] = rebuild
     return taskgraph, label_to_taskid
 
 

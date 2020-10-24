@@ -40,27 +40,27 @@ bar = value2
 @SettingsProvider
 class Provider1(object):
     config_settings = [
-        ("foo.bar", StringType, "desc"),
-        ("foo.baz", PathType, "desc"),
+        ('foo.bar', StringType, 'desc'),
+        ('foo.baz', PathType, 'desc'),
     ]
 
 
 @SettingsProvider
 class ProviderDuplicate(object):
     config_settings = [
-        ("dupesect.foo", StringType, "desc"),
-        ("dupesect.foo", StringType, "desc"),
+        ('dupesect.foo', StringType, 'desc'),
+        ('dupesect.foo', StringType, 'desc'),
     ]
 
 
 @SettingsProvider
 class Provider2(object):
     config_settings = [
-        ("a.string", StringType, "desc"),
-        ("a.boolean", BooleanType, "desc"),
-        ("a.pos_int", PositiveIntegerType, "desc"),
-        ("a.int", IntegerType, "desc"),
-        ("a.path", PathType, "desc"),
+        ('a.string', StringType, 'desc'),
+        ('a.boolean', BooleanType, 'desc'),
+        ('a.pos_int', PositiveIntegerType, 'desc'),
+        ('a.int', IntegerType, 'desc'),
+        ('a.path', PathType, 'desc'),
     ]
 
 
@@ -69,27 +69,27 @@ class Provider3(object):
     @classmethod
     def config_settings(cls):
         return [
-            ("a.string", "string", "desc"),
-            ("a.boolean", "boolean", "desc"),
-            ("a.pos_int", "pos_int", "desc"),
-            ("a.int", "int", "desc"),
-            ("a.path", "path", "desc"),
+            ('a.string', 'string', 'desc'),
+            ('a.boolean', 'boolean', 'desc'),
+            ('a.pos_int', 'pos_int', 'desc'),
+            ('a.int', 'int', 'desc'),
+            ('a.path', 'path', 'desc'),
         ]
 
 
 @SettingsProvider
 class Provider4(object):
     config_settings = [
-        ("foo.abc", StringType, "desc", "a", {"choices": set("abc")}),
-        ("foo.xyz", StringType, "desc", "w", {"choices": set("xyz")}),
+        ('foo.abc', StringType, 'desc', 'a', {'choices': set('abc')}),
+        ('foo.xyz', StringType, 'desc', 'w', {'choices': set('xyz')}),
     ]
 
 
 @SettingsProvider
 class Provider5(object):
     config_settings = [
-        ("foo.*", "string", "desc"),
-        ("foo.bar", "string", "desc"),
+        ('foo.*', 'string', 'desc'),
+        ('foo.bar', 'string', 'desc'),
     ]
 
 
@@ -98,7 +98,7 @@ class TestConfigSettings(unittest.TestCase):
         s = ConfigSettings()
 
         self.assertEqual(len(s), 0)
-        self.assertNotIn("foo", s)
+        self.assertNotIn('foo', s)
 
     def test_duplicate_option(self):
         s = ConfigSettings()
@@ -111,23 +111,23 @@ class TestConfigSettings(unittest.TestCase):
         s.register_provider(Provider1)
 
         self.assertEqual(len(s), 1)
-        self.assertIn("foo", s)
+        self.assertIn('foo', s)
 
-        foo = s["foo"]
+        foo = s['foo']
         foo = s.foo
 
         self.assertEqual(len(foo), 0)
         self.assertEqual(len(foo._settings), 2)
 
-        self.assertIn("bar", foo._settings)
-        self.assertIn("baz", foo._settings)
+        self.assertIn('bar', foo._settings)
+        self.assertIn('baz', foo._settings)
 
-        self.assertNotIn("bar", foo)
-        foo["bar"] = "value1"
-        self.assertIn("bar", foo)
+        self.assertNotIn('bar', foo)
+        foo['bar'] = 'value1'
+        self.assertIn('bar', foo)
 
-        self.assertEqual(foo["bar"], "value1")
-        self.assertEqual(foo.bar, "value1")
+        self.assertEqual(foo['bar'], 'value1')
+        self.assertEqual(foo.bar, 'value1')
 
     def test_assignment_validation(self):
         s = ConfigSettings()
@@ -141,11 +141,11 @@ class TestConfigSettings(unittest.TestCase):
             a.undefined = True
 
         with self.assertRaises(KeyError):
-            a["undefined"] = True
+            a['undefined'] = True
 
         # Basic type validation.
-        a.string = "foo"
-        a.string = "foo"
+        a.string = 'foo'
+        a.string = 'foo'
 
         with self.assertRaises(TypeError):
             a.string = False
@@ -154,7 +154,7 @@ class TestConfigSettings(unittest.TestCase):
         a.boolean = False
 
         with self.assertRaises(TypeError):
-            a.boolean = "foo"
+            a.boolean = 'foo'
 
         a.pos_int = 5
         a.pos_int = 0
@@ -163,7 +163,7 @@ class TestConfigSettings(unittest.TestCase):
             a.pos_int = -1
 
         with self.assertRaises(TypeError):
-            a.pos_int = "foo"
+            a.pos_int = 'foo'
 
         a.int = 5
         a.int = 0
@@ -173,12 +173,12 @@ class TestConfigSettings(unittest.TestCase):
             a.int = 1.24
 
         with self.assertRaises(TypeError):
-            a.int = "foo"
+            a.int = 'foo'
 
-        a.path = "/home/gps"
-        a.path = "foo.c"
-        a.path = "foo/bar"
-        a.path = "./foo"
+        a.path = '/home/gps'
+        a.path = 'foo.c'
+        a.path = 'foo/bar'
+        a.path = './foo'
 
     def retrieval_type_helper(self, provider):
         s = ConfigSettings()
@@ -186,11 +186,11 @@ class TestConfigSettings(unittest.TestCase):
 
         a = s.a
 
-        a.string = "foo"
+        a.string = 'foo'
         a.boolean = True
         a.pos_int = 12
         a.int = -4
-        a.path = "./foo/bar"
+        a.path = './foo/bar'
 
         self.assertIsInstance(a.string, string_types)
         self.assertIsInstance(a.boolean, bool)
@@ -212,10 +212,10 @@ class TestConfigSettings(unittest.TestCase):
             foo.xyz
 
         with self.assertRaises(ValueError):
-            foo.abc = "e"
+            foo.abc = 'e'
 
-        foo.abc = "b"
-        foo.xyz = "y"
+        foo.abc = 'b'
+        foo.xyz = 'y'
 
     def test_wildcard_options(self):
         s = ConfigSettings()
@@ -223,20 +223,20 @@ class TestConfigSettings(unittest.TestCase):
 
         foo = s.foo
 
-        self.assertIn("*", foo._settings)
-        self.assertNotIn("*", foo)
+        self.assertIn('*', foo._settings)
+        self.assertNotIn('*', foo)
 
-        foo.baz = "value1"
-        foo.bar = "value2"
+        foo.baz = 'value1'
+        foo.bar = 'value2'
 
-        self.assertIn("baz", foo)
-        self.assertEqual(foo.baz, "value1")
+        self.assertIn('baz', foo)
+        self.assertEqual(foo.baz, 'value1')
 
-        self.assertIn("bar", foo)
-        self.assertEqual(foo.bar, "value2")
+        self.assertIn('bar', foo)
+        self.assertEqual(foo.bar, 'value2')
 
     def test_file_reading_single(self):
-        temp = NamedTemporaryFile(mode="wt")
+        temp = NamedTemporaryFile(mode='wt')
         temp.write(CONFIG1)
         temp.flush()
 
@@ -245,15 +245,15 @@ class TestConfigSettings(unittest.TestCase):
 
         s.load_file(temp.name)
 
-        self.assertEqual(s.foo.bar, "bar_value")
+        self.assertEqual(s.foo.bar, 'bar_value')
 
     def test_file_reading_multiple(self):
         """Loading multiple files has proper overwrite behavior."""
-        temp1 = NamedTemporaryFile(mode="wt")
+        temp1 = NamedTemporaryFile(mode='wt')
         temp1.write(CONFIG1)
         temp1.flush()
 
-        temp2 = NamedTemporaryFile(mode="wt")
+        temp2 = NamedTemporaryFile(mode='wt')
         temp2.write(CONFIG2)
         temp2.flush()
 
@@ -262,23 +262,23 @@ class TestConfigSettings(unittest.TestCase):
 
         s.load_files([temp1.name, temp2.name])
 
-        self.assertEqual(s.foo.bar, "value2")
+        self.assertEqual(s.foo.bar, 'value2')
 
     def test_file_reading_missing(self):
         """Missing files should silently be ignored."""
 
         s = ConfigSettings()
 
-        s.load_file("/tmp/foo.ini")
+        s.load_file('/tmp/foo.ini')
 
     def test_file_writing(self):
         s = ConfigSettings()
         s.register_provider(Provider2)
 
-        s.a.string = "foo"
+        s.a.string = 'foo'
         s.a.boolean = False
 
-        temp = NamedTemporaryFile("wt")
+        temp = NamedTemporaryFile('wt')
         s.write(temp)
         temp.flush()
 
@@ -291,5 +291,5 @@ class TestConfigSettings(unittest.TestCase):
         self.assertEqual(s.a.boolean, s2.a.boolean)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

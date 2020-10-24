@@ -1,15 +1,26 @@
 ---
 black:
     description: Reformat python
+    include:
+        - python/mozbuild/mozbuild/code_analysis
+        - python/mozbuild/mozbuild/compilation/database.py
+        - python/mozperftest/mozperftest
+        - python/mozrelease/mozrelease/scriptworker_canary.py
+        - taskcluster/docker/funsize-update-generator
+        - taskcluster/taskgraph/actions/scriptworker_canary.py
+        - taskcluster/taskgraph/test/conftest.py
+        - taskcluster/taskgraph/transforms/scriptworker_canary.py
+        - taskcluster/test
+        - testing/condprofile/condprof
+        - tools/crashreporter/system-symbols
+        - tools/moztreedocs/
+        - tools/lint/
+        - tools/tryselect/selectors/scriptworker.py
     exclude:
-        - gfx/harfbuzz/src/meson.build
         - layout/style/ServoCSSPropList.mako.py
-        - python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build
         - testing/mozharness/configs/test/test_malformed.py
-        - testing/web-platform/tests
+        - tools/lint/test/files
     extensions:
-        - build
-        - configure
         - py
     support-files:
         - 'tools/lint/python/**'

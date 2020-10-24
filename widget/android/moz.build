@@ -6,194 +6,189 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Android")
-    SCHEDULES.exclusive = ["android"]
+    SCHEDULES.exclusive = ['android']
 
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
 DIRS += [
-    "bindings",
-    "jni",
+    'bindings',
+    'jni',
 ]
 
 XPIDL_SOURCES += [
-    "nsIAndroidBridge.idl",
+    'nsIAndroidBridge.idl',
 ]
 
-XPIDL_MODULE = "widget_android"
+XPIDL_MODULE = 'widget_android'
 
 EXPORTS += [
-    "AndroidBridge.h",
+    'AndroidBridge.h',
 ]
 
 classes_with_WrapForJNI = [
-    "AndroidGamepadManager",
-    "Base64Utils",
-    "Clipboard",
-    "CodecProxy",
-    "EnterpriseRoots",
-    "EventCallback",
-    "EventDispatcher",
-    "GeckoAppShell",
-    "GeckoAudioInfo",
-    "GeckoBatteryManager",
-    "GeckoBundle",
-    "GeckoEditableChild",
-    "GeckoHLSDemuxerWrapper",
-    "GeckoHLSResourceWrapper",
-    "GeckoHLSSample",
-    "GeckoInputStream",
-    "GeckoJavaSampler",
-    "GeckoNetworkManager",
-    "GeckoProcessManager",
-    "GeckoProcessType",
-    "GeckoResult",
-    "GeckoRuntime",
-    "GeckoScreenOrientation",
-    "GeckoServiceChildProcess",
-    "GeckoSession",
-    "GeckoSurface",
-    "GeckoSurfaceTexture",
-    "GeckoSystemStateListener",
-    "GeckoThread",
-    "GeckoVRManager",
-    "GeckoVideoInfo",
-    "GeckoWebExecutor",
-    "HardwareCodecCapabilityUtils",
-    "ImageDecoder",
-    "MediaDrmProxy",
-    "PanZoomController",
-    "PrefsHelper",
-    "RuntimeTelemetry",
-    "Sample",
-    "SampleBuffer",
-    "ScreenManagerHelper",
-    "ServiceAllocator",
-    "SessionAccessibility",
-    "SessionKeyInfo",
-    "SessionTextInput",
-    "SpeechSynthesisService",
-    "StackScroller",
-    "SurfaceAllocator",
-    "SurfaceTextureListener",
-    "TelemetryUtils",
-    "VsyncSource",
-    "WebAuthnTokenManager",
-    "WebMessage",
-    "WebNotification",
-    "WebNotificationDelegate",
-    "WebRequest",
-    "WebRequestError",
-    "WebResponse",
-    "XPCOMEventTarget",
+    'AndroidGamepadManager',
+    'Base64Utils',
+    'Clipboard',
+    'CodecProxy',
+    'EnterpriseRoots',
+    'EventCallback',
+    'EventDispatcher',
+    'GeckoAppShell',
+    'GeckoAudioInfo',
+    'GeckoBatteryManager',
+    'GeckoBundle',
+    'GeckoEditableChild',
+    'GeckoHLSDemuxerWrapper',
+    'GeckoHLSResourceWrapper',
+    'GeckoHLSSample',
+    'GeckoInputStream',
+    'GeckoJavaSampler',
+    'GeckoNetworkManager',
+    'GeckoProcessManager',
+    'GeckoProcessType',
+    'GeckoResult',
+    'GeckoRuntime',
+    'GeckoScreenOrientation',
+    'GeckoServiceChildProcess',
+    'GeckoSession',
+    'GeckoSurface',
+    'GeckoSurfaceTexture',
+    'GeckoSystemStateListener',
+    'GeckoThread',
+    'GeckoVRManager',
+    'GeckoVideoInfo',
+    'GeckoWebExecutor',
+    'HardwareCodecCapabilityUtils',
+    'ImageDecoder',
+    'MediaDrmProxy',
+    'PanZoomController',
+    'PrefsHelper',
+    'RuntimeTelemetry',
+    'Sample',
+    'SampleBuffer',
+    'ScreenManagerHelper',
+    'ServiceAllocator',
+    'SessionAccessibility',
+    'SessionKeyInfo',
+    'SessionTextInput',
+    'SpeechSynthesisService',
+    'StackScroller',
+    'SurfaceAllocator',
+    'SurfaceTextureListener',
+    'TelemetryUtils',
+    'VsyncSource',
+    'WebAuthnTokenManager',
+    'WebMessage',
+    'WebNotification',
+    'WebNotificationDelegate',
+    'WebRequest',
+    'WebRequestError',
+    'WebResponse',
+    'XPCOMEventTarget',
 ]
 
 natives_from_WrapForJNI = sorted(
-    ["GeneratedJNI/{}Natives.h".format(c) for c in classes_with_WrapForJNI]
-)
+    ['GeneratedJNI/{}Natives.h'.format(c) for c in classes_with_WrapForJNI])
 
 wrappers_from_WrapForJNI = sorted(
-    ["GeneratedJNI/{}Wrappers.h".format(c) for c in classes_with_WrapForJNI]
-)
+    ['GeneratedJNI/{}Wrappers.h'.format(c) for c in classes_with_WrapForJNI])
 
 sources_from_WrapForJNI = sorted(
-    "GeneratedJNI{}Wrappers.cpp".format(c) for c in classes_with_WrapForJNI
-)
+    'GeneratedJNI{}Wrappers.cpp'.format(c) for c in classes_with_WrapForJNI)
 
 EXPORTS.mozilla.widget += [
-    "AndroidCompositorWidget.h",
-    "AndroidUiThread.h",
-    "AndroidView.h",
-    "EventDispatcher.h",
-    "GeckoViewSupport.h",
-    "nsWindow.h",
-    "WindowEvent.h",
+    'AndroidCompositorWidget.h',
+    'AndroidUiThread.h',
+    'AndroidView.h',
+    'EventDispatcher.h',
+    'GeckoViewSupport.h',
+    'nsWindow.h',
+    'WindowEvent.h',
 ]
 
-EXPORTS.mozilla.java += ["!{}".format(c) for c in natives_from_WrapForJNI]
+EXPORTS.mozilla.java += [
+    '!{}'.format(c) for c in natives_from_WrapForJNI
+]
 
-EXPORTS.mozilla.java += ["!{}".format(c) for c in wrappers_from_WrapForJNI]
+EXPORTS.mozilla.java += [
+    '!{}'.format(c) for c in wrappers_from_WrapForJNI
+]
 
-SOURCES += ["!{}".format(c) for c in sources_from_WrapForJNI]
+SOURCES += ['!{}'.format(c) for c in sources_from_WrapForJNI]
 
 SOURCES += [
-    "MediaKeysEventSourceFactory.cpp",
+    'MediaKeysEventSourceFactory.cpp',
 ]
 
 UNIFIED_SOURCES += [
-    "AndroidAlerts.cpp",
-    "AndroidBridge.cpp",
-    "AndroidCompositorWidget.cpp",
-    "AndroidContentController.cpp",
-    "AndroidUiThread.cpp",
-    "EventDispatcher.cpp",
-    "GeckoEditableSupport.cpp",
-    "GeckoProcessManager.cpp",
-    "GfxInfo.cpp",
-    "ImageDecoderSupport.cpp",
-    "nsAndroidProtocolHandler.cpp",
-    "nsAppShell.cpp",
-    "nsClipboard.cpp",
-    "nsDeviceContextAndroid.cpp",
-    "nsLookAndFeel.cpp",
-    "nsNativeBasicThemeAndroid.cpp",
-    "nsNativeThemeAndroid.cpp",
-    "nsPrintSettingsServiceAndroid.cpp",
-    "nsUserIdleServiceAndroid.cpp",
-    "nsWidgetFactory.cpp",
-    "nsWindow.cpp",
-    "ProcInfo.cpp",
-    "ScreenHelperAndroid.cpp",
-    "WebAuthnTokenManager.cpp",
-    "WebExecutorSupport.cpp",
+    'AndroidAlerts.cpp',
+    'AndroidBridge.cpp',
+    'AndroidCompositorWidget.cpp',
+    'AndroidContentController.cpp',
+    'AndroidUiThread.cpp',
+    'EventDispatcher.cpp',
+    'GeckoEditableSupport.cpp',
+    'GeckoProcessManager.cpp',
+    'GfxInfo.cpp',
+    'ImageDecoderSupport.cpp',
+    'nsAndroidProtocolHandler.cpp',
+    'nsAppShell.cpp',
+    'nsClipboard.cpp',
+    'nsDeviceContextAndroid.cpp',
+    'nsLookAndFeel.cpp',
+    'nsNativeBasicThemeAndroid.cpp',
+    'nsNativeThemeAndroid.cpp',
+    'nsPrintSettingsServiceAndroid.cpp',
+    'nsUserIdleServiceAndroid.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+    'ProcInfo.cpp',
+    'ScreenHelperAndroid.cpp',
+    'WebAuthnTokenManager.cpp',
+    'WebExecutorSupport.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 # The recursive make backend treats the first output specially: it's passed as
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
 # output.
 
-t = tuple(
-    ["generated_jni_wrappers"]
-    + natives_from_WrapForJNI
-    + sources_from_WrapForJNI
-    + wrappers_from_WrapForJNI
-)
+t = tuple(['generated_jni_wrappers'] + natives_from_WrapForJNI +
+          sources_from_WrapForJNI + wrappers_from_WrapForJNI)
 
-GeneratedFile(
-    *t,
-    script="/mobile/android/gradle.py",
-    entry_point="generate_generated_jni_wrappers"
-)
+GeneratedFile(*t,
+    script='/mobile/android/gradle.py',
+    entry_point='generate_generated_jni_wrappers')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/docshell/base",
-    "/dom/base",
-    "/dom/system/android",
-    "/gfx/2d",
-    "/gfx/vr",
-    "/layout/forms",
-    "/layout/painting",
-    "/netwerk/base",
-    "/netwerk/cache",
-    "/toolkit/components/telemetry",
-    "/widget",
-    "/xpcom/threads",
+    '/docshell/base',
+    '/dom/base',
+    '/dom/system/android',
+    '/gfx/2d',
+    '/gfx/vr',
+    '/layout/forms',
+    '/layout/painting',
+    '/netwerk/base',
+    '/netwerk/cache',
+    '/toolkit/components/telemetry',
+    '/widget',
+    '/xpcom/threads',
 ]
 
-CXXFLAGS += ["-Wno-error=shadow"]
+CXXFLAGS += ['-Wno-error=shadow']
 
-OS_LIBS += ["android"]
+OS_LIBS += ['android']
 
-if CONFIG["MOZ_NATIVE_DEVICES"]:
-    DEFINES["MOZ_NATIVE_DEVICES"] = True
+if CONFIG['MOZ_NATIVE_DEVICES']:
+    DEFINES['MOZ_NATIVE_DEVICES'] = True
 
-# DEFINES['DEBUG_WIDGETS'] = True
+#DEFINES['DEBUG_WIDGETS'] = True

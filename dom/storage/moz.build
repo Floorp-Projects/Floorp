@@ -8,52 +8,52 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 EXPORTS.mozilla.dom += [
-    "LocalStorage.h",
-    "LocalStorageManager.h",
-    "PartitionedLocalStorage.h",
-    "SessionStorageManager.h",
-    "Storage.h",
-    "StorageActivityService.h",
-    "StorageDBUpdater.h",
-    "StorageIPC.h",
-    "StorageNotifierService.h",
-    "StorageObserver.h",
-    "StorageUtils.h",
+    'LocalStorage.h',
+    'LocalStorageManager.h',
+    'PartitionedLocalStorage.h',
+    'SessionStorageManager.h',
+    'Storage.h',
+    'StorageActivityService.h',
+    'StorageDBUpdater.h',
+    'StorageIPC.h',
+    'StorageNotifierService.h',
+    'StorageObserver.h',
+    'StorageUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    "LocalStorage.cpp",
-    "LocalStorageCache.cpp",
-    "LocalStorageManager.cpp",
-    "PartitionedLocalStorage.cpp",
-    "SessionStorage.cpp",
-    "SessionStorageCache.cpp",
-    "SessionStorageManager.cpp",
-    "SessionStorageObserver.cpp",
-    "Storage.cpp",
-    "StorageActivityService.cpp",
-    "StorageDBThread.cpp",
-    "StorageDBUpdater.cpp",
-    "StorageIPC.cpp",
-    "StorageNotifierService.cpp",
-    "StorageObserver.cpp",
-    "StorageUtils.cpp",
+    'LocalStorage.cpp',
+    'LocalStorageCache.cpp',
+    'LocalStorageManager.cpp',
+    'PartitionedLocalStorage.cpp',
+    'SessionStorage.cpp',
+    'SessionStorageCache.cpp',
+    'SessionStorageManager.cpp',
+    'SessionStorageObserver.cpp',
+    'Storage.cpp',
+    'StorageActivityService.cpp',
+    'StorageDBThread.cpp',
+    'StorageDBUpdater.cpp',
+    'StorageIPC.cpp',
+    'StorageNotifierService.cpp',
+    'StorageObserver.cpp',
+    'StorageUtils.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PBackgroundLocalStorageCache.ipdl",
-    "PBackgroundSessionStorageCache.ipdl",
-    "PBackgroundSessionStorageManager.ipdl",
-    "PBackgroundStorage.ipdl",
-    "PSessionStorageObserver.ipdl",
+    'PBackgroundLocalStorageCache.ipdl',
+    'PBackgroundSessionStorageCache.ipdl',
+    'PBackgroundSessionStorageManager.ipdl',
+    'PBackgroundStorage.ipdl',
+    'PSessionStorageObserver.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/base",
+    '/dom/base',
 ]
 
-if CONFIG["ENABLE_TESTS"]:
-    DEFINES["DOM_STORAGE_TESTS"] = True
+if CONFIG['ENABLE_TESTS']:
+    DEFINES['DOM_STORAGE_TESTS'] = True

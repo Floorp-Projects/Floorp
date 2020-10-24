@@ -4,35 +4,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("cors/**"):
-    BUG_COMPONENT = ("Core", "Networking")
+with Files('cors/**'):
+    BUG_COMPONENT = ('Core', 'Networking')
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "unit/xpcshell.ini",
+    'unit/xpcshell.ini',
 ]
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
 MOCHITEST_MANIFESTS += [
-    "cors/mochitest.ini",
-    "csp/mochitest.ini",
-    "general/mochitest.ini",
-    "https-only/mochitest.ini",
-    "mixedcontentblocker/mochitest.ini",
-    "referrer-policy/mochitest.ini",
-    "sri/mochitest.ini",
+    'cors/mochitest.ini',
+    'csp/mochitest.ini',
+    'general/mochitest.ini',
+    'https-only/mochitest.ini',
+    'mixedcontentblocker/mochitest.ini',
+    'referrer-policy/mochitest.ini',
+    'sri/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "general/chrome.ini",
+    'general/chrome.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "cors/browser.ini",
-    "csp/browser.ini",
-    "general/browser.ini",
-    "https-only/browser.ini",
-    "mixedcontentblocker/browser.ini",
+    'cors/browser.ini',
+    'csp/browser.ini',
+    'general/browser.ini',
+    'https-only/browser.ini',
+    'mixedcontentblocker/browser.ini'
 ]

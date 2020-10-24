@@ -18,19 +18,16 @@ transforms = TransformSequence()
 def make_task_worker(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job, "worker-type", item_name=job["name"], project=config.params["project"]
+            job, 'worker-type', item_name=job['name'], project=config.params['project']
         )
         resolve_keyed_by(
-            job, "scopes", item_name=job["name"], project=config.params["project"]
+            job, 'scopes', item_name=job['name'], project=config.params['project']
         )
         resolve_keyed_by(
-            job,
-            "bouncer-products",
-            item_name=job["name"],
-            project=config.params["project"],
+            job, 'bouncer-products', item_name=job['name'], project=config.params['project']
         )
 
-        job["worker"]["bouncer-products"] = job["bouncer-products"]
+        job['worker']['bouncer-products'] = job['bouncer-products']
 
-        del job["bouncer-products"]
+        del job['bouncer-products']
         yield job

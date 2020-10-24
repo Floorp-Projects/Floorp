@@ -8,8 +8,8 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 XPIDL_SOURCES += [
-    "nsIDOMStorageManager.idl",
-    "nsIStorageActivityService.idl",
+    'nsIDOMStorageManager.idl',
+    'nsIStorageActivityService.idl',
 ]
 
-XPIDL_MODULE = "dom_storage"
+XPIDL_MODULE = 'dom_storage'

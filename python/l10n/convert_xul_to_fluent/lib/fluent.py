@@ -8,7 +8,7 @@ from fluent.syntax.serializer import FluentSerializer
 
 
 def get_value_from_dtd(name, dtd):
-    return dtd[name[1:-1]]["value"]
+    return dtd[name[1:-1]]['value']
 
 
 def build_ftl(messages, dtd, data):
@@ -19,11 +19,11 @@ def build_ftl(messages, dtd, data):
         l10n_id = ast.Identifier(id_str)
         val = None
         attrs = []
-        if msg["value"]:
-            dtd_val = get_value_from_dtd(msg["value"], dtd)
+        if msg['value']:
+            dtd_val = get_value_from_dtd(msg['value'], dtd)
             val = ast.Pattern([ast.TextElement(dtd_val)])
-        for attr_name in msg["attrs"]:
-            dtd_val = get_value_from_dtd(msg["attrs"][attr_name], dtd)
+        for attr_name in msg['attrs']:
+            dtd_val = get_value_from_dtd(msg['attrs'][attr_name], dtd)
             attr_val = ast.Pattern([ast.TextElement(dtd_val)])
             attrs.append(ast.Attribute(ast.Identifier(attr_name), attr_val))
 

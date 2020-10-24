@@ -4,36 +4,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TESTING_JS_MODULES += ["PerTestCoverageUtils.jsm"]
+TESTING_JS_MODULES += ['PerTestCoverageUtils.jsm']
 
-if CONFIG["MOZ_CODE_COVERAGE"]:
-    XPIDL_MODULE = "code-coverage"
+if CONFIG['MOZ_CODE_COVERAGE']:
+    XPIDL_MODULE = 'code-coverage'
 
     XPIDL_SOURCES += [
-        "nsICodeCoverage.idl",
+        'nsICodeCoverage.idl',
     ]
 
     SOURCES += [
-        "CodeCoverageHandler.cpp",
-        "nsCodeCoverage.cpp",
+        'CodeCoverageHandler.cpp',
+        'nsCodeCoverage.cpp',
     ]
 
     XPCOM_MANIFESTS += [
-        "components.conf",
+        'components.conf',
     ]
 
     EXPORTS.mozilla += [
-        "CodeCoverageHandler.h",
+        'CodeCoverageHandler.h',
     ]
 
     LOCAL_INCLUDES += [
-        "/ipc/chromium/src",
-        "/xpcom/base",
+        '/ipc/chromium/src',
+        '/xpcom/base',
     ]
 
-    include("/ipc/chromium/chromium-config.mozbuild")
+    include('/ipc/chromium/chromium-config.mozbuild')
 
-    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-    MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+    MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
-    FINAL_LIBRARY = "xul"
+    FINAL_LIBRARY = 'xul'

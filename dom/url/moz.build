@@ -8,25 +8,25 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
 EXPORTS.mozilla.dom += [
-    "URL.h",
-    "URLSearchParams.h",
+    'URL.h',
+    'URLSearchParams.h',
 ]
 
 UNIFIED_SOURCES += [
-    "URL.cpp",
-    "URLMainThread.cpp",
-    "URLSearchParams.cpp",
-    "URLWorker.cpp",
+    'URL.cpp',
+    'URLMainThread.cpp',
+    'URLSearchParams.cpp',
+    'URLWorker.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/netwerk/base",
+    '/netwerk/base',
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += [ 'tests/chrome.ini' ]
+BROWSER_CHROME_MANIFESTS += [ 'tests/browser.ini' ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

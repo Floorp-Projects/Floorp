@@ -8,11 +8,12 @@ import time
 
 
 def test_macintelpower_init(macintelpower_obj):
-    """Tests that the MacIntelPower object is correctly initialized."""
+    """Tests that the MacIntelPower object is correctly initialized.
+    """
     assert macintelpower_obj.ipg_path
     assert macintelpower_obj.ipg
-    assert macintelpower_obj._os == "darwin"
-    assert macintelpower_obj._cpu == "intel"
+    assert macintelpower_obj._os == 'darwin'
+    assert macintelpower_obj._cpu == 'intel'
 
 
 def test_macintelpower_measuring(macintelpower_obj):
@@ -42,12 +43,12 @@ def test_macintelpower_measuring(macintelpower_obj):
         return test_data
 
     with mock.patch(
-        "mozpower.intel_power_gadget.IPGResultsHandler.clean_ipg_data"
-    ) as _:
+            'mozpower.intel_power_gadget.IPGResultsHandler.clean_ipg_data'
+         ) as _:
         with mock.patch(
-            "mozpower.intel_power_gadget.IPGResultsHandler."
-            "format_ipg_data_to_partial_perfherder"
-        ) as formatter:
+                'mozpower.intel_power_gadget.IPGResultsHandler.'
+                'format_ipg_data_to_partial_perfherder'
+             ) as formatter:
             formatter.side_effect = formatter_side_effect
 
             macintelpower_obj.finalize_power_measurements(wait_interval=2, timeout=30)
@@ -62,16 +63,17 @@ def test_macintelpower_measuring(macintelpower_obj):
 
             # Check that the IPGResultHandler's methods were
             # called
-            macintelpower_obj.ipg_results_handler.clean_ipg_data.assert_called()
-            macintelpower_obj.ipg_results_handler.format_ipg_data_to_partial_perfherder.assert_called_once_with(  # NOQA: E501
-                macintelpower_obj.end_time - macintelpower_obj.start_time,
-                "power-testing",
-            )
+            macintelpower_obj.ipg_results_handler. \
+                clean_ipg_data.assert_called()
+            macintelpower_obj.ipg_results_handler. \
+                format_ipg_data_to_partial_perfherder.assert_called_once_with(
+                    macintelpower_obj.end_time - macintelpower_obj.start_time, 'power-testing'
+                )
 
             # Make sure we can get the expected perfherder data
             # after formatting
             assert macintelpower_obj.get_perfherder_data() == test_data
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

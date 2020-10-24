@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "HandshakeProtocol.js",
-    "IHubProtocol.js",
-    "index.js",
-    "JSONHubProtocol.js",
-    "TextMessageFormat.js",
-    "Utils.js",
+    'HandshakeProtocol.js',
+    'IHubProtocol.js',
+    'index.js',
+    'JSONHubProtocol.js',
+    'TextMessageFormat.js',
+    'Utils.js',
 )

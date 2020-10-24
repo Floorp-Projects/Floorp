@@ -17,16 +17,15 @@ def find_object(path):
             import <modulepath> as mod
             return mod.<objectpath>
     """
-    if path.count(":") != 1:
+    if path.count(':') != 1:
         raise ValueError(
-            'python path {!r} does not have the form "module:object"'.format(path)
-        )
+            'python path {!r} does not have the form "module:object"'.format(path))
 
-    modulepath, objectpath = path.split(":")
+    modulepath, objectpath = path.split(':')
     obj = __import__(modulepath)
-    for a in modulepath.split(".")[1:]:
+    for a in modulepath.split('.')[1:]:
         obj = getattr(obj, a)
-    for a in objectpath.split("."):
+    for a in objectpath.split('.'):
         obj = getattr(obj, a)
     return obj
 
@@ -43,14 +42,14 @@ def import_sibling_modules(exceptions=None):
     mod = inspect.getmodule(frame[0])
 
     name = os.path.basename(mod.__file__)
-    excs = set(["__init__.py", name])
+    excs = set(['__init__.py', name])
     if exceptions:
         excs.update(exceptions)
 
     modpath = mod.__name__
-    if not name.startswith("__init__.py"):
-        modpath = modpath.rsplit(".", 1)[0]
+    if not name.startswith('__init__.py'):
+        modpath = modpath.rsplit('.', 1)[0]
 
     for f in os.listdir(os.path.dirname(mod.__file__)):
-        if f.endswith(".py") and f not in excs:
-            __import__(modpath + "." + f[:-3])
+        if f.endswith('.py') and f not in excs:
+            __import__(modpath + '.' + f[:-3])

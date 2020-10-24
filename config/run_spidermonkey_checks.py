@@ -10,6 +10,7 @@ import sys
 
 def main(output, lib_file, *scripts):
     for script in scripts:
-        retcode = subprocess.call([sys.executable, script], cwd=buildconfig.topsrcdir)
+        retcode = subprocess.call(
+            [sys.executable, script], cwd=buildconfig.topsrcdir)
         if retcode != 0:
             raise Exception(script + " failed")

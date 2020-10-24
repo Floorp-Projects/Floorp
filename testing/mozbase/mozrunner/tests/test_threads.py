@@ -55,5 +55,5 @@ def test_process_post_stop_via_thread(runner, create_thread):
     assert runner.wait(2) == returncode
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

@@ -5,43 +5,43 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    TEST_DIRS += ["windows"]
+if CONFIG['OS_ARCH'] == 'WINNT':
+    TEST_DIRS += ['windows']
 
 EXPORTS.testing += [
-    "TestHarness.h",
+    'TestHarness.h',
 ]
 
 test_progs = [
-    "TestArguments",
-    "TestBlockingProcess",
-    "TestPRIntN",
-    "TestQuickReturn",
-    "TestUnicodeArguments",
+    'TestArguments',
+    'TestBlockingProcess',
+    'TestPRIntN',
+    'TestQuickReturn',
+    'TestUnicodeArguments',
 ]
 SimplePrograms(test_progs)
 
-USE_LIBS += ["mfbt"]
+USE_LIBS += ['mfbt']
 
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
+if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
-        "!%s%s" % (f, CONFIG["BIN_SUFFIX"]) for f in test_progs
+        '!%s%s' % (f, CONFIG['BIN_SUFFIX']) for f in test_progs
     ]
 
-XPIDL_MODULE = "xpcomtest"
+XPIDL_MODULE = 'xpcomtest'
 XPIDL_SOURCES += [
-    "NotXPCOMTest.idl",
+    'NotXPCOMTest.idl',
 ]
 
 LOCAL_INCLUDES += [
-    "../ds",
+    '../ds',
 ]
 
 RESOURCE_FILES += [
-    "test.properties",
+    'test.properties',
 ]

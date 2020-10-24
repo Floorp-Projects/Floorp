@@ -16,12 +16,12 @@ prop:
 
 
 class TestYaml(unittest.TestCase):
+
     def test_load(self):
-        with MockedOpen({"/dir1/dir2/foo.yml": FOO_YML}):
-            self.assertEqual(
-                yaml.load_yaml("/dir1/dir2", "foo.yml"), {"prop": ["val1"]}
-            )
+        with MockedOpen({'/dir1/dir2/foo.yml': FOO_YML}):
+            self.assertEqual(yaml.load_yaml("/dir1/dir2", "foo.yml"),
+                             {'prop': ['val1']})
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -14,10 +14,10 @@ transforms = TransformSequence()
 
 def order_tasks(config, tasks):
     """Iterate image tasks in an order where parent tasks come first."""
-    kind_prefix = config.kind + "-"
+    kind_prefix = config.kind + '-'
 
     pending = deque(tasks)
-    task_labels = {task["label"] for task in pending}
+    task_labels = {task['label'] for task in pending}
     emitted = set()
     while True:
         try:
@@ -25,25 +25,22 @@ def order_tasks(config, tasks):
         except IndexError:
             break
         parents = {
-            task
-            for task in task.get("dependencies", {}).values()
+            task for task in task.get('dependencies', {}).values()
             if task.startswith(kind_prefix)
         }
         if parents and not emitted.issuperset(parents & task_labels):
             pending.append(task)
             continue
-        emitted.add(task["label"])
+        emitted.add(task['label'])
         yield task
 
 
 def format_task_digest(cached_task):
-    return "/".join(
-        [
-            cached_task["type"],
-            cached_task["name"],
-            cached_task["digest"],
-        ]
-    )
+    return "/".join([
+        cached_task['type'],
+        cached_task['name'],
+        cached_task['digest'],
+    ])
 
 
 @transforms.add
@@ -55,33 +52,25 @@ def cache_task(config, tasks):
 
     digests = {}
     for task in config.kind_dependencies_tasks.values():
-        if "cached_task" in task.attributes:
-            digests[task.label] = format_task_digest(task.attributes["cached_task"])
+        if 'cached_task' in task.attributes:
+            digests[task.label] = format_task_digest(task.attributes['cached_task'])
 
     for task in order_tasks(config, tasks):
-        cache = task.pop("cache", None)
+        cache = task.pop('cache', None)
         if cache is None:
             yield task
             continue
 
         dependency_digests = []
-        for p in task.get("dependencies", {}).values():
+        for p in task.get('dependencies', {}).values():
             if p in digests:
                 dependency_digests.append(digests[p])
             else:
-                raise Exception(
-                    "Cached task {} has uncached parent task: {}".format(
-                        task["label"], p
-                    )
-                )
-        digest_data = cache["digest-data"] + sorted(dependency_digests)
-        add_optimization(
-            config,
-            task,
-            cache_type=cache["type"],
-            cache_name=cache["name"],
-            digest_data=digest_data,
-        )
-        digests[task["label"]] = format_task_digest(task["attributes"]["cached_task"])
+                raise Exception('Cached task {} has uncached parent task: {}'.format(
+                    task['label'], p))
+        digest_data = cache['digest-data'] + sorted(dependency_digests)
+        add_optimization(config, task, cache_type=cache['type'],
+                         cache_name=cache['name'], digest_data=digest_data)
+        digests[task['label']] = format_task_digest(task['attributes']['cached_task'])
 
         yield task

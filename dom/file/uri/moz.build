@@ -8,29 +8,29 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
 EXPORTS.mozilla.dom += [
-    "BlobURL.h",
-    "BlobURLInputStream.h",
-    "BlobURLProtocolHandler.h",
-    "FontTableURIProtocolHandler.h",
+    'BlobURL.h',
+    'BlobURLInputStream.h',
+    'BlobURLProtocolHandler.h',
+    'FontTableURIProtocolHandler.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BlobURL.cpp",
-    "BlobURLChannel.cpp",
-    "BlobURLInputStream.cpp",
-    "BlobURLProtocolHandler.cpp",
-    "FontTableURIProtocolHandler.cpp",
+    'BlobURL.cpp',
+    'BlobURLChannel.cpp',
+    'BlobURLInputStream.cpp',
+    'BlobURLProtocolHandler.cpp',
+    'FontTableURIProtocolHandler.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/file",
-    "/netwerk/base",
+    '/dom/file',
+    '/netwerk/base',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

@@ -4,8 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-from abc import ABCMeta, abstractmethod
+from __future__ import (absolute_import, print_function)
+from abc import (ABCMeta, abstractmethod)
 from collections import deque
 import csv
 import os
@@ -15,11 +15,11 @@ from uuid import UUID
 
 # This constant must match the event declared in
 # toolkit/components/startup/mozprofilerprobe.mof
-EVENT_ID_FIREFOX_WINDOW_RESTORED = "{917B96B1-ECAD-4DAB-A760-8D49027748AE}"
+EVENT_ID_FIREFOX_WINDOW_RESTORED = '{917B96B1-ECAD-4DAB-A760-8D49027748AE}'
 
 
 class XPerfSession(object):
-    """This class encapsulates data that is retained for the term of the xperf
+    """ This class encapsulates data that is retained for the term of the xperf
     analysis. This includes the set of attributes, the set of events that are
     owned by those attributes, and the mapping of field names to row indices.
     """
@@ -59,7 +59,7 @@ class XPerfSession(object):
 
 
 class XPerfAttribute(object):
-    """Base class for all attributes. Each attribute has one or more events
+    """ Base class for all attributes. Each attribute has one or more events
     that are associated with it. When those events fire, the attribute
     accumulates statistics for those events.
 
@@ -74,25 +74,25 @@ class XPerfAttribute(object):
 
     # Key whose value should be a dict containing any statistics that were
     # accumulated by this attribute.
-    ACCUMULATIONS = "XPerfAttribute.ACCUMULATIONS"
+    ACCUMULATIONS = 'XPerfAttribute.ACCUMULATIONS'
 
     # The class name of this attribute.
-    NAME = "XPerfAttribute.NAME"
+    NAME = 'XPerfAttribute.NAME'
 
     # The primary result of the attribute.
-    RESULT = "XPerfAttribute.RESULT"
+    RESULT = 'XPerfAttribute.RESULT'
 
     # Some attributes may themselves act as containers for other attributes.
     # The results of those contained attributes should be added to a dict that
     # is indexed by this key.
-    SUB_ATTRIBUTES = "XPerfAttribute.SUB_ATTRIBUTES"
+    SUB_ATTRIBUTES = 'XPerfAttribute.SUB_ATTRIBUTES'
 
     # Other constants:
     NON_PERSISTENT = False
     PERSISTENT = True
 
     def __init__(self, events, persistent=NON_PERSISTENT, **kwargs):
-        """Positional arguments:
+        """ Positional arguments:
 
         events -- a list containing one or more events that will be associated
                   with the attribute.
@@ -122,7 +122,7 @@ class XPerfAttribute(object):
         self.seen_evtlist = []
         self.persistent = persistent
         try:
-            self.output = kwargs["output"]
+            self.output = kwargs['output']
         except KeyError:
             self.output = lambda a: None
 
@@ -143,16 +143,14 @@ class XPerfAttribute(object):
         return self.sess.get_field_index(key, field)
 
     def on_event_matched(self, evt):
-        """Attributes that override this method should always call super().
+        """ Attributes that override this method should always call super().
 
         This method is called any time one of the attribute's events matches
         the current event, which is passed in as the evt parameter.
         """
         if evt not in self.evtlist:
-            raise Exception(
-                'Event mismatch: "{!s}" is not in this '.format((evt))
-                + "attribute's event list"
-            )
+            raise Exception("Event mismatch: \"{!s}\" is not in this "
+                            .format((evt)) + "attribute's event list")
 
         self.accumulate(evt)
 
@@ -179,21 +177,21 @@ class XPerfAttribute(object):
         self.output(self)
 
     def accumulate(self, evt):
-        """Optional method that an attribute may implement for the purposes
+        """ Optional method that an attribute may implement for the purposes
         of accumulating data about multiple events.
         """
         pass
 
     @abstractmethod
     def process(self):
-        """This method is called once all of the attribute's events have been
+        """ This method is called once all of the attribute's events have been
         retired.
         """
         pass
 
     @abstractmethod
     def get_results(self):
-        """This method is used to retrieve the attibute's results. It returns
+        """ This method is used to retrieve the attibute's results. It returns
         a dict whose keys are any of the constants declared at the top of this
         class. At the very least, the XPerfAttribute.NAME and
         XPerfAttribute.RESULT keys must be set.
@@ -202,11 +200,10 @@ class XPerfAttribute(object):
 
 
 class XPerfInterval(XPerfAttribute):
-    """This attribute computes the duration of time between a start event and
+    """ This attribute computes the duration of time between a start event and
     and end event. It also accepts sub-attributes which are only active for the
     duration of the interval.
     """
-
     def __init__(self, startevt, endevt, attrs=None, **kwargs):
         super(XPerfInterval, self).__init__([startevt, endevt], **kwargs)
         if not attrs:
@@ -239,9 +236,8 @@ class XPerfInterval(XPerfAttribute):
         end = self.seen_evtlist[-1]
         start = self.seen_evtlist[0]
         duration = end.get_timestamp() - start.get_timestamp()
-        msg = "Interval from [{!s}] to [{!s}] took [{:.3f}]" " milliseconds.".format(
-            (start), (end), (duration)
-        )
+        msg = "Interval from [{!s}] to [{!s}] took [{:.3f}]" \
+              " milliseconds.".format((start), (end), (duration))
         if self.attrs_during_interval:
             msg += " Within this interval:"
             for attr in self.attrs_during_interval:
@@ -251,7 +247,7 @@ class XPerfInterval(XPerfAttribute):
         return msg
 
     def get_results(self):
-        """The result of an XPerf interval is the interval's duration, in
+        """ The result of an XPerf interval is the interval's duration, in
         milliseconds. The results of the sub-attributes are also provided.
         """
         end = self.seen_evtlist[-1]
@@ -262,10 +258,8 @@ class XPerfInterval(XPerfAttribute):
         for attr in self.attrs_during_interval:
             sub_attrs.append(attr.get_results())
 
-        results = {
-            XPerfAttribute.NAME: self.__class__.__name__,
-            XPerfAttribute.RESULT: duration,
-        }
+        results = {XPerfAttribute.NAME: self.__class__.__name__,
+                   XPerfAttribute.RESULT: duration}
         if sub_attrs:
             results[XPerfAttribute.SUB_ATTRIBUTES] = sub_attrs
 
@@ -273,13 +267,13 @@ class XPerfInterval(XPerfAttribute):
 
 
 class XPerfCounter(XPerfAttribute):
-    """This persistent attribute computes the number of occurrences of the
+    """ This persistent attribute computes the number of occurrences of the
     event specified to __init__. It can also accumulate additional data from
     the events.
     """
 
     def __init__(self, evt, **kwargs):
-        """Positional parameters:
+        """ Positional parameters:
 
         evt -- The event to be counted.
 
@@ -291,11 +285,12 @@ class XPerfCounter(XPerfAttribute):
                    value is a function that evaluates the corresponding value
                    from the event's whiteboard.
         """
-        super(XPerfCounter, self).__init__([evt], XPerfAttribute.PERSISTENT, **kwargs)
+        super(XPerfCounter, self).__init__([evt], XPerfAttribute.PERSISTENT,
+                                           **kwargs)
         self.values = dict()
         self.count = 0
         try:
-            self.filters = kwargs["filters"]
+            self.filters = kwargs['filters']
         except KeyError:
             self.filters = dict()
 
@@ -326,9 +321,8 @@ class XPerfCounter(XPerfAttribute):
         self.remove_event(self.evtlist[0])
 
     def __str__(self):
-        msg = "[{!s}] events of type [{!s}]".format(
-            (self.count), (self.seen_evtlist[0])
-        )
+        msg = "[{!s}] events of type [{!s}]".format((self.count),
+                                                    (self.seen_evtlist[0]))
         if self.values:
             msg += " with accumulated"
             for (k, v) in self.values.iteritems():
@@ -336,10 +330,8 @@ class XPerfCounter(XPerfAttribute):
         return msg
 
     def get_results(self):
-        results = {
-            XPerfAttribute.NAME: self.__class__.__name__,
-            XPerfAttribute.RESULT: self.count,
-        }
+        results = {XPerfAttribute.NAME: self.__class__.__name__,
+                   XPerfAttribute.RESULT: self.count}
 
         if self.values:
             results[XPerfAttribute.ACCUMULATIONS] = self.values
@@ -348,7 +340,7 @@ class XPerfCounter(XPerfAttribute):
 
 
 class XPerfEvent(object):
-    """Base class for all events. An important feature of this class is the
+    """ Base class for all events. An important feature of this class is the
     whiteboard variable. This variable allows for passing values between
     successive events that are *owned by the same attribute*.
 
@@ -360,19 +352,19 @@ class XPerfEvent(object):
     # events by |self.whiteboard|:
 
     # The pid recorded by a process or thread related event
-    EVENT_DATA_PID = "pid"
+    EVENT_DATA_PID = 'pid'
     # The command line recorded by a ProcessStart event
-    EVENT_DATA_CMD_LINE = "cmd_line"
+    EVENT_DATA_CMD_LINE = 'cmd_line'
     # The tid recorded by a thread related event
-    EVENT_DATA_TID = "tid"
+    EVENT_DATA_TID = 'tid'
     # Number of bytes recorded by an event that contains such quantities
-    EVENT_NUM_BYTES = "num_bytes"
+    EVENT_NUM_BYTES = 'num_bytes'
     # File name recorded by an I/O event
-    EVENT_FILE_NAME = "file_name"
+    EVENT_FILE_NAME = 'file_name'
     # Set of field names that may be accumulated by an XPerfCounter. The
     # counter uses this to query the whiteboard for other EVENT_* keys that
     # contain values that should be accumulated.
-    EVENT_ACCUMULATABLE_FIELDS = "accumulatable_fields"
+    EVENT_ACCUMULATABLE_FIELDS = 'accumulatable_fields'
 
     timestamp_index = None
 
@@ -402,7 +394,7 @@ class XPerfEvent(object):
         # All events use the same index for timestamps, so timestamp_index can
         # be a class variable.
         if not XPerfEvent.timestamp_index:
-            XPerfEvent.timestamp_index = self.get_field_index("TimeStamp")
+            XPerfEvent.timestamp_index = self.get_field_index('TimeStamp')
 
         # Convert microseconds to milliseconds
         self.timestamp = float(row[XPerfEvent.timestamp_index]) / 1000.0
@@ -417,7 +409,7 @@ class XPerfEvent(object):
 
 
 class EventExpression(object):
-    """EventExpression is an optional layer that sits between attributes and
+    """ EventExpression is an optional layer that sits between attributes and
     events, and allow the user to compose multiple events into a more complex
     event. To achieve this, EventExpression implementations must implement both
     the XPerfEvent interface (so that their underlying attributes may
@@ -467,10 +459,9 @@ class EventExpression(object):
 
 
 class Nth(EventExpression):
-    """This is a simple EventExpression that does not fire until the Nth
+    """ This is a simple EventExpression that does not fire until the Nth
     occurrence of the event that it encapsulates.
     """
-
     def __init__(self, N, event):
         super(Nth, self).__init__(event)
         self.event = event
@@ -480,9 +471,8 @@ class Nth(EventExpression):
     def on_event_matched(self, evt):
         if evt != self.event:
             raise Exception(
-                "Nth expression for event "
-                + '"%s" fired for event "%s" instead' % (self.event, evt)
-            )
+                "Nth expression for event " +
+                "\"%s\" fired for event \"%s\" instead" % (self.event, evt))
         self.match_count += 1
         if self.match_count == self.N:
             self.attr.on_event_matched(self)
@@ -501,14 +491,14 @@ class Nth(EventExpression):
 
     def get_suffix(self):
         lastDigit = str(self.N)[-1]
-        if lastDigit == "1":
-            return "st"
-        elif lastDigit == "2":
-            return "nd"
-        elif lastDigit == "3":
-            return "rd"
+        if lastDigit == '1':
+            return 'st'
+        elif lastDigit == '2':
+            return 'nd'
+        elif lastDigit == '3':
+            return 'rd'
         else:
-            return "th"
+            return 'th'
 
     def __str__(self):
         suffix = self.get_suffix()
@@ -516,7 +506,7 @@ class Nth(EventExpression):
 
 
 class EventSequence(EventExpression):
-    """This EventExpression represents a sequence of events that must fire in
+    """ This EventExpression represents a sequence of events that must fire in
     the correct order. Once the final event in the sequence is received, then
     the EventSequence fires itself.
 
@@ -528,27 +518,23 @@ class EventSequence(EventExpression):
     essentially interpreted as, "once all of these other events have triggered,
     fire this last one repeatedly for the remainder of the analysis."
     """
-
     def __init__(self, *events):
         super(EventSequence, self).__init__(list(events))
         if len(events) < 2:
             raise Exception(
-                "EventSequence requires at least two events, %d provided" % len(events)
-            )
+                'EventSequence requires at least two events, %d provided' %
+                len(events))
         self.events = deque(events)
         self.seen_events = []
 
     def on_event_matched(self, evt):
         unseen_events = len(self.events) > 0
-        if (
-            unseen_events
-            and evt != self.events[0]
-            or not unseen_events
-            and evt != self.seen_events[-1]
-        ):
+        if unseen_events and evt != self.events[0] or not unseen_events and \
+           evt != self.seen_events[-1]:
             raise Exception(
-                'Unexpected event "%s" is not a member of this event sequence' % (evt)
-            )
+                'Unexpected event "%s" is not a member of this event sequence'
+                % (evt)
+                )
 
         # Move the event from events queue to seen_events
         if unseen_events:
@@ -587,11 +573,10 @@ class EventSequence(EventExpression):
 
 
 class BindThread(EventExpression):
-    """This event expression binds the event that it encapsulates to a
+    """ This event expression binds the event that it encapsulates to a
     specific thread ID. This is used to force an event to only fire when it
     matches the thread ID supplied by the whiteboard.
     """
-
     def __init__(self, event):
         super(BindThread, self).__init__(event)
         self.event = event
@@ -600,9 +585,8 @@ class BindThread(EventExpression):
     def on_event_matched(self, evt):
         if evt != self.event:
             raise Exception(
-                "BindThread expression for event "
-                + '"%s" fired for event "%s" instead' % (self.event, evt)
-            )
+                "BindThread expression for event " +
+                "\"%s\" fired for event \"%s\" instead" % (self.event, evt))
         self.attr.on_event_matched(self)
 
     def set_whiteboard(self, data):
@@ -614,7 +598,7 @@ class BindThread(EventExpression):
 
     def do_match(self, row):
         try:
-            tid_index = self.get_field_index(row[0], "ThreadID")
+            tid_index = self.get_field_index(row[0], 'ThreadID')
         except KeyError:
             # Not every event has a thread ID. We don't care about those.
             return
@@ -630,14 +614,13 @@ class BindThread(EventExpression):
 
 
 class ClassicEvent(XPerfEvent):
-    """Classic ETW events are differentiated via a GUID. This class
+    """ Classic ETW events are differentiated via a GUID. This class
     implements the boilerplate for matching those events.
     """
-
     guid_index = None
 
     def __init__(self, guidstr):
-        super(ClassicEvent, self).__init__("UnknownEvent/Classic")
+        super(ClassicEvent, self).__init__('UnknownEvent/Classic')
         self.guid = UUID(guidstr)
 
     def match(self, row):
@@ -645,7 +628,7 @@ class ClassicEvent(XPerfEvent):
             return False
 
         if not ClassicEvent.guid_index:
-            ClassicEvent.guid_index = self.get_field_index("EventGuid")
+            ClassicEvent.guid_index = self.get_field_index('EventGuid')
 
         guid = UUID(row[ClassicEvent.guid_index])
         return guid.int == self.guid.int
@@ -656,11 +639,9 @@ class ClassicEvent(XPerfEvent):
 
 class SessionStoreWindowRestored(ClassicEvent):
     """ The Firefox session store window restored event """
-
     def __init__(self):
         super(SessionStoreWindowRestored, self).__init__(
-            EVENT_ID_FIREFOX_WINDOW_RESTORED
-        )
+            EVENT_ID_FIREFOX_WINDOW_RESTORED)
 
     def __str__(self):
         return "Firefox Session Store Window Restored"
@@ -669,10 +650,10 @@ class SessionStoreWindowRestored(ClassicEvent):
 class ProcessStart(XPerfEvent):
     cmd_line_index = None
     process_index = None
-    extractor = re.compile("^(.+) \(\s*(\d+)\)$")
+    extractor = re.compile('^(.+) \(\s*(\d+)\)$')
 
     def __init__(self, leafname):
-        super(ProcessStart, self).__init__("P-Start")
+        super(ProcessStart, self).__init__('P-Start')
         self.leafname = leafname.lower()
 
     @staticmethod
@@ -688,7 +669,7 @@ class ProcessStart(XPerfEvent):
             else:
                 if c == '"':
                     quoted = True
-                elif c == " ":
+                elif c == ' ':
                     result.append(current)
                     current = str()
                     continue
@@ -706,7 +687,8 @@ class ProcessStart(XPerfEvent):
             return False
 
         if not ProcessStart.process_index:
-            ProcessStart.process_index = self.get_field_index("Process Name ( PID)")
+            ProcessStart.process_index = self.get_field_index(
+                'Process Name ( PID)')
 
         m = ProcessStart.extractor.match(row[ProcessStart.process_index])
         executable = m.group(1).lower()
@@ -717,7 +699,7 @@ class ProcessStart(XPerfEvent):
         pid = int(m.group(2))
 
         if not ProcessStart.cmd_line_index:
-            ProcessStart.cmd_line_index = self.get_field_index("Command Line")
+            ProcessStart.cmd_line_index = self.get_field_index('Command Line')
 
         cmd_line = row[ProcessStart.cmd_line_index]
         cmd_line_tokens = ProcessStart.tokenize_cmd_line(cmd_line)
@@ -727,7 +709,8 @@ class ProcessStart(XPerfEvent):
         try:
             cmd_line_dict = self.whiteboard[XPerfEvent.EVENT_DATA_CMD_LINE]
         except KeyError:
-            self.whiteboard[XPerfEvent.EVENT_DATA_CMD_LINE] = {pid: cmd_line_tokens}
+            self.whiteboard[XPerfEvent.EVENT_DATA_CMD_LINE] = \
+                {pid: cmd_line_tokens}
         else:
             cmd_line_dict[pid] = cmd_line_tokens
 
@@ -738,50 +721,50 @@ class ProcessStart(XPerfEvent):
 
 
 class ThreadStart(XPerfEvent):
-    """ThreadStart only fires for threads whose process matches the
+    """ ThreadStart only fires for threads whose process matches the
     XPerfEvent.EVENT_DATA_PID entry in the whiteboard.
     """
-
     process_index = None
     tid_index = None
-    pid_extractor = re.compile("^.+ \(\s*(\d+)\)$")
+    pid_extractor = re.compile('^.+ \(\s*(\d+)\)$')
 
     def __init__(self):
-        super(ThreadStart, self).__init__("T-Start")
+        super(ThreadStart, self).__init__('T-Start')
 
     def match(self, row):
         if not super(ThreadStart, self).match(row):
             return False
 
         if not ThreadStart.process_index:
-            ThreadStart.process_index = self.get_field_index("Process Name ( PID)")
+            ThreadStart.process_index = self.get_field_index(
+                'Process Name ( PID)')
 
         m = ThreadStart.pid_extractor.match(row[ThreadStart.process_index])
         if self.whiteboard[XPerfEvent.EVENT_DATA_PID] != int(m.group(1)):
             return False
 
         if not ThreadStart.tid_index:
-            ThreadStart.tid_index = self.get_field_index("ThreadID")
+            ThreadStart.tid_index = self.get_field_index('ThreadID')
 
-        self.whiteboard[XPerfEvent.EVENT_DATA_TID] = int(row[ThreadStart.tid_index])
+        self.whiteboard[XPerfEvent.EVENT_DATA_TID] = \
+            int(row[ThreadStart.tid_index])
         return True
 
     def __str__(self):
         s = "Thread start in process [{}]".format(
-            (self.whiteboard[XPerfEvent.EVENT_DATA_PID])
-        )
+            (self.whiteboard[XPerfEvent.EVENT_DATA_PID]))
         return s
 
 
 class ReadyThread(XPerfEvent):
-    """ReadyThread only fires for the last thread whose ID was recorded in the
+    """ ReadyThread only fires for the last thread whose ID was recorded in the
     whiteboard via the XPerfEvent.EVENT_DATA_TID key.
     """
 
     tid_index = None
 
     def __init__(self):
-        super(ReadyThread, self).__init__("ReadyThread")
+        super(ReadyThread, self).__init__('ReadyThread')
 
     def set_whiteboard(self, data):
         super(ReadyThread, self).set_whiteboard(data)
@@ -791,49 +774,45 @@ class ReadyThread(XPerfEvent):
             return False
 
         if not ReadyThread.tid_index:
-            ReadyThread.tid_index = self.get_field_index("Rdy TID")
+            ReadyThread.tid_index = self.get_field_index('Rdy TID')
 
         try:
-            return self.whiteboard[XPerfEvent.EVENT_DATA_TID] == int(
-                row[ReadyThread.tid_index]
-            )
+            return self.whiteboard[XPerfEvent.EVENT_DATA_TID] == \
+                   int(row[ReadyThread.tid_index])
         except KeyError:
             return False
 
     def __str__(self):
         return "Thread [{!s}] is ready".format(
-            (self.whiteboard[XPerfEvent.EVENT_DATA_TID])
-        )
+            (self.whiteboard[XPerfEvent.EVENT_DATA_TID]))
 
 
 class ContextSwitchToThread(XPerfEvent):
-    """ContextSwitchToThread only fires for the last thread whose ID was
+    """ ContextSwitchToThread only fires for the last thread whose ID was
     recorded in the whiteboard via the XPerfEvent.EVENT_DATA_TID key.
     """
 
     tid_index = None
 
     def __init__(self):
-        super(ContextSwitchToThread, self).__init__("CSwitch")
+        super(ContextSwitchToThread, self).__init__('CSwitch')
 
     def match(self, row):
         if not super(ContextSwitchToThread, self).match(row):
             return False
 
         if not ContextSwitchToThread.tid_index:
-            ContextSwitchToThread.tid_index = self.get_field_index("New TID")
+            ContextSwitchToThread.tid_index = self.get_field_index('New TID')
 
         try:
-            return self.whiteboard[XPerfEvent.EVENT_DATA_TID] == int(
-                row[ContextSwitchToThread.tid_index]
-            )
+            return self.whiteboard[XPerfEvent.EVENT_DATA_TID] == \
+                   int(row[ContextSwitchToThread.tid_index])
         except KeyError:
             return False
 
     def __str__(self):
-        return "Context switch to thread " + "[{!s}]".format(
-            (self.whiteboard[XPerfEvent.EVENT_DATA_TID])
-        )
+        return "Context switch to thread " + \
+               "[{!s}]".format((self.whiteboard[XPerfEvent.EVENT_DATA_TID]))
 
 
 class FileIOReadOrWrite(XPerfEvent):
@@ -846,13 +825,13 @@ class FileIOReadOrWrite(XPerfEvent):
 
     def __init__(self, verb):
         if verb == FileIOReadOrWrite.WRITE:
-            evt_name = "FileIoWrite"
-            self.strverb = "Write"
+            evt_name = 'FileIoWrite'
+            self.strverb = 'Write'
         elif verb == FileIOReadOrWrite.READ:
-            evt_name = "FileIoRead"
-            self.strverb = "Read"
+            evt_name = 'FileIoRead'
+            self.strverb = 'Read'
         else:
-            raise Exception("Invalid verb argument to FileIOReadOrWrite")
+            raise Exception('Invalid verb argument to FileIOReadOrWrite')
 
         super(FileIOReadOrWrite, self).__init__(evt_name)
 
@@ -863,26 +842,23 @@ class FileIOReadOrWrite(XPerfEvent):
             return False
 
         if not FileIOReadOrWrite.tid_index:
-            FileIOReadOrWrite.tid_index = self.get_field_index("ThreadID")
+            FileIOReadOrWrite.tid_index = self.get_field_index('ThreadID')
 
         if not FileIOReadOrWrite.num_bytes_index:
-            FileIOReadOrWrite.num_bytes_index = self.get_field_index("Size")
+            FileIOReadOrWrite.num_bytes_index = self.get_field_index('Size')
 
         if not FileIOReadOrWrite.file_name_index:
-            FileIOReadOrWrite.file_name_index = self.get_field_index("FileName")
+            FileIOReadOrWrite.file_name_index = \
+                self.get_field_index('FileName')
 
-        self.whiteboard[XPerfEvent.EVENT_DATA_TID] = int(
-            row[FileIOReadOrWrite.tid_index]
-        )
-        self.whiteboard[XPerfEvent.EVENT_NUM_BYTES] = int(
-            row[FileIOReadOrWrite.num_bytes_index], 0
-        )
-        self.whiteboard[XPerfEvent.EVENT_FILE_NAME] = row[
-            FileIOReadOrWrite.file_name_index
-        ].strip('"')
-        self.whiteboard[XPerfEvent.EVENT_ACCUMULATABLE_FIELDS] = {
-            XPerfEvent.EVENT_NUM_BYTES
-        }
+        self.whiteboard[XPerfEvent.EVENT_DATA_TID] = \
+            int(row[FileIOReadOrWrite.tid_index])
+        self.whiteboard[XPerfEvent.EVENT_NUM_BYTES] = \
+            int(row[FileIOReadOrWrite.num_bytes_index], 0)
+        self.whiteboard[XPerfEvent.EVENT_FILE_NAME] = \
+            row[FileIOReadOrWrite.file_name_index].strip('"')
+        self.whiteboard[XPerfEvent.EVENT_ACCUMULATABLE_FIELDS] = \
+            {XPerfEvent.EVENT_NUM_BYTES}
 
         return True
 
@@ -891,13 +867,13 @@ class FileIOReadOrWrite(XPerfEvent):
 
 
 class XPerfFile(object):
-    """This class is the main entry point into xperf analysis. The user should
+    """ This class is the main entry point into xperf analysis. The user should
     create one or more attributes, add them via add_attr(), and then call
     analyze() to run.
     """
 
     def __init__(self, xperf_path=None, debug=False, **kwargs):
-        """Keyword arguments:
+        """ Keyword arguments:
 
         debug -- When True, enables additional diagnostics
         etlfile -- Path to a merged .etl file to use for the analysis.
@@ -927,28 +903,28 @@ class XPerfFile(object):
         self.keepcsv = False
         self.xperf_path = xperf_path
 
-        if "etlfile" in kwargs:
-            self.etlfile = os.path.abspath(kwargs["etlfile"])
-        elif "etluser" in kwargs and "etlkernel" in kwargs:
+        if 'etlfile' in kwargs:
+            self.etlfile = os.path.abspath(kwargs['etlfile'])
+        elif 'etluser' in kwargs and 'etlkernel' in kwargs:
             self.etlfile = self.etl_merge_user_kernel(**kwargs)
-        elif "csvfile" not in kwargs:
-            raise Exception("Missing parameters: etl or csv files required")
+        elif 'csvfile' not in kwargs:
+            raise Exception('Missing parameters: etl or csv files required')
 
         if self.etlfile:
             try:
-                self.csvout = os.path.abspath(kwargs["csvout"])
+                self.csvout = os.path.abspath(kwargs['csvout'])
             except KeyError:
                 pass
             self.csvfile = self.etl2csv()
         else:
-            self.csvfile = os.path.abspath(kwargs["csvfile"])
+            self.csvfile = os.path.abspath(kwargs['csvfile'])
 
         try:
-            self.keepcsv = kwargs["keepcsv"]
+            self.keepcsv = kwargs['keepcsv']
         except KeyError:
             # If we've been supplied a csvfile, assume by default that we don't
             # want that file deleted by us.
-            self.keepcsv = "csvfile" in kwargs
+            self.keepcsv = 'csvfile' in kwargs
 
         self.sess = XPerfSession()
 
@@ -959,24 +935,24 @@ class XPerfFile(object):
         if self.xperf_path:
             return self.xperf_path
 
-        leaf_name = "xperf.exe"
+        leaf_name = 'xperf.exe'
         access_flags = os.R_OK | os.X_OK
-        path_entries = os.environ["PATH"].split(os.pathsep)
+        path_entries = os.environ['PATH'].split(os.pathsep)
         for entry in path_entries:
             full = os.path.join(entry, leaf_name)
             if os.access(full, access_flags):
                 self.xperf_path = os.path.abspath(full)
                 return self.xperf_path
 
-        raise Exception("Cannot find xperf")
+        raise Exception('Cannot find xperf')
 
     def etl_merge_user_kernel(self, **kwargs):
-        user = os.path.abspath(kwargs["etluser"])
-        kernel = os.path.abspath(kwargs["etlkernel"])
+        user = os.path.abspath(kwargs['etluser'])
+        kernel = os.path.abspath(kwargs['etlkernel'])
         (base, leaf) = os.path.split(user)
-        merged = os.path.join(base, "merged.etl")
+        merged = os.path.join(base, 'merged.etl')
 
-        xperf_cmd = [self.get_xperf_path(), "-merge", user, kernel, merged]
+        xperf_cmd = [self.get_xperf_path(), '-merge', user, kernel, merged]
         if self.debug:
             print("Executing '%s'" % subprocess.list2cmdline(xperf_cmd))
         subprocess.call(xperf_cmd)
@@ -990,7 +966,8 @@ class XPerfFile(object):
             (leaf, ext) = os.path.splitext(leaf)
             abs_csv_name = os.path.join(base, "{}.csv".format((leaf)))
 
-        xperf_cmd = [self.get_xperf_path(), "-i", self.etlfile, "-o", abs_csv_name]
+        xperf_cmd = [self.get_xperf_path(), '-i', self.etlfile, '-o',
+                     abs_csv_name]
         if self.debug:
             print("Executing '%s'" % subprocess.list2cmdline(xperf_cmd))
         subprocess.call(xperf_cmd)
@@ -998,7 +975,7 @@ class XPerfFile(object):
 
     def __enter__(self):
         if not self.load():
-            raise Exception("Load failed")
+            raise Exception('Load failed')
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -1011,16 +988,12 @@ class XPerfFile(object):
         if not self.csvfile:
             return False
 
-        self.csv_fd = open(self.csvfile, "rb")
-        self.data = self.filter_xperf_header(
-            csv.reader(
-                self.csv_fd,
-                delimiter=",",
-                quotechar='"',
-                quoting=csv.QUOTE_NONE,
-                skipinitialspace=True,
-            )
-        )
+        self.csv_fd = open(self.csvfile, 'rb')
+        self.data = self.filter_xperf_header(csv.reader(self.csv_fd,
+                                                        delimiter=',',
+                                                        quotechar='"',
+                                                        quoting=csv.QUOTE_NONE,
+                                                        skipinitialspace=True))
 
         return True
 
@@ -1054,9 +1027,8 @@ class XPerfFile(object):
                     continue
 
                 # Map field names to indices
-                self.sess.add_field_mapping(
-                    row[0], {v: k + 1 for k, v in enumerate(row[1:])}
-                )
+                self.sess.add_field_mapping(row[0], {v: k + 1 for k, v in
+                                                     enumerate(row[1:])})
                 continue
 
             if state >= XPERF_CSV_END_HEADER_SEEN:
@@ -1074,7 +1046,6 @@ class XPerfFile(object):
 
 
 if __name__ == "__main__":
-
     def main():
         import argparse
 
@@ -1082,76 +1053,52 @@ if __name__ == "__main__":
         subparsers = parser.add_subparsers()
 
         etl_parser = subparsers.add_parser(
-            "etl", help="Input consists of one .etl file"
-        )
+            'etl', help='Input consists of one .etl file')
         etl_parser.add_argument(
-            "etlfile",
-            type=str,
-            help="Path to a single .etl containing merged kernel "
-            + "and user mode data",
-        )
+            "etlfile", type=str,
+            help="Path to a single .etl containing merged kernel " +
+                 "and user mode data")
         etl_parser.add_argument(
-            "--csvout",
-            required=False,
-            help="Specify a path to save the interim csv file to disk",
-        )
+            '--csvout', required=False,
+            help='Specify a path to save the interim csv file to disk')
         etl_parser.add_argument(
-            "--keepcsv",
-            required=False,
-            help="Do not delete the interim csv file that was written to disk",
-            action="store_true",
-        )
+            '--keepcsv', required=False,
+            help='Do not delete the interim csv file that was written to disk',
+            action='store_true')
 
         etls_parser = subparsers.add_parser(
-            "etls", help="Input consists of two .etl files"
-        )
+            'etls', help='Input consists of two .etl files')
         etls_parser.add_argument(
-            "--user",
-            type=str,
-            help="Path to a user-mode .etl file",
-            dest="etluser",
-            required=True,
-        )
+            "--user", type=str,
+            help="Path to a user-mode .etl file", dest='etluser',
+            required=True)
         etls_parser.add_argument(
-            "--kernel",
-            type=str,
-            help="Path to a kernel-mode .etl file",
-            dest="etlkernel",
-            required=True,
-        )
+            "--kernel", type=str,
+            help="Path to a kernel-mode .etl file", dest='etlkernel',
+            required=True)
         etls_parser.add_argument(
-            "--csvout",
-            required=False,
-            help="Specify a path to save the interim csv file to disk",
-        )
+            '--csvout', required=False,
+            help='Specify a path to save the interim csv file to disk')
         etls_parser.add_argument(
-            "--keepcsv",
-            required=False,
-            help="Do not delete the interim csv file that was written to disk",
-            action="store_true",
-        )
+            '--keepcsv', required=False,
+            help='Do not delete the interim csv file that was written to disk',
+            action='store_true')
 
         csv_parser = subparsers.add_parser(
-            "csv", help="Input consists of one .csv file"
-        )
+            'csv', help='Input consists of one .csv file')
         csv_parser.add_argument(
-            "csvfile", type=str, help="Path to a .csv file generated by xperf"
-        )
+            "csvfile", type=str,
+            help="Path to a .csv file generated by xperf")
         # We always imply --keepcsv when running in csv mode
         csv_parser.add_argument(
-            "--keepcsv",
-            required=False,
-            help=argparse.SUPPRESS,
-            action="store_true",
-            default=True,
-        )
+            '--keepcsv', required=False, help=argparse.SUPPRESS,
+            action='store_true', default=True)
 
         args = parser.parse_args()
 
         # This is merely sample code for running analyses.
 
         with XPerfFile(**vars(args)) as etl:
-
             def null_output(attr):
                 pass
 
@@ -1160,61 +1107,47 @@ if __name__ == "__main__":
 
             def test_filter_exclude_dll(file):
                 (base, ext) = os.path.splitext(file)
-                return ext.lower() != ".dll"
+                return ext.lower() != '.dll'
 
             myfilters = {XPerfEvent.EVENT_FILE_NAME: test_filter_exclude_dll}
 
-            fxstart1 = ProcessStart("firefox.exe")
+            fxstart1 = ProcessStart('firefox.exe')
             sess_restore = SessionStoreWindowRestored()
-            interval1 = XPerfInterval(
-                fxstart1, sess_restore, output=lambda a: print(str(a))
-            )
+            interval1 = XPerfInterval(fxstart1, sess_restore,
+                                      output=lambda a: print(str(a)))
             etl.add_attr(interval1)
 
-            fxstart2 = ProcessStart("firefox.exe")
-            ready = EventSequence(
-                Nth(2, ProcessStart("firefox.exe")), ThreadStart(), ReadyThread()
-            )
-            interval2 = XPerfInterval(fxstart2, ready, output=structured_output)
+            fxstart2 = ProcessStart('firefox.exe')
+            ready = EventSequence(Nth(2, ProcessStart('firefox.exe')),
+                                  ThreadStart(), ReadyThread())
+            interval2 = XPerfInterval(fxstart2, ready,
+                                      output=structured_output)
             etl.add_attr(interval2)
 
             browser_main_thread_file_io_read = EventSequence(
-                Nth(2, ProcessStart("firefox.exe")),
-                ThreadStart(),
-                BindThread(FileIOReadOrWrite(FileIOReadOrWrite.READ)),
-            )
-            read_counter = XPerfCounter(
-                browser_main_thread_file_io_read,
-                output=structured_output,
-                filters=myfilters,
-            )
+                Nth(2, ProcessStart('firefox.exe')), ThreadStart(),
+                BindThread(FileIOReadOrWrite(FileIOReadOrWrite.READ)))
+            read_counter = XPerfCounter(browser_main_thread_file_io_read,
+                                        output=structured_output,
+                                        filters=myfilters)
 
             browser_main_thread_file_io_write = EventSequence(
-                Nth(2, ProcessStart("firefox.exe")),
-                ThreadStart(),
-                BindThread(FileIOReadOrWrite(FileIOReadOrWrite.WRITE)),
-            )
-            write_counter = XPerfCounter(
-                browser_main_thread_file_io_write, output=structured_output
-            )
+                Nth(2, ProcessStart('firefox.exe')), ThreadStart(),
+                BindThread(FileIOReadOrWrite(FileIOReadOrWrite.WRITE)))
+            write_counter = XPerfCounter(browser_main_thread_file_io_write,
+                                         output=structured_output)
 
             # This is equivalent to the old-style xperf test (with launcher)
-            parent_process_started = Nth(2, ProcessStart("firefox.exe"))
-            interval3 = XPerfInterval(
-                parent_process_started,
-                SessionStoreWindowRestored(),
-                read_counter,
-                output=structured_output,
-            )
+            parent_process_started = Nth(2, ProcessStart('firefox.exe'))
+            interval3 = XPerfInterval(parent_process_started,
+                                      SessionStoreWindowRestored(),
+                                      read_counter, output=structured_output)
             etl.add_attr(interval3)
 
-            parent_process_started2 = Nth(2, ProcessStart("firefox.exe"))
-            interval4 = XPerfInterval(
-                parent_process_started2,
-                SessionStoreWindowRestored(),
-                write_counter,
-                output=structured_output,
-            )
+            parent_process_started2 = Nth(2, ProcessStart('firefox.exe'))
+            interval4 = XPerfInterval(parent_process_started2,
+                                      SessionStoreWindowRestored(),
+                                      write_counter, output=structured_output)
             etl.add_attr(interval4)
 
             etl.analyze()

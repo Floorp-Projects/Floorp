@@ -53,7 +53,9 @@ from mozbuild.jar import (
 from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
-from mozbuild.util import mkdir
+from mozbuild.util import (
+    mkdir,
+)
 
 
 class XPIDLManager(object):
@@ -67,10 +69,10 @@ class XPIDLManager(object):
 
         def add_idls(self, idls):
             self.idl_files.update(idl.full_path for idl in idls)
-            self.directories.update(mozpath.dirname(idl.full_path) for idl in idls)
-            self._stems.update(
-                mozpath.splitext(mozpath.basename(idl))[0] for idl in idls
-            )
+            self.directories.update(mozpath.dirname(idl.full_path)
+                                    for idl in idls)
+            self._stems.update(mozpath.splitext(mozpath.basename(idl))[0]
+                               for idl in idls)
 
         def stems(self):
             return iter(self._stems)
@@ -89,7 +91,7 @@ class XPIDLManager(object):
             basename = mozpath.basename(idl.full_path)
 
             if basename in self._idls:
-                raise Exception("IDL already registered: %s" % basename)
+                raise Exception('IDL already registered: %s' % basename)
             self._idls.add(basename)
 
         self.modules[module.name].add_idls(module.idl_files)
@@ -130,7 +132,7 @@ class CommonBackend(BuildBackend):
         elif isinstance(obj, ConfigFileSubstitution):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that
             # to other
-            if mozpath.basename(obj.output_path) == "Makefile":
+            if mozpath.basename(obj.output_path) == 'Makefile':
                 return False
             with self._get_preprocessor(obj) as pp:
                 pp.do_include(obj.input_path)
@@ -140,19 +142,15 @@ class CommonBackend(BuildBackend):
             self._handle_webidl_collection(obj)
 
         elif isinstance(obj, IPDLCollection):
-            self._handle_generated_sources(
-                mozpath.join(obj.objdir, f) for f in obj.all_generated_sources()
-            )
-            self._write_unified_files(
-                obj.unified_source_mapping, obj.objdir, poison_windows_h=False
-            )
-            self._handle_ipdl_sources(
-                obj.objdir,
-                list(sorted(obj.all_sources())),
-                list(sorted(obj.all_preprocessed_sources())),
-                list(sorted(obj.all_regular_sources())),
-                obj.unified_source_mapping,
-            )
+            self._handle_generated_sources(mozpath.join(obj.objdir, f)
+                                           for f in obj.all_generated_sources())
+            self._write_unified_files(obj.unified_source_mapping, obj.objdir,
+                                      poison_windows_h=False)
+            self._handle_ipdl_sources(obj.objdir,
+                                      list(sorted(obj.all_sources())),
+                                      list(sorted(obj.all_preprocessed_sources())),
+                                      list(sorted(obj.all_regular_sources())),
+                                      obj.unified_source_mapping)
 
         elif isinstance(obj, XPCOMComponentManifests):
             self._handle_xpcom_collection(obj)
@@ -164,7 +162,7 @@ class CommonBackend(BuildBackend):
 
             if obj.have_unified_mapping:
                 self._write_unified_files(obj.unified_source_mapping, obj.objdir)
-            if hasattr(self, "_process_unified_sources"):
+            if hasattr(self, '_process_unified_sources'):
                 self._process_unified_sources(obj)
 
         elif isinstance(obj, BaseProgram):
@@ -181,20 +179,15 @@ class CommonBackend(BuildBackend):
 
         elif isinstance(obj, GeneratedFile):
             if obj.required_during_compile or obj.required_before_compile:
-                for f in itertools.chain(
-                    obj.required_before_compile, obj.required_during_compile
-                ):
-                    fullpath = ObjDirPath(obj._context, "!" + f).full_path
+                for f in itertools.chain(obj.required_before_compile,
+                                         obj.required_during_compile):
+                    fullpath = ObjDirPath(obj._context, '!' + f).full_path
                     self._handle_generated_sources([fullpath])
             return False
 
         elif isinstance(obj, Exports):
-            objdir_files = [
-                f.full_path
-                for path, files in obj.files.walk()
-                for f in files
-                if isinstance(f, ObjDirPath)
-            ]
+            objdir_files = [f.full_path for path, files in obj.files.walk()
+                            for f in files if isinstance(f, ObjDirPath)]
             if objdir_files:
                 self._handle_generated_sources(objdir_files)
             return False
@@ -220,23 +213,21 @@ class CommonBackend(BuildBackend):
 
         # Write out a machine-readable file describing binaries.
         topobjdir = self.environment.topobjdir
-        with self._write_file(mozpath.join(topobjdir, "binaries.json")) as fh:
+        with self._write_file(mozpath.join(topobjdir, 'binaries.json')) as fh:
             d = {
-                "shared_libraries": sorted(
+                'shared_libraries': sorted(
                     (s.to_dict() for s in self._binaries.shared_libraries),
-                    key=itemgetter("basename"),
-                ),
-                "programs": sorted(
+                    key=itemgetter('basename')),
+                'programs': sorted(
                     (p.to_dict() for p in self._binaries.programs),
-                    key=itemgetter("program"),
-                ),
+                    key=itemgetter('program')),
             }
             json.dump(d, fh, sort_keys=True, indent=4)
 
         # Write out a file listing generated sources.
-        with self._write_file(mozpath.join(topobjdir, "generated-sources.json")) as fh:
+        with self._write_file(mozpath.join(topobjdir, 'generated-sources.json')) as fh:
             d = {
-                "sources": sorted(self._generated_sources),
+                'sources': sorted(self._generated_sources),
             }
             json.dump(d, fh, sort_keys=True, indent=4)
 
@@ -258,7 +249,8 @@ class CommonBackend(BuildBackend):
                 objs.append(o)
 
         def expand(lib, recurse_objs, system_libs):
-            if isinstance(lib, (HostLibrary, StaticLibrary, SandboxedWasmLibrary)):
+            if isinstance(lib, (HostLibrary, StaticLibrary,
+                                SandboxedWasmLibrary)):
                 if lib.no_expand_lib:
                     static_libs.append(lib)
                     recurse_objs = False
@@ -281,11 +273,11 @@ class CommonBackend(BuildBackend):
 
         add_objs(input_bin)
 
-        system_libs = not isinstance(
-            input_bin, (HostLibrary, StaticLibrary, SandboxedWasmLibrary)
-        )
+        system_libs = not isinstance(input_bin, (HostLibrary, StaticLibrary,
+                                                 SandboxedWasmLibrary))
         for lib in input_bin.linked_libraries:
-            if isinstance(lib, (HostLibrary, StaticLibrary, SandboxedWasmLibrary)):
+            if isinstance(lib, (HostLibrary, StaticLibrary,
+                                SandboxedWasmLibrary)):
                 expand(lib, True, system_libs)
             elif isinstance(lib, SharedLibrary):
                 if lib not in seen_libs:
@@ -302,8 +294,8 @@ class CommonBackend(BuildBackend):
     def _make_list_file(self, kind, objdir, objs, name):
         if not objs:
             return None
-        if kind == "target":
-            list_style = self.environment.substs.get("EXPAND_LIBS_LIST_STYLE")
+        if kind == 'target':
+            list_style = self.environment.substs.get('EXPAND_LIBS_LIST_STYLE')
         else:
             # The host compiler is not necessarily the same kind as the target
             # compiler, so we can't be sure EXPAND_LIBS_LIST_STYLE is the right
@@ -312,18 +304,18 @@ class CommonBackend(BuildBackend):
             # it really matters to use something else than `list` is when
             # linking tons of objects (because of command line argument limits),
             # which only really happens for libxul.
-            list_style = "list"
+            list_style = 'list'
         list_file_path = mozpath.join(objdir, name)
         objs = [os.path.relpath(o, objdir) for o in objs]
-        if list_style == "linkerscript":
+        if list_style == 'linkerscript':
             ref = list_file_path
-            content = "\n".join('INPUT("%s")' % o for o in objs)
-        elif list_style == "filelist":
+            content = '\n'.join('INPUT("%s")' % o for o in objs)
+        elif list_style == 'filelist':
             ref = "-Wl,-filelist," + list_file_path
-            content = "\n".join(objs)
-        elif list_style == "list":
+            content = '\n'.join(objs)
+        elif list_style == 'list':
             ref = "@" + list_file_path
-            content = "\n".join(objs)
+            content = '\n'.join(objs)
         else:
             return None
 
@@ -334,25 +326,20 @@ class CommonBackend(BuildBackend):
         return ref
 
     def _handle_generated_sources(self, files):
-        self._generated_sources.update(
-            mozpath.relpath(f, self.environment.topobjdir) for f in files
-        )
+        self._generated_sources.update(mozpath.relpath(
+            f, self.environment.topobjdir) for f in files)
 
     def _handle_xpidl_sources(self):
-        bindings_rt_dir = mozpath.join(
-            self.environment.topobjdir, "dist", "xpcrs", "rt"
-        )
-        bindings_bt_dir = mozpath.join(
-            self.environment.topobjdir, "dist", "xpcrs", "bt"
-        )
-        include_dir = mozpath.join(self.environment.topobjdir, "dist", "include")
+        bindings_rt_dir = mozpath.join(self.environment.topobjdir, 'dist', 'xpcrs', 'rt')
+        bindings_bt_dir = mozpath.join(self.environment.topobjdir, 'dist', 'xpcrs', 'bt')
+        include_dir = mozpath.join(self.environment.topobjdir, 'dist', 'include')
 
         self._handle_generated_sources(
             itertools.chain.from_iterable(
                 (
-                    mozpath.join(include_dir, "%s.h" % stem),
-                    mozpath.join(bindings_rt_dir, "%s.rs" % stem),
-                    mozpath.join(bindings_bt_dir, "%s.rs" % stem),
+                    mozpath.join(include_dir, '%s.h' % stem),
+                    mozpath.join(bindings_rt_dir, '%s.rs' % stem),
+                    mozpath.join(bindings_bt_dir, '%s.rs' % stem),
                 )
                 for stem in self._idl_manager.idl_stems()
             )
@@ -360,7 +347,7 @@ class CommonBackend(BuildBackend):
 
     def _handle_webidl_collection(self, webidls):
 
-        bindings_dir = mozpath.join(self.environment.topobjdir, "dom", "bindings")
+        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom', 'bindings')
 
         all_inputs = set(webidls.all_static_sources())
         for s in webidls.all_non_static_basenames():
@@ -378,7 +365,7 @@ class CommonBackend(BuildBackend):
             example_interfaces=sorted(webidls.example_interfaces),
         )
 
-        file_lists = mozpath.join(bindings_dir, "file-lists.json")
+        file_lists = mozpath.join(bindings_dir, 'file-lists.json')
         with self._write_file(file_lists) as fh:
             json.dump(o, fh, sort_keys=True, indent=2)
 
@@ -387,22 +374,19 @@ class CommonBackend(BuildBackend):
         manager = mozwebidlcodegen.create_build_system_manager(
             self.environment.topsrcdir,
             self.environment.topobjdir,
-            mozpath.join(self.environment.topobjdir, "dist"),
+            mozpath.join(self.environment.topobjdir, 'dist')
         )
         self._handle_generated_sources(manager.expected_build_output_files())
-        self._write_unified_files(
-            webidls.unified_source_mapping, bindings_dir, poison_windows_h=True
-        )
-        self._handle_webidl_build(
-            bindings_dir,
-            webidls.unified_source_mapping,
-            webidls,
-            manager.expected_build_output_files(),
-            manager.GLOBAL_DEFINE_FILES,
-        )
+        self._write_unified_files(webidls.unified_source_mapping, bindings_dir,
+                                  poison_windows_h=True)
+        self._handle_webidl_build(bindings_dir, webidls.unified_source_mapping,
+                                  webidls,
+                                  manager.expected_build_output_files(),
+                                  manager.GLOBAL_DEFINE_FILES)
 
     def _handle_xpcom_collection(self, manifests):
-        components_dir = mozpath.join(manifests.topobjdir, "xpcom", "components")
+        components_dir = mozpath.join(manifests.topobjdir,
+                                      'xpcom', 'components')
 
         # The code generators read their configuration from this file, so it
         # needs to be written early.
@@ -410,67 +394,59 @@ class CommonBackend(BuildBackend):
             manifests=sorted(manifests.all_sources()),
         )
 
-        conf_file = mozpath.join(components_dir, "manifest-lists.json")
+        conf_file = mozpath.join(components_dir, 'manifest-lists.json')
         with self._write_file(conf_file) as fh:
             json.dump(o, fh, sort_keys=True, indent=2)
 
-    def _write_unified_file(
-        self, unified_file, source_filenames, output_directory, poison_windows_h=False
-    ):
+    def _write_unified_file(self, unified_file, source_filenames,
+                            output_directory, poison_windows_h=False):
         with self._write_file(mozpath.join(output_directory, unified_file)) as f:
-            f.write("#define MOZ_UNIFIED_BUILD\n")
+            f.write('#define MOZ_UNIFIED_BUILD\n')
             includeTemplate = '#include "%(cppfile)s"'
             if poison_windows_h:
                 includeTemplate += (
-                    "\n"
-                    "#if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)\n"
+                    '\n'
+                    '#if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)\n'
                     '#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)\n'  # noqa
                     '#error "%(cppfile)s included unwrapped windows.h"\n'
-                    "#endif"
-                )
+                    "#endif")
             includeTemplate += (
-                "\n"
-                "#ifdef PL_ARENA_CONST_ALIGN_MASK\n"
+                '\n'
+                '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
                 '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
                 'so it cannot be built in unified mode."\n'
-                "#undef PL_ARENA_CONST_ALIGN_MASK\n"
-                "#endif\n"
-                "#ifdef INITGUID\n"
+                '#undef PL_ARENA_CONST_ALIGN_MASK\n'
+                '#endif\n'
+                '#ifdef INITGUID\n'
                 '#error "%(cppfile)s defines INITGUID, '
                 'so it cannot be built in unified mode."\n'
-                "#undef INITGUID\n"
-                "#endif"
-            )
-            f.write(
-                "\n".join(includeTemplate % {"cppfile": s} for s in source_filenames)
-            )
+                '#undef INITGUID\n'
+                '#endif')
+            f.write('\n'.join(includeTemplate % {"cppfile": s} for
+                              s in source_filenames))
 
-    def _write_unified_files(
-        self, unified_source_mapping, output_directory, poison_windows_h=False
-    ):
+    def _write_unified_files(self, unified_source_mapping, output_directory,
+                             poison_windows_h=False):
         for unified_file, source_filenames in unified_source_mapping:
-            self._write_unified_file(
-                unified_file, source_filenames, output_directory, poison_windows_h
-            )
+            self._write_unified_file(unified_file, source_filenames,
+                                     output_directory, poison_windows_h)
 
     def localized_path(self, relativesrcdir, filename):
-        """Return the localized path for a file.
+        '''Return the localized path for a file.
 
         Given ``relativesrcdir``, a path relative to the topsrcdir, return a path to ``filename``
         from the current locale as specified by ``MOZ_UI_LOCALE``, using ``L10NBASEDIR`` as the
         parent directory for non-en-US locales.
-        """
-        ab_cd = self.environment.substs["MOZ_UI_LOCALE"][0]
-        l10nbase = mozpath.join(self.environment.substs["L10NBASEDIR"], ab_cd)
+        '''
+        ab_cd = self.environment.substs['MOZ_UI_LOCALE'][0]
+        l10nbase = mozpath.join(self.environment.substs['L10NBASEDIR'], ab_cd)
         # Filenames from LOCALIZED_FILES will start with en-US/.
-        if filename.startswith("en-US/"):
-            e, filename = filename.split("en-US/")
-            assert not e
-        if ab_cd == "en-US":
-            return mozpath.join(
-                self.environment.topsrcdir, relativesrcdir, "en-US", filename
-            )
-        if mozpath.basename(relativesrcdir) == "locales":
+        if filename.startswith('en-US/'):
+            e, filename = filename.split('en-US/')
+            assert(not e)
+        if ab_cd == 'en-US':
+            return mozpath.join(self.environment.topsrcdir, relativesrcdir, 'en-US', filename)
+        if mozpath.basename(relativesrcdir) == 'locales':
             l10nrelsrcdir = mozpath.dirname(relativesrcdir)
         else:
             l10nrelsrcdir = relativesrcdir
@@ -489,7 +465,7 @@ class CommonBackend(BuildBackend):
         if obj.defines:
             pp.context.update(obj.defines.defines)
         pp.context.update(self.environment.defines)
-        ab_cd = obj.config.substs["MOZ_UI_LOCALE"][0]
+        ab_cd = obj.config.substs['MOZ_UI_LOCALE'][0]
         pp.context.update(
             AB_CD=ab_cd,
         )
@@ -497,70 +473,63 @@ class CommonBackend(BuildBackend):
         try:
             pp.do_include(obj.path.full_path)
         except DeprecatedJarManifest as e:
-            raise DeprecatedJarManifest(
-                "Parsing error while processing %s: %s"
-                % (obj.path.full_path, e.message)
-            )
+            raise DeprecatedJarManifest('Parsing error while processing %s: %s'
+                                        % (obj.path.full_path, e.message))
         self.backend_input_files |= pp.includes
 
         for jarinfo in pp.out:
             jar_context = Context(
-                allowed_variables=VARIABLES, config=obj._context.config
-            )
+                allowed_variables=VARIABLES, config=obj._context.config)
             jar_context.push_source(obj._context.main_path)
             jar_context.push_source(obj.path.full_path)
 
             install_target = obj.install_target
             if jarinfo.base:
                 install_target = mozpath.normpath(
-                    mozpath.join(install_target, jarinfo.base)
-                )
-            jar_context["FINAL_TARGET"] = install_target
+                    mozpath.join(install_target, jarinfo.base))
+            jar_context['FINAL_TARGET'] = install_target
             if obj.defines:
-                jar_context["DEFINES"] = obj.defines.defines
-            files = jar_context["FINAL_TARGET_FILES"]
-            files_pp = jar_context["FINAL_TARGET_PP_FILES"]
-            localized_files = jar_context["LOCALIZED_FILES"]
-            localized_files_pp = jar_context["LOCALIZED_PP_FILES"]
+                jar_context['DEFINES'] = obj.defines.defines
+            files = jar_context['FINAL_TARGET_FILES']
+            files_pp = jar_context['FINAL_TARGET_PP_FILES']
+            localized_files = jar_context['LOCALIZED_FILES']
+            localized_files_pp = jar_context['LOCALIZED_PP_FILES']
 
             for e in jarinfo.entries:
                 if e.is_locale:
                     if jarinfo.relativesrcdir:
-                        src = "/%s" % jarinfo.relativesrcdir
+                        src = '/%s' % jarinfo.relativesrcdir
                     else:
-                        src = ""
-                    src = mozpath.join(src, "en-US", e.source)
+                        src = ''
+                    src = mozpath.join(src, 'en-US', e.source)
                 else:
                     src = e.source
 
                 src = Path(jar_context, src)
 
-                if "*" not in e.source and not os.path.exists(src.full_path):
+                if '*' not in e.source and not os.path.exists(src.full_path):
                     if e.is_locale:
                         raise Exception(
-                            "%s: Cannot find %s (tried %s)"
-                            % (obj.path, e.source, src.full_path)
-                        )
-                    if e.source.startswith("/"):
-                        src = Path(jar_context, "!" + e.source)
+                            '%s: Cannot find %s (tried %s)' % (obj.path, e.source, src.full_path))
+                    if e.source.startswith('/'):
+                        src = Path(jar_context, '!' + e.source)
                     else:
                         # This actually gets awkward if the jar.mn is not
                         # in the same directory as the moz.build declaring
                         # it, but it's how it works in the recursive make,
                         # not that anything relies on that, but it's simpler.
-                        src = Path(obj._context, "!" + e.source)
+                        src = Path(obj._context, '!' + e.source)
 
                 output_basename = mozpath.basename(e.output)
                 if output_basename != src.target_basename:
-                    src = RenamedSourcePath(jar_context, (src, output_basename))
+                    src = RenamedSourcePath(jar_context,
+                                            (src, output_basename))
                 path = mozpath.dirname(mozpath.join(jarinfo.name, e.output))
 
                 if e.preprocess:
-                    if "*" in e.source:
-                        raise Exception(
-                            "%s: Wildcards are not supported with "
-                            "preprocessing" % obj.path
-                        )
+                    if '*' in e.source:
+                        raise Exception('%s: Wildcards are not supported with '
+                                        'preprocessing' % obj.path)
                     if e.is_locale:
                         localized_files_pp[path] += [src]
                     else:
@@ -574,47 +543,37 @@ class CommonBackend(BuildBackend):
             if files:
                 self.consume_object(FinalTargetFiles(jar_context, files))
             if files_pp:
-                self.consume_object(FinalTargetPreprocessedFiles(jar_context, files_pp))
+                self.consume_object(
+                    FinalTargetPreprocessedFiles(jar_context, files_pp))
             if localized_files:
                 self.consume_object(LocalizedFiles(jar_context, localized_files))
             if localized_files_pp:
                 self.consume_object(
-                    LocalizedPreprocessedFiles(jar_context, localized_files_pp)
-                )
+                    LocalizedPreprocessedFiles(jar_context, localized_files_pp))
 
             for m in jarinfo.chrome_manifests:
                 entry = parse_manifest_line(
                     mozpath.dirname(jarinfo.name),
-                    m.replace("%", mozpath.basename(jarinfo.name) + "/"),
-                )
-                self.consume_object(
-                    ChromeManifestEntry(
-                        jar_context, "%s.manifest" % jarinfo.name, entry
-                    )
-                )
+                    m.replace('%', mozpath.basename(jarinfo.name) + '/'))
+                self.consume_object(ChromeManifestEntry(
+                    jar_context, '%s.manifest' % jarinfo.name, entry))
 
     def _write_rust_xpidl_summary(self, manager):
         """Write out a rust file which includes the generated xpcom rust modules"""
         topobjdir = self.environment.topobjdir
 
-        include_tmpl = (
-            'include!(concat!(env!("MOZ_TOPOBJDIR"), "/dist/xpcrs/%s/%s.rs"))'
-        )
+        include_tmpl = "include!(concat!(env!(\"MOZ_TOPOBJDIR\"), \"/dist/xpcrs/%s/%s.rs\"))"
 
         # Ensure deterministic output files.
         stems = sorted(manager.idl_stems())
 
-        with self._write_file(
-            mozpath.join(topobjdir, "dist", "xpcrs", "rt", "all.rs")
-        ) as fh:
+        with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'rt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
             for stem in stems:
                 fh.write(include_tmpl % ("rt", stem))
                 fh.write(";\n")
 
-        with self._write_file(
-            mozpath.join(topobjdir, "dist", "xpcrs", "bt", "all.rs")
-        ) as fh:
+        with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'bt', 'all.rs')) as fh:
             fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
             fh.write("&[\n")
             for stem in stems:

@@ -11,24 +11,25 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestSafeBrowsingWarningPages, self).setUp()
 
         self.urls = [
             # Unwanted software URL
-            "https://www.itisatrap.org/firefox/unwanted.html",
+            'https://www.itisatrap.org/firefox/unwanted.html',
             # Phishing URL
-            "https://www.itisatrap.org/firefox/its-a-trap.html",
+            'https://www.itisatrap.org/firefox/its-a-trap.html',
             # Malware URL
-            "https://www.itisatrap.org/firefox/its-an-attack.html",
+            'https://www.itisatrap.org/firefox/its-an-attack.html'
         ]
 
-        self.default_homepage = self.marionette.get_pref("browser.startup.homepage")
+        self.default_homepage = self.marionette.get_pref('browser.startup.homepage')
         self.support_page = self.marionette.absolute_url("support.html?topic=")
 
-        self.marionette.set_pref("app.support.baseURL", self.support_page)
-        self.marionette.set_pref("browser.safebrowsing.phishing.enabled", True)
-        self.marionette.set_pref("browser.safebrowsing.malware.enabled", True)
+        self.marionette.set_pref('app.support.baseURL', self.support_page)
+        self.marionette.set_pref('browser.safebrowsing.phishing.enabled', True)
+        self.marionette.set_pref('browser.safebrowsing.malware.enabled', True)
 
         # Give the browser a little time, because SafeBrowsing.jsm takes a
         # while between start up and adding the example urls to the db.
@@ -41,11 +42,11 @@ class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:
-            self.marionette.clear_pref("app.support.baseURL")
-            self.marionette.clear_pref("browser.safebrowsing.malware.enabled")
-            self.marionette.clear_pref("browser.safebrowsing.phishing.enabled")
+            self.marionette.clear_pref('app.support.baseURL')
+            self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
+            self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
 
-            self.remove_permission("https://www.itisatrap.org", "safe-browsing")
+            self.remove_permission('https://www.itisatrap.org', 'safe-browsing')
             self.close_all_tabs()
         finally:
             super(TestSafeBrowsingWarningPages, self).tearDown()
@@ -75,37 +76,31 @@ class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
         return self.marionette.get_url()
 
     def remove_permission(self, host, permission):
-        with self.marionette.using_context("chrome"):
-            self.marionette.execute_script(
-                """
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
               let uri = Services.io.newURI(arguments[0], null, null);
               let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
               Services.perms.removeFromPrincipal(principal, arguments[1]);
-            """,
-                script_args=[host, permission],
-            )
+            """, script_args=[host, permission])
 
     def check_get_me_out_of_here_button(self, unsafe_page):
         button = self.marionette.find_element(By.ID, "goBackButton")
         button.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            lambda mn: self.default_homepage in mn.get_url()
-        )
+            lambda mn: self.default_homepage in mn.get_url())
 
     def check_report_link(self, unsafe_page):
         # Get the URL of the support site for phishing and malware. This may result in a redirect.
-        with self.marionette.using_context("chrome"):
-            url = self.marionette.execute_script(
-                """
+        with self.marionette.using_context('chrome'):
+            url = self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
               return Services.urlFormatter.formatURLPref("app.support.baseURL")
                                                          + "phishing-malware";
-            """
-            )
+            """)
 
-        button = self.marionette.find_element(By.ID, "seeDetailsButton")
+        button = self.marionette.find_element(By.ID, 'seeDetailsButton')
         button.click()
         link = self.marionette.find_element(By.ID, "firefox_support")
         link.click()
@@ -113,30 +108,28 @@ class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
         # Wait for the button to become stale, whereby a longer timeout is needed
         # here to not fail in case of slow connections.
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            expected.element_stale(button)
-        )
+            expected.element_stale(button))
 
         # Wait for page load to be completed, so we can verify the URL even if a redirect happens.
         # TODO: Bug 1140470: use replacement for mozmill's waitforPageLoad
         expected_url = self.get_final_url(url)
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: expected_url == mn.get_url(),
-            message="The expected URL '{}' has not been loaded".format(expected_url),
+            message="The expected URL '{}' has not been loaded".format(expected_url)
         )
 
         topic = self.marionette.find_element(By.ID, "topic")
         self.assertEquals(topic.text, "phishing-malware")
 
     def check_ignore_warning_button(self, unsafe_page):
-        button = self.marionette.find_element(By.ID, "seeDetailsButton")
+        button = self.marionette.find_element(By.ID, 'seeDetailsButton')
         button.click()
-        link = self.marionette.find_element(By.ID, "ignore_warning_link")
+        link = self.marionette.find_element(By.ID, 'ignore_warning_link')
         link.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            expected.element_present(By.ID, "main-feature")
-        )
+            expected.element_present(By.ID, 'main-feature'))
         self.assertEquals(self.marionette.get_url(), self.get_final_url(unsafe_page))
 
         # Clean up by removing safe browsing permission for unsafe page
-        self.remove_permission("https://www.itisatrap.org", "safe-browsing")
+        self.remove_permission('https://www.itisatrap.org', 'safe-browsing')

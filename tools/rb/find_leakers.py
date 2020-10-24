@@ -17,49 +17,44 @@ import six
 
 
 def print_output(allocation, obj_to_class):
-    """Formats and prints output."""
+    '''Formats and prints output.'''
     items = []
-    for (
-        obj,
-        count,
-    ) in six.iteritems(allocation):
+    for obj, count, in six.iteritems(allocation):
         # Adding items to a list, so we can sort them.
         items.append((obj, count))
     # Sorting by count.
     items.sort(key=lambda item: item[1])
 
-    for (
-        obj,
-        count,
-    ) in items:
-        print(
-            "{obj} ({count}) @ {class_name}".format(
-                obj=obj, count=count, class_name=obj_to_class[obj]
-            )
-        )
+    for obj, count, in items:
+        print("{obj} ({count}) @ {class_name}".format(obj=obj,
+                                                      count=count,
+                                                      class_name=obj_to_class[obj]))
 
 
 def process_log(log_lines):
-    """Process through the log lines, and print out the result.
+    '''Process through the log lines, and print out the result.
 
     @param log_lines: List of strings.
-    """
+    '''
     allocation = {}
     class_count = {}
     obj_to_class = {}
 
     for log_line in log_lines:
-        if not log_line.startswith("<"):
+        if not log_line.startswith('<'):
             continue
 
-        (class_name, obj, ignore, operation, count,) = log_line.strip("\r\n").split(
-            " "
-        )[:5]
+        (class_name,
+         obj,
+         ignore,
+         operation,
+         count,) = log_line.strip('\r\n').split(' ')[:5]
 
         # for AddRef/Release `count' is the refcount,
         # for Ctor/Dtor it's the size.
 
-        if (operation == "AddRef" and count == "1") or operation == "Ctor":
+        if ((operation == 'AddRef' and count == '1') or
+                operation == 'Ctor'):
             # Examples:
             #     <nsStringBuffer> 0x01AFD3B8 1 AddRef 1
             #     <PStreamNotifyParent> 0x08880BD0 8 Ctor (20)
@@ -67,14 +62,13 @@ def process_log(log_lines):
             allocation[obj] = class_count[class_name]
             obj_to_class[obj] = class_name
 
-        elif (operation == "Release" and count == "0") or operation == "Dtor":
+        elif ((operation == 'Release' and count == '0') or
+              operation == 'Dtor'):
             # Examples:
             #     <nsStringBuffer> 0x01AFD3B8 1 Release 0
             #     <PStreamNotifyParent> 0x08880BD0 8 Dtor (20)
             if obj not in allocation:
-                print(
-                    "An object was released that wasn't allocated!",
-                )
+                print("An object was released that wasn't allocated!",)
                 print(obj, "@", class_name)
             else:
                 allocation.pop(obj)
@@ -85,28 +79,28 @@ def process_log(log_lines):
 
 
 def print_usage():
-    print("")
+    print('')
     print("Usage: find-leakers.py [log-file]")
-    print("")
+    print('')
     print("If `log-file' provided, it will read that as the input log.")
     print("Else, it will read the stdin as the input log.")
-    print("")
+    print('')
 
 
 def main():
-    """Main method of the script."""
+    '''Main method of the script.'''
     if len(sys.argv) == 1:
         # Reading log from stdin.
         process_log(sys.stdin.readlines())
     elif len(sys.argv) == 2:
         # Reading log from file.
-        with open(sys.argv[1], "r") as log_file:
+        with open(sys.argv[1], 'r') as log_file:
             log_lines = log_file.readlines()
         process_log(log_lines)
     else:
-        print("ERROR: Invalid number of arguments")
+        print('ERROR: Invalid number of arguments')
         print_usage()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

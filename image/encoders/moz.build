@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "ico",
-    "png",
-    "jpeg",
-    "bmp",
+    'ico',
+    'png',
+    'jpeg',
+    'bmp',
 ]

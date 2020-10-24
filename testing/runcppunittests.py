@@ -20,7 +20,7 @@ import mozrunner.utils
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
 # Export directory js/src for tests that need it.
-env["CPP_UNIT_TESTS_DIR_JS_SRC"] = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
+env['CPP_UNIT_TESTS_DIR_JS_SRC'] = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 
 
 class CPPUnitTests(object):
@@ -29,9 +29,8 @@ class CPPUnitTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_one_test(
-        self, prog, env, symbols_path=None, interactive=False, timeout_factor=1
-    ):
+    def run_one_test(self, prog, env, symbols_path=None, interactive=False,
+                     timeout_factor=1):
         """
         Run a single C++ unit test program.
 
@@ -49,29 +48,23 @@ class CPPUnitTests(object):
         with mozfile.TemporaryDirectory() as tempdir:
             if interactive:
                 # For tests run locally, via mach, print output directly
-                proc = mozprocess.ProcessHandler(
-                    [prog],
-                    cwd=tempdir,
-                    env=env,
-                    storeOutput=False,
-                    universal_newlines=True,
-                )
+                proc = mozprocess.ProcessHandler([prog],
+                                                 cwd=tempdir,
+                                                 env=env,
+                                                 storeOutput=False,
+                                                 universal_newlines=True)
             else:
-                proc = mozprocess.ProcessHandler(
-                    [prog],
-                    cwd=tempdir,
-                    env=env,
-                    storeOutput=True,
-                    processOutputLine=lambda _: None,
-                    universal_newlines=True,
-                )
+                proc = mozprocess.ProcessHandler([prog],
+                                                 cwd=tempdir,
+                                                 env=env,
+                                                 storeOutput=True,
+                                                 processOutputLine=lambda _: None,
+                                                 universal_newlines=True)
             # TODO: After bug 811320 is fixed, don't let .run() kill the process,
             # instead use a timeout in .wait() and then kill to get a stack.
             test_timeout = CPPUnitTests.TEST_PROC_TIMEOUT * timeout_factor
-            proc.run(
-                timeout=test_timeout,
-                outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
-            )
+            proc.run(timeout=test_timeout,
+                     outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             proc.wait()
             if proc.output:
                 if self.fix_stack:
@@ -83,23 +76,20 @@ class CPPUnitTests(object):
                 self.log.process_output(proc.pid, output, command=[prog])
             if proc.timedOut:
                 message = "timed out after %d seconds" % CPPUnitTests.TEST_PROC_TIMEOUT
-                self.log.test_end(
-                    basename, status="TIMEOUT", expected="PASS", message=message
-                )
+                self.log.test_end(basename, status='TIMEOUT', expected='PASS',
+                                  message=message)
                 return False
-            if mozcrash.check_for_crashes(tempdir, symbols_path, test_name=basename):
-                self.log.test_end(basename, status="CRASH", expected="PASS")
+            if mozcrash.check_for_crashes(tempdir, symbols_path,
+                                          test_name=basename):
+                self.log.test_end(basename, status='CRASH', expected='PASS')
                 return False
             result = proc.proc.returncode == 0
             if not result:
-                self.log.test_end(
-                    basename,
-                    status="FAIL",
-                    expected="PASS",
-                    message=("test failed with return code %d" % proc.proc.returncode),
-                )
+                self.log.test_end(basename, status='FAIL', expected='PASS',
+                                  message=("test failed with return code %d" %
+                                           proc.proc.returncode))
             else:
-                self.log.test_end(basename, status="PASS", expected="PASS")
+                self.log.test_end(basename, status='PASS', expected='PASS')
             return result
 
     def build_core_environment(self, env, enable_webrender):
@@ -114,10 +104,10 @@ class CPPUnitTests(object):
         env["MOZ_CRASHREPORTER"] = "1"
 
         if enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-            env["MOZ_ACCELERATED"] = "1"
+            env['MOZ_WEBRENDER'] = '1'
+            env['MOZ_ACCELERATED'] = '1'
         else:
-            env["MOZ_WEBRENDER"] = "0"
+            env['MOZ_WEBRENDER'] = '0'
 
         return env
 
@@ -136,7 +126,7 @@ class CPPUnitTests(object):
         if mozinfo.os == "linux":
             pathvar = "LD_LIBRARY_PATH"
         elif mozinfo.os == "mac":
-            applibpath = os.path.join(os.path.dirname(libpath), "MacOS")
+            applibpath = os.path.join(os.path.dirname(libpath), 'MacOS')
             if os.path.exists(applibpath):
                 # Set the library load path to Contents/MacOS if we're run from
                 # the app bundle.
@@ -153,8 +143,8 @@ class CPPUnitTests(object):
         if mozinfo.info["asan"]:
             # Use llvm-symbolizer for ASan if available/required
             llvmsym = os.path.join(
-                self.xre_path, "llvm-symbolizer" + mozinfo.info["bin_suffix"]
-            )
+                self.xre_path,
+                "llvm-symbolizer" + mozinfo.info["bin_suffix"])
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 self.log.info("ASan using symbolizer at %s" % llvmsym)
@@ -163,20 +153,13 @@ class CPPUnitTests(object):
 
             # dom/media/webrtc/transport tests statically link in NSS, which
             # causes ODR violations. See bug 1215679.
-            assert "ASAN_OPTIONS" not in env
-            env["ASAN_OPTIONS"] = "detect_leaks=0:detect_odr_violation=0"
+            assert 'ASAN_OPTIONS' not in env
+            env['ASAN_OPTIONS'] = 'detect_leaks=0:detect_odr_violation=0'
 
         return env
 
-    def run_tests(
-        self,
-        programs,
-        xre_path,
-        symbols_path=None,
-        utility_path=None,
-        enable_webrender=False,
-        interactive=False,
-    ):
+    def run_tests(self, programs, xre_path, symbols_path=None,
+                  utility_path=None, enable_webrender=False, interactive=False):
         """
         Run a set of C++ unit test programs.
 
@@ -195,18 +178,16 @@ class CPPUnitTests(object):
         self.log = mozlog.get_default_logger()
         if utility_path:
             self.fix_stack = mozrunner.utils.get_stack_fixer_function(
-                utility_path, symbols_path
-            )
-        self.log.suite_start(programs, name="cppunittest")
+                utility_path, symbols_path)
+        self.log.suite_start(programs, name='cppunittest')
         env = self.build_environment(enable_webrender)
         pass_count = 0
         fail_count = 0
         for prog in programs:
             test_path = prog[0]
             timeout_factor = prog[1]
-            single_result = self.run_one_test(
-                test_path, env, symbols_path, interactive, timeout_factor
-            )
+            single_result = self.run_one_test(test_path, env, symbols_path,
+                                              interactive, timeout_factor)
             if single_result:
                 pass_count += 1
             else:
@@ -223,46 +204,27 @@ class CPPUnitTests(object):
 class CPPUnittestOptions(OptionParser):
     def __init__(self):
         OptionParser.__init__(self)
-        self.add_option(
-            "--xre-path",
-            action="store",
-            type="string",
-            dest="xre_path",
-            default=None,
-            help="absolute path to directory containing XRE (probably xulrunner)",
-        )
-        self.add_option(
-            "--symbols-path",
-            action="store",
-            type="string",
-            dest="symbols_path",
-            default=None,
-            help="absolute path to directory containing breakpad symbols, or "
-            "the URL of a zip file containing symbols",
-        )
-        self.add_option(
-            "--manifest-path",
-            action="store",
-            type="string",
-            dest="manifest_path",
-            default=None,
-            help="path to test manifest, if different from the path to test binaries",
-        )
-        self.add_option(
-            "--utility-path",
-            action="store",
-            type="string",
-            dest="utility_path",
-            default=None,
-            help="path to directory containing utility programs",
-        )
-        self.add_option(
-            "--enable-webrender",
-            action="store_true",
-            dest="enable_webrender",
-            default=False,
-            help="Enable the WebRender compositor in Gecko",
-        )
+        self.add_option("--xre-path",
+                        action="store", type="string", dest="xre_path",
+                        default=None,
+                        help="absolute path to directory containing XRE (probably xulrunner)")
+        self.add_option("--symbols-path",
+                        action="store", type="string", dest="symbols_path",
+                        default=None,
+                        help="absolute path to directory containing breakpad symbols, or "
+                        "the URL of a zip file containing symbols")
+        self.add_option("--manifest-path",
+                        action="store", type="string", dest="manifest_path",
+                        default=None,
+                        help="path to test manifest, if different from the path to test binaries")
+        self.add_option("--utility-path",
+                        action="store", type="string", dest="utility_path",
+                        default=None,
+                        help="path to directory containing utility programs")
+        self.add_option("--enable-webrender",
+                        action="store_true", dest="enable_webrender",
+                        default=False,
+                        help="Enable the WebRender compositor in Gecko")
 
 
 def extract_unittests_from_args(args, environ, manifest_path):
@@ -278,36 +240,29 @@ def extract_unittests_from_args(args, environ, manifest_path):
         for p in args:
             if os.path.isdir(p):
                 try:
-                    mp.read(os.path.join(p, "cppunittest.ini"))
+                    mp.read(os.path.join(p, 'cppunittest.ini'))
                 except IOError:
                     files = [os.path.abspath(os.path.join(p, x)) for x in os.listdir(p)]
-                    tests.extend(
-                        (f, 1) for f in files if os.access(f, os.R_OK | os.X_OK)
-                    )
+                    tests.extend((f, 1) for f in files
+                                 if os.access(f, os.R_OK | os.X_OK))
             else:
                 tests.append((os.path.abspath(p), 1))
 
     # we skip the existence check here because not all tests are built
     # for all platforms (and it will fail on Windows anyway)
     active_tests = mp.active_tests(exists=False, disabled=False, **environ)
-    suffix = ".exe" if mozinfo.isWin else ""
+    suffix = '.exe' if mozinfo.isWin else ''
     if binary_path:
-        tests.extend(
-            [
-                (
-                    os.path.join(binary_path, test["relpath"] + suffix),
-                    int(test.get("requesttimeoutfactor", 1)),
-                )
-                for test in active_tests
-            ]
-        )
+        tests.extend([
+            (os.path.join(binary_path, test['relpath'] + suffix),
+             int(test.get('requesttimeoutfactor', 1)))
+            for test in active_tests])
     else:
-        tests.extend(
-            [
-                (test["path"] + suffix, int(test.get("requesttimeoutfactor", 1)))
-                for test in active_tests
-            ]
-        )
+        tests.extend([
+            (test['path'] + suffix,
+             int(test.get('requesttimeoutfactor', 1)))
+            for test in active_tests
+        ])
 
     # skip and warn for any tests in the manifest that are not found
     final_tests = []
@@ -325,7 +280,7 @@ def update_mozinfo():
     """walk up directories to find mozinfo.json update the info"""
     path = SCRIPT_DIR
     dirs = set()
-    while path != os.path.expanduser("~"):
+    while path != os.path.expanduser('~'):
         if path in dirs:
             break
         dirs.add(path)
@@ -339,13 +294,8 @@ def run_test_harness(options, args):
     options.xre_path = os.path.abspath(options.xre_path)
     options.utility_path = os.path.abspath(options.utility_path)
     tester = CPPUnitTests()
-    result = tester.run_tests(
-        progs,
-        options.xre_path,
-        options.symbols_path,
-        options.utility_path,
-        options.enable_webrender,
-    )
+    result = tester.run_tests(progs, options.xre_path, options.symbols_path,
+                              options.utility_path, options.enable_webrender)
 
     return result
 
@@ -355,23 +305,16 @@ def main():
     mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
-        print(
-            """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0],
-            file=sys.stderr,
-        )
+        print("""Usage: %s <test binary> [<test binary>...]""" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     if not options.xre_path:
         print("""Error: --xre-path is required""", file=sys.stderr)
         sys.exit(1)
     if options.manifest_path and len(args) > 1:
-        print(
-            "Error: multiple arguments not supported with --test-manifest",
-            file=sys.stderr,
-        )
+        print("Error: multiple arguments not supported with --test-manifest", file=sys.stderr)
         sys.exit(1)
-    log = mozlog.commandline.setup_logging(
-        "cppunittests", options, {"tbpl": sys.stdout}
-    )
+    log = mozlog.commandline.setup_logging("cppunittests", options,
+                                           {"tbpl": sys.stdout})
     try:
         result = run_test_harness(options, args)
     except Exception as e:
@@ -381,5 +324,5 @@ def main():
     sys.exit(0 if result else 1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

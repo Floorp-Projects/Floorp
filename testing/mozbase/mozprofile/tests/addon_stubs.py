@@ -13,16 +13,15 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 # stubs is a dict of the form {'addon id': 'install manifest content'}
 stubs = {
-    "test-addon-1@mozilla.org": "test_addon_1.rdf",
-    "test-addon-2@mozilla.org": "test_addon_2.rdf",
-    "test-addon-3@mozilla.org": "test_addon_3.rdf",
-    "test-addon-4@mozilla.org": "test_addon_4.rdf",
-    "test-addon-invalid-no-id@mozilla.org": "test_addon_invalid_no_id.rdf",
-    "test-addon-invalid-version@mozilla.org": "test_addon_invalid_version.rdf",
-    "test-addon-invalid-no-manifest@mozilla.org": None,
-    "test-addon-invalid-not-wellformed@mozilla.org": "test_addon_invalid_not_wellformed.rdf",
-    "test-addon-unpack@mozilla.org": "test_addon_unpack.rdf",
-}
+    'test-addon-1@mozilla.org': 'test_addon_1.rdf',
+    'test-addon-2@mozilla.org': 'test_addon_2.rdf',
+    'test-addon-3@mozilla.org': 'test_addon_3.rdf',
+    'test-addon-4@mozilla.org': 'test_addon_4.rdf',
+    'test-addon-invalid-no-id@mozilla.org': 'test_addon_invalid_no_id.rdf',
+    'test-addon-invalid-version@mozilla.org': 'test_addon_invalid_version.rdf',
+    'test-addon-invalid-no-manifest@mozilla.org': None,
+    'test-addon-invalid-not-wellformed@mozilla.org': 'test_addon_invalid_not_wellformed.rdf',
+    'test-addon-unpack@mozilla.org': 'test_addon_unpack.rdf'}
 
 
 def generate_addon(addon_id, path=None, name=None, xpi=True):
@@ -46,22 +45,22 @@ def generate_addon(addon_id, path=None, name=None, xpi=True):
         addon_dir = os.path.join(tmpdir, name or addon_id)
         os.mkdir(addon_dir)
     except IOError:
-        raise IOError("Could not generate directory structure for addon stub.")
+        raise IOError('Could not generate directory structure for addon stub.')
 
     # Write install.rdf for addon
     if stubs[addon_id]:
-        install_rdf = os.path.join(addon_dir, "install.rdf")
-        with open(install_rdf, "w") as f:
-            manifest = os.path.join(here, "install_manifests", stubs[addon_id])
-            f.write(open(manifest, "r").read())
+        install_rdf = os.path.join(addon_dir, 'install.rdf')
+        with open(install_rdf, 'w') as f:
+            manifest = os.path.join(here, 'install_manifests', stubs[addon_id])
+            f.write(open(manifest, 'r').read())
 
     if not xpi:
         return addon_dir
 
     # Generate the .xpi for the addon
-    xpi_file = os.path.join(tmpdir, (name or addon_id) + ".xpi")
-    with zipfile.ZipFile(xpi_file, "w") as x:
-        x.write(install_rdf, install_rdf[len(addon_dir) :])
+    xpi_file = os.path.join(tmpdir, (name or addon_id) + '.xpi')
+    with zipfile.ZipFile(xpi_file, 'w') as x:
+        x.write(install_rdf, install_rdf[len(addon_dir):])
 
     # Ensure we remove the temporary folder to not install the addon twice
     mozfile.rmtree(addon_dir)

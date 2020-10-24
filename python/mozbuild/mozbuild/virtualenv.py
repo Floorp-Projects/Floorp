@@ -13,24 +13,24 @@ import shutil
 import subprocess
 import sys
 
-IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
-IS_CYGWIN = sys.platform == "cygwin"
+IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
+IS_CYGWIN = (sys.platform == 'cygwin')
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-UPGRADE_WINDOWS = """
+UPGRADE_WINDOWS = '''
 Please upgrade to the latest MozillaBuild development environment. See
 https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites
-""".lstrip()
+'''.lstrip()
 
-UPGRADE_OTHER = """
+UPGRADE_OTHER = '''
 Run |mach bootstrap| to ensure your system is up to date.
 
 If you still receive this error, your shell environment is likely detecting
 another Python version. Ensure a modern Python can be found in the paths
 defined by the $PATH environment variable and try again.
-""".lstrip()
+'''.lstrip()
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -46,18 +46,18 @@ else:
     binary_type = str
 
 
-def ensure_binary(s, encoding="utf-8"):
+def ensure_binary(s, encoding='utf-8'):
     if isinstance(s, text_type):
-        return s.encode(encoding, errors="strict")
+        return s.encode(encoding, errors='strict')
     elif isinstance(s, binary_type):
         return s
     else:
         raise TypeError("not expecting type '%s'" % type(s))
 
 
-def ensure_text(s, encoding="utf-8"):
+def ensure_text(s, encoding='utf-8'):
     if isinstance(s, binary_type):
-        return s.decode(encoding, errors="strict")
+        return s.decode(encoding, errors='strict')
     elif isinstance(s, text_type):
         return s
     else:
@@ -77,15 +77,15 @@ class VirtualenvHelper(object):
         # import virtualenv. The functionality is trivial, so just implement
         # it here.
         if IS_CYGWIN or IS_NATIVE_WIN:
-            return os.path.join(self.virtualenv_root, "Scripts")
+            return os.path.join(self.virtualenv_root, 'Scripts')
 
-        return os.path.join(self.virtualenv_root, "bin")
+        return os.path.join(self.virtualenv_root, 'bin')
 
     @property
     def python_path(self):
-        binary = "python"
-        if sys.platform in ("win32", "cygwin"):
-            binary += ".exe"
+        binary = 'python'
+        if sys.platform in ('win32', 'cygwin'):
+            binary += '.exe'
 
         return os.path.join(self.bin_path, binary)
 
@@ -94,13 +94,8 @@ class VirtualenvManager(VirtualenvHelper):
     """Contains logic for managing virtualenvs for building the tree."""
 
     def __init__(
-        self,
-        topsrcdir,
-        virtualenv_path,
-        log_handle,
-        manifest_path,
-        populate_local_paths=True,
-    ):
+            self, topsrcdir, virtualenv_path, log_handle, manifest_path,
+            populate_local_paths=True):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
@@ -111,17 +106,17 @@ class VirtualenvManager(VirtualenvHelper):
         # __PYVENV_LAUNCHER__ confuses pip, telling it to use the system
         # python interpreter rather than the local virtual environment interpreter.
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
-        os.environ.pop("__PYVENV_LAUNCHER__", None)
+        os.environ.pop('__PYVENV_LAUNCHER__', None)
 
         assert os.path.isabs(
-            manifest_path
-        ), "manifest_path must be an absolute path: %s" % (manifest_path)
+            manifest_path), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
 
         # Record the Python executable that was used to create the Virtualenv
         # so we can check this against sys.executable when verifying the
         # integrity of the virtualenv.
-        self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
+        self.exe_info_path = os.path.join(self.virtualenv_root,
+                                          'python_exe.txt')
 
         self.log_handle = log_handle
         self.manifest_path = manifest_path
@@ -130,27 +125,23 @@ class VirtualenvManager(VirtualenvHelper):
     @property
     def virtualenv_script_path(self):
         """Path to virtualenv's own populator script."""
-        return os.path.join(
-            self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
-        )
+        return os.path.join(self.topsrcdir, 'third_party', 'python',
+                            'virtualenv', 'virtualenv.py')
 
     @property
     def version_info(self):
-        return eval(
-            subprocess.check_output(
-                [self.python_path, "-c", "import sys; print(sys.version_info[:])"]
-            )
-        )
+        return eval(subprocess.check_output([
+            self.python_path, '-c', 'import sys; print(sys.version_info[:])']))
 
     @property
     def activate_path(self):
-        return os.path.join(self.bin_path, "activate_this.py")
+        return os.path.join(self.bin_path, 'activate_this.py')
 
     def get_exe_info(self):
         """Returns the version of the python executable that was in use when
         this virtualenv was created.
         """
-        with open(self.exe_info_path, "r") as fh:
+        with open(self.exe_info_path, 'r') as fh:
             version = fh.read()
         return int(version)
 
@@ -161,13 +152,13 @@ class VirtualenvManager(VirtualenvHelper):
         executable.
         """
         ver = self.python_executable_hexversion(python)
-        with open(self.exe_info_path, "w") as fh:
+        with open(self.exe_info_path, 'w') as fh:
             fh.write("%s\n" % ver)
 
     def python_executable_hexversion(self, python):
         """Run a Python executable and return its sys.hexversion value."""
-        program = "import sys; print(sys.hexversion)"
-        out = subprocess.check_output([python, "-c", program]).rstrip()
+        program = 'import sys; print(sys.hexversion)'
+        out = subprocess.check_output([python, '-c', program]).rstrip()
         return int(out)
 
     def up_to_date(self, python):
@@ -183,9 +174,8 @@ class VirtualenvManager(VirtualenvHelper):
         deps = [self.manifest_path, __file__]
 
         # check if virtualenv exists
-        if not os.path.exists(self.virtualenv_root) or not os.path.exists(
-            self.activate_path
-        ):
+        if not os.path.exists(self.virtualenv_root) or \
+                not os.path.exists(self.activate_path):
             return False
 
         # Modifications to our package dependency list or to this file mean the
@@ -205,12 +195,14 @@ class VirtualenvManager(VirtualenvHelper):
             return False
 
         # recursively check sub packages.txt files
-        submanifests = [i[1] for i in self.packages() if i[0] == "packages.txt"]
+        submanifests = [i[1] for i in self.packages()
+                        if i[0] == 'packages.txt']
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
-            submanager = VirtualenvManager(
-                self.topsrcdir, self.virtualenv_root, self.log_handle, submanifest
-            )
+            submanager = VirtualenvManager(self.topsrcdir,
+                                           self.virtualenv_root,
+                                           self.log_handle,
+                                           submanifest)
             if not submanager.up_to_date(python):
                 return False
 
@@ -230,25 +222,23 @@ class VirtualenvManager(VirtualenvHelper):
         return self.build(python)
 
     def _log_process_output(self, *args, **kwargs):
-        env = kwargs.pop("env", None) or os.environ.copy()
+        env = kwargs.pop('env', None) or os.environ.copy()
         # PYTHONEXECUTABLE can mess up the creation of virtualenvs when set.
-        env.pop("PYTHONEXECUTABLE", None)
-        kwargs["env"] = ensure_subprocess_env(env)
+        env.pop('PYTHONEXECUTABLE', None)
+        kwargs['env'] = ensure_subprocess_env(env)
 
-        if hasattr(self.log_handle, "fileno"):
-            return subprocess.call(
-                *args, stdout=self.log_handle, stderr=subprocess.STDOUT, **kwargs
-            )
+        if hasattr(self.log_handle, 'fileno'):
+            return subprocess.call(*args, stdout=self.log_handle,
+                                   stderr=subprocess.STDOUT, **kwargs)
 
-        proc = subprocess.Popen(
-            *args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs
-        )
+        proc = subprocess.Popen(*args, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, **kwargs)
 
         for line in proc.stdout:
             if PY2:
                 self.log_handle.write(line)
             else:
-                self.log_handle.write(line.decode("UTF-8"))
+                self.log_handle.write(line.decode('UTF-8'))
 
         return proc.wait()
 
@@ -262,33 +252,30 @@ class VirtualenvManager(VirtualenvHelper):
         if os.path.exists(self.virtualenv_root):
             shutil.rmtree(self.virtualenv_root)
 
-        args = [
-            python,
-            self.virtualenv_script_path,
-            # Without this, virtualenv.py may attempt to contact the outside
-            # world and search for or download a newer version of pip,
-            # setuptools, or wheel. This is bad for security, reproducibility,
-            # and speed.
-            "--no-download",
-            self.virtualenv_root,
-        ]
+        args = [python, self.virtualenv_script_path,
+                # Without this, virtualenv.py may attempt to contact the outside
+                # world and search for or download a newer version of pip,
+                # setuptools, or wheel. This is bad for security, reproducibility,
+                # and speed.
+                '--no-download',
+                self.virtualenv_root]
 
         result = self._log_process_output(args)
 
         if result:
             raise Exception(
-                "Failed to create virtualenv: %s (virtualenv.py retcode: %s)"
-                % (self.virtualenv_root, result)
-            )
+                'Failed to create virtualenv: %s (virtualenv.py retcode: %s)' % (
+                    self.virtualenv_root, result))
 
         self.write_exe_info(python)
 
         return self.virtualenv_root
 
     def packages(self):
-        mode = "rU" if PY2 else "r"
+        mode = 'rU' if PY2 else 'r'
         with open(self.manifest_path, mode) as fh:
-            packages = [line.rstrip().split(":") for line in fh]
+            packages = [line.rstrip().split(':')
+                        for line in fh]
         return packages
 
     def populate(self, sitecustomize=None):
@@ -343,45 +330,42 @@ class VirtualenvManager(VirtualenvHelper):
         python_lib = distutils.sysconfig.get_python_lib()
         do_close = not bool(sitecustomize)
         sitecustomize = sitecustomize or open(
-            os.path.join(os.path.dirname(python_lib), "sitecustomize.py"), mode="w"
-        )
+            os.path.join(os.path.dirname(python_lib), 'sitecustomize.py'),
+            mode='w')
 
         def handle_package(package):
-            if package[0].startswith("set-variable "):
+            if package[0].startswith('set-variable '):
                 assert len(package) == 1
-                assignment = package[0][len("set-variable ") :].strip()
-                var, val = assignment.split("=", 1)
+                assignment = package[0][len('set-variable '):].strip()
+                var, val = assignment.split('=', 1)
                 var = var if PY3 else ensure_binary(var)
                 val = val if PY3 else ensure_binary(val)
                 sitecustomize.write(
-                    "import os\n" "os.environ[%s] = %s\n" % (repr(var), repr(val))
-                )
+                    'import os\n'
+                    "os.environ[%s] = %s\n" % (repr(var), repr(val)))
                 return True
 
-            if package[0] == "setup.py":
+            if package[0] == 'setup.py':
                 assert len(package) >= 2
 
-                self.call_setup(os.path.join(self.topsrcdir, package[1]), package[2:])
+                self.call_setup(os.path.join(self.topsrcdir, package[1]),
+                                package[2:])
 
                 return True
 
-            if package[0] == "packages.txt":
+            if package[0] == 'packages.txt':
                 assert len(package) == 2
 
                 src = os.path.join(self.topsrcdir, package[1])
                 assert os.path.isfile(src), "'%s' does not exist" % src
                 submanager = VirtualenvManager(
-                    self.topsrcdir,
-                    self.virtualenv_root,
-                    self.log_handle,
-                    src,
-                    populate_local_paths=self.populate_local_paths,
-                )
+                    self.topsrcdir, self.virtualenv_root, self.log_handle, src,
+                    populate_local_paths=self.populate_local_paths)
                 submanager.populate(sitecustomize=sitecustomize)
 
                 return True
 
-            if package[0].endswith(".pth"):
+            if package[0].endswith('.pth'):
                 assert len(package) == 2
 
                 if not self.populate_local_paths:
@@ -389,7 +373,7 @@ class VirtualenvManager(VirtualenvHelper):
 
                 path = os.path.join(self.topsrcdir, package[1])
 
-                with open(os.path.join(python_lib, package[0]), "a") as f:
+                with open(os.path.join(python_lib, package[0]), 'a') as f:
                     # This path is relative to the .pth file.  Using a
                     # relative path allows the srcdir/objdir combination
                     # to be moved around (as long as the paths relative to
@@ -397,32 +381,30 @@ class VirtualenvManager(VirtualenvHelper):
                     f.write("%s\n" % os.path.relpath(path, python_lib))
                 return True
 
-            if package[0] == "optional":
+            if package[0] == 'optional':
                 try:
                     handle_package(package[1:])
                     return True
                 except Exception:
-                    print(
-                        "Error processing command. Ignoring",
-                        "because optional. (%s)" % ":".join(package),
-                        file=self.log_handle,
-                    )
+                    print('Error processing command. Ignoring',
+                          'because optional. (%s)' % ':'.join(package),
+                          file=self.log_handle)
                     return False
 
-            if package[0] in ("windows", "!windows"):
-                for_win = not package[0].startswith("!")
-                is_win = sys.platform == "win32"
+            if package[0] in ('windows', '!windows'):
+                for_win = not package[0].startswith('!')
+                is_win = sys.platform == 'win32'
                 if is_win == for_win:
                     return handle_package(package[1:])
                 return True
 
-            if package[0] in ("python2", "python3"):
-                for_python3 = package[0].endswith("3")
+            if package[0] in ('python2', 'python3'):
+                for_python3 = package[0].endswith('3')
                 if PY3 == for_python3:
                     return handle_package(package[1:])
                 return True
 
-            raise Exception("Unknown action: %s" % package[0])
+            raise Exception('Unknown action: %s' % package[0])
 
         # We always target the OS X deployment target that Python itself was
         # built with, regardless of what's in the current environment. If we
@@ -439,16 +421,15 @@ class VirtualenvManager(VirtualenvHelper):
         # configure or a mozconfig activated in the current shell. We trust
         # Python is smart enough to find a proper compiler and to use the
         # proper compiler flags. If it isn't your Python is likely broken.
-        IGNORE_ENV_VARIABLES = ("CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS")
+        IGNORE_ENV_VARIABLES = ('CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS')
 
         try:
-            old_target = os.environ.get("MACOSX_DEPLOYMENT_TARGET", None)
-            sysconfig_target = distutils.sysconfig.get_config_var(
-                "MACOSX_DEPLOYMENT_TARGET"
-            )
+            old_target = os.environ.get('MACOSX_DEPLOYMENT_TARGET', None)
+            sysconfig_target = \
+                distutils.sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
 
             if sysconfig_target is not None:
-                os.environ["MACOSX_DEPLOYMENT_TARGET"] = sysconfig_target
+                os.environ['MACOSX_DEPLOYMENT_TARGET'] = sysconfig_target
 
             old_env_variables = {}
             for k in IGNORE_ENV_VARIABLES:
@@ -467,22 +448,21 @@ class VirtualenvManager(VirtualenvHelper):
                 # out-of-objdir virtualenvs.
                 if self.populate_local_paths and PY2:
                     sitecustomize.write(
-                        "# Importing mach_bootstrap has the side effect of\n"
-                        "# installing an import hook\n"
-                        "import mach_bootstrap\n"
-                    )
+                        '# Importing mach_bootstrap has the side effect of\n'
+                        '# installing an import hook\n'
+                        'import mach_bootstrap\n')
                 sitecustomize.close()
 
-            os.environ.pop("MACOSX_DEPLOYMENT_TARGET", None)
+            os.environ.pop('MACOSX_DEPLOYMENT_TARGET', None)
 
             if old_target is not None:
-                os.environ["MACOSX_DEPLOYMENT_TARGET"] = old_target
+                os.environ['MACOSX_DEPLOYMENT_TARGET'] = old_target
 
             os.environ.update(old_env_variables)
 
     def call_setup(self, directory, arguments):
         """Calls setup.py in a directory."""
-        setup = os.path.join(directory, "setup.py")
+        setup = os.path.join(directory, 'setup.py')
 
         program = [self.python_path, setup]
         program.extend(arguments)
@@ -493,22 +473,16 @@ class VirtualenvManager(VirtualenvHelper):
         # havoc. While this may work, invoking a new process is safer.
 
         try:
-            output = subprocess.check_output(
-                program,
-                cwd=directory,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-            )
+            output = subprocess.check_output(program, cwd=directory, stderr=subprocess.STDOUT,
+                                             universal_newlines=True)
             print(output)
         except subprocess.CalledProcessError as e:
-            if "Python.h: No such file or directory" in e.output:
-                print(
-                    "WARNING: Python.h not found. Install Python development headers."
-                )
+            if 'Python.h: No such file or directory' in e.output:
+                print('WARNING: Python.h not found. Install Python development headers.')
             else:
                 print(e.output)
 
-            raise Exception("Error installing package: %s" % directory)
+            raise Exception('Error installing package: %s' % directory)
 
     def build(self, python):
         """Build a virtualenv per tree conventions.
@@ -524,26 +498,20 @@ class VirtualenvManager(VirtualenvHelper):
         # point to a Python 2 .pyc file. If we are generating a Python 3
         # virtualenv from Python 2 make sure we call Python 3 with the path to
         # the module and not the Python 2 .pyc file.
-        if os.path.splitext(__file__)[1] in (".pyc", ".pyo"):
+        if os.path.splitext(__file__)[1] in ('.pyc', '.pyo'):
             thismodule = __file__[:-1]
         else:
             thismodule = __file__
 
-        args = [
-            self.python_path,
-            thismodule,
-            "populate",
-            self.topsrcdir,
-            self.virtualenv_root,
-            self.manifest_path,
-        ]
+        args = [self.python_path, thismodule, 'populate', self.topsrcdir,
+                self.virtualenv_root, self.manifest_path]
         if self.populate_local_paths:
-            args.append("--populate-local-paths")
+            args.append('--populate-local-paths')
 
         result = self._log_process_output(args, cwd=self.topsrcdir)
 
         if result != 0:
-            raise Exception("Error populating virtualenv.")
+            raise Exception('Error populating virtualenv.')
 
         os.utime(self.activate_path, None)
 
@@ -586,33 +554,29 @@ class VirtualenvManager(VirtualenvHelper):
                 return
 
         args = [
-            "install",
+            'install',
             package,
         ]
 
         if vendored:
-            args.extend(
-                [
-                    "--no-deps",
-                    "--no-index",
-                    # The setup will by default be performed in an isolated build
-                    # environment, and since we're running with --no-index, this
-                    # means that pip will be unable to install in the isolated build
-                    # environment any dependencies that might be specified in a
-                    # setup_requires directive for the package. Since we're manually
-                    # controlling our build environment, build isolation isn't a
-                    # concern and we can disable that feature. Note that this is
-                    # safe and doesn't risk trampling any other packages that may be
-                    # installed due to passing `--no-deps --no-index` as well.
-                    "--no-build-isolation",
-                ]
-            )
+            args.extend([
+                '--no-deps',
+                '--no-index',
+                # The setup will by default be performed in an isolated build
+                # environment, and since we're running with --no-index, this
+                # means that pip will be unable to install in the isolated build
+                # environment any dependencies that might be specified in a
+                # setup_requires directive for the package. Since we're manually
+                # controlling our build environment, build isolation isn't a
+                # concern and we can disable that feature. Note that this is
+                # safe and doesn't risk trampling any other packages that may be
+                # installed due to passing `--no-deps --no-index` as well.
+                '--no-build-isolation',
+            ])
 
         return self._run_pip(args)
 
-    def install_pip_requirements(
-        self, path, require_hashes=True, quiet=False, vendored=False
-    ):
+    def install_pip_requirements(self, path, require_hashes=True, quiet=False, vendored=False):
         """Install a pip requirements.txt file.
 
         The supplied path is a text file containing pip requirement
@@ -627,24 +591,22 @@ class VirtualenvManager(VirtualenvHelper):
             path = os.path.join(self.topsrcdir, path)
 
         args = [
-            "install",
-            "--requirement",
+            'install',
+            '--requirement',
             path,
         ]
 
         if require_hashes:
-            args.append("--require-hashes")
+            args.append('--require-hashes')
 
         if quiet:
-            args.append("--quiet")
+            args.append('--quiet')
 
         if vendored:
-            args.extend(
-                [
-                    "--no-deps",
-                    "--no-index",
-                ]
-            )
+            args.extend([
+                '--no-deps',
+                '--no-index',
+            ])
 
         return self._run_pip(args)
 
@@ -656,13 +618,9 @@ class VirtualenvManager(VirtualenvHelper):
         # force the virtualenv's interpreter to be used and all is well.
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
-        pip = os.path.join(self.bin_path, "pip")
-        subprocess.check_call(
-            [pip] + args,
-            stderr=subprocess.STDOUT,
-            cwd=self.topsrcdir,
-            universal_newlines=PY3,
-        )
+        pip = os.path.join(self.bin_path, 'pip')
+        subprocess.check_call([pip] + args, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
+                              universal_newlines=PY3)
 
 
 def verify_python_version(log_handle):
@@ -671,18 +629,19 @@ def verify_python_version(log_handle):
 
     major, minor, micro = sys.version_info[:3]
     minimum_python_versions = {
-        2: LooseVersion("2.7.3"),
-        3: LooseVersion("3.6.0"),
+        2: LooseVersion('2.7.3'),
+        3: LooseVersion('3.6.0'),
     }
-    our = LooseVersion("%d.%d.%d" % (major, minor, micro))
+    our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
-    if major not in minimum_python_versions or our < minimum_python_versions[major]:
-        log_handle.write("One of the following Python versions are required:\n")
+    if (major not in minimum_python_versions or
+        our < minimum_python_versions[major]):
+        log_handle.write('One of the following Python versions are required:\n')
         for minver in minimum_python_versions.values():
-            log_handle.write("* Python %s or greater\n" % minver)
-        log_handle.write("You are running Python %s.\n" % our)
+            log_handle.write('* Python %s or greater\n' % minver)
+        log_handle.write('You are running Python %s.\n' % our)
 
-        if os.name in ("nt", "ce"):
+        if os.name in ('nt', 'ce'):
             log_handle.write(UPGRADE_WINDOWS)
         else:
             log_handle.write(UPGRADE_OTHER)
@@ -690,7 +649,7 @@ def verify_python_version(log_handle):
         sys.exit(1)
 
 
-def ensure_subprocess_env(env, encoding="utf-8"):
+def ensure_subprocess_env(env, encoding='utf-8'):
     """Ensure the environment is in the correct format for the `subprocess`
     module.
 
@@ -719,20 +678,20 @@ def ensure_subprocess_env(env, encoding="utf-8"):
         }
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     verify_python_version(sys.stdout)
 
     if len(sys.argv) < 2:
-        print("Too few arguments", file=sys.stderr)
+        print('Too few arguments', file=sys.stderr)
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("topsrcdir")
-    parser.add_argument("virtualenv_path")
-    parser.add_argument("manifest_path")
-    parser.add_argument("--populate-local-paths", action="store_true")
+    parser.add_argument('topsrcdir')
+    parser.add_argument('virtualenv_path')
+    parser.add_argument('manifest_path')
+    parser.add_argument('--populate-local-paths', action='store_true')
 
-    if sys.argv[1] == "populate":
+    if sys.argv[1] == 'populate':
         # This should only be called internally.
         populate = True
         opts = parser.parse_args(sys.argv[2:])
@@ -741,12 +700,8 @@ if __name__ == "__main__":
         opts = parser.parse_args(sys.argv[1:])
 
     manager = VirtualenvManager(
-        opts.topsrcdir,
-        opts.virtualenv_path,
-        sys.stdout,
-        opts.manifest_path,
-        populate_local_paths=opts.populate_local_paths,
-    )
+        opts.topsrcdir, opts.virtualenv_path, sys.stdout, opts.manifest_path,
+        populate_local_paths=opts.populate_local_paths)
 
     if populate:
         manager.populate()

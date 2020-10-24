@@ -26,13 +26,8 @@ def rewrite_patch(patch, strip_dir):
         strip_dir = "/%s" % strip_dir
 
     new_diff = []
-    line_starts = [
-        ("diff ", True),
-        ("+++ ", True),
-        ("--- ", True),
-        ("rename from ", False),
-        ("rename to ", False),
-    ]
+    line_starts = [("diff ", True), ("+++ ", True), ("--- ", True),
+                   ("rename from ", False), ("rename to ", False)]
     for line in patch.diff.split("\n"):
         for start, leading_slash in line_starts:
             strip = strip_dir if leading_slash else strip_dir[1:]
@@ -51,19 +46,13 @@ def rewrite_patch(patch, strip_dir):
 
 def rewrite_message(patch):
     if patch.message.bug is not None:
-        return "\n".join(
-            [
-                patch.message.summary,
-                patch.message.body,
-                "",
-                "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s [ci skip]"
-                % patch.message.bug,  # noqa E501
-            ]
-        )
+        return "\n".join([patch.message.summary,
+                          patch.message.body,
+                          "",
+                          "Upstreamed from https://bugzilla.mozilla.org/show_bug.cgi?id=%s [ci skip]" % # noqa E501
+                          patch.message.bug])
 
-    return "\n".join(
-        [patch.message.full_summary, "%s\n[ci skip]\n" % patch.message.body]
-    )
+    return "\n".join([patch.message.full_summary, "%s\n[ci skip]\n" % patch.message.body])
 
 
 class SyncToUpstream(Step):
@@ -78,11 +67,9 @@ class SyncToUpstream(Step):
             return exit_clean
 
         try:
-            import requests  # noqa F401
+            import requests # noqa F401
         except ImportError:
-            self.logger.error(
-                "Upstream sync requires the requests module to be installed"
-            )
+            self.logger.error("Upstream sync requires the requests module to be installed")
             return exit_clean
 
         if not state.sync_tree:
@@ -90,9 +77,8 @@ class SyncToUpstream(Step):
             state.sync_tree = GitTree(root=state.sync["path"])
 
         kwargs = state.kwargs
-        with state.push(
-            ["local_tree", "sync_tree", "tests_path", "metadata_path", "sync"]
-        ):
+        with state.push(["local_tree", "sync_tree", "tests_path", "metadata_path",
+                         "sync"]):
             state.token = kwargs["token"]
             runner = SyncToUpstreamRunner(self.logger, state)
             runner.run()
@@ -113,21 +99,16 @@ class GetLastSyncData(Step):
                 key, value = [item.strip() for item in line.split(":", 1)]
                 items[key] = value
 
-        state.last_sync_commit = Commit(
-            state.local_tree, state.local_tree.rev_from_hg(items["local"])
-        )
+        state.last_sync_commit = Commit(state.local_tree,
+                                        state.local_tree.rev_from_hg(items["local"]))
         state.old_upstream_rev = items["upstream"]
 
         if not state.local_tree.contains_commit(state.last_sync_commit):
-            self.logger.error(
-                "Could not find last sync commit %s" % state.last_sync_commit.sha1
-            )
+            self.logger.error("Could not find last sync commit %s" % state.last_sync_commit.sha1)
             return exit_clean
 
-        self.logger.info(
-            "Last sync to web-platform-tests happened in %s"
-            % state.last_sync_commit.sha1
-        )
+        self.logger.info("Last sync to web-platform-tests happened in %s" %
+                         state.last_sync_commit.sha1)
 
 
 class CheckoutBranch(Step):
@@ -139,11 +120,10 @@ class CheckoutBranch(Step):
     def create(self, state):
         self.logger.info("Updating sync tree from %s" % state.sync["remote_url"])
         state.branch = state.sync_tree.unique_branch_name(
-            "outbound_update_%s" % state.old_upstream_rev
-        )
-        state.sync_tree.update(
-            state.sync["remote_url"], state.sync["branch"], state.branch
-        )
+            "outbound_update_%s" % state.old_upstream_rev)
+        state.sync_tree.update(state.sync["remote_url"],
+                               state.sync["branch"],
+                               state.branch)
         state.sync_tree.checkout(state.old_upstream_rev, state.branch, force=True)
 
 
@@ -153,9 +133,8 @@ class GetBaseCommit(Step):
     provides = ["base_commit"]
 
     def create(self, state):
-        state.base_commit = state.sync_tree.get_remote_sha1(
-            state.sync["remote_url"], state.sync["branch"]
-        )
+        state.base_commit = state.sync_tree.get_remote_sha1(state.sync["remote_url"],
+                                                            state.sync["branch"])
         self.logger.debug("New base commit is %s" % state.base_commit.sha1)
 
 
@@ -165,13 +144,10 @@ class LoadCommits(Step):
     provides = ["source_commits", "has_backouts"]
 
     def create(self, state):
-        state.source_commits = state.local_tree.log(
-            state.last_sync_commit, state.tests_path
-        )
+        state.source_commits = state.local_tree.log(state.last_sync_commit,
+                                                    state.tests_path)
 
-        update_regexp = re.compile(
-            "Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}"
-        )
+        update_regexp = re.compile("Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}")
 
         state.has_backouts = False
 
@@ -186,10 +162,8 @@ class LoadCommits(Step):
                 state.has_backouts = True
 
             elif not commit.message.bug:
-                self.logger.error(
-                    "Commit %i (%s) doesn't have an associated bug number."
-                    % (i + 1, commit.sha1)
-                )
+                self.logger.error("Commit %i (%s) doesn't have an associated bug number." %
+                                  (i + 1, commit.sha1))
                 return exit_unclean
 
         self.logger.debug("Source commits: %s" % state.source_commits)
@@ -204,10 +178,8 @@ class SelectCommits(Step):
             for i, commit in enumerate(commits):
                 print("{}:\t{}".format(i, commit.message.summary))
 
-            remove = input(
-                "Provide a space-separated list of any commits numbers "
-                "to remove from the list to upstream:\n"
-            ).strip()
+            remove = input("Provide a space-separated list of any commits numbers "
+                           "to remove from the list to upstream:\n").strip()
             remove_idx = set()
             for item in remove.split(" "):
                 try:
@@ -218,9 +190,7 @@ class SelectCommits(Step):
                     continue
                 remove_idx.add(item)
 
-            keep_commits = [
-                (i, cmt) for i, cmt in enumerate(commits) if i not in remove_idx
-            ]
+            keep_commits = [(i, cmt) for i, cmt in enumerate(commits) if i not in remove_idx]
             # TODO: consider printed removed commits
             print("Selected the following commits to keep:")
             for i, commit in keep_commits:
@@ -241,13 +211,14 @@ class MovePatches(Step):
         if not hasattr(state, "commits_loaded"):
             state.commits_loaded = 0
 
-        strip_path = os.path.relpath(state.tests_path, state.local_tree.root)
+        strip_path = os.path.relpath(state.tests_path,
+                                     state.local_tree.root)
         self.logger.debug("Stripping patch %s" % strip_path)
 
         if not hasattr(state, "patch"):
             state.patch = None
 
-        for commit in state.source_commits[state.commits_loaded :]:
+        for commit in state.source_commits[state.commits_loaded:]:
             i = state.commits_loaded + 1
             self.logger.info("Moving commit %i: %s" % (i, commit.message.full_summary))
             stripped_patch = None
@@ -271,12 +242,8 @@ class MovePatches(Step):
             except Exception:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".diff") as f:
                     f.write(stripped_patch.diff)
-                    print(
-                        """Patch failed to apply. Diff saved in {}
-Fix this file so it applies and run with --continue""".format(
-                            f.name
-                        )
-                    )
+                    print("""Patch failed to apply. Diff saved in {}
+Fix this file so it applies and run with --continue""".format(f.name))
                     state.patch = (f.name, stripped_patch)
                     print(state.patch)
                 sys.exit(1)
@@ -296,25 +263,25 @@ class RebaseCommits(Step):
         self.logger.info("Rebasing local commits")
         continue_rebase = False
         # Check if there's a rebase in progress
-        if os.path.exists(
-            os.path.join(state.sync_tree.root, ".git", "rebase-merge")
-        ) or os.path.exists(os.path.join(state.sync_tree.root, ".git", "rebase-apply")):
+        if (os.path.exists(os.path.join(state.sync_tree.root,
+                                        ".git",
+                                        "rebase-merge")) or
+            os.path.exists(os.path.join(state.sync_tree.root,
+                                        ".git",
+                                        "rebase-apply"))):
             continue_rebase = True
 
         try:
             state.sync_tree.rebase(state.base_commit, continue_rebase=continue_rebase)
         except subprocess.CalledProcessError:
             self.logger.info(
-                "Rebase failed, fix merge and run %s again with --continue"
-                % sys.argv[0]
-            )
+                "Rebase failed, fix merge and run %s again with --continue" % sys.argv[0])
             raise
         self.logger.info("Rebase successful")
 
 
 class CheckRebase(Step):
     """Check if there are any commits remaining after rebase"""
-
     provides = ["rebased_commits"]
 
     def create(self, state):
@@ -338,7 +305,7 @@ class MergeUpstream(Step):
         if name.endswith(".git"):
             name = name[:-4]
         state.gh_repo = gh.repo(org, name)
-        for commit in state.rebased_commits[state.merge_index :]:
+        for commit in state.rebased_commits[state.merge_index:]:
             with state.push(["gh_repo", "sync_tree"]):
                 state.commit = commit
                 pr_merger = PRMergeRunner(self.logger, state)
@@ -355,10 +322,8 @@ class UpdateLastSyncData(Step):
 
     def create(self, state):
         self.logger.info("Updating last sync commit")
-        data = {
-            "local": state.local_tree.rev_to_hg(state.local_tree.rev),
-            "upstream": state.sync_tree.rev,
-        }
+        data = {"local": state.local_tree.rev_to_hg(state.local_tree.rev),
+                "upstream": state.sync_tree.rev}
         with open(state.sync_data_path, "w") as f:
             for key, value in data.iteritems():
                 f.write("%s: %s\n" % (key, value))
@@ -380,16 +345,13 @@ class MergeLocalBranch(Step):
 
 class MergeRemoteBranch(Step):
     """Get an unused remote branch name to use for the PR"""
-
     provides = ["remote_branch"]
 
     def create(self, state):
         remote_branch = "sync_%s" % state.commit.sha1
-        branches = [
-            ref[len("refs/heads/") :]
-            for sha1, ref in state.sync_tree.list_remote(state.gh_repo.url)
-            if ref.startswith("refs/heads")
-        ]
+        branches = [ref[len("refs/heads/"):] for sha1, ref in
+                    state.sync_tree.list_remote(state.gh_repo.url)
+                    if ref.startswith("refs/heads")]
         state.remote_branch = get_unique_name(branches, remote_branch)
 
 
@@ -398,7 +360,9 @@ class PushUpstream(Step):
 
     def create(self, state):
         self.logger.info("Pushing commit upstream")
-        state.sync_tree.push(state.gh_repo.url, state.local_branch, state.remote_branch)
+        state.sync_tree.push(state.gh_repo.url,
+                             state.local_branch,
+                             state.remote_branch)
 
 
 class CreatePR(Step):
@@ -409,12 +373,10 @@ class CreatePR(Step):
     def create(self, state):
         self.logger.info("Creating a PR")
         commit = state.commit
-        state.pr = state.gh_repo.create_pr(
-            commit.message.full_summary,
-            state.remote_branch,
-            "master",
-            commit.message.body if commit.message.body else "",
-        )
+        state.pr = state.gh_repo.create_pr(commit.message.full_summary,
+                                           state.remote_branch,
+                                           "master",
+                                           commit.message.body if commit.message.body else "")
 
 
 class PRAddComment(Step):
@@ -442,24 +404,20 @@ class PRDeleteBranch(Step):
 
 class SyncToUpstreamRunner(StepRunner):
     """Runner for syncing local changes to upstream"""
-
-    steps = [
-        GetLastSyncData,
-        CheckoutBranch,
-        GetBaseCommit,
-        LoadCommits,
-        SelectCommits,
-        MovePatches,
-        RebaseCommits,
-        CheckRebase,
-        MergeUpstream,
-        UpdateLastSyncData,
-    ]
+    steps = [GetLastSyncData,
+             CheckoutBranch,
+             GetBaseCommit,
+             LoadCommits,
+             SelectCommits,
+             MovePatches,
+             RebaseCommits,
+             CheckRebase,
+             MergeUpstream,
+             UpdateLastSyncData]
 
 
 class PRMergeRunner(StepRunner):
     """(Sub)Runner for creating and merging a PR"""
-
     steps = [
         MergeLocalBranch,
         MergeRemoteBranch,

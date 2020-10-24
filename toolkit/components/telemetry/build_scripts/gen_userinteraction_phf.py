@@ -47,25 +47,20 @@ def main(output, *filenames):
         print("\nError processing UserInteractions:\n" + str(ex) + "\n")
         sys.exit(1)
 
-    user_interactions = [
-        (bytearray(ui.label, "ascii"), idx)
-        for (idx, ui) in enumerate(user_interactions)
-    ]
+    user_interactions = [(bytearray(ui.label, 'ascii'), idx) for (idx, ui)
+                         in enumerate(user_interactions)]
     name_phf = PerfectHash(user_interactions, PHFSIZE)
 
-    output.write(
-        name_phf.cxx_codegen(
-            name="UserInteractionIDByNameLookup",
-            entry_type="uint32_t",
-            lower_entry=lambda x: str(x[1]),
-            key_type="const nsACString&",
-            key_bytes="aKey.BeginReading()",
-            key_length="aKey.Length()",
-        )
-    )
+    output.write(name_phf.cxx_codegen(
+        name='UserInteractionIDByNameLookup',
+        entry_type="uint32_t",
+        lower_entry=lambda x: str(x[1]),
+        key_type="const nsACString&",
+        key_bytes="aKey.BeginReading()",
+        key_length="aKey.Length()"))
 
     output.write(footer)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

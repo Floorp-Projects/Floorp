@@ -11,17 +11,14 @@ def inline(doc):
 
 
 class RenderedElementTests(MarionetteTestCase):
+
     def test_get_computed_style_value_from_element(self):
-        self.marionette.navigate(
-            inline(
-                """
+        self.marionette.navigate(inline("""
             <div style="color: green;" id="parent">
               <p id="green">This should be green</p>
               <p id="red" style="color: red;">But this is red</p>
             </div>
-            """
-            )
-        )
+            """))
 
         parent = self.marionette.find_element(By.ID, "parent")
         self.assertEqual("rgb(0, 128, 0)", parent.value_of_css_property("color"))

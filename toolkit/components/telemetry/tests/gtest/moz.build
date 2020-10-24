@@ -4,27 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("telemetrytest")
+Library('telemetrytest')
 
 LOCAL_INCLUDES += [
-    "../..",
+    '../..',
 ]
 
 UNIFIED_SOURCES = [
-    "TelemetryFixture.cpp",
-    "TelemetryTestHelpers.cpp",
+    'TelemetryFixture.cpp',
+    'TelemetryTestHelpers.cpp',
 ]
 
-if CONFIG["OS_TARGET"] != "Android":
+if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
-        "TestCombinedStacks.cpp",
-        "TestCounters.cpp",
-        "TestEvents.cpp",
-        "TestHistograms.cpp",
-        "TestOrigins.cpp",
-        "TestScalars.cpp",
+        'TestCombinedStacks.cpp',
+        'TestCounters.cpp',
+        'TestEvents.cpp',
+        'TestHistograms.cpp',
+        'TestOrigins.cpp',
+        'TestScalars.cpp'
     ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
+

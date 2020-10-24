@@ -4,21 +4,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "Button",
+    'Button',
 ]
 
 CompiledModules(
-    "AccessibleImage.js",
-    "Accordion.js",
-    "Badge.js",
-    "BracketArrow.js",
-    "Dropdown.js",
-    "ManagedTree.js",
-    "Modal.js",
-    "Popover.js",
-    "PreviewFunction.js",
-    "ResultList.js",
-    "SearchInput.js",
-    "SourceIcon.js",
-    "SmartGap.js",
+    'AccessibleImage.js',
+    'Accordion.js',
+    'Badge.js',
+    'BracketArrow.js',
+    'Dropdown.js',
+    'ManagedTree.js',
+    'Modal.js',
+    'Popover.js',
+    'PreviewFunction.js',
+    'ResultList.js',
+    'SearchInput.js',
+    'SourceIcon.js',
+    'SmartGap.js',
 )

@@ -14,6 +14,7 @@ import json
 
 
 class SecretsMixin(object):
+
     def _fetch_secret(self, secret_name):
         self.info("fetching secret {} from API".format(secret_name))
         # fetch from http://taskcluster, which points to the taskcluster proxy
@@ -24,7 +25,7 @@ class SecretsMixin(object):
         if res.getcode() != 200:
             self.fatal("Error fetching from secrets API:" + res.read())
 
-        return json.loads(six.ensure_str(res.read()))["secret"]["content"]
+        return json.loads(six.ensure_str(res.read()))['secret']['content']
 
     def get_secrets(self):
         """
@@ -48,24 +49,24 @@ class SecretsMixin(object):
         The optional 'mode' key allows a mode change (chmod) after the file is written
         """
         dirs = self.query_abs_dirs()
-        secret_files = self.config.get("secret_files", [])
+        secret_files = self.config.get('secret_files', [])
 
-        scm_level = int(os.environ.get("MOZ_SCM_LEVEL", "1"))
+        scm_level = int(os.environ.get('MOZ_SCM_LEVEL', '1'))
         subst = {
-            "scm-level": scm_level,
+            'scm-level': scm_level,
         }
 
         for sf in secret_files:
-            filename = os.path.abspath(sf["filename"])
-            secret_name = sf["secret_name"] % subst
-            min_scm_level = sf.get("min_scm_level", 0)
+            filename = os.path.abspath(sf['filename'])
+            secret_name = sf['secret_name'] % subst
+            min_scm_level = sf.get('min_scm_level', 0)
             if scm_level < min_scm_level:
-                if "default" in sf:
+                if 'default' in sf:
                     self.info("Using default value for " + filename)
-                    secret = sf["default"]
-                elif "default-file" in sf:
-                    default_path = sf["default-file"].format(**dirs)
-                    with open(default_path, "r") as f:
+                    secret = sf['default']
+                elif 'default-file' in sf:
+                    default_path = sf['default-file'].format(**dirs)
+                    with open(default_path, 'r') as f:
                         secret = f.read()
                 else:
                     self.info("No default for secret; not writing " + filename)
@@ -75,5 +76,5 @@ class SecretsMixin(object):
 
             open(filename, "w").write(secret)
 
-            if sf.get("mode"):
-                os.chmod(filename, sf["mode"])
+            if sf.get('mode'):
+                os.chmod(filename, sf['mode'])

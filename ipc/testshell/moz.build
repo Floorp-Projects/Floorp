@@ -5,36 +5,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.ipc += [
-    "TestShellChild.h",
-    "TestShellParent.h",
-    "XPCShellEnvironment.h",
+    'TestShellChild.h',
+    'TestShellParent.h',
+    'XPCShellEnvironment.h',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
 SOURCES += [
-    "TestShellChild.cpp",
-    "TestShellParent.cpp",
-    "XPCShellEnvironment.cpp",
+    'TestShellChild.cpp',
+    'TestShellParent.cpp',
+    'XPCShellEnvironment.cpp',
 ]
 
 IPDL_SOURCES = [
-    "PTestShell.ipdl",
-    "PTestShellCommand.ipdl",
+    'PTestShell.ipdl',
+    'PTestShellCommand.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 # For xpcshell error messages and nsAutoJSString
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/js/xpconnect/src",
+    '/dom/base',
+    '/js/xpconnect/src',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "XPConnect")

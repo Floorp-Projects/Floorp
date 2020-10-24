@@ -4,22 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXPORTS += [
-    "nsMediaSniffer.h",
+    'nsMediaSniffer.h',
 ]
 
 UNIFIED_SOURCES += [
-    "mp3sniff.c",
-    "nsMediaSniffer.cpp",
+    'mp3sniff.c',
+    'nsMediaSniffer.cpp',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Audio/Video")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')

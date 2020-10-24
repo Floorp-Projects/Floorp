@@ -4,26 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 # Register the startup components only for 'all' builds.
-if CONFIG["MOZ_DEVTOOLS"] == "all":
+if CONFIG['MOZ_DEVTOOLS'] == 'all':
     EXTRA_JS_MODULES += [
-        "AboutDebuggingRegistration.jsm",
-        "AboutDevToolsToolboxRegistration.jsm",
-        "DevToolsStartup.jsm",
+        'AboutDebuggingRegistration.jsm',
+        'AboutDevToolsToolboxRegistration.jsm',
+        'DevToolsStartup.jsm',
     ]
 
     DIRS += [
-        "aboutdevtools",
-        "locales",
+      'aboutdevtools',
+      'locales',
     ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
-if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
-    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']

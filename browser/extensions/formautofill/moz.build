@@ -4,50 +4,50 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
-DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
+DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 
-DIRS += ["locales"]
+DIRS += ['locales']
 
-FINAL_TARGET_FILES.features["formautofill@mozilla.org"] += [
-    "api.js",
-    "background.js",
-    "manifest.json",
-    "schema.json",
+FINAL_TARGET_FILES.features['formautofill@mozilla.org'] += [
+  'api.js',
+  'background.js',
+  'manifest.json',
+  'schema.json',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    FINAL_TARGET_FILES.features["formautofill@mozilla.org"].chrome.content.skin += [
-        "skin/linux/autocomplete-item.css",
-        "skin/linux/editDialog.css",
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.content.skin += [
+        'skin/linux/autocomplete-item.css',
+        'skin/linux/editDialog.css',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    FINAL_TARGET_FILES.features["formautofill@mozilla.org"].chrome.content.skin += [
-        "skin/osx/autocomplete-item.css",
-        "skin/osx/editDialog.css",
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.content.skin += [
+        'skin/osx/autocomplete-item.css',
+        'skin/osx/editDialog.css',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    FINAL_TARGET_FILES.features["formautofill@mozilla.org"].chrome.content.skin += [
-        "skin/windows/autocomplete-item.css",
-        "skin/windows/editDialog.css",
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    FINAL_TARGET_FILES.features['formautofill@mozilla.org'].chrome.content.skin += [
+        'skin/windows/autocomplete-item.css',
+        'skin/windows/editDialog.css',
     ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.ini",
-    "test/browser/creditCard/browser.ini",
-    "test/browser/focus-leak/browser.ini",
+    'test/browser/browser.ini',
+    'test/browser/creditCard/browser.ini',
+    'test/browser/focus-leak/browser.ini',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest/creditCard/mochitest.ini",
-    "test/mochitest/mochitest.ini",
+    'test/mochitest/creditCard/mochitest.ini',
+    'test/mochitest/mochitest.ini',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
-SPHINX_TREES["docs"] = "docs"
+SPHINX_TREES['docs'] = 'docs'
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Form Autofill")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Form Autofill')

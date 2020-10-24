@@ -32,30 +32,26 @@ PARTNER_PLATFORMS_TO_BOUNCER = {
     "macosx64-shippable": "osx",
     "win32-shippable": "win",
     "win64-shippable": "win64",
-    "win64-aarch64-shippable": "win64-aarch64",
+    "win64-aarch64-shippable": "win64-aarch64"
 }
 
 # :lang is interpolated by bouncer at runtime
-RELEASES_PARTNERS_PATH_TEMPLATE = "/{ftp_product}/releases/partners/{partner}/{sub_config}/\
-{version}/{ftp_platform}/:lang/{file}"
+RELEASES_PARTNERS_PATH_TEMPLATE = '/{ftp_product}/releases/partners/{partner}/{sub_config}/\
+{version}/{ftp_platform}/:lang/{file}'
 
 CONFIG_PER_BOUNCER_PRODUCT = {
-    "installer": {
-        "name_postfix": "-{partner}-{sub_config}",
-        "path_template": RELEASES_PARTNERS_PATH_TEMPLATE,
-        "file_names": CONFIG_PER_BOUNCER_PRODUCT_VANILLA["installer"]["file_names"],
+    'installer': {
+        'name_postfix': "-{partner}-{sub_config}",
+        'path_template': RELEASES_PARTNERS_PATH_TEMPLATE,
+        'file_names':  CONFIG_PER_BOUNCER_PRODUCT_VANILLA['installer']['file_names']
     },
-    "stub-installer": {
-        "name_postfix": "-{partner}-{sub_config}-stub",
+    'stub-installer': {
+        'name_postfix': "-{partner}-{sub_config}-stub",
         # We currently have a sole win32 stub installer that is to be used
         # in all windows platforms to toggle between full installers
-        "path_template": RELEASES_PARTNERS_PATH_TEMPLATE.replace(
-            "{ftp_platform}", "win32"
-        ),
-        "file_names": CONFIG_PER_BOUNCER_PRODUCT_VANILLA["stub-installer"][
-            "file_names"
-        ],
-    },
+        'path_template': RELEASES_PARTNERS_PATH_TEMPLATE.replace('{ftp_platform}', 'win32'),
+        'file_names': CONFIG_PER_BOUNCER_PRODUCT_VANILLA['stub-installer']['file_names']
+    }
 }
 
 transforms = TransformSequence()
@@ -66,81 +62,65 @@ transforms.add(check_if_partners_enabled)
 def make_task_worker(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job,
-            "worker-type",
-            item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            job, 'worker-type', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job,
-            "scopes",
-            item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            job, 'scopes', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job,
-            "bouncer-products",
-            item_name=job["name"],
-            **{"release-type": config.params["release_type"]}
+            job, 'bouncer-products', item_name=job['name'],
+            **{'release-type': config.params['release_type']}
         )
 
         # the schema requires at least one locale but this will not be used
-        job["worker"]["locales"] = ["fake"]
-        job["worker"]["entries"] = craft_bouncer_entries(config, job)
+        job['worker']['locales'] = ["fake"]
+        job['worker']['entries'] = craft_bouncer_entries(config, job)
 
-        del job["locales-file"]
-        del job["bouncer-platforms"]
-        del job["bouncer-products"]
+        del job['locales-file']
+        del job['bouncer-platforms']
+        del job['bouncer-products']
 
-        if job["worker"]["entries"]:
+        if job['worker']['entries']:
             yield job
 
 
 def craft_bouncer_entries(config, job):
     release_config = get_release_config(config)
 
-    product = job["shipping-product"]
-    current_version = release_config["version"]
-    bouncer_products = job["bouncer-products"]
+    product = job['shipping-product']
+    current_version = release_config['version']
+    bouncer_products = job['bouncer-products']
 
     partners = get_partners_to_be_published(config)
     entries = {}
     for partner, sub_config_name, platforms in partners:
         platforms = [PARTNER_PLATFORMS_TO_BOUNCER[p] for p in platforms]
-        entries.update(
-            {
-                craft_partner_bouncer_product_name(
-                    product, bouncer_product, current_version, partner, sub_config_name
-                ): {
-                    "options": {
-                        "add_locales": False,  # partners may use different sets of locales
-                        "ssl_only": craft_ssl_only(bouncer_product),
-                    },
-                    "paths_per_bouncer_platform": craft_paths_per_bouncer_platform(
-                        product,
-                        bouncer_product,
-                        platforms,
-                        current_version,
-                        partner,
-                        sub_config_name,
-                    ),
-                }
-                for bouncer_product in bouncer_products
+        entries.update({
+            craft_partner_bouncer_product_name(product, bouncer_product, current_version,
+                                               partner, sub_config_name): {
+                'options': {
+                    'add_locales': False,  # partners may use different sets of locales
+                    'ssl_only': craft_ssl_only(bouncer_product),
+                },
+                'paths_per_bouncer_platform': craft_paths_per_bouncer_platform(
+                    product, bouncer_product, platforms, current_version, partner,
+                    sub_config_name
+                ),
             }
-        )
+            for bouncer_product in bouncer_products
+        })
     return entries
 
 
-def craft_paths_per_bouncer_platform(
-    product, bouncer_product, bouncer_platforms, current_version, partner, sub_config
-):
+def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms, current_version,
+                                     partner, sub_config):
     paths_per_bouncer_platform = {}
     for bouncer_platform in bouncer_platforms:
-        file_names_per_platform = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product][
-            "file_names"
-        ]
+        file_names_per_platform = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['file_names']
         file_name_template = file_names_per_platform.get(
-            bouncer_platform, file_names_per_platform.get("default", None)
+            bouncer_platform, file_names_per_platform.get('default', None)
         )
         if not file_name_template:
             # Some bouncer product like stub-installer are only meant to be on Windows.
@@ -154,7 +134,7 @@ def craft_paths_per_bouncer_platform(
             version=current_version,
         )
 
-        path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]["path_template"]
+        path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['path_template']
         file_relative_location = path_template.format(
             ftp_product=_craft_ftp_product(product),
             version=current_version,
@@ -169,19 +149,14 @@ def craft_paths_per_bouncer_platform(
     return paths_per_bouncer_platform
 
 
-def craft_partner_bouncer_product_name(
-    product, bouncer_product, current_version, partner, sub_config
-):
-    postfix = (
-        CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]
-        .get("name_postfix", "")
-        .format(
-            partner=partner,
-            sub_config=sub_config,
-        )
+def craft_partner_bouncer_product_name(product, bouncer_product, current_version,
+                                       partner, sub_config):
+    postfix = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product].get('name_postfix', '').format(
+        partner=partner,
+        sub_config=sub_config,
     )
 
-    return "{product}-{version}{postfix}".format(
+    return '{product}-{version}{postfix}'.format(
         product=product.capitalize(), version=current_version, postfix=postfix
     )
 

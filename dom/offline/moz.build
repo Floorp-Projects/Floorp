@@ -8,15 +8,15 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
 EXPORTS += [
-    "nsDOMOfflineResourceList.h",
+    'nsDOMOfflineResourceList.h',
 ]
 UNIFIED_SOURCES += [
-    "nsDOMOfflineResourceList.cpp",
+    'nsDOMOfflineResourceList.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/uriloader/prefetch",
+    '/dom/base',
+    '/uriloader/prefetch',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

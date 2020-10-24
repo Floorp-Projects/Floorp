@@ -5,31 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "NesteggPacketHolder.h",
-    "WebMBufferedParser.h",
-    "WebMDecoder.h",
-    "WebMDemuxer.h",
+    'NesteggPacketHolder.h',
+    'WebMBufferedParser.h',
+    'WebMDecoder.h',
+    'WebMDemuxer.h',
 ]
 
 UNIFIED_SOURCES += [
-    "WebMBufferedParser.cpp",
-    "WebMDecoder.cpp",
-    "WebMDemuxer.cpp",
+    'WebMBufferedParser.cpp',
+    'WebMDecoder.cpp',
+    'WebMDemuxer.cpp',
 ]
 
-if CONFIG["MOZ_WEBM_ENCODER"]:
-    EXPORTS += ["WebMWriter.h"]
-    UNIFIED_SOURCES += [
-        "EbmlComposer.cpp",
-        "WebMWriter.cpp",
+if CONFIG['MOZ_WEBM_ENCODER']:
+    EXPORTS += ['WebMWriter.h']
+    UNIFIED_SOURCES += ['EbmlComposer.cpp',
+                        'WebMWriter.cpp',
     ]
 
-CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_LIBVPX_CFLAGS']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

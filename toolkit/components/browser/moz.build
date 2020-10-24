@@ -4,48 +4,48 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
 
-DIRS += ["build"]
+DIRS += ['build']
 
 XPIDL_SOURCES += [
-    "nsIEmbeddingSiteWindow.idl",
-    "nsIWebBrowser.idl",
-    "nsIWebBrowserChrome.idl",
-    "nsIWebBrowserChrome3.idl",
-    "nsIWebBrowserChromeFocus.idl",
+    'nsIEmbeddingSiteWindow.idl',
+    'nsIWebBrowser.idl',
+    'nsIWebBrowserChrome.idl',
+    'nsIWebBrowserChrome3.idl',
+    'nsIWebBrowserChromeFocus.idl',
 ]
 
 XPIDL_SOURCES += [
-    "nsIWebBrowserPrint.idl",
+    'nsIWebBrowserPrint.idl',
 ]
 
-if CONFIG["NS_PRINTING"]:
+if CONFIG['NS_PRINTING']:
     XPIDL_SOURCES += [
-        "nsIPrintingPromptService.idl",
+        'nsIPrintingPromptService.idl',
     ]
 
-XPIDL_MODULE = "webBrowser_core"
+XPIDL_MODULE = 'webBrowser_core'
 
 UNIFIED_SOURCES += [
-    "nsWebBrowser.cpp",
-    "nsWebBrowserContentPolicy.cpp",
+    'nsWebBrowser.cpp',
+    'nsWebBrowserContentPolicy.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/docshell/base",
-    "/dom/base",
-    "/layout/style",
+    '/docshell/base',
+    '/dom/base',
+    '/layout/style',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
 EXPORTS += [
-    "nsEmbedCID.h",
-    "nsWebBrowser.h",
+    'nsEmbedCID.h',
+    'nsWebBrowser.h',
 ]

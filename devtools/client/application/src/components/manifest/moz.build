@@ -3,16 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "Manifest.js",
-    "ManifestColorItem.js",
-    "ManifestEmpty.js",
-    "ManifestIconItem.js",
-    "ManifestIssue.js",
-    "ManifestIssueList.js",
-    "ManifestItem.js",
-    "ManifestJsonLink.js",
-    "ManifestLoader.js",
-    "ManifestPage.js",
-    "ManifestSection.js",
-    "ManifestUrlItem.js",
+    'Manifest.js',
+    'ManifestColorItem.js',
+    'ManifestEmpty.js',
+    'ManifestIconItem.js',
+    'ManifestIssue.js',
+    'ManifestIssueList.js',
+    'ManifestItem.js',
+    'ManifestJsonLink.js',
+    'ManifestLoader.js',
+    'ManifestPage.js',
+    'ManifestSection.js',
+    'ManifestUrlItem.js',
 )

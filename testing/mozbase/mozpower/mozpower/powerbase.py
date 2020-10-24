@@ -12,7 +12,6 @@ class IPGExecutableMissingError(Exception):
     """IPGExecutableMissingError is raised when we cannot find
     the executable for Intel Power Gadget at the expected location.
     """
-
     pass
 
 
@@ -20,7 +19,6 @@ class PlatformUnsupportedError(Exception):
     """PlatformUnsupportedError is raised when we cannot find
     an expected IPG path for the OS being tested.
     """
-
     pass
 
 
@@ -46,8 +44,7 @@ class PowerBase(object):
            print "PowerBase cannot be instantiated."
 
     """
-
-    def __init__(self, logger_name="mozpower", os=None, cpu=None):
+    def __init__(self, logger_name='mozpower', os=None, cpu=None):
         """Initializes the PowerBase object.
 
         :param str logger_name: logging logger name. Defaults to 'mozpower'.
@@ -79,7 +76,7 @@ class PowerBase(object):
         """
         raise NotImplementedError
 
-    def finalize_power_measurements(self, test_name="power-testing", **kwargs):
+    def finalize_power_measurements(self, test_name='power-testing', **kwargs):
         """Stops power measurement gathering, must be implemented by subclass.
 
         :raises: * NotImplementedError
@@ -112,13 +109,13 @@ class PowerBase(object):
             exe_path = "/Applications/Intel Power Gadget/PowerLog"
         else:
             raise PlatformUnsupportedError(
-                "%s platform currently not supported for Intel Power Gadget measurements"
-                % self._os
+                "%s platform currently not supported for Intel Power Gadget measurements" %
+                self._os
             )
         if not os.path.exists(exe_path):
             raise IPGExecutableMissingError(
-                "Intel Power Gadget is not installed, or cannot be found at the location %s"
-                % exe_path
+                "Intel Power Gadget is not installed, or cannot be found at the location %s" %
+                exe_path
             )
 
         return exe_path

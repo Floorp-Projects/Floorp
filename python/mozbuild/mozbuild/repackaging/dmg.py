@@ -27,14 +27,13 @@ def repackage_dmg(infile, output):
         # Remove the /Applications symlink. If we don't, an rsync command in
         # create_dmg() will break, and create_dmg() re-creates the symlink anyway.
         try:
-            os.remove(mozpath.join(tmpdir, " "))
+            os.remove(mozpath.join(tmpdir, ' '))
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
 
-        volume_name = get_application_ini_value(
-            tmpdir, "App", "CodeName", fallback="Name"
-        )
+        volume_name = get_application_ini_value(tmpdir, 'App', 'CodeName',
+                                                fallback='Name')
 
         # The extra_files argument is empty [] because they are already a part
         # of the original dmg produced by the build, and they remain in the

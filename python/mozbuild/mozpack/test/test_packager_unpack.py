@@ -35,9 +35,8 @@ class TestUnpack(TestWithTmpDir):
 
     @classmethod
     def setUpClass(cls):
-        cls.contents = get_contents(
-            cls._get_copier(FlatFormatter), read_all=True, mode="rb"
-        )
+        cls.contents = get_contents(cls._get_copier(FlatFormatter),
+                                    read_all=True, mode='rb')
 
     def _unpack_test(self, cls):
         # Format a package with the given formatter class
@@ -47,10 +46,10 @@ class TestUnpack(TestWithTmpDir):
         # Unpack that package. Its content is expected to match that of a Flat
         # formatted package.
         registry = FileRegistry()
-        unpack_to_registry(self.tmpdir, registry, getattr(cls, "OMNIJAR_NAME", None))
-        self.assertEqual(
-            get_contents(registry, read_all=True, mode="rb"), self.contents
-        )
+        unpack_to_registry(self.tmpdir, registry,
+                           getattr(cls, 'OMNIJAR_NAME', None))
+        self.assertEqual(get_contents(registry, read_all=True, mode='rb'),
+                         self.contents)
 
     def test_flat_unpack(self):
         self._unpack_test(FlatFormatter)
@@ -65,15 +64,14 @@ class TestUnpack(TestWithTmpDir):
 
             def __init__(self, registry):
                 super(OmniFooFormatter, self).__init__(registry, name)
-
         return OmniFooFormatter
 
     def test_omnijar_unpack(self):
-        self._unpack_test(self._omni_foo_formatter("omni.foo"))
+        self._unpack_test(self._omni_foo_formatter('omni.foo'))
 
     def test_omnijar_subpath_unpack(self):
-        self._unpack_test(self._omni_foo_formatter("bar/omni.foo"))
+        self._unpack_test(self._omni_foo_formatter('bar/omni.foo'))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

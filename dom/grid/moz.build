@@ -7,30 +7,30 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
-    "Grid.h",
-    "GridArea.h",
-    "GridDimension.h",
-    "GridLine.h",
-    "GridLines.h",
-    "GridTrack.h",
-    "GridTracks.h",
+    'Grid.h',
+    'GridArea.h',
+    'GridDimension.h',
+    'GridLine.h',
+    'GridLines.h',
+    'GridTrack.h',
+    'GridTracks.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Grid.cpp",
-    "GridArea.cpp",
-    "GridDimension.cpp",
-    "GridLine.cpp",
-    "GridLines.cpp",
-    "GridTrack.cpp",
-    "GridTracks.cpp",
+    'Grid.cpp',
+    'GridArea.cpp',
+    'GridDimension.cpp',
+    'GridLine.cpp',
+    'GridLines.cpp',
+    'GridTrack.cpp',
+    'GridTracks.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/layout/generic",
+    '/layout/generic',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

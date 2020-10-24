@@ -15,14 +15,12 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Optional
 
-beetmover_checksums_description_schema = schema.extend(
-    {
-        Optional("label"): text_type,
-        Optional("extra"): object,
-        Optional("shipping-phase"): task_description_schema["shipping-phase"],
-        Optional("shipping-product"): task_description_schema["shipping-product"],
-    }
-)
+beetmover_checksums_description_schema = schema.extend({
+    Optional('label'): text_type,
+    Optional('extra'): object,
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
+    Optional('shipping-product'): task_description_schema['shipping-product'],
+})
 
 
 transforms = TransformSequence()
@@ -32,12 +30,12 @@ transforms.add_validate(beetmover_checksums_description_schema)
 @transforms.add
 def make_beetmover_checksums_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = job['primary-dependency']
         attributes = dep_job.attributes
         build_platform = attributes.get("build_platform")
         if not build_platform:
             raise Exception("Cannot find build platform!")
-        repack_id = dep_job.task.get("extra", {}).get("repack_id")
+        repack_id = dep_job.task.get('extra', {}).get('repack_id')
         if not repack_id:
             raise Exception("Cannot find repack id!")
 
@@ -47,42 +45,40 @@ def make_beetmover_checksums_description(config, jobs):
             "{build_platform}/{build_type}'".format(
                 repack_id=repack_id,
                 build_platform=build_platform,
-                build_type=attributes.get("build_type"),
+                build_type=attributes.get('build_type')
             )
         )
 
         extra = {}
-        extra["partner_path"] = dep_job.task["payload"]["upstreamArtifacts"][0][
-            "locale"
-        ]
-        extra["repack_id"] = repack_id
+        extra['partner_path'] = dep_job.task['payload']['upstreamArtifacts'][0]['locale']
+        extra['repack_id'] = repack_id
 
         dependencies = {dep_job.kind: dep_job.label}
         for k, v in dep_job.dependencies.items():
-            if k.startswith("beetmover"):
+            if k.startswith('beetmover'):
                 dependencies[k] = v
 
         attributes = copy_attributes_from_dependent_job(dep_job)
 
         task = {
-            "label": label,
-            "description": description,
-            "worker-type": "{}/{}".format(
-                dep_job.task["provisionerId"],
-                dep_job.task["workerType"],
+            'label': label,
+            'description': description,
+            'worker-type': '{}/{}'.format(
+                dep_job.task['provisionerId'],
+                dep_job.task['workerType'],
             ),
-            "scopes": dep_job.task["scopes"],
-            "dependencies": dependencies,
-            "attributes": attributes,
-            "run-on-projects": dep_job.attributes.get("run_on_projects"),
-            "extra": extra,
+            'scopes': dep_job.task['scopes'],
+            'dependencies': dependencies,
+            'attributes': attributes,
+            'run-on-projects': dep_job.attributes.get('run_on_projects'),
+            'extra': extra,
         }
 
-        if "shipping-phase" in job:
-            task["shipping-phase"] = job["shipping-phase"]
+        if 'shipping-phase' in job:
+            task['shipping-phase'] = job['shipping-phase']
 
-        if "shipping-product" in job:
-            task["shipping-product"] = job["shipping-product"]
+        if 'shipping-product' in job:
+            task['shipping-product'] = job['shipping-product']
 
         yield task
 
@@ -96,14 +92,12 @@ def generate_upstream_artifacts(refs, partner_path):
         "public/target.checksums",
     ]
 
-    upstream_artifacts = [
-        {
-            "taskId": {"task-reference": refs["beetmover"]},
-            "taskType": "signing",
-            "paths": common_paths,
-            "locale": "beetmover-checksums/{}".format(partner_path),
-        }
-    ]
+    upstream_artifacts = [{
+        "taskId": {"task-reference": refs["beetmover"]},
+        "taskType": "signing",
+        "paths": common_paths,
+        "locale": "beetmover-checksums/{}".format(partner_path),
+    }]
 
     return upstream_artifacts
 
@@ -111,7 +105,7 @@ def generate_upstream_artifacts(refs, partner_path):
 @transforms.add
 def make_beetmover_checksums_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = len(job["dependencies"]) == 1
+        valid_beetmover_job = (len(job["dependencies"]) == 1)
         if not valid_beetmover_job:
             raise NotImplementedError("Beetmover checksums must have one dependency.")
 
@@ -120,20 +114,18 @@ def make_beetmover_checksums_worker(config, jobs):
         }
         for dependency in job["dependencies"].keys():
             if dependency.endswith("beetmover"):
-                refs["beetmover"] = "<{}>".format(dependency)
+                refs['beetmover'] = "<{}>".format(dependency)
         if None in refs.values():
             raise NotImplementedError(
-                "Beetmover checksums must have a beetmover dependency!"
-            )
+                "Beetmover checksums must have a beetmover dependency!")
 
         worker = {
-            "implementation": "beetmover",
-            "release-properties": craft_release_properties(config, job),
-            "upstream-artifacts": generate_upstream_artifacts(
-                refs,
-                job["extra"]["partner_path"],
+            'implementation': 'beetmover',
+            'release-properties': craft_release_properties(config, job),
+            'upstream-artifacts': generate_upstream_artifacts(
+                refs, job['extra']['partner_path'],
             ),
-            "partner-public": True,
+            'partner-public': True,
         }
 
         job["worker"] = worker

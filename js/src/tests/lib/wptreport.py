@@ -26,23 +26,19 @@ class WptreportHandler(object):
         """
         Produce the "suite_start" message at the present time.
         """
-        self.formatter.suite_start(
-            {
-                "time": time(),
-                "run_info": {},
-            }
-        )
+        self.formatter.suite_start({
+            "time": time(),
+            "run_info": {},
+        })
 
     def suite_end(self):
         """
         Produce the "suite_end" message at the present time and write the
         results to the file path given in the constructor.
         """
-        result = self.formatter.suite_end(
-            {
-                "time": time(),
-            }
-        )
+        result = self.formatter.suite_end({
+            "time": time(),
+        })
         with open(self.out, "w") as fp:
             fp.write(result)
 
@@ -65,21 +61,17 @@ class WptreportHandler(object):
         end_time = time()
         start_time = end_time - duration
 
-        self.formatter.test_start(
-            {
-                "test": testname,
-                "time": start_time,
-            }
-        )
+        self.formatter.test_start({
+            "test": testname,
+            "time": start_time,
+        })
 
         for subtest in result["subtests"]:
             self.formatter.test_status(subtest)
 
-        self.formatter.test_end(
-            {
-                "test": testname,
-                "time": end_time,
-                "status": result["status"],
-                "expected": result["expected"],
-            }
-        )
+        self.formatter.test_end({
+            "test": testname,
+            "time": end_time,
+            "status": result["status"],
+            "expected": result["expected"],
+        })

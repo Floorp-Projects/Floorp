@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIWebVTTListener.idl",
-    "nsIWebVTTParserWrapper.idl",
+  'nsIWebVTTListener.idl',
+  'nsIWebVTTParserWrapper.idl',
 ]
 
-XPIDL_MODULE = "webvtt"
+XPIDL_MODULE = 'webvtt'
 
 EXTRA_JS_MODULES += [
-    "WebVTTParserWrapper.jsm",
+  'WebVTTParserWrapper.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+  'components.conf',
 ]
 
 EXTRA_JS_MODULES += [
-    "vtt.jsm",
+  'vtt.jsm',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']

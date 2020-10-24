@@ -25,4 +25,4 @@ from __future__ import absolute_import
 
 from .moznetwork import get_ip
 
-__all__ = ["get_ip"]
+__all__ = ['get_ip']

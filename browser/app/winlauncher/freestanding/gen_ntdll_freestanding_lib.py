@@ -20,11 +20,11 @@ def main(output_fd, def_file, llvm_dlltool, *llvm_dlltool_args):
     try:
         cmd = [llvm_dlltool]
         cmd.extend(llvm_dlltool_args)
-        cmd += ["-d", def_file, "-l", tmp_output]
+        cmd += ['-d', def_file, '-l', tmp_output]
 
         subprocess.check_call(cmd)
 
-        with open(tmp_output, "rb") as tmplib:
+        with open(tmp_output, 'rb') as tmplib:
             output_fd.write(tmplib.read())
     finally:
         os.remove(tmp_output)

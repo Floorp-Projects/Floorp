@@ -4,35 +4,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 XPIDL_SOURCES += [
-    "nsIAlertsService.idl",
+    'nsIAlertsService.idl',
 ]
 
-XPIDL_MODULE = "alerts"
+XPIDL_MODULE = 'alerts'
 
 EXPORTS += [
-    "nsAlertsUtils.h",
+    'nsAlertsUtils.h',
 ]
 
 EXPORTS.mozilla += [
-    "AlertNotification.h",
-    "AlertNotificationIPCSerializer.h",
+    'AlertNotification.h',
+    'AlertNotificationIPCSerializer.h',
 ]
 
 UNIFIED_SOURCES += [
-    "AlertNotification.cpp",
-    "nsAlertsService.cpp",
-    "nsAlertsUtils.cpp",
-    "nsXULAlerts.cpp",
+    'AlertNotification.cpp',
+    'nsAlertsService.cpp',
+    'nsAlertsUtils.cpp',
+    'nsXULAlerts.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Notifications and Alerts')

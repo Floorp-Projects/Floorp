@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "autocomplete.js",
-    "css-autocompleter.js",
-    "editor-commands-controller.js",
-    "editor.js",
-    "wasm.js",
+    'autocomplete.js',
+    'css-autocompleter.js',
+    'editor-commands-controller.js',
+    'editor.js',
+    'wasm.js'
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Source Editor")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Source Editor')

@@ -2,29 +2,27 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-
 @template
 def Library(name):
-    """Template for libraries."""
+    '''Template for libraries.'''
     LIBRARY_NAME = name
 
-
-Library("dummy")
+Library('dummy')
 
 UNIFIED_SOURCES += [
-    "bar.cxx",
-    "foo.cpp",
-    "quux.cc",
+    'bar.cxx',
+    'foo.cpp',
+    'quux.cc',
 ]
 
 UNIFIED_SOURCES += [
-    "objc1.mm",
-    "objc2.mm",
+    'objc1.mm',
+    'objc2.mm',
 ]
 
 UNIFIED_SOURCES += [
-    "c1.c",
-    "c2.c",
+    'c1.c',
+    'c2.c',
 ]
 
 FILES_PER_UNIFIED_FILE = 1

@@ -24,7 +24,6 @@ class ProcessContext(object):
     """
     Store useful results of the browser execution.
     """
-
     def __init__(self, is_launcher=False):
         self.output = None
         self.process = None
@@ -43,12 +42,8 @@ class ProcessContext(object):
         # If we're using a launcher process, terminate that instead of us:
         kids = parentProc and parentProc.is_running() and parentProc.children()
         if self.is_launcher and kids and len(kids) == 1 and kids[0].is_running():
-            LOG.debug(
-                (
-                    "Launcher process {} detected. Terminating parent"
-                    " process {} instead."
-                ).format(parentProc, kids[0])
-            )
+            LOG.debug(("Launcher process {} detected. Terminating parent"
+                       " process {} instead.").format(parentProc, kids[0]))
             parentProc = kids[0]
 
         if parentProc and parentProc.is_running():
@@ -76,41 +71,31 @@ class Reader(object):
         self.output = []
         self.got_end_timestamp = False
         self.got_timeout = False
-        self.timeout_message = ""
+        self.timeout_message = ''
         self.got_error = False
         self.event = event
         self.proc = None
 
     def __call__(self, line):
-        if line.find("__endTimestamp") != -1:
+        if line.find('__endTimestamp') != -1:
             self.got_end_timestamp = True
             self.event.set()
-        elif line == "TART: TIMEOUT":
+        elif line == 'TART: TIMEOUT':
             self.got_timeout = True
-            self.timeout_message = "TART"
+            self.timeout_message = 'TART'
             self.event.set()
-        elif line.startswith("TEST-UNEXPECTED-FAIL | "):
+        elif line.startswith('TEST-UNEXPECTED-FAIL | '):
             self.got_error = True
             self.event.set()
 
-        if not (
-            line.startswith("JavaScript error:")
-            or line.startswith("JavaScript warning:")
-        ):
+        if not (line.startswith('JavaScript error:') or
+                line.startswith('JavaScript warning:')):
             LOG.process_output(self.proc.pid, line)
             self.output.append(line)
 
 
-def run_browser(
-    command,
-    minidump_dir,
-    timeout=None,
-    on_started=None,
-    debug=None,
-    debugger=None,
-    debugger_args=None,
-    **kwargs
-):
+def run_browser(command, minidump_dir, timeout=None, on_started=None,
+                debug=None, debugger=None, debugger_args=None, **kwargs):
     """
     Run the browser using the given `command`.
 
@@ -137,27 +122,26 @@ def run_browser(
 
     debugger_info = find_debugger_info(debug, debugger, debugger_args)
     if debugger_info is not None:
-        return run_in_debug_mode(
-            command, debugger_info, on_started=on_started, env=kwargs.get("env")
-        )
+        return run_in_debug_mode(command, debugger_info,
+                                 on_started=on_started, env=kwargs.get('env'))
 
-    is_launcher = sys.platform.startswith("win") and "-wait-for-browser" in command
+    is_launcher = sys.platform.startswith('win') and '-wait-for-browser' in command
     context = ProcessContext(is_launcher)
     first_time = int(time.time()) * 1000
     wait_for_quit_timeout = 20
     event = Event()
     reader = Reader(event)
 
-    LOG.info("Using env: %s" % pprint.pformat(kwargs["env"]))
+    LOG.info("Using env: %s" % pprint.pformat(kwargs['env']))
 
-    kwargs["storeOutput"] = False
-    kwargs["processOutputLine"] = reader
-    kwargs["onFinish"] = event.set
+    kwargs['storeOutput'] = False
+    kwargs['processOutputLine'] = reader
+    kwargs['onFinish'] = event.set
     proc = ProcessHandler(command, **kwargs)
     reader.proc = proc
     proc.run()
 
-    LOG.process_start(proc.pid, " ".join(command))
+    LOG.process_start(proc.pid, ' '.join(command))
     try:
         context.process = psutil.Process(proc.pid)
         if on_started:
@@ -184,7 +168,7 @@ def run_browser(
                     " process.".format(wait_for_quit_timeout)
                 )
         elif reader.got_timeout:
-            raise TalosError("TIMEOUT: %s" % reader.timeout_message)
+            raise TalosError('TIMEOUT: %s' % reader.timeout_message)
         elif reader.got_error:
             raise TalosError("unexpected error")
     finally:
@@ -201,12 +185,11 @@ def run_browser(
             LOG.info(traceback.format_exc())
 
     reader.output.append(
-        "__startBeforeLaunchTimestamp%d__endBeforeLaunchTimestamp" % first_time
-    )
+        "__startBeforeLaunchTimestamp%d__endBeforeLaunchTimestamp"
+        % first_time)
     reader.output.append(
         "__startAfterTerminationTimestamp%d__endAfterTerminationTimestamp"
-        % (int(time.time()) * 1000)
-    )
+        % (int(time.time()) * 1000))
 
     if return_code is not None:
         LOG.process_exit(proc.pid, return_code)
@@ -224,16 +207,14 @@ def find_debugger_info(debug, debugger, debugger_args):
         if not debugger:
             # No debugger name was provided. Look for the default ones on
             # current OS.
-            debugger = mozdebug.get_default_debugger_name(
-                mozdebug.DebuggerSearch.KeepLooking
-            )
+            debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
 
         debuggerInfo = None
         if debugger:
             debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
 
         if debuggerInfo is None:
-            raise TalosError("Could not find a suitable debugger in your PATH.")
+            raise TalosError('Could not find a suitable debugger in your PATH.')
 
     return debuggerInfo
 
@@ -264,12 +245,8 @@ def kill_and_get_minidump(context, minidump_dir):
     if context.is_launcher:
         kids = context.process.children()
         if len(kids) == 1:
-            LOG.debug(
-                (
-                    "Launcher process {} detected. Killing parent"
-                    " process {} instead."
-                ).format(proc, kids[0])
-            )
+            LOG.debug(("Launcher process {} detected. Killing parent"
+                       " process {} instead.").format(proc, kids[0]))
             proc = kids[0]
     LOG.debug("Killing %s and writing a minidump file" % proc)
     mozcrash.kill_and_get_minidump(proc.pid, minidump_dir)

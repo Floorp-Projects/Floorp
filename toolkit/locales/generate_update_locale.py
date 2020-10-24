@@ -10,7 +10,7 @@ import six
 
 
 def main(output, locale=None):
-    assert locale is not None
+    assert(locale is not None)
     # update.locale is a trivial file but let's be unicode aware anyway.
     locale = six.ensure_text(locale)
     print(locale, file=output)

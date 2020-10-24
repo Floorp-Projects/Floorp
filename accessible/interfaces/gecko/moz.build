@@ -4,36 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeneratedFile(
-    "IGeckoCustom.h",
-    "IGeckoCustom_p.c",
-    "IGeckoCustom_i.c",
-    "IGeckoCustom_dlldata.c",
-    "IGeckoCustom.tlb",
-    inputs=["IGeckoCustom.idl"],
-    script="/build/midl.py",
-    entry_point="midl",
-    flags=["-dlldata", OBJDIR + "/IGeckoCustom_dlldata.c"],
-)
+GeneratedFile('IGeckoCustom.h', 'IGeckoCustom_p.c', 'IGeckoCustom_i.c',
+              'IGeckoCustom_dlldata.c', 'IGeckoCustom.tlb',
+              inputs=['IGeckoCustom.idl'],
+              script='/build/midl.py', entry_point='midl',
+              flags=['-dlldata', OBJDIR + '/IGeckoCustom_dlldata.c'])
 
 SOURCES += [
-    "!IGeckoCustom_dlldata.c",
-    "!IGeckoCustom_i.c",
-    "!IGeckoCustom_p.c",
+    '!IGeckoCustom_dlldata.c',
+    '!IGeckoCustom_i.c',
+    '!IGeckoCustom_p.c',
 ]
 
 EXPORTS += [
-    "!IGeckoCustom.h",
-    "!IGeckoCustom_i.c",
+    '!IGeckoCustom.h',
+    '!IGeckoCustom_i.c',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 # Suppress warnings from the MIDL generated code.
-if CONFIG["CC_TYPE"] == "clang-cl":
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
-        "-Wno-extern-initializer",
-        "-Wno-incompatible-pointer-types",
-        "-Wno-missing-braces",
-        "-Wno-unused-const-variable",
+        '-Wno-extern-initializer',
+        '-Wno-incompatible-pointer-types',
+        '-Wno-missing-braces',
+        '-Wno-unused-const-variable',
     ]

@@ -25,17 +25,17 @@ class NetworkError(Exception):
 
 
 def _get_logger():
-    logger = mozlog.get_default_logger(component="moznetwork")
+    logger = mozlog.get_default_logger(component='moznetwork')
     if not logger:
-        logger = mozlog.unstructured.getLogger("moznetwork")
+        logger = mozlog.unstructured.getLogger('moznetwork')
     return logger
 
 
 def _get_interface_list():
     """Provides a list of available network interfaces
-    as a list of tuples (name, ip)"""
+       as a list of tuples (name, ip)"""
     logger = _get_logger()
-    logger.debug("Gathering interface list")
+    logger.debug('Gathering interface list')
     max_iface = 32  # Maximum number of interfaces(arbitrary)
     bytes = max_iface * 32
     is_32bit = (8 * struct.calcsize("P")) == 32  # Set Architecture
@@ -43,40 +43,31 @@ def _get_interface_list():
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        names = array.array("B", b"\0" * bytes)
-        outbytes = struct.unpack(
-            "iL",
-            fcntl.ioctl(
-                s.fileno(),
-                0x8912,  # SIOCGIFCONF
-                struct.pack("iL", bytes, names.buffer_info()[0]),
-            ),
-        )[0]
+        names = array.array('B', b'\0' * bytes)
+        outbytes = struct.unpack('iL', fcntl.ioctl(
+            s.fileno(),
+            0x8912,  # SIOCGIFCONF
+            struct.pack('iL', bytes, names.buffer_info()[0])
+        ))[0]
         if six.PY3:
             namestr = names.tobytes()
         else:
             namestr = names.tostring()
-        return [
-            (
-                six.ensure_str(namestr[i : i + 32].split(b"\0", 1)[0]),
-                socket.inet_ntoa(namestr[i + 20 : i + 24]),
-            )
-            for i in range(0, outbytes, struct_size)
-        ]
+        return [(six.ensure_str(namestr[i:i + 32].split(b'\0', 1)[0]),
+                 socket.inet_ntoa(namestr[i + 20:i + 24]))
+                for i in range(0, outbytes, struct_size)]
 
     except IOError:
-        raise NetworkError("Unable to call ioctl with SIOCGIFCONF")
+        raise NetworkError('Unable to call ioctl with SIOCGIFCONF')
 
 
 def _proc_matches(args, regex):
     """Helper returns the matches of regex in the output of a process created with
     the given arguments"""
-    output = subprocess.Popen(
-        args=args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
-    ).stdout.read()
+    output = subprocess.Popen(args=args,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True).stdout.read()
     return re.findall(regex, output)
 
 
@@ -84,60 +75,59 @@ def _parse_ifconfig():
     """Parse the output of running ifconfig on mac in cases other methods
     have failed"""
     logger = _get_logger()
-    logger.debug("Parsing ifconfig")
+    logger.debug('Parsing ifconfig')
 
     # Attempt to determine the default interface in use.
-    default_iface = _proc_matches(
-        ["route", "-n", "get", "default"], r"interface: (\w+)"
-    )
+    default_iface = _proc_matches(['route', '-n', 'get', 'default'],
+                                  r'interface: (\w+)')
 
     if default_iface:
-        addr_list = _proc_matches(
-            ["ifconfig", default_iface[0]], r"inet (\d+.\d+.\d+.\d+)"
-        )
+        addr_list = _proc_matches(['ifconfig', default_iface[0]],
+                                  r'inet (\d+.\d+.\d+.\d+)')
         if addr_list:
-            logger.debug(
-                "Default interface: [%s] %s" % (default_iface[0], addr_list[0])
-            )
-            if not addr_list[0].startswith("127."):
+            logger.debug('Default interface: [%s] %s' % (default_iface[0],
+                                                         addr_list[0]))
+            if not addr_list[0].startswith('127.'):
                 return addr_list[0]
 
     # Iterate over plausible interfaces if we didn't find a suitable default.
-    for iface in ["en%s" % i for i in range(10)]:
-        addr_list = _proc_matches(["ifconfig", iface], r"inet (\d+.\d+.\d+.\d+)")
+    for iface in ['en%s' % i for i in range(10)]:
+        addr_list = _proc_matches(['ifconfig', iface],
+                                  r'inet (\d+.\d+.\d+.\d+)')
         if addr_list:
-            logger.debug("Interface: [%s] %s" % (iface, addr_list[0]))
-            if not addr_list[0].startswith("127."):
+            logger.debug('Interface: [%s] %s' % (iface, addr_list[0]))
+            if not addr_list[0].startswith('127.'):
                 return addr_list[0]
 
     # Just return any that isn't localhost. If we can't find one, we have
     # failed.
-    addrs = _proc_matches(["ifconfig"], r"inet (\d+.\d+.\d+.\d+)")
+    addrs = _proc_matches(['ifconfig'],
+                          r'inet (\d+.\d+.\d+.\d+)')
     try:
-        return [addr for addr in addrs if not addr.startswith("127.")][0]
+        return [addr for addr in addrs if not addr.startswith('127.')][0]
     except IndexError:
         return None
 
 
 def get_ip():
     """Provides an available network interface address, for example
-    "192.168.1.3".
+       "192.168.1.3".
 
-    A `NetworkError` exception is raised in case of failure."""
+       A `NetworkError` exception is raised in case of failure."""
     logger = _get_logger()
     try:
         hostname = socket.gethostname()
         try:
-            logger.debug("Retrieving IP for %s" % hostname)
+            logger.debug('Retrieving IP for %s' % hostname)
             ips = socket.gethostbyname_ex(hostname)[2]
         except socket.gaierror:  # for Mac OS X
-            hostname += ".local"
-            logger.debug("Retrieving IP for %s" % hostname)
+            hostname += '.local'
+            logger.debug('Retrieving IP for %s' % hostname)
             ips = socket.gethostbyname_ex(hostname)[2]
         if len(ips) == 1:
             ip = ips[0]
         elif len(ips) > 1:
-            logger.debug("Multiple addresses found: %s" % ips)
+            logger.debug('Multiple addresses found: %s' % ips)
             # no fallback on Windows so take the first address
             ip = ips[0] if mozinfo.isWin else None
         else:
@@ -151,8 +141,8 @@ def get_ip():
         if mozinfo.isLinux:
             interfaces = _get_interface_list()
             for ifconfig in interfaces:
-                logger.debug("Interface: [%s] %s" % (ifconfig[0], ifconfig[1]))
-                if ifconfig[0] == "lo":
+                logger.debug('Interface: [%s] %s' % (ifconfig[0], ifconfig[1]))
+                if ifconfig[0] == 'lo':
                     continue
                 else:
                     return ifconfig[1]
@@ -160,7 +150,7 @@ def get_ip():
             ip = _parse_ifconfig()
 
     if ip is None:
-        raise NetworkError("Unable to obtain network address")
+        raise NetworkError('Unable to obtain network address')
 
     return ip
 
@@ -171,16 +161,19 @@ def get_lan_ip():
 
 
 def cli(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description="Retrieve IP address")
+    parser = argparse.ArgumentParser(
+        description='Retrieve IP address')
     mozlog.commandline.add_logging_group(
-        parser, include_formatters=mozlog.commandline.TEXT_FORMATTERS
+        parser,
+        include_formatters=mozlog.commandline.TEXT_FORMATTERS
     )
 
     args = parser.parse_args()
-    mozlog.commandline.setup_logging("mozversion", args, {"mach": sys.stdout})
+    mozlog.commandline.setup_logging(
+        'mozversion', args, {'mach': sys.stdout})
 
-    _get_logger().info("IP address: %s" % get_ip())
+    _get_logger().info('IP address: %s' % get_ip())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cli()

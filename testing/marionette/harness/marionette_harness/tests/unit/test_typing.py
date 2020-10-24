@@ -18,6 +18,7 @@ def inline(doc):
 
 
 class TypingTestCase(MarionetteTestCase):
+
     def setUp(self):
         super(TypingTestCase, self).setUp()
 
@@ -28,6 +29,7 @@ class TypingTestCase(MarionetteTestCase):
 
 
 class TestTypingChrome(TypingTestCase):
+
     def setUp(self):
         super(TestTypingChrome, self).setUp()
         self.marionette.set_context("chrome")
@@ -59,6 +61,7 @@ class TestTypingChrome(TypingTestCase):
 
 
 class TestTypingContent(TypingTestCase):
+
     def test_should_fire_key_press_events(self):
         test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)
@@ -122,8 +125,8 @@ class TestTypingContent(TypingTestCase):
         self.marionette.navigate(test_html)
 
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
-        key_reporter.send_keys('"')
-        self.assertEqual('"', key_reporter.get_property("value"))
+        key_reporter.send_keys("\"")
+        self.assertEqual("\"", key_reporter.get_property("value"))
 
     def test_should_type_an_at_character(self):
         test_html = self.marionette.absolute_url("keyboard.html")
@@ -245,7 +248,7 @@ class TestTypingContent(TypingTestCase):
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
-        numeric_shifts_etc = '~!@#$%^&*()_+{}:i"<>?|END~'
+        numeric_shifts_etc = "~!@#$%^&*()_+{}:i\"<>?|END~"
         element.send_keys(numeric_shifts_etc)
         self.assertEqual(numeric_shifts_etc, element.get_property("value"))
         self.assertIn(" up: 16", result.text.strip())
@@ -286,11 +289,9 @@ class TestTypingContent(TypingTestCase):
 
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
-        all_printable = (
-            "!\"#$%&'()*+,-./0123456789:<=>?@ "
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`"
-            "abcdefghijklmnopqrstuvwxyz{|}~"
-        )
+        all_printable = ("!\"#$%&'()*+,-./0123456789:<=>?@ "
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ [\\]^_`"
+                         "abcdefghijklmnopqrstuvwxyz{|}~")
         element.send_keys(all_printable)
 
         self.assertTrue(all_printable, element.get_property("value"))
@@ -338,37 +339,31 @@ class TestTypingContent(TypingTestCase):
         test_html = self.marionette.absolute_url("html5/test_html_inputs.html")
         self.marionette.navigate(test_html)
 
-        num_input = self.marionette.find_element(By.ID, "number")
-        self.assertEqual(
-            "", self.marionette.execute_script("return arguments[0].value", [num_input])
-        )
+        num_input = self.marionette.find_element(By.ID, 'number')
+        self.assertEqual("",
+                         self.marionette.execute_script("return arguments[0].value", [num_input]))
         num_input.send_keys("1234")
-        self.assertEqual(
-            "1234",
-            self.marionette.execute_script("return arguments[0].value", [num_input]),
-        )
+        self.assertEqual('1234',
+                         self.marionette.execute_script("return arguments[0].value", [num_input]))
 
     def test_insert_keys(self):
         l = self.marionette.find_element(By.ID, "change")
         l.send_keys("abde")
-        self.assertEqual(
-            "abde", self.marionette.execute_script("return arguments[0].value;", [l])
-        )
+        self.assertEqual("abde", self.marionette.execute_script("return arguments[0].value;", [l]))
 
         # Set caret position to the middle of the input text.
         self.marionette.execute_script(
             """var el = arguments[0];
             el.selectionStart = el.selectionEnd = el.value.length / 2;""",
-            script_args=[l],
-        )
+            script_args=[l])
 
         l.send_keys("c")
-        self.assertEqual(
-            "abcde", self.marionette.execute_script("return arguments[0].value;", [l])
-        )
+        self.assertEqual("abcde",
+                         self.marionette.execute_script("return arguments[0].value;", [l]))
 
 
 class TestTypingContentLegacy(TestTypingContent):
+
     def setUp(self):
         super(TestTypingContent, self).setUp()
 

@@ -5,51 +5,45 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@imports("sys")
+@imports('sys')
 def die(*args):
-    "Print an error and terminate configure."
+    'Print an error and terminate configure.'
     log.error(*args)
     sys.exit(1)
 
 
-@imports(_from="mozbuild.configure", _import="ConfigureError")
+@imports(_from='mozbuild.configure', _import='ConfigureError')
 def configure_error(message):
-    """Raise a programming error and terminate configure.
+    '''Raise a programming error and terminate configure.
     Primarily for use in moz.configure templates to sanity check
-    their inputs from moz.configure usage."""
+    their inputs from moz.configure usage.'''
     raise ConfigureError(message)
 
 
 # A wrapper to obtain a process' output and return code.
 # Returns a tuple (retcode, stdout, stderr).
-@imports("os")
-@imports("six")
-@imports("subprocess")
-@imports(_from="mozbuild.shellutil", _import="quote")
-@imports(_from="mozbuild.util", _import="system_encoding")
+@imports('os')
+@imports('six')
+@imports('subprocess')
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.util', _import='system_encoding')
 def get_cmd_output(*args, **kwargs):
-    log.debug("Executing: `%s`", quote(*args))
+    log.debug('Executing: `%s`', quote(*args))
     proc = subprocess.Popen(
-        args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         # On Python 2 on Windows, close_fds prevents the process from inheriting
         # stdout/stderr. Elsewhere, it simply prevents it from inheriting extra
         # file descriptors, which is what we want.
-        close_fds=os.name != "nt",
-        **kwargs
-    )
+        close_fds=os.name != 'nt', **kwargs)
     stdout, stderr = proc.communicate()
     # Normally we would set the `encoding` and `errors` arguments in the
     # constructor to subprocess.Popen, but those arguments were added in 3.6
     # and we need to support back to 3.5, so instead we need to do this
     # nonsense.
-    stdout = six.ensure_text(
-        stdout, encoding=system_encoding, errors="replace"
-    ).replace("\r\n", "\n")
-    stderr = six.ensure_text(
-        stderr, encoding=system_encoding, errors="replace"
-    ).replace("\r\n", "\n")
+    stdout = six.ensure_text(stdout, encoding=system_encoding,
+                             errors='replace').replace('\r\n', '\n')
+    stderr = six.ensure_text(stderr, encoding=system_encoding,
+                             errors='replace').replace('\r\n', '\n')
     return proc.wait(), stdout, stderr
 
 
@@ -57,83 +51,87 @@ def get_cmd_output(*args, **kwargs):
 # by running the given command if it exits normally, and streams that
 # output to log.debug and calls die or the given error callback if it
 # does not.
-@imports(_from="mozbuild.configure.util", _import="LineIO")
-@imports(_from="mozbuild.shellutil", _import="quote")
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def check_cmd_output(*args, **kwargs):
-    onerror = kwargs.pop("onerror", None)
+    onerror = kwargs.pop('onerror', None)
 
     with log.queue_debug():
         retcode, stdout, stderr = get_cmd_output(*args, **kwargs)
         if retcode == 0:
             return stdout
 
-        log.debug("The command returned non-zero exit status %d.", retcode)
-        for out, desc in ((stdout, "output"), (stderr, "error output")):
+        log.debug('The command returned non-zero exit status %d.',
+                  retcode)
+        for out, desc in ((stdout, 'output'), (stderr, 'error output')):
             if out:
-                log.debug("Its %s was:", desc)
-                with LineIO(lambda l: log.debug("| %s", l)) as o:
+                log.debug('Its %s was:', desc)
+                with LineIO(lambda l: log.debug('| %s', l)) as o:
                     o.write(out)
         if onerror:
             return onerror()
-        die("Command `%s` failed with exit status %d." % (quote(*args), retcode))
+        die('Command `%s` failed with exit status %d.' %
+            (quote(*args), retcode))
 
 
-@imports("os")
+@imports('os')
 def is_absolute_or_relative(path):
     if os.altsep and os.altsep in path:
         return True
     return os.sep in path
 
 
-@imports(_import="mozpack.path", _as="mozpath")
+@imports(_import='mozpack.path', _as='mozpath')
 def normsep(path):
     return mozpath.normsep(path)
 
 
-@imports("ctypes")
-@imports(_from="ctypes", _import="wintypes")
-@imports(_from="mozbuild.configure.constants", _import="WindowsBinaryType")
+@imports('ctypes')
+@imports(_from='ctypes', _import='wintypes')
+@imports(_from='mozbuild.configure.constants', _import='WindowsBinaryType')
 def windows_binary_type(path):
     """Obtain the type of a binary on Windows.
 
     Returns WindowsBinaryType constant.
     """
     GetBinaryTypeW = ctypes.windll.kernel32.GetBinaryTypeW
-    GetBinaryTypeW.argtypes = [wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+    GetBinaryTypeW.argtypes = [wintypes.LPWSTR,
+                               ctypes.POINTER(wintypes.DWORD)]
     GetBinaryTypeW.restype = wintypes.BOOL
 
     bin_type = wintypes.DWORD()
     res = GetBinaryTypeW(path, ctypes.byref(bin_type))
     if not res:
-        die("could not obtain binary type of %s" % path)
+        die('could not obtain binary type of %s' % path)
 
     if bin_type.value == 0:
-        return WindowsBinaryType("win32")
+        return WindowsBinaryType('win32')
     elif bin_type.value == 6:
-        return WindowsBinaryType("win64")
+        return WindowsBinaryType('win64')
     # If we see another binary type, something is likely horribly wrong.
     else:
-        die("unsupported binary type on %s: %s" % (path, bin_type))
+        die('unsupported binary type on %s: %s' % (path, bin_type))
 
 
-@imports("ctypes")
-@imports(_from="ctypes", _import="wintypes")
+@imports('ctypes')
+@imports(_from='ctypes', _import='wintypes')
 def get_GetShortPathNameW():
     GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
-    GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR,
+                                  wintypes.DWORD]
     GetShortPathNameW.restype = wintypes.DWORD
     return GetShortPathNameW
 
 
 @template
-@imports("ctypes")
-@imports("platform")
-@imports(_from="mozbuild.shellutil", _import="quote")
+@imports('ctypes')
+@imports('platform')
+@imports(_from='mozbuild.shellutil', _import='quote')
 def normalize_path():
     # Until the build system can properly handle programs that need quoting,
     # transform those paths into their short version on Windows (e.g.
     # c:\PROGRA~1...).
-    if platform.system() == "Windows":
+    if platform.system() == 'Windows':
         GetShortPathNameW = get_GetShortPathNameW()
 
         def normalize_path(path):
@@ -145,20 +143,17 @@ def normalize_path():
                 out = ctypes.create_unicode_buffer(size)
                 needed = GetShortPathNameW(path, out, size)
                 if size >= needed:
-                    if " " in out.value:
-                        die(
-                            "GetShortPathName returned a long path name: `%s`. "
+                    if ' ' in out.value:
+                        die("GetShortPathName returned a long path name: `%s`. "
                             "Use `fsutil file setshortname' "
                             "to create a short name "
                             "for any components of this path "
                             "that have spaces.",
-                            out.value,
-                        )
+                            out.value)
                     return normsep(out.value)
                 size = needed
 
     else:
-
         def normalize_path(path):
             return normsep(path)
 
@@ -172,10 +167,10 @@ normalize_path = normalize_path()
 # exists.
 # The `paths` parameter may be passed to search the given paths instead of
 # $PATH.
-@imports("sys")
-@imports(_from="os", _import="pathsep")
-@imports(_from="os", _import="environ")
-@imports(_from="mozfile", _import="which")
+@imports('sys')
+@imports(_from='os', _import='pathsep')
+@imports(_from='os', _import='environ')
+@imports(_from='mozfile', _import='which')
 def find_program(file, paths=None):
     # The following snippet comes from `which` itself, with a slight
     # modification to use lowercase extensions, because it's confusing rustup
@@ -183,11 +178,12 @@ def find_program(file, paths=None):
 
     # Windows has the concept of a list of extensions (PATHEXT env var).
     if sys.platform.startswith("win"):
-        exts = [e.lower() for e in environ.get("PATHEXT", "").split(pathsep)]
+        exts = [e.lower()
+                for e in environ.get("PATHEXT", "").split(pathsep)]
         # If '.exe' is not in exts then obviously this is Win9x and
         # or a bogus PATHEXT, then use a reasonable default.
-        if ".exe" not in exts:
-            exts = [".com", ".exe", ".bat"]
+        if '.exe' not in exts:
+            exts = ['.com', '.exe', '.bat']
     else:
         exts = None
 
@@ -197,43 +193,42 @@ def find_program(file, paths=None):
 
     if paths:
         if not isinstance(paths, (list, tuple)):
-            die(
-                "Paths provided to find_program must be a list of strings, " "not %r",
-                paths,
-            )
+            die("Paths provided to find_program must be a list of strings, "
+                "not %r", paths)
         paths = pathsep.join(paths)
 
     path = which(file, path=paths, exts=exts)
     return normalize_path(path) if path else None
 
 
-@imports("os")
-@imports(_from="mozbuild.configure.util", _import="LineIO")
-@imports(_from="six", _import="ensure_binary")
-@imports(_from="tempfile", _import="mkstemp")
+@imports('os')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='six', _import='ensure_binary')
+@imports(_from='tempfile', _import='mkstemp')
 def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
     flags = flags or []
 
     if not isinstance(flags, (list, tuple)):
-        die("Flags provided to try_compile must be a list of strings, " "not %r", flags)
+        die("Flags provided to try_compile must be a list of strings, "
+            "not %r", flags)
 
     suffix = {
-        "C": ".c",
-        "C++": ".cpp",
+        'C': '.c',
+        'C++': '.cpp',
     }[language]
 
-    fd, path = mkstemp(prefix="conftest.", suffix=suffix, text=True)
+    fd, path = mkstemp(prefix='conftest.', suffix=suffix, text=True)
     try:
-        source = source.encode("ascii", "replace")
+        source = source.encode('ascii', 'replace')
 
-        log.debug("Creating `%s` with content:", path)
-        with LineIO(lambda l: log.debug("| %s", l)) as out:
+        log.debug('Creating `%s` with content:', path)
+        with LineIO(lambda l: log.debug('| %s', l)) as out:
             out.write(source)
 
         os.write(fd, ensure_binary(source))
         os.close(fd)
         cmd = compiler + [path] + list(flags)
-        kwargs = {"onerror": onerror}
+        kwargs = {'onerror': onerror}
         return check_cmd_output(*cmd, **kwargs)
     finally:
         os.remove(path)
@@ -293,9 +288,9 @@ def unique_list(l):
 #     ('19.0', 'arm', r'C:\...\amd64_arm\cl.exe')
 #     ('19.0', 'x64', r'C:\...\amd64\cl.exe')
 #     ('19.0', 'x86', r'C:\...\amd64_x86\cl.exe')
-@imports(_import="winreg")
-@imports(_from="__builtin__", _import="WindowsError")
-@imports(_from="fnmatch", _import="fnmatch")
+@imports(_import='winreg')
+@imports(_from='__builtin__', _import='WindowsError')
+@imports(_from='fnmatch', _import='fnmatch')
 def get_registry_values(pattern, get_32_and_64_bit=False):
     def enum_helper(func, key):
         i = 0
@@ -308,7 +303,7 @@ def get_registry_values(pattern, get_32_and_64_bit=False):
 
     def get_keys(key, pattern, access_mask):
         try:
-            s = winreg.OpenKey(key, "\\".join(pattern[:-1]), 0, access_mask)
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]), 0, access_mask)
         except WindowsError:
             return
         for k in enum_helper(winreg.EnumKey, s):
@@ -320,7 +315,7 @@ def get_registry_values(pattern, get_32_and_64_bit=False):
 
     def get_values(key, pattern, access_mask):
         try:
-            s = winreg.OpenKey(key, "\\".join(pattern[:-1]), 0, access_mask)
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]), 0, access_mask)
         except WindowsError:
             return
         for k, v, t in enum_helper(winreg.EnumValue, s):
@@ -331,7 +326,7 @@ def get_registry_values(pattern, get_32_and_64_bit=False):
         subpattern = []
         for p in pattern:
             subpattern.append(p)
-            if "*" in p:
+            if '*' in p:
                 yield subpattern
                 subpattern = []
         if subpattern:
@@ -344,7 +339,7 @@ def get_registry_values(pattern, get_32_and_64_bit=False):
                 matches = base_key[:-1]
                 base_key = base_key[-1]
                 if i == len(pattern) - 1:
-                    want_name = "*" in p[-1]
+                    want_name = '*' in p[-1]
                     for name, value in get_values(base_key, p, access_mask):
                         yield matches + ((name, value) if want_name else (value,))
                 else:
@@ -352,29 +347,24 @@ def get_registry_values(pattern, get_32_and_64_bit=False):
                         next_keys.append(matches + (name, k))
             keys = next_keys
 
-    pattern = pattern.split("\\")
-    assert pattern[0].startswith("HKEY_")
+    pattern = pattern.split('\\')
+    assert pattern[0].startswith('HKEY_')
     keys = [(getattr(winreg, pattern[0]),)]
     pattern = list(split_pattern(pattern[1:]))
     if get_32_and_64_bit:
-        for match in get_all_values(
-            keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_32KEY
-        ):
+        for match in get_all_values(keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_32KEY):
             yield match
-        for match in get_all_values(
-            keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_64KEY
-        ):
+        for match in get_all_values(keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_64KEY):
             yield match
     else:
         for match in get_all_values(keys, pattern, winreg.KEY_READ):
             yield match
 
 
-@imports(_from="mozbuild.configure.util", _import="Version", _as="_Version")
+@imports(_from='mozbuild.configure.util', _import='Version', _as='_Version')
 def Version(v):
-    "A version number that can be compared usefully."
+    'A version number that can be compared usefully.'
     return _Version(v)
-
 
 # Denotes a deprecated option. Combines option() and @depends:
 # @deprecated_option('--option')
@@ -388,23 +378,22 @@ def Version(v):
 
 @template
 def deprecated_option(*args, **kwargs):
-    assert "help" not in kwargs
-    kwargs["help"] = "Deprecated"
+    assert 'help' not in kwargs
+    kwargs['help'] = 'Deprecated'
     opt = option(*args, **kwargs)
 
     def decorator(func):
         @depends(opt.option)
         def deprecated(value):
-            if value.origin != "default":
+            if value.origin != 'default':
                 return func(value)
-
         return deprecated
 
     return decorator
 
 
 # from mozbuild.util import ReadOnlyNamespace as namespace
-@imports(_from="mozbuild.util", _import="ReadOnlyNamespace")
+@imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
 def namespace(**kwargs):
     return ReadOnlyNamespace(**kwargs)
 
@@ -413,8 +402,8 @@ def namespace(**kwargs):
 # The given object can be a literal value, a function that takes no argument,
 # or, for convenience, a @depends function.
 @template
-@imports(_from="inspect", _import="isfunction")
-@imports(_from="mozbuild.configure", _import="SandboxDependsFunction")
+@imports(_from='inspect', _import='isfunction')
+@imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
 def dependable(obj):
     if isinstance(obj, SandboxDependsFunction):
         return obj
@@ -422,7 +411,7 @@ def dependable(obj):
         return depends(when=True)(obj)
     # Depend on --help to make lint happy if the dependable is used as an input
     # to an option().
-    return depends("--help", when=True)(lambda _: obj)
+    return depends('--help', when=True)(lambda _: obj)
 
 
 always = dependable(True)
@@ -436,7 +425,7 @@ never = dependable(False)
 def depends_tmpl(eval_args_fn, *args, **kwargs):
     if kwargs:
         assert len(kwargs) == 1
-        when = kwargs["when"]
+        when = kwargs['when']
     else:
         when = None
 
@@ -445,9 +434,7 @@ def depends_tmpl(eval_args_fn, *args, **kwargs):
         def wrapper(*args):
             if eval_args_fn(args):
                 return func(*args)
-
         return wrapper
-
     return decorator
 
 
@@ -468,7 +455,6 @@ def depends_all(*args, **kwargs):
 # Hacks related to old-configure
 # ==============================
 
-
 @dependable
 def old_configure_assignments():
     return []
@@ -480,14 +466,14 @@ def add_old_configure_assignment(var, value, when=None):
     value = dependable(value)
 
     @depends(old_configure_assignments, var, value, when=when)
-    @imports(_from="mozbuild.shellutil", _import="quote")
+    @imports(_from='mozbuild.shellutil', _import='quote')
     def add_assignment(assignments, var, value):
         if var is None or value is None:
             return
         if value is True:
-            assignments.append((var, "1"))
+            assignments.append((var, '1'))
         elif value is False:
-            assignments.append((var, ""))
+            assignments.append((var, ''))
         else:
             if isinstance(value, (list, tuple)):
                 value = quote(*value)

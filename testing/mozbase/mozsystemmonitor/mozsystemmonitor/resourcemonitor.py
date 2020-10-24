@@ -17,36 +17,17 @@ from collections import (
 
 
 class PsutilStub(object):
+
     def __init__(self):
-        self.sswap = namedtuple(
-            "sswap", ["total", "used", "free", "percent", "sin", "sout"]
-        )
-        self.sdiskio = namedtuple(
-            "sdiskio",
-            [
-                "read_count",
-                "write_count",
-                "read_bytes",
-                "write_bytes",
-                "read_time",
-                "write_time",
-            ],
-        )
-        self.pcputimes = namedtuple("pcputimes", ["user", "system"])
+        self.sswap = namedtuple('sswap', ['total', 'used', 'free', 'percent', 'sin',
+                                          'sout'])
+        self.sdiskio = namedtuple('sdiskio', ['read_count', 'write_count',
+                                              'read_bytes', 'write_bytes',
+                                              'read_time', 'write_time'])
+        self.pcputimes = namedtuple('pcputimes', ['user', 'system'])
         self.svmem = namedtuple(
-            "svmem",
-            [
-                "total",
-                "available",
-                "percent",
-                "used",
-                "free",
-                "active",
-                "inactive",
-                "buffers",
-                "cached",
-            ],
-        )
+            'svmem', ['total', 'available', 'percent', 'used', 'free',
+                      'active', 'inactive', 'buffers', 'cached'])
 
     def cpu_percent(self, a, b):
         return [0]
@@ -70,7 +51,6 @@ class PsutilStub(object):
 # psutil will raise NotImplementedError if the platform is not supported.
 try:
     import psutil
-
     have_psutil = True
 except Exception:
     try:
@@ -133,8 +113,8 @@ def _collect(pipe, poll_interval):
     swap_last = psutil.swap_memory()
     psutil.cpu_percent(None, True)
 
-    sin_index = swap_last._fields.index("sin")
-    sout_index = swap_last._fields.index("sout")
+    sin_index = swap_last._fields.index('sin')
+    sout_index = swap_last._fields.index('sout')
 
     sleep_interval = poll_interval
 
@@ -153,7 +133,8 @@ def _collect(pipe, poll_interval):
 
         cpu_diff = []
         for core, values in enumerate(cpu_times):
-            cpu_diff.append([v - cpu_last[core][i] for i, v in enumerate(values)])
+            cpu_diff.append([v - cpu_last[core][i] for i, v in
+                             enumerate(values)])
 
         cpu_last = cpu_times
 
@@ -162,17 +143,8 @@ def _collect(pipe, poll_interval):
         swap_entry[sout_index] = swap_mem.sout - swap_last.sout
         swap_last = swap_mem
 
-        data.append(
-            (
-                last_time,
-                measured_end_time,
-                io_diff,
-                cpu_diff,
-                cpu_percent,
-                list(virt_mem),
-                swap_entry,
-            )
-        )
+        data.append((last_time, measured_end_time, io_diff, cpu_diff,
+                     cpu_percent, list(virt_mem), swap_entry))
 
         collection_overhead = time.time() - last_time - poll_interval
         last_time = measured_end_time
@@ -181,15 +153,14 @@ def _collect(pipe, poll_interval):
     for entry in data:
         pipe.send(entry)
 
-    pipe.send(("done", None, None, None, None, None, None))
+    pipe.send(('done', None, None, None, None, None, None))
     pipe.close()
     sys.exit(0)
 
 
-SystemResourceUsage = namedtuple(
-    "SystemResourceUsage",
-    ["start", "end", "cpu_times", "cpu_percent", "io", "virt", "swap"],
-)
+SystemResourceUsage = namedtuple('SystemResourceUsage',
+                                 ['start', 'end',
+                                  'cpu_times', 'cpu_percent', 'io', 'virt', 'swap'])
 
 
 class SystemResourceMonitor(object):
@@ -292,7 +263,7 @@ class SystemResourceMonitor(object):
             virt = psutil.virtual_memory()
             swap = psutil.swap_memory()
         except Exception as e:
-            warnings.warn("psutil failed to run: %s" % e)
+            warnings.warn('psutil failed to run: %s' % e)
             return
 
         self._cpu_cores = len(cpu_percent)
@@ -307,13 +278,12 @@ class SystemResourceMonitor(object):
 
         self._pipe, child_pipe = multiprocessing.Pipe(True)
 
-        self._process = multiprocessing.Process(
-            target=_collect, args=(child_pipe, poll_interval)
-        )
+        self._process = multiprocessing.Process(target=_collect,
+                                                args=(child_pipe, poll_interval))
 
     def __del__(self):
         if self._running:
-            self._pipe.send(("terminate",))
+            self._pipe.send(('terminate',))
             self._process.join()
 
     # Methods to control monitoring.
@@ -345,7 +315,7 @@ class SystemResourceMonitor(object):
         assert not self._stopped
 
         try:
-            self._pipe.send(("terminate",))
+            self._pipe.send(('terminate',))
         except Exception:
             pass
         self._running = False
@@ -360,22 +330,15 @@ class SystemResourceMonitor(object):
 
         while _poll(self._pipe, poll_interval=0.1):
             try:
-                (
-                    start_time,
-                    end_time,
-                    io_diff,
-                    cpu_diff,
-                    cpu_percent,
-                    virt_mem,
-                    swap_mem,
-                ) = self._pipe.recv()
+                start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
+                    swap_mem = self._pipe.recv()
             except Exception:
                 # Let's assume we're done here
                 break
 
             # There should be nothing after the "done" message so
             # terminate.
-            if start_time == "done":
+            if start_time == 'done':
                 break
 
             io = self._io_type(*io_diff)
@@ -383,11 +346,8 @@ class SystemResourceMonitor(object):
             swap = self._swap_type(*swap_mem)
             cpu_times = [self._cpu_times_type(*v) for v in cpu_diff]
 
-            self.measurements.append(
-                SystemResourceUsage(
-                    start_time, end_time, cpu_times, cpu_percent, io, virt, swap
-                )
-            )
+            self.measurements.append(SystemResourceUsage(start_time, end_time,
+                                                         cpu_times, cpu_percent, io, virt, swap))
 
         # We establish a timeout so we don't hang forever if the child
         # process has crashed.
@@ -492,14 +452,15 @@ class SystemResourceMonitor(object):
                 end_time = t
 
         if start_time is None:
-            raise Exception("Could not find start event: %s" % start_event)
+            raise Exception('Could not find start event: %s' % start_event)
 
         if end_time is None:
-            raise Exception("Could not find end event: %s" % end_event)
+            raise Exception('Could not find end event: %s' % end_event)
 
         return self.range_usage(start_time, end_time)
 
-    def aggregate_cpu_percent(self, start=None, end=None, phase=None, per_cpu=True):
+    def aggregate_cpu_percent(self, start=None, end=None, phase=None,
+                              per_cpu=True):
         """Obtain the aggregate CPU percent usage for a range.
 
         Returns a list of floats representing average CPU usage percentage per
@@ -533,7 +494,8 @@ class SystemResourceMonitor(object):
 
         return sum(cores) / len(cpu) / samples
 
-    def aggregate_cpu_times(self, start=None, end=None, phase=None, per_cpu=True):
+    def aggregate_cpu_times(self, start=None, end=None, phase=None,
+                            per_cpu=True):
         """Obtain the aggregate CPU times for a range.
 
         If per_cpu is True (the default), this returns a list of named tuples.
@@ -671,19 +633,18 @@ class SystemResourceMonitor(object):
         )
 
         def populate_derived(e):
-            if e["cpu_percent_cores"]:
-                e["cpu_percent_mean"] = sum(e["cpu_percent_cores"]) / len(
-                    e["cpu_percent_cores"]
-                )
+            if e['cpu_percent_cores']:
+                e['cpu_percent_mean'] = sum(e['cpu_percent_cores']) / \
+                    len(e['cpu_percent_cores'])
             else:
-                e["cpu_percent_mean"] = None
+                e['cpu_percent_mean'] = None
 
-            if e["cpu_times"]:
-                e["cpu_times_sum"] = [0.0] * self._cpu_times_len
+            if e['cpu_times']:
+                e['cpu_times_sum'] = [0.0] * self._cpu_times_len
                 for i in range(0, self._cpu_times_len):
-                    e["cpu_times_sum"][i] = sum(core[i] for core in e["cpu_times"])
+                    e['cpu_times_sum'][i] = sum(core[i] for core in e['cpu_times'])
 
-                e["cpu_times_total"] = sum(e["cpu_times_sum"])
+                e['cpu_times_total'] = sum(e['cpu_times_sum'])
 
         def phase_entry(name, start, end):
             e = dict(
@@ -692,7 +653,8 @@ class SystemResourceMonitor(object):
                 end=end,
                 duration=end - start,
                 cpu_percent_cores=self.aggregate_cpu_percent(phase=name),
-                cpu_times=[list(c) for c in self.aggregate_cpu_times(phase=name)],
+                cpu_times=[list(c) for c in
+                           self.aggregate_cpu_times(phase=name)],
                 io=list(self.aggregate_io(phase=name)),
             )
             populate_derived(e)
@@ -706,36 +668,34 @@ class SystemResourceMonitor(object):
                 virt=list(m.virt),
                 swap=list(m.swap),
                 cpu_percent_cores=list(m.cpu_percent),
-                cpu_times=list(list(cpu) for cpu in m.cpu_times),
+                cpu_times=list(list(cpu) for cpu in m.cpu_times)
             )
 
             populate_derived(e)
-            o["samples"].append(e)
+            o['samples'].append(e)
 
-        if o["samples"]:
-            o["start"] = o["samples"][0]["start"]
-            o["end"] = o["samples"][-1]["end"]
-            o["duration"] = o["end"] - o["start"]
-            o["overall"] = phase_entry(None, o["start"], o["end"])
+        if o['samples']:
+            o['start'] = o['samples'][0]['start']
+            o['end'] = o['samples'][-1]['end']
+            o['duration'] = o['end'] - o['start']
+            o['overall'] = phase_entry(None, o['start'], o['end'])
         else:
-            o["start"] = None
-            o["end"] = None
-            o["duration"] = None
-            o["overall"] = None
+            o['start'] = None
+            o['end'] = None
+            o['duration'] = None
+            o['overall'] = None
 
-        o["events"] = [list(ev) for ev in self.events]
+        o['events'] = [list(ev) for ev in self.events]
 
         for phase, v in self.phases.items():
-            o["phases"].append(phase_entry(phase, v[0], v[1]))
+            o['phases'].append(phase_entry(phase, v[0], v[1]))
 
         if have_psutil:
-            o["system"].update(
-                dict(
-                    cpu_logical_count=psutil.cpu_count(logical=True),
-                    cpu_physical_count=psutil.cpu_count(logical=False),
-                    swap_total=psutil.swap_memory()[0],
-                    vmem_total=psutil.virtual_memory()[0],
-                )
-            )
+            o['system'].update(dict(
+                cpu_logical_count=psutil.cpu_count(logical=True),
+                cpu_physical_count=psutil.cpu_count(logical=False),
+                swap_total=psutil.swap_memory()[0],
+                vmem_total=psutil.virtual_memory()[0],
+            ))
 
         return o

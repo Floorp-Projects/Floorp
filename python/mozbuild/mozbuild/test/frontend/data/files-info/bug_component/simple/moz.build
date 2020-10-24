@@ -1,2 +1,2 @@
-with Files("*"):
-    BUG_COMPONENT = ("Firefox Build System", "General")
+with Files('*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')

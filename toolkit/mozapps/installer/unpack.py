@@ -10,16 +10,16 @@ import buildconfig
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Unpack a Gecko-based application")
-    parser.add_argument("directory", help="Location of the application")
-    parser.add_argument("--omnijar", help="Name of the omnijar")
+    parser = argparse.ArgumentParser(
+        description='Unpack a Gecko-based application')
+    parser.add_argument('directory', help='Location of the application')
+    parser.add_argument('--omnijar', help='Name of the omnijar')
 
     options = parser.parse_args(sys.argv[1:])
 
-    buildconfig.substs["USE_ELF_HACK"] = False
-    buildconfig.substs["PKG_STRIP"] = False
+    buildconfig.substs['USE_ELF_HACK'] = False
+    buildconfig.substs['PKG_STRIP'] = False
     unpack(options.directory, options.omnijar)
-
 
 if __name__ == "__main__":
     main()

@@ -4,9 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-arch = CONFIG["OS_ARCH"]
+arch = CONFIG['OS_ARCH']
 
-if arch == "WINNT":
-    DIRS += ["win32"]
+if arch == 'WINNT':
+    DIRS += ['win32']
 else:
-    DIRS += ["unix"]
+    DIRS += ['unix']

@@ -12,13 +12,13 @@ class CleanupObj(script.ScriptMixin, log.LogMixin):
     def __init__(self):
         super(CleanupObj, self).__init__()
         self.log_obj = None
-        self.config = {"log_level": ERROR}
+        self.config = {'log_level': ERROR}
 
 
 def cleanup():
     gc.collect()
     c = CleanupObj()
-    for f in ("test_logs", "test_dir", "tmpfile_stdout", "tmpfile_stderr"):
+    for f in ('test_logs', 'test_dir', 'tmpfile_stdout', 'tmpfile_stderr'):
         c.rmtree(f)
 
 
@@ -36,11 +36,11 @@ class TestAutomationStatus(unittest.TestCase):
 
     def tearDown(self):
         # Close the logfile handles, or windows can't remove the logs
-        if hasattr(self, "s") and isinstance(self.s, object):
-            del self.s
+        if hasattr(self, 's') and isinstance(self.s, object):
+            del(self.s)
         cleanup()
 
 
 # main {{{1
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

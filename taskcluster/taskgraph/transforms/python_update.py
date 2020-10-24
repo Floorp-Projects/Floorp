@@ -16,8 +16,8 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        env = task["worker"].setdefault("env", {})
-        env["BRANCH"] = config.params["project"]
+        env = task['worker'].setdefault('env', {})
+        env['BRANCH'] = config.params['project']
         for envvar in env:
             resolve_keyed_by(env, envvar, envvar, **config.params)
 

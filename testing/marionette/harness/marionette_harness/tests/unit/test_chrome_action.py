@@ -11,15 +11,16 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestPointerActions(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestPointerActions, self).setUp()
 
         self.actors_enabled = self.marionette.get_pref("marionette.actors.enabled")
 
         self.mouse_chain = self.marionette.actions.sequence(
-            "pointer", "pointer_id", {"pointerType": "mouse"}
-        )
-        self.key_chain = self.marionette.actions.sequence("key", "keyboard_id")
+            "pointer", "pointer_id", {"pointerType": "mouse"})
+        self.key_chain = self.marionette.actions.sequence(
+            "key", "keyboard_id")
 
         if self.marionette.session_capabilities["platformName"] == "mac":
             self.mod_key = Keys.META
@@ -42,17 +43,11 @@ class TestPointerActions(WindowManagerMixin, MarionetteTestCase):
         box = self.marionette.find_element(By.ID, "testBox")
         box.get_property("localName")
         if self.actors_enabled:
-            self.assertFalse(
-                self.marionette.execute_script(
-                    "return document.getElementById('testBox').checked"
-                )
-            )
+            self.assertFalse(self.marionette.execute_script(
+                "return document.getElementById('testBox').checked"))
             self.mouse_chain.click(element=box).perform()
-            self.assertTrue(
-                self.marionette.execute_script(
-                    "return document.getElementById('testBox').checked"
-                )
-            )
+            self.assertTrue(self.marionette.execute_script(
+                "return document.getElementById('testBox').checked"))
         else:
             with self.assertRaises(errors.UnsupportedOperationException):
                 self.mouse_chain.click(element=box).perform()
@@ -61,12 +56,8 @@ class TestPointerActions(WindowManagerMixin, MarionetteTestCase):
         self.marionette.find_element(By.ID, "textInput").click()
         if self.actors_enabled:
             self.key_chain.send_keys("x").perform()
-            self.assertEqual(
-                self.marionette.execute_script(
-                    "return document.getElementById('textInput').value"
-                ),
-                "testx",
-            )
+            self.assertEqual(self.marionette.execute_script(
+                "return document.getElementById('textInput').value"), "testx")
         else:
             with self.assertRaises(errors.UnsupportedOperationException):
                 self.key_chain.send_keys("x").perform()

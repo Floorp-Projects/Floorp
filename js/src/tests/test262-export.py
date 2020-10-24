@@ -15,20 +15,11 @@ import yaml
 
 # Skip all common files used to support tests for jstests
 # These files are listed in the README.txt
-SUPPORT_FILES = set(
-    [
-        "browser.js",
-        "shell.js",
-        "template.js",
-        "user.js",
-        "js-test-driver-begin.js",
-        "js-test-driver-end.js",
-    ]
-)
+SUPPORT_FILES = set(["browser.js", "shell.js", "template.js", "user.js",
+                     "js-test-driver-begin.js", "js-test-driver-end.js"])
 
 FRONTMATTER_WRAPPER_PATTERN = re.compile(
-    r"/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/", flags=re.DOTALL
-)
+    r'/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/', flags=re.DOTALL)
 
 
 def convertTestFile(source, includes):
@@ -64,12 +55,12 @@ def convertReportCompare(source):
         return matchobj.group()
 
     newSource = re.sub(
-        r".*reportCompare\s*\(\s*(\w*)\s*,\s*(\w*)\s*(,\s*\S*)?\s*\)\s*;*\s*",
+        r'.*reportCompare\s*\(\s*(\w*)\s*,\s*(\w*)\s*(,\s*\S*)?\s*\)\s*;*\s*',
         replaceFn,
-        source,
+        source
     )
 
-    return re.sub(r"\breportCompare\b", "assert.sameValue", newSource)
+    return re.sub(r'\breportCompare\b', "assert.sameValue", newSource)
 
 
 def fetchReftestEntries(reftest):
@@ -85,37 +76,41 @@ def fetchReftestEntries(reftest):
     module = False
 
     # should capture conditions to skip
-    matchesSkip = re.search(r"skip-if\((.*)\)", reftest)
+    matchesSkip = re.search(r'skip-if\((.*)\)', reftest)
     if matchesSkip:
         matches = matchesSkip.group(1).split("||")
         for match in matches:
             # captures a features list
             dependsOnProp = re.search(
-                r"!this.hasOwnProperty\([\'\"](.*?)[\'\"]\)", match
-            )
+                r'!this.hasOwnProperty\([\'\"](.*?)[\'\"]\)', match)
             if dependsOnProp:
                 features.append(dependsOnProp.group(1))
             else:
                 print("# Can't parse the following skip-if rule: %s" % match)
 
     # should capture the expected error
-    matchesError = re.search(r"error:\s*(\w*)", reftest)
+    matchesError = re.search(r'error:\s*(\w*)', reftest)
     if matchesError:
         # The metadata from the reftests won't say if it's a runtime or an
         # early error. This specification is required for the frontmatter tags.
         error = matchesError.group(1)
 
     # just tells if it's a module
-    matchesModule = re.search(r"\bmodule\b", reftest)
+    matchesModule = re.search(r'\bmodule\b', reftest)
     if matchesModule:
         module = True
 
     # captures any comments
-    matchesComments = re.search(r" -- (.*)", reftest)
+    matchesComments = re.search(r' -- (.*)', reftest)
     if matchesComments:
         comments = matchesComments.group(1)
 
-    return {"features": features, "error": error, "module": module, "info": comments}
+    return {
+        "features": features,
+        "error": error,
+        "module": module,
+        "info": comments
+    }
 
 
 def parseHeader(source):
@@ -154,7 +149,7 @@ def extractMeta(source):
 
     indent, frontmatter_lines = match.groups()
 
-    unindented = re.sub("^%s" % indent, "", frontmatter_lines)
+    unindented = re.sub('^%s' % indent, '', frontmatter_lines)
 
     return yaml.safe_load(unindented)
 
@@ -204,16 +199,12 @@ def cleanupMeta(meta):
     if "negative" in meta:
         # If the negative tag exists, phase needs to be present and set
         if meta["negative"].get("phase") not in ("early", "runtime"):
-            print(
-                "Warning: the negative.phase is not properly set.\n"
-                + "Ref https://github.com/tc39/test262/blob/main/INTERPRETING.md#negative"
-            )
+            print("Warning: the negative.phase is not properly set.\n" +
+                  "Ref https://github.com/tc39/test262/blob/main/INTERPRETING.md#negative")
         # If the negative tag exists, type is required
         if "type" not in meta["negative"]:
-            print(
-                "Warning: the negative.type is not set.\n"
-                + "Ref https://github.com/tc39/test262/blob/main/INTERPRETING.md#negative"
-            )
+            print("Warning: the negative.type is not set.\n" +
+                  "Ref https://github.com/tc39/test262/blob/main/INTERPRETING.md#negative")
 
     return meta
 
@@ -227,7 +218,8 @@ def mergeMeta(reftest, frontmatter, includes):
     # Merge the meta from reftest to the frontmatter
 
     if "features" in reftest:
-        frontmatter.setdefault("features", []).extend(reftest.get("features", []))
+        frontmatter.setdefault("features", []) \
+            .extend(reftest.get("features", []))
 
     # Only add the module flag if the value from reftest is truish
     if reftest.get("module"):
@@ -253,15 +245,13 @@ def mergeMeta(reftest, frontmatter, includes):
                 # specify the error phase in the generated code or fill the
                 # phase with an empty string.
                 "phase": "early",
-                "type": error,
+                "type": error
             }
         # Print a warning if the errors don't match
         elif frontmatter["negative"].get("type") != error:
-            print(
-                "Warning: The reftest error doesn't match the existing "
-                + "frontmatter error. %s != %s"
-                % (error, frontmatter["negative"]["type"])
-            )
+            print("Warning: The reftest error doesn't match the existing " +
+                  "frontmatter error. %s != %s" % (error,
+                                                   frontmatter["negative"]["type"]))
 
     # Add the shell specific includes
     if includes:
@@ -278,14 +268,10 @@ def insertCopyrightLines(source):
 
     lines = []
 
-    if not re.match(r"\/\/\s+Copyright.*\. All rights reserved.", source):
+    if not re.match(r'\/\/\s+Copyright.*\. All rights reserved.', source):
         year = date.today().year
-        lines.append(
-            "// Copyright (C) %s Mozilla Corporation. All rights reserved." % year
-        )
-        lines.append(
-            "// This code is governed by the BSD license found in the LICENSE file."
-        )
+        lines.append("// Copyright (C) %s Mozilla Corporation. All rights reserved." % year)
+        lines.append("// This code is governed by the BSD license found in the LICENSE file.")
         lines.append("\n")
 
     return "\n".join(lines) + source
@@ -303,21 +289,11 @@ def insertMeta(source, frontmatter):
     for (key, value) in frontmatter.items():
         if key in ("description", "info"):
             lines.append("%s: |" % key)
-            lines.append(
-                "  "
-                + yaml.dump(
-                    value,
-                    encoding="utf8",
-                )
-                .strip()
-                .replace("\n...", "")
-            )
+            lines.append("  " + yaml.dump(value, encoding="utf8",
+                                          ).strip().replace('\n...', ''))
         else:
-            lines.append(
-                yaml.dump(
-                    {key: value}, encoding="utf8", default_flow_style=False
-                ).strip()
-            )
+            lines.append(yaml.dump({key: value}, encoding="utf8",
+                                   default_flow_style=False).strip())
 
     lines.append("---*/")
 
@@ -336,7 +312,7 @@ def findAndCopyIncludes(dirPath, baseDir, includeDir):
     # Recurse down all folders in the relative path until
     # we reach the base directory of shell.js include files.
     # Each directory will have a shell.js file to copy.
-    while relPath:
+    while (relPath):
 
         # find the shell.js
         shellFile = os.path.join(baseDir, relPath, "shell.js")
@@ -415,9 +391,7 @@ def exportTest262(args):
                     continue
 
                 filePath = os.path.join(dirPath, fileName)
-                testName = os.path.join(
-                    fullRelPath, fileName
-                )  # captures folder(s)+filename
+                testName = os.path.join(fullRelPath, fileName)  # captures folder(s)+filename
 
                 # Copy non-test files as is.
                 (_, fileExt) = os.path.splitext(fileName)
@@ -449,25 +423,15 @@ if __name__ == "__main__":
     if "/".join(os.path.normpath(os.getcwd()).split(os.sep)[-3:]) != "js/src/tests":
         raise RuntimeError("%s must be run from js/src/tests" % sys.argv[0])
 
-    parser = argparse.ArgumentParser(
-        description="Export tests to match Test262 file compliance."
-    )
-    parser.add_argument(
-        "--out",
-        default="test262/export",
-        help="Output directory. Any existing directory will be removed! "
-        "(default: %(default)s)",
-    )
-    parser.add_argument(
-        "--exportshellincludes",
-        action="store_true",
-        help="Optionally export shell.js files as includes in exported tests. "
-        "Only use for testing, do not use for exporting to test262 (test262 tests "
-        "should have as few dependencies as possible).",
-    )
-    parser.add_argument(
-        "src", nargs="+", help="Source folder with test files to export"
-    )
+    parser = argparse.ArgumentParser(description="Export tests to match Test262 file compliance.")
+    parser.add_argument("--out", default="test262/export",
+                        help="Output directory. Any existing directory will be removed! "
+                        "(default: %(default)s)")
+    parser.add_argument("--exportshellincludes", action="store_true",
+                        help="Optionally export shell.js files as includes in exported tests. "
+                        "Only use for testing, do not use for exporting to test262 (test262 tests "
+                        "should have as few dependencies as possible).")
+    parser.add_argument("src", nargs="+", help="Source folder with test files to export")
     parser.set_defaults(func=exportTest262)
     args = parser.parse_args()
     args.func(args)

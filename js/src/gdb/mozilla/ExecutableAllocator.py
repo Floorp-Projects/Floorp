@@ -17,8 +17,7 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 
 
 class jsjitExecutableAllocatorCache(object):
-    """Cache information about the ExecutableAllocator type for this objfile."""
-
+    '''Cache information about the ExecutableAllocator type for this objfile.'''
     def __init__(self):
         self.d = None
 
@@ -29,9 +28,9 @@ class jsjitExecutableAllocatorCache(object):
 
     def initialize(self):
         self.d = {}
-        self.d["ExecutableAllocator"] = gdb.lookup_type("js::jit::ExecutableAllocator")
-        self.d["ExecutablePool"] = gdb.lookup_type("js::jit::ExecutablePool")
-        self.d["HashNumber"] = gdb.lookup_type("mozilla::HashNumber")
+        self.d['ExecutableAllocator'] = gdb.lookup_type('js::jit::ExecutableAllocator')
+        self.d['ExecutablePool'] = gdb.lookup_type('js::jit::ExecutablePool')
+        self.d['HashNumber'] = gdb.lookup_type('mozilla::HashNumber')
 
 
 @pretty_printer("js::jit::ExecutableAllocator")
@@ -43,7 +42,7 @@ class jsjitExecutableAllocator(object):
         self.cache = cache.mod_ExecutableAllocator
 
     def to_string(self):
-        return "ExecutableAllocator([%s])" % ", ".join([str(x) for x in self])
+        return "ExecutableAllocator([%s])" % ', '.join([str(x) for x in self])
 
     def __iter__(self):
         return self.PoolIterator(self)
@@ -54,10 +53,10 @@ class jsjitExecutableAllocator(object):
             self.entryType = allocator.cache.ExecutablePool.pointer()
             self.hashNumType = allocator.cache.HashNumber
             # Emulate the HashSet::Range
-            self.table = allocator.value["m_pools"]["mImpl"]["mTable"]
+            self.table = allocator.value['m_pools']['mImpl']['mTable']
             self.index = 0
             kHashNumberBits = 32
-            hashShift = allocator.value["m_pools"]["mImpl"]["mHashShift"]
+            hashShift = allocator.value['m_pools']['mImpl']['mHashShift']
             self.capacity = 1 << (kHashNumberBits - hashShift)
             if self.table == 0:
                 self.capacity = 0
@@ -91,6 +90,6 @@ class jsjitExecutablePool(mozilla.prettyprinters.Pointer):
         self.cache = cache.mod_ExecutableAllocator
 
     def to_string(self):
-        pages = self.value["m_allocation"]["pages"]
-        size = self.value["m_allocation"]["size"]
+        pages = self.value['m_allocation']['pages']
+        size = self.value['m_allocation']['size']
         return "ExecutablePool %08x-%08x" % (pages, pages + size)

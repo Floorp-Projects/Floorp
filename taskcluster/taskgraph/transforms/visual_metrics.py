@@ -18,15 +18,14 @@ transforms = TransformSequence()
 @transforms.add
 def set_visual_metrics_jobs(config, jobs):
     """Set the visual metrics configuration for the given jobs."""
-    vismet_jobs = config.params["try_task_config"].get("visual-metrics-jobs")
+    vismet_jobs = config.params['try_task_config'].get('visual-metrics-jobs')
 
     if vismet_jobs:
         vismet_jobs = json.dumps(vismet_jobs)
 
     for job in jobs:
         if vismet_jobs:
-            job["task"]["payload"].setdefault("env", {}).update(
-                VISUAL_METRICS_JOBS_JSON=vismet_jobs
-            )
+            job['task']['payload'].setdefault('env', {}).update(
+                VISUAL_METRICS_JOBS_JSON=vismet_jobs)
 
         yield job

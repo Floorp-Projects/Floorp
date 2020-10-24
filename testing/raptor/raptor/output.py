@@ -121,13 +121,11 @@ class PerftestOutput(object):
                 "subtests": subtests,
             }
             if data_set.get("summarize-values", True):
-                suite.update(
-                    {
-                        "lowerIsBetter": True,
-                        "unit": data_set["unit"],
-                        "alertThreshold": 2.0,
-                    }
-                )
+                suite.update({
+                    "lowerIsBetter": True,
+                    "unit": data_set["unit"],
+                    "alertThreshold": 2.0,
+                })
 
             for result in self.results:
                 if result["name"] == data_set["test"]:
@@ -320,9 +318,7 @@ class PerftestOutput(object):
         if testname.startswith("raptor-v8_7"):
             return 100 * filters.geometric_mean(_filter(vals))
 
-        if testname.startswith("raptor-speedometer") or testname.startswith(
-            "speedometer"
-        ):
+        if testname.startswith("raptor-speedometer") or testname.startswith("speedometer"):
             correctionFactor = 3
             results = _filter(vals)
             # speedometer has 16 tests, each of these are made of up 9 subtests
@@ -420,8 +416,7 @@ class PerftestOutput(object):
                     return sum(allavgs)
 
                 raise Exception(
-                    "No average measurements found for supporting data with W, or MHz unit ."
-                )
+                    "No average measurements found for supporting data with W, or MHz unit .")
 
             if unit in ["KB", "mAh", "mWh"]:
                 return sum(_filter(vals))
@@ -595,11 +590,10 @@ class PerftestOutput(object):
         All those three values will then be emitted as separate sub tests.
         """
         _subtests = {}
-        test_name = [
-            measurement
-            for measurement in test["measurements"].keys()
-            if "youtube-playback" in measurement
-        ]
+        test_name = [measurement
+                     for measurement in test["measurements"].keys()
+                     if "youtube-playback" in measurement
+                     ]
         if len(test_name) > 0:
             data = test["measurements"].get(test_name[0])
         else:
@@ -628,15 +622,12 @@ class PerftestOutput(object):
                         "turning on subtest alerting for measurement type: %s" % name
                     )
                     _subtests[name]["shouldAlert"] = True
-
         failed_tests = []
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
                 if _value["decodedFrames"] == 0:
-                    failed_tests.append(
-                        "%s test Failed. decodedFrames %s droppedFrames %s."
-                        % (_sub, _value["decodedFrames"], _value["droppedFrames"])
-                    )
+                    failed_tests.append("%s test Failed. decodedFrames %s droppedFrames %s." %
+                                        (_sub, _value["decodedFrames"], _value["droppedFrames"]))
 
                 try:
                     percent_dropped = (
@@ -668,10 +659,8 @@ class PerftestOutput(object):
         if len(failed_tests) > 0:
             [LOG.warning("Youtube sub-test FAILED: %s" % test) for test in failed_tests]
             # TODO: Change this to raise Exception after we figure out the failing tests
-            LOG.warning(
-                "Youtube playback sub-tests failed!!! "
-                "Not submitting results to perfherder!"
-            )
+            LOG.warning("Youtube playback sub-tests failed!!! "
+                        "Not submitting results to perfherder!")
         vals = []
         subtests = []
         names = _subtests.keys()
@@ -841,12 +830,8 @@ class RaptorOutput(PerftestOutput):
 
             elif test["type"] == "benchmark":
 
-                if any(
-                    [
-                        "youtube-playback" in measurement
-                        for measurement in test["measurements"].keys()
-                    ]
-                ):
+                if any(["youtube-playback" in measurement
+                        for measurement in test["measurements"].keys()]):
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 elif "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
@@ -1063,14 +1048,14 @@ class RaptorOutput(PerftestOutput):
 
     def parseWASMMiscOutput(self, test):
         """
-        {u'wasm-misc': [
-          [[{u'name': u'validate', u'time': 163.44000000000005},
+          {u'wasm-misc': [
+            [[{u'name': u'validate', u'time': 163.44000000000005},
+              ...
+              {u'name': u'__total__', u'time': 63308.434904788155}]],
             ...
-            {u'name': u'__total__', u'time': 63308.434904788155}]],
-          ...
-          [[{u'name': u'validate', u'time': 129.42000000000002},
-            {u'name': u'__total__', u'time': 63181.24089257814}]]
-         ]}
+            [[{u'name': u'validate', u'time': 129.42000000000002},
+              {u'name': u'__total__', u'time': 63181.24089257814}]]
+           ]}
         """
         _subtests = {}
         data = test["measurements"]["wasm-misc"]
@@ -1102,15 +1087,15 @@ class RaptorOutput(PerftestOutput):
 
     def parseWASMGodotOutput(self, test):
         """
-        {u'wasm-godot': [
-            {
-              "name": "wasm-instantiate",
-              "time": 349
-            },{
-              "name": "engine-instantiate",
-              "time": 1263
-            ...
-            }]}
+            {u'wasm-godot': [
+                {
+                  "name": "wasm-instantiate",
+                  "time": 349
+                },{
+                  "name": "engine-instantiate",
+                  "time": 1263
+                ...
+                }]}
         """
         _subtests = {}
         data = test["measurements"]["wasm-godot"]
@@ -1467,15 +1452,10 @@ class BrowsertimeOutput(PerftestOutput):
             # by appending the difference in options to the key used in `suites`. We
             # need to do a loop here in case we get a conflicting test name again.
             prev_name = test_name
-            while (
-                test_name in suites
-                and suites[test_name]["extraOptions"] != extra_options
-            ):
+            while test_name in suites and suites[test_name]["extraOptions"] != extra_options:
                 missing = set(extra_options) - set(suites[test_name]["extraOptions"])
                 if len(missing) == 0:
-                    missing = set(suites[test_name]["extraOptions"]) - set(
-                        extra_options
-                    )
+                    missing = set(suites[test_name]["extraOptions"]) - set(extra_options)
                 test_name = test_name + "-".join(list(missing))
 
                 if prev_name == test_name:
@@ -1496,7 +1476,7 @@ class BrowsertimeOutput(PerftestOutput):
                     "alertThreshold": float(test["alert_threshold"]),
                     # like suites, subtests are identified by names
                     "subtests": {},
-                },
+                }
             )
 
             # Check if the test has set optional properties
@@ -1533,9 +1513,7 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseSpeedometerOutput(test)
                 if "ares6" in test["name"]:
                     subtests, vals = self.parseAresSixOutput(test)
-                if any(
-                    "youtube-playback" in key for key in test["measurements"].keys()
-                ):
+                if any("youtube-playback" in key for key in test["measurements"].keys()):
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 if "unity-webgl" in test["name"]:
                     subtests, vals = self.parseUnityWebGLOutput(test)

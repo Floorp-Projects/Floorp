@@ -62,10 +62,7 @@ class VendorManifest(MozbuildObject):
         self.update_files(commit, yaml_file)
 
         self.log(
-            logging.INFO,
-            "vendor",
-            {},
-            "Registering changes with version control.",
+            logging.INFO, "vendor", {}, "Registering changes with version control.",
         )
         self.repository.add_remove_files(
             self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
@@ -257,9 +254,7 @@ class VendorManifest(MozbuildObject):
                     "Performing run-script action script: {script} working dir: {run_dir}",
                 )
                 self.run_process(
-                    args=[script],
-                    cwd=run_dir,
-                    log_name=script,
+                    args=[script], cwd=run_dir, log_name=script,
                 )
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"

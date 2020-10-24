@@ -3,7 +3,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 LOCALIZED_FILES.foo += [
-    "en-US/bar.ini",
-    "en-US/code/*.js",
-    "en-US/foo.js",
+    'en-US/bar.ini',
+    'en-US/code/*.js',
+    'en-US/foo.js',
 ]

@@ -11,10 +11,8 @@ import sys
 
 
 def find_error_ids(filename, known_strings):
-    with open(filename, "r", encoding="utf-8") as f:
-        known_strings += [
-            m.id.name for m in parse(f.read()).body if isinstance(m, Message)
-        ]
+    with open(filename, 'r', encoding="utf-8") as f:
+        known_strings += [m.id.name for m in parse(f.read()).body if isinstance(m, Message)]
 
 
 def main(output, *filenames):
@@ -22,11 +20,11 @@ def main(output, *filenames):
     for filename in filenames:
         find_error_ids(filename, known_strings)
 
-    output.write("const KNOWN_ERROR_MESSAGE_IDS = new Set([\n")
+    output.write('const KNOWN_ERROR_MESSAGE_IDS = new Set([\n')
     for known_string in known_strings:
         output.write('  "{}",\n'.format(known_string))
-    output.write("]);\n")
+    output.write(']);\n')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main(sys.stdout, *sys.argv[1:]))

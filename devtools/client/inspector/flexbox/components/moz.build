@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "Flexbox.js",
-    "FlexContainer.js",
-    "FlexItem.js",
-    "FlexItemList.js",
-    "FlexItemSelector.js",
-    "FlexItemSizingOutline.js",
-    "FlexItemSizingProperties.js",
-    "Header.js",
+    'Flexbox.js',
+    'FlexContainer.js',
+    'FlexItem.js',
+    'FlexItemList.js',
+    'FlexItemSelector.js',
+    'FlexItemSizingOutline.js',
+    'FlexItemSizingProperties.js',
+    'Header.js',
 )

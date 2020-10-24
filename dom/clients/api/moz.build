@@ -5,21 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "Client.h",
-    "Clients.h",
+  'Client.h',
+  'Clients.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Client.cpp",
-    "Clients.cpp",
+  'Client.cpp',
+  'Clients.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-MOCHITEST_MANIFESTS += []
+MOCHITEST_MANIFESTS += [
+]
 
-BROWSER_CHROME_MANIFESTS += []
+BROWSER_CHROME_MANIFESTS += [
+]
 
-XPCSHELL_TESTS_MANIFESTS += []
+XPCSHELL_TESTS_MANIFESTS += [
+]

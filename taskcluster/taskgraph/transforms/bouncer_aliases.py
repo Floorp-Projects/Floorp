@@ -11,9 +11,7 @@ import logging
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.bouncer_submission import craft_bouncer_product_name
-from taskgraph.transforms.bouncer_submission_partners import (
-    craft_partner_bouncer_product_name,
-)
+from taskgraph.transforms.bouncer_submission_partners import craft_partner_bouncer_product_name
 from taskgraph.util.partners import get_partners_to_be_published
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
@@ -27,81 +25,59 @@ transforms = TransformSequence()
 def make_task_worker(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job,
-            "worker-type",
-            item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            job, 'worker-type', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job,
-            "scopes",
-            item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            job, 'scopes', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job,
-            "bouncer-products-per-alias",
-            item_name=job["name"],
-            project=config.params["project"],
+            job, 'bouncer-products-per-alias',
+            item_name=job['name'], project=config.params['project']
         )
-        if "partner-bouncer-products-per-alias" in job:
+        if 'partner-bouncer-products-per-alias' in job:
             resolve_keyed_by(
-                job,
-                "partner-bouncer-products-per-alias",
-                item_name=job["name"],
-                project=config.params["project"],
+                job, 'partner-bouncer-products-per-alias',
+                item_name=job['name'], project=config.params['project']
             )
 
-        job["worker"]["entries"] = craft_bouncer_entries(config, job)
+        job['worker']['entries'] = craft_bouncer_entries(config, job)
 
-        del job["bouncer-products-per-alias"]
-        if "partner-bouncer-products-per-alias" in job:
-            del job["partner-bouncer-products-per-alias"]
+        del job['bouncer-products-per-alias']
+        if 'partner-bouncer-products-per-alias' in job:
+            del job['partner-bouncer-products-per-alias']
 
-        if job["worker"]["entries"]:
+        if job['worker']['entries']:
             yield job
         else:
-            logger.warn(
-                'No bouncer entries defined in bouncer submission task for "{}". \
-Job deleted.'.format(
-                    job["name"]
-                )
-            )
+            logger.warn('No bouncer entries defined in bouncer submission task for "{}". \
+Job deleted.'.format(job['name']))
 
 
 def craft_bouncer_entries(config, job):
     release_config = get_release_config(config)
 
-    product = job["shipping-product"]
-    current_version = release_config["version"]
-    bouncer_products_per_alias = job["bouncer-products-per-alias"]
+    product = job['shipping-product']
+    current_version = release_config['version']
+    bouncer_products_per_alias = job['bouncer-products-per-alias']
 
     entries = {
         bouncer_alias: craft_bouncer_product_name(
-            product,
-            bouncer_product,
-            current_version,
+            product, bouncer_product, current_version,
         )
         for bouncer_alias, bouncer_product in bouncer_products_per_alias.items()
     }
 
-    partner_bouncer_products_per_alias = job.get("partner-bouncer-products-per-alias")
+    partner_bouncer_products_per_alias = job.get('partner-bouncer-products-per-alias')
     if partner_bouncer_products_per_alias:
         partners = get_partners_to_be_published(config)
         for partner, sub_config_name, _ in partners:
-            entries.update(
-                {
-                    bouncer_alias.replace(
-                        "PARTNER", "{}-{}".format(partner, sub_config_name)
-                    ): craft_partner_bouncer_product_name(
-                        product,
-                        bouncer_product,
-                        current_version,
-                        partner,
-                        sub_config_name,
-                    )
-                    for bouncer_alias, bouncer_product in partner_bouncer_products_per_alias.items()  # NOQA: E501
-                }
-            )
+            entries.update({
+                bouncer_alias.replace('PARTNER', '{}-{}'.format(partner, sub_config_name)):
+                    craft_partner_bouncer_product_name(
+                        product, bouncer_product, current_version, partner, sub_config_name)
+                for bouncer_alias, bouncer_product in partner_bouncer_products_per_alias.items()
+            })
 
     return entries

@@ -20,11 +20,10 @@ import mozpack.path as mozpath
 # Regular expression to strip ANSI color sequences from a string. This is
 # needed to properly analyze Clang compiler output, which may be colorized.
 # It assumes ANSI escape sequences.
-RE_STRIP_COLORS = re.compile(r"\x1b\[[\d;]+m")
+RE_STRIP_COLORS = re.compile(r'\x1b\[[\d;]+m')
 
 # This captures Clang diagnostics with the standard formatting.
-RE_CLANG_WARNING_AND_ERROR = re.compile(
-    r"""
+RE_CLANG_WARNING_AND_ERROR = re.compile(r"""
     (?P<file>[^:]+)
     :
     (?P<line>\d+)
@@ -34,23 +33,18 @@ RE_CLANG_WARNING_AND_ERROR = re.compile(
     \s(?P<type>warning|error):\s
     (?P<message>.+)
     \[(?P<flag>[^\]]+)
-    """,
-    re.X,
-)
+    """, re.X)
 
 # This captures Clang-cl warning format.
-RE_CLANG_CL_WARNING_AND_ERROR = re.compile(
-    r"""
+RE_CLANG_CL_WARNING_AND_ERROR = re.compile(r"""
     (?P<file>.*)
     \((?P<line>\d+),(?P<column>\d+)\)
     \s?:\s+(?P<type>warning|error):\s
     (?P<message>.*)
     \[(?P<flag>[^\]]+)
-    """,
-    re.X,
-)
+    """, re.X)
 
-IN_FILE_INCLUDED_FROM = "In file included from "
+IN_FILE_INCLUDED_FROM = 'In file included from '
 
 
 class CompilerWarning(dict):
@@ -59,11 +53,11 @@ class CompilerWarning(dict):
     def __init__(self):
         dict.__init__(self)
 
-        self["filename"] = None
-        self["line"] = None
-        self["column"] = None
-        self["message"] = None
-        self["flag"] = None
+        self['filename'] = None
+        self['line'] = None
+        self['column'] = None
+        self['message'] = None
+        self['flag'] = None
 
     def copy(self):
         """Returns a copy of this compiler warning."""
@@ -76,7 +70,7 @@ class CompilerWarning(dict):
     # implement all the rich operators with those; approach is from:
     # http://regebro.wordpress.com/2010/12/13/python-implementing-rich-comparison-the-correct-way/
     def _cmpkey(self):
-        return (self["filename"], self["line"], self["column"])
+        return (self['filename'], self['line'], self['column'])
 
     def _compare(self, other, func):
         if not isinstance(other, CompilerWarning):
@@ -138,18 +132,18 @@ class WarningsDatabase(object):
     def __len__(self):
         i = 0
         for value in self._files.values():
-            i += len(value["warnings"])
+            i += len(value['warnings'])
 
         return i
 
     def __iter__(self):
         for value in self._files.values():
-            for warning in value["warnings"]:
+            for warning in value['warnings']:
                 yield warning
 
     def __contains__(self, item):
         for value in self._files.values():
-            for warning in value["warnings"]:
+            for warning in value['warnings']:
                 if warning == item:
                     return True
 
@@ -159,7 +153,7 @@ class WarningsDatabase(object):
     def warnings(self):
         """All the CompilerWarning instances in this database."""
         for value in self._files.values():
-            for w in value["warnings"]:
+            for w in value['warnings']:
                 yield w
 
     def type_counts(self, dirpath=None):
@@ -167,12 +161,10 @@ class WarningsDatabase(object):
 
         types = {}
         for value in self._files.values():
-            for warning in value["warnings"]:
-                if dirpath and not mozpath.normsep(warning["filename"]).startswith(
-                    dirpath
-                ):
+            for warning in value['warnings']:
+                if dirpath and not mozpath.normsep(warning['filename']).startswith(dirpath):
                     continue
-                flag = warning["flag"]
+                flag = warning['flag']
                 count = types.get(flag, 0)
                 count += 1
 
@@ -186,15 +178,15 @@ class WarningsDatabase(object):
 
     def warnings_for_file(self, filename):
         """Obtain the warnings for the specified file."""
-        f = self._files.get(filename, {"warnings": []})
+        f = self._files.get(filename, {'warnings': []})
 
-        for warning in f["warnings"]:
+        for warning in f['warnings']:
             yield warning
 
     def insert(self, warning, compute_hash=True):
         assert isinstance(warning, CompilerWarning)
 
-        filename = warning["filename"]
+        filename = warning['filename']
 
         new_hash = None
 
@@ -202,18 +194,15 @@ class WarningsDatabase(object):
             new_hash = hash_file(filename)
 
         if filename in self._files:
-            if new_hash != self._files[filename]["hash"]:
+            if new_hash != self._files[filename]['hash']:
                 del self._files[filename]
 
-        value = self._files.get(
-            filename,
-            {
-                "hash": new_hash,
-                "warnings": set(),
-            },
-        )
+        value = self._files.get(filename, {
+            'hash': new_hash,
+            'warnings': set(),
+        })
 
-        value["warnings"].add(warning)
+        value['warnings'].add(warning)
 
         self._files[filename] = value
 
@@ -235,27 +224,27 @@ class WarningsDatabase(object):
                 del self._files[filename]
                 continue
 
-            if self._files[filename]["hash"] is None:
+            if self._files[filename]['hash'] is None:
                 continue
 
             current_hash = hash_file(filename)
-            if current_hash != self._files[filename]["hash"]:
+            if current_hash != self._files[filename]['hash']:
                 del self._files[filename]
                 continue
 
     def serialize(self, fh):
         """Serialize the database to an open file handle."""
-        obj = {"files": {}}
+        obj = {'files': {}}
 
         # All this hackery because JSON can't handle sets.
         for k, v in six.iteritems(self._files):
-            obj["files"][k] = {}
+            obj['files'][k] = {}
 
             for k2, v2 in six.iteritems(v):
                 normalized = v2
                 if isinstance(v2, set):
                     normalized = list(v2)
-                obj["files"][k][k2] = normalized
+                obj['files'][k][k2] = normalized
 
         to_write = six.ensure_text(json.dumps(obj, indent=2))
         fh.write(to_write)
@@ -264,22 +253,22 @@ class WarningsDatabase(object):
         """Load serialized content from a handle into the current instance."""
         obj = json.load(fh)
 
-        self._files = obj["files"]
+        self._files = obj['files']
 
         # Normalize data types.
         for filename, value in six.iteritems(self._files):
-            if "warnings" in value:
+            if 'warnings' in value:
                 normalized = set()
-                for d in value["warnings"]:
+                for d in value['warnings']:
                     w = CompilerWarning()
                     w.update(d)
                     normalized.add(w)
 
-                self._files[filename]["warnings"] = normalized
+                self._files[filename]['warnings'] = normalized
 
     def load_from_file(self, filename):
         """Load the database from a file."""
-        with io.open(filename, "r", encoding="utf-8") as fh:
+        with io.open(filename, 'r', encoding='utf-8') as fh:
             self.deserialize(fh)
 
     def save_to_file(self, filename):
@@ -290,7 +279,7 @@ class WarningsDatabase(object):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        with io.open(filename, "w", encoding="utf-8", newline="\n") as fh:
+        with io.open(filename, 'w', encoding='utf-8', newline='\n') as fh:
             self.serialize(fh)
 
 
@@ -312,7 +301,7 @@ class WarningsCollector(object):
         instance whenever a new warning is parsed.
 
          ``objdir`` is the object directory. Used for normalizing paths.
-        """
+         """
         self.cb = cb
         self.objdir = objdir
         self.included_from = []
@@ -320,15 +309,15 @@ class WarningsCollector(object):
     def process_line(self, line):
         """Take a line of text and process it for a warning."""
 
-        filtered = RE_STRIP_COLORS.sub("", line)
+        filtered = RE_STRIP_COLORS.sub('', line)
 
         # Clang warnings in files included from the one(s) being compiled will
         # start with "In file included from /path/to/file:line:". Here, we
         # record those.
         if filtered.startswith(IN_FILE_INCLUDED_FROM):
-            included_from = filtered[len(IN_FILE_INCLUDED_FROM) :]
+            included_from = filtered[len(IN_FILE_INCLUDED_FROM):]
 
-            parts = included_from.split(":")
+            parts = included_from.split(':')
 
             self.included_from.append(parts[0])
 
@@ -343,22 +332,22 @@ class WarningsCollector(object):
         if match_clang:
             d = match_clang.groupdict()
 
-            filename = d["file"]
-            warning["type"] = d["type"]
-            warning["line"] = int(d["line"])
-            warning["column"] = int(d["column"])
-            warning["flag"] = d["flag"]
-            warning["message"] = d["message"].rstrip()
+            filename = d['file']
+            warning['type'] = d['type']
+            warning['line'] = int(d['line'])
+            warning['column'] = int(d['column'])
+            warning['flag'] = d['flag']
+            warning['message'] = d['message'].rstrip()
 
         elif match_clang_cl:
             d = match_clang_cl.groupdict()
 
-            filename = d["file"]
-            warning["type"] = d["type"]
-            warning["line"] = int(d["line"])
-            warning["column"] = int(d["column"])
-            warning["flag"] = d["flag"]
-            warning["message"] = d["message"].rstrip()
+            filename = d['file']
+            warning['type'] = d['type']
+            warning['line'] = int(d['line'])
+            warning['column'] = int(d['column'])
+            warning['flag'] = d['flag']
+            warning['message'] = d['message'].rstrip()
 
         else:
             self.included_from = []
@@ -371,7 +360,7 @@ class WarningsCollector(object):
         if not os.path.isabs(filename):
             filename = self._normalize_relative_path(filename)
 
-        warning["filename"] = filename
+        warning['filename'] = filename
 
         self.cb(warning)
 
@@ -379,7 +368,7 @@ class WarningsCollector(object):
 
     def _normalize_relative_path(self, filename):
         # Special case files in dist/include.
-        idx = filename.find("/dist/include")
+        idx = filename.find('/dist/include')
         if idx != -1:
             return self.objdir + filename[idx:]
 

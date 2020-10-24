@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "debounce.js",
-    "history.js",
-    "ignore.js",
-    "log.js",
-    "performance-marker.js",
-    "promise.js",
-    "task.js",
-    "thunk.js",
-    "wait-service.js",
+    'debounce.js',
+    'history.js',
+    'ignore.js',
+    'log.js',
+    'performance-marker.js',
+    'promise.js',
+    'task.js',
+    'thunk.js',
+    'wait-service.js',
 )
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']

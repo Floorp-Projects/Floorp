@@ -4,17 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = "_tests/xpcshell/security/manager/ssl/tests/unit/pkcs11testmodule"
+FINAL_TARGET = '_tests/xpcshell/security/manager/ssl/tests/unit/pkcs11testmodule'
 
 UNIFIED_SOURCES += [
-    "pkcs11testmodule.cpp",
+    'pkcs11testmodule.cpp',
 ]
 
-SharedLibrary("pkcs11testmodule")
+SharedLibrary('pkcs11testmodule')
 
 # C_GetFunctionList needs to be exported. As it turns out, it's much easier to
 # just export all the symbols.
 NoVisibilityFlags()
-SYMBOLS_FILE = "pkcs11testmodule.symbols"
+SYMBOLS_FILE = 'pkcs11testmodule.symbols'
 
 NO_PGO = True
