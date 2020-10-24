@@ -1681,10 +1681,11 @@ WSRunScanner::TextFragmentData::GetNonCollapsedRangeInTexts(
   if (!aRange.IsPositioned()) {
     return EditorDOMRangeInTexts();
   }
+  if (aRange.Collapsed()) {
+    // If collapsed, we can do nothing.
+    return EditorDOMRangeInTexts();
+  }
   if (aRange.IsInTextNodes()) {
-    if (aRange.Collapsed()) {
-      return EditorDOMRangeInTexts();
-    }
     // Note that this may return a range which don't include any invisible
     // white-spaces due to empty text nodes.
     return aRange.GetAsInTexts();
