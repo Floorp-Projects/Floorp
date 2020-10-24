@@ -2071,26 +2071,24 @@ nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
       if (!isMenu && !mIncrementalString.IsEmpty()) {
         mIncrementalString.SetLength(mIncrementalString.Length() - 1);
         return nullptr;
-      } else {
-#ifdef XP_WIN
-        nsCOMPtr<nsISound> soundInterface =
-            do_CreateInstance("@mozilla.org/sound;1");
-        if (soundInterface) soundInterface->Beep();
-#endif  // #ifdef XP_WIN
       }
+#ifdef XP_WIN
+      nsCOMPtr<nsISound> soundInterface =
+          do_CreateInstance("@mozilla.org/sound;1");
+      if (soundInterface) soundInterface->Beep();
+#endif  // #ifdef XP_WIN
     }
     return nullptr;
+  }
+  char16_t uniChar = ToLowerCase(static_cast<char16_t>(charCode));
+  if (isMenu) {
+    // Menu supports only first-letter navigation
+    mIncrementalString = uniChar;
+  } else if (IsWithinIncrementalTime(keyTime)) {
+    mIncrementalString.Append(uniChar);
   } else {
-    char16_t uniChar = ToLowerCase(static_cast<char16_t>(charCode));
-    if (isMenu) {
-      // Menu supports only first-letter navigation
-      mIncrementalString = uniChar;
-    } else if (IsWithinIncrementalTime(keyTime)) {
-      mIncrementalString.Append(uniChar);
-    } else {
-      // Interval too long, treat as new typing
-      mIncrementalString = uniChar;
-    }
+    // Interval too long, treat as new typing
+    mIncrementalString = uniChar;
   }
 
   // See bug 188199 & 192346, if all letters in incremental string are same,
