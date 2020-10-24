@@ -114,9 +114,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
 
   BytecodeRangeWithPosition(JSContext* cx, JSScript* script)
       : BytecodeRange(cx, script),
-        initialLine(script->lineno()),
         lineno(script->lineno()),
-        column(script->column()),
+        column(0),
         sn(script->notes()),
         snpc(script->code()),
         isEntryPoint(false),
@@ -204,7 +203,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         column += colspan;
         lastLinePC = snpc;
       } else if (type == SrcNoteType::SetLine) {
-        lineno = SrcNote::SetLine::getLine(sn, initialLine);
+        lineno = SrcNote::SetLine::getLine(sn);
         column = 0;
         lastLinePC = snpc;
       } else if (type == SrcNoteType::NewLine) {
@@ -224,7 +223,6 @@ class BytecodeRangeWithPosition : private BytecodeRange {
     isEntryPoint = lastLinePC == frontPC();
   }
 
-  size_t initialLine;
   size_t lineno;
   size_t column;
   const SrcNote* sn;

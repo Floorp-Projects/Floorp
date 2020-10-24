@@ -349,7 +349,7 @@ const expectedPageErrors = new Map([
           filename: "self-hosted",
           sourceId: null,
           lineNumber: NUMBER_REGEX,
-          columnNumber: NUMBER_REGEX,
+          columnNumber: 1,
           functionName: "repeat",
         },
         {
@@ -389,7 +389,7 @@ const expectedPageErrors = new Map([
           filename: "self-hosted",
           sourceId: null,
           lineNumber: NUMBER_REGEX,
-          columnNumber: NUMBER_REGEX,
+          columnNumber: 1,
           functionName: "repeat",
         },
         {
