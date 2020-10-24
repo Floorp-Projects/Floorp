@@ -59,7 +59,7 @@ describe("AuditProgressOverlay component:", () => {
       preloadedState: { audit: { auditing: [AUDIT_TYPE.CONTRAST] } },
     });
 
-    testTextProgressBar(store, "accessibility.progress.initializing");
+    testTextProgressBar(store, "Initializing…");
   });
 
   it("render auditing progress", () => {
@@ -83,7 +83,7 @@ describe("AuditProgressOverlay component:", () => {
     expect(overlayContainer.prop("id")).toBe("audit-progress-container");
     expect(overlayContainer.children().length).toBe(1);
 
-    expect(overlayContainer.text()).toBe("accessibility.progress.progressbar");
+    expect(overlayContainer.text()).toBe("Checking 5 nodes");
     expect(overlayContainer.childAt(0).type()).toBe("progress");
 
     testProgress(wrapper, 0);
@@ -117,6 +117,6 @@ describe("AuditProgressOverlay component:", () => {
       },
     });
 
-    testTextProgressBar(store, "accessibility.progress.finishing");
+    testTextProgressBar(store, "Finishing up…");
   });
 });

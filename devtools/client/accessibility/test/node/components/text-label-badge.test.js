@@ -29,8 +29,8 @@ function testBadge(wrapper) {
   const badge = textLabelBadge.childAt(0);
   expect(badge.type()).toBe(Badge);
   expect(badge.props()).toMatchObject({
-    label: "accessibility.badge.textLabel",
-    tooltip: "accessibility.badge.textLabel.tooltip",
+    label: "text label",
+    tooltip: "Does not meet WCAG standards for text alternative.",
   });
 }
 
