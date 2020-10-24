@@ -665,8 +665,19 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
+    // When update2 is enabled and a one-off is selected, we restyle URL
+    // heuristic results to look like search results. In the unlikely event that
+    // they are clicked, we promote search mode instead of navigating to the
+    // URL. This was agreed on as a compromise between consistent UX and
+    // engineering effort. See review discussion at bug 1667766.
+    let urlResultWillPromoteSearchMode =
+      this.searchMode &&
+      result.heuristic &&
+      result.type == UrlbarUtils.RESULT_TYPE.URL &&
+      this.view.oneOffSearchButtons.selectedButton;
+
     let selIndex = result.rowIndex;
-    if (!result.payload.keywordOffer) {
+    if (!result.payload.keywordOffer && !urlResultWillPromoteSearchMode) {
       this.view.close(/* elementPicked */ true);
     }
 
@@ -694,6 +705,11 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL: {
+        if (urlResultWillPromoteSearchMode) {
+          this.promoteSearchMode();
+          this.search(this.value);
+          return;
+        }
         // Bug 1578856: both the provider and the docshell run heuristics to
         // decide how to handle a non-url string, either fixing it to a url, or
         // searching for it.
