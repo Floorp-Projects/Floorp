@@ -47,14 +47,26 @@ AllowCompilerWarnings()
 
 # We allow compiler warnings, but we can at least cut down on spammy
 # warnings that get triggered for every file.
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
+        '-Wno-c++20-compat',
+        '-Wno-comma',
+        '-Wno-implicit-const-int-float-conversion',
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
+        '-Wno-tautological-unsigned-enum-zero-compare',
+        '-Wno-unreachable-code-loop-increment',
+        '-Wno-unreachable-code-return',
     ]
     CXXFLAGS += [
+        '-Wno-c++20-compat',
+        '-Wno-comma',
+        '-Wno-implicit-const-int-float-conversion',
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
+        '-Wno-tautological-unsigned-enum-zero-compare',
+        '-Wno-unreachable-code-loop-increment',
+        '-Wno-unreachable-code-return',
     ]
 
 for k, v in DEFINES.items():
