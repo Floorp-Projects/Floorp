@@ -1921,6 +1921,7 @@ class UrlbarView {
 
       let action = item.querySelector(".urlbarView-action");
       let favicon = item.querySelector(".urlbarView-favicon");
+      let title = item.querySelector(".urlbarView-title");
 
       // If a one-off button is the only selection, force the heuristic result
       // to show its action text, so the engine name is visible.
@@ -1946,10 +1947,28 @@ class UrlbarView {
 
       // When update2 is disabled, we only update search results when a search
       // engine one-off is selected.
-      if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
+      if (
+        !this.oneOffsRefresh &&
+        result.type != UrlbarUtils.RESULT_TYPE.SEARCH
+      ) {
         continue;
       }
 
+      // Update heuristic URL result titles to reflect the search string. This
+      // means we restyle a URL result to look like a search result. We override
+      // result-picking behaviour in UrlbarInput.pickResult.
+      if (
+        this.oneOffsRefresh &&
+        result.heuristic &&
+        result.type == UrlbarUtils.RESULT_TYPE.URL
+      ) {
+        title.textContent =
+          source || engine
+            ? this._queryContext.searchString
+            : result.payload.title;
+      }
+
+      // Update result action text.
       if (source) {
         // Update the result action text for a local one-off.
         this.document.l10n.setAttributes(action, source.l10nId);
@@ -1979,6 +1998,11 @@ class UrlbarView {
 
       // Update result favicons.
       let iconOverride = source?.icon || engine?.iconURI?.spec;
+      if (!iconOverride && result.type == UrlbarUtils.RESULT_TYPE.URL) {
+        // For one-offs without an icon, do not allow restyled URL results to
+        // use their own icons.
+        iconOverride = UrlbarUtils.ICON.SEARCH_GLASS;
+      }
       if (
         // Don't update the favicon on non-heuristic results when update2 is
         // enabled.
