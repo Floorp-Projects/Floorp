@@ -3290,6 +3290,10 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
              aStripWrappers == nsIEditor::eNoStrip);
 
+  if (!SelectionRefPtr()->RangeCount()) {
+    return EditActionCanceled();
+  }
+
   // Remember that we did a selection deletion.  Used by
   // CreateStyleForInsertText()
   TopLevelEditSubActionDataRef().mDidDeleteSelection = true;
@@ -3301,9 +3305,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   }
 
   // First check for table selection mode.  If so, hand off to table editor.
-  ErrorResult error;
-  if (RefPtr<Element> cellElement = GetFirstSelectedTableCellElement(error)) {
-    error.SuppressException();
+  if (HTMLEditUtils::IsInTableCellSelectionMode(*SelectionRefPtr())) {
     nsresult rv = DeleteTableCellContentsWithTransaction();
     if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -3312,14 +3314,6 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteTableCellContentsWithTransaction() failed");
     return EditActionHandled(rv);
-  }
-
-  // Only when there is no selection range, GetFirstSelectedTableCellElement()
-  // returns error and in this case, anyway we cannot handle delete selection.
-  // So, let's return error here even though we haven't handled this.
-  if (error.Failed()) {
-    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
-    return EditActionResult(error.StealNSResult());
   }
 
   AutoRangeArray rangesToDelete(*SelectionRefPtr());
