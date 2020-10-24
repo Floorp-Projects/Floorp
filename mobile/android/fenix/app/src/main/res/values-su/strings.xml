@@ -143,6 +143,8 @@
     <string name="browser_menu_install_on_homescreen">Pasang</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Tab singkron</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Singkronkeun deui</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Panggihan dina kaca</string>
     <!-- Browser menu button that creates a private tab -->
@@ -212,6 +214,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Lenyepan</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Buka tab Firefox anyar</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Paluruh</string>
     <!-- Text preview for larger sized widgets -->
@@ -338,6 +342,11 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Iber</string>
+
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Ngaran koléksi</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Pamilik koléksi (Sandiasma)</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -473,6 +482,11 @@
 
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Gorolongkeun pikeun nyumputkeun tulbar</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Gilerkeun tulbar ka gigir pikeun pindah tab</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Gilerkeun tulbar ka luhur pikeun muka tab</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->

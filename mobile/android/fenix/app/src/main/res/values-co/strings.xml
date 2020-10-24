@@ -813,6 +813,8 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">
 </string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Allucamentu permanente</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Dumandà per permette</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1627,6 +1629,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ottene u più bellu da %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Cliccu per sapene di più</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Racuglite ciò chì conta per voi</string>
