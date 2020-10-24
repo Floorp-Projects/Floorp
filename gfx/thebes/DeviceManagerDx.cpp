@@ -441,7 +441,6 @@ void DeviceManagerDx::CreateDirectCompositionDevice() {
 
 /* static */
 HANDLE DeviceManagerDx::CreateDCompSurfaceHandle() {
-#if !defined(__MINGW32__)
   if (!sDcompCreateSurfaceHandleFn) {
     return 0;
   }
@@ -454,9 +453,6 @@ HANDLE DeviceManagerDx::CreateDCompSurfaceHandle() {
   }
 
   return handle;
-#else
-  return 0;
-#endif
 }
 
 void DeviceManagerDx::ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus) {
