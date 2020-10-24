@@ -14,27 +14,29 @@ import six
 def pytest_addoption(parser):
     # We can't simply use mozlog.commandline.add_logging_group(parser) here because
     # Pytest's parser doesn't have the add_argument_group method Mozlog expects.
-    group = parser.getgroup("mozlog")
+    group = parser.getgroup('mozlog')
 
     for name, (_class, _help) in six.iteritems(mozlog.commandline.log_formatters):
-        group.addoption("--log-{0}".format(name), action="append", help=_help)
+        group.addoption('--log-{0}'.format(name), action='append', help=_help)
 
     formatter_options = six.iteritems(mozlog.commandline.fmt_options)
     for name, (_class, _help, formatters, action) in formatter_options:
         for formatter in formatters:
             if formatter in mozlog.commandline.log_formatters:
                 group.addoption(
-                    "--log-{0}-{1}".format(formatter, name), action=action, help=_help
-                )
+                    '--log-{0}-{1}'.format(formatter, name),
+                    action=action,
+                    help=_help)
 
 
 def pytest_configure(config):
     # If using pytest-xdist for parallelization, only register plugin on master process
-    if not hasattr(config, "slaveinput"):
+    if not hasattr(config, 'slaveinput'):
         config.pluginmanager.register(MozLog())
 
 
 class MozLog(object):
+
     def __init__(self):
         self._started = False
         self.results = {}
@@ -45,31 +47,28 @@ class MozLog(object):
             # As this is called for each node when using pytest-xdist, we want
             # to avoid logging multiple suite_start messages.
             self.logger.suite_start(
-                tests=tests, time=self.start_time, run_info=self.run_info
-            )
+                tests=tests,
+                time=self.start_time,
+                run_info=self.run_info)
             self._started = True
 
     def pytest_configure(self, config):
-        mozlog.commandline.setup_logging(
-            "pytest",
-            config.known_args_namespace,
-            defaults={},
-            allow_unused_options=True,
-        )
-        self.logger = mozlog.get_default_logger(component="pytest")
+        mozlog.commandline.setup_logging('pytest', config.known_args_namespace,
+                                         defaults={}, allow_unused_options=True)
+        self.logger = mozlog.get_default_logger(component='pytest')
 
     def pytest_sessionstart(self, session):
-        """Called before test collection; records suite start time to log later"""
+        '''Called before test collection; records suite start time to log later'''
         self.start_time = int(time.time() * 1000)  # in ms for Mozlog compatibility
-        self.run_info = getattr(session.config, "_metadata", None)
+        self.run_info = getattr(session.config, '_metadata', None)
 
     def pytest_collection_finish(self, session):
-        """Called after test collection is completed, just before tests are run (suite start)"""
+        '''Called after test collection is completed, just before tests are run (suite start)'''
         self._log_suite_start([item.nodeid for item in session.items])
 
     @pytest.mark.optionalhook
     def pytest_xdist_node_collection_finished(self, node, ids):
-        """Called after each pytest-xdist node collection is completed"""
+        '''Called after each pytest-xdist node collection is completed'''
         self._log_suite_start(ids)
 
     def pytest_sessionfinish(self, session, exitstatus):
@@ -79,25 +78,25 @@ class MozLog(object):
         self.logger.test_start(test=nodeid)
 
     def pytest_runtest_logreport(self, report):
-        """Called 3 times per test (setup, call, teardown), indicated by report.when"""
+        '''Called 3 times per test (setup, call, teardown), indicated by report.when'''
         test = report.nodeid
-        status = expected = "PASS"
+        status = expected = 'PASS'
         message = stack = None
-        if hasattr(report, "wasxfail"):
-            expected = "FAIL"
-        if report.failed or report.outcome == "rerun":
-            status = "FAIL" if report.when == "call" else "ERROR"
+        if hasattr(report, 'wasxfail'):
+            expected = 'FAIL'
+        if report.failed or report.outcome == 'rerun':
+            status = 'FAIL' if report.when == 'call' else 'ERROR'
         if report.skipped:
-            status = "SKIP" if not hasattr(report, "wasxfail") else "FAIL"
+            status = 'SKIP' if not hasattr(report, 'wasxfail') else 'FAIL'
         if report.longrepr is not None:
             longrepr = report.longrepr
             if isinstance(longrepr, six.string_types):
                 # When using pytest-xdist, longrepr is serialised as a str
                 message = stack = longrepr
-                if longrepr.startswith("[XPASS(strict)]"):
+                if longrepr.startswith('[XPASS(strict)]'):
                     # Strict expected failures have an outcome of failed when
                     # they unexpectedly pass.
-                    expected, status = ("FAIL", "PASS")
+                    expected, status = ('FAIL', 'PASS')
             elif hasattr(longrepr, "reprcrash"):
                 # For failures, longrepr is a ReprExceptionInfo
                 crash = longrepr.reprcrash
@@ -110,19 +109,12 @@ class MozLog(object):
                 # For skips, longrepr is a tuple of (file, lineno, reason)
                 message = report.longrepr[-1]
             else:
-                raise ValueError(
-                    "Unable to convert longrepr to message:\ntype %s\nfields: %s"
-                    % (longrepr.__class__, dir(longrepr))
-                )
-        if status != expected or expected != "PASS":
+                raise ValueError("Unable to convert longrepr to message:\ntype %s\nfields: %s" %
+                                 (longrepr.__class__, dir(longrepr)))
+        if status != expected or expected != 'PASS':
             self.results[test] = (status, expected, message, stack)
-        if report.outcome == "rerun" or report.when == "teardown":
-            defaults = ("PASS", "PASS", None, None)
+        if report.outcome == 'rerun' or report.when == 'teardown':
+            defaults = ('PASS', 'PASS', None, None)
             status, expected, message, stack = self.results.get(test, defaults)
-            self.logger.test_end(
-                test=test,
-                status=status,
-                expected=expected,
-                message=message,
-                stack=stack,
-            )
+            self.logger.test_end(test=test, status=status, expected=expected,
+                                 message=message, stack=stack)

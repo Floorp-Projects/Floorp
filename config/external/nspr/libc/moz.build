@@ -4,42 +4,42 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_FOLD_LIBS"]:
-    Library("plc4")
+if CONFIG['MOZ_FOLD_LIBS']:
+    Library('plc4')
 else:
-    SharedLibrary("plc4")
-    SOURCES += ["/nsprpub/lib/libc/src/plvrsion.c"]
-    USE_LIBS += ["nspr4"]
+    SharedLibrary('plc4')
+    SOURCES += ['/nsprpub/lib/libc/src/plvrsion.c']
+    USE_LIBS += ['nspr4']
 
 # We allow warnings for third-party code that can be updated from upstream.
 # TODO: fix NSPR warnings and remove this
 AllowCompilerWarnings()
 
-DEFINES["_NSPR_BUILD_"] = True
+DEFINES['_NSPR_BUILD_'] = True
 
 LOCAL_INCLUDES += [
-    "/config/external/nspr",
+    '/config/external/nspr',
 ]
 
 EXPORTS.nspr += [
-    "/nsprpub/lib/libc/include/plbase64.h",
-    "/nsprpub/lib/libc/include/plerror.h",
-    "/nsprpub/lib/libc/include/plgetopt.h",
-    "/nsprpub/lib/libc/include/plstr.h",
+    '/nsprpub/lib/libc/include/plbase64.h',
+    '/nsprpub/lib/libc/include/plerror.h',
+    '/nsprpub/lib/libc/include/plgetopt.h',
+    '/nsprpub/lib/libc/include/plstr.h',
 ]
 
 SOURCES += [
-    "/nsprpub/lib/libc/src/base64.c",
-    "/nsprpub/lib/libc/src/plerror.c",
-    "/nsprpub/lib/libc/src/plgetopt.c",
-    "/nsprpub/lib/libc/src/strcase.c",
-    "/nsprpub/lib/libc/src/strcat.c",
-    "/nsprpub/lib/libc/src/strchr.c",
-    "/nsprpub/lib/libc/src/strcmp.c",
-    "/nsprpub/lib/libc/src/strcpy.c",
-    "/nsprpub/lib/libc/src/strdup.c",
-    "/nsprpub/lib/libc/src/strlen.c",
-    "/nsprpub/lib/libc/src/strpbrk.c",
-    "/nsprpub/lib/libc/src/strstr.c",
-    "/nsprpub/lib/libc/src/strtok.c",
+    '/nsprpub/lib/libc/src/base64.c',
+    '/nsprpub/lib/libc/src/plerror.c',
+    '/nsprpub/lib/libc/src/plgetopt.c',
+    '/nsprpub/lib/libc/src/strcase.c',
+    '/nsprpub/lib/libc/src/strcat.c',
+    '/nsprpub/lib/libc/src/strchr.c',
+    '/nsprpub/lib/libc/src/strcmp.c',
+    '/nsprpub/lib/libc/src/strcpy.c',
+    '/nsprpub/lib/libc/src/strdup.c',
+    '/nsprpub/lib/libc/src/strlen.c',
+    '/nsprpub/lib/libc/src/strpbrk.c',
+    '/nsprpub/lib/libc/src/strstr.c',
+    '/nsprpub/lib/libc/src/strtok.c',
 ]

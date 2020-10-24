@@ -4,6 +4,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class ChromeTests(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(ChromeTests, self).setUp()
 
@@ -21,11 +22,9 @@ class ChromeTests(WindowManagerMixin, MarionetteTestCase):
                 # Raise an exception type which should not be thrown by Marionette
                 # while running this test. Otherwise it would mask eg. IOError as
                 # thrown for a socket timeout.
-                raise NotImplementedError(
-                    "Exception should not cause a hang when "
-                    "closing the chrome window in content "
-                    "context"
-                )
+                raise NotImplementedError('Exception should not cause a hang when '
+                                          'closing the chrome window in content '
+                                          'context')
             finally:
                 self.marionette.close_chrome_window()
                 self.marionette.switch_to_window(self.start_window)

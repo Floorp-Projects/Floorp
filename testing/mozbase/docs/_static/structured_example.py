@@ -21,11 +21,9 @@ def expected(status):
     def inner(f):
         def test_func():
             f()
-
         test_func.__name__ = f.__name__
         test_func._expected = status
         return test_func
-
     return inner
 
 
@@ -47,14 +45,13 @@ def test_expected_fail():
 
 
 class TestRunner(object):
+
     def __init__(self):
-        self.logger = get_default_logger(component="TestRunner")
+        self.logger = get_default_logger(component='TestRunner')
 
     def gather_tests(self):
         for item in globals().itervalues():
-            if isinstance(item, types.FunctionType) and item.__name__.startswith(
-                "test_"
-            ):
+            if isinstance(item, types.FunctionType) and item.__name__.startswith("test_"):
                 yield item.__name__, item
 
     def run(self):

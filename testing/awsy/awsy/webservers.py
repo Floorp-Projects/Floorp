@@ -34,8 +34,9 @@ class WebServers(object):
         port = self.port
         while len(self.servers) < self.count:
             self.servers.append(
-                mozhttpd.MozHttpd(host=self.host, port=port, docroot=self.docroot)
-            )
+                mozhttpd.MozHttpd(host=self.host,
+                                  port=port,
+                                  docroot=self.docroot))
             try:
                 self.servers[-1].start()
             except socket.error as error:
@@ -61,29 +62,16 @@ class WebServers(object):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Start mozhttpd servers for use by areweslimyet."
-    )
+        description='Start mozhttpd servers for use by areweslimyet.')
 
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=8001,
-        help="Starting port. Defaults to 8001. Web servers will be "
-        "created for each port from the starting port to starting port "
-        "+ count - 1.",
-    )
-    parser.add_argument(
-        "--count",
-        type=int,
-        default=100,
-        help="Number of web servers to start. Defaults to 100.",
-    )
-    parser.add_argument(
-        "--host",
-        type=str,
-        default="localhost",
-        help="Name of webserver host. Defaults to localhost.",
-    )
+    parser.add_argument('--port', type=int, default=8001,
+                        help='Starting port. Defaults to 8001. Web servers will be '
+                        'created for each port from the starting port to starting port '
+                        '+ count - 1.')
+    parser.add_argument('--count', type=int, default=100,
+                        help='Number of web servers to start. Defaults to 100.')
+    parser.add_argument('--host', type=str, default='localhost',
+                        help='Name of webserver host. Defaults to localhost.')
 
     args = parser.parse_args()
     web_servers = WebServers(args.host, args.port, "%s/html" % here, args.count)

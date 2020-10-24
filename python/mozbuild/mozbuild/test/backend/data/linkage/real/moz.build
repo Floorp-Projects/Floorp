@@ -2,13 +2,13 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 DIRS += [
-    "foo",
+    'foo',
 ]
 
 NO_EXPAND_LIBS = True
 
-OS_LIBS += ["-lbaz"]
+OS_LIBS += ['-lbaz']
 
-USE_LIBS += ["static:baz"]
+USE_LIBS += ['static:baz']
 
-Library("foo")
+Library('foo')

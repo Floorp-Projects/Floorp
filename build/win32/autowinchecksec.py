@@ -22,63 +22,56 @@ binary_path = sys.argv[1]
 # execute winchecksec against the binary, using the WINCHECKSEC environment
 # variable as the path to winchecksec.exe
 try:
-    winchecksec_path = buildconfig.substs["WINCHECKSEC"]
+    winchecksec_path = buildconfig.substs['WINCHECKSEC']
 except KeyError:
-    print(
-        "TEST-UNEXPECTED-FAIL | autowinchecksec.py | WINCHECKSEC environment variable is "
-        "not set, can't check DEP/ASLR etc. status."
-    )
+    print("TEST-UNEXPECTED-FAIL | autowinchecksec.py | WINCHECKSEC environment variable is "
+          "not set, can't check DEP/ASLR etc. status.")
     sys.exit(1)
 
-wine = buildconfig.substs.get("WINE")
-if wine and winchecksec_path.lower().endswith(".exe"):
+wine = buildconfig.substs.get('WINE')
+if wine and winchecksec_path.lower().endswith('.exe'):
     cmd = [wine, winchecksec_path]
 else:
     cmd = [winchecksec_path]
 
 try:
-    result = subprocess.check_output(cmd + ["-j", binary_path], universal_newlines=True)
+    result = subprocess.check_output(cmd + ['-j', binary_path],
+                                     universal_newlines=True)
 
 except subprocess.CalledProcessError as e:
-    print(
-        "TEST-UNEXPECTED-FAIL | autowinchecksec.py | Winchecksec returned error code %d:\n%s"
-        % (e.returncode, e.output)
-    )
+    print("TEST-UNEXPECTED-FAIL | autowinchecksec.py | Winchecksec returned error code %d:\n%s" % (
+          e.returncode, e.output))
     sys.exit(1)
 
 
 result = json.loads(result)
 
 checks = [
-    "aslr",
-    "cfg",
-    "dynamicBase",
-    "gs",
-    "isolation",
-    "nx",
-    "seh",
+    'aslr',
+    'cfg',
+    'dynamicBase',
+    'gs',
+    'isolation',
+    'nx',
+    'seh',
 ]
 
-if buildconfig.substs["CPU_ARCH"] == "x86":
+if buildconfig.substs['CPU_ARCH'] == 'x86':
     checks += [
-        "safeSEH",
+        'safeSEH',
     ]
 else:
     checks += [
-        "highEntropyVA",
+        'highEntropyVA',
     ]
 
 failed = [c for c in checks if result.get(c) is False]
 
 if failed:
-    print(
-        "TEST-UNEXPECTED-FAIL | autowinchecksec.py | Winchecksec reported %d error(s) for %s"
-        % (len(failed), binary_path)
-    )
-    print(
-        "TEST-UNEXPECTED-FAIL | autowinchecksec.py | The following check(s) failed: %s"
-        % (", ".join(failed))
-    )
+    print("TEST-UNEXPECTED-FAIL | autowinchecksec.py | Winchecksec reported %d error(s) for %s" %
+          (len(failed), binary_path))
+    print("TEST-UNEXPECTED-FAIL | autowinchecksec.py | The following check(s) failed: %s" %
+          (', '.join(failed)))
     sys.exit(1)
 else:
     print("TEST-PASS | autowinchecksec.py | %s succeeded" % binary_path)

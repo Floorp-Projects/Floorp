@@ -18,40 +18,39 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    name="run-all-talos",
-    title="Run All Talos Tests",
-    symbol="raT",
+    name='run-all-talos',
+    title='Run All Talos Tests',
+    symbol='raT',
     description="Add all Talos tasks to a push.",
     order=150,
     context=[],
     schema={
-        "type": "object",
-        "properties": {
-            "times": {
-                "type": "integer",
-                "default": 1,
-                "minimum": 1,
-                "maximum": 6,
-                "title": "Times",
-                "description": "How many times to run each task.",
+        'type': 'object',
+        'properties': {
+            'times': {
+                'type': 'integer',
+                'default': 1,
+                'minimum': 1,
+                'maximum': 6,
+                'title': 'Times',
+                'description': 'How many times to run each task.',
             }
         },
-        "additionalProperties": False,
+        'additionalProperties': False
     },
 )
 def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config
-    )
+        parameters, graph_config)
 
-    times = input.get("times", 1)
+    times = input.get('times', 1)
     for i in range(times):
-        to_run = [
-            label
-            for label, entry in six.iteritems(full_task_graph.tasks)
-            if "talos_try_name" in entry.attributes
-            and standard_filter(entry, parameters)
-        ]
+        to_run = [label
+                  for label, entry
+                  in six.iteritems(full_task_graph.tasks)
+                  if 'talos_try_name' in entry.attributes
+                  and standard_filter(entry, parameters)
+                  ]
 
         create_tasks(
             graph_config,
@@ -61,6 +60,4 @@ def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
             parameters,
             decision_task_id,
         )
-        logger.info(
-            "Scheduled {} talos tasks (time {}/{})".format(len(to_run), i + 1, times)
-        )
+        logger.info('Scheduled {} talos tasks (time {}/{})'.format(len(to_run), i+1, times))

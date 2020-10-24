@@ -5,27 +5,27 @@
 from __future__ import absolute_import, print_function
 
 backends = {
-    "Clangd": "mozbuild.backend.clangd",
-    "ChromeMap": "mozbuild.codecoverage.chrome_map",
-    "CompileDB": "mozbuild.compilation.database",
-    "CppEclipse": "mozbuild.backend.cpp_eclipse",
-    "FasterMake": "mozbuild.backend.fastermake",
-    "FasterMake+RecursiveMake": None,
-    "GnConfigGen": "mozbuild.gn_processor",
-    "GnMozbuildWriter": "mozbuild.gn_processor",
-    "RecursiveMake": "mozbuild.backend.recursivemake",
-    "StaticAnalysis": "mozbuild.backend.static_analysis",
-    "TestManifest": "mozbuild.backend.test_manifest",
-    "VisualStudio": "mozbuild.backend.visualstudio",
+    'Clangd': 'mozbuild.backend.clangd',
+    'ChromeMap': 'mozbuild.codecoverage.chrome_map',
+    'CompileDB': 'mozbuild.compilation.database',
+    'CppEclipse': 'mozbuild.backend.cpp_eclipse',
+    'FasterMake': 'mozbuild.backend.fastermake',
+    'FasterMake+RecursiveMake': None,
+    'GnConfigGen': 'mozbuild.gn_processor',
+    'GnMozbuildWriter': 'mozbuild.gn_processor',
+    'RecursiveMake': 'mozbuild.backend.recursivemake',
+    'StaticAnalysis': 'mozbuild.backend.static_analysis',
+    'TestManifest': 'mozbuild.backend.test_manifest',
+    'VisualStudio': 'mozbuild.backend.visualstudio',
 }
 
 
 def get_backend_class(name):
-    if "+" in name:
+    if '+' in name:
         from mozbuild.backend.base import HybridBackend
+        return HybridBackend(*(get_backend_class(name)
+                               for name in name.split('+')))
 
-        return HybridBackend(*(get_backend_class(name) for name in name.split("+")))
-
-    class_name = "%sBackend" % name
+    class_name = '%sBackend' % name
     module = __import__(backends[name], globals(), locals(), [class_name])
     return getattr(module, class_name)

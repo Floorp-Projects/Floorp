@@ -7,22 +7,22 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
-    "Flex.h",
-    "FlexItemValues.h",
-    "FlexLineValues.h",
+    'Flex.h',
+    'FlexItemValues.h',
+    'FlexLineValues.h',
 ]
 
 UNIFIED_SOURCES += [
-    "Flex.cpp",
-    "FlexItemValues.cpp",
-    "FlexLineValues.cpp",
+    'Flex.cpp',
+    'FlexItemValues.cpp',
+    'FlexLineValues.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/layout/generic",
+    '/layout/generic',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

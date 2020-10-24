@@ -4,53 +4,53 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Layout: Form Controls")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS += [
-    "nsIFormControlFrame.h",
-    "nsISelectControlFrame.h",
-    "nsITextControlFrame.h",
+    'nsIFormControlFrame.h',
+    'nsISelectControlFrame.h',
+    'nsITextControlFrame.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsButtonFrameRenderer.cpp",
-    "nsCheckboxRadioFrame.cpp",
-    "nsColorControlFrame.cpp",
-    "nsComboboxControlFrame.cpp",
-    "nsDateTimeControlFrame.cpp",
-    "nsFieldSetFrame.cpp",
-    "nsFileControlFrame.cpp",
-    "nsGfxButtonControlFrame.cpp",
-    "nsHTMLButtonControlFrame.cpp",
-    "nsImageControlFrame.cpp",
-    "nsLegendFrame.cpp",
-    "nsListControlFrame.cpp",
-    "nsMeterFrame.cpp",
-    "nsNumberControlFrame.cpp",
-    "nsProgressFrame.cpp",
-    "nsRangeFrame.cpp",
-    "nsSearchControlFrame.cpp",
-    "nsSelectsAreaFrame.cpp",
-    "nsTextControlFrame.cpp",
+    'nsButtonFrameRenderer.cpp',
+    'nsCheckboxRadioFrame.cpp',
+    'nsColorControlFrame.cpp',
+    'nsComboboxControlFrame.cpp',
+    'nsDateTimeControlFrame.cpp',
+    'nsFieldSetFrame.cpp',
+    'nsFileControlFrame.cpp',
+    'nsGfxButtonControlFrame.cpp',
+    'nsHTMLButtonControlFrame.cpp',
+    'nsImageControlFrame.cpp',
+    'nsLegendFrame.cpp',
+    'nsListControlFrame.cpp',
+    'nsMeterFrame.cpp',
+    'nsNumberControlFrame.cpp',
+    'nsProgressFrame.cpp',
+    'nsRangeFrame.cpp',
+    'nsSearchControlFrame.cpp',
+    'nsSelectsAreaFrame.cpp',
+    'nsTextControlFrame.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "../base",
-    "../generic",
-    "../painting",
-    "../style",
-    "../xul",
-    "/dom/base",
-    "/dom/html",
+    '../base',
+    '../generic',
+    '../painting',
+    '../style',
+    '../xul',
+    '/dom/base',
+    '/dom/html',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

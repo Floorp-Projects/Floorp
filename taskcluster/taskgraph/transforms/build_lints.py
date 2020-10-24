@@ -30,32 +30,31 @@ def check_mozharness_perfherder_options(config, jobs):
     """
 
     for job in jobs:
-        if job["run"]["using"] != "mozharness":
+        if job['run']['using'] != 'mozharness':
             yield job
             continue
 
-        worker = job.get("worker", {})
+        worker = job.get('worker', {})
 
-        platform = job["treeherder"]["platform"]
-        primary_config = job["run"]["config"][0]
-        options = worker.get("env", {}).get("PERFHERDER_EXTRA_OPTIONS")
-        shippable = job.get("attributes", {}).get("shippable", False)
+        platform = job['treeherder']['platform']
+        primary_config = job['run']['config'][0]
+        options = worker.get('env', {}).get('PERFHERDER_EXTRA_OPTIONS')
+        shippable = job.get('attributes', {}).get('shippable', False)
 
         # This isn't strictly necessary. But the Perfherder code looking at the
         # values we care about is only active on builds. So it doesn't make
         # sense to run this linter elsewhere.
-        assert primary_config.startswith("builds/")
+        assert primary_config.startswith('builds/')
 
         key = (platform, primary_config, shippable, options)
 
         if key in SEEN_CONFIGS:
             raise Exception(
-                "Non-unique Perfherder data collection for jobs %s-%s and %s: "
-                "set PERFHERDER_EXTRA_OPTIONS in worker environment variables "
-                "or use different mozconfigs"
-                % (config.kind, job["name"], SEEN_CONFIGS[key])
-            )
+                'Non-unique Perfherder data collection for jobs %s-%s and %s: '
+                'set PERFHERDER_EXTRA_OPTIONS in worker environment variables '
+                'or use different mozconfigs'
+                % (config.kind, job['name'], SEEN_CONFIGS[key]))
 
-        SEEN_CONFIGS[key] = "{}-{}".format(config.kind, job["name"])
+        SEEN_CONFIGS[key] = '{}-{}'.format(config.kind, job['name'])
 
         yield job

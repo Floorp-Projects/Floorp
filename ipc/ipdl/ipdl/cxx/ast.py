@@ -10,9 +10,8 @@ from ipdl.util import hash_str
 
 class Visitor:
     def defaultVisit(self, node):
-        raise Exception(
-            "INTERNAL ERROR: no visitor for node type `%s'" % (node.__class__.__name__)
-        )
+        raise Exception("INTERNAL ERROR: no visitor for node type `%s'" %
+                        (node.__class__.__name__))
 
     def visitWhitespace(self, ws):
         pass
@@ -224,7 +223,6 @@ class Visitor:
         if sr.expr is not None:
             sr.expr.accept(self)
 
-
 # ------------------------------
 
 
@@ -233,9 +231,9 @@ class Node:
         pass
 
     def accept(self, visitor):
-        visit = getattr(visitor, "visit" + self.__class__.__name__, None)
+        visit = getattr(visitor, 'visit' + self.__class__.__name__, None)
         if visit is None:
-            return getattr(visitor, "defaultVisit")(self)
+            return getattr(visitor, 'defaultVisit')(self)
         return visit(self)
 
 
@@ -248,7 +246,7 @@ class Whitespace(Node):
         self.indent = indent
 
 
-Whitespace.NL = Whitespace("\n")
+Whitespace.NL = Whitespace('\n')
 
 
 class VerbatimNode(Node):
@@ -302,12 +300,11 @@ class File(Node):
 
     def addcode(self, tmpl, **context):
         from ipdl.cxx.code import StmtCode
-
         self.addstmt(StmtCode(tmpl, **context))
 
 
 class CppDirective(Node):
-    """represents |#[directive] [rest]|, where |rest| is any string"""
+    '''represents |#[directive] [rest]|, where |rest| is any string'''
 
     def __init__(self, directive, rest=None):
         Node.__init__(self)
@@ -331,9 +328,7 @@ class Block(Node):
 
     def addcode(self, tmpl, **context):
         from ipdl.cxx.code import StmtCode
-
         self.addstmt(StmtCode(tmpl, **context))
-
 
 # ------------------------------
 # type and decl thingies
@@ -348,33 +343,27 @@ class Namespace(Block):
 
 
 class Type(Node):
-    def __init__(
-        self,
-        name,
-        const=False,
-        ptr=False,
-        ptrptr=False,
-        ptrconstptr=False,
-        ref=False,
-        rvalref=False,
-        hasimplicitcopyctor=True,
-        T=None,
-        inner=None,
-    ):
+    def __init__(self, name, const=False,
+                 ptr=False, ptrptr=False, ptrconstptr=False,
+                 ref=False, rvalref=False,
+                 hasimplicitcopyctor=True,
+                 T=None,
+                 inner=None):
         """
-        Represents the type |name<T>::inner| with the ptr and const
-        modifiers as specified.
+Represents the type |name<T>::inner| with the ptr and const
+modifiers as specified.
 
-        To avoid getting fancy with recursive types, we limit the kinds
-        of pointer types that can be be constructed.
+To avoid getting fancy with recursive types, we limit the kinds
+of pointer types that can be be constructed.
 
-          ptr            => T*
-          ptrptr         => T**
-          ptrconstptr    => T* const*
-          ref            => T&
-          rvalref        => T&&
+  ptr            => T*
+  ptrptr         => T**
+  ptrconstptr    => T* const*
+  ref            => T&
+  rvalref        => T&&
 
-        Any type, naked or pointer, can be const (const T) or ref (T&)."""
+Any type, naked or pointer, can be const (const T) or ref (T&).
+"""
         assert isinstance(name, str)
         assert isinstance(const, bool)
         assert isinstance(ptr, bool)
@@ -399,46 +388,42 @@ class Type(Node):
         # need that for this codegen
 
     def __deepcopy__(self, memo):
-        return Type(
-            self.name,
-            const=self.const,
-            ptr=self.ptr,
-            ptrptr=self.ptrptr,
-            ptrconstptr=self.ptrconstptr,
-            ref=self.ref,
-            rvalref=self.rvalref,
-            T=copy.deepcopy(self.T, memo),
-            inner=copy.deepcopy(self.inner, memo),
-        )
+        return Type(self.name,
+                    const=self.const,
+                    ptr=self.ptr,
+                    ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
+                    ref=self.ref, rvalref=self.rvalref,
+                    T=copy.deepcopy(self.T, memo),
+                    inner=copy.deepcopy(self.inner, memo))
 
 
-Type.BOOL = Type("bool")
-Type.INT = Type("int")
-Type.INT32 = Type("int32_t")
-Type.INTPTR = Type("intptr_t")
-Type.NSRESULT = Type("nsresult")
-Type.UINT32 = Type("uint32_t")
-Type.UINT32PTR = Type("uint32_t", ptr=True)
-Type.SIZE = Type("size_t")
-Type.VOID = Type("void")
-Type.VOIDPTR = Type("void", ptr=True)
-Type.AUTO = Type("auto")
-Type.AUTORVAL = Type("auto", rvalref=True)
+Type.BOOL = Type('bool')
+Type.INT = Type('int')
+Type.INT32 = Type('int32_t')
+Type.INTPTR = Type('intptr_t')
+Type.NSRESULT = Type('nsresult')
+Type.UINT32 = Type('uint32_t')
+Type.UINT32PTR = Type('uint32_t', ptr=True)
+Type.SIZE = Type('size_t')
+Type.VOID = Type('void')
+Type.VOIDPTR = Type('void', ptr=True)
+Type.AUTO = Type('auto')
+Type.AUTORVAL = Type('auto', rvalref=True)
 
 
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):
-        """the type |basetype DECLNAME[nmemb]|.  |nmemb| is an Expr"""
+        '''the type |basetype DECLNAME[nmemb]|.  |nmemb| is an Expr'''
         self.basetype = basetype
         self.nmemb = nmemb
 
 
 class TypeEnum(Node):
     def __init__(self, name=None):
-        """name can be None"""
+        '''name can be None'''
         Node.__init__(self)
         self.name = name
-        self.idnums = []  # pairs of ('Foo', [num]) or ('Foo', None)
+        self.idnums = []    # pairs of ('Foo', [num]) or ('Foo', None)
 
     def addId(self, id, num=None):
         self.idnums.append((id, num))
@@ -448,15 +433,15 @@ class TypeUnion(Node):
     def __init__(self, name=None):
         Node.__init__(self)
         self.name = name
-        self.components = []  # [ Decl ]
+        self.components = []           # [ Decl ]
 
     def addComponent(self, type, name):
         self.components.append(Decl(type, name))
 
 
 class TypeFunction(Node):
-    def __init__(self, params=[], ret=Type("void")):
-        """Anonymous function type std::function<>"""
+    def __init__(self, params=[], ret=Type('void')):
+        '''Anonymous function type std::function<>'''
         self.params = params
         self.ret = ret
 
@@ -475,7 +460,8 @@ class Typedef(Node):
         return self.totypename < other.totypename
 
     def __eq__(self, other):
-        return self.__class__ == other.__class__ and self.totypename == other.totypename
+        return (self.__class__ == other.__class__
+                and self.totypename == other.totypename)
 
     def __hash__(self):
         return hash_str(self.totypename)
@@ -498,7 +484,7 @@ class ForwardDecl(Node):
 
 
 class Decl(Node):
-    """represents |Foo bar|, e.g. in a function signature"""
+    '''represents |Foo bar|, e.g. in a function signature'''
 
     def __init__(self, type, name):
         assert type is not None
@@ -519,26 +505,17 @@ class Param(Decl):
         self.default = default
 
     def __deepcopy__(self, memo):
-        return Param(
-            copy.deepcopy(self.type, memo), self.name, copy.deepcopy(self.default, memo)
-        )
-
+        return Param(copy.deepcopy(self.type, memo), self.name,
+                     copy.deepcopy(self.default, memo))
 
 # ------------------------------
 # class stuff
 
 
 class Class(Block):
-    def __init__(
-        self,
-        name,
-        inherits=[],
-        interface=False,
-        abstract=False,
-        final=False,
-        specializes=None,
-        struct=False,
-    ):
+    def __init__(self, name, inherits=[],
+                 interface=False, abstract=False, final=False,
+                 specializes=None, struct=False):
         assert not (interface and abstract)
         assert not (abstract and final)
         assert not (interface and final)
@@ -546,16 +523,16 @@ class Class(Block):
 
         Block.__init__(self)
         self.name = name
-        self.inherits = inherits  # [ Type ]
-        self.interface = interface  # bool
-        self.abstract = abstract  # bool
-        self.final = final  # bool
+        self.inherits = inherits        # [ Type ]
+        self.interface = interface      # bool
+        self.abstract = abstract        # bool
+        self.final = final              # bool
         self.specializes = specializes  # Type or None
-        self.struct = struct  # bool
+        self.struct = struct            # bool
 
 
 class Inherit(Node):
-    def __init__(self, type, viz="public"):
+    def __init__(self, type, viz='public'):
         assert isinstance(viz, str)
         Node.__init__(self)
         self.type = type
@@ -566,7 +543,6 @@ class FriendClassDecl(Node):
     def __init__(self, friend):
         Node.__init__(self)
         self.friend = friend
-
 
 # Python2 polyfill for Python3's Enum() functional API.
 
@@ -579,23 +555,13 @@ def make_enum(name, members_str):
     return type(name, (), members_dict)
 
 
-MethodSpec = make_enum("MethodSpec", "NONE VIRTUAL PURE OVERRIDE STATIC")
+MethodSpec = make_enum('MethodSpec', 'NONE VIRTUAL PURE OVERRIDE STATIC')
 
 
 class MethodDecl(Node):
-    def __init__(
-        self,
-        name,
-        params=[],
-        ret=Type("void"),
-        methodspec=MethodSpec.NONE,
-        const=False,
-        warn_unused=False,
-        force_inline=False,
-        typeop=None,
-        T=None,
-        cls=None,
-    ):
+    def __init__(self, name, params=[], ret=Type('void'),
+                 methodspec=MethodSpec.NONE, const=False, warn_unused=False,
+                 force_inline=False, typeop=None, T=None, cls=None):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
         assert not isinstance(ret, list)
@@ -612,15 +578,15 @@ class MethodDecl(Node):
 
         Node.__init__(self)
         self.name = name
-        self.params = params  # [ Param ]
-        self.ret = ret  # Type or None
-        self.methodspec = methodspec  # enum
-        self.const = const  # bool
+        self.params = params            # [ Param ]
+        self.ret = ret                  # Type or None
+        self.methodspec = methodspec    # enum
+        self.const = const              # bool
         self.warn_unused = warn_unused  # bool
-        self.force_inline = force_inline or bool(T)  # bool
-        self.typeop = typeop  # Type or None
-        self.T = T  # Type or None
-        self.cls = cls  # Class or None
+        self.force_inline = (force_inline or bool(T))  # bool
+        self.typeop = typeop            # Type or None
+        self.T = T                      # Type or None
+        self.cls = cls                  # Class or None
         self.only_for_definition = False
 
     def __deepcopy__(self, memo):
@@ -633,8 +599,7 @@ class MethodDecl(Node):
             warn_unused=self.warn_unused,
             force_inline=self.force_inline,
             typeop=copy.deepcopy(self.typeop, memo),
-            T=copy.deepcopy(self.T, memo),
-        )
+            T=copy.deepcopy(self.T, memo))
 
 
 class MethodDefn(Block):
@@ -644,27 +609,13 @@ class MethodDefn(Block):
 
 
 class FunctionDecl(MethodDecl):
-    def __init__(
-        self,
-        name,
-        params=[],
-        ret=Type("void"),
-        methodspec=MethodSpec.NONE,
-        warn_unused=False,
-        force_inline=False,
-        T=None,
-    ):
+    def __init__(self, name, params=[], ret=Type('void'),
+                 methodspec=MethodSpec.NONE, warn_unused=False,
+                 force_inline=False, T=None):
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.STATIC
-        MethodDecl.__init__(
-            self,
-            name,
-            params=params,
-            ret=ret,
-            methodspec=methodspec,
-            warn_unused=warn_unused,
-            force_inline=force_inline,
-            T=T,
-        )
+        MethodDecl.__init__(self, name, params=params, ret=ret,
+                            methodspec=methodspec, warn_unused=warn_unused,
+                            force_inline=force_inline, T=T)
 
 
 class FunctionDefn(MethodDefn):
@@ -674,15 +625,14 @@ class FunctionDefn(MethodDefn):
 
 class ConstructorDecl(MethodDecl):
     def __init__(self, name, params=[], explicit=False, force_inline=False):
-        MethodDecl.__init__(
-            self, name, params=params, ret=None, force_inline=force_inline
-        )
+        MethodDecl.__init__(self, name, params=params, ret=None,
+                            force_inline=force_inline)
         self.explicit = explicit
 
     def __deepcopy__(self, memo):
-        return ConstructorDecl(
-            self.name, copy.deepcopy(self.params, memo), self.explicit
-        )
+        return ConstructorDecl(self.name,
+                               copy.deepcopy(self.params, memo),
+                               self.explicit)
 
 
 class ConstructorDefn(MethodDefn):
@@ -695,25 +645,17 @@ class DestructorDecl(MethodDecl):
     def __init__(self, name, methodspec=MethodSpec.NONE, force_inline=False):
         # C++ allows pure or override destructors, but ipdl cgen does not.
         assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.VIRTUAL
-        MethodDecl.__init__(
-            self,
-            name,
-            params=[],
-            ret=None,
-            methodspec=methodspec,
-            force_inline=force_inline,
-        )
+        MethodDecl.__init__(self, name, params=[], ret=None,
+                            methodspec=methodspec, force_inline=force_inline)
 
     def __deepcopy__(self, memo):
-        return DestructorDecl(
-            self.name, methodspec=self.methodspec, force_inline=self.force_inline
-        )
+        return DestructorDecl(self.name,
+                              methodspec=self.methodspec,
+                              force_inline=self.force_inline)
 
 
 class DestructorDefn(MethodDefn):
-    def __init__(self, decl):
-        MethodDefn.__init__(self, decl)
-
+    def __init__(self, decl):  MethodDefn.__init__(self, decl)
 
 # ------------------------------
 # expressions
@@ -727,33 +669,31 @@ class ExprVar(Node):
         self.name = name
 
 
-ExprVar.THIS = ExprVar("this")
+ExprVar.THIS = ExprVar('this')
 
 
 class ExprLiteral(Node):
     def __init__(self, value, type):
-        """|type| is a Python format specifier; 'd' for example"""
+        '''|type| is a Python format specifier; 'd' for example'''
         Node.__init__(self)
         self.value = value
         self.type = type
 
     @staticmethod
-    def Int(i):
-        return ExprLiteral(i, "d")
+    def Int(i): return ExprLiteral(i, 'd')
 
     @staticmethod
-    def String(s):
-        return ExprLiteral('"' + s + '"', "s")
+    def String(s): return ExprLiteral('"' + s + '"', 's')
 
     def __str__(self):
-        return ("%" + self.type) % (self.value)
+        return ('%' + self.type) % (self.value)
 
 
 ExprLiteral.ZERO = ExprLiteral.Int(0)
 ExprLiteral.ONE = ExprLiteral.Int(1)
-ExprLiteral.NULL = ExprVar("nullptr")
-ExprLiteral.TRUE = ExprVar("true")
-ExprLiteral.FALSE = ExprVar("false")
+ExprLiteral.NULL = ExprVar('nullptr')
+ExprLiteral.TRUE = ExprVar('true')
+ExprLiteral.FALSE = ExprVar('false')
 
 
 class ExprPrefixUnop(Node):
@@ -765,21 +705,22 @@ class ExprPrefixUnop(Node):
 
 class ExprNot(ExprPrefixUnop):
     def __init__(self, expr):
-        ExprPrefixUnop.__init__(self, expr, "!")
+        ExprPrefixUnop.__init__(self, expr, '!')
 
 
 class ExprAddrOf(ExprPrefixUnop):
     def __init__(self, expr):
-        ExprPrefixUnop.__init__(self, expr, "&")
+        ExprPrefixUnop.__init__(self, expr, '&')
 
 
 class ExprDeref(ExprPrefixUnop):
     def __init__(self, expr):
-        ExprPrefixUnop.__init__(self, expr, "*")
+        ExprPrefixUnop.__init__(self, expr, '*')
 
 
 class ExprCast(Node):
-    def __init__(self, expr, type, static=False, const=False):
+    def __init__(self, expr, type,
+                 static=False, const=False):
         # Exactly one of these should be set
         assert static ^ const
 
@@ -822,7 +763,7 @@ class ExprSelect(Node):
 
 
 class ExprAssn(Node):
-    def __init__(self, lhs, rhs, op="="):
+    def __init__(self, lhs, rhs, op='='):
         Node.__init__(self)
         self.lhs = lhs
         self.op = op
@@ -831,7 +772,7 @@ class ExprAssn(Node):
 
 class ExprCall(Node):
     def __init__(self, func, args=[]):
-        assert hasattr(func, "accept")
+        assert hasattr(func, 'accept')
         assert isinstance(args, list)
         for arg in args:
             assert arg and not isinstance(arg, str)
@@ -877,7 +818,6 @@ class ExprLambda(Block):
         self.params = params
         self.ret = ret
 
-
 # ------------------------------
 # statements etc.
 
@@ -907,9 +847,9 @@ class Label(Node):
         self.name = name
 
 
-Label.PUBLIC = Label("public")
-Label.PROTECTED = Label("protected")
-Label.PRIVATE = Label("private")
+Label.PUBLIC = Label('public')
+Label.PROTECTED = Label('protected')
+Label.PRIVATE = Label('private')
 
 
 class CaseLabel(Node):
@@ -972,24 +912,18 @@ class StmtSwitch(Block):
         self.nr_cases = 0
 
     def addcase(self, case, block):
-        """NOTE: |case| is not checked for uniqueness"""
+        '''NOTE: |case| is not checked for uniqueness'''
         assert not isinstance(case, str)
-        assert (
-            isinstance(block, StmtBreak)
-            or isinstance(block, StmtReturn)
-            or isinstance(block, StmtSwitch)
-            or isinstance(block, GroupNode)
-            or isinstance(block, VerbatimNode)
-            or (
-                hasattr(block, "stmts")
-                and (
-                    isinstance(block.stmts[-1], StmtBreak)
-                    or isinstance(block.stmts[-1], StmtReturn)
-                    or isinstance(block.stmts[-1], GroupNode)
-                    or isinstance(block.stmts[-1], VerbatimNode)
-                )
-            )
-        )
+        assert (isinstance(block, StmtBreak)
+                or isinstance(block, StmtReturn)
+                or isinstance(block, StmtSwitch)
+                or isinstance(block, GroupNode)
+                or isinstance(block, VerbatimNode)
+                or (hasattr(block, 'stmts')
+                    and (isinstance(block.stmts[-1], StmtBreak)
+                         or isinstance(block.stmts[-1], StmtReturn)
+                         or isinstance(block.stmts[-1], GroupNode)
+                         or isinstance(block.stmts[-1], VerbatimNode))))
         self.addstmt(case)
         self.addstmt(block)
         self.nr_cases += 1

@@ -18,20 +18,18 @@ def parse_checksums_file(checksums):
             fileInfo[file_] = {"hashes": {}}
         # If the file already exists, make sure that the size matches the
         # previous entry.
-        elif fileInfo[file_]["size"] != size:
+        elif fileInfo[file_]['size'] != size:
             raise ValueError(
                 "Found different sizes for same file %s (%s and %s)"
-                % (file_, fileInfo[file_]["size"], size)
-            )
+                % (file_, fileInfo[file_]['size'], size))
         # Same goes for the hash.
         elif (
-            type_ in fileInfo[file_]["hashes"]
-            and fileInfo[file_]["hashes"][type_] != hash_
+            type_ in fileInfo[file_]['hashes']
+            and fileInfo[file_]['hashes'][type_] != hash_
         ):
             raise ValueError(
                 "Found different %s hashes for same file %s (%s and %s)"
-                % (type_, file_, fileInfo[file_]["hashes"][type_], hash_)
-            )
-        fileInfo[file_]["size"] = size
-        fileInfo[file_]["hashes"][type_] = hash_
+                % (type_, file_, fileInfo[file_]['hashes'][type_], hash_))
+        fileInfo[file_]['size'] = size
+        fileInfo[file_]['hashes'][type_] = hash_
     return fileInfo

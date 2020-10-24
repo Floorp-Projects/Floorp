@@ -25,7 +25,9 @@ class TestPingServer(TelemetryTestCase):
                 "Accept": "text/plain",
             }
 
-            response = requests.post(self.pings_url, json=data, headers=headers)
+            response = requests.post(
+                self.pings_url, json=data, headers=headers
+            )
 
             self.assertEqual(
                 response.status_code,

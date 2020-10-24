@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "computed.js",
+    'computed.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Computed")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Computed')

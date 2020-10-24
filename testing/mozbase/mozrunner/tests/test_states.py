@@ -21,5 +21,5 @@ def test_errors_before_start(runner):
         runner.wait()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

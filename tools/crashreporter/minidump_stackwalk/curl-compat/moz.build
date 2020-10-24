@@ -9,12 +9,12 @@
 # libcurl.so.4 that provide the symbols, independently of the symbol version
 # they use. That means it works on systems before and after the switch to
 # openssl 1.1. That includes older and newer Ubuntu and Debian systems.
-SharedLibrary("curl")
+SharedLibrary('curl')
 
 NoVisibilityFlags()
 
 DIST_INSTALL = False
 
-SOURCES += ["curl-compat.c"]
+SOURCES += ['curl-compat.c']
 
-LDFLAGS += ["-Wl,-soname,libcurl.so.4"]
+LDFLAGS += ['-Wl,-soname,libcurl.so.4']

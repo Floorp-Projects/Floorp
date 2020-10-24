@@ -4,97 +4,97 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
-    "IUrlClassifierUITelemetry.idl",
-    "nsIUrlClassifierDBService.idl",
-    "nsIUrlClassifierHashCompleter.idl",
-    "nsIUrlClassifierInfo.idl",
-    "nsIUrlClassifierPrefixSet.idl",
-    "nsIUrlClassifierStreamUpdater.idl",
-    "nsIUrlClassifierUtils.idl",
-    "nsIUrlListManager.idl",
+    'IUrlClassifierUITelemetry.idl',
+    'nsIUrlClassifierDBService.idl',
+    'nsIUrlClassifierHashCompleter.idl',
+    'nsIUrlClassifierInfo.idl',
+    'nsIUrlClassifierPrefixSet.idl',
+    'nsIUrlClassifierStreamUpdater.idl',
+    'nsIUrlClassifierUtils.idl',
+    'nsIUrlListManager.idl',
 ]
 
-XPIDL_MODULE = "url-classifier"
+XPIDL_MODULE = 'url-classifier'
 
-DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
-DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 UNIFIED_SOURCES += [
-    "chromium/safebrowsing.pb.cc",
-    "ChunkSet.cpp",
-    "Classifier.cpp",
-    "LookupCache.cpp",
-    "LookupCacheV4.cpp",
-    "nsCheckSummedOutputStream.cpp",
-    "nsUrlClassifierDBService.cpp",
-    "nsUrlClassifierInfo.cpp",
-    "nsUrlClassifierProxies.cpp",
-    "nsUrlClassifierUtils.cpp",
-    "ProtocolParser.cpp",
-    "RiceDeltaDecoder.cpp",
-    "UrlClassifierTelemetryUtils.cpp",
+    'chromium/safebrowsing.pb.cc',
+    'ChunkSet.cpp',
+    'Classifier.cpp',
+    'LookupCache.cpp',
+    'LookupCacheV4.cpp',
+    'nsCheckSummedOutputStream.cpp',
+    'nsUrlClassifierDBService.cpp',
+    'nsUrlClassifierInfo.cpp',
+    'nsUrlClassifierProxies.cpp',
+    'nsUrlClassifierUtils.cpp',
+    'ProtocolParser.cpp',
+    'RiceDeltaDecoder.cpp',
+    'UrlClassifierTelemetryUtils.cpp',
 ]
 
 # define conflicting LOG() macros
 SOURCES += [
-    "nsUrlClassifierPrefixSet.cpp",
-    "nsUrlClassifierStreamUpdater.cpp",
-    "VariableLengthPrefixSet.cpp",
+    'nsUrlClassifierPrefixSet.cpp',
+    'nsUrlClassifierStreamUpdater.cpp',
+    'VariableLengthPrefixSet.cpp',
 ]
 
 # contains variables that conflict with LookupCache.cpp
 SOURCES += [
-    "HashStore.cpp",
+    'HashStore.cpp',
 ]
 
 EXTRA_JS_MODULES += [
-    "SafeBrowsing.jsm",
-    "UrlClassifierHashCompleter.jsm",
-    "UrlClassifierLib.jsm",
-    "UrlClassifierListManager.jsm",
+    'SafeBrowsing.jsm',
+    'UrlClassifierHashCompleter.jsm',
+    'UrlClassifierLib.jsm',
+    'UrlClassifierListManager.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 EXPORTS += [
-    "chromium/safebrowsing.pb.h",
-    "Entries.h",
-    "LookupCache.h",
-    "LookupCacheV4.h",
-    "nsUrlClassifierPrefixSet.h",
-    "VariableLengthPrefixSet.h",
+    'chromium/safebrowsing.pb.h',
+    'Entries.h',
+    'LookupCache.h',
+    'LookupCacheV4.h',
+    'nsUrlClassifierPrefixSet.h',
+    'VariableLengthPrefixSet.h',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../build",
-    "/xpcom/io",
+    '../build',
+    '/xpcom/io',
 ]
 
-CXXFLAGS += CONFIG["SQLITE_CFLAGS"]
+CXXFLAGS += CONFIG['SQLITE_CFLAGS']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
     # Suppress warnings in third-party code.
     CXXFLAGS += [
-        "-Wno-maybe-uninitialized",
+        '-Wno-maybe-uninitialized',
     ]
 
-if CONFIG["NIGHTLY_BUILD"] or CONFIG["MOZ_DEBUG"]:
-    DEFINES["MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES"] = True
+if CONFIG['NIGHTLY_BUILD'] or CONFIG['MOZ_DEBUG']:
+    DEFINES['MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES'] = True
 
-SPHINX_TREES["url-classifier"] = "docs"
+SPHINX_TREES['url-classifier'] = 'docs'
 
-with Files("docs/**"):
-    SCHEDULES.exclusive = ["docs"]
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

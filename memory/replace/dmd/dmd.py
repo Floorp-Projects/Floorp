@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""This script analyzes a JSON file emitted by DMD."""
+'''This script analyzes a JSON file emitted by DMD.'''
 
 from __future__ import absolute_import, print_function, division
 
@@ -30,30 +30,30 @@ outputVersion = 5
 allocatorFns = [
     # Matches malloc, replace_malloc, moz_xmalloc, vpx_malloc, js_malloc,
     # pod_malloc, malloc_zone_*, g_malloc.
-    "malloc",
+    'malloc',
     # Matches calloc, replace_calloc, moz_xcalloc, vpx_calloc, js_calloc,
     # pod_calloc, malloc_zone_calloc, pod_callocCanGC.
-    "calloc",
+    'calloc',
     # Matches realloc, replace_realloc, moz_xrealloc, vpx_realloc, js_realloc,
     # pod_realloc, pod_reallocCanGC.
-    "realloc",
+    'realloc',
     # Matches memalign, posix_memalign, replace_memalign, replace_posix_memalign,
     # moz_xmemalign, vpx_memalign, malloc_zone_memalign.
-    "memalign",
-    "operator new(",
-    "operator new[](",
-    "g_slice_alloc",
+    'memalign',
+    'operator new(',
+    'operator new[](',
+    'g_slice_alloc',
     # This one necessary to fully filter some sequences of allocation functions
     # that happen in practice. Note that ??? entries that follow non-allocation
     # functions won't be stripped, as explained above.
-    "???",
+    '???',
 ]
 
 
 class Record(object):
-    """A record is an aggregation of heap blocks that have identical stack
+    '''A record is an aggregation of heap blocks that have identical stack
     traces. It can also be used to represent the difference between two
-    records."""
+    records.'''
 
     def __init__(self):
         self.numBlocks = 0
@@ -65,13 +65,11 @@ class Record(object):
         self.usableSizes = collections.defaultdict(int)
 
     def isZero(self, args):
-        return (
-            self.numBlocks == 0
-            and self.reqSize == 0
-            and self.slopSize == 0
-            and self.usableSize == 0
-            and len(self.usableSizes) == 0
-        )
+        return self.numBlocks == 0 and \
+            self.reqSize == 0 and \
+            self.slopSize == 0 and \
+            self.usableSize == 0 and \
+            len(self.usableSizes) == 0
 
     def negate(self):
         self.numBlocks = -self.numBlocks
@@ -120,9 +118,8 @@ class Record(object):
     @staticmethod
     def cmpByUsableSize(r1, r2):
         # Sort by usable size, then by req size.
-        return cmp(abs(r1.usableSize), abs(r2.usableSize)) or Record.cmpByReqSize(
-            r1, r2
-        )
+        return cmp(abs(r1.usableSize), abs(r2.usableSize)) or \
+            Record.cmpByReqSize(r1, r2)
 
     @staticmethod
     def cmpByReqSize(r1, r2):
@@ -137,16 +134,15 @@ class Record(object):
     @staticmethod
     def cmpByNumBlocks(r1, r2):
         # Sort by block counts, then by usable size.
-        return cmp(abs(r1.numBlocks), abs(r2.numBlocks)) or Record.cmpByUsableSize(
-            r1, r2
-        )
+        return cmp(abs(r1.numBlocks), abs(r2.numBlocks)) or \
+            Record.cmpByUsableSize(r1, r2)
 
 
 sortByChoices = {
-    "usable": Record.cmpByUsableSize,  # the default
-    "req": Record.cmpByReqSize,
-    "slop": Record.cmpBySlopSize,
-    "num-blocks": Record.cmpByNumBlocks,
+    'usable':     Record.cmpByUsableSize,   # the default
+    'req':        Record.cmpByReqSize,
+    'slop':       Record.cmpBySlopSize,
+    'num-blocks': Record.cmpByNumBlocks,
 }
 
 
@@ -155,11 +151,11 @@ def parseCommandLine():
     def range_1_24(string):
         value = int(string)
         if value < 1 or value > 24:
-            msg = "{:s} is not in the range 1..24".format(string)
+            msg = '{:s} is not in the range 1..24'.format(string)
             raise argparse.ArgumentTypeError(msg)
         return value
 
-    description = """
+    description = '''
 Analyze heap data produced by DMD.
 If one file is specified, analyze it; if two files are specified, analyze the
 difference.
@@ -169,73 +165,44 @@ Stack traces are fixed to show function names, filenames and line numbers
 unless --no-fix-stacks is specified; stack fixing modifies the original file
 and may take some time. If specified, the BREAKPAD_SYMBOLS_PATH environment
 variable is used to find breakpad symbols for stack fixing.
-"""
+'''
     p = argparse.ArgumentParser(description=description)
 
-    p.add_argument(
-        "-o",
-        "--output",
-        type=argparse.FileType("w"),
-        help="output file; stdout if unspecified",
-    )
+    p.add_argument('-o', '--output', type=argparse.FileType('w'),
+                   help='output file; stdout if unspecified')
 
-    p.add_argument(
-        "-f",
-        "--max-frames",
-        type=range_1_24,
-        default=8,
-        help="maximum number of frames to consider in each trace",
-    )
+    p.add_argument('-f', '--max-frames', type=range_1_24, default=8,
+                   help='maximum number of frames to consider in each trace')
 
-    p.add_argument(
-        "-s",
-        "--sort-by",
-        choices=sortByChoices.keys(),
-        default="usable",
-        help="sort the records by a particular metric",
-    )
+    p.add_argument('-s', '--sort-by', choices=sortByChoices.keys(),
+                   default='usable',
+                   help='sort the records by a particular metric')
 
-    p.add_argument(
-        "-a",
-        "--ignore-alloc-fns",
-        action="store_true",
-        help="ignore allocation functions at the start of traces",
-    )
+    p.add_argument('-a', '--ignore-alloc-fns', action='store_true',
+                   help='ignore allocation functions at the start of traces')
 
-    p.add_argument("--no-fix-stacks", action="store_true", help="do not fix stacks")
+    p.add_argument('--no-fix-stacks', action='store_true',
+                   help='do not fix stacks')
 
-    p.add_argument(
-        "--clamp-contents",
-        action="store_true",
-        help="for a scan mode log, clamp addresses to the start of live blocks, "
-        "or zero if not in one",
-    )
+    p.add_argument('--clamp-contents', action='store_true',
+                   help='for a scan mode log, clamp addresses to the start of live blocks, '
+                   'or zero if not in one')
 
-    p.add_argument(
-        "--print-clamp-stats",
-        action="store_true",
-        help="print information about the results of pointer clamping; mostly "
-        "useful for debugging clamping",
-    )
+    p.add_argument('--print-clamp-stats', action='store_true',
+                   help='print information about the results of pointer clamping; mostly '
+                   'useful for debugging clamping')
 
-    p.add_argument(
-        "--filter-stacks-for-testing",
-        action="store_true",
-        help="filter stack traces; only useful for testing purposes",
-    )
+    p.add_argument('--filter-stacks-for-testing', action='store_true',
+                   help='filter stack traces; only useful for testing purposes')
 
-    p.add_argument(
-        "--allocation-filter",
-        help="Only print entries that have a stack that matches the filter",
-    )
+    p.add_argument('--allocation-filter',
+                   help='Only print entries that have a stack that matches the filter')
 
-    p.add_argument("input_file", help="a file produced by DMD")
+    p.add_argument('input_file',
+                   help='a file produced by DMD')
 
-    p.add_argument(
-        "input_file2",
-        nargs="?",
-        help="a file produced by DMD; if present, it is diff'd with input_file",
-    )
+    p.add_argument('input_file2', nargs='?',
+                   help='a file produced by DMD; if present, it is diff\'d with input_file')
 
     return p.parse_args(sys.argv[1:])
 
@@ -247,7 +214,7 @@ def fixStackTraces(inputFilename, isZipped, opener):
     # script is installed as a symlink.
     sys.path.append(os.path.dirname(__file__))
 
-    bpsyms = os.environ.get("BREAKPAD_SYMBOLS_PATH", None)
+    bpsyms = os.environ.get('BREAKPAD_SYMBOLS_PATH', None)
     sysname = platform.system()
     if bpsyms and os.path.exists(bpsyms):
         import fix_stacks as fixModule
@@ -255,11 +222,10 @@ def fixStackTraces(inputFilename, isZipped, opener):
         def fix(line):
             return fixModule.fixSymbols(line, jsonMode=True, breakpadSymsDir=bpsyms)
 
-    elif sysname in ("Linux", "Darwin", "Windows"):
+    elif sysname in ('Linux', 'Darwin', 'Windows'):
         import fix_stacks as fixModule
 
-        def fix(line):
-            return fixModule.fixSymbols(line, jsonMode=True)
+        def fix(line): return fixModule.fixSymbols(line, jsonMode=True)
 
     else:
         return
@@ -280,9 +246,9 @@ def fixStackTraces(inputFilename, isZipped, opener):
     # get that now in order to move |tmpFile| at the end.
     tmpFilename = tmpFile.name
     if isZipped:
-        tmpFile = gzip.GzipFile(filename="", fileobj=tmpFile)
+        tmpFile = gzip.GzipFile(filename='', fileobj=tmpFile)
 
-    with opener(inputFilename, "rb") as inputFile:
+    with opener(inputFilename, 'rb') as inputFile:
         for line in inputFile:
             tmpFile.write(fix(line))
 
@@ -293,7 +259,7 @@ def fixStackTraces(inputFilename, isZipped, opener):
 
 def getDigestFromFile(args, inputFile):
     # Handle gzipped input if necessary.
-    isZipped = inputFile.endswith(".gz")
+    isZipped = inputFile.endswith('.gz')
     opener = gzip.open if isZipped else open
 
     # Fix stack traces unless otherwise instructed.
@@ -303,42 +269,41 @@ def getDigestFromFile(args, inputFile):
     if args.clamp_contents:
         clampBlockList(args, inputFile, isZipped, opener)
 
-    with opener(inputFile, "rb") as f:
+    with opener(inputFile, 'rb') as f:
         j = json.load(f)
 
-    if j["version"] != outputVersion:
+    if j['version'] != outputVersion:
         raise Exception("'version' property isn't '{:d}'".format(outputVersion))
 
     # Extract the main parts of the JSON object.
-    invocation = j["invocation"]
-    dmdEnvVar = invocation["dmdEnvVar"]
-    mode = invocation["mode"]
-    blockList = j["blockList"]
-    traceTable = j["traceTable"]
-    frameTable = j["frameTable"]
+    invocation = j['invocation']
+    dmdEnvVar = invocation['dmdEnvVar']
+    mode = invocation['mode']
+    blockList = j['blockList']
+    traceTable = j['traceTable']
+    frameTable = j['frameTable']
 
     # Insert the necessary entries for unrecorded stack traces. Note that 'ut'
     # and 'uf' will not overlap with any keys produced by DMD's
     # ToIdStringConverter::Base32() function.
-    unrecordedTraceID = "ut"
-    unrecordedFrameID = "uf"
+    unrecordedTraceID = 'ut'
+    unrecordedFrameID = 'uf'
     traceTable[unrecordedTraceID] = [unrecordedFrameID]
-    frameTable[
-        unrecordedFrameID
-    ] = "#00: (no stack trace recorded due to --stacks=partial)"
+    frameTable[unrecordedFrameID] = \
+        '#00: (no stack trace recorded due to --stacks=partial)'
 
     # For the purposes of this script, 'scan' behaves like 'live'.
-    if mode == "scan":
-        mode = "live"
+    if mode == 'scan':
+        mode = 'live'
 
-    if mode not in ["live", "dark-matter", "cumulative"]:
+    if mode not in ['live', 'dark-matter', 'cumulative']:
         raise Exception("bad 'mode' property: '{:s}'".format(mode))
 
     # Remove allocation functions at the start of traces.
     if args.ignore_alloc_fns:
         # Build a regexp that matches every function in allocatorFns.
         escapedAllocatorFns = map(re.escape, allocatorFns)
-        fn_re = re.compile("|".join(escapedAllocatorFns))
+        fn_re = re.compile('|'.join(escapedAllocatorFns))
 
         # Remove allocator fns from each stack trace.
         for traceKey, frameKeys in traceTable.items():
@@ -355,11 +320,11 @@ def getDigestFromFile(args, inputFile):
     # Trim the number of frames.
     for traceKey, frameKeys in traceTable.items():
         if len(frameKeys) > args.max_frames:
-            traceTable[traceKey] = frameKeys[: args.max_frames]
+            traceTable[traceKey] = frameKeys[:args.max_frames]
 
     def buildTraceDescription(traceTable, frameTable, traceKey):
         frameKeys = traceTable[traceKey]
-        fmt = "    #{:02d}{:}"
+        fmt = '    #{:02d}{:}'
 
         if args.filter_stacks_for_testing:
             # This option is used by `test_dmd.js`, which runs the code in
@@ -389,10 +354,10 @@ def getDigestFromFile(args, inputFile):
             dmd_frame_matches = 0
             for frameKey in frameKeys:
                 frameDesc = frameTable[frameKey]
-                if "DMD" in frameDesc:
+                if 'DMD' in frameDesc:
                     dmd_frame_matches += 1
                     if dmd_frame_matches >= 3:
-                        return [fmt.format(1, ": ... DMD.cpp ...")]
+                        return [fmt.format(1, ': ... DMD.cpp ...')]
 
         # The frame number is always '#00' (see DMD.h for why), so we have to
         # replace that with the correct frame number.
@@ -404,9 +369,9 @@ def getDigestFromFile(args, inputFile):
     # Aggregate blocks into records. All sufficiently similar blocks go into a
     # single record.
 
-    if mode in ["live", "cumulative"]:
+    if mode in ['live', 'cumulative']:
         liveOrCumulativeRecords = collections.defaultdict(Record)
-    elif mode == "dark-matter":
+    elif mode == 'dark-matter':
         unreportedRecords = collections.defaultdict(Record)
         onceReportedRecords = collections.defaultdict(Record)
         twiceReportedRecords = collections.defaultdict(Record)
@@ -443,20 +408,19 @@ def getDigestFromFile(args, inputFile):
             if traceKey in recordKeyPartCache:
                 return recordKeyPartCache[traceKey]
 
-            recordKeyPart = str(
-                map(lambda frameKey: frameTable[frameKey], traceTable[traceKey])
-            )
+            recordKeyPart = str(map(lambda frameKey: frameTable[frameKey],
+                                    traceTable[traceKey]))
             recordKeyPartCache[traceKey] = recordKeyPart
             return recordKeyPart
 
-        allocatedAtTraceKey = block.get("alloc", unrecordedTraceID)
-        if mode in ["live", "cumulative"]:
+        allocatedAtTraceKey = block.get('alloc', unrecordedTraceID)
+        if mode in ['live', 'cumulative']:
             recordKey = makeRecordKeyPart(allocatedAtTraceKey)
             records = liveOrCumulativeRecords
-        elif mode == "dark-matter":
+        elif mode == 'dark-matter':
             recordKey = makeRecordKeyPart(allocatedAtTraceKey)
-            if "reps" in block:
-                reportedAtTraceKeys = block["reps"]
+            if 'reps' in block:
+                reportedAtTraceKeys = block['reps']
                 for reportedAtTraceKey in reportedAtTraceKeys:
                     recordKey += makeRecordKeyPart(reportedAtTraceKey)
                 if len(reportedAtTraceKeys) == 1:
@@ -468,14 +432,14 @@ def getDigestFromFile(args, inputFile):
 
         record = records[recordKey]
 
-        if "req" not in block:
+        if 'req' not in block:
             raise Exception("'req' property missing in block'")
 
-        reqSize = block["req"]
-        slopSize = block.get("slop", 0)
+        reqSize = block['req']
+        slopSize = block.get('slop', 0)
 
-        if "num" in block:
-            num = block["num"]
+        if 'num' in block:
+            num = block['num']
         else:
             num = 1
 
@@ -488,33 +452,30 @@ def getDigestFromFile(args, inputFile):
         record.slopSize += num * slopSize
         record.usableSize += num * usableSize
         if record.allocatedAtDesc is None:
-            record.allocatedAtDesc = buildTraceDescription(
-                traceTable, frameTable, allocatedAtTraceKey
-            )
+            record.allocatedAtDesc = \
+                buildTraceDescription(traceTable, frameTable,
+                                      allocatedAtTraceKey)
 
-        if mode in ["live", "cumulative"]:
+        if mode in ['live', 'cumulative']:
             pass
-        elif mode == "dark-matter":
-            if "reps" in block and record.reportedAtDescs == []:
-
-                def f(k):
-                    return buildTraceDescription(traceTable, frameTable, k)
-
+        elif mode == 'dark-matter':
+            if 'reps' in block and record.reportedAtDescs == []:
+                def f(k): return buildTraceDescription(traceTable, frameTable, k)
                 record.reportedAtDescs = map(f, reportedAtTraceKeys)
         record.usableSizes[usableSize] += num
 
     # All the processed data for a single DMD file is called a "digest".
     digest = {}
-    digest["dmdEnvVar"] = dmdEnvVar
-    digest["mode"] = mode
-    digest["heapUsableSize"] = heapUsableSize
-    digest["heapBlocks"] = heapBlocks
-    if mode in ["live", "cumulative"]:
-        digest["liveOrCumulativeRecords"] = liveOrCumulativeRecords
-    elif mode == "dark-matter":
-        digest["unreportedRecords"] = unreportedRecords
-        digest["onceReportedRecords"] = onceReportedRecords
-        digest["twiceReportedRecords"] = twiceReportedRecords
+    digest['dmdEnvVar'] = dmdEnvVar
+    digest['mode'] = mode
+    digest['heapUsableSize'] = heapUsableSize
+    digest['heapBlocks'] = heapBlocks
+    if mode in ['live', 'cumulative']:
+        digest['liveOrCumulativeRecords'] = liveOrCumulativeRecords
+    elif mode == 'dark-matter':
+        digest['unreportedRecords'] = unreportedRecords
+        digest['onceReportedRecords'] = onceReportedRecords
+        digest['twiceReportedRecords'] = twiceReportedRecords
     return digest
 
 
@@ -544,54 +505,51 @@ def diffRecords(args, records1, records2):
 
 
 def diffDigests(args, d1, d2):
-    if d1["mode"] != d2["mode"]:
+    if (d1['mode'] != d2['mode']):
         raise Exception("the input files have different 'mode' properties")
 
     d3 = {}
-    d3["dmdEnvVar"] = (d1["dmdEnvVar"], d2["dmdEnvVar"])
-    d3["mode"] = d1["mode"]
-    d3["heapUsableSize"] = d2["heapUsableSize"] - d1["heapUsableSize"]
-    d3["heapBlocks"] = d2["heapBlocks"] - d1["heapBlocks"]
-    if d1["mode"] in ["live", "cumulative"]:
-        d3["liveOrCumulativeRecords"] = diffRecords(
-            args, d1["liveOrCumulativeRecords"], d2["liveOrCumulativeRecords"]
-        )
-    elif d1["mode"] == "dark-matter":
-        d3["unreportedRecords"] = diffRecords(
-            args, d1["unreportedRecords"], d2["unreportedRecords"]
-        )
-        d3["onceReportedRecords"] = diffRecords(
-            args, d1["onceReportedRecords"], d2["onceReportedRecords"]
-        )
-        d3["twiceReportedRecords"] = diffRecords(
-            args, d1["twiceReportedRecords"], d2["twiceReportedRecords"]
-        )
+    d3['dmdEnvVar'] = (d1['dmdEnvVar'], d2['dmdEnvVar'])
+    d3['mode'] = d1['mode']
+    d3['heapUsableSize'] = d2['heapUsableSize'] - d1['heapUsableSize']
+    d3['heapBlocks'] = d2['heapBlocks'] - d1['heapBlocks']
+    if d1['mode'] in ['live', 'cumulative']:
+        d3['liveOrCumulativeRecords'] = \
+            diffRecords(args, d1['liveOrCumulativeRecords'],
+                        d2['liveOrCumulativeRecords'])
+    elif d1['mode'] == 'dark-matter':
+        d3['unreportedRecords'] = diffRecords(args, d1['unreportedRecords'],
+                                              d2['unreportedRecords'])
+        d3['onceReportedRecords'] = diffRecords(args, d1['onceReportedRecords'],
+                                                d2['onceReportedRecords'])
+        d3['twiceReportedRecords'] = diffRecords(args, d1['twiceReportedRecords'],
+                                                 d2['twiceReportedRecords'])
     return d3
 
 
 def printDigest(args, digest):
-    dmdEnvVar = digest["dmdEnvVar"]
-    mode = digest["mode"]
-    heapUsableSize = digest["heapUsableSize"]
-    heapBlocks = digest["heapBlocks"]
-    if mode in ["live", "cumulative"]:
-        liveOrCumulativeRecords = digest["liveOrCumulativeRecords"]
-    elif mode == "dark-matter":
-        unreportedRecords = digest["unreportedRecords"]
-        onceReportedRecords = digest["onceReportedRecords"]
-        twiceReportedRecords = digest["twiceReportedRecords"]
+    dmdEnvVar = digest['dmdEnvVar']
+    mode = digest['mode']
+    heapUsableSize = digest['heapUsableSize']
+    heapBlocks = digest['heapBlocks']
+    if mode in ['live', 'cumulative']:
+        liveOrCumulativeRecords = digest['liveOrCumulativeRecords']
+    elif mode == 'dark-matter':
+        unreportedRecords = digest['unreportedRecords']
+        onceReportedRecords = digest['onceReportedRecords']
+        twiceReportedRecords = digest['twiceReportedRecords']
 
-    separator = "#" + "-" * 65 + "\n"
+    separator = '#' + '-' * 65 + '\n'
 
     def number(n):
-        """Format a number with comma as a separator."""
-        return "{:,d}".format(n)
+        '''Format a number with comma as a separator.'''
+        return '{:,d}'.format(n)
 
     def perc(m, n):
         return 0 if n == 0 else (100 * m / n)
 
     def plural(n):
-        return "" if n == 1 else "s"
+        return '' if n == 1 else 's'
 
     # Prints to stdout, or to file if -o/--output was specified.
     def out(*arguments, **kwargs):
@@ -612,14 +570,9 @@ def printDigest(args, digest):
         maxRecord = 1000
 
         if args.allocation_filter:
-            sortedRecords = list(
-                filter(
-                    lambda x: any(
-                        map(lambda y: args.allocation_filter in y, x.allocatedAtDesc)
-                    ),
-                    sortedRecords,
-                )
-            )
+            sortedRecords = list(filter(
+                lambda x: any(map(lambda y: args.allocation_filter in y, x.allocatedAtDesc)),
+                sortedRecords))
 
         # First iteration: get totals, etc.
         for record in sortedRecords:
@@ -628,206 +581,180 @@ def printDigest(args, digest):
 
         # Second iteration: print.
         if numRecords == 0:
-            out("# no {:} heap blocks\n".format(recordKind))
+            out('# no {:} heap blocks\n'.format(recordKind))
 
         kindCumulativeUsableSize = 0
         for i, record in enumerate(sortedRecords, start=1):
             # Stop printing at the |maxRecord|th record.
             if i == maxRecord:
-                out(
-                    "# {:}: stopping after {:,d} heap block records\n".format(
-                        RecordKind, i
-                    )
-                )
+                out('# {:}: stopping after {:,d} heap block records\n'.
+                    format(RecordKind, i))
                 break
 
             kindCumulativeUsableSize += record.usableSize
 
-            out(RecordKind + " {")
-            out(
-                "  {:} block{:} in heap block record {:,d} of {:,d}".format(
-                    number(record.numBlocks), plural(record.numBlocks), i, numRecords
-                )
-            )
-            out(
-                "  {:} bytes ({:} requested / {:} slop)".format(
-                    number(record.usableSize),
-                    number(record.reqSize),
-                    number(record.slopSize),
-                )
-            )
+            out(RecordKind + ' {')
+            out('  {:} block{:} in heap block record {:,d} of {:,d}'.
+                format(number(record.numBlocks),
+                       plural(record.numBlocks), i, numRecords))
+            out('  {:} bytes ({:} requested / {:} slop)'.
+                format(number(record.usableSize),
+                       number(record.reqSize),
+                       number(record.slopSize)))
 
-            usableSizes = sorted(
-                record.usableSizes.items(), key=lambda x: abs(x[0]), reverse=True
-            )
+            usableSizes = sorted(record.usableSizes.items(),
+                                 key=lambda x: abs(x[0]), reverse=True)
             hasSingleBlock = len(usableSizes) == 1 and usableSizes[0][1] == 1
 
             if not hasSingleBlock:
-                out("  Individual block sizes: ", end="")
+                out('  Individual block sizes: ', end='')
                 if len(usableSizes) == 0:
-                    out("(no change)", end="")
+                    out('(no change)', end='')
                 else:
                     isFirst = True
                     for usableSize, count in usableSizes:
                         if not isFirst:
-                            out("; ", end="")
-                        out("{:}".format(number(usableSize)), end="")
+                            out('; ', end='')
+                        out('{:}'.format(number(usableSize)), end='')
                         if count > 1:
-                            out(" x {:,d}".format(count), end="")
+                            out(' x {:,d}'.format(count), end='')
                         isFirst = False
                 out()
 
-            out(
-                "  {:4.2f}% of the heap ({:4.2f}% cumulative)".format(
-                    perc(record.usableSize, heapUsableSize),
-                    perc(kindCumulativeUsableSize, heapUsableSize),
-                )
-            )
-            if mode in ["live", "cumulative"]:
+            out('  {:4.2f}% of the heap ({:4.2f}% cumulative)'.
+                format(perc(record.usableSize, heapUsableSize),
+                       perc(kindCumulativeUsableSize, heapUsableSize)))
+            if mode in ['live', 'cumulative']:
                 pass
-            elif mode == "dark-matter":
-                out(
-                    "  {:4.2f}% of {:} ({:4.2f}% cumulative)".format(
-                        perc(record.usableSize, kindUsableSize),
-                        recordKind,
-                        perc(kindCumulativeUsableSize, kindUsableSize),
-                    )
-                )
-            out("  Allocated at {")
+            elif mode == 'dark-matter':
+                out('  {:4.2f}% of {:} ({:4.2f}% cumulative)'.
+                    format(perc(record.usableSize, kindUsableSize),
+                           recordKind,
+                           perc(kindCumulativeUsableSize, kindUsableSize)))
+            out('  Allocated at {')
             printStack(record.allocatedAtDesc)
-            out("  }")
-            if mode in ["live", "cumulative"]:
+            out('  }')
+            if mode in ['live', 'cumulative']:
                 pass
-            elif mode == "dark-matter":
+            elif mode == 'dark-matter':
                 for n, reportedAtDesc in enumerate(record.reportedAtDescs):
-                    again = "again " if n > 0 else ""
-                    out("  Reported {:}at {{".format(again))
+                    again = 'again ' if n > 0 else ''
+                    out('  Reported {:}at {{'.format(again))
                     printStack(reportedAtDesc)
-                    out("  }")
-            out("}\n")
+                    out('  }')
+            out('}\n')
 
         return (kindUsableSize, kindBlocks)
 
     def printInvocation(n, dmdEnvVar, mode):
-        out("Invocation{:} {{".format(n))
+        out('Invocation{:} {{'.format(n))
         if dmdEnvVar is None:
-            out("  $DMD is undefined")
+            out('  $DMD is undefined')
         else:
-            out("  $DMD = '" + dmdEnvVar + "'")
-        out("  Mode = '" + mode + "'")
-        out("}\n")
+            out('  $DMD = \'' + dmdEnvVar + '\'')
+        out('  Mode = \'' + mode + '\'')
+        out('}\n')
 
     # Print command line. Strip dirs so the output is deterministic, which is
     # needed for testing.
-    out(separator, end="")
-    out("# " + " ".join(map(os.path.basename, sys.argv)) + "\n")
+    out(separator, end='')
+    out('# ' + ' '.join(map(os.path.basename, sys.argv)) + '\n')
 
     # Print invocation(s).
     if type(dmdEnvVar) is not tuple:
-        printInvocation("", dmdEnvVar, mode)
+        printInvocation('', dmdEnvVar, mode)
     else:
-        printInvocation(" 1", dmdEnvVar[0], mode)
-        printInvocation(" 2", dmdEnvVar[1], mode)
+        printInvocation(' 1', dmdEnvVar[0], mode)
+        printInvocation(' 2', dmdEnvVar[1], mode)
 
     # Print records.
-    if mode in ["live", "cumulative"]:
-        liveOrCumulativeUsableSize, liveOrCumulativeBlocks = printRecords(
-            mode, liveOrCumulativeRecords, heapUsableSize
-        )
-    elif mode == "dark-matter":
-        twiceReportedUsableSize, twiceReportedBlocks = printRecords(
-            "twice-reported", twiceReportedRecords, heapUsableSize
-        )
+    if mode in ['live', 'cumulative']:
+        liveOrCumulativeUsableSize, liveOrCumulativeBlocks = \
+            printRecords(mode, liveOrCumulativeRecords, heapUsableSize)
+    elif mode == 'dark-matter':
+        twiceReportedUsableSize, twiceReportedBlocks = \
+            printRecords('twice-reported', twiceReportedRecords, heapUsableSize)
 
-        unreportedUsableSize, unreportedBlocks = printRecords(
-            "unreported", unreportedRecords, heapUsableSize
-        )
+        unreportedUsableSize, unreportedBlocks = \
+            printRecords('unreported', unreportedRecords, heapUsableSize)
 
-        onceReportedUsableSize, onceReportedBlocks = printRecords(
-            "once-reported", onceReportedRecords, heapUsableSize
-        )
+        onceReportedUsableSize, onceReportedBlocks = \
+            printRecords('once-reported', onceReportedRecords, heapUsableSize)
 
     # Print summary.
     out(separator)
-    out("Summary {")
-    if mode in ["live", "cumulative"]:
-        out(
-            "  Total: {:} bytes in {:} blocks".format(
-                number(liveOrCumulativeUsableSize), number(liveOrCumulativeBlocks)
-            )
-        )
-    elif mode == "dark-matter":
-        fmt = "  {:15} {:>12} bytes ({:6.2f}%) in {:>7} blocks ({:6.2f}%)"
-        out(fmt.format("Total:", number(heapUsableSize), 100, number(heapBlocks), 100))
-        out(
-            fmt.format(
-                "Unreported:",
-                number(unreportedUsableSize),
-                perc(unreportedUsableSize, heapUsableSize),
-                number(unreportedBlocks),
-                perc(unreportedBlocks, heapBlocks),
-            )
-        )
-        out(
-            fmt.format(
-                "Once-reported:",
-                number(onceReportedUsableSize),
-                perc(onceReportedUsableSize, heapUsableSize),
-                number(onceReportedBlocks),
-                perc(onceReportedBlocks, heapBlocks),
-            )
-        )
-        out(
-            fmt.format(
-                "Twice-reported:",
-                number(twiceReportedUsableSize),
-                perc(twiceReportedUsableSize, heapUsableSize),
-                number(twiceReportedBlocks),
-                perc(twiceReportedBlocks, heapBlocks),
-            )
-        )
-    out("}\n")
+    out('Summary {')
+    if mode in ['live', 'cumulative']:
+        out('  Total: {:} bytes in {:} blocks'.
+            format(number(liveOrCumulativeUsableSize),
+                   number(liveOrCumulativeBlocks)))
+    elif mode == 'dark-matter':
+        fmt = '  {:15} {:>12} bytes ({:6.2f}%) in {:>7} blocks ({:6.2f}%)'
+        out(fmt.
+            format('Total:',
+                   number(heapUsableSize),
+                   100,
+                   number(heapBlocks),
+                   100))
+        out(fmt.
+            format('Unreported:',
+                   number(unreportedUsableSize),
+                   perc(unreportedUsableSize, heapUsableSize),
+                   number(unreportedBlocks),
+                   perc(unreportedBlocks, heapBlocks)))
+        out(fmt.
+            format('Once-reported:',
+                   number(onceReportedUsableSize),
+                   perc(onceReportedUsableSize, heapUsableSize),
+                   number(onceReportedBlocks),
+                   perc(onceReportedBlocks, heapBlocks)))
+        out(fmt.
+            format('Twice-reported:',
+                   number(twiceReportedUsableSize),
+                   perc(twiceReportedUsableSize, heapUsableSize),
+                   number(twiceReportedBlocks),
+                   perc(twiceReportedBlocks, heapBlocks)))
+    out('}\n')
 
 
 #############################
 # Pretty printer for DMD JSON
 #############################
 
-
 def prettyPrintDmdJson(out, j):
-    out.write("{\n")
+    out.write('{\n')
 
-    out.write(' "version": {0},\n'.format(j["version"]))
+    out.write(' "version": {0},\n'.format(j['version']))
     out.write(' "invocation": ')
-    json.dump(j["invocation"], out, sort_keys=True)
-    out.write(",\n")
+    json.dump(j['invocation'], out, sort_keys=True)
+    out.write(',\n')
 
     out.write(' "blockList": [')
     first = True
-    for b in j["blockList"]:
-        out.write("" if first else ",")
-        out.write("\n  ")
+    for b in j['blockList']:
+        out.write('' if first else ',')
+        out.write('\n  ')
         json.dump(b, out, sort_keys=True)
         first = False
-    out.write("\n ],\n")
+    out.write('\n ],\n')
 
     out.write(' "traceTable": {')
     first = True
-    for k, l in j["traceTable"].iteritems():
-        out.write("" if first else ",")
+    for k, l in j['traceTable'].iteritems():
+        out.write('' if first else ',')
         out.write('\n  "{0}": {1}'.format(k, json.dumps(l)))
         first = False
-    out.write("\n },\n")
+    out.write('\n },\n')
 
     out.write(' "frameTable": {')
     first = True
-    for k, v in j["frameTable"].iteritems():
-        out.write("" if first else ",")
+    for k, v in j['frameTable'].iteritems():
+        out.write('' if first else ',')
         out.write('\n  "{0}": {1}'.format(k, json.dumps(v)))
         first = False
-    out.write("\n }\n")
+    out.write('\n }\n')
 
-    out.write("}\n")
+    out.write('}\n')
 
 
 ##################################################################
@@ -876,22 +803,16 @@ class ClampStats:
         self.nonNullNonBlockPtr += 1
 
     def log(self):
-        sys.stderr.write("Results:\n")
+        sys.stderr.write('Results:\n')
         sys.stderr.write(
-            "  Number of pointers already pointing to start of blocks: "
-            + str(self.startBlockPtr)
-            + "\n"
-        )
-        sys.stderr.write(
-            "  Number of pointers clamped to start of blocks: "
-            + str(self.midBlockPtr)
-            + "\n"
-        )
-        sys.stderr.write(
-            "  Number of non-null pointers not pointing into blocks "
-            "clamped to null: " + str(self.nonNullNonBlockPtr) + "\n"
-        )
-        sys.stderr.write("  Number of null pointers: " + str(self.nullPtr) + "\n")
+            '  Number of pointers already pointing to start of blocks: ' +
+            str(self.startBlockPtr) + '\n')
+        sys.stderr.write('  Number of pointers clamped to start of blocks: ' +
+                         str(self.midBlockPtr) + '\n')
+        sys.stderr.write('  Number of non-null pointers not pointing into blocks '
+                         'clamped to null: ' +
+                         str(self.nonNullNonBlockPtr) + '\n')
+        sys.stderr.write('  Number of null pointers: ' + str(self.nullPtr) + '\n')
 
 
 # Search the block ranges array for a block that address points into.
@@ -908,7 +829,7 @@ def clampAddress(blockRanges, blockStarts, clampStats, address):
     if address >= r.end:
         assert address < blockRanges[i].start
         clampStats.clampedNonBlockAddr()
-        return "0"
+        return '0'
 
     clampStats.clampedBlockAddr(r.start == address)
     return r.block
@@ -917,22 +838,22 @@ def clampAddress(blockRanges, blockStarts, clampStats, address):
 def clampBlockList(args, inputFileName, isZipped, opener):
     # XXX This isn't very efficient because we end up reading and writing
     # the file multiple times.
-    with opener(inputFileName, "rb") as f:
+    with opener(inputFileName, 'rb') as f:
         j = json.load(f)
 
-    if j["version"] != outputVersion:
+    if j['version'] != outputVersion:
         raise Exception("'version' property isn't '{:d}'".format(outputVersion))
 
     # Check that the invocation is reasonable for contents clamping.
-    invocation = j["invocation"]
-    if invocation["mode"] != "scan":
-        raise Exception("Log was taken in mode " + invocation["mode"] + " not scan")
+    invocation = j['invocation']
+    if invocation['mode'] != 'scan':
+        raise Exception("Log was taken in mode " + invocation['mode'] + " not scan")
 
-    sys.stderr.write("Creating block range list.\n")
-    blockList = j["blockList"]
+    sys.stderr.write('Creating block range list.\n')
+    blockList = j['blockList']
     blockRanges = []
     for block in blockList:
-        blockRanges.append(AddrRange(block["addr"], block["req"]))
+        blockRanges.append(AddrRange(block['addr'], block['req']))
     blockRanges.sort(key=lambda r: r.start)
 
     # Make sure there are no overlapping blocks.
@@ -941,7 +862,7 @@ def clampBlockList(args, inputFileName, isZipped, opener):
         assert prevRange.end <= currRange.start
         prevRange = currRange
 
-    sys.stderr.write("Clamping block contents.\n")
+    sys.stderr.write('Clamping block contents.\n')
     clampStats = ClampStats()
     firstAddr = blockRanges[0].start
     lastAddr = blockRanges[-1].end
@@ -952,10 +873,10 @@ def clampBlockList(args, inputFileName, isZipped, opener):
 
     for block in blockList:
         # Small blocks don't have any contents.
-        if "contents" not in block:
+        if 'contents' not in block:
             continue
 
-        cont = block["contents"]
+        cont = block['contents']
         for i in range(len(cont)):
             address = int(cont[i], 16)
 
@@ -967,23 +888,23 @@ def clampBlockList(args, inputFileName, isZipped, opener):
             # block then it can't be within a block.
             if address < firstAddr or address >= lastAddr:
                 clampStats.clampedNonBlockAddr()
-                cont[i] = "0"
+                cont[i] = '0'
                 continue
 
             cont[i] = clampAddress(blockRanges, blockStarts, clampStats, address)
 
         # Remove any trailing nulls.
-        while len(cont) and cont[-1] == "0":
+        while len(cont) and cont[-1] == '0':
             cont.pop()
 
     if args.print_clamp_stats:
         clampStats.log()
 
-    sys.stderr.write("Saving file.\n")
+    sys.stderr.write('Saving file.\n')
     tmpFile = tempfile.NamedTemporaryFile(delete=False)
     tmpFilename = tmpFile.name
     if isZipped:
-        tmpFile = gzip.GzipFile(filename="", fileobj=tmpFile)
+        tmpFile = gzip.GzipFile(filename='', fileobj=tmpFile)
     prettyPrintDmdJson(tmpFile, j)
     tmpFile.close()
     shutil.move(tmpFilename, inputFileName)
@@ -998,5 +919,5 @@ def main():
     printDigest(args, digest)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -15,37 +15,37 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
         s = self.server.wrapper
         p = self.path
 
-        if p == "/build_resources.json":
+        if p == '/build_resources.json':
             self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
 
             keys = sorted(s.json_files.keys())
-            s = json.dumps({"files": ["resources/%s" % k for k in keys]})
-            self.wfile.write(s.encode("utf-8"))
+            s = json.dumps({'files': ['resources/%s' % k for k in keys]})
+            self.wfile.write(s.encode('utf-8'))
             return
 
-        if p.startswith("/resources/"):
-            key = p[len("/resources/") :]
+        if p.startswith('/resources/'):
+            key = p[len('/resources/'):]
 
             if key not in s.json_files:
                 self.send_error(404)
                 return
 
             self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
 
             self.wfile.write(s.json_files[key])
             return
 
-        if p == "/":
-            p = "/build_resources.html"
+        if p == '/':
+            p = '/build_resources.html'
 
         self.serve_docroot(s.doc_root, p[1:])
 
     def do_POST(self):
-        if self.path == "/shutdown":
+        if self.path == '/shutdown':
             self.server.wrapper.do_shutdown = True
             self.send_response(200)
             return
@@ -69,22 +69,22 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
             return
 
         self.send_response(200)
-        ct = "text/plain"
-        if path.endswith(".html"):
-            ct = "text/html"
+        ct = 'text/plain'
+        if path.endswith('.html'):
+            ct = 'text/html'
 
-        self.send_header("Content-Type", ct)
+        self.send_header('Content-Type', ct)
         self.end_headers()
 
-        with open(local_path, "rb") as fh:
+        with open(local_path, 'rb') as fh:
             self.wfile.write(fh.read())
 
 
 class BuildViewerServer(object):
-    def __init__(self, address="localhost", port=0):
+    def __init__(self, address='localhost', port=0):
         # TODO use pkg_resources to obtain HTML resources.
         pkg_dir = os.path.dirname(os.path.abspath(__file__))
-        doc_root = os.path.join(pkg_dir, "resources", "html-build-viewer")
+        doc_root = os.path.join(pkg_dir, 'resources', 'html-build-viewer')
         assert os.path.isdir(doc_root)
 
         self.doc_root = doc_root
@@ -97,20 +97,20 @@ class BuildViewerServer(object):
     @property
     def url(self):
         hostname, port = self.server.server_address
-        return "http://%s:%d/" % (hostname, port)
+        return 'http://%s:%d/' % (hostname, port)
 
     def add_resource_json_file(self, key, path):
         """Register a resource JSON file with the server.
 
         The file will be made available under the name/key specified."""
-        with open(path, "rb") as fh:
+        with open(path, 'rb') as fh:
             self.json_files[key] = fh.read()
 
     def add_resource_json_url(self, key, url):
         """Register a resource JSON file at a URL."""
         r = requests.get(url)
         if r.status_code != 200:
-            raise Exception("Non-200 HTTP response code")
+            raise Exception('Non-200 HTTP response code')
         self.json_files[key] = r.text
 
     def run(self):

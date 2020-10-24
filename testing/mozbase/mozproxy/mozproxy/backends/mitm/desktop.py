@@ -99,8 +99,8 @@ class MitmproxyDesktop(Mitmproxy):
 
         self.write_policies_json(
             self.policies_dir,
-            policies_content=POLICIES_CONTENT_ON
-            % {"cert": self.cert_path, "host": self.host, "port": self.port},
+            policies_content=POLICIES_CONTENT_ON %
+            {"cert": self.cert_path, "host": self.host, "port": self.port},
         )
 
         # cannot continue if failed to add CA cert to Firefox, need to check
@@ -133,8 +133,8 @@ class MitmproxyDesktop(Mitmproxy):
             LOG.info("Firefox policies file contents:")
             LOG.info(contents)
             if (
-                POLICIES_CONTENT_ON
-                % {"cert": self.cert_path, "host": self.host, "port": self.port}
+                    POLICIES_CONTENT_ON
+                    % {"cert": self.cert_path, "host": self.host, "port": self.port}
             ) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:

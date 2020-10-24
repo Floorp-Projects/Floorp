@@ -4,223 +4,223 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Canvas: 2D')
 
-with Files("TexUnpackBlob.cpp"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('TexUnpackBlob.cpp'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("WebGL*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('WebGL*'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("test/webgl-conf/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('test/webgl-conf/**'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("test/webgl-mochitest/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('test/webgl-mochitest/**'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("test/reftest/webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('test/reftest/webgl*'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("test/chrome/*webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('test/chrome/*webgl*'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-with Files("test/crossorigin/*webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+with Files('test/crossorigin/*webgl*'):
+    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
 # Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
 # * Adjust failure errata for webgl-conf.
 
 MOCHITEST_MANIFESTS += [
-    "test/crash/mochitest.ini",
-    "test/crossorigin/mochitest.ini",
-    "test/mochitest.ini",
-    "test/webgl-conf/generated-mochitest.ini",
-    "test/webgl-mochitest/mochitest.ini",
+    'test/crash/mochitest.ini',
+    'test/crossorigin/mochitest.ini',
+    'test/mochitest.ini',
+    'test/webgl-conf/generated-mochitest.ini',
+    'test/webgl-mochitest/mochitest.ini',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
 
 EXPORTS += [
-    "nsICanvasRenderingContextInternal.h",
+    'nsICanvasRenderingContextInternal.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "BasicRenderingContext2D.h",
-    "CanvasGradient.h",
-    "CanvasPath.h",
-    "CanvasPattern.h",
-    "CanvasRenderingContext2D.h",
-    "CanvasRenderingContextHelper.h",
-    "CanvasUtils.h",
-    "GeneratePlaceholderCanvasData.h",
-    "ImageBitmap.h",
-    "ImageBitmapRenderingContext.h",
-    "ImageBitmapSource.h",
-    "ImageData.h",
-    "ImageUtils.h",
-    "IpdlQueue.h",
-    "OffscreenCanvas.h",
-    "ProducerConsumerQueue.h",
-    "QueueParamTraits.h",
-    "TextMetrics.h",
-    "WebGLChild.h",
-    "WebGLCommandQueue.h",
-    "WebGLCrossProcessCommandQueue.h",
-    "WebGLIpdl.h",
-    "WebGLParent.h",
-    "WebGLTypes.h",
-    "XRWebGLLayer.h",
+    'BasicRenderingContext2D.h',
+    'CanvasGradient.h',
+    'CanvasPath.h',
+    'CanvasPattern.h',
+    'CanvasRenderingContext2D.h',
+    'CanvasRenderingContextHelper.h',
+    'CanvasUtils.h',
+    'GeneratePlaceholderCanvasData.h',
+    'ImageBitmap.h',
+    'ImageBitmapRenderingContext.h',
+    'ImageBitmapSource.h',
+    'ImageData.h',
+    'ImageUtils.h',
+    'IpdlQueue.h',
+    'OffscreenCanvas.h',
+    'ProducerConsumerQueue.h',
+    'QueueParamTraits.h',
+    'TextMetrics.h',
+    'WebGLChild.h',
+    'WebGLCommandQueue.h',
+    'WebGLCrossProcessCommandQueue.h',
+    'WebGLIpdl.h',
+    'WebGLParent.h',
+    'WebGLTypes.h',
+    'XRWebGLLayer.h',
 ]
 # XRWebGLLayer.h must be exported for use by the generated WebXRBinding.h
 
 # Canvas 2D and common sources
 UNIFIED_SOURCES += [
-    "CanvasGradient.cpp",
-    "CanvasImageCache.cpp",
-    "CanvasPattern.cpp",
-    "CanvasRenderingContext2D.cpp",
-    "CanvasRenderingContextHelper.cpp",
-    "CanvasUtils.cpp",
-    "ImageBitmap.cpp",
-    "ImageBitmapRenderingContext.cpp",
-    "ImageData.cpp",
-    "nsICanvasRenderingContextInternal.cpp",
-    "OffscreenCanvas.cpp",
-    "XRWebGLLayer.cpp",
+    'CanvasGradient.cpp',
+    'CanvasImageCache.cpp',
+    'CanvasPattern.cpp',
+    'CanvasRenderingContext2D.cpp',
+    'CanvasRenderingContextHelper.cpp',
+    'CanvasUtils.cpp',
+    'ImageBitmap.cpp',
+    'ImageBitmapRenderingContext.cpp',
+    'ImageData.cpp',
+    'nsICanvasRenderingContextInternal.cpp',
+    'OffscreenCanvas.cpp',
+    'XRWebGLLayer.cpp',
 ]
 
 SOURCES += [
-    "ImageUtils.cpp",
+    'ImageUtils.cpp',
 ]
 
 # WebGL Sources
 UNIFIED_SOURCES += [
-    "CacheInvalidator.cpp",
-    "ClientWebGLContext.cpp",
-    "ClientWebGLExtensions.cpp",
-    "HostWebGLContext.cpp",
-    "Queue.cpp",
-    "TexUnpackBlob.cpp",
-    "WebGL2Context.cpp",
-    "WebGL2ContextBuffers.cpp",
-    "WebGL2ContextFramebuffers.cpp",
-    "WebGL2ContextMRTs.cpp",
-    "WebGL2ContextQueries.cpp",
-    "WebGL2ContextRenderbuffers.cpp",
-    "WebGL2ContextSamplers.cpp",
-    "WebGL2ContextState.cpp",
-    "WebGL2ContextSync.cpp",
-    "WebGL2ContextTransformFeedback.cpp",
-    "WebGL2ContextUniforms.cpp",
-    "WebGLBuffer.cpp",
-    "WebGLChild.cpp",
-    "WebGLContext.cpp",
-    "WebGLContextBuffers.cpp",
-    "WebGLContextDraw.cpp",
-    "WebGLContextExtensions.cpp",
-    "WebGLContextFramebufferOperations.cpp",
-    "WebGLContextGL.cpp",
-    "WebGLContextLossHandler.cpp",
-    "WebGLContextState.cpp",
-    "WebGLContextTextures.cpp",
-    "WebGLContextUtils.cpp",
-    "WebGLContextValidate.cpp",
-    "WebGLContextVertexArray.cpp",
-    "WebGLContextVertices.cpp",
-    "WebGLCrossProcessCommandQueue.cpp",
-    "WebGLExtensionColorBufferFloat.cpp",
-    "WebGLExtensionColorBufferHalfFloat.cpp",
-    "WebGLExtensionCompressedTextureASTC.cpp",
-    "WebGLExtensionCompressedTextureBPTC.cpp",
-    "WebGLExtensionCompressedTextureES3.cpp",
-    "WebGLExtensionCompressedTextureETC1.cpp",
-    "WebGLExtensionCompressedTexturePVRTC.cpp",
-    "WebGLExtensionCompressedTextureRGTC.cpp",
-    "WebGLExtensionCompressedTextureS3TC.cpp",
-    "WebGLExtensionCompressedTextureS3TC_SRGB.cpp",
-    "WebGLExtensionDepthTexture.cpp",
-    "WebGLExtensionDisjointTimerQuery.cpp",
-    "WebGLExtensionDrawBuffers.cpp",
-    "WebGLExtensionEXTColorBufferFloat.cpp",
-    "WebGLExtensionFragDepth.cpp",
-    "WebGLExtensionInstancedArrays.cpp",
-    "WebGLExtensions.cpp",
-    "WebGLExtensionShaderTextureLod.cpp",
-    "WebGLExtensionSRGB.cpp",
-    "WebGLExtensionTextureFloat.cpp",
-    "WebGLExtensionTextureFloatLinear.cpp",
-    "WebGLExtensionTextureHalfFloat.cpp",
-    "WebGLExtensionTextureHalfFloatLinear.cpp",
-    "WebGLFormats.cpp",
-    "WebGLFramebuffer.cpp",
-    "WebGLMemoryTracker.cpp",
-    "WebGLParent.cpp",
-    "WebGLProgram.cpp",
-    "WebGLQuery.cpp",
-    "WebGLRenderbuffer.cpp",
-    "WebGLSampler.cpp",
-    "WebGLShader.cpp",
-    "WebGLShaderValidator.cpp",
-    "WebGLSync.cpp",
-    "WebGLTexelConversions.cpp",
-    "WebGLTexture.cpp",
-    "WebGLTextureUpload.cpp",
-    "WebGLTransformFeedback.cpp",
-    "WebGLValidateStrings.cpp",
-    "WebGLVertexArray.cpp",
-    "WebGLVertexArrayFake.cpp",
-    "WebGLVertexArrayGL.cpp",
+    'CacheInvalidator.cpp',
+    'ClientWebGLContext.cpp',
+    'ClientWebGLExtensions.cpp',
+    'HostWebGLContext.cpp',
+    'Queue.cpp',
+    'TexUnpackBlob.cpp',
+    'WebGL2Context.cpp',
+    'WebGL2ContextBuffers.cpp',
+    'WebGL2ContextFramebuffers.cpp',
+    'WebGL2ContextMRTs.cpp',
+    'WebGL2ContextQueries.cpp',
+    'WebGL2ContextRenderbuffers.cpp',
+    'WebGL2ContextSamplers.cpp',
+    'WebGL2ContextState.cpp',
+    'WebGL2ContextSync.cpp',
+    'WebGL2ContextTransformFeedback.cpp',
+    'WebGL2ContextUniforms.cpp',
+    'WebGLBuffer.cpp',
+    'WebGLChild.cpp',
+    'WebGLContext.cpp',
+    'WebGLContextBuffers.cpp',
+    'WebGLContextDraw.cpp',
+    'WebGLContextExtensions.cpp',
+    'WebGLContextFramebufferOperations.cpp',
+    'WebGLContextGL.cpp',
+    'WebGLContextLossHandler.cpp',
+    'WebGLContextState.cpp',
+    'WebGLContextTextures.cpp',
+    'WebGLContextUtils.cpp',
+    'WebGLContextValidate.cpp',
+    'WebGLContextVertexArray.cpp',
+    'WebGLContextVertices.cpp',
+    'WebGLCrossProcessCommandQueue.cpp',
+    'WebGLExtensionColorBufferFloat.cpp',
+    'WebGLExtensionColorBufferHalfFloat.cpp',
+    'WebGLExtensionCompressedTextureASTC.cpp',
+    'WebGLExtensionCompressedTextureBPTC.cpp',
+    'WebGLExtensionCompressedTextureES3.cpp',
+    'WebGLExtensionCompressedTextureETC1.cpp',
+    'WebGLExtensionCompressedTexturePVRTC.cpp',
+    'WebGLExtensionCompressedTextureRGTC.cpp',
+    'WebGLExtensionCompressedTextureS3TC.cpp',
+    'WebGLExtensionCompressedTextureS3TC_SRGB.cpp',
+    'WebGLExtensionDepthTexture.cpp',
+    'WebGLExtensionDisjointTimerQuery.cpp',
+    'WebGLExtensionDrawBuffers.cpp',
+    'WebGLExtensionEXTColorBufferFloat.cpp',
+    'WebGLExtensionFragDepth.cpp',
+    'WebGLExtensionInstancedArrays.cpp',
+    'WebGLExtensions.cpp',
+    'WebGLExtensionShaderTextureLod.cpp',
+    'WebGLExtensionSRGB.cpp',
+    'WebGLExtensionTextureFloat.cpp',
+    'WebGLExtensionTextureFloatLinear.cpp',
+    'WebGLExtensionTextureHalfFloat.cpp',
+    'WebGLExtensionTextureHalfFloatLinear.cpp',
+    'WebGLFormats.cpp',
+    'WebGLFramebuffer.cpp',
+    'WebGLMemoryTracker.cpp',
+    'WebGLParent.cpp',
+    'WebGLProgram.cpp',
+    'WebGLQuery.cpp',
+    'WebGLRenderbuffer.cpp',
+    'WebGLSampler.cpp',
+    'WebGLShader.cpp',
+    'WebGLShaderValidator.cpp',
+    'WebGLSync.cpp',
+    'WebGLTexelConversions.cpp',
+    'WebGLTexture.cpp',
+    'WebGLTextureUpload.cpp',
+    'WebGLTransformFeedback.cpp',
+    'WebGLValidateStrings.cpp',
+    'WebGLVertexArray.cpp',
+    'WebGLVertexArrayFake.cpp',
+    'WebGLVertexArrayGL.cpp',
 ]
 
 SOURCES += [
-    "MurmurHash3.cpp",
+    'MurmurHash3.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PWebGL.ipdl",
+    'PWebGL.ipdl',
 ]
 
 # Suppress warnings from third-party code.
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    SOURCES["MurmurHash3.cpp"].flags += ["-Wno-implicit-fallthrough"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    SOURCES['MurmurHash3.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 LOCAL_INCLUDES += [
-    "/js/xpconnect/wrappers",
+    '/js/xpconnect/wrappers',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 
-USE_LIBS += ["translator"]  # Grab the Angle shader translator.
+USE_LIBS += [ 'translator' ] # Grab the Angle shader translator.
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/html",
-    "/dom/svg",
-    "/dom/workers",
-    "/dom/xul",
-    "/gfx/angle/checkout/include",
-    "/gfx/gl",
-    "/image",
-    "/js/xpconnect/src",
-    "/layout/generic",
-    "/layout/style",
-    "/layout/xul",
-    "/media/libyuv/libyuv/include",
+    '/dom/base',
+    '/dom/html',
+    '/dom/svg',
+    '/dom/workers',
+    '/dom/xul',
+    '/gfx/angle/checkout/include',
+    '/gfx/gl',
+    '/image',
+    '/js/xpconnect/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul',
+    '/media/libyuv/libyuv/include',
 ]
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
-LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    CXXFLAGS += ["-Werror=implicit-int-conversion"]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    CXXFLAGS += ['-Werror=implicit-int-conversion']
 
-if CONFIG["CC_TYPE"] == "gcc":
-    CXXFLAGS += ["-Wno-error=unused-result"]  # GCC doesn't ignore (void)MustUse();
+if CONFIG['CC_TYPE'] == 'gcc':
+    CXXFLAGS += ['-Wno-error=unused-result'] # GCC doesn't ignore (void)MustUse();

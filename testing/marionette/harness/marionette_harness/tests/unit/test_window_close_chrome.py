@@ -8,6 +8,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestCloseWindow, self).setUp()
 

@@ -5,14 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "TestFetchPreloader.cpp",
+    'TestFetchPreloader.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/netwerk/base",
-    "/xpcom/tests/gtest",
+    '/netwerk/base',
+    '/xpcom/tests/gtest',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-LOCAL_INCLUDES += ["!/xpcom", "/xpcom/components"]
+LOCAL_INCLUDES += [
+    '!/xpcom',
+    '/xpcom/components'
+]

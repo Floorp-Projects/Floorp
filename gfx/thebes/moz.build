@@ -4,291 +4,293 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("*Text*"):
-    BUG_COMPONENT = ("Core", "Graphics: Text")
+with Files('*Text*'):
+    BUG_COMPONENT = ('Core', 'Graphics: Text')
 
-with Files("*DWrite*"):
-    BUG_COMPONENT = ("Core", "Graphics: Text")
+with Files('*DWrite*'):
+    BUG_COMPONENT = ('Core', 'Graphics: Text')
 
 XPIDL_SOURCES += [
-    "nsIFontLoadCompleteCallback.idl",
+    'nsIFontLoadCompleteCallback.idl',
 ]
 
-XPIDL_MODULE = "gfx"
+XPIDL_MODULE = 'gfx'
 
 EXPORTS += [
-    "DrawMode.h",
-    "gfx2DGlue.h",
-    "gfxAlphaRecovery.h",
-    "gfxASurface.h",
-    "gfxBaseSharedMemorySurface.h",
-    "gfxBlur.h",
-    "gfxColor.h",
-    "gfxContext.h",
-    "gfxDrawable.h",
-    "gfxEnv.h",
-    "gfxFailure.h",
-    "gfxFont.h",
-    "gfxFontConstants.h",
-    "gfxFontEntry.h",
-    "gfxFontFamilyList.h",
-    "gfxFontFeatures.h",
-    "gfxFontInfoLoader.h",
-    "gfxFontPrefLangList.h",
-    "gfxFontSrcPrincipal.h",
-    "gfxFontSrcURI.h",
-    "gfxFontUtils.h",
-    "gfxFontVariations.h",
-    "gfxGradientCache.h",
-    "gfxImageSurface.h",
-    "gfxLineSegment.h",
-    "gfxMathTable.h",
-    "gfxMatrix.h",
-    "gfxOTSUtils.h",
-    "gfxPattern.h",
-    "gfxPlatform.h",
-    "gfxPlatformFontList.h",
-    "gfxPoint.h",
-    "gfxQuad.h",
-    "gfxQuaternion.h",
-    "gfxRect.h",
-    "gfxSharedImageSurface.h",
-    "gfxSkipChars.h",
-    "gfxSVGGlyphs.h",
-    "gfxTextRun.h",
-    "gfxTypes.h",
-    "gfxUserFontSet.h",
-    "gfxUtils.h",
-    "SharedFontList.h",
-    "SoftwareVsyncSource.h",
-    "ThebesRLBoxTypes.h",
-    "VsyncSource.h",
+    'DrawMode.h',
+    'gfx2DGlue.h',
+    'gfxAlphaRecovery.h',
+    'gfxASurface.h',
+    'gfxBaseSharedMemorySurface.h',
+    'gfxBlur.h',
+    'gfxColor.h',
+    'gfxContext.h',
+    'gfxDrawable.h',
+    'gfxEnv.h',
+    'gfxFailure.h',
+    'gfxFont.h',
+    'gfxFontConstants.h',
+    'gfxFontEntry.h',
+    'gfxFontFamilyList.h',
+    'gfxFontFeatures.h',
+    'gfxFontInfoLoader.h',
+    'gfxFontPrefLangList.h',
+    'gfxFontSrcPrincipal.h',
+    'gfxFontSrcURI.h',
+    'gfxFontUtils.h',
+    'gfxFontVariations.h',
+    'gfxGradientCache.h',
+    'gfxImageSurface.h',
+    'gfxLineSegment.h',
+    'gfxMathTable.h',
+    'gfxMatrix.h',
+    'gfxOTSUtils.h',
+    'gfxPattern.h',
+    'gfxPlatform.h',
+    'gfxPlatformFontList.h',
+    'gfxPoint.h',
+    'gfxQuad.h',
+    'gfxQuaternion.h',
+    'gfxRect.h',
+    'gfxSharedImageSurface.h',
+    'gfxSkipChars.h',
+    'gfxSVGGlyphs.h',
+    'gfxTextRun.h',
+    'gfxTypes.h',
+    'gfxUserFontSet.h',
+    'gfxUtils.h',
+    'SharedFontList.h',
+    'SoftwareVsyncSource.h',
+    'ThebesRLBoxTypes.h',
+    'VsyncSource.h',
 ]
 
 EXPORTS.mozilla.gfx += [
-    "D3D11Checks.h",
-    "DeviceManagerDx.h",
-    "DisplayConfigWindows.h",
-    "PrintTarget.h",
-    "PrintTargetThebes.h",
-    "ThebesRLBox.h",
+    'D3D11Checks.h',
+    'DeviceManagerDx.h',
+    'DisplayConfigWindows.h',
+    'PrintTarget.h',
+    'PrintTargetThebes.h',
+    'ThebesRLBox.h',
 ]
 
-if CONFIG["MOZ_ENABLE_SKIA"]:
-    EXPORTS.mozilla.gfx += ["SkMemoryReporter.h"]
-
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    EXPORTS += [
-        "gfxAndroidPlatform.h",
-        "gfxFT2FontBase.h",
-        "gfxFT2Fonts.h",
-    ]
+if CONFIG['MOZ_ENABLE_SKIA']:
     EXPORTS.mozilla.gfx += [
-        "PrintTargetPDF.h",
-    ]
-    SOURCES += [
-        "gfxAndroidPlatform.cpp",
-        "gfxFT2FontBase.cpp",
-        "gfxFT2FontList.cpp",
-        "gfxFT2Fonts.cpp",
-        "gfxFT2Utils.cpp",
-        "PrintTargetPDF.cpp",
-    ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    EXPORTS += [
-        "gfxPlatformMac.h",
-        "gfxQuartzNativeDrawing.h",
-        "gfxQuartzSurface.h",
-    ]
-    EXPORTS.mozilla.gfx += [
-        "PrintTargetCG.h",
-    ]
-    SOURCES += [
-        "gfxCoreTextShaper.cpp",
-        "gfxMacFont.cpp",
-        "gfxPlatformMac.cpp",
-        "gfxQuartzNativeDrawing.cpp",
-        "gfxQuartzSurface.cpp",
-        "PrintTargetCG.mm",
-    ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    EXPORTS += [
-        "gfxFT2FontBase.h",
-        "gfxGdkNativeRenderer.h",
-        "gfxPlatformGtk.h",
-    ]
-    EXPORTS.mozilla.gfx += [
-        "PrintTargetPDF.h",
-        "PrintTargetPS.h",
-    ]
-    SOURCES += [
-        "gfxFcPlatformFontList.cpp",
-        "gfxFT2FontBase.cpp",
-        "gfxFT2Utils.cpp",
-        "gfxGdkNativeRenderer.cpp",
-        "gfxPlatformGtk.cpp",
-        "PrintTargetPDF.cpp",
-        "PrintTargetPS.cpp",
+        'SkMemoryReporter.h'
     ]
 
-    if CONFIG["MOZ_X11"]:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [
+        'gfxAndroidPlatform.h',
+        'gfxFT2FontBase.h',
+        'gfxFT2Fonts.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
+    ]
+    SOURCES += [
+        'gfxAndroidPlatform.cpp',
+        'gfxFT2FontBase.cpp',
+        'gfxFT2FontList.cpp',
+        'gfxFT2Fonts.cpp',
+        'gfxFT2Utils.cpp',
+        'PrintTargetPDF.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS += [
+        'gfxPlatformMac.h',
+        'gfxQuartzNativeDrawing.h',
+        'gfxQuartzSurface.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetCG.h',
+    ]
+    SOURCES += [
+        'gfxCoreTextShaper.cpp',
+        'gfxMacFont.cpp',
+        'gfxPlatformMac.cpp',
+        'gfxQuartzNativeDrawing.cpp',
+        'gfxQuartzSurface.cpp',
+        'PrintTargetCG.mm',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    EXPORTS += [
+        'gfxFT2FontBase.h',
+        'gfxGdkNativeRenderer.h',
+        'gfxPlatformGtk.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
+        'PrintTargetPS.h',
+    ]
+    SOURCES += [
+        'gfxFcPlatformFontList.cpp',
+        'gfxFT2FontBase.cpp',
+        'gfxFT2Utils.cpp',
+        'gfxGdkNativeRenderer.cpp',
+        'gfxPlatformGtk.cpp',
+        'PrintTargetPDF.cpp',
+        'PrintTargetPS.cpp',
+    ]
+
+    if CONFIG['MOZ_X11']:
         EXPORTS += [
-            "gfxXlibNativeRenderer.h",
-            "gfxXlibSurface.h",
+            'gfxXlibNativeRenderer.h',
+            'gfxXlibSurface.h',
         ]
         SOURCES += [
-            "gfxXlibNativeRenderer.cpp",
-            "gfxXlibSurface.cpp",
+            'gfxXlibNativeRenderer.cpp',
+            'gfxXlibSurface.cpp',
         ]
 
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
-        "gfxDWriteFonts.h",
-        "gfxGDIFont.h",
-        "gfxGDIFontList.h",
-        "gfxWindowsNativeDrawing.h",
-        "gfxWindowsPlatform.h",
-        "gfxWindowsSurface.h",
+        'gfxDWriteFonts.h',
+        'gfxGDIFont.h',
+        'gfxGDIFontList.h',
+        'gfxWindowsNativeDrawing.h',
+        'gfxWindowsPlatform.h',
+        'gfxWindowsSurface.h',
     ]
     EXPORTS.mozilla.gfx += [
-        "PrintTargetPDF.h",
-        "PrintTargetWindows.h",
+        'PrintTargetPDF.h',
+        'PrintTargetWindows.h',
     ]
     SOURCES += [
-        "DisplayConfigWindows.cpp",
-        "gfxDWriteCommon.cpp",
-        "gfxDWriteFonts.cpp",
-        "gfxGDIFont.cpp",
-        "gfxGDIFontList.cpp",
-        "gfxWindowsNativeDrawing.cpp",
-        "gfxWindowsPlatform.cpp",
-        "gfxWindowsSurface.cpp",
-        "PrintTargetPDF.cpp",
-        "PrintTargetWindows.cpp",
+        'DisplayConfigWindows.cpp',
+        'gfxDWriteCommon.cpp',
+        'gfxDWriteFonts.cpp',
+        'gfxGDIFont.cpp',
+        'gfxGDIFontList.cpp',
+        'gfxWindowsNativeDrawing.cpp',
+        'gfxWindowsPlatform.cpp',
+        'gfxWindowsSurface.cpp',
+        'PrintTargetPDF.cpp',
+        'PrintTargetWindows.cpp',
     ]
     UNIFIED_SOURCES += [
-        "gfxDWriteFontList.cpp",
+        'gfxDWriteFontList.cpp',
     ]
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
-if CONFIG["INTEL_ARCHITECTURE"]:
-    SOURCES += ["gfxAlphaRecoverySSE2.cpp"]
+if CONFIG['INTEL_ARCHITECTURE']:
+    SOURCES += ['gfxAlphaRecoverySSE2.cpp']
     # The file uses SSE2 intrinsics, so it needs special compile flags on some
     # compilers.
-    SOURCES["gfxAlphaRecoverySSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
+    SOURCES['gfxAlphaRecoverySSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 SOURCES += [
     # Includes mac system header conflicting with point/size,
     # and includes glxXlibSurface.h which drags in Xrender.h
-    "gfxASurface.cpp",
+    'gfxASurface.cpp',
     # on X11, gfxDrawable.cpp includes X headers for an old workaround which
     # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
     # which currently prevent it from joining UNIFIED_SOURCES.
-    "gfxDrawable.cpp",
+    'gfxDrawable.cpp',
     # gfxFontUtils.cpp and gfxPlatform.cpp include mac system header conflicting with point/size
-    "gfxFontUtils.cpp",
-    "gfxPlatform.cpp",
-    "PrintTarget.cpp",
-    "PrintTargetThebes.cpp",
+    'gfxFontUtils.cpp',
+    'gfxPlatform.cpp',
+    'PrintTarget.cpp',
+    'PrintTargetThebes.cpp',
 ]
 
 UNIFIED_SOURCES += [
-    "CJKCompatSVS.cpp",
-    "gfxAlphaRecovery.cpp",
-    "gfxBaseSharedMemorySurface.cpp",
-    "gfxBlur.cpp",
-    "gfxContext.cpp",
-    "gfxFont.cpp",
-    "gfxFontEntry.cpp",
-    "gfxFontFeatures.cpp",
-    "gfxFontInfoLoader.cpp",
-    "gfxFontMissingGlyphs.cpp",
-    "gfxFontSrcPrincipal.cpp",
-    "gfxFontSrcURI.cpp",
-    "gfxGlyphExtents.cpp",
-    "gfxGradientCache.cpp",
-    "gfxGraphiteShaper.cpp",
-    "gfxHarfBuzzShaper.cpp",
-    "gfxImageSurface.cpp",
-    "gfxMathTable.cpp",
-    "gfxPattern.cpp",
-    "gfxPlatformFontList.cpp",
-    "gfxScriptItemizer.cpp",
-    "gfxSkipChars.cpp",
-    "gfxSVGGlyphs.cpp",
-    "gfxTextRun.cpp",
-    "gfxUserFontSet.cpp",
-    "gfxUtils.cpp",
-    "SharedFontList.cpp",
-    "SoftwareVsyncSource.cpp",
-    "VsyncSource.cpp",
+    'CJKCompatSVS.cpp',
+    'gfxAlphaRecovery.cpp',
+    'gfxBaseSharedMemorySurface.cpp',
+    'gfxBlur.cpp',
+    'gfxContext.cpp',
+    'gfxFont.cpp',
+    'gfxFontEntry.cpp',
+    'gfxFontFeatures.cpp',
+    'gfxFontInfoLoader.cpp',
+    'gfxFontMissingGlyphs.cpp',
+    'gfxFontSrcPrincipal.cpp',
+    'gfxFontSrcURI.cpp',
+    'gfxGlyphExtents.cpp',
+    'gfxGradientCache.cpp',
+    'gfxGraphiteShaper.cpp',
+    'gfxHarfBuzzShaper.cpp',
+    'gfxImageSurface.cpp',
+    'gfxMathTable.cpp',
+    'gfxPattern.cpp',
+    'gfxPlatformFontList.cpp',
+    'gfxScriptItemizer.cpp',
+    'gfxSkipChars.cpp',
+    'gfxSVGGlyphs.cpp',
+    'gfxTextRun.cpp',
+    'gfxUserFontSet.cpp',
+    'gfxUtils.cpp',
+    'SharedFontList.cpp',
+    'SoftwareVsyncSource.cpp',
+    'VsyncSource.cpp',
 ]
 
-if CONFIG["MOZ_ENABLE_SKIA"]:
+if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
-        "SkMemoryReporter.cpp",
+        'SkMemoryReporter.cpp',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
-        "gfxMacPlatformFontList.mm",
+        'gfxMacPlatformFontList.mm',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
-        "D3D11Checks.cpp",
+        'D3D11Checks.cpp',
     ]
     SOURCES += [
-        "DeviceManagerDx.cpp",
+        'DeviceManagerDx.cpp',
     ]
 
-if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
+if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     EXPORTS.mozilla.gfx += [
-        "PrintTargetSkPDF.h",
+        'PrintTargetSkPDF.h',
     ]
     SOURCES += [
-        "PrintTargetSkPDF.cpp",
+        'PrintTargetSkPDF.cpp',
     ]
 
 # We use ICU for normalization functions:
 USE_LIBS += [
-    "icu",
+    'icu',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/xml",
+    '/dom/base',
+    '/dom/xml',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
-    DEFINES["MOZ_ENABLE_FREETYPE"] = True
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    for var in ("MOZ_ENABLE_D3D10_LAYER",):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    for var in ('MOZ_ENABLE_D3D10_LAYER',):
         if CONFIG[var]:
             DEFINES[var] = True
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-CFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
-CFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
+CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android"):
-    CXXFLAGS += CONFIG["CAIRO_FT_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
+    CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
-if CONFIG["MOZ_WAYLAND"]:
-    CXXFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
+if CONFIG['MOZ_WAYLAND']:
+    CXXFLAGS += CONFIG['MOZ_WAYLAND_CFLAGS']
 
-LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-DEFINES["GRAPHITE2_STATIC"] = True
+DEFINES['GRAPHITE2_STATIC'] = True
 
-if CONFIG["CC_TYPE"] == "clang":
+if CONFIG['CC_TYPE'] == 'clang':
     # Suppress warnings from Skia header files.
-    SOURCES["gfxPlatform.cpp"].flags += ["-Wno-implicit-fallthrough"]
+    SOURCES['gfxPlatform.cpp'].flags += ['-Wno-implicit-fallthrough']

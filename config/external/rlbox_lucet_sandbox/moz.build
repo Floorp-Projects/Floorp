@@ -5,10 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.rlbox += [
-    "/third_party/rust/rlbox_lucet_sandbox/include/lucet_sandbox.h",
-    "/third_party/rust/rlbox_lucet_sandbox/include/rlbox_lucet_sandbox.hpp",
+    '/third_party/rust/rlbox_lucet_sandbox/include/lucet_sandbox.h',
+    '/third_party/rust/rlbox_lucet_sandbox/include/rlbox_lucet_sandbox.hpp',
 ]
 
-SOURCES += ["rlbox_lucet_thread_locals.cpp"]
+SOURCES += [
+    'rlbox_lucet_thread_locals.cpp'
+]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

@@ -8,9 +8,7 @@ import unittest
 from os import path
 from test_histogramtools_non_strict import load_histogram
 
-TELEMETRY_ROOT_PATH = path.abspath(
-    path.join(path.dirname(__file__), path.pardir, path.pardir)
-)
+TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
 sys.path.append(TELEMETRY_ROOT_PATH)
 # The parsers live in a subdirectory of "build_scripts", account for that.
 # NOTE: if the parsers are moved, this logic will need to be updated.
@@ -25,17 +23,15 @@ class TestParser(unittest.TestCase):
             "USE_COUNTER2_TEST_HISTOGRAM": {
                 "expires_in_version": "never",
                 "kind": "boolean",
-                "description": "Whether a foo used bar",
+                "description": "Whether a foo used bar"
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        hist = parse_histograms.Histogram(
-            "USE_COUNTER2_TEST_HISTOGRAM",
-            histograms["USE_COUNTER2_TEST_HISTOGRAM"],
-            strict_type_checks=True,
-        )
+        hist = parse_histograms.Histogram('USE_COUNTER2_TEST_HISTOGRAM',
+                                          histograms['USE_COUNTER2_TEST_HISTOGRAM'],
+                                          strict_type_checks=True)
 
         ParserError.exit_func()
         self.assertEquals(hist.dataset(), "nsITelemetry::DATASET_ALL_CHANNELS")
@@ -46,17 +42,15 @@ class TestParser(unittest.TestCase):
             "USE_COUNTER2_TEST_HISTOGRAM": {
                 "expires_in_version": "never",
                 "kind": "boolean",
-                "description": "Whether a foo used bar",
+                "description": "Whether a foo used bar"
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
         parse_histograms.load_allowlist()
 
-        hist = parse_histograms.Histogram(
-            "USE_COUNTER2_TEST_HISTOGRAM",
-            histograms["USE_COUNTER2_TEST_HISTOGRAM"],
-            strict_type_checks=True,
-        )
+        hist = parse_histograms.Histogram('USE_COUNTER2_TEST_HISTOGRAM',
+                                          histograms['USE_COUNTER2_TEST_HISTOGRAM'],
+                                          strict_type_checks=True)
 
         ParserError.exit_func()
         self.assertEquals(hist.expiration(), "never")
@@ -65,5 +59,5 @@ class TestParser(unittest.TestCase):
         self.assertEquals(hist.products(), ["firefox", "fennec"])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

@@ -3,114 +3,114 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
+include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'WebRTC: Audio/Video')
 
-with Files("PeerIdentity.*"):
-    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
+with Files('PeerIdentity.*'):
+    BUG_COMPONENT = ('Core', 'WebRTC: Signaling')
 
-with Files("common/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
-with Files("jsep/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
-with Files("libwebrtcglue/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
-with Files("transportbridge/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
-with Files("jsapi/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
-with Files("sdp/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+with Files('common/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('jsep/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('libwebrtcglue/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('transportbridge/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('jsapi/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('sdp/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 
 EXPORTS += [
-    "CubebDeviceEnumerator.h",
-    "MediaEngine.h",
-    "MediaEngineDefault.h",
-    "MediaEnginePrefs.h",
-    "MediaEngineSource.h",
-    "MediaTrackConstraints.h",
-    "SineWaveGenerator.h",
+    'CubebDeviceEnumerator.h',
+    'MediaEngine.h',
+    'MediaEngineDefault.h',
+    'MediaEnginePrefs.h',
+    'MediaEngineSource.h',
+    'MediaTrackConstraints.h',
+    'SineWaveGenerator.h',
 ]
 
 SOURCES += [
-    "CubebDeviceEnumerator.cpp",
+    'CubebDeviceEnumerator.cpp',
 ]
 
-if CONFIG["MOZ_WEBRTC"]:
+if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
-        "MediaEngineRemoteVideoSource.h",
-        "MediaEngineWebRTC.h",
-        "MediaEngineWebRTCAudio.h",
+        'MediaEngineRemoteVideoSource.h',
+        'MediaEngineWebRTC.h',
+        'MediaEngineWebRTCAudio.h',
     ]
-    EXPORTS.mozilla.dom += ["RTCIdentityProviderRegistrar.h"]
+    EXPORTS.mozilla.dom += [ 'RTCIdentityProviderRegistrar.h' ]
     UNIFIED_SOURCES += [
-        "MediaEngineRemoteVideoSource.cpp",
-        "MediaEngineWebRTCAudio.cpp",
-        "RTCCertificate.cpp",
-        "RTCIdentityProviderRegistrar.cpp",
+        'MediaEngineRemoteVideoSource.cpp',
+        'MediaEngineWebRTCAudio.cpp',
+        'RTCCertificate.cpp',
+        'RTCIdentityProviderRegistrar.cpp',
     ]
     # MediaEngineWebRTC.cpp needs to be built separately.
     SOURCES += [
-        "MediaEngineWebRTC.cpp",
+        'MediaEngineWebRTC.cpp',
     ]
     LOCAL_INCLUDES += [
-        "..",
-        "/dom/base",
-        "/dom/media",
-        "/dom/media/webrtc/common",
-        "/dom/media/webrtc/common/browser_logging",
-        "/media/libyuv/libyuv/include",
-        "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
+        '..',
+        '/dom/base',
+        '/dom/media',
+        '/dom/media/webrtc/common',
+        '/dom/media/webrtc/common/browser_logging',
+        '/media/libyuv/libyuv/include',
+        '/third_party/libwebrtc',
+        '/third_party/libwebrtc/webrtc',
     ]
 
-if CONFIG["MOZ_WEBRTC_SIGNALING"]:
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
     DIRS += [
-        "common",
-        "jsapi",
-        "jsep",
-        "libwebrtcglue",
-        "sdp",
-        "third_party_build",
-        "transportbridge",
+        'common',
+        'jsapi',
+        'jsep',
+        'libwebrtcglue',
+        'sdp',
+        'third_party_build',
+        'transportbridge',
     ]
 
     # Avoid warnings from third-party code that we can not modify.
-    if CONFIG["CC_TYPE"] == "clang-cl":
-        CXXFLAGS += ["-Wno-invalid-source-encoding"]
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        CXXFLAGS += ['-Wno-invalid-source-encoding']
 
 
 PREPROCESSED_IPDL_SOURCES += [
-    "PMediaTransport.ipdl",
-    "PWebrtcGlobal.ipdl",
+    'PMediaTransport.ipdl',
+    'PWebrtcGlobal.ipdl',
 ]
 
 UNIFIED_SOURCES += [
-    "MediaEngineDefault.cpp",
-    "MediaEngineSource.cpp",
-    "MediaTrackConstraints.cpp",
-    "PeerIdentity.cpp",
+    'MediaEngineDefault.cpp',
+    'MediaEngineSource.cpp',
+    'MediaTrackConstraints.cpp',
+    'PeerIdentity.cpp',
 ]
 
 EXPORTS.mozilla += [
-    "PeerIdentity.h",
+    'PeerIdentity.h',
 ]
 EXPORTS.mozilla.dom += [
-    "RTCCertificate.h",
+    'RTCCertificate.h',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 # Suppress some GCC/clang warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about important MOZ_EXPORT attributes for
 #    android API types
 CXXFLAGS += [
-    "-Wno-error=attributes",
-    "-Wno-error=shadow",
+    '-Wno-error=attributes',
+    '-Wno-error=shadow',
 ]
 
-DEFINES["TRACING"] = True
-FINAL_LIBRARY = "xul"
+DEFINES['TRACING'] = True
+FINAL_LIBRARY = 'xul'

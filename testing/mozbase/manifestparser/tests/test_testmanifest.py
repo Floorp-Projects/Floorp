@@ -20,32 +20,25 @@ class TestTestManifest(unittest.TestCase):
 
     def test_testmanifest(self):
         # Test filtering based on platform:
-        filter_example = os.path.join(here, "filter-example.ini")
+        filter_example = os.path.join(here, 'filter-example.ini')
         manifest = TestManifest(manifests=(filter_example,), strict=False)
-        self.assertEqual(
-            [
-                i["name"]
-                for i in manifest.active_tests(os="win", disabled=False, exists=False)
-            ],
-            ["windowstest", "fleem"],
-        )
-        self.assertEqual(
-            [
-                i["name"]
-                for i in manifest.active_tests(os="linux", disabled=False, exists=False)
-            ],
-            ["fleem", "linuxtest"],
-        )
+        self.assertEqual([i['name'] for i in manifest.active_tests(os='win', disabled=False,
+                                                                   exists=False)],
+                         ['windowstest', 'fleem'])
+        self.assertEqual([i['name'] for i in manifest.active_tests(os='linux', disabled=False,
+                                                                   exists=False)],
+                         ['fleem', 'linuxtest'])
 
         # Look for existing tests.  There is only one:
-        self.assertEqual([i["name"] for i in manifest.active_tests()], ["fleem"])
+        self.assertEqual([i['name'] for i in manifest.active_tests()],
+                         ['fleem'])
 
         # You should be able to expect failures:
-        last = manifest.active_tests(exists=False, toolkit="gtk")[-1]
-        self.assertEqual(last["name"], "linuxtest")
-        self.assertEqual(last["expected"], "pass")
-        last = manifest.active_tests(exists=False, toolkit="cocoa")[-1]
-        self.assertEqual(last["expected"], "fail")
+        last = manifest.active_tests(exists=False, toolkit='gtk')[-1]
+        self.assertEqual(last['name'], 'linuxtest')
+        self.assertEqual(last['expected'], 'pass')
+        last = manifest.active_tests(exists=False, toolkit='cocoa')[-1]
+        self.assertEqual(last['expected'], 'fail')
 
     def test_missing_paths(self):
         """
@@ -53,7 +46,7 @@ class TestTestManifest(unittest.TestCase):
         """
         tempdir = tempfile.mkdtemp()
 
-        missing_path = os.path.join(here, "missing-path.ini")
+        missing_path = os.path.join(here, 'missing-path.ini')
         manifest = TestManifest(manifests=(missing_path,), strict=True)
         self.assertRaises(IOError, manifest.active_tests)
         self.assertRaises(IOError, manifest.copy, tempdir)
@@ -66,45 +59,55 @@ class TestTestManifest(unittest.TestCase):
         ensure comments work, see
         https://bugzilla.mozilla.org/show_bug.cgi?id=813674
         """
-        comment_example = os.path.join(here, "comment-example.ini")
+        comment_example = os.path.join(here, 'comment-example.ini')
         manifest = TestManifest(manifests=(comment_example,))
         self.assertEqual(len(manifest.tests), 8)
-        names = [i["name"] for i in manifest.tests]
-        self.assertFalse("test_0202_app_launch_apply_update_dirlocked.js" in names)
+        names = [i['name'] for i in manifest.tests]
+        self.assertFalse('test_0202_app_launch_apply_update_dirlocked.js' in names)
 
     def test_manifest_subsuites(self):
         """
         test subsuites and conditional subsuites
         """
-        relative_path = os.path.join(here, "subsuite.ini")
+        relative_path = os.path.join(here, 'subsuite.ini')
         manifest = TestManifest(manifests=(relative_path,))
-        info = {"foo": "bar"}
+        info = {'foo': 'bar'}
 
         # 6 tests total
         tests = manifest.active_tests(exists=False, **info)
         self.assertEqual(len(tests), 6)
 
         # only 3 tests for subsuite bar when foo==bar
-        tests = manifest.active_tests(exists=False, filters=[subsuite("bar")], **info)
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('bar')],
+                                      **info)
         self.assertEqual(len(tests), 3)
 
         # only 1 test for subsuite baz, regardless of conditions
-        other = {"something": "else"}
-        tests = manifest.active_tests(exists=False, filters=[subsuite("baz")], **info)
+        other = {'something': 'else'}
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('baz')],
+                                      **info)
         self.assertEqual(len(tests), 1)
-        tests = manifest.active_tests(exists=False, filters=[subsuite("baz")], **other)
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite('baz')],
+                                      **other)
         self.assertEqual(len(tests), 1)
 
         # 4 tests match when the condition doesn't match (all tests except
         # the unconditional subsuite)
-        info = {"foo": "blah"}
-        tests = manifest.active_tests(exists=False, filters=[subsuite()], **info)
+        info = {'foo': 'blah'}
+        tests = manifest.active_tests(exists=False,
+                                      filters=[subsuite()],
+                                      **info)
         self.assertEqual(len(tests), 5)
 
         # test for illegal subsuite value
-        manifest.tests[0]["subsuite"] = 'subsuite=bar,foo=="bar",type="nothing"'
+        manifest.tests[0]['subsuite'] = 'subsuite=bar,foo=="bar",type="nothing"'
         with self.assertRaises(ParseError):
-            manifest.active_tests(exists=False, filters=[subsuite("foo")], **info)
+            manifest.active_tests(exists=False,
+                                  filters=[subsuite('foo')],
+                                  **info)
 
     def test_none_and_empty_manifest(self):
         """
@@ -120,5 +123,5 @@ class TestTestManifest(unittest.TestCase):
         self.assertEqual(len(empty_manifest.active_tests()), 0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

@@ -16,12 +16,15 @@ import os.path
 
 import pytest
 import taskgraph.util.verify
-from taskgraph.util.verify import DocPaths, verify_docs
+from taskgraph.util.verify import (
+    DocPaths,
+    verify_docs
+)
 from taskgraph import GECKO
 from mozunit import main
 
-FF_DOCS_BASE = os.path.join(GECKO, "taskcluster", "docs")
-EXTRA_DOCS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "docs"))
+FF_DOCS_BASE = os.path.join(GECKO, 'taskcluster', 'docs')
+EXTRA_DOCS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), 'docs'))
 
 
 @pytest.fixture
@@ -29,9 +32,7 @@ def mock_single_doc_path(monkeypatch):
     """Set a single path containing documentation"""
     mocked_documentation_paths = DocPaths()
     mocked_documentation_paths.add(FF_DOCS_BASE)
-    monkeypatch.setattr(
-        taskgraph.util.verify, "documentation_paths", mocked_documentation_paths
-    )
+    monkeypatch.setattr(taskgraph.util.verify, "documentation_paths", mocked_documentation_paths)
 
 
 @pytest.fixture
@@ -40,9 +41,7 @@ def mock_two_doc_paths(monkeypatch):
     mocked_documentation_paths = DocPaths()
     mocked_documentation_paths.add(FF_DOCS_BASE)
     mocked_documentation_paths.add(EXTRA_DOCS_BASE)
-    monkeypatch.setattr(
-        taskgraph.util.verify, "documentation_paths", mocked_documentation_paths
-    )
+    monkeypatch.setattr(taskgraph.util.verify, "documentation_paths", mocked_documentation_paths)
 
 
 @pytest.mark.usefixtures("mock_single_doc_path")
@@ -51,7 +50,6 @@ class PyTestSingleDocPath:
     Taskcluster documentation for Firefox is in a single directory. Check the tests
     running at build time to make sure documentation exists, actually work themselves.
     """
-
     def test_heading(self):
         """
         Look for a headings in filename matching identifiers. This is used when making sure
@@ -59,14 +57,14 @@ class PyTestSingleDocPath:
         """
         verify_docs(
             filename="kinds.rst",
-            identifiers=["build", "packages", "toolchain"],
-            appearing_as="heading",
+            identifiers=['build', 'packages', 'toolchain'],
+            appearing_as="heading"
         )
-        with pytest.raises(Exception, match="missing from doc file"):
+        with pytest.raises(Exception, match='missing from doc file'):
             verify_docs(
                 filename="kinds.rst",
-                identifiers=["build", "packages", "badvalue"],
-                appearing_as="heading",
+                identifiers=['build', 'packages', 'badvalue'],
+                appearing_as="heading"
             )
 
     def test_inline_literal(self):
@@ -76,14 +74,14 @@ class PyTestSingleDocPath:
         """
         verify_docs(
             filename="parameters.rst",
-            identifiers=["base_repository", "head_repository", "owner"],
-            appearing_as="inline-literal",
+            identifiers=['base_repository', 'head_repository', 'owner'],
+            appearing_as="inline-literal"
         )
-        with pytest.raises(Exception, match="missing from doc file"):
+        with pytest.raises(Exception, match='missing from doc file'):
             verify_docs(
                 filename="parameters.rst",
-                identifiers=["base_repository", "head_repository", "badvalue"],
-                appearing_as="inline-literal",
+                identifiers=['base_repository', 'head_repository', 'badvalue'],
+                appearing_as="inline-literal"
             )
 
 
@@ -95,7 +93,6 @@ class PyTestTwoDocPaths:
     two places to look for files. Run the same tests as for a single documentation
     path, and cover additional possible scenarios.
     """
-
     def test_heading(self):
         """
         Look for a headings in filename matching identifiers. This is used when
@@ -107,19 +104,19 @@ class PyTestTwoDocPaths:
         """
         verify_docs(
             filename="kinds.rst",
-            identifiers=["build", "packages", "toolchain"],
-            appearing_as="heading",
+            identifiers=['build', 'packages', 'toolchain'],
+            appearing_as="heading"
         )
         verify_docs(
             filename="kinds.rst",
-            identifiers=["build", "packages", "newkind"],
-            appearing_as="heading",
+            identifiers=['build', 'packages', 'newkind'],
+            appearing_as="heading"
         )
-        with pytest.raises(Exception, match="missing from doc file"):
+        with pytest.raises(Exception, match='missing from doc file'):
             verify_docs(
                 filename="kinds.rst",
-                identifiers=["build", "packages", "badvalue"],
-                appearing_as="heading",
+                identifiers=['build', 'packages', 'badvalue'],
+                appearing_as="heading"
             )
 
     def test_inline_literal(self):
@@ -130,21 +127,21 @@ class PyTestTwoDocPaths:
         """
         verify_docs(
             filename="parameters.rst",
-            identifiers=["base_repository", "head_repository", "owner"],
-            appearing_as="inline-literal",
+            identifiers=['base_repository', 'head_repository', 'owner'],
+            appearing_as="inline-literal"
         )
         verify_docs(
             filename="parameters.rst",
-            identifiers=["base_repository", "head_repository", "newparameter"],
-            appearing_as="inline-literal",
+            identifiers=['base_repository', 'head_repository', 'newparameter'],
+            appearing_as="inline-literal"
         )
-        with pytest.raises(Exception, match="missing from doc file"):
+        with pytest.raises(Exception, match='missing from doc file'):
             verify_docs(
                 filename="parameters.rst",
-                identifiers=["base_repository", "head_repository", "badvalue"],
-                appearing_as="inline-literal",
+                identifiers=['base_repository', 'head_repository', 'badvalue'],
+                appearing_as="inline-literal"
             )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

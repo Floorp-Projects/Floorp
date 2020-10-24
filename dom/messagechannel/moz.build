@@ -7,32 +7,32 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: postMessage")
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ['tests']
 
 EXPORTS.mozilla.dom += [
-    "MessageChannel.h",
-    "MessagePort.h",
-    "MessagePortChild.h",
-    "MessagePortParent.h",
+    'MessageChannel.h',
+    'MessagePort.h',
+    'MessagePortChild.h',
+    'MessagePortParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    "MessageChannel.cpp",
-    "MessagePort.cpp",
-    "MessagePortChild.cpp",
-    "MessagePortParent.cpp",
-    "MessagePortService.cpp",
+    'MessageChannel.cpp',
+    'MessagePort.cpp',
+    'MessagePortChild.cpp',
+    'MessagePortParent.cpp',
+    'MessagePortService.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PMessagePort.ipdl",
+    'PMessagePort.ipdl',
 ]
 
 LOCAL_INCLUDES += [
-    "../base",
-    "../events",
+    '../base',
+    '../events',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

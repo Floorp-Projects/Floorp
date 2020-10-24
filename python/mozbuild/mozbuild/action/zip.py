@@ -20,22 +20,16 @@ import sys
 
 def main(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-C",
-        metavar="DIR",
-        default=".",
-        help="Change to given directory before considering " "other paths",
-    )
-    parser.add_argument("--strip", action="store_true", help="Strip executables")
-    parser.add_argument(
-        "-x",
-        metavar="EXCLUDE",
-        default=[],
-        action="append",
-        help="Exclude files that match the pattern",
-    )
+    parser.add_argument("-C", metavar='DIR', default=".",
+                        help="Change to given directory before considering "
+                        "other paths")
+    parser.add_argument("--strip", action='store_true',
+                        help="Strip executables")
+    parser.add_argument("-x", metavar='EXCLUDE', default=[], action='append',
+                        help="Exclude files that match the pattern")
     parser.add_argument("zip", help="Path to zip file to write")
-    parser.add_argument("input", nargs="+", help="Path to files to add to zip")
+    parser.add_argument("input", nargs="+",
+                        help="Path to files to add to zip")
     args = parser.parse_args(args)
 
     jarrer = Jarrer()
@@ -49,5 +43,5 @@ def main(args):
         jarrer.copy(mozpath.join(args.C, args.zip))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     log_build_task(main, sys.argv[1:])

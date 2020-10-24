@@ -5,11 +5,11 @@
 
 DIST_INSTALL = False
 
-SharedLibrary("TestDllBlocklist_MatchByName")
+SharedLibrary('TestDllBlocklist_MatchByName')
 
 UNIFIED_SOURCES = [
-    "TestDllBlocklist_MatchByName.cpp",
+    'TestDllBlocklist_MatchByName.cpp',
 ]
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
-    TEST_HARNESS_FILES.gtest += ["!TestDllBlocklist_MatchByName.dll"]
+if CONFIG['COMPILE_ENVIRONMENT']:
+    TEST_HARNESS_FILES.gtest += ['!TestDllBlocklist_MatchByName.dll']

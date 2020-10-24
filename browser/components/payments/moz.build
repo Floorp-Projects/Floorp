@@ -4,33 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "WebPayments UI")
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'WebPayments UI')
 
 EXTRA_JS_MODULES += [
-    "PaymentUIService.jsm",
+    'PaymentUIService.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest/formautofill/mochitest.ini",
-    "test/mochitest/mochitest.ini",
+    'test/mochitest/formautofill/mochitest.ini',
+    'test/mochitest/mochitest.ini',
 ]
 
-SPHINX_TREES["docs"] = "docs"
+SPHINX_TREES['docs'] = 'docs'
 
-with Files("docs/**"):
-    SCHEDULES.exclusive = ["docs"]
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 TESTING_JS_MODULES += [
-    "test/PaymentTestUtils.jsm",
+    'test/PaymentTestUtils.jsm',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

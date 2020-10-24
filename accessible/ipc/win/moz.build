@@ -4,69 +4,67 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["ACCESSIBILITY"]:
+if CONFIG['COMPILE_ENVIRONMENT'] and CONFIG['ACCESSIBILITY']:
     DIRS += [
-        "handler",
-        "typelib",
+        'handler',
+        'typelib',
     ]
 
-if CONFIG["ACCESSIBILITY"]:
-    IPDL_SOURCES += ["PDocAccessible.ipdl"]
+if CONFIG['ACCESSIBILITY']:
+    IPDL_SOURCES += ['PDocAccessible.ipdl']
 
-    if not CONFIG["HAVE_64BIT_BUILD"]:
+    if not CONFIG['HAVE_64BIT_BUILD']:
         EXPORTS += [
-            "IAccessible32.manifest",
+            'IAccessible32.manifest',
         ]
 
     EXPORTS += [
-        "IAccessible64.manifest",
+        'IAccessible64.manifest',
     ]
 
     EXPORTS.mozilla.a11y += [
-        "COMPtrTypes.h",
-        "DocAccessibleChild.h",
-        "HandlerProvider.h",
-        "PlatformChild.h",
-        "ProxyAccessible.h",
+        'COMPtrTypes.h',
+        'DocAccessibleChild.h',
+        'HandlerProvider.h',
+        'PlatformChild.h',
+        'ProxyAccessible.h'
     ]
 
     SOURCES += [
-        "!./handler/HandlerData_c.c",
-        "COMPtrTypes.cpp",
-        "DocAccessibleChild.cpp",
-        "HandlerProvider.cpp",
-        "PlatformChild.cpp",
-        "ProxyAccessible.cpp",
+        '!./handler/HandlerData_c.c',
+        'COMPtrTypes.cpp',
+        'DocAccessibleChild.cpp',
+        'HandlerProvider.cpp',
+        'PlatformChild.cpp',
+        'ProxyAccessible.cpp',
     ]
 
     # Give some symbols a unique name in each translation unit, to avoid
     # collisions caused by https://llvm.org/pr41817.
-    if CONFIG["CC_TYPE"] == "clang-cl":
-        SOURCES["!./handler/HandlerData_c.c"].flags += [
-            "-DUserMarshalRoutines=UserMarshalRoutines__HandlerData_c"
-        ]
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        SOURCES['!./handler/HandlerData_c.c'].flags += ['-DUserMarshalRoutines=UserMarshalRoutines__HandlerData_c']
 
     LOCAL_INCLUDES += [
-        "/accessible/base",
-        "/accessible/generic",
-        "/accessible/windows/ia2",
-        "/accessible/windows/msaa",
-        "/accessible/xpcom",
+        '/accessible/base',
+        '/accessible/generic',
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
+        '/accessible/xpcom',
     ]
 
     # Suppress warnings from the MIDL generated code.
-    if CONFIG["CC_TYPE"] == "clang-cl":
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         CFLAGS += [
-            "-Wno-extern-initializer",
-            "-Wno-incompatible-pointer-types",
-            "-Wno-missing-braces",
-            "-Wno-unused-const-variable",
+            '-Wno-extern-initializer',
+            '-Wno-incompatible-pointer-types',
+            '-Wno-missing-braces',
+            '-Wno-unused-const-variable',
         ]
 
         CXXFLAGS += [
-            "-Wno-missing-braces",
+            '-Wno-missing-braces',
         ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

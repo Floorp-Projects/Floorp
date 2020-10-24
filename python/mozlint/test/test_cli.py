@@ -26,73 +26,66 @@ def run(parser, lintdir, files):
         args = args or []
         args.extend(files)
         lintargs = vars(parser.parse_args(args))
-        lintargs["root"] = here
-        lintargs["config_paths"] = [os.path.join(here, "linters")]
+        lintargs['root'] = here
+        lintargs['config_paths'] = [os.path.join(here, 'linters')]
         return cli.run(**lintargs)
-
     return inner
 
 
 def test_cli_with_ascii_encoding(run, monkeypatch, capfd):
-    cmd = [sys.executable, "runcli.py", "-l=string", "-f=stylish"]
+    cmd = [sys.executable, 'runcli.py', '-l=string', '-f=stylish']
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(sys.path)
-    env["PYTHONIOENCODING"] = "ascii"
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        cwd=here,
-        env=env,
-        universal_newlines=True,
-    )
+    env['PYTHONPATH'] = os.pathsep.join(sys.path)
+    env['PYTHONIOENCODING'] = 'ascii'
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            cwd=here, env=env, universal_newlines=True)
     out = proc.communicate()[0]
-    assert "Traceback" not in out
+    assert 'Traceback' not in out
 
 
 def test_cli_run_with_fix(run, capfd):
-    ret = run(["-f", "json", "--fix", "--linter", "external"])
+    ret = run(['-f', 'json', '--fix', '--linter', 'external'])
     out, err = capfd.readouterr()
     assert ret == 0
-    assert out.endswith("{}\n")
+    assert out.endswith('{}\n')
 
 
 @pytest.mark.skipif(not find_executable("echo"), reason="No `echo` executable found.")
 def test_cli_run_with_edit(run, parser, capfd):
-    os.environ["EDITOR"] = "echo"
+    os.environ['EDITOR'] = 'echo'
 
-    ret = run(["-f", "compact", "--edit", "--linter", "external"])
+    ret = run(['-f', 'compact', '--edit', '--linter', 'external'])
     out, err = capfd.readouterr()
     out = out.splitlines()
     assert ret == 1
-    assert out[0].endswith("foobar.js")  # from the `echo` editor
+    assert out[0].endswith('foobar.js')  # from the `echo` editor
     assert "foobar.js: line 1, col 1, Error" in out[1]
     assert "foobar.js: line 2, col 1, Error" in out[2]
     assert "2 problems" in out[-1]
     assert len(out) == 5
 
-    del os.environ["EDITOR"]
+    del os.environ['EDITOR']
     with pytest.raises(SystemExit):
-        parser.parse_args(["--edit"])
+        parser.parse_args(['--edit'])
 
 
 def test_cli_run_with_setup(run, capfd):
     # implicitly call setup
-    ret = run(["-l", "setup", "-l", "setupfailed", "-l", "setupraised"])
+    ret = run(['-l', 'setup', '-l', 'setupfailed', '-l', 'setupraised'])
     out, err = capfd.readouterr()
-    assert "setup passed" in out
-    assert "setup failed" in out
-    assert "setup raised" in out
+    assert 'setup passed' in out
+    assert 'setup failed' in out
+    assert 'setup raised' in out
     assert ret == 1
 
     # explicitly call setup
-    ret = run(["-l", "setup", "-l", "setupfailed", "-l", "setupraised", "--setup"])
+    ret = run(['-l', 'setup', '-l', 'setupfailed', '-l', 'setupraised', '--setup'])
     out, err = capfd.readouterr()
-    assert "setup passed" in out
-    assert "setup failed" in out
-    assert "setup raised" in out
+    assert 'setup passed' in out
+    assert 'setup failed' in out
+    assert 'setup raised' in out
     assert ret == 1
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

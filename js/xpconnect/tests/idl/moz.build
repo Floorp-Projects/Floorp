@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "xpctest_attributes.idl",
-    "xpctest_bug809674.idl",
-    "xpctest_cenums.idl",
-    "xpctest_interfaces.idl",
-    "xpctest_params.idl",
-    "xpctest_returncode.idl",
-    "xpctest_utils.idl",
+    'xpctest_attributes.idl',
+    'xpctest_bug809674.idl',
+    'xpctest_cenums.idl',
+    'xpctest_interfaces.idl',
+    'xpctest_params.idl',
+    'xpctest_returncode.idl',
+    'xpctest_utils.idl',
 ]
 
-XPIDL_MODULE = "xpctest"
+XPIDL_MODULE = 'xpctest'

@@ -10,12 +10,5 @@ from .summaryhandler import SummaryHandler
 from .bufferhandler import BufferHandler
 from .valgrindhandler import ValgrindHandler
 
-__all__ = [
-    "LogLevelFilter",
-    "StreamHandler",
-    "BaseHandler",
-    "StatusHandler",
-    "SummaryHandler",
-    "BufferHandler",
-    "ValgrindHandler",
-]
+__all__ = ['LogLevelFilter', 'StreamHandler', 'BaseHandler',
+           'StatusHandler', 'SummaryHandler', 'BufferHandler', 'ValgrindHandler']

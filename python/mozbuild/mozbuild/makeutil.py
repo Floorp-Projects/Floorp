@@ -11,20 +11,20 @@ from collections import Iterable
 
 
 class Makefile(object):
-    """Provides an interface for writing simple makefiles
+    '''Provides an interface for writing simple makefiles
 
     Instances of this class are created, populated with rules, then
     written.
-    """
+    '''
 
     def __init__(self):
         self._statements = []
 
     def create_rule(self, targets=()):
-        """
+        '''
         Create a new rule in the makefile for the given targets.
         Returns the corresponding Rule instance.
-        """
+        '''
         targets = list(targets)
         for target in targets:
             assert isinstance(target, six.text_type)
@@ -33,19 +33,19 @@ class Makefile(object):
         return rule
 
     def add_statement(self, statement):
-        """
+        '''
         Add a raw statement in the makefile. Meant to be used for
         simple variable assignments.
-        """
+        '''
         assert isinstance(statement, six.text_type)
         self._statements.append(statement)
 
     def dump(self, fh, removal_guard=True):
-        """
+        '''
         Dump all the rules to the given file handle. Optionally (and by
         default), add guard rules for file removals (empty rules for other
         rules' dependencies)
-        """
+        '''
         all_deps = set()
         all_targets = set()
         for statement in self._statements:
@@ -54,18 +54,18 @@ class Makefile(object):
                 all_deps.update(statement.dependencies())
                 all_targets.update(statement.targets())
             else:
-                fh.write("%s\n" % statement)
+                fh.write('%s\n' % statement)
         if removal_guard:
             guard = Rule(sorted(all_deps - all_targets))
             guard.dump(fh)
 
 
 class _SimpleOrderedSet(object):
-    """
+    '''
     Simple ordered set, specialized for used in Rule below only.
     It doesn't expose a complete API, and normalizes path separators
     at insertion.
-    """
+    '''
 
     def __init__(self):
         self._list = []
@@ -87,23 +87,22 @@ class _SimpleOrderedSet(object):
         def _add(iterable):
             emitted = set()
             for i in iterable:
-                i = i.replace(os.sep, "/")
+                i = i.replace(os.sep, '/')
                 if i not in self._set and i not in emitted:
                     yield i
                     emitted.add(i)
-
         added = list(_add(iterable))
         self._set.update(added)
         self._list.extend(added)
 
 
 class Rule(object):
-    """Class handling simple rules in the form:
-    target1 target2 ... : dep1 dep2 ...
-            command1
-            command2
-            ...
-    """
+    '''Class handling simple rules in the form:
+           target1 target2 ... : dep1 dep2 ...
+                   command1
+                   command2
+                   ...
+    '''
 
     def __init__(self, targets=()):
         self._targets = _SimpleOrderedSet()
@@ -112,10 +111,9 @@ class Rule(object):
         self.add_targets(targets)
 
     def add_targets(self, targets):
-        """Add additional targets to the rule."""
+        '''Add additional targets to the rule.'''
         assert isinstance(targets, Iterable) and not isinstance(
-            targets, six.string_types
-        )
+            targets, six.string_types)
         targets = list(targets)
         for target in targets:
             assert isinstance(target, six.text_type)
@@ -123,8 +121,9 @@ class Rule(object):
         return self
 
     def add_dependencies(self, deps):
-        """Add dependencies to the rule."""
-        assert isinstance(deps, Iterable) and not isinstance(deps, six.string_types)
+        '''Add dependencies to the rule.'''
+        assert isinstance(deps, Iterable) and not isinstance(
+            deps, six.string_types)
         deps = list(deps)
         for dep in deps:
             assert isinstance(dep, six.text_type)
@@ -132,10 +131,9 @@ class Rule(object):
         return self
 
     def add_commands(self, commands):
-        """Add commands to the rule."""
+        '''Add commands to the rule.'''
         assert isinstance(commands, Iterable) and not isinstance(
-            commands, six.string_types
-        )
+            commands, six.string_types)
         commands = list(commands)
         for command in commands:
             assert isinstance(command, six.text_type)
@@ -143,35 +141,35 @@ class Rule(object):
         return self
 
     def targets(self):
-        """Return an iterator on the rule targets."""
+        '''Return an iterator on the rule targets.'''
         # Ensure the returned iterator is actually just that, an iterator.
         # Avoids caller fiddling with the set itself.
         return iter(self._targets)
 
     def dependencies(self):
-        """Return an iterator on the rule dependencies."""
+        '''Return an iterator on the rule dependencies.'''
         return iter(d for d in self._dependencies if d not in self._targets)
 
     def commands(self):
-        """Return an iterator on the rule commands."""
+        '''Return an iterator on the rule commands.'''
         return iter(self._commands)
 
     def dump(self, fh):
-        """
+        '''
         Dump the rule to the given file handle.
-        """
+        '''
         if not self._targets:
             return
-        fh.write("%s:" % " ".join(self._targets))
+        fh.write('%s:' % ' '.join(self._targets))
         if self._dependencies:
-            fh.write(" %s" % " ".join(self.dependencies()))
-        fh.write("\n")
+            fh.write(' %s' % ' '.join(self.dependencies()))
+        fh.write('\n')
         for cmd in self._commands:
-            fh.write("\t%s\n" % cmd)
+            fh.write('\t%s\n' % cmd)
 
 
 # colon followed by anything except a slash (Windows path detection)
-_depfilesplitter = re.compile(r":(?![\\/])")
+_depfilesplitter = re.compile(r':(?![\\/])')
 
 
 def read_dep_makefile(fh):
@@ -181,31 +179,30 @@ def read_dep_makefile(fh):
     it contains. Ignores removal guard rules.
     """
 
-    rule = ""
+    rule = ''
     for line in fh.readlines():
         line = six.ensure_text(line)
-        assert not line.startswith("\t")
+        assert not line.startswith('\t')
         line = line.strip()
-        if line.endswith("\\"):
+        if line.endswith('\\'):
             rule += line[:-1]
         else:
             rule += line
             split_rule = _depfilesplitter.split(rule, 1)
             if len(split_rule) > 1 and split_rule[1].strip():
-                yield Rule(split_rule[0].strip().split()).add_dependencies(
-                    split_rule[1].strip().split()
-                )
-            rule = ""
+                yield Rule(split_rule[0].strip().split()) \
+                      .add_dependencies(split_rule[1].strip().split())
+            rule = ''
 
     if rule:
-        raise Exception("Makefile finishes with a backslash. Expected more input.")
+        raise Exception('Makefile finishes with a backslash. Expected more input.')
 
 
 def write_dep_makefile(fh, target, deps):
-    """
+    '''
     Write a Makefile containing only target's dependencies to the file handle
     specified.
-    """
+    '''
     mk = Makefile()
     rule = mk.create_rule(targets=[target])
     rule.add_dependencies(deps)

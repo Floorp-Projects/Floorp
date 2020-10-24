@@ -4,75 +4,75 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    "test/LoginTestUtils.jsm",
+    'test/LoginTestUtils.jsm',
 ]
 
 XPIDL_SOURCES += [
-    "nsILoginAutoCompleteSearch.idl",
-    "nsILoginInfo.idl",
-    "nsILoginManager.idl",
-    "nsILoginManagerAuthPrompter.idl",
-    "nsILoginManagerCrypto.idl",
-    "nsILoginManagerPrompter.idl",
-    "nsILoginManagerStorage.idl",
-    "nsILoginMetaInfo.idl",
+    'nsILoginAutoCompleteSearch.idl',
+    'nsILoginInfo.idl',
+    'nsILoginManager.idl',
+    'nsILoginManagerAuthPrompter.idl',
+    'nsILoginManagerCrypto.idl',
+    'nsILoginManagerPrompter.idl',
+    'nsILoginManagerStorage.idl',
+    'nsILoginMetaInfo.idl',
 ]
 
-XPIDL_MODULE = "loginmgr"
+XPIDL_MODULE = 'loginmgr'
 
 EXTRA_JS_MODULES += [
-    "crypto-SDR.js",
-    "InsecurePasswordUtils.jsm",
-    "LoginAutoComplete.jsm",
-    "LoginFormFactory.jsm",
-    "LoginHelper.jsm",
-    "LoginInfo.jsm",
-    "LoginManager.jsm",
-    "LoginManagerAuthPrompter.jsm",
-    "LoginManagerChild.jsm",
-    "LoginManagerParent.jsm",
-    "LoginManagerPrompter.jsm",
-    "LoginRecipes.jsm",
-    "NewPasswordModel.jsm",
-    "OSCrypto.jsm",
-    "PasswordGenerator.jsm",
-    "storage-json.js",
+    'crypto-SDR.js',
+    'InsecurePasswordUtils.jsm',
+    'LoginAutoComplete.jsm',
+    'LoginFormFactory.jsm',
+    'LoginHelper.jsm',
+    'LoginInfo.jsm',
+    'LoginManager.jsm',
+    'LoginManagerAuthPrompter.jsm',
+    'LoginManagerChild.jsm',
+    'LoginManagerParent.jsm',
+    'LoginManagerPrompter.jsm',
+    'LoginRecipes.jsm',
+    'NewPasswordModel.jsm',
+    'OSCrypto.jsm',
+    'PasswordGenerator.jsm',
+    'storage-json.js',
 ]
 
-if CONFIG["OS_TARGET"] == "Android":
+if CONFIG['OS_TARGET'] == 'Android':
     EXTRA_JS_MODULES += [
-        "storage-geckoview.js",
+        'storage-geckoview.js',
     ]
 else:
     EXTRA_JS_MODULES += [
-        "LoginCSVImport.jsm",
-        "LoginExport.jsm",
-        "LoginStore.jsm",
+        'LoginCSVImport.jsm',
+        'LoginExport.jsm',
+        'LoginStore.jsm',
     ]
 
-if CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG['OS_TARGET'] == 'WINNT':
     EXTRA_JS_MODULES += [
-        "OSCrypto_win.js",
+        'OSCrypto_win.js',
     ]
 
-if CONFIG["MOZ_BUILD_APP"] == "browser" or CONFIG["MOZ_SUITE"]:
+if CONFIG['MOZ_BUILD_APP'] == 'browser' or CONFIG['MOZ_SUITE']:
     EXTRA_JS_MODULES += [
-        "LoginManagerContextMenu.jsm",
+        'LoginManagerContextMenu.jsm',
     ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Password Manager")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Password Manager')

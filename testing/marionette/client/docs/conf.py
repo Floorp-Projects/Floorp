@@ -32,23 +32,23 @@ sys.path.insert(0, parent)
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc"]
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = '.rst'
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = "index"
+master_doc = 'index'
 
 # General information about the project.
-project = u"Marionette Python Client"
-copyright = u"2013, Mozilla Automation and Tools and individual contributors"
+project = u'Marionette Python Client'
+copyright = u'2013, Mozilla Automation and Tools and individual contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -71,7 +71,7 @@ copyright = u"2013, Mozilla Automation and Tools and individual contributors"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build"]
+exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 # default_role = None
@@ -88,7 +88,7 @@ exclude_patterns = ["_build"]
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -99,15 +99,14 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-html_theme = "default"
+html_theme = 'default'
 
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:
     try:
         import sphinx_rtd_theme
-
-        html_theme = "sphinx_rtd_theme"
+        html_theme = 'sphinx_rtd_theme'
         html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     except ImportError:
         pass
@@ -184,7 +183,7 @@ html_show_copyright = False
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "MarionettePythonClientdoc"
+htmlhelp_basename = 'MarionettePythonClientdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -192,8 +191,10 @@ htmlhelp_basename = "MarionettePythonClientdoc"
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
+
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
+
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
 }
@@ -201,13 +202,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    (
-        "index",
-        "MarionettePythonClient.tex",
-        u"Marionette Python Client Documentation",
-        u"Mozilla Automation and Tools team",
-        "manual",
-    ),
+    ('index', 'MarionettePythonClient.tex', u'Marionette Python Client Documentation',
+     u'Mozilla Automation and Tools team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -236,13 +232,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (
-        "index",
-        "marionettepythonclient",
-        u"Marionette Python Client Documentation",
-        [u"Mozilla Automation and Tools team"],
-        1,
-    )
+    ('index', 'marionettepythonclient', u'Marionette Python Client Documentation',
+     [u'Mozilla Automation and Tools team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -255,15 +246,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (
-        "index",
-        "MarionettePythonClient",
-        "Marionette Python Client Documentation",
-        "Mozilla Automation and Tools team",
-        "MarionettePythonClient",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
+    ('index', 'MarionettePythonClient', 'Marionette Python Client Documentation',
+     'Mozilla Automation and Tools team', 'MarionettePythonClient',
+     'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

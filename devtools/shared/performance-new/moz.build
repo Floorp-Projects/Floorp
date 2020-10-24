@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "gecko-profiler-interface.js",
-    "recording-utils.js",
+    'gecko-profiler-interface.js',
+    'recording-utils.js',
 )
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

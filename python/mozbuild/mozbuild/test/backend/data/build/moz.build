@@ -1,68 +1,68 @@
 CONFIGURE_SUBST_FILES += [
-    "/config/autoconf.mk",
-    "/config/emptyvars.mk",
+    '/config/autoconf.mk',
+    '/config/emptyvars.mk',
 ]
 
 EXTRA_JS_MODULES += [
-    "foo.jsm",
+    'foo.jsm',
 ]
 
 EXTRA_JS_MODULES.child += [
-    "bar.jsm",
+    'bar.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
-    "baz.jsm",
+    'baz.jsm',
 ]
 
 EXTRA_PP_JS_MODULES.child2 += [
-    "qux.jsm",
+    'qux.jsm',
 ]
 
 FINAL_TARGET_FILES += [
-    "foo.ini",
+    'foo.ini',
 ]
 
 FINAL_TARGET_FILES.child += [
-    "bar.ini",
+    'bar.ini',
 ]
 
 FINAL_TARGET_PP_FILES += [
-    "baz.ini",
+    'baz.ini',
 ]
 
 FINAL_TARGET_PP_FILES.child2 += [
-    "foo.css",
-    "qux.ini",
+    'foo.css',
+    'qux.ini',
 ]
 
 EXTRA_COMPONENTS += [
-    "components.manifest",
-    "foo.js",
+    'components.manifest',
+    'foo.js',
 ]
 
 EXTRA_PP_COMPONENTS += [
-    "bar.js",
+    'bar.js',
 ]
 
 JS_PREFERENCE_FILES += [
-    "prefs.js",
+    'prefs.js',
 ]
 
 RESOURCE_FILES += [
-    "resource",
+    'resource',
 ]
 
 RESOURCE_FILES.child += [
-    "resource2",
+    'resource2',
 ]
 
-DEFINES["FOO"] = "foo"
+DEFINES['FOO'] = 'foo'
 
 JAR_MANIFESTS += [
-    "jar.mn",
+    'jar.mn',
 ]
 
 DIRS += [
-    "app",
+    'app',
 ]

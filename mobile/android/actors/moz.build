@@ -2,19 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("GeckoView", "General")
+with Files('**'):
+    BUG_COMPONENT = ('GeckoView', 'General')
 
 FINAL_TARGET_FILES.actors += [
-    "ContentDelegateChild.jsm",
-    "ContentDelegateParent.jsm",
-    "GeckoViewContentChild.jsm",
-    "GeckoViewContentParent.jsm",
-    "GeckoViewPromptChild.jsm",
-    "GeckoViewSettingsChild.jsm",
-    "LoadURIDelegateChild.jsm",
-    "ProgressDelegateChild.jsm",
-    "ProgressDelegateParent.jsm",
-    "ScrollDelegateChild.jsm",
-    "WebBrowserChromeChild.jsm",
+    'ContentDelegateChild.jsm',
+    'ContentDelegateParent.jsm',
+    'GeckoViewContentChild.jsm',
+    'GeckoViewContentParent.jsm',
+    'GeckoViewPromptChild.jsm',
+    'GeckoViewSettingsChild.jsm',
+    'LoadURIDelegateChild.jsm',
+    'ProgressDelegateChild.jsm',
+    'ProgressDelegateParent.jsm',
+    'ScrollDelegateChild.jsm',
+    'WebBrowserChromeChild.jsm',
 ]

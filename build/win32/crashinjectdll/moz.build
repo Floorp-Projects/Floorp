@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "crashinjectdll.cpp",
+    'crashinjectdll.cpp',
 ]
 
-SharedLibrary("crashinjectdll")
+SharedLibrary('crashinjectdll')
 
-DEFFILE = "crashinjectdll.def"
+DEFFILE = 'crashinjectdll.def'
 
 USE_STATIC_LIBS = True
 NO_PGO = True

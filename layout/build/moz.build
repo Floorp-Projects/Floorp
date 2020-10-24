@@ -5,74 +5,74 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "nsContentDLF.h",
-    "nsLayoutCID.h",
-    "nsLayoutStatics.h",
+    'nsContentDLF.h',
+    'nsLayoutCID.h',
+    'nsLayoutStatics.h',
 ]
 
 UNIFIED_SOURCES += [
-    "nsContentDLF.cpp",
-    "nsLayoutModule.cpp",
-    "nsLayoutStatics.cpp",
+    'nsContentDLF.cpp',
+    'nsLayoutModule.cpp',
+    'nsLayoutStatics.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "../base",
-    "../forms",
-    "../generic",
-    "../inspector",
-    "../mathml",
-    "../painting",
-    "../style",
-    "../tables",
-    "../xul",
-    "/caps",
-    "/docshell/base",
-    "/dom/audiochannel",
-    "/dom/base",
-    "/dom/bindings",
-    "/dom/canvas",
-    "/dom/filesystem",
-    "/dom/geolocation",
-    "/dom/html",
-    "/dom/jsurl",
-    "/dom/media",
-    "/dom/offline",
-    "/dom/storage",
-    "/dom/xslt/base",
-    "/dom/xslt/xml",
-    "/dom/xslt/xpath",
-    "/dom/xslt/xslt",
-    "/dom/xul",
-    "/editor/composer",
-    "/js/xpconnect/loader",
-    "/js/xpconnect/src",
-    "/netwerk/base",
-    "/netwerk/cookie",
-    "/view",
+    '../base',
+    '../forms',
+    '../generic',
+    '../inspector',
+    '../mathml',
+    '../painting',
+    '../style',
+    '../tables',
+    '../xul',
+    '/caps',
+    '/docshell/base',
+    '/dom/audiochannel',
+    '/dom/base',
+    '/dom/bindings',
+    '/dom/canvas',
+    '/dom/filesystem',
+    '/dom/geolocation',
+    '/dom/html',
+    '/dom/jsurl',
+    '/dom/media',
+    '/dom/offline',
+    '/dom/storage',
+    '/dom/xslt/base',
+    '/dom/xslt/xml',
+    '/dom/xslt/xpath',
+    '/dom/xslt/xslt',
+    '/dom/xul',
+    '/editor/composer',
+    '/js/xpconnect/loader',
+    '/js/xpconnect/src',
+    '/netwerk/base',
+    '/netwerk/cookie',
+    '/view',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/dom/system/windows",
+        '/dom/system/windows',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/dom/system/mac",
+        '/dom/system/mac',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/dom/system",
-        "/dom/system/android",
+        '/dom/system',
+        '/dom/system/android',
     ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

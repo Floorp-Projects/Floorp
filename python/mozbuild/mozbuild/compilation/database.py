@@ -17,7 +17,9 @@ from mozbuild.frontend.data import (
     PerSourceFlag,
     VariablePassthru,
 )
-from mozbuild.shellutil import quote as shell_quote
+from mozbuild.shellutil import (
+    quote as shell_quote,
+)
 from mozbuild.util import expand_variables
 import mozpack.path as mozpath
 from collections import (

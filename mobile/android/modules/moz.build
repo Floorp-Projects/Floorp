@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Most files are General, a few exceptions
-with Files("**"):
-    BUG_COMPONENT = ("GeckoView", "General")
+with Files('**'):
+    BUG_COMPONENT = ('GeckoView', 'General')
 
-DIRS += ["geckoview"]
+DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [
-    "dbg-browser-actors.js",
+    'dbg-browser-actors.js',
 ]

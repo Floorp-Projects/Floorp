@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ["browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
 
 # Temporarily disabled. See bug 1256495.
 # (Note that when this gets enabled, some extra work will have to happen so
 # that the mochitest harness knows where to get the generated certificates -
 # right now it assumes they're in the source directory, which isn't the case
 # when they're automatically generated.)
-# test_certificates = (
+#test_certificates = (
 #    'ca.pem',
 #    'client-cert-via-intermediate.pem',
 #    'client-cert-with-ocsp-signing.pem',
@@ -35,7 +35,7 @@ BROWSER_CHROME_MANIFESTS += ["browser.ini"]
 #    'ssl-ee.pem',
 #    'unknown-issuer.pem',
 #    'untrusted-ca.pem',
-# )
+#)
 #
-# for test_certificate in test_certificates:
+#for test_certificate in test_certificates:
 #    GeneratedTestCertificate(test_certificate)

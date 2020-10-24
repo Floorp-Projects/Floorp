@@ -5,20 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "actions",
-    "components",
-    "reducers",
-    "selectors",
-    "utils",
+    'actions',
+    'components',
+    'reducers',
+    'selectors',
+    'utils',
 ]
 
 DevToolsModules(
-    "ChangesContextMenu.js",
-    "ChangesView.js",
+    'ChangesContextMenu.js',
+    'ChangesView.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Changes")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Changes')

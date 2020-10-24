@@ -9,44 +9,44 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 XPIDL_SOURCES += [
-    "nsIWebBrowserPersist.idl",
-    "nsIWebBrowserPersistDocument.idl",
+    'nsIWebBrowserPersist.idl',
+    'nsIWebBrowserPersistDocument.idl',
 ]
 
-XPIDL_MODULE = "webbrowserpersist"
+XPIDL_MODULE = 'webbrowserpersist'
 
 IPDL_SOURCES += [
-    "PWebBrowserPersistDocument.ipdl",
-    "PWebBrowserPersistResources.ipdl",
-    "PWebBrowserPersistSerialize.ipdl",
+    'PWebBrowserPersistDocument.ipdl',
+    'PWebBrowserPersistResources.ipdl',
+    'PWebBrowserPersistSerialize.ipdl',
 ]
 
 UNIFIED_SOURCES += [
-    "nsWebBrowserPersist.cpp",
-    "WebBrowserPersistDocumentChild.cpp",
-    "WebBrowserPersistDocumentParent.cpp",
-    "WebBrowserPersistLocalDocument.cpp",
-    "WebBrowserPersistRemoteDocument.cpp",
-    "WebBrowserPersistResourcesChild.cpp",
-    "WebBrowserPersistResourcesParent.cpp",
-    "WebBrowserPersistSerializeChild.cpp",
-    "WebBrowserPersistSerializeParent.cpp",
+    'nsWebBrowserPersist.cpp',
+    'WebBrowserPersistDocumentChild.cpp',
+    'WebBrowserPersistDocumentParent.cpp',
+    'WebBrowserPersistLocalDocument.cpp',
+    'WebBrowserPersistRemoteDocument.cpp',
+    'WebBrowserPersistResourcesChild.cpp',
+    'WebBrowserPersistResourcesParent.cpp',
+    'WebBrowserPersistSerializeChild.cpp',
+    'WebBrowserPersistSerializeParent.cpp',
 ]
 
 EXPORTS.mozilla += [
-    "WebBrowserPersistDocumentChild.h",
-    "WebBrowserPersistDocumentParent.h",
-    "WebBrowserPersistLocalDocument.h",
+    'WebBrowserPersistDocumentChild.h',
+    'WebBrowserPersistDocumentParent.h',
+    'WebBrowserPersistLocalDocument.h',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/docshell/shistory",
-    "/dom/base",
-    "/dom/html",
+    '/docshell/shistory',
+    '/dom/base',
+    '/dom/html',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

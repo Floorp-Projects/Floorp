@@ -11,10 +11,10 @@ from gdbpp import GeckoPrettyPrinter
 
 
 def walk_template_to_given_base(value, desired_tag_prefix):
-    """Given a value of some template subclass, walk up its ancestry until we
+    '''Given a value of some template subclass, walk up its ancestry until we
     hit the desired type, then return the appropriate value (which will then
     have that type).
-    """
+    '''
     # Base case
     t = value.type
     # It's possible that we're dealing with an alias template that looks like:
@@ -45,17 +45,17 @@ def walk_template_to_given_base(value, desired_tag_prefix):
 # the nsTHashtable core at the center.  All we care about is that nsTHashtable,
 # but we register for the descendant types in order to avoid the default pretty
 # printers having to unwrap those onion layers, wasting precious lines.
-@GeckoPrettyPrinter("nsClassHashtable", "^nsClassHashtable<.*>$")
-@GeckoPrettyPrinter("nsDataHashtable", "^nsDataHashtable<.*>$")
-@GeckoPrettyPrinter("nsInterfaceHashtable", "^nsInterfaceHashtable<.*>$")
-@GeckoPrettyPrinter("nsRefPtrHashtable", "^nsRefPtrHashtable<.*>$")
-@GeckoPrettyPrinter("nsBaseHashtable", "^nsBaseHashtable<.*>$")
-@GeckoPrettyPrinter("nsTHashtable", "^nsTHashtable<.*>$")
+@GeckoPrettyPrinter('nsClassHashtable', '^nsClassHashtable<.*>$')
+@GeckoPrettyPrinter('nsDataHashtable', '^nsDataHashtable<.*>$')
+@GeckoPrettyPrinter('nsInterfaceHashtable', '^nsInterfaceHashtable<.*>$')
+@GeckoPrettyPrinter('nsRefPtrHashtable', '^nsRefPtrHashtable<.*>$')
+@GeckoPrettyPrinter('nsBaseHashtable', '^nsBaseHashtable<.*>$')
+@GeckoPrettyPrinter('nsTHashtable', '^nsTHashtable<.*>$')
 class thashtable_printer(object):
     def __init__(self, outer_value):
         self.outermost_type = outer_value.type
 
-        value = walk_template_to_given_base(outer_value, "nsTHashtable<")
+        value = walk_template_to_given_base(outer_value, 'nsTHashtable<')
         self.value = value
 
         self.entry_type = value.type.template_argument(0)
@@ -68,7 +68,7 @@ class thashtable_printer(object):
         # (It should ideally also be true that the type ends with HashKey, but
         # since nsBaseHashtableET causes us to assume "mData" exists, let's
         # pivot based on that.)
-        self.is_table = self.entry_type.tag.startswith("nsBaseHashtableET<")
+        self.is_table = self.entry_type.tag.startswith('nsBaseHashtableET<')
 
         # While we know that it has a field `mKeyHash` for the hash-code and
         # book-keeping, and a DataType field mData for the value (if we're a
@@ -91,31 +91,31 @@ class thashtable_printer(object):
             if f.is_base_class:
                 continue
             # ...just to skip the fields we know exist...
-            if f.name == "mKeyHash" or f.name == "mData":
+            if f.name == 'mKeyHash' or f.name == 'mData':
                 continue
             # ...and assume the first one we find is the key.
             self.key_field_name = f.name
             break
 
     def children(self):
-        table = self.value["mTable"]
+        table = self.value['mTable']
 
         # mEntryCount is the number of occupied slots/entries in the table.
         # We can use this to avoid doing wasted memory reads.
-        entryCount = table["mEntryCount"]
+        entryCount = table['mEntryCount']
         if entryCount == 0:
             return
 
         # The table capacity is tracked "cleverly" in terms of how many bits
         # the hash needs to be shifted.  CapacityFromHashShift calculates this
         # quantity, but may be inlined, so we replicate the calculation here.
-        hashType = gdb.lookup_type("mozilla::HashNumber")
+        hashType = gdb.lookup_type('mozilla::HashNumber')
         hashBits = hashType.sizeof * 8
-        capacity = 1 << (hashBits - table["mHashShift"])
+        capacity = 1 << (hashBits - table['mHashShift'])
 
         # Pierce generation-tracking EntryStore class to get at buffer.  The
         # class instance always exists, but this char* may be null.
-        store = table["mEntryStore"]["mEntryStore"]
+        store = table['mEntryStore']['mEntryStore']
 
         key_field_name = self.key_field_name
 
@@ -133,9 +133,9 @@ class thashtable_printer(object):
                 continue
 
             entry = (pEntries + i).dereference()
-            yield ("%d" % i, entry[key_field_name])
+            yield ('%d' % i, entry[key_field_name])
             if self.is_table:
-                yield ("%d" % i, entry["mData"])
+                yield ('%d' % i, entry['mData'])
 
             # Stop iterating if we know there are no more occupied slots.
             seenCount += 1
@@ -148,6 +148,6 @@ class thashtable_printer(object):
 
     def display_hint(self):
         if self.is_table:
-            return "map"
+            return 'map'
         else:
-            return "array"
+            return 'array'

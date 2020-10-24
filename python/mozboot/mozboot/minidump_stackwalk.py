@@ -4,6 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-LINUX_MINIDUMP_STACKWALK = "linux64-minidump-stackwalk"
-MACOS_MINIDUMP_STACKWALK = "macosx64-minidump-stackwalk"
-WINDOWS_MINIDUMP_STACKWALK = "win32-minidump-stackwalk"
+LINUX_MINIDUMP_STACKWALK = 'linux64-minidump-stackwalk'
+MACOS_MINIDUMP_STACKWALK = 'macosx64-minidump-stackwalk'
+WINDOWS_MINIDUMP_STACKWALK = 'win32-minidump-stackwalk'

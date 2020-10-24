@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("xretest")
+Library('xretest')
 
 UNIFIED_SOURCES = [
-    "TestCompatVersionCompare.cpp",
+    'TestCompatVersionCompare.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/toolkit/components/remote",
+    '/toolkit/components/remote',
 ]
 
-if CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
-        "TestAssembleCommandLineWin.cpp",
+        'TestAssembleCommandLineWin.cpp',
     ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'

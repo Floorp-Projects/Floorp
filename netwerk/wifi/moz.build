@@ -5,52 +5,52 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIWifiAccessPoint.idl",
-    "nsIWifiListener.idl",
-    "nsIWifiMonitor.idl",
+    'nsIWifiAccessPoint.idl',
+    'nsIWifiListener.idl',
+    'nsIWifiMonitor.idl',
 ]
 
-XPIDL_MODULE = "necko_wifi"
+XPIDL_MODULE = 'necko_wifi'
 
 UNIFIED_SOURCES += [
-    "nsWifiAccessPoint.cpp",
-    "nsWifiMonitor.cpp",
+    'nsWifiAccessPoint.cpp',
+    'nsWifiMonitor.cpp',
 ]
 
-if CONFIG["OS_ARCH"] == "Darwin":
+if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
-        "nsWifiScannerMac.cpp",
+        'nsWifiScannerMac.cpp',
     ]
     SOURCES += [
-        "osx_corewlan.mm",
+        'osx_corewlan.mm',
     ]
     # osx_corewlan.mm has warnings about scanForNetworksWithParameters,
     # bssidData and rssi. These are APIs that were removed in 10.7, so we need
     # to accept the warnings when targeting the newer SDKs.
-    SOURCES["osx_corewlan.mm"].flags += ["-Wno-error=objc-method-access"]
-elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD"):
+    SOURCES['osx_corewlan.mm'].flags += ['-Wno-error=objc-method-access']
+elif CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD'):
     UNIFIED_SOURCES += [
-        "nsWifiScannerFreeBSD.cpp",
+        'nsWifiScannerFreeBSD.cpp',
     ]
-elif CONFIG["OS_ARCH"] == "WINNT":
+elif CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
-        "nsWifiScannerWin.cpp",
-        "win_wifiScanner.cpp",
-        "win_wlanLibrary.cpp",
+        'nsWifiScannerWin.cpp',
+        'win_wifiScanner.cpp',
+        'win_wlanLibrary.cpp',
     ]
-elif CONFIG["OS_ARCH"] == "SunOS":
-    CXXFLAGS += CONFIG["GLIB_CFLAGS"]
+elif CONFIG['OS_ARCH'] == 'SunOS':
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
     UNIFIED_SOURCES += [
-        "nsWifiScannerSolaris.cpp",
+        'nsWifiScannerSolaris.cpp',
     ]
 
-if CONFIG["NECKO_WIFI_DBUS"]:
+if CONFIG['NECKO_WIFI_DBUS']:
     UNIFIED_SOURCES += [
-        "nsWifiScannerDBus.cpp",
+        'nsWifiScannerDBus.cpp',
     ]
-    CXXFLAGS += ["-Wno-error=shadow"]
+    CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["NECKO_WIFI_DBUS"]:
-    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+if CONFIG['NECKO_WIFI_DBUS']:
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

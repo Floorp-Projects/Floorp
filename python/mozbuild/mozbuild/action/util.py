@@ -18,9 +18,9 @@ def log_build_task(f, *args, **kwargs):
         return f(*args, **kwargs)
     finally:
         end = time.time()
-        print(
-            "BUILDTASK %s"
-            % json.dumps(
-                {"argv": sys.argv, "start": start, "end": end, "context": None}
-            )
-        )
+        print('BUILDTASK %s' % json.dumps({
+            "argv": sys.argv,
+            "start": start,
+            "end": end,
+            "context": None
+        }))

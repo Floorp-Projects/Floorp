@@ -26,13 +26,9 @@ PUSHLOG_PUSHES_TMPL = (
 
 
 def _query_pushlog(url):
-    response = retry(
-        requests.get,
-        attempts=5,
-        sleeptime=10,
-        args=(url,),
-        kwargs={"timeout": 60, "headers": {"User-Agent": "TaskCluster"}},
-    )
+    response = retry(requests.get, attempts=5, sleeptime=10,
+                     args=(url, ),
+                     kwargs={'timeout': 60, 'headers': {'User-Agent': 'TaskCluster'}})
 
     return response.json()["pushes"]
 
@@ -40,7 +36,9 @@ def _query_pushlog(url):
 def find_hg_revision_push_info(repository, revision):
     """Given the parameters for this action and a revision, find the
     pushlog_id of the revision."""
-    url = PUSHLOG_CHANGESET_TMPL.format(repository=repository, revision=revision)
+    url = PUSHLOG_CHANGESET_TMPL.format(
+        repository=repository, revision=revision
+    )
 
     pushes = _query_pushlog(url)
 
@@ -53,9 +51,9 @@ def find_hg_revision_push_info(repository, revision):
 
     pushid = list(pushes.keys())[0]
     return {
-        "pushdate": pushes[pushid]["date"],
-        "pushid": pushid,
-        "user": pushes[pushid]["user"],
+        'pushdate': pushes[pushid]['date'],
+        'pushid': pushid,
+        'user': pushes[pushid]['user'],
     }
 
 
@@ -70,10 +68,7 @@ def get_push_data(repository, project, push_id_start, push_id_end):
     try:
         pushes = _query_pushlog(url)
 
-        return {
-            push_id: pushes[str(push_id)]
-            for push_id in range(push_id_start, push_id_end + 1)
-        }
+        return {push_id: pushes[str(push_id)] for push_id in range(push_id_start, push_id_end + 1)}
 
     # In the event of request times out, requests will raise a TimeoutError.
     except requests.exceptions.Timeout:
@@ -103,20 +98,11 @@ def get_push_data(repository, project, push_id_start, push_id_end):
 def get_hg_revision_branch(root, revision):
     """Given the parameters for a revision, find the hg_branch (aka
     relbranch) of the revision."""
-    return six.ensure_text(
-        subprocess.check_output(
-            [
-                "hg",
-                "identify",
-                "-T",
-                "{branch}",
-                "--rev",
-                revision,
-            ],
-            cwd=root,
-            universal_newlines=True,
-        )
-    )
+    return six.ensure_text(subprocess.check_output([
+        'hg', 'identify',
+        '-T', '{branch}',
+        '--rev', revision,
+    ], cwd=root, universal_newlines=True))
 
 
 # For these functions, we assume that run-task has correctly checked out the
@@ -124,11 +110,11 @@ def get_hg_revision_branch(root, revision):
 # current revision is.  Mercurial refers to that as `.`.
 def get_hg_commit_message(root):
     return six.ensure_text(
-        subprocess.check_output(["hg", "log", "-r", ".", "-T", "{desc}"], cwd=root)
+        subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{desc}'], cwd=root)
     )
 
 
 def calculate_head_rev(root):
     return six.ensure_text(
-        subprocess.check_output(["hg", "log", "-r", ".", "-T", "{node}"], cwd=root)
+        subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{node}'], cwd=root)
     )

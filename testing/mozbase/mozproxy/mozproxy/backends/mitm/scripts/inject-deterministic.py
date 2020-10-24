@@ -8,7 +8,8 @@ import time
 from mitmproxy import ctx
 
 
-class AddDeterministic:
+class AddDeterministic():
+
     def get_csp_directives(self, headers):
         csp = headers.get("Content-Security-Policy", "")
         return [d.strip() for d in csp.split(";")]
@@ -52,7 +53,7 @@ class AddDeterministic:
 
         if nonce:
             return '<script nonce="{}">{}</script>'.format(nonce, script)
-        return "<script>{}</script>".format(script)
+        return '<script>{}</script>'.format(script)
 
     def update_csp_script_src(self, headers, sha256):
         """
@@ -110,10 +111,8 @@ class AddDeterministic:
         millis = int(round(time.time() * 1000))
 
         if "content-type" in flow.response.headers:
-            if "text/html" in flow.response.headers["content-type"]:
-                ctx.log.info(
-                    "Working on {}".format(flow.response.headers["content-type"])
-                )
+            if 'text/html' in flow.response.headers["content-type"]:
+                ctx.log.info("Working on {}".format(flow.response.headers["content-type"]))
 
                 flow.response.decode()
                 html = flow.response.text
@@ -122,17 +121,14 @@ class AddDeterministic:
                     js = jsfile.read().replace("REPLACE_LOAD_TIMESTAMP", str(millis))
 
                     if js not in html:
-                        script_index = re.search("(?i).*?<head.*?>", html)
+                        script_index = re.search('(?i).*?<head.*?>', html)
                         if script_index is None:
-                            script_index = re.search("(?i).*?<html.*?>", html)
+                            script_index = re.search('(?i).*?<html.*?>', html)
                         if script_index is None:
-                            script_index = re.search("(?i).*?<!doctype html>", html)
+                            script_index = re.search('(?i).*?<!doctype html>', html)
                         if script_index is None:
-                            ctx.log.info(
-                                "No start tags found in request {}. Skip injecting".format(
-                                    flow.request.url
-                                )
-                            )
+                            ctx.log.info("No start tags found in request {}. Skip injecting".
+                                         format(flow.request.url))
                             return
                         script_index = script_index.end()
 
@@ -142,43 +138,31 @@ class AddDeterministic:
                             nonce = self.get_nonce_from_headers(flow.response.headers)
                             ctx.log.info("nonce : %s" % nonce)
 
-                            if (
-                                self.get_csp_script_sources(flow.response.headers)
-                                and not nonce
-                            ):
+                            if self.get_csp_script_sources(flow.response.headers) and not nonce:
                                 # generate sha256 for the script
-                                hash_object = hashlib.sha256(js.encode("utf-8"))
-                                script_sha256 = base64.b64encode(
-                                    hash_object.digest()
-                                ).decode("utf-8")
+                                hash_object = hashlib.sha256(js.encode('utf-8'))
+                                script_sha256 = base64.b64encode(hash_object.digest()). \
+                                    decode("utf-8")
 
                                 # generate the new response headers
                                 updated_script_sources = self.update_csp_script_src(
-                                    flow.response.headers, script_sha256
-                                )
+                                    flow.response.headers,
+                                    script_sha256)
                                 flow.response.headers = self.get_new_csp_header(
-                                    flow.response.headers, updated_script_sources
-                                )
+                                    flow.response.headers,
+                                    updated_script_sources)
 
                         # generate new html file
-                        new_html = (
-                            html[:script_index]
-                            + self.get_script_with_nonce(js, nonce)
-                            + html[script_index:]
-                        )
+                        new_html = html[:script_index] + \
+                            self.get_script_with_nonce(js, nonce) + \
+                            html[script_index:]
                         flow.response.text = new_html
 
-                        ctx.log.info(
-                            "In request {} injected deterministic JS".format(
-                                flow.request.url
-                            )
-                        )
+                        ctx.log.info("In request {} injected deterministic JS".
+                                     format(flow.request.url))
                     else:
-                        ctx.log.info(
-                            "Script already injected in request {}".format(
-                                flow.request.url
-                            )
-                        )
+                        ctx.log.info("Script already injected in request {}".
+                                     format(flow.request.url))
 
 
 def start():

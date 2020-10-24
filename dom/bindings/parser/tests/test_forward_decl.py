@@ -1,17 +1,14 @@
 import WebIDL
 
-
 def WebIDLTest(parser, harness):
-    parser.parse(
-        """
+    parser.parse("""
         interface ForwardDeclared;
         interface ForwardDeclared;
 
         interface TestForwardDecl {
           attribute ForwardDeclared foo;
         };
-    """
-    )
+    """)
 
     results = parser.finish()
 

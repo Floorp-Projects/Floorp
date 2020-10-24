@@ -128,13 +128,11 @@ class WebExtension(Perftest):
                 )
 
         if self.control_server._runtime_error:
-            raise RuntimeError(
-                "Failed to run {}: {}\nStack:\n{}".format(
-                    test["name"],
-                    self.control_server._runtime_error["error"],
-                    self.control_server._runtime_error["stack"],
-                )
-            )
+            raise RuntimeError("Failed to run {}: {}\nStack:\n{}".format(
+                test["name"],
+                self.control_server._runtime_error["error"],
+                self.control_server._runtime_error["stack"],
+            ))
 
     def run_test_teardown(self, test):
         super(WebExtension, self).run_test_teardown(test)
@@ -145,13 +143,13 @@ class WebExtension(Perftest):
             confidence_values = self.playback.confidence()
             if confidence_values:
                 mozproxy_replay = {
-                    u"summarize-values": False,
-                    u"suite-suffix-type": False,
-                    u"type": u"mozproxy",
-                    u"test": test["name"],
-                    u"unit": u"a.u.",
-                    u"values": confidence_values,
-                    u"shouldAlert": False,  # Bug 1655841 temporary disable confidence metrics
+                    u'summarize-values': False,
+                    u'suite-suffix-type': False,
+                    u'type': u'mozproxy',
+                    u'test': test["name"],
+                    u'unit': u'a.u.',
+                    u'values': confidence_values,
+                    u'shouldAlert': False  # Bug 1655841 temporary disable confidence metrics
                 }
                 self.control_server.submit_supporting_data(mozproxy_replay)
             else:
@@ -175,7 +173,10 @@ class WebExtension(Perftest):
             self.control_server.user_profile = self.profile
 
     def start_control_server(self):
-        self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
+        self.control_server = RaptorControlServer(
+            self.results_handler,
+            self.debug_mode
+        )
         self.control_server.user_profile = self.profile
         self.control_server.start()
 

@@ -5,23 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "FlacDecoder.h",
-    "FlacDemuxer.h",
-    "FlacFrameParser.h",
+    'FlacDecoder.h',
+    'FlacDemuxer.h',
+    'FlacFrameParser.h',
 ]
 
 UNIFIED_SOURCES += [
-    "FlacDecoder.cpp",
-    "FlacDemuxer.cpp",
-    "FlacFrameParser.cpp",
+    'FlacDecoder.cpp',
+    'FlacDemuxer.cpp',
+    'FlacFrameParser.cpp',
 ]
 
-CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_LIBVPX_CFLAGS']
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

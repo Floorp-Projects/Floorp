@@ -5,25 +5,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIPresentationControlChannel.idl",
-    "nsIPresentationControlService.idl",
-    "nsIPresentationDevice.idl",
-    "nsIPresentationDeviceManager.idl",
-    "nsIPresentationDevicePrompt.idl",
-    "nsIPresentationDeviceProvider.idl",
-    "nsIPresentationListener.idl",
-    "nsIPresentationLocalDevice.idl",
-    "nsIPresentationRequestUIGlue.idl",
-    "nsIPresentationService.idl",
-    "nsIPresentationSessionRequest.idl",
-    "nsIPresentationSessionTransport.idl",
-    "nsIPresentationSessionTransportBuilder.idl",
-    "nsIPresentationTerminateRequest.idl",
+    'nsIPresentationControlChannel.idl',
+    'nsIPresentationControlService.idl',
+    'nsIPresentationDevice.idl',
+    'nsIPresentationDeviceManager.idl',
+    'nsIPresentationDevicePrompt.idl',
+    'nsIPresentationDeviceProvider.idl',
+    'nsIPresentationListener.idl',
+    'nsIPresentationLocalDevice.idl',
+    'nsIPresentationRequestUIGlue.idl',
+    'nsIPresentationService.idl',
+    'nsIPresentationSessionRequest.idl',
+    'nsIPresentationSessionTransport.idl',
+    'nsIPresentationSessionTransportBuilder.idl',
+    'nsIPresentationTerminateRequest.idl',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     XPIDL_SOURCES += [
-        "nsIPresentationNetworkHelper.idl",
+        'nsIPresentationNetworkHelper.idl',
     ]
 
-XPIDL_MODULE = "dom_presentation"
+XPIDL_MODULE = 'dom_presentation'
+

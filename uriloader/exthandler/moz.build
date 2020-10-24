@@ -4,149 +4,148 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SPHINX_TREES["/uriloader/exthandler"] = "docs"
+SPHINX_TREES['/uriloader/exthandler'] = 'docs'
 
-TEST_DIRS += ["tests"]
+TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
-    "nsCExternalHandlerService.idl",
-    "nsIContentDispatchChooser.idl",
-    "nsIExternalHelperAppService.idl",
-    "nsIExternalProtocolService.idl",
-    "nsIExternalURLHandlerService.idl",
-    "nsIHandlerService.idl",
-    "nsIHelperAppLauncherDialog.idl",
-    "nsISharingHandlerApp.idl",
+    'nsCExternalHandlerService.idl',
+    'nsIContentDispatchChooser.idl',
+    'nsIExternalHelperAppService.idl',
+    'nsIExternalProtocolService.idl',
+    'nsIExternalURLHandlerService.idl',
+    'nsIHandlerService.idl',
+    'nsIHelperAppLauncherDialog.idl',
+    'nsISharingHandlerApp.idl',
 ]
 
-XPIDL_MODULE = "exthandler"
+XPIDL_MODULE = 'exthandler'
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    osdir = "win"
-    LOCAL_INCLUDES += ["win"]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    osdir = "mac"
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "uikit"):
-    osdir = CONFIG["MOZ_WIDGET_TOOLKIT"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    osdir = 'win'
+    LOCAL_INCLUDES += ['win']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    osdir = 'mac'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'uikit'):
+    osdir = CONFIG['MOZ_WIDGET_TOOLKIT']
 else:
-    osdir = "unix"
-
-EXPORTS += [osdir + "/nsOSHelperAppService.h"]
+    osdir = 'unix'
 
 EXPORTS += [
-    "ContentHandlerService.h",
-    "nsExternalHelperAppService.h",
-    "nsMIMEInfoChild.h",
-    "nsOSHelperAppServiceChild.h",
+    osdir + '/nsOSHelperAppService.h'
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    EXPORTS += [
-        "%s/%s" % (osdir, f)
-        for f in [
-            "nsExternalURLHandlerService.h",
-        ]
-    ]
+EXPORTS += [
+    'ContentHandlerService.h',
+    'nsExternalHelperAppService.h',
+    'nsMIMEInfoChild.h',
+    'nsOSHelperAppServiceChild.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [ '%s/%s' % (osdir, f) for f in [
+        'nsExternalURLHandlerService.h',
+    ]]
 
 EXPORTS += [
-    "nsLocalHandlerApp.h",
+    'nsLocalHandlerApp.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "ExternalHelperAppChild.h",
-    "ExternalHelperAppParent.h",
+    'ExternalHelperAppChild.h',
+    'ExternalHelperAppParent.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ContentHandlerService.cpp",
-    "ExternalHelperAppChild.cpp",
-    "ExternalHelperAppParent.cpp",
-    "HandlerServiceParent.cpp",
-    "nsExternalHelperAppService.cpp",
-    "nsExternalProtocolHandler.cpp",
-    "nsLocalHandlerApp.cpp",
-    "nsMIMEInfoImpl.cpp",
-    "nsOSHelperAppServiceChild.cpp",
+    'ContentHandlerService.cpp',
+    'ExternalHelperAppChild.cpp',
+    'ExternalHelperAppParent.cpp',
+    'HandlerServiceParent.cpp',
+    'nsExternalHelperAppService.cpp',
+    'nsExternalProtocolHandler.cpp',
+    'nsLocalHandlerApp.cpp',
+    'nsMIMEInfoImpl.cpp',
+    'nsOSHelperAppServiceChild.cpp',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
-        "mac/nsLocalHandlerAppMac.mm",
-        "mac/nsMIMEInfoMac.mm",
-        "mac/nsOSHelperAppService.mm",
+        'mac/nsLocalHandlerAppMac.mm',
+        'mac/nsMIMEInfoMac.mm',
+        'mac/nsOSHelperAppService.mm',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     UNIFIED_SOURCES += [
-        "uikit/nsLocalHandlerAppUIKit.mm",
-        "uikit/nsMIMEInfoUIKit.mm",
-        "uikit/nsOSHelperAppService.mm",
+        'uikit/nsLocalHandlerAppUIKit.mm',
+        'uikit/nsMIMEInfoUIKit.mm',
+        'uikit/nsOSHelperAppService.mm',
     ]
 else:
     # These files can't be built in unified mode because they redefine LOG.
     SOURCES += [
-        osdir + "/nsOSHelperAppService.cpp",
+        osdir + '/nsOSHelperAppService.cpp',
     ]
-    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-        CXXFLAGS += ["-Wno-error=shadow"]
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        CXXFLAGS += ['-Wno-error=shadow']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
-        "unix/nsGNOMERegistry.cpp",
-        "unix/nsMIMEInfoUnix.cpp",
+        'unix/nsGNOMERegistry.cpp',
+        'unix/nsMIMEInfoUnix.cpp',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
-        "android/nsAndroidHandlerApp.cpp",
-        "android/nsExternalURLHandlerService.cpp",
-        "android/nsMIMEInfoAndroid.cpp",
+        'android/nsAndroidHandlerApp.cpp',
+        'android/nsExternalURLHandlerService.cpp',
+        'android/nsMIMEInfoAndroid.cpp',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
-        "win/nsMIMEInfoWin.cpp",
+        'win/nsMIMEInfoWin.cpp',
     ]
 
-if CONFIG["MOZ_ENABLE_DBUS"]:
+if CONFIG['MOZ_ENABLE_DBUS']:
     UNIFIED_SOURCES += [
-        "nsDBusHandlerApp.cpp",
+        'nsDBusHandlerApp.cpp',
     ]
     EXPORTS.mozilla += [
-        "DBusHelpers.h",
+        'DBusHelpers.h',
     ]
 
 EXTRA_COMPONENTS += [
-    "HandlerService.js",
-    "HandlerService.manifest",
+    'HandlerService.js',
+    'HandlerService.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    "WebHandlerApp.jsm",
+    'WebHandlerApp.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 IPDL_SOURCES += [
-    "PExternalHelperApp.ipdl",
-    "PHandlerService.ipdl",
+    'PExternalHelperApp.ipdl',
+    'PHandlerService.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/docshell/base",
-    "/dom/base",
-    "/dom/ipc",
-    "/netwerk/base",
-    "/netwerk/protocol/http",
+    '/docshell/base',
+    '/dom/base',
+    '/dom/ipc',
+    '/netwerk/base',
+    '/netwerk/protocol/http',
 ]
 
-if CONFIG["MOZ_ENABLE_DBUS"]:
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
+if CONFIG['MOZ_ENABLE_DBUS']:
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

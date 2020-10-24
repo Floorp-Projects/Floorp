@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "utils",
+    'utils',
 ]
 
 DevToolsModules(
-    "channel-event-sink.js",
-    "eventsource-actor.js",
-    "network-event-actor.js",
-    "network-event.js",
-    "network-monitor.js",
-    "network-observer.js",
-    "network-response-listener.js",
-    "stack-trace-collector.js",
-    "stack-traces-actor.js",
-    "websocket-actor.js",
+    'channel-event-sink.js',
+    'eventsource-actor.js',
+    'network-event-actor.js',
+    'network-event.js',
+    'network-monitor.js',
+    'network-observer.js',
+    'network-response-listener.js',
+    'stack-trace-collector.js',
+    'stack-traces-actor.js',
+    'websocket-actor.js',
 )

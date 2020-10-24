@@ -1,9 +1,7 @@
 import WebIDL
 
-
 def WebIDLTest(parser, harness):
-    parser.parse(
-        """
+    parser.parse("""
         typedef float myFloat;
         typedef unrestricted float myUnrestrictedFloat;
         interface FloatTypes {
@@ -34,14 +32,14 @@ def WebIDLTest(parser, harness):
           [LenientFloat]
           void m6(sequence<float> arg);
         };
-    """
-    )
+    """)
 
     results = parser.finish()
 
     harness.check(len(results), 3, "Should be two typedefs and one interface.")
     iface = results[2]
-    harness.ok(isinstance(iface, WebIDL.IDLInterface), "Should be an IDLInterface")
+    harness.ok(isinstance(iface, WebIDL.IDLInterface),
+               "Should be an IDLInterface")
     types = [a.type for a in iface.members if a.isAttr()]
     harness.ok(types[0].isFloat(), "'float' is a float")
     harness.ok(not types[0].isUnrestricted(), "'float' is not unrestricted")
@@ -57,23 +55,19 @@ def WebIDLTest(parser, harness):
     argtypes = [a.type for a in method.signatures()[0][1]]
     for (idx, type) in enumerate(argtypes):
         harness.ok(type.isFloat(), "Type %d should be float" % idx)
-        harness.check(
-            type.isUnrestricted(),
-            idx >= 5,
-            "Type %d should %sbe unrestricted" % (idx, "" if idx >= 4 else "not "),
-        )
+        harness.check(type.isUnrestricted(), idx >= 5,
+                      "Type %d should %sbe unrestricted" % (
+                idx, "" if idx >= 4 else "not "))
 
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface FloatTypes {
               [LenientFloat]
               long m(float arg);
             };
-        """
-        )
+        """)
     except Exception as x:
         threw = True
     harness.ok(threw, "[LenientFloat] only allowed on void methods")
@@ -81,65 +75,51 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface FloatTypes {
               [LenientFloat]
               void m(unrestricted float arg);
             };
-        """
-        )
+        """)
     except Exception as x:
         threw = True
-    harness.ok(
-        threw, "[LenientFloat] only allowed on methods with unrestricted float args"
-    )
+    harness.ok(threw, "[LenientFloat] only allowed on methods with unrestricted float args")
 
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface FloatTypes {
               [LenientFloat]
               void m(sequence<unrestricted float> arg);
             };
-        """
-        )
+        """)
     except Exception as x:
         threw = True
-    harness.ok(
-        threw, "[LenientFloat] only allowed on methods with unrestricted float args (2)"
-    )
+    harness.ok(threw, "[LenientFloat] only allowed on methods with unrestricted float args (2)")
 
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface FloatTypes {
               [LenientFloat]
               void m((unrestricted float or FloatTypes) arg);
             };
-        """
-        )
+        """)
     except Exception as x:
         threw = True
-    harness.ok(
-        threw, "[LenientFloat] only allowed on methods with unrestricted float args (3)"
-    )
+    harness.ok(threw, "[LenientFloat] only allowed on methods with unrestricted float args (3)")
 
     parser = parser.reset()
     threw = False
     try:
-        parser.parse(
-            """
+        parser.parse("""
             interface FloatTypes {
               [LenientFloat]
               readonly attribute float foo;
             };
-        """
-        )
+        """)
     except Exception as x:
         threw = True
     harness.ok(threw, "[LenientFloat] only allowed on writable attributes")

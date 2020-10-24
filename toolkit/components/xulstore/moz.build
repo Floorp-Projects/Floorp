@@ -4,41 +4,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
-XPIDL_MODULE = "toolkit_xulstore"
+XPIDL_MODULE = 'toolkit_xulstore'
 
 XPIDL_SOURCES += [
-    "nsIXULStore.idl",
+    'nsIXULStore.idl',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-if CONFIG["MOZ_NEW_XULSTORE"]:
+if CONFIG['MOZ_NEW_XULSTORE']:
     EXTRA_JS_MODULES += [
-        "new/XULStore.jsm",
+        'new/XULStore.jsm',
     ]
 
     TEST_DIRS += [
-        "tests/gtest",
+        'tests/gtest',
     ]
 
     EXPORTS.mozilla += [
-        "XULStore.h",
+        'XULStore.h',
     ]
 
     UNIFIED_SOURCES += [
-        "XULStore.cpp",
+        'XULStore.cpp',
     ]
 
-    FINAL_LIBRARY = "xul"
+    FINAL_LIBRARY = 'xul'
 else:
     EXTRA_JS_MODULES += [
-        "old/XULStore.jsm",
+        'old/XULStore.jsm',
     ]

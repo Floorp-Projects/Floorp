@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "ConsoleSettings.js",
-    "FilterBar.js",
-    "FilterButton.js",
-    "FilterCheckbox.js",
+    'ConsoleSettings.js',
+    'FilterBar.js',
+    'FilterButton.js',
+    'FilterCheckbox.js',
 )

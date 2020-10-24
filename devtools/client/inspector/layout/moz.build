@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "components",
-    "utils",
+    'components',
+    'utils',
 ]
 
 DevToolsModules(
-    "layout.js",
+    'layout.js',
 )
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Layout")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Layout')

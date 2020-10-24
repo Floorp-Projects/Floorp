@@ -40,30 +40,28 @@ def rebuild_check(args):
         limit = 5
         length = len(filelist)
         if length < limit:
-            return ", ".join(filelist)
+            return ', '.join(filelist)
 
         truncated = filelist[:limit]
         remaining = length - limit
 
-        return "%s (and %d other files)" % (", ".join(truncated), remaining)
+        return '%s (and %d other files)' % (', '.join(truncated), remaining)
 
     newer = format_filelist(newer)
     removed = format_filelist(removed)
 
     if newer and removed:
-        print(
-            "Rebuilding %s because %s changed and %s was removed"
-            % (target, newer, removed)
-        )
+        print('Rebuilding %s because %s changed and %s was removed' % (
+            target, newer, removed))
     elif newer:
-        print("Rebuilding %s because %s changed" % (target, newer))
+        print('Rebuilding %s because %s changed' % (target, newer))
     elif removed:
-        print("Rebuilding %s because %s was removed" % (target, removed))
+        print('Rebuilding %s because %s was removed' % (
+            target, removed))
     else:
-        print("Rebuilding %s for an unknown reason" % target)
+        print('Rebuilding %s for an unknown reason' % target)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
-
     rebuild_check(sys.argv[1:])

@@ -136,7 +136,7 @@ def main(args=sys.argv[1:]):
             conditioned_profile_scenario=args.conditioned_profile_scenario,
             chimera=args.chimera,
             project=args.project,
-            verbose=args.verbose,
+            verbose=args.verbose
         )
     except Exception:
         traceback.print_exc()
@@ -159,10 +159,9 @@ def main(args=sys.argv[1:]):
                     ("timed out loading test page", "waiting for pending metrics"),
                 ]
                 if _page.get("pending_metrics") is not None:
-                    LOG.warning(
-                        "page cycle {} has pending metrics: {}".format(
-                            _page["page_cycle"], _page["pending_metrics"]
-                        )
+                    LOG.warning("page cycle {} has pending metrics: {}".format(
+                        _page["page_cycle"],
+                        _page["pending_metrics"])
                     )
 
                 LOG.critical(

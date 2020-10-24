@@ -21,19 +21,20 @@ except ImportError:
 from mach.main import Mach
 
 here = os.path.abspath(os.path.dirname(__file__))
-PROVIDER_DIR = os.path.join(here, "providers")
+PROVIDER_DIR = os.path.join(here, 'providers')
 
 
 @pytest.fixture(scope="class")
 def get_mach(request):
+
     def _populate_context(key):
-        if key == "topdir":
+        if key == 'topdir':
             return topsrcdir
 
     def inner(provider_files=None, entry_point=None, context_handler=None):
         m = Mach(os.getcwd())
-        m.define_category("testing", "Mach unittest", "Testing for mach core", 10)
-        m.define_category("misc", "Mach misc", "Testing for mach core", 20)
+        m.define_category('testing', 'Mach unittest', 'Testing for mach core', 10)
+        m.define_category('misc', 'Mach misc', 'Testing for mach core', 20)
         m.populate_context_handler = context_handler or _populate_context
 
         if provider_files:
@@ -55,6 +56,7 @@ def get_mach(request):
 
 @pytest.fixture(scope="class")
 def run_mach(request, get_mach):
+
     def inner(argv, *args, **kwargs):
         m = get_mach(*args, **kwargs)
 
@@ -62,8 +64,8 @@ def run_mach(request, get_mach):
         stderr = StringIO()
 
         if sys.version_info < (3, 0):
-            stdout.encoding = "UTF-8"
-            stderr.encoding = "UTF-8"
+            stdout.encoding = 'UTF-8'
+            stderr.encoding = 'UTF-8'
 
         try:
             result = m.run(argv, stdout=stdout, stderr=stderr)

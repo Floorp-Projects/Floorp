@@ -5,13 +5,13 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "TestPrioEncoder.cpp",
+    'TestPrioEncoder.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/prio",
-    "/third_party/msgpack/include",
-    "/third_party/prio/include",
+    '/dom/prio',
+    '/third_party/msgpack/include',
+    '/third_party/prio/include',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'

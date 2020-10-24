@@ -9,12 +9,13 @@ from mozprocess import ProcessHandlerMixin
 
 
 class LintProcess(ProcessHandlerMixin, ABC):
+
     def __init__(self, config, *args, **kwargs):
         self.config = config
         self.results = []
 
-        kwargs["universal_newlines"] = True
-        kwargs["processOutputLine"] = [self.process_line]
+        kwargs['universal_newlines'] = True
+        kwargs['processOutputLine'] = [self.process_line]
         ProcessHandlerMixin.__init__(self, *args, **kwargs)
 
     @abstractmethod

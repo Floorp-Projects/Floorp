@@ -10,9 +10,7 @@ import unittest
 
 def _node_to_string(node: Node, prefix, buffer, cache):
     if not node.is_end_node:
-        prefix += (
-            str(ord(node.character)) if ord(node.character) < 10 else node.character
-        )
+        prefix += str(ord(node.character)) if ord(node.character) < 10 else node.character
     else:
         prefix += "$"
     cached = cache.get(id(node))
@@ -97,8 +95,7 @@ class TestDafsa(unittest.TestCase):
         bc=
         bd
         bd1=
-        """,
-        )
+        """)
 
     def test_2(self):
         _assert_dafsa(
@@ -118,8 +115,7 @@ class TestDafsa(unittest.TestCase):
         bb
         bb1=
         bbb=
-        """,
-        )
+        """)
 
     def test_3(self):
         _assert_dafsa(
@@ -155,8 +151,7 @@ class TestDafsa(unittest.TestCase):
         c.c
         c.co
         c.cor=
-        """,
-        )
+        """)
 
     def test_4(self):
         _assert_dafsa(
@@ -181,8 +176,7 @@ class TestDafsa(unittest.TestCase):
         bco
         bcom
         bcomc=
-        """,
-        )
+        """)
 
     def test_5(self):
         _assert_dafsa(
@@ -203,8 +197,7 @@ class TestDafsa(unittest.TestCase):
         a.d=
         b
         b.=
-        """,
-        )
+        """)
 
     def test_6(self):
         _assert_dafsa(
@@ -223,8 +216,7 @@ class TestDafsa(unittest.TestCase):
         a661=
         b
         b6=
-        """,
-        )
+        """)
 
     def test_7(self):
         _assert_dafsa(
@@ -244,8 +236,7 @@ class TestDafsa(unittest.TestCase):
         a6661=
         b
         b6=
-        """,
-        )
+        """)
 
     def test_8(self):
         _assert_dafsa(
@@ -264,8 +255,7 @@ class TestDafsa(unittest.TestCase):
         bc
         bc1=
         bcc=
-        """,
-        )
+        """)
 
     def test_9(self):
         _assert_dafsa(
@@ -284,8 +274,7 @@ class TestDafsa(unittest.TestCase):
         bc
         bc1=
         bcc=
-        """,
-        )
+        """)
 
     def test_10(self):
         _assert_dafsa(
@@ -304,8 +293,7 @@ class TestDafsa(unittest.TestCase):
         cc
         cc1=
         ccc=
-        """,
-        )
+        """)
 
     def test_11(self):
         _assert_dafsa(
@@ -324,8 +312,7 @@ class TestDafsa(unittest.TestCase):
         acc1=
         b
         bc=
-        """,
-        )
+        """)
 
     def test_12(self):
         _assert_dafsa(
@@ -345,8 +332,7 @@ class TestDafsa(unittest.TestCase):
         bcd
         bcd1=
         bcdd=
-        """,
-        )
+        """)
 
     def test_13(self):
         _assert_dafsa(
@@ -368,8 +354,7 @@ class TestDafsa(unittest.TestCase):
         bc
         bc1=
         bcc=
-        """,
-        )
+        """)
 
     def test_14(self):
         _assert_dafsa(
@@ -394,8 +379,7 @@ class TestDafsa(unittest.TestCase):
         bcc
         bcc1=
         bccc=
-        """,
-        )
+        """)
 
     def test_15(self):
         _assert_dafsa(
@@ -414,8 +398,7 @@ class TestDafsa(unittest.TestCase):
         acac1=
         b
         bc=
-        """,
-        )
+        """)
 
     def test_16(self):
         _assert_dafsa(
@@ -433,8 +416,7 @@ class TestDafsa(unittest.TestCase):
         t
         t1=
         tb=
-        """,
-        )
+        """)
 
     def test_17(self):
         _assert_dafsa(
@@ -460,8 +442,7 @@ class TestDafsa(unittest.TestCase):
         acow
         acow1=
         t=
-        """,
-        )
+        """)
 
     def test_18(self):
         _assert_dafsa(
@@ -483,8 +464,7 @@ class TestDafsa(unittest.TestCase):
         abcxyzc1=
         b
         bc=
-        """,
-        )
+        """)
 
     def test_19(self):
         _assert_dafsa(
@@ -508,8 +488,7 @@ class TestDafsa(unittest.TestCase):
         c.z=
         d
         d.=
-        """,
-        )
+        """)
 
     def test_20(self):
         _assert_dafsa(
@@ -537,9 +516,8 @@ class TestDafsa(unittest.TestCase):
         acz=
         b
         bc=
-        """,
-        )
+        """)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

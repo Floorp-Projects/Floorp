@@ -23,8 +23,7 @@ from mozbuild.base import (
     BinaryNotFoundException,
 )
 
-SUPPORTED_APPS = ["firefox", "android", "thunderbird"]
-
+SUPPORTED_APPS = ['firefox', 'android', 'thunderbird']
 
 def create_parser_tests():
     from marionette_harness.runtests import MarionetteArguments
@@ -38,14 +37,17 @@ def create_parser_tests():
 def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
 
-    from marionette_harness.runtests import MarionetteTestRunner, MarionetteHarness
+    from marionette_harness.runtests import (
+        MarionetteTestRunner,
+        MarionetteHarness
+    )
 
     parser = create_parser_tests()
 
     args = argparse.Namespace(tests=tests)
 
     args.binary = binary
-    args.logger = kwargs.pop("log", None)
+    args.logger = kwargs.pop('log', None)
 
     for k, v in iteritems(kwargs):
         setattr(args, k, v)
@@ -53,9 +55,9 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
     parser.verify_usage(args)
 
     if not args.logger:
-        args.logger = commandline.setup_logging(
-            "Marionette Unit Tests", args, {"mach": sys.stdout}
-        )
+        args.logger = commandline.setup_logging("Marionette Unit Tests",
+                                                args,
+                                                {"mach": sys.stdout})
     failed = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
     if failed > 0:
         return 1
@@ -65,13 +67,12 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
 
 @CommandProvider
 class MarionetteTest(MachCommandBase):
-    @Command(
-        "marionette-test",
-        category="testing",
-        description="Remote control protocol to Gecko, used for browser automation.",
-        conditions=[functools.partial(conditions.is_buildapp_in, apps=SUPPORTED_APPS)],
-        parser=create_parser_tests,
-    )
+    @Command("marionette-test",
+             category="testing",
+             description="Remote control protocol to Gecko, used for browser automation.",
+             conditions=[functools.partial(conditions.is_buildapp_in, apps=SUPPORTED_APPS)],
+             parser=create_parser_tests,
+             )
     def marionette_test(self, tests, **kwargs):
         if "test_objects" in kwargs:
             tests = []
@@ -81,32 +82,23 @@ class MarionetteTest(MachCommandBase):
 
         if not tests:
             if conditions.is_thunderbird(self):
-                tests = [
-                    os.path.join(
-                        self.topsrcdir, "comm/testing/marionette/unit-tests.ini"
-                    )
-                ]
+                tests = [os.path.join(self.topsrcdir,
+                         "comm/testing/marionette/unit-tests.ini")]
             else:
-                tests = [
-                    os.path.join(
-                        self.topsrcdir,
-                        "testing/marionette/harness/marionette_harness/tests/unit-tests.ini",
-                    )
-                ]
+                tests = [os.path.join(self.topsrcdir,
+                         "testing/marionette/harness/marionette_harness/tests/unit-tests.ini")]
 
-        if not kwargs.get("binary") and (
-            conditions.is_firefox(self) or conditions.is_thunderbird(self)
-        ):
+        if not kwargs.get("binary") and \
+                (conditions.is_firefox(self) or conditions.is_thunderbird(self)):
             try:
                 kwargs["binary"] = self.get_binary_path("app")
             except BinaryNotFoundException as e:
-                self.log(
-                    logging.ERROR,
-                    "marionette-test",
-                    {"error": str(e)},
-                    "ERROR: {error}",
-                )
-                self.log(logging.INFO, "marionette-test", {"help": e.help()}, "{help}")
+                self.log(logging.ERROR, 'marionette-test',
+                         {'error': str(e)},
+                         'ERROR: {error}')
+                self.log(logging.INFO, 'marionette-test',
+                         {'help': e.help()},
+                         '{help}')
                 return 1
 
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)

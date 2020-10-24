@@ -4,24 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 @template
-def SignedAppFile(name, flags, app_directory="app/"):
-    if not CONFIG["COMPILE_ENVIRONMENT"]:
+def SignedAppFile(name, flags, app_directory='app/'):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
         return
 
     GENERATED_FILES += [name]
     props = GENERATED_FILES[name]
-    props.script = "/security/manager/ssl/tests/unit/sign_app.py"
+    props.script = '/security/manager/ssl/tests/unit/sign_app.py'
     props.inputs = [app_directory]
     props.flags = flags
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/test_signed_apps' ->
     # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_signed_apps.
     files = TEST_HARNESS_FILES.xpcshell
-    for part in RELATIVEDIR.split("/"):
+    for part in RELATIVEDIR.split('/'):
         files = files[part]
-    files += ["!%s" % name]
+    files += ['!%s' % name]
 
 
 # Except for unusual testcases (unknown issuer, unsigned app, empty
@@ -36,16 +35,16 @@ def SignedAppFile(name, flags, app_directory="app/"):
 # hashes, and the pkcs#7 file only has sha-256.
 #
 # Temporarily disabled. See bug 1256495.
-# signed_app_files = (
+#signed_app_files = (
 #    ['unknown_issuer_app.zip', '-i', 'unknown issuer', '-p', 'sha256'],
 #    ['unsigned_app.zip'],
 #    ['empty_signerInfos.zip', '-e'],
-# )
+#)
 #
-# for signed_app_file_params in signed_app_files:
+#for signed_app_file_params in signed_app_files:
 #    SignedAppFile(signed_app_file_params[0], signed_app_file_params[1:])
 #
-# for mf_algs in [['1'], ['256'], ['1', '256']]:
+#for mf_algs in [['1'], ['256'], ['1', '256']]:
 #    for sf_algs in [['1'], ['256'], ['1', '256']]:
 #        for p7_algs in [['1'], ['256'], ['1', '256']]:
 #            filename = "app_mf-%s_sf-%s_p7-%s.zip" % ('-'.join(mf_algs), '-'.join(sf_algs), '-'.join(p7_algs))
@@ -62,11 +61,11 @@ def SignedAppFile(name, flags, app_directory="app/"):
 #            SignedAppFile(filename, args)
 #
 # COSE test-cases
-# SignedAppFile('cose_signed_with_pkcs7.zip', ['-c', 'ES256', '-p', 'sha256'])
-# SignedAppFile('cose_int_signed_with_pkcs7.zip', ['-c', 'ES256', '-r', 'xpcshell signed apps test root', '-p', 'sha256'])
-# SignedAppFile('cose_multiple_signed_with_pkcs7.zip', ['-c', 'ES256', '-c', 'ES384', '-p', 'sha256'])
-# SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
-# SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
-# SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')
-# SignedAppFile('big_manifest.zip', ['-p', 'sha256', '--pad-headers', '2'])
-# SignedAppFile('huge_manifest.zip', ['-p', 'sha256', '--pad-headers', '10'])
+#SignedAppFile('cose_signed_with_pkcs7.zip', ['-c', 'ES256', '-p', 'sha256'])
+#SignedAppFile('cose_int_signed_with_pkcs7.zip', ['-c', 'ES256', '-r', 'xpcshell signed apps test root', '-p', 'sha256'])
+#SignedAppFile('cose_multiple_signed_with_pkcs7.zip', ['-c', 'ES256', '-c', 'ES384', '-p', 'sha256'])
+#SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
+#SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
+#SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')
+#SignedAppFile('big_manifest.zip', ['-p', 'sha256', '--pad-headers', '2'])
+#SignedAppFile('huge_manifest.zip', ['-p', 'sha256', '--pad-headers', '10'])

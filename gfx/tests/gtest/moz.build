@@ -5,87 +5,81 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "gfxSurfaceRefCountTest.cpp",
-    "MockWidget.cpp",
-    "PolygonTestUtils.cpp",
-    "TestArena.cpp",
-    "TestArrayView.cpp",
-    "TestBSPTree.cpp",
-    "TestBufferRotation.cpp",
-    "TestColorNames.cpp",
-    "TestConfigManager.cpp",
-    "TestGfxWidgets.cpp",
-    "TestLayers.cpp",
-    "TestMatrix.cpp",
-    "TestMoz2D.cpp",
-    "TestPolygon.cpp",
-    "TestQcms.cpp",
-    "TestRegion.cpp",
-    "TestSkipChars.cpp",
-    "TestSwizzle.cpp",
-    "TestTextures.cpp",
-    "TestTreeTraversal.cpp",
+    'gfxSurfaceRefCountTest.cpp',
+    'MockWidget.cpp',
+    'PolygonTestUtils.cpp',
+    'TestArena.cpp',
+    'TestArrayView.cpp',
+    'TestBSPTree.cpp',
+    'TestBufferRotation.cpp',
+    'TestColorNames.cpp',
+    'TestConfigManager.cpp',
+    'TestGfxWidgets.cpp',
+    'TestLayers.cpp',
+    'TestMatrix.cpp',
+    'TestMoz2D.cpp',
+    'TestPolygon.cpp',
+    'TestQcms.cpp',
+    'TestRegion.cpp',
+    'TestSkipChars.cpp',
+    'TestSwizzle.cpp',
+    'TestTextures.cpp',
+    'TestTreeTraversal.cpp',
 ]
 
 # skip the test on windows10-aarch64 due to perma-crash - bug 1544961
-if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
+if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
     UNIFIED_SOURCES += [
-        "TestVsync.cpp",
+        'TestVsync.cpp',
     ]
 
-if CONFIG["OS_TARGET"] != "Android":
+if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
-        "TestCompositor.cpp",
-        "TestRect.cpp",
-        "TestTextureCompatibility.cpp",
+        'TestCompositor.cpp',
+        'TestRect.cpp',
+        'TestTextureCompatibility.cpp',
     ]
 
-UNIFIED_SOURCES += [
-    "/gfx/2d/unittest/%s" % p
-    for p in [
-        "TestBase.cpp",
-        "TestBugs.cpp",
-        "TestCairo.cpp",
-        "TestPoint.cpp",
-        "TestScaling.cpp",
-    ]
-]
+UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
+    'TestBase.cpp',
+    'TestBugs.cpp',
+    'TestCairo.cpp',
+    'TestPoint.cpp',
+    'TestScaling.cpp',
+]]
 
 # not UNIFIED_SOURCES because layout_common_table_test.cc has classes
 # in an anonymous namespace which result in a GCC error when used in
 # tests (e g. "error: 'ScriptListTableTest_TestSuccess_Test' has a field
 # 'ScriptListTableTest_TestSuccess_Test::<anonymous>' whose type uses
 # the anonymous namespace").
-SOURCES += [
-    "/gfx/ots/tests/%s" % p
-    for p in [
-        "cff_charstring_test.cc",
-        "layout_common_table_test.cc",
-    ]
-]
+SOURCES += [ '/gfx/ots/tests/%s' % p for p in [
+    'cff_charstring_test.cc',
+    'layout_common_table_test.cc',
+]]
 
 # ICC profiles used for verifying QCMS transformations. The copyright
 # notice embedded in the profiles should be reviewed to ensure there are
 # no known restrictions on distribution.
 TEST_HARNESS_FILES.gtest += [
-    "icc_profiles/lcms_samsung_syncmaster.icc",
-    "icc_profiles/lcms_thinkpad_w540.icc",
+    'icc_profiles/lcms_samsung_syncmaster.icc',
+    'icc_profiles/lcms_thinkpad_w540.icc',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/gfx/2d",
-    "/gfx/2d/unittest",
-    "/gfx/config",
-    "/gfx/layers",
-    "/gfx/ots/src",
-    "/gfx/qcms",
+    '/gfx/2d',
+    '/gfx/2d/unittest',
+    '/gfx/config',
+    '/gfx/layers',
+    '/gfx/ots/src',
+    '/gfx/qcms',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

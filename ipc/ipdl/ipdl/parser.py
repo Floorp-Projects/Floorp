@@ -13,19 +13,18 @@ from ipdl.ast import *
 class ParseError(Exception):
     def __init__(self, loc, fmt, *args):
         self.loc = loc
-        self.error = (
-            "%s%s: error: %s" % (Parser.includeStackString(), loc, fmt)
-        ) % args
+        self.error = ('%s%s: error: %s' % (
+            Parser.includeStackString(), loc, fmt)) % args
 
     def __str__(self):
         return self.error
 
 
 def _safeLinenoValue(t):
-    lineno, value = 0, "???"
-    if hasattr(t, "lineno"):
+    lineno, value = 0, '???'
+    if hasattr(t, 'lineno'):
         lineno = t.lineno
-    if hasattr(t, "value"):
+    if hasattr(t, 'value'):
         value = t.value
     return lineno, value
 
@@ -50,7 +49,7 @@ class Parser:
         self.debug = debug
         self.filename = None
         self.includedirs = None
-        self.loc = None  # not always up to date
+        self.loc = None         # not always up to date
         self.lexer = None
         self.parser = None
         self.tu = TranslationUnit(type, name)
@@ -62,11 +61,10 @@ class Parser:
         if self.tu.name in Parser.parsed:
             priorTU = Parser.parsed[self.tu.name].tu
             if priorTU.filename != filename:
-                _error(
-                    Loc(filename),
-                    "Trying to load `%s' from a file when we'd already seen it in file `%s'"
-                    % (self.tu.name, priorTU.filename),
-                )
+                _error(Loc(filename),
+                       "Trying to load `%s' from a file when we'd already seen it in file `%s'" % (
+                           self.tu.name,
+                           priorTU.filename))
 
             return priorTU
 
@@ -81,16 +79,17 @@ class Parser:
         Parser.current = self
 
         try:
-            ast = self.parser.parse(input=input, lexer=self.lexer, debug=self.debug)
+            ast = self.parser.parse(input=input, lexer=self.lexer,
+                                    debug=self.debug)
         finally:
             Parser.current = Parser.parseStack.pop()
 
         return ast
 
     def resolveIncludePath(self, filepath):
-        """Return the absolute path from which the possibly partial
-        |filepath| should be read, or |None| if |filepath| cannot be located."""
-        for incdir in self.includedirs + [""]:
+        '''Return the absolute path from which the possibly partial
+|filepath| should be read, or |None| if |filepath| cannot be located.'''
+        for incdir in self.includedirs + ['']:
             realpath = os.path.join(incdir, filepath)
             if os.path.isfile(realpath):
                 return os.path.abspath(realpath)
@@ -103,12 +102,10 @@ class Parser:
     # which can be printed above a proper error message or warning
     @staticmethod
     def includeStackString():
-        s = ""
+        s = ''
         for parse in Parser.parseStack[1:]:
             s += "  in file included from `%s', line %d:\n" % (
-                parse.loc.filename,
-                parse.loc.lineno,
-            )
+                parse.loc.filename, parse.loc.lineno)
         return s
 
 
@@ -118,68 +115,63 @@ def locFromTok(p, num):
 
 # -----------------------------------------------------------------------------
 
-reserved = set(
-    (
-        "async",
-        "both",
-        "child",
-        "class",
-        "comparable",
-        "compress",
-        "compressall",
-        "from",
-        "include",
-        "intr",
-        "manager",
-        "manages",
-        "namespace",
-        "nested",
-        "nullable",
-        "or",
-        "parent",
-        "prio",
-        "protocol",
-        "refcounted",
-        "moveonly",
-        "returns",
-        "struct",
-        "sync",
-        "tainted",
-        "union",
-        "UniquePtr",
-        "upto",
-        "using",
-        "verify",
-    )
-)
+reserved = set((
+    'async',
+    'both',
+    'child',
+    'class',
+    'comparable',
+    'compress',
+    'compressall',
+    'from',
+    'include',
+    'intr',
+    'manager',
+    'manages',
+    'namespace',
+    'nested',
+    'nullable',
+    'or',
+    'parent',
+    'prio',
+    'protocol',
+    'refcounted',
+    'moveonly',
+    'returns',
+    'struct',
+    'sync',
+    'tainted',
+    'union',
+    'UniquePtr',
+    'upto',
+    'using',
+    'verify'))
 tokens = [
-    "COLONCOLON",
-    "ID",
-    "STRING",
+    'COLONCOLON', 'ID', 'STRING',
 ] + [r.upper() for r in reserved]
 
-t_COLONCOLON = "::"
+t_COLONCOLON = '::'
 
-literals = "(){}[]<>;:,?"
-t_ignore = " \f\t\v"
+literals = '(){}[]<>;:,?'
+t_ignore = ' \f\t\v'
 
 
 def t_linecomment(t):
-    r"//[^\n]*"
+    r'//[^\n]*'
 
 
 def t_multilinecomment(t):
-    r"/\*(\n|.)*?\*/"
-    t.lexer.lineno += t.value.count("\n")
+    r'/\*(\n|.)*?\*/'
+    t.lexer.lineno += t.value.count('\n')
 
 
 def t_NL(t):
-    r"(?:\r\n|\n|\n)+"
+    r'(?:\r\n|\n|\n)+'
     t.lexer.lineno += len(t.value)
 
 
 def t_ID(t):
-    r"[a-zA-Z_][a-zA-Z0-9_]*"
+    r'[a-zA-Z_][a-zA-Z0-9_]*'
     if t.value in reserved:
         t.type = t.value.upper()
     return t
@@ -192,12 +184,8 @@ def t_STRING(t):
 
 
 def t_error(t):
-    _error(
-        Loc(Parser.current.filename, t.lineno),
-        "lexically invalid characters `%s",
-        t.value,
-    )
-
+    _error(Loc(Parser.current.filename, t.lineno),
+           'lexically invalid characters `%s', t.value)
 
 # -----------------------------------------------------------------------------
 
@@ -226,16 +214,16 @@ def p_TranslationUnit(p):
                 _error(thing.loc, "only one protocol definition per file")
             tu.protocol = thing
         else:
-            assert 0
+            assert(0)
 
     # The "canonical" namespace of the tu, what it's considered to be
     # in for the purposes of C++: |#include "foo/bar/TU.h"|
     if tu.protocol:
-        assert tu.filetype == "protocol"
+        assert tu.filetype == 'protocol'
         tu.namespaces = tu.protocol.namespaces
         tu.name = tu.protocol.name
     else:
-        assert tu.filetype == "header"
+        assert tu.filetype == 'header'
         # There's not really a canonical "thing" in headers.  So
         # somewhat arbitrarily use the namespace of the last
         # interesting thing that was declared.
@@ -245,14 +233,13 @@ def p_TranslationUnit(p):
 
     p[0] = tu
 
-
 # --------------------
 # Preamble
 
 
 def p_Preamble(p):
     """Preamble : Preamble PreambleStmt ';'
-    |"""
+                |"""
     if 1 == len(p):
         p[0] = []
     else:
@@ -262,8 +249,8 @@ def p_Preamble(p):
 
 def p_PreambleStmt(p):
     """PreambleStmt : CxxIncludeStmt
-    | IncludeStmt
-    | UsingStmt"""
+                    | IncludeStmt
+                    | UsingStmt"""
     p[0] = p[1]
 
 
@@ -274,21 +261,22 @@ def p_CxxIncludeStmt(p):
 
 def p_IncludeStmt(p):
     """IncludeStmt : INCLUDE PROTOCOL ID
-    | INCLUDE ID"""
+                   | INCLUDE ID"""
     loc = locFromTok(p, 1)
 
     Parser.current.loc = loc
     if 4 == len(p):
         id = p[3]
-        type = "protocol"
+        type = 'protocol'
     else:
         id = p[2]
-        type = "header"
+        type = 'header'
     inc = Include(loc, type, id)
 
     path = Parser.current.resolveIncludePath(inc.file)
     if path is None:
-        raise ParseError(loc, "can't locate include file `%s'" % (inc.file))
+        raise ParseError(loc, "can't locate include file `%s'" % (
+            inc.file))
 
     inc.tu = Parser(type, id).parse(open(path).read(), path, Parser.current.includedirs)
     p[0] = inc
@@ -296,40 +284,37 @@ def p_IncludeStmt(p):
 
 def p_UsingKind(p):
     """UsingKind : CLASS
-    | STRUCT
-    |"""
+                 | STRUCT
+                 |"""
     p[0] = p[1] if 2 == len(p) else None
 
 
 def p_MaybeComparable(p):
     """MaybeComparable : COMPARABLE
-    |"""
+                        |"""
     p[0] = 2 == len(p)
 
 
 def p_MaybeRefcounted(p):
     """MaybeRefcounted : REFCOUNTED
-    |"""
+                       |"""
     p[0] = 2 == len(p)
 
 
 def p_MaybeMoveOnly(p):
     """MaybeMoveOnly : MOVEONLY
-    |"""
+                       |"""
     p[0] = 2 == len(p)
 
 
 def p_UsingStmt(p):
     """UsingStmt : USING MaybeRefcounted MaybeMoveOnly UsingKind CxxType FROM STRING"""
-    p[0] = UsingStmt(
-        locFromTok(p, 1),
-        refcounted=p[2],
-        moveonly=p[3],
-        kind=p[4],
-        cxxTypeSpec=p[5],
-        cxxHeader=p[7],
-    )
-
+    p[0] = UsingStmt(locFromTok(p, 1),
+                     refcounted=p[2],
+                     moveonly=p[3],
+                     kind=p[4],
+                     cxxTypeSpec=p[5],
+                     cxxHeader=p[7])
 
 # --------------------
 # Namespaced stuff
@@ -337,7 +322,7 @@ def p_UsingStmt(p):
 
 def p_NamespacedStuff(p):
     """NamespacedStuff : NamespacedStuff NamespaceThing
-    | NamespaceThing"""
+                       | NamespaceThing"""
     if 2 == len(p):
         p[0] = p[1]
     else:
@@ -347,9 +332,9 @@ def p_NamespacedStuff(p):
 
 def p_NamespaceThing(p):
     """NamespaceThing : NAMESPACE ID '{' NamespacedStuff '}'
-    | StructDecl
-    | UnionDecl
-    | ProtocolDefn"""
+                      | StructDecl
+                      | UnionDecl
+                      | ProtocolDefn"""
     if 2 == len(p):
         p[0] = [p[1]]
     else:
@@ -360,7 +345,7 @@ def p_NamespaceThing(p):
 
 def p_StructDecl(p):
     """StructDecl : MaybeComparable STRUCT ID '{' StructFields '}' ';'
-    | MaybeComparable STRUCT ID '{' '}' ';'"""
+                  | MaybeComparable STRUCT ID '{' '}' ';'"""
     if 8 == len(p):
         p[0] = StructDecl(locFromTok(p, 2), p[3], p[5], p[1])
     else:
@@ -369,7 +354,7 @@ def p_StructDecl(p):
 
 def p_StructFields(p):
     """StructFields : StructFields StructField ';'
-    | StructField ';'"""
+                    | StructField ';'"""
     if 3 == len(p):
         p[0] = [p[1]]
     else:
@@ -389,7 +374,7 @@ def p_UnionDecl(p):
 
 def p_ComponentTypes(p):
     """ComponentTypes : ComponentTypes Type ';'
-    | Type ';'"""
+                      | Type ';'"""
     if 3 == len(p):
         p[0] = [p[1]]
     else:
@@ -408,11 +393,9 @@ def p_ProtocolDefn(p):
     protocol.refcounted = p[2]
     p[0] = protocol
 
-    if Parser.current.type == "header":
-        _error(
-            protocol.loc,
-            "can't define a protocol in a header.  Do it in a protocol spec instead.",
-        )
+    if Parser.current.type == 'header':
+        _error(protocol.loc,
+               'can\'t define a protocol in a header.  Do it in a protocol spec instead.')
 
 
 def p_ProtocolBody(p):
@@ -423,10 +406,9 @@ def p_ProtocolBody(p):
 # --------------------
 # manager/manages stmts
 
-
 def p_ManagersStmtOpt(p):
     """ManagersStmtOpt : ManagersStmt ManagesStmtsOpt
-    | ManagesStmtsOpt"""
+                       | ManagesStmtsOpt"""
     if 2 == len(p):
         p[0] = p[1]
     else:
@@ -444,7 +426,7 @@ def p_ManagersStmt(p):
 
 def p_ManagerList(p):
     """ManagerList : ID
-    | ManagerList OR ID"""
+                   | ManagerList OR ID"""
     if 2 == len(p):
         p[0] = [Manager(locFromTok(p, 1), p[1])]
     else:
@@ -454,7 +436,7 @@ def p_ManagerList(p):
 
 def p_ManagesStmtsOpt(p):
     """ManagesStmtsOpt : ManagesStmt ManagesStmtsOpt
-    | MessageDeclsOpt"""
+                       | MessageDeclsOpt"""
     if 2 == len(p):
         p[0] = p[1]
     else:
@@ -470,10 +452,9 @@ def p_ManagesStmt(p):
 # --------------------
 # Message decls
 
-
 def p_MessageDeclsOpt(p):
     """MessageDeclsOpt : MessageDeclThing MessageDeclsOpt
-    |"""
+                       | """
     if 1 == len(p):
         # we fill in |loc| in the Protocol rule
         p[0] = Protocol(None)
@@ -484,7 +465,7 @@ def p_MessageDeclsOpt(p):
 
 def p_MessageDeclThing(p):
     """MessageDeclThing : MessageDirectionLabel ':' MessageDecl ';'
-    | MessageDecl ';'"""
+                        | MessageDecl ';'"""
     if 3 == len(p):
         p[0] = p[1]
     else:
@@ -493,13 +474,13 @@ def p_MessageDeclThing(p):
 
 def p_MessageDirectionLabel(p):
     """MessageDirectionLabel : PARENT
-    | CHILD
-    | BOTH"""
-    if p[1] == "parent":
+                             | CHILD
+                             | BOTH"""
+    if p[1] == 'parent':
         Parser.current.direction = IN
-    elif p[1] == "child":
+    elif p[1] == 'child':
         Parser.current.direction = OUT
-    elif p[1] == "both":
+    elif p[1] == 'both':
         Parser.current.direction = INOUT
     else:
         assert 0
@@ -513,7 +494,7 @@ def p_MessageDecl(p):
     msg.sendSemantics = p[1][2]
 
     if Parser.current.direction is None:
-        _error(msg.loc, "missing message direction")
+        _error(msg.loc, 'missing message direction')
     msg.direction = Parser.current.direction
 
     p[0] = msg
@@ -539,7 +520,7 @@ def p_MessageInParams(p):
 
 def p_MessageOutParams(p):
     """MessageOutParams : RETURNS '(' ParamList ')'
-    |"""
+                        | """
     if 1 == len(p):
         p[0] = []
     else:
@@ -548,8 +529,8 @@ def p_MessageOutParams(p):
 
 def p_OptionalMessageModifiers(p):
     """OptionalMessageModifiers : OptionalMessageModifiers MessageModifier
-    | MessageModifier
-    |"""
+                                | MessageModifier
+                                | """
     if 1 == len(p):
         p[0] = []
     elif 2 == len(p):
@@ -560,9 +541,9 @@ def p_OptionalMessageModifiers(p):
 
 
 def p_MessageModifier(p):
-    """MessageModifier : MessageVerify
-    | MessageCompress
-    | MessageTainted"""
+    """ MessageModifier : MessageVerify
+                        | MessageCompress
+                        | MessageTainted """
     p[0] = p[1]
 
 
@@ -573,9 +554,8 @@ def p_MessageVerify(p):
 
 def p_MessageCompress(p):
     """MessageCompress : COMPRESS
-    | COMPRESSALL"""
+                       | COMPRESSALL"""
     p[0] = p[1]
-
 
 def p_MessageTainted(p):
     """MessageTainted : TAINTED"""
@@ -586,35 +566,36 @@ def p_MessageTainted(p):
 # Minor stuff
 def p_Nested(p):
     """Nested : ID"""
-    kinds = {"not": 1, "inside_sync": 2, "inside_cpow": 3}
+    kinds = {'not': 1,
+             'inside_sync': 2,
+             'inside_cpow': 3}
     if p[1] not in kinds:
-        _error(
-            locFromTok(p, 1), "Expected not, inside_sync, or inside_cpow for nested()"
-        )
+        _error(locFromTok(p, 1), "Expected not, inside_sync, or inside_cpow for nested()")
 
-    p[0] = {"nested": kinds[p[1]]}
+    p[0] = {'nested': kinds[p[1]]}
 
 
 def p_Priority(p):
     """Priority : ID"""
-    kinds = {"normal": 1, "input": 2, "high": 3, "mediumhigh": 4}
+    kinds = {'normal': 1,
+             'input': 2,
+             'high': 3,
+             'mediumhigh': 4}
     if p[1] not in kinds:
-        _error(
-            locFromTok(p, 1), "Expected normal, input, high or mediumhigh for prio()"
-        )
+        _error(locFromTok(p, 1), "Expected normal, input, high or mediumhigh for prio()")
 
-    p[0] = {"prio": kinds[p[1]]}
+    p[0] = {'prio': kinds[p[1]]}
 
 
 def p_SendQualifier(p):
     """SendQualifier : NESTED '(' Nested ')'
-    | PRIO '(' Priority ')'"""
+                     | PRIO '(' Priority ')'"""
     p[0] = p[3]
 
 
 def p_SendQualifierList(p):
     """SendQualifierList : SendQualifier SendQualifierList
-    |"""
+                         | """
     if len(p) > 1:
         p[0] = p[1]
         p[0].update(p[2])
@@ -624,30 +605,30 @@ def p_SendQualifierList(p):
 
 def p_SendSemanticsQual(p):
     """SendSemanticsQual : SendQualifierList ASYNC
-    | SendQualifierList SYNC
-    | INTR"""
+                         | SendQualifierList SYNC
+                         | INTR"""
     quals = {}
     if len(p) == 3:
         quals = p[1]
         mtype = p[2]
     else:
-        mtype = "intr"
+        mtype = 'intr'
 
-    if mtype == "async":
+    if mtype == 'async':
         mtype = ASYNC
-    elif mtype == "sync":
+    elif mtype == 'sync':
         mtype = SYNC
-    elif mtype == "intr":
+    elif mtype == 'intr':
         mtype = INTR
     else:
         assert 0
 
-    p[0] = [quals.get("nested", NOT_NESTED), quals.get("prio", NORMAL_PRIORITY), mtype]
+    p[0] = [quals.get('nested', NOT_NESTED), quals.get('prio', NORMAL_PRIORITY), mtype]
 
 
 def p_OptionalProtocolSendSemanticsQual(p):
     """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
-    |"""
+                                         | """
     if 2 == len(p):
         p[0] = p[1]
     else:
@@ -656,22 +637,22 @@ def p_OptionalProtocolSendSemanticsQual(p):
 
 def p_ProtocolSendSemanticsQual(p):
     """ProtocolSendSemanticsQual : ASYNC
-    | SYNC
-    | NESTED '(' UPTO Nested ')' ASYNC
-    | NESTED '(' UPTO Nested ')' SYNC
-    | INTR"""
-    if p[1] == "nested":
+                                 | SYNC
+                                 | NESTED '(' UPTO Nested ')' ASYNC
+                                 | NESTED '(' UPTO Nested ')' SYNC
+                                 | INTR"""
+    if p[1] == 'nested':
         mtype = p[6]
         nested = p[4]
     else:
         mtype = p[1]
         nested = NOT_NESTED
 
-    if mtype == "async":
+    if mtype == 'async':
         mtype = ASYNC
-    elif mtype == "sync":
+    elif mtype == 'sync':
         mtype = SYNC
-    elif mtype == "intr":
+    elif mtype == 'intr':
         mtype = INTR
     else:
         assert 0
@@ -681,8 +662,8 @@ def p_ProtocolSendSemanticsQual(p):
 
 def p_ParamList(p):
     """ParamList : ParamList ',' Param
-    | Param
-    |"""
+                 | Param
+                 | """
     if 1 == len(p):
         p[0] = []
     elif 2 == len(p):
@@ -706,9 +687,9 @@ def p_Type(p):
 
 def p_BasicType(p):
     """BasicType : CxxID
-    | CxxID '[' ']'
-    | CxxID '?'
-    | CxxUniquePtrInst"""
+                 | CxxID '[' ']'
+                 | CxxID '?'
+                 | CxxUniquePtrInst"""
     # ID == CxxType; we forbid qnames here,
     # in favor of the |using| declaration
     if not isinstance(p[1], TypeSpec):
@@ -728,9 +709,8 @@ def p_BasicType(p):
 
 def p_MaybeNullable(p):
     """MaybeNullable : NULLABLE
-    |"""
-    p[0] = 2 == len(p)
-
+                     | """
+    p[0] = (2 == len(p))
 
 # --------------------
 # C++ stuff
@@ -738,7 +718,7 @@ def p_MaybeNullable(p):
 
 def p_CxxType(p):
     """CxxType : QualifiedID
-    | CxxID"""
+               | CxxID"""
     if isinstance(p[1], QualifiedId):
         p[0] = TypeSpec(p[1].loc, p[1])
     else:
@@ -748,7 +728,7 @@ def p_CxxType(p):
 
 def p_QualifiedID(p):
     """QualifiedID : QualifiedID COLONCOLON CxxID
-    | CxxID COLONCOLON CxxID"""
+                   | CxxID COLONCOLON CxxID"""
     if isinstance(p[1], QualifiedId):
         loc, id = p[3]
         p[1].qualify(id)
@@ -761,7 +741,7 @@ def p_QualifiedID(p):
 
 def p_CxxID(p):
     """CxxID : ID
-    | CxxTemplateInst"""
+             | CxxTemplateInst"""
     if isinstance(p[1], tuple):
         p[0] = p[1]
     else:
@@ -770,7 +750,7 @@ def p_CxxID(p):
 
 def p_CxxTemplateInst(p):
     """CxxTemplateInst : ID '<' ID '>'"""
-    p[0] = (locFromTok(p, 1), str(p[1]) + "<" + str(p[3]) + ">")
+    p[0] = (locFromTok(p, 1), str(p[1]) + '<' + str(p[3]) + '>')
 
 
 def p_CxxUniquePtrInst(p):
@@ -780,4 +760,5 @@ def p_CxxUniquePtrInst(p):
 
 def p_error(t):
     lineno, value = _safeLinenoValue(t)
-    _error(Loc(Parser.current.filename, lineno), "bad syntax near `%s'", value)
+    _error(Loc(Parser.current.filename, lineno),
+           "bad syntax near `%s'", value)

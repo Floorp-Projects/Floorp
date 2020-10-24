@@ -106,8 +106,7 @@ def run_command(log, cmd, job_count):
 
     if time.time() - start > MAX_TIME:
         log.error(
-            "[TEST-UNEXPECTED FAIL] Timed out waiting for response from command",
-            cmd=cmd,
+            "[TEST-UNEXPECTED FAIL] Timed out waiting for response from command", cmd=cmd
         )
         return 1, "Timed out"
 
@@ -162,7 +161,7 @@ def append_result(log, suites, test_name, name, result, extra_options):
 
     subtests = suites.setdefault(
         test_name,
-        {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options},
+        {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options}
     )["subtests"]
 
     if name not in subtests:
@@ -218,7 +217,7 @@ def read_json(json_path, schema):
         The contents of the file at ``json_path`` interpreted as JSON.
     """
     try:
-        with open(str(json_path), "r", encoding="utf-8", errors="ignore") as f:
+        with open(str(json_path),  "r", encoding="utf-8", errors="ignore") as f:
             data = json.load(f)
     except Exception:
         log.error("Could not read JSON file", path=json_path, exc_info=True)
@@ -268,7 +267,7 @@ def main(log, args):
         log.error(
             "Could not read/extract browsertime results archive",
             path=browsertime_results_path,
-            exc_info=True,
+            exc_info=True
         )
         return 1
     log.info("Extracted browsertime results", path=browsertime_results_path)
@@ -278,7 +277,9 @@ def main(log, args):
         jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
     except Exception:
         log.error(
-            "Could not open the jobs.json file", path=jobs_json_path, exc_info=True
+            "Could not open the jobs.json file",
+            path=jobs_json_path,
+            exc_info=True
         )
         return 1
 
@@ -294,7 +295,7 @@ def main(log, args):
             log.error(
                 "Could not open a browsertime.json file",
                 path=browsertime_json_path,
-                exc_info=True,
+                exc_info=True
             )
             return 1
 
@@ -304,9 +305,8 @@ def main(log, args):
                 jobs.append(
                     Job(
                         test_name=job["test_name"],
-                        extra_options=len(job["extra_options"]) > 0
-                        and job["extra_options"]
-                        or jobs_json["extra_options"],
+                        extra_options=len(job["extra_options"]) > 0 and
+                        job["extra_options"] or jobs_json["extra_options"],
                         json_path=browsertime_json_path,
                         video_path=browsertime_json_path.parent / video,
                         count=count,
@@ -340,9 +340,7 @@ def main(log, args):
                 # Python 3.5 requires a str object (not 3.6+)
                 res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
-                    append_result(
-                        log, suites, job.test_name, name, value, job.extra_options
-                    )
+                    append_result(log, suites, job.test_name, name, value, job.extra_options)
 
     suites = [get_suite(suite) for suite in suites.values()]
 
@@ -358,21 +356,16 @@ def main(log, args):
     # the on-going quality of our recordings.
     try:
         from similarity import calculate_similarity
-
-        for name, value in calculate_similarity(
-            jobs_json, fetch_dir, OUTPUT_DIR
-        ).items():
+        for name, value in calculate_similarity(jobs_json, fetch_dir, OUTPUT_DIR).items():
             if value is None:
                 continue
-            suites[0]["subtests"].append(
-                {
-                    "name": name,
-                    "value": value,
-                    "replicates": [value],
-                    "lowerIsBetter": False,
-                    "unit": "a.u.",
-                }
-            )
+            suites[0]["subtests"].append({
+                "name": name,
+                "value": value,
+                "replicates": [value],
+                "lowerIsBetter": False,
+                "unit": "a.u.",
+            })
     except Exception:
         log.info("Failed to calculate similarity score", exc_info=True)
 
@@ -415,7 +408,7 @@ def run_visual_metrics(job, visualmetrics_path, options):
         "--logformat",
         "[%(levelname)s] - %(message)s",
         "--video",
-        str(job.video_path),
+        str(job.video_path)
     ]
     cmd.extend(options)
     return run_command(log, cmd, job.count)

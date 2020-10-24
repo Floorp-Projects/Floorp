@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PREPROCESSED_IPDL_SOURCES += [
-    "foo1.ipdl",
+    'foo1.ipdl',
 ]
 
 IPDL_SOURCES += [
-    "foo.ipdl",
-    "foo2.ipdlh",
+    'foo.ipdl',
+    'foo2.ipdlh',
 ]

@@ -38,5 +38,5 @@ def test_wait_after_process_finished(runner):
     assert runner.process_handler is not None
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

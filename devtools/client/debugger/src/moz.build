@@ -4,17 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "actions",
-    "client",
-    "components",
-    "context-menu",
-    "reducers",
-    "selectors",
-    "utils",
-    "workers",
+    'actions',
+    'client',
+    'components',
+    'context-menu',
+    'reducers',
+    'selectors',
+    'utils',
+    'workers',
 ]
 
 CompiledModules(
-    "main.js",
-    "vendors.js",
+    'main.js',
+    'vendors.js',
 )
