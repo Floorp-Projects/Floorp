@@ -1317,6 +1317,10 @@ nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
     return NS_OK;
   }
 
+  if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    return NS_ERROR_FAILURE;  // XXX Should we just return NS_OK?
+  }
+
   AutoPlaceholderBatch treateAsOneTransaction(*this,
                                               ScrollSelectionIntoView::Yes);
   // Prevent rules testing until we're done
@@ -1333,22 +1337,19 @@ nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
   // Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
-  ErrorResult error;
-  RefPtr<Element> firstSelectedCellElement =
-      GetFirstSelectedTableCellElement(error);
-  if (error.Failed()) {
-    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
-    return error.StealNSResult();
-  }
-
-  if (firstSelectedCellElement) {
+  SelectedTableCellScanner scanner(*SelectionRefPtr());
+  if (scanner.IsInTableCellSelectionMode()) {
     const RefPtr<PresShell> presShell{GetPresShell()};
-    CellIndexes firstCellIndexes(*firstSelectedCellElement, presShell, error);
+    // `MOZ_KnownLive(scanner.ElementsRef()[0])` is safe because scanner
+    // grabs it until it's destroyed later.
+    ErrorResult error;
+    CellIndexes firstCellIndexes(MOZ_KnownLive(scanner.ElementsRef()[0]),
+                                 presShell, error);
     if (error.Failed()) {
       NS_WARNING("CellIndexes failed");
       return error.StealNSResult();
     }
-    cell = firstSelectedCellElement;
+    cell = scanner.ElementsRef()[0];
     startRowIndex = firstCellIndexes.mRow;
     startColIndex = firstCellIndexes.mColumn;
   }
@@ -1356,22 +1357,18 @@ nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
   AutoSelectionSetterAfterTableEdit setCaret(
       *this, table, startRowIndex, startColIndex, ePreviousColumn, false);
 
-  while (cell) {
-    DebugOnly<nsresult> rv = DeleteAllChildrenWithTransaction(*cell);
+  for (RefPtr<Element> selectedCellElement = std::move(cell);
+       selectedCellElement; selectedCellElement = scanner.GetNextElement()) {
+    DebugOnly<nsresult> rvIgnored =
+        DeleteAllChildrenWithTransaction(*selectedCellElement);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DeleteAllChildrenWithTransaction() failed, but ignored");
-    // If selection is not in cell-select mode, we should remove only the cell
-    // which contains first selection range.
-    if (!firstSelectedCellElement) {
-      return NS_OK;
-    }
-    // If there are 2 or more selected cells, keep handling the other selected
-    // cells.
-    cell = GetNextSelectedTableCellElement(error);
-    if (error.Failed()) {
-      NS_WARNING("HTMLEditor::GetNextSelectedTableCellElement() failed");
-      return error.StealNSResult();
+    if (!scanner.IsInTableCellSelectionMode()) {
+      break;
     }
   }
   return NS_OK;
