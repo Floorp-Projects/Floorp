@@ -9,43 +9,35 @@ DisableStlWrapping()
 # Important: for CppUnitTests to be run, they also need to be added
 # to testing/cppunittest.ini.
 
-GeckoCppUnitTests(
-    [
-        "ShowSSEConfig",
-    ],
-    linkage=None,
-)
+GeckoCppUnitTests([
+    'ShowSSEConfig',
+], linkage=None)
 
-CppUnitTests(
-    [
-        "TestBaseProfiler",
-        "TestPrintf",
-    ]
-)
+CppUnitTests([
+    'TestBaseProfiler',
+    'TestPrintf',
+])
 
-with Files("TestBaseProfiler.cpp"):
-    BUG_COMPONENT = ("Core", "Gecko Profiler")
+with Files('TestBaseProfiler.cpp'):
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    GeckoCppUnitTests(
-        [
-            "TestNativeNt",
-            "TestPEExportSection",
-            "TestTimeStampWin",
-        ],
-        linkage=None,
-    )
+if CONFIG['OS_ARCH'] == 'WINNT':
+    GeckoCppUnitTests([
+        'TestNativeNt',
+        'TestPEExportSection',
+        'TestTimeStampWin',
+    ], linkage=None)
     TEST_DIRS += [
-        "interceptor",
-        "gtest",
+        'interceptor',
+        'gtest',
     ]
     OS_LIBS += [
-        "ntdll",
-        "version",
+        'ntdll',
+        'version',
     ]
 
-if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
+if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CC_TYPE'] in ('gcc', 'clang'):
     # This allows us to use wmain as the entry point on mingw
     LDFLAGS += [
-        "-municode",
+        '-municode',
     ]

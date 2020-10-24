@@ -11,20 +11,8 @@ import sys
 import time
 import traceback
 
-from .logtypes import (
-    Unicode,
-    TestId,
-    TestList,
-    Status,
-    SubStatus,
-    Dict,
-    List,
-    Int,
-    Any,
-    Tuple,
-    Boolean,
-    Nullable,
-)
+from .logtypes import (Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple,
+                       Boolean, Nullable)
 from .logtypes import log_action, convertor_registry
 import six
 
@@ -138,10 +126,8 @@ def set_default_logger(default_logger):
     _default_logger_name = default_logger.name
 
 
-log_levels = dict(
-    (k.upper(), v)
-    for v, k in enumerate(["critical", "error", "warning", "info", "debug"])
-)
+log_levels = dict((k.upper(), v) for v, k in
+                  enumerate(["critical", "error", "warning", "info", "debug"]))
 
 lint_levels = ["ERROR", "WARNING"]
 
@@ -156,6 +142,7 @@ class LoggerShutdownError(Exception):
 
 
 class LoggerState(object):
+
     def __init__(self):
         self.reset()
 
@@ -168,6 +155,7 @@ class LoggerState(object):
 
 
 class ComponentState(object):
+
     def __init__(self):
         self.filter_ = None
 
@@ -208,9 +196,7 @@ class StructuredLogger(object):
         are removed, running tests are discarded and components are reset.
         """
         self._state.reset()
-        self._component_state = self._state.component_states[
-            self.component
-        ] = ComponentState()
+        self._component_state = self._state.component_states[self.component] = ComponentState()
 
     def send_message(self, topic, command, *args):
         """Send a message to each handler configured for this logger. This
@@ -249,20 +235,16 @@ class StructuredLogger(object):
         action = raw_data["action"]
         converted_data = convertor_registry[action].convert_known(**raw_data)
         for k, v in six.iteritems(raw_data):
-            if (
-                k not in converted_data
-                and k not in convertor_registry[action].optional_args
-            ):
+            if (k not in converted_data and
+                    k not in convertor_registry[action].optional_args):
                 converted_data[k] = v
 
         data = self._make_log_data(action, converted_data)
 
         if action in ("test_status", "test_end"):
-            if (
-                data["expected"] == data["status"]
-                or data["status"] == "SKIP"
-                or "expected" not in raw_data
-            ):
+            if (data["expected"] == data["status"] or
+                data["status"] == "SKIP" or
+                    "expected" not in raw_data):
                 del data["expected"]
 
         if not self._ensure_suite_state(action, data):
@@ -279,9 +261,7 @@ class StructuredLogger(object):
 
     def _handle_log(self, data):
         if self._state.has_shutdown:
-            raise LoggerShutdownError(
-                "{} action received after shutdown.".format(data["action"])
-            )
+            raise LoggerShutdownError("{} action received after shutdown.".format(data['action']))
 
         with self._lock:
             if self.component_filter:
@@ -295,53 +275,42 @@ class StructuredLogger(object):
                 except Exception:
                     # Write the exception details directly to stderr because
                     # log() would call this method again which is currently locked.
-                    print(
-                        "%s: Failure calling log handler:" % __name__,
-                        file=sys.__stderr__,
-                    )
+                    print('%s: Failure calling log handler:' % __name__, file=sys.__stderr__)
                     print(traceback.format_exc(), file=sys.__stderr__)
 
     def _make_log_data(self, action, data):
-        all_data = {
-            "action": action,
-            "time": int(time.time() * 1000),
-            "thread": current_thread().name,
-            "pid": current_process().pid,
-            "source": self.name,
-        }
+        all_data = {"action": action,
+                    "time": int(time.time() * 1000),
+                    "thread": current_thread().name,
+                    "pid": current_process().pid,
+                    "source": self.name}
         if self.component:
-            all_data["component"] = self.component
+            all_data['component'] = self.component
         all_data.update(data)
         return all_data
 
     def _ensure_suite_state(self, action, data):
-        if action == "suite_start":
+        if action == 'suite_start':
             if self._state.suite_started:
                 # limit data to reduce unnecessary log bloat
-                self.error(
-                    "Got second suite_start message before suite_end. "
-                    + "Logged with data: {}".format(json.dumps(data)[:100])
-                )
+                self.error("Got second suite_start message before suite_end. " +
+                           "Logged with data: {}".format(json.dumps(data)[:100]))
                 return False
             self._state.suite_started = True
-        elif action == "suite_end":
+        elif action == 'suite_end':
             if not self._state.suite_started:
-                self.error(
-                    "Got suite_end message before suite_start. "
-                    + "Logged with data: {}".format(json.dumps(data))
-                )
+                self.error("Got suite_end message before suite_start. " +
+                           "Logged with data: {}".format(json.dumps(data)))
                 return False
             self._state.suite_started = False
         return True
 
-    @log_action(
-        TestList("tests"),
-        Unicode("name", default=None, optional=True),
-        Dict(Any, "run_info", default=None, optional=True),
-        Dict(Any, "version_info", default=None, optional=True),
-        Dict(Any, "device_info", default=None, optional=True),
-        Dict(Any, "extra", default=None, optional=True),
-    )
+    @log_action(TestList("tests"),
+                Unicode("name", default=None, optional=True),
+                Dict(Any, "run_info", default=None, optional=True),
+                Dict(Any, "version_info", default=None, optional=True),
+                Dict(Any, "device_info", default=None, optional=True),
+                Dict(Any, "extra", default=None, optional=True))
     def suite_start(self, data):
         """Log a suite_start message
 
@@ -352,7 +321,7 @@ class StructuredLogger(object):
           by mozversion.
         :param dict device_info: Optional target device information provided by mozdevice.
         """
-        if not self._ensure_suite_state("suite_start", data):
+        if not self._ensure_suite_state('suite_start', data):
             return
 
         self._log_data("suite_start", data)
@@ -360,12 +329,13 @@ class StructuredLogger(object):
     @log_action(Dict(Any, "extra", default=None, optional=True))
     def suite_end(self, data):
         """Log a suite_end message"""
-        if not self._ensure_suite_state("suite_end", data):
+        if not self._ensure_suite_state('suite_end', data):
             return
 
         self._log_data("suite_end", data)
 
-    @log_action(TestId("test"), Unicode("path", default=None, optional=True))
+    @log_action(TestId("test"),
+                Unicode("path", default=None, optional=True))
     def test_start(self, data):
         """Log a test_start message
 
@@ -374,26 +344,25 @@ class StructuredLogger(object):
                      the source tree).
         """
         if not self._state.suite_started:
-            self.error(
-                "Got test_start message before suite_start for test %s" % data["test"]
-            )
+            self.error("Got test_start message before suite_start for test %s" %
+                       data["test"])
             return
         if data["test"] in self._state.running_tests:
-            self.error("test_start for %s logged while in progress." % data["test"])
+            self.error("test_start for %s logged while in progress." %
+                       data["test"])
             return
         self._state.running_tests.add(data["test"])
         self._log_data("test_start", data)
 
-    @log_action(
-        TestId("test"),
-        Unicode("subtest"),
-        SubStatus("status"),
-        SubStatus("expected", default="PASS"),
-        Unicode("message", default=None, optional=True),
-        Unicode("stack", default=None, optional=True),
-        Dict(Any, "extra", default=None, optional=True),
-        List(SubStatus, "known_intermittent", default=None, optional=True),
-    )
+    @log_action(TestId("test"),
+                Unicode("subtest"),
+                SubStatus("status"),
+                SubStatus("expected", default="PASS"),
+                Unicode("message", default=None, optional=True),
+                Unicode("stack", default=None, optional=True),
+                Dict(Any, "extra", default=None, optional=True),
+                List(SubStatus, "known_intermittent", default=None,
+                     optional=True))
     def test_status(self, data):
         """
         Log a test_status message indicating a subtest result. Tests that
@@ -408,27 +377,25 @@ class StructuredLogger(object):
         :param extra: suite-specific data associated with the test result.
         """
 
-        if data["expected"] == data["status"] or data["status"] == "SKIP":
+        if (data["expected"] == data["status"] or
+                data["status"] == "SKIP"):
             del data["expected"]
 
         if data["test"] not in self._state.running_tests:
-            self.error(
-                "test_status for %s logged while not in progress. "
-                "Logged with data: %s" % (data["test"], json.dumps(data))
-            )
+            self.error("test_status for %s logged while not in progress. "
+                       "Logged with data: %s" % (data["test"], json.dumps(data)))
             return
 
         self._log_data("test_status", data)
 
-    @log_action(
-        TestId("test"),
-        Status("status"),
-        Status("expected", default="OK"),
-        Unicode("message", default=None, optional=True),
-        Unicode("stack", default=None, optional=True),
-        Dict(Any, "extra", default=None, optional=True),
-        List(Status, "known_intermittent", default=None, optional=True),
-    )
+    @log_action(TestId("test"),
+                Status("status"),
+                Status("expected", default="OK"),
+                Unicode("message", default=None, optional=True),
+                Unicode("stack", default=None, optional=True),
+                Dict(Any, "extra", default=None, optional=True),
+                List(Status, "known_intermittent", default=None,
+                     optional=True))
     def test_end(self, data):
         """
         Log a test_end message indicating that a test completed. For tests
@@ -444,23 +411,20 @@ class StructuredLogger(object):
         :param extra: suite-specific data associated with the test result.
         """
 
-        if data["expected"] == data["status"] or data["status"] == "SKIP":
+        if (data["expected"] == data["status"] or
+                data["status"] == "SKIP"):
             del data["expected"]
 
         if data["test"] not in self._state.running_tests:
-            self.error(
-                "test_end for %s logged while not in progress. "
-                "Logged with data: %s" % (data["test"], json.dumps(data))
-            )
+            self.error("test_end for %s logged while not in progress. "
+                       "Logged with data: %s" % (data["test"], json.dumps(data)))
         else:
             self._state.running_tests.remove(data["test"])
             self._log_data("test_end", data)
 
-    @log_action(
-        Unicode("process"),
-        Unicode("data"),
-        Unicode("command", default=None, optional=True),
-    )
+    @log_action(Unicode("process"),
+                Unicode("data"),
+                Unicode("command", default=None, optional=True))
     def process_output(self, data):
         """Log output from a managed process.
 
@@ -472,32 +436,30 @@ class StructuredLogger(object):
         """
         self._log_data("process_output", data)
 
-    @log_action(
-        Unicode("process", default=None),
-        Unicode("signature", default="[Unknown]"),
-        TestId("test", default=None, optional=True),
-        Unicode("minidump_path", default=None, optional=True),
-        Unicode("minidump_extra", default=None, optional=True),
-        Int("stackwalk_retcode", default=None, optional=True),
-        Unicode("stackwalk_stdout", default=None, optional=True),
-        Unicode("stackwalk_stderr", default=None, optional=True),
-        Unicode("reason", default=None, optional=True),
-        Unicode("java_stack", default=None, optional=True),
-        List(Unicode, "stackwalk_errors", default=None),
-    )
+    @log_action(Unicode("process", default=None),
+                Unicode("signature", default="[Unknown]"),
+                TestId("test", default=None, optional=True),
+                Unicode("minidump_path", default=None, optional=True),
+                Unicode("minidump_extra", default=None, optional=True),
+                Int("stackwalk_retcode", default=None, optional=True),
+                Unicode("stackwalk_stdout", default=None, optional=True),
+                Unicode("stackwalk_stderr", default=None, optional=True),
+                Unicode("reason", default=None, optional=True),
+                Unicode("java_stack", default=None, optional=True),
+                List(Unicode, "stackwalk_errors", default=None))
     def crash(self, data):
         if data["stackwalk_errors"] is None:
             data["stackwalk_errors"] = []
 
         self._log_data("crash", data)
 
-    @log_action(
-        Unicode("primary", default=None), List(Unicode, "secondary", default=None)
-    )
+    @log_action(Unicode("primary", default=None),
+                List(Unicode, "secondary", default=None))
     def valgrind_error(self, data):
         self._log_data("valgrind_error", data)
 
-    @log_action(Unicode("process"), Unicode("command", default=None, optional=True))
+    @log_action(Unicode("process"),
+                Unicode("command", default=None, optional=True))
     def process_start(self, data):
         """Log start event of a process.
 
@@ -508,11 +470,9 @@ class StructuredLogger(object):
         """
         self._log_data("process_start", data)
 
-    @log_action(
-        Unicode("process"),
-        Int("exitcode"),
-        Unicode("command", default=None, optional=True),
-    )
+    @log_action(Unicode("process"),
+                Int("exitcode"),
+                Unicode("command", default=None, optional=True))
     def process_exit(self, data):
         """Log exit event of a process.
 
@@ -524,7 +484,10 @@ class StructuredLogger(object):
         """
         self._log_data("process_exit", data)
 
-    @log_action(TestId("test"), Int("count"), Int("min_expected"), Int("max_expected"))
+    @log_action(TestId("test"),
+                Int("count"),
+                Int("min_expected"),
+                Int("max_expected"))
     def assertion_count(self, data):
         """Log count of assertions produced when running a test.
 
@@ -534,41 +497,33 @@ class StructuredLogger(object):
         """
         self._log_data("assertion_count", data)
 
-    @log_action(
-        List(Unicode, "frames"),
-        Unicode("scope", optional=True, default=None),
-        Unicode("allowed_match", optional=True, default=None),
-    )
+    @log_action(List(Unicode, "frames"),
+                Unicode("scope", optional=True, default=None),
+                Unicode("allowed_match", optional=True, default=None))
     def lsan_leak(self, data):
         self._log_data("lsan_leak", data)
 
-    @log_action(
-        Int("bytes"),
-        Int("allocations"),
-        Boolean("allowed", optional=True, default=False),
-    )
+    @log_action(Int("bytes"),
+                Int("allocations"),
+                Boolean("allowed", optional=True, default=False))
     def lsan_summary(self, data):
         self._log_data("lsan_summary", data)
 
-    @log_action(
-        Unicode("process"),
-        Int("bytes"),
-        Unicode("name"),
-        Unicode("scope", optional=True, default=None),
-        Boolean("allowed", optional=True, default=False),
-    )
+    @log_action(Unicode("process"),
+                Int("bytes"),
+                Unicode("name"),
+                Unicode("scope", optional=True, default=None),
+                Boolean("allowed", optional=True, default=False))
     def mozleak_object(self, data):
         self._log_data("mozleak_object", data)
 
-    @log_action(
-        Unicode("process"),
-        Nullable(Int, "bytes"),
-        Int("threshold"),
-        List(Unicode, "objects"),
-        Unicode("scope", optional=True, default=None),
-        Boolean("induced_crash", optional=True, default=False),
-        Boolean("ignore_missing", optional=True, default=False),
-    )
+    @log_action(Unicode("process"),
+                Nullable(Int, "bytes"),
+                Int("threshold"),
+                List(Unicode, "objects"),
+                Unicode("scope", optional=True, default=None),
+                Boolean("induced_crash", optional=True, default=False),
+                Boolean("ignore_missing", optional=True, default=False))
     def mozleak_total(self, data):
         self._log_data("mozleak_total", data)
 
@@ -582,7 +537,7 @@ class StructuredLogger(object):
         This is also called implicitly from the destructor or
         when exiting the context manager.
         """
-        self._log_data("shutdown", data)
+        self._log_data('shutdown', data)
         self._state.has_shutdown = True
 
     def __enter__(self):
@@ -593,7 +548,8 @@ class StructuredLogger(object):
 
 
 def _log_func(level_name):
-    @log_action(Unicode("message"), Any("exc_info", default=False))
+    @log_action(Unicode("message"),
+                Any("exc_info", default=False))
     def log(self, data):
         exc_info = data.pop("exc_info", None)
         if exc_info:
@@ -601,42 +557,36 @@ def _log_func(level_name):
                 exc_info = sys.exc_info()
             if exc_info != (None, None, None):
                 bt = traceback.format_exception(*exc_info)
-                data["stack"] = "\n".join(bt)
+                data["stack"] = u"\n".join(bt)
 
         data["level"] = level_name
         self._log_data("log", data)
 
-    log.__doc__ = (
-        """Log a message with level %s
+    log.__doc__ = """Log a message with level %s
 
 :param message: The string message to log
 :param exc_info: Either a boolean indicating whether to include a traceback
                  derived from sys.exc_info() or a three-item tuple in the
                  same format as sys.exc_info() containing exception information
                  to log.
-"""
-        % level_name
-    )
+""" % level_name
     log.__name__ = str(level_name).lower()
     return log
 
 
 def _lint_func(level_name):
-    @log_action(
-        Unicode("path"),
-        Unicode("message", default=""),
-        Int("lineno", default=0),
-        Int("column", default=None, optional=True),
-        Unicode("hint", default=None, optional=True),
-        Unicode("source", default=None, optional=True),
-        Unicode("rule", default=None, optional=True),
-        Tuple((Int, Int), "lineoffset", default=None, optional=True),
-        Unicode("linter", default=None, optional=True),
-    )
+    @log_action(Unicode("path"),
+                Unicode("message", default=""),
+                Int("lineno", default=0),
+                Int("column", default=None, optional=True),
+                Unicode("hint", default=None, optional=True),
+                Unicode("source", default=None, optional=True),
+                Unicode("rule", default=None, optional=True),
+                Tuple((Int, Int), "lineoffset", default=None, optional=True),
+                Unicode("linter", default=None, optional=True))
     def lint(self, data):
         data["level"] = level_name
         self._log_data("lint", data)
-
     lint.__doc__ = """Log an error resulting from a failed lint check
 
         :param linter: name of the linter that flagged this error

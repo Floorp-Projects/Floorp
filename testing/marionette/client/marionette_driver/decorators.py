@@ -11,7 +11,7 @@ from functools import wraps
 
 def _find_marionette_in_args(*args, **kwargs):
     try:
-        m = [a for a in args + tuple(kwargs.values()) if hasattr(a, "session")][0]
+        m = [a for a in args + tuple(kwargs.values()) if hasattr(a, 'session')][0]
     except IndexError:
         print("Can only apply decorator to function using a marionette object")
         raise
@@ -20,7 +20,6 @@ def _find_marionette_in_args(*args, **kwargs):
 
 def do_process_check(func):
     """Decorator which checks the process status after the function has run."""
-
     @wraps(func)
     def _(*args, **kwargs):
         try:
@@ -43,7 +42,6 @@ def uses_marionette(func):
     """Decorator which creates a marionette session and deletes it
     afterwards if one doesn't already exist.
     """
-
     @wraps(func)
     def _(*args, **kwargs):
         m = _find_marionette_in_args(*args, **kwargs)
@@ -59,7 +57,6 @@ def uses_marionette(func):
             m.delete_session()
 
         return ret
-
     return _
 
 
@@ -69,7 +66,6 @@ def using_context(context):
     scope once the function exits.
     :param context: Either 'chrome' or 'content'.
     """
-
     def wrap(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -78,5 +74,4 @@ def using_context(context):
                 return func(*args, **kwargs)
 
         return inner
-
     return wrap

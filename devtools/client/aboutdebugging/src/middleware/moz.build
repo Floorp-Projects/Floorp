@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "debug-target-listener.js",
-    "error-logging.js",
-    "event-recording.js",
-    "extension-component-data.js",
-    "process-component-data.js",
-    "tab-component-data.js",
-    "worker-component-data.js",
+    'debug-target-listener.js',
+    'error-logging.js',
+    'event-recording.js',
+    'extension-component-data.js',
+    'process-component-data.js',
+    'tab-component-data.js',
+    'worker-component-data.js',
 )

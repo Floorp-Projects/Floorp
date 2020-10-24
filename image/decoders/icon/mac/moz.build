@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "nsIconChannelCocoa.mm",
+    'nsIconChannelCocoa.mm',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

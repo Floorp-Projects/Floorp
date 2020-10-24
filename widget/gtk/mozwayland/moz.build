@@ -5,12 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    "mozwayland.c",
+    'mozwayland.c',
 ]
 EXPORTS.mozilla.widget += [
-    "mozwayland.h",
+    'mozwayland.h',
 ]
 
-SharedLibrary("mozwayland")
+SharedLibrary('mozwayland')
 
-CFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG['TK_CFLAGS']
+

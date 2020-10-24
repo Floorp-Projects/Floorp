@@ -2,14 +2,14 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-SANDBOXED_WASM_LIBRARY_NAME = "wasmSources"
+SANDBOXED_WASM_LIBRARY_NAME = 'wasmSources'
 
 WASM_SOURCES += [
-    "a.cpp",
-    "b.cc",
-    "c.cxx",
+    'a.cpp',
+    'b.cc',
+    'c.cxx',
 ]
 
 WASM_SOURCES += [
-    "d.c",
+    'd.c',
 ]

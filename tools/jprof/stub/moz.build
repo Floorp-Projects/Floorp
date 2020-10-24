@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    "jprof.h",
+    'jprof.h',
 ]
 
 SOURCES += [
-    "libmalloc.cpp",
+    'libmalloc.cpp',
 ]
 
-SharedLibrary("jprof")
+SharedLibrary('jprof')
 
-DEFINES["_IMPL_JPROF_API"] = True
+DEFINES['_IMPL_JPROF_API'] = True

@@ -83,7 +83,7 @@ else:
 
 
 def log(logger, level, action, params, formatter):
-    logger.log(level, formatter, extra={"action": action, "params": params})
+    logger.log(level, formatter, extra={'action': action, 'params': params})
 
 
 class EmptyConfig(object):
@@ -93,7 +93,6 @@ class EmptyConfig(object):
     checkout, without any existing configuration. The config is simply
     bootstrapped from a top source directory path.
     """
-
     class PopulateOnGetDict(ReadOnlyDefaultDict):
         """A variation on ReadOnlyDefaultDict that populates during .get().
 
@@ -107,15 +106,15 @@ class EmptyConfig(object):
     default_substs = {
         # These 2 variables are used semi-frequently and it isn't worth
         # changing all the instances.
-        "MOZ_APP_NAME": "empty",
-        "MOZ_CHILD_PROCESS_NAME": "empty",
+        'MOZ_APP_NAME': 'empty',
+        'MOZ_CHILD_PROCESS_NAME': 'empty',
         # Needed to prevent js/src's config.status from loading.
-        "JS_STANDALONE": "1",
+        'JS_STANDALONE': '1',
     }
 
     def __init__(self, topsrcdir, substs=None):
         self.topsrcdir = topsrcdir
-        self.topobjdir = ""
+        self.topobjdir = ''
 
         self.substs = self.PopulateOnGetDict(EmptyValue, substs or self.default_substs)
         self.defines = self.substs
@@ -172,15 +171,15 @@ class MozbuildSandbox(Sandbox):
         self._log = logging.getLogger(__name__)
 
         self.metadata = dict(metadata)
-        exports = self.metadata.get("exports", {})
+        exports = self.metadata.get('exports', {})
         self.exports = set(exports.keys())
         context.update(exports)
-        self.templates = self.metadata.setdefault("templates", {})
-        self.special_variables = self.metadata.setdefault(
-            "special_variables", SPECIAL_VARIABLES
-        )
-        self.functions = self.metadata.setdefault("functions", FUNCTIONS)
-        self.subcontext_types = self.metadata.setdefault("subcontexts", SUBCONTEXTS)
+        self.templates = self.metadata.setdefault('templates', {})
+        self.special_variables = self.metadata.setdefault('special_variables',
+                                                          SPECIAL_VARIABLES)
+        self.functions = self.metadata.setdefault('functions', FUNCTIONS)
+        self.subcontext_types = self.metadata.setdefault('subcontexts',
+                                                         SUBCONTEXTS)
 
     def __getitem__(self, key):
         if key in self.special_variables:
@@ -194,15 +193,8 @@ class MozbuildSandbox(Sandbox):
         return Sandbox.__getitem__(self, key)
 
     def __contains__(self, key):
-        if any(
-            key in d
-            for d in (
-                self.special_variables,
-                self.functions,
-                self.subcontext_types,
-                self.templates,
-            )
-        ):
+        if any(key in d for d in (self.special_variables, self.functions,
+                                  self.subcontext_types, self.templates)):
             return True
 
         return Sandbox.__contains__(self, key)
@@ -210,12 +202,9 @@ class MozbuildSandbox(Sandbox):
     def __setitem__(self, key, value):
         if key in self.special_variables and value is self[key]:
             return
-        if (
-            key in self.special_variables
-            or key in self.functions
-            or key in self.subcontext_types
-        ):
-            raise KeyError('Cannot set "%s" because it is a reserved keyword' % key)
+        if key in self.special_variables or key in self.functions or key in self.subcontext_types:
+            raise KeyError('Cannot set "%s" because it is a reserved keyword'
+                           % key)
         if key in self.exports:
             self._context[key] = value
             self.exports.remove(key)
@@ -232,18 +221,17 @@ class MozbuildSandbox(Sandbox):
         # realpath() is needed for true security. But, this isn't for security
         # protection, so it is omitted.
         if not is_read_allowed(path, self._context.config):
-            raise SandboxLoadError(
-                self._context.source_stack, sys.exc_info()[2], illegal_path=path
-            )
+            raise SandboxLoadError(self._context.source_stack,
+                                   sys.exc_info()[2], illegal_path=path)
 
         Sandbox.exec_file(self, path)
 
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""
 
-        exports = self.metadata.setdefault("exports", dict())
+        exports = self.metadata.setdefault('exports', dict())
         if varname in exports:
-            raise Exception("Variable has already been exported: %s" % varname)
+            raise Exception('Variable has already been exported: %s' % varname)
 
         try:
             # Doing a regular self._context[varname] causes a set as a side
@@ -251,16 +239,16 @@ class MozbuildSandbox(Sandbox):
             # side effects.
             exports[varname] = dict.__getitem__(self._context, varname)
         except KeyError:
-            self.last_name_error = KeyError("global_ns", "get_unknown", varname)
+            self.last_name_error = KeyError('global_ns', 'get_unknown', varname)
             raise self.last_name_error
 
     def recompute_exports(self):
         """Recompute the variables to export to subdirectories with the current
         values in the subdirectory."""
 
-        if "exports" in self.metadata:
-            for key in self.metadata["exports"]:
-                self.metadata["exports"][key] = self[key]
+        if 'exports' in self.metadata:
+            for key in self.metadata['exports']:
+                self.metadata['exports'][key] = self[key]
 
     def _include(self, path):
         """Include and exec another file within the context of this one."""
@@ -270,7 +258,7 @@ class MozbuildSandbox(Sandbox):
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
-        print("WARNING: %s" % message, file=sys.stderr)
+        print('WARNING: %s' % message, file=sys.stderr)
 
     def _error(self, message):
         if self._context.error_is_fatal:
@@ -282,28 +270,24 @@ class MozbuildSandbox(Sandbox):
         """Registers a template function."""
 
         if not inspect.isfunction(func):
-            raise Exception(
-                "`template` is a function decorator. You must "
-                "use it as `@template` preceding a function declaration."
-            )
+            raise Exception('`template` is a function decorator. You must '
+                            'use it as `@template` preceding a function declaration.')
 
         name = func.__name__
 
         if name in self.templates:
             raise KeyError(
-                'A template named "%s" was already declared in %s.'
-                % (name, self.templates[name].path)
-            )
+                'A template named "%s" was already declared in %s.' % (name,
+                                                                       self.templates[name].path))
 
         if name.islower() or name.isupper() or name[0].islower():
-            raise NameError("Template function names must be CamelCase.")
+            raise NameError('Template function names must be CamelCase.')
 
         self.templates[name] = TemplateFunction(func, self)
 
     @memoize
     def _create_subcontext(self, cls):
         """Return a function object that creates SubContext instances."""
-
         def fn(*args, **kwargs):
             return cls(self._context, *args, **kwargs)
 
@@ -326,7 +310,6 @@ class MozbuildSandbox(Sandbox):
                     else:
                         arg = type(arg)
                 return arg
-
             args = [coerce(arg, type) for arg, type in zip(args, args_def)]
             return func(self)(*args)
 
@@ -343,31 +326,25 @@ class MozbuildSandbox(Sandbox):
         After the template is executed, the data from its execution is merged
         with the context of the calling sandbox.
         """
-
         def template_wrapper(*args, **kwargs):
             context = TemplateContext(
                 template=template.name,
                 allowed_variables=self._context._allowed_variables,
-                config=self._context.config,
-            )
+                config=self._context.config)
             context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
 
-            sandbox = MozbuildSandbox(
-                context,
-                metadata={
-                    # We should arguably set these defaults to something else.
-                    # Templates, for example, should arguably come from the state
-                    # of the sandbox from when the template was declared, not when
-                    # it was instantiated. Bug 1137319.
-                    "functions": self.metadata.get("functions", {}),
-                    "special_variables": self.metadata.get("special_variables", {}),
-                    "subcontexts": self.metadata.get("subcontexts", {}),
-                    "templates": self.metadata.get("templates", {}),
-                },
-                finder=self._finder,
-            )
+            sandbox = MozbuildSandbox(context, metadata={
+                # We should arguably set these defaults to something else.
+                # Templates, for example, should arguably come from the state
+                # of the sandbox from when the template was declared, not when
+                # it was instantiated. Bug 1137319.
+                'functions': self.metadata.get('functions', {}),
+                'special_variables': self.metadata.get('special_variables', {}),
+                'subcontexts': self.metadata.get('subcontexts', {}),
+                'templates': self.metadata.get('templates', {})
+            }, finder=self._finder)
 
             template.exec_in_sandbox(sandbox, *args, **kwargs)
 
@@ -402,16 +379,16 @@ class TemplateFunction(object):
         if lines:
             # Older versions of python 2.7 had a buggy inspect.getblock() that
             # would ignore the last line if it didn't terminate with a newline.
-            if not lines[-1].endswith("\n"):
-                lines[-1] += "\n"
-        lines = inspect.getblock(lines[firstlineno - 1 :])
+            if not lines[-1].endswith('\n'):
+                lines[-1] += '\n'
+        lines = inspect.getblock(lines[firstlineno - 1:])
 
         # The code lines we get out of inspect.getsourcelines look like
         #   @template
         #   def Template(*args, **kwargs):
         #       VAR = 'value'
         #       ...
-        func_ast = ast.parse("".join(lines), self.path)
+        func_ast = ast.parse(''.join(lines), self.path)
         # Remove decorators
         func_ast.body[0].decorator_list = []
         # Adjust line numbers accordingly
@@ -422,13 +399,12 @@ class TemplateFunction(object):
         # modify the AST so that accesses to globals are properly directed
         # to a dict. AST wants binary_type for this in Py2 and text_type for
         # this in Py3, so cast to str.
-        self._global_name = str("_data")
+        self._global_name = str('_data')
         # In case '_data' is a name used for a variable in the function code,
         # prepend more underscores until we find an unused name.
-        while (
-            self._global_name in code.co_names or self._global_name in code.co_varnames
-        ):
-            self._global_name += str("_")
+        while (self._global_name in code.co_names or
+                self._global_name in code.co_varnames):
+            self._global_name += str('_')
         func_ast = self.RewriteName(sandbox, self._global_name).visit(func_ast)
 
         # Execute the rewritten code. That code now looks like:
@@ -437,9 +413,9 @@ class TemplateFunction(object):
         #       ...
         # The result of executing this code is the creation of a 'Template'
         # function object in the global namespace.
-        glob = {"__builtins__": sandbox._builtins}
+        glob = {'__builtins__': sandbox._builtins}
         func = types.FunctionType(
-            compile(func_ast, self.path, "exec"),
+            compile(func_ast, self.path, 'exec'),
             glob,
             self.name,
             func.__defaults__,
@@ -452,7 +428,10 @@ class TemplateFunction(object):
     def exec_in_sandbox(self, sandbox, *args, **kwargs):
         """Executes the template function in the given sandbox."""
         # Create a new function object associated with the execution sandbox
-        glob = {self._global_name: sandbox, "__builtins__": sandbox._builtins}
+        glob = {
+            self._global_name: sandbox,
+            '__builtins__': sandbox._builtins
+        }
         func = types.FunctionType(
             self._func.__code__,
             glob,
@@ -460,7 +439,8 @@ class TemplateFunction(object):
             self._func.__defaults__,
             self._func.__closure__,
         )
-        sandbox.exec_function(func, args, kwargs, self.path, becomes_current_path=False)
+        sandbox.exec_function(func, args, kwargs, self.path,
+                              becomes_current_path=False)
 
     class RewriteName(ast.NodeTransformer):
         """AST Node Transformer to rewrite variable accesses to go through
@@ -484,13 +464,11 @@ class TemplateFunction(object):
             def c(new_node):
                 return ast.copy_location(new_node, node)
 
-            return c(
-                ast.Subscript(
-                    value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
-                    slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
-                    ctx=node.ctx,
-                )
-            )
+            return c(ast.Subscript(
+                value=c(ast.Name(id=self._global_name, ctx=ast.Load())),
+                slice=c(ast.Index(value=c(ast.Str(s=node.id)))),
+                ctx=node.ctx
+            ))
 
 
 class SandboxValidationError(Exception):
@@ -503,25 +481,22 @@ class SandboxValidationError(Exception):
     def __str__(self):
         s = StringIO()
 
-        delim = "=" * 30
-        s.write("\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n" % (delim, delim))
+        delim = '=' * 30
+        s.write('\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
 
-        s.write("The error occurred while processing the following file or ")
-        s.write("one of the files it includes:\n")
-        s.write("\n")
-        s.write("    %s/moz.build\n" % self.context.srcdir)
-        s.write("\n")
+        s.write('The error occurred while processing the following file or ')
+        s.write('one of the files it includes:\n')
+        s.write('\n')
+        s.write('    %s/moz.build\n' % self.context.srcdir)
+        s.write('\n')
 
-        s.write("The error occurred when validating the result of ")
-        s.write("the execution. The reported error is:\n")
-        s.write("\n")
-        s.write(
-            "".join(
-                "    %s\n" % l
-                for l in super(SandboxValidationError, self).__str__().splitlines()
-            )
-        )
-        s.write("\n")
+        s.write('The error occurred when validating the result of ')
+        s.write('the execution. The reported error is:\n')
+        s.write('\n')
+        s.write(''.join(
+            '    %s\n' % l
+            for l in super(SandboxValidationError, self).__str__().splitlines()))
+        s.write('\n')
 
         return s.getvalue()
 
@@ -542,16 +517,9 @@ class BuildReaderError(Exception):
     which affect error messages, of course).
     """
 
-    def __init__(
-        self,
-        file_stack,
-        trace,
-        sandbox_exec_error=None,
-        sandbox_load_error=None,
-        validation_error=None,
-        other_error=None,
-        sandbox_called_error=None,
-    ):
+    def __init__(self, file_stack, trace, sandbox_exec_error=None,
+                 sandbox_load_error=None, validation_error=None, other_error=None,
+                 sandbox_called_error=None):
 
         self.file_stack = file_stack
         self.trace = trace
@@ -575,54 +543,52 @@ class BuildReaderError(Exception):
             if len(self.file_stack) > 1:
                 return self.file_stack[-2]
 
-        if self.sandbox_error is not None and len(self.sandbox_error.file_stack):
+        if self.sandbox_error is not None and \
+                len(self.sandbox_error.file_stack):
             return self.sandbox_error.file_stack[-1]
 
         return self.file_stack[-1]
 
     @property
     def sandbox_error(self):
-        return self.sandbox_exec or self.sandbox_load or self.sandbox_called_error
+        return self.sandbox_exec or self.sandbox_load or \
+            self.sandbox_called_error
 
     def __str__(self):
         s = StringIO()
 
-        delim = "=" * 30
-        s.write("\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n" % (delim, delim))
+        delim = '=' * 30
+        s.write('\n%s\nFATAL ERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
 
-        s.write("The error occurred while processing the following file:\n")
-        s.write("\n")
-        s.write("    %s\n" % self.actual_file)
-        s.write("\n")
+        s.write('The error occurred while processing the following file:\n')
+        s.write('\n')
+        s.write('    %s\n' % self.actual_file)
+        s.write('\n')
 
         if self.actual_file != self.main_file and not self.sandbox_load:
-            s.write("This file was included as part of processing:\n")
-            s.write("\n")
-            s.write("    %s\n" % self.main_file)
-            s.write("\n")
+            s.write('This file was included as part of processing:\n')
+            s.write('\n')
+            s.write('    %s\n' % self.main_file)
+            s.write('\n')
 
         if self.sandbox_error is not None:
             self._print_sandbox_error(s)
         elif self.validation_error is not None:
-            s.write("The error occurred when validating the result of ")
-            s.write("the execution. The reported error is:\n")
-            s.write("\n")
-            s.write(
-                "".join(
-                    "    %s\n" % l
-                    for l in six.text_type(self.validation_error).splitlines()
-                )
-            )
-            s.write("\n")
+            s.write('The error occurred when validating the result of ')
+            s.write('the execution. The reported error is:\n')
+            s.write('\n')
+            s.write(''.join(
+                '    %s\n' % l
+                for l in six.text_type(self.validation_error).splitlines()))
+            s.write('\n')
         else:
-            s.write("The error appears to be part of the %s " % __name__)
-            s.write("Python module itself! It is possible you have stumbled ")
-            s.write("across a legitimate bug.\n")
-            s.write("\n")
+            s.write('The error appears to be part of the %s ' % __name__)
+            s.write('Python module itself! It is possible you have stumbled ')
+            s.write('across a legitimate bug.\n')
+            s.write('\n')
 
-            for l in traceback.format_exception(
-                type(self.other), self.other, self.trace
-            ):
+            for l in traceback.format_exception(type(self.other), self.other,
+                                                self.trace):
                 s.write(six.ensure_text(l))
 
         return s.getvalue()
@@ -634,7 +600,7 @@ class BuildReaderError(Exception):
         # We don't currently capture the trace for SandboxCalledError.
         # Therefore, we don't get line numbers from the moz.build file.
         # FUTURE capture this.
-        trace = getattr(self.sandbox_error, "trace", None)
+        trace = getattr(self.sandbox_error, 'trace', None)
         frames = []
         if trace:
             frames = traceback.extract_tb(trace)
@@ -644,15 +610,15 @@ class BuildReaderError(Exception):
 
             # Reset if we enter a new execution context. This prevents errors
             # in this module from being attributes to a script.
-            elif frame[0] == __file__ and frame[2] == "exec_function":
+            elif frame[0] == __file__ and frame[2] == 'exec_function':
                 script_frame = None
 
         if script_frame is not None:
-            s.write("The error was triggered on line %d " % script_frame[1])
-            s.write("of this file:\n")
-            s.write("\n")
-            s.write("    %s\n" % script_frame[3])
-            s.write("\n")
+            s.write('The error was triggered on line %d ' % script_frame[1])
+            s.write('of this file:\n')
+            s.write('\n')
+            s.write('    %s\n' % script_frame[3])
+            s.write('\n')
 
         if self.sandbox_called_error is not None:
             self._print_sandbox_called_error(s)
@@ -667,54 +633,54 @@ class BuildReaderError(Exception):
     def _print_sandbox_called_error(self, s):
         assert self.sandbox_called_error is not None
 
-        s.write("A moz.build file called the error() function.\n")
-        s.write("\n")
-        s.write("The error it encountered is:\n")
-        s.write("\n")
-        s.write("    %s\n" % self.sandbox_called_error.message)
-        s.write("\n")
-        s.write("Correct the error condition and try again.\n")
+        s.write('A moz.build file called the error() function.\n')
+        s.write('\n')
+        s.write('The error it encountered is:\n')
+        s.write('\n')
+        s.write('    %s\n' % self.sandbox_called_error.message)
+        s.write('\n')
+        s.write('Correct the error condition and try again.\n')
 
     def _print_sandbox_load_error(self, s):
         assert self.sandbox_load is not None
 
         if self.sandbox_load.illegal_path is not None:
-            s.write("The underlying problem is an illegal file access. ")
-            s.write("This is likely due to trying to access a file ")
-            s.write("outside of the top source directory.\n")
-            s.write("\n")
-            s.write("The path whose access was denied is:\n")
-            s.write("\n")
-            s.write("    %s\n" % self.sandbox_load.illegal_path)
-            s.write("\n")
-            s.write("Modify the script to not access this file and ")
-            s.write("try again.\n")
+            s.write('The underlying problem is an illegal file access. ')
+            s.write('This is likely due to trying to access a file ')
+            s.write('outside of the top source directory.\n')
+            s.write('\n')
+            s.write('The path whose access was denied is:\n')
+            s.write('\n')
+            s.write('    %s\n' % self.sandbox_load.illegal_path)
+            s.write('\n')
+            s.write('Modify the script to not access this file and ')
+            s.write('try again.\n')
             return
 
         if self.sandbox_load.read_error is not None:
             if not os.path.exists(self.sandbox_load.read_error):
-                s.write("The underlying problem is we referenced a path ")
-                s.write("that does not exist. That path is:\n")
-                s.write("\n")
-                s.write("    %s\n" % self.sandbox_load.read_error)
-                s.write("\n")
-                s.write("Either create the file if it needs to exist or ")
-                s.write("do not reference it.\n")
+                s.write('The underlying problem is we referenced a path ')
+                s.write('that does not exist. That path is:\n')
+                s.write('\n')
+                s.write('    %s\n' % self.sandbox_load.read_error)
+                s.write('\n')
+                s.write('Either create the file if it needs to exist or ')
+                s.write('do not reference it.\n')
             else:
-                s.write("The underlying problem is a referenced path could ")
-                s.write("not be read. The trouble path is:\n")
-                s.write("\n")
-                s.write("    %s\n" % self.sandbox_load.read_error)
-                s.write("\n")
-                s.write("It is possible the path is not correct. Is it ")
-                s.write("pointing to a directory? It could also be a file ")
-                s.write("permissions issue. Ensure that the file is ")
-                s.write("readable.\n")
+                s.write('The underlying problem is a referenced path could ')
+                s.write('not be read. The trouble path is:\n')
+                s.write('\n')
+                s.write('    %s\n' % self.sandbox_load.read_error)
+                s.write('\n')
+                s.write('It is possible the path is not correct. Is it ')
+                s.write('pointing to a directory? It could also be a file ')
+                s.write('permissions issue. Ensure that the file is ')
+                s.write('readable.\n')
 
             return
 
         # This module is buggy if you see this.
-        raise AssertionError("SandboxLoadError with unhandled properties!")
+        raise AssertionError('SandboxLoadError with unhandled properties!')
 
     def _print_sandbox_exec_error(self, s):
         assert self.sandbox_exec is not None
@@ -722,14 +688,14 @@ class BuildReaderError(Exception):
         inner = self.sandbox_exec.exc_value
 
         if isinstance(inner, SyntaxError):
-            s.write("The underlying problem is a Python syntax error ")
-            s.write("on line %d:\n" % inner.lineno)
-            s.write("\n")
-            s.write("    %s\n" % inner.text)
+            s.write('The underlying problem is a Python syntax error ')
+            s.write('on line %d:\n' % inner.lineno)
+            s.write('\n')
+            s.write('    %s\n' % inner.text)
             if inner.offset:
-                s.write((" " * (inner.offset + 4)) + "^\n")
-            s.write("\n")
-            s.write("Fix the syntax error and try again.\n")
+                s.write((' ' * (inner.offset + 4)) + '^\n')
+            s.write('\n')
+            s.write('Fix the syntax error and try again.\n')
             return
 
         if isinstance(inner, KeyError):
@@ -740,102 +706,100 @@ class BuildReaderError(Exception):
             self._print_exception(inner, s)
 
     def _print_keyerror(self, inner, s):
-        if not inner.args or inner.args[0] not in ("global_ns", "local_ns"):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 
-        if inner.args[0] == "global_ns":
+        if inner.args[0] == 'global_ns':
             import difflib
 
             verb = None
-            if inner.args[1] == "get_unknown":
-                verb = "read"
-            elif inner.args[1] == "set_unknown":
-                verb = "write"
-            elif inner.args[1] == "reassign":
-                s.write("The underlying problem is an attempt to reassign ")
-                s.write("a reserved UPPERCASE variable.\n")
-                s.write("\n")
-                s.write("The reassigned variable causing the error is:\n")
-                s.write("\n")
-                s.write("    %s\n" % inner.args[2])
-                s.write("\n")
+            if inner.args[1] == 'get_unknown':
+                verb = 'read'
+            elif inner.args[1] == 'set_unknown':
+                verb = 'write'
+            elif inner.args[1] == 'reassign':
+                s.write('The underlying problem is an attempt to reassign ')
+                s.write('a reserved UPPERCASE variable.\n')
+                s.write('\n')
+                s.write('The reassigned variable causing the error is:\n')
+                s.write('\n')
+                s.write('    %s\n' % inner.args[2])
+                s.write('\n')
                 s.write('Maybe you meant "+=" instead of "="?\n')
                 return
             else:
-                raise AssertionError("Unhandled global_ns: %s" % inner.args[1])
+                raise AssertionError('Unhandled global_ns: %s' % inner.args[1])
 
-            s.write("The underlying problem is an attempt to %s " % verb)
-            s.write("a reserved UPPERCASE variable that does not exist.\n")
-            s.write("\n")
-            s.write("The variable %s causing the error is:\n" % verb)
-            s.write("\n")
-            s.write("    %s\n" % inner.args[2])
-            s.write("\n")
-            close_matches = difflib.get_close_matches(
-                inner.args[2], VARIABLES.keys(), 2
-            )
+            s.write('The underlying problem is an attempt to %s ' % verb)
+            s.write('a reserved UPPERCASE variable that does not exist.\n')
+            s.write('\n')
+            s.write('The variable %s causing the error is:\n' % verb)
+            s.write('\n')
+            s.write('    %s\n' % inner.args[2])
+            s.write('\n')
+            close_matches = difflib.get_close_matches(inner.args[2],
+                                                      VARIABLES.keys(), 2)
             if close_matches:
-                s.write("Maybe you meant %s?\n" % " or ".join(close_matches))
-                s.write("\n")
+                s.write('Maybe you meant %s?\n' % ' or '.join(close_matches))
+                s.write('\n')
 
             if inner.args[2] in DEPRECATION_HINTS:
-                s.write(
-                    "%s\n" % textwrap.dedent(DEPRECATION_HINTS[inner.args[2]]).strip()
-                )
+                s.write('%s\n' %
+                        textwrap.dedent(DEPRECATION_HINTS[inner.args[2]]).strip())
                 return
 
-            s.write("Please change the file to not use this variable.\n")
-            s.write("\n")
-            s.write("For reference, the set of valid variables is:\n")
-            s.write("\n")
-            s.write(", ".join(sorted(VARIABLES.keys())) + "\n")
+            s.write('Please change the file to not use this variable.\n')
+            s.write('\n')
+            s.write('For reference, the set of valid variables is:\n')
+            s.write('\n')
+            s.write(', '.join(sorted(VARIABLES.keys())) + '\n')
             return
 
-        s.write("The underlying problem is a reference to an undefined ")
-        s.write("local variable:\n")
-        s.write("\n")
-        s.write("    %s\n" % inner.args[2])
-        s.write("\n")
-        s.write("Please change the file to not reference undefined ")
-        s.write("variables and try again.\n")
+        s.write('The underlying problem is a reference to an undefined ')
+        s.write('local variable:\n')
+        s.write('\n')
+        s.write('    %s\n' % inner.args[2])
+        s.write('\n')
+        s.write('Please change the file to not reference undefined ')
+        s.write('variables and try again.\n')
 
     def _print_valueerror(self, inner, s):
-        if not inner.args or inner.args[0] not in ("global_ns", "local_ns"):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 
-        assert inner.args[1] == "set_type"
+        assert inner.args[1] == 'set_type'
 
-        s.write("The underlying problem is an attempt to write an illegal ")
-        s.write("value to a special variable.\n")
-        s.write("\n")
-        s.write("The variable whose value was rejected is:\n")
-        s.write("\n")
-        s.write("    %s" % inner.args[2])
-        s.write("\n")
-        s.write("The value being written to it was of the following type:\n")
-        s.write("\n")
-        s.write("    %s\n" % type(inner.args[3]).__name__)
-        s.write("\n")
-        s.write("This variable expects the following type(s):\n")
-        s.write("\n")
+        s.write('The underlying problem is an attempt to write an illegal ')
+        s.write('value to a special variable.\n')
+        s.write('\n')
+        s.write('The variable whose value was rejected is:\n')
+        s.write('\n')
+        s.write('    %s' % inner.args[2])
+        s.write('\n')
+        s.write('The value being written to it was of the following type:\n')
+        s.write('\n')
+        s.write('    %s\n' % type(inner.args[3]).__name__)
+        s.write('\n')
+        s.write('This variable expects the following type(s):\n')
+        s.write('\n')
         if type(inner.args[4]) == type_type:
-            s.write("    %s\n" % inner.args[4].__name__)
+            s.write('    %s\n' % inner.args[4].__name__)
         else:
             for t in inner.args[4]:
-                s.write("    %s\n" % t.__name__)
-        s.write("\n")
-        s.write("Change the file to write a value of the appropriate type ")
-        s.write("and try again.\n")
+                s.write('    %s\n' % t.__name__)
+        s.write('\n')
+        s.write('Change the file to write a value of the appropriate type ')
+        s.write('and try again.\n')
 
     def _print_exception(self, e, s):
-        s.write("An error was encountered as part of executing the file ")
-        s.write("itself. The error appears to be the fault of the script.\n")
-        s.write("\n")
-        s.write("The error as reported by Python is:\n")
-        s.write("\n")
-        s.write("    %s\n" % traceback.format_exception_only(type(e), e))
+        s.write('An error was encountered as part of executing the file ')
+        s.write('itself. The error appears to be the fault of the script.\n')
+        s.write('\n')
+        s.write('The error as reported by Python is:\n')
+        s.write('\n')
+        s.write('    %s\n' % traceback.format_exception_only(type(e), e))
 
 
 class BuildReader(object):
@@ -863,23 +827,23 @@ class BuildReader(object):
         # Finder patterns to ignore when searching for moz.build files.
         ignores = {
             # Ignore fake moz.build files used for testing moz.build.
-            "python/mozbuild/mozbuild/test",
-            "testing/mozbase/moztest/tests/data",
+            'python/mozbuild/mozbuild/test',
+            'testing/mozbase/moztest/tests/data',
+
             # Ignore object directories.
-            "obj*",
+            'obj*',
         }
 
-        self._relevant_mozbuild_finder = FileFinder(
-            self.config.topsrcdir, ignore=ignores
-        )
+        self._relevant_mozbuild_finder = FileFinder(self.config.topsrcdir,
+                                                    ignore=ignores)
 
         # Also ignore any other directories that could be objdirs, they don't
         # necessarily start with the string 'obj'.
-        for path, f in self._relevant_mozbuild_finder.find("*/config.status"):
+        for path, f in self._relevant_mozbuild_finder.find('*/config.status'):
             self._relevant_mozbuild_finder.ignore.add(os.path.dirname(path))
 
         max_workers = cpu_count()
-        if sys.platform.startswith("win"):
+        if sys.platform.startswith('win'):
             # In python 3, on Windows, ProcessPoolExecutor uses
             # _winapi.WaitForMultipleObjects, which doesn't work on large
             # number of objects. It also has some automatic capping to avoid
@@ -897,19 +861,17 @@ class BuildReader(object):
 
     def summary(self):
         return ExecutionSummary(
-            "Finished reading {file_count:d} moz.build files in "
-            "{execution_time:.2f}s",
+            'Finished reading {file_count:d} moz.build files in '
+            '{execution_time:.2f}s',
             file_count=self._file_count,
-            execution_time=self._execution_time,
-        )
+            execution_time=self._execution_time)
 
     def gyp_summary(self):
         return ExecutionSummary(
-            "Read {file_count:d} gyp files in parallel contributing "
-            "{execution_time:.2f}s to total wall time",
+            'Read {file_count:d} gyp files in parallel contributing '
+            '{execution_time:.2f}s to total wall time',
             file_count=self._gyp_file_count,
-            execution_time=self._gyp_execution_time,
-        )
+            execution_time=self._gyp_execution_time)
 
     def read_topsrcdir(self):
         """Read the tree of linked moz.build files.
@@ -920,7 +882,7 @@ class BuildReader(object):
         This is a generator of Context instances. As each moz.build file is
         read, a new Context is created and emitted.
         """
-        path = mozpath.join(self.config.topsrcdir, "moz.build")
+        path = mozpath.join(self.config.topsrcdir, 'moz.build')
         for r in self.read_mozbuild(path, self.config):
             yield r
         all_gyp_paths = set()
@@ -941,7 +903,7 @@ class BuildReader(object):
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
         # a conditional. For now, just walk the filesystem.
-        for path, f in self._relevant_mozbuild_finder.find("**/moz.build"):
+        for path, f in self._relevant_mozbuild_finder.find('**/moz.build'):
             yield path
 
     def find_variables_from_ast(self, variables, path=None):
@@ -989,7 +951,7 @@ class BuildReader(object):
 
         def assigned_variable(node):
             # This is not correct, but we don't care yet.
-            if hasattr(node, "targets"):
+            if hasattr(node, 'targets'):
                 # Nothing in moz.build does multi-assignment (yet). So error if
                 # we see it.
                 assert len(node.targets) == 1
@@ -1054,7 +1016,7 @@ class BuildReader(object):
             assignments[:] = []
             full = os.path.join(self.config.topsrcdir, p)
 
-            with open(full, "rb") as fh:
+            with open(full, 'rb') as fh:
                 source = fh.read()
 
             tree = ast.parse(source, full)
@@ -1086,57 +1048,41 @@ class BuildReader(object):
         """
         self._execution_stack.append(path)
         try:
-            for s in self._read_mozbuild(
-                path, config, descend=descend, metadata=metadata
-            ):
+            for s in self._read_mozbuild(path, config, descend=descend,
+                                         metadata=metadata):
                 yield s
 
         except BuildReaderError as bre:
             raise bre
 
         except SandboxCalledError as sce:
-            raise BuildReaderError(
-                list(self._execution_stack), sys.exc_info()[2], sandbox_called_error=sce
-            )
+            raise BuildReaderError(list(self._execution_stack),
+                                   sys.exc_info()[2], sandbox_called_error=sce)
 
         except SandboxExecutionError as se:
-            raise BuildReaderError(
-                list(self._execution_stack), sys.exc_info()[2], sandbox_exec_error=se
-            )
+            raise BuildReaderError(list(self._execution_stack),
+                                   sys.exc_info()[2], sandbox_exec_error=se)
 
         except SandboxLoadError as sle:
-            raise BuildReaderError(
-                list(self._execution_stack), sys.exc_info()[2], sandbox_load_error=sle
-            )
+            raise BuildReaderError(list(self._execution_stack),
+                                   sys.exc_info()[2], sandbox_load_error=sle)
 
         except SandboxValidationError as ve:
-            raise BuildReaderError(
-                list(self._execution_stack), sys.exc_info()[2], validation_error=ve
-            )
+            raise BuildReaderError(list(self._execution_stack),
+                                   sys.exc_info()[2], validation_error=ve)
 
         except Exception as e:
-            raise BuildReaderError(
-                list(self._execution_stack), sys.exc_info()[2], other_error=e
-            )
+            raise BuildReaderError(list(self._execution_stack),
+                                   sys.exc_info()[2], other_error=e)
 
     def _read_mozbuild(self, path, config, descend, metadata):
         path = mozpath.normpath(path)
-        log(
-            self._log,
-            logging.DEBUG,
-            "read_mozbuild",
-            {"path": path},
-            "Reading file: {path}".format(path=path),
-        )
+        log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
+            'Reading file: {path}'.format(path=path))
 
         if path in self._read_files:
-            log(
-                self._log,
-                logging.WARNING,
-                "read_already",
-                {"path": path},
-                "File already read. Skipping: {path}".format(path=path),
-            )
+            log(self._log, logging.WARNING, 'read_already', {'path': path},
+                'File already read. Skipping: {path}'.format(path=path))
             return
 
         self._read_files.add(path)
@@ -1148,16 +1094,15 @@ class BuildReader(object):
         relpath = mozpath.relpath(path, config.topsrcdir)
         reldir = mozpath.dirname(relpath)
 
-        if mozpath.dirname(relpath) == "js/src" and not config.substs.get(
-            "JS_STANDALONE"
-        ):
+        if mozpath.dirname(relpath) == 'js/src' and \
+                not config.substs.get('JS_STANDALONE'):
             config = ConfigEnvironment.from_config_status(
-                mozpath.join(topobjdir, reldir, "config.status")
-            )
+                mozpath.join(topobjdir, reldir, 'config.status'))
             config.topobjdir = topobjdir
 
         context = Context(VARIABLES, config, self.finder)
-        sandbox = MozbuildSandbox(context, metadata=metadata, finder=self.finder)
+        sandbox = MozbuildSandbox(context, metadata=metadata,
+                                  finder=self.finder)
         sandbox.exec_file(path)
         self._execution_time += time.time() - time_start
         self._file_count += len(context.all_paths)
@@ -1168,18 +1113,16 @@ class BuildReader(object):
         yield context
 
         # We need the list of directories pre-gyp processing for later.
-        dirs = list(context.get("DIRS", []))
+        dirs = list(context.get('DIRS', []))
 
         curdir = mozpath.dirname(path)
 
-        for target_dir in context.get("GYP_DIRS", []):
-            gyp_dir = context["GYP_DIRS"][target_dir]
-            for v in ("input", "variables"):
+        for target_dir in context.get('GYP_DIRS', []):
+            gyp_dir = context['GYP_DIRS'][target_dir]
+            for v in ('input', 'variables'):
                 if not getattr(gyp_dir, v):
-                    raise SandboxValidationError(
-                        "Missing value for " 'GYP_DIRS["%s"].%s' % (target_dir, v),
-                        context,
-                    )
+                    raise SandboxValidationError('Missing value for '
+                                                 'GYP_DIRS["%s"].%s' % (target_dir, v), context)
 
             # The make backend assumes contexts for sub-directories are
             # emitted after their parent, so accumulate the gyp contexts.
@@ -1187,26 +1130,25 @@ class BuildReader(object):
             # configuration, but we need to add the gyp objdirs to that context
             # first.
             from .gyp_reader import GypProcessor
-
             non_unified_sources = set()
             for s in gyp_dir.non_unified_sources:
                 source = SourcePath(context, s)
                 if not self.finder.get(source.full_path):
-                    raise SandboxValidationError("Cannot find %s." % source, context)
+                    raise SandboxValidationError('Cannot find %s.' % source,
+                                                 context)
                 non_unified_sources.add(source)
             action_overrides = {}
             for action, script in six.iteritems(gyp_dir.action_overrides):
                 action_overrides[action] = SourcePath(context, script)
 
-            gyp_processor = GypProcessor(
-                context.config,
-                gyp_dir,
-                mozpath.join(curdir, gyp_dir.input),
-                mozpath.join(context.objdir, target_dir),
-                self._gyp_worker_pool,
-                action_overrides,
-                non_unified_sources,
-            )
+            gyp_processor = GypProcessor(context.config,
+                                         gyp_dir,
+                                         mozpath.join(curdir, gyp_dir.input),
+                                         mozpath.join(context.objdir,
+                                                      target_dir),
+                                         self._gyp_worker_pool,
+                                         action_overrides,
+                                         non_unified_sources)
             self._gyp_processors.append(gyp_processor)
 
         for subcontext in sandbox.subcontexts:
@@ -1221,20 +1163,19 @@ class BuildReader(object):
         for d in dirs:
             if d in recurse_info:
                 raise SandboxValidationError(
-                    "Directory (%s) registered multiple times"
-                    % (mozpath.relpath(d.full_path, context.srcdir)),
-                    context,
-                )
+                    'Directory (%s) registered multiple times' % (
+                        mozpath.relpath(d.full_path, context.srcdir)),
+                    context)
 
             recurse_info[d] = {}
             for key in sandbox.metadata:
-                if key == "exports":
+                if key == 'exports':
                     sandbox.recompute_exports()
 
                 recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
-            child_path = path.join("moz.build").full_path
+            child_path = path.join('moz.build').full_path
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,
@@ -1242,17 +1183,14 @@ class BuildReader(object):
             # need to worry about security too much.
             if not is_read_allowed(child_path, context.config):
                 raise SandboxValidationError(
-                    "Attempting to process file outside of allowed paths: %s"
-                    % child_path,
-                    context,
-                )
+                    'Attempting to process file outside of allowed paths: %s' %
+                    child_path, context)
 
             if not descend:
                 continue
 
-            for res in self.read_mozbuild(
-                child_path, context.config, metadata=child_metadata
-            ):
+            for res in self.read_mozbuild(child_path, context.config,
+                                          metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()
@@ -1286,17 +1224,17 @@ class BuildReader(object):
             return self._relevant_mozbuild_finder.get(path) is not None
 
         def itermozbuild(path):
-            subpath = ""
-            yield "moz.build"
+            subpath = ''
+            yield 'moz.build'
             for part in mozpath.split(path):
                 subpath = mozpath.join(subpath, part)
-                yield mozpath.join(subpath, "moz.build")
+                yield mozpath.join(subpath, 'moz.build')
 
         for path in sorted(paths):
             path = mozpath.normpath(path)
             if os.path.isabs(path):
                 if not mozpath.basedir(path, [root]):
-                    raise Exception("Path outside topsrcdir: %s" % path)
+                    raise Exception('Path outside topsrcdir: %s' % path)
                 path = mozpath.relpath(path, root)
 
             result[path] = [p for p in itermozbuild(path) if exists(p)]
@@ -1343,25 +1281,23 @@ class BuildReader(object):
 
         def export(sandbox):
             return lambda varname: None
-
-        functions["export"] = tuple([export] + list(FUNCTIONS["export"][1:]))
+        functions['export'] = tuple([export] + list(FUNCTIONS['export'][1:]))
 
         metadata = {
-            "functions": functions,
+            'functions': functions,
         }
 
         contexts = defaultdict(list)
         all_contexts = []
-        for context in self.read_mozbuild(
-            mozpath.join(topsrcdir, "moz.build"), self.config, metadata=metadata
-        ):
+        for context in self.read_mozbuild(mozpath.join(topsrcdir, 'moz.build'),
+                                          self.config, metadata=metadata):
             # Explicitly set directory traversal variables to override default
             # traversal rules.
             if not isinstance(context, SubContext):
-                for v in ("DIRS", "GYP_DIRS"):
+                for v in ('DIRS', 'GYP_DIRS'):
                     context[v][:] = []
 
-                context["DIRS"] = sorted(dirs[context.main_path])
+                context['DIRS'] = sorted(dirs[context.main_path])
 
             contexts[context.main_path].append(context)
             all_contexts.append(context)
@@ -1369,8 +1305,7 @@ class BuildReader(object):
         result = {}
         for path, paths in path_mozbuilds.items():
             result[path] = six.moves.reduce(
-                lambda x, y: x + y, (contexts[p] for p in paths), []
-            )
+                lambda x, y: x + y, (contexts[p] for p in paths), [])
 
         return result, all_contexts
 
@@ -1403,11 +1338,11 @@ class BuildReader(object):
             if pattern == relpath:
                 return True
 
-            return "*" in pattern and mozpath.match(relpath, pattern)
+            return '*' in pattern and mozpath.match(relpath, pattern)
 
         for path, ctxs in paths.items():
             # Should be normalized by read_relevant_mozbuilds.
-            assert "\\" not in path
+            assert '\\' not in path
 
             flags = Files(Context())
 
@@ -1423,7 +1358,7 @@ class BuildReader(object):
                 ctx_rel_dir = ctx.relsrcdir
                 if ctx_rel_dir:
                     assert path.startswith(ctx_rel_dir)
-                    relpath = path[len(ctx_rel_dir) + 1 :]
+                    relpath = path[len(ctx_rel_dir) + 1:]
                 else:
                     relpath = path
 

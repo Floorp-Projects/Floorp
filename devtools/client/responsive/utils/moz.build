@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "e10s.js",
-    "key.js",
-    "l10n.js",
-    "message.js",
-    "notification.js",
-    "orientation.js",
-    "ua.js",
-    "window.js",
+    'e10s.js',
+    'key.js',
+    'l10n.js',
+    'message.js',
+    'notification.js',
+    'orientation.js',
+    'ua.js',
+    'window.js',
 )

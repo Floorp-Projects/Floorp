@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsITCPSocketCallback.idl",
-    "nsIUDPSocketChild.idl",
+    'nsITCPSocketCallback.idl',
+    'nsIUDPSocketChild.idl',
 ]
 
-XPIDL_MODULE = "dom_network"
+XPIDL_MODULE = 'dom_network'

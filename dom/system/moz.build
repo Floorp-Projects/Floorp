@@ -41,67 +41,67 @@ with Files("tests/mochitest.ini"):
 with Files("tests/*1197901*"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
-toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if toolkit == "windows":
-    DIRS += ["windows"]
-elif toolkit == "cocoa":
-    DIRS += ["mac"]
-elif toolkit == "android":
-    DIRS += ["android"]
-elif toolkit == "gtk":
-    DIRS += ["linux"]
+if toolkit == 'windows':
+    DIRS += ['windows']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
+elif toolkit == 'android':
+    DIRS += ['android']
+elif toolkit == 'gtk':
+    DIRS += ['linux']
 
-if toolkit != "cocoa":
+if toolkit != 'cocoa':
     EXPORTS += [
-        "nsOSPermissionRequest.h",
+        'nsOSPermissionRequest.h',
     ]
 
 XPIDL_SOURCES += [
-    "nsIOSFileConstantsService.idl",
-    "nsIOSPermissionRequest.idl",
+    'nsIOSFileConstantsService.idl',
+    'nsIOSPermissionRequest.idl',
 ]
 
-XPIDL_MODULE = "dom_system"
+XPIDL_MODULE = 'dom_system'
 
 EXPORTS += [
-    "nsDeviceSensors.h",
-    "nsOSPermissionRequestBase.h",
+    'nsDeviceSensors.h',
+    'nsOSPermissionRequestBase.h',
 ]
 
 EXPORTS.mozilla += [
-    "OSFileConstants.h",
+    'OSFileConstants.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "IOUtils.h",
+    'IOUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    "IOUtils.cpp",
-    "nsDeviceSensors.cpp",
-    "nsOSPermissionRequestBase.cpp",
-    "OSFileConstants.cpp",
+    'IOUtils.cpp',
+    'nsDeviceSensors.cpp',
+    'nsOSPermissionRequestBase.cpp',
+    'OSFileConstants.cpp',
 ]
 
 EXTRA_JS_MODULES += [
-    "NetworkGeolocationProvider.jsm",
+    'NetworkGeolocationProvider.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/bindings",
-    "/js/xpconnect/loader",
-    "/xpcom/base",
+    '/dom/base',
+    '/dom/bindings',
+    '/js/xpconnect/loader',
+    '/xpcom/base',
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini", "tests/ioutils/chrome.ini"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini', 'tests/ioutils/chrome.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

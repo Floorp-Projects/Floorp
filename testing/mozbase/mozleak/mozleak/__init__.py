@@ -11,4 +11,4 @@ from __future__ import absolute_import
 from .leaklog import process_leak_log
 from .lsan import LSANLeaks
 
-__all__ = ["process_leak_log", "LSANLeaks"]
+__all__ = ['process_leak_log', 'LSANLeaks']

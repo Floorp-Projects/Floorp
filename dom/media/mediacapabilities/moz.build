@@ -4,29 +4,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "MediaCapabilities.h",
+    'MediaCapabilities.h',
 ]
 
 EXPORTS.mozilla += [
-    "BenchmarkStorageChild.h",
-    "BenchmarkStorageParent.h",
-    "KeyValueStorage.h",
+    'BenchmarkStorageChild.h',
+    'BenchmarkStorageParent.h',
+    'KeyValueStorage.h',
 ]
 
 EXPORTS += [
-    "DecoderBenchmark.h",
+    'DecoderBenchmark.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BenchmarkStorageChild.cpp",
-    "BenchmarkStorageParent.cpp",
-    "DecoderBenchmark.cpp",
-    "KeyValueStorage.cpp",
-    "MediaCapabilities.cpp",
+    'BenchmarkStorageChild.cpp',
+    'BenchmarkStorageParent.cpp',
+    'DecoderBenchmark.cpp',
+    'KeyValueStorage.cpp',
+    'MediaCapabilities.cpp',
 ]
 
-IPDL_SOURCES += ["PBenchmarkStorage.ipdl"]
+IPDL_SOURCES += [
+    'PBenchmarkStorage.ipdl'
+]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

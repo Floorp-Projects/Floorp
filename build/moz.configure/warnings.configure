@@ -4,44 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option(
-    "--enable-warnings-as-errors",
-    env="MOZ_ENABLE_WARNINGS_AS_ERRORS",
-    default=depends("MOZ_AUTOMATION")(lambda x: bool(x)),
-    help="{Enable|Disable} treating warnings as errors",
-)
+option('--enable-warnings-as-errors', env='MOZ_ENABLE_WARNINGS_AS_ERRORS',
+       default=depends('MOZ_AUTOMATION')(lambda x: bool(x)),
+       help='{Enable|Disable} treating warnings as errors')
 
 
-@depends("--enable-warnings-as-errors")
+@depends('--enable-warnings-as-errors')
 def rust_warning_flags(warnings_as_errors):
     flags = []
 
     # Note that cargo passes --cap-lints warn to rustc for third-party code, so
     # we don't need a very complicated setup.
     if warnings_as_errors:
-        flags.append("-Dwarnings")
+        flags.append('-Dwarnings')
     else:
-        flags.extend(("--cap-lints", "warn"))
+        flags.extend(('--cap-lints', 'warn'))
 
     return flags
 
+c_warning_flag = dependable('-Werror')
 
-c_warning_flag = dependable("-Werror")
 
-
-@depends("--enable-warnings-as-errors", c_warning_flag)
+@depends('--enable-warnings-as-errors', c_warning_flag)
 def warnings_as_errors(warnings_as_errors, c_warning_flag):
     if not warnings_as_errors:
-        return ""
+        return ''
 
     return c_warning_flag
 
-
-set_config("WARNINGS_AS_ERRORS", warnings_as_errors)
+set_config('WARNINGS_AS_ERRORS', warnings_as_errors)
 # We have a peculiar setup in old-configure.in where some compilation tests
 # depend on enabling warnings-as-errors even if it's disabled for Firefox
 # compilation.  We therefore need this assignment.
-add_old_configure_assignment("WARNINGS_AS_ERRORS", c_warning_flag)
+add_old_configure_assignment('WARNINGS_AS_ERRORS', c_warning_flag)
 
 
 # GCC/Clang warnings:
@@ -49,70 +44,70 @@ add_old_configure_assignment("WARNINGS_AS_ERRORS", c_warning_flag)
 # https://clang.llvm.org/docs/DiagnosticsReference.html
 
 # lots of useful warnings
-add_gcc_warning("-Wall")
+add_gcc_warning('-Wall')
 
 # catch implicit truncation of enum values assigned to smaller bit fields
-check_and_add_gcc_warning("-Wbitfield-enum-conversion")
+check_and_add_gcc_warning('-Wbitfield-enum-conversion')
 
 # catches bugs, e.g. "if (c); foo();", few false positives
-add_gcc_warning("-Wempty-body")
+add_gcc_warning('-Wempty-body')
 
 # catches return types with qualifiers like const
-add_gcc_warning("-Wignored-qualifiers")
+add_gcc_warning('-Wignored-qualifiers')
 
 # function declaration hides virtual function from base class
-add_gcc_warning("-Woverloaded-virtual", cxx_compiler)
+add_gcc_warning('-Woverloaded-virtual', cxx_compiler)
 
 # catches pointer arithmetic using NULL or sizeof(void)
-add_gcc_warning("-Wpointer-arith")
+add_gcc_warning('-Wpointer-arith')
 
 # catch modifying constructor parameter that shadows member variable
-check_and_add_gcc_warning("-Wshadow-field-in-constructor-modified")
+check_and_add_gcc_warning('-Wshadow-field-in-constructor-modified')
 
 # catches comparing signed/unsigned ints
-add_gcc_warning("-Wsign-compare")
+add_gcc_warning('-Wsign-compare')
 
 # catches overflow bugs, few false positives
-add_gcc_warning("-Wtype-limits")
+add_gcc_warning('-Wtype-limits')
 
 # catches some dead code
-add_gcc_warning("-Wunreachable-code")
-check_and_add_gcc_warning("-Wunreachable-code-return")
+add_gcc_warning('-Wunreachable-code')
+check_and_add_gcc_warning('-Wunreachable-code-return')
 
 # catches treating string literals as non-const
-add_gcc_warning("-Wwrite-strings", cxx_compiler)
+add_gcc_warning('-Wwrite-strings', cxx_compiler)
 
 # turned on by -Wall, but we use offsetof on non-POD types frequently
-add_gcc_warning("-Wno-invalid-offsetof", cxx_compiler)
+add_gcc_warning('-Wno-invalid-offsetof', cxx_compiler)
 
 # catches objects passed by value to variadic functions.
-check_and_add_gcc_warning("-Wclass-varargs")
+check_and_add_gcc_warning('-Wclass-varargs')
 
 # catches empty if/switch/for initialization statements that have no effect
-check_and_add_gcc_warning("-Wempty-init-stmt", cxx_compiler)
+check_and_add_gcc_warning('-Wempty-init-stmt', cxx_compiler)
 
 # catches some implicit conversion of floats to ints
-check_and_add_gcc_warning("-Wfloat-overflow-conversion")
-check_and_add_gcc_warning("-Wfloat-zero-conversion")
+check_and_add_gcc_warning('-Wfloat-overflow-conversion')
+check_and_add_gcc_warning('-Wfloat-zero-conversion')
 
 # catches issues around loops
-check_and_add_gcc_warning("-Wloop-analysis")
+check_and_add_gcc_warning('-Wloop-analysis')
 
 # catches C++ version forward-compat issues
-check_and_add_gcc_warning("-Wc++2a-compat", cxx_compiler)
+check_and_add_gcc_warning('-Wc++2a-compat', cxx_compiler)
 
 # catches possible misuse of the comma operator
-check_and_add_gcc_warning("-Wcomma", cxx_compiler)
+check_and_add_gcc_warning('-Wcomma', cxx_compiler)
 
 # catches duplicated conditions in if-else-if chains
-check_and_add_gcc_warning("-Wduplicated-cond")
+check_and_add_gcc_warning('-Wduplicated-cond')
 
 # catches unintentional switch case fallthroughs
-check_and_add_gcc_warning("-Wimplicit-fallthrough", cxx_compiler)
+check_and_add_gcc_warning('-Wimplicit-fallthrough', cxx_compiler)
 
 # catches unused variable/function declarations
-check_and_add_gcc_warning("-Wunused-function", cxx_compiler)
-check_and_add_gcc_warning("-Wunused-variable", cxx_compiler)
+check_and_add_gcc_warning('-Wunused-function', cxx_compiler)
+check_and_add_gcc_warning('-Wunused-variable', cxx_compiler)
 
 # catches expressions used as a null pointer constant
 # XXX: at the time of writing, the version of clang used on the OS X test
@@ -122,123 +117,120 @@ check_and_add_gcc_warning("-Wunused-variable", cxx_compiler)
 # -Werror=non-literal-null-conversion, but we only do that when
 # --enable-warnings-as-errors is specified so that no unexpected fatal
 # warnings are produced.
-check_and_add_gcc_warning(
-    "-Werror=non-literal-null-conversion", when="--enable-warnings-as-errors"
-)
+check_and_add_gcc_warning('-Werror=non-literal-null-conversion',
+                          when='--enable-warnings-as-errors')
 
 # catches string literals used in boolean expressions
-check_and_add_gcc_warning("-Wstring-conversion")
+check_and_add_gcc_warning('-Wstring-conversion')
 
 # catches comparisons that are always true or false
-check_and_add_gcc_warning("-Wtautological-overlap-compare")
-check_and_add_gcc_warning("-Wtautological-unsigned-enum-zero-compare")
-check_and_add_gcc_warning("-Wtautological-unsigned-zero-compare")
+check_and_add_gcc_warning('-Wtautological-overlap-compare')
+check_and_add_gcc_warning('-Wtautological-unsigned-enum-zero-compare')
+check_and_add_gcc_warning('-Wtautological-unsigned-zero-compare')
 # This can be triggered by certain patterns used deliberately in portable code
-check_and_add_gcc_warning("-Wno-error=tautological-type-limit-compare")
+check_and_add_gcc_warning('-Wno-error=tautological-type-limit-compare')
 
 # we inline 'new' and 'delete' in mozalloc
-check_and_add_gcc_warning("-Wno-inline-new-delete", cxx_compiler)
+check_and_add_gcc_warning('-Wno-inline-new-delete', cxx_compiler)
 
 # Prevent the following GCC warnings from being treated as errors:
 # too many false positives
-check_and_add_gcc_warning("-Wno-error=maybe-uninitialized")
+check_and_add_gcc_warning('-Wno-error=maybe-uninitialized')
 
 # we don't want our builds held hostage when a platform-specific API
 # becomes deprecated.
-check_and_add_gcc_warning("-Wno-error=deprecated-declarations")
+check_and_add_gcc_warning('-Wno-error=deprecated-declarations')
 
 # false positives depending on optimization
-check_and_add_gcc_warning("-Wno-error=array-bounds")
+check_and_add_gcc_warning('-Wno-error=array-bounds')
 
 # can't get rid of those PGO warnings
-check_and_add_gcc_warning("-Wno-error=coverage-mismatch")
+check_and_add_gcc_warning('-Wno-error=coverage-mismatch')
 
 # -Wbackend-plugin warnings from Android PGO profile-use builds:
 # error: /builds/worker/workspace/build/src/mozglue/misc/AutoProfilerLabel.cpp:
 #  Function control flow change detected (hash mismatch)
 #  _ZN7mozilla17AutoProfilerLabelD2Ev [-Werror,-Wbackend-plugin]
-check_and_add_gcc_warning("-Wno-error=backend-plugin")
+check_and_add_gcc_warning('-Wno-error=backend-plugin')
 
 # false positives depending on optimizations
-check_and_add_gcc_warning("-Wno-error=free-nonheap-object")
+check_and_add_gcc_warning('-Wno-error=free-nonheap-object')
 
 # Would be a pain to fix all occurrences, for very little gain
-check_and_add_gcc_warning("-Wno-multistatement-macros")
+check_and_add_gcc_warning('-Wno-multistatement-macros')
 
 # Disable the -Werror for return-std-move because of a false positive
 # on nsTAutoStringN: https://bugs.llvm.org/show_bug.cgi?id=37249
-check_and_add_gcc_warning("-Wno-error=return-std-move")
+check_and_add_gcc_warning('-Wno-error=return-std-move')
 
 # Disable the -Werror for -Wclass-memaccess as we have a long
 # tail of issues to fix
-check_and_add_gcc_warning("-Wno-error=class-memaccess")
+check_and_add_gcc_warning('-Wno-error=class-memaccess')
 
 # -Watomic-alignment is a new warning in clang 7 that seems way too broad.
 # https://bugs.llvm.org/show_bug.cgi?id=38593
-check_and_add_gcc_warning("-Wno-error=atomic-alignment")
+check_and_add_gcc_warning('-Wno-error=atomic-alignment')
 
 # New warning with gcc 9. Not useful
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1515356
-check_and_add_gcc_warning("-Wno-error=deprecated-copy")
+check_and_add_gcc_warning('-Wno-error=deprecated-copy')
 
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
-    "-Wformat", when=depends(target)(lambda t: t.kernel != "WINNT")
-)
+    '-Wformat', when=depends(target)(lambda t: t.kernel != 'WINNT'))
 
 # Add compile-time warnings for unprotected functions and format functions
 # that represent possible security problems. Enable this only when -Wformat
 # is enabled, otherwise it is an error
-check_and_add_gcc_warning(
-    "-Wformat-security", when=c_format_warning & cxx_format_warning
-)
-check_and_add_gcc_warning(
-    "-Wformat-overflow=2", when=c_format_warning & cxx_format_warning
-)
+check_and_add_gcc_warning('-Wformat-security',
+                          when=c_format_warning & cxx_format_warning)
+check_and_add_gcc_warning('-Wformat-overflow=2',
+                          when=c_format_warning & cxx_format_warning)
 
 # Other MinGW specific things
-with only_when(depends(target)(lambda t: t.kernel == "WINNT")):
+with only_when(depends(target)(lambda t: t.kernel == 'WINNT')):
     # When compiling for Windows with gcc, we encounter lots of "#pragma warning"'s
     # which is an MSVC-only pragma that GCC does not recognize.
-    check_and_add_gcc_warning("-Wno-unknown-pragmas")
+    check_and_add_gcc_warning('-Wno-unknown-pragmas')
 
     # When compiling for Windows with gcc, gcc throws false positives and true
     # positives where the callsite is ifdef-ed out
-    check_and_add_gcc_warning("-Wno-unused-function")
+    check_and_add_gcc_warning('-Wno-unused-function')
 
     # When compiling for Windows with gcc, gcc cannot produce this warning
     # correctly: it mistakes DWORD_PTR and ULONG_PTR as types you cannot
     # give NULL to. (You can in fact do that.)
-    check_and_add_gcc_warning("-Wno-conversion-null")
+    check_and_add_gcc_warning('-Wno-conversion-null')
 
     # Throughout the codebase we regularly have switch statements off of enums
     # without covering every value in the enum. We don't care about these warnings.
-    check_and_add_gcc_warning("-Wno-switch")
+    check_and_add_gcc_warning('-Wno-switch')
 
     # Another code pattern we have is using start and end constants in enums of
     # different types. We do this for safety, but then when comparing it throws
     # an error, which we would like to ignore. This seems to only affect the MinGW
     # build, but we're not sure why.
-    check_and_add_gcc_warning("-Wno-enum-compare")
+    check_and_add_gcc_warning('-Wno-enum-compare')
 
 # We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
-check_and_add_gcc_warning("-Wno-gnu-zero-variadic-macro-arguments")
+check_and_add_gcc_warning('-Wno-gnu-zero-variadic-macro-arguments')
 
 # Make it an error to be missing function declarations.
-check_and_add_gcc_warning("-Werror=implicit-function-declaration")
+check_and_add_gcc_warning('-Werror=implicit-function-declaration')
 
 # New in clang 11. We can't really do anything about this warning.
-check_and_add_gcc_warning("-Wno-psabi")
+check_and_add_gcc_warning('-Wno-psabi')
 
 # Disable broken missing-braces warning on old clang versions
 check_and_add_gcc_warning(
-    "-Wno-missing-braces",
-    when=depends(c_compiler)(lambda c: c.type == "clang" and c.version < "6.0"),
-)
+    '-Wno-missing-braces',
+    when=depends(c_compiler)(lambda c: c.type == 'clang' and c.version < '6.0'))
 
 
 # Please keep these last in this file
-add_old_configure_assignment("_WARNINGS_CFLAGS", warnings_flags.cflags)
-add_old_configure_assignment("_WARNINGS_CXXFLAGS", warnings_flags.cxxflags)
-add_old_configure_assignment("_WARNINGS_HOST_CFLAGS", warnings_flags.host_cflags)
-add_old_configure_assignment("_WARNINGS_HOST_CXXFLAGS", warnings_flags.host_cxxflags)
+add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_flags.cflags)
+add_old_configure_assignment('_WARNINGS_CXXFLAGS', warnings_flags.cxxflags)
+add_old_configure_assignment(
+    '_WARNINGS_HOST_CFLAGS', warnings_flags.host_cflags)
+add_old_configure_assignment(
+    '_WARNINGS_HOST_CXXFLAGS', warnings_flags.host_cxxflags)

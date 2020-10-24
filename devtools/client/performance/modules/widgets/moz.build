@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "graphs.js",
-    "marker-details.js",
-    "markers-overview.js",
-    "tree-view.js",
+    'graphs.js',
+    'marker-details.js',
+    'markers-overview.js',
+    'tree-view.js',
 )

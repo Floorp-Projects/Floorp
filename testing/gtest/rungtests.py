@@ -16,7 +16,7 @@ import mozlog
 import mozprocess
 from mozrunner.utils import get_stack_fixer_function
 
-log = mozlog.unstructured.getLogger("gtest")
+log = mozlog.unstructured.getLogger('gtest')
 
 
 class GTests(object):
@@ -25,15 +25,8 @@ class GTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_gtest(
-        self,
-        prog,
-        xre_path,
-        cwd,
-        symbols_path=None,
-        utility_path=None,
-        enable_webrender=False,
-    ):
+    def run_gtest(self, prog, xre_path, cwd, symbols_path=None,
+                  utility_path=None, enable_webrender=False):
         """
         Run a single C++ unit test program.
 
@@ -62,45 +55,34 @@ class GTests(object):
         if utility_path:
             stack_fixer = get_stack_fixer_function(utility_path, symbols_path)
             if stack_fixer:
-
-                def f(line):
-                    return stream_output(stack_fixer(line))
-
+                def f(line): return stream_output(stack_fixer(line))
                 process_output = f
 
-        proc = mozprocess.ProcessHandler(
-            [prog, "-unittest", "--gtest_death_test_style=threadsafe"],
-            cwd=cwd,
-            env=env,
-            processOutputLine=process_output,
-        )
+        proc = mozprocess.ProcessHandler([prog, "-unittest",
+                                         "--gtest_death_test_style=threadsafe"],
+                                         cwd=cwd,
+                                         env=env,
+                                         processOutputLine=process_output)
         # TODO: After bug 811320 is fixed, don't let .run() kill the process,
         # instead use a timeout in .wait() and then kill to get a stack.
-        proc.run(
-            timeout=GTests.TEST_PROC_TIMEOUT,
-            outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
-        )
+        proc.run(timeout=GTests.TEST_PROC_TIMEOUT,
+                 outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
         proc.wait()
         log.info("gtest | process wait complete, returncode=%s" % proc.proc.returncode)
         if proc.timedOut:
             if proc.outputTimedOut:
-                log.testFail(
-                    "gtest | timed out after %d seconds without output",
-                    GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
-                )
+                log.testFail("gtest | timed out after %d seconds without output",
+                             GTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             else:
-                log.testFail(
-                    "gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT
-                )
+                log.testFail("gtest | timed out after %d seconds",
+                             GTests.TEST_PROC_TIMEOUT)
             return False
         if mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest"):
             # mozcrash will output the log failure line for us.
             return False
         result = proc.proc.returncode == 0
         if not result:
-            log.testFail(
-                "gtest | test failed with return code %d", proc.proc.returncode
-            )
+            log.testFail("gtest | test failed with return code %d", proc.proc.returncode)
         return result
 
     def build_core_environment(self, env={}):
@@ -110,7 +92,7 @@ class GTests(object):
         env["MOZ_XRE_DIR"] = self.xre_path
         env["MOZ_GMP_PATH"] = os.pathsep.join(
             os.path.join(self.xre_path, p, "1.0")
-            for p in ("gmp-fake", "gmp-fakeopenh264")
+            for p in ('gmp-fake', 'gmp-fakeopenh264')
         )
         env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
@@ -159,8 +141,8 @@ class GTests(object):
         if mozinfo.info["asan"]:
             # Symbolizer support
             llvmsym = os.path.join(
-                self.xre_path, "llvm-symbolizer" + mozinfo.info["bin_suffix"]
-            )
+                self.xre_path,
+                "llvm-symbolizer" + mozinfo.info["bin_suffix"])
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 log.info("gtest | ASan using symbolizer at %s", llvmsym)
@@ -181,39 +163,31 @@ class gtestOptions(argparse.ArgumentParser):
     def __init__(self):
         super(gtestOptions, self).__init__()
 
-        self.add_argument(
-            "--cwd",
-            dest="cwd",
-            default=os.getcwd(),
-            help="absolute path to directory from which " "to run the binary",
-        )
-        self.add_argument(
-            "--xre-path",
-            dest="xre_path",
-            default=None,
-            help="absolute path to directory containing XRE " "(probably xulrunner)",
-        )
-        self.add_argument(
-            "--symbols-path",
-            dest="symbols_path",
-            default=None,
-            help="absolute path to directory containing breakpad "
-            "symbols, or the URL of a zip file containing "
-            "symbols",
-        )
-        self.add_argument(
-            "--utility-path",
-            dest="utility_path",
-            default=None,
-            help="path to a directory containing utility program binaries",
-        )
-        self.add_argument(
-            "--enable-webrender",
-            action="store_true",
-            dest="enable_webrender",
-            default=False,
-            help="Enable the WebRender compositor in Gecko.",
-        )
+        self.add_argument("--cwd",
+                          dest="cwd",
+                          default=os.getcwd(),
+                          help="absolute path to directory from which "
+                               "to run the binary")
+        self.add_argument("--xre-path",
+                          dest="xre_path",
+                          default=None,
+                          help="absolute path to directory containing XRE "
+                               "(probably xulrunner)")
+        self.add_argument("--symbols-path",
+                          dest="symbols_path",
+                          default=None,
+                          help="absolute path to directory containing breakpad "
+                               "symbols, or the URL of a zip file containing "
+                               "symbols")
+        self.add_argument("--utility-path",
+                          dest="utility_path",
+                          default=None,
+                          help="path to a directory containing utility program binaries")
+        self.add_argument("--enable-webrender",
+                          action="store_true",
+                          dest="enable_webrender",
+                          default=False,
+                          help="Enable the WebRender compositor in Gecko.")
         self.add_argument("args", nargs=argparse.REMAINDER)
 
 
@@ -221,7 +195,7 @@ def update_mozinfo():
     """walk up directories to find mozinfo.json update the info"""
     path = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
     dirs = set()
-    while path != os.path.expanduser("~"):
+    while path != os.path.expanduser('~'):
         if path in dirs:
             break
         dirs.add(path)
@@ -247,14 +221,11 @@ def main():
     options.xre_path = os.path.abspath(options.xre_path)
     tester = GTests()
     try:
-        result = tester.run_gtest(
-            prog,
-            options.xre_path,
-            options.cwd,
-            symbols_path=options.symbols_path,
-            utility_path=options.utility_path,
-            enable_webrender=options.enable_webrender,
-        )
+        result = tester.run_gtest(prog, options.xre_path,
+                                  options.cwd,
+                                  symbols_path=options.symbols_path,
+                                  utility_path=options.utility_path,
+                                  enable_webrender=options.enable_webrender)
     except Exception as e:
         log.error(str(e))
         result = False
@@ -263,5 +234,5 @@ def main():
     sys.exit(exit_code)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

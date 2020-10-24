@@ -4,37 +4,43 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += ["GeckoViewExternalAppService.cpp", "GeckoViewStreamListener.cpp"]
-EXPORTS += ["GeckoViewExternalAppService.h", "GeckoViewStreamListener.h"]
+SOURCES += [
+    'GeckoViewExternalAppService.cpp',
+    'GeckoViewStreamListener.cpp'
+]
+EXPORTS += [
+    'GeckoViewExternalAppService.h',
+    'GeckoViewStreamListener.h'
+]
 
-if CONFIG["MOZ_ANDROID_HISTORY"]:
+if CONFIG['MOZ_ANDROID_HISTORY']:
     EXPORTS += [
-        "GeckoViewHistory.h",
+        'GeckoViewHistory.h',
     ]
     SOURCES += [
-        "GeckoViewHistory.cpp",
+        'GeckoViewHistory.cpp',
     ]
-    include("/ipc/chromium/chromium-config.mozbuild")
+    include('/ipc/chromium/chromium-config.mozbuild')
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 EXTRA_COMPONENTS += [
-    "GeckoView.manifest",
+    'GeckoView.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    "ColorPickerDelegate.jsm",
-    "FilePickerDelegate.jsm",
-    "GeckoViewPermission.jsm",
-    "GeckoViewPrompt.jsm",
-    "GeckoViewPrompter.jsm",
-    "GeckoViewPush.jsm",
-    "GeckoViewStartup.jsm",
-    "LoginStorageDelegate.jsm",
-    "PromptCollection.jsm",
-    "ShareDelegate.jsm",
+    'ColorPickerDelegate.jsm',
+    'FilePickerDelegate.jsm',
+    'GeckoViewPermission.jsm',
+    'GeckoViewPrompt.jsm',
+    'GeckoViewPrompter.jsm',
+    'GeckoViewPush.jsm',
+    'GeckoViewStartup.jsm',
+    'LoginStorageDelegate.jsm',
+    'PromptCollection.jsm',
+    'ShareDelegate.jsm',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

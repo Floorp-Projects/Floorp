@@ -15,34 +15,34 @@ import yaml
 # This is a list of flags that determine which process a measurement is allowed
 # to record from.
 KNOWN_PROCESS_FLAGS = {
-    "all": "All",
-    "all_children": "AllChildren",
-    "main": "Main",
-    "content": "Content",
-    "gpu": "Gpu",
-    "socket": "Socket",
+    'all': 'All',
+    'all_children': 'AllChildren',
+    'main': 'Main',
+    'content': 'Content',
+    'gpu': 'Gpu',
+    'socket': 'Socket',
     # Historical Values
-    "all_childs": "AllChildren",  # Supporting files from before bug 1363725
+    'all_childs': 'AllChildren',  # Supporting files from before bug 1363725
 }
 
-GECKOVIEW_STREAMING_PRODUCT = "geckoview_streaming"
+GECKOVIEW_STREAMING_PRODUCT = 'geckoview_streaming'
 
 SUPPORTED_PRODUCTS = {
-    "firefox": "Firefox",
-    "fennec": "Fennec",
-    GECKOVIEW_STREAMING_PRODUCT: "GeckoviewStreaming",
-    "thunderbird": "Thunderbird",
+    'firefox': 'Firefox',
+    'fennec': 'Fennec',
+    GECKOVIEW_STREAMING_PRODUCT: 'GeckoviewStreaming',
+    'thunderbird': 'Thunderbird',
     # Historical, deprecated values:
     # 'geckoview': 'Geckoview',
 }
 
 SUPPORTED_OPERATING_SYSTEMS = [
-    "mac",
-    "linux",
-    "windows",
-    "android",
-    "unix",
-    "all",
+    'mac',
+    'linux',
+    'windows',
+    'android',
+    'unix',
+    'all',
 ]
 
 # mozinfo identifies linux, BSD variants, Solaris and SunOS as unix
@@ -54,17 +54,17 @@ UNIX_LIKE_OS = [
 ]
 
 CANONICAL_OPERATING_SYSTEMS = {
-    "darwin": "mac",
-    "linux": "linux",
-    "winnt": "windows",
-    "android": "android",
+    'darwin': 'mac',
+    'linux': 'linux',
+    'winnt': 'windows',
+    'android': 'android',
     # for simplicity we treat all BSD and Solaris systems as unix
-    "gnu/kfreebsd": "unix",
-    "sunos": "unix",
-    "dragonfly": "unix",
-    "freeunix": "unix",
-    "netunix": "unix",
-    "openunix": "unix",
+    'gnu/kfreebsd': 'unix',
+    'sunos': 'unix',
+    'dragonfly': 'unix',
+    'freeunix': 'unix',
+    'netunix': 'unix',
+    'openunix': 'unix'
 }
 
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
@@ -102,7 +102,7 @@ class ParserError(Exception):
 
 
 def is_valid_process_name(name):
-    return name in KNOWN_PROCESS_FLAGS
+    return (name in KNOWN_PROCESS_FLAGS)
 
 
 def process_name_to_enum(name):
@@ -110,15 +110,15 @@ def process_name_to_enum(name):
 
 
 def is_valid_product(name):
-    return name in SUPPORTED_PRODUCTS
+    return (name in SUPPORTED_PRODUCTS)
 
 
 def is_geckoview_streaming_product(name):
-    return name == GECKOVIEW_STREAMING_PRODUCT
+    return (name == GECKOVIEW_STREAMING_PRODUCT)
 
 
 def is_valid_os(name):
-    return name in SUPPORTED_OPERATING_SYSTEMS
+    return (name in SUPPORTED_OPERATING_SYSTEMS)
 
 
 def canonical_os(os):
@@ -140,11 +140,11 @@ def static_assert(output, expression, message):
     :param message: the string literal that will appear if the expression evaluates to
         false.
     """
-    print('static_assert(%s, "%s");' % (expression, message), file=output)
+    print("static_assert(%s, \"%s\");" % (expression, message), file=output)
 
 
 def validate_expiration_version(expiration):
-    """Makes sure the expiration version has the expected format.
+    """ Makes sure the expiration version has the expected format.
 
     Allowed examples: "10", "20", "60", "never"
     Disallowed examples: "Never", "asd", "4000000", "60a1", "30.5a1"
@@ -152,22 +152,22 @@ def validate_expiration_version(expiration):
     :param expiration: the expiration version string.
     :return: True if the expiration validates correctly, False otherwise.
     """
-    if expiration != "never" and not re.match(r"^\d{1,3}$", expiration):
+    if expiration != 'never' and not re.match(r'^\d{1,3}$', expiration):
         return False
 
     return True
 
 
 def add_expiration_postfix(expiration):
-    """Formats the expiration version and adds a version postfix if needed.
+    """ Formats the expiration version and adds a version postfix if needed.
 
     :param expiration: the expiration version string.
     :return: the modified expiration string.
     """
-    if re.match(r"^[1-9][0-9]*$", expiration):
+    if re.match(r'^[1-9][0-9]*$', expiration):
         return expiration + ".0a1"
 
-    if re.match(r"^[1-9][0-9]*\.0$", expiration):
+    if re.match(r'^[1-9][0-9]*\.0$', expiration):
         return expiration + "a1"
 
     return expiration
@@ -176,11 +176,10 @@ def add_expiration_postfix(expiration):
 def load_yaml_file(filename):
     """ Load a YAML file from disk, throw a ParserError on failure."""
     try:
-        with open(filename, "r") as f:
+        with open(filename, 'r') as f:
             return yaml.safe_load(f)
     except IOError as e:
-        raise ParserError("Error opening " + filename + ": " + e.message)
+        raise ParserError('Error opening ' + filename + ': ' + e.message)
     except ValueError as e:
-        raise ParserError(
-            "Error parsing processes in {}: {}".format(filename, e.message)
-        )
+        raise ParserError('Error parsing processes in {}: {}'
+                          .format(filename, e.message))

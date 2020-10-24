@@ -7,22 +7,22 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
-TEST_DIRS += ["gtest"]
+TEST_DIRS += ['gtest']
 
 EXPORTS.mozilla += [
-    "FetchPreloader.h",
-    "PreloaderBase.h",
-    "PreloadHashKey.h",
-    "PreloadService.h",
+    'FetchPreloader.h',
+    'PreloaderBase.h',
+    'PreloadHashKey.h',
+    'PreloadService.h',
 ]
 
 UNIFIED_SOURCES += [
-    "FetchPreloader.cpp",
-    "PreloaderBase.cpp",
-    "PreloadHashKey.cpp",
-    "PreloadService.cpp",
+    'FetchPreloader.cpp',
+    'PreloaderBase.cpp',
+    'PreloadHashKey.cpp',
+    'PreloadService.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')

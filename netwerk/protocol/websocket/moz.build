@@ -4,66 +4,66 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Networking: WebSockets")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Networking: WebSockets')
 
 XPIDL_SOURCES += [
-    "nsITransportProvider.idl",
-    "nsIWebSocketChannel.idl",
-    "nsIWebSocketConnection.idl",
-    "nsIWebSocketEventService.idl",
-    "nsIWebSocketImpl.idl",
-    "nsIWebSocketListener.idl",
+    'nsITransportProvider.idl',
+    'nsIWebSocketChannel.idl',
+    'nsIWebSocketConnection.idl',
+    'nsIWebSocketEventService.idl',
+    'nsIWebSocketImpl.idl',
+    'nsIWebSocketListener.idl',
 ]
 
-XPIDL_MODULE = "necko_websocket"
+XPIDL_MODULE = 'necko_websocket'
 
 EXPORTS.mozilla.net += [
-    "BaseWebSocketChannel.h",
-    "IPCTransportProvider.h",
-    "WebSocketChannel.h",
-    "WebSocketChannelChild.h",
-    "WebSocketChannelParent.h",
-    "WebSocketConnectionChild.h",
-    "WebSocketConnectionParent.h",
-    "WebSocketEventListenerChild.h",
-    "WebSocketEventListenerParent.h",
-    "WebSocketEventService.h",
-    "WebSocketFrame.h",
+    'BaseWebSocketChannel.h',
+    'IPCTransportProvider.h',
+    'WebSocketChannel.h',
+    'WebSocketChannelChild.h',
+    'WebSocketChannelParent.h',
+    'WebSocketConnectionChild.h',
+    'WebSocketConnectionParent.h',
+    'WebSocketEventListenerChild.h',
+    'WebSocketEventListenerParent.h',
+    'WebSocketEventService.h',
+    'WebSocketFrame.h',
 ]
 
 UNIFIED_SOURCES += [
-    "BaseWebSocketChannel.cpp",
-    "IPCTransportProvider.cpp",
-    "nsWebSocketConnection.cpp",
-    "WebSocketChannel.cpp",
-    "WebSocketChannelChild.cpp",
-    "WebSocketChannelParent.cpp",
-    "WebSocketConnectionChild.cpp",
-    "WebSocketConnectionParent.cpp",
-    "WebSocketEventListenerChild.cpp",
-    "WebSocketEventListenerParent.cpp",
-    "WebSocketEventService.cpp",
-    "WebSocketFrame.cpp",
+    'BaseWebSocketChannel.cpp',
+    'IPCTransportProvider.cpp',
+    'nsWebSocketConnection.cpp',
+    'WebSocketChannel.cpp',
+    'WebSocketChannelChild.cpp',
+    'WebSocketChannelParent.cpp',
+    'WebSocketConnectionChild.cpp',
+    'WebSocketConnectionParent.cpp',
+    'WebSocketEventListenerChild.cpp',
+    'WebSocketEventListenerParent.cpp',
+    'WebSocketEventService.cpp',
+    'WebSocketFrame.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PTransportProvider.ipdl",
-    "PWebSocket.ipdl",
-    "PWebSocketConnection.ipdl",
-    "PWebSocketEventListener.ipdl",
+    'PTransportProvider.ipdl',
+    'PWebSocket.ipdl',
+    'PWebSocketConnection.ipdl',
+    'PWebSocketEventListener.ipdl',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/netwerk/base",
+    '/dom/base',
+    '/netwerk/base',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
 
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

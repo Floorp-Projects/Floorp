@@ -9,23 +9,23 @@ from __future__ import absolute_import
 from gdbpp import GeckoPrettyPrinter
 
 
-@GeckoPrettyPrinter("InfallibleTArray", "^InfallibleTArray<.*>$")
-@GeckoPrettyPrinter("FallibleTArray", "^FallibleTArray<.*>$")
-@GeckoPrettyPrinter("AutoTArray", "^AutoTArray<.*>$")
-@GeckoPrettyPrinter("nsTArray", "^nsTArray<.*>$")
+@GeckoPrettyPrinter('InfallibleTArray', '^InfallibleTArray<.*>$')
+@GeckoPrettyPrinter('FallibleTArray', '^FallibleTArray<.*>$')
+@GeckoPrettyPrinter('AutoTArray', '^AutoTArray<.*>$')
+@GeckoPrettyPrinter('nsTArray', '^nsTArray<.*>$')
 class tarray_printer(object):
     def __init__(self, value):
         self.value = value
         self.elem_type = value.type.template_argument(0)
 
     def children(self):
-        length = self.value["mHdr"].dereference()["mLength"]
-        data = self.value["mHdr"] + 1
+        length = self.value['mHdr'].dereference()['mLength']
+        data = self.value['mHdr'] + 1
         elements = data.cast(self.elem_type.pointer())
-        return (("%d" % i, (elements + i).dereference()) for i in range(0, int(length)))
+        return (('%d' % i, (elements + i).dereference()) for i in range(0, int(length)))
 
     def to_string(self):
         return str(self.value.type)
 
     def display_hint(self):
-        return "array"
+        return 'array'

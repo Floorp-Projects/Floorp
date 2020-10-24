@@ -4,169 +4,167 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Preferences: Backend")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Preferences: Backend')
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["test/gtest"]
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['test/gtest']
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/unit/xpcshell.ini",
-    "test/unit_ipc/xpcshell.ini",
+    'test/unit/xpcshell.ini',
+    'test/unit_ipc/xpcshell.ini',
 ]
 
 XPIDL_SOURCES += [
-    "nsIPrefBranch.idl",
-    "nsIPrefLocalizedString.idl",
-    "nsIPrefService.idl",
-    "nsIRelativeFilePref.idl",
+    'nsIPrefBranch.idl',
+    'nsIPrefLocalizedString.idl',
+    'nsIPrefService.idl',
+    'nsIRelativeFilePref.idl',
 ]
 
-XPIDL_MODULE = "pref"
+XPIDL_MODULE = 'pref'
 
 pref_groups = [
-    "accessibility",
-    "alerts",
-    "apz",
-    "beacon",
-    "bidi",
-    "browser",
-    "canvas",
-    "channelclassifier",
-    "clipboard",
-    "content",
-    "converter",
-    "datareporting",
-    "device",
-    "devtools",
-    "docshell",
-    "dom",
-    "editor",
-    "extensions",
-    "findbar",
-    "fission",
-    "font",
-    "full_screen_api",
-    "general",
-    "geo",
-    "gfx",
-    "gl",
-    "html5",
-    "idle_period",
-    "image",
-    "intl",
-    "javascript",
-    "layers",
-    "layout",
-    "mathml",
-    "media",
-    "mousewheel",
-    "network",
-    "nglayout",
-    "page_load",
-    "permissions",
-    "plain_text",
-    "plugin",
-    "plugins",
-    "preferences",
-    "print",
-    "privacy",
-    "prompts",
-    "security",
-    "slider",
-    "storage",
-    "svg",
-    "telemetry",
-    "test",
-    "threads",
-    "toolkit",
-    "ui",
-    "urlclassifier",
-    "view_source",
-    "webgl",
-    "widget",
-    "xul",
-    "zoom",
+    'accessibility',
+    'alerts',
+    'apz',
+    'beacon',
+    'bidi',
+    'browser',
+    'canvas',
+    'channelclassifier',
+    'clipboard',
+    'content',
+    'converter',
+    'datareporting',
+    'device',
+    'devtools',
+    'docshell',
+    'dom',
+    'editor',
+    'extensions',
+    'findbar',
+    'fission',
+    'font',
+    'full_screen_api',
+    'general',
+    'geo',
+    'gfx',
+    'gl',
+    'html5',
+    'idle_period',
+    'image',
+    'intl',
+    'javascript',
+    'layers',
+    'layout',
+    'mathml',
+    'media',
+    'mousewheel',
+    'network',
+    'nglayout',
+    'page_load',
+    'permissions',
+    'plain_text',
+    'plugin',
+    'plugins',
+    'preferences',
+    'print',
+    'privacy',
+    'prompts',
+    'security',
+    'slider',
+    'storage',
+    'svg',
+    'telemetry',
+    'test',
+    'threads',
+    'toolkit',
+    'ui',
+    'urlclassifier',
+    'view_source',
+    'webgl',
+    'widget',
+    'xul',
+    'zoom',
 ]
-if CONFIG["OS_TARGET"] == "Android":
+if CONFIG['OS_TARGET'] == 'Android':
     pref_groups += [
-        "android",
-        "consoleservice",
+        'android',
+        'consoleservice',
     ]
-if CONFIG["FUZZING"]:
-    pref_groups += ["fuzzing"]
+if CONFIG['FUZZING']:
+    pref_groups += [
+        'fuzzing'
+    ]
 pref_groups = tuple(sorted(pref_groups))
 
 # Note: generate_static_pref_list.py relies on StaticPrefListAll.h being first.
-gen_h = ["init/StaticPrefListAll.h"]
-gen_h += ["StaticPrefsAll.h"]
-gen_h += ["init/StaticPrefList_{}.h".format(pg) for pg in pref_groups]
-gen_h += ["StaticPrefs_{}.h".format(pg) for pg in pref_groups]
+gen_h = ['init/StaticPrefListAll.h']
+gen_h += ['StaticPrefsAll.h']
+gen_h += ['init/StaticPrefList_{}.h'.format(pg) for pg in pref_groups]
+gen_h += ['StaticPrefs_{}.h'.format(pg) for pg in pref_groups]
 
-gen_cpp = ["init/StaticPrefsCGetters.cpp"]
+gen_cpp = ['init/StaticPrefsCGetters.cpp']
 
-gen_rs = ["static_prefs.rs"]
+gen_rs = ['static_prefs.rs']
 
 EXPORTS.mozilla += [
-    "init/StaticPrefListBegin.h",
-    "init/StaticPrefListEnd.h",
-    "nsRelativeFilePref.h",
-    "Preferences.h",
-    "StaticPrefsBase.h",
+    'init/StaticPrefListBegin.h',
+    'init/StaticPrefListEnd.h',
+    'nsRelativeFilePref.h',
+    'Preferences.h',
+    'StaticPrefsBase.h',
 ]
-EXPORTS.mozilla += sorted(["!" + g for g in gen_h])
+EXPORTS.mozilla += sorted(['!' + g for g in gen_h])
 
 UNIFIED_SOURCES += [
-    "Preferences.cpp",
-    "SharedPrefMap.cpp",
+    'Preferences.cpp',
+    'SharedPrefMap.cpp',
 ]
 
 gen_all_tuple = tuple(gen_h + gen_cpp + gen_rs)
 
-GeneratedFile(
-    *gen_all_tuple,
-    script="init/generate_static_pref_list.py",
-    entry_point="emit_code",
-    inputs=["init/StaticPrefList.yaml"]
-)
+GeneratedFile(*gen_all_tuple, script='init/generate_static_pref_list.py',
+              entry_point='emit_code', inputs=['init/StaticPrefList.yaml'])
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "test/python.ini",
+    'test/python.ini',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-SPHINX_TREES["/modules/libpref"] = "docs"
+SPHINX_TREES['/modules/libpref'] = 'docs'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-DEFINES["OS_ARCH"] = CONFIG["OS_ARCH"]
-DEFINES["MOZ_WIDGET_TOOLKIT"] = CONFIG["MOZ_WIDGET_TOOLKIT"]
+DEFINES['OS_ARCH'] = CONFIG['OS_ARCH']
+DEFINES['MOZ_WIDGET_TOOLKIT'] = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if CONFIG["MOZ_SERVICES_SYNC"]:
-    DEFINES["MOZ_SERVICES_SYNC"] = True
+if CONFIG['MOZ_SERVICES_SYNC']:
+  DEFINES['MOZ_SERVICES_SYNC'] = True
 
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
 
-if CONFIG["CPU_ARCH"] == "aarch64":
-    DEFINES["MOZ_AARCH64"] = True
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    DEFINES['MOZ_AARCH64'] = True
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    if not CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
-        FINAL_TARGET_PP_FILES[CONFIG["ANDROID_CPU_ARCH"]] += [
-            "greprefs.js",
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    if not CONFIG['MOZ_ANDROID_FAT_AAR_ARCHITECTURES']:
+        FINAL_TARGET_PP_FILES[CONFIG['ANDROID_CPU_ARCH']] += [
+            'greprefs.js',
         ]
     else:
-        for arch in CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
+        for arch in CONFIG['MOZ_ANDROID_FAT_AAR_ARCHITECTURES']:
             FINAL_TARGET_FILES[arch] += [
-                "!/dist/fat-aar/output/{arch}/greprefs.js".format(arch=arch),
+                 '!/dist/fat-aar/output/{arch}/greprefs.js'.format(arch=arch),
             ]
 else:
     FINAL_TARGET_PP_FILES += [
-        "greprefs.js",
+        'greprefs.js',
     ]

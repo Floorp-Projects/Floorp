@@ -7,70 +7,67 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: GMP")
 
-SharedLibrary("clearkey")
+SharedLibrary('clearkey')
 
-FINAL_TARGET = "dist/bin/gmp-clearkey/0.1"
+FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
-FINAL_TARGET_PP_FILES += ["manifest.json.in"]
+FINAL_TARGET_PP_FILES += ['manifest.json.in']
 
 UNIFIED_SOURCES += [
-    "ClearKeyBase64.cpp",
-    "ClearKeyCDM.cpp",
-    "ClearKeyDecryptionManager.cpp",
-    "ClearKeyPersistence.cpp",
-    "ClearKeySession.cpp",
-    "ClearKeySessionManager.cpp",
-    "ClearKeyStorage.cpp",
-    "ClearKeyUtils.cpp",
-    "gmp-clearkey.cpp",
+    'ClearKeyBase64.cpp',
+    'ClearKeyCDM.cpp',
+    'ClearKeyDecryptionManager.cpp',
+    'ClearKeyPersistence.cpp',
+    'ClearKeySession.cpp',
+    'ClearKeySessionManager.cpp',
+    'ClearKeyStorage.cpp',
+    'ClearKeyUtils.cpp',
+    'gmp-clearkey.cpp',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
-        "VideoDecoder.cpp",
-        "WMFH264Decoder.cpp",
+        'VideoDecoder.cpp',
+        'WMFH264Decoder.cpp',
     ]
 
     SOURCES += [
-        "WMFUtils.cpp",
+        'WMFUtils.cpp',
     ]
 
     OS_LIBS += [
-        "mfuuid",
+        'mfuuid',
     ]
 
-    DEFINES["ENABLE_WMF"] = True
+    DEFINES['ENABLE_WMF'] = True
 
 
-DEFINES["CDM_IMPLEMENTATION"] = True
+DEFINES['CDM_IMPLEMENTATION'] = True
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
 DisableStlWrapping()
-DEFINES["MOZ_NO_MOZALLOC"] = True
+DEFINES['MOZ_NO_MOZALLOC'] = True
 
 USE_LIBS += [
-    "nss",
-    "psshparser",
+    'nss',
+    'psshparser',
 ]
 
 # Suppress warnings in third-party code.
 CFLAGS += [
-    "-Wno-pointer-to-int-cast",
-    "-Wno-sign-compare",
+    '-Wno-pointer-to-int-cast',
+    '-Wno-sign-compare',
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
-        "-include",
-        "stdio.h",  # for sprintf() prototype
-        "-include",
-        "unistd.h",  # for getpid() prototype
+        '-include', 'stdio.h',      # for sprintf() prototype
+        '-include', 'unistd.h',     # for getpid() prototype
     ]
-elif CONFIG["CC_TYPE"] == "clang-cl":
+elif CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
-        "-FI",
-        "stdio.h",  # for sprintf() prototype
+        '-FI', 'stdio.h',           # for sprintf() prototype
     ]

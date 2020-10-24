@@ -23,44 +23,37 @@ class Settings(MachCommandBase):
     available. In the future, this module will be used to modify settings, help
     people create configs via a wizard, etc.
     """
-
     def __init__(self, *args, **kwargs):
         super(Settings, self).__init__(*args, **kwargs)
         self._settings = self._mach_context.settings
 
-    @Command(
-        "settings", category="devenv", description="Show available config settings."
-    )
-    @CommandArgument(
-        "-l",
-        "--list",
-        dest="short",
-        action="store_true",
-        help="Show settings in a concise list",
-    )
+    @Command('settings', category='devenv',
+             description='Show available config settings.')
+    @CommandArgument('-l', '--list', dest='short', action='store_true',
+                     help='Show settings in a concise list')
     def run_settings(self, short=None):
         """List available settings."""
         types = {v: k for k, v in TYPE_CLASSES.items()}
-        wrapper = TextWrapper(initial_indent="# ", subsequent_indent="# ")
+        wrapper = TextWrapper(initial_indent='# ', subsequent_indent='# ')
         for i, section in enumerate(sorted(self._settings)):
             if not short:
-                print("%s[%s]" % ("" if i == 0 else "\n", section))
+                print('%s[%s]' % ('' if i == 0 else '\n', section))
 
             for option in sorted(self._settings[section]._settings):
                 meta = self._settings[section].get_meta(option)
-                desc = meta["description"]
+                desc = meta['description']
 
                 if short:
-                    print("%s.%s -- %s" % (section, option, desc.splitlines()[0]))
+                    print('%s.%s -- %s' % (section, option, desc.splitlines()[0]))
                     continue
 
-                if option == "*":
-                    option = "<option>"
+                if option == '*':
+                    option = '<option>'
 
-                if "choices" in meta:
-                    value = "{%s}" % ", ".join(meta["choices"])
+                if 'choices' in meta:
+                    value = "{%s}" % ', '.join(meta['choices'])
                 else:
-                    value = "<%s>" % types[meta["type_cls"]]
+                    value = '<%s>' % types[meta['type_cls']]
 
                 print(wrapper.fill(desc))
-                print(";%s=%s" % (option, value))
+                print(';%s=%s' % (option, value))

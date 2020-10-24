@@ -29,7 +29,7 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
     # taskId as the taskGroupId.  The process that created the decision task
     # helpfully placed it in this same taskGroup.  If there is no $TASK_ID,
     # fall back to a slugid
-    scheduler_id = "{}-level-{}".format(graph_config["trust-domain"], params["level"])
+    scheduler_id = '{}-level-{}'.format(graph_config['trust-domain'], params['level'])
 
     # Add the taskGroupId, schedulerId and optionally the decision task
     # dependency
@@ -41,11 +41,11 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
         # the taskgraph, then it already implicitly depends on the decision
         # task.  The result is that tasks do not start immediately. if this
         # loop fails halfway through, none of the already-created tasks run.
-        if not any(t in taskgraph.tasks for t in task_def.get("dependencies", [])):
-            task_def.setdefault("dependencies", []).append(decision_task_id)
+        if not any(t in taskgraph.tasks for t in task_def.get('dependencies', [])):
+            task_def.setdefault('dependencies', []).append(decision_task_id)
 
-        task_def["taskGroupId"] = decision_task_id
-        task_def["schedulerId"] = scheduler_id
+        task_def['taskGroupId'] = decision_task_id
+        task_def['schedulerId'] = scheduler_id
 
     # If `testing` is True, then run without parallelization
     concurrency = CONCURRENCY if not testing else 1
@@ -78,7 +78,7 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
                 # come back to this later.
                 # Some dependencies aren't in our graph, so make sure to filter
                 # those out
-                deps = set(task_def.get("dependencies", [])) & alltasks
+                deps = set(task_def.get('dependencies', [])) & alltasks
                 if any((d not in fs or not fs[d].done()) for d in deps):
                     continue
 
@@ -87,7 +87,7 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
 
                 # Schedule tasks as many times as task_duplicates indicates
                 attributes = taskgraph.tasks[task_id].attributes
-                for i in range(1, attributes.get("task_duplicates", 1)):
+                for i in range(1, attributes.get('task_duplicates', 1)):
                     # We use slugid() since we want a distinct task id
                     submit(slugid().decode("ascii"), taskid_to_label[task_id], task_def)
             tasklist.difference_update(to_remove)
@@ -113,24 +113,18 @@ def create_task(session, task_id, label, task_def):
     task_def = resolve_timestamps(now, task_def)
 
     if testing:
-        json.dump(
-            [task_id, task_def],
-            sys.stdout,
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "),
-        )
+        json.dump([task_id, task_def], sys.stdout,
+                  sort_keys=True, indent=4, separators=(',', ': '))
         # add a newline
         print("")
         return
 
     logger.debug("Creating task with taskId {} for {}".format(task_id, label))
-    res = session.put(
-        "http://taskcluster/queue/v1/task/{}".format(task_id), data=json.dumps(task_def)
-    )
+    res = session.put('http://taskcluster/queue/v1/task/{}'.format(task_id),
+                      data=json.dumps(task_def))
     if res.status_code != 200:
         try:
-            logger.error(res.json()["message"])
+            logger.error(res.json()['message'])
         except Exception:
             logger.error(res.text)
         res.raise_for_status()

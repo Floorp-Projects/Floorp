@@ -4,114 +4,117 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += ["AccEvent.h", "nsAccessibilityService.h"]
-
-EXPORTS.mozilla.a11y += [
-    "AccTypes.h",
-    "DocManager.h",
-    "FocusManager.h",
-    "IDSet.h",
-    "Platform.h",
-    "RelationType.h",
-    "Role.h",
-    "SelectionManager.h",
-    "States.h",
+EXPORTS += [
+    'AccEvent.h',
+    'nsAccessibilityService.h'
 ]
 
-if CONFIG["MOZ_DEBUG"]:
+EXPORTS.mozilla.a11y += [
+    'AccTypes.h',
+    'DocManager.h',
+    'FocusManager.h',
+    'IDSet.h',
+    'Platform.h',
+    'RelationType.h',
+    'Role.h',
+    'SelectionManager.h',
+    'States.h',
+]
+
+if CONFIG['MOZ_DEBUG']:
     EXPORTS.mozilla.a11y += [
-        "Logging.h",
+        'Logging.h',
     ]
 
 UNIFIED_SOURCES += [
-    "AccessibleOrProxy.cpp",
-    "AccEvent.cpp",
-    "AccGroupInfo.cpp",
-    "AccIterator.cpp",
-    "ARIAMap.cpp",
-    "ARIAStateMap.cpp",
-    "Asserts.cpp",
-    "DocManager.cpp",
-    "EmbeddedObjCollector.cpp",
-    "EventQueue.cpp",
-    "EventTree.cpp",
-    "Filters.cpp",
-    "FocusManager.cpp",
-    "NotificationController.cpp",
-    "nsAccessibilityService.cpp",
-    "nsAccessiblePivot.cpp",
-    "nsAccUtils.cpp",
-    "nsCoreUtils.cpp",
-    "nsEventShell.cpp",
-    "nsTextEquivUtils.cpp",
-    "Pivot.cpp",
-    "SelectionManager.cpp",
-    "StyleInfo.cpp",
-    "TextAttrs.cpp",
-    "TextRange.cpp",
-    "TextUpdater.cpp",
-    "TreeWalker.cpp",
+    'AccessibleOrProxy.cpp',
+    'AccEvent.cpp',
+    'AccGroupInfo.cpp',
+    'AccIterator.cpp',
+    'ARIAMap.cpp',
+    'ARIAStateMap.cpp',
+    'Asserts.cpp',
+    'DocManager.cpp',
+    'EmbeddedObjCollector.cpp',
+    'EventQueue.cpp',
+    'EventTree.cpp',
+    'Filters.cpp',
+    'FocusManager.cpp',
+    'NotificationController.cpp',
+    'nsAccessibilityService.cpp',
+    'nsAccessiblePivot.cpp',
+    'nsAccUtils.cpp',
+    'nsCoreUtils.cpp',
+    'nsEventShell.cpp',
+    'nsTextEquivUtils.cpp',
+    'Pivot.cpp',
+    'SelectionManager.cpp',
+    'StyleInfo.cpp',
+    'TextAttrs.cpp',
+    'TextRange.cpp',
+    'TextUpdater.cpp',
+    'TreeWalker.cpp',
 ]
 
-if CONFIG["A11Y_LOG"]:
+if CONFIG['A11Y_LOG']:
     UNIFIED_SOURCES += [
-        "Logging.cpp",
+        'Logging.cpp',
     ]
 
 LOCAL_INCLUDES += [
-    "/accessible/generic",
-    "/accessible/html",
-    "/accessible/ipc",
-    "/dom/base",
-    "/dom/xul",
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/ipc',
+    '/dom/base',
+    '/dom/xul',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
+        '/accessible/ipc/win',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
+        '/accessible/ipc/other',
     ]
 
 LOCAL_INCLUDES += [
-    "/accessible/xpcom",
-    "/accessible/xul",
-    "/dom/base",
-    "/ipc/chromium/src",
-    "/layout/generic",
-    "/layout/style",
-    "/layout/xul",
-    "/layout/xul/tree/",
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/dom/base',
+    '/ipc/chromium/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul',
+    '/layout/xul/tree/',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
-        "/accessible/atk",
+        '/accessible/atk',
     ]
-    CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/accessible/windows/ia2",
-        "/accessible/windows/msaa",
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/accessible/mac",
+        '/accessible/mac',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/accessible/android",
+        '/accessible/android',
     ]
 else:
     LOCAL_INCLUDES += [
-        "/accessible/other",
+        '/accessible/other',
     ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

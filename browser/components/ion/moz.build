@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
-with Files("**"):
-    BUG_COMPONENT = ("Firefox", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'General')
 
 TESTING_JS_MODULES += [
-    "schemas/IonContentSchema.json",
-    "schemas/IonStudyAddonsSchema.json",
+    'schemas/IonContentSchema.json',
+    'schemas/IonStudyAddonsSchema.json',
 ]

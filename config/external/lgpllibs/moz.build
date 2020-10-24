@@ -10,5 +10,5 @@
 #
 # Any library added here should also be reflected in the about:license page.
 
-GeckoSharedLibrary("lgpllibs", linkage=None)
-SHARED_LIBRARY_NAME = "lgpllibs"
+GeckoSharedLibrary('lgpllibs', linkage=None)
+SHARED_LIBRARY_NAME = 'lgpllibs'

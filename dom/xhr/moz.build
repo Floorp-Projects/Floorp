@@ -8,32 +8,32 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
 EXPORTS.mozilla.dom += [
-    "XMLHttpRequest.h",
-    "XMLHttpRequestEventTarget.h",
-    "XMLHttpRequestMainThread.h",
-    "XMLHttpRequestString.h",
-    "XMLHttpRequestUpload.h",
+    'XMLHttpRequest.h',
+    'XMLHttpRequestEventTarget.h',
+    'XMLHttpRequestMainThread.h',
+    'XMLHttpRequestString.h',
+    'XMLHttpRequestUpload.h',
 ]
 
 UNIFIED_SOURCES += [
-    "XMLHttpRequest.cpp",
-    "XMLHttpRequestEventTarget.cpp",
-    "XMLHttpRequestMainThread.cpp",
-    "XMLHttpRequestString.cpp",
-    "XMLHttpRequestUpload.cpp",
-    "XMLHttpRequestWorker.cpp",
+    'XMLHttpRequest.cpp',
+    'XMLHttpRequestEventTarget.cpp',
+    'XMLHttpRequestMainThread.cpp',
+    'XMLHttpRequestString.cpp',
+    'XMLHttpRequestUpload.cpp',
+    'XMLHttpRequestWorker.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/file",
-    "/netwerk/base",
+    '/dom/base',
+    '/dom/file',
+    '/netwerk/base',
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [ 'tests/browser.ini' ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

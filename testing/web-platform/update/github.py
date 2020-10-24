@@ -4,7 +4,6 @@
 
 import json
 from six.moves.urllib.parse import urljoin
-
 requests = None
 
 
@@ -41,7 +40,8 @@ class GitHub(object):
         headers_ = self.headers
         if headers is not None:
             headers_.update(headers)
-        kwargs = {"headers": headers_, "auth": self.auth}
+        kwargs = {"headers": headers_,
+                  "auth": self.auth}
         if data is not None:
             kwargs["data"] = json.dumps(data)
 
@@ -120,10 +120,11 @@ class PullRequest(object):
 
     @classmethod
     def create(cls, repo, title, head, base, body):
-        data = repo.gh.post(
-            repo.path("pulls"),
-            {"title": title, "head": head, "base": base, "body": body},
-        )
+        data = repo.gh.post(repo.path("pulls"),
+                            {"title": title,
+                             "head": head,
+                             "base": base,
+                             "body": body})
         return cls(repo, data)
 
     def path(self, suffix):
@@ -137,12 +138,11 @@ class PullRequest(object):
         return self._issue
 
     def merge(self):
-        """Merge the Pull Request into its base branch."""
-        self.repo.gh.put(
-            self.path("merge"),
-            {"merge_method": "merge"},
-            headers={"Accept": "application/vnd.github.polaris-preview+json"},
-        )
+        """Merge the Pull Request into its base branch.
+        """
+        self.repo.gh.put(self.path("merge"),
+                         {"merge_method": "merge"},
+                         headers={"Accept": "application/vnd.github.polaris-preview+json"})
 
 
 class Issue(object):
@@ -165,4 +165,5 @@ class Issue(object):
 
         :param message: The text of the comment
         """
-        self.repo.gh.post(self.path("comments"), {"body": message})
+        self.repo.gh.post(self.path("comments"),
+                          {"body": message})

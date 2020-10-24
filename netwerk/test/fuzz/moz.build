@@ -5,25 +5,28 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "FuzzingStreamListener.cpp",
-    "TestFtpFuzzing.cpp",
-    "TestHttpFuzzing.cpp",
-    "TestURIFuzzing.cpp",
-    "TestWebsocketFuzzing.cpp",
+    'FuzzingStreamListener.cpp',
+    'TestFtpFuzzing.cpp',
+    'TestHttpFuzzing.cpp',
+    'TestURIFuzzing.cpp',
+    'TestWebsocketFuzzing.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    "/caps",
-    "/netwerk/base",
-    "/netwerk/protocol/ftp",
-    "/netwerk/protocol/http",
-    "/xpcom/tests/gtest",
+    '/caps',
+    '/netwerk/base',
+    '/netwerk/protocol/ftp',
+    '/netwerk/protocol/http',
+    '/xpcom/tests/gtest',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-LOCAL_INCLUDES += ["!/xpcom", "/xpcom/components"]
+LOCAL_INCLUDES += [
+    '!/xpcom',
+    '/xpcom/components'
+]
 
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')

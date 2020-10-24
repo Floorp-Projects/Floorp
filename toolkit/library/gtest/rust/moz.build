@@ -4,10 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("../../rust/gkrust-features.mozbuild")
+include('../../rust/gkrust-features.mozbuild')
 
-RustLibrary(
-    "gkrust-gtest",
-    gkrust_features,
-    output_category=None if CONFIG["LINK_GTEST_DURING_COMPILE"] else "gtest",
-)
+RustLibrary('gkrust-gtest', gkrust_features,
+            output_category=None if CONFIG['LINK_GTEST_DURING_COMPILE'] else 'gtest')

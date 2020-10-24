@@ -68,7 +68,7 @@ class TaskPool(object):
     class TerminateTask(Exception):
         pass
 
-    def __init__(self, tasks, cwd=".", job_limit=4, timeout=150):
+    def __init__(self, tasks, cwd='.', job_limit=4, timeout=150):
         self.pending = iter(tasks)
         self.cwd = cwd
         self.job_limit = job_limit
@@ -78,18 +78,13 @@ class TaskPool(object):
     def run_all(self):
         # The currently running tasks: a set of Task instances.
         running = set()
-        with open(os.devnull, "r") as devnull:
+        with open(os.devnull, 'r') as devnull:
             while True:
                 while len(running) < self.job_limit and self.next_pending:
                     task = self.next_pending
-                    p = Popen(
-                        task.cmd(),
-                        bufsize=16384,
-                        stdin=devnull,
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        cwd=self.cwd,
-                    )
+                    p = Popen(task.cmd(), bufsize=16384,
+                              stdin=devnull, stdout=PIPE, stderr=PIPE,
+                              cwd=self.cwd)
 
                     # Put the stdout and stderr pipes in non-blocking mode. See
                     # the post-'select' code below for details.
@@ -112,12 +107,10 @@ class TaskPool(object):
                 secs_to_next_deadline = max(min([t.deadline for t in running]) - now, 0)
 
                 # Wait for output or a timeout.
-                stdouts_and_stderrs = [t.pipe.stdout for t in running] + [
-                    t.pipe.stderr for t in running
-                ]
-                (readable, w, x) = select.select(
-                    stdouts_and_stderrs, [], [], secs_to_next_deadline
-                )
+                stdouts_and_stderrs = ([t.pipe.stdout for t in running]
+                                       + [t.pipe.stderr for t in running])
+                (readable, w, x) = select.select(stdouts_and_stderrs, [], [],
+                                                 secs_to_next_deadline)
                 finished = set()
                 terminate = set()
                 for t in running:
@@ -131,14 +124,14 @@ class TaskPool(object):
                         output = t.pipe.stdout.read(16384)
                         if len(output):
                             try:
-                                t.onStdout(output.decode("utf-8"))
+                                t.onStdout(output.decode('utf-8'))
                             except TerminateTask:
                                 terminate.add(t)
                     if t.pipe.stderr in readable:
                         output = t.pipe.stderr.read(16384)
                         if len(output):
                             try:
-                                t.onStderr(output.decode("utf-8"))
+                                t.onStderr(output.decode('utf-8'))
                             except TerminateTask:
                                 terminate.add(t)
                         else:
@@ -180,14 +173,13 @@ def get_cpu_count():
     # Python 2.6+
     try:
         import multiprocessing
-
         return multiprocessing.cpu_count()
     except (ImportError, NotImplementedError):
         pass
 
     # POSIX
     try:
-        res = int(os.sysconf("SC_NPROCESSORS_ONLN"))
+        res = int(os.sysconf('SC_NPROCESSORS_ONLN'))
         if res > 0:
             return res
     except (AttributeError, ValueError):
@@ -195,7 +187,7 @@ def get_cpu_count():
 
     # Windows
     try:
-        res = int(os.environ["NUMBER_OF_PROCESSORS"])
+        res = int(os.environ['NUMBER_OF_PROCESSORS'])
         if res > 0:
             return res
     except (KeyError, ValueError):
@@ -204,7 +196,7 @@ def get_cpu_count():
     return 1
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Test TaskPool by using it to implement the unique 'sleep sort' algorithm.
     def sleep_sort(ns, timeout):
         sorted = []
@@ -218,20 +210,20 @@ if __name__ == "__main__":
                 super(SortableTask, self).start(pipe, deadline)
 
             def cmd(self):
-                return ["sh", "-c", "echo out; sleep %d; echo err>&2" % (self.n,)]
+                return ['sh', '-c', 'echo out; sleep %d; echo err>&2' % (self.n,)]
 
             def onStdout(self, text):
-                print("%d stdout: %r" % (self.n, text))
+                print('%d stdout: %r' % (self.n, text))
 
             def onStderr(self, text):
-                print("%d stderr: %r" % (self.n, text))
+                print('%d stderr: %r' % (self.n, text))
 
             def onFinished(self, returncode):
-                print("%d (rc=%d)" % (self.n, returncode))
+                print('%d (rc=%d)' % (self.n, returncode))
                 sorted.append(self.n)
 
             def onTimeout(self):
-                print("%d timed out" % (self.n,))
+                print('%d timed out' % (self.n,))
 
         p = TaskPool([SortableTask(_) for _ in ns], job_limit=len(ns), timeout=timeout)
         p.run_all()

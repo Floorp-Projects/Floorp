@@ -15,22 +15,21 @@ from nose.tools import raises
 class TestManifest(unittest.TestCase):
     def test_simple(self):
         simple_dict = {
-            "schema": 1,
-            "origin": {
-                "description": "2D Graphics Library",
-                "license": ["MPL-1.1", "LGPL-2.1"],
-                "name": "cairo",
-                "release": "version 1.6.4",
-                "url": "https://www.cairographics.org/",
+            'schema': 1,
+            'origin': {
+                'description': '2D Graphics Library',
+                'license': ['MPL-1.1', 'LGPL-2.1'],
+                'name': 'cairo',
+                'release': 'version 1.6.4',
+                'url': 'https://www.cairographics.org/',
             },
-            "bugzilla": {
-                "component": "Graphics",
-                "product": "Core",
+            'bugzilla': {
+                'component': 'Graphics',
+                'product': 'Core',
             },
         }
         with mozfile.NamedTemporaryFile() as tf:
-            tf.write(
-                """
+            tf.write("""
 ---
 schema: 1
 origin:
@@ -44,17 +43,14 @@ origin:
 bugzilla:
   product: Core
   component: Graphics
-            """.strip()
-            )
+            """.strip())
             tf.flush()
             self.assertDictEqual(
-                load_moz_yaml(tf.name, require_license_file=False), simple_dict
-            )
+                load_moz_yaml(tf.name, require_license_file=False), simple_dict)
 
         # as above, without the --- yaml prefix
         with mozfile.NamedTemporaryFile() as tf:
-            tf.write(
-                """
+            tf.write("""
 schema: 1
 origin:
   name: cairo
@@ -67,36 +63,32 @@ origin:
 bugzilla:
   product: Core
   component: Graphics
-            """.strip()
-            )
+            """.strip())
             tf.flush()
             self.assertDictEqual(
-                load_moz_yaml(tf.name, require_license_file=False), simple_dict
-            )
+                load_moz_yaml(tf.name, require_license_file=False), simple_dict)
 
     @raises(VerifyError)
     def test_malformed(self):
         with mozfile.NamedTemporaryFile() as tf:
-            tf.write("blah")
+            tf.write('blah')
             tf.flush()
             load_moz_yaml(tf.name, require_license_file=False)
 
     @raises(VerifyError)
     def test_bad_schema(self):
         with mozfile.NamedTemporaryFile() as tf:
-            tf.write("schema: 99")
+            tf.write('schema: 99')
             tf.flush()
             load_moz_yaml(tf.name, require_license_file=False)
 
     @raises(VerifyError)
     def test_json(self):
         with mozfile.NamedTemporaryFile() as tf:
-            tf.write(
-                '{"origin": {"release": "version 1.6.4", "url": "https://w'
-                'ww.cairographics.org/", "description": "2D Graphics Libra'
-                'ry", "license": ["MPL-1.1", "LGPL-2.1"], "name": "cairo"}'
-                ', "bugzilla": {"product": "Core", "component": "Graphics"'
-                '}, "schema": 1}'
-            )
+            tf.write('{"origin": {"release": "version 1.6.4", "url": "https://w'
+                     'ww.cairographics.org/", "description": "2D Graphics Libra'
+                     'ry", "license": ["MPL-1.1", "LGPL-2.1"], "name": "cairo"}'
+                     ', "bugzilla": {"product": "Core", "component": "Graphics"'
+                     '}, "schema": 1}')
             tf.flush()
             load_moz_yaml(tf.name, require_license_file=False)

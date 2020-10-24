@@ -19,20 +19,20 @@ transforms = TransformSequence()
 @transforms.add
 def make_iris_tasks(config, jobs):
     # Each platform will get a copy of the test categories
-    platforms = config.config.get("iris-build-platforms")
+    platforms = config.config.get('iris-build-platforms')
 
     # The fields needing to be resolve_keyed_by'd
     fields = [
-        "dependencies.build",
-        "fetches.build",
-        "run.command",
-        "run-on-projects",
-        "treeherder.platform",
-        "worker.docker-image",
-        "worker.artifacts",
-        "worker.env.PATH",
-        "worker.max-run-time",
-        "worker-type",
+        'dependencies.build',
+        'fetches.build',
+        'run.command',
+        'run-on-projects',
+        'treeherder.platform',
+        'worker.docker-image',
+        'worker.artifacts',
+        'worker.env.PATH',
+        'worker.max-run-time',
+        'worker-type',
     ]
 
     for job in jobs:
@@ -47,14 +47,9 @@ def make_iris_tasks(config, jobs):
             # resolve_keyed_by picks the correct values based on
             # the `by-platform` keys in the task definitions
             for field in fields:
-                resolve_keyed_by(
-                    clone,
-                    field,
-                    clone["name"],
-                    **{
-                        "platform": platform,
-                    }
-                )
+                resolve_keyed_by(clone, field, clone['name'], **{
+                    'platform': platform,
+                })
 
             # iris uses this to select the tests to run in this chunk
             clone["worker"]["env"]["CURRENT_TEST_DIR"] = basename
@@ -82,14 +77,9 @@ def fill_email_data(config, tasks):
         format_kwargs["filterstring"] = "&searchStr=iris%20{}".format(task["name"])
         format_kwargs["chunk"] = task["worker"]["env"]["CURRENT_TEST_DIR"]
 
-        resolve_keyed_by(
-            task,
-            "notify.email",
-            item_name=task["name"],
-            **{
-                "project": config.params["project"],
-            }
-        )
+        resolve_keyed_by(task, 'notify.email', item_name=task["name"], **{
+            'project': config.params["project"],
+        })
 
         email = task["notify"].get("email")
         if email:
@@ -102,24 +92,22 @@ def fill_email_data(config, tasks):
 @transforms.add
 def add_notify_email(config, tasks):
     for task in tasks:
-        notify = task.pop("notify", {})
-        email_config = notify.get("email")
+        notify = task.pop('notify', {})
+        email_config = notify.get('email')
         if email_config:
-            extra = task.setdefault("extra", {})
-            notify = extra.setdefault("notify", {})
-            notify["email"] = {
-                "subject": email_config["subject"],
-                "content": email_config["message"],
-                "link": email_config.get("link", None),
+            extra = task.setdefault('extra', {})
+            notify = extra.setdefault('notify', {})
+            notify['email'] = {
+                'subject': email_config['subject'],
+                'content': email_config['message'],
+                'link': email_config.get('link', None),
             }
 
-            routes = task.setdefault("routes", [])
-            routes.extend(
-                [
-                    "notify.email.{}.on-{}".format(address, reason)
-                    for address in email_config["emails"]
-                    for reason in email_config["on-reasons"]
-                ]
-            )
+            routes = task.setdefault('routes', [])
+            routes.extend([
+                'notify.email.{}.on-{}'.format(address, reason)
+                for address in email_config['emails']
+                for reason in email_config['on-reasons']
+            ])
 
         yield task

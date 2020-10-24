@@ -5,235 +5,236 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIConsoleListener.idl",
-    "nsIConsoleMessage.idl",
-    "nsIConsoleService.idl",
-    "nsICycleCollectorListener.idl",
-    "nsIDebug2.idl",
-    "nsIErrorService.idl",
-    "nsIException.idl",
-    "nsIGZFileWriter.idl",
-    "nsIInterfaceRequestor.idl",
-    "nsIMemory.idl",
-    "nsIMemoryInfoDumper.idl",
-    "nsIMemoryReporter.idl",
-    "nsIMessageLoop.idl",
-    "nsISecurityConsoleMessage.idl",
-    "nsISupports.idl",
-    "nsIUUIDGenerator.idl",
-    "nsIVersionComparator.idl",
-    "nsIWeakReference.idl",
-    "nsrootidl.idl",
+    'nsIConsoleListener.idl',
+    'nsIConsoleMessage.idl',
+    'nsIConsoleService.idl',
+    'nsICycleCollectorListener.idl',
+    'nsIDebug2.idl',
+    'nsIErrorService.idl',
+    'nsIException.idl',
+    'nsIGZFileWriter.idl',
+    'nsIInterfaceRequestor.idl',
+    'nsIMemory.idl',
+    'nsIMemoryInfoDumper.idl',
+    'nsIMemoryReporter.idl',
+    'nsIMessageLoop.idl',
+    'nsISecurityConsoleMessage.idl',
+    'nsISupports.idl',
+    'nsIUUIDGenerator.idl',
+    'nsIVersionComparator.idl',
+    'nsIWeakReference.idl',
+    'nsrootidl.idl',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     XPIDL_SOURCES += [
-        "nsIMacPreferencesReader.idl",
-        "nsIMacUtils.idl",
+        'nsIMacPreferencesReader.idl',
+        'nsIMacUtils.idl',
     ]
     EXPORTS.mozilla += [
-        "MacHelpers.h",
-        "MacStringHelpers.h",
-        "nsMacPreferencesReader.h",
+        'MacHelpers.h',
+        'MacStringHelpers.h',
+        'nsMacPreferencesReader.h',
     ]
     UNIFIED_SOURCES += [
-        "MacHelpers.mm",
-        "MacStringHelpers.mm",
-        "nsMacPreferencesReader.mm",
+        'MacHelpers.mm',
+        'MacStringHelpers.mm',
+        'nsMacPreferencesReader.mm',
     ]
 
-XPIDL_MODULE = "xpcom_base"
+XPIDL_MODULE = 'xpcom_base'
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 EXPORTS += [
-    "!ErrorList.h",
-    "!ErrorNamesInternal.h",
-    "CodeAddressService.h",
-    "nsAlgorithm.h",
-    "nsAutoRef.h",
-    "nsCom.h",
-    "nsCOMPtr.h",
-    "nscore.h",
-    "nsCRTGlue.h",
-    "nsCycleCollectionNoteChild.h",
-    "nsCycleCollectionNoteRootCallback.h",
-    "nsCycleCollectionParticipant.h",
-    "nsCycleCollectionTraversalCallback.h",
-    "nsCycleCollector.h",
-    "nsDebug.h",
-    "nsDebugImpl.h",
-    "nsDumpUtils.h",
-    "nsError.h",
-    "nsErrorService.h",
-    "nsGZFileWriter.h",
-    "nsIClassInfoImpl.h",
-    "nsID.h",
-    "nsIInterfaceRequestorUtils.h",
-    "nsINIParser.h",
-    "nsInterfaceRequestorAgg.h",
-    "nsISizeOf.h",
-    "nsISupportsBase.h",
-    "nsISupportsImpl.h",
-    "nsISupportsUtils.h",
-    "nsIWeakReferenceUtils.h",
-    "nsMaybeWeakPtr.h",
-    "nsMemory.h",
-    "nsMemoryReporterManager.h",
-    "nsObjCExceptions.h",
-    "nsQueryObject.h",
-    "nsSystemInfo.h",
-    "nsTraceRefcnt.h",
-    "nsVersionComparator.h",
-    "nsWeakReference.h",
+    '!ErrorList.h',
+    '!ErrorNamesInternal.h',
+    'CodeAddressService.h',
+    'nsAlgorithm.h',
+    'nsAutoRef.h',
+    'nsCom.h',
+    'nsCOMPtr.h',
+    'nscore.h',
+    'nsCRTGlue.h',
+    'nsCycleCollectionNoteChild.h',
+    'nsCycleCollectionNoteRootCallback.h',
+    'nsCycleCollectionParticipant.h',
+    'nsCycleCollectionTraversalCallback.h',
+    'nsCycleCollector.h',
+    'nsDebug.h',
+    'nsDebugImpl.h',
+    'nsDumpUtils.h',
+    'nsError.h',
+    'nsErrorService.h',
+    'nsGZFileWriter.h',
+    'nsIClassInfoImpl.h',
+    'nsID.h',
+    'nsIInterfaceRequestorUtils.h',
+    'nsINIParser.h',
+    'nsInterfaceRequestorAgg.h',
+    'nsISizeOf.h',
+    'nsISupportsBase.h',
+    'nsISupportsImpl.h',
+    'nsISupportsUtils.h',
+    'nsIWeakReferenceUtils.h',
+    'nsMaybeWeakPtr.h',
+    'nsMemory.h',
+    'nsMemoryReporterManager.h',
+    'nsObjCExceptions.h',
+    'nsQueryObject.h',
+    'nsSystemInfo.h',
+    'nsTraceRefcnt.h',
+    'nsVersionComparator.h',
+    'nsWeakReference.h',
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
-        "nsWindowsHelpers.h",
+        'nsWindowsHelpers.h',
     ]
-    if CONFIG["CC_TYPE"] not in ("gcc", "clang"):
+    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):
         OS_LIBS += [
-            "wscapi",
+            'wscapi',
         ]
 
 EXPORTS.mozilla += [
-    "AppShutdown.h",
-    "AutoRestore.h",
-    "AvailableMemoryTracker.h",
-    "ClearOnShutdown.h",
-    "CountingAllocatorBase.h",
-    "CycleCollectedJSContext.h",
-    "CycleCollectedJSRuntime.h",
-    "Debug.h",
-    "DebuggerOnGCRunnable.h",
-    "DeferredFinalize.h",
-    "EnumeratedArrayCycleCollection.h",
-    "ErrorNames.h",
-    "GkRustUtils.h",
-    "HoldDropJSObjects.h",
-    "IntentionalCrash.h",
-    "JSObjectHolder.h",
-    "Logging.h",
-    "MemoryInfo.h",
-    "MemoryMapping.h",
-    "MemoryReportingProcess.h",
-    "MemoryTelemetry.h",
-    "nsMemoryInfoDumper.h",
-    "NSPRLogModulesParser.h",
-    "OwningNonNull.h",
-    "ShutdownPhase.h",
-    "SizeOfState.h",
-    "StaticLocalPtr.h",
-    "StaticMonitor.h",
-    "StaticMutex.h",
-    "StaticPtr.h",
-    "TupleCycleCollection.h",
+    'AppShutdown.h',
+    'AutoRestore.h',
+    'AvailableMemoryTracker.h',
+    'ClearOnShutdown.h',
+    'CountingAllocatorBase.h',
+    'CycleCollectedJSContext.h',
+    'CycleCollectedJSRuntime.h',
+    'Debug.h',
+    'DebuggerOnGCRunnable.h',
+    'DeferredFinalize.h',
+    'EnumeratedArrayCycleCollection.h',
+    'ErrorNames.h',
+    'GkRustUtils.h',
+    'HoldDropJSObjects.h',
+    'IntentionalCrash.h',
+    'JSObjectHolder.h',
+    'Logging.h',
+    'MemoryInfo.h',
+    'MemoryMapping.h',
+    'MemoryReportingProcess.h',
+    'MemoryTelemetry.h',
+    'nsMemoryInfoDumper.h',
+    'NSPRLogModulesParser.h',
+    'OwningNonNull.h',
+    'ShutdownPhase.h',
+    'SizeOfState.h',
+    'StaticLocalPtr.h',
+    'StaticMonitor.h',
+    'StaticMutex.h',
+    'StaticPtr.h',
+    'TupleCycleCollection.h',
 ]
 
 SOURCES += [
-    # nsDebugImpl isn't unified because we disable PGO so that NS_ABORT_OOM isn't
-    # optimized away oddly.
-    "nsDebugImpl.cpp",
-    # nsDumpUtils.cpp includes SpecialSystemDirectory.h which includes
-    # nsLocalFileMac.h which upsets other files in this dir that have a different
-    # idea about what `TextRange` means.
-    "nsDumpUtils.cpp",
+# nsDebugImpl isn't unified because we disable PGO so that NS_ABORT_OOM isn't
+# optimized away oddly.
+    'nsDebugImpl.cpp',
+# nsDumpUtils.cpp includes SpecialSystemDirectory.h which includes
+# nsLocalFileMac.h which upsets other files in this dir that have a different
+# idea about what `TextRange` means.
+    'nsDumpUtils.cpp',
 ]
-SOURCES["nsDebugImpl.cpp"].no_pgo = True
+SOURCES['nsDebugImpl.cpp'].no_pgo = True
 
 UNIFIED_SOURCES += [
-    "AppShutdown.cpp",
-    "AvailableMemoryTracker.cpp",
-    "ClearOnShutdown.cpp",
-    "CycleCollectedJSContext.cpp",
-    "CycleCollectedJSRuntime.cpp",
-    "Debug.cpp",
-    "DebuggerOnGCRunnable.cpp",
-    "DeferredFinalize.cpp",
-    "ErrorNames.cpp",
-    "GkRustUtils.cpp",
-    "HoldDropJSObjects.cpp",
-    "JSObjectHolder.cpp",
-    "LogCommandLineHandler.cpp",
-    "Logging.cpp",
-    "LogModulePrefWatcher.cpp",
-    "MemoryTelemetry.cpp",
-    "nsClassInfoImpl.cpp",
-    "nsCOMPtr.cpp",
-    "nsConsoleMessage.cpp",
-    "nsConsoleService.cpp",
-    "nsCRTGlue.cpp",
-    "nsCycleCollectionParticipant.cpp",
-    "nsCycleCollector.cpp",
-    "nsCycleCollectorTraceJSHelpers.cpp",
-    "nsErrorService.cpp",
-    "nsGZFileWriter.cpp",
-    "nsID.cpp",
-    "nsIInterfaceRequestorUtils.cpp",
-    "nsINIParser.cpp",
-    "nsInterfaceRequestorAgg.cpp",
-    "nsISupportsImpl.cpp",
-    "nsMemory.cpp",
-    "nsMemoryImpl.cpp",
-    "nsMemoryInfoDumper.cpp",
-    "nsMemoryReporterManager.cpp",
-    "nsMessageLoop.cpp",
-    "NSPRLogModulesParser.cpp",
-    "nsSecurityConsoleMessage.cpp",
-    "nsSystemInfo.cpp",
-    "nsTraceRefcnt.cpp",
-    "nsUUIDGenerator.cpp",
-    "nsVersionComparator.cpp",
-    "nsVersionComparatorImpl.cpp",
-    "nsWeakReference.cpp",
+    'AppShutdown.cpp',
+    'AvailableMemoryTracker.cpp',
+    'ClearOnShutdown.cpp',
+    'CycleCollectedJSContext.cpp',
+    'CycleCollectedJSRuntime.cpp',
+    'Debug.cpp',
+    'DebuggerOnGCRunnable.cpp',
+    'DeferredFinalize.cpp',
+    'ErrorNames.cpp',
+    'GkRustUtils.cpp',
+    'HoldDropJSObjects.cpp',
+    'JSObjectHolder.cpp',
+    'LogCommandLineHandler.cpp',
+    'Logging.cpp',
+    'LogModulePrefWatcher.cpp',
+    'MemoryTelemetry.cpp',
+    'nsClassInfoImpl.cpp',
+    'nsCOMPtr.cpp',
+    'nsConsoleMessage.cpp',
+    'nsConsoleService.cpp',
+    'nsCRTGlue.cpp',
+    'nsCycleCollectionParticipant.cpp',
+    'nsCycleCollector.cpp',
+    'nsCycleCollectorTraceJSHelpers.cpp',
+    'nsErrorService.cpp',
+    'nsGZFileWriter.cpp',
+    'nsID.cpp',
+    'nsIInterfaceRequestorUtils.cpp',
+    'nsINIParser.cpp',
+    'nsInterfaceRequestorAgg.cpp',
+    'nsISupportsImpl.cpp',
+    'nsMemory.cpp',
+    'nsMemoryImpl.cpp',
+    'nsMemoryInfoDumper.cpp',
+    'nsMemoryReporterManager.cpp',
+    'nsMessageLoop.cpp',
+    'NSPRLogModulesParser.cpp',
+    'nsSecurityConsoleMessage.cpp',
+    'nsSystemInfo.cpp',
+    'nsTraceRefcnt.cpp',
+    'nsUUIDGenerator.cpp',
+    'nsVersionComparator.cpp',
+    'nsVersionComparatorImpl.cpp',
+    'nsWeakReference.cpp',
 ]
 
-if CONFIG["OS_TARGET"] in ("Linux", "Android"):
+if CONFIG['OS_TARGET'] in ('Linux', 'Android'):
     UNIFIED_SOURCES += [
-        "MemoryMapping.cpp",
+        'MemoryMapping.cpp',
     ]
 
-if CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
-        "MemoryInfo.cpp",
+        'MemoryInfo.cpp',
     ]
 
 GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
-GeneratedFile(
-    "ErrorNamesInternal.h", script="ErrorList.py", entry_point="error_names_internal_h"
-)
-GeneratedFile("error_list.rs", script="ErrorList.py", entry_point="error_list_rs")
+GeneratedFile("ErrorNamesInternal.h", script="ErrorList.py",
+              entry_point="error_names_internal_h")
+GeneratedFile("error_list.rs", script="ErrorList.py",
+              entry_point="error_list_rs")
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
-        "nsMacUtilsImpl.cpp",
+        'nsMacUtilsImpl.cpp',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
-        "nsCrashOnException.cpp",
+        'nsCrashOnException.cpp',
     ]
 
-if CONFIG["COMPILE_ENVIRONMENT"]:
+if CONFIG['COMPILE_ENVIRONMENT']:
     EXPORTS.mozilla += [
-        "!gk_rust_utils_ffi_generated.h",
+        '!gk_rust_utils_ffi_generated.h',
     ]
 
-    CbindgenHeader("gk_rust_utils_ffi_generated.h", inputs=["/xpcom/rust/gkrust_utils"])
+    CbindgenHeader('gk_rust_utils_ffi_generated.h',
+                   inputs=['/xpcom/rust/gkrust_utils'])
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "../build",
-    "/dom/base",
-    "/mfbt",
-    "/netwerk/base",
-    "/xpcom/ds",
+    '../build',
+    '/dom/base',
+    '/mfbt',
+    '/netwerk/base',
+    '/xpcom/ds',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    CXXFLAGS += CONFIG['TK_CFLAGS']

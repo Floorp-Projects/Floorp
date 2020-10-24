@@ -42,10 +42,8 @@ def define_filter(func):
     """
     decorator to attach the prepare method.
     """
-
     def prepare(*args, **kwargs):
         return (Filter(func, *args, **kwargs),)
-
     func.prepare = prepare
     return func
 
@@ -76,6 +74,7 @@ def apply(data, filters):
 
 
 def parse(string_):
+
     def to_number(string_number):
         try:
             return int(string_number)
@@ -95,14 +94,13 @@ def parse(string_):
 
 # filters that return a scalar
 
-
 @register_filter
 @define_filter
 def mean(series):
     """
     mean of data; needs at least one data point
     """
-    return sum(series) / float(len(series))
+    return sum(series)/float(len(series))
 
 
 @register_filter
@@ -114,11 +112,11 @@ def median(series):
     series = sorted(series)
     if len(series) % 2:
         # odd
-        return series[len(series) / 2]
+        return series[len(series)/2]
     else:
         # even
-        middle = len(series) / 2  # the higher of the middle 2, actually
-        return 0.5 * (series[middle - 1] + series[middle])
+        middle = len(series)/2  # the higher of the middle 2, actually
+        return 0.5*(series[middle-1] + series[middle])
 
 
 @register_filter
@@ -129,7 +127,7 @@ def variance(series):
     """
 
     _mean = mean(series)
-    variance = sum([(i - _mean) ** 2 for i in series]) / float(len(series))
+    variance = sum([(i-_mean)**2 for i in series])/float(len(series))
     return variance
 
 
@@ -139,7 +137,7 @@ def stddev(series):
     """
     standard deviation: http://en.wikipedia.org/wiki/Standard_deviation
     """
-    return variance(series) ** 0.5
+    return variance(series)**0.5
 
 
 @register_filter
@@ -163,7 +161,7 @@ def dromaeo(series):
 @define_filter
 def dromaeo_chunks(series, size):
     for i in range(0, len(series), size):
-        yield series[i : i + size]
+        yield series[i:i+size]
 
 
 @register_filter
@@ -174,9 +172,8 @@ def geometric_mean(series):
     """
     total = 0
     for i in series:
-        total += math.log(i + 1)
+        total += math.log(i+1)
     return math.exp(total / len(series)) - 1
-
 
 # filters that return a list
 
@@ -230,24 +227,23 @@ def ignore_min(series):
 @define_filter
 def v8_subtest(series, name):
     """
-    v8 benchmark score - modified for no sub benchmarks.
-    * removed Crypto and kept Encrypt/Decrypt standalone
-    * removed EarlyBoyer and kept Earley/Boyer standalone
+       v8 benchmark score - modified for no sub benchmarks.
+       * removed Crypto and kept Encrypt/Decrypt standalone
+       * removed EarlyBoyer and kept Earley/Boyer standalone
 
-    this is not 100% in parity but within .3%
+       this is not 100% in parity but within .3%
     """
-    reference = {
-        "Encrypt": 266181.0,
-        "Decrypt": 266181.0,
-        "DeltaBlue": 66118.0,
-        "Earley": 666463.0,
-        "Boyer": 666463.0,
-        "NavierStokes": 1484000.0,
-        "RayTrace": 739989.0,
-        "RegExp": 910985.0,
-        "Richards": 35302.0,
-        "Splay": 81491.0,
-    }
+    reference = {'Encrypt': 266181.,
+                 'Decrypt': 266181.,
+                 'DeltaBlue': 66118.,
+                 'Earley': 666463.,
+                 'Boyer': 666463.,
+                 'NavierStokes': 1484000.,
+                 'RayTrace': 739989.,
+                 'RegExp': 910985.,
+                 'Richards': 35302.,
+                 'Splay': 81491.
+                 }
 
     return reference[name] / geometric_mean(series)
 
@@ -255,4 +251,4 @@ def v8_subtest(series, name):
 @register_filter
 @define_filter
 def responsiveness_Metric(val_list):
-    return sum([float(x) * float(x) / 1000000.0 for x in val_list])
+    return sum([float(x)*float(x) / 1000000.0 for x in val_list])

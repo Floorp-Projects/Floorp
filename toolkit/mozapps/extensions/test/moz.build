@@ -4,17 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["browser"]
+DIRS += ['browser']
 
-BROWSER_CHROME_MANIFESTS += ["xpinstall/browser.ini"]
-MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ['xpinstall/browser.ini']
+MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell/rs-blocklist/xpcshell.ini",
-    "xpcshell/xpcshell-unpack.ini",
-    "xpcshell/xpcshell.ini",
+    'xpcshell/rs-blocklist/xpcshell.ini',
+    'xpcshell/xpcshell-unpack.ini',
+    'xpcshell/xpcshell.ini',
 ]
 
-with Files("xpcshell/rs-blocklist/**"):
-    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
+with Files('xpcshell/rs-blocklist/**'):
+    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')

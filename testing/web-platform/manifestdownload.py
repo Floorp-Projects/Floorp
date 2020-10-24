@@ -12,7 +12,7 @@ try:
 except ImportError:
     from io import BytesIO
 
-HEADERS = {"User-Agent": "wpt manifest download"}
+HEADERS = {'User-Agent': "wpt manifest download"}
 
 
 def get(logger, url, **kwargs):
@@ -41,29 +41,22 @@ def get_commits(logger, repo_root):
         if not repo.has_git_cinnabar:
             logger.error("git cinnabar not found")
             return []
-        changeset_iter = (
-            repo._run("cinnabar", "git2hg", rev).strip()
-            for rev in repo._run(
-                "log",
-                "--format=%H",
-                "-n50",
-                base_rev,
-                "testing/web-platform/tests",
-                "testing/web-platform/mozilla/tests",
-            ).splitlines()
-        )
+        changeset_iter = (repo._run("cinnabar", "git2hg", rev).strip() for rev in
+                          repo._run("log",
+                                    "--format=%H",
+                                    "-n50",
+                                    base_rev,
+                                    "testing/web-platform/tests",
+                                    "testing/web-platform/mozilla/tests").splitlines())
     else:
         logger.debug("Found hg repo")
         logger.debug("Base rev is %s" % base_rev)
-        changeset_iter = repo._run(
-            "log",
-            "-fl50",
-            "--template={node}\n",
-            "-r",
-            base_rev,
-            "testing/web-platform/tests",
-            "testing/web-platform/mozilla/tests",
-        ).splitlines()
+        changeset_iter = repo._run("log",
+                                   "-fl50",
+                                   "--template={node}\n",
+                                   "-r", base_rev,
+                                   "testing/web-platform/tests",
+                                   "testing/web-platform/mozilla/tests").splitlines()
     return changeset_iter
 
 
@@ -83,24 +76,20 @@ def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
 
 
 def taskcluster_url(logger, commits):
-    artifact_path = "/artifacts/public/manifests.tar.gz"
+    artifact_path = '/artifacts/public/manifests.tar.gz'
 
-    repos = {"mozilla-central": "mozilla-central", "integration/autoland": "autoland"}
-    cset_url = (
-        "https://hg.mozilla.org/{repo}/json-pushes?"
-        "changeset={changeset}&version=2&tipsonly=1"
-    )
+    repos = {"mozilla-central": "mozilla-central",
+             "integration/autoland": "autoland"}
+    cset_url = ('https://hg.mozilla.org/{repo}/json-pushes?'
+                'changeset={changeset}&version=2&tipsonly=1')
 
-    tc_url = (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/"
-        "task/gecko.v2.{name}."
-        "revision.{changeset}.source.manifest-upload"
-    )
+    tc_url = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/'
+              'task/gecko.v2.{name}.'
+              'revision.{changeset}.source.manifest-upload')
 
-    default = (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/"
-        "task/gecko.v2.mozilla-central.latest.source.manifest-upload" + artifact_path
-    )
+    default = ("https://firefox-ci-tc.services.mozilla.com/api/index/v1/"
+               "task/gecko.v2.mozilla-central.latest.source.manifest-upload" +
+               artifact_path)
 
     for revision in commits:
         req = None
@@ -111,12 +100,9 @@ def taskcluster_url(logger, commits):
         for repo_path, index_name in six.iteritems(repos):
             try:
                 req_headers = HEADERS.copy()
-                req_headers.update({"Accept": "application/json"})
-                req = get(
-                    logger,
-                    cset_url.format(changeset=revision, repo=repo_path),
-                    headers=req_headers,
-                )
+                req_headers.update({'Accept': 'application/json'})
+                req = get(logger, cset_url.format(changeset=revision, repo=repo_path),
+                          headers=req_headers)
                 req.raise_for_status()
             except requests.exceptions.RequestException:
                 if req is not None and req.status_code == 404:
@@ -128,11 +114,11 @@ def taskcluster_url(logger, commits):
 
             result = req.json()
 
-            pushes = result["pushes"]
+            pushes = result['pushes']
             if not pushes:
                 logger.debug("Error reading response; 'pushes' key not found")
                 continue
-            [cset] = next(iter(pushes.values()))["changesets"]
+            [cset] = next(iter(pushes.values()))['changesets']
 
             tc_index_url = tc_url.format(changeset=cset, name=index_name)
             try:
@@ -143,9 +129,8 @@ def taskcluster_url(logger, commits):
             if req.status_code == 200:
                 return tc_index_url + artifact_path
 
-    logger.info(
-        "Can't find a commit-specific manifest so just using the most " "recent one"
-    )
+    logger.info("Can't find a commit-specific manifest so just using the most "
+                "recent one")
 
     return default
 
@@ -171,10 +156,8 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
         return False
 
     if req.status_code != 200:
-        logger.warning(
-            "Downloading pregenerated manifest failed; got "
-            "HTTP status %d" % req.status_code
-        )
+        logger.warning("Downloading pregenerated manifest failed; got "
+                       "HTTP status %d" % req.status_code)
         return False
 
     tar = tarfile.open(mode="r:gz", fileobj=BytesIO(req.content))
@@ -182,25 +165,18 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
         try:
             member = tar.getmember(paths["manifest_rel_path"].replace(os.path.sep, "/"))
         except KeyError:
-            logger.warning(
-                "Failed to find downloaded manifest %s" % paths["manifest_rel_path"]
-            )
+            logger.warning("Failed to find downloaded manifest %s" % paths["manifest_rel_path"])
         else:
             try:
-                logger.debug(
-                    "Unpacking %s to %s" % (member.name, paths["manifest_path"])
-                )
+                logger.debug("Unpacking %s to %s" % (member.name, paths["manifest_path"]))
                 src = tar.extractfile(member)
                 with open(paths["manifest_path"], "wb") as dest:
                     dest.write(src.read())
                 src.close()
             except IOError:
                 import traceback
-
-                logger.warning(
-                    "Failed to decompress %s:\n%s"
-                    % (paths["manifest_rel_path"], traceback.format_exc())
-                )
+                logger.warning("Failed to decompress %s:\n%s" %
+                               (paths["manifest_rel_path"], traceback.format_exc()))
                 return False
 
         os.utime(paths["manifest_path"], None)
@@ -209,10 +185,8 @@ def download_manifest(logger, test_paths, commits_func, url_func, force=False):
 
 
 def download_from_taskcluster(logger, repo_root, test_paths, force=False):
-    return download_manifest(
-        logger,
-        test_paths,
-        lambda: get_commits(logger, repo_root),
-        taskcluster_url,
-        force,
-    )
+    return download_manifest(logger,
+                             test_paths,
+                             lambda: get_commits(logger, repo_root),
+                             taskcluster_url,
+                             force)

@@ -8,50 +8,50 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 EXPORTS += [
-    "nsGeoPositionIPCSerialiser.h",
+    'nsGeoPositionIPCSerialiser.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "Geolocation.h",
-    "GeolocationCoordinates.h",
-    "GeolocationPosition.h",
-    "GeolocationPositionError.h",
+    'Geolocation.h',
+    'GeolocationCoordinates.h',
+    'GeolocationPosition.h',
+    'GeolocationPositionError.h',
 ]
 
 SOURCES += [
-    "Geolocation.cpp",
-    "GeolocationCoordinates.cpp",
-    "GeolocationPosition.cpp",
-    "GeolocationPositionError.cpp",
+    'Geolocation.cpp',
+    'GeolocationCoordinates.cpp',
+    'GeolocationPosition.cpp',
+    'GeolocationPositionError.cpp',
 ]
 
 UNIFIED_SOURCES += [
-    "MLSFallback.cpp",
+    'MLSFallback.cpp',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/base",
-    "/dom/ipc",
+    '/dom/base',
+    '/dom/ipc',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/dom/system/android",
+        '/dom/system/android',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        "/dom/system/mac",
+        '/dom/system/mac',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        "/dom/system/windows",
+        '/dom/system/windows',
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    if CONFIG["MOZ_GPSD"]:
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+    if CONFIG['MOZ_GPSD']:
         LOCAL_INCLUDES += [
-            "/dom/system/linux",
+            '/dom/system/linux',
         ]
-        DEFINES["MOZ_GPSD"] = True
+        DEFINES['MOZ_GPSD'] = True

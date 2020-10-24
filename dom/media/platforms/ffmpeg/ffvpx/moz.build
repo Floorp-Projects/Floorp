@@ -4,36 +4,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES += ["/xpcom/build"]
+LOCAL_INCLUDES += ['/xpcom/build']
 EXPORTS += [
-    "FFVPXRuntimeLinker.h",
+    'FFVPXRuntimeLinker.h',
 ]
 
 UNIFIED_SOURCES += [
-    "../FFmpegAudioDecoder.cpp",
-    "../FFmpegDataDecoder.cpp",
-    "../FFmpegDecoderModule.cpp",
-    "../FFmpegVideoDecoder.cpp",
+    '../FFmpegAudioDecoder.cpp',
+    '../FFmpegDataDecoder.cpp',
+    '../FFmpegDecoderModule.cpp',
+    '../FFmpegVideoDecoder.cpp',
 ]
 SOURCES += [
-    "FFVPXRuntimeLinker.cpp",
+    'FFVPXRuntimeLinker.cpp',
 ]
 LOCAL_INCLUDES += [
-    "..",
-    "../ffmpeg58/include",
+    '..',
+    '../ffmpeg58/include',
 ]
 
-CXXFLAGS += ["-Wno-deprecated-declarations"]
-if CONFIG["CC_TYPE"] == "clang":
-    CXXFLAGS += [
-        "-Wno-unknown-attributes",
-    ]
-if CONFIG["CC_TYPE"] == "gcc":
-    CXXFLAGS += [
-        "-Wno-attributes",
-    ]
+CXXFLAGS += [ '-Wno-deprecated-declarations' ]
+if CONFIG['CC_TYPE'] == 'clang':
+  CXXFLAGS += [
+    '-Wno-unknown-attributes',
+  ]
+if CONFIG['CC_TYPE'] == 'gcc':
+  CXXFLAGS += [
+    '-Wno-attributes',
+  ]
 
-DEFINES["FFVPX_VERSION"] = 46465650
-DEFINES["USING_MOZFFVPX"] = True
+DEFINES['FFVPX_VERSION'] = 46465650
+DEFINES['USING_MOZFFVPX'] = True
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

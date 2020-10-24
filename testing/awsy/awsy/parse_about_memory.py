@@ -30,7 +30,7 @@ def path_total(data, path):
     explicit_heap = defaultdict(int)
     heap_allocated = defaultdict(int)
 
-    discrete = not path.endswith("/")
+    discrete = not path.endswith('/')
 
     def match(value):
         """
@@ -96,9 +96,8 @@ def path_total(data, path):
     return path_totals
 
 
-def calculate_memory_report_values(
-    memory_report_path, data_point_path, process_names=None
-):
+def calculate_memory_report_values(memory_report_path, data_point_path,
+                                   process_names=None):
     """
     Opens the given memory report file and calculates the value for the given
     data point.
@@ -113,7 +112,7 @@ def calculate_memory_report_values(
             data = json.load(f)
     except ValueError:
         # Check if the file is gzipped.
-        with gzip.open(memory_report_path, "rb") as f:
+        with gzip.open(memory_report_path, 'rb') as f:
             data = json.load(f)
 
     totals = path_total(data, data_point_path)
@@ -130,31 +129,24 @@ def calculate_memory_report_values(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Extract data points from about:memory reports"
-    )
-    parser.add_argument("report", action="store", help="Path to a memory report file.")
-    parser.add_argument(
-        "prefix",
-        action="store",
-        help="Prefix of data point to measure. "
-        "If the prefix does not end in a '/' "
-        "then an exact match is made.",
-    )
-    parser.add_argument(
-        "--proc-filter",
-        action="store",
-        nargs="*",
-        default=None,
-        help="Process name filter. " "If not provided all processes will be included.",
-    )
-    parser.add_argument(
-        "--mebi",
-        action="store_true",
-        help="Output values as mebibytes (instead of bytes)" " to match about:memory.",
-    )
+            description='Extract data points from about:memory reports')
+    parser.add_argument('report', action='store',
+                        help='Path to a memory report file.')
+    parser.add_argument('prefix', action='store',
+                        help='Prefix of data point to measure. '
+                        'If the prefix does not end in a \'/\' '
+                        'then an exact match is made.')
+    parser.add_argument('--proc-filter', action='store',
+                        nargs='*', default=None,
+                        help='Process name filter. '
+                             'If not provided all processes will be included.')
+    parser.add_argument('--mebi', action='store_true',
+                        help='Output values as mebibytes (instead of bytes)'
+                        ' to match about:memory.')
 
     args = parser.parse_args()
-    totals = calculate_memory_report_values(args.report, args.prefix, args.proc_filter)
+    totals = calculate_memory_report_values(
+                    args.report, args.prefix, args.proc_filter)
 
     sorted_totals = sorted(totals.items(), key=lambda item: (-item[1], item[0]))
     for (k, v) in sorted_totals:

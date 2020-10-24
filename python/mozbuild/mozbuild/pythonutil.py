@@ -9,19 +9,22 @@ import six
 import subprocess
 import sys
 
-from distutils.version import StrictVersion
+from distutils.version import (
+    StrictVersion,
+)
 
 
 def iter_modules_in_path(*paths):
-    paths = [os.path.abspath(os.path.normcase(p)) + os.sep for p in paths]
+    paths = [os.path.abspath(os.path.normcase(p)) + os.sep
+             for p in paths]
     for name, module in sys.modules.items():
-        if getattr(module, "__file__", None) is None:
+        if getattr(module, '__file__', None) is None:
             continue
         if module.__file__ is None:
             continue
         path = module.__file__
 
-        if path.endswith(".pyc"):
+        if path.endswith('.pyc'):
             path = path[:-1]
         path = os.path.abspath(os.path.normcase(path))
 
@@ -35,31 +38,29 @@ def python_executable_version(exe):
     May raise ``subprocess.CalledProcessError`` or ``ValueError`` on failure.
     """
     program = "import sys; print('.'.join(map(str, sys.version_info[0:3])))"
-    out = six.ensure_text(
-        subprocess.check_output([exe, "-c", program], universal_newlines=True)
-    ).rstrip()
+    out = six.ensure_text(subprocess.check_output(
+        [exe, '-c', program], universal_newlines=True)).rstrip()
     return StrictVersion(out)
 
 
 def _find_python_executable(major):
     if major not in (2, 3):
-        raise ValueError("Expected a Python major version of 2 or 3")
-    min_versions = {2: "2.7.0", 3: "3.6.0"}
+        raise ValueError('Expected a Python major version of 2 or 3')
+    min_versions = {2: '2.7.0', 3: '3.6.0'}
 
     def ret(min_version=min_versions[major]):
         from mozfile import which
 
-        prefix = min_version[0] + "."
+        prefix = min_version[0] + '.'
         if not min_version.startswith(prefix):
-            raise ValueError(
-                "min_version expected a %sx string, got %s" % (prefix, min_version)
-            )
+            raise ValueError('min_version expected a %sx string, got %s' %
+                             (prefix, min_version))
 
         min_version = StrictVersion(min_version)
         major = min_version.version[0]
 
         if sys.version_info.major == major:
-            our_version = StrictVersion("%s.%s.%s" % (sys.version_info[0:3]))
+            our_version = StrictVersion('%s.%s.%s' % (sys.version_info[0:3]))
 
             if our_version >= min_version:
                 # This will potentially return a virtualenv Python. It's probably
@@ -77,11 +78,11 @@ def _find_python_executable(major):
         # ignore `python` here. We instead look for the preferred `pythonX` first
         # and fall back to `pythonX.Y` if it isn't found or doesn't meet our
         # version requirements.
-        names = ["python%d" % major]
+        names = ['python%d' % major]
 
         # Look for `pythonX.Y` down to our minimum version.
         for minor in range(9, min_version.version[1] - 1, -1):
-            names.append("python%d.%d" % (major, minor))
+            names.append('python%d.%d' % (major, minor))
 
         for name in names:
             exe = which(name)
@@ -99,7 +100,6 @@ def _find_python_executable(major):
                 return exe, version.version
 
         return None, None
-
     return ret
 
 

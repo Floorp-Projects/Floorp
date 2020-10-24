@@ -4,100 +4,98 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_TARGET"] != "Android":
-    Program("crashreporter")
+if CONFIG['OS_TARGET'] != 'Android':
+    Program('crashreporter')
 
     UNIFIED_SOURCES += [
-        "../CrashAnnotations.cpp",
-        "crashreporter.cpp",
-        "ping.cpp",
+        '../CrashAnnotations.cpp',
+        'crashreporter.cpp',
+        'ping.cpp',
     ]
 
     LOCAL_INCLUDES += [
-        "/toolkit/components/jsoncpp/include",
+        '/toolkit/components/jsoncpp/include',
     ]
 
     USE_LIBS += [
-        "jsoncpp",
+        'jsoncpp',
     ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
-        "crashreporter_win.cpp",
+        'crashreporter_win.cpp',
     ]
-    include("/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild")
-    include("/toolkit/crashreporter/breakpad-client/windows/sender/objs.mozbuild")
-    include(
-        "/toolkit/crashreporter/breakpad-client/windows/crash_generation/objs.mozbuild"
-    )
-    include("/toolkit/crashreporter/breakpad-client/windows/common/objs.mozbuild")
+    include('/toolkit/crashreporter/google-breakpad/src/common/windows/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/sender/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/crash_generation/objs.mozbuild')
+    include('/toolkit/crashreporter/breakpad-client/windows/common/objs.mozbuild')
     SOURCES += objs_common
     SOURCES += objs_sender
     SOURCES += objs_crash_generation
     SOURCES += objs_client_common
     SOURCES += [
-        "../google-breakpad/src/common/windows/http_upload.cc",
+        '../google-breakpad/src/common/windows/http_upload.cc',
     ]
-    DEFINES["UNICODE"] = True
-    DEFINES["_UNICODE"] = True
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
     USE_LIBS += [
-        "nss",
+        'nss',
     ]
     OS_LIBS += [
-        "comctl32",
-        "ole32",
-        "shell32",
-        "wininet",
-        "shlwapi",
+        'comctl32',
+        'ole32',
+        'shell32',
+        'wininet',
+        'shlwapi',
     ]
-elif CONFIG["OS_ARCH"] == "Darwin":
+elif CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
-        "crashreporter_osx.mm",
-        "crashreporter_unix_common.cpp",
+        'crashreporter_osx.mm',
+        'crashreporter_unix_common.cpp',
     ]
     LOCAL_INCLUDES += [
-        "../google-breakpad/src/common/mac",
+        '../google-breakpad/src/common/mac',
     ]
-    OS_LIBS += ["-framework Cocoa"]
+    OS_LIBS += ['-framework Cocoa']
     USE_LIBS += [
-        "breakpad_common_s",
-        "breakpad_mac_common_s",
-        "nss",
+        'breakpad_common_s',
+        'breakpad_mac_common_s',
+        'nss',
     ]
-elif CONFIG["OS_ARCH"] == "SunOS":
+elif CONFIG['OS_ARCH'] == 'SunOS':
     SOURCES += [
-        "crashreporter_linux.cpp",
-        "crashreporter_unix.cpp",
+        'crashreporter_linux.cpp',
+        'crashreporter_unix.cpp',
     ]
     USE_LIBS += [
-        "breakpad_solaris_common_s",
+        'breakpad_solaris_common_s',
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
-        "crashreporter_gtk_common.cpp",
-        "crashreporter_linux.cpp",
-        "crashreporter_unix_common.cpp",
+        'crashreporter_gtk_common.cpp',
+        'crashreporter_linux.cpp',
+        'crashreporter_unix_common.cpp'
     ]
     USE_LIBS += [
-        "breakpad_linux_common_s",
+        'breakpad_linux_common_s',
     ]
-    OS_LIBS += CONFIG["TK_LIBS"]
-    OS_LIBS += CONFIG["MOZ_GTHREAD_LIBS"]
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    CXXFLAGS += CONFIG["MOZ_GTHREAD_CFLAGS"]
+    OS_LIBS += CONFIG['TK_LIBS']
+    OS_LIBS += CONFIG['MOZ_GTHREAD_LIBS']
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_GTHREAD_CFLAGS']
 
-if CONFIG["OS_ARCH"] == "Linux" or CONFIG["OS_ARCH"] == "SunOS":
+if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'SunOS':
     FINAL_TARGET_FILES += [
-        "Throbber-small.gif",
+        'Throbber-small.gif',
     ]
 
-DEFINES["BIN_SUFFIX"] = '"%s"' % CONFIG["BIN_SUFFIX"]
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
-RCINCLUDE = "crashreporter.rc"
+RCINCLUDE = 'crashreporter.rc'
 
 # Don't use the STL wrappers in the crashreporter clients; they don't
 # link with -lmozalloc, and it really doesn't matter here anyway.
 DisableStlWrapping()
 
-include("/toolkit/crashreporter/crashreporter.mozbuild")
+include('/toolkit/crashreporter/crashreporter.mozbuild')

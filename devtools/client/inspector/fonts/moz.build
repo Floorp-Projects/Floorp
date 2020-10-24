@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "actions",
-    "components",
-    "reducers",
-    "utils",
+    'actions',
+    'components',
+    'reducers',
+    'utils',
 ]
 
 DevToolsModules(
-    "fonts.js",
-    "types.js",
+    'fonts.js',
+    'types.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Inspector: Fonts")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Fonts')

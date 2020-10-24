@@ -34,14 +34,14 @@ def FixupMsysPath(path):
     and commandline arguments into Windows native paths. This sucks if you're
     trying to pass an absolute path on a remote server. This function attempts
     to un-mangle such paths."""
-    if "OSTYPE" in os.environ and os.environ["OSTYPE"] == "msys":
+    if 'OSTYPE' in os.environ and os.environ['OSTYPE'] == 'msys':
         # sort of awful, find out where our shell is (should be in msys/bin)
         # and strip the first part of that path out of the other path
-        if "SHELL" in os.environ:
-            sh = os.environ["SHELL"]
-            msys = sh[: sh.find("/bin")]
+        if 'SHELL' in os.environ:
+            sh = os.environ['SHELL']
+            msys = sh[:sh.find('/bin')]
             if path.startswith(msys):
-                path = path[len(msys) :]
+                path = path[len(msys):]
     return path
 
 
@@ -55,7 +55,7 @@ def GetBaseRelativePath(path, local_file, base_path):
 
     dir = os.path.dirname(local_file)
     # strip base_path + extra slash and make it unixy
-    dir = dir[len(base_path) + 1 :].replace("\\", "/")
+    dir = dir[len(base_path) + 1:].replace('\\', '/')
     return path + dir
 
 
@@ -79,28 +79,26 @@ def CopyFilesLocally(path, files, verbose=False, base_path=None):
         shutil.copy(file, target_path)
 
 
-if __name__ == "__main__":
-    path = OptionalEnvironmentVariable("UPLOAD_PATH")
+if __name__ == '__main__':
+    path = OptionalEnvironmentVariable('UPLOAD_PATH')
 
-    if sys.platform == "win32":
+    if sys.platform == 'win32':
         if path is not None:
             path = FixupMsysPath(path)
 
     parser = OptionParser(usage="usage: %prog [options] <files>")
-    parser.add_option(
-        "-b",
-        "--base-path",
-        action="store",
-        help="Preserve file paths relative to this path when uploading. "
-        "If unset, all files will be uploaded directly to UPLOAD_PATH.",
-    )
+    parser.add_option("-b", "--base-path",
+                      action="store",
+                      help="Preserve file paths relative to this path when uploading. "
+                      "If unset, all files will be uploaded directly to UPLOAD_PATH.")
     (options, args) = parser.parse_args()
     if len(args) < 1:
         print("You must specify at least one file to upload")
         sys.exit(1)
 
     try:
-        CopyFilesLocally(path, args, base_path=options.base_path, verbose=True)
+        CopyFilesLocally(path, args, base_path=options.base_path,
+                         verbose=True)
     except IOError as strerror:
         print(strerror)
         sys.exit(1)

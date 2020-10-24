@@ -3,4 +3,4 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 # We want to test recursion into the subdir, so do the real work in 'sub'
-DIRS += ["sub"]
+DIRS += ['sub']

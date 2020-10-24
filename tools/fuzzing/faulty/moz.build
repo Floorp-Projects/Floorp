@@ -4,10 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += ["Faulty.cpp"]
+SOURCES += [
+  'Faulty.cpp'
+]
 
-EXPORTS.mozilla.ipc += ["Faulty.h"]
+EXPORTS.mozilla.ipc += [
+  'Faulty.h'
+]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
+

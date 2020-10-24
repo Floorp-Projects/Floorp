@@ -4,12 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += ["SpeechDispatcherService.cpp"]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
+UNIFIED_SOURCES += [
+  'SpeechDispatcherService.cpp'
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
 
-FINAL_LIBRARY = "xul"
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

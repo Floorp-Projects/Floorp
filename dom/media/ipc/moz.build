@@ -6,61 +6,61 @@
 
 
 IPDL_SOURCES += [
-    "PMediaDecoderParams.ipdlh",
-    "PRDD.ipdl",
-    "PRemoteDecoder.ipdl",
-    "PRemoteDecoderManager.ipdl",
+    'PMediaDecoderParams.ipdlh',
+    'PRDD.ipdl',
+    'PRemoteDecoder.ipdl',
+    'PRemoteDecoderManager.ipdl',
 ]
 
 EXPORTS.mozilla += [
-    "IRemoteDecoderChild.h",
-    "RDDChild.h",
-    "RDDParent.h",
-    "RDDProcessHost.h",
-    "RDDProcessImpl.h",
-    "RDDProcessManager.h",
-    "RemoteDecoderChild.h",
-    "RemoteDecoderManagerChild.h",
-    "RemoteDecoderManagerParent.h",
-    "RemoteDecoderModule.h",
-    "RemoteDecoderParent.h",
-    "RemoteImageHolder.h",
-    "RemoteMediaData.h",
-    "RemoteMediaDataDecoder.h",
-    "ShmemRecycleAllocator.h",
+    'IRemoteDecoderChild.h',
+    'RDDChild.h',
+    'RDDParent.h',
+    'RDDProcessHost.h',
+    'RDDProcessImpl.h',
+    'RDDProcessManager.h',
+    'RemoteDecoderChild.h',
+    'RemoteDecoderManagerChild.h',
+    'RemoteDecoderManagerParent.h',
+    'RemoteDecoderModule.h',
+    'RemoteDecoderParent.h',
+    'RemoteImageHolder.h',
+    'RemoteMediaData.h',
+    'RemoteMediaDataDecoder.h',
+    'ShmemRecycleAllocator.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "MediaIPCUtils.h",
+    'MediaIPCUtils.h',
 ]
 
 SOURCES += [
-    "RDDChild.cpp",
-    "RDDParent.cpp",
-    "RDDProcessHost.cpp",
-    "RDDProcessImpl.cpp",
-    "RDDProcessManager.cpp",
-    "RemoteAudioDecoder.cpp",
-    "RemoteDecoderChild.cpp",
-    "RemoteDecoderManagerChild.cpp",
-    "RemoteDecoderManagerParent.cpp",
-    "RemoteDecoderModule.cpp",
-    "RemoteDecoderParent.cpp",
-    "RemoteImageHolder.cpp",
-    "RemoteMediaData.cpp",
-    "RemoteMediaDataDecoder.cpp",
-    "RemoteVideoDecoder.cpp",
+    'RDDChild.cpp',
+    'RDDParent.cpp',
+    'RDDProcessHost.cpp',
+    'RDDProcessImpl.cpp',
+    'RDDProcessManager.cpp',
+    'RemoteAudioDecoder.cpp',
+    'RemoteDecoderChild.cpp',
+    'RemoteDecoderManagerChild.cpp',
+    'RemoteDecoderManagerParent.cpp',
+    'RemoteDecoderModule.cpp',
+    'RemoteDecoderParent.cpp',
+    'RemoteImageHolder.cpp',
+    'RemoteMediaData.cpp',
+    'RemoteMediaDataDecoder.cpp',
+    'RemoteVideoDecoder.cpp',
 ]
 
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
 LOCAL_INCLUDES += [
-    "/xpcom/base",
+    '/xpcom/base',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'

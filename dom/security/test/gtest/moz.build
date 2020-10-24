@@ -5,20 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    "TestCSPParser.cpp",
-    "TestFilenameEvalParser.cpp",
-    "TestSecureContext.cpp",
+     'TestCSPParser.cpp',
+     'TestFilenameEvalParser.cpp',
+     'TestSecureContext.cpp',
 ]
 
-if CONFIG["OS_TARGET"] != "Android":
+if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
-        "TestUnexpectedPrivilegedLoads.cpp",
+     'TestUnexpectedPrivilegedLoads.cpp',
     ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
-    "/caps",
-    "/toolkit/components/telemetry/",
-    "/toolkit/components/telemetry/tests/gtest",
+    '/caps',
+    '/toolkit/components/telemetry/',
+    '/toolkit/components/telemetry/tests/gtest',
 ]

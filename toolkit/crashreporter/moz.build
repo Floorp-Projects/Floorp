@@ -4,143 +4,139 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SPHINX_TREES["crashreporter"] = "docs"
+SPHINX_TREES['crashreporter'] = 'docs'
 
-with Files("docs/**"):
-    SCHEDULES.exclusive = ["docs"]
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 EXPORTS += [
-    "!CrashAnnotations.h",
-    "nsExceptionHandler.h",
+    '!CrashAnnotations.h',
+    'nsExceptionHandler.h',
 ]
 
-JAR_MANIFESTS += ["jar.mn"]
+JAR_MANIFESTS += ['jar.mn']
 
 UNIFIED_SOURCES = [
-    "CrashAnnotations.cpp",
-    "nsExceptionHandlerUtils.cpp",
+    'CrashAnnotations.cpp',
+    'nsExceptionHandlerUtils.cpp',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["MOZ_CRASHREPORTER"]:
-    if CONFIG["OS_ARCH"] == "WINNT":
+if CONFIG['MOZ_CRASHREPORTER']:
+    if CONFIG['OS_ARCH'] == 'WINNT':
         DIRS += [
-            "google-breakpad/src/common",
-            "google-breakpad/src/processor",
-            "breakpad-windows-libxul",
+            'google-breakpad/src/common',
+            'google-breakpad/src/processor',
+            'breakpad-windows-libxul',
         ]
 
-        if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
-            DIRS += ["breakpad-windows-standalone"]
+        if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
+            DIRS += ['breakpad-windows-standalone']
 
-    elif CONFIG["OS_ARCH"] == "Darwin":
+    elif CONFIG['OS_ARCH'] == 'Darwin':
         DIRS += [
-            "breakpad-client",
-            "breakpad-client/mac/crash_generation",
-            "breakpad-client/mac/handler",
-            "google-breakpad/src/common",
-            "google-breakpad/src/common/mac",
-            "google-breakpad/src/processor",
+            'breakpad-client',
+            'breakpad-client/mac/crash_generation',
+            'breakpad-client/mac/handler',
+            'google-breakpad/src/common',
+            'google-breakpad/src/common/mac',
+            'google-breakpad/src/processor',
         ]
-        if not CONFIG["DUMP_SYMS"]:
+        if not CONFIG['DUMP_SYMS']:
             DIRS += [
-                "google-breakpad/src/tools/mac/dump_syms",
-                "rust",
+                'google-breakpad/src/tools/mac/dump_syms',
+                'rust',
             ]
 
-    elif CONFIG["OS_ARCH"] == "Linux":
+    elif CONFIG['OS_ARCH'] == 'Linux':
         DIRS += [
-            "breakpad-client",
-            "breakpad-client/linux/",
-            "google-breakpad/src/common",
-            "google-breakpad/src/common/linux",
-            "google-breakpad/src/processor",
+            'breakpad-client',
+            'breakpad-client/linux/',
+            'google-breakpad/src/common',
+            'google-breakpad/src/common/linux',
+            'google-breakpad/src/processor',
         ]
-        if not CONFIG["DUMP_SYMS"] and CONFIG["HOST_OS_ARCH"] == "Linux":
+        if not CONFIG['DUMP_SYMS'] and CONFIG['HOST_OS_ARCH'] == 'Linux':
             DIRS += [
-                "google-breakpad/src/tools/linux/dump_syms",
-                "rust",
+                'google-breakpad/src/tools/linux/dump_syms',
+                'rust',
             ]
 
     DIRS += [
-        "client",
-        "minidump-analyzer",
+        'client',
+        'minidump-analyzer',
     ]
 
-    if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
-        DIRS += ["injector"]
+    if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
+        DIRS += ['injector']
         UNIFIED_SOURCES += [
-            "InjectCrashReporter.cpp",
-            "LoadLibraryRemote.cpp",
+            'InjectCrashReporter.cpp',
+            'LoadLibraryRemote.cpp',
         ]
 
-    if CONFIG["ENABLE_TESTS"]:
-        DIRS += ["test/gtest"]
+    if CONFIG['ENABLE_TESTS']:
+        DIRS += ['test/gtest']
 
-    TEST_DIRS += ["test"]
+    TEST_DIRS += ['test']
 
     UNIFIED_SOURCES += [
-        "nsExceptionHandler.cpp",
-        "ThreadAnnotation.cpp",
+        'nsExceptionHandler.cpp',
+        'ThreadAnnotation.cpp',
     ]
 
-    if CONFIG["OS_ARCH"] == "Darwin":
+    if CONFIG['OS_ARCH'] == 'Darwin':
         UNIFIED_SOURCES += [
-            "mac_utils.mm",
+            'mac_utils.mm',
         ]
 
     EXTRA_JS_MODULES += [
-        "CrashReports.jsm",
-        "CrashSubmit.jsm",
+        'CrashReports.jsm',
+        'CrashSubmit.jsm',
     ]
 
-    include("/ipc/chromium/chromium-config.mozbuild")
+    include('/ipc/chromium/chromium-config.mozbuild')
 
-    if CONFIG["OS_TARGET"] == "Android":
-        DEFINES["ANDROID_NDK_MAJOR_VERSION"] = CONFIG["ANDROID_NDK_MAJOR_VERSION"]
-        DEFINES["ANDROID_NDK_MINOR_VERSION"] = CONFIG["ANDROID_NDK_MINOR_VERSION"]
-        DEFINES["ANDROID_PACKAGE_NAME"] = '"%s"' % CONFIG["ANDROID_PACKAGE_NAME"]
+    if CONFIG['OS_TARGET'] == 'Android':
+        DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
+        DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
+        DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
         # NDK5 workarounds
-        DEFINES["_STLP_CONST_CONSTRUCTOR_BUG"] = True
-        DEFINES["_STLP_NO_MEMBER_TEMPLATES"] = True
+        DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
+        DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
         LOCAL_INCLUDES += [
-            "/toolkit/crashreporter/google-breakpad/src/common/android/include",
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
         ]
 
-    DEFINES["UNICODE"] = True
-    DEFINES["_UNICODE"] = True
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
 
-    if CONFIG["MOZ_PHC"]:
-        DEFINES["MOZ_PHC"] = True
+    if CONFIG['MOZ_PHC']:
+        DEFINES['MOZ_PHC'] = True
 
     LOCAL_INCLUDES += [
-        "google-breakpad/src",
+        'google-breakpad/src',
     ]
 
     PYTHON_UNITTEST_MANIFESTS += [
-        "tools/python.ini",
+        'tools/python.ini',
     ]
 
-    include("/toolkit/crashreporter/crashreporter.mozbuild")
+    include('/toolkit/crashreporter/crashreporter.mozbuild')
 
-    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-        CXXFLAGS += ["-Wno-shadow"]
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        CXXFLAGS += ['-Wno-shadow']
 else:
     UNIFIED_SOURCES += [
-        "nsDummyExceptionHandler.cpp",
+        'nsDummyExceptionHandler.cpp',
     ]
 
 # Generate CrashAnnotations.h
-GeneratedFile(
-    "CrashAnnotations.h",
-    script="generate_crash_reporter_sources.py",
-    entry_point="emit_header",
-    inputs=[
-        "CrashAnnotations.h.in",
-        "CrashAnnotations.yaml",
-    ],
-)
+GeneratedFile('CrashAnnotations.h', script='generate_crash_reporter_sources.py',
+              entry_point='emit_header', inputs=[
+                  'CrashAnnotations.h.in',
+                  'CrashAnnotations.yaml',
+              ])
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Crash Reporting')

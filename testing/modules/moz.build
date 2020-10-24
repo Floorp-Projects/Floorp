@@ -4,30 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 TESTING_JS_MODULES += [
-    "ajv-4.1.1.js",
-    "AppData.jsm",
-    "AppInfo.jsm",
-    "Assert.jsm",
-    "CoverageUtils.jsm",
-    "FileTestUtils.jsm",
-    "MockRegistrar.jsm",
-    "sinon-7.2.7.js",
-    "Sinon.jsm",
-    "StructuredLog.jsm",
-    "TestUtils.jsm",
+    'ajv-4.1.1.js',
+    'AppData.jsm',
+    'AppInfo.jsm',
+    'Assert.jsm',
+    'CoverageUtils.jsm',
+    'FileTestUtils.jsm',
+    'MockRegistrar.jsm',
+    'sinon-7.2.7.js',
+    'Sinon.jsm',
+    'StructuredLog.jsm',
+    'TestUtils.jsm',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     TESTING_JS_MODULES += [
-        "MockRegistry.jsm",
+        'MockRegistry.jsm',
     ]
 
 
-TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ["StructuredLog.jsm"]
+TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ['StructuredLog.jsm']
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "General")

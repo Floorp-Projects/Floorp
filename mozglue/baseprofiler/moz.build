@@ -9,109 +9,109 @@
 # specific code).
 # All exported headers now prefixed with "Base" to avoid #include name clashes.
 
-if CONFIG["MOZ_GECKO_PROFILER"]:
-    DEFINES["IMPL_MFBT"] = True
+if CONFIG['MOZ_GECKO_PROFILER']:
+    DEFINES['IMPL_MFBT'] = True
     EXPORTS += [
-        "public/BaseProfilerSharedLibraries.h",
-        "public/BaseProfilingCategory.h",
-        "public/BaseProfilingStack.h",
-        "public/ProfilingCategoryList.h",
+        'public/BaseProfilerSharedLibraries.h',
+        'public/BaseProfilingCategory.h',
+        'public/BaseProfilingStack.h',
+        'public/ProfilingCategoryList.h',
     ]
     UNIFIED_SOURCES += [
-        "core/PageInformation.cpp",
-        "core/platform.cpp",
-        "core/ProfileBuffer.cpp",
-        "core/ProfileBufferEntry.cpp",
-        "core/ProfiledThreadData.cpp",
-        "core/ProfilerBacktrace.cpp",
-        "core/ProfilerMarkers.cpp",
-        "core/ProfilingCategory.cpp",
-        "core/ProfilingStack.cpp",
-        "core/RegisteredThread.cpp",
+        'core/PageInformation.cpp',
+        'core/platform.cpp',
+        'core/ProfileBuffer.cpp',
+        'core/ProfileBufferEntry.cpp',
+        'core/ProfiledThreadData.cpp',
+        'core/ProfilerBacktrace.cpp',
+        'core/ProfilerMarkers.cpp',
+        'core/ProfilingCategory.cpp',
+        'core/ProfilingStack.cpp',
+        'core/RegisteredThread.cpp',
     ]
 
-    if CONFIG["OS_TARGET"] in ("Android", "Linux", "FreeBSD"):
-        if CONFIG["CPU_ARCH"] in ("arm", "aarch64", "x86", "x86_64", "mips64"):
+    if CONFIG['OS_TARGET'] in ('Android', 'Linux', 'FreeBSD'):
+        if CONFIG['CPU_ARCH'] in ('arm', 'aarch64', 'x86', 'x86_64', 'mips64'):
             UNIFIED_SOURCES += [
-                "lul/AutoObjectMapper.cpp",
-                "lul/LulCommon.cpp",
-                "lul/LulDwarf.cpp",
-                "lul/LulDwarfSummariser.cpp",
-                "lul/LulElf.cpp",
-                "lul/LulMain.cpp",
-                "lul/platform-linux-lul.cpp",
+                'lul/AutoObjectMapper.cpp',
+                'lul/LulCommon.cpp',
+                'lul/LulDwarf.cpp',
+                'lul/LulDwarfSummariser.cpp',
+                'lul/LulElf.cpp',
+                'lul/LulMain.cpp',
+                'lul/platform-linux-lul.cpp',
             ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
-            "core/shared-libraries-linux.cc",
+            'core/shared-libraries-linux.cc',
         ]
-        if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] != "FreeBSD":
+        if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['OS_TARGET'] != 'FreeBSD':
             SOURCES += [
-                "core/EHABIStackWalk.cpp",
+                'core/EHABIStackWalk.cpp',
             ]
-    elif CONFIG["OS_TARGET"] == "Darwin":
+    elif CONFIG['OS_TARGET'] == 'Darwin':
         UNIFIED_SOURCES += [
-            "core/shared-libraries-macos.cc",
+            'core/shared-libraries-macos.cc',
         ]
-    elif CONFIG["OS_TARGET"] == "WINNT":
+    elif CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += [
-            "core/shared-libraries-win32.cc",
+            'core/shared-libraries-win32.cc',
         ]
 
     LOCAL_INCLUDES += [
-        "/mozglue/baseprofiler/core/",
-        "/mozglue/linker",
+        '/mozglue/baseprofiler/core/',
+        '/mozglue/linker',
     ]
 
-    if CONFIG["OS_TARGET"] == "Android":
-        DEFINES["ANDROID_NDK_MAJOR_VERSION"] = CONFIG["ANDROID_NDK_MAJOR_VERSION"]
-        DEFINES["ANDROID_NDK_MINOR_VERSION"] = CONFIG["ANDROID_NDK_MINOR_VERSION"]
+    if CONFIG['OS_TARGET'] == 'Android':
+        DEFINES['ANDROID_NDK_MAJOR_VERSION'] = CONFIG['ANDROID_NDK_MAJOR_VERSION']
+        DEFINES['ANDROID_NDK_MINOR_VERSION'] = CONFIG['ANDROID_NDK_MINOR_VERSION']
 
-    FINAL_LIBRARY = "mozglue"
+    FINAL_LIBRARY = 'mozglue'
 
 # Many of the headers in this directory are usable in non-MOZ_GECKO_PROFILER
 # builds.
 # BaseProfiler.h and BaseProfilerCounts.h only contain no-op macros in that
 # case.
 EXPORTS += [
-    "public/BaseProfiler.h",
+    'public/BaseProfiler.h',
 ]
 
 EXPORTS.mozilla += [
-    "public/BaseProfileJSONWriter.h",
-    "public/BaseProfilerCounts.h",
-    "public/BaseProfilerDetail.h",
-    "public/BaseProfilerMarkers.h",
-    "public/BaseProfilerMarkersDetail.h",
-    "public/BaseProfilerMarkersPrerequisites.h",
-    "public/BaseProfilerMarkerTypes.h",
-    "public/BlocksRingBuffer.h",
-    "public/leb128iterator.h",
-    "public/ModuloBuffer.h",
-    "public/PowerOfTwo.h",
-    "public/ProfileBufferChunk.h",
-    "public/ProfileBufferChunkManager.h",
-    "public/ProfileBufferChunkManagerSingle.h",
-    "public/ProfileBufferChunkManagerWithLocalLimit.h",
-    "public/ProfileBufferControlledChunkManager.h",
-    "public/ProfileBufferEntryKinds.h",
-    "public/ProfileBufferEntrySerialization.h",
-    "public/ProfileBufferIndex.h",
-    "public/ProfileChunkedBuffer.h",
+    'public/BaseProfileJSONWriter.h',
+    'public/BaseProfilerCounts.h',
+    'public/BaseProfilerDetail.h',
+    'public/BaseProfilerMarkers.h',
+    'public/BaseProfilerMarkersDetail.h',
+    'public/BaseProfilerMarkersPrerequisites.h',
+    'public/BaseProfilerMarkerTypes.h',
+    'public/BlocksRingBuffer.h',
+    'public/leb128iterator.h',
+    'public/ModuloBuffer.h',
+    'public/PowerOfTwo.h',
+    'public/ProfileBufferChunk.h',
+    'public/ProfileBufferChunkManager.h',
+    'public/ProfileBufferChunkManagerSingle.h',
+    'public/ProfileBufferChunkManagerWithLocalLimit.h',
+    'public/ProfileBufferControlledChunkManager.h',
+    'public/ProfileBufferEntryKinds.h',
+    'public/ProfileBufferEntrySerialization.h',
+    'public/ProfileBufferIndex.h',
+    'public/ProfileChunkedBuffer.h',
 ]
 
-if CONFIG["MOZ_VTUNE"]:
-    DEFINES["MOZ_VTUNE_INSTRUMENTATION"] = True
+if CONFIG['MOZ_VTUNE']:
+    DEFINES['MOZ_VTUNE_INSTRUMENTATION'] = True
     UNIFIED_SOURCES += [
-        "core/VTuneProfiler.cpp",
+        'core/VTuneProfiler.cpp',
     ]
 
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
-        "-Wno-error=shadow",
-        "-Wno-ignored-qualifiers",  # due to use of breakpad headers
+        '-Wno-error=shadow',
+        '-Wno-ignored-qualifiers', # due to use of breakpad headers
     ]
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Gecko Profiler")
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')

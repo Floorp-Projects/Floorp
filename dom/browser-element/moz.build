@@ -8,30 +8,30 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 XPIDL_SOURCES += [
-    "nsIBrowserElementAPI.idl",
+    'nsIBrowserElementAPI.idl',
 ]
 
-XPIDL_MODULE = "browser-element"
+XPIDL_MODULE = 'browser-element'
 
 EXTRA_JS_MODULES += [
-    "BrowserElementParent.jsm",
-    "BrowserElementPromptService.jsm",
+    'BrowserElementParent.jsm',
+    'BrowserElementPromptService.jsm',
 ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
 LOCAL_INCLUDES += [
-    "/dom/html",
+    '/dom/html',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    "/dom/",
-    "/dom/base",
-    "/dom/ipc",
+    '/dom/',
+    '/dom/base',
+    '/dom/ipc',
 ]

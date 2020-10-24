@@ -21,20 +21,18 @@ from .manifest_handler import ChromeManifestHandler
 
 
 class LcovRecord(object):
-    __slots__ = (
-        "test_name",
-        "source_file",
-        "functions",
-        "function_exec_counts",
-        "function_count",
-        "covered_function_count",
-        "branches",
-        "branch_count",
-        "covered_branch_count",
-        "lines",
-        "line_count",
-        "covered_line_count",
-    )
+    __slots__ = ("test_name",
+                 "source_file",
+                 "functions",
+                 "function_exec_counts",
+                 "function_count",
+                 "covered_function_count",
+                 "branches",
+                 "branch_count",
+                 "covered_branch_count",
+                 "lines",
+                 "line_count",
+                 "covered_line_count")
 
     def __init__(self):
         self.functions = {}
@@ -46,14 +44,12 @@ class LcovRecord(object):
 
         # These shouldn't differ.
         self.source_file = other.source_file
-        if hasattr(other, "test_name"):
+        if hasattr(other, 'test_name'):
             self.test_name = other.test_name
         self.functions.update(other.functions)
 
         for name, count in viewitems(other.function_exec_counts):
-            self.function_exec_counts[name] = count + self.function_exec_counts.get(
-                name, 0
-            )
+            self.function_exec_counts[name] = count + self.function_exec_counts.get(name, 0)
 
         for key, taken in viewitems(other.branches):
             self.branches[key] = taken + self.branches.get(key, 0)
@@ -73,13 +69,9 @@ class LcovRecord(object):
         self.function_count = len(self.functions.keys())
         # Function records may have moved between files, so filter here.
         self.function_exec_counts = {
-            fn_name: count
-            for fn_name, count in viewitems(self.function_exec_counts)
-            if fn_name in self.functions.values()
-        }
-        self.covered_function_count = len(
-            [c for c in self.function_exec_counts.values() if c]
-        )
+            fn_name: count for fn_name, count in viewitems(self.function_exec_counts)
+            if fn_name in self.functions.values()}
+        self.covered_function_count = len([c for c in self.function_exec_counts.values() if c])
         self.line_count = len(self.lines)
         self.covered_line_count = len([c for c, _ in self.lines.values() if c])
         self.branch_count = len(self.branches)
@@ -153,9 +145,7 @@ class RecordRewriter(object):
                 gen_rec = self._get_record(inc_source)
                 gen_rec.functions[new_ln] = fn_name
                 if fn_name in record.function_exec_counts:
-                    gen_rec.function_exec_counts[fn_name] = record.function_exec_counts[
-                        fn_name
-                    ]
+                    gen_rec.function_exec_counts[fn_name] = record.function_exec_counts[fn_name]
                 continue
             rewritten_fns[new_ln] = fn_name
         record.functions = rewritten_fns
@@ -181,8 +171,7 @@ class RecordRewriter(object):
         # Rewrite the lines in the given record according to preprocessor info
         # and split to additional records when pp_info has included file info.
         self._current_pp_info = dict(
-            [(tuple([int(l) for l in k.split(",")]), v) for k, v in pp_info.items()]
-        )
+            [(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
         self._ranges = sorted(self._current_pp_info.keys())
         self._additions = {}
         self._rewrite_lines(record)
@@ -215,18 +204,18 @@ class LcovFile(object):
     # LH:<number of lines with a non-zero execution count>
     # end_of_record
     PREFIX_TYPES = {
-        "TN": 0,
-        "SF": 0,
-        "FN": 1,
-        "FNDA": 1,
-        "FNF": 0,
-        "FNH": 0,
-        "BRDA": 3,
-        "BRF": 0,
-        "BRH": 0,
-        "DA": 2,
-        "LH": 0,
-        "LF": 0,
+      'TN': 0,
+      'SF': 0,
+      'FN': 1,
+      'FNDA': 1,
+      'FNF': 0,
+      'FNH': 0,
+      'BRDA': 3,
+      'BRF': 0,
+      'BRH': 0,
+      'DA': 2,
+      'LH': 0,
+      'LF': 0,
     }
 
     def __init__(self, lcov_paths):
@@ -243,7 +232,7 @@ class LcovFile(object):
                     if not line:
                         continue
 
-                    if line == "end_of_record":
+                    if line == 'end_of_record':
                         # We skip records that we couldn't rewrite, that is records for which
                         # rewrite_url returns None.
                         if current_source_file is not None:
@@ -253,21 +242,17 @@ class LcovFile(object):
                         current_lines = []
                         continue
 
-                    colon = line.find(":")
+                    colon = line.find(':')
                     prefix = line[:colon]
 
-                    if prefix == "SF":
-                        sf = line[(colon + 1) :]
-                        res = (
-                            rewrite_source(sf)
-                            if rewrite_source is not None
-                            else (sf, None)
-                        )
+                    if prefix == 'SF':
+                        sf = line[(colon + 1):]
+                        res = rewrite_source(sf) if rewrite_source is not None else (sf, None)
                         if res is None:
                             current_lines.append(line)
                         else:
                             current_source_file, current_pp_info = res
-                            current_lines.append("SF:" + current_source_file)
+                            current_lines.append('SF:' + current_source_file)
                     else:
                         current_lines.append(line)
 
@@ -275,7 +260,7 @@ class LcovFile(object):
         self.current_record = LcovRecord()
 
         for line in record_content:
-            colon = line.find(":")
+            colon = line.find(':')
 
             prefix = line[:colon]
 
@@ -284,26 +269,28 @@ class LcovFile(object):
             if colon < 0 or prefix not in self.PREFIX_TYPES:
                 continue
 
-            args = line[(colon + 1) :].split(",", self.PREFIX_TYPES[prefix])
+            args = line[(colon + 1):].split(',', self.PREFIX_TYPES[prefix])
 
             def try_convert(a):
                 try:
                     return int(a)
                 except ValueError:
                     return a
-
             args = [try_convert(a) for a in args]
 
             try:
-                LcovFile.__dict__["parse_" + prefix](self, *args)
+                LcovFile.__dict__['parse_' + prefix](self, *args)
             except ValueError:
-                print("Encountered an error in %s:\n%s" % (self.lcov_fh.name, line))
+                print("Encountered an error in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
             except KeyError:
-                print("Invalid lcov line start in %s:\n%s" % (self.lcov_fh.name, line))
+                print("Invalid lcov line start in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
             except TypeError:
-                print("Invalid lcov line start in %s:\n%s" % (self.lcov_fh.name, line))
+                print("Invalid lcov line start in %s:\n%s" %
+                      (self.lcov_fh.name, line))
                 raise
 
         ret = self.current_record
@@ -311,23 +298,21 @@ class LcovFile(object):
         return ret
 
     def print_file(self, fh, rewrite_source, rewrite_record):
-        for source_file, pp_info, record_content in self.iterate_records(
-            rewrite_source
-        ):
+        for source_file, pp_info, record_content in self.iterate_records(rewrite_source):
             if pp_info is not None:
                 record = self.parse_record(record_content)
                 for r in rewrite_record(record, pp_info):
                     fh.write(self.format_record(r))
                 fh.write(self.format_record(record))
             else:
-                fh.write("\n".join(record_content) + "\nend_of_record\n")
+                fh.write('\n'.join(record_content) + '\nend_of_record\n')
 
     def format_record(self, record):
         out_lines = []
         for name in LcovRecord.__slots__:
             if hasattr(record, name):
-                out_lines.append(LcovFile.__dict__["format_" + name](self, record))
-        return "\n".join(out_lines) + "\nend_of_record\n"
+                out_lines.append(LcovFile.__dict__['format_' + name](self, record))
+        return '\n'.join(out_lines) + '\nend_of_record\n'
 
     def format_test_name(self, record):
         return "TN:%s" % record.test_name
@@ -340,49 +325,50 @@ class LcovFile(object):
         # using OrderedDict).
         fns = []
         for start_lineno, fn_name in sorted(viewitems(record.functions)):
-            fns.append("FN:%s,%s" % (start_lineno, fn_name))
-        return "\n".join(fns)
+            fns.append('FN:%s,%s' % (start_lineno, fn_name))
+        return '\n'.join(fns)
 
     def format_function_exec_counts(self, record):
         fndas = []
         for name, exec_count in sorted(viewitems(record.function_exec_counts)):
-            fndas.append("FNDA:%s,%s" % (exec_count, name))
-        return "\n".join(fndas)
+            fndas.append('FNDA:%s,%s' % (exec_count, name))
+        return '\n'.join(fndas)
 
     def format_function_count(self, record):
-        return "FNF:%s" % record.function_count
+        return 'FNF:%s' % record.function_count
 
     def format_covered_function_count(self, record):
-        return "FNH:%s" % record.covered_function_count
+        return 'FNH:%s' % record.covered_function_count
 
     def format_branches(self, record):
         brdas = []
         for key in sorted(record.branches):
             taken = record.branches[key]
-            taken = "-" if taken == 0 else taken
-            brdas.append("BRDA:%s" % ",".join(map(str, list(key) + [taken])))
-        return "\n".join(brdas)
+            taken = '-' if taken == 0 else taken
+            brdas.append('BRDA:%s' %
+                         ','.join(map(str, list(key) + [taken])))
+        return '\n'.join(brdas)
 
     def format_branch_count(self, record):
-        return "BRF:%s" % record.branch_count
+        return 'BRF:%s' % record.branch_count
 
     def format_covered_branch_count(self, record):
-        return "BRH:%s" % record.covered_branch_count
+        return 'BRH:%s' % record.covered_branch_count
 
     def format_lines(self, record):
         das = []
         for line_no, (exec_count, checksum) in sorted(viewitems(record.lines)):
-            s = "DA:%s,%s" % (line_no, exec_count)
+            s = 'DA:%s,%s' % (line_no, exec_count)
             if checksum:
-                s += ",%s" % checksum
+                s += ',%s' % checksum
             das.append(s)
-        return "\n".join(das)
+        return '\n'.join(das)
 
     def format_line_count(self, record):
-        return "LF:%s" % record.line_count
+        return 'LF:%s' % record.line_count
 
     def format_covered_line_count(self, record):
-        return "LH:%s" % record.covered_line_count
+        return 'LH:%s' % record.covered_line_count
 
     def parse_TN(self, test_name):
         self.current_record.test_name = test_name
@@ -403,8 +389,9 @@ class LcovFile(object):
         self.current_record.covered_function_count = covered_function_count
 
     def parse_BRDA(self, line_number, block_number, branch_number, taken):
-        taken = 0 if taken == "-" else taken
-        self.current_record.branches[(line_number, block_number, branch_number)] = taken
+        taken = 0 if taken == '-' else taken
+        self.current_record.branches[(line_number, block_number,
+                                      branch_number)] = taken
 
     def parse_BRF(self, branch_count):
         self.current_record.branch_count = branch_count
@@ -438,15 +425,13 @@ class UrlFinder(object):
             with open(chrome_map_path) as fh:
                 url_prefixes, overrides, install_info, buildconfig = json.load(fh)
         except IOError:
-            print(
-                "Error reading %s. Run |./mach build-backend -b ChromeMap| to "
-                "populate the ChromeMap backend." % chrome_map_path
-            )
+            print("Error reading %s. Run |./mach build-backend -b ChromeMap| to "
+                  "populate the ChromeMap backend." % chrome_map_path)
             raise
 
-        self.topobjdir = buildconfig["topobjdir"]
-        self.MOZ_APP_NAME = buildconfig["MOZ_APP_NAME"]
-        self.OMNIJAR_NAME = buildconfig["OMNIJAR_NAME"]
+        self.topobjdir = buildconfig['topobjdir']
+        self.MOZ_APP_NAME = buildconfig['MOZ_APP_NAME']
+        self.OMNIJAR_NAME = buildconfig['OMNIJAR_NAME']
 
         # These are added dynamically in nsIResProtocolHandler, we might
         # need to get them at run time.
@@ -460,14 +445,15 @@ class UrlFinder(object):
 
         self._respath = None
 
-        mac_bundle_name = buildconfig["MOZ_MACBUNDLE_NAME"]
+        mac_bundle_name = buildconfig['MOZ_MACBUNDLE_NAME']
         if mac_bundle_name:
-            self._respath = mozpath.join(
-                "dist", mac_bundle_name, "Contents", "Resources"
-            )
+            self._respath = mozpath.join('dist',
+                                         mac_bundle_name,
+                                         'Contents',
+                                         'Resources')
 
         if not extra_chrome_manifests:
-            extra_path = os.path.join(self.topobjdir, "_tests", "extra.manifest")
+            extra_path = os.path.join(self.topobjdir, '_tests', 'extra.manifest')
             if os.path.isfile(extra_path):
                 extra_chrome_manifests = [extra_path]
 
@@ -486,22 +472,21 @@ class UrlFinder(object):
         self._url_prefixes.update(handler.chrome_mapping)
 
     def _find_install_prefix(self, objdir_path):
+
         def _prefix(s):
             for p in mozpath.split(s):
-                if "*" not in p:
-                    yield p + "/"
+                if '*' not in p:
+                    yield p + '/'
 
         offset = 0
         for leaf in reversed(mozpath.split(objdir_path)):
             offset += len(leaf)
             if objdir_path[:-offset] in self._install_mapping:
                 pattern_prefix, is_pp = self._install_mapping[objdir_path[:-offset]]
-                full_leaf = objdir_path[len(objdir_path) - offset :]
-                src_prefix = "".join(_prefix(pattern_prefix))
-                self._install_mapping[objdir_path] = (
-                    mozpath.join(src_prefix, full_leaf),
-                    is_pp,
-                )
+                full_leaf = objdir_path[len(objdir_path) - offset:]
+                src_prefix = ''.join(_prefix(pattern_prefix))
+                self._install_mapping[objdir_path] = (mozpath.join(src_prefix, full_leaf),
+                                                      is_pp)
                 break
             offset += 1
 
@@ -511,21 +496,24 @@ class UrlFinder(object):
             # mapping mapped to a wildcard.
             self._find_install_prefix(objdir_path)
         if objdir_path not in self._install_mapping:
-            raise UrlFinderError("Couldn't find entry in manifest for %s" % objdir_path)
+            raise UrlFinderError("Couldn't find entry in manifest for %s" %
+                                 objdir_path)
         return self._install_mapping[objdir_path]
 
     def _abs_objdir_install_info(self, term):
-        obj_relpath = term[len(self.topobjdir) + 1 :]
+        obj_relpath = term[len(self.topobjdir) + 1:]
         res = self._install_info(obj_relpath)
 
         # Some urls on osx will refer to paths in the mac bundle, so we
         # re-interpret them as being their original location in dist/bin.
-        if not res and self._respath and obj_relpath.startswith(self._respath):
-            obj_relpath = obj_relpath.replace(self._respath, "dist/bin")
+        if (not res and self._respath and
+            obj_relpath.startswith(self._respath)):
+            obj_relpath = obj_relpath.replace(self._respath, 'dist/bin')
             res = self._install_info(obj_relpath)
 
         if not res:
-            raise UrlFinderError("Couldn't find entry in manifest for %s" % obj_relpath)
+            raise UrlFinderError("Couldn't find entry in manifest for %s" %
+                                 obj_relpath)
         return res
 
     def find_files(self, url):
@@ -542,19 +530,17 @@ class UrlFinder(object):
         for prefix, dests in viewitems(self._url_prefixes):
             if term.startswith(prefix):
                 for dest in dests:
-                    if not dest.endswith("/"):
-                        dest += "/"
+                    if not dest.endswith('/'):
+                        dest += '/'
                     objdir_path = term.replace(prefix, dest)
 
-                    while objdir_path.startswith("//"):
+                    while objdir_path.startswith('//'):
                         # The mochitest harness produces some wonky file:// uris
                         # that need to be fixed.
                         objdir_path = objdir_path[1:]
 
                     try:
-                        if os.path.isabs(objdir_path) and objdir_path.startswith(
-                            self.topobjdir
-                        ):
+                        if os.path.isabs(objdir_path) and objdir_path.startswith(self.topobjdir):
                             return self._abs_objdir_install_info(objdir_path)
                         else:
                             src_path, pp_info = self._install_info(objdir_path)
@@ -562,7 +548,8 @@ class UrlFinder(object):
                     except UrlFinderError:
                         pass
 
-                    if dest.startswith("resource://") or dest.startswith("chrome://"):
+                    if (dest.startswith('resource://') or
+                        dest.startswith('chrome://')):
                         result = self.find_files(term.replace(prefix, dest))
                         if result:
                             return result
@@ -575,61 +562,49 @@ class UrlFinder(object):
         # instance).
         if url in self._final_mapping:
             return self._final_mapping[url]
-        if url.endswith("> eval"):
+        if url.endswith('> eval'):
             return None
-        if url.endswith("> Function"):
+        if url.endswith('> Function'):
             return None
-        if " -> " in url:
-            url = url.split(" -> ")[1].rstrip()
-        if "?" in url:
-            url = url.split("?")[0]
+        if ' -> ' in url:
+            url = url.split(' -> ')[1].rstrip()
+        if '?' in url:
+            url = url.split('?')[0]
 
         url_obj = urlparse.urlparse(url)
-        if url_obj.scheme == "jar":
+        if url_obj.scheme == 'jar':
             app_name = self.MOZ_APP_NAME
             omnijar_name = self.OMNIJAR_NAME
 
             if app_name in url:
                 if omnijar_name in url:
                     # e.g. file:///home/worker/workspace/build/application/firefox/omni.ja!/components/MainProcessSingleton.js  # noqa
-                    parts = url_obj.path.split(omnijar_name + "!", 1)
-                elif ".xpi!" in url:
+                    parts = url_obj.path.split(omnijar_name + '!', 1)
+                elif '.xpi!' in url:
                     # e.g. file:///home/worker/workspace/build/application/firefox/browser/features/e10srollout@mozilla.org.xpi!/bootstrap.js  # noqa
-                    parts = url_obj.path.split(".xpi!", 1)
+                    parts = url_obj.path.split('.xpi!', 1)
                 else:
                     # We don't know how to handle this jar: path, so return it to the
                     # caller to make it print a warning.
                     return url_obj.path, None
 
-                dir_parts = parts[0].rsplit(app_name + "/", 1)
+                dir_parts = parts[0].rsplit(app_name + '/', 1)
                 url = mozpath.normpath(
-                    mozpath.join(
-                        self.topobjdir,
-                        "dist",
-                        "bin",
-                        dir_parts[1].lstrip("/"),
-                        parts[1].lstrip("/"),
+                    mozpath.join(self.topobjdir, 'dist',
+                                 'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/'))
                     )
-                )
-            elif ".xpi!" in url:
+            elif '.xpi!' in url:
                 # This matching mechanism is quite brittle and based on examples seen in the wild.
                 # There's no rule to match the XPI name to the path in dist/xpi-stage.
-                parts = url_obj.path.split(".xpi!", 1)
+                parts = url_obj.path.split('.xpi!', 1)
                 addon_name = os.path.basename(parts[0])
-                if "-test@mozilla.org" in addon_name:
-                    addon_name = addon_name[: -len("-test@mozilla.org")]
-                elif addon_name.endswith("@mozilla.org"):
-                    addon_name = addon_name[: -len("@mozilla.org")]
-                url = mozpath.normpath(
-                    mozpath.join(
-                        self.topobjdir,
-                        "dist",
-                        "xpi-stage",
-                        addon_name,
-                        parts[1].lstrip("/"),
-                    )
-                )
-        elif url_obj.scheme == "file" and os.path.isabs(url_obj.path):
+                if '-test@mozilla.org' in addon_name:
+                    addon_name = addon_name[:-len('-test@mozilla.org')]
+                elif addon_name.endswith('@mozilla.org'):
+                    addon_name = addon_name[:-len('@mozilla.org')]
+                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist',
+                                                    'xpi-stage', addon_name, parts[1].lstrip('/')))
+        elif url_obj.scheme == 'file' and os.path.isabs(url_obj.path):
             path = url_obj.path
             if not os.path.isfile(path):
                 # This may have been in a profile directory that no
@@ -638,7 +613,7 @@ class UrlFinder(object):
             if not path.startswith(self.topobjdir):
                 return path, None
             url = url_obj.path
-        elif url_obj.scheme in ("http", "https", "javascript", "data", "about"):
+        elif url_obj.scheme in ('http', 'https', 'javascript', 'data', 'about'):
             return None
 
         result = self.find_files(url)
@@ -649,16 +624,9 @@ class UrlFinder(object):
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(
-        self,
-        chrome_map_path,
-        appdir="dist/bin/browser/",
-        gredir="dist/bin/",
-        extra_chrome_manifests=[],
-    ):
-        self.url_finder = UrlFinder(
-            chrome_map_path, appdir, gredir, extra_chrome_manifests
-        )
+    def __init__(self, chrome_map_path, appdir='dist/bin/browser/',
+                 gredir='dist/bin/', extra_chrome_manifests=[]):
+        self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
     def rewrite_files(self, in_paths, output_file, output_suffix):
@@ -672,10 +640,8 @@ class LcovFileRewriter(object):
                     return None
             except Exception as e:
                 if url not in unknowns:
-                    print(
-                        "Error: %s.\nCouldn't find source info for %s, removing record"
-                        % (e, url)
-                    )
+                    print("Error: %s.\nCouldn't find source info for %s, removing record" %
+                          (e, url))
                 unknowns.add(url)
                 return None
 
@@ -694,17 +660,13 @@ class LcovFileRewriter(object):
 
         if output_file:
             lcov_file = LcovFile(in_paths)
-            with open(output_file, "w+") as out_fh:
-                lcov_file.print_file(
-                    out_fh, rewrite_source, self.pp_rewriter.rewrite_record
-                )
+            with open(output_file, 'w+') as out_fh:
+                lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
         else:
             for in_path in in_paths:
                 lcov_file = LcovFile([in_path])
-                with open(in_path + output_suffix, "w+") as out_fh:
-                    lcov_file.print_file(
-                        out_fh, rewrite_source, self.pp_rewriter.rewrite_record
-                    )
+                with open(in_path + output_suffix, 'w+') as out_fh:
+                    lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
 
         if not found_valid[0]:
             print("WARNING: No valid records found in %s" % in_paths)
@@ -719,9 +681,7 @@ def main():
         "back to their original locations."
     )
     parser.add_argument(
-        "--chrome-map-path",
-        default="chrome-map.json",
-        help="Path to the chrome-map.json file.",
+        "--chrome-map-path", default="chrome-map.json", help="Path to the chrome-map.json file."
     )
     parser.add_argument(
         "--app-dir",
@@ -742,7 +702,7 @@ def main():
     )
     parser.add_argument(
         "--extra-chrome-manifests",
-        nargs="+",
+        nargs='+',
         help="Paths to files containing extra chrome registration.",
     )
     parser.add_argument(
@@ -751,13 +711,12 @@ def main():
         help="The output file where the results are merged. Leave empty to make the rewriter not "
         "merge files.",
     )
-    parser.add_argument("files", nargs="+", help="The set of files to process.")
+    parser.add_argument("files", nargs='+', help="The set of files to process.")
 
     args = parser.parse_args()
 
-    rewriter = LcovFileRewriter(
-        args.chrome_map_path, args.app_dir, args.gre_dir, args.extra_chrome_manifests
-    )
+    rewriter = LcovFileRewriter(args.chrome_map_path, args.app_dir, args.gre_dir,
+                                args.extra_chrome_manifests)
 
     files = []
     for f in args.files:
@@ -769,5 +728,5 @@ def main():
     rewriter.rewrite_files(files, args.output_file, args.output_suffix)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

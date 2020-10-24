@@ -4,22 +4,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "tree-map",
+    'tree-map',
 ]
 
 DevToolsModules(
-    "Census.js",
-    "CensusHeader.js",
-    "CensusTreeItem.js",
-    "DominatorTree.js",
-    "DominatorTreeHeader.js",
-    "DominatorTreeItem.js",
-    "Heap.js",
-    "Individuals.js",
-    "IndividualsHeader.js",
-    "List.js",
-    "ShortestPaths.js",
-    "SnapshotListItem.js",
-    "Toolbar.js",
-    "TreeMap.js",
+    'Census.js',
+    'CensusHeader.js',
+    'CensusTreeItem.js',
+    'DominatorTree.js',
+    'DominatorTreeHeader.js',
+    'DominatorTreeItem.js',
+    'Heap.js',
+    'Individuals.js',
+    'IndividualsHeader.js',
+    'List.js',
+    'ShortestPaths.js',
+    'SnapshotListItem.js',
+    'Toolbar.js',
+    'TreeMap.js',
 )

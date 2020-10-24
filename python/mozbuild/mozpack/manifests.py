@@ -22,12 +22,12 @@ import mozpack.path as mozpath
 
 # This probably belongs in a more generic module. Where?
 @contextmanager
-def _auto_fileobj(path, fileobj, mode="r"):
+def _auto_fileobj(path, fileobj, mode='r'):
     if path and fileobj:
-        raise AssertionError("Only 1 of path or fileobj may be defined.")
+        raise AssertionError('Only 1 of path or fileobj may be defined.')
 
     if not path and not fileobj:
-        raise AssertionError("Must specified 1 of path or fileobj.")
+        raise AssertionError('Must specified 1 of path or fileobj.')
 
     if path:
         fileobj = open(path, mode)
@@ -89,7 +89,7 @@ class InstallManifest(object):
 
     CURRENT_VERSION = 5
 
-    FIELD_SEPARATOR = "\x1f"
+    FIELD_SEPARATOR = '\x1f'
 
     # Negative values are reserved for non-actionable items, that is, metadata
     # that doesn't describe files in the destination.
@@ -117,19 +117,20 @@ class InstallManifest(object):
         self._source_files = set()
 
         if path or fileobj:
-            with _auto_fileobj(path, fileobj, "r") as fh:
+            with _auto_fileobj(path, fileobj, 'r') as fh:
                 self._source_files.add(fh.name)
                 self._load_from_fileobj(fh)
 
     def _load_from_fileobj(self, fileobj):
         version = fileobj.readline().rstrip()
-        if version not in ("1", "2", "3", "4", "5"):
-            raise UnreadableInstallManifest("Unknown manifest version: %s" % version)
+        if version not in ('1', '2', '3', '4', '5'):
+            raise UnreadableInstallManifest('Unknown manifest version: %s' %
+                                            version)
 
         for line in fileobj:
             # Explicitly strip on \n so we don't strip out the FIELD_SEPARATOR
             # as well.
-            line = line.rstrip("\n")
+            line = line.rstrip('\n')
 
             fields = line.split(self.FIELD_SEPARATOR)
 
@@ -168,28 +169,23 @@ class InstallManifest(object):
             if record_type == self.PREPROCESS:
                 dest, source, deps, marker, defines, warnings = fields[1:]
 
-                self.add_preprocess(
-                    source,
-                    dest,
-                    deps,
-                    marker,
-                    self._decode_field_entry(defines),
-                    silence_missing_directive_warnings=bool(int(warnings)),
-                )
+                self.add_preprocess(source, dest, deps, marker,
+                                    self._decode_field_entry(defines),
+                                    silence_missing_directive_warnings=bool(int(warnings)))
                 continue
 
             if record_type == self.CONTENT:
                 dest, content = fields[1:]
 
                 self.add_content(
-                    six.ensure_text(self._decode_field_entry(content)), dest
-                )
+                    six.ensure_text(self._decode_field_entry(content)), dest)
                 continue
 
             # Don't fail for non-actionable items, allowing
             # forward-compatibility with those we will add in the future.
             if record_type >= 0:
-                raise UnreadableInstallManifest("Unknown record type: %d" % record_type)
+                raise UnreadableInstallManifest('Unknown record type: %d' %
+                                                record_type)
 
     def __len__(self):
         return len(self._dests)
@@ -205,7 +201,7 @@ class InstallManifest(object):
 
     def __ior__(self, other):
         if not isinstance(other, InstallManifest):
-            raise ValueError("Can only | with another instance of InstallManifest.")
+            raise ValueError('Can only | with another instance of InstallManifest.')
 
         self.add_entries_from(other)
 
@@ -235,36 +231,27 @@ class InstallManifest(object):
 
         It is an error if both are specified.
         """
-        with _auto_fileobj(path, fileobj, "wt") as fh:
-            fh.write("%d\n" % self.CURRENT_VERSION)
+        with _auto_fileobj(path, fileobj, 'wt') as fh:
+            fh.write('%d\n' % self.CURRENT_VERSION)
 
             for dest in sorted(self._dests):
                 entry = self._dests[dest]
 
-                if expand_pattern and entry[0] in (
-                    self.PATTERN_LINK,
-                    self.PATTERN_COPY,
-                ):
+                if expand_pattern and entry[0] in (self.PATTERN_LINK, self.PATTERN_COPY):
                     type, base, pattern, dest = entry
                     type = self.LINK if type == self.PATTERN_LINK else self.COPY
                     finder = FileFinder(base)
                     paths = [f[0] for f in finder.find(pattern)]
                     for path in paths:
                         source = mozpath.join(base, path)
-                        parts = ["%d" % type, mozpath.join(dest, path), source]
-                        fh.write(
-                            "%s\n"
-                            % self.FIELD_SEPARATOR.join(
-                                six.ensure_text(p) for p in parts
-                            )
-                        )
+                        parts = ['%d' % type, mozpath.join(dest, path), source]
+                        fh.write('%s\n' % self.FIELD_SEPARATOR.join(
+                            six.ensure_text(p) for p in parts))
                 else:
-                    parts = ["%d" % entry[0], dest]
+                    parts = ['%d' % entry[0], dest]
                     parts.extend(entry[1:])
-                    fh.write(
-                        "%s\n"
-                        % self.FIELD_SEPARATOR.join(six.ensure_text(p) for p in parts)
-                    )
+                    fh.write('%s\n' % self.FIELD_SEPARATOR.join(
+                        six.ensure_text(p) for p in parts))
 
     def add_link(self, source, dest):
         """Add a link to this manifest.
@@ -309,62 +296,47 @@ class InstallManifest(object):
 
            <base>/foo/bar.h -> <dest>/foo/bar.h
         """
-        self._add_entry(
-            mozpath.join(dest, pattern), (self.PATTERN_LINK, base, pattern, dest)
-        )
+        self._add_entry(mozpath.join(dest, pattern),
+                        (self.PATTERN_LINK, base, pattern, dest))
 
     def add_pattern_copy(self, base, pattern, dest):
         """Add a pattern match that results in copies.
 
         See ``add_pattern_link()`` for usage.
         """
-        self._add_entry(
-            mozpath.join(dest, pattern), (self.PATTERN_COPY, base, pattern, dest)
-        )
+        self._add_entry(mozpath.join(dest, pattern),
+                        (self.PATTERN_COPY, base, pattern, dest))
 
-    def add_preprocess(
-        self,
-        source,
-        dest,
-        deps,
-        marker="#",
-        defines={},
-        silence_missing_directive_warnings=False,
-    ):
+    def add_preprocess(self, source, dest, deps, marker='#', defines={},
+                       silence_missing_directive_warnings=False):
         """Add a preprocessed file to this manifest.
 
         ``source`` will be passed through preprocessor.py, and the output will be
         written to ``dest``.
         """
-        self._add_entry(
-            dest,
-            (
-                self.PREPROCESS,
-                source,
-                deps,
-                marker,
-                self._encode_field_entry(defines),
-                "1" if silence_missing_directive_warnings else "0",
-            ),
-        )
+        self._add_entry(dest, (
+            self.PREPROCESS,
+            source,
+            deps,
+            marker,
+            self._encode_field_entry(defines),
+            '1' if silence_missing_directive_warnings else '0',
+        ))
 
     def add_content(self, content, dest):
         """Add a file with the given content."""
-        self._add_entry(
-            dest,
-            (
-                self.CONTENT,
-                self._encode_field_entry(content),
-            ),
-        )
+        self._add_entry(dest, (
+            self.CONTENT,
+            self._encode_field_entry(content),
+        ))
 
     def _add_entry(self, dest, entry):
         if dest in self._dests:
-            raise ValueError("Item already in manifest: %s" % dest)
+            raise ValueError('Item already in manifest: %s' % dest)
 
         self._dests[dest] = entry
 
-    def add_entries_from(self, other, base=""):
+    def add_entries_from(self, other, base=''):
         """
         Copy data from another mozpack.copier.InstallManifest
         instance, adding an optional base prefix to the destination.
@@ -392,7 +364,8 @@ class InstallManifest(object):
 
             self._add_entry(new_dest, new_entry)
 
-    def populate_registry(self, registry, defines_override={}, link_policy="symlink"):
+    def populate_registry(self, registry, defines_override={},
+                          link_policy='symlink'):
         """Populate a mozpack.copier.FileRegistry instance with data from us.
 
         The caller supplied a FileRegistry instance (or at least something that
@@ -457,27 +430,23 @@ class InstallManifest(object):
                 defines = self._decode_field_entry(entry[4])
                 if defines_override:
                     defines.update(defines_override)
-                registry.add(
-                    dest,
-                    PreprocessedFile(
-                        entry[1],
-                        depfile_path=entry[2],
-                        marker=entry[3],
-                        defines=defines,
-                        extra_depends=self._source_files,
-                        silence_missing_directive_warnings=bool(int(entry[5])),
-                    ),
-                )
+                registry.add(dest, PreprocessedFile(
+                   entry[1],
+                   depfile_path=entry[2],
+                   marker=entry[3],
+                   defines=defines,
+                   extra_depends=self._source_files,
+                   silence_missing_directive_warnings=bool(int(entry[5])),
+                ))
 
                 continue
 
             if install_type == self.CONTENT:
                 # GeneratedFile expect the buffer interface, which the unicode
                 # type doesn't have, so encode to a str.
-                content = self._decode_field_entry(entry[1]).encode("utf-8")
+                content = self._decode_field_entry(entry[1]).encode('utf-8')
                 registry.add(dest, GeneratedFile(content))
                 continue
 
-            raise Exception(
-                "Unknown install type defined in manifest: %d" % install_type
-            )
+            raise Exception('Unknown install type defined in manifest: %d' %
+                            install_type)

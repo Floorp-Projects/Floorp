@@ -82,10 +82,8 @@ def split_public_and_private(config, jobs):
                 prefix + "/", ""
             ).split("/", 4)
             destination = "private"
-            this_config = [
-                p
-                for p in partner_config["configs"]
-                if (p["campaign"] == partner and p["content"] == sub_partner)
+            this_config = [p for p in partner_config["configs"] if (
+                    p["campaign"] == partner and p["content"] == sub_partner)
             ]
             if this_config[0].get("upload_to_candidates"):
                 destination = "public"

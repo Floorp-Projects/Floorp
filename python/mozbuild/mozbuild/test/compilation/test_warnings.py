@@ -16,25 +16,12 @@ from mozbuild.compilation.warnings import WarningsDatabase
 from mozunit import main
 
 CLANG_TESTS = [
-    (
-        "foobar.cpp:123:10: warning: you messed up [-Wfoo]",
-        "foobar.cpp",
-        123,
-        10,
-        "warning",
-        "you messed up",
-        "-Wfoo",
-    ),
-    (
-        "c_locale_dummy.c:457:1: error: (near initialization for "
-        "'full_wmonthname[0]') [clang-diagnostic-error]",
-        "c_locale_dummy.c",
-        457,
-        1,
-        "error",
-        "(near initialization for 'full_wmonthname[0]')",
-        "clang-diagnostic-error",
-    ),
+    ('foobar.cpp:123:10: warning: you messed up [-Wfoo]',
+     'foobar.cpp', 123, 10, 'warning', 'you messed up', '-Wfoo'),
+    ("c_locale_dummy.c:457:1: error: (near initialization for "
+     "'full_wmonthname[0]') [clang-diagnostic-error]",
+     'c_locale_dummy.c', 457, 1, 'error',
+     "(near initialization for 'full_wmonthname[0]')", 'clang-diagnostic-error')
 ]
 
 CURRENT_LINE = 1
@@ -44,10 +31,10 @@ def get_warning():
     global CURRENT_LINE
 
     w = CompilerWarning()
-    w["filename"] = "/foo/bar/baz.cpp"
-    w["line"] = CURRENT_LINE
-    w["column"] = 12
-    w["message"] = "This is irrelevant"
+    w['filename'] = '/foo/bar/baz.cpp'
+    w['line'] = CURRENT_LINE
+    w['column'] = 12
+    w['message'] = 'This is irrelevant'
 
     CURRENT_LINE += 1
 
@@ -69,8 +56,8 @@ class TestCompilerWarning(unittest.TestCase):
 
         self.assertEqual(len(s), 1)
 
-        w1["filename"] = "/foo.c"
-        w2["filename"] = "/bar.c"
+        w1['filename'] = '/foo.c'
+        w2['filename'] = '/bar.c'
 
         self.assertNotEqual(w1, w2)
 
@@ -80,13 +67,13 @@ class TestCompilerWarning(unittest.TestCase):
 
         self.assertEqual(len(s), 2)
 
-        w1["filename"] = "/foo.c"
-        w1["line"] = 5
-        w2["line"] = 5
+        w1['filename'] = '/foo.c'
+        w1['line'] = 5
+        w2['line'] = 5
 
-        w2["filename"] = "/foo.c"
-        w1["column"] = 3
-        w2["column"] = 3
+        w2['filename'] = '/foo.c'
+        w1['column'] = 3
+        w2['column'] = 3
 
         self.assertEqual(w1, w2)
 
@@ -94,37 +81,37 @@ class TestCompilerWarning(unittest.TestCase):
         w1 = CompilerWarning()
         w2 = CompilerWarning()
 
-        w1["filename"] = "/aaa.c"
-        w1["line"] = 5
-        w1["column"] = 5
+        w1['filename'] = '/aaa.c'
+        w1['line'] = 5
+        w1['column'] = 5
 
-        w2["filename"] = "/bbb.c"
-        w2["line"] = 5
-        w2["column"] = 5
+        w2['filename'] = '/bbb.c'
+        w2['line'] = 5
+        w2['column'] = 5
 
         self.assertLess(w1, w2)
         self.assertGreater(w2, w1)
         self.assertGreaterEqual(w2, w1)
 
-        w2["filename"] = "/aaa.c"
-        w2["line"] = 4
-        w2["column"] = 6
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 4
+        w2['column'] = 6
 
         self.assertLess(w2, w1)
         self.assertGreater(w1, w2)
         self.assertGreaterEqual(w1, w2)
 
-        w2["filename"] = "/aaa.c"
-        w2["line"] = 5
-        w2["column"] = 10
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 5
+        w2['column'] = 10
 
         self.assertLess(w1, w2)
         self.assertGreater(w2, w1)
         self.assertGreaterEqual(w2, w1)
 
-        w2["filename"] = "/aaa.c"
-        w2["line"] = 5
-        w2["column"] = 5
+        w2['filename'] = '/aaa.c'
+        w2['line'] = 5
+        w2['column'] = 5
 
         self.assertLessEqual(w1, w2)
         self.assertLessEqual(w2, w1)
@@ -140,12 +127,12 @@ class TestWarningsAndErrorsParsing(unittest.TestCase):
 
             self.assertIsNotNone(warning)
 
-            self.assertEqual(warning["filename"], filename)
-            self.assertEqual(warning["line"], line)
-            self.assertEqual(warning["column"], column)
-            self.assertEqual(warning["type"], diag_type)
-            self.assertEqual(warning["message"], message)
-            self.assertEqual(warning["flag"], flag)
+            self.assertEqual(warning['filename'], filename)
+            self.assertEqual(warning['line'], line)
+            self.assertEqual(warning['column'], column)
+            self.assertEqual(warning['type'], diag_type)
+            self.assertEqual(warning['message'], message)
+            self.assertEqual(warning['flag'], flag)
 
 
 class TestWarningsDatabase(unittest.TestCase):
@@ -166,20 +153,20 @@ class TestWarningsDatabase(unittest.TestCase):
         """Ensure that hashing files on insert works."""
         db = WarningsDatabase()
 
-        temp = NamedTemporaryFile(mode="wt")
-        temp.write("x" * 100)
+        temp = NamedTemporaryFile(mode='wt')
+        temp.write('x' * 100)
         temp.flush()
 
         w = CompilerWarning()
-        w["filename"] = temp.name
-        w["line"] = 1
-        w["column"] = 4
-        w["message"] = "foo bar"
+        w['filename'] = temp.name
+        w['line'] = 1
+        w['column'] = 4
+        w['message'] = 'foo bar'
 
         # Should not throw.
         db.insert(w)
 
-        w["filename"] = "DOES_NOT_EXIST"
+        w['filename'] = 'DOES_NOT_EXIST'
 
         with self.assertRaises(Exception):
             db.insert(w)
@@ -190,18 +177,18 @@ class TestWarningsDatabase(unittest.TestCase):
 
         source_files = []
         for i in range(1, 21):
-            temp = NamedTemporaryFile(mode="wt")
-            temp.write("x" * (100 * i))
+            temp = NamedTemporaryFile(mode='wt')
+            temp.write('x' * (100 * i))
             temp.flush()
 
             # Keep reference so it doesn't get GC'd and deleted.
             source_files.append(temp)
 
             w = CompilerWarning()
-            w["filename"] = temp.name
-            w["line"] = 1
-            w["column"] = i * 10
-            w["message"] = "irrelevant"
+            w['filename'] = temp.name
+            w['line'] = 1
+            w['column'] = i * 10
+            w['message'] = 'irrelevant'
 
             db.insert(w)
 
@@ -209,14 +196,14 @@ class TestWarningsDatabase(unittest.TestCase):
 
         # If we change a source file, inserting a new warning should nuke the
         # old one.
-        source_files[0].write("extra")
+        source_files[0].write('extra')
         source_files[0].flush()
 
         w = CompilerWarning()
-        w["filename"] = source_files[0].name
-        w["line"] = 1
-        w["column"] = 50
-        w["message"] = "replaced"
+        w['filename'] = source_files[0].name
+        w['line'] = 1
+        w['column'] = 50
+        w['message'] = 'replaced'
 
         db.insert(w)
 
@@ -224,7 +211,7 @@ class TestWarningsDatabase(unittest.TestCase):
 
         warnings = list(db.warnings_for_file(source_files[0].name))
         self.assertEqual(len(warnings), 1)
-        self.assertEqual(warnings[0]["column"], w["column"])
+        self.assertEqual(warnings[0]['column'], w['column'])
 
         # If we delete the source file, calling prune should cause the warnings
         # to go away.
@@ -237,5 +224,5 @@ class TestWarningsDatabase(unittest.TestCase):
         self.assertEqual(len(db), 19)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

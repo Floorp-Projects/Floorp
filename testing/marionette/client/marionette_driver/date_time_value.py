@@ -27,25 +27,25 @@ class DateTimeValue(object):
         """
         Retrieve the element's string value
         """
-        return self.element.get_attribute("value")
+        return self.element.get_attribute('value')
 
     # As per the W3C "date" element specification
     # (http://dev.w3.org/html5/markup/input.date.html), this value is formatted
     # according to RFC 3339: http://tools.ietf.org/html/rfc3339#section-5.6
     @date.setter
     def date(self, date_value):
-        self.element.send_keys(date_value.strftime("%Y-%m-%d"))
+        self.element.send_keys(date_value.strftime('%Y-%m-%d'))
 
     @property
     def time(self):
         """
         Retrieve the element's string value
         """
-        return self.element.get_attribute("value")
+        return self.element.get_attribute('value')
 
     # As per the W3C "time" element specification
     # (http://dev.w3.org/html5/markup/input.time.html), this value is formatted
     # according to RFC 3339: http://tools.ietf.org/html/rfc3339#section-5.6
     @time.setter
     def time(self, time_value):
-        self.element.send_keys(time_value.strftime("%H:%M:%S"))
+        self.element.send_keys(time_value.strftime('%H:%M:%S'))

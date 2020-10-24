@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library("FuzzingSdp")
+Library('FuzzingSdp')
 
 LOCAL_INCLUDES += [
-    "/dom/media/webrtc",
-    "/ipc/chromium/src",
-    "/media/webrtc",
+  '/dom/media/webrtc',
+  '/ipc/chromium/src',
+  '/media/webrtc',
 ]
 
 # Add libFuzzer configuration directives
-include("/tools/fuzzing/libfuzzer-config.mozbuild")
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 SOURCES += [
-    "sdp_parser_libfuzz.cpp",
+    'sdp_parser_libfuzz.cpp',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'

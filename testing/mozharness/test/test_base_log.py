@@ -27,17 +27,16 @@ class TestLog(unittest.TestCase):
         clean_log_dir()
 
     def test_log_dir(self):
-        fh = open(tmp_dir, "w")
+        fh = open(tmp_dir, 'w')
         fh.write("foo")
         fh.close()
-        l = log.SimpleFileLogger(
-            log_dir=tmp_dir, log_name=log_name, log_to_console=False
-        )
+        l = log.SimpleFileLogger(log_dir=tmp_dir, log_name=log_name,
+                                 log_to_console=False)
         self.assertTrue(os.path.exists(tmp_dir))
-        l.log_message("blah")
+        l.log_message('blah')
         self.assertTrue(os.path.exists(get_log_file_path()))
-        del l
+        del(l)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

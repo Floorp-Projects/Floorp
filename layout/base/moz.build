@@ -4,185 +4,185 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("Restyle*"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+with Files('Restyle*'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 
-with Files("nsStyle*"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+with Files('nsStyle*'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 
-with Files("nsChangeHint.h"):
-    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+with Files('nsChangeHint.h'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 
-with Files("nsBidi*"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+with Files('nsBidi*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 
-with Files("AccessibleCaret*"):
-    BUG_COMPONENT = ("Core", "DOM: Selection")
+with Files('AccessibleCaret*'):
+    BUG_COMPONENT = ('Core', 'DOM: Selection')
 
 XPIDL_SOURCES += [
-    "nsILayoutHistoryState.idl",
-    "nsIPreloadedStyleSheet.idl",
-    "nsIStyleSheetService.idl",
+    'nsILayoutHistoryState.idl',
+    'nsIPreloadedStyleSheet.idl',
+    'nsIStyleSheetService.idl',
 ]
 
-if CONFIG["MOZ_DEBUG"]:
+if CONFIG['MOZ_DEBUG']:
     UNIFIED_SOURCES += [
-        "nsAutoLayoutPhase.cpp",
+        'nsAutoLayoutPhase.cpp',
     ]
 
-XPIDL_MODULE = "layout_base"
+XPIDL_MODULE = 'layout_base'
 
 EXPORTS += [
-    "CaretAssociationHint.h",
-    "FrameProperties.h",
-    "LayoutConstants.h",
-    "LayoutLogging.h",
-    "MobileViewportManager.h",
-    "nsAutoLayoutPhase.h",
-    "nsBidi.h",
-    "nsBidiPresUtils.h",
-    "nsCaret.h",
-    "nsChangeHint.h",
-    "nsCompatibility.h",
-    "nsCounterManager.h",
-    "nsCSSFrameConstructor.h",
-    "nsFrameManager.h",
-    "nsFrameTraversal.h",
-    "nsGenConList.h",
-    "nsIFrameTraversal.h",
-    "nsIPercentBSizeObserver.h",
-    "nsIReflowCallback.h",
-    "nsLayoutUtils.h",
-    "nsPresArena.h",
-    "nsPresArenaObjectList.h",
-    "nsPresContext.h",
-    "nsPresContextInlines.h",
-    "nsQuoteList.h",
-    "nsRefreshDriver.h",
-    "nsRefreshObservers.h",
-    "nsStyleChangeList.h",
-    "nsStyleSheetService.h",
-    "StackArena.h",
-    "TouchManager.h",
-    "Units.h",
-    "UnitTransforms.h",
-    "WordMovementType.h",
-    "ZoomConstraintsClient.h",
+    'CaretAssociationHint.h',
+    'FrameProperties.h',
+    'LayoutConstants.h',
+    'LayoutLogging.h',
+    'MobileViewportManager.h',
+    'nsAutoLayoutPhase.h',
+    'nsBidi.h',
+    'nsBidiPresUtils.h',
+    'nsCaret.h',
+    'nsChangeHint.h',
+    'nsCompatibility.h',
+    'nsCounterManager.h',
+    'nsCSSFrameConstructor.h',
+    'nsFrameManager.h',
+    'nsFrameTraversal.h',
+    'nsGenConList.h',
+    'nsIFrameTraversal.h',
+    'nsIPercentBSizeObserver.h',
+    'nsIReflowCallback.h',
+    'nsLayoutUtils.h',
+    'nsPresArena.h',
+    'nsPresArenaObjectList.h',
+    'nsPresContext.h',
+    'nsPresContextInlines.h',
+    'nsQuoteList.h',
+    'nsRefreshDriver.h',
+    'nsRefreshObservers.h',
+    'nsStyleChangeList.h',
+    'nsStyleSheetService.h',
+    'StackArena.h',
+    'TouchManager.h',
+    'Units.h',
+    'UnitTransforms.h',
+    'WordMovementType.h',
+    'ZoomConstraintsClient.h',
 ]
 
 EXPORTS.mozilla += [
-    "AccessibleCaretEventHub.h",
-    "ArenaObjectID.h",
-    "DisplayPortUtils.h",
-    "GeckoMVMContext.h",
-    "GeometryUtils.h",
-    "MediaEmulationData.h",
-    "MotionPathUtils.h",
-    "MVMContext.h",
-    "OverflowChangedTracker.h",
-    "PositionedEventTargeting.h",
-    "PresShell.h",
-    "PresShellForwards.h",
-    "PresShellInlines.h",
-    "RelativeTo.h",
-    "RestyleManager.h",
-    "ScrollStyles.h",
-    "ScrollTypes.h",
-    "ShapeUtils.h",
-    "StaticPresData.h",
-    "SurfaceFromElementResult.h",
-    "ViewportUtils.h",
+    'AccessibleCaretEventHub.h',
+    'ArenaObjectID.h',
+    'DisplayPortUtils.h',
+    'GeckoMVMContext.h',
+    'GeometryUtils.h',
+    'MediaEmulationData.h',
+    'MotionPathUtils.h',
+    'MVMContext.h',
+    'OverflowChangedTracker.h',
+    'PositionedEventTargeting.h',
+    'PresShell.h',
+    'PresShellForwards.h',
+    'PresShellInlines.h',
+    'RelativeTo.h',
+    'RestyleManager.h',
+    'ScrollStyles.h',
+    'ScrollTypes.h',
+    'ShapeUtils.h',
+    'StaticPresData.h',
+    'SurfaceFromElementResult.h',
+    'ViewportUtils.h',
 ]
 
 EXPORTS.mozilla.layout += [
-    "LayoutTelemetryTools.h",
+    'LayoutTelemetryTools.h',
 ]
 
 UNIFIED_SOURCES += [
-    "AccessibleCaret.cpp",
-    "AccessibleCaretEventHub.cpp",
-    "AccessibleCaretManager.cpp",
-    "DisplayPortUtils.cpp",
-    "GeckoMVMContext.cpp",
-    "GeometryUtils.cpp",
-    "LayoutLogging.cpp",
-    "LayoutTelemetryTools.cpp",
-    "MobileViewportManager.cpp",
-    "MotionPathUtils.cpp",
-    "nsBidi.cpp",
-    "nsBidiPresUtils.cpp",
-    "nsCaret.cpp",
-    "nsCounterManager.cpp",
-    "nsCSSColorUtils.cpp",
-    "nsCSSFrameConstructor.cpp",
-    "nsDocumentViewer.cpp",
-    "nsFrameManager.cpp",
-    "nsFrameTraversal.cpp",
-    "nsGenConList.cpp",
-    "nsLayoutDebugger.cpp",
-    "nsLayoutHistoryState.cpp",
-    "nsLayoutUtils.cpp",
-    "nsPresArena.cpp",
-    "nsPresContext.cpp",
-    "nsQuoteList.cpp",
-    "nsRefreshObservers.cpp",
-    "nsStyleChangeList.cpp",
-    "nsStyleSheetService.cpp",
-    "PositionedEventTargeting.cpp",
-    "PresShell.cpp",
-    "RestyleManager.cpp",
-    "ScrollStyles.cpp",
-    "ShapeUtils.cpp",
-    "StackArena.cpp",
-    "StaticPresData.cpp",
-    "TouchManager.cpp",
-    "ViewportUtils.cpp",
-    "ZoomConstraintsClient.cpp",
+    'AccessibleCaret.cpp',
+    'AccessibleCaretEventHub.cpp',
+    'AccessibleCaretManager.cpp',
+    'DisplayPortUtils.cpp',
+    'GeckoMVMContext.cpp',
+    'GeometryUtils.cpp',
+    'LayoutLogging.cpp',
+    'LayoutTelemetryTools.cpp',
+    'MobileViewportManager.cpp',
+    'MotionPathUtils.cpp',
+    'nsBidi.cpp',
+    'nsBidiPresUtils.cpp',
+    'nsCaret.cpp',
+    'nsCounterManager.cpp',
+    'nsCSSColorUtils.cpp',
+    'nsCSSFrameConstructor.cpp',
+    'nsDocumentViewer.cpp',
+    'nsFrameManager.cpp',
+    'nsFrameTraversal.cpp',
+    'nsGenConList.cpp',
+    'nsLayoutDebugger.cpp',
+    'nsLayoutHistoryState.cpp',
+    'nsLayoutUtils.cpp',
+    'nsPresArena.cpp',
+    'nsPresContext.cpp',
+    'nsQuoteList.cpp',
+    'nsRefreshObservers.cpp',
+    'nsStyleChangeList.cpp',
+    'nsStyleSheetService.cpp',
+    'PositionedEventTargeting.cpp',
+    'PresShell.cpp',
+    'RestyleManager.cpp',
+    'ScrollStyles.cpp',
+    'ShapeUtils.cpp',
+    'StackArena.cpp',
+    'StaticPresData.cpp',
+    'TouchManager.cpp',
+    'ViewportUtils.cpp',
+    'ZoomConstraintsClient.cpp',
 ]
 
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [
-    "nsRefreshDriver.cpp",
+    'nsRefreshDriver.cpp',
 ]
 
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["gtest"]
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['gtest']
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "../forms",
-    "../generic",
-    "../mathml",
-    "../painting",
-    "../printing",
-    "../style",
-    "../tables",
-    "../xul",
-    "../xul/tree/",
-    "/docshell/base",
-    "/dom/base",
-    "/dom/html",
-    "/dom/svg",
-    "/dom/xul",
-    "/view",
+    '../forms',
+    '../generic',
+    '../mathml',
+    '../painting',
+    '../printing',
+    '../style',
+    '../tables',
+    '../xul',
+    '../xul/tree/',
+    '/docshell/base',
+    '/dom/base',
+    '/dom/html',
+    '/dom/svg',
+    '/dom/xul',
+    '/view',
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
-        "/widget/android",
+        '/widget/android',
     ]
 
 IPDL_SOURCES += [
-    "PresState.ipdlh",
+    'PresState.ipdlh',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
-MARIONETTE_LAYOUT_MANIFESTS += ["tests/marionette/manifest.ini"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+MARIONETTE_LAYOUT_MANIFESTS += ['tests/marionette/manifest.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

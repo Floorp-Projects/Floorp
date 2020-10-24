@@ -8,6 +8,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestWindowTypeChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super(TestWindowTypeChrome, self).setUp()
 
@@ -23,6 +24,5 @@ class TestWindowTypeChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(win)
 
         window_type = self.marionette.execute_script(
-            "return window.document.documentElement.getAttribute('windowtype');"
-        )
+            "return window.document.documentElement.getAttribute('windowtype');")
         self.assertEqual(window_type, self.marionette.get_window_type())

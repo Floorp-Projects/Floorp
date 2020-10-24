@@ -4,22 +4,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "components",
-    "modules",
-    "test",
-    "views",
+    'components',
+    'modules',
+    'test',
+    'views',
 ]
 
 DevToolsModules(
-    "events.js",
-    "initializer.js",
-    "panel.js",
-    "performance-controller.js",
-    "performance-view.js",
+    'events.js',
+    'initializer.js',
+    'panel.js',
+    'performance-controller.js',
+    'performance-view.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
-with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

@@ -4,65 +4,65 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "General")
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files("AutoScroll*.jsm"):
-    BUG_COMPONENT = ("Core", "Panning and Zooming")
+with Files('AutoScroll*.jsm'):
+    BUG_COMPONENT = ('Core', 'Panning and Zooming')
 
-with Files("Finder*.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Find Toolbar")
+with Files('Finder*.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files("KeyPressEventModelCheckerChild.jsm"):
-    BUG_COMPONENT = ("Core", "DOM: Events")
+with Files('KeyPressEventModelCheckerChild.jsm'):
+    BUG_COMPONENT = ('Core', 'DOM: Events')
 
 TESTING_JS_MODULES += [
-    "TestProcessActorChild.jsm",
-    "TestProcessActorParent.jsm",
-    "TestWindowChild.jsm",
-    "TestWindowParent.jsm",
+    'TestProcessActorChild.jsm',
+    'TestProcessActorParent.jsm',
+    'TestWindowChild.jsm',
+    'TestWindowParent.jsm',
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "AboutHttpsOnlyErrorChild.jsm",
-    "AboutHttpsOnlyErrorParent.jsm",
-    "AudioPlaybackChild.jsm",
-    "AudioPlaybackParent.jsm",
-    "AutoCompleteChild.jsm",
-    "AutoCompleteParent.jsm",
-    "AutoplayChild.jsm",
-    "AutoplayParent.jsm",
-    "AutoScrollChild.jsm",
-    "AutoScrollParent.jsm",
-    "BackgroundThumbnailsChild.jsm",
-    "BrowserElementChild.jsm",
-    "BrowserElementParent.jsm",
-    "ControllersChild.jsm",
-    "ControllersParent.jsm",
-    "DateTimePickerChild.jsm",
-    "DateTimePickerParent.jsm",
-    "ExtFindChild.jsm",
-    "FindBarChild.jsm",
-    "FindBarParent.jsm",
-    "FinderChild.jsm",
-    "InlineSpellCheckerChild.jsm",
-    "InlineSpellCheckerParent.jsm",
-    "KeyPressEventModelCheckerChild.jsm",
-    "PictureInPictureChild.jsm",
-    "PopupBlockingChild.jsm",
-    "PopupBlockingParent.jsm",
-    "PrintingChild.jsm",
-    "PurgeSessionHistoryChild.jsm",
-    "RemotePageChild.jsm",
-    "SelectChild.jsm",
-    "SelectParent.jsm",
-    "ThumbnailsChild.jsm",
-    "UAWidgetsChild.jsm",
-    "UnselectedTabHoverChild.jsm",
-    "UnselectedTabHoverParent.jsm",
-    "ViewSourceChild.jsm",
-    "ViewSourcePageChild.jsm",
-    "ViewSourcePageParent.jsm",
-    "WebChannelChild.jsm",
-    "WebChannelParent.jsm",
+    'AboutHttpsOnlyErrorChild.jsm',
+    'AboutHttpsOnlyErrorParent.jsm',
+    'AudioPlaybackChild.jsm',
+    'AudioPlaybackParent.jsm',
+    'AutoCompleteChild.jsm',
+    'AutoCompleteParent.jsm',
+    'AutoplayChild.jsm',
+    'AutoplayParent.jsm',
+    'AutoScrollChild.jsm',
+    'AutoScrollParent.jsm',
+    'BackgroundThumbnailsChild.jsm',
+    'BrowserElementChild.jsm',
+    'BrowserElementParent.jsm',
+    'ControllersChild.jsm',
+    'ControllersParent.jsm',
+    'DateTimePickerChild.jsm',
+    'DateTimePickerParent.jsm',
+    'ExtFindChild.jsm',
+    'FindBarChild.jsm',
+    'FindBarParent.jsm',
+    'FinderChild.jsm',
+    'InlineSpellCheckerChild.jsm',
+    'InlineSpellCheckerParent.jsm',
+    'KeyPressEventModelCheckerChild.jsm',
+    'PictureInPictureChild.jsm',
+    'PopupBlockingChild.jsm',
+    'PopupBlockingParent.jsm',
+    'PrintingChild.jsm',
+    'PurgeSessionHistoryChild.jsm',
+    'RemotePageChild.jsm',
+    'SelectChild.jsm',
+    'SelectParent.jsm',
+    'ThumbnailsChild.jsm',
+    'UAWidgetsChild.jsm',
+    'UnselectedTabHoverChild.jsm',
+    'UnselectedTabHoverParent.jsm',
+    'ViewSourceChild.jsm',
+    'ViewSourcePageChild.jsm',
+    'ViewSourcePageParent.jsm',
+    'WebChannelChild.jsm',
+    'WebChannelParent.jsm',
 ]

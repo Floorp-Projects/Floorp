@@ -32,32 +32,23 @@ for f in files:
         details[f] = num
 
 if count == expected_count:
-    print(
-        "TEST-PASS | check_source_count.py {0} | {1}".format(
-            search_string, expected_count
-        )
-    )
+    print("TEST-PASS | check_source_count.py {0} | {1}"
+          .format(search_string, expected_count))
 
 else:
-    print(
-        "TEST-UNEXPECTED-FAIL | check_source_count.py {0} | ".format(search_string),
-        end="",
-    )
+    print("TEST-UNEXPECTED-FAIL | check_source_count.py {0} | "
+          .format(search_string),
+          end='')
     if count < expected_count:
-        print(
-            "There are fewer occurrences of /{0}/ than expected. "
-            "This may mean that you have removed some, but forgotten to "
-            "account for it {1}.".format(search_string, error_location)
-        )
+        print("There are fewer occurrences of /{0}/ than expected. "
+              "This may mean that you have removed some, but forgotten to "
+              "account for it {1}.".format(search_string, error_location))
     else:
-        print(
-            "There are more occurrences of /{0}/ than expected. We're trying "
-            "to prevent an increase in the number of {1}'s, using {2} if "
-            "possible. If it is unavoidable, you should update the expected "
-            "count {3}.".format(
-                search_string, search_string, replacement, error_location
-            )
-        )
+        print("There are more occurrences of /{0}/ than expected. We're trying "
+              "to prevent an increase in the number of {1}'s, using {2} if "
+              "possible. If it is unavoidable, you should update the expected "
+              "count {3}.".format(search_string, search_string, replacement,
+                                  error_location))
 
     print("Expected: {0}; found: {1}".format(expected_count, count))
     for k in sorted(details):

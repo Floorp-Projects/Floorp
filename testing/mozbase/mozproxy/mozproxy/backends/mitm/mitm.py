@@ -98,7 +98,7 @@ class Mitmproxy(Playback):
             here,
             "manifests",
             "mitmproxy-rel-bin-%s-{platform}.manifest"
-            % self.config["playback_version"],
+            % self.config["playback_version"]
         )
         transformed_manifest = transform_platform(manifest, self.config["platform"])
 
@@ -131,7 +131,9 @@ class Mitmproxy(Playback):
         # we use one pageset for all platforms
         LOG.info("downloading mitmproxy pageset")
 
-        tooltool_download(manifest_path, self.config["run_local"], self.mozproxy_dir)
+        tooltool_download(
+            manifest_path, self.config["run_local"], self.mozproxy_dir
+        )
 
         with open(manifest_path) as manifest_file:
             manifest = json.load(manifest_file)
@@ -144,9 +146,7 @@ class Mitmproxy(Playback):
         # Detect type of file from playback_files and download accordingly
 
         if "playback_files" not in self.config:
-            LOG.error(
-                "playback_files value was not provided. Proxy service wont' start "
-            )
+            LOG.error("playback_files value was not provided. Proxy service wont' start ")
             raise Exception("Please provide a playback_files list.")
 
         if not isinstance(self.config["playback_files"], list):
@@ -242,10 +242,8 @@ class Mitmproxy(Playback):
                 "scripts",
                 "alternate-server-replay.py",
             )
-            self.recording_paths = [
-                normalize_path(recording.recording_path)
-                for recording in self.recordings
-            ]
+            self.recording_paths = [normalize_path(recording.recording_path)
+                                    for recording in self.recordings]
 
             if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
                 args = [
@@ -365,17 +363,17 @@ class Mitmproxy(Playback):
         and convert them to perftest results
         """
         if len(self.recordings) == 0:
-            LOG.warning(
-                "Proxy service did not load a recording file. "
-                "Confidence metrics will nt be generated"
-            )
+            LOG.warning("Proxy service did not load a recording file. "
+                        "Confidence metrics will nt be generated")
             return
 
-        file_name = (
-            "mitm_netlocs_%s.json"
-            % os.path.splitext(os.path.basename(self.recordings[0].recording_path))[0]
-        )
-        path = os.path.normpath(os.path.join(self.upload_dir, file_name))
+        file_name = "mitm_netlocs_%s.json" % os.path.splitext(
+            os.path.basename(
+                self.recordings[0].recording_path
+            )
+        )[0]
+        path = os.path.normpath(os.path.join(self.upload_dir,
+                                             file_name))
         if os.path.exists(path):
             try:
                 LOG.info("Reading confidence values from: %s" % path)
@@ -387,28 +385,28 @@ class Mitmproxy(Playback):
                             "subtest-prefix-type": False,
                             "unit": "%",
                             "shouldAlert": True,
-                            "lowerIsBetter": False,
+                            "lowerIsBetter": False
                         },
                         "recording-proportion-used": {
                             "values": data["recording-proportion-used"],
                             "subtest-prefix-type": False,
                             "unit": "%",
                             "shouldAlert": False,
-                            "lowerIsBetter": False,
+                            "lowerIsBetter": False
                         },
                         "not-replayed": {
                             "values": data["not-replayed"],
                             "subtest-prefix-type": False,
                             "shouldAlert": False,
-                            "unit": "a.u.",
+                            "unit": "a.u."
                         },
                         "replayed": {
                             "values": data["replayed"],
                             "subtest-prefix-type": False,
                             "unit": "a.u.",
                             "shouldAlert": False,
-                            "lowerIsBetter": False,
-                        },
+                            "lowerIsBetter": False
+                        }
                     }
             except Exception:
                 LOG.info("Can't read netlocs file!", exc_info=True)

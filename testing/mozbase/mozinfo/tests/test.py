@@ -26,6 +26,7 @@ if PY3:
 
 
 class TestMozinfo(unittest.TestCase):
+
     def setUp(self):
         reload(mozinfo)
         self.tempdir = os.path.abspath(tempfile.mkdtemp())
@@ -33,11 +34,11 @@ class TestMozinfo(unittest.TestCase):
         # When running from an objdir mozinfo will use a build generated json file
         # instead of the ones created for testing. Prevent that from happening.
         # See bug 896038 for details.
-        sys.modules["mozbuild"] = None
+        sys.modules['mozbuild'] = None
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
-        del sys.modules["mozbuild"]
+        del sys.modules['mozbuild']
 
     def test_basic(self):
         """Test that mozinfo has a few attributes."""
@@ -60,8 +61,8 @@ class TestMozinfo(unittest.TestCase):
 
     def test_update_file_invalid_json(self):
         """Test that mozinfo.update handles invalid JSON correctly"""
-        j = os.path.join(self.tempdir, "test.json")
-        with open(j, "w") as f:
+        j = os.path.join(self.tempdir, 'test.json')
+        with open(j, 'w') as f:
             f.write('invalid{"json":')
         self.assertRaises(ValueError, mozinfo.update, [j])
 
@@ -84,7 +85,7 @@ class TestMozinfo(unittest.TestCase):
         """Test that mozinfo.find_and_update_from_json can
         handle invalid JSON"""
         j = os.path.join(self.tempdir, "mozinfo.json")
-        with open(j, "w") as f:
+        with open(j, 'w') as f:
             f.write('invalid{"json":')
         self.assertRaises(ValueError, mozinfo.find_and_update_from_json, self.tempdir)
 
@@ -100,7 +101,8 @@ class TestMozinfo(unittest.TestCase):
         an IOError exception if a False boolean value is
         provided as the only argument.
         """
-        self.assertEqual(mozinfo.find_and_update_from_json(raise_exception=False), None)
+        self.assertEqual(mozinfo.find_and_update_from_json(
+            raise_exception=False), None)
 
     def test_find_and_update_file_mozbuild(self):
         """Test that mozinfo.find_and_update_from_json can
@@ -129,43 +131,44 @@ class TestMozinfo(unittest.TestCase):
 
 
 class TestStringVersion(unittest.TestCase):
+
     def test_os_version_is_a_StringVersion(self):
         self.assertIsInstance(mozinfo.os_version, mozinfo.StringVersion)
 
     def test_compare_to_string(self):
-        version = mozinfo.StringVersion("10.10")
+        version = mozinfo.StringVersion('10.10')
 
-        self.assertGreater(version, "10.2")
-        self.assertGreater("11", version)
-        self.assertGreaterEqual(version, "10.10")
-        self.assertGreaterEqual("10.11", version)
-        self.assertEqual(version, "10.10")
-        self.assertEqual("10.10", version)
-        self.assertNotEqual(version, "10.2")
-        self.assertNotEqual("11", version)
-        self.assertLess(version, "11.8.5")
-        self.assertLess("10.2", version)
-        self.assertLessEqual(version, "11")
-        self.assertLessEqual("10.10", version)
+        self.assertGreater(version, '10.2')
+        self.assertGreater('11', version)
+        self.assertGreaterEqual(version, '10.10')
+        self.assertGreaterEqual('10.11', version)
+        self.assertEqual(version, '10.10')
+        self.assertEqual('10.10', version)
+        self.assertNotEqual(version, '10.2')
+        self.assertNotEqual('11', version)
+        self.assertLess(version, '11.8.5')
+        self.assertLess('10.2', version)
+        self.assertLessEqual(version, '11')
+        self.assertLessEqual('10.10', version)
 
         # Can have non-numeric versions (Bug 1654915)
-        self.assertNotEqual(version, mozinfo.StringVersion("Testing"))
-        self.assertNotEqual(mozinfo.StringVersion("Testing"), version)
-        self.assertEqual(mozinfo.StringVersion(""), "")
-        self.assertEqual("", mozinfo.StringVersion(""))
+        self.assertNotEqual(version, mozinfo.StringVersion('Testing'))
+        self.assertNotEqual(mozinfo.StringVersion('Testing'), version)
+        self.assertEqual(mozinfo.StringVersion(''), '')
+        self.assertEqual('', mozinfo.StringVersion(''))
 
-        a = mozinfo.StringVersion("1.2.5a")
-        b = mozinfo.StringVersion("1.2.5b")
+        a = mozinfo.StringVersion('1.2.5a')
+        b = mozinfo.StringVersion('1.2.5b')
         self.assertLess(a, b)
         self.assertGreater(b, a)
 
         # Make sure we can compare against unicode (for python 2).
-        self.assertEqual(a, u"1.2.5a")
-        self.assertEqual(u"1.2.5a", a)
+        self.assertEqual(a, u'1.2.5a')
+        self.assertEqual(u'1.2.5a', a)
 
     def test_to_string(self):
-        self.assertEqual("10.10", str(mozinfo.StringVersion("10.10")))
+        self.assertEqual('10.10', str(mozinfo.StringVersion('10.10')))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

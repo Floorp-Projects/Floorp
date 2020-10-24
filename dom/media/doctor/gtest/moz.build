@@ -4,19 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_TARGET"] != "Android":
+if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
-        "TestMultiWriterQueue.cpp",
-        "TestRollingNumber.cpp",
+        'TestMultiWriterQueue.cpp',
+        'TestRollingNumber.cpp',
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    "/dom/media/doctor",
+    '/dom/media/doctor',
 ]
 
-FINAL_LIBRARY = "xul-gtest"
+FINAL_LIBRARY = 'xul-gtest'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

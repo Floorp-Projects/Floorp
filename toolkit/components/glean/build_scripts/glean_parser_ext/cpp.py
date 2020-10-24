@@ -33,7 +33,7 @@ def output_cpp(objs, output_fd, options={}):
     """
 
     # Monkeypatch a util.snake_case function for the templates to use
-    util.snake_case = lambda value: value.replace(".", "_").replace("-", "_")
+    util.snake_case = lambda value: value.replace('.', '_').replace('-', '_')
     # Monkeypatch util.get_jinja2_template to find templates nearby
 
     def get_local_template(template_name, filters=()):

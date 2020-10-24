@@ -90,8 +90,12 @@ class TestSearchCounts(TelemetryTestCase):
         self.assertEqual(ping1_info["profileSubsessionCounter"], 1)
 
         scalars1 = ping1["payload"]["processes"]["parent"]["scalars"]
-        self.assertNotIn("browser.engagement.window_open_event_count", scalars1)
-        self.assertEqual(scalars1["browser.engagement.tab_open_event_count"], 1)
+        self.assertNotIn(
+            "browser.engagement.window_open_event_count", scalars1
+        )
+        self.assertEqual(
+            scalars1["browser.engagement.tab_open_event_count"], 1
+        )
 
         keyed_histograms1 = ping1["payload"]["keyedHistograms"]
         search_counts1 = keyed_histograms1["SEARCH_COUNTS"][
@@ -126,7 +130,9 @@ class TestSearchCounts(TelemetryTestCase):
         # - Verify that there should be no listing for tab scalar as we started a new
         # session
 
-        ping2 = self.wait_for_ping(self.install_addon, MAIN_ENVIRONMENT_CHANGE_PING)
+        ping2 = self.wait_for_ping(
+            self.install_addon, MAIN_ENVIRONMENT_CHANGE_PING
+        )
 
         self.assertEqual(ping2["clientId"], client_id)
 
@@ -140,12 +146,16 @@ class TestSearchCounts(TelemetryTestCase):
         self.assertNotEqual(s2_s1_subsession_id, s1_s1_subsession_id)
 
         self.assertEqual(ping2_info["previousSessionId"], s1_session_id)
-        self.assertEqual(ping2_info["previousSubsessionId"], s1_s1_subsession_id)
+        self.assertEqual(
+            ping2_info["previousSubsessionId"], s1_s1_subsession_id
+        )
         self.assertEqual(ping2_info["subsessionCounter"], 1)
         self.assertEqual(ping2_info["profileSubsessionCounter"], 2)
 
         scalars2 = ping2["payload"]["processes"]["parent"]["scalars"]
-        self.assertNotIn("browser.engagement.window_open_event_count", scalars2)
+        self.assertNotIn(
+            "browser.engagement.window_open_event_count", scalars2
+        )
         self.assertNotIn("browser.engagement.tab_open_event_count", scalars2)
 
         keyed_histograms2 = ping2["payload"]["keyedHistograms"]
@@ -188,12 +198,16 @@ class TestSearchCounts(TelemetryTestCase):
         self.assertNotEqual(s2_s2_subsession_id, s2_s1_subsession_id)
 
         self.assertEqual(ping3_info["previousSessionId"], s1_session_id)
-        self.assertEqual(ping3_info["previousSubsessionId"], s2_s1_subsession_id)
+        self.assertEqual(
+            ping3_info["previousSubsessionId"], s2_s1_subsession_id
+        )
         self.assertEqual(ping3_info["subsessionCounter"], 2)
         self.assertEqual(ping3_info["profileSubsessionCounter"], 3)
 
         scalars3 = ping3["payload"]["processes"]["parent"]["scalars"]
-        self.assertNotIn("browser.engagement.window_open_event_count", scalars3)
+        self.assertNotIn(
+            "browser.engagement.window_open_event_count", scalars3
+        )
         self.assertNotIn("browser.engagement.tab_open_event_count", scalars3)
 
         keyed_histograms3 = ping3["payload"]["keyedHistograms"]

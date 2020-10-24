@@ -10,9 +10,11 @@ import subprocess
 import sys
 import six
 
-SCRIPT_ALLOWLIST = [buildconfig.topsrcdir + "/devtools/client/shared/build/build.js"]
+SCRIPT_ALLOWLIST = [
+        buildconfig.topsrcdir + "/devtools/client/shared/build/build.js"
+    ]
 
-ALLOWLIST_ERROR = """
+ALLOWLIST_ERROR = '''
 %s is not
 in SCRIPT_ALLOWLIST in python/mozbuild/mozbuild/action/node.py.
 Using NodeJS from moz.build is currently in beta, and node
@@ -20,7 +22,7 @@ scripts to be executed need to be added to the allowlist and
 reviewed by a build peer so that we can get a better sense of
 how support should evolve. (To consult a build peer, raise a
 question in the #build channel at https://chat.mozilla.org.)
-"""
+'''
 
 
 def is_script_in_allowlist(script_path):
@@ -48,15 +50,14 @@ def execute_node_cmd(node_cmd_list):
     """
 
     try:
-        printable_cmd = " ".join(pipes.quote(arg) for arg in node_cmd_list)
+        printable_cmd = ' '.join(pipes.quote(arg) for arg in node_cmd_list)
         print('Executing "{}"'.format(printable_cmd), file=sys.stderr)
         sys.stderr.flush()
 
         # We need to redirect stderr to a pipe because
         # https://github.com/nodejs/node/issues/14752 causes issues with make.
         proc = subprocess.Popen(
-            node_cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+            node_cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         stdout, stderr = proc.communicate()
         retcode = proc.wait()
@@ -73,8 +74,8 @@ def execute_node_cmd(node_cmd_list):
         deps = []
         for line in stdout.splitlines():
             line = six.ensure_text(line)
-            if "dep:" in line:
-                deps.append(line.replace("dep:", ""))
+            if 'dep:' in line:
+                deps.append(line.replace('dep:', ''))
             else:
                 print(line, file=sys.stderr)
                 sys.stderr.flush()
@@ -86,13 +87,9 @@ def execute_node_cmd(node_cmd_list):
         # (at least sometimes) means "node executable not found".  Can we
         # disambiguate this from real "Permission denied" errors so that we
         # can log such problems more clearly?
-        print(
-            """Failed with %s.  Be sure to check that your mozconfig doesn't
+        print("""Failed with %s.  Be sure to check that your mozconfig doesn't
             have --disable-nodejs in it.  If it does, try removing that line and
-            building again."""
-            % str(err),
-            file=sys.stderr,
-        )
+            building again.""" % str(err), file=sys.stderr)
         sys.exit(1)
 
 
@@ -110,22 +107,17 @@ def generate(output, node_script, *files):
     to ensure that incremental rebuilds happen when any dependency changes.
     """
 
-    node_interpreter = buildconfig.substs.get("NODEJS")
+    node_interpreter = buildconfig.substs.get('NODEJS')
     if not node_interpreter:
-        print(
-            """NODEJS not set.  Be sure to check that your mozconfig doesn't
+        print("""NODEJS not set.  Be sure to check that your mozconfig doesn't
             have --disable-nodejs in it.  If it does, try removing that line
-            and building again.""",
-            file=sys.stderr,
-        )
+            and building again.""", file=sys.stderr)
         sys.exit(1)
 
     node_script = six.ensure_text(node_script)
     if not isinstance(node_script, six.text_type):
-        print(
-            "moz.build file didn't pass a valid node script name to execute",
-            file=sys.stderr,
-        )
+        print("moz.build file didn't pass a valid node script name to execute",
+              file=sys.stderr)
         sys.exit(1)
 
     if not is_script_in_allowlist(node_script):

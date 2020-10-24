@@ -9,9 +9,7 @@ import unittest
 import os
 from os import path
 
-TELEMETRY_ROOT_PATH = path.abspath(
-    path.join(path.dirname(__file__), path.pardir, path.pardir)
-)
+TELEMETRY_ROOT_PATH = path.abspath(path.join(path.dirname(__file__), path.pardir, path.pardir))
 sys.path.append(TELEMETRY_ROOT_PATH)
 # The parsers live in a subdirectory of "build_scripts", account for that.
 # NOTE: if the parsers are moved, this logic will need to be updated.
@@ -33,7 +31,6 @@ class TestParser(unittest.TestCase):
     def setUp(self):
         def mockexit(x):
             raise SystemExit(x)
-
         self.oldexit = os._exit
         os._exit = mockexit
 
@@ -52,7 +49,10 @@ expiry_version: never
 """
         name = "test_event"
         event = load_event(SAMPLE_EVENT)
-        evt = parse_events.EventData("CATEGORY", name, event, strict_type_checks=True)
+        evt = parse_events.EventData("CATEGORY",
+                                     name,
+                                     event,
+                                     strict_type_checks=True)
         ParserError.exit_func()
 
         self.assertEqual(evt.methods, [name])
@@ -74,7 +74,10 @@ products: ["firefox"]
 release_channel_collection: none
 """
         event = load_event(SAMPLE_EVENT)
-        parse_events.EventData("CATEGORY", "test_event", event, strict_type_checks=True)
+        parse_events.EventData("CATEGORY",
+                               "test_event",
+                               event,
+                               strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
@@ -97,7 +100,10 @@ operating_systems:
 """
         name = "test_event"
         event = load_event(SAMPLE_EVENT)
-        evt = parse_events.EventData("CATEGORY", name, event, strict_type_checks=True)
+        evt = parse_events.EventData("CATEGORY",
+                                     name,
+                                     event,
+                                     strict_type_checks=True)
         ParserError.exit_func()
 
         self.assertEqual(evt.methods, ["method1", "method2"])
@@ -118,12 +124,10 @@ description: This is a test entry for Telemetry.
 expiry_version: never
 """
         event = load_event(SAMPLE_EVENT)
-        self.assertRaises(
-            SystemExit,
-            lambda: parse_events.EventData(
-                "CATEGORY", "test_event", event, strict_type_checks=True
-            ),
-        )
+        self.assertRaises(SystemExit, lambda: parse_events.EventData("CATEGORY",
+                                                                     "test_event",
+                                                                     event,
+                                                                     strict_type_checks=True))
 
     def test_empty_products(self):
         SAMPLE_EVENT = """
@@ -137,12 +141,10 @@ products: []
 expiry_version: never
 """
         event = load_event(SAMPLE_EVENT)
-        self.assertRaises(
-            SystemExit,
-            lambda: parse_events.EventData(
-                "CATEGORY", "test_event", event, strict_type_checks=True
-            ),
-        )
+        self.assertRaises(SystemExit, lambda: parse_events.EventData("CATEGORY",
+                                                                     "test_event",
+                                                                     event,
+                                                                     strict_type_checks=True))
 
     def test_geckoview_streaming_product(self):
         SAMPLE_EVENT = """
@@ -156,10 +158,13 @@ products: ["geckoview_streaming"]
 expiry_version: never
 """
         event = load_event(SAMPLE_EVENT)
-        parse_events.EventData("CATEGORY", "test_event", event, strict_type_checks=True)
+        parse_events.EventData("CATEGORY",
+                               "test_event",
+                               event,
+                               strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     mozunit.main()

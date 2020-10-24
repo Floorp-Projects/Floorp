@@ -11,7 +11,6 @@ from taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 @register_strategy("skip-unless-backstop")
 class SkipUnlessBackstop(OptimizationStrategy):
     """Always removes tasks except on backstop pushes."""
-
     def should_remove_task(self, task, params, _):
         return not params["backstop"]
 
@@ -22,7 +21,6 @@ class SkipUnlessPushInterval(OptimizationStrategy):
     Args:
         push_interval (int): Number of pushes
     """
-
     def __init__(self, push_interval, remove_on_projects=None):
         self.push_interval = push_interval
 

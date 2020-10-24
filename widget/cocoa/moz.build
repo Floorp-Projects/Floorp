@@ -6,178 +6,175 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
-    SCHEDULES.exclusive = ["macosx"]
+    SCHEDULES.exclusive = ['macosx']
 
 with Files("*TextInput*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 XPIDL_SOURCES += [
-    "nsPIWidgetCocoa.idl",
+    'nsPIWidgetCocoa.idl',
 ]
 
-XPIDL_MODULE = "widget_cocoa"
+XPIDL_MODULE = 'widget_cocoa'
 
 EXPORTS += [
-    "CFTypeRefPtr.h",
-    "DesktopBackgroundImage.h",
-    "MediaHardwareKeysEventSourceMac.h",
-    "MediaHardwareKeysEventSourceMacMediaCenter.h",
-    "MediaPlayerWrapper.h",
-    "mozView.h",
-    "nsBidiKeyboard.h",
-    "nsChangeObserver.h",
-    "nsCocoaDebugUtils.h",
-    "nsCocoaFeatures.h",
-    "nsCocoaUtils.h",
+    'CFTypeRefPtr.h',
+    'DesktopBackgroundImage.h',
+    'MediaHardwareKeysEventSourceMac.h',
+    'MediaHardwareKeysEventSourceMacMediaCenter.h',
+    'MediaPlayerWrapper.h',
+    'mozView.h',
+    'nsBidiKeyboard.h',
+    'nsChangeObserver.h',
+    'nsCocoaDebugUtils.h',
+    'nsCocoaFeatures.h',
+    'nsCocoaUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ComplexTextInputPanel.mm",
-    "GfxInfo.mm",
-    "IconLoaderHelperCocoa.mm",
-    "NativeKeyBindings.mm",
-    "nsAppShell.mm",
-    "nsBidiKeyboard.mm",
-    "nsCocoaFeatures.mm",
-    "nsCocoaUtils.mm",
-    "nsCocoaWindow.mm",
-    "nsColorPicker.mm",
-    "nsCursorManager.mm",
-    "nsDeviceContextSpecX.mm",
-    "nsFilePicker.mm",
-    "nsLookAndFeel.mm",
-    "nsMacCursor.mm",
-    "nsMacDockSupport.mm",
-    "nsMacFinderProgress.mm",
-    "nsMacSharingService.mm",
-    "nsMacWebAppUtils.mm",
-    "nsMenuBarX.mm",
-    "nsMenuGroupOwnerX.mm",
-    "nsMenuItemIconX.mm",
-    "nsMenuItemX.mm",
-    "nsMenuUtilsX.mm",
-    "nsMenuX.mm",
-    "nsNativeBasicThemeCocoa.cpp",
-    "nsPrintDialogX.mm",
-    "nsPrintSettingsServiceX.mm",
-    "nsPrintSettingsX.mm",
-    "nsSound.mm",
-    "nsStandaloneNativeMenu.mm",
-    "nsSystemStatusBarCocoa.mm",
-    "nsToolkit.mm",
-    "nsTouchBar.mm",
-    "nsTouchBarInput.mm",
-    "nsTouchBarInputIcon.mm",
-    "nsTouchBarUpdater.mm",
-    "nsUserIdleServiceX.mm",
-    "nsWidgetFactory.mm",
-    "nsWindowMap.mm",
-    "OSXNotificationCenter.mm",
-    "ProcInfo.mm",
-    "ScreenHelperCocoa.mm",
-    "SwipeTracker.mm",
-    "TextInputHandler.mm",
-    "VibrancyManager.mm",
-    "ViewRegion.mm",
-    "WidgetTraceEvent.mm",
+    'ComplexTextInputPanel.mm',
+    'GfxInfo.mm',
+    'IconLoaderHelperCocoa.mm',
+    'NativeKeyBindings.mm',
+    'nsAppShell.mm',
+    'nsBidiKeyboard.mm',
+    'nsCocoaFeatures.mm',
+    'nsCocoaUtils.mm',
+    'nsCocoaWindow.mm',
+    'nsColorPicker.mm',
+    'nsCursorManager.mm',
+    'nsDeviceContextSpecX.mm',
+    'nsFilePicker.mm',
+    'nsLookAndFeel.mm',
+    'nsMacCursor.mm',
+    'nsMacDockSupport.mm',
+    'nsMacFinderProgress.mm',
+    'nsMacSharingService.mm',
+    'nsMacWebAppUtils.mm',
+    'nsMenuBarX.mm',
+    'nsMenuGroupOwnerX.mm',
+    'nsMenuItemIconX.mm',
+    'nsMenuItemX.mm',
+    'nsMenuUtilsX.mm',
+    'nsMenuX.mm',
+    'nsNativeBasicThemeCocoa.cpp',
+    'nsPrintDialogX.mm',
+    'nsPrintSettingsServiceX.mm',
+    'nsPrintSettingsX.mm',
+    'nsSound.mm',
+    'nsStandaloneNativeMenu.mm',
+    'nsSystemStatusBarCocoa.mm',
+    'nsToolkit.mm',
+    'nsTouchBar.mm',
+    'nsTouchBarInput.mm',
+    'nsTouchBarInputIcon.mm',
+    'nsTouchBarUpdater.mm',
+    'nsUserIdleServiceX.mm',
+    'nsWidgetFactory.mm',
+    'nsWindowMap.mm',
+    'OSXNotificationCenter.mm',
+    'ProcInfo.mm',
+    'ScreenHelperCocoa.mm',
+    'SwipeTracker.mm',
+    'TextInputHandler.mm',
+    'VibrancyManager.mm',
+    'ViewRegion.mm',
+    'WidgetTraceEvent.mm',
 ]
 
 # These files cannot be built in unified mode because they cause symbol conflicts
 SOURCES += [
-    "DesktopBackgroundImage.mm",
-    "MediaHardwareKeysEventSourceMac.mm",
-    "MediaHardwareKeysEventSourceMacMediaCenter.mm",
-    "MediaKeysEventSourceFactory.cpp",
-    "MediaPlayerWrapper.mm",
-    "nsChildView.mm",
-    "nsClipboard.mm",
-    "nsCocoaDebugUtils.mm",
-    "nsDragService.mm",
-    "nsNativeThemeCocoa.mm",
+    'DesktopBackgroundImage.mm',
+    'MediaHardwareKeysEventSourceMac.mm',
+    'MediaHardwareKeysEventSourceMacMediaCenter.mm',
+    'MediaKeysEventSourceFactory.cpp',
+    'MediaPlayerWrapper.mm',
+    'nsChildView.mm',
+    'nsClipboard.mm',
+    'nsCocoaDebugUtils.mm',
+    'nsDragService.mm',
+    'nsNativeThemeCocoa.mm',
 ]
 
-if not CONFIG["RELEASE_OR_BETA"] or CONFIG["MOZ_DEBUG"]:
+if not CONFIG['RELEASE_OR_BETA'] or CONFIG['MOZ_DEBUG']:
     SOURCES += [
-        "nsSandboxViolationSink.mm",
+        'nsSandboxViolationSink.mm',
     ]
 
 XPCOM_MANIFESTS += [
-    "components.conf",
+    'components.conf',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    "/dom/media/platforms/apple",
-    "/layout/base",
-    "/layout/forms",
-    "/layout/generic",
-    "/layout/style",
-    "/layout/xul",
-    "/widget",
-    "/widget/headless",
+    '/dom/media/platforms/apple',
+    '/layout/base',
+    '/layout/forms',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul',
+    '/widget',
+    '/widget/headless',
 ]
 
-if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
+if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     # Skia includes because widget code includes PrintTargetSkPDF.h, and that
     # includes skia headers.
-    LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
+    LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 RESOURCE_FILES.cursors += [
-    "cursors/arrowN.png",
-    "cursors/arrowN@2x.png",
-    "cursors/arrowS.png",
-    "cursors/arrowS@2x.png",
-    "cursors/cell.png",
-    "cursors/cell@2x.png",
-    "cursors/colResize.png",
-    "cursors/colResize@2x.png",
-    "cursors/help.png",
-    "cursors/help@2x.png",
-    "cursors/move.png",
-    "cursors/move@2x.png",
-    "cursors/rowResize.png",
-    "cursors/rowResize@2x.png",
-    "cursors/sizeNE.png",
-    "cursors/sizeNE@2x.png",
-    "cursors/sizeNESW.png",
-    "cursors/sizeNESW@2x.png",
-    "cursors/sizeNS.png",
-    "cursors/sizeNS@2x.png",
-    "cursors/sizeNW.png",
-    "cursors/sizeNW@2x.png",
-    "cursors/sizeNWSE.png",
-    "cursors/sizeNWSE@2x.png",
-    "cursors/sizeSE.png",
-    "cursors/sizeSE@2x.png",
-    "cursors/sizeSW.png",
-    "cursors/sizeSW@2x.png",
-    "cursors/vtIBeam.png",
-    "cursors/vtIBeam@2x.png",
-    "cursors/zoomIn.png",
-    "cursors/zoomIn@2x.png",
-    "cursors/zoomOut.png",
-    "cursors/zoomOut@2x.png",
+    'cursors/arrowN.png',
+    'cursors/arrowN@2x.png',
+    'cursors/arrowS.png',
+    'cursors/arrowS@2x.png',
+    'cursors/cell.png',
+    'cursors/cell@2x.png',
+    'cursors/colResize.png',
+    'cursors/colResize@2x.png',
+    'cursors/help.png',
+    'cursors/help@2x.png',
+    'cursors/move.png',
+    'cursors/move@2x.png',
+    'cursors/rowResize.png',
+    'cursors/rowResize@2x.png',
+    'cursors/sizeNE.png',
+    'cursors/sizeNE@2x.png',
+    'cursors/sizeNESW.png',
+    'cursors/sizeNESW@2x.png',
+    'cursors/sizeNS.png',
+    'cursors/sizeNS@2x.png',
+    'cursors/sizeNW.png',
+    'cursors/sizeNW@2x.png',
+    'cursors/sizeNWSE.png',
+    'cursors/sizeNWSE@2x.png',
+    'cursors/sizeSE.png',
+    'cursors/sizeSE@2x.png',
+    'cursors/sizeSW.png',
+    'cursors/sizeSW@2x.png',
+    'cursors/vtIBeam.png',
+    'cursors/vtIBeam@2x.png',
+    'cursors/zoomIn.png',
+    'cursors/zoomIn@2x.png',
+    'cursors/zoomOut.png',
+    'cursors/zoomOut@2x.png',
 ]
 
 # These resources go in $(DIST)/bin/res/MainMenu.nib, but we can't use a magic
 # RESOURCE_FILES.MainMenu.nib attribute, since that would put the files in
 # $(DIST)/bin/res/MainMenu/nib. Instead, we call __setattr__ directly to create
 # an attribute with the correct name.
-RESOURCE_FILES.__setattr__(
-    "MainMenu.nib",
-    [
-        "resources/MainMenu.nib/classes.nib",
-        "resources/MainMenu.nib/info.nib",
-        "resources/MainMenu.nib/keyedobjects.nib",
-    ],
-)
+RESOURCE_FILES.__setattr__('MainMenu.nib', [
+    'resources/MainMenu.nib/classes.nib',
+    'resources/MainMenu.nib/info.nib',
+    'resources/MainMenu.nib/keyedobjects.nib',
+])
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
 OS_LIBS += [
-    "-framework IOSurface",
+    '-framework IOSurface',
 ]
 
-SPHINX_TREES["/widget/cocoa"] = "docs"
+SPHINX_TREES['/widget/cocoa'] = 'docs'

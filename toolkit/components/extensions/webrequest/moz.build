@@ -5,50 +5,50 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "SecurityInfo.jsm",
-    "WebRequest.jsm",
-    "WebRequestUpload.jsm",
+    'SecurityInfo.jsm',
+    'WebRequest.jsm',
+    'WebRequestUpload.jsm',
 ]
 
 UNIFIED_SOURCES += [
-    "ChannelWrapper.cpp",
-    "StreamFilter.cpp",
-    "StreamFilterChild.cpp",
-    "StreamFilterEvents.cpp",
-    "StreamFilterParent.cpp",
-    "WebRequestService.cpp",
+    'ChannelWrapper.cpp',
+    'StreamFilter.cpp',
+    'StreamFilterChild.cpp',
+    'StreamFilterEvents.cpp',
+    'StreamFilterParent.cpp',
+    'WebRequestService.cpp',
 ]
 
 IPDL_SOURCES += [
-    "PStreamFilter.ipdl",
+    'PStreamFilter.ipdl',
 ]
 
 EXPORTS.mozilla += [
-    "WebRequestService.h",
+    'WebRequestService.h',
 ]
 
 EXPORTS.mozilla.extensions += [
-    "ChannelWrapper.h",
-    "StreamFilter.h",
-    "StreamFilterBase.h",
-    "StreamFilterChild.h",
-    "StreamFilterEvents.h",
-    "StreamFilterParent.h",
+    'ChannelWrapper.h',
+    'StreamFilter.h',
+    'StreamFilterBase.h',
+    'StreamFilterChild.h',
+    'StreamFilterEvents.h',
+    'StreamFilterParent.h',
 ]
 
 LOCAL_INCLUDES += [
-    "/caps",
+    '/caps',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     # For nsHttpChannel.h
-    "/netwerk/base",
-    "/netwerk/protocol/http",
+    '/netwerk/base',
+    '/netwerk/protocol/http',
 ]
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
 with Files("**"):
     BUG_COMPONENT = ("WebExtensions", "Request Handling")

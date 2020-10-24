@@ -52,76 +52,35 @@ class AutoIndent(object):
     def write(self, string):
         """A smart write function which automatically adjusts the
         indentation of each line as it is written by counting braces"""
-        for s in string.split("\n"):
+        for s in string.split('\n'):
             s = s.strip()
             indent = self.indent
             if len(s) == 0:
                 indent = 0
-            elif s[0] == "}":
+            elif s[0] == '}':
                 indent -= 1
 
             self.fd.write("    " * indent + s + "\n")
             for c in s:
-                if c == "(" or c == "{" or c == "[":
+                if c == '(' or c == '{' or c == '[':
                     self.indent += 1
-                elif c == ")" or c == "}" or c == "]":
+                elif c == ')' or c == '}' or c == ']':
                     self.indent -= 1
 
 
 def rustSanitize(s):
     keywords = [
-        "abstract",
-        "alignof",
-        "as",
-        "become",
-        "box",
-        "break",
-        "const",
-        "continue",
-        "crate",
-        "do",
-        "else",
-        "enum",
-        "extern",
-        "false",
-        "final",
-        "fn",
-        "for",
-        "if",
-        "impl",
-        "in",
-        "let",
-        "loop",
-        "macro",
-        "match",
-        "mod",
-        "move",
-        "mut",
-        "offsetof",
-        "override",
-        "priv",
-        "proc",
-        "pub",
-        "pure",
-        "ref",
-        "return",
-        "Self",
-        "self",
-        "sizeof",
-        "static",
-        "struct",
-        "super",
-        "trait",
-        "true",
-        "type",
-        "typeof",
-        "unsafe",
-        "unsized",
-        "use",
-        "virtual",
-        "where",
-        "while",
-        "yield",
+        "abstract", "alignof", "as", "become", "box",
+        "break", "const", "continue", "crate", "do",
+        "else", "enum", "extern", "false", "final",
+        "fn", "for", "if", "impl", "in",
+        "let", "loop", "macro", "match", "mod",
+        "move", "mut", "offsetof", "override", "priv",
+        "proc", "pub", "pure", "ref", "return",
+        "Self", "self", "sizeof", "static", "struct",
+        "super", "trait", "true", "type", "typeof",
+        "unsafe", "unsized", "use", "virtual", "where",
+        "while", "yield"
     ]
     if s in keywords:
         return s + "_"
@@ -132,7 +91,6 @@ def rustSanitize(s):
 printdoccomments = True
 
 if printdoccomments:
-
     def printComments(fd, clist, indent):
         fd.write("%s%s" % (indent, doccomments(clist)))
 
@@ -146,9 +104,7 @@ if printdoccomments:
         s += "\n/// ```\n///\n"
         return s
 
-
 else:
-
     def printComments(fd, clist, indent):
         pass
 
@@ -163,13 +119,13 @@ def firstCap(str):
 # Attribute VTable Methods
 def attributeNativeName(a, getter):
     binaryname = rustSanitize(a.binaryname if a.binaryname else firstCap(a.name))
-    return "%s%s" % ("Get" if getter else "Set", binaryname)
+    return "%s%s" % ('Get' if getter else 'Set', binaryname)
 
 
 def attributeReturnType(a, getter):
     if a.notxpcom:
         if getter:
-            return a.realtype.rustType("in").strip()
+            return a.realtype.rustType('in').strip()
         return "::libc::c_void"
     return "::nserror::nsresult"
 
@@ -182,7 +138,8 @@ def attributeRawParamList(iface, a, getter):
     if getter and a.notxpcom:
         l = []
     else:
-        l = [(attributeParamName(a), a.realtype.rustType("out" if getter else "in"))]
+        l = [(attributeParamName(a),
+              a.realtype.rustType('out' if getter else 'in'))]
     if a.implicit_jscontext:
         raise xpidl.RustNoncompat("jscontext is unsupported")
     if a.nostdcall:
@@ -198,18 +155,14 @@ def attributeParamList(iface, a, getter):
 
 def attrAsVTableEntry(iface, m, getter):
     try:
-        return 'pub %s: unsafe extern "system" fn (%s) -> %s' % (
-            attributeNativeName(m, getter),
-            attributeParamList(iface, m, getter),
-            attributeReturnType(m, getter),
-        )
+        return "pub %s: unsafe extern \"system\" fn (%s) -> %s" % \
+            (attributeNativeName(m, getter),
+             attributeParamList(iface, m, getter),
+             attributeReturnType(m, getter))
     except xpidl.RustNoncompat as reason:
         return """\
 /// Unable to generate binding because `%s`
-pub %s: *const ::libc::c_void""" % (
-            reason,
-            attributeNativeName(m, getter),
-        )
+pub %s: *const ::libc::c_void""" % (reason, attributeNativeName(m, getter))
 
 
 # Method VTable generation functions
@@ -220,7 +173,7 @@ def methodNativeName(m):
 
 def methodReturnType(m):
     if m.notxpcom:
-        return m.realtype.rustType("in").strip()
+        return m.realtype.rustType('in').strip()
     return "::nserror::nsresult"
 
 
@@ -236,8 +189,8 @@ def methodRawParamList(iface, m):
     if m.nostdcall:
         raise xpidl.RustNoncompat("nostdcall is unsupported")
 
-    if not m.notxpcom and m.realtype.name != "void":
-        l.append(("_retval", m.realtype.rustType("out")))
+    if not m.notxpcom and m.realtype.name != 'void':
+        l.append(("_retval", m.realtype.rustType('out')))
 
     return l
 
@@ -250,18 +203,14 @@ def methodParamList(iface, m):
 
 def methodAsVTableEntry(iface, m):
     try:
-        return 'pub %s: unsafe extern "system" fn (%s) -> %s' % (
-            methodNativeName(m),
-            methodParamList(iface, m),
-            methodReturnType(m),
-        )
+        return "pub %s: unsafe extern \"system\" fn (%s) -> %s" % \
+            (methodNativeName(m),
+             methodParamList(iface, m),
+             methodReturnType(m))
     except xpidl.RustNoncompat as reason:
         return """\
 /// Unable to generate binding because `%s`
-pub %s: *const ::libc::c_void""" % (
-            reason,
-            methodNativeName(m),
-        )
+pub %s: *const ::libc::c_void""" % (reason, methodNativeName(m))
 
 
 method_impl_tmpl = """\
@@ -279,10 +228,10 @@ def methodAsWrapper(iface, m):
         args = [x[0] for x in param_list]
 
         return method_impl_tmpl % {
-            "name": methodNativeName(m),
-            "params": ", ".join(params),
-            "ret_ty": methodReturnType(m),
-            "args": ", ".join(args),
+            'name': methodNativeName(m),
+            'params': ', '.join(params),
+            'ret_ty': methodReturnType(m),
+            'args': ', '.join(args),
         }
     except xpidl.RustNoncompat:
         # Dummy field for the doc comments to attach to.
@@ -311,20 +260,20 @@ def attrAsWrapper(iface, m, getter):
 
         name = attributeParamName(m)
 
-        if getter and m.infallible and m.realtype.kind == "builtin":
+        if getter and m.infallible and m.realtype.kind == 'builtin':
             # NOTE: We don't support non-builtin infallible getters in Rust code.
             return infallible_impl_tmpl % {
-                "name": attributeNativeName(m, getter),
-                "realtype": m.realtype.rustType("in"),
+                'name': attributeNativeName(m, getter),
+                'realtype': m.realtype.rustType('in'),
             }
 
         param_list = attributeRawParamList(iface, m, getter)
         params = ["%s: %s" % x for x in param_list]
         return method_impl_tmpl % {
-            "name": attributeNativeName(m, getter),
-            "params": ", ".join(params),
-            "ret_ty": attributeReturnType(m, getter),
-            "args": "" if getter and m.notxpcom else name,
+            'name': attributeNativeName(m, getter),
+            'params': ', '.join(params),
+            'ret_ty': attributeReturnType(m, getter),
+            'args': '' if getter and m.notxpcom else name,
         }
 
     except xpidl.RustNoncompat:
@@ -349,38 +298,34 @@ def idl_basename(f):
 def print_rust_bindings(idl, fd, relpath):
     fd = AutoIndent(fd)
 
-    fd.write(header % {"relpath": relpath})
+    fd.write(header % {'relpath': relpath})
 
     # All of the idl files will be included into the same rust module, as we
     # can't do forward declarations. Because of this, we want to ignore all
     # import statements
 
     for p in idl.productions:
-        if p.kind == "include" or p.kind == "cdata" or p.kind == "forward":
+        if p.kind == 'include' or p.kind == 'cdata' or p.kind == 'forward':
             continue
 
-        if p.kind == "interface":
+        if p.kind == 'interface':
             write_interface(p, fd)
             continue
 
-        if p.kind == "typedef":
+        if p.kind == 'typedef':
             try:
                 # We have to skip the typedef of bool to bool (it doesn't make any sense anyways)
                 if p.name == "bool":
                     continue
 
                 if printdoccomments:
-                    fd.write(
-                        "/// `typedef %s %s;`\n///\n"
-                        % (p.realtype.nativeType("in"), p.name)
-                    )
+                    fd.write("/// `typedef %s %s;`\n///\n" %
+                             (p.realtype.nativeType('in'), p.name))
                     fd.write(doccomments(p.doccomments))
-                fd.write("pub type %s = %s;\n\n" % (p.name, p.realtype.rustType("in")))
+                fd.write("pub type %s = %s;\n\n" % (p.name, p.realtype.rustType('in')))
             except xpidl.RustNoncompat as reason:
-                fd.write(
-                    "/* unable to generate %s typedef because `%s` */\n\n"
-                    % (p.name, reason)
-                )
+                fd.write("/* unable to generate %s typedef because `%s` */\n\n" %
+                         (p.name, reason))
 
 
 base_vtable_tmpl = """
@@ -525,14 +470,11 @@ method_wrapper_tmpl = """\
 """
 
 
-uuid_decoder = re.compile(
-    r"""(?P<m0>[a-f0-9]{8})-
+uuid_decoder = re.compile(r"""(?P<m0>[a-f0-9]{8})-
                               (?P<m1>[a-f0-9]{4})-
                               (?P<m2>[a-f0-9]{4})-
                               (?P<m3>[a-f0-9]{4})-
-                              (?P<m4>[a-f0-9]{12})$""",
-    re.X,
-)
+                              (?P<m4>[a-f0-9]{12})$""", re.X)
 
 
 def write_interface(iface, fd):
@@ -543,113 +485,85 @@ def write_interface(iface, fd):
 
     # Extract the UUID's information so that it can be written into the struct definition
     names = uuid_decoder.match(iface.attributes.uuid).groupdict()
-    m3str = names["m3"] + names["m4"]
-    names["m3joined"] = ", ".join(["0x%s" % m3str[i : i + 2] for i in range(0, 16, 2)])
-    names["name"] = iface.name
+    m3str = names['m3'] + names['m4']
+    names['m3joined'] = ", ".join(["0x%s" % m3str[i:i+2] for i in range(0, 16, 2)])
+    names['name'] = iface.name
 
     if printdoccomments:
         if iface.base is not None:
-            fd.write("/// `interface %s : %s`\n///\n" % (iface.name, iface.base))
+            fd.write("/// `interface %s : %s`\n///\n" %
+                     (iface.name, iface.base))
         else:
-            fd.write("/// `interface %s`\n///\n" % iface.name)
-    printComments(fd, iface.doccomments, "")
+            fd.write("/// `interface %s`\n///\n" %
+                     iface.name)
+    printComments(fd, iface.doccomments, '')
     fd.write(struct_tmpl % names)
 
     if iface.base is not None:
-        fd.write(
-            deref_tmpl
-            % {
-                "name": iface.name,
-                "base": iface.base,
-            }
-        )
+        fd.write(deref_tmpl % {
+            'name': iface.name,
+            'base': iface.base,
+        })
 
     entries = []
     for member in iface.members:
         if type(member) == xpidl.Attribute:
-            entries.append(
-                vtable_entry_tmpl
-                % {
-                    "idl": member.toIDL(),
-                    "entry": attrAsVTableEntry(iface, member, True),
-                }
-            )
+            entries.append(vtable_entry_tmpl % {
+                'idl': member.toIDL(),
+                'entry': attrAsVTableEntry(iface, member, True),
+            })
             if not member.readonly:
-                entries.append(
-                    vtable_entry_tmpl
-                    % {
-                        "idl": member.toIDL(),
-                        "entry": attrAsVTableEntry(iface, member, False),
-                    }
-                )
+                entries.append(vtable_entry_tmpl % {
+                    'idl': member.toIDL(),
+                    'entry': attrAsVTableEntry(iface, member, False),
+                })
 
         elif type(member) == xpidl.Method:
-            entries.append(
-                vtable_entry_tmpl
-                % {
-                    "idl": member.toIDL(),
-                    "entry": methodAsVTableEntry(iface, member),
-                }
-            )
+            entries.append(vtable_entry_tmpl % {
+                'idl': member.toIDL(),
+                'entry': methodAsVTableEntry(iface, member),
+            })
 
-    fd.write(
-        vtable_tmpl
-        % {
-            "name": iface.name,
-            "base": base_vtable_tmpl % iface.base if iface.base is not None else "",
-            "entries": "\n".join(entries),
-        }
-    )
+    fd.write(vtable_tmpl % {
+        'name': iface.name,
+        'base': base_vtable_tmpl % iface.base if iface.base is not None else "",
+        'entries': '\n'.join(entries),
+    })
 
     # Get all of the constants
     consts = []
     for member in iface.members:
         if type(member) == xpidl.ConstMember:
-            consts.append(
-                const_wrapper_tmpl
-                % {
-                    "docs": doccomments(member.doccomments),
-                    "name": member.name,
-                    "val": member.getValue(),
-                }
-            )
+            consts.append(const_wrapper_tmpl % {
+                'docs': doccomments(member.doccomments),
+                'name': member.name,
+                'val': member.getValue(),
+            })
 
     methods = []
     for member in iface.members:
         if type(member) == xpidl.Attribute:
-            methods.append(
-                method_wrapper_tmpl
-                % {
-                    "docs": doccomments(member.doccomments),
-                    "idl": member.toIDL(),
-                    "wrapper": attrAsWrapper(iface, member, True),
-                }
-            )
+            methods.append(method_wrapper_tmpl % {
+                'docs': doccomments(member.doccomments),
+                'idl': member.toIDL(),
+                'wrapper': attrAsWrapper(iface, member, True),
+            })
             if not member.readonly:
-                methods.append(
-                    method_wrapper_tmpl
-                    % {
-                        "docs": doccomments(member.doccomments),
-                        "idl": member.toIDL(),
-                        "wrapper": attrAsWrapper(iface, member, False),
-                    }
-                )
+                methods.append(method_wrapper_tmpl % {
+                    'docs': doccomments(member.doccomments),
+                    'idl': member.toIDL(),
+                    'wrapper': attrAsWrapper(iface, member, False),
+                })
 
         elif type(member) == xpidl.Method:
-            methods.append(
-                method_wrapper_tmpl
-                % {
-                    "docs": doccomments(member.doccomments),
-                    "idl": member.toIDL(),
-                    "wrapper": methodAsWrapper(iface, member),
-                }
-            )
+            methods.append(method_wrapper_tmpl % {
+                'docs': doccomments(member.doccomments),
+                'idl': member.toIDL(),
+                'wrapper': methodAsWrapper(iface, member),
+            })
 
-    fd.write(
-        wrapper_tmpl
-        % {
-            "name": iface.name,
-            "consts": "\n".join(consts),
-            "methods": "\n".join(methods),
-        }
-    )
+    fd.write(wrapper_tmpl % {
+        'name': iface.name,
+        'consts': '\n'.join(consts),
+        'methods': '\n'.join(methods),
+    })

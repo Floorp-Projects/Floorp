@@ -24,20 +24,20 @@ class TestMozbuildReading(unittest.TestCase):
     # This hack is needed to appease running in automation.
     def setUp(self):
         self._old_env = dict(os.environ)
-        os.environ.pop("MOZCONFIG", None)
-        os.environ.pop("MOZ_OBJDIR", None)
+        os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
 
     def tearDown(self):
         os.environ.clear()
         os.environ.update(self._old_env)
 
     def _mozbuilds(self, reader):
-        if not hasattr(self, "_mozbuild_paths"):
+        if not hasattr(self, '_mozbuild_paths'):
             self._mozbuild_paths = set(reader.all_mozbuild_paths())
 
         return self._mozbuild_paths
 
-    @unittest.skip("failing in SpiderMonkey builds")
+    @unittest.skip('failing in SpiderMonkey builds')
     def test_filesystem_traversal_reading(self):
         """Reading moz.build according to filesystem traversal works.
 
@@ -61,7 +61,7 @@ class TestMozbuildReading(unittest.TestCase):
         lot of moz.build files assumes certain variables are present.
         """
         here = os.path.abspath(os.path.dirname(__file__))
-        root = os.path.normpath(os.path.join(here, "..", ".."))
+        root = os.path.normpath(os.path.join(here, '..', '..'))
         config = EmptyConfig(root)
         reader = BuildReader(config)
         all_paths = self._mozbuilds(reader)
@@ -70,26 +70,26 @@ class TestMozbuildReading(unittest.TestCase):
         self.assertGreaterEqual(len(contexts), len(paths))
 
     def test_orphan_file_patterns(self):
-        if sys.platform == "win32":
-            raise unittest.SkipTest("failing on windows builds")
+        if sys.platform == 'win32':
+            raise unittest.SkipTest('failing on windows builds')
 
         mb = MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
 
         try:
             config = mb.config_environment
         except Exception as e:
-            if str(e) == "config.status not available. Run configure.":
-                raise unittest.SkipTest("failing without config.status")
+            if str(e) == 'config.status not available. Run configure.':
+                raise unittest.SkipTest('failing without config.status')
             raise
 
-        if config.substs["MOZ_BUILD_APP"] == "js":
-            raise unittest.SkipTest("failing in Spidermonkey builds")
+        if config.substs['MOZ_BUILD_APP'] == 'js':
+            raise unittest.SkipTest('failing in Spidermonkey builds')
 
         reader = BuildReader(config)
         all_paths = self._mozbuilds(reader)
         _, contexts = reader.read_relevant_mozbuilds(all_paths)
 
-        finder = FileFinder(config.topsrcdir, ignore=["obj*"])
+        finder = FileFinder(config.topsrcdir, ignore=['obj*'])
 
         def pattern_exists(pat):
             return [p for p in finder.find(pat)] != []
@@ -100,12 +100,11 @@ class TestMozbuildReading(unittest.TestCase):
             relsrcdir = ctx.relsrcdir
             for p in ctx.patterns:
                 if not pattern_exists(os.path.join(relsrcdir, p)):
-                    self.fail(
-                        "The pattern '%s' in a Files() entry in "
-                        "'%s' corresponds to no files in the tree.\n"
-                        "Please update this entry." % (p, ctx.main_path)
-                    )
+                    self.fail("The pattern '%s' in a Files() entry in "
+                              "'%s' corresponds to no files in the tree.\n"
+                              "Please update this entry." %
+                              (p, ctx.main_path))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

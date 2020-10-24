@@ -19,7 +19,7 @@ else:
 
 
 class DotProperties:
-    r"""A thin representation of a key=value .properties file."""
+    r'''A thin representation of a key=value .properties file.'''
 
     def __init__(self, file=None):
         self._properties = {}
@@ -27,62 +27,60 @@ class DotProperties:
             self.update(file)
 
     def update(self, file):
-        """Updates properties from a file name or file-like object.
+        '''Updates properties from a file name or file-like object.
 
-        Ignores empty lines and comment lines."""
+        Ignores empty lines and comment lines.'''
 
         if isinstance(file, str_type):
-            f = codecs.open(file, "r", "utf-8")
+            f = codecs.open(file, 'r', 'utf-8')
         else:
             f = file
 
         for l in f.readlines():
             line = l.strip()
-            if not line or line.startswith("#"):
+            if not line or line.startswith('#'):
                 continue
-            (k, v) = re.split("\s*=\s*", line, 1)
+            (k, v) = re.split('\s*=\s*', line, 1)
             self._properties[k] = v
 
     def get(self, key, default=None):
         return self._properties.get(key, default)
 
     def get_list(self, prefix):
-        """Turns {'list.0':'foo', 'list.1':'bar'} into ['foo', 'bar'].
+        '''Turns {'list.0':'foo', 'list.1':'bar'} into ['foo', 'bar'].
 
-        Returns [] to indicate an empty or missing list."""
+        Returns [] to indicate an empty or missing list.'''
 
-        if not prefix.endswith("."):
-            prefix = prefix + "."
+        if not prefix.endswith('.'):
+            prefix = prefix + '.'
         indexes = []
         for k, v in six.iteritems(self._properties):
             if not k.startswith(prefix):
                 continue
-            key = k[len(prefix) :]
-            if "." in key:
+            key = k[len(prefix):]
+            if '.' in key:
                 # We have something like list.sublist.0.
                 continue
             indexes.append(int(key))
         return [self._properties[prefix + str(index)] for index in sorted(indexes)]
 
     def get_dict(self, prefix, required_keys=[]):
-        """Turns {'foo.title':'title', ...} into {'title':'title', ...}.
+        '''Turns {'foo.title':'title', ...} into {'title':'title', ...}.
 
         If ``|required_keys|`` is present, it must be an iterable of required key
         names.  If a required key is not present, ValueError is thrown.
 
-        Returns {} to indicate an empty or missing dict."""
+        Returns {} to indicate an empty or missing dict.'''
 
-        if not prefix.endswith("."):
-            prefix = prefix + "."
+        if not prefix.endswith('.'):
+            prefix = prefix + '.'
 
-        D = dict(
-            (k[len(prefix) :], v)
-            for k, v in six.iteritems(self._properties)
-            if k.startswith(prefix) and "." not in k[len(prefix) :]
-        )
+        D = dict((k[len(prefix):], v) for k, v
+                 in six.iteritems(self._properties)
+                 if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
             if required_key not in D:
-                raise ValueError("Required key %s not present" % required_key)
+                raise ValueError('Required key %s not present' % required_key)
 
         return D

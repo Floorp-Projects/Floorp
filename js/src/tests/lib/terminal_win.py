@@ -17,26 +17,28 @@ WORD = c_ushort
 
 class COORD(Structure):
     """struct in wincon.h."""
-
-    _fields_ = [("X", SHORT), ("Y", SHORT)]
+    _fields_ = [
+        ("X", SHORT),
+        ("Y", SHORT)]
 
 
 class SMALL_RECT(Structure):
     """struct in wincon.h."""
-
-    _fields_ = [("Left", SHORT), ("Top", SHORT), ("Right", SHORT), ("Bottom", SHORT)]
+    _fields_ = [
+        ("Left", SHORT),
+        ("Top", SHORT),
+        ("Right", SHORT),
+        ("Bottom", SHORT)]
 
 
 class CONSOLE_SCREEN_BUFFER_INFO(Structure):
     """struct in wincon.h."""
-
     _fields_ = [
         ("dwSize", COORD),
         ("dwCursorPosition", COORD),
         ("wAttributes", WORD),
         ("srWindow", SMALL_RECT),
-        ("dwMaximumWindowSize", COORD),
-    ]
+        ("dwMaximumWindowSize", COORD)]
 
 
 # winbase.h
@@ -81,14 +83,14 @@ DEFAULT_COLORS = get_text_attr()
 
 class Terminal(object):
     COLOR = {
-        "black": 0x0000,
-        "blue": 0x0001,
-        "green": 0x0002,
-        "cyan": 0x0003,
-        "red": 0x0004,
-        "magenta": 0x0005,
-        "yellow": 0x0006,
-        "gray": 0x0007,
+        'black': 0x0000,
+        'blue': 0x0001,
+        'green': 0x0002,
+        'cyan': 0x0003,
+        'red': 0x0004,
+        'magenta': 0x0005,
+        'yellow': 0x0006,
+        'gray': 0x0007
     }
     BRIGHT_INTENSITY = 0x0008
     BACKGROUND_SHIFT = 4
@@ -99,9 +101,9 @@ class Terminal(object):
         color: str - color definition string
         """
         color_code = 0
-        if color.startswith("bright"):
+        if color.startswith('bright'):
             color_code |= cls.BRIGHT_INTENSITY
-            color = color[len("bright") :]
+            color = color[len('bright'):]
         color_code |= Terminal.COLOR[color]
         SetConsoleTextAttribute(stdout_handle, color_code)
 

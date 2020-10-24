@@ -4,4 +4,4 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Raptor")
-    SCHEDULES.exclusive = ["raptor"]
+    SCHEDULES.exclusive = ['raptor']

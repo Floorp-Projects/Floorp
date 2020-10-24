@@ -10,9 +10,9 @@ import pytest
 from marionette_harness.runtests import MarionetteArguments, MarionetteTestRunner
 
 
-@pytest.mark.parametrize("socket_timeout", ["A", "10", "1B-", "1C2", "44.35"])
+@pytest.mark.parametrize("socket_timeout", ['A', '10', '1B-', '1C2', '44.35'])
 def test_parse_arg_socket_timeout(socket_timeout):
-    argv = ["marionette", "--socket-timeout", socket_timeout]
+    argv = ['marionette', '--socket-timeout', socket_timeout]
     parser = MarionetteArguments()
 
     def _is_float_convertible(value):
@@ -28,25 +28,18 @@ def test_parse_arg_socket_timeout(socket_timeout):
         assert ex.value.code == 2
     else:
         args = parser.parse_args(args=argv)
-        assert hasattr(args, "socket_timeout") and args.socket_timeout == float(
-            socket_timeout
-        )
+        assert hasattr(args, 'socket_timeout') and args.socket_timeout == float(socket_timeout)
 
 
-@pytest.mark.parametrize(
-    "arg_name, arg_dest, arg_value, expected_value",
-    [
-        ("app-arg", "app_args", "samplevalue", ["samplevalue"]),
-        ("symbols-path", "symbols_path", "samplevalue", "samplevalue"),
-        ("gecko-log", "gecko_log", "samplevalue", "samplevalue"),
-        ("app", "app", "samplevalue", "samplevalue"),
-    ],
-)
-def test_parsing_optional_arguments(
-    mach_parsed_kwargs, arg_name, arg_dest, arg_value, expected_value
-):
+@pytest.mark.parametrize("arg_name, arg_dest, arg_value, expected_value",
+                         [('app-arg', 'app_args', 'samplevalue', ['samplevalue']),
+                          ('symbols-path', 'symbols_path', 'samplevalue', 'samplevalue'),
+                          ('gecko-log', 'gecko_log', 'samplevalue', 'samplevalue'),
+                          ('app', 'app', 'samplevalue', 'samplevalue')])
+def test_parsing_optional_arguments(mach_parsed_kwargs, arg_name, arg_dest, arg_value,
+                                    expected_value):
     parser = MarionetteArguments()
-    parsed_args = parser.parse_args(["--" + arg_name, arg_value])
+    parsed_args = parser.parse_args(['--' + arg_name, arg_value])
     result = vars(parsed_args)
     assert result.get(arg_dest) == expected_value
     mach_parsed_kwargs[arg_dest] = result[arg_dest]
@@ -55,20 +48,14 @@ def test_parsing_optional_arguments(
     assert built_kwargs[arg_dest] == expected_value
 
 
-@pytest.mark.parametrize(
-    "arg_name, arg_dest, arg_value, expected_value",
-    [
-        ("adb", "adb_path", "samplevalue", "samplevalue"),
-        ("avd", "avd", "samplevalue", "samplevalue"),
-        ("avd-home", "avd_home", "samplevalue", "samplevalue"),
-        ("package", "package_name", "samplevalue", "samplevalue"),
-    ],
-)
-def test_parse_opt_args_emulator(
-    mach_parsed_kwargs, arg_name, arg_dest, arg_value, expected_value
-):
+@pytest.mark.parametrize("arg_name, arg_dest, arg_value, expected_value",
+                         [('adb', 'adb_path', 'samplevalue', 'samplevalue'),
+                          ('avd', 'avd', 'samplevalue', 'samplevalue'),
+                          ('avd-home', 'avd_home', 'samplevalue', 'samplevalue'),
+                          ('package', 'package_name', 'samplevalue', 'samplevalue')])
+def test_parse_opt_args_emulator(mach_parsed_kwargs, arg_name, arg_dest, arg_value, expected_value):
     parser = MarionetteArguments()
-    parsed_args = parser.parse_args(["--" + arg_name, arg_value])
+    parsed_args = parser.parse_args(['--' + arg_name, arg_value])
     result = vars(parsed_args)
     assert result.get(arg_dest) == expected_value
     mach_parsed_kwargs[arg_dest] = result[arg_dest]
@@ -78,5 +65,5 @@ def test_parse_opt_args_emulator(
     assert built_kwargs[arg_dest] == expected_value
 
 
-if __name__ == "__main__":
-    mozunit.main("-p", "no:terminalreporter", "--log-tbpl=-", "--capture", "no")
+if __name__ == '__main__':
+    mozunit.main('-p', 'no:terminalreporter', '--log-tbpl=-', '--capture', 'no')

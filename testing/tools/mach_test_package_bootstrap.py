@@ -12,79 +12,79 @@ import types
 
 
 SEARCH_PATHS = [
-    "gtest",
-    "marionette/client",
-    "marionette/harness",
-    "mochitest",
-    "mozbase/manifestparser",
-    "mozbase/mozcrash",
-    "mozbase/mozdebug",
-    "mozbase/mozdevice",
-    "mozbase/mozfile",
-    "mozbase/mozgeckoprofile",
-    "mozbase/mozhttpd",
-    "mozbase/mozinfo",
-    "mozbase/mozinstall",
-    "mozbase/mozleak",
-    "mozbase/mozlog",
-    "mozbase/moznetwork",
-    "mozbase/mozpower",
-    "mozbase/mozprocess",
-    "mozbase/mozprofile",
-    "mozbase/mozrunner",
-    "mozbase/mozscreenshot",
-    "mozbase/mozsystemmonitor",
-    "mozbase/moztest",
-    "mozbase/mozversion",
-    "reftest",
-    "tools/mach",
-    "tools/mozterm",
-    "tools/six",
-    "tools/wptserve",
-    "web-platform",
-    "web-platform/tests/tools/wptrunner",
-    "xpcshell",
+    'gtest',
+    'marionette/client',
+    'marionette/harness',
+    'mochitest',
+    'mozbase/manifestparser',
+    'mozbase/mozcrash',
+    'mozbase/mozdebug',
+    'mozbase/mozdevice',
+    'mozbase/mozfile',
+    'mozbase/mozgeckoprofile',
+    'mozbase/mozhttpd',
+    'mozbase/mozinfo',
+    'mozbase/mozinstall',
+    'mozbase/mozleak',
+    'mozbase/mozlog',
+    'mozbase/moznetwork',
+    'mozbase/mozpower',
+    'mozbase/mozprocess',
+    'mozbase/mozprofile',
+    'mozbase/mozrunner',
+    'mozbase/mozscreenshot',
+    'mozbase/mozsystemmonitor',
+    'mozbase/moztest',
+    'mozbase/mozversion',
+    'reftest',
+    'tools/mach',
+    'tools/mozterm',
+    'tools/six',
+    'tools/wptserve',
+    'web-platform',
+    'web-platform/tests/tools/wptrunner',
+    'xpcshell',
 ]
 
 # Individual files providing mach commands.
 MACH_MODULES = [
-    "gtest/mach_test_package_commands.py",
-    "marionette/mach_test_package_commands.py",
-    "mochitest/mach_test_package_commands.py",
-    "reftest/mach_test_package_commands.py",
-    "tools/mach/mach/commands/commandinfo.py",
-    "web-platform/mach_test_package_commands.py",
-    "xpcshell/mach_test_package_commands.py",
+    'gtest/mach_test_package_commands.py',
+    'marionette/mach_test_package_commands.py',
+    'mochitest/mach_test_package_commands.py',
+    'reftest/mach_test_package_commands.py',
+    'tools/mach/mach/commands/commandinfo.py',
+    'web-platform/mach_test_package_commands.py',
+    'xpcshell/mach_test_package_commands.py',
 ]
 
 
 CATEGORIES = {
-    "testing": {
-        "short": "Testing",
-        "long": "Run tests.",
-        "priority": 30,
+    'testing': {
+        'short': 'Testing',
+        'long': 'Run tests.',
+        'priority': 30,
     },
-    "devenv": {
-        "short": "Development Environment",
-        "long": "Set up and configure your development environment.",
-        "priority": 20,
+    'devenv': {
+        'short': 'Development Environment',
+        'long': 'Set up and configure your development environment.',
+        'priority': 20,
     },
-    "misc": {
-        "short": "Potpourri",
-        "long": "Potent potables and assorted snacks.",
-        "priority": 10,
+    'misc': {
+        'short': 'Potpourri',
+        'long': 'Potent potables and assorted snacks.',
+        'priority': 10,
     },
-    "disabled": {
-        "short": "Disabled",
-        "long": "The disabled commands are hidden by default. Use -v to display them. "
-        "These commands are unavailable for your current context, "
-        'run "mach <command>" to see why.',
-        "priority": 0,
-    },
+    'disabled': {
+        'short': 'Disabled',
+        'long': 'The disabled commands are hidden by default. Use -v to display them. '
+                'These commands are unavailable for your current context, '
+                'run "mach <command>" to see why.',
+        'priority': 0,
+    }
 }
 
 
-IS_WIN = sys.platform in ("win32", "cygwin")
+IS_WIN = sys.platform in ('win32', 'cygwin')
 PY3 = sys.version_info[0] == 3
 
 if PY3:
@@ -107,63 +107,60 @@ def ancestors(path, depth=0):
 
 def activate_mozharness_venv(context):
     """Activate the mozharness virtualenv in-process."""
-    venv = os.path.join(
-        context.mozharness_workdir,
-        context.mozharness_config.get("virtualenv_path", "venv"),
-    )
+    venv = os.path.join(context.mozharness_workdir,
+                        context.mozharness_config.get('virtualenv_path', 'venv'))
 
     if not os.path.isdir(venv):
         print("No mozharness virtualenv detected at '{}'.".format(venv))
         return 1
 
-    venv_bin = os.path.join(venv, "Scripts" if IS_WIN else "bin")
-    activate_path = os.path.join(venv_bin, "activate_this.py")
+    venv_bin = os.path.join(venv, 'Scripts' if IS_WIN else 'bin')
+    activate_path = os.path.join(venv_bin, 'activate_this.py')
 
     exec(open(activate_path).read(), dict(__file__=activate_path))
 
-    if isinstance(os.environ["PATH"], text_type):
-        os.environ["PATH"] = os.environ["PATH"].encode("utf-8")
+    if isinstance(os.environ['PATH'], text_type):
+        os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
 
     # sys.executable is used by mochitest-media to start the websocketprocessbridge,
     # for some reason it doesn't get set when calling `activate_this.py` so set it
     # here instead.
-    binary = "python"
+    binary = 'python'
     if IS_WIN:
-        binary += ".exe"
+        binary += '.exe'
     sys.executable = os.path.join(venv_bin, binary)
 
 
 def find_firefox(context):
     """Try to automagically find the firefox binary."""
     import mozinstall
-
     search_paths = []
 
     # Check for a mozharness setup
     config = context.mozharness_config
-    if config and "binary_path" in config:
-        return config["binary_path"]
+    if config and 'binary_path' in config:
+        return config['binary_path']
     elif config:
-        search_paths.append(os.path.join(context.mozharness_workdir, "application"))
+        search_paths.append(os.path.join(context.mozharness_workdir, 'application'))
 
     # Check for test-stage setup
-    dist_bin = os.path.join(os.path.dirname(context.package_root), "bin")
+    dist_bin = os.path.join(os.path.dirname(context.package_root), 'bin')
     if os.path.isdir(dist_bin):
         search_paths.append(dist_bin)
 
     for path in search_paths:
         try:
-            return mozinstall.get_binary(path, "firefox")
+            return mozinstall.get_binary(path, 'firefox')
         except mozinstall.InvalidBinary:
             continue
 
 
 def find_hostutils(context):
     workdir = context.mozharness_workdir
-    hostutils = os.path.join(workdir, "hostutils")
+    hostutils = os.path.join(workdir, 'hostutils')
     for fname in os.listdir(hostutils):
         fpath = os.path.join(hostutils, fname)
-        if os.path.isdir(fpath) and fname.startswith("host-utils"):
+        if os.path.isdir(fpath) and fname.startswith('host-utils'):
             return fpath
 
 
@@ -186,8 +183,8 @@ def bootstrap(test_package_root):
     # user-friendly error message rather than a cryptic stack trace on module
     # import.
     if sys.version_info[0] != 2 or sys.version_info[1] < 7:
-        print("Python 2.7 or above (but not Python 3) is required to run mach.")
-        print("You are running Python", platform.python_version())
+        print('Python 2.7 or above (but not Python 3) is required to run mach.')
+        print('You are running Python', platform.python_version())
         sys.exit(1)
 
     sys.path[0:0] = [os.path.join(test_package_root, path) for path in SEARCH_PATHS]
@@ -199,13 +196,13 @@ def bootstrap(test_package_root):
             return test_package_root
 
         if key == "bin_dir":
-            return os.path.join(test_package_root, "bin")
+            return os.path.join(test_package_root, 'bin')
 
         if key == "certs_dir":
-            return os.path.join(test_package_root, "certs")
+            return os.path.join(test_package_root, 'certs')
 
         if key == "module_dir":
-            return os.path.join(test_package_root, "modules")
+            return os.path.join(test_package_root, 'modules')
 
         if key == "ancestors":
             return ancestors
@@ -213,33 +210,34 @@ def bootstrap(test_package_root):
         if key == "normalize_test_path":
             return normalize_test_path
 
-        if key == "firefox_bin":
+        if key == 'firefox_bin':
             return find_firefox(context)
 
-        if key == "hostutils":
+        if key == 'hostutils':
             return find_hostutils(context)
 
-        if key == "mozharness_config":
+        if key == 'mozharness_config':
             for dir_path in ancestors(context.package_root):
-                mozharness_config = os.path.join(dir_path, "logs", "localconfig.json")
+                mozharness_config = os.path.join(dir_path, 'logs', 'localconfig.json')
                 if os.path.isfile(mozharness_config):
-                    with open(mozharness_config, "rb") as f:
+                    with open(mozharness_config, 'rb') as f:
                         return json.load(f)
             return {}
 
-        if key == "mozharness_workdir":
+        if key == 'mozharness_workdir':
             config = context.mozharness_config
             if config:
-                return os.path.join(config["base_work_dir"], config["work_dir"])
+                return os.path.join(config['base_work_dir'], config['work_dir'])
 
-        if key == "activate_mozharness_venv":
+        if key == 'activate_mozharness_venv':
             return types.MethodType(activate_mozharness_venv, context)
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context
 
     for category, meta in CATEGORIES.items():
-        mach.define_category(category, meta["short"], meta["long"], meta["priority"])
+        mach.define_category(category, meta['short'], meta['long'],
+                             meta['priority'])
 
     for path in MACH_MODULES:
         cmdfile = os.path.join(test_package_root, path)

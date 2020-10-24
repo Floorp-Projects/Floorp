@@ -3,43 +3,43 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
-    "AsyncEventRunner.h",
-    "MediaSourceDecoder.h",
-    "MediaSourceDemuxer.h",
-    "SourceBufferAttributes.h",
-    "SourceBufferTask.h",
-    "TrackBuffersManager.h",
+    'AsyncEventRunner.h',
+    'MediaSourceDecoder.h',
+    'MediaSourceDemuxer.h',
+    'SourceBufferAttributes.h',
+    'SourceBufferTask.h',
+    'TrackBuffersManager.h',
 ]
 
 EXPORTS.mozilla.dom += [
-    "MediaSource.h",
-    "SourceBuffer.h",
-    "SourceBufferList.h",
+    'MediaSource.h',
+    'SourceBuffer.h',
+    'SourceBufferList.h',
 ]
 
 UNIFIED_SOURCES += [
-    "ContainerParser.cpp",
-    "MediaSource.cpp",
-    "MediaSourceDecoder.cpp",
-    "MediaSourceDemuxer.cpp",
-    "MediaSourceUtils.cpp",
-    "ResourceQueue.cpp",
-    "SourceBuffer.cpp",
-    "SourceBufferList.cpp",
-    "SourceBufferResource.cpp",
-    "TrackBuffersManager.cpp",
+    'ContainerParser.cpp',
+    'MediaSource.cpp',
+    'MediaSourceDecoder.cpp',
+    'MediaSourceDemuxer.cpp',
+    'MediaSourceUtils.cpp',
+    'ResourceQueue.cpp',
+    'SourceBuffer.cpp',
+    'SourceBufferList.cpp',
+    'SourceBufferResource.cpp',
+    'TrackBuffersManager.cpp',
 ]
 
 TEST_DIRS += [
-    "gtest",
+    'gtest',
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
+include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = 'xul'
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
