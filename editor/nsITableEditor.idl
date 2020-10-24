@@ -427,14 +427,11 @@ interface nsITableEditor : nsISupports
    * returns null.  However, if Selection has no range, this throws an
    * exception.
    *
-   * @param aFirstRangeOfSelection [OUT] Returns the first range of Selection
-   *                               only when this returns a <td> or <th>
-   *                               element.  Otherwise, returns null.
    * @return                       A <td> or <th> element if first range of
    *                               Selection selects only one table cell
    *                               element.
    */
-  Element getFirstSelectedCell(out Range aFirstRangeOfSelection);
+  Element getFirstSelectedCell();
 
   /**
    * getFirstSelectedCellInTable() returns a cell element, its row index and
@@ -471,13 +468,9 @@ interface nsITableEditor : nsISupports
    * scans all ranges of Selection.  Therefore, returning cells which
    * belong to different <table> elements.
    *
-   * @param aNextSelectedCellRange [OUT] Returns null if this method returns
-   *                               null.  Otherwise, i.e., found a range which
-   *                               selects a <td> or <th> element, returns the
-   *                               range.
    * @return                       A <td> or <th> element if one of remaining
    *                               ranges selects a <td> or <th> element unless
    *                               this does not meet a range in a text node.
    */
-  Element getNextSelectedCell(out Range aNextSelectedCellRange);
+  Element getNextSelectedCell();
 };
