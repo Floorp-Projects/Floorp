@@ -71,22 +71,22 @@ linux64-clang-9:
             - linux64-gcc-7
             - wasi-sysroot-9
 
-linux64-clang-10-mingw-x86:
-    description: "MinGW-Clang 10 x86 toolchain build"
+linux64-clang-11-mingw-x86:
+    description: "MinGW-Clang 11 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
     run:
         script: build-clang-mingw.sh
         arguments:
             - 'x86'
-            - 'build/build-clang/clang-10-mingw.json'
+            - 'build/build-clang/clang-11-mingw.json'
         resources:
-            - 'build/build-clang/clang-10-mingw.json'
+            - 'build/build-clang/clang-11-mingw.json'
         toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
-            - clang-10
+            - clang-11
             - mingw-w64
             - libunwind
             - llvm-mingw
@@ -95,8 +95,8 @@ linux64-clang-10-mingw-x86:
             - linux64-gcc-7
             - linux64-binutils
 
-linux64-clang-10-mingw-x64:
-    description: "MinGW-Clang 10 x64 toolchain build"
+linux64-clang-11-mingw-x64:
+    description: "MinGW-Clang 11 x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
@@ -104,14 +104,14 @@ linux64-clang-10-mingw-x64:
         script: build-clang-mingw.sh
         arguments:
             - 'x64'
-            - 'build/build-clang/clang-10-mingw.json'
+            - 'build/build-clang/clang-11-mingw.json'
         resources:
-            - 'build/build-clang/clang-10-mingw.json'
+            - 'build/build-clang/clang-11-mingw.json'
         toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
-            - clang-10
+            - clang-11
             - mingw-w64
             - libunwind
             - llvm-mingw
