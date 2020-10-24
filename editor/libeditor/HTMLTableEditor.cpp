@@ -1698,19 +1698,19 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
     return rv;
   }
 
-  RefPtr<Element> firstSelectedCellElement =
-      GetFirstSelectedTableCellElement(error);
-  if (error.Failed()) {
-    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
-    return error.StealNSResult();
+  if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    return NS_ERROR_FAILURE;  // XXX Should we just return NS_OK?
   }
 
-  MOZ_ASSERT(SelectionRefPtr()->RangeCount());
-
-  if (firstSelectedCellElement && SelectionRefPtr()->RangeCount() > 1) {
+  SelectedTableCellScanner scanner(*SelectionRefPtr());
+  if (scanner.IsInTableCellSelectionMode() &&
+      SelectionRefPtr()->RangeCount() > 1) {
     // Fetch indexes again - may be different for selected cells
     const RefPtr<PresShell> presShell{GetPresShell()};
-    CellIndexes firstCellIndexes(*firstSelectedCellElement, presShell, error);
+    // `MOZ_KnownLive(scanner.ElementsRef()[0])` is safe because `scanner`
+    // grabs it until it's destroyed later.
+    CellIndexes firstCellIndexes(MOZ_KnownLive(scanner.ElementsRef()[0]),
+                                 presShell, error);
     if (error.Failed()) {
       NS_WARNING("CellIndexes failed");
       return error.StealNSResult();
@@ -1731,7 +1731,8 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
 
   // If 2 or more cells are not selected, removing rows starting from
   // a row which contains first selection range.
-  if (!firstSelectedCellElement || SelectionRefPtr()->RangeCount() == 1) {
+  if (!scanner.IsInTableCellSelectionMode() ||
+      SelectionRefPtr()->RangeCount() == 1) {
     int32_t rowCountToRemove =
         std::min(aNumberOfRowsToDelete, tableSize.mRowCount - startRowIndex);
     for (int32_t i = 0; i < rowCountToRemove; i++) {
@@ -1755,9 +1756,10 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
   // If 2 or more cells are selected, remove all rows which contain selected
   // cells.  I.e., we ignore aNumberOfRowsToDelete in this case.
   const RefPtr<PresShell> presShell{GetPresShell()};
-  for (cell = firstSelectedCellElement; cell;) {
-    if (cell != firstSelectedCellElement) {
-      CellIndexes cellIndexes(*cell, presShell, error);
+  for (RefPtr<Element> selectedCellElement = scanner.GetFirstElement();
+       selectedCellElement;) {
+    if (selectedCellElement != scanner.ElementsRef()[0]) {
+      CellIndexes cellIndexes(*selectedCellElement, presShell, error);
       if (error.Failed()) {
         NS_WARNING("CellIndexes failed");
         return error.StealNSResult();
@@ -1769,15 +1771,11 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
     // to continue after we delete this row
     int32_t nextRow = startRowIndex;
     while (nextRow == startRowIndex) {
-      cell = GetNextSelectedTableCellElement(error);
-      if (error.Failed()) {
-        NS_WARNING("HTMLEditor::GetNextSelectedTableCellElement() failed");
-        return error.StealNSResult();
-      }
-      if (!cell) {
+      selectedCellElement = scanner.GetNextElement();
+      if (!selectedCellElement) {
         break;
       }
-      CellIndexes cellIndexes(*cell, presShell, error);
+      CellIndexes cellIndexes(*selectedCellElement, presShell, error);
       if (error.Failed()) {
         NS_WARNING("CellIndexes failed");
         return error.StealNSResult();
