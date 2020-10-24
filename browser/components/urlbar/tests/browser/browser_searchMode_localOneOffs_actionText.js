@@ -154,6 +154,159 @@ add_task(async function localOneOff() {
   );
 });
 
+add_task(async function localOneOff_withVisit() {
+  info("Type a url, select a local one-off, check heuristic action");
+  await PlacesUtils.history.clear();
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits("https://mozilla.org/");
+  }
+  const searchString = "mozilla.org";
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: searchString,
+  });
+  Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
+  let oneOffButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
+
+  let [
+    actionHistory,
+    actionTabs,
+    actionBookmarks,
+    actionVisit,
+  ] = await document.l10n.formatValues([
+    { id: "urlbar-result-action-search-history" },
+    { id: "urlbar-result-action-search-tabs" },
+    { id: "urlbar-result-action-search-bookmarks" },
+    { id: "urlbar-result-action-visit" },
+  ]);
+
+  info("Alt UP to select the history one-off.");
+  EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "the heuristic result should be selected"
+  );
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    oneOffButtons.selectedButton.source,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
+    "The history one-off button should be selected"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(result.element.action),
+    "The heuristic action should be visible"
+  );
+  Assert.equal(
+    result.displayed.action,
+    actionHistory,
+    "Check the heuristic action"
+  );
+  Assert.equal(
+    result.image,
+    "chrome://browser/skin/history.svg",
+    "Check the heuristic icon"
+  );
+  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.equal(
+    row.querySelector(".urlbarView-title").textContent,
+    searchString,
+    "Check that the result title has been replaced with the search string."
+  );
+
+  info("Alt UP to select the tabs one-off.");
+  EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    oneOffButtons.selectedButton.source,
+    UrlbarUtils.RESULT_SOURCE.TABS,
+    "The tabs one-off button should be selected"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(result.element.action),
+    "The heuristic action should be visible"
+  );
+  Assert.equal(
+    result.displayed.action,
+    actionTabs,
+    "Check the heuristic action"
+  );
+  Assert.equal(
+    result.image,
+    "chrome://browser/skin/tab.svg",
+    "Check the heuristic icon"
+  );
+
+  info("Alt UP to select the bookmarks one-off.");
+  EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    oneOffButtons.selectedButton.source,
+    UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+    "The bookmarks one-off button should be selected"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_visible(result.element.action),
+    "The heuristic action should be visible"
+  );
+  Assert.equal(
+    result.displayed.action,
+    actionBookmarks,
+    "Check the heuristic action"
+  );
+  Assert.equal(
+    result.image,
+    "chrome://browser/skin/bookmark.svg",
+    "Check the heuristic icon"
+  );
+
+  info(
+    "Select the next result, then reselect the heuristic, check it's a visit"
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "the heuristic result should be selected"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown", {});
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    1,
+    "the heuristic result should not be selected"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowUp", {});
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "the heuristic result should be selected"
+  );
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    oneOffButtons.selectedButton,
+    null,
+    "No one-off button should be selected"
+  );
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
+  Assert.equal(
+    result.displayed.action,
+    actionVisit,
+    "Check the heuristic action"
+  );
+  Assert.notEqual(
+    result.image,
+    "chrome://browser/skin/history.svg",
+    "Check the heuristic icon"
+  );
+  row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.equal(
+    row.querySelector(".urlbarView-title").textContent,
+    `https://${searchString}`,
+    "Check that the result title has been restored to the fixed-up URI."
+  );
+
+  await PlacesUtils.history.clear();
+});
+
 add_task(async function localOneOff_suggestion() {
   info("Type some text, select the first suggestion, then a local one-off");
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
