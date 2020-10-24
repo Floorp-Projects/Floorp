@@ -4,44 +4,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShadowLayers.h"
-
-#include <set>     // for _Rb_tree_const_iterator, etc
-#include <vector>  // for vector
-
 #include "ClientLayerManager.h"  // for ClientLayerManager
-#include "GeckoProfiler.h"       // for AUTO_PROFILER_LABEL
-#include "IPDLActor.h"
-#include "ISurfaceAllocator.h"    // for IsSurfaceDescriptorValid
-#include "Layers.h"               // for Layer
-#include "RenderTrace.h"          // for RenderTraceScope
-#include "gfx2DGlue.h"            // for Moz2D transition helpers
-#include "gfxPlatform.h"          // for gfxImageFormat, gfxPlatform
+#include "ShadowLayers.h"
+#include <set>                  // for _Rb_tree_const_iterator, etc
+#include <vector>               // for vector
+#include "GeckoProfiler.h"      // for AUTO_PROFILER_LABEL
+#include "ISurfaceAllocator.h"  // for IsSurfaceDescriptorValid
+#include "Layers.h"             // for Layer
+#include "RenderTrace.h"        // for RenderTraceScope
+#include "gfx2DGlue.h"          // for Moz2D transition helpers
+#include "gfxPlatform.h"        // for gfxImageFormat, gfxPlatform
+
+//#include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
 #include "ipc/IPCMessageUtils.h"  // for gfxContentType, null_t
-#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc
-#include "mozilla/gfx/Point.h"    // for IntSize
+#include "IPDLActor.h"
+#include "mozilla/Assertions.h"                 // for MOZ_ASSERT, etc
+#include "mozilla/gfx/Point.h"                  // for IntSize
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ContentClient.h"
-#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
-#include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for Edit, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/LayersTypes.h"     // for MOZ_LAYERS_LOG
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "mozilla/layers/SyncObject.h"
 #ifdef XP_DARWIN
 #  include "mozilla/layers/TextureSync.h"
 #endif
 #include "ShadowLayerUtils.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"              // for operator new, etc
-#include "nsIXULRuntime.h"                 // for BrowserTabsRemoteAutostart
 #include "nsTArray.h"                      // for AutoTArray, nsTArray, etc
 #include "nsXULAppAPI.h"                   // for XRE_GetProcessType, etc
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StaticPrefs_layers.h"
 
 namespace mozilla {
 namespace ipc {
@@ -147,7 +146,7 @@ void KnowsCompositor::IdentifyTextureHost(
     const TextureFactoryIdentifier& aIdentifier) {
   mTextureFactoryIdentifier = aIdentifier;
 
-  if (XRE_IsContentProcess() || !mozilla::BrowserTabsRemoteAutostart()) {
+  if (XRE_IsContentProcess()) {
     mSyncObject = SyncObjectClient::CreateSyncObjectClientForContentDevice(
         aIdentifier.mSyncHandle);
   }
