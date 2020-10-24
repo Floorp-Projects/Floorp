@@ -1141,7 +1141,7 @@ class UrlbarView {
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
       result.type == UrlbarUtils.RESULT_TYPE.KEYWORD
     ) {
-      favicon.src = this._iconForSearchResult(result);
+      favicon.src = this._iconForResult(result);
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
@@ -1356,9 +1356,11 @@ class UrlbarView {
     );
   }
 
-  _iconForSearchResult(result, iconUrlOverride = null) {
+  _iconForResult(result, iconUrlOverride = null) {
     return (
       (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY &&
+        (result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
+          result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) &&
         UrlbarUtils.ICON.HISTORY) ||
       iconUrlOverride ||
       result.payload.icon ||
@@ -1852,8 +1854,6 @@ class UrlbarView {
       return;
     }
 
-    // Update all search suggestion results to use the newly selected engine, or
-    // if no engine is selected, revert to their original engines.
     let engine = this.oneOffSearchButtons.selectedButton?.engine;
     let source = this.oneOffSearchButtons.selectedButton?.source;
     switch (source) {
@@ -1904,6 +1904,21 @@ class UrlbarView {
         continue;
       }
 
+      // If there is no selected button and we are in full search mode, it is
+      // because the user just confirmed a one-off button, thus starting a new
+      // query. Don't change the heuristic result because it would be
+      // immediately replaced with the search mode heuristic, causing flicker.
+      if (
+        this.oneOffsRefresh &&
+        result.heuristic &&
+        !engine &&
+        !source &&
+        this.input.searchMode &&
+        !this.input.searchMode.isPreview
+      ) {
+        continue;
+      }
+
       let action = item.querySelector(".urlbarView-action");
       let favicon = item.querySelector(".urlbarView-favicon");
 
@@ -1915,23 +1930,42 @@ class UrlbarView {
         item.removeAttribute("show-action-text");
       }
 
-      if (source) {
-        // Update the result action text.
-        this.document.l10n.setAttributes(action, source.l10nId);
-        item._actionOverride = true;
-        // Update the result favicon.
-        if (result.heuristic) {
-          item.setAttribute("source", source.attribute);
-          favicon.src = this._iconForSearchResult(result, source?.icon);
+      // If an engine is selected, update search results to use that engine.
+      // Otherwise, restore their original engines.
+      if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+        if (engine) {
+          if (!result.payload.originalEngine) {
+            result.payload.originalEngine = result.payload.engine;
+          }
+          result.payload.engine = engine.name;
+        } else if (result.payload.originalEngine) {
+          result.payload.engine = result.payload.originalEngine;
+          delete result.payload.originalEngine;
         }
-        // When a local one-off is selected we're done.
+      }
+
+      // When update2 is disabled, we only update search results when a search
+      // engine one-off is selected.
+      if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
         continue;
       }
 
-      // If we replaced the action while a local one-off button was selected,
-      // now it should be restored. This happens for example if a local one-off
-      // is selected, and then the user presses DOWN to go to the next result.
-      if (item._actionOverride) {
+      if (source) {
+        // Update the result action text for a local one-off.
+        this.document.l10n.setAttributes(action, source.l10nId);
+        if (result.heuristic) {
+          item.setAttribute("source", source.attribute);
+        }
+      } else if (engine && !result.payload.inPrivateWindow) {
+        // Update the result action text for an engine one-off.
+        this.document.l10n.setAttributes(
+          action,
+          "urlbar-result-action-search-w-engine",
+          { engine: engine.name }
+        );
+      } else {
+        // No one-off is selected. If we replaced the action while a one-off
+        // button was selected, it should be restored.
         if (item._originalActionSetter) {
           item._originalActionSetter();
           if (result.heuristic) {
@@ -1940,36 +1974,11 @@ class UrlbarView {
         } else {
           Cu.reportError("An item is missing the action setter");
         }
-        item._actionOverride = false;
         item.removeAttribute("source");
       }
 
-      // For one-off buttons having an engine, we update the action only for
-      // search results. All the other cases were already skipped earlier.
-      if (result.type != UrlbarUtils.RESULT_TYPE.SEARCH) {
-        continue;
-      }
-
-      if (engine) {
-        if (!result.payload.originalEngine) {
-          result.payload.originalEngine = result.payload.engine;
-        }
-        result.payload.engine = engine.name;
-      } else if (result.payload.originalEngine) {
-        result.payload.engine = result.payload.originalEngine;
-        delete result.payload.originalEngine;
-      }
-
-      // Update the result action text.
-      if (!result.payload.inPrivateWindow) {
-        this.document.l10n.setAttributes(
-          action,
-          "urlbar-result-action-search-w-engine",
-          { engine: (engine && engine.name) || result.payload.engine }
-        );
-      }
-
       // Update result favicons.
+      let iconOverride = source?.icon || engine?.iconURI?.spec;
       if (
         // Don't update the favicon on non-heuristic results when update2 is
         // enabled.
@@ -1981,7 +1990,7 @@ class UrlbarView {
         // icon, then make sure the result now uses the new engine's icon or
         // failing that the default icon.  If we changed it back to the original
         // engine, go back to the original or default icon.
-        favicon.src = this._iconForSearchResult(result, engine?.iconURI?.spec);
+        favicon.src = this._iconForResult(result, iconOverride);
       }
     }
   }
