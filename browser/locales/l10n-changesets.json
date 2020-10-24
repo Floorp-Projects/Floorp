@@ -1659,7 +1659,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1b640a96821a4daf68109dc4ea3b293d20a95d70"
+        "revision": "26ce534d23ec7e31d8865e243d5697da8d1860b2"
     },
     "xh": {
         "pin": false,
