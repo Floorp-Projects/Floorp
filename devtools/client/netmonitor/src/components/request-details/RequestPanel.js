@@ -202,7 +202,7 @@ class RequestPanel extends Component {
         component: SourcePreview,
         componentProps: {
           text: postData,
-          mode: mimeType.replace(/;.+/, ""),
+          mode: mimeType?.replace(/;.+/, ""),
           targetSearchResult,
         },
         header: REQUEST_POST_PAYLOAD,
