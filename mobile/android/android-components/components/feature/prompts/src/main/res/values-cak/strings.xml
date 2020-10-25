@@ -90,6 +90,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">¿La nitaq chik tzij chi re re ruxaq?</string>
+    <string name="mozac_feature_prompt_repost_message">Nisamajïx chik re ruxaq rik\'in jub\'a\' nukamuluj samaj k\'a jub\'a\' b\'anon, achi\'el nitaq jun tojïk o kamul nrelesaj rutzijol jun na\'oj.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Titaq chik tzij</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
