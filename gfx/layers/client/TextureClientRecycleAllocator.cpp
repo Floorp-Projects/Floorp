@@ -142,7 +142,7 @@ already_AddRefed<TextureClient> TextureClientRecycleAllocator::CreateOrRecycle(
 
   {
     MutexAutoLock lock(mLock);
-    if (mIsDestroyed) {
+    if (mIsDestroyed || !mKnowsCompositor->GetTextureForwarder()) {
       return nullptr;
     }
     if (!mPooledClients.empty()) {
