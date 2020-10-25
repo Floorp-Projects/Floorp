@@ -38,8 +38,13 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
 
   const auto& sd =
       static_cast<const SurfaceDescriptorRemoteDecoder&>(mDescriptor);
-  mWrappedTextureHost =
-      VideoBridgeParent::GetSingleton(sd.source())->LookupTexture(sd.handle());
+  VideoBridgeParent* parent = VideoBridgeParent::GetSingleton(sd.source());
+  if (!parent) {
+    // The VideoBridge went away. This can happen if the RDD process
+    // crashes.
+    return nullptr;
+  }
+  mWrappedTextureHost = parent->LookupTexture(sd.handle());
 
   if (!mWrappedTextureHost) {
     // The TextureHost hasn't been registered yet. This is due to a race
