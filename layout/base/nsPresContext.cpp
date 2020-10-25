@@ -1120,8 +1120,9 @@ static bool CheckOverflow(const ComputedStyle* aComputedStyle,
     return false;
   }
 
-  if (display->mOverflowX == StyleOverflow::Visible &&
-      display->mOverflowY == StyleOverflow::Visible) {
+  // NOTE(emilio): This check needs to match the one in
+  // Document::IsPotentiallyScrollable.
+  if (display->OverflowIsVisibleInBothAxis()) {
     return false;
   }
 
