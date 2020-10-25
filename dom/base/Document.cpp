@@ -12886,21 +12886,18 @@ bool Document::IsPotentiallyScrollable(HTMLBodyElement* aBody) {
     return false;
   }
 
-  // The element's parent element's computed value of the overflow-x or
-  // overflow-y properties is neither visible nor clip.
+  // The element's parent element's computed value of the overflow-x and
+  // overflow-y properties are visible.
   MOZ_ASSERT(aBody->GetParent() == aBody->OwnerDoc()->GetRootElement());
   nsIFrame* parentFrame = nsLayoutUtils::GetStyleFrame(aBody->GetParent());
-  if (parentFrame && !parentFrame->StyleDisplay()->IsScrollableOverflow()) {
+  if (parentFrame &&
+      parentFrame->StyleDisplay()->OverflowIsVisibleInBothAxis()) {
     return false;
   }
 
   // The element's computed value of the overflow-x or overflow-y properties is
-  // neither visible nor clip.
-  if (!bodyFrame->StyleDisplay()->IsScrollableOverflow()) {
-    return false;
-  }
-
-  return true;
+  // not visible.
+  return !bodyFrame->StyleDisplay()->OverflowIsVisibleInBothAxis();
 }
 
 Element* Document::GetScrollingElement() {

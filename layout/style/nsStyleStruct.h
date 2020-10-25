@@ -1517,6 +1517,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            mOverflowX != mozilla::StyleOverflow::Clip;
   }
 
+  bool OverflowIsVisibleInBothAxis() const {
+    return mOverflowX == mozilla::StyleOverflow::Visible &&
+           mOverflowY == mozilla::StyleOverflow::Visible;
+  }
+
   bool IsContainPaint() const {
     return (mContain & mozilla::StyleContain::PAINT) &&
            !IsInternalRubyDisplayType() && !IsInternalTableStyleExceptCell();
