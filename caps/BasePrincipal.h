@@ -154,6 +154,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD IsSameOrigin(nsIURI* aURI, bool aIsPrivateWin,
                           bool* aRes) override;
   NS_IMETHOD GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
+                                  const OriginAttributes& aOriginAttributes,
                                   nsACString& _retval) override;
   NS_IMETHOD HasFirstpartyStorageAccess(mozIDOMWindow* aCheckWindow,
                                         uint32_t* aRejectedReason,
