@@ -767,8 +767,12 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             # Select some browsertime tasks as desktop smoke-tests
             if 'browsertime' in try_name:
                 if 'chrome' in try_name:
+                    if 'linux' in platform:
+                        return True
                     return False
                 if 'chromium' in try_name:
+                    if 'linux' in platform:
+                        return True
                     return False
                 if '-fis' in try_name:
                     return False
@@ -777,10 +781,10 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 if 'linux' in platform:
                     if 'speedometer' in try_name:
                         return True
-                    if 'tp6' in try_name and 'amazon' in try_name:
-                        return True
             else:
                 # Run tests on all chrome variants
+                if 'linux' in platform and 'tp6' in try_name:
+                    return False
                 if '-chrome' in try_name:
                     return True
                 if '-chromium' in try_name:
