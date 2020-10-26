@@ -128,4 +128,32 @@ class WebNotificationFeatureTest {
 
         verify(notificationManager, never()).notify(eq(testNotification.tag), eq(NOTIFICATION_ID), any())
     }
+
+    @Test
+    fun `notifications always allowed for web extensions`() = runBlockingTest {
+        val webExtensionNotification = WebNotification(
+            "Mozilla",
+            "mozilla.org",
+            "Notification body",
+            "mozilla.org",
+            "https://mozilla.org/image.ico",
+            "rtl",
+            "en",
+            false,
+            triggeredByWebExtension = true
+        )
+
+        val feature = WebNotificationFeature(
+            context,
+            engine,
+            browserIcons,
+            android.R.drawable.ic_dialog_alert,
+            permissionsStorage,
+            null,
+            coroutineContext
+        )
+
+        feature.onShowNotification(webExtensionNotification)
+        verify(notificationManager).notify(eq(testNotification.tag), eq(NOTIFICATION_ID), any())
+    }
 }

@@ -17,6 +17,8 @@ package mozilla.components.concept.engine.webnotifications
  * @property lang language of the notification.
  * @property requireInteraction Preference flag that indicates the notification should remain.
  * @property timestamp Time when the notification was created.
+ * @property triggeredByWebExtension True if this notification was triggered by a
+ * web extension, otherwise false.
  */
 data class WebNotification(
     val title: String?,
@@ -27,5 +29,6 @@ data class WebNotification(
     val direction: String?,
     val lang: String?,
     val requireInteraction: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val triggeredByWebExtension: Boolean = false
 )

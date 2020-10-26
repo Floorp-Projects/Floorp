@@ -72,11 +72,17 @@ class WebNotificationFeature(
 
     override fun onShowNotification(webNotification: WebNotification) {
         CoroutineScope(coroutineContext).launch {
-            val origin = webNotification.sourceUrl?.tryGetHostFromUrl() ?: return@launch
-            val permissions = sitePermissionsStorage.findSitePermissionsBy(origin) ?: return@launch
+            // Only need to check permissions for notifications from web pages. Permissions for
+            // web extensions are managed via the extension's manifest and approved by the user
+            // upon installation.
+            if (!webNotification.triggeredByWebExtension) {
+                val origin = webNotification.sourceUrl?.tryGetHostFromUrl() ?: return@launch
+                val permissions = sitePermissionsStorage.findSitePermissionsBy(origin)
+                    ?: return@launch
 
-            if (!permissions.notification.isAllowed()) {
-                return@launch
+                if (!permissions.notification.isAllowed()) {
+                    return@launch
+                }
             }
 
             ensureNotificationGroupAndChannelExists()
