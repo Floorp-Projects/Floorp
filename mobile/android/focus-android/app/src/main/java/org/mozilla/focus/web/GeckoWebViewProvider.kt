@@ -95,6 +95,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             runtimeSettingsBuilder.contentBlocking(contentBlockingBuilder.build())
             runtimeSettingsBuilder.crashHandler(CrashHandlerService::class.java)
             runtimeSettingsBuilder.consoleOutput(false)
+            runtimeSettingsBuilder.debugLogging(false)
 
             geckoRuntime =
                     GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
