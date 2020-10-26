@@ -283,11 +283,9 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                  const Rect& aRect, const EventStates& aState,
                                  StyleAppearance aAppearance,
                                  uint32_t aDpiRatio);
-  static void PaintRangeTrackBackground(nsIFrame* aFrame,
-                                        DrawTarget* aDrawTarget,
-                                        const Rect& aRect,
-                                        const EventStates& aState,
-                                        uint32_t aDpiRatio, bool aHorizontal);
+  static void PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                         const Rect& aRect, const EventStates& aState,
+                         uint32_t aDpiRatio, bool aHorizontal);
   static void PaintRangeThumb(DrawTarget* aDrawTarget, const Rect& aRect,
                               const EventStates& aState, uint32_t aDpiRatio);
   static void PaintProgressBar(DrawTarget* aDrawTarget, const Rect& aRect,
