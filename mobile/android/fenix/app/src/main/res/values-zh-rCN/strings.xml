@@ -1033,7 +1033,7 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">中文字体测试：天地玄黄，宇宙洪荒。日月盈仄，辰宿列张。</string>
+    <string name="accessibility_text_size_sample_text_1">这是示例文本。您可以增大或减小字体大小设置，调整文字显示效果。</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">使网站上的文字更大或更小</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->

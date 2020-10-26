@@ -1292,6 +1292,10 @@
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">ما جديد %s</string>
 
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">‏%s | المكتبات مفتوحة المصدر</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">الدعم</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1466,6 +1470,8 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">اطّلع على المزيد</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">تفاصيل محرك البحث المخصّص</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">رابط ”اطّلع على المزيد“</string>
 

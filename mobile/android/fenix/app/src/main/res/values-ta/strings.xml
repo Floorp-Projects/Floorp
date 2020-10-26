@@ -214,7 +214,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">மேலும் அறிய</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">தேடல்</string>
     <!-- Text preview for larger sized widgets -->
@@ -292,6 +291,8 @@
     <string name="preferences_theme">கருப்பொருள்</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">முகப்பு</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">சைகைகள்</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">தனிப்பயனாக்கு</string>
     <!-- Preference description for banner about signing in -->
@@ -469,6 +470,12 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">சாதனக் கருப்பொருளைப் பின்பற்று</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">புதுப்பிக்க இழுங்கள்</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">கருவிப்பட்டியை மறைக்க உருட்டுங்கள்</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">அமர்வுகள்</string>
@@ -515,7 +522,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">சமீபத்தில் மூடிய கீற்றுகள் ஏதுமில்லை</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">கீற்றுகளை மூடு</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1059,10 +1065,6 @@
     <string name="onboarding_account_sign_in_header">உங்கள் பயர்பாக்சு கணக்குடன் புத்தகக்குறிகள், கடவுச்சொற்கள், மற்றும் பலவற்றை ஒத்திசைக்கத் தொடங்குங்கள்.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">மேலும் அறிக</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">இந்தத் தொலைபேசியில் மற்றொரு பயர்பாக்சு உலாவியில் %s பெயரில் உள்நுழைந்துள்ளீர்கள். இக்கணக்கில் உள்நுழைய விரும்புகிறீர்களா?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ஆம், புகுபதி</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1309,9 +1311,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">குறுக்குவழி பெயர்</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">விரைவான அணுகலுக்கும் மற்றும் செயலி போன்ற அனுபவத்துடனும் விரைவாக உலாவ நீங்கள் இந்த வலைப்பக்கத்தை உங்கள் முகப்பு திரையில் எளிதில் சேர்க்கலாம்.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">புகுபதிகைககளும் கடவுச்சொற்களும்</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1382,8 +1381,12 @@
     <string name="logins_site_copied">தளம் ஒட்டுப்பலகைக்கு நகலெடுக்கப்பட்டது</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">கடவுச்சொல்லை நகலெடு</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">கடவுச்சொல்லை அழி</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">பயனர் பெயரை நகலெடு</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">பயனர்பெயரை அழி</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">தளத்தை நகலெடு</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1537,7 +1540,7 @@
     <string name="saved_login_duplicate">அந்தப் பயனர்பெயருடன் ஒரு புகுபதிகை ஏற்கனவே உள்ளது</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">மற்றொரு சாதனத்தை இணைக்க.</string>
 
     <!-- Text displayed asking user to re-authenticate -->
@@ -1557,8 +1560,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">முதன்மை தள வரம்பை அடைந்தது</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">புதிய முதன்மை தளத்தைச் சேர்க்க, ஒன்றை அகற்றுங்கள். தளத்தை நெடுநேரம் அழுத்தி அகற்று என்பதைத் தேர்ந்தெடுங்கள்.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">சரி, புரிந்தது</string>
 
@@ -1568,7 +1569,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">நீக்கு</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s இலிருந்து ஆக அதிகமானதைப் பெறுங்கள்.</string>
 
@@ -1576,4 +1577,9 @@
     <string name="no_collections_header1">உங்களுக்கு முக்கியமான விடயங்களைச் சேகரியுங்கள்</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">விரைவான அணுகலுக்காக ஒத்த தேடல்கள், தளங்கள், கீற்றுகளை ஒன்றிணையுங்கள்.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">இந்தத் தொலைபேசியில் மற்றொரு பயர்பாக்சு உலாவியில் %s பெயரில் உள்நுழைந்துள்ளீர்கள். இக்கணக்கில் உள்நுழைய விரும்புகிறீர்களா?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">விரைவான அணுகலுக்கும் மற்றும் செயலி போன்ற அனுபவத்துடனும் விரைவாக உலாவ நீங்கள் இந்த வலைப்பக்கத்தை உங்கள் முகப்பு திரையில் எளிதில் சேர்க்கலாம்.</string>
+
     </resources>

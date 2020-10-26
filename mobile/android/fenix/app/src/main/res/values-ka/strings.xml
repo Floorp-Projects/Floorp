@@ -142,7 +142,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">დაყენება</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">დასინქრონებული ჩანართები</string>
+    <string name="synced_tabs">დასინქრონებული</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">კვლავ დასინქრონება</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -328,9 +328,9 @@
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">ძიება დათვალიერების ისტორიაში</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">სანიშნების ძიება</string>
+    <string name="preferences_search_bookmarks">ძიება სანიშნებში</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
-    <string name="preferences_search_synced_tabs">დასინქრონებული ჩანართების მოძიება</string>
+    <string name="preferences_search_synced_tabs">დასინქრონებულ ჩანართებში ძიება</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ანგარიშის პარამეტრები</string>
     <!-- Preference for enabling url autocomplete-->
@@ -464,7 +464,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[QR-კოდის წააკითხეთ საიტიდან <b>firefox.com/pair</b>]]></string>
+    <string name="pair_instructions_2"><![CDATA[QR-კოდი წააკითხეთ გვერდიდან <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">ჩართეთ კამერა</string>
     <!-- Button to cancel pairing -->
@@ -488,12 +488,12 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">ჩამოწიეთ გასაახლებლად</string>
+    <string name="preference_gestures_website_pull_to_refresh">ჩამოწევით გაახლება</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">გადაადგილდით ხელსაწყოების დასამალად</string>
+    <string name="preference_gestures_dynamic_toolbar">გადაადგილებისას ხელსაწყოთა დამალვა</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">გაუსვით ხელსაწყოთა ზოლის გვერდებზე, ჩანართებზე გადასართველად</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">ხელსაწყოთა ზოლზე გასმით, ჩანართებზე გადასვლა</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">აუსვით ხელსაწყოთა ზოლზე ჩანართების გახსნისთვის</string>
 
@@ -1503,7 +1503,7 @@
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">შეიყვანეთ საძიებო ფრაზა</string>
     <!-- Text shown when a user leaves out the required template string -->
-    <string name="search_add_custom_engine_error_missing_template">შეამოწმეთ, შეესაბამება თუ არა საძიებო ფრაზა მოცემულ ფორმატს</string>
+    <string name="search_add_custom_engine_error_missing_template">დარწმუნდით, რომ შეესაბამება მოცემულ მაგალითს</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">შეცდომა კავშირისას – „%s“</string>
     <!-- Text shown when a user creates a new search engine -->
