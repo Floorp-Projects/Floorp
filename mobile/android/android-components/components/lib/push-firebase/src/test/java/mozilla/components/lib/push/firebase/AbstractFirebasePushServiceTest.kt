@@ -108,13 +108,6 @@ class AbstractFirebasePushServiceTest {
     }
 
     @Test
-    fun `processor is not called when no remote message provided`() {
-        service.onMessageReceived(null)
-
-        verifyZeroInteractions(processor)
-    }
-
-    @Test
     fun `force registration should never be on Main`() {
         // Default dispatcher isn't main
         assertTrue(service.coroutineContext != Dispatchers.Main)

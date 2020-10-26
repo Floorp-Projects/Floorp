@@ -63,8 +63,7 @@ object Versions {
     }
 
     object Firebase {
-        const val core = "16.0.1"
-        const val messaging = "17.3.4"
+        const val messaging = "20.3.0"
     }
 }
 

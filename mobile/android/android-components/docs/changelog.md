@@ -203,6 +203,10 @@ permalink: /changelog/
 * **feature-prompts**
   * The repost prompt now has different text and will also dismiss the pull to refresh throbber.
 
+* **lib-push-firebase**
+  * Upgrade Firebase Cloud Messaging to v20.3.0.
+    * ⚠️ **This is a breaking change**: `RemoteMessage` is now non-null in `onMessageReceived`.
+
 # 62.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...v62.0.0)
