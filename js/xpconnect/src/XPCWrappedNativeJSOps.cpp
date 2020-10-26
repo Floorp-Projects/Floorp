@@ -44,7 +44,7 @@ static bool ToStringGuts(XPCCallContext& ccx) {
   XPCWrappedNative* wrapper = ccx.GetWrapper();
 
   if (wrapper) {
-    sz.reset(wrapper->ToString(ccx, ccx.GetTearOff()));
+    sz.reset(wrapper->ToString(ccx.GetTearOff()));
   } else {
     sz = JS_smprintf("[xpconnect wrapped native prototype]");
   }
