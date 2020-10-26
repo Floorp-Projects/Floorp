@@ -28,7 +28,10 @@ class MainThreadWorkerDebuggerTransport {
   }
 
   close() {
-    this._dbg.removeListener(this._dbgListener);
+    if (this._dbgListener) {
+      this._dbg.removeListener(this._dbgListener);
+    }
+    this._dbgListener = null;
     this.hooks?.onClosed();
   }
 
