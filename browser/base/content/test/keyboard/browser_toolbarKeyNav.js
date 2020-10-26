@@ -303,10 +303,12 @@ add_task(async function testArrowsRtl() {
 // Test that right arrow reaches the overflow menu button on the Bookmarks
 // toolbar when it is visible.
 add_task(async function testArrowsBookmarksOverflowButton() {
-  let toolbar = document.getElementById("PersonalToolbar");
-  let transitionEnded = BrowserTestUtils.waitForEvent(toolbar, "transitionend");
+  let toolbarOpened = TestUtils.waitForCondition(() => {
+    let toolbar = gNavToolbox.querySelector("#PersonalToolbar");
+    return !toolbar.collapsed;
+  }, "waiting for toolbar to become visible");
   CustomizableUI.setToolbarVisibility("PersonalToolbar", true);
-  await transitionEnded;
+  await toolbarOpened;
   let items = document.getElementById("PlacesToolbarItems").children;
   let lastVisible;
   for (let item of items) {
