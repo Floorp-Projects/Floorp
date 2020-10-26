@@ -17,6 +17,7 @@ use marionette_rs::webdriver::{
     ScreenshotOptions, Script as MarionetteScript, Selector as MarionetteSelector,
     Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
+use mozdevice::AndroidStorageInput;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
@@ -95,6 +96,8 @@ pub struct MarionetteSettings {
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
     pub jsdebugger: bool,
+
+    pub android_storage: AndroidStorageInput,
 }
 
 #[derive(Default)]
@@ -131,6 +134,7 @@ impl MarionetteHandler {
 
             let options = FirefoxOptions::from_capabilities(
                 fx_capabilities.chosen_binary,
+                self.settings.android_storage,
                 &mut capabilities,
             )?;
             (options, capabilities)
@@ -188,10 +192,7 @@ impl MarionetteHandler {
     fn start_android(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
         let android_options = options.android.unwrap();
 
-        let mut handler = AndroidHandler::new(&android_options);
-        handler
-            .connect(port)
-            .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError, e.to_string()))?;
+        let handler = AndroidHandler::new(&android_options, port)?;
 
         // Profile management.
         let is_custom_profile = options.profile.is_some();

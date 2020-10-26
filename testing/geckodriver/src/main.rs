@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
 
-extern crate base64;
 extern crate chrono;
 #[macro_use]
 extern crate clap;
@@ -58,6 +57,7 @@ pub mod test;
 use crate::command::extension_routes;
 use crate::logging::Level;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
+use mozdevice::AndroidStorageInput;
 
 const EXIT_SUCCESS: i32 = 0;
 const EXIT_USAGE: i32 = 64;
@@ -159,6 +159,8 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         Err(e) => usage!("{}: {}:{}", e, host, port),
     };
 
+    let android_storage = value_t!(matches, "android_storage", AndroidStorageInput)?;
+
     let binary = matches.value_of("binary").map(PathBuf::from);
 
     let marionette_host = matches.value_of("marionette_host").unwrap();
@@ -181,6 +183,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
             binary,
             connect_existing: matches.is_present("connect_existing"),
             jsdebugger: matches.is_present("jsdebugger"),
+            android_storage,
         };
         Operation::Server {
             log_level,
@@ -317,6 +320,13 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .short("V")
                 .long("version")
                 .help("Prints version and copying information"),
+        )
+        .arg(
+            Arg::with_name("android_storage")
+                .long("android-storage")
+                .possible_values(&["auto", "app", "internal", "sdcard"])
+                .default_value("auto")
+                .help("Selects storage location to be used for test data."),
         )
 }
 

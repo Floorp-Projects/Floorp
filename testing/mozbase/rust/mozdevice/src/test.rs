@@ -6,6 +6,7 @@ use crate::*;
 //
 //     $ cargo test -- --test-threads=1
 
+use crate::{AndroidStorage, AndroidStorageInput};
 use std::collections::BTreeSet;
 use std::panic;
 use tempfile::{tempdir, TempDir};
@@ -69,22 +70,17 @@ fn run_device_test<F>(test: F) -> ()
 where
     F: FnOnce(&Device, &TempDir, &Path) -> () + panic::UnwindSafe,
 {
-    fn clean_remote_dir(device: &Device, path: &Path) {
-        let command = format!("rm -fr {}", path.display());
-        let _ = device.execute_host_shell_command(&command);
-    }
-
     let host = Host {
         ..Default::default()
     };
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
     let remote_path = Path::new("/data/local/tmp/mozdevice/");
 
-    clean_remote_dir(&device, remote_path);
+    let _ = device.remove(remote_path);
 
     let result = panic::catch_unwind(|| test(&device, &tmp_dir, &remote_path));
 
@@ -116,7 +112,7 @@ fn host_devices() {
 }
 
 #[test]
-fn host_device_or_default_valid_serial() {
+fn host_device_or_default() {
     let host = Host {
         ..Default::default()
     };
@@ -125,9 +121,11 @@ fn host_device_or_default_valid_serial() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(Some(&expected_device.serial))
+        .device_or_default::<String>(Some(&expected_device.serial), AndroidStorageInput::App)
         .expect("connected device with serial");
+    assert_eq!(device.run_as_package, None);
     assert_eq!(device.serial, expected_device.serial);
+    assert!(device.tempfile.starts_with("/data/local/tmp"));
 }
 
 #[test]
@@ -136,7 +134,7 @@ fn host_device_or_default_invalid_serial() {
         ..Default::default()
     };
 
-    host.device_or_default::<String>(Some(&"foobar".to_owned()))
+    host.device_or_default::<String>(Some(&"foobar".to_owned()), AndroidStorageInput::Auto)
         .expect_err("invalid serial");
 }
 
@@ -150,9 +148,57 @@ fn host_device_or_default_no_serial() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("connected device with serial");
     assert_eq!(device.serial, expected_device.serial);
+}
+
+#[test]
+fn host_device_or_default_storage_as_app() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::App)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::App);
+}
+
+#[test]
+fn host_device_or_default_storage_as_auto() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Internal);
+}
+
+#[test]
+fn host_device_or_default_storage_as_internal() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Internal)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Internal);
+}
+
+#[test]
+fn host_device_or_default_storage_as_sdcard() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Sdcard)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Sdcard);
 }
 
 #[test]
