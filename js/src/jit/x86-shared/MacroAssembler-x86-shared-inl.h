@@ -1216,8 +1216,8 @@ void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
 // Shuffle - permute with immediate indices
 
 void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
-                                    FloatRegister lhsDest, FloatRegister temp) {
-  MacroAssemblerX86Shared::shuffleInt8x16(lhsDest, rhs, lhsDest, temp, lanes);
+                                    FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::shuffleInt8x16(lhsDest, rhs, lhsDest, lanes);
 }
 
 void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister rhs,
