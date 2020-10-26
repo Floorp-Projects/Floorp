@@ -1045,7 +1045,8 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign() {
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
     const URIParams& uri,
-    const mozilla::ipc::PrincipalInfo& requestingPrincipal) {
+    const mozilla::ipc::PrincipalInfo& requestingPrincipal,
+    const OriginAttributes& originAttributes) {
   nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(uri);
   if (!deserializedURI) {
     return IPC_FAIL_NO_REASON(this);
@@ -1055,7 +1056,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
-  nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI, principal);
+  nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI, principal,
+                                                    originAttributes);
   return IPC_OK();
 }
 

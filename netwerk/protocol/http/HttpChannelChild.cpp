@@ -2761,8 +2761,9 @@ void HttpChannelChild::GetClientSetCorsPreflightParameters(
 }
 
 NS_IMETHODIMP
-HttpChannelChild::RemoveCorsPreflightCacheEntry(nsIURI* aURI,
-                                                nsIPrincipal* aPrincipal) {
+HttpChannelChild::RemoveCorsPreflightCacheEntry(
+    nsIURI* aURI, nsIPrincipal* aPrincipal,
+    const OriginAttributes& aOriginAttributes) {
   URIParams uri;
   SerializeURI(aURI, uri);
   PrincipalInfo principalInfo;
@@ -2774,7 +2775,8 @@ HttpChannelChild::RemoveCorsPreflightCacheEntry(nsIURI* aURI,
   // Be careful to not attempt to send a message to the parent after the
   // actor has been destroyed.
   if (CanSend()) {
-    result = SendRemoveCorsPreflightCacheEntry(uri, principalInfo);
+    result = SendRemoveCorsPreflightCacheEntry(uri, principalInfo,
+                                               aOriginAttributes);
   }
   return result ? NS_OK : NS_ERROR_FAILURE;
 }

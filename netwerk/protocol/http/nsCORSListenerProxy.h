@@ -79,8 +79,9 @@ class nsCORSListenerProxy final : public nsIStreamListener,
   // Only nsHttpChannel can invoke CORS preflights
   friend class mozilla::net::nsHttpChannel;
 
-  static void RemoveFromCorsPreflightCache(nsIURI* aURI,
-                                           nsIPrincipal* aRequestingPrincipal);
+  static void RemoveFromCorsPreflightCache(
+      nsIURI* aURI, nsIPrincipal* aRequestingPrincipal,
+      const mozilla::OriginAttributes& aOriginAttributes);
   [[nodiscard]] static nsresult StartCORSPreflight(
       nsIChannel* aRequestChannel, nsICorsPreflightCallback* aCallback,
       nsTArray<nsCString>& aACUnsafeHeaders, nsIChannel** aPreflightChannel);
