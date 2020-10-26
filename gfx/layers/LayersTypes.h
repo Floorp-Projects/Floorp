@@ -16,6 +16,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"  // for TimeStamp
 #include "nsRegion.h"
+#include "mozilla/EnumSet.h"
 
 #ifndef MOZ_LAYERS_HAVE_LOG
 #  define MOZ_LAYERS_HAVE_LOG
@@ -373,6 +374,13 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
   eVertical,
   eHorizontal
 ));
+
+typedef EnumSet<ScrollDirection> ScrollDirections;
+
+constexpr ScrollDirections EitherScrollDirection(ScrollDirection::eVertical,ScrollDirection::eHorizontal);
+constexpr ScrollDirections HorizontalScrollDirection(ScrollDirection::eHorizontal);
+constexpr ScrollDirections VerticalScollDirection(ScrollDirection::eVertical);
+
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
   /**

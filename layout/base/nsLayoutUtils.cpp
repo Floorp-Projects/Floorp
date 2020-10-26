@@ -1390,7 +1390,7 @@ ScrollableLayerGuid::ViewID nsLayoutUtils::ScrollIdForRootScrollFrame(
 
 // static
 nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
-    nsIFrame* aFrame, ScrollableDirection aDirection) {
+    nsIFrame* aFrame, ScrollDirections aDirections) {
   NS_ASSERTION(
       aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
   for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
@@ -1398,14 +1398,12 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
     if (scrollableFrame) {
       uint32_t directions =
           scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
-      if (aDirection == ScrollableDirection::Vertical ||
-          aDirection == ScrollableDirection::Either) {
+      if (aDirections.contains(ScrollDirection::eVertical)) {
         if (directions & nsIScrollableFrame::VERTICAL) {
           return scrollableFrame;
         }
       }
-      if (aDirection == ScrollableDirection::Horizontal ||
-          aDirection == ScrollableDirection::Either) {
+      if (aDirections.contains(ScrollDirection::eHorizontal)) {
         if (directions & nsIScrollableFrame::HORIZONTAL) {
           return scrollableFrame;
         }

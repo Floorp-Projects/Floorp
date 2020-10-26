@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/FocusTarget.h"
-
 #include "mozilla/dom/BrowserBridgeChild.h"  // for BrowserBridgeChild
 #include "mozilla/dom/EventTarget.h"         // for EventTarget
 #include "mozilla/dom/RemoteBrowser.h"       // For RemoteBrowser
@@ -189,10 +188,10 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
   // for this scroll target
   nsIScrollableFrame* horizontal =
       presShell->GetScrollableFrameToScrollForContent(
-          selectedContent.get(), ScrollableDirection::Horizontal);
+          selectedContent.get(), HorizontalScrollDirection);
   nsIScrollableFrame* vertical =
-      presShell->GetScrollableFrameToScrollForContent(
-          selectedContent.get(), ScrollableDirection::Vertical);
+      presShell->GetScrollableFrameToScrollForContent(selectedContent.get(),
+                                                      VerticalScollDirection);
 
   // We might have the globally focused element for scrolling. Gather a ViewID
   // for the horizontal and vertical scroll targets of this element.
