@@ -167,8 +167,7 @@ navigate.refresh = async function(browsingContext) {
  *     Callback to execute that might trigger a navigation.
  * @param {Object} options
  * @param {BrowsingContext=} browsingContext
- *     Browsing context to observe. Defaults to the current top-level
- *     browsing context.
+ *     Browsing context to observe. Defaults to the current browsing context.
  * @param {boolean=} loadEventExpected
  *     If false, return immediately and don't wait for
  *     the navigation to be completed. Defaults to true.
@@ -182,13 +181,13 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   options = {}
 ) {
   const {
-    browsingContext = driver.getBrowsingContext({ top: true }),
+    browsingContext = driver.getBrowsingContext(),
     loadEventExpected = true,
     requireBeforeUnload = true,
   } = options;
 
-  const pageLoadStrategy = driver.capabilities.get("pageLoadStrategy");
   const chromeWindow = browsingContext.topChromeWindow;
+  const pageLoadStrategy = driver.capabilities.get("pageLoadStrategy");
 
   // Return immediately if no load event is expected
   if (!loadEventExpected || pageLoadStrategy === PageLoadStrategy.None) {
