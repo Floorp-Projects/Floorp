@@ -66,8 +66,8 @@ function test1() {
       ok(expectMouseOut, "Got expected mouseout at " + e.screenX + ", " + e.screenY);
       expectMouseOut = false;
     }
-    gLeftWindow.addEventListener("mouseover", mouseOverListener, false);
-    gLeftWindow.addEventListener("mouseout", mouseOutListener, false);
+    gLeftWindow.addEventListener("mouseover", mouseOverListener);
+    gLeftWindow.addEventListener("mouseout", mouseOutListener);
 
     // Move into the left window
     expectMouseOver = true;
@@ -78,8 +78,8 @@ function test1() {
       expectMouseOut = true;
       moveMouseTo(150, 150, function () {
         ok (!expectMouseOut, "Should have got mouseout event");
-        gLeftWindow.removeEventListener("mouseover", mouseOverListener, false);
-        gLeftWindow.removeEventListener("mouseout", mouseOutListener, false);
+        gLeftWindow.removeEventListener("mouseover", mouseOverListener);
+        gLeftWindow.removeEventListener("mouseout", mouseOutListener);
         test2();
       });
     });
@@ -112,19 +112,15 @@ function test2() {
                                              elementToWatchForMouseEventOn) {
      function mouseWatcher() {
        elementToWatchForMouseEventOn.removeEventListener("mouseover",
-                                                         mouseWatcher,
-                                                         false);
+                                                         mouseWatcher);
        elementToWatchForMouseEventOn.removeEventListener("mouseout",
-                                                         mouseWatcher,
-                                                         false);
+                                                         mouseWatcher);
        SimpleTest.executeSoon(callback);
      }
      elementToWatchForMouseEventOn.addEventListener("mouseover",
-                                                    mouseWatcher,
-                                                    false);
+                                                    mouseWatcher);
      elementToWatchForMouseEventOn.addEventListener("mouseout",
-                                                    mouseWatcher,
-                                                    false);
+                                                    mouseWatcher);
      // Just pass a dummy function to waitForFocus; the mouseout/over listener
      // will actually handle things for us.
      SimpleTest.waitForFocus(function() {}, winToFocus);

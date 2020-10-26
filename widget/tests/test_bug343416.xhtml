@@ -29,22 +29,13 @@ SimpleTest.waitForExplicitFinish();
 // Observer:
 var idleObserver =
 {
-    QueryInterface: function _qi(iid)
-    {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsIObserver))
-        {
-            return this;
-        }
-        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
     observe: function _observe(subject, topic, data)
     {
         if (topic != "idle")
             return;
-        
-        var diff = Math.abs(data - newIdleSeconds * 1000);
 
+//        var diff = Math.abs(data - newIdleSeconds * 1000);
 //        ok (diff < 5000, "The idle time should have increased by roughly 6 seconds, " +
 //                         "as that's when we told this listener to fire.");
 //        if (diff >= 5000)
@@ -162,8 +153,6 @@ function testIdleTime()
     var timeDiff = Math.abs((newIdleTime - idleTime) -
                             (Date.now() - startTimeStamp));
 
-    var timePassed = Date.now() - startTimeStamp;
-    var idleTimeDiff = newIdleTime - idleTime;
     // 1.5 second leniency.
     ok(timeDiff < 1500, "The idle time should have increased by roughly the " +
                         "amount of time it took for the timeout to fire. " +

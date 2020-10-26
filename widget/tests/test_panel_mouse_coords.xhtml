@@ -33,8 +33,7 @@ let nativeMouseMove;
 let rect;
 
 function startTest() {
-    let widgetToolkit = Cc["@mozilla.org/xre/app-info;1"].
-        getService(Ci.nsIXULRuntime).widgetToolkit;
+    let widgetToolkit = SpecialPowers.Services.appinfo.widgetToolkit;
 
     if (widgetToolkit == "cocoa") {
         nativeMouseMove = 5; // NSMouseMoved

@@ -42,7 +42,7 @@
     function setGlobals() {
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
                   getService(Ci.nsIWindowMediator);
-      gChromeWindow = wm.getMostRecentWindow("navigator:browser");
+      let chromeWindow = wm.getMostRecentWindow("navigator:browser");
       // For some reason, a global <key> element's oncommand handler only gets
       // invoked if the focus is outside both of the <browser> elements
       // (tab1browser and tab2browser).  So, to make sure we can see a
@@ -50,7 +50,7 @@
       // the focus is in this window, we need to add a "keypress" event
       // listener to gChromeWindow, and then check (in onKeyPress()) to see if
       // it's a cmd-opt-y event.
-      gChromeWindow.addEventListener("keypress", onKeyPress, false);
+      chromeWindow.addEventListener("keypress", onKeyPress);
     }
 
     // 1) Start loading first tab.
@@ -63,7 +63,7 @@
     function configureFirstTab() {
       try {
         var button = document.getElementById("tab1browser").contentDocument.getElementById("button1");
-        button.addEventListener("click", onFirstTabButtonClicked, false);
+        button.addEventListener("click", onFirstTabButtonClicked);
         button.focus();
         if (document.getElementById("tabbox").selectedIndex == 0) {
           // 2) When first tab has finished loading (while first tab is
@@ -88,7 +88,7 @@
     function configureSecondTab() {
       try {
         var button = document.getElementById("tab2browser").contentDocument.getElementById("button1");
-        button.addEventListener("click", onSecondTabButtonClicked, false);
+        button.addEventListener("click", onSecondTabButtonClicked);
         button.focus();
         if (document.getElementById("tabbox").selectedIndex == 1) {
           // 9) When second tab has finished loading (while second tab is
