@@ -52,7 +52,8 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:layout_gravity="center"
-            android:background="@drawable/ic_pin" />
+            android:background="@drawable/ic_pin"
+            android:backgroundTint="@color/top_site_pin_icon_background_tint"/>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
