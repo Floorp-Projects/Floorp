@@ -19,9 +19,9 @@ dictionary SanitizerOptions {
   sequence<DOMString> removed;
 };
 
-[Exposed=Window, SecureContext]
+[Exposed=Window, SecureContext, Pref="dom.security.sanitizer.enabled"]
 interface Sanitizer {
-  [Pref="dom.security.sanitizer.enabled", Throws]
+  [Throws]
   constructor(optional SanitizerOptions options = {}); // optionality still discussed in spec
   [Throws]
   DocumentFragment sanitize(optional SanitizerInput input);
