@@ -70,6 +70,33 @@ function getBrowser(panel) {
 
   stack.appendChild(browser);
 
+  browser.addEventListener(
+    "DoZoomEnlargeBy10",
+    () => {
+      let { ZoomManager } = browser.ownerGlobal;
+      let zoom = browser.fullZoom;
+      zoom += 0.1;
+      if (zoom > ZoomManager.MAX) {
+        zoom = ZoomManager.MAX;
+      }
+      browser.fullZoom = zoom;
+    },
+    true
+  );
+  browser.addEventListener(
+    "DoZoomReduceBy10",
+    () => {
+      let { ZoomManager } = browser.ownerGlobal;
+      let zoom = browser.fullZoom;
+      zoom -= 0.1;
+      if (zoom < ZoomManager.MIN) {
+        zoom = ZoomManager.MIN;
+      }
+      browser.fullZoom = zoom;
+    },
+    true
+  );
+
   return readyPromise.then(() => {
     ExtensionParent.apiManager.emit(
       "extension-browser-inserted",
