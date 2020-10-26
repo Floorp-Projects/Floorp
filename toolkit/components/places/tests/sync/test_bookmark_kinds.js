@@ -202,13 +202,6 @@ add_task(async function test_mismatched_folder_types() {
       },
     ],
   });
-  // Livemarks have been removed in bug 1477671, but Sync still checks the anno
-  // to distinguish them from folders.
-  await setItemAnnotation(
-    "livemarkBBBB",
-    PlacesUtils.LMANNO_FEEDURI,
-    "http://example.com/b"
-  );
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
