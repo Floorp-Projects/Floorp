@@ -33,11 +33,7 @@ add_task(async function test_defaults() {
     "The form pref is defined by default"
   );
 
-  if (AppConstants.EARLY_BETA_OR_EARLIER) {
-    ok(renderForms, "Forms are enabled");
-  } else {
-    ok(!renderForms, "Forms are not enabled");
-  }
+  ok(renderForms, "Forms are enabled");
 
   // Test that the forms state matches the pref.
   await BrowserTestUtils.withNewTab(
@@ -48,11 +44,7 @@ add_task(async function test_defaults() {
         TESTROOT + "file_pdfjs_form.pdf"
       );
 
-      await SpecialPowers.spawn(
-        browser,
-        [AppConstants.EARLY_BETA_OR_EARLIER],
-        checkFormState
-      );
+      await SpecialPowers.spawn(browser, [true], checkFormState);
     }
   );
 });

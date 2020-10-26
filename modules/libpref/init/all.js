@@ -349,11 +349,7 @@ pref("browser.chrome.image_icons.max_size", 1024);
 pref("browser.triple_click_selects_paragraph", true);
 
 // Enable fillable forms in the PDF viewer.
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("pdfjs.renderInteractiveForms", true);
-#else
-  pref("pdfjs.renderInteractiveForms", false);
-#endif
+pref("pdfjs.renderInteractiveForms", true);
 
 // Disable support for MathML
 pref("mathml.disabled",    false);
