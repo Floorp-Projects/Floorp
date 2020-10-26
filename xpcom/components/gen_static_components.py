@@ -11,17 +11,16 @@ from perfecthash import PerfectHash
 import buildconfig
 
 
-NO_CONTRACT_ID = 0xffffffff
+NO_CONTRACT_ID = 0xFFFFFFFF
 
 PHF_SIZE = 512
 
-ENDIAN = '<' if buildconfig.substs['TARGET_ENDIANNESS'] == 'little' else '>'
+ENDIAN = "<" if buildconfig.substs["TARGET_ENDIANNESS"] == "little" else ">"
 
 
 # Represents a UUID in the format used internally by Gecko, and supports
 # serializing it in that format to both C++ source and raw byte arrays.
 class UUIDRepr(object):
-
     def __init__(self, uuid):
         self.uuid = uuid
 
@@ -33,7 +32,7 @@ class UUIDRepr(object):
 
         d = list(fields[3:5])
         for i in range(0, 6):
-            d.append(fields[5] >> (8 * (5 - i)) & 0xff)
+            d.append(fields[5] >> (8 * (5 - i)) & 0xFF)
 
         self.d = tuple(d)
 
@@ -42,14 +41,12 @@ class UUIDRepr(object):
 
     @property
     def bytes(self):
-        return struct.pack(ENDIAN + 'IHHBBBBBBBB',
-                           self.a, self.b, self.c, *self.d)
+        return struct.pack(ENDIAN + "IHHBBBBBBBB", self.a, self.b, self.c, *self.d)
 
     def to_cxx(self):
-        rest = ', '.join('0x%02x' % b for b in self.d)
+        rest = ", ".join("0x%02x" % b for b in self.d)
 
-        return '{ 0x%x, 0x%x, 0x%x, { %s } }' % (self.a, self.b, self.c,
-                                                 rest)
+        return "{ 0x%x, 0x%x, 0x%x, { %s } }" % (self.a, self.b, self.c, rest)
 
 
 # Corresponds to the Module::ProcessSelector enum in Module.h. The actual
@@ -63,63 +60,58 @@ class ProcessSelector:
     ALLOW_IN_VR_PROCESS = 0x8
     ALLOW_IN_SOCKET_PROCESS = 0x10
     ALLOW_IN_RDD_PROCESS = 0x20
-    ALLOW_IN_GPU_AND_MAIN_PROCESS = (ALLOW_IN_GPU_PROCESS |
-                                     MAIN_PROCESS_ONLY)
-    ALLOW_IN_GPU_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
-                                       ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_GPU_AND_MAIN_PROCESS = ALLOW_IN_GPU_PROCESS | MAIN_PROCESS_ONLY
+    ALLOW_IN_GPU_AND_SOCKET_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_SOCKET_PROCESS
     ALLOW_IN_GPU_AND_VR_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS
-    ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
-                                          ALLOW_IN_VR_PROCESS |
-                                          ALLOW_IN_SOCKET_PROCESS)
-    ALLOW_IN_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_RDD_PROCESS |
-                                       ALLOW_IN_SOCKET_PROCESS)
-    ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
-                                           ALLOW_IN_RDD_PROCESS |
-                                           ALLOW_IN_SOCKET_PROCESS)
-    ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
-                                              ALLOW_IN_RDD_PROCESS |
-                                              ALLOW_IN_VR_PROCESS |
-                                              ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS = (
+        ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS | ALLOW_IN_SOCKET_PROCESS
+    )
+    ALLOW_IN_RDD_AND_SOCKET_PROCESS = ALLOW_IN_RDD_PROCESS | ALLOW_IN_SOCKET_PROCESS
+    ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS = (
+        ALLOW_IN_GPU_PROCESS | ALLOW_IN_RDD_PROCESS | ALLOW_IN_SOCKET_PROCESS
+    )
+    ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS = (
+        ALLOW_IN_GPU_PROCESS
+        | ALLOW_IN_RDD_PROCESS
+        | ALLOW_IN_VR_PROCESS
+        | ALLOW_IN_SOCKET_PROCESS
+    )
 
 
 # Maps ProcessSelector constants to the name of the corresponding
 # Module::ProcessSelector enum value.
 PROCESSES = {
-    ProcessSelector.ANY_PROCESS: 'ANY_PROCESS',
-    ProcessSelector.MAIN_PROCESS_ONLY: 'MAIN_PROCESS_ONLY',
-    ProcessSelector.CONTENT_PROCESS_ONLY: 'CONTENT_PROCESS_ONLY',
-    ProcessSelector.ALLOW_IN_GPU_PROCESS: 'ALLOW_IN_GPU_PROCESS',
-    ProcessSelector.ALLOW_IN_VR_PROCESS: 'ALLOW_IN_VR_PROCESS',
-    ProcessSelector.ALLOW_IN_SOCKET_PROCESS: 'ALLOW_IN_SOCKET_PROCESS',
-    ProcessSelector.ALLOW_IN_RDD_PROCESS: 'ALLOW_IN_RDD_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_AND_MAIN_PROCESS: 'ALLOW_IN_GPU_AND_MAIN_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_AND_SOCKET_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_AND_VR_PROCESS: 'ALLOW_IN_GPU_AND_VR_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS',
-    ProcessSelector.ALLOW_IN_RDD_AND_SOCKET_PROCESS:
-        'ALLOW_IN_RDD_AND_SOCKET_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS:
-        'ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS',
-    ProcessSelector.ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS:
-        'ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS',
+    ProcessSelector.ANY_PROCESS: "ANY_PROCESS",
+    ProcessSelector.MAIN_PROCESS_ONLY: "MAIN_PROCESS_ONLY",
+    ProcessSelector.CONTENT_PROCESS_ONLY: "CONTENT_PROCESS_ONLY",
+    ProcessSelector.ALLOW_IN_GPU_PROCESS: "ALLOW_IN_GPU_PROCESS",
+    ProcessSelector.ALLOW_IN_VR_PROCESS: "ALLOW_IN_VR_PROCESS",
+    ProcessSelector.ALLOW_IN_SOCKET_PROCESS: "ALLOW_IN_SOCKET_PROCESS",
+    ProcessSelector.ALLOW_IN_RDD_PROCESS: "ALLOW_IN_RDD_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_AND_MAIN_PROCESS: "ALLOW_IN_GPU_AND_MAIN_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_AND_SOCKET_PROCESS: "ALLOW_IN_GPU_AND_SOCKET_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_AND_VR_PROCESS: "ALLOW_IN_GPU_AND_VR_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS: "ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS",
+    ProcessSelector.ALLOW_IN_RDD_AND_SOCKET_PROCESS: "ALLOW_IN_RDD_AND_SOCKET_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS: "ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS",
+    ProcessSelector.ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS: "ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS",  # NOQA: E501
 }
 
 
 # Emits the C++ symbolic constant corresponding to a ProcessSelector constant.
 def lower_processes(processes):
-    return 'Module::ProcessSelector::%s' % PROCESSES[processes]
+    return "Module::ProcessSelector::%s" % PROCESSES[processes]
 
 
 # Emits the C++ symbolic constant for a ModuleEntry's ModuleID enum entry.
 def lower_module_id(module):
-    return 'ModuleID::%s' % module.name
+    return "ModuleID::%s" % module.name
 
 
 # Represents a static string table, indexed by offset. This allows us to
 # reference strings from static data structures without requiring runtime
 # relocations.
 class StringTable(object):
-
     def __init__(self):
         self.entries = {}
         self.entry_list = []
@@ -136,7 +128,7 @@ class StringTable(object):
 
         assert not self._serialized
 
-        assert len(string) == len(string.encode('utf-8'))
+        assert len(string) == len(string.encode("utf-8"))
 
         idx = self.size
         self.size += len(string) + 1
@@ -155,23 +147,20 @@ class StringTable(object):
 
         idx = 0
         for entry in self.entry_list:
-            str_ = entry.replace('\\', '\\\\').replace('"', r'\"') \
-                        .replace('\n', r'\n')
+            str_ = entry.replace("\\", "\\\\").replace('"', r"\"").replace("\n", r"\n")
 
             lines.append('    /* 0x%x */ "%s\\0"\n' % (idx, str_))
 
             idx += len(entry) + 1
 
-        return ''.join(lines)
+        return "".join(lines)
 
     # Returns a `StringEntry` struct initializer for the string table entry
     # corresponding to the given string. If no matching entry exists, it is
     # first created.
     def entry_to_cxx(self, string):
         idx = self.get_idx(string)
-        return '{ 0x%x } /* %s */' % (
-            idx,
-            pretty_string(string))
+        return "{ 0x%x } /* %s */" % (idx, pretty_string(string))
 
 
 strings = StringTable()
@@ -183,7 +172,6 @@ interfaces = []
 # sub-namespaces. This is used to generate pre-declarations for incomplete
 # types referenced in XPCOM manifests.
 class Namespace(object):
-
     def __init__(self, name=None):
         self.name = name
         self.classes = set()
@@ -202,16 +190,16 @@ class Namespace(object):
     def to_cxx(self):
         res = ""
         if self.name:
-            res += 'namespace %s {\n' % self.name
+            res += "namespace %s {\n" % self.name
 
         for clas in sorted(self.classes):
-            res += 'class %s;\n' % clas
+            res += "class %s;\n" % clas
 
         for ns in sorted(self.namespaces.keys()):
             res += self.namespaces[ns].to_cxx()
 
         if self.name:
-            res += '}  // namespace %s\n' % self.name
+            res += "}  // namespace %s\n" % self.name
 
         return res
 
@@ -221,19 +209,20 @@ class ModuleEntry(object):
     next_anon_id = 0
 
     def __init__(self, data, init_idx):
-        self.cid = UUIDRepr(UUID(data['cid']))
-        self.contract_ids = data.get('contract_ids', [])
-        self.type = data.get('type', 'nsISupports')
-        self.categories = data.get('categories', {})
-        self.processes = data.get('processes', 0)
-        self.headers = data.get('headers', [])
+        self.cid = UUIDRepr(UUID(data["cid"]))
+        self.contract_ids = data.get("contract_ids", [])
+        self.type = data.get("type", "nsISupports")
+        self.categories = data.get("categories", {})
+        self.processes = data.get("processes", 0)
+        self.headers = data.get("headers", [])
 
-        self.js_name = data.get('js_name', None)
-        self.interfaces = data.get('interfaces', [])
+        self.js_name = data.get("js_name", None)
+        self.interfaces = data.get("interfaces", [])
 
         if len(self.interfaces) > 255:
-            raise Exception('JS service %s may not have more than 255 '
-                            'interfaces' % self.js_name)
+            raise Exception(
+                "JS service %s may not have more than 255 " "interfaces" % self.js_name
+            )
 
         self.interfaces_offset = len(interfaces)
         for iface in self.interfaces:
@@ -247,56 +236,67 @@ class ModuleEntry(object):
         # module's constructor.
         self.init_idx = init_idx
 
-        self.constructor = data.get('constructor', None)
-        self.legacy_constructor = data.get('legacy_constructor', None)
-        self.init_method = data.get('init_method', [])
+        self.constructor = data.get("constructor", None)
+        self.legacy_constructor = data.get("legacy_constructor", None)
+        self.init_method = data.get("init_method", [])
 
-        self.jsm = data.get('jsm', None)
+        self.jsm = data.get("jsm", None)
 
-        self.external = data.get('external', not (self.headers or
-                                                  self.legacy_constructor))
-        self.singleton = data.get('singleton', False)
-        self.overridable = data.get('overridable', False)
+        self.external = data.get(
+            "external", not (self.headers or self.legacy_constructor)
+        )
+        self.singleton = data.get("singleton", False)
+        self.overridable = data.get("overridable", False)
 
-        if 'name' in data:
+        if "name" in data:
             self.anonymous = False
-            self.name = data['name']
+            self.name = data["name"]
         else:
             self.anonymous = True
-            self.name = 'Anonymous%03d' % ModuleEntry.next_anon_id
+            self.name = "Anonymous%03d" % ModuleEntry.next_anon_id
             ModuleEntry.next_anon_id += 1
 
         def error(str_):
-            raise Exception("Error defining component %s (%s): %s" % (
-                str(self.cid), ', '.join(map(repr, self.contract_ids)),
-                str_))
+            raise Exception(
+                "Error defining component %s (%s): %s"
+                % (str(self.cid), ", ".join(map(repr, self.contract_ids)), str_)
+            )
 
         if self.jsm:
             if not self.constructor:
                 error("JavaScript components must specify a constructor")
 
-            for prop in ('init_method', 'legacy_constructor', 'headers'):
+            for prop in ("init_method", "legacy_constructor", "headers"):
                 if getattr(self, prop):
-                    error("JavaScript components may not specify a '%s' "
-                          "property" % prop)
+                    error(
+                        "JavaScript components may not specify a '%s' "
+                        "property" % prop
+                    )
         elif self.external:
             if self.constructor or self.legacy_constructor:
-                error("Externally-constructed components may not specify "
-                      "'constructor' or 'legacy_constructor' properties")
+                error(
+                    "Externally-constructed components may not specify "
+                    "'constructor' or 'legacy_constructor' properties"
+                )
             if self.init_method:
-                error("Externally-constructed components may not specify "
-                      "'init_method' properties")
-            if self.type == 'nsISupports':
-                error("Externally-constructed components must specify a type "
-                      "other than nsISupports")
+                error(
+                    "Externally-constructed components may not specify "
+                    "'init_method' properties"
+                )
+            if self.type == "nsISupports":
+                error(
+                    "Externally-constructed components must specify a type "
+                    "other than nsISupports"
+                )
 
         if self.constructor and self.legacy_constructor:
-            error("The 'constructor' and 'legacy_constructor' properties "
-                  "are mutually exclusive")
+            error(
+                "The 'constructor' and 'legacy_constructor' properties "
+                "are mutually exclusive"
+            )
 
         if self.overridable and not self.contract_ids:
-            error("Overridable components must specify at least one contract "
-                  "ID")
+            error("Overridable components must specify at least one contract " "ID")
 
     @property
     def contract_id(self):
@@ -305,9 +305,11 @@ class ModuleEntry(object):
     # Generates the C++ code for a StaticModule struct initializer
     # representing this component.
     def to_cxx(self):
-        contract_id = (strings.entry_to_cxx(self.contract_id)
-                       if self.overridable
-                       else '{ 0x%x }' % NO_CONTRACT_ID)
+        contract_id = (
+            strings.entry_to_cxx(self.contract_id)
+            if self.overridable
+            else "{ 0x%x }" % NO_CONTRACT_ID
+        )
 
         return """
         /* {name} */ {{
@@ -315,10 +317,13 @@ class ModuleEntry(object):
           {cid},
           {contract_id},
           {processes},
-        }}""".format(name=self.name, cid=self.cid.to_cxx(),
-                     cid_string=str(self.cid),
-                     contract_id=contract_id,
-                     processes=lower_processes(self.processes))
+        }}""".format(
+            name=self.name,
+            cid=self.cid.to_cxx(),
+            cid_string=str(self.cid),
+            contract_id=contract_id,
+            processes=lower_processes(self.processes),
+        )
 
     # Generates the C++ code for a JSServiceEntry represengin this module.
     def lower_js_service(self):
@@ -328,10 +333,12 @@ class ModuleEntry(object):
           ModuleID::{name},
           {{ {iface_offset} }},
           {iface_count}
-        }}""".format(js_name=strings.entry_to_cxx(self.js_name),
-                     name=self.name,
-                     iface_offset=self.interfaces_offset,
-                     iface_count=len(self.interfaces))
+        }}""".format(
+            js_name=strings.entry_to_cxx(self.js_name),
+            name=self.name,
+            iface_offset=self.interfaces_offset,
+            iface_count=len(self.interfaces),
+        )
 
     # Generates the C++ code necessary to construct an instance of this
     # component.
@@ -345,40 +352,45 @@ class ModuleEntry(object):
     #
     # And which returns an `nsresult` indicating success or failure.
     def lower_constructor(self):
-        res = ''
+        res = ""
 
         if self.init_idx is not None:
-            res += '      MOZ_TRY(CallInitFunc(%d));\n' % self.init_idx
+            res += "      MOZ_TRY(CallInitFunc(%d));\n" % self.init_idx
 
         if self.legacy_constructor:
-            res += ('      return /* legacy */ %s(nullptr, aIID, aResult);\n'
-                    % self.legacy_constructor)
+            res += (
+                "      return /* legacy */ %s(nullptr, aIID, aResult);\n"
+                % self.legacy_constructor
+            )
             return res
 
         if self.jsm:
             res += (
-                '      nsCOMPtr<nsISupports> inst;\n'
-                '      MOZ_TRY(ConstructJSMComponent(nsLiteralCString(%s),\n'
-                '                                    %s,\n'
-                '                                    getter_AddRefs(inst)));'
-                '\n' % (json.dumps(self.jsm), json.dumps(self.constructor)))
+                "      nsCOMPtr<nsISupports> inst;\n"
+                "      MOZ_TRY(ConstructJSMComponent(nsLiteralCString(%s),\n"
+                "                                    %s,\n"
+                "                                    getter_AddRefs(inst)));"
+                "\n" % (json.dumps(self.jsm), json.dumps(self.constructor))
+            )
         elif self.external:
-            res += ('      nsCOMPtr<nsISupports> inst = '
-                    'mozCreateComponent<%s>();\n' % self.type)
+            res += (
+                "      nsCOMPtr<nsISupports> inst = "
+                "mozCreateComponent<%s>();\n" % self.type
+            )
             # The custom constructor may return null, so check before calling
             # any methods.
-            res += '      NS_ENSURE_TRUE(inst, NS_ERROR_FAILURE);\n'
+            res += "      NS_ENSURE_TRUE(inst, NS_ERROR_FAILURE);\n"
         else:
-            res += '      RefPtr<%s> inst = ' % self.type
+            res += "      RefPtr<%s> inst = " % self.type
 
             if not self.constructor:
-                res += 'new %s();\n' % self.type
+                res += "new %s();\n" % self.type
             else:
-                res += '%s();\n' % self.constructor
+                res += "%s();\n" % self.constructor
                 # The `new` operator is infallible, so we don't need to worry
                 # about it returning null, but custom constructors may, so
                 # check before calling any methods.
-                res += '      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);\n'
+                res += "      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);\n"
 
                 # Check that the constructor function returns an appropriate
                 # `already_AddRefed` value for our declared type.
@@ -392,12 +404,15 @@ class ModuleEntry(object):
           std::is_base_of<%(type)s, T>::value,
           "Singleton constructor must return correct already_AddRefed");
 
-""" % {'type': self.type, 'constructor': self.constructor}
+""" % {
+                    "type": self.type,
+                    "constructor": self.constructor,
+                }
 
             if self.init_method:
-                res += '      MOZ_TRY(inst->%s());\n' % self.init_method
+                res += "      MOZ_TRY(inst->%s());\n" % self.init_method
 
-        res += '      return inst->QueryInterface(aIID, aResult);\n'
+        res += "      return inst->QueryInterface(aIID, aResult);\n"
 
         return res
 
@@ -409,11 +424,12 @@ class ModuleEntry(object):
         assert not self.anonymous
 
         substs = {
-            'name': self.name,
-            'id': '::mozilla::xpcom::ModuleID::%s' % self.name,
+            "name": self.name,
+            "id": "::mozilla::xpcom::ModuleID::%s" % self.name,
         }
 
-        res = """
+        res = (
+            """
 namespace %(name)s {
 static inline const nsID& CID() {
   return ::mozilla::xpcom::Components::GetCID(%(id)s);
@@ -422,18 +438,26 @@ static inline const nsID& CID() {
 static inline ::mozilla::xpcom::GetServiceHelper Service(nsresult* aRv = nullptr) {
   return {%(id)s, aRv};
 }
-""" % substs
+"""
+            % substs
+        )
 
         if not self.singleton:
-            res += """
+            res += (
+                """
 static inline ::mozilla::xpcom::CreateInstanceHelper Create(nsresult* aRv = nullptr) {
   return {%(id)s, aRv};
 }
-""" % substs
+"""
+                % substs
+            )
 
-        res += """\
+        res += (
+            """\
 }  // namespace %(name)s
-""" % substs
+"""
+            % substs
+        )
 
         return res
 
@@ -442,14 +466,12 @@ static inline ::mozilla::xpcom::CreateInstanceHelper Create(nsresult* aRv = null
 # certain special characters replaced so that it can be used in a C++-style
 # (/* ... */) comment.
 def pretty_string(string):
-    return (json.dumps(string).replace('*/', r'*\/')
-                .replace('/*', r'/\*'))
+    return json.dumps(string).replace("*/", r"*\/").replace("/*", r"/\*")
 
 
 # Represents a static contract ID entry, corresponding to a C++ ContractEntry
 # struct, mapping a contract ID to a static module entry.
 class ContractEntry(object):
-
     def __init__(self, contract, module):
         self.contract = contract
         self.module = module
@@ -459,8 +481,10 @@ class ContractEntry(object):
         {{
           {contract},
           {module_id},
-        }}""".format(contract=strings.entry_to_cxx(self.contract),
-                     module_id=lower_module_id(self.module))
+        }}""".format(
+            contract=strings.entry_to_cxx(self.contract),
+            module_id=lower_module_id(self.module),
+        )
 
 
 # Generates the C++ code for the StaticCategoryEntry and StaticCategory
@@ -473,26 +497,30 @@ def gen_categories(substs, categories):
     for category, entries in sorted(categories.items()):
         entries.sort()
 
-        cats.append('  { %s,\n'
-                    '    %d, %d },\n'
-                    % (strings.entry_to_cxx(category),
-                       count, len(entries)))
+        cats.append(
+            "  { %s,\n"
+            "    %d, %d },\n" % (strings.entry_to_cxx(category), count, len(entries))
+        )
         count += len(entries)
 
-        ents.append('  /* %s */\n' % pretty_string(category))
+        ents.append("  /* %s */\n" % pretty_string(category))
         for entry, value, processes in entries:
-            ents.append('  { %s,\n'
-                        '    %s,\n'
-                        '    %s },\n'
-                        % (strings.entry_to_cxx(entry),
-                           strings.entry_to_cxx(value),
-                           lower_processes(processes)))
-        ents.append('\n')
+            ents.append(
+                "  { %s,\n"
+                "    %s,\n"
+                "    %s },\n"
+                % (
+                    strings.entry_to_cxx(entry),
+                    strings.entry_to_cxx(value),
+                    lower_processes(processes),
+                )
+            )
+        ents.append("\n")
     ents.pop()
 
-    substs['category_count'] = len(cats)
-    substs['categories'] = ''.join(cats)
-    substs['category_entries'] = ''.join(ents)
+    substs["category_count"] = len(cats)
+    substs["categories"] = "".join(cats)
+    substs["category_entries"] = "".join(ents)
 
 
 # Generates the C++ code for all Init and Unload functions declared in XPCOM
@@ -509,26 +537,29 @@ def gen_module_funcs(substs, funcs):
 """
 
     for i, (init, unload) in enumerate(funcs):
-        init_code = '%s();' % init if init else '/* empty */'
+        init_code = "%s();" % init if init else "/* empty */"
         inits.append(template % (i, init_code))
 
         if unload:
-            unloads.append("""\
+            unloads.append(
+                """\
   if (CalledInit(%d)) {
     %s();
   }
-""" % (i, unload))
+"""
+                % (i, unload)
+            )
 
-    substs['init_funcs'] = ''.join(inits)
-    substs['unload_funcs'] = ''.join(unloads)
-    substs['init_count'] = len(funcs)
+    substs["init_funcs"] = "".join(inits)
+    substs["unload_funcs"] = "".join(unloads)
+    substs["init_count"] = len(funcs)
 
 
 def gen_interfaces(ifaces):
     res = []
     for iface in ifaces:
-        res.append('  nsXPTInterface::%s,\n' % iface)
-    return ''.join(res)
+        res.append("  nsXPTInterface::%s,\n" % iface)
+    return "".join(res)
 
 
 # Generates class pre-declarations for any types referenced in `Classes` array
@@ -538,7 +569,7 @@ def gen_decls(types):
     root_ns = Namespace()
 
     for type_ in sorted(types):
-        parts = type_.split('::')
+        parts = type_.split("::")
 
         ns = root_ns
         for part in parts[:-1]:
@@ -554,14 +585,17 @@ def gen_decls(types):
 def gen_constructors(entries):
     constructors = []
     for entry in entries:
-        constructors.append("""\
+        constructors.append(
+            """\
     case {id}: {{
 {constructor}\
     }}
-""".format(id=lower_module_id(entry),
-           constructor=entry.lower_constructor()))
+""".format(
+                id=lower_module_id(entry), constructor=entry.lower_constructor()
+            )
+        )
 
-    return ''.join(constructors)
+    return "".join(constructors)
 
 
 # Generates the getter code for each named component entry in the
@@ -570,9 +604,7 @@ def gen_getters(entries):
     entries = list(entries)
     entries.sort(key=lambda e: e.name)
 
-    return ''.join(entry.lower_getters()
-                   for entry in entries
-                   if not entry.anonymous)
+    return "".join(entry.lower_getters() for entry in entries if not entry.anonymous)
 
 
 def gen_includes(substs, all_headers):
@@ -580,23 +612,24 @@ def gen_includes(substs, all_headers):
     absolute_headers = set()
 
     for header in all_headers:
-        if header.startswith('/'):
+        if header.startswith("/"):
             absolute_headers.add(header)
         else:
             headers.add(header)
 
     includes = ['#include "%s"' % header for header in sorted(headers)]
-    substs['includes'] = '\n'.join(includes) + '\n'
+    substs["includes"] = "\n".join(includes) + "\n"
 
-    relative_includes = ['#include "../..%s"' % header
-                         for header in sorted(absolute_headers)]
-    substs['relative_includes'] = '\n'.join(relative_includes) + '\n'
+    relative_includes = [
+        '#include "../..%s"' % header for header in sorted(absolute_headers)
+    ]
+    substs["relative_includes"] = "\n".join(relative_includes) + "\n"
 
 
 def to_list(val):
     if isinstance(val, (list, tuple)):
         return val
-    return val,
+    return (val,)
 
 
 def gen_substs(manifests):
@@ -608,19 +641,19 @@ def gen_substs(manifests):
     categories = defaultdict(list)
 
     for manifest in manifests:
-        headers |= set(manifest.get('Headers', []))
+        headers |= set(manifest.get("Headers", []))
 
         init_idx = None
-        init = manifest.get('InitFunc')
-        unload = manifest.get('UnloadFunc')
+        init = manifest.get("InitFunc")
+        unload = manifest.get("UnloadFunc")
         if init or unload:
             init_idx = len(module_funcs)
             module_funcs.append((init, unload))
 
-        for clas in manifest['Classes']:
+        for clas in manifest["Classes"]:
             modules.append(ModuleEntry(clas, init_idx))
 
-        for category, entries in manifest.get('Categories', {}).items():
+        for category, entries in manifest.get("Categories", {}).items():
             for key, entry in entries.items():
                 if isinstance(entry, tuple):
                     value, process = entry
@@ -642,7 +675,7 @@ def gen_substs(manifests):
 
         for contract_id in mod.contract_ids:
             if contract_id in contract_map:
-                raise Exception('Duplicate contract ID: %s' % contract_id)
+                raise Exception("Duplicate contract ID: %s" % contract_id)
 
             entry = ContractEntry(contract_id, mod)
             contracts.append(entry)
@@ -650,8 +683,7 @@ def gen_substs(manifests):
 
         for category, entries in mod.categories.items():
             for entry in to_list(entries):
-                categories[category].append((entry, mod.contract_id,
-                                             mod.processes))
+                categories[category].append((entry, mod.contract_id, mod.processes))
 
         if mod.type and not mod.headers:
             types.add(mod.type)
@@ -661,90 +693,87 @@ def gen_substs(manifests):
 
         if mod.js_name:
             if mod.js_name in js_services:
-                raise Exception('Duplicate JS service name: %s' % mod.js_name)
+                raise Exception("Duplicate JS service name: %s" % mod.js_name)
             js_services[mod.js_name] = mod
 
         if str(mod.cid) in cids:
-            raise Exception('Duplicate cid: %s' % str(mod.cid))
+            raise Exception("Duplicate cid: %s" % str(mod.cid))
         cids.add(str(mod.cid))
 
-    cid_phf = PerfectHash(modules, PHF_SIZE,
-                          key=lambda module: module.cid.bytes)
+    cid_phf = PerfectHash(modules, PHF_SIZE, key=lambda module: module.cid.bytes)
 
-    contract_phf = PerfectHash(contracts, PHF_SIZE,
-                               key=lambda entry: entry.contract)
+    contract_phf = PerfectHash(contracts, PHF_SIZE, key=lambda entry: entry.contract)
 
-    js_services_phf = PerfectHash(list(js_services.values()), PHF_SIZE,
-                                  key=lambda entry: entry.js_name)
+    js_services_phf = PerfectHash(
+        list(js_services.values()), PHF_SIZE, key=lambda entry: entry.js_name
+    )
 
     substs = {}
 
     gen_categories(substs, categories)
 
-    substs['module_ids'] = ''.join('  %s,\n' % entry.name
-                                   for entry in cid_phf.entries)
+    substs["module_ids"] = "".join("  %s,\n" % entry.name for entry in cid_phf.entries)
 
-    substs['module_count'] = len(modules)
-    substs['contract_count'] = len(contracts)
+    substs["module_count"] = len(modules)
+    substs["contract_count"] = len(contracts)
 
     gen_module_funcs(substs, module_funcs)
 
     gen_includes(substs, headers)
 
-    substs['component_jsms'] = '\n'.join(' %s,' % strings.entry_to_cxx(jsm)
-                                         for jsm in sorted(jsms)) + '\n'
+    substs["component_jsms"] = (
+        "\n".join(" %s," % strings.entry_to_cxx(jsm) for jsm in sorted(jsms)) + "\n"
+    )
 
-    substs['interfaces'] = gen_interfaces(interfaces)
+    substs["interfaces"] = gen_interfaces(interfaces)
 
-    substs['decls'] = gen_decls(types)
+    substs["decls"] = gen_decls(types)
 
-    substs['constructors'] = gen_constructors(cid_phf.entries)
+    substs["constructors"] = gen_constructors(cid_phf.entries)
 
-    substs['component_getters'] = gen_getters(cid_phf.entries)
+    substs["component_getters"] = gen_getters(cid_phf.entries)
 
-    substs['module_cid_table'] = cid_phf.cxx_codegen(
-        name='ModuleByCID',
-        entry_type='StaticModule',
-        entries_name='gStaticModules',
+    substs["module_cid_table"] = cid_phf.cxx_codegen(
+        name="ModuleByCID",
+        entry_type="StaticModule",
+        entries_name="gStaticModules",
         lower_entry=lambda entry: entry.to_cxx(),
+        return_type="const StaticModule*",
+        return_entry=(
+            "return entry.CID().Equals(aKey) && entry.Active()" " ? &entry : nullptr;"
+        ),
+        key_type="const nsID&",
+        key_bytes="reinterpret_cast<const char*>(&aKey)",
+        key_length="sizeof(nsID)",
+    )
 
-        return_type='const StaticModule*',
-        return_entry=('return entry.CID().Equals(aKey) && entry.Active()'
-                      ' ? &entry : nullptr;'),
-
-        key_type='const nsID&',
-        key_bytes='reinterpret_cast<const char*>(&aKey)',
-        key_length='sizeof(nsID)')
-
-    substs['module_contract_id_table'] = contract_phf.cxx_codegen(
-        name='LookupContractID',
-        entry_type='ContractEntry',
-        entries_name='gContractEntries',
+    substs["module_contract_id_table"] = contract_phf.cxx_codegen(
+        name="LookupContractID",
+        entry_type="ContractEntry",
+        entries_name="gContractEntries",
         lower_entry=lambda entry: entry.to_cxx(),
+        return_type="const ContractEntry*",
+        return_entry="return entry.Matches(aKey) ? &entry : nullptr;",
+        key_type="const nsACString&",
+        key_bytes="aKey.BeginReading()",
+        key_length="aKey.Length()",
+    )
 
-        return_type='const ContractEntry*',
-        return_entry='return entry.Matches(aKey) ? &entry : nullptr;',
-
-        key_type='const nsACString&',
-        key_bytes='aKey.BeginReading()',
-        key_length='aKey.Length()')
-
-    substs['js_services_table'] = js_services_phf.cxx_codegen(
-        name='LookupJSService',
-        entry_type='JSServiceEntry',
-        entries_name='gJSServices',
+    substs["js_services_table"] = js_services_phf.cxx_codegen(
+        name="LookupJSService",
+        entry_type="JSServiceEntry",
+        entries_name="gJSServices",
         lower_entry=lambda entry: entry.lower_js_service(),
-
-        return_type='const JSServiceEntry*',
-        return_entry='return entry.Name() == aKey ? &entry : nullptr;',
-
-        key_type='const nsACString&',
-        key_bytes='aKey.BeginReading()',
-        key_length='aKey.Length()')
+        return_type="const JSServiceEntry*",
+        return_entry="return entry.Name() == aKey ? &entry : nullptr;",
+        key_type="const nsACString&",
+        key_bytes="aKey.BeginReading()",
+        key_length="aKey.Length()",
+    )
 
     # Do this only after everything else has been emitted so we're sure the
     # string table is complete.
-    substs['strings'] = strings.to_cxx()
+    substs["strings"] = strings.to_cxx()
     return substs
 
 
@@ -754,9 +783,11 @@ def defined(subst):
 
 
 def read_manifest(filename):
-    glbl = {'buildconfig': buildconfig,
-            'defined': defined,
-            'ProcessSelector': ProcessSelector}
+    glbl = {
+        "buildconfig": buildconfig,
+        "defined": defined,
+        "ProcessSelector": ProcessSelector,
+    }
     exec(open(filename).read(), glbl)
     return glbl
 
@@ -765,33 +796,34 @@ def main(fd, conf_file, template_file):
     def open_output(filename):
         return FileAvoidWrite(os.path.join(os.path.dirname(fd.name), filename))
 
-    conf = json.load(open(conf_file, 'r'))
+    conf = json.load(open(conf_file, "r"))
 
     deps = set()
 
     manifests = []
-    for filename in conf['manifests']:
+    for filename in conf["manifests"]:
         deps.add(filename)
         manifest = read_manifest(filename)
         manifests.append(manifest)
-        manifest.setdefault('Priority', 50)
-        manifest['__filename__'] = filename
+        manifest.setdefault("Priority", 50)
+        manifest["__filename__"] = filename
 
-    manifests.sort(key=lambda man: (man['Priority'], man['__filename__']))
+    manifests.sort(key=lambda man: (man["Priority"], man["__filename__"]))
 
     substs = gen_substs(manifests)
 
     def replacer(match):
         return substs[match.group(1)]
 
-    with open_output('StaticComponents.cpp') as fh:
-        with open(template_file, 'r') as tfh:
+    with open_output("StaticComponents.cpp") as fh:
+        with open(template_file, "r") as tfh:
             template = tfh.read()
 
-        fh.write(re.sub(r'//# @([a-zA-Z_]+)@\n', replacer, template))
+        fh.write(re.sub(r"//# @([a-zA-Z_]+)@\n", replacer, template))
 
-    with open_output('StaticComponentData.h') as fh:
-        fh.write("""\
+    with open_output("StaticComponentData.h") as fh:
+        fh.write(
+            """\
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -816,9 +848,12 @@ static constexpr size_t kModuleInitCount = %(init_count)d;
 }  // namespace mozilla
 
 #endif
-""" % substs)
+"""
+            % substs
+        )
 
-    fd.write("""\
+    fd.write(
+        """\
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -893,6 +928,8 @@ namespace components {
 }  // namespace mozilla
 
 #endif
-""" % substs)
+"""
+        % substs
+    )
 
     return deps
