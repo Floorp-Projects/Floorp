@@ -418,6 +418,7 @@ ul.children + .tag-line::before {
    sibling of the class, not a child. */
 .theme-selected ~ .editor,
 .theme-selected ~ .editor.comment,
+.theme-selected ~ .editor .tag,
 .theme-selected ~ .editor .theme-fg-color1,
 .theme-selected ~ .editor .theme-fg-color2,
 .theme-selected ~ .editor .theme-fg-color3 {
