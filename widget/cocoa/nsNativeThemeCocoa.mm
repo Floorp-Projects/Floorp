@@ -1036,33 +1036,6 @@ void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& i
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsNativeThemeCocoa::MenuBackgroundParams nsNativeThemeCocoa::ComputeMenuBackgroundParams(
-    nsIFrame* aFrame, EventStates aEventState) {
-  MenuBackgroundParams params;
-  params.disabled = IsDisabled(aFrame, aEventState);
-  bool isLeftOfParent = false;
-  params.submenuRightOfParent = IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent;
-  return params;
-}
-
-void nsNativeThemeCocoa::DrawMenuBackground(CGContextRef cgContext, const CGRect& inBoxRect,
-                                            const MenuBackgroundParams& aParams) {
-  HIThemeMenuDrawInfo mdi;
-  memset(&mdi, 0, sizeof(mdi));
-  mdi.version = 0;
-  mdi.menuType = aParams.disabled ? static_cast<ThemeMenuType>(kThemeMenuTypeInactive)
-                                  : static_cast<ThemeMenuType>(kThemeMenuTypePopUp);
-
-  if (aParams.submenuRightOfParent) {
-    mdi.menuType = kThemeMenuTypeHierarchical;
-  }
-
-  // The rounded corners draw outside the frame.
-  CGRect deflatedRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 4, inBoxRect.size.width,
-                                   inBoxRect.size.height - 8);
-  HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext, HITHEME_ORIENTATION);
-}
-
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
 static const NSSize kMenuarrowSize = NSMakeSize(9, 10);
 static const NSSize kMenuScrollArrowSize = NSMakeSize(10, 8);
@@ -2929,11 +2902,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         case Widget::eScrollbarTrack:
         case Widget::eScrollCorner: {
           MOZ_CRASH("already handled in outer switch");
-          break;
-        }
-        case Widget::eMenuBackground: {
-          MenuBackgroundParams params = aWidgetInfo.Params<MenuBackgroundParams>();
-          DrawMenuBackground(cgContext, macRect, params);
           break;
         }
         case Widget::eMenuIcon: {
