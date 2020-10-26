@@ -23,6 +23,7 @@
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/gfx/2D.h"
+
 #include "gfx2DGlue.h"
 #include "gfxPoint.h"
 #include "nsBoundingMetrics.h"
@@ -32,6 +33,7 @@
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"  // for layers::Image
 #include "Units.h"
+#include "mozilla/layers/LayersTypes.h"
 #include <limits>
 #include <algorithm>
 // If you're thinking of adding a new include here, please try hard to not.
@@ -108,6 +110,7 @@ struct ScrollMetadata;
 class Image;
 class StackingContextHelper;
 class Layer;
+
 }  // namespace layers
 }  // namespace mozilla
 
@@ -117,8 +120,6 @@ enum class DrawStringFlags {
   ForceHorizontal = 0x1  // Forces the text to be drawn horizontally.
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
-
-enum class ScrollableDirection { Horizontal, Vertical, Either };
 
 namespace mozilla {
 
@@ -531,7 +532,7 @@ class nsLayoutUtils {
    * @return the nearest scrollable frame or nullptr if not found
    */
   static nsIScrollableFrame* GetNearestScrollableFrameForDirection(
-      nsIFrame* aFrame, ScrollableDirection aDirection);
+      nsIFrame* aFrame, mozilla::layers::ScrollDirections aDirections);
 
   enum {
     /**
