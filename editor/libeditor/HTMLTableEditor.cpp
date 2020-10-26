@@ -4256,6 +4256,10 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    return NS_ERROR_FAILURE;  // XXX Should we just return NS_OK?
+  }
+
   // Be sure we have a table element
   //  (if aElement is null, this uses selection's anchor node)
   RefPtr<Element> table;
@@ -4285,12 +4289,8 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
   }
 
   // Traverse all selected cells
-  RefPtr<Element> selectedCell = GetFirstSelectedTableCellElement(error);
-  if (error.Failed()) {
-    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
-    return EditorBase::ToGenericNSResult(error.StealNSResult());
-  }
-  if (!selectedCell) {
+  SelectedTableCellScanner scanner(*SelectionRefPtr());
+  if (!scanner.IsInTableCellSelectionMode()) {
     return NS_OK;
   }
 
@@ -4302,10 +4302,12 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
 
   const RefPtr<PresShell> presShell{GetPresShell()};
   bool allCellsInRowAreSelected = false;
-  bool allCellsInColAreSelected = false;
-  IgnoredErrorResult ignoredError;
-  while (selectedCell) {
-    CellIndexes selectedCellIndexes(*selectedCell, presShell, error);
+  for (const OwningNonNull<Element>& selectedCellElement :
+       scanner.ElementsRef()) {
+    // `MOZ_KnownLive(selectedCellElement)` is safe because `scanner` grabs
+    // it until it's destroyed later.
+    CellIndexes selectedCellIndexes(MOZ_KnownLive(selectedCellElement),
+                                    presShell, error);
     if (error.Failed()) {
       NS_WARNING("CellIndexes failed");
       return EditorBase::ToGenericNSResult(error.StealNSResult());
@@ -4319,11 +4321,6 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
         break;
       }
     }
-    selectedCell = GetNextSelectedTableCellElement(ignoredError);
-    NS_WARNING_ASSERTION(
-        !ignoredError.Failed(),
-        "HTMLEditor::GetNextSelectedTableCellElement() failed, but ignored");
-    ignoredError.SuppressException();
   }
 
   if (allCellsInRowAreSelected) {
@@ -4336,14 +4333,13 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
   indexArray.Clear();
 
   // Start at first cell again
-  selectedCell = GetFirstSelectedTableCellElement(ignoredError);
-  NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
-      "HTMLEditor::GetFirstSelectedTableCellElement() failed, but ignored");
-  ignoredError.SuppressException();
-
-  while (selectedCell) {
-    CellIndexes selectedCellIndexes(*selectedCell, presShell, error);
+  bool allCellsInColAreSelected = false;
+  for (const OwningNonNull<Element>& selectedCellElement :
+       scanner.ElementsRef()) {
+    // `MOZ_KnownLive(selectedCellElement)` is safe because `scanner` grabs
+    // it until it's destroyed later.
+    CellIndexes selectedCellIndexes(MOZ_KnownLive(selectedCellElement),
+                                    presShell, error);
     if (error.Failed()) {
       NS_WARNING("CellIndexes failed");
       return EditorBase::ToGenericNSResult(error.StealNSResult());
@@ -4358,11 +4354,6 @@ NS_IMETHODIMP HTMLEditor::GetSelectedCellsType(Element* aElement,
         break;
       }
     }
-    selectedCell = GetNextSelectedTableCellElement(ignoredError);
-    NS_WARNING_ASSERTION(
-        !ignoredError.Failed(),
-        "HTMLEditor::GetNextSelectedTableCellElement() failed, but ignored");
-    ignoredError.SuppressException();
   }
   if (allCellsInColAreSelected) {
     *aSelectionType = static_cast<uint32_t>(TableSelectionMode::Column);
