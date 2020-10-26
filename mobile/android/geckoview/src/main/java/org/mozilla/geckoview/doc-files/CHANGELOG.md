@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v84
+- ⚠️  Removed deprecated [`GeckoRuntimeSettings.Builder.useMultiprocess`] and
+  [`GeckoRuntimeSettings.getUseMultiprocess`]. Single-process GeckoView is no
+  longer supported. ([bug 1650118]({{bugzilla}}1650118))
+
 ## v83
 - Added [`WebExtension.MetaData.temporary`][83.1] which exposes whether an extension
   has been installed temporarily, e.g. when using web-ext.
@@ -71,7 +76,7 @@ exclude: true
   the thread and nullable annotation types.
 - Added [`REPLACED_TRACKING_CONTENT`][82.6] to content blocking API to indicate when unsafe content is shimmed.
   ([bug 1663756]({{bugzilla}}1663756))
-  
+
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
 [82.3]: {{javadoc_uri}}/Image.html
@@ -836,4 +841,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: cd2ba68c049db26ce20ba332ef2ba46cbde4910a
+[api-version]: 8a6a2cd431b4185d3bc665c6ce13a84684dd7b9e
