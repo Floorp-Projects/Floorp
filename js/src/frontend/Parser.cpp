@@ -7372,8 +7372,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
         return false;
       }
 
-      initializerIfPrivate =
-          Some(privateMethodInitializer(propAtom, storedMethodAtom));
+      TokenPos propNamePos(propNameOffset, pos().end);
+      initializerIfPrivate = Some(
+          privateMethodInitializer(propNamePos, propAtom, storedMethodAtom));
     }
   }
 
@@ -7834,7 +7835,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
-    const ParserAtom* propAtom, const ParserAtom* storedMethodAtom) {
+    TokenPos propNamePos, const ParserAtom* propAtom,
+    const ParserAtom* storedMethodAtom) {
   // Synthesize an initializer function that the constructor can use to stamp a
   // private method onto an instance object.
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::FieldInitializer;
@@ -7843,17 +7845,16 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   bool isSelfHosting = options().selfHostingMode;
   FunctionFlags flags =
       InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
-  TokenPos firstTokenPos = pos();
 
-  FunctionNodeType funNode = handler_.newFunction(syntaxKind, firstTokenPos);
+  FunctionNodeType funNode = handler_.newFunction(syntaxKind, propNamePos);
   if (!funNode) {
     return null();
   }
 
   Directives directives(true);
   FunctionBox* funbox =
-      newFunctionBox(funNode, nullptr, flags, 0, directives, generatorKind,
-                     asyncKind, TopLevelFunction::No);
+      newFunctionBox(funNode, nullptr, flags, propNamePos.begin, directives,
+                     generatorKind, asyncKind, TopLevelFunction::No);
   if (!funbox) {
     return null();
   }
@@ -7869,7 +7870,7 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
 
   // Add empty parameter list.
   ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, firstTokenPos);
+      handler_.newList(ParseNodeKind::ParamsBody, propNamePos);
   if (!argsbody) {
     return null();
   }
@@ -7900,7 +7901,7 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   // a body of synthesized AST nodes. Instead, the body is left empty and the
   // initializer is synthesized at the bytecode level.
   // See BytecodeEmitter::emitPrivateMethodInitializer.
-  ListNodeType stmtList = handler_.newStatementList(firstTokenPos);
+  ListNodeType stmtList = handler_.newStatementList(propNamePos);
   if (!stmtList) {
     return null();
   }
@@ -7913,10 +7914,10 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   handler_.setEndPosition(initializerBody, stmtList);
   handler_.setFunctionBody(funNode, initializerBody);
 
-  // Since the initializer doesn't correspond directly to any of the original
-  // source, set it's text position as being empty.
-  funbox->setStart(0, 0, 0);
-  funbox->setEnd(0);
+  // Set field-initializer lambda boundary to start at property name and end
+  // after method body.
+  setFunctionStartAtPosition(funbox, propNamePos);
+  setFunctionEndFromCurrentToken(funbox);
 
   if (!finishFunction()) {
     return null();
