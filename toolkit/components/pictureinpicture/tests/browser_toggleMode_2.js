@@ -8,7 +8,7 @@
  * for a description of what these toggle style objects are representing.
  */
 const TOGGLE_STYLES_LEFT_EXPLAINER = {
-  rootID: "pictureInPictureToggleExperiment",
+  rootID: "pictureInPictureToggle",
   stages: {
     hoverVideo: {
       opacities: {
@@ -16,7 +16,7 @@ const TOGGLE_STYLES_LEFT_EXPLAINER = {
         ".pip-wrapper": 0.8,
         ".pip-expanded": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-icon-label > .pip-icon"],
+      hidden: [".pip-icon-label > .pip-icon"],
     },
 
     hoverToggle: {
@@ -25,13 +25,13 @@ const TOGGLE_STYLES_LEFT_EXPLAINER = {
         ".pip-wrapper": 1.0,
         ".pip-expanded": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-icon-label > .pip-icon"],
+      hidden: [".pip-icon-label > .pip-icon"],
     },
   },
 };
 
 const TOGGLE_STYLES_RIGHT_EXPLAINER = {
-  rootID: "pictureInPictureToggleExperiment",
+  rootID: "pictureInPictureToggle",
   stages: {
     hoverVideo: {
       opacities: {
@@ -39,7 +39,7 @@ const TOGGLE_STYLES_RIGHT_EXPLAINER = {
         ".pip-wrapper": 0.8,
         ".pip-expanded": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-wrapper > .pip-icon"],
+      hidden: [".pip-wrapper > .pip-icon"],
     },
 
     hoverToggle: {
@@ -48,45 +48,45 @@ const TOGGLE_STYLES_RIGHT_EXPLAINER = {
         ".pip-wrapper": 1.0,
         ".pip-expanded": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-wrapper > .pip-icon"],
+      hidden: [".pip-wrapper > .pip-icon"],
     },
   },
 };
 
 const TOGGLE_STYLES_LEFT_SMALL = {
-  rootID: "pictureInPictureToggleExperiment",
+  rootID: "pictureInPictureToggle",
   stages: {
     hoverVideo: {
       opacities: {
         ".pip-wrapper": 0.8,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
 
     hoverToggle: {
       opacities: {
         ".pip-wrapper": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
   },
 };
 
 const TOGGLE_STYLES_RIGHT_SMALL = {
-  rootID: "pictureInPictureToggleExperiment",
+  rootID: "pictureInPictureToggle",
   stages: {
     hoverVideo: {
       opacities: {
         ".pip-wrapper": 0.8,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
 
     hoverToggle: {
       opacities: {
         ".pip-wrapper": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
   },
 };
@@ -100,7 +100,6 @@ const TOGGLE_STYLES_RIGHT_SMALL = {
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["media.videocontrols.picture-in-picture.video-toggle.mode", 2],
       ["media.videocontrols.picture-in-picture.video-toggle.position", "left"],
       [HAS_USED_PREF, false],
     ],
