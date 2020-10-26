@@ -6591,21 +6591,21 @@ function setToolbarVisibility(
     hidingAttribute = "collapsed";
   }
 
-  if (persist) {
-    if (toolbar.id == "PersonalToolbar") {
-      let prefValue;
-      if (typeof isVisible == "string") {
-        prefValue = isVisible;
-      } else {
-        prefValue = isVisible ? "always" : "never";
-      }
-      Services.prefs.setCharPref(
-        "browser.toolbars.bookmarks.visibility",
-        prefValue
-      );
+  // For the bookmarks toolbar, we need to persist state before toggling
+  // the visibility in this window, because the state can be different
+  // (newtab vs never or always) even when that won't change visibility
+  // in this window.
+  if (persist && toolbar.id == "PersonalToolbar") {
+    let prefValue;
+    if (typeof isVisible == "string") {
+      prefValue = isVisible;
     } else {
-      Services.xulStore.persist(toolbar, hidingAttribute);
+      prefValue = isVisible ? "always" : "never";
     }
+    Services.prefs.setCharPref(
+      "browser.toolbars.bookmarks.visibility",
+      prefValue
+    );
   }
 
   if (typeof isVisible == "string") {
@@ -6633,6 +6633,12 @@ function setToolbarVisibility(
 
   toolbar.classList.toggle("instant", !animated);
   toolbar.setAttribute(hidingAttribute, !isVisible);
+  // For the bookmarks toolbar, we will have saved state above. For other
+  // toolbars, we need to do it after setting the attribute, or we might
+  // save the wrong state.
+  if (persist && toolbar.id != "PersonalToolbar") {
+    Services.xulStore.persist(toolbar, hidingAttribute);
+  }
 
   let eventParams = {
     detail: {
