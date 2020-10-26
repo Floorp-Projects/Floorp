@@ -3206,7 +3206,6 @@ class HTMLEditor final : public TextEditor,
   Element* GetNextTableRowElement(Element& aTableRowElement,
                                   ErrorResult& aRv) const;
 
-  struct CellAndIndexes;
   struct CellData;
 
   /**
@@ -3274,33 +3273,7 @@ class HTMLEditor final : public TextEditor,
    private:
     CellIndexes() : mRow(-1), mColumn(-1) {}
 
-    friend struct CellAndIndexes;
     friend struct CellData;
-  };
-
-  struct MOZ_STACK_CLASS CellAndIndexes final {
-    RefPtr<Element> mElement;
-    CellIndexes mIndexes;
-
-    /**
-     * This constructor initializes the members with cell element which is
-     * selected by first range of the Selection.  Note that even if the
-     * first range is in the cell element, this does not treat it as the
-     * cell element is selected.
-     */
-    MOZ_CAN_RUN_SCRIPT CellAndIndexes(HTMLEditor& aHTMLEditor,
-                                      Selection& aSelection, ErrorResult& aRv) {
-      Update(aHTMLEditor, aSelection, aRv);
-    }
-
-    /**
-     * Update mElement and mIndexes with cell element which is selected by
-     * first range of the Selection.  Note that even if the first range is
-     * in the cell element, this does not treat it as the cell element is
-     * selected.
-     */
-    MOZ_CAN_RUN_SCRIPT void Update(HTMLEditor& aHTMLEditor,
-                                   Selection& aSelection, ErrorResult& aRv);
   };
 
   struct MOZ_STACK_CLASS CellData final {
