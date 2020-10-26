@@ -2338,8 +2338,7 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend) {
   nsIFrame* frame = nullptr;
   if (!aExtend) {
-    frame = do_QueryFrame(
-        GetScrollableFrameToScroll(ScrollableDirection::Vertical));
+    frame = do_QueryFrame(GetScrollableFrameToScroll(VerticalScollDirection));
     // If there is no scrollable frame, get the frame to move caret instead.
   }
   if (!frame || frame->PresContext() != mPresContext) {
@@ -2359,7 +2358,7 @@ PresShell::PageMove(bool aForward, bool aExtend) {
 NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
+      GetScrollableFrameToScroll(VerticalScollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2375,7 +2374,7 @@ PresShell::ScrollPage(bool aForward) {
 NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
+      GetScrollableFrameToScroll(VerticalScollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2394,7 +2393,7 @@ PresShell::ScrollLine(bool aForward) {
 NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(ScrollableDirection::Horizontal);
+      GetScrollableFrameToScroll(HorizontalScrollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2413,7 +2412,7 @@ PresShell::ScrollCharacter(bool aRight) {
 NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
+      GetScrollableFrameToScroll(VerticalScollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2881,7 +2880,7 @@ already_AddRefed<nsIContent> PresShell::GetSelectedContentForScrolling() const {
 }
 
 nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
-    nsIContent* aContent, ScrollableDirection aDirection) {
+    nsIContent* aContent, ScrollDirections aDirections) {
   nsIScrollableFrame* scrollFrame = nullptr;
   if (aContent) {
     nsIFrame* startFrame = aContent->GetPrimaryFrame();
@@ -2891,7 +2890,7 @@ nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
         startFrame = scrollFrame->GetScrolledFrame();
       }
       scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
-          startFrame, aDirection);
+          startFrame, aDirections);
     }
   }
   if (!scrollFrame) {
@@ -2900,15 +2899,15 @@ nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
       return nullptr;
     }
     scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
-        scrollFrame->GetScrolledFrame(), aDirection);
+        scrollFrame->GetScrolledFrame(), aDirections);
   }
   return scrollFrame;
 }
 
 nsIScrollableFrame* PresShell::GetScrollableFrameToScroll(
-    ScrollableDirection aDirection) {
+    ScrollDirections aDirections) {
   nsCOMPtr<nsIContent> content = GetContentForScrolling();
-  return GetScrollableFrameToScrollForContent(content.get(), aDirection);
+  return GetScrollableFrameToScrollForContent(content.get(), aDirections);
 }
 
 void PresShell::CancelAllPendingReflows() {

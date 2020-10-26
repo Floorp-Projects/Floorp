@@ -43,8 +43,6 @@ inline CancelAnimationFlags operator|(CancelAnimationFlags a,
                                            static_cast<int>(b));
 }
 
-typedef EnumSet<ScrollDirection> ScrollDirections;
-
 // clang-format off
 enum class ScrollSource {
   // scrollTo() or something similar.
