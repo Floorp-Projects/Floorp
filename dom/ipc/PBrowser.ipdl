@@ -609,12 +609,23 @@ parent:
     async RequestPointerLock() returns (nsCString error);
     async ReleasePointerLock();
 
+    /**
+     * Child informs the parent that a pointer capture has requested/released.
+     */
+    async RequestPointerCapture(uint32_t aPointerId) returns (bool aSuccess);
+    async ReleasePointerCapture(uint32_t aPointerId);
+
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
     async FlushTabState(uint32_t aFlushId, bool aIsFinal);
     async UpdateEpoch(uint32_t aEpoch);
     async UpdateSHistory(bool aImmediately);
     async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc);
+
+    /**
+     * Parent informs the child to release all pointer capture.
+     */
+    async ReleaseAllPointerCapture();
 
 parent:
 

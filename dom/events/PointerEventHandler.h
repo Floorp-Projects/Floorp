@@ -19,8 +19,9 @@ namespace mozilla {
 class PresShell;
 
 namespace dom {
+class BrowserParent;
 class Element;
-};
+};  // namespace dom
 
 class PointerCaptureInfo final {
  public:
@@ -51,11 +52,24 @@ class PointerEventHandler final {
   // table.
   static void UpdateActivePointerState(WidgetMouseEvent* aEvent);
 
-  // Got/release pointer capture of the specified pointer by the element.
-  static void SetPointerCaptureById(uint32_t aPointerId,
-                                    dom::Element* aElement);
+  // Request/release pointer capture of the specified pointer by the element.
+  static void RequestPointerCaptureById(uint32_t aPointerId,
+                                        dom::Element* aElement);
   static void ReleasePointerCaptureById(uint32_t aPointerId);
   static void ReleaseAllPointerCapture();
+
+  // Set/release pointer capture of the specified pointer by the remote target.
+  // Should only be called in parent process.
+  static bool SetPointerCaptureRemoteTarget(uint32_t aPointerId,
+                                            dom::BrowserParent* aBrowserParent);
+  static void ReleasePointerCaptureRemoteTarget(
+      dom::BrowserParent* aBrowserParent);
+  static void ReleasePointerCaptureRemoteTarget(uint32_t aPointerId);
+  static void ReleaseAllPointerCaptureRemoteTarget();
+
+  // Get the pointer capturing remote target of the specified pointer.
+  static dom::BrowserParent* GetPointerCapturingRemoteTarget(
+      uint32_t aPointerId);
 
   // Get the pointer captured info of the specified pointer.
   static PointerCaptureInfo* GetPointerCaptureInfo(uint32_t aPointerId);
@@ -147,7 +161,8 @@ class PointerEventHandler final {
 
   static bool ShouldGeneratePointerEventFromMouse(WidgetGUIEvent* aEvent) {
     return aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp ||
-           aEvent->mMessage == eMouseMove;
+           aEvent->mMessage == eMouseMove ||
+           aEvent->mMessage == eMouseExitFromWidget;
   }
 
   static bool ShouldGeneratePointerEventFromTouch(WidgetGUIEvent* aEvent) {
@@ -161,6 +176,10 @@ class PointerEventHandler final {
   }
 
  private:
+  // Set pointer capture of the specified pointer by the element.
+  static void SetPointerCaptureById(uint32_t aPointerId,
+                                    dom::Element* aElement);
+
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
   // event with pointerId. The return value must be one of
   // MouseEvent_Binding::MOZ_SOURCE_*

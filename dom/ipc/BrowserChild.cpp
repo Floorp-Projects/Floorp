@@ -3330,6 +3330,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvSetWidgetNativeData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvReleaseAllPointerCapture() {
+  PointerEventHandler::ReleaseAllPointerCapture();
+  return IPC_OK();
+}
+
 mozilla::plugins::PPluginWidgetChild* BrowserChild::AllocPPluginWidgetChild() {
 #ifdef XP_WIN
   return new mozilla::plugins::PluginWidgetChild();

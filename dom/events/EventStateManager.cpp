@@ -1375,6 +1375,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       if (BrowserParent* pointerLockedRemote =
               BrowserParent::GetPointerLockedRemoteTarget()) {
         remote = pointerLockedRemote;
+      } else if (BrowserParent* pointerCapturedRemote =
+                     PointerEventHandler::GetPointerCapturingRemoteTarget(
+                         mouseEvent->pointerId)) {
+        remote = pointerCapturedRemote;
       }
 
       // If a mouse is over a remote target A, and then moves to
