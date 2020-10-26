@@ -1704,7 +1704,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth) {
 /***************************************************************************/
 
 char* XPCWrappedNative::ToString(
-    JSContext* cx, XPCWrappedNativeTearOff* to /* = nullptr */) const {
+    XPCWrappedNativeTearOff* to /* = nullptr */) const {
 #ifdef DEBUG
 #  define FMT_ADDR " @ 0x%p"
 #  define FMT_STR(str) str
@@ -1729,19 +1729,22 @@ char* XPCWrappedNative::ToString(
   } else if (!name) {
     XPCNativeSet* set = GetSet();
     XPCNativeInterface** array = set->GetInterfaceArray();
-    RefPtr<XPCNativeInterface> isupp = XPCNativeInterface::GetISupports(cx);
     uint16_t count = set->GetInterfaceCount();
+    MOZ_RELEASE_ASSERT(count >= 1, "Expected at least one interface");
+    MOZ_ASSERT(*array[0]->GetIID() == NS_GET_IID(nsISupports),
+               "The first interface must be nsISupports");
 
+    // The first interface is always nsISupports, so don't print it, unless
+    // there are no others.
     if (count == 1) {
-      name =
-          JS_sprintf_append(std::move(name), "%s", array[0]->GetNameString());
-    } else if (count == 2 && array[0] == isupp) {
+      name = JS_sprintf_append(std::move(name), "nsISupports");
+    } else if (count == 2) {
       name =
           JS_sprintf_append(std::move(name), "%s", array[1]->GetNameString());
     } else {
-      for (uint16_t i = 0; i < count; i++) {
+      for (uint16_t i = 1; i < count; i++) {
         const char* fmt =
-            (i == 0) ? "(%s" : (i == count - 1) ? ", %s)" : ", %s";
+            (i == 1) ? "(%s" : (i == count - 1) ? ", %s)" : ", %s";
         name =
             JS_sprintf_append(std::move(name), fmt, array[i]->GetNameString());
       }
