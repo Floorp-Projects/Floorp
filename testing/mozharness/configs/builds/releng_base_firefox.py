@@ -1,3 +1,3 @@
 config = {
-    'app_name': 'browser',
+    "app_name": "browser",
 }

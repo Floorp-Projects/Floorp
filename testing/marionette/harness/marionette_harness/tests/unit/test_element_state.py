@@ -14,24 +14,32 @@ from marionette_harness import MarionetteTestCase
 
 
 boolean_attributes = {
-  "audio": ["autoplay", "controls", "loop", "muted"],
-  "button": ["autofocus", "disabled", "formnovalidate"],
-  "details": ["open"],
-  "dialog": ["open"],
-  "fieldset": ["disabled"],
-  "form": ["novalidate"],
-  "iframe": ["allowfullscreen"],
-  "img": ["ismap"],
-  "input": ["autofocus", "checked", "disabled", "formnovalidate", "multiple", "readonly", "required"],
-  "menuitem": ["checked", "default", "disabled"],
-  "ol": ["reversed"],
-  "optgroup": ["disabled"],
-  "option": ["disabled", "selected"],
-  "script": ["async", "defer"],
-  "select": ["autofocus", "disabled", "multiple", "required"],
-  "textarea": ["autofocus", "disabled", "readonly", "required"],
-  "track": ["default"],
-  "video": ["autoplay", "controls", "loop", "muted"],
+    "audio": ["autoplay", "controls", "loop", "muted"],
+    "button": ["autofocus", "disabled", "formnovalidate"],
+    "details": ["open"],
+    "dialog": ["open"],
+    "fieldset": ["disabled"],
+    "form": ["novalidate"],
+    "iframe": ["allowfullscreen"],
+    "img": ["ismap"],
+    "input": [
+        "autofocus",
+        "checked",
+        "disabled",
+        "formnovalidate",
+        "multiple",
+        "readonly",
+        "required",
+    ],
+    "menuitem": ["checked", "default", "disabled"],
+    "ol": ["reversed"],
+    "optgroup": ["disabled"],
+    "option": ["disabled", "selected"],
+    "script": ["async", "defer"],
+    "select": ["autofocus", "disabled", "multiple", "required"],
+    "textarea": ["autofocus", "disabled", "readonly", "required"],
+    "track": ["default"],
+    "video": ["autoplay", "controls", "loop", "muted"],
 }
 
 
@@ -39,8 +47,9 @@ def inline(doc, doctype="html"):
     if doctype == "html":
         return "data:text/html;charset=utf-8,{}".format(quote(doc))
     elif doctype == "xhtml":
-        return "data:application/xhtml+xml,{}".format(quote(
-r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        return "data:application/xhtml+xml,{}".format(
+            quote(
+                r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
@@ -50,7 +59,11 @@ r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <body>
     {}
   </body>
-</html>""".format(doc)))
+</html>""".format(
+                    doc
+                )
+            )
+        )
 
 
 attribute = inline("<input foo=bar>")
@@ -124,7 +137,7 @@ class TestGetElementAttribute(MarionetteTestCase):
     # TODO(ato): Test for custom elements
 
     def test_xhtml(self):
-        doc = inline("<p hidden=\"true\">foo</p>", doctype="xhtml")
+        doc = inline('<p hidden="true">foo</p>', doctype="xhtml")
         self.marionette.navigate(doc)
         el = self.marionette.find_element(By.TAG_NAME, "p")
         attr = el.get_attribute("hidden")

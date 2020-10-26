@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestCollation.cpp',
-    'TestDateTimeFormat.cpp',
-    'TestLocaleService.cpp',
-    'TestLocaleServiceNegotiate.cpp',
-    'TestMozLocale.cpp',
-    'TestOSPreferences.cpp',
+    "TestCollation.cpp",
+    "TestDateTimeFormat.cpp",
+    "TestLocaleService.cpp",
+    "TestLocaleServiceNegotiate.cpp",
+    "TestMozLocale.cpp",
+    "TestOSPreferences.cpp",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

@@ -7,7 +7,6 @@ config = {
         "EN_US_BINARY_URL": os.environ["EN_US_BINARY_URL"],
         "DIST": "%(abs_obj_dir)s",
         "L10NBASEDIR": "../../l10n",
-        'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE'),
+        "TOOLTOOL_CACHE": os.environ.get("TOOLTOOL_CACHE"),
     },
 }
-

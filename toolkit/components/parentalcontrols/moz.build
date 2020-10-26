@@ -4,31 +4,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "General")
 
 XPIDL_SOURCES += [
-    'nsIParentalControlsService.idl',
+    "nsIParentalControlsService.idl",
 ]
 
-XPIDL_MODULE = 'parentalcontrols'
+XPIDL_MODULE = "parentalcontrols"
 
-if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if not CONFIG["MOZ_DISABLE_PARENTAL_CONTROLS"]:
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         SOURCES += [
-            'nsParentalControlsServiceWin.cpp',
+            "nsParentalControlsServiceWin.cpp",
         ]
-    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         UNIFIED_SOURCES += [
-            'nsParentalControlsServiceCocoa.mm',
+            "nsParentalControlsServiceCocoa.mm",
         ]
-    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         UNIFIED_SOURCES += [
-            'nsParentalControlsServiceAndroid.cpp',
+            "nsParentalControlsServiceAndroid.cpp",
         ]
     else:
         SOURCES += [
-            'nsParentalControlsServiceDefault.cpp',
+            "nsParentalControlsServiceDefault.cpp",
         ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

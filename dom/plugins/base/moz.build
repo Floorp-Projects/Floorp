@@ -5,94 +5,94 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIHTTPHeaderListener.idl',
-    'nsIPluginDocument.idl',
-    'nsIPluginHost.idl',
-    'nsIPluginInputStream.idl',
-    'nsIPluginInstanceOwner.idl',
-    'nsIPluginTag.idl',
-    'nspluginroot.idl',
+    "nsIHTTPHeaderListener.idl",
+    "nsIPluginDocument.idl",
+    "nsIPluginHost.idl",
+    "nsIPluginInputStream.idl",
+    "nsIPluginInstanceOwner.idl",
+    "nsIPluginTag.idl",
+    "nspluginroot.idl",
 ]
 
-XPIDL_MODULE = 'plugin'
+XPIDL_MODULE = "plugin"
 
 EXPORTS += [
-    'npapi.h',
-    'npfunctions.h',
-    'npruntime.h',
-    'nptypes.h',
-    'nsJSNPRuntime.h',
-    'nsNPAPIPluginInstance.h',
-    'nsPluginDirServiceProvider.h',
-    'nsPluginHost.h',
-    'nsPluginInstanceOwner.h',
-    'nsPluginLogging.h',
-    'nsPluginNativeWindow.h',
-    'nsPluginsCID.h',
-    'nsPluginsDir.h',
-    'nsPluginTags.h',
+    "npapi.h",
+    "npfunctions.h",
+    "npruntime.h",
+    "nptypes.h",
+    "nsJSNPRuntime.h",
+    "nsNPAPIPluginInstance.h",
+    "nsPluginDirServiceProvider.h",
+    "nsPluginHost.h",
+    "nsPluginInstanceOwner.h",
+    "nsPluginLogging.h",
+    "nsPluginNativeWindow.h",
+    "nsPluginsCID.h",
+    "nsPluginsDir.h",
+    "nsPluginTags.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsJSNPRuntime.cpp',
-    'nsNPAPIPluginInstance.cpp',
-    'nsNPAPIPluginStreamListener.cpp',
-    'nsPluginInstanceOwner.cpp',
-    'nsPluginStreamListenerPeer.cpp',
-    'nsPluginTags.cpp',
-    'PluginFinder.cpp',
+    "nsJSNPRuntime.cpp",
+    "nsNPAPIPluginInstance.cpp",
+    "nsNPAPIPluginStreamListener.cpp",
+    "nsPluginInstanceOwner.cpp",
+    "nsPluginStreamListenerPeer.cpp",
+    "nsPluginTags.cpp",
+    "PluginFinder.cpp",
 ]
 
 SOURCES += [
-    'nsNPAPIPlugin.cpp', # Conflict with X11 headers
-    'nsPluginHost.cpp',  # Conflict with NS_NPAPIPLUGIN_CALLBACK
+    "nsNPAPIPlugin.cpp",  # Conflict with X11 headers
+    "nsPluginHost.cpp",  # Conflict with NS_NPAPIPLUGIN_CALLBACK
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
-        'nsPluginDirServiceProvider.cpp',
-        'nsPluginNativeWindowWin.cpp',
-        'nsPluginsDirWin.cpp',
+        "nsPluginDirServiceProvider.cpp",
+        "nsPluginNativeWindowWin.cpp",
+        "nsPluginsDirWin.cpp",
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
-        'nsPluginNativeWindow.cpp',
+        "nsPluginNativeWindow.cpp",
     ]
     SOURCES += [
-        'nsPluginsDirDarwin.cpp', # conflict with mozilla::EventPriority
+        "nsPluginsDirDarwin.cpp",  # conflict with mozilla::EventPriority
     ]
 else:
     UNIFIED_SOURCES += [
-        'nsPluginNativeWindow.cpp',
-        'nsPluginsDirUnix.cpp',
+        "nsPluginNativeWindow.cpp",
+        "nsPluginsDirUnix.cpp",
     ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/dom/plugins/ipc',
-    '/layout/generic',
-    '/layout/xul',
-    '/netwerk/base',
-    '/widget',
-    '/widget/cocoa',
-    '/xpcom/base',
+    "/dom/base",
+    "/dom/plugins/ipc",
+    "/layout/generic",
+    "/layout/xul",
+    "/netwerk/base",
+    "/widget",
+    "/widget/cocoa",
+    "/xpcom/base",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += [
-        '/xpcom/base',
+        "/xpcom/base",
     ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

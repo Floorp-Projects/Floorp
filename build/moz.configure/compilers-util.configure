@@ -6,8 +6,8 @@
 
 
 @template
-@imports('textwrap')
-@imports(_from='mozbuild.configure', _import='SandboxDependsFunction')
+@imports("textwrap")
+@imports(_from="mozbuild.configure", _import="SandboxDependsFunction")
 def compiler_class(compiler, host_or_target):
     is_target = host_or_target is target
 
@@ -24,22 +24,34 @@ def compiler_class(compiler, host_or_target):
         #   `-c`.
         # - `check_msg` is the message to be printed to accompany compiling the
         #   test program.
-        def try_compile(self, includes=None, body='', flags=None,
-                        check_msg=None, when=None, onerror=lambda: None):
+        def try_compile(
+            self,
+            includes=None,
+            body="",
+            flags=None,
+            check_msg=None,
+            when=None,
+            onerror=lambda: None,
+        ):
             @depends(dependable(flags))
             def flags(flags):
                 flags = list(flags or [])
-                flags.append('-c')
+                flags.append("-c")
                 return flags
 
             @depends(dependable(includes))
             def header(includes):
                 includes = includes or []
-                return ['#include <%s>' % f for f in includes]
+                return ["#include <%s>" % f for f in includes]
 
             return self.try_run(
-                header=header, body=body, flags=flags, check_msg=check_msg,
-                when=when, onerror=onerror)
+                header=header,
+                body=body,
+                flags=flags,
+                check_msg=check_msg,
+                when=when,
+                onerror=onerror,
+            )
 
         # Generates a test program and run the compiler against it. In case of
         # failure, the resulting check will return None.
@@ -52,9 +64,17 @@ def compiler_class(compiler, host_or_target):
         # - `check_msg` is the message to be printed to accompany compiling the
         #   test program.
         # - `onerror` is a function called when the check fails.
-        def try_run(self, header=None, body='', flags=None,
-                    check_msg=None, when=None, onerror=lambda: None):
-            source = textwrap.dedent('''\
+        def try_run(
+            self,
+            header=None,
+            body="",
+            flags=None,
+            check_msg=None,
+            when=None,
+            onerror=lambda: None,
+        ):
+            source = textwrap.dedent(
+                """\
                 int
                 main(void)
                 {
@@ -62,35 +82,51 @@ def compiler_class(compiler, host_or_target):
                   ;
                   return 0;
                 }
-            ''' % body)
+            """
+                % body
+            )
 
             if check_msg:
+
                 def checking_fn(fn):
                     return checking(check_msg)(fn)
+
             else:
+
                 def checking_fn(fn):
                     return fn
 
-            @depends(self, dependable(flags), extra_toolchain_flags,
-                     stlport_cppflags, dependable(header), when=when)
+            @depends(
+                self,
+                dependable(flags),
+                extra_toolchain_flags,
+                stlport_cppflags,
+                dependable(header),
+                when=when,
+            )
             @checking_fn
             def func(compiler, flags, extra_flags, stlport_flags, header):
                 flags = list(flags or [])
                 if is_target:
                     flags += extra_flags or []
-                if compiler.language == 'C++':
+                if compiler.language == "C++":
                     flags += stlport_flags or []
-                header = header or ''
+                header = header or ""
                 if isinstance(header, (list, tuple)):
-                    header = '\n'.join(header)
+                    header = "\n".join(header)
                 if header:
-                    header += '\n'
+                    header += "\n"
 
-                if try_invoke_compiler(
-                        compiler.wrapper +
-                        [compiler.compiler] + compiler.flags,
-                        compiler.language, header + source, flags,
-                        onerror=onerror) is not None:
+                if (
+                    try_invoke_compiler(
+                        compiler.wrapper + [compiler.compiler] + compiler.flags,
+                        compiler.language,
+                        header + source,
+                        flags,
+                        onerror=onerror,
+                    )
+                    is not None
+                ):
                     return True
 
             return func

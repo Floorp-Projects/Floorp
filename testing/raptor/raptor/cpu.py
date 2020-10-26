@@ -8,7 +8,7 @@ import threading
 
 from logger.logger import RaptorLogger
 
-LOG = RaptorLogger(component='raptor-cpu')
+LOG = RaptorLogger(component="raptor-cpu")
 
 
 class AndroidCPUProfiler(object):
@@ -47,20 +47,18 @@ class AndroidCPUProfiler(object):
         android_version = self.raptor.device.shell_output(
             "getprop ro.build.version.release"
         ).strip()
-        self.android_version = int(android_version.split('.')[0])
+        self.android_version = int(android_version.split(".")[0])
 
         # Prepare the polling thread (set as daemon for clean exiting)
         self.thread = threading.Thread(target=self.poll_cpu, args=(poll_interval,))
         self.thread.daemon = True
 
     def start_polling(self):
-        """Start the thread responsible for polling CPU usage.
-        """
+        """Start the thread responsible for polling CPU usage."""
         self.thread.start()
 
     def stop_polling(self):
-        """Pauses CPU usage polling.
-        """
+        """Pauses CPU usage polling."""
         self.pause_polling = True
 
     def poll_cpu(self, poll_interval):
@@ -80,7 +78,7 @@ class AndroidCPUProfiler(object):
         :return float: CPU usage found for the app at this point in time.
         """
         cpu_usage = 0
-        app_name = self.raptor.config['binary']
+        app_name = self.raptor.config["binary"]
         verbose = self.raptor.device._verbose
         self.raptor.device._verbose = False
 
@@ -113,7 +111,7 @@ class AndroidCPUProfiler(object):
             # Get CPU usage
             for line in appcpuinfo:
                 data = line.split()
-                cpu_usage = float(data[4].strip('%'))
+                cpu_usage = float(data[4].strip("%"))
 
         self.raptor.device._verbose = verbose
         return cpu_usage
@@ -131,32 +129,26 @@ class AndroidCPUProfiler(object):
             self.polls.append(0)
 
         avg_cpuinfo_data = {
-            u'type': u'cpu',
-            u'test': test_name + '-avg',
-            u'unit': u'%',
-            u'values': {
-                u'avg': sum(self.polls)/len(self.polls)
-            }
+            u"type": u"cpu",
+            u"test": test_name + "-avg",
+            u"unit": u"%",
+            u"values": {u"avg": sum(self.polls) / len(self.polls)},
         }
         self.raptor.control_server.submit_supporting_data(avg_cpuinfo_data)
 
         min_cpuinfo_data = {
-            u'type': u'cpu',
-            u'test': test_name + '-min',
-            u'unit': u'%',
-            u'values': {
-                u'min': min(self.polls)
-            }
+            u"type": u"cpu",
+            u"test": test_name + "-min",
+            u"unit": u"%",
+            u"values": {u"min": min(self.polls)},
         }
         self.raptor.control_server.submit_supporting_data(min_cpuinfo_data)
 
         max_cpuinfo_data = {
-            u'type': u'cpu',
-            u'test': test_name + '-max',
-            u'unit': u'%',
-            u'values': {
-                u'max': max(self.polls)
-            }
+            u"type": u"cpu",
+            u"test": test_name + "-max",
+            u"unit": u"%",
+            u"values": {u"max": max(self.polls)},
         }
         self.raptor.control_server.submit_supporting_data(max_cpuinfo_data)
 

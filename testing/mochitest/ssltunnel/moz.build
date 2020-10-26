@@ -4,20 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoProgram('ssltunnel', linkage=None)
+GeckoProgram("ssltunnel", linkage=None)
 
 SOURCES += [
-    'ssltunnel.cpp',
+    "ssltunnel.cpp",
 ]
 
 USE_LIBS += [
-    'nspr',
-    'nss',
+    "nspr",
+    "nss",
 ]
 
 # This isn't XPCOM code, but it wants to use STL, so disable the STL
 # wrappers
 DisableStlWrapping()
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow"]

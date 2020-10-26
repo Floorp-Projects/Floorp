@@ -4,17 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'message-types',
+    "message-types",
 ]
 
 DevToolsModules(
-    'CollapseButton.js',
-    'ConsoleOutput.js',
-    'ConsoleTable.js',
-    'GripMessageBody.js',
-    'Message.js',
-    'MessageContainer.js',
-    'MessageIcon.js',
-    'MessageIndent.js',
-    'MessageRepeat.js',
+    "CollapseButton.js",
+    "ConsoleOutput.js",
+    "ConsoleTable.js",
+    "GripMessageBody.js",
+    "Message.js",
+    "MessageContainer.js",
+    "MessageIcon.js",
+    "MessageIndent.js",
+    "MessageRepeat.js",
 )

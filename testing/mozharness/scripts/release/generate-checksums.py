@@ -17,62 +17,84 @@ from mozharness.mozilla.merkle import MerkleTree
 
 class ChecksumsGenerator(BaseScript, VirtualenvMixin):
     config_options = [
-        [["--stage-product"], {
-            "dest": "stage_product",
-            "help": "Name of product used in file server's directory structure, "
-                    "e.g.: firefox, mobile",
-        }],
-        [["--version"], {
-            "dest": "version",
-            "help": "Version of release, e.g.: 59.0b5",
-        }],
-        [["--build-number"], {
-            "dest": "build_number",
-            "help": "Build number of release, e.g.: 2",
-        }],
-        [["--bucket-name"], {
-            "dest": "bucket_name",
-            "help": "Full bucket name e.g.: net-mozaws-prod-delivery-{firefox,archive}.",
-        }],
-        [["-j", "--parallelization"], {
-            "dest": "parallelization",
-            "default": 20,
-            "type": int,
-            "help": "Number of checksums file to download concurrently",
-        }],
-        [["--branch"], {
-            "dest": "branch",
-            "help": "dummy option",
-        }],
-        [["--build-pool"], {
-            "dest": "build_pool",
-            "help": "dummy option",
-        }],
+        [
+            ["--stage-product"],
+            {
+                "dest": "stage_product",
+                "help": "Name of product used in file server's directory structure, "
+                "e.g.: firefox, mobile",
+            },
+        ],
+        [
+            ["--version"],
+            {
+                "dest": "version",
+                "help": "Version of release, e.g.: 59.0b5",
+            },
+        ],
+        [
+            ["--build-number"],
+            {
+                "dest": "build_number",
+                "help": "Build number of release, e.g.: 2",
+            },
+        ],
+        [
+            ["--bucket-name"],
+            {
+                "dest": "bucket_name",
+                "help": "Full bucket name e.g.: net-mozaws-prod-delivery-{firefox,archive}.",
+            },
+        ],
+        [
+            ["-j", "--parallelization"],
+            {
+                "dest": "parallelization",
+                "default": 20,
+                "type": int,
+                "help": "Number of checksums file to download concurrently",
+            },
+        ],
+        [
+            ["--branch"],
+            {
+                "dest": "branch",
+                "help": "dummy option",
+            },
+        ],
+        [
+            ["--build-pool"],
+            {
+                "dest": "build_pool",
+                "help": "dummy option",
+            },
+        ],
     ] + virtualenv_config_options
 
     def __init__(self):
-        BaseScript.__init__(self,
-                            config_options=self.config_options,
-                            require_config_file=False,
-                            config={
-                                "virtualenv_modules": [
-                                    "boto",
-                                ],
-                                "virtualenv_path": "venv",
-                            },
-                            all_actions=[
-                                "create-virtualenv",
-                                "collect-individual-checksums",
-                                "create-big-checksums",
-                                "create-summary",
-                            ],
-                            default_actions=[
-                                "create-virtualenv",
-                                "collect-individual-checksums",
-                                "create-big-checksums",
-                                "create-summary",
-                            ],
-                            )
+        BaseScript.__init__(
+            self,
+            config_options=self.config_options,
+            require_config_file=False,
+            config={
+                "virtualenv_modules": [
+                    "boto",
+                ],
+                "virtualenv_path": "venv",
+            },
+            all_actions=[
+                "create-virtualenv",
+                "collect-individual-checksums",
+                "create-big-checksums",
+                "create-summary",
+            ],
+            default_actions=[
+                "create-virtualenv",
+                "collect-individual-checksums",
+                "create-big-checksums",
+                "create-summary",
+            ],
+        )
 
         self.checksums = {}
         self.file_prefix = self._get_file_prefix()
@@ -104,7 +126,9 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
 
     def _get_file_prefix(self):
         return "pub/{}/candidates/{}-candidates/build{}/".format(
-            self.config["stage_product"], self.config["version"], self.config["build_number"]
+            self.config["stage_product"],
+            self.config["version"],
+            self.config["build_number"],
         )
 
     def _get_sums_filename(self, format_):
@@ -122,6 +146,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
     def _get_bucket(self):
         self.activate_virtualenv()
         from boto import connect_s3
+
         self.info("Connecting to S3")
         conn = connect_s3(anon=True)
         self.info("Connecting to bucket {}".format(self.config["bucket_name"]))
@@ -171,12 +196,16 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
                     if re.search(pattern, f):
                         if f in self.checksums:
                             if info == self.checksums[f]:
-                                self.debug("Duplicate checksum for file {}"
-                                           " but the data matches;"
-                                           " continuing...".format(f))
+                                self.debug(
+                                    "Duplicate checksum for file {}"
+                                    " but the data matches;"
+                                    " continuing...".format(f)
+                                )
                                 continue
-                            self.fatal("Found duplicate checksum entry for {}, "
-                                       "don't know which one to pick.".format(f))
+                            self.fatal(
+                                "Found duplicate checksum entry for {}, "
+                                "don't know which one to pick.".format(f)
+                            )
                         if not set(self.config["formats"]) <= set(info["hashes"]):
                             self.fatal("Missing necessary format for file {}".format(f))
                         self.debug("Adding checksums for file: {}".format(f))
@@ -198,15 +227,17 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin):
 
             tree = MerkleTree(hash_fn, data)
             head = binascii.hexlify(tree.head())
-            proofs = [binascii.hexlify(tree.inclusion_proof(i).to_rfc6962_bis())
-                      for i in range(len(files))]
+            proofs = [
+                binascii.hexlify(tree.inclusion_proof(i).to_rfc6962_bis())
+                for i in range(len(files))
+            ]
 
             summary = self._get_summary_filename(fmt)
             self.info("Creating summary file: {}".format(summary))
 
-            content = "{} TREE_HEAD\n".format(head.decode('ascii'))
+            content = "{} TREE_HEAD\n".format(head.decode("ascii"))
             for i in range(len(files)):
-                content += "{} {}\n".format(proofs[i].decode('ascii'), files[i])
+                content += "{} {}\n".format(proofs[i].decode("ascii"), files[i])
 
             self.write_to_file(summary, content)
 

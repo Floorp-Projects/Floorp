@@ -4,26 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('moz.build'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+with Files("moz.build"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 DIRS += [
-    'common',
-    'crypto',
-    'interfaces',
-    'settings',
+    "common",
+    "crypto",
+    "interfaces",
+    "settings",
 ]
 
 # The automation dir is only included in nightlies and debug
-if not CONFIG['RELEASE_OR_BETA'] or CONFIG['MOZ_DEBUG']:
+if not CONFIG["RELEASE_OR_BETA"] or CONFIG["MOZ_DEBUG"]:
+    DIRS += ["automation"]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     DIRS += [
-        'automation'
+        "fxaccounts",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    DIRS += [
-        'fxaccounts',
-    ]
-
-if CONFIG['MOZ_SERVICES_SYNC']:
-    DIRS += ['sync']
+if CONFIG["MOZ_SERVICES_SYNC"]:
+    DIRS += ["sync"]

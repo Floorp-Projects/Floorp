@@ -34,19 +34,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-beetmover_description_schema = schema.extend({
-    # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-    Optional('label'): text_type,
-
-    Required('partner-bucket-scope'): optionally_keyed_by('release-level', text_type),
-    Required('partner-public-path'): Any(None, text_type),
-    Required('partner-private-path'): Any(None, text_type),
-
-    Optional('extra'): object,
-    Required('shipping-phase'): task_description_schema['shipping-phase'],
-    Optional('shipping-product'): task_description_schema['shipping-product'],
-    Optional('priority'): task_description_schema['priority'],
-})
+beetmover_description_schema = schema.extend(
+    {
+        # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
+        Optional("label"): text_type,
+        Required("partner-bucket-scope"): optionally_keyed_by(
+            "release-level", text_type
+        ),
+        Required("partner-public-path"): Any(None, text_type),
+        Required("partner-private-path"): Any(None, text_type),
+        Optional("extra"): object,
+        Required("shipping-phase"): task_description_schema["shipping-phase"],
+        Optional("shipping-product"): task_description_schema["shipping-product"],
+        Optional("priority"): task_description_schema["priority"],
+    }
+)
 
 transforms = TransformSequence()
 transforms.add_validate(beetmover_description_schema)
@@ -56,8 +58,10 @@ transforms.add_validate(beetmover_description_schema)
 def resolve_keys(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job, 'partner-bucket-scope', item_name=job['label'],
-            **{'release-level': config.params.release_level()}
+            job,
+            "partner-bucket-scope",
+            item_name=job["label"],
+            **{"release-level": config.params.release_level()}
         )
         yield job
 
@@ -65,8 +69,8 @@ def resolve_keys(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job['primary-dependency']
-        repack_id = dep_job.task.get('extra', {}).get('repack_id')
+        dep_job = job["primary-dependency"]
+        repack_id = dep_job.task.get("extra", {}).get("repack_id")
         if not repack_id:
             raise Exception("Cannot find repack id!")
 
@@ -84,7 +88,7 @@ def make_task_description(config, jobs):
             "{build_platform}/{build_type}'".format(
                 repack_id=repack_id,
                 build_platform=build_platform,
-                build_type=attributes.get('build_type')
+                build_type=attributes.get("build_type"),
             )
         )
 
@@ -96,45 +100,45 @@ def make_task_description(config, jobs):
         dependencies["build"] = "{}-{}".format(base_label, build_platform)
         if "macosx" in build_platform or "win" in build_platform:
             dependencies["repackage"] = "{}-repackage-{}-{}".format(
-                base_label, build_platform, repack_id.replace('/', '-')
+                base_label, build_platform, repack_id.replace("/", "-")
             )
         dependencies["repackage-signing"] = "{}-repackage-signing-{}-{}".format(
-             base_label, build_platform, repack_id.replace('/', '-')
+            base_label, build_platform, repack_id.replace("/", "-")
         )
 
         attributes = copy_attributes_from_dependent_job(dep_job)
 
         task = {
-            'label': label,
-            'description': description,
-            'dependencies': dependencies,
-            'attributes': attributes,
-            'run-on-projects': dep_job.attributes.get('run_on_projects'),
-            'shipping-phase': job['shipping-phase'],
-            'shipping-product': job.get('shipping-product'),
-            'partner-private-path': job['partner-private-path'],
-            'partner-public-path': job['partner-public-path'],
-            'partner-bucket-scope': job['partner-bucket-scope'],
-            'extra': {
-                'repack_id': repack_id,
+            "label": label,
+            "description": description,
+            "dependencies": dependencies,
+            "attributes": attributes,
+            "run-on-projects": dep_job.attributes.get("run_on_projects"),
+            "shipping-phase": job["shipping-phase"],
+            "shipping-product": job.get("shipping-product"),
+            "partner-private-path": job["partner-private-path"],
+            "partner-public-path": job["partner-public-path"],
+            "partner-bucket-scope": job["partner-bucket-scope"],
+            "extra": {
+                "repack_id": repack_id,
             },
         }
         # we may have reduced the priority for partner jobs, otherwise task.py will set it
-        if job.get('priority'):
-            task['priority'] = job['priority']
+        if job.get("priority"):
+            task["priority"] = job["priority"]
 
         yield task
 
 
 def populate_scopes_and_worker_type(config, job, bucket_scope, partner_public=False):
-    action_scope = add_scope_prefix(config, 'beetmover:action:push-to-partner')
+    action_scope = add_scope_prefix(config, "beetmover:action:push-to-partner")
 
     task = deepcopy(job)
-    task['scopes'] = [bucket_scope, action_scope]
-    task['worker-type'] = 'beetmover'
-    task['partner_public'] = partner_public
+    task["scopes"] = [bucket_scope, action_scope]
+    task["worker-type"] = "beetmover"
+    task["partner_public"] = partner_public
     if partner_public:
-        task['label'] = "{}-public".format(task['label'])
+        task["label"] = "{}-public".format(task["label"])
     return task
 
 
@@ -144,10 +148,10 @@ def split_public_and_private(config, jobs):
     partner_config = get_partner_config_by_kind(config, config.kind)
 
     for job in jobs:
-        partner_bucket_scope = add_scope_prefix(config, job['partner-bucket-scope'])
-        partner, subpartner, _ = job['extra']['repack_id'].split('/')
+        partner_bucket_scope = add_scope_prefix(config, job["partner-bucket-scope"])
+        partner, subpartner, _ = job["extra"]["repack_id"].split("/")
 
-        if partner_config[partner][subpartner].get('upload_to_candidates'):
+        if partner_config[partner][subpartner].get("upload_to_candidates"):
             # public
             yield populate_scopes_and_worker_type(
                 config, job, public_bucket_scope, partner_public=True
@@ -159,66 +163,102 @@ def split_public_and_private(config, jobs):
             )
 
 
-def generate_upstream_artifacts(job, build_task_ref, repackage_task_ref,
-                                repackage_signing_task_ref, platform, repack_id,
-                                partner_path, repack_stub_installer=False):
+def generate_upstream_artifacts(
+    job,
+    build_task_ref,
+    repackage_task_ref,
+    repackage_signing_task_ref,
+    platform,
+    repack_id,
+    partner_path,
+    repack_stub_installer=False,
+):
 
     upstream_artifacts = []
     artifact_prefix = get_artifact_prefix(job)
 
     if "linux" in platform:
-        upstream_artifacts.append({
-            "taskId": {"task-reference": build_task_ref},
-            "taskType": "build",
-            "paths": ["{}/{}/target.tar.bz2".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
-        upstream_artifacts.append({
-            "taskId": {"task-reference": repackage_signing_task_ref},
-            "taskType": "repackage",
-            "paths": ["{}/{}/target.tar.bz2.asc".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
+        upstream_artifacts.append(
+            {
+                "taskId": {"task-reference": build_task_ref},
+                "taskType": "build",
+                "paths": ["{}/{}/target.tar.bz2".format(artifact_prefix, repack_id)],
+                "locale": partner_path,
+            }
+        )
+        upstream_artifacts.append(
+            {
+                "taskId": {"task-reference": repackage_signing_task_ref},
+                "taskType": "repackage",
+                "paths": [
+                    "{}/{}/target.tar.bz2.asc".format(artifact_prefix, repack_id)
+                ],
+                "locale": partner_path,
+            }
+        )
     elif "macosx" in platform:
-        upstream_artifacts.append({
-            "taskId": {"task-reference": repackage_task_ref},
-            "taskType": "repackage",
-            "paths": ["{}/{}/target.dmg".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
-        upstream_artifacts.append({
-            "taskId": {"task-reference": repackage_signing_task_ref},
-            "taskType": "repackage",
-            "paths": ["{}/{}/target.dmg.asc".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
+        upstream_artifacts.append(
+            {
+                "taskId": {"task-reference": repackage_task_ref},
+                "taskType": "repackage",
+                "paths": ["{}/{}/target.dmg".format(artifact_prefix, repack_id)],
+                "locale": partner_path,
+            }
+        )
+        upstream_artifacts.append(
+            {
+                "taskId": {"task-reference": repackage_signing_task_ref},
+                "taskType": "repackage",
+                "paths": ["{}/{}/target.dmg.asc".format(artifact_prefix, repack_id)],
+                "locale": partner_path,
+            }
+        )
     elif "win" in platform:
-        upstream_artifacts.append({
-            "taskId": {"task-reference": repackage_signing_task_ref},
-            "taskType": "repackage",
-            "paths": ["{}/{}/target.installer.exe".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
-        upstream_artifacts.append({
-            "taskId": {"task-reference": repackage_signing_task_ref},
-            "taskType": "repackage",
-            "paths": ["{}/{}/target.installer.exe.asc".format(artifact_prefix, repack_id)],
-            "locale": partner_path,
-        })
-        if platform.startswith('win32') and repack_stub_installer:
-            upstream_artifacts.append({
+        upstream_artifacts.append(
+            {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": ["{}/{}/target.stub-installer.exe".format(artifact_prefix, repack_id)],
+                "paths": [
+                    "{}/{}/target.installer.exe".format(artifact_prefix, repack_id)
+                ],
                 "locale": partner_path,
-            })
-            upstream_artifacts.append({
+            }
+        )
+        upstream_artifacts.append(
+            {
                 "taskId": {"task-reference": repackage_signing_task_ref},
                 "taskType": "repackage",
-                "paths": ["{}/{}/target.stub-installer.exe.asc".format(
-                    artifact_prefix, repack_id)],
+                "paths": [
+                    "{}/{}/target.installer.exe.asc".format(artifact_prefix, repack_id)
+                ],
                 "locale": partner_path,
-            })
+            }
+        )
+        if platform.startswith("win32") and repack_stub_installer:
+            upstream_artifacts.append(
+                {
+                    "taskId": {"task-reference": repackage_signing_task_ref},
+                    "taskType": "repackage",
+                    "paths": [
+                        "{}/{}/target.stub-installer.exe".format(
+                            artifact_prefix, repack_id
+                        )
+                    ],
+                    "locale": partner_path,
+                }
+            )
+            upstream_artifacts.append(
+                {
+                    "taskId": {"task-reference": repackage_signing_task_ref},
+                    "taskType": "repackage",
+                    "paths": [
+                        "{}/{}/target.stub-installer.exe.asc".format(
+                            artifact_prefix, repack_id
+                        )
+                    ],
+                    "locale": partner_path,
+                }
+            )
 
     if not upstream_artifacts:
         raise Exception("Couldn't find any upstream artifacts.")
@@ -231,17 +271,19 @@ def make_task_worker(config, jobs):
     for job in jobs:
         platform = job["attributes"]["build_platform"]
         repack_id = job["extra"]["repack_id"]
-        partner, subpartner, locale = job['extra']['repack_id'].split('/')
+        partner, subpartner, locale = job["extra"]["repack_id"].split("/")
         partner_config = get_partner_config_by_kind(config, config.kind)
-        repack_stub_installer = partner_config[partner][subpartner].get('repack_stub_installer')
+        repack_stub_installer = partner_config[partner][subpartner].get(
+            "repack_stub_installer"
+        )
         build_task = None
         repackage_task = None
         repackage_signing_task = None
 
         for dependency in job["dependencies"].keys():
-            if 'repackage-signing' in dependency:
+            if "repackage-signing" in dependency:
                 repackage_signing_task = dependency
-            elif 'repackage' in dependency:
+            elif "repackage" in dependency:
                 repackage_task = dependency
             else:
                 build_task = "build"
@@ -253,37 +295,44 @@ def make_task_worker(config, jobs):
         # generate the partner path; we'll send this to beetmover as the "locale"
         ftp_platform = get_ftp_platform(platform)
         repl_dict = {
-            "build_number": config.params['build_number'],
+            "build_number": config.params["build_number"],
             "locale": locale,
             "partner": partner,
             "platform": ftp_platform,
-            "release_partner_build_number": config.params['release_partner_build_number'],
+            "release_partner_build_number": config.params[
+                "release_partner_build_number"
+            ],
             "subpartner": subpartner,
-            "version": config.params['version'],
+            "version": config.params["version"],
         }
-        partner_public = job['partner_public']
+        partner_public = job["partner_public"]
         if partner_public:
-            partner_path_key = 'partner-public-path'
+            partner_path_key = "partner-public-path"
         else:
-            partner_path_key = 'partner-private-path'
+            partner_path_key = "partner-private-path"
         # Kinds can set these to None
         if not job[partner_path_key]:
             continue
         partner_path = job[partner_path_key].format(**repl_dict)
-        del(job['partner_public'])
-        del(job['partner-private-path'])
-        del(job['partner-public-path'])
-        del(job['partner-bucket-scope'])
+        del job["partner_public"]
+        del job["partner-private-path"]
+        del job["partner-public-path"]
+        del job["partner-bucket-scope"]
 
         worker = {
-            'implementation': 'beetmover',
-            'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': generate_upstream_artifacts(
-                job, build_task_ref, repackage_task_ref,
-                repackage_signing_task_ref, platform, repack_id,
-                partner_path, repack_stub_installer
+            "implementation": "beetmover",
+            "release-properties": craft_release_properties(config, job),
+            "upstream-artifacts": generate_upstream_artifacts(
+                job,
+                build_task_ref,
+                repackage_task_ref,
+                repackage_signing_task_ref,
+                platform,
+                repack_id,
+                partner_path,
+                repack_stub_installer,
             ),
-            'partner-public': partner_public,
+            "partner-public": partner_public,
         }
         job["worker"] = worker
 

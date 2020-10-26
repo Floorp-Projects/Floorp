@@ -25,7 +25,10 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
 
         args_list = ["--viewPort", "1024x768"]
 
-        if self.config["app"] in ("chrome", "chromium",):
+        if self.config["app"] in (
+            "chrome",
+            "chromium",
+        ):
             return args_list + [
                 "--browser",
                 "chrome",
@@ -34,7 +37,12 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
                 "--xvfbParams.display",
                 "0",
             ]
-        return args_list + ["--browser", self.config["app"], "--firefox.binaryPath", binary_path]
+        return args_list + [
+            "--browser",
+            self.config["app"],
+            "--firefox.binaryPath",
+            binary_path,
+        ]
 
     def setup_chrome_args(self, test):
         # Setup required chrome arguments

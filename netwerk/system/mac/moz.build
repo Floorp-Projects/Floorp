@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'nsNetworkLinkService.mm',
+    "nsNetworkLinkService.mm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] == 'clang':
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] == "clang":
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -67,8 +67,10 @@ def main(output, *filenames):
         for event_index, e in indexed:
             if e.record_on_os(buildconfig.substs["OS_TARGET"]):
                 for offset, label in enumerate(e.enum_labels):
-                    print(" %s_%s = %d,"
-                          % (category_cpp, label, event_index + offset), file=output)
+                    print(
+                        " %s_%s = %d," % (category_cpp, label, event_index + offset),
+                        file=output,
+                    )
 
     print("  // meta", file=output)
     print("  EventCount = %d," % index, file=output)
@@ -76,5 +78,5 @@ def main(output, *filenames):
     print(file_footer, file=output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

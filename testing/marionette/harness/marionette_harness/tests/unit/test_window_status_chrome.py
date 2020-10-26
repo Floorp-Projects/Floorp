@@ -14,7 +14,6 @@ from test_window_status_content import TestNoSuchWindowContent
 
 
 class TestNoSuchWindowChrome(TestNoSuchWindowContent):
-
     def setUp(self):
         super(TestNoSuchWindowChrome, self).setUp()
 

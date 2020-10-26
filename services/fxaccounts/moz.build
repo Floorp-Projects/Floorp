@@ -4,39 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Firefox Accounts')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Firefox Accounts")
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.ini"]
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-  'Credentials.jsm',
-  'FxAccounts.jsm',
-  'FxAccountsClient.jsm',
-  'FxAccountsCommands.js',
-  'FxAccountsCommon.js',
-  'FxAccountsConfig.jsm',
-  'FxAccountsDevice.jsm',
-  'FxAccountsKeys.jsm',
-  'FxAccountsOAuthGrantClient.jsm',
-  'FxAccountsPairing.jsm',
-  'FxAccountsPairingChannel.js',
-  'FxAccountsProfile.jsm',
-  'FxAccountsProfileClient.jsm',
-  'FxAccountsPush.jsm',
-  'FxAccountsStorage.jsm',
-  'FxAccountsTelemetry.jsm',
-  'FxAccountsWebChannel.jsm',
-  'RustFxAccount.js',
+    "Credentials.jsm",
+    "FxAccounts.jsm",
+    "FxAccountsClient.jsm",
+    "FxAccountsCommands.js",
+    "FxAccountsCommon.js",
+    "FxAccountsConfig.jsm",
+    "FxAccountsDevice.jsm",
+    "FxAccountsKeys.jsm",
+    "FxAccountsOAuthGrantClient.jsm",
+    "FxAccountsPairing.jsm",
+    "FxAccountsPairingChannel.js",
+    "FxAccountsProfile.jsm",
+    "FxAccountsProfileClient.jsm",
+    "FxAccountsPush.jsm",
+    "FxAccountsStorage.jsm",
+    "FxAccountsTelemetry.jsm",
+    "FxAccountsWebChannel.jsm",
+    "RustFxAccount.js",
 ]
 
-if CONFIG['MOZ_RUST_FXA_CLIENT']:
-  DIRS += ['rust-bridge']
+if CONFIG["MOZ_RUST_FXA_CLIENT"]:
+    DIRS += ["rust-bridge"]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]

@@ -5,13 +5,13 @@
 
 DIST_INSTALL = False
 
-SharedLibrary('TestDllBlocklist_AllowByVersion')
+SharedLibrary("TestDllBlocklist_AllowByVersion")
 
 UNIFIED_SOURCES = [
-    'TestDllBlocklist_AllowByVersion.cpp',
+    "TestDllBlocklist_AllowByVersion.cpp",
 ]
 
-RCFILE  = 'TestDllBlocklist_AllowByVersion.rc'
+RCFILE = "TestDllBlocklist_AllowByVersion.rc"
 
-if CONFIG['COMPILE_ENVIRONMENT']:
-    TEST_HARNESS_FILES.gtest += ['!TestDllBlocklist_AllowByVersion.dll']
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    TEST_HARNESS_FILES.gtest += ["!TestDllBlocklist_AllowByVersion.dll"]

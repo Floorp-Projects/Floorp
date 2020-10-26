@@ -10,10 +10,16 @@ import mozunit
 import pytest
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="fzf not installed on host")
+@pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
 def test_query_paths(run_mach, capfd):
-    cmd = ['try', 'fuzzy', '--no-push',
-           '-q', "^test-linux '64/debug-xpcshell-e10s-", 'caps/tests/unit/test_origin.js']
+    cmd = [
+        "try",
+        "fuzzy",
+        "--no-push",
+        "-q",
+        "^test-linux '64/debug-xpcshell-e10s-",
+        "caps/tests/unit/test_origin.js",
+    ]
     assert run_mach(cmd) == 0
 
     output = capfd.readouterr().out
@@ -29,9 +35,9 @@ def test_query_paths(run_mach, capfd):
     assert expected in output
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="fzf not installed on host")
+@pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
 def test_query(run_mach, capfd):
-    cmd = ['try', 'fuzzy', '--no-push', '-q', "'source-test-python-taskgraph-tests-py2"]
+    cmd = ["try", "fuzzy", "--no-push", "-q", "'source-test-python-taskgraph-tests-py2"]
     assert run_mach(cmd) == 0
 
     output = capfd.readouterr().out
@@ -46,5 +52,5 @@ def test_query(run_mach, capfd):
     assert expected in output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

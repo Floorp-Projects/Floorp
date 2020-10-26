@@ -9,10 +9,10 @@ from mozbuild.backend.configenvironment import PartialConfigEnvironment
 config = MozbuildObject.from_environment()
 partial_config = PartialConfigEnvironment(config.topobjdir)
 
-for var in ('topsrcdir', 'topobjdir'):
+for var in ("topsrcdir", "topobjdir"):
     value = getattr(config, var)
     setattr(sys.modules[__name__], var, value)
 
-for var in ('defines', 'substs', 'get_dependencies'):
+for var in ("defines", "substs", "get_dependencies"):
     value = getattr(partial_config, var)
     setattr(sys.modules[__name__], var, value)

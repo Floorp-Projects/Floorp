@@ -20,27 +20,30 @@ import os
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 import mozharness.base.script as script
-from mozharness.mozilla.building.buildbase import BUILD_BASE_CONFIG_OPTIONS, \
-    BuildingConfig, BuildScript
+from mozharness.mozilla.building.buildbase import (
+    BUILD_BASE_CONFIG_OPTIONS,
+    BuildingConfig,
+    BuildScript,
+)
 
 
 class FxDesktopBuild(BuildScript, object):
     def __init__(self):
         buildscript_kwargs = {
-            'config_options': BUILD_BASE_CONFIG_OPTIONS,
-            'all_actions': [
-                'get-secrets',
-                'clobber',
-                'build',
-                'static-analysis-autotest',
-                'valgrind-test',
-                'multi-l10n',
-                'package-source',
+            "config_options": BUILD_BASE_CONFIG_OPTIONS,
+            "all_actions": [
+                "get-secrets",
+                "clobber",
+                "build",
+                "static-analysis-autotest",
+                "valgrind-test",
+                "multi-l10n",
+                "package-source",
             ],
-            'require_config_file': True,
+            "require_config_file": True,
             # Default configuration
-            'config': {
-                'is_automation': True,
+            "config": {
+                "is_automation": True,
                 "debug_build": False,
                 # nightly stuff
                 "nightly_build": False,
@@ -48,19 +51,17 @@ class FxDesktopBuild(BuildScript, object):
                 # jobs have a minimal `hg pull`.
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
                 "repo_base": "https://hg.mozilla.org",
-                'build_resources_path': '%(upload_path)s/build_resources.json',
-                'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
-
+                "build_resources_path": "%(upload_path)s/build_resources.json",
+                "nightly_promotion_branches": ["mozilla-central", "mozilla-aurora"],
                 # try will overwrite these
-                'clone_with_purge': False,
-                'clone_by_revision': False,
-
-                'virtualenv_modules': [
-                    'requests==2.8.1',
+                "clone_with_purge": False,
+                "clone_by_revision": False,
+                "virtualenv_modules": [
+                    "requests==2.8.1",
                 ],
-                'virtualenv_path': 'venv',
+                "virtualenv_path": "venv",
             },
-            'ConfigClass': BuildingConfig,
+            "ConfigClass": BuildingConfig,
         }
         super(FxDesktopBuild, self).__init__(**buildscript_kwargs)
 
@@ -77,9 +78,8 @@ class FxDesktopBuild(BuildScript, object):
             # there is a seperation in mh.  for example, rather than having
             # '{mozharness_repo}/build/build/', I have '{
             # mozharness_repo}/build/src/'
-            'abs_obj_dir': os.path.join(abs_dirs['abs_work_dir'],
-                                        self._query_objdir()),
-            'upload_path': self.config["upload_env"]["UPLOAD_PATH"],
+            "abs_obj_dir": os.path.join(abs_dirs["abs_work_dir"], self._query_objdir()),
+            "upload_path": self.config["upload_env"]["UPLOAD_PATH"],
         }
         abs_dirs.update(dirs)
         self.abs_dirs = abs_dirs
@@ -92,9 +92,10 @@ class FxDesktopBuild(BuildScript, object):
         if self._is_windows():
             # Suppress Windows modal dialogs to avoid hangs
             import ctypes
+
             ctypes.windll.kernel32.SetErrorMode(0x8001)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fx_desktop_build = FxDesktopBuild()
     fx_desktop_build.run_and_exit()

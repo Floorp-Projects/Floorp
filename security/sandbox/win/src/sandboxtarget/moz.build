@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla += [
-    'sandboxTarget.h',
+    "sandboxTarget.h",
 ]
 
 SOURCES += [
-    'sandboxTarget.cpp',
+    "sandboxTarget.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/security/sandbox/chromium',
-    '/security/sandbox/chromium-shim',
+    "/security/sandbox/chromium",
+    "/security/sandbox/chromium-shim",
 ]
 
-DEFINES['UNICODE'] = True
+DEFINES["UNICODE"] = True
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

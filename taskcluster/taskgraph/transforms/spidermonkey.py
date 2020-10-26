@@ -13,12 +13,10 @@ transforms = TransformSequence()
 @transforms.add
 def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by platform, etc."""
-    fields = [
-        "fetches.toolchain"
-    ]
+    fields = ["fetches.toolchain"]
     for job in jobs:
         job = copy.deepcopy(job)  # don't overwrite dict values here
         for field in fields:
-            resolve_keyed_by(item=job, field=field, item_name=job['name'])
+            resolve_keyed_by(item=job, field=field, item_name=job["name"])
 
         yield job

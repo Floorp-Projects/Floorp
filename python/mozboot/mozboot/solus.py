@@ -17,49 +17,47 @@ if sys.version_info < (3,):
     input = raw_input  # noqa
 
 
-class SolusBootstrapper(
-        LinuxBootstrapper,
-        BaseBootstrapper):
-    '''Solus experimental bootstrapper.'''
+class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
+    """Solus experimental bootstrapper."""
 
     SYSTEM_PACKAGES = [
-        'nodejs',
-        'unzip',
-        'zip',
+        "nodejs",
+        "unzip",
+        "zip",
     ]
     SYSTEM_COMPONENTS = [
-        'system.devel',
+        "system.devel",
     ]
 
     BROWSER_PACKAGES = [
-        'alsa-lib',
-        'dbus',
-        'libgtk-2',
-        'libgtk-3',
-        'libevent',
-        'libvpx',
-        'libxt',
-        'nasm',
-        'libstartup-notification',
-        'gst-plugins-base',
-        'gst-plugins-good',
-        'pulseaudio',
-        'xorg-server-xvfb',
-        'yasm',
+        "alsa-lib",
+        "dbus",
+        "libgtk-2",
+        "libgtk-3",
+        "libevent",
+        "libvpx",
+        "libxt",
+        "nasm",
+        "libstartup-notification",
+        "gst-plugins-base",
+        "gst-plugins-good",
+        "pulseaudio",
+        "xorg-server-xvfb",
+        "yasm",
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        'openjdk-8',
+        "openjdk-8",
         # For downloading the Android SDK and NDK.
-        'wget',
+        "wget",
         # See comment about 32 bit binaries and multilib below.
-        'ncurses-32bit',
-        'readline-32bit',
-        'zlib-32bit',
+        "ncurses-32bit",
+        "readline-32bit",
+        "zlib-32bit",
     ]
 
     def __init__(self, version, dist_id, **kwargs):
-        print('Using an experimental bootstrapper for Solus.')
+        print("Using an experimental bootstrapper for Solus.")
         BaseBootstrapper.__init__(self, **kwargs)
 
     def install_system_packages(self):
@@ -89,18 +87,21 @@ class SolusBootstrapper(
         try:
             self.package_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
         except Exception as e:
-            print('Failed to install all packages!')
+            print("Failed to install all packages!")
             raise e
 
         # 2. Android pieces.
         self.ensure_java(mozconfig_builder)
         from mozboot import android
-        android.ensure_android('linux', artifact_mode=artifact_mode,
-                               no_interactive=self.no_interactive)
+
+        android.ensure_android(
+            "linux", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+        )
 
     def generate_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        return android.generate_mozconfig('linux', artifact_mode=artifact_mode)
+
+        return android.generate_mozconfig("linux", artifact_mode=artifact_mode)
 
     def generate_mobile_android_artifact_mode_mozconfig(self):
         return self.generate_mobile_android_mozconfig(artifact_mode=True)
@@ -109,21 +110,21 @@ class SolusBootstrapper(
         pass
 
     def upgrade_mercurial(self, current):
-        self.package_install('mercurial')
+        self.package_install("mercurial")
 
     def package_install(self, *packages):
-        command = ['eopkg', 'install']
+        command = ["eopkg", "install"]
         if self.no_interactive:
-            command.append('--yes-all')
+            command.append("--yes-all")
 
         command.extend(packages)
 
         self.run_as_root(command)
 
     def component_install(self, *components):
-        command = ['eopkg', 'install', '-c']
+        command = ["eopkg", "install", "-c"]
         if self.no_interactive:
-            command.append('--yes-all')
+            command.append("--yes-all")
 
         command.extend(components)
 

@@ -4,38 +4,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
-DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
-DIRS += ['locales']
+DIRS += ["locales"]
 
-FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'] += [
-  'background.js',
-  'manifest.json'
+FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"] += [
+    "background.js",
+    "manifest.json",
 ]
 
-FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'].experimentalAPIs += [
-  'experimentalAPIs/aboutConfigPrefs.js',
-  'experimentalAPIs/aboutConfigPrefs.json',
-  'experimentalAPIs/browserInfo.js',
-  'experimentalAPIs/browserInfo.json',
-  'experimentalAPIs/l10n.js',
-  'experimentalAPIs/l10n.json',
-  'experimentalAPIs/pageActionExtras.js',
-  'experimentalAPIs/pageActionExtras.json',
-  'experimentalAPIs/tabExtras.js',
-  'experimentalAPIs/tabExtras.json'
+FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].experimentalAPIs += [
+    "experimentalAPIs/aboutConfigPrefs.js",
+    "experimentalAPIs/aboutConfigPrefs.json",
+    "experimentalAPIs/browserInfo.js",
+    "experimentalAPIs/browserInfo.json",
+    "experimentalAPIs/l10n.js",
+    "experimentalAPIs/l10n.json",
+    "experimentalAPIs/pageActionExtras.js",
+    "experimentalAPIs/pageActionExtras.json",
+    "experimentalAPIs/tabExtras.js",
+    "experimentalAPIs/tabExtras.json",
 ]
 
-FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'].experimentalAPIs.actors += [
-  'experimentalAPIs/actors/tabExtrasActor.jsm'
+FINAL_TARGET_FILES.features[
+    "webcompat-reporter@mozilla.org"
+].experimentalAPIs.actors += ["experimentalAPIs/actors/tabExtrasActor.jsm"]
+
+FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].icons += [
+    "icons/lightbulb.svg"
 ]
 
-FINAL_TARGET_FILES.features['webcompat-reporter@mozilla.org'].icons += [
-  'icons/lightbulb.svg'
-]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-
-with Files('**'):
-    BUG_COMPONENT = ('Web Compatibility', 'Tooling & Investigations')
+with Files("**"):
+    BUG_COMPONENT = ("Web Compatibility", "Tooling & Investigations")

@@ -10,19 +10,18 @@ import subprocess
 
 
 def extract_exe(package, target):
-    subprocess.check_call(['7z', 'x', package, 'core'])
-    shutil.move('core', target)
+    subprocess.check_call(["7z", "x", package, "core"])
+    shutil.move("core", target)
 
 
 def main(args):
     if len(args) != 2:
-        print('Usage: exe_7z_extract.py <package> <target>',
-              file=sys.stderr)
+        print("Usage: exe_7z_extract.py <package> <target>", file=sys.stderr)
         return 1
     else:
         extract_exe(args[0], args[1])
         return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

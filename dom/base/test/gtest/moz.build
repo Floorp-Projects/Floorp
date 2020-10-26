@@ -5,17 +5,15 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestContentUtils.cpp',
-    'TestMimeType.cpp',
-    'TestParser.cpp',
-    'TestPlainTextSerializer.cpp',
-    'TestXPathGenerator.cpp',
+    "TestContentUtils.cpp",
+    "TestMimeType.cpp",
+    "TestParser.cpp",
+    "TestPlainTextSerializer.cpp",
+    "TestXPathGenerator.cpp",
 ]
 
-LOCAL_INCLUDES += [
-    '/dom/base'
-]
+LOCAL_INCLUDES += ["/dom/base"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

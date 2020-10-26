@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # NOTE: I think there are a few other possible components in this directory
-with Files('**'):
-    BUG_COMPONENT = ('GeckoView', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("GeckoView", "General")
 
-DIRS += ['geckoview']
+DIRS += ["geckoview"]
 
-DEFINES['AB_CD'] = CONFIG['MOZ_UI_LOCALE']
-DEFINES['PACKAGE'] = 'browser'
-DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
-DEFINES['MOZ_APP_VERSION_DISPLAY'] = CONFIG['MOZ_APP_VERSION_DISPLAY']
-DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
+DEFINES["AB_CD"] = CONFIG["MOZ_UI_LOCALE"]
+DEFINES["PACKAGE"] = "browser"
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_VERSION_DISPLAY"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]
+DEFINES["ANDROID_PACKAGE_NAME"] = CONFIG["ANDROID_PACKAGE_NAME"]

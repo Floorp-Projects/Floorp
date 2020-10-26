@@ -5,39 +5,39 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsISDBCallbacks.idl',
-    'nsISDBConnection.idl',
-    'nsISDBRequest.idl',
-    'nsISDBResults.idl',
+    "nsISDBCallbacks.idl",
+    "nsISDBConnection.idl",
+    "nsISDBRequest.idl",
+    "nsISDBResults.idl",
 ]
 
-XPIDL_MODULE = 'dom_simpledb'
+XPIDL_MODULE = "dom_simpledb"
 
 EXPORTS.mozilla.dom.simpledb += [
-    'ActorsParent.h',
+    "ActorsParent.h",
 ]
 
 EXPORTS.mozilla.dom += [
-    'SDBConnection.h',
+    "SDBConnection.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ActorsChild.cpp',
-    'ActorsParent.cpp',
-    'SDBConnection.cpp',
-    'SDBRequest.cpp',
-    'SDBResults.cpp',
-    'SimpleDBCommon.cpp',
+    "ActorsChild.cpp",
+    "ActorsParent.cpp",
+    "SDBConnection.cpp",
+    "SDBRequest.cpp",
+    "SDBResults.cpp",
+    "SimpleDBCommon.cpp",
 ]
 
 IPDL_SOURCES += [
-    'PBackgroundSDBConnection.ipdl',
-    'PBackgroundSDBRequest.ipdl',
+    "PBackgroundSDBConnection.ipdl",
+    "PBackgroundSDBRequest.ipdl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["GNU_CXX"]:
+    CXXFLAGS += ["-Wno-error=shadow"]

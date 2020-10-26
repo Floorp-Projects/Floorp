@@ -38,12 +38,11 @@ class EasyServer(ThreadingMixIn, HTTPServer):
     def handle_error(self, request, client_address):
         error = sys.exc_info()[1]
 
-        if ((isinstance(error, socket.error) and
-             isinstance(error.args, tuple) and
-             error.args[0] in self.acceptable_errors)
-            or
-            (isinstance(error, IOError) and
-             error.errno in self.acceptable_errors)):
+        if (
+            isinstance(error, socket.error)
+            and isinstance(error.args, tuple)
+            and error.args[0] in self.acceptable_errors
+        ) or (isinstance(error, IOError) and error.errno in self.acceptable_errors):
             pass  # remote hang up before the result is sent
         else:
             logging.error(error)
@@ -56,7 +55,7 @@ class Request(object):
     """Details of a request."""
 
     # attributes from urlsplit that this class also sets
-    uri_attrs = ('scheme', 'netloc', 'path', 'query', 'fragment')
+    uri_attrs = ("scheme", "netloc", "path", "query", "fragment")
 
     def __init__(self, uri, headers, rfile=None):
         self.uri = uri
@@ -65,7 +64,7 @@ class Request(object):
         for i, attr in enumerate(self.uri_attrs):
             setattr(self, attr, parsed[i])
         try:
-            body_len = int(self.headers.get('Content-length', 0))
+            body_len = int(self.headers.get("Content-length", 0))
         except ValueError:
             body_len = 0
         if body_len and rfile:
@@ -84,21 +83,23 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, *args, **kwargs):
         SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
-        self.extensions_map['.svg'] = 'image/svg+xml'
+        self.extensions_map[".svg"] = "image/svg+xml"
 
     def _try_handler(self, method):
         if self.log_requests:
-            self.request_log.append({'method': method,
-                                     'path': self.request.path,
-                                     'time': time.time()})
+            self.request_log.append(
+                {"method": method, "path": self.request.path, "time": time.time()}
+            )
 
-        handlers = [handler for handler in self.urlhandlers
-                    if handler['method'] == method]
+        handlers = [
+            handler for handler in self.urlhandlers if handler["method"] == method
+        ]
         for handler in handlers:
-            m = re.match(handler['path'], self.request.path)
+            m = re.match(handler["path"], self.request.path)
             if m:
-                (response_code, headerdict, data) = \
-                    handler['function'](self.request, *m.groups())
+                (response_code, headerdict, data) = handler["function"](
+                    self.request, *m.groups()
+                )
                 self.send_response(response_code)
                 for (keyword, value) in iteritems(headerdict):
                     self.send_header(keyword, value)
@@ -113,14 +114,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """Find the on-disk path to serve this request from,
         using self.path_mappings and self.docroot.
         Return (url_path, disk_path)."""
-        path_components = list(filter(None, self.request.path.split('/')))
+        path_components = list(filter(None, self.request.path.split("/")))
         for prefix, disk_path in iteritems(self.path_mappings):
-            prefix_components = list(filter(None, prefix.split('/')))
+            prefix_components = list(filter(None, prefix.split("/")))
             if len(path_components) < len(prefix_components):
                 continue
-            if path_components[:len(prefix_components)] == prefix_components:
-                return ('/'.join(path_components[len(prefix_components):]),
-                        disk_path)
+            if path_components[: len(prefix_components)] == prefix_components:
+                return ("/".join(path_components[len(prefix_components) :]), disk_path)
         if self.docroot:
             return self.request.path, self.docroot
         return None
@@ -131,38 +131,37 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return retval
 
     def do_GET(self):
-        if not self._try_handler('GET'):
+        if not self._try_handler("GET"):
             res = self._find_path()
             if res:
                 self.path, self.disk_root = res
                 # don't include query string and fragment, and prepend
                 # host directory if required.
                 if self.request.netloc and self.proxy_host_dirs:
-                    self.path = '/' + self.request.netloc + \
-                        self.path
+                    self.path = "/" + self.request.netloc + self.path
                 SimpleHTTPRequestHandler.do_GET(self)
             else:
                 self.send_response(404)
                 self.end_headers()
-                self.wfile.write(b'')
+                self.wfile.write(b"")
 
     def do_POST(self):
         # if we don't have a match, we always fall through to 404 (this may
         # not be "technically" correct if we have a local file at the same
         # path as the resource but... meh)
-        if not self._try_handler('POST'):
+        if not self._try_handler("POST"):
             self.send_response(404)
             self.end_headers()
-            self.wfile.write(b'')
+            self.wfile.write(b"")
 
     def do_DEL(self):
         # if we don't have a match, we always fall through to 404 (this may
         # not be "technically" correct if we have a local file at the same
         # path as the resource but... meh)
-        if not self._try_handler('DEL'):
+        if not self._try_handler("DEL"):
             self.send_response(404)
             self.end_headers()
-            self.wfile.write(b'')
+            self.wfile.write(b"")
 
     def translate_path(self, path):
         # this is taken from SimpleHTTPRequestHandler.translate_path(),
@@ -170,7 +169,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # parse_request()/do_GET() have already stripped the query string and
         # fragment and mangled the path for proxying, if required.
         path = posixpath.normpath(unquote(self.path))
-        words = path.split('/')
+        words = path.split("/")
         words = list(filter(None, words))
         path = self.disk_root
         for word in words:
@@ -232,14 +231,16 @@ class MozHttpd(object):
     True.
     """
 
-    def __init__(self,
-                 host="127.0.0.1",
-                 port=0,
-                 docroot=None,
-                 urlhandlers=None,
-                 path_mappings=None,
-                 proxy_host_dirs=False,
-                 log_requests=False):
+    def __init__(
+        self,
+        host="127.0.0.1",
+        port=0,
+        docroot=None,
+        urlhandlers=None,
+        path_mappings=None,
+        proxy_host_dirs=False,
+        log_requests=False,
+    ):
         self.host = host
         self.port = int(port)
         self.docroot = docroot
@@ -309,20 +310,36 @@ class MozHttpd(object):
 
 def main(args=sys.argv[1:]):
     # parse command line options
-    parser = ArgumentParser(description='Basic python webserver.',
-                            formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--port', dest='port',
-                        type=int, default=8888,
-                        help="port to run the server on")
-    parser.add_argument('-H', '--host', dest='host',
-                        default='127.0.0.1',
-                        help="host address")
-    parser.add_argument('-i', '--external-ip', action="store_true",
-                        dest='external_ip', default=False,
-                        help="find and use external ip for host")
-    parser.add_argument('-d', '--docroot', dest='docroot',
-                        default=os.getcwd(),
-                        help="directory to serve files from")
+    parser = ArgumentParser(
+        description="Basic python webserver.",
+        formatter_class=ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        dest="port",
+        type=int,
+        default=8888,
+        help="port to run the server on",
+    )
+    parser.add_argument(
+        "-H", "--host", dest="host", default="127.0.0.1", help="host address"
+    )
+    parser.add_argument(
+        "-i",
+        "--external-ip",
+        action="store_true",
+        dest="external_ip",
+        default=False,
+        help="find and use external ip for host",
+    )
+    parser.add_argument(
+        "-d",
+        "--docroot",
+        dest="docroot",
+        default=os.getcwd(),
+        help="directory to serve files from",
+    )
     args = parser.parse_args()
 
     if args.external_ip:
@@ -337,5 +354,5 @@ def main(args=sys.argv[1:]):
     server.start(block=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

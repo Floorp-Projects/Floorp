@@ -3,21 +3,21 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES = [
-    'TestIDBResult.cpp',
+    "TestIDBResult.cpp",
 ]
 
 # not UNIFIED_SOURCES because TestKey.cpp has classes in an anonymous namespace
 # which result in a GCC error when used in tests, cf. gfx/tests/gtest/moz.build
 SOURCES = [
-    'TestFileInfo.cpp',
-    'TestKey.cpp',
-    'TestSafeRefPtr.cpp',
+    "TestFileInfo.cpp",
+    "TestKey.cpp",
+    "TestSafeRefPtr.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
-    '/dom/indexedDB',
+    "/dom/indexedDB",
 ]

@@ -8,28 +8,28 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
 EXPORTS.mozilla.dom.filehandle += [
-    'ActorsParent.h',
-    'SerializationHelpers.h',
+    "ActorsParent.h",
+    "SerializationHelpers.h",
 ]
 
 EXPORTS.mozilla.dom += [
-    'FileHandleStorage.h',
+    "FileHandleStorage.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ActorsParent.cpp',
+    "ActorsParent.cpp",
 ]
 
 IPDL_SOURCES += [
-    'PBackgroundFileHandle.ipdl',
-    'PBackgroundFileRequest.ipdl',
-    'PBackgroundMutableFile.ipdl',
+    "PBackgroundFileHandle.ipdl",
+    "PBackgroundFileRequest.ipdl",
+    "PBackgroundMutableFile.ipdl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '../base',
+    "../base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

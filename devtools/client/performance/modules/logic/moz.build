@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'frame-utils.js',
-    'jit.js',
-    'telemetry.js',
-    'tree-model.js',
-    'waterfall-utils.js',
+    "frame-utils.js",
+    "jit.js",
+    "telemetry.js",
+    "tree-model.js",
+    "waterfall-utils.js",
 )

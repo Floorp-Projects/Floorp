@@ -113,10 +113,10 @@ with Files("*wheeltransaction*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 
-XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+MOCHITEST_MANIFESTS += ["mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
 
 # if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 #

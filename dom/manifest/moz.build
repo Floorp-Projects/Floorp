@@ -8,14 +8,14 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXTRA_JS_MODULES += [
-    'ImageObjectProcessor.jsm',
-    'Manifest.jsm',
-    'ManifestFinder.jsm',
-    'ManifestIcons.jsm',
-    'ManifestObtainer.jsm',
-    'ManifestProcessor.jsm',
-    'ValueExtractor.jsm',
+    "ImageObjectProcessor.jsm",
+    "Manifest.jsm",
+    "ManifestFinder.jsm",
+    "ManifestIcons.jsm",
+    "ManifestObtainer.jsm",
+    "ManifestProcessor.jsm",
+    "ValueExtractor.jsm",
 ]
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]

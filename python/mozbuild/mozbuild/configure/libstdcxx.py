@@ -20,14 +20,14 @@ import subprocess
 import re
 import six
 
-re_for_ld = re.compile('.*\((.*)\).*')
+re_for_ld = re.compile(".*\((.*)\).*")
 
 
 def parse_readelf_line(x):
     """Return the version from a readelf line that looks like:
     0x00ec: Rev: 1  Flags: none  Index: 8  Cnt: 2  Name: GLIBCXX_3.4.6
     """
-    return x.split(':')[-1].split('_')[-1].strip()
+    return x.split(":")[-1].split("_")[-1].strip()
 
 
 def parse_ld_line(x):
@@ -41,14 +41,12 @@ def parse_ld_line(x):
 
 
 def split_ver(v):
-    """Covert the string '1.2.3' into the list [1,2,3]
-    """
-    return [int(x) for x in v.split('.')]
+    """Covert the string '1.2.3' into the list [1,2,3]"""
+    return [int(x) for x in v.split(".")]
 
 
 def encode_ver(v):
-    """Encode the version as a single number.
-    """
+    """Encode the version as a single number."""
     t = split_ver(v)
     return t[0] << 16 | t[1] << 8 | t[2]
 
@@ -57,35 +55,40 @@ def find_version(args):
     """Given a base command line for a compiler, find the version of the
     libstdc++ it uses.
     """
-    args += ['-shared', '-Wl,-t']
+    args += ["-shared", "-Wl,-t"]
     p = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    candidates = [six.ensure_text(x, encoding='ascii') for x in p.stdout]
-    candidates = [x for x in candidates if 'libstdc++.so' in x]
-    candidates = [x for x in candidates if 'skipping incompatible' not in x]
+    candidates = [six.ensure_text(x, encoding="ascii") for x in p.stdout]
+    candidates = [x for x in candidates if "libstdc++.so" in x]
+    candidates = [x for x in candidates if "skipping incompatible" not in x]
     if not candidates:
-        raise Exception('''Couldn't find libstdc++ candidates!
-command line: %s''' % args)
+        raise Exception(
+            """Couldn't find libstdc++ candidates!
+command line: %s"""
+            % args
+        )
     if len(candidates) != 1:
-        raise Exception('''Too many libstdc++ candidates!
+        raise Exception(
+            """Too many libstdc++ candidates!
 command line: %s
 candidates:
-%s''' % (args, '\n'.join(candidates)))
+%s"""
+            % (args, "\n".join(candidates))
+        )
 
     libstdcxx = parse_ld_line(candidates[-1])
 
-    p = subprocess.Popen(['readelf', '-V', libstdcxx], stdout=subprocess.PIPE)
-    lines = [six.ensure_text(x, encoding='ascii') for x in p.stdout]
-    versions = [parse_readelf_line(x)
-                for x in lines if 'Name: GLIBCXX' in x]
+    p = subprocess.Popen(["readelf", "-V", libstdcxx], stdout=subprocess.PIPE)
+    lines = [six.ensure_text(x, encoding="ascii") for x in p.stdout]
+    versions = [parse_readelf_line(x) for x in lines if "Name: GLIBCXX" in x]
     last_version = sorted(versions, key=split_ver)[-1]
     return (last_version, encode_ver(last_version))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """Given the value of environment variable CXX or HOST_CXX, find the
     version of the libstdc++ it uses.
     """
-    cxx_env = os.environ['CXX']
-    print('MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env.split())[1])
-    host_cxx_env = os.environ.get('HOST_CXX', cxx_env)
-    print('MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env.split())[1])
+    cxx_env = os.environ["CXX"]
+    print("MOZ_LIBSTDCXX_TARGET_VERSION=%s" % find_version(cxx_env.split())[1])
+    host_cxx_env = os.environ.get("HOST_CXX", cxx_env)
+    print("MOZ_LIBSTDCXX_HOST_VERSION=%s" % find_version(host_cxx_env.split())[1])

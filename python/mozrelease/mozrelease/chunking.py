@@ -13,8 +13,9 @@ class ChunkingError(Exception):
 
 def getChunk(things, chunks, thisChunk):
     if thisChunk > chunks:
-        raise ChunkingError("thisChunk (%d) is greater than total chunks (%d)" %
-                            (thisChunk, chunks))
+        raise ChunkingError(
+            "thisChunk (%d) is greater than total chunks (%d)" % (thisChunk, chunks)
+        )
     possibleThings = copy(things)
     nThings = len(possibleThings)
     for c in range(1, chunks + 1):

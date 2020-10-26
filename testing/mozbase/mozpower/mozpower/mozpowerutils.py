@@ -13,12 +13,14 @@ def get_logger(logger_name):
     logger = None
     try:
         import mozlog
+
         logger = mozlog.get_default_logger(logger_name)
     except ImportError:
         pass
 
     if logger is None:
         import logging
+
         logging.basicConfig()
         logger = logging.getLogger(logger_name)
     return logger
@@ -30,7 +32,7 @@ def average_summary(values):
     :param list values: list of values to average.
     :returns: float
     """
-    return sum([float(v[0]) for v in values])/len(values)
+    return sum([float(v[0]) for v in values]) / len(values)
 
 
 def sum_summary(values):
@@ -50,7 +52,7 @@ def frequency_summary(values):
     """
     avgfreq = 0
     for val, name in values:
-        if 'avg' in name:
+        if "avg" in name:
             avgfreq = float(val)
             break
     return avgfreq

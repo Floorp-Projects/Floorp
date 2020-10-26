@@ -22,7 +22,7 @@ except ImportError:
 
 BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
 RETRY_TIMEOUT = 9 * 60  # seconds
-RETRY_INTERVAL = 10     # seconds
+RETRY_INTERVAL = 10  # seconds
 
 # Preset confidence thresholds.
 CT_LOW = 0.7
@@ -50,7 +50,7 @@ class BugbugTimeoutException(Exception):
 @memoize
 def get_session():
     s = requests.Session()
-    s.headers.update({'X-API-KEY': 'gecko-taskgraph'})
+    s.headers.update({"X-API-KEY": "gecko-taskgraph"})
     return requests_retry_session(retries=5, session=s)
 
 
@@ -76,7 +76,9 @@ def _write_perfherder_data(lower_is_better):
 
 @memoize
 def push_schedules(branch, rev):
-    url = BUGBUG_BASE_URL + '/push/{branch}/{rev}/schedules'.format(branch=branch, rev=rev)
+    url = BUGBUG_BASE_URL + "/push/{branch}/{rev}/schedules".format(
+        branch=branch, rev=rev
+    )
     start = monotonic()
     session = get_session()
 
@@ -100,19 +102,25 @@ def push_schedules(branch, rev):
         i += 1
     end = monotonic()
 
-    _write_perfherder_data(lower_is_better={
-        'bugbug_push_schedules_time': end-start,
-        'bugbug_push_schedules_retries': i,
-    })
+    _write_perfherder_data(
+        lower_is_better={
+            "bugbug_push_schedules_time": end - start,
+            "bugbug_push_schedules_retries": i,
+        }
+    )
 
     data = r.json()
     if r.status_code == 202:
-        raise BugbugTimeoutException("Timed out waiting for result from '{}'".format(url))
+        raise BugbugTimeoutException(
+            "Timed out waiting for result from '{}'".format(url)
+        )
 
     if "groups" in data:
         data["groups"] = {translate_group(k): v for k, v in data["groups"].items()}
 
     if "config_groups" in data:
-        data["config_groups"] = {translate_group(k): v for k, v in data["config_groups"].items()}
+        data["config_groups"] = {
+            translate_group(k): v for k, v in data["config_groups"].items()
+        }
 
     return data

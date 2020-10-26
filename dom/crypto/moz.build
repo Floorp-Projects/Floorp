@@ -8,28 +8,28 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 EXPORTS.mozilla.dom += [
-    'CryptoBuffer.h',
-    'CryptoKey.h',
-    'KeyAlgorithmProxy.h',
-    'WebCryptoCommon.h',
-    'WebCryptoTask.h',
+    "CryptoBuffer.h",
+    "CryptoKey.h",
+    "KeyAlgorithmProxy.h",
+    "WebCryptoCommon.h",
+    "WebCryptoTask.h",
 ]
 
 UNIFIED_SOURCES += [
-    'CryptoBuffer.cpp',
-    'CryptoKey.cpp',
-    'KeyAlgorithmProxy.cpp',
-    'WebCryptoTask.cpp',
+    "CryptoBuffer.cpp",
+    "CryptoKey.cpp",
+    "KeyAlgorithmProxy.cpp",
+    "WebCryptoTask.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/security/manager/ssl',
-    '/xpcom/build',
+    "/security/manager/ssl",
+    "/xpcom/build",
 ]
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]

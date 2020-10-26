@@ -5,19 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'WaveDecoder.h',
-    'WaveDemuxer.h',
+    "WaveDecoder.h",
+    "WaveDemuxer.h",
 ]
 
 UNIFIED_SOURCES += [
-    'WaveDecoder.cpp',
-    'WaveDemuxer.cpp',
+    "WaveDecoder.cpp",
+    "WaveDemuxer.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

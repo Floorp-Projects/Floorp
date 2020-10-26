@@ -6,14 +6,20 @@
 
 defs = []
 
-for s in ('MOZ_GECKODRIVER', 'MOZ_ASAN', 'MOZ_TSAN', 'MOZ_CRASHREPORTER',
-          'MOZ_APP_NAME'):
+for s in (
+    "MOZ_GECKODRIVER",
+    "MOZ_ASAN",
+    "MOZ_TSAN",
+    "MOZ_CRASHREPORTER",
+    "MOZ_APP_NAME",
+):
     if CONFIG[s]:
-        defs.append('-D%s=%s' % (s, '1' if CONFIG[s] is True else CONFIG[s]))
+        defs.append("-D%s=%s" % (s, "1" if CONFIG[s] is True else CONFIG[s]))
 
 GeneratedFile(
-    'MacOS-files.txt',
-    script='/python/mozbuild/mozbuild/action/preprocessor.py',
-    entry_point='generate',
-    inputs=['MacOS-files.in'],
-    flags=defs)
+    "MacOS-files.txt",
+    script="/python/mozbuild/mozbuild/action/preprocessor.py",
+    entry_point="generate",
+    inputs=["MacOS-files.in"],
+    flags=defs,
+)

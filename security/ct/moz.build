@@ -8,52 +8,52 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 EXPORTS += [
-    'BTTypes.h',
-    'BTVerifier.h',
-    'Buffer.h',
-    'CTLog.h',
-    'CTPolicyEnforcer.h',
-    'CTVerifyResult.h',
-    'SignedCertificateTimestamp.h',
+    "BTTypes.h",
+    "BTVerifier.h",
+    "Buffer.h",
+    "CTLog.h",
+    "CTPolicyEnforcer.h",
+    "CTVerifyResult.h",
+    "SignedCertificateTimestamp.h",
 ]
 
 UNIFIED_SOURCES += [
-    'BTVerifier.cpp',
-    'Buffer.cpp',
-    'CTDiversityPolicy.cpp',
-    'CTLogVerifier.cpp',
-    'CTObjectsExtractor.cpp',
-    'CTPolicyEnforcer.cpp',
-    'CTSerialization.cpp',
-    'CTVerifyResult.cpp',
-    'MultiLogCTVerifier.cpp',
-    'SignedCertificateTimestamp.cpp',
+    "BTVerifier.cpp",
+    "Buffer.cpp",
+    "CTDiversityPolicy.cpp",
+    "CTLogVerifier.cpp",
+    "CTObjectsExtractor.cpp",
+    "CTPolicyEnforcer.cpp",
+    "CTSerialization.cpp",
+    "CTVerifyResult.cpp",
+    "MultiLogCTVerifier.cpp",
+    "SignedCertificateTimestamp.cpp",
 ]
 
 TEST_DIRS += [
-    'tests/gtest',
+    "tests/gtest",
 ]
 
-if not CONFIG['MOZ_DEBUG']:
-    DEFINES['NDEBUG'] = True
+if not CONFIG["MOZ_DEBUG"]:
+    DEFINES["NDEBUG"] = True
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     # -Wall on clang-cl maps to -Weverything, which turns on way too
     # much, so we're passing through -Wall using -Xclang.
-    CXXFLAGS += ['-Xclang']
-CXXFLAGS += ['-Wall']
+    CXXFLAGS += ["-Xclang"]
+CXXFLAGS += ["-Wall"]
 
 CXXFLAGS += [
-    '-Wextra',
-    '-Wunreachable-code',
+    "-Wextra",
+    "-Wunreachable-code",
 ]
 
 # Gecko headers aren't warning-free enough for us to enable these warnings.
 CXXFLAGS += [
-    '-Wno-unused-parameter',
+    "-Wno-unused-parameter",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     AllowCompilerWarnings()  # workaround for bug 1090497

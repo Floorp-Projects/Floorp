@@ -18,14 +18,23 @@
 # - `check_msg` is the message to be printed to accompany compiling the test
 #   program.
 @template
-def try_compile(includes=None, body='', language='C++', flags=None, check_msg=None,
-                when=None, onerror=lambda: None):
+def try_compile(
+    includes=None,
+    body="",
+    language="C++",
+    flags=None,
+    check_msg=None,
+    when=None,
+    onerror=lambda: None,
+):
     compiler = {
-        'C': c_compiler,
-        'C++': cxx_compiler,
+        "C": c_compiler,
+        "C++": cxx_compiler,
     }[language]
 
-    return compiler.try_compile(includes, body, flags, check_msg, when=when, onerror=onerror)
+    return compiler.try_compile(
+        includes, body, flags, check_msg, when=when, onerror=onerror
+    )
 
 
 # Checks for the presence of the given header on the target system by compiling
@@ -44,8 +53,9 @@ def try_compile(includes=None, body='', language='C++', flags=None, check_msg=No
 # - `when` is a depends function that if present will make performing the check
 #   conditional on the value of that function.
 @template
-def check_header(header, language='C++', flags=None, includes=None, when=None,
-                 onerror=lambda: None):
+def check_header(
+    header, language="C++", flags=None, includes=None, when=None, onerror=lambda: None
+):
     if when is None:
         when = always
 
@@ -55,14 +65,20 @@ def check_header(header, language='C++', flags=None, includes=None, when=None,
         includes = []
     includes.append(header)
 
-    have_header = try_compile(includes=includes, language=language, flags=flags,
-                              check_msg='for %s' % header, when=when, onerror=onerror)
-    header_var = 'HAVE_%s' % (header.upper()
-                                    .replace('-', '_')
-                                    .replace('/', '_')
-                                    .replace('.', '_'))
+    have_header = try_compile(
+        includes=includes,
+        language=language,
+        flags=flags,
+        check_msg="for %s" % header,
+        when=when,
+        onerror=onerror,
+    )
+    header_var = "HAVE_%s" % (
+        header.upper().replace("-", "_").replace("/", "_").replace(".", "_")
+    )
     set_define(header_var, have_header)
     return have_header
+
 
 # A convenience wrapper for check_header for checking multiple headers.
 # returns an array of the resulting checks in order corresponding to the
@@ -83,28 +99,28 @@ def check_headers(*headers, **kwargs):
 # a test program. The return value of the template is a check function
 # returning True if the symbol can be found, and None if it is not.
 @template
-def check_symbol(symbol, language='C', flags=None, when=None, onerror=lambda: None):
+def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: None):
     if when is None:
         when = always
 
     compiler = {
-        'C': c_compiler,
-        'C++': cxx_compiler,
+        "C": c_compiler,
+        "C++": cxx_compiler,
     }[language]
 
     # Stolen from autoconf 2.13 ; might be irrelevant now, but it doesn't hurt to
     # keep using a char return type.
     comment = [
-        '/* Override any gcc2 internal prototype to avoid an error.  */',
-        '/* We use char because int might match the return type of a gcc2',
-        '    builtin and then its argument prototype would still apply.  */',
+        "/* Override any gcc2 internal prototype to avoid an error.  */",
+        "/* We use char because int might match the return type of a gcc2",
+        "    builtin and then its argument prototype would still apply.  */",
     ]
 
     return compiler.try_run(
-        header=comment + ['char %s();' % symbol],
-        body='%s();' % symbol,
+        header=comment + ["char %s();" % symbol],
+        body="%s();" % symbol,
         flags=flags,
-        check_msg='for %s' % symbol,
+        check_msg="for %s" % symbol,
         when=when,
         onerror=onerror,
     )
@@ -126,8 +142,9 @@ def check_symbol(symbol, language='C', flags=None, when=None, onerror=lambda: No
 # - `check`, when not set, skips checking whether the flag is supported and
 #   adds it to the list of flags unconditionally.
 @template
-def check_and_add_flags(flag, flags_collection, test_flags,
-                        compiler=None, when=None, check=True):
+def check_and_add_flags(
+    flag, flags_collection, test_flags, compiler=None, when=None, check=True
+):
     if compiler is not None:
         compilers = (compiler,)
     else:
@@ -144,32 +161,34 @@ def check_and_add_flags(flag, flags_collection, test_flags,
         flags = [flag]
 
     for c in compilers:
-        assert c in {c_compiler, cxx_compiler,
-                     host_c_compiler, host_cxx_compiler}
+        assert c in {c_compiler, cxx_compiler, host_c_compiler, host_cxx_compiler}
         lang, list_of_flags = {
-            c_compiler: ('C', flags_collection.cflags),
-            cxx_compiler: ('C++', flags_collection.cxxflags),
-            host_c_compiler: ('host C', flags_collection.host_cflags),
-            host_cxx_compiler: ('host C++', flags_collection.host_cxxflags),
+            c_compiler: ("C", flags_collection.cflags),
+            cxx_compiler: ("C++", flags_collection.cxxflags),
+            host_c_compiler: ("host C", flags_collection.host_cflags),
+            host_cxx_compiler: ("host C++", flags_collection.host_cxxflags),
         }[c]
 
         @depends(c, when)
         def result(c, when):
-            if when and c.type in ('clang', 'gcc'):
+            if when and c.type in ("clang", "gcc"):
                 return True
 
         if check:
+
             @depends(c, dependable(flags))
             def flags(c, flags):
                 # Don't error out just because clang complains about other things.
-                if c.type == 'clang':
-                    flags += ['-Wno-error=unused-command-line-argument']
+                if c.type == "clang":
+                    flags += ["-Wno-error=unused-command-line-argument"]
 
                 return flags
 
             result = c.try_compile(
-                flags=flags, when=result,
-                check_msg='whether the %s compiler supports %s' % (lang, flag))
+                flags=flags,
+                when=result,
+                check_msg="whether the %s compiler supports %s" % (lang, flag),
+            )
 
         @depends(result, list_of_flags)
         def maybe_add_flag(result, list_of_flags):
@@ -204,15 +223,16 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
     # warning option like -Wno-foobar. So when we are checking for support
     # of a negated warning option, we actually test the positive form, but
     # add the negated form to the flags variable.
-    if warning.startswith('-Wno-') and not warning.startswith('-Wno-error='):
-        flags = ['-Werror', '-W' + warning[5:]]
-    elif warning.startswith('-Werror='):
+    if warning.startswith("-Wno-") and not warning.startswith("-Wno-error="):
+        flags = ["-Werror", "-W" + warning[5:]]
+    elif warning.startswith("-Werror="):
         flags = [warning]
     else:
-        flags = ['-Werror', warning]
+        flags = ["-Werror", warning]
 
-    return check_and_add_flags(warning, warnings_flags, flags,
-                               compiler=compiler, when=when, check=check)
+    return check_and_add_flags(
+        warning, warnings_flags, flags, compiler=compiler, when=when, check=check
+    )
 
 
 # Add the given warning to the list of warning flags for the build.
@@ -248,10 +268,11 @@ def compilation_flags():
 #   add_gcc_flag().
 @template
 def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
-    flags = ['-Werror', flag]
+    flags = ["-Werror", flag]
 
-    return check_and_add_flags(flag, compilation_flags, flags,
-                               compiler=compiler, when=when, check=check)
+    return check_and_add_flags(
+        flag, compilation_flags, flags, compiler=compiler, when=when, check=check
+    )
 
 
 # Add the given flag to the list of flags for the build.

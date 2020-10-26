@@ -2,9 +2,11 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
+
 @template
 def Library(name):
-    '''Template for libraries'''
+    """Template for libraries"""
     LIBRARY_NAME = name
 
-Library('foo')
+
+Library("foo")

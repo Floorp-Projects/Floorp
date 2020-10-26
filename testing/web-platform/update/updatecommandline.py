@@ -2,16 +2,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 def create_parser():
     from wptrunner import wptcommandline
 
     parser = wptcommandline.create_parser_update()
-    parser.add_argument("--upstream", dest="upstream", action="store_true", default=None,
-                        help="Push local changes to upstream repository even when not syncing")
-    parser.add_argument("--no-upstream", dest="upstream", action="store_false", default=None,
-                        help="Dont't push local changes to upstream repository when syncing")
-    parser.add_argument("--token-file", action="store", type=wptcommandline.abs_path,
-                        help="Path to file containing github token")
+    parser.add_argument(
+        "--upstream",
+        dest="upstream",
+        action="store_true",
+        default=None,
+        help="Push local changes to upstream repository even when not syncing",
+    )
+    parser.add_argument(
+        "--no-upstream",
+        dest="upstream",
+        action="store_false",
+        default=None,
+        help="Dont't push local changes to upstream repository when syncing",
+    )
+    parser.add_argument(
+        "--token-file",
+        action="store",
+        type=wptcommandline.abs_path,
+        help="Path to file containing github token",
+    )
     parser.add_argument("--token", action="store", help="GitHub token to use")
     return parser
 
@@ -20,7 +35,9 @@ def check_args(kwargs):
     from wptrunner import wptcommandline
 
     kwargs = wptcommandline.check_args_update(kwargs)
-    kwargs["upstream"] = kwargs["upstream"] if kwargs["upstream"] is not None else kwargs["sync"]
+    kwargs["upstream"] = (
+        kwargs["upstream"] if kwargs["upstream"] is not None else kwargs["sync"]
+    )
 
     if kwargs["upstream"]:
         if kwargs["rev"]:

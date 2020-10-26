@@ -5,52 +5,53 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 addons = {
-    'tabs-activate-remove': [
-        'background.js',
-        'manifest.json',
+    "tabs-activate-remove": [
+        "background.js",
+        "manifest.json",
     ],
-    'tabs-activate-remove-2': [
-        'background.js',
-        'manifest.json',
+    "tabs-activate-remove-2": [
+        "background.js",
+        "manifest.json",
     ],
-    'update-1': [
-        'borderify.js',
-        'manifest.json',
+    "update-1": [
+        "borderify.js",
+        "manifest.json",
     ],
-    'update-2': [
-        'borderify.js',
-        'manifest.json',
+    "update-2": [
+        "borderify.js",
+        "manifest.json",
     ],
-    'update-postpone-1': [
-        'background.js',
-        'borderify.js',
-        'manifest.json',
+    "update-postpone-1": [
+        "background.js",
+        "borderify.js",
+        "manifest.json",
     ],
-    'update-postpone-2': [
-        'borderify.js',
-        'manifest.json',
+    "update-postpone-2": [
+        "borderify.js",
+        "manifest.json",
     ],
-    'update-with-perms-1': [
-        'borderify.js',
-        'manifest.json',
+    "update-with-perms-1": [
+        "borderify.js",
+        "manifest.json",
     ],
-    'update-with-perms-2': [
-        'borderify.js',
-        'manifest.json',
+    "update-with-perms-2": [
+        "borderify.js",
+        "manifest.json",
     ],
-    'page-history': [
-        'page.html',
-        'manifest.json',
+    "page-history": [
+        "page.html",
+        "manifest.json",
     ],
 }
 
 for addon, files in addons.items():
-    indir = 'web_extensions/%s' % addon
-    xpi = '%s.xpi' % indir
+    indir = "web_extensions/%s" % addon
+    xpi = "%s.xpi" % indir
     inputs = [indir]
     for file in files:
-        inputs.append('%s/%s' % (indir, file))
-    GeneratedFile(xpi, script='/toolkit/mozapps/extensions/test/create_xpi.py',
-                  inputs=inputs)
+        inputs.append("%s/%s" % (indir, file))
+    GeneratedFile(
+        xpi, script="/toolkit/mozapps/extensions/test/create_xpi.py", inputs=inputs
+    )
 
-    TEST_HARNESS_FILES.testing.mochitest.tests.junit += ['!%s' % xpi]
+    TEST_HARNESS_FILES.testing.mochitest.tests.junit += ["!%s" % xpi]

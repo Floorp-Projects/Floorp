@@ -13,49 +13,52 @@ import argparse
 from glob import glob
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))
-testdir = os.path.join(scriptdir, 't')
+testdir = os.path.join(scriptdir, "t")
 
 site.addsitedir(testdir)
 from testlib import Test, equal
 
-parser = argparse.ArgumentParser(description='run hazard analysis tests')
+parser = argparse.ArgumentParser(description="run hazard analysis tests")
 parser.add_argument(
-    '--js', default=os.environ.get('JS'),
-    help='JS binary to run the tests with')
+    "--js", default=os.environ.get("JS"), help="JS binary to run the tests with"
+)
 parser.add_argument(
-    '--sixgill', default=os.environ.get('SIXGILL', os.path.join(testdir, "sixgill")),
-    help='Path to root of sixgill installation')
+    "--sixgill",
+    default=os.environ.get("SIXGILL", os.path.join(testdir, "sixgill")),
+    help="Path to root of sixgill installation",
+)
 parser.add_argument(
-    '--sixgill-bin', default=os.environ.get('SIXGILL_BIN'),
-    help='Path to sixgill binary dir')
+    "--sixgill-bin",
+    default=os.environ.get("SIXGILL_BIN"),
+    help="Path to sixgill binary dir",
+)
 parser.add_argument(
-    '--sixgill-plugin', default=os.environ.get('SIXGILL_PLUGIN'),
-    help='Full path to sixgill gcc plugin')
+    "--sixgill-plugin",
+    default=os.environ.get("SIXGILL_PLUGIN"),
+    help="Full path to sixgill gcc plugin",
+)
 parser.add_argument(
-    '--gccdir', default=os.environ.get('GCCDIR'),
-    help='Path to GCC installation dir')
+    "--gccdir", default=os.environ.get("GCCDIR"), help="Path to GCC installation dir"
+)
+parser.add_argument("--cc", default=os.environ.get("CC"), help="Path to gcc")
+parser.add_argument("--cxx", default=os.environ.get("CXX"), help="Path to g++")
 parser.add_argument(
-    '--cc', default=os.environ.get('CC'),
-    help='Path to gcc')
+    "--verbose",
+    "-v",
+    action="store_true",
+    help="Display verbose output, including commands executed",
+)
 parser.add_argument(
-    '--cxx', default=os.environ.get('CXX'),
-    help='Path to g++')
-parser.add_argument(
-    '--verbose', '-v', action='store_true',
-    help='Display verbose output, including commands executed')
-parser.add_argument(
-    'tests', nargs='*', default=[
-        'sixgill-tree',
-        'suppression',
-        'hazards',
-        'exceptions',
-        'virtual'],
-    help='tests to run')
+    "tests",
+    nargs="*",
+    default=["sixgill-tree", "suppression", "hazards", "exceptions", "virtual"],
+    help="tests to run",
+)
 
 cfg = parser.parse_args()
 
 if not cfg.js:
-    exit('Must specify JS binary through environment variable or --js option')
+    exit("Must specify JS binary through environment variable or --js option")
 if not cfg.cc:
     if cfg.gccdir:
         cfg.cc = os.path.join(cfg.gccdir, "bin", "gcc")
@@ -69,9 +72,13 @@ if not cfg.cxx:
 if not cfg.sixgill_bin:
     cfg.sixgill_bin = os.path.join(cfg.sixgill, "usr", "bin")
 if not cfg.sixgill_plugin:
-    cfg.sixgill_plugin = os.path.join(cfg.sixgill, "usr", "libexec", "sixgill", "gcc", "xgill.so")
+    cfg.sixgill_plugin = os.path.join(
+        cfg.sixgill, "usr", "libexec", "sixgill", "gcc", "xgill.so"
+    )
 
-subprocess.check_call([cfg.js, '-e', 'if (!getBuildConfiguration()["has-ctypes"]) quit(1)'])
+subprocess.check_call(
+    [cfg.js, "-e", 'if (!getBuildConfiguration()["has-ctypes"]) quit(1)']
+)
 
 
 def binpath(prog):
@@ -82,13 +89,13 @@ def make_dir(dirname, exist_ok=True):
     try:
         os.mkdir(dirname)
     except OSError as e:
-        if exist_ok and e.strerror == 'File exists':
+        if exist_ok and e.strerror == "File exists":
             pass
         else:
             raise
 
 
-outroot = os.path.join(testdir, 'out')
+outroot = os.path.join(testdir, "out")
 make_dir(outroot)
 
 for name in cfg.tests:
@@ -105,9 +112,9 @@ for name in cfg.tests:
     print("START TEST {}".format(name), flush=True)
     testpath = os.path.join(indir, "test.py")
     testscript = open(testpath).read()
-    testcode = compile(testscript, testpath, 'exec')
+    testcode = compile(testscript, testpath, "exec")
     try:
-        exec(testcode, {'test': test, 'equal': equal})
+        exec(testcode, {"test": test, "equal": equal})
     except subprocess.CalledProcessError:
         print("TEST-FAILED: %s" % name)
     except AssertionError:

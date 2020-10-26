@@ -17,6 +17,7 @@ from .pathutils import expand_exclusions, filterpaths, findobject
 
 class BaseType(object):
     """Abstract base class for all types of linters."""
+
     __metaclass__ = ABCMeta
     batch = False
 
@@ -29,26 +30,28 @@ class BaseType(object):
                          the definition, but passed in by a consumer.
         :returns: A list of :class:`~result.Issue` objects.
         """
-        log = lintargs['log']
+        log = lintargs["log"]
 
-        if lintargs.get('use_filters', True):
+        if lintargs.get("use_filters", True):
             paths, exclude = filterpaths(
-                lintargs['root'],
+                lintargs["root"],
                 paths,
-                config['include'],
-                config.get('exclude', []),
-                config.get('extensions', []),
+                config["include"],
+                config.get("exclude", []),
+                config.get("extensions", []),
             )
-            config['exclude'] = exclude
-        elif config.get('exclude'):
-            del config['exclude']
+            config["exclude"] = exclude
+        elif config.get("exclude"):
+            del config["exclude"]
 
         if not paths:
             return []
 
-        log.debug("Passing the following paths:\n{paths}".format(
-            paths="  \n".join(paths),
-        ))
+        log.debug(
+            "Passing the following paths:\n{paths}".format(
+                paths="  \n".join(paths),
+            )
+        )
 
         if self.batch:
             return self._lint(paths, config, **lintargs)
@@ -75,6 +78,7 @@ class LineType(BaseType):
     Subclasses of this linter type will read each file and check the provided
     payload against each line one by one.
     """
+
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -82,12 +86,12 @@ class LineType(BaseType):
         pass
 
     def _lint_dir(self, path, config, **lintargs):
-        if not config.get('extensions'):
-            patterns = ['**']
+        if not config.get("extensions"):
+            patterns = ["**"]
         else:
-            patterns = ['**/*.{}'.format(e) for e in config['extensions']]
+            patterns = ["**/*.{}".format(e) for e in config["extensions"]]
 
-        exclude = [os.path.relpath(e, path) for e in config.get('exclude', [])]
+        exclude = [os.path.relpath(e, path) for e in config.get("exclude", [])]
         finder = FileFinder(path, ignore=exclude)
 
         errors = []
@@ -100,14 +104,14 @@ class LineType(BaseType):
         if os.path.isdir(path):
             return self._lint_dir(path, config, **lintargs)
 
-        payload = config['payload']
-        with open(path, 'r', errors='replace') as fh:
+        payload = config["payload"]
+        with open(path, "r", errors="replace") as fh:
             lines = fh.readlines()
 
         errors = []
         for i, line in enumerate(lines):
             if self.condition(payload, line, config):
-                errors.append(result.from_config(config, path=path, lineno=i+1))
+                errors.append(result.from_config(config, path=path, lineno=i + 1))
 
         return errors
 
@@ -136,10 +140,11 @@ class ExternalType(BaseType):
     The function is responsible for properly formatting the results
     into a list of :class:`~result.Issue` objects.
     """
+
     batch = True
 
     def _lint(self, files, config, **lintargs):
-        func = findobject(config['payload'])
+        func = findobject(config["payload"])
         return func(files, config, **lintargs)
 
 
@@ -149,17 +154,18 @@ class GlobalType(ExternalType):
     The function is responsible for properly formatting the results
     into a list of :class:`~result.Issue` objects.
     """
+
     batch = True
 
     def _lint(self, files, config, **lintargs):
         # Global lints are expensive to invoke.  Try to avoid running
         # them based on extensions and exclusions.
         try:
-            next(expand_exclusions(files, config, lintargs['root']))
+            next(expand_exclusions(files, config, lintargs["root"]))
         except StopIteration:
             return []
 
-        func = findobject(config['payload'])
+        func = findobject(config["payload"])
         return func(config, **lintargs)
 
 
@@ -194,10 +200,10 @@ class StructuredLogType(BaseType):
 
 
 supported_types = {
-    'string': StringType(),
-    'regex': RegexType(),
-    'external': ExternalType(),
-    'global': GlobalType(),
-    'structured_log': StructuredLogType()
+    "string": StringType(),
+    "regex": RegexType(),
+    "external": ExternalType(),
+    "global": GlobalType(),
+    "structured_log": StructuredLogType(),
 }
 """Mapping of type string to an associated instance."""

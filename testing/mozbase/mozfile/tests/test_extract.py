@@ -40,8 +40,8 @@ def tarpath(tmpdir_factory):
 
     tempdir = tmpdir.join("stubs").strpath
     stubs.create_stub(tempdir)
-    filename = tmpdir.join('bundle.tar').strpath
-    archive = tarfile.TarFile(filename, mode='w')
+    filename = tmpdir.join("bundle.tar").strpath
+    archive = tarfile.TarFile(filename, mode="w")
     for path in stubs.files:
         archive.add(os.path.join(tempdir, *path), arcname=os.path.join(*path))
     archive.close()
@@ -57,8 +57,8 @@ def zippath(tmpdir_factory):
 
     tempdir = tmpdir.join("stubs").strpath
     stubs.create_stub(tempdir)
-    filename = tmpdir.join('bundle.zip').strpath
-    archive = zipfile.ZipFile(filename, mode='w')
+    filename = tmpdir.join("bundle.zip").strpath
+    archive = zipfile.ZipFile(filename, mode="w")
     for path in stubs.files:
         archive.write(os.path.join(tempdir, *path), arcname=os.path.join(*path))
     archive.close()
@@ -77,20 +77,22 @@ def bundlepath(request, tarpath, zippath):
 
 def test_extract(tmpdir, bundlepath, ensure_directory_contents):
     """test extracting a zipfile"""
-    dest = tmpdir.mkdir('dest').strpath
+    dest = tmpdir.mkdir("dest").strpath
     mozfile.extract(bundlepath, dest)
     ensure_directory_contents(dest)
 
 
 def test_extract_zipfile_missing_file_attributes(tmpdir):
     """if files do not have attributes set the default permissions have to be inherited."""
-    _zipfile = os.path.join(os.path.dirname(__file__), 'files', 'missing_file_attributes.zip')
+    _zipfile = os.path.join(
+        os.path.dirname(__file__), "files", "missing_file_attributes.zip"
+    )
     assert os.path.exists(_zipfile)
-    dest = tmpdir.mkdir('dest').strpath
+    dest = tmpdir.mkdir("dest").strpath
 
     # Get the default file permissions for the user
-    fname = os.path.join(dest, 'foo')
-    with open(fname, 'w'):
+    fname = os.path.join(dest, "foo")
+    with open(fname, "w"):
         pass
     default_stmode = os.stat(fname).st_mode
 
@@ -103,7 +105,7 @@ def test_extract_non_archive(tarpath, zippath):
     """test the generalized extract function"""
     # test extracting some non-archive; this should fail
     fd, filename = tempfile.mkstemp()
-    os.write(fd, b'This is not a zipfile or tarball')
+    os.write(fd, b"This is not a zipfile or tarball")
     os.close(fd)
     exception = None
 
@@ -120,12 +122,12 @@ def test_extract_non_archive(tarpath, zippath):
 
 
 def test_extract_ignore(tmpdir, bundlepath):
-    dest = tmpdir.mkdir('dest').strpath
-    ignore = ('foo', '**/fleem.txt', 'read*.txt')
+    dest = tmpdir.mkdir("dest").strpath
+    ignore = ("foo", "**/fleem.txt", "read*.txt")
     mozfile.extract(bundlepath, dest, ignore=ignore)
 
-    assert sorted(os.listdir(dest)) == ['bar.txt', 'foo.txt']
+    assert sorted(os.listdir(dest)) == ["bar.txt", "foo.txt"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

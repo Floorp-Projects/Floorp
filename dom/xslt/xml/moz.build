@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'txXMLParser.cpp',
-    'txXMLUtils.cpp',
+    "txXMLParser.cpp",
+    "txXMLUtils.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '../base',
-    '../xpath',
-    '../xslt',
-    '/dom/base',
+    "../base",
+    "../xpath",
+    "../xslt",
+    "/dom/base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

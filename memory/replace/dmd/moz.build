@@ -5,33 +5,33 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'DMD.h',
+    "DMD.h",
 ]
 
 UNIFIED_SOURCES += [
-    'DMD.cpp',
+    "DMD.cpp",
 ]
 
-if not CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
+if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
     UNIFIED_SOURCES += [
-        '/mfbt/HashFunctions.cpp',
-        '/mfbt/JSONWriter.cpp',
-        '/mfbt/Poison.cpp',
-        '/mozglue/misc/StackWalk.cpp',
+        "/mfbt/HashFunctions.cpp",
+        "/mfbt/JSONWriter.cpp",
+        "/mfbt/Poison.cpp",
+        "/mozglue/misc/StackWalk.cpp",
     ]
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         OS_LIBS += [
-            'dbghelp',
+            "dbghelp",
         ]
 
-ReplaceMalloc('dmd')
+ReplaceMalloc("dmd")
 
-DEFINES['MOZ_NO_MOZALLOC'] = True
-DEFINES['IMPL_MFBT'] = True
+DEFINES["MOZ_NO_MOZALLOC"] = True
+DEFINES["IMPL_MFBT"] = True
 
-if CONFIG['MOZ_OPTIMIZE']:
-    DEFINES['MOZ_OPTIMIZE'] = True
+if CONFIG["MOZ_OPTIMIZE"]:
+    DEFINES["MOZ_OPTIMIZE"] = True
 
 DisableStlWrapping()
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]

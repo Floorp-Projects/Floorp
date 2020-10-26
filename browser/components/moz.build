@@ -22,88 +22,86 @@ with Files("tests/unit/test_distribution.js"):
 with Files("safebrowsing/**"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
-with Files('controlcenter/**'):
-    BUG_COMPONENT = ('Firefox', 'General')
+with Files("controlcenter/**"):
+    BUG_COMPONENT = ("Firefox", "General")
 
 
 DIRS += [
-    'about',
-    'aboutconfig',
-    'aboutlogins',
-    'attribution',
-    'contextualidentity',
-    'customizableui',
-    'doh',
-    'downloads',
-    'enterprisepolicies',
-    'extensions',
-    'fxmonitor',
-    'migration',
-    'newtab',
-    'originattributes',
-    'ion',
-    'places',
-    'pocket',
-    'preferences',
-    'privatebrowsing',
-    'prompts',
-    'protections',
-    'protocolhandler',
-    'resistfingerprinting',
-    'search',
-    'sessionstore',
-    'shell',
-    'ssb',
-    'syncedtabs',
-    'uitour',
-    'urlbar',
-    'translation',
+    "about",
+    "aboutconfig",
+    "aboutlogins",
+    "attribution",
+    "contextualidentity",
+    "customizableui",
+    "doh",
+    "downloads",
+    "enterprisepolicies",
+    "extensions",
+    "fxmonitor",
+    "migration",
+    "newtab",
+    "originattributes",
+    "ion",
+    "places",
+    "pocket",
+    "preferences",
+    "privatebrowsing",
+    "prompts",
+    "protections",
+    "protocolhandler",
+    "resistfingerprinting",
+    "search",
+    "sessionstore",
+    "shell",
+    "ssb",
+    "syncedtabs",
+    "uitour",
+    "urlbar",
+    "translation",
 ]
 
-DIRS += ['build']
+DIRS += ["build"]
 
-if CONFIG['NIGHTLY_BUILD']:
+if CONFIG["NIGHTLY_BUILD"]:
     DIRS += [
-        'payments',
+        "payments",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    DIRS += ['touchbar']
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    DIRS += ['installerprefs']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    DIRS += ["touchbar"]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    DIRS += ["installerprefs"]
 
 XPIDL_SOURCES += [
-    'nsIBrowserHandler.idl',
+    "nsIBrowserHandler.idl",
 ]
 
-XPIDL_MODULE = 'browsercompsbase'
+XPIDL_MODULE = "browsercompsbase"
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 EXTRA_COMPONENTS += [
-    'BrowserComponents.manifest',
-    'tests/startupRecorder.js',
-    'tests/testComponents.manifest',
+    "BrowserComponents.manifest",
+    "tests/startupRecorder.js",
+    "tests/testComponents.manifest",
 ]
 
 EXTRA_JS_MODULES += [
-    'BrowserContentHandler.jsm',
-    'BrowserGlue.jsm',
-    'distribution.js',
+    "BrowserContentHandler.jsm",
+    "BrowserGlue.jsm",
+    "distribution.js",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'safebrowsing/content/test/browser.ini',
-    'tests/browser/browser.ini',
+    "safebrowsing/content/test/browser.ini",
+    "tests/browser/browser.ini",
 ]
 
-if CONFIG['MOZ_UPDATER']:
+if CONFIG["MOZ_UPDATER"]:
     BROWSER_CHROME_MANIFESTS += [
-        'tests/browser/whats_new_page/browser.ini',
+        "tests/browser/whats_new_page/browser.ini",
     ]
 
-XPCSHELL_TESTS_MANIFESTS += [
-    'tests/unit/xpcshell.ini'
-]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]

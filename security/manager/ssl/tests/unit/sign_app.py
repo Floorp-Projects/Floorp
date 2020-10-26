@@ -51,8 +51,7 @@ def coseAlgorithmToPykeyHash(algorithm):
 # ]
 
 
-def coseSignature(payload, algorithm, signingKey, signingCertificate,
-                  bodyProtected):
+def coseSignature(payload, algorithm, signingKey, signingCertificate, bodyProtected):
     """Returns a COSE_Signature structure.
     payload is a string representing the data to be signed
     algorithm is one of (ES256, ES384, ES512)
@@ -69,12 +68,12 @@ def coseSignature(payload, algorithm, signingKey, signingCertificate,
     #     external_aad : nil
     #     payload : bstr
     # ]
-    sigStructure = [u'Signature', bodyProtected, protectedEncoded, None,
-                    payload]
+    sigStructure = [u"Signature", bodyProtected, protectedEncoded, None, payload]
     sigStructureEncoded = dumps(sigStructure)
     pykeyHash = coseAlgorithmToPykeyHash(algorithm)
     signature = signingKey.signRaw(sigStructureEncoded, pykeyHash)
     return [protectedEncoded, {}, signature]
+
 
 # COSE_Sign = [
 #     protected : serialized_map,
@@ -96,9 +95,11 @@ def coseSig(payload, intermediates, signatures):
     protectedEncoded = dumps(protected)
     coseSignatures = []
     for (algorithm, signingKey, signingCertificate) in signatures:
-        coseSignatures.append(coseSignature(payload, algorithm, signingKey,
-                                            signingCertificate,
-                                            protectedEncoded))
+        coseSignatures.append(
+            coseSignature(
+                payload, algorithm, signingKey, signingCertificate, protectedEncoded
+            )
+        )
     tagged = CBORTag(COSE_Sign, [protectedEncoded, {}, None, coseSignatures])
     return dumps(tagged)
 
@@ -113,7 +114,7 @@ def walkDirectory(directory):
     for path, dirs, files in os.walk(directory):
         for f in files:
             fullPath = os.path.join(path, f)
-            internalPath = re.sub(r'^/', '', fullPath.replace(directory, ''))
+            internalPath = re.sub(r"^/", "", fullPath.replace(directory, ""))
             paths.append((fullPath, internalPath))
     return paths
 
@@ -123,10 +124,10 @@ def addManifestEntry(filename, hashes, contents, entries):
     Takes the filename, a list of (hash function, hash function name)
     pairs to use, the contents of the file, and the current list
     of manifest entries."""
-    entry = 'Name: %s\n' % filename
+    entry = "Name: %s\n" % filename
     for (hashFunc, name) in hashes:
         base64hash = b64encode(hashFunc(contents).digest())
-        entry += '%s-Digest: %s\n' % (name, base64hash)
+        entry += "%s-Digest: %s\n" % (name, base64hash)
     entries.append(entry)
 
 
@@ -135,16 +136,22 @@ def getCert(subject, keyName, issuerName, ee, issuerKey=""):
     Takes the subject, the subject key name to use, the issuer name,
     a bool whether this is an EE cert or not, and optionally an issuer key
     name."""
-    certSpecification = 'issuer:%s\n' % issuerName + \
-        'subject:' + subject + '\n' + \
-        'subjectKey:%s\n' % keyName
+    certSpecification = (
+        "issuer:%s\n" % issuerName
+        + "subject:"
+        + subject
+        + "\n"
+        + "subjectKey:%s\n" % keyName
+    )
     if ee:
-        certSpecification += 'extension:keyUsage:digitalSignature'
+        certSpecification += "extension:keyUsage:digitalSignature"
     else:
-        certSpecification += 'extension:basicConstraints:cA,\n' + \
-            'extension:keyUsage:cRLSign,keyCertSign'
+        certSpecification += (
+            "extension:basicConstraints:cA,\n"
+            + "extension:keyUsage:cRLSign,keyCertSign"
+        )
     if issuerKey:
-        certSpecification += '\nissuerKey:%s' % issuerKey
+        certSpecification += "\nissuerKey:%s" % issuerKey
     certSpecificationStream = StringIO()
     print(certSpecification, file=certSpecificationStream)
     certSpecificationStream.seek(0)
@@ -156,27 +163,41 @@ def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
     name, returns a (algorithm id, pykey.ECCKey, encoded certificate)
     triplet for use with coseSig.
     """
-    if coseAlgorithm == 'ES256':
-        keyName = 'secp256r1'
+    if coseAlgorithm == "ES256":
+        keyName = "secp256r1"
         algId = ES256
-    elif coseAlgorithm == 'ES384':
-        keyName = 'secp384r1'
+    elif coseAlgorithm == "ES384":
+        keyName = "secp384r1"
         algId = ES384
-    elif coseAlgorithm == 'ES512':
-        keyName = 'secp521r1'  # COSE uses the hash algorithm; this is the curve
+    elif coseAlgorithm == "ES512":
+        keyName = "secp521r1"  # COSE uses the hash algorithm; this is the curve
         algId = ES512
     else:
         raise UnknownCOSEAlgorithmError(coseAlgorithm)
     key = pykey.ECCKey(keyName)
     # The subject must differ to avoid errors when importing into NSS later.
-    ee = getCert('xpcshell signed app test signer ' + keyName,
-                 keyName, issuerName, True, 'default')
+    ee = getCert(
+        "xpcshell signed app test signer " + keyName,
+        keyName,
+        issuerName,
+        True,
+        "default",
+    )
     return (algId, key, ee.toDER())
 
 
-def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
-            signatureHashes, pkcs7Hashes, coseAlgorithms, emptySignerInfos,
-            headerPaddingFactor):
+def signZip(
+    appDirectory,
+    outputFile,
+    issuerName,
+    rootName,
+    manifestHashes,
+    signatureHashes,
+    pkcs7Hashes,
+    coseAlgorithms,
+    emptySignerInfos,
+    headerPaddingFactor,
+):
     """Given a directory containing the files to package up,
     an output filename to write to, the name of the issuer of
     the signing certificate, the name of trust anchor, a list of hash algorithms
@@ -189,21 +210,21 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
     # The header of each manifest starts with the magic string
     # 'Manifest-Version: 1.0' and ends with a blank line. There can be
     # essentially anything after the first line before the blank line.
-    mfEntries = ['Manifest-Version: 1.0']
+    mfEntries = ["Manifest-Version: 1.0"]
     if headerPaddingFactor > 0:
         # In this format, each line can only be 72 bytes long. We make
         # our padding 50 bytes per line (49 of content and one newline)
         # so the math is easy.
-        singleLinePadding = 'a' * 49
+        singleLinePadding = "a" * 49
         # 1000000 / 50 = 20000
         allPadding = [singleLinePadding] * (headerPaddingFactor * 20000)
         mfEntries.extend(allPadding)
     # Append the blank line.
-    mfEntries.append('')
+    mfEntries.append("")
 
-    with zipfile.ZipFile(outputFile, 'w', zipfile.ZIP_DEFLATED) as outZip:
+    with zipfile.ZipFile(outputFile, "w", zipfile.ZIP_DEFLATED) as outZip:
         for (fullPath, internalPath) in walkDirectory(appDirectory):
-            with open(fullPath, 'rb') as inputFile:
+            with open(fullPath, "rb") as inputFile:
                 contents = inputFile.read()
             outZip.writestr(internalPath, contents)
 
@@ -211,54 +232,63 @@ def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
             addManifestEntry(internalPath, manifestHashes, contents, mfEntries)
 
         if len(coseAlgorithms) > 0:
-            coseManifest = '\n'.join(mfEntries)
-            outZip.writestr('META-INF/cose.manifest', coseManifest)
-            addManifestEntry('META-INF/cose.manifest', manifestHashes,
-                             coseManifest, mfEntries)
+            coseManifest = "\n".join(mfEntries)
+            outZip.writestr("META-INF/cose.manifest", coseManifest)
+            addManifestEntry(
+                "META-INF/cose.manifest", manifestHashes, coseManifest, mfEntries
+            )
             intermediates = []
             coseIssuerName = issuerName
             if rootName:
-                coseIssuerName = 'xpcshell signed app test issuer'
-                intermediate = getCert(coseIssuerName, 'default', rootName, False)
+                coseIssuerName = "xpcshell signed app test issuer"
+                intermediate = getCert(coseIssuerName, "default", rootName, False)
                 intermediate = intermediate.toDER()
                 intermediates.append(intermediate)
-            signatures = map(lambda coseAlgorithm:
-                             coseAlgorithmToSignatureParams(coseAlgorithm, coseIssuerName),
-                             coseAlgorithms)
+            signatures = map(
+                lambda coseAlgorithm: coseAlgorithmToSignatureParams(
+                    coseAlgorithm, coseIssuerName
+                ),
+                coseAlgorithms,
+            )
             coseSignatureBytes = coseSig(coseManifest, intermediates, signatures)
-            outZip.writestr('META-INF/cose.sig', coseSignatureBytes)
-            addManifestEntry('META-INF/cose.sig', manifestHashes,
-                             coseSignatureBytes, mfEntries)
+            outZip.writestr("META-INF/cose.sig", coseSignatureBytes)
+            addManifestEntry(
+                "META-INF/cose.sig", manifestHashes, coseSignatureBytes, mfEntries
+            )
 
         if len(pkcs7Hashes) != 0 or emptySignerInfos:
-            mfContents = '\n'.join(mfEntries)
-            sfContents = 'Signature-Version: 1.0\n'
+            mfContents = "\n".join(mfEntries)
+            sfContents = "Signature-Version: 1.0\n"
             for (hashFunc, name) in signatureHashes:
-                base64hash = b64encode(
-                    hashFunc(six.ensure_binary(mfContents)).digest())
-                sfContents += '%s-Digest-Manifest: %s\n' % (name, base64hash)
+                base64hash = b64encode(hashFunc(six.ensure_binary(mfContents)).digest())
+                sfContents += "%s-Digest-Manifest: %s\n" % (name, base64hash)
 
-            cmsSpecification = ''
+            cmsSpecification = ""
             for name in pkcs7Hashes:
                 hashFunc, _ = hashNameToFunctionAndIdentifier(name)
-                cmsSpecification += '%s:%s\n' % (
-                    name, hashFunc(six.ensure_binary(sfContents)).hexdigest())
-            cmsSpecification += 'signer:\n' + \
-                'issuer:%s\n' % issuerName + \
-                'subject:xpcshell signed app test signer\n' + \
-                'extension:keyUsage:digitalSignature'
+                cmsSpecification += "%s:%s\n" % (
+                    name,
+                    hashFunc(six.ensure_binary(sfContents)).hexdigest(),
+                )
+            cmsSpecification += (
+                "signer:\n"
+                + "issuer:%s\n" % issuerName
+                + "subject:xpcshell signed app test signer\n"
+                + "extension:keyUsage:digitalSignature"
+            )
             cmsSpecificationStream = StringIO()
             print(cmsSpecification, file=cmsSpecificationStream)
             cmsSpecificationStream.seek(0)
             cms = pycms.CMS(cmsSpecificationStream)
             p7 = cms.toDER()
-            outZip.writestr('META-INF/A.RSA', p7)
-            outZip.writestr('META-INF/A.SF', sfContents)
-            outZip.writestr('META-INF/MANIFEST.MF', mfContents)
+            outZip.writestr("META-INF/A.RSA", p7)
+            outZip.writestr("META-INF/A.SF", sfContents)
+            outZip.writestr("META-INF/MANIFEST.MF", mfContents)
 
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -270,7 +300,7 @@ class UnknownHashAlgorithmError(Error):
         self.name = name
 
     def __str__(self):
-        return 'Unknown hash algorithm %s' % repr(self.name)
+        return "Unknown hash algorithm %s" % repr(self.name)
 
 
 class UnknownCOSEAlgorithmError(Error):
@@ -281,14 +311,14 @@ class UnknownCOSEAlgorithmError(Error):
         self.name = name
 
     def __str__(self):
-        return 'Unknown COSE algorithm %s' % repr(self.name)
+        return "Unknown COSE algorithm %s" % repr(self.name)
 
 
 def hashNameToFunctionAndIdentifier(name):
-    if name == 'sha1':
-        return (sha1, 'SHA1')
-    if name == 'sha256':
-        return (sha256, 'SHA256')
+    if name == "sha1":
+        return (sha1, "SHA1")
+    if name == "sha256":
+        return (sha256, "SHA256")
     raise UnknownHashAlgorithmError(name)
 
 
@@ -297,37 +327,73 @@ def main(outputFile, appPath, *args):
     object, a path to the app directory to sign, and some
     optional arguments, signs the contents of the directory and
     writes the resulting package to the 'file'."""
-    parser = argparse.ArgumentParser(description='Sign an app.')
-    parser.add_argument('-i', '--issuer', action='store', help='Issuer name',
-                        default='xpcshell signed apps test root')
-    parser.add_argument('-r', '--root', action='store', help='Root name',
-                        default='')
-    parser.add_argument('-m', '--manifest-hash', action='append',
-                        help='Hash algorithms to use in manifest',
-                        default=[])
-    parser.add_argument('-s', '--signature-hash', action='append',
-                        help='Hash algorithms to use in signature file',
-                        default=[])
-    parser.add_argument('-c', '--cose-sign', action='append',
-                        help='Append a COSE signature with the given ' +
-                             'algorithms (out of ES256, ES384, and ES512)',
-                        default=[])
-    parser.add_argument('-z', '--pad-headers', action='store', default=0,
-                        help='Pad the header sections of the manifests ' +
-                             'with X MB of repetitive data')
+    parser = argparse.ArgumentParser(description="Sign an app.")
+    parser.add_argument(
+        "-i",
+        "--issuer",
+        action="store",
+        help="Issuer name",
+        default="xpcshell signed apps test root",
+    )
+    parser.add_argument("-r", "--root", action="store", help="Root name", default="")
+    parser.add_argument(
+        "-m",
+        "--manifest-hash",
+        action="append",
+        help="Hash algorithms to use in manifest",
+        default=[],
+    )
+    parser.add_argument(
+        "-s",
+        "--signature-hash",
+        action="append",
+        help="Hash algorithms to use in signature file",
+        default=[],
+    )
+    parser.add_argument(
+        "-c",
+        "--cose-sign",
+        action="append",
+        help="Append a COSE signature with the given "
+        + "algorithms (out of ES256, ES384, and ES512)",
+        default=[],
+    )
+    parser.add_argument(
+        "-z",
+        "--pad-headers",
+        action="store",
+        default=0,
+        help="Pad the header sections of the manifests "
+        + "with X MB of repetitive data",
+    )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-p', '--pkcs7-hash', action='append',
-                       help='Hash algorithms to use in PKCS#7 signature',
-                       default=[])
-    group.add_argument('-e', '--empty-signerInfos', action='store_true',
-                       help='Emit pkcs#7 SignedData with empty signerInfos')
+    group.add_argument(
+        "-p",
+        "--pkcs7-hash",
+        action="append",
+        help="Hash algorithms to use in PKCS#7 signature",
+        default=[],
+    )
+    group.add_argument(
+        "-e",
+        "--empty-signerInfos",
+        action="store_true",
+        help="Emit pkcs#7 SignedData with empty signerInfos",
+    )
     parsed = parser.parse_args(args)
     if len(parsed.manifest_hash) == 0:
-        parsed.manifest_hash.append('sha256')
+        parsed.manifest_hash.append("sha256")
     if len(parsed.signature_hash) == 0:
-        parsed.signature_hash.append('sha256')
-    signZip(appPath, outputFile, parsed.issuer, parsed.root,
-            map(hashNameToFunctionAndIdentifier, parsed.manifest_hash),
-            map(hashNameToFunctionAndIdentifier, parsed.signature_hash),
-            parsed.pkcs7_hash, parsed.cose_sign, parsed.empty_signerInfos,
-            int(parsed.pad_headers))
+        parsed.signature_hash.append("sha256")
+    signZip(
+        appPath,
+        outputFile,
+        parsed.issuer,
+        parsed.root,
+        map(hashNameToFunctionAndIdentifier, parsed.manifest_hash),
+        map(hashNameToFunctionAndIdentifier, parsed.signature_hash),
+        parsed.pkcs7_hash,
+        parsed.cose_sign,
+        parsed.empty_signerInfos,
+        int(parsed.pad_headers),
+    )
