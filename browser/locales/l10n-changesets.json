@@ -267,7 +267,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b0cb9e21dbed7758766bd6094a2b3fa197b9b26c"
+        "revision": "8083fba83e42fb3295ba92f602078dc89a985722"
     },
     "cy": {
         "pin": false,
