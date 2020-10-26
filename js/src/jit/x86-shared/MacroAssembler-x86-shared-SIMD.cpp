@@ -188,34 +188,28 @@ void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
 void MacroAssemblerX86Shared::shuffleInt8x16(FloatRegister lhs,
                                              FloatRegister rhs,
                                              FloatRegister output,
-                                             FloatRegister temp,
                                              const uint8_t lanes[16]) {
   ScratchSimd128Scope scratch(asMasm());
 
   // Use pshufb instructions to gather the lanes from each source vector.
   // A negative index creates a zero lane, so the two vectors can be combined.
 
-  // Set scratch = lanes from lhs.
-  int8_t idx[16];
-  for (unsigned i = 0; i < 16; i++) {
-    idx[i] = lanes[i] < 16 ? lanes[i] : -1;
-  }
-  asMasm().loadConstantSimd128Int(SimdConstant::CreateX16(idx), temp);
-  FloatRegister lhsCopy = reusedInputInt32x4(lhs, scratch);
-  vpshufb(temp, lhsCopy, scratch);
+  // Register preference: lhs == output.
 
-  // Set output = lanes from rhs.
-  // TODO: The alternative to loading this constant is to complement
-  // the one that is already in temp, takes two instructions
-  // and a temp register: PCMPEQD tmp, tmp; PXOR temp, tmp.
-  // But scratch is available here so that's OK.  But it's not given
-  // that avoiding the load is a win.
+  // Set scratch = lanes from rhs.
+  int8_t idx[16];
   for (unsigned i = 0; i < 16; i++) {
     idx[i] = lanes[i] >= 16 ? lanes[i] - 16 : -1;
   }
-  asMasm().loadConstantSimd128Int(SimdConstant::CreateX16(idx), temp);
-  FloatRegister rhsCopy = reusedInputInt32x4(rhs, output);
-  vpshufb(temp, rhsCopy, output);
+  moveSimd128Int(rhs, scratch);
+  asMasm().vpshufbSimd128(SimdConstant::CreateX16(idx), scratch);
+
+  // Set output = lanes from lhs.
+  for (unsigned i = 0; i < 16; i++) {
+    idx[i] = lanes[i] < 16 ? lanes[i] : -1;
+  }
+  moveSimd128Int(lhs, output);
+  asMasm().vpshufbSimd128(SimdConstant::CreateX16(idx), output);
 
   // Combine.
   vpor(scratch, output, output);

@@ -78,22 +78,32 @@ void MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant& v,
 }
 
 void MacroAssemblerX64::vpandSimd128(const SimdConstant& v,
-                                     FloatRegister dest) {
+                                     FloatRegister srcDest) {
   SimdData* val = getSimdData(v);
   if (!val) {
     return;
   }
-  JmpSrc j = masm.vpand_ripr(dest.encoding());
+  JmpSrc j = masm.vpand_ripr(srcDest.encoding());
   propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
 
 void MacroAssemblerX64::vpxorSimd128(const SimdConstant& v,
-                                     FloatRegister dest) {
+                                     FloatRegister srcDest) {
   SimdData* val = getSimdData(v);
   if (!val) {
     return;
   }
-  JmpSrc j = masm.vpxor_ripr(dest.encoding());
+  JmpSrc j = masm.vpxor_ripr(srcDest.encoding());
+  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+}
+
+void MacroAssemblerX64::vpshufbSimd128(const SimdConstant& v,
+                                       FloatRegister srcDest) {
+  SimdData* val = getSimdData(v);
+  if (!val) {
+    return;
+  }
+  JmpSrc j = masm.vpshufb_ripr(srcDest.encoding());
   propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
 

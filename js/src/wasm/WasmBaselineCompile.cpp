@@ -13838,15 +13838,7 @@ bool BaseCompiler::emitVectorShuffle() {
 
   RegV128 rd, rs;
   pop2xV128(&rd, &rs);
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  RegV128 temp = needV128();
-  masm.shuffleInt8x16(shuffleMask.bytes, rs, rd, temp);
-  freeV128(temp);
-#  elif defined(JS_CODEGEN_ARM64)
   masm.shuffleInt8x16(shuffleMask.bytes, rs, rd);
-#  else
-  MOZ_CRASH("NYI");
-#  endif
   freeV128(rs);
   pushV128(rd);
 

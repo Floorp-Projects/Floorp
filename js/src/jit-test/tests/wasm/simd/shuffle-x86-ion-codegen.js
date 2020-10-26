@@ -68,6 +68,19 @@ for ( let [op, expected] of [
 000000..  66 0f 3a 0f c0 0d         palignr \\$0x0D, %xmm0, %xmm0
 000000..  5d                        pop %rbp
 `],
+    ['i8x16.shuffle 15 29 0 1 2 1 2 0 3 4 7 8 16 8 17 9',
+     // General shuffle + blend.  The initial movdqa to scratch is
+     // unavoidable unless we can convince the compiler that it's OK to destroy xmm1.
+`
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 44 0f 6f f9            movdqa %xmm1, %xmm15
+000000..  66 44 0f 38 00 3d .. 00 00 00 
+                                    pshufbx 0x0000000000000050, %xmm15
+000000..  66 0f 38 00 05 .. 00 00 00 
+                                    pshufbx 0x0000000000000060, %xmm0
+000000..  66 41 0f eb c7            por %xmm15, %xmm0
+000000..  5d                        pop %rbp
+`],
 ] ) {
     let ins = wasmEvalText(`
   (module

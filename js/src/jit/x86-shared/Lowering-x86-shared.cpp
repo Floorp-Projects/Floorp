@@ -1742,7 +1742,6 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
     case Shuffle::Operand::BOTH_SWAPPED: {
       LDefinition temp = LDefinition::BogusTemp();
       switch (*s.shuffleOp) {
-        case LWasmShuffleSimd128::SHUFFLE_BLEND_8x16:
         case LWasmShuffleSimd128::BLEND_8x16:
           temp = tempSimd128();
           break;
