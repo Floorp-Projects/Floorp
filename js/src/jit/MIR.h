@@ -14337,7 +14337,7 @@ class MWasmShuffleSimd128 : public MBinaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmShuffleSimd128()->control() == control_ &&
+    return ins->toWasmShuffleSimd128()->control().bitwiseEqual(control_) &&
            congruentIfOperandsEqual(ins);
   }
 
