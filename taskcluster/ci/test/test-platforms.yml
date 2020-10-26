@@ -470,7 +470,6 @@ android-hw-g5-7-0-arm7-api-16/opt:
         - android-hw-arm7-browsertime
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 android-hw-g5-7-0-arm7-api-16-shippable/opt:
     build-platform: android-api-16-shippable/opt
@@ -478,7 +477,6 @@ android-hw-g5-7-0-arm7-api-16-shippable/opt:
         - android-hw-arm7-browsertime
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 # android-hw-p2-8-0 Google Pixel 2 Android 8.0
 
@@ -489,7 +487,6 @@ android-hw-p2-8-0-arm7-api-16/opt:
         - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16-shippable/opt:
     build-platform: android-api-16-shippable/opt
@@ -498,7 +495,6 @@ android-hw-p2-8-0-arm7-api-16-shippable/opt:
         - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor-cpu-memory
         - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16/debug:
     build-platform: android-api-16/debug
