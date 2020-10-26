@@ -255,8 +255,8 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
       break;
     default:
       MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
-    case MediaThreadType::CONTROLLER:
-      name = "MediaController";
+    case MediaThreadType::SUPERVISOR:
+      name = "MediaSupervisor";
       break;
   }
 

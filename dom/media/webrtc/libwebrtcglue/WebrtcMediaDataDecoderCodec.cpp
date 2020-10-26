@@ -16,7 +16,7 @@
 namespace mozilla {
 
 WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
-    : mThreadPool(GetMediaThreadPool(MediaThreadType::CONTROLLER)),
+    : mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataDecoder::mTaskQueue")),
       mImageContainer(layers::LayerManager::CreateImageContainer(
