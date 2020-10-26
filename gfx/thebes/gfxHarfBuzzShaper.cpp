@@ -1114,7 +1114,6 @@ static void AddOpenTypeFeature(const uint32_t& aTag, uint32_t& aValue,
  */
 
 static hb_font_funcs_t* sHBFontFuncs = nullptr;
-static hb_font_funcs_t* sNominalGlyphFunc = nullptr;
 static hb_unicode_funcs_t* sHBUnicodeFuncs = nullptr;
 static const hb_script_t sMathScript =
     hb_ot_tag_to_script(HB_TAG('m', 'a', 't', 'h'));
@@ -1146,12 +1145,6 @@ bool gfxHarfBuzzShaper::Initialize() {
                                                nullptr, nullptr);
     hb_font_funcs_set_glyph_h_kerning_func(sHBFontFuncs, HBGetHKerning, nullptr,
                                            nullptr);
-    hb_font_funcs_make_immutable(sHBFontFuncs);
-
-    sNominalGlyphFunc = hb_font_funcs_create();
-    hb_font_funcs_set_nominal_glyph_func(sNominalGlyphFunc, HBGetNominalGlyph,
-                                         nullptr, nullptr);
-    hb_font_funcs_make_immutable(sNominalGlyphFunc);
 
     sHBUnicodeFuncs = hb_unicode_funcs_create(hb_unicode_funcs_get_empty());
     hb_unicode_funcs_set_mirroring_func(sHBUnicodeFuncs, HBGetMirroring,
@@ -1166,7 +1159,6 @@ bool gfxHarfBuzzShaper::Initialize() {
                                       nullptr, nullptr);
     hb_unicode_funcs_set_decompose_func(sHBUnicodeFuncs, HBUnicodeDecompose,
                                         nullptr, nullptr);
-    hb_unicode_funcs_make_immutable(sHBUnicodeFuncs);
 
     UErrorCode error = U_ZERO_ERROR;
     sNormalizer = unorm2_getNFCInstance(&error);
@@ -1203,11 +1195,7 @@ bool gfxHarfBuzzShaper::Initialize() {
   hb_buffer_set_cluster_level(mBuffer,
                               HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
 
-  auto* funcs =
-      mFont->GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'F', 'F', ' '))
-          ? sNominalGlyphFunc
-          : sHBFontFuncs;
-  mHBFont = CreateHBFont(mFont, funcs, &mCallbackData);
+  mHBFont = CreateHBFont(mFont, sHBFontFuncs, &mCallbackData);
 
   return true;
 }
@@ -1219,12 +1207,10 @@ hb_font_t* gfxHarfBuzzShaper::CreateHBFont(gfxFont* aFont,
   hb_font_t* result = hb_font_create(hbFace);
   hb_face_destroy(hbFace);
 
-  if (aFontFuncs && aCallbackData) {
-    if (aFontFuncs == sNominalGlyphFunc) {
-      hb_font_t* subfont = hb_font_create_sub_font(result);
-      hb_font_destroy(result);
-      result = subfont;
-    }
+  if (!aFontFuncs || !aCallbackData ||
+      aFont->GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'F', 'F', ' '))) {
+    hb_ot_font_set_funcs(result);
+  } else {
     hb_font_set_funcs(result, aFontFuncs, aCallbackData, nullptr);
   }
   hb_font_set_ppem(result, aFont->GetAdjustedSize(), aFont->GetAdjustedSize());
