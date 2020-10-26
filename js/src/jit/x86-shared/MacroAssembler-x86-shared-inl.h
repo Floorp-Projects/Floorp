@@ -1190,27 +1190,27 @@ void MacroAssembler::extractLaneFloat64x2(uint32_t lane, FloatRegister src,
 
 void MacroAssembler::replaceLaneInt8x16(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::insertLaneSimdInt(lhsDest, rhs, lhsDest, lane, 16);
+  vpinsrb(lane, rhs, lhsDest, lhsDest);
 }
 
 void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::insertLaneSimdInt(lhsDest, rhs, lhsDest, lane, 8);
+  vpinsrw(lane, rhs, lhsDest, lhsDest);
 }
 
 void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::insertLaneSimdInt(lhsDest, rhs, lhsDest, lane, 4);
+  vpinsrd(lane, rhs, lhsDest, lhsDest);
 }
 
 void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::insertLaneFloat32x4(lhsDest, rhs, lhsDest, lane);
+  MacroAssemblerX86Shared::replaceLaneFloat32x4(rhs, lhsDest, lane);
 }
 
 void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::insertLaneFloat64x2(lhsDest, rhs, lhsDest, lane);
+  MacroAssemblerX86Shared::replaceLaneFloat64x2(rhs, lhsDest, lane);
 }
 
 // Shuffle - permute with immediate indices
@@ -1998,38 +1998,36 @@ void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
 
 // Compare-based minimum
 
-void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  ScratchSimd128Scope scratch(*this);
-  vmovaps(rhs, scratch);
-  vminps(Operand(lhsDest), scratch, scratch);
-  vmovaps(scratch, lhsDest);
+void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhsOrRhsDest,
+                                        FloatRegister lhsOrLhsDest) {
+  // Shut up the linter by using the same names as in the declaration, then
+  // aliasing here.
+  FloatRegister rhsDest = rhsOrRhsDest;
+  FloatRegister lhs = lhsOrLhsDest;
+  vminps(Operand(lhs), rhsDest, rhsDest);
 }
 
-void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  ScratchSimd128Scope scratch(*this);
-  vmovapd(rhs, scratch);
-  vminpd(Operand(lhsDest), scratch, scratch);
-  vmovapd(scratch, lhsDest);
+void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
+                                        FloatRegister lhsOrLhsDest) {
+  FloatRegister rhsDest = rhsOrRhsDest;
+  FloatRegister lhs = lhsOrLhsDest;
+  vminpd(Operand(lhs), rhsDest, rhsDest);
 }
 
 // Compare-based maximum
 
-void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  ScratchSimd128Scope scratch(*this);
-  vmovaps(rhs, scratch);
-  vmaxps(Operand(lhsDest), scratch, scratch);
-  vmovaps(scratch, lhsDest);
+void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
+                                        FloatRegister lhsOrLhsDest) {
+  FloatRegister rhsDest = rhsOrRhsDest;
+  FloatRegister lhs = lhsOrLhsDest;
+  vmaxps(Operand(lhs), rhsDest, rhsDest);
 }
 
-void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhs,
-                                        FloatRegister lhsDest) {
-  ScratchSimd128Scope scratch(*this);
-  vmovapd(rhs, scratch);
-  vmaxpd(Operand(lhsDest), scratch, scratch);
-  vmovapd(scratch, lhsDest);
+void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
+                                        FloatRegister lhsOrLhsDest) {
+  FloatRegister rhsDest = rhsOrRhsDest;
+  FloatRegister lhs = lhsOrLhsDest;
+  vmaxpd(Operand(lhs), rhsDest, rhsDest);
 }
 
 // Widening/pairwise integer dot product

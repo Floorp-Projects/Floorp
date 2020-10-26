@@ -2658,17 +2658,27 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   // Compare-based minimum/maximum
+  //
+  // On x86, the signature is (rhsDest, lhs); on arm64 it is (rhs, lhsDest).
+  //
+  // The masm preprocessor can't deal with multiple declarations with identical
+  // signatures even if they are on different platforms, hence the weird
+  // argument names.
 
-  inline void pseudoMinFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
+  inline void pseudoMinFloat32x4(FloatRegister rhsOrRhsDest,
+                                 FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void pseudoMinFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
+  inline void pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
+                                 FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void pseudoMaxFloat32x4(FloatRegister rhs, FloatRegister lhsDest)
+  inline void pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
+                                 FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void pseudoMaxFloat64x2(FloatRegister rhs, FloatRegister lhsDest)
+  inline void pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
+                                 FloatRegister lhsOrLhsDest)
       DEFINED_ON(x86_shared, arm64);
 
   // Widening/pairwise integer dot product
