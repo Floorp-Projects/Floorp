@@ -13,6 +13,7 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include",
     "/media/webrtc",
     "/third_party/libwebrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [
