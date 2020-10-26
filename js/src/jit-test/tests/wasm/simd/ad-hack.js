@@ -1589,6 +1589,7 @@ assertEq(ins.exports.const_extract_i64x2_1(), -2n);
 // operand 1 is v128 in memory
 // operand 2 is immediate scalar
 // lane index is immediate so we're testing something randomish but not zero
+// (note though that fp operations have special cases for zero)
 // result is v128 in memory
 
 var ins = wasmEvalText(`
@@ -1606,6 +1607,9 @@ var ins = wasmEvalText(`
     (func (export "replace_i64x2_1") (param $value i64)
       (v128.store (i32.const 0)
         (i64x2.replace_lane 1 (v128.load (i32.const 16)) (local.get $value))))
+    (func (export "replace_f32x4_0") (param $value f32)
+      (v128.store (i32.const 0)
+        (f32x4.replace_lane 0 (v128.load (i32.const 16)) (local.get $value))))
     (func (export "replace_f32x4_3") (param $value f32)
       (v128.store (i32.const 0)
         (f32x4.replace_lane 3 (v128.load (i32.const 16)) (local.get $value))))
@@ -1647,6 +1651,10 @@ assertSame(get(mem64, 0, 2), upd(as, 1, 42));
 
 var mem32 = new Float32Array(ins.exports.mem.buffer);
 var as = [1.5, 2.5, 3.5, 4.5];
+
+set(mem32, 4, as)
+ins.exports.replace_f32x4_0(42.5);
+assertSame(get(mem32, 0, 4), upd(as, 0, 42.5));
 
 set(mem32, 4, as)
 ins.exports.replace_f32x4_3(42.5);

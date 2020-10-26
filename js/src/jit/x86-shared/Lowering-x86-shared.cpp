@@ -815,6 +815,15 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
       op = wasm::SimdOp::F64x2Le;
       break;
     }
+    case wasm::SimdOp::F32x4PMin:
+    case wasm::SimdOp::F32x4PMax:
+    case wasm::SimdOp::F64x2PMin:
+    case wasm::SimdOp::F64x2PMax: {
+      // Code generation requires the operations to be reversed (the rhs is the
+      // output register).
+      swap = true;
+      break;
+    }
     default:
       break;
   }
@@ -854,6 +863,21 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     default:
       break;
   }
+
+  // For binary ops, the Masm API always is usually (rhs, lhsDest) and requires
+  // AtStart+ReuseInput for the lhs.
+  //
+  // The rhs is tricky due to register allocator restrictions:
+  //  - if lhs == rhs and lhs is AtStart then rhs must be AtStart too
+  //  - if lhs != rhs and lhs is AtStart then rhs must not be AtStart,
+  //    this appears to have something to do with risk of the rhs
+  //    being clobbered.  Anyway it doesn't matter much, since the
+  //    liveness of rhs will not prevent the lhs register to be reused
+  //    for the output.
+  //
+  // For a few ops, the API is actually (rhsDest, lhs) and the rules are the
+  // same but the reversed.  We swapped operands above; they will be swapped
+  // again in the code generator to emit the right code.
 
   LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
   LAllocation rhsAlloc =
@@ -1720,6 +1744,10 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
 void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
   MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
+
+  // The Masm API is (rhs, lhsDest) and requires AtStart+ReuseInput for the lhs.
+  // For type reasons, the rhs will never be the same as the lhs and is
+  // therefore a plain Use.
 
   if (ins->rhs()->type() == MIRType::Int64) {
     auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
