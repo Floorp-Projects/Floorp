@@ -1156,7 +1156,7 @@ nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
   bool isDisabled = IsDisabled(aFrame, aEventState);
 
   MenuItemParams params;
-  params.backgroundIsVibrant = VibrancyManager::SystemSupportsVibrancy();
+  params.backgroundIsVibrant = true;
   params.checked = aIsChecked;
   params.disabled = isDisabled;
   params.selected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
@@ -2523,10 +2523,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
   switch (aAppearance) {
     case StyleAppearance::Menupopup:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        return Nothing();
-      }
-      return Some(WidgetInfo::MenuBackground(ComputeMenuBackgroundParams(aFrame, eventState)));
+      return Nothing();
 
     case StyleAppearance::Menuarrow:
       return Some(
@@ -2549,10 +2546,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     }
 
     case StyleAppearance::Tooltip:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        return Nothing();
-      }
-      return Some(WidgetInfo::Tooltip());
+      return Nothing();
 
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
@@ -2828,17 +2822,14 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::ListBox());
 
     case StyleAppearance::MozMacSourceList: {
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        return Nothing();
-      }
-      return Some(WidgetInfo::SourceList(FrameIsInActiveWindow(aFrame)));
+      return Nothing();
     }
 
     case StyleAppearance::MozMacSourceListSelection:
     case StyleAppearance::MozMacActiveSourceListSelection: {
       // We only support vibrancy for source list selections if we're inside
       // a source list, because we need the background to be transparent.
-      if (VibrancyManager::SystemSupportsVibrancy() && IsInSourceList(aFrame)) {
+      if (IsInSourceList(aFrame)) {
         return Nothing();
       }
       bool isInActiveWindow = FrameIsInActiveWindow(aFrame);
@@ -3161,29 +3152,12 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
   //  - If the case in DrawWidgetBackground draws something complicated for the
   //    given widget type, return false here.
   switch (aAppearance) {
-    case StyleAppearance::Menupopup:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        return true;
-      }
-      return false;
-
     case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Menuseparator:
-      return false;
-
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
-      return false;
-
-    case StyleAppearance::Tooltip:
-      if (!VibrancyManager::SystemSupportsVibrancy()) {
-        aBuilder.PushRect(bounds, bounds, true,
-                          wr::ToColorF(ToDeviceColor(kTooltipBackgroundColor)));
-      }
-      return true;
-
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Button:
@@ -3288,12 +3262,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
       aBuilder.PushBorder(bounds, bounds, true, borderWidths, wrsides, borderRadius);
       return true;
     }
-
-    case StyleAppearance::MozMacSourceList:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        return true;
-      }
-      return false;
 
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
@@ -3898,7 +3866,7 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::MozMacVibrancyDark:
     case StyleAppearance::MozMacVibrantTitlebarLight:
     case StyleAppearance::MozMacVibrantTitlebarDark:
-      return VibrancyManager::SystemSupportsVibrancy();
+      return true;
     default:
       break;
   }

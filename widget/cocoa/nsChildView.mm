@@ -1844,10 +1844,6 @@ static void MakeRegionsNonOverlapping(Region& aFirst, Regions&... aRest) {
 }
 
 void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries) {
-  if (!VibrancyManager::SystemSupportsVibrancy()) {
-    return;
-  }
-
   LayoutDeviceIntRegion sheetRegion = GatherVibrantRegion(aThemeGeometries, VibrancyType::SHEET);
   LayoutDeviceIntRegion vibrantLightRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::LIGHT);

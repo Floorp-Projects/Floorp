@@ -57,9 +57,7 @@ class VibrancyManager {
    *   NSVisualEffectViews which will be created for vibrant regions.
    */
   VibrancyManager(const nsChildView& aCoordinateConverter, NSView* aContainerView)
-      : mCoordinateConverter(aCoordinateConverter), mContainerView(aContainerView) {
-    MOZ_ASSERT(SystemSupportsVibrancy(), "Don't instantiate this if !SystemSupportsVibrancy()");
-  }
+      : mCoordinateConverter(aCoordinateConverter), mContainerView(aContainerView) {}
 
   /**
    * Update the placement of the NSVisualEffectViews inside the container
@@ -74,13 +72,6 @@ class VibrancyManager {
   bool HasVibrantRegions() { return !mVibrantRegions.IsEmpty(); }
 
   LayoutDeviceIntRegion GetUnionOfVibrantRegions() const;
-
-  /**
-   * Check whether the operating system supports vibrancy at all.
-   * You may only create a VibrancyManager instance if this returns true.
-   * @return Whether VibrancyManager can be used on this OS.
-   */
-  static bool SystemSupportsVibrancy();
 
   /**
    * Create an NSVisualEffectView for the specified vibrancy type. The return
