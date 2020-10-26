@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
@@ -66,7 +68,8 @@ class DefaultBrowserToolbarMenuController(
     private val bookmarkTapped: (Session) -> Unit,
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
-    private val topSitesStorage: DefaultTopSitesStorage
+    private val topSitesStorage: DefaultTopSitesStorage,
+    private val browserStore: BrowserStore
 ) : BrowserToolbarMenuController {
 
     private val currentSession
@@ -184,7 +187,7 @@ class DefaultBrowserToolbarMenuController(
                 val directions = NavGraphDirections.actionGlobalShareFragment(
                     data = arrayOf(
                         ShareData(
-                            url = currentSession?.url,
+                            url = getProperUrl(currentSession),
                             title = currentSession?.title
                         )
                     ),
@@ -291,6 +294,17 @@ class DefaultBrowserToolbarMenuController(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionGlobalDownloadsFragment()
                 )
+            }
+        }
+    }
+
+    private fun getProperUrl(currentSession: Session?): String? {
+        return currentSession?.id?.let {
+            val currentTab = browserStore.state.findTab(it)
+            if (currentTab?.readerState?.active == true) {
+                currentTab.readerState.activeUrl
+            } else {
+                currentSession.url
             }
         }
     }

@@ -26,6 +26,10 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.search.SearchUseCases
@@ -85,6 +89,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @MockK private lateinit var sessionFeatureWrapper: ViewBoundFeatureWrapper<SessionFeature>
     @RelaxedMockK private lateinit var sessionFeature: SessionFeature
     @RelaxedMockK private lateinit var topSitesStorage: DefaultTopSitesStorage
+    @RelaxedMockK private lateinit var browserStore: BrowserStore
 
     @Before
     fun setUp() {
@@ -334,11 +339,19 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun handleToolbarSharePress() = runBlockingTest {
+    fun handleToolbarSharePressWithReaderModeInactive() = runBlockingTest {
         val item = ToolbarMenu.Item.Share
-
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = false, activeUrl = "https://1234.org"),
+            title = title
+        )
+        browserStore = BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
+        every { currentSession.id } returns readerTab.id
+        every { currentSession.title } returns title
         every { currentSession.url } returns "https://mozilla.org"
-        every { currentSession.title } returns "Mozilla"
 
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
@@ -346,10 +359,43 @@ class DefaultBrowserToolbarMenuControllerTest {
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SHARE)) }
         verify {
             navController.navigate(
-                directionsEq(NavGraphDirections.actionGlobalShareFragment(
-                    data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
-                    showPage = true
-                ))
+                directionsEq(
+                    NavGraphDirections.actionGlobalShareFragment(
+                        data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
+                        showPage = true
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun handleToolbarSharePressWithReaderModeActive() = runBlockingTest {
+        val item = ToolbarMenu.Item.Share
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = true, activeUrl = "https://mozilla.org"),
+            title = title
+        )
+        browserStore = BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
+        every { currentSession.id } returns readerTab.id
+        every { currentSession.title } returns title
+        every { currentSession.url } returns readerUrl
+
+        val controller = createController(scope = this)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SHARE)) }
+        verify {
+            navController.navigate(
+                directionsEq(
+                    NavGraphDirections.actionGlobalShareFragment(
+                        data = arrayOf(ShareData(url = "https://mozilla.org", title = "Mozilla")),
+                        showPage = true
+                    )
+                )
             )
         }
     }
@@ -491,7 +537,8 @@ class DefaultBrowserToolbarMenuControllerTest {
         readerModeController = readerModeController,
         sessionManager = sessionManager,
         sessionFeature = sessionFeatureWrapper,
-        topSitesStorage = topSitesStorage
+        topSitesStorage = topSitesStorage,
+        browserStore = browserStore
     ).apply {
         ioScope = scope
     }

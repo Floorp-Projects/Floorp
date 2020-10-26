@@ -316,7 +316,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
-                topSitesStorage = requireComponents.core.topSitesStorage
+                topSitesStorage = requireComponents.core.topSitesStorage,
+                browserStore = store
             )
 
             _browserInteractor = BrowserInteractor(
