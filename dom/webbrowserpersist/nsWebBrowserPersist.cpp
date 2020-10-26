@@ -508,10 +508,13 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsISupports* aDocument,
       rv = NS_ERROR_NO_INTERFACE;
     }
   }
-  if (doc) {
+
+  bool closed = false;
+  if (doc && NS_SUCCEEDED(doc->GetIsClosed(&closed)) && !closed) {
     rv = SaveDocumentInternal(doc, fileAsURI, datapathAsURI);
   }
-  if (NS_FAILED(rv)) {
+
+  if (NS_FAILED(rv) || closed) {
     SendErrorStatusChange(true, rv, nullptr, mURI);
     EndDownload(rv);
   }
