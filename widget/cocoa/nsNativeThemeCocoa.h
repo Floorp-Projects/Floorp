@@ -205,11 +205,10 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eMenuIcon,       // MenuIconParams
     eMenuItem,       // MenuItemParams
     eMenuSeparator,  // MenuItemParams
-    eTooltip,
-    eCheckbox,  // CheckboxOrRadioParams
-    eRadio,     // CheckboxOrRadioParams
-    eButton,    // ButtonParams
-    eDropdown,  // DropdownParams
+    eCheckbox,       // CheckboxOrRadioParams
+    eRadio,          // CheckboxOrRadioParams
+    eButton,         // ButtonParams
+    eDropdown,       // DropdownParams
     eFocusOutline,
     eSpinButtons,     // SpinButtonParams
     eSpinButtonUp,    // SpinButtonParams
@@ -252,7 +251,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     static WidgetInfo MenuSeparator(const MenuItemParams& aParams) {
       return WidgetInfo(Widget::eMenuSeparator, aParams);
     }
-    static WidgetInfo Tooltip() { return WidgetInfo(Widget::eTooltip, false); }
     static WidgetInfo Checkbox(const CheckboxOrRadioParams& aParams) {
       return WidgetInfo(Widget::eCheckbox, aParams);
     }
