@@ -6008,6 +6008,8 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
                                      Register ptrScratch, AnyRegister output,
                                      Register64 out64) {
   MOZ_ASSERT(ptr == ptrScratch);
+  MOZ_ASSERT(!access.isZeroExtendSimd128Load());
+  MOZ_ASSERT(!access.isSplatSimd128Load());
 
   uint32_t offset = access.offset();
   MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
@@ -6054,7 +6056,6 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
       }
     }
   } else {
-    MOZ_ASSERT(!access.isZeroExtendSimd128Load());
     bool isFloat = output.isFloat();
     if (isFloat) {
       MOZ_ASSERT((byteSize == 4) == output.fpu().isSingle());
@@ -6151,6 +6152,8 @@ void MacroAssemblerARM::wasmUnalignedLoadImpl(
   MOZ_ASSERT(ptr == ptrScratch);
   MOZ_ASSERT(tmp != ptr);
   MOZ_ASSERT(!Assembler::SupportsFastUnalignedAccesses());
+  MOZ_ASSERT(!access.isZeroExtendSimd128Load());
+  MOZ_ASSERT(!access.isSplatSimd128Load());
 
   uint32_t offset = access.offset();
   MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);

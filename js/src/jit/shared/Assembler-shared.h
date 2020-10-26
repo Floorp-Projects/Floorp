@@ -505,6 +505,7 @@ class MemoryAccessDesc {
   jit::Synchronization sync_;
   wasm::BytecodeOffset trapOffset_;
   bool zeroExtendSimd128Load_;
+  bool splatSimd128Load_;
 
  public:
   explicit MemoryAccessDesc(
@@ -516,7 +517,8 @@ class MemoryAccessDesc {
         type_(type),
         sync_(sync),
         trapOffset_(trapOffset),
-        zeroExtendSimd128Load_(false) {
+        zeroExtendSimd128Load_(false),
+        splatSimd128Load_(false) {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
   }
 
@@ -528,11 +530,20 @@ class MemoryAccessDesc {
   BytecodeOffset trapOffset() const { return trapOffset_; }
   bool isAtomic() const { return !sync_.isNone(); }
   bool isZeroExtendSimd128Load() const { return zeroExtendSimd128Load_; }
+  bool isSplatSimd128Load() const { return splatSimd128Load_; }
 
   void setZeroExtendSimd128Load() {
     MOZ_ASSERT(type() == Scalar::Float32 || type() == Scalar::Float64);
     MOZ_ASSERT(!isAtomic());
+    MOZ_ASSERT(!isSplatSimd128Load());
     zeroExtendSimd128Load_ = true;
+  }
+
+  void setSplatSimd128Load() {
+    MOZ_ASSERT(type() == Scalar::Float64);
+    MOZ_ASSERT(!isAtomic());
+    MOZ_ASSERT(!isZeroExtendSimd128Load());
+    splatSimd128Load_ = true;
   }
 
   void clearOffset() { offset_ = 0; }
