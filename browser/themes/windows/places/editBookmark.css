@@ -81,8 +81,3 @@
 #editBMPanel_bmRootItem {
   list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg") !important;
 }
-
-#editBMPanel_folderMenuList[selectedGuid="unfiled_____"],
-#editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg") !important;
-}
