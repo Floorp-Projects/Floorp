@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for nsITableEditor.getSelectedCellsType()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  const kTableSelectionMode_None = 0;
+  const kTableSelectionMode_Cell = 1;
+  const kTableSelectionMode_Row = 2;
+  const kTableSelectionMode_Column = 3;
+
+  (function test_without_selection_range() {
+    selection.removeAllRanges();
+    try {
+      getTableEditor().getSelectedCellsType(null);
+      ok(false, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when editor does not have Selection");
+    } catch (e) {
+      ok(true, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when editor does not have Selection");
+    }
+  })();
+
+  (function test_without_table() {
+    editor.innerHTML = "<p>Here is a paragraph</p>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.collapse(editor.querySelector("p").firstChild, 0);
+    try {
+      getTableEditor().getSelectedCellsType(null);
+      ok(false, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when editor does not have a <table>");
+    } catch (e) {
+      ok(true, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when editor does not have a <table>");
+    }
+  })();
+
+  (function test_with_selection_outside_table() {
+    editor.innerHTML = "<p>Here is a paragraph before the table</p>" +
+      "<table><tr><td>cell</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.collapse(editor.querySelector("p").firstChild, 0);
+    try {
+      getTableEditor().getSelectedCellsType(null);
+      ok(false, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when selection is outside the <table>");
+    } catch (e) {
+      ok(true, "nsITableEditor.getSelectedCellsType(null) should cause throwing an exception when selection is outside the <table>");
+    }
+  })();
+
+  (function test_with_selection_in_text_in_cell() {
+    editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.collapse(editor.querySelector("td").firstChild, 0);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(null) should return None when selection is collapsed in a text node in a cell");
+  })();
+
+  (function test_with_selecting_a_cell_which_is_only_one_cell_in_table() {
+    editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects the cell which is only one in the table");
+  })();
+
+  (function test_with_selecting_a_cell_whose_table_has_one_row() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
+      "nsITableEditor.getSelectedCellsType(null) should return Column when selection selects a cell in the first row which is only one in the table");
+  })();
+
+  (function test_with_selecting_a_cell_whose_table_has_one_column() {
+    editor.innerHTML = "<table><tr><td>cell1</td></tr><tr><td>cell2</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects a cell in the first row which is only one in the row");
+  })();
+
+  (function test_with_selecting_a_cell_at_1_1_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at first row and first column");
+  })();
+
+  (function test_with_selecting_a_cell_at_1_2_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 1, editor.querySelector("tr"), 2);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at first row and second column");
+  })();
+
+  (function test_with_selecting_a_cell_at_2_1_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr + tr"), 0, editor.querySelector("tr + tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at second row and first column");
+  })();
+
+  (function test_with_selecting_a_cell_at_2_2_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr + tr"), 1, editor.querySelector("tr + tr"), 2);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at second row and second column");
+  })();
+
+  (function test_with_selecting_a_cell_at_1_1_whose_colspan_2_and_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td colspan=\"2\">cell1</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects a cell whose colspan is 2 at first row");
+  })();
+
+  (function test_with_selecting_a_cell_at_1_1_whose_rowspan_2_and_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td rowspan=\"2\">cell1</td><td>cell2</td></tr><tr><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
+      "nsITableEditor.getSelectedCellsType(null) should return Column when selection selects a cell whose row is 2 at first column");
+  })();
+
+  (function test_with_selecting_all_cells_in_first_row_whose_table_has_2x2_cells() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
+    synthesizeMouseAtCenter(editor.querySelector("td + td"), {accelKey: true});
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects all cells in the first row whose table has 2 rows and 2 columns");
+  })();
+
+  (function test_with_selecting_all_cells_in_first_column_whose_table_has_2x2_cells() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
+    synthesizeMouseAtCenter(editor.querySelector("tr + tr > td"), {accelKey: true});
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects all cells in the first column whose table has 2 rows and 2 columns");
+  })();
+
+  (function test_with_selecting_all_cells_whose_table_has_2x2_cells() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
+    synthesizeMouseAtCenter(editor.querySelector("td + td"), {accelKey: true});
+    synthesizeMouseAtCenter(editor.querySelector("tr + tr > td"), {accelKey: true});
+    synthesizeMouseAtCenter(editor.querySelector("tr + tr > td + td"), {accelKey: true});
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
+      "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects all cells whose table has 2 rows and 2 columns");
+  })();
+
+  (function test_with_selecting_a_raw() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("tbody"), 0, editor.querySelector("tbody"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a row");
+  })();
+
+  (function test_with_selecting_a_tbody() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor.querySelector("table"), 0, editor.querySelector("table"), 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a tbody");
+  })();
+
+  (function test_with_selecting_a_table() {
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    selection.setBaseAndExtent(editor, 0, editor, 1);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a table");
+  })();
+
+  (function test_with_selecting_cells_in_different_table() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
+      "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    let range = document.createRange();
+    range.selectNode(editor.querySelector("td"));
+    selection.addRange(range);
+    range = document.createRange();
+    range.selectNode(editor.querySelector("table + table td"));
+    selection.addRange(range);
+    is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects 2 cells in different tables");
+  })();
+
+  (function test_with_selecting_a_cell_in_the_table() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
+      "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    let range = document.createRange();
+    range.selectNode(editor.querySelector("td"));
+    selection.addRange(range);
+    is(getTableEditor().getSelectedCellsType(editor.querySelector("table")), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(editor.querySelector(\"table\")) should return Cell when selection selects a cell in the table");
+  })();
+
+  (function test_with_selecting_a_cell_in_the_table_specifying_different_cell() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
+      "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    let range = document.createRange();
+    range.selectNode(editor.querySelector("tr + tr > td"));
+    selection.addRange(range);
+    is(getTableEditor().getSelectedCellsType(editor.querySelector("td")), kTableSelectionMode_Cell,
+      "nsITableEditor.getSelectedCellsType(editor.querySelector(\"td\")) should return Cell when selection selects a cell in the table");
+  })();
+
+  (function test_with_selecting_a_cell_in_the_other_table() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
+      "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    let range = document.createRange();
+    range.selectNode(editor.querySelector("td"));
+    selection.addRange(range);
+    todo_is(getTableEditor().getSelectedCellsType(editor.querySelector("table + table")), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(editor.querySelector(\"table + table\")) should return None when selection selects a cell in the other table");
+  })();
+
+  (function test_with_selecting_a_cell_in_the_other_table_specifying_a_cell_in_the_other_one() {
+    selection.removeAllRanges();
+    editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
+      "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
+    document.body.scrollTop;  // Flush pending layout
+    let range = document.createRange();
+    range.selectNode(editor.querySelector("td"));
+    selection.addRange(range);
+    todo_is(getTableEditor().getSelectedCellsType(editor.querySelector("table + table td")), kTableSelectionMode_None,
+      "nsITableEditor.getSelectedCellsType(editor.querySelector(\"table + table td\")) should return None when selection selects a cell in the other table");
+  })();
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>
