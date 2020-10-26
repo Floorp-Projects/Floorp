@@ -56,21 +56,19 @@ function readFromClipboard()
   var clip =
     Cc['@mozilla.org/widget/clipboard;1'].createInstance(clipid);
   if (!clip)
-    return;
+    return "";
   var trans =
     Cc['@mozilla.org/widget/transferable;1'].createInstance(Ci.nsITransferable);
   if (!trans)
-    return;
+    return "";
   trans.init(getLoadContext());
   trans.addDataFlavor('text/html');
   clip.getData(trans,clipid.kGlobalClipboard);
-  var str = new Object();
+  var str = {};
   trans.getTransferData("text/html",str);
   if (str)
     str = str.value.QueryInterface(Ci.nsISupportsString);
-  if (str)
-    pastetext = str.data;
-  return pastetext;
+  return str?.data;
 }
 
 function encodeHtmlEntities(s)
@@ -94,7 +92,8 @@ function initAndRunTests()
   result = readFromClipboard();
   ok(expect.test(result), "data on system pasteboard is wrapped with charset metadata");
 
-  $("display").innerHTML = 
+  // eslint-disable-next-line no-unsanitized/property
+  $("display").innerHTML =
     '<em>source:</em> <pre>' + encodeHtmlEntities(source) + '</pre><br/>' +
     '<em>result:</em> <pre>' + encodeHtmlEntities(result) + '</pre>';
 }

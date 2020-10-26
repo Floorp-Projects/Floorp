@@ -22,7 +22,7 @@
 
   <script type="application/javascript"><![CDATA[
     var gKeyPressEventCount = 0;
-    var gKeyDownEventCound = 0;
+    var gKeyDownEventCount = 0;
 
     function onKeyDown(e)
     {
@@ -37,8 +37,8 @@
 
     function* testBody()
     {
-      window.addEventListener("keydown", onKeyDown, false);
-      window.addEventListener("keypress", onKeyPress, false);
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keypress", onKeyPress);
 
       // Test ctrl-tab
       gKeyDownEventCount = 0;
@@ -61,8 +61,8 @@
       is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 1);
 
-      window.removeEventListener("keydown", onKeyDown, false);
-      window.removeEventListener("keypress", onKeyPress, false);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keypress", onKeyPress);
     }
 
     var gTestContinuation = null;
