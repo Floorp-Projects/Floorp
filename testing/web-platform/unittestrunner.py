@@ -1,5 +1,5 @@
-import ConfigParser
 import argparse
+import configparser
 import os
 import re
 import subprocess
@@ -43,7 +43,7 @@ class ReplaceRequirements(object):
 
     def read_deps(self):
         rv = []
-        parser = ConfigParser.ConfigParser()
+        parser = configparser.ConfigParser()
         path = os.path.join(self.tox_path, "tox.ini")
         with open(path) as f:
             parser.readfp(f)

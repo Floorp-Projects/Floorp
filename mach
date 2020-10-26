@@ -37,7 +37,6 @@ py2commands="
     wpt-metadata-merge
     wpt-serve
     wpt-test-paths
-    wpt-unittest
     wpt-update
 "
 
