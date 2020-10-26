@@ -1322,24 +1322,6 @@ PlacesSyncUtils.test.bookmarks = Object.freeze({
     return PlacesUtils.withConnectionWrapper(
       "BookmarkTestUtils: insert",
       async db => {
-        let requestedParentRecordId = insertInfo.parentRecordId;
-        let requestedParentGuid = BookmarkSyncUtils.recordIdToGuid(
-          insertInfo.parentRecordId
-        );
-        let isOrphan = await GUIDMissing(requestedParentGuid);
-
-        // Default to "unfiled" for new bookmarks if the parent doesn't exist.
-        if (!isOrphan) {
-          BookmarkSyncLog.debug(
-            `insertSyncBookmark: Item ${insertInfo.recordId} is not an orphan`
-          );
-        } else {
-          BookmarkSyncLog.debug(
-            `insertSyncBookmark: Item ${insertInfo.recordId} is an orphan: parent ${insertInfo.parentRecordId} doesn't exist; reparenting to unfiled`
-          );
-          insertInfo.parentRecordId = "unfiled";
-        }
-
         // If we're inserting a tag query, make sure the tag exists and fix the
         // folder ID to refer to the local tag folder.
         insertInfo = await updateTagQueryFolder(db, insertInfo);
@@ -1351,14 +1333,6 @@ PlacesSyncUtils.test.bookmarks = Object.freeze({
           bookmarkItem,
           insertInfo
         );
-
-        // If the item is an orphan, annotate it with its real parent record ID.
-        if (isOrphan) {
-          await annotateOrphan(newItem, requestedParentRecordId);
-        }
-
-        // Reparent all orphans that expect this folder as the parent.
-        await reparentOrphans(db, newItem);
 
         return newItem;
       }
@@ -1457,56 +1431,6 @@ function updateTagQueryFolder(db, info) {
   info.url = new URL(info.url.protocol + params);
   return info;
 }
-
-async function annotateOrphan(item, requestedParentRecordId) {
-  let guid = BookmarkSyncUtils.recordIdToGuid(item.recordId);
-  let itemId = await PlacesUtils.promiseItemId(guid);
-  PlacesUtils.annotations.setItemAnnotation(
-    itemId,
-    BookmarkSyncUtils.SYNC_PARENT_ANNO,
-    requestedParentRecordId,
-    0,
-    PlacesUtils.annotations.EXPIRE_NEVER,
-    SOURCE_SYNC
-  );
-}
-
-var reparentOrphans = async function(db, item) {
-  if (!item.kind || item.kind != BookmarkSyncUtils.KINDS.FOLDER) {
-    return;
-  }
-  let orphanGuids = await fetchGuidsWithAnno(
-    db,
-    BookmarkSyncUtils.SYNC_PARENT_ANNO,
-    item.recordId
-  );
-  let folderGuid = BookmarkSyncUtils.recordIdToGuid(item.recordId);
-  BookmarkSyncLog.debug(
-    `reparentOrphans: Reparenting ${JSON.stringify(orphanGuids)} to ${
-      item.recordId
-    }`
-  );
-  for (let i = 0; i < orphanGuids.length; ++i) {
-    try {
-      // Reparenting can fail if we have a corrupted or incomplete tree
-      // where an item's parent is one of its descendants.
-      BookmarkSyncLog.trace(
-        `reparentOrphans: Attempting to move item ${orphanGuids[i]} to new parent ${item.recordId}`
-      );
-      await PlacesUtils.bookmarks.update({
-        guid: orphanGuids[i],
-        parentGuid: folderGuid,
-        index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-        source: SOURCE_SYNC,
-      });
-    } catch (ex) {
-      BookmarkSyncLog.error(
-        `reparentOrphans: Failed to reparent item ${orphanGuids[i]} to ${item.recordId}`,
-        ex
-      );
-    }
-  }
-};
 
 // Keywords are a 1 to 1 mapping between strings and pairs of (URL, postData).
 // (the postData is not synced, so we ignore it). Sync associates keywords with
