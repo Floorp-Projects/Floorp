@@ -150,7 +150,7 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
   VideoInfo videoInfo(WIDTH, HEIGHT);
   videoInfo.mMimeType = nsLiteralCString(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::CONTROLLER)));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR)));
 
   RefPtr<MediaDataEncoder> e;
   if (aSpecific) {
@@ -204,7 +204,7 @@ static bool EnsureInit(RefPtr<MediaDataEncoder> aEncoder) {
 
   bool succeeded;
   media::Await(
-      GetMediaThreadPool(MediaThreadType::CONTROLLER), aEncoder->Init(),
+      GetMediaThreadPool(MediaThreadType::SUPERVISOR), aEncoder->Init(),
       [&succeeded](TrackInfo::TrackType t) {
         EXPECT_EQ(TrackInfo::TrackType::kVideoTrack, t);
         succeeded = true;
@@ -249,7 +249,7 @@ static MediaDataEncoder::EncodedData Encode(
   for (size_t i = 0; i < aNumFrames; i++) {
     RefPtr<MediaData> frame = aSource.GetFrame(i);
     media::Await(
-        GetMediaThreadPool(MediaThreadType::CONTROLLER),
+        GetMediaThreadPool(MediaThreadType::SUPERVISOR),
         aEncoder->Encode(frame),
         [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
           output.AppendElements(std::move(encoded));
@@ -265,7 +265,7 @@ static MediaDataEncoder::EncodedData Encode(
   size_t pending = 0;
   do {
     media::Await(
-        GetMediaThreadPool(MediaThreadType::CONTROLLER), aEncoder->Drain(),
+        GetMediaThreadPool(MediaThreadType::SUPERVISOR), aEncoder->Drain(),
         [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
           pending = encoded.Length();
           output.AppendElements(std::move(encoded));

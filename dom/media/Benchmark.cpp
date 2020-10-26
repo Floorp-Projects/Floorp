@@ -127,7 +127,7 @@ bool VP9Benchmark::IsVP9DecodeFast(bool aDefault) {
 }
 
 Benchmark::Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters)
-    : QueueObject(new TaskQueue(GetMediaThreadPool(MediaThreadType::CONTROLLER),
+    : QueueObject(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                                 "Benchmark::QueueObject")),
       mParameters(aParameters),
       mKeepAliveUntilComplete(this),
@@ -172,7 +172,7 @@ void Benchmark::Init() {
 
 BenchmarkPlayback::BenchmarkPlayback(Benchmark* aGlobalState,
                                      MediaDataDemuxer* aDemuxer)
-    : QueueObject(new TaskQueue(GetMediaThreadPool(MediaThreadType::CONTROLLER),
+    : QueueObject(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                                 "BenchmarkPlayback::QueueObject")),
       mGlobalState(aGlobalState),
       mDecoderTaskQueue(
