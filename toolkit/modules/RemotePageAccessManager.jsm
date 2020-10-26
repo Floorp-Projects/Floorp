@@ -62,7 +62,6 @@ let RemotePageAccessManager = {
         "services.settings.last_update_seconds",
       ],
       RPMGetAppBuildID: ["*"],
-      RPMGetInnerMostURI: ["*"],
       RPMIsWindowPrivate: ["*"],
       RPMAddToHistogram: ["*"],
     },
