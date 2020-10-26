@@ -863,8 +863,6 @@ function PlacesToolbar(aPlace) {
     ["_dropIndicator", "PlacesToolbarDropIndicator"],
     ["_chevron", "PlacesChevron"],
     ["_chevronPopup", "PlacesChevronPopup"],
-    ["_otherBookmarks", "OtherBookmarks"],
-    ["_otherBookmarksPopup", "OtherBookmarksPopup"],
   ].forEach(function(elementGlobal) {
     let [name, id] = elementGlobal;
     thisView.__defineGetter__(name, function() {
@@ -1032,8 +1030,6 @@ PlacesToolbar.prototype = {
       // Otherwise, it will be initialized when the toolbar overflows.
       this._chevronPopup.place = this.place;
     }
-
-    BookmarkingUI.updateUnfiledBookmarksVisibility();
   },
 
   _insertNewItem: function PT__insertNewItem(
@@ -1121,15 +1117,6 @@ PlacesToolbar.prototype = {
     }
 
     this._updateChevronPopupNodesVisibility();
-  },
-
-  _onOtherBookmarksPopupShowing: function PT__onOtherBookmarksPopupShowing(
-    aEvent
-  ) {
-    if (aEvent.target != this._otherBookmarksPopup) {
-      return;
-    }
-    this._rebuildPopup(this._otherBookmarksPopup);
   },
 
   handleEvent: function PT_handleEvent(aEvent) {

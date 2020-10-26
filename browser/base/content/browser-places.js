@@ -2150,10 +2150,6 @@ var BookmarkingUI = {
           }
           break;
       }
-
-      if (ev.parentGuid === PlacesUtils.bookmarks.unfiledGuid) {
-        this.updateUnfiledBookmarksVisibility();
-      }
     }
   },
 
@@ -2191,21 +2187,7 @@ var BookmarkingUI = {
   onEndUpdateBatch() {},
   onBeforeItemRemoved() {},
   onItemVisited() {},
-  onItemMoved(
-    aItemId,
-    aProperty,
-    aIsAnnotationProperty,
-    aNewValue,
-    aLastModified,
-    aItemType,
-    aParentId,
-    aGuid,
-    aParentGuid
-  ) {
-    if (aParentGuid === PlacesUtils.bookmarks.unfiledGuid) {
-      this.updateUnfiledBookmarksVisibility();
-    }
-  },
+  onItemMoved() {},
 
   onWidgetUnderflow(aNode, aContainer) {
     let win = aNode.ownerGlobal;
@@ -2216,50 +2198,6 @@ var BookmarkingUI = {
     // The view gets broken by being removed and reinserted. Uninit
     // here so popupshowing will generate a new one:
     this._uninitView();
-  },
-
-  async updateUnfiledBookmarksVisibility() {
-    // Only show the "Other Bookmarks" folder in the toolbar if pref is enabled.
-    let featureEnabled = Services.prefs.getBoolPref(
-      "browser.toolbars.bookmarks.2h2020",
-      false
-    );
-
-    if (!featureEnabled) {
-      return;
-    }
-
-    let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
-    let unfiledBookmarksFolderId = await PlacesUtils.promiseItemId(unfiledGuid);
-
-    let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
-      "PlacesUtils: maybeShowOtherBookmarksFolder",
-      async db => {
-        let rows = await db.execute(
-          `SELECT COUNT(*) as n FROM moz_bookmarks b
-            WHERE b.parent = :parentId`,
-          { parentId: unfiledBookmarksFolderId }
-        );
-        return rows[0].getResultByName("n");
-      }
-    ).catch(e => {
-      // We want to report errors, but we still want to show the folder then:
-      Cu.reportError(e);
-      return 0;
-    });
-
-    let otherBookmarks = document.getElementById("OtherBookmarks");
-
-    if (numberOfBookmarks > 0) {
-      let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
-      let result = PlacesUtils.getFolderContents(unfiledGuid);
-      let node = result.root;
-      otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
-
-      otherBookmarks.setAttribute("collapsed", "false");
-    } else {
-      otherBookmarks.setAttribute("collapsed", "true");
-    }
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
