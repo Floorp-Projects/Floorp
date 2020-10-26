@@ -54,7 +54,7 @@ class FirebasePushService : LeanplumPushFirebaseMessagingService(),
         super.onNewToken(newToken)
     }
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
         AutoPushService.onMessageReceived(remoteMessage)
         super.onMessageReceived(remoteMessage)
     }
