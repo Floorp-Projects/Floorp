@@ -54,8 +54,6 @@ const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
-const TOGGLE_EXPERIMENTAL_MODE_PREF =
-  "media.videocontrols.picture-in-picture.video-toggle.mode";
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
 
@@ -182,8 +180,6 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     this.weakDocStates = new WeakMap();
     this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
     this.toggleTesting = Services.prefs.getBoolPref(TOGGLE_TESTING_PREF, false);
-    this.experimentalToggle =
-      Services.prefs.getIntPref(TOGGLE_EXPERIMENTAL_MODE_PREF, -1) != -1;
 
     // Bug 1570744 - JSWindowActorChild's cannot be used as nsIObserver's
     // directly, so we create a new function here instead to act as our
@@ -192,20 +188,12 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       this.observe(subject, topic, data);
     };
     Services.prefs.addObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
-    Services.prefs.addObserver(
-      TOGGLE_EXPERIMENTAL_MODE_PREF,
-      this.observerFunction
-    );
     Services.cpmm.sharedData.addEventListener("change", this);
   }
 
   didDestroy() {
     this.stopTrackingMouseOverVideos();
     Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
-    Services.prefs.removeObserver(
-      TOGGLE_EXPERIMENTAL_MODE_PREF,
-      this.observerFunction
-    );
     Services.cpmm.sharedData.removeEventListener("change", this);
   }
 
@@ -214,27 +202,17 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
-    switch (data) {
-      case TOGGLE_ENABLED_PREF: {
-        this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+    this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
 
-        if (this.toggleEnabled) {
-          // We have enabled the Picture-in-Picture toggle, so we need to make
-          // sure we register all of the videos that might already be on the page.
-          this.contentWindow.requestIdleCallback(() => {
-            let videos = this.document.querySelectorAll("video");
-            for (let video of videos) {
-              this.registerVideo(video);
-            }
-          });
+    if (this.toggleEnabled) {
+      // We have enabled the Picture-in-Picture toggle, so we need to make
+      // sure we register all of the videos that might already be on the page.
+      this.contentWindow.requestIdleCallback(() => {
+        let videos = this.document.querySelectorAll("video");
+        for (let video of videos) {
+          this.registerVideo(video);
         }
-        break;
-      }
-      case TOGGLE_EXPERIMENTAL_MODE_PREF: {
-        this.experimentalToggle =
-          Services.prefs.getIntPref(TOGGLE_EXPERIMENTAL_MODE_PREF, -1) != -1;
-        break;
-      }
+      });
     }
   }
 
@@ -985,22 +963,20 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       toggle
     );
 
-    if (this.experimentalToggle) {
-      // The way the experimental toggles are currently implemented with
-      // absolute positioning, the root toggle element bounds don't actually
-      // contain all of the toggle child element bounds. Until we find a way to
-      // sort that out, we workaround the issue by having each clickable child
-      // elements of the toggle have a clicklable class, and then compute the
-      // smallest rect that contains all of their bounding rects and use that
-      // as the hitbox.
-      toggleRect = Rect.fromRect(toggleRect);
-      let clickableChildren = toggle.querySelectorAll(".clickable");
-      for (let child of clickableChildren) {
-        let childRect = Rect.fromRect(
-          child.ownerGlobal.windowUtils.getBoundsWithoutFlushing(child)
-        );
-        toggleRect.expandToContain(childRect);
-      }
+    // The way the toggle is currently implemented with
+    // absolute positioning, the root toggle element bounds don't actually
+    // contain all of the toggle child element bounds. Until we find a way to
+    // sort that out, we workaround the issue by having each clickable child
+    // elements of the toggle have a clicklable class, and then compute the
+    // smallest rect that contains all of their bounding rects and use that
+    // as the hitbox.
+    toggleRect = Rect.fromRect(toggleRect);
+    let clickableChildren = toggle.querySelectorAll(".clickable");
+    for (let child of clickableChildren) {
+      let childRect = Rect.fromRect(
+        child.ownerGlobal.windowUtils.getBoundsWithoutFlushing(child)
+      );
+      toggleRect.expandToContain(childRect);
     }
 
     // If the toggle has no dimensions, we're definitely not over it.
@@ -1057,10 +1033,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    * @returns {Element} The toggle element.
    */
   getToggleElement(shadowRoot) {
-    if (!this.experimentalToggle) {
-      return shadowRoot.getElementById("pictureInPictureToggleButton");
-    }
-    return shadowRoot.getElementById("pictureInPictureToggleExperiment");
+    return shadowRoot.getElementById("pictureInPictureToggle");
   }
 
   /**

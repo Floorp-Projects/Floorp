@@ -85,7 +85,7 @@ add_task(async () => {
  */
 add_task(async () => {
   const TOGGLE_SMALL = {
-    rootID: "pictureInPictureToggleExperiment",
+    rootID: "pictureInPictureToggle",
     stages: {
       hoverVideo: {
         opacities: {
@@ -98,13 +98,13 @@ add_task(async () => {
         opacities: {
           ".pip-wrapper": 1.0,
         },
-        hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+        hidden: [".pip-expanded"],
       },
     },
   };
 
   const TOGGLE_LARGE = {
-    rootID: "pictureInPictureToggleExperiment",
+    rootID: "pictureInPictureToggle",
     stages: {
       hoverVideo: {
         opacities: {
@@ -112,22 +112,17 @@ add_task(async () => {
           ".pip-wrapper": 0.8,
           ".pip-expanded": 0.0,
         },
-        hidden: [
-          "#pictureInPictureToggleButton",
-          ".pip-explainer",
-          ".pip-icon-label > .pip-icon",
-        ],
+        hidden: [".pip-explainer", ".pip-icon-label > .pip-icon"],
       },
       hoverToggle: {
         opacities: {
           ".pip-small": 0.0,
           ".pip-wrapper": 1.0,
-          ".pip-expanded": 1.0,
         },
         hidden: [
-          "#pictureInPictureToggleButton",
           ".pip-explainer",
           ".pip-icon-label > .pip-icon",
+          ".pip-expanded",
         ],
       },
     },
@@ -179,9 +174,7 @@ add_task(async () => {
             );
             video.style.width = targetWidth + "px";
             await resizePromise;
-            let toggle = shadowRoot.getElementById(
-              "pictureInPictureToggleExperiment"
-            );
+            let toggle = shadowRoot.getElementById("pictureInPictureToggle");
             return toggle.hasAttribute("small-video");
           }
         );
@@ -203,9 +196,7 @@ add_task(async () => {
             );
             video.style.width = "";
             await resizePromise;
-            let toggle = shadowRoot.getElementById(
-              "pictureInPictureToggleExperiment"
-            );
+            let toggle = shadowRoot.getElementById("pictureInPictureToggle");
             return toggle.hasAttribute("small-video");
           }
         );
