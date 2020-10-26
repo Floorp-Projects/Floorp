@@ -231,7 +231,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eScrollCorner,        // ScrollbarParams
     eMultilineTextField,  // bool
     eListBox,
-    eSourceList,                   // bool
     eActiveSourceListSelection,    // bool
     eInactiveSourceListSelection,  // bool
     eTabPanel,
@@ -317,7 +316,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
       return WidgetInfo(Widget::eMultilineTextField, aParams);
     }
     static WidgetInfo ListBox() { return WidgetInfo(Widget::eListBox, false); }
-    static WidgetInfo SourceList(bool aParams) { return WidgetInfo(Widget::eSourceList, aParams); }
     static WidgetInfo ActiveSourceListSelection(bool aParams) {
       return WidgetInfo(Widget::eActiveSourceListSelection, aParams);
     }
@@ -467,7 +465,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect, bool aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsFocused);
-  void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsActive);
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
                                bool aSelectionIsActive);
 
