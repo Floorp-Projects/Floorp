@@ -16,8 +16,6 @@ const TEST_PAGE_2 = TEST_ROOT_2 + "test-page.html";
 const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
 const TEST_PAGE_WITH_SOUND = TEST_ROOT + "test-page-with-sound.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
-const TOGGLE_MODE_PREF =
-  "media.videocontrols.picture-in-picture.video-toggle.mode";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
 const HAS_USED_PREF =
@@ -60,20 +58,20 @@ const HAS_USED_PREF =
  * toggle.
  */
 const DEFAULT_TOGGLE_STYLES = {
-  rootID: "pictureInPictureToggleExperiment",
+  rootID: "pictureInPictureToggle",
   stages: {
     hoverVideo: {
       opacities: {
         ".pip-wrapper": 0.8,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
 
     hoverToggle: {
       opacities: {
         ".pip-wrapper": 1.0,
       },
-      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
+      hidden: [".pip-expanded"],
     },
   },
 };
@@ -190,7 +188,6 @@ async function toggleOpacityReachesThreshold(
   stage,
   toggleStyles = DEFAULT_TOGGLE_STYLES
 ) {
-  let toggleMode = String(Services.prefs.getIntPref(TOGGLE_MODE_PREF, -1));
   let togglePosition = Services.prefs.getStringPref(
     TOGGLE_POSITION_PREF,
     "right"
@@ -198,7 +195,7 @@ async function toggleOpacityReachesThreshold(
   let hasUsed = Services.prefs.getBoolPref(HAS_USED_PREF, false);
   let toggleStylesForStage = toggleStyles.stages[stage];
   info(
-    `Testing toggle mode ${toggleMode} for stage ${stage} ` +
+    `Testing toggle for stage ${stage} ` +
       `in position ${togglePosition}, has used: ${hasUsed}`
   );
 
