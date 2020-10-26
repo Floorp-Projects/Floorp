@@ -29,17 +29,17 @@ private val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROO
 /**
  * A shortcut to get the localized name of an add-on.
  */
-val Addon.translatedName: String get() = translatableName.translate(this)
+fun Addon.translateName(context: Context): String = translatableName.translate(this, context)
 
 /**
  * A shortcut to get the localized summary of an add-on.
  */
-val Addon.translatedSummary: String get() = translatableSummary.translate(this)
+fun Addon.translateSummary(context: Context): String = translatableSummary.translate(this, context)
 
 /**
  * A shortcut to get the localized description of an add-on.
  */
-val Addon.translatedDescription: String get() = translatableDescription.translate(this)
+fun Addon.translateDescription(context: Context): String = translatableDescription.translate(this, context)
 
 /**
  * The date the add-on was created, as a JVM date object.
@@ -57,9 +57,11 @@ val Addon.updatedAtDate: Date get() = dateParser.parse(updatedAt)!!
 /**
  * Try to find the default language on the map otherwise defaults to [Addon.DEFAULT_LOCALE].
  */
-internal fun Map<String, String>.translate(addon: Addon): String {
+internal fun Map<String, String>.translate(addon: Addon, context: Context): String {
     val lang = Locale.getDefault().language
-    return get(lang) ?: getValue(addon.defaultLocale)
+    return get(lang) ?: getOrElse(addon.defaultLocale) {
+        context.getString(R.string.mozac_feature_addons_failed_to_translate, lang, addon.defaultLocale)
+    }
 }
 
 /**

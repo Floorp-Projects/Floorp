@@ -43,15 +43,15 @@ class ExtensionsTest {
 
         Locale.setDefault(Locale("es"))
 
-        assertEquals("nombre", addon.translatedName)
+        assertEquals("nombre", addon.translateName(testContext))
 
         Locale.setDefault(Locale.GERMAN)
 
-        assertEquals("Name", addon.translatedName)
+        assertEquals("Name", addon.translateName(testContext))
 
         Locale.setDefault(Locale.ENGLISH)
 
-        assertEquals("name", addon.translatedName)
+        assertEquals("name", addon.translateName(testContext))
     }
 
     @Test
@@ -61,15 +61,24 @@ class ExtensionsTest {
 
         Locale.setDefault(Locale("es"))
 
-        assertEquals("Hola", map.translate(addon))
+        assertEquals("Hola", map.translate(addon, testContext))
 
         Locale.setDefault(Locale.GERMAN)
 
-        assertEquals("Hallo", map.translate(addon))
+        assertEquals("Hallo", map.translate(addon, testContext))
 
         Locale.setDefault(Locale.ITALIAN)
 
-        assertEquals("Hello", map.translate(addon))
+        assertEquals("Hello", map.translate(addon, testContext))
+
+        Locale.setDefault(Locale.CHINESE)
+
+        val locales = mapOf("es" to "Hola", "de" to "Hallo")
+
+        val lang = Locale.getDefault().language
+        val notFoundTranslation = testContext.getString(R.string.mozac_feature_addons_failed_to_translate, lang, addon.defaultLocale)
+
+        assertEquals(notFoundTranslation, locales.translate(addon, testContext))
     }
 
     @Test

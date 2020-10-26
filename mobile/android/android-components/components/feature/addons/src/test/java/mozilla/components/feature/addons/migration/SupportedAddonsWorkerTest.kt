@@ -19,7 +19,7 @@ import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.addons.migration.SupportedAddonsWorker.Companion.NOTIFICATION_TAG
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.test.mock
@@ -157,25 +157,25 @@ class SupportedAddonsWorkerTest {
         val thirdAddon = Addon("three", translatableName = mapOf(Addon.DEFAULT_LOCALE to "three"))
 
         // One add-on
-        var contentString = worker.getNotificationBody(listOf(firstAddon))
-        var expectedString: String? = testContext.getString(R.string.mozac_feature_addons_supported_checker_notification_content_one, firstAddon.translatedName, appName)
+        var contentString = worker.getNotificationBody(listOf(firstAddon), testContext)
+        var expectedString: String? = testContext.getString(R.string.mozac_feature_addons_supported_checker_notification_content_one, firstAddon.translateName(testContext), appName)
 
         assertEquals(expectedString, contentString)
 
         // Two add-ons
-        contentString = worker.getNotificationBody(listOf(firstAddon, secondAddon))
-        expectedString = testContext.getString(R.string.mozac_feature_addons_supported_checker_notification_content_two, firstAddon.translatedName, secondAddon.translatedName, appName)
+        contentString = worker.getNotificationBody(listOf(firstAddon, secondAddon), testContext)
+        expectedString = testContext.getString(R.string.mozac_feature_addons_supported_checker_notification_content_two, firstAddon.translateName(testContext), secondAddon.translateName(testContext), appName)
 
         assertEquals(expectedString, contentString)
 
         // More than two add-ons
-        contentString = worker.getNotificationBody(listOf(firstAddon, secondAddon, thirdAddon))
+        contentString = worker.getNotificationBody(listOf(firstAddon, secondAddon, thirdAddon), testContext)
         expectedString = testContext.getString(R.string.mozac_feature_addons_supported_checker_notification_content_more_than_two, appName)
 
         assertEquals(expectedString, contentString)
 
         // Zero add-ons :(
-        contentString = worker.getNotificationBody(emptyList())
+        contentString = worker.getNotificationBody(emptyList(), testContext)
         expectedString = null
 
         assertEquals(expectedString, contentString)

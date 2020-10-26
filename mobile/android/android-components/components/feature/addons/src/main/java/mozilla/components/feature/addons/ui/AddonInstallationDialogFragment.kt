@@ -154,7 +154,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
         rootView.findViewById<TextView>(R.id.title).text =
             requireContext().getString(
                 R.string.mozac_feature_addons_installed_dialog_title,
-                addon.translatedName,
+                addon.translateName(requireContext()),
                 requireContext().appName
             )
 

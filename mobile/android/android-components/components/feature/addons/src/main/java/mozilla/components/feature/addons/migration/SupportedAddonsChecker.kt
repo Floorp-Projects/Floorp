@@ -26,7 +26,7 @@ import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.migration.SupportedAddonsChecker.Frequency
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.addons.worker.shouldReport
 import mozilla.components.support.base.ids.SharedIdsHelper
@@ -192,7 +192,7 @@ internal class SupportedAddonsWorker(
         return NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(mozilla.components.ui.icons.R.drawable.mozac_ic_extensions)
                 .setContentTitle(getNotificationTitle(plural = newSupportedAddons.size > 1))
-                .setContentText(getNotificationBody(newSupportedAddons))
+                .setContentText(getNotificationBody(newSupportedAddons, context))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContentIntent(createContentIntent())
                 .setAutoCancel(true)
@@ -212,19 +212,19 @@ internal class SupportedAddonsWorker(
     }
 
     @VisibleForTesting
-    internal fun getNotificationBody(newSupportedAddons: List<Addon>): String? {
+    internal fun getNotificationBody(newSupportedAddons: List<Addon>, context: Context): String? {
         return when (newSupportedAddons.size) {
             0 -> null
             1 -> {
-                val addonName = newSupportedAddons.first().translatedName
+                val addonName = newSupportedAddons.first().translateName(context)
                 applicationContext.getString(
                         R.string.mozac_feature_addons_supported_checker_notification_content_one,
                         addonName,
                         applicationContext.appName)
             }
             2 -> {
-                val firstAddonName = newSupportedAddons.first().translatedName
-                val secondAddonName = newSupportedAddons[1].translatedName
+                val firstAddonName = newSupportedAddons.first().translateName(context)
+                val secondAddonName = newSupportedAddons[1].translateName(context)
                 applicationContext.getString(
                         R.string.mozac_feature_addons_supported_checker_notification_content_two,
                         firstAddonName,

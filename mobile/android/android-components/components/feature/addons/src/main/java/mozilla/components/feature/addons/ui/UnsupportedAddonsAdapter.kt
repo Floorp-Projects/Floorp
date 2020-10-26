@@ -39,7 +39,7 @@ class UnsupportedAddonsAdapter(
 
         holder.titleView.text =
             if (addon.translatableName.isNotEmpty()) {
-                addon.translatedName
+                addon.translateName(holder.titleView.context)
             } else {
                 addon.id
             }

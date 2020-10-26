@@ -37,7 +37,7 @@ class PermissionsDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val name = addon.translatedName
+        val name = addon.translateName(testContext)
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
         val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
         val permissionText = fragment.buildPermissionsText()

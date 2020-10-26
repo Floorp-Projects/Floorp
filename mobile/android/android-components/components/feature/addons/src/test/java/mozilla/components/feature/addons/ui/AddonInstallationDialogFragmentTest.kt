@@ -62,7 +62,7 @@ class AddonInstallationDialogFragmentTest {
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
-        val name = addon.translatedName
+        val name = addon.translateName(testContext)
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
         val description = dialog.findViewById<TextView>(R.id.description)
         val allowedInPrivateBrowsing = dialog.findViewById<AppCompatCheckBox>(R.id.allow_in_private_browsing)

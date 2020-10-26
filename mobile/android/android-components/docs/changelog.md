@@ -18,6 +18,10 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Renames `blackListFile` to `blocklistFile`.
   * ⚠️ **This is a breaking change**: Renames `whiteListFile` to `safelistFile`.
 
+* **feature-addons**
+  * 🚒 Bug fixed [issue #7879](https://github.com/mozilla-mobile/android-components/issues/7879) Crash when the default locale is not part of the translations fields of an add-on
+  * ⚠️ Removed `Addon.translatedName`, `Addon.translatedSummary` and `Addon.translatedDescription` and added `Addon.translateName(context: Context)`, `Addon.translateSummary(context: Context)` and `Addon.translateDescription(context: Context)`
+
 * **concept-engine**
   * ⚠️ Removed `TrackingCategory`.`SHIMMED`, for user usability reasons, we are going to mark SHIMMED categories as blocked, to follow the same pattern as Firefox desktop for more information see [#8769](https://github.com/mozilla-mobile/android-components/issues/8769)
 
@@ -2920,7 +2924,7 @@ permalink: /changelog/
   * Added custom notification icon for `FetchDownloadManager`.
 
 * **feature-app-links**
-  * Added safelist for schemes of URLs to open with an external app. This defaults to `mailto`, `market`, `sms` and `tel`.
+  * Added whitelist for schemes of URLs to open with an external app. This defaults to `mailto`, `market`, `sms` and `tel`.
 
 * **feature-accounts**
   * ⚠️ **This is a breaking change**: Public API for interacting with `FxaAccountManager` and sync changes
