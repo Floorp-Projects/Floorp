@@ -3993,43 +3993,31 @@ NS_IMETHODIMP HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    return NS_ERROR_FAILURE;  // XXX Should return NS_OK?
+  }
+
   *aRowIndex = 0;
   *aColumnIndex = 0;
   *aCellElement = nullptr;
+  RefPtr<Element> firstSelectedCellElement =
+      HTMLEditUtils::GetFirstSelectedTableCellElement(*SelectionRefPtr());
+  if (!firstSelectedCellElement) {
+    return NS_OK;
+  }
 
   ErrorResult error;
-  CellAndIndexes result(*this, MOZ_KnownLive(*SelectionRefPtr()), error);
+  RefPtr<PresShell> presShell = GetPresShell();
+  CellIndexes indexes(*firstSelectedCellElement, presShell, error);
   if (error.Failed()) {
-    NS_WARNING("CellAndIndexes failed");
-    return EditorBase::ToGenericNSResult(error.StealNSResult());
+    NS_WARNING("CellIndexes failed");
+    return error.StealNSResult();
   }
-  result.mElement.forget(aCellElement);
-  *aRowIndex = std::max(result.mIndexes.mRow, 0);
-  *aColumnIndex = std::max(result.mIndexes.mColumn, 0);
+
+  firstSelectedCellElement.forget(aCellElement);
+  *aRowIndex = indexes.mRow;
+  *aColumnIndex = indexes.mColumn;
   return NS_OK;
-}
-
-void HTMLEditor::CellAndIndexes::Update(HTMLEditor& aHTMLEditor,
-                                        Selection& aSelection,
-                                        ErrorResult& aRv) {
-  MOZ_ASSERT(!aRv.Failed());
-
-  mIndexes.mRow = -1;
-  mIndexes.mColumn = -1;
-
-  mElement = aHTMLEditor.GetFirstSelectedTableCellElement(aRv);
-  if (aRv.Failed()) {
-    NS_WARNING("HTMLEditor::GetFirstSelectedTableCellElement() failed");
-    return;
-  }
-  if (!mElement) {
-    return;
-  }
-
-  const RefPtr<PresShell> presShell{aHTMLEditor.GetPresShell()};
-  const RefPtr<Element> element{mElement};
-  mIndexes.Update(*element, presShell, aRv);
-  NS_WARNING_ASSERTION(!aRv.Failed(), "CellIndexes::Update() failed");
 }
 
 void HTMLEditor::SetSelectionAfterTableEdit(Element* aTable, int32_t aRow,
