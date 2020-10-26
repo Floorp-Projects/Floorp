@@ -3272,7 +3272,26 @@ nsresult HTMLEditor::ComputeTargetRanges(
     AutoRangeArray& aRangesToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // TODO: Handle the case to delete in a table.
+  // First check for table selection mode.  If so, hand off to table editor.
+  SelectedTableCellScanner scanner(aRangesToDelete);
+  if (scanner.IsInTableCellSelectionMode()) {
+    // If it's in table cell selection mode, we'll delete all childen in
+    // the all selected table cell elements,
+    if (scanner.ElementsRef().Length() == aRangesToDelete.Ranges().Length()) {
+      return NS_OK;
+    }
+    // but will ignore all ranges which does not select a table cell.
+    size_t removedRanges = 0;
+    for (size_t i = 1; i < scanner.ElementsRef().Length(); i++) {
+      if (HTMLEditUtils::GetTableCellElementIfOnlyOneSelected(
+              aRangesToDelete.Ranges()[i - removedRanges]) !=
+          scanner.ElementsRef()[i]) {
+        aRangesToDelete.Ranges().RemoveElementAt(i - removedRanges);
+        removedRanges++;
+      }
+    }
+    return NS_OK;
+  }
 
   AutoDeleteRangesHandler deleteHandler;
   nsresult rv = deleteHandler.ComputeRangesToDelete(*this, aDirectionAndAmount,
