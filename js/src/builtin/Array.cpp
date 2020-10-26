@@ -3100,43 +3100,47 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
     /* Step 16. */
 
-    /*
-     * Optimize only if the array is already dense and we can extend it to
-     * its new length.  It would be wrong to extend the elements here for a
-     * number of reasons.
-     *
-     * First, this could cause us to fall into the fast-path below.  This
-     * would cause elements to be moved into places past the non-writable
-     * length.  And when the dense initialized length is updated, that'll
-     * cause the |in| operator to think that those elements actually exist,
-     * even though, properly, setting them must fail.
-     *
-     * Second, extending the elements here will trigger assertions inside
-     * ensureDenseElements that the elements aren't being extended past the
-     * length of a non-writable array.  This is because extending elements
-     * will extend capacity -- which might extend them past a non-writable
-     * length, violating the |capacity <= length| invariant for such
-     * arrays.  And that would make the various JITted fast-path method
-     * implementations of [].push, [].unshift, and so on wrong.
-     *
-     * If the array length is non-writable, this method *will* throw.  For
-     * simplicity, have the slow-path code do it.  (Also note that the slow
-     * path may validly *not* throw -- if all the elements being moved are
-     * holes.)
-     */
-    if (obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj) &&
-        len <= UINT32_MAX) {
-      HandleArrayObject arr = obj.as<ArrayObject>();
-      if (arr->lengthIsWritable() && arr->isExtensible()) {
-        DenseElementResult result = arr->ensureDenseElements(
-            cx, uint32_t(len), itemCount - deleteCount);
-        if (result == DenseElementResult::Failure) {
-          return false;
-        }
+    // Fast path for when we can simply extend and move the dense elements.
+    auto extendElements = [len, itemCount, deleteCount](JSContext* cx,
+                                                        HandleObject obj) {
+      if (!obj->is<ArrayObject>()) {
+        return DenseElementResult::Incomplete;
       }
-    }
+      if (len > UINT32_MAX) {
+        return DenseElementResult::Incomplete;
+      }
 
-    if (CanOptimizeForDenseStorage<ArrayAccess::Write>(obj, finalLength, cx)) {
+      // Ensure there are no getters/setters or other extra indexed properties.
+      if (ObjectMayHaveExtraIndexedProperties(obj)) {
+        return DenseElementResult::Incomplete;
+      }
+
+      // Watch out for arrays with non-writable length or non-extensible arrays.
+      // In these cases `splice` may have to throw an exception so we let the
+      // slow path handle it. We also have to ensure we maintain the
+      // |capacity <= initializedLength| invariant for such objects. See
+      // NativeObject::shrinkCapacityToInitializedLength.
+      HandleArrayObject arr = obj.as<ArrayObject>();
+      if (!arr->lengthIsWritable() || !arr->isExtensible()) {
+        return DenseElementResult::Incomplete;
+      }
+
+      // Also use the slow path if there might be an active for-in iterator so
+      // that we don't have to worry about suppressing deleted properties.
+      if (arr->denseElementsMaybeInIteration()) {
+        return DenseElementResult::Incomplete;
+      }
+
+      return arr->ensureDenseElements(cx, uint32_t(len),
+                                      itemCount - deleteCount);
+    };
+
+    DenseElementResult res = extendElements(cx, obj);
+    if (res == DenseElementResult::Failure) {
+      return false;
+    }
+    if (res == DenseElementResult::Success) {
+      MOZ_ASSERT(finalLength <= UINT32_MAX);
       MOZ_ASSERT((actualStart + actualDeleteCount) <= len && len <= UINT32_MAX,
                  "start and deleteCount are uint32 array indices");
       MOZ_ASSERT(actualStart + itemCount <= UINT32_MAX,
@@ -3157,6 +3161,8 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       /* Steps 16.a-b. */
       SetInitializedLength(cx, obj.as<NativeObject>(), finalLength);
     } else {
+      MOZ_ASSERT(res == DenseElementResult::Incomplete);
+
       RootedValue fromValue(cx);
       for (uint64_t k = len - actualDeleteCount; k > actualStart; k--) {
         if (!CheckForInterrupt(cx)) {
