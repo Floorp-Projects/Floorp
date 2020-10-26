@@ -89,15 +89,26 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   // If a margin is 'auto', use the margin from the print settings for that
   // side.
   const auto& marginStyle = kidReflowInput.mStyleMargin->mMargin;
+  // We clamp to the paper's unwriteable margins to avoid clipping, *except*
+  // that we will respect a margin of zero if specified, assuming this means
+  // the document is intended to fit the paper size exactly, and the client is
+  // taking full responsibility for what happens around the edges.
   for (const auto side : mozilla::AllPhysicalSides()) {
     if (marginStyle.Get(side).IsAuto()) {
       mPageContentMargin.Side(side) =
           aPresContext->GetDefaultPageMargin().Side(side);
     } else {
-      nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
-          mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
-      mPageContentMargin.Side(side) = std::max(
-          kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
+      nscoord computed = kidReflowInput.ComputedPhysicalMargin().Side(side);
+      // Respecting a zero margin is particularly important when the client
+      // is PDF.js where the PDF already contains the margins.
+      if (computed == 0) {
+        mPageContentMargin.Side(side) = 0;
+      } else {
+        nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
+            mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
+        mPageContentMargin.Side(side) = std::max(
+            kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
+      }
     }
   }
 
