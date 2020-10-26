@@ -11197,7 +11197,7 @@
     "products": ["firefox"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "sstreich@mozilla.com"],
     "bug_numbers": [1646768],
-    "expires_in_version": "85",
+    "expires_in_version": "90",
     "kind": "boolean",
     "description": "Accumulates how many downloads are mixed-content (True = The download is MixedContent, False= is not MixedContent)"
   },
