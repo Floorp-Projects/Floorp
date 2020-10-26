@@ -368,8 +368,11 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
 nsINode* FocusManager::FocusedDOMNode() const {
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
   nsIContent* focusedElm = DOMFocusManager->GetFocusedElement();
-
-  if (focusedElm) {
+  nsIFrame* focusedFrame = focusedElm ? focusedElm->GetPrimaryFrame() : nullptr;
+  // DOM elements retain their focused state when they get styled as display:
+  // none/content or visibility: hidden. We should treat those cases as if those
+  // elements were removed, and focus on doc.
+  if (focusedFrame && focusedFrame->StyleVisibility()->IsVisible()) {
     // Print preview documents don't get DocAccessibles, but we still want a11y
     // focus to go somewhere useful. Therefore, we allow a11y focus to land on
     // the OuterDocAccessible in this case.
