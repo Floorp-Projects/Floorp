@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object AndroidComponents {
-    const val VERSION = "64.0.20201023143136"
+    const val VERSION = "64.0.20201026161129"
 }
