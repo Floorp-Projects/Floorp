@@ -1020,7 +1020,8 @@ void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
   asMasm().moveSimd128(src, scratch);
   vpslldq(Imm32(1), scratch, scratch);               // Low bytes -> high bytes
   vpsraw(Imm32(count.value + 8), scratch, scratch);  // Shift low bytes
-  vpsraw(count, dest, dest);                         // Shift high bytes
+  asMasm().moveSimd128(src, dest);
+  vpsraw(count, dest, dest);  // Shift high bytes
   asMasm().loadConstantSimd128Int(SimdConstant::SplatX8(0xFF00), temp);
   bitwiseAndSimdInt(dest, Operand(temp), dest);        // Keep high bytes
   bitwiseAndNotSimdInt(temp, Operand(scratch), temp);  // Keep low bytes
