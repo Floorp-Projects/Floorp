@@ -24,8 +24,12 @@ use regex::Regex;
 ///
 /// If the input string is empty, this function returns an empty quoted string.
 pub fn escape(input: &str) -> String {
-    // Stolen from https://docs.rs/shellwords/1.0.0/src/shellwords/lib.rs.html#24-37.
-    let escape_pattern: Regex = Regex::new(r"([^A-Za-z0-9_\-.,:/@\n])").unwrap();
+    // Stolen from
+    // https://docs.rs/shellwords/1.0.0/src/shellwords/lib.rs.html#24-37.
+    // Added space to the pattern to exclude spaces from being escaped
+    // which can cause problems when combining strings to form a full
+    // command.
+    let escape_pattern: Regex = Regex::new(r"([^A-Za-z0-9_\-.,:/@ \n])").unwrap();
     let line_feed: Regex = Regex::new(r"\n").unwrap();
 
     if input.is_empty() {
@@ -48,7 +52,7 @@ mod tests {
 
     #[test]
     fn full_escape() {
-        assert_eq!(escape("foo '\"' bar"), "foo\\ \\'\\\"\\'\\ bar");
+        assert_eq!(escape("foo '\"' bar"), "foo \\'\\\"\\' bar");
     }
 
     #[test]
