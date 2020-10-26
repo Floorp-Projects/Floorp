@@ -34,7 +34,7 @@
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">გახსნა</string>
     <!-- Button that restarts the download after a failed attempt -->
-    <string name="mozac_feature_downloads_button_try_again">ხელახლა ცდა</string>
+    <string name="mozac_feature_downloads_button_try_again">ხელახლა</string>
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">დახურვა</string>
