@@ -2401,21 +2401,6 @@ void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CG
   }
 }
 
-void nsNativeThemeCocoa::DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect,
-                                        bool aIsActive) {
-  CGGradientRef backgroundGradient;
-  CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-  CGFloat activeGradientColors[8] = {0.9137, 0.9294, 0.9490, 1.0, 0.8196, 0.8471, 0.8784, 1.0};
-  CGFloat inactiveGradientColors[8] = {0.9686, 0.9686, 0.9686, 1.0, 0.9216, 0.9216, 0.9216, 1.0};
-  CGPoint start = inBoxRect.origin;
-  CGPoint end = CGPointMake(inBoxRect.origin.x, inBoxRect.origin.y + inBoxRect.size.height);
-  backgroundGradient = CGGradientCreateWithColorComponents(
-      rgb, aIsActive ? activeGradientColors : inactiveGradientColors, NULL, 2);
-  CGContextDrawLinearGradient(cgContext, backgroundGradient, start, end, 0);
-  CGGradientRelease(backgroundGradient);
-  CGColorSpaceRelease(rgb);
-}
-
 void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect,
                                                  bool aWindowIsActive, bool aSelectionIsActive) {
   if (!nsCocoaFeatures::OnYosemiteOrLater()) {
@@ -3041,11 +3026,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
           CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
           CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
           CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
-          break;
-        }
-        case Widget::eSourceList: {
-          bool isInActiveWindow = aWidgetInfo.Params<bool>();
-          DrawSourceList(cgContext, macRect, isInActiveWindow);
           break;
         }
         case Widget::eActiveSourceListSelection:
