@@ -552,16 +552,6 @@ class SimdConstant {
     return type_;
   }
 
-  bool isFloatingType() const {
-    MOZ_ASSERT(defined());
-    return type_ >= Float32x4;
-  }
-
-  bool isIntegerType() const {
-    MOZ_ASSERT(defined());
-    return type_ <= Int64x2;
-  }
-
   // Get the raw bytes of the constant.
   const void* bytes() const { return u.i8x16; }
 
@@ -595,32 +585,28 @@ class SimdConstant {
     return u.f64x2;
   }
 
-  bool bitwiseEqual(const SimdConstant& rhs) const {
+  bool operator==(const SimdConstant& rhs) const {
     MOZ_ASSERT(defined() && rhs.defined());
+    if (type() != rhs.type()) {
+      return false;
+    }
+    // Takes negative zero into account, as it's a bit comparison.
     return memcmp(&u, &rhs.u, sizeof(u)) == 0;
   }
+  bool operator!=(const SimdConstant& rhs) const { return !operator==(rhs); }
 
-  bool isZeroBits() const {
-    MOZ_ASSERT(defined());
-    return u.i64x2[0] == 0 && u.i64x2[1] == 0;
+  bool isIntegerZero() const {
+    return type_ <= Int64x2 && u.i64x2[0] == 0 && u.i64x2[1] == 0;
   }
 
-  bool isOneBits() const {
-    MOZ_ASSERT(defined());
-    return ~u.i64x2[0] == 0 && ~u.i64x2[1] == 0;
-  }
-
-  // SimdConstant is a HashPolicy.  Currently we discriminate by type, but it
-  // may be that we should only be discriminating by int vs float.
+  // SimdConstant is a HashPolicy
   using Lookup = SimdConstant;
-
   static HashNumber hash(const SimdConstant& val) {
     uint32_t hash = mozilla::HashBytes(&val.u, sizeof(val.u));
     return mozilla::AddToHash(hash, val.type_);
   }
-
   static bool match(const SimdConstant& lhs, const SimdConstant& rhs) {
-    return lhs.type() == rhs.type() && lhs.bitwiseEqual(rhs);
+    return lhs == rhs;
   }
 };
 

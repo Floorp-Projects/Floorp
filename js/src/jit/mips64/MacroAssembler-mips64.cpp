@@ -2281,10 +2281,6 @@ void MacroAssemblerMIPS64Compat::wasmLoadI64Impl(
   MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
   MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
 
-  MOZ_ASSERT(!access.isZeroExtendSimd128Load());
-  MOZ_ASSERT(!access.isSplatSimd128Load());
-  MOZ_ASSERT(!access.isWidenSimd128Load());
-
   // Maybe add the offset.
   if (offset) {
     asMasm().addPtr(Imm32(offset), ptrScratch);
