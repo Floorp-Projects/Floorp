@@ -645,39 +645,47 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
 }
 
 /* static */
-void nsNativeBasicTheme::PaintRangeTrackBackground(
-    nsIFrame* aFrame, DrawTarget* aDrawTarget, const Rect& aRect,
-    const EventStates& aState, uint32_t aDpiRatio, bool aHorizontal) {
+void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+                                    const Rect& aRect,
+                                    const EventStates& aState,
+                                    uint32_t aDpiRatio, bool aHorizontal) {
   nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
   if (!rangeFrame) {
     return;
   }
 
-  Rect rect(aRect);
-  const CSSCoord verticalSize = kRangeHeight * aDpiRatio;
-  if (aHorizontal) {
-    rect.y += (rect.height - verticalSize) / 2;
-    rect.height = verticalSize;
-  } else {
-    rect.x += (rect.width - verticalSize) / 2;
-    rect.width = verticalSize;
-  }
-
   double progress = rangeFrame->GetValueAsFractionOfRange();
+  Rect rect(aRect);
+  Rect thumbRect(0, 0, kMinimumRangeThumbSize.value * aDpiRatio,
+                 kMinimumRangeThumbSize.value * aDpiRatio);
   Rect progressClipRect(aRect);
   Rect trackClipRect(aRect);
+  const CSSCoord verticalSize = kRangeHeight * aDpiRatio;
   if (aHorizontal) {
+    rect.height = verticalSize;
+    rect.y = aRect.y + (aRect.height - rect.height) / 2;
+    thumbRect.y = aRect.y + (aRect.height - thumbRect.height) / 2;
+
     progressClipRect.width = aRect.width * progress;
-    if (IsFrameRTL(aFrame)) {
-      progressClipRect.x += aRect.width - progressClipRect.width;
-    } else {
-      trackClipRect.x += progressClipRect.width;
-    }
     trackClipRect.width -= progressClipRect.width;
+
+    if (IsFrameRTL(aFrame)) {
+      progressClipRect.x = trackClipRect.XMost();
+      thumbRect.x =
+          aRect.x + (aRect.width - thumbRect.width) * (1.0 - progress);
+    } else {
+      trackClipRect.x = progressClipRect.XMost();
+      thumbRect.x = aRect.x + (aRect.width - thumbRect.width) * progress;
+    }
   } else {
+    rect.width = verticalSize;
+    rect.x = aRect.x + (aRect.width - rect.width) / 2;
+    thumbRect.x = aRect.x + (aRect.width - thumbRect.width) / 2;
+
     progressClipRect.height = aRect.height * progress;
-    progressClipRect.y += aRect.height - progressClipRect.height;
     trackClipRect.height -= progressClipRect.height;
+    progressClipRect.y = trackClipRect.YMost();
+    thumbRect.y = aRect.y + (aRect.height - thumbRect.height) * progress;
   }
 
   const CSSCoord borderWidth = 1.0f;
@@ -699,6 +707,8 @@ void nsNativeBasicTheme::PaintRangeTrackBackground(
   PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
                              borderWidth, radius, aDpiRatio);
   aDrawTarget->PopClip();
+
+  PaintRangeThumb(aDrawTarget, thumbRect, aState, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
@@ -1133,11 +1143,11 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                          dpiRatio);
       break;
     case StyleAppearance::Range:
-      PaintRangeTrackBackground(aFrame, dt, devPxRect, eventState, dpiRatio,
-                                IsRangeHorizontal(aFrame));
+      PaintRange(aFrame, dt, devPxRect, eventState, dpiRatio,
+                 IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
-      PaintRangeThumb(dt, devPxRect, eventState, dpiRatio);
+      // Painted as part of StyleAppearance::Range.
       break;
     case StyleAppearance::ProgressBar:
       PaintProgressBar(dt, devPxRect, eventState, dpiRatio);
