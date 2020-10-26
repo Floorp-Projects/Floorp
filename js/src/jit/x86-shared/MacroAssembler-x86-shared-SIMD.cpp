@@ -49,14 +49,20 @@ void MacroAssemblerX86Shared::splatX4(Register input, FloatRegister output) {
 
 void MacroAssemblerX86Shared::splatX4(FloatRegister input,
                                       FloatRegister output) {
-  FloatRegister inputCopy = reusedInputSimd128Float(input, output);
-  vshufps(0, inputCopy, inputCopy, output);
+  MOZ_ASSERT(input.isSingle() && output.isSimd128());
+  if (input.asSimd128() != output) {
+    vmovaps(input, output);
+  }
+  vshufps(0, output, output, output);
 }
 
 void MacroAssemblerX86Shared::splatX2(FloatRegister input,
                                       FloatRegister output) {
-  FloatRegister inputCopy = reusedInputSimd128Float(input, output);
-  vshufpd(0, inputCopy, inputCopy, output);
+  MOZ_ASSERT(input.isDouble() && output.isSimd128());
+  if (input.asSimd128() != output) {
+    vmovapd(input, output);
+  }
+  vshufpd(0, output, output, output);
 }
 
 void MacroAssemblerX86Shared::extractLaneInt32x4(FloatRegister input,
@@ -87,7 +93,7 @@ void MacroAssemblerX86Shared::extractLaneFloat32x4(FloatRegister input,
     moveHighPairToLowPairFloat32(input, output);
   } else {
     uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
-    shuffleFloat32(mask, input, output);
+    shuffleFloat32(mask, input, output.asSimd128());
   }
 }
 
@@ -1007,109 +1013,6 @@ void MacroAssemblerX86Shared::maxFloat64x2(FloatRegister lhs, Operand rhs,
   minMaxFloat64x2(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
 }
 
-void MacroAssemblerX86Shared::negFloat32x4(Operand in, FloatRegister out) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister result = out;
-  if (in.kind() == Operand::FPREG && ToSimdFloatRegister(in) == out) {
-    result = scratch;
-  }
-  // All zeros but the sign bit
-  static const SimdConstant minusZero = SimdConstant::SplatX4(-0.f);
-  asMasm().loadConstantSimd128Float(minusZero, result);
-  bitwiseXorFloat32x4(result, in, result);
-  if (result == scratch) {
-    moveSimd128Float(result, out);
-  }
-}
-
-void MacroAssemblerX86Shared::negFloat64x2(Operand in, FloatRegister out) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister result = out;
-  if (in.kind() == Operand::FPREG && ToSimdFloatRegister(in) == out) {
-    result = scratch;
-  }
-  // All zeros but the sign bit
-  static const SimdConstant minusZero = SimdConstant::SplatX2(-0.0);
-  asMasm().loadConstantSimd128Float(minusZero, result);
-  vxorpd(ToSimdFloatRegister(in), result, result);
-  if (result == scratch) {
-    moveSimd128Float(result, out);
-  }
-}
-
-void MacroAssemblerX86Shared::notInt8x16(Operand in, FloatRegister out) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister result = out;
-  if (in.kind() == Operand::FPREG && ToSimdFloatRegister(in) == out) {
-    result = scratch;
-  }
-  static const SimdConstant allOnes = SimdConstant::SplatX16(-1);
-  asMasm().loadConstantSimd128Int(allOnes, result);
-  bitwiseXorSimdInt(result, in, result);
-  if (result == scratch) {
-    moveSimd128Float(result, out);
-  }
-}
-
-void MacroAssemblerX86Shared::notInt16x8(Operand in, FloatRegister out) {
-  // Bug, really
-  MOZ_ASSERT_IF(in.kind() == Operand::FPREG, in.fpu() != out.encoding());
-  static const SimdConstant allOnes = SimdConstant::SplatX8(-1);
-  asMasm().loadConstantSimd128Int(allOnes, out);
-  bitwiseXorSimdInt(out, in, out);
-}
-
-void MacroAssemblerX86Shared::notInt32x4(Operand in, FloatRegister out) {
-  // Bug, really
-  MOZ_ASSERT_IF(in.kind() == Operand::FPREG, in.fpu() != out.encoding());
-  static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
-  asMasm().loadConstantSimd128Int(allOnes, out);
-  bitwiseXorSimdInt(out, in, out);
-}
-
-void MacroAssemblerX86Shared::notFloat32x4(Operand in, FloatRegister out) {
-  // Bug, really
-  MOZ_ASSERT_IF(in.kind() == Operand::FPREG, in.fpu() != out.encoding());
-  float ones = SpecificNaN<float>(1, FloatingPoint<float>::kSignificandBits);
-  static const SimdConstant allOnes = SimdConstant::SplatX4(ones);
-  asMasm().loadConstantSimd128Float(allOnes, out);
-  bitwiseXorFloat32x4(out, in, out);
-}
-
-void MacroAssemblerX86Shared::absFloat32x4(Operand in, FloatRegister out) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister result = out;
-  if (in.kind() == Operand::FPREG && ToSimdFloatRegister(in) == out) {
-    result = scratch;
-  }
-  // All ones but the sign bit
-  float signMask =
-      SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits);
-  static const SimdConstant signMasks = SimdConstant::SplatX4(signMask);
-  asMasm().loadConstantSimd128Float(signMasks, result);
-  bitwiseAndFloat32x4(result, in, result);
-  if (result == scratch) {
-    moveSimd128Float(result, out);
-  }
-}
-
-void MacroAssemblerX86Shared::absFloat64x2(Operand in, FloatRegister out) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister result = out;
-  if (in.kind() == Operand::FPREG && ToSimdFloatRegister(in) == out) {
-    result = scratch;
-  }
-  // All ones but the sign bit
-  double signMask =
-      SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits);
-  static const SimdConstant signMasks = SimdConstant::SplatX2(signMask);
-  asMasm().loadConstantSimd128Float(signMasks, result);
-  vandpd(ToSimdFloatRegister(in), result, result);
-  if (result == scratch) {
-    moveSimd128Float(result, out);
-  }
-}
-
 static inline void MaskSimdShiftCount(MacroAssembler& masm, unsigned shiftmask,
                                       Register count, Register temp,
                                       FloatRegister dest) {
@@ -1167,11 +1070,8 @@ void MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(
       asMasm().addInt8x16(dest, dest);
     }
   } else {
-    ScratchSimd128Scope scratch(asMasm());
-    // Whether SplatX8 or SplatX16 is best depends on the constant probably?
-    asMasm().loadConstantSimd128Int(SimdConstant::SplatX16(0xFF >> count.value),
-                                    scratch);
-    vpand(Operand(scratch), dest, dest);
+    asMasm().bitwiseAndSimd128(SimdConstant::SplatX16(0xFF >> count.value),
+                               dest);
     vpsllw(count, dest, dest);
   }
 }
@@ -1213,11 +1113,8 @@ void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
   if (src != dest) {
     asMasm().moveSimd128(src, dest);
   }
-  ScratchSimd128Scope scratch(asMasm());
-  // Whether SplatX8 or SplatX16 is best depends on the constant probably?
-  asMasm().loadConstantSimd128Int(
-      SimdConstant::SplatX16((0xFF << count.value) & 0xFF), scratch);
-  vpand(Operand(scratch), dest, dest);
+  asMasm().bitwiseAndSimd128(
+      SimdConstant::SplatX16((0xFF << count.value) & 0xFF), dest);
   vpsrlw(count, dest, dest);
 }
 

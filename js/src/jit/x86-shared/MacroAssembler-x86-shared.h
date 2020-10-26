@@ -450,14 +450,6 @@ class MacroAssemblerX86Shared : public Assembler {
                   const mozilla::Maybe<FloatRegister>& temp,
                   FloatRegister output);
 
-  void negFloat32x4(Operand in, FloatRegister out);
-  void negFloat64x2(Operand in, FloatRegister out);
-
-  void notInt8x16(Operand in, FloatRegister out);
-  void notInt16x8(Operand in, FloatRegister out);
-  void notInt32x4(Operand in, FloatRegister out);
-  void notFloat32x4(Operand in, FloatRegister out);
-
   void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
                        FloatRegister temp1, FloatRegister temp2,
                        FloatRegister output);
@@ -473,9 +465,6 @@ class MacroAssemblerX86Shared : public Assembler {
                     FloatRegister temp2, FloatRegister output);
   void maxFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp1,
                     FloatRegister temp2, FloatRegister output);
-
-  void absFloat32x4(Operand in, FloatRegister out);
-  void absFloat64x2(Operand in, FloatRegister out);
 
   void packedShiftByScalarInt8x16(
       FloatRegister in, Register count, Register temp, FloatRegister xtmp,
@@ -579,9 +568,12 @@ class MacroAssemblerX86Shared : public Assembler {
     vmovdqa(src, Operand(dest));
   }
   void moveSimd128Int(FloatRegister src, FloatRegister dest) {
-    vmovdqa(src, dest);
+    if (src != dest) {
+      vmovdqa(src, dest);
+    }
   }
   FloatRegister reusedInputInt32x4(FloatRegister src, FloatRegister dest) {
+    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
     }
@@ -642,9 +634,12 @@ class MacroAssemblerX86Shared : public Assembler {
     vmovaps(src, Operand(dest));
   }
   void moveSimd128Float(FloatRegister src, FloatRegister dest) {
-    vmovaps(src, dest);
+    if (src != dest) {
+      vmovaps(src, dest);
+    }
   }
   FloatRegister reusedInputSimd128Float(FloatRegister src, FloatRegister dest) {
+    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
     }
@@ -734,6 +729,7 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   FloatRegister reusedInputAlignedInt32x4(const Operand& src,
                                           FloatRegister dest) {
+    MOZ_ASSERT(dest.isSimd128());
     if (HasAVX() && src.kind() == Operand::FPREG) {
       return FloatRegister::FromCode(src.fpu());
     }
@@ -771,6 +767,7 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   FloatRegister reusedInputAlignedSimd128Float(const Operand& src,
                                                FloatRegister dest) {
+    MOZ_ASSERT(dest.isSimd128());
     if (HasAVX() && src.kind() == Operand::FPREG) {
       return FloatRegister::FromCode(src.fpu());
     }
