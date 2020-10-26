@@ -4,31 +4,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('mscom_oop')
+Library("mscom_oop")
 
 SOURCES += [
-    '../ActivationContext.cpp',
-    '../Objref.cpp',
-    '../Registration.cpp',
-    '../StructStream.cpp',
-    '../Utils.cpp',
+    "../ActivationContext.cpp",
+    "../Objref.cpp",
+    "../Registration.cpp",
+    "../StructStream.cpp",
+    "../Utils.cpp",
 ]
 
 UNIFIED_SOURCES += [
-    'Handler.cpp',
-    'Module.cpp',
+    "Handler.cpp",
+    "Module.cpp",
 ]
 
 OS_LIBS += [
-    'ole32',
-    'oleaut32',
-    'shlwapi',
+    "ole32",
+    "oleaut32",
+    "shlwapi",
 ]
 
-LIBRARY_DEFINES['UNICODE'] = True
-LIBRARY_DEFINES['_UNICODE'] = True
-LIBRARY_DEFINES['MOZ_NO_MOZALLOC'] = True
-LIBRARY_DEFINES['MOZ_MSCOM_REMARSHAL_NO_HANDLER'] = True
+LIBRARY_DEFINES["UNICODE"] = True
+LIBRARY_DEFINES["_UNICODE"] = True
+LIBRARY_DEFINES["MOZ_NO_MOZALLOC"] = True
+LIBRARY_DEFINES["MOZ_MSCOM_REMARSHAL_NO_HANDLER"] = True
 
 DisableStlWrapping()
 NO_EXPAND_LIBS = True

@@ -13,16 +13,17 @@ import os
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import VCSScript
 
-VCS_TOOLS = ('gittool.py',)
+VCS_TOOLS = ("gittool.py",)
 
 
 class VCSToolsScript(VCSScript):
-    ''' This script allows us to fetch gittool.py if
+    """This script allows us to fetch gittool.py if
     we're running the script on developer mode.
-    '''
-    @PreScriptAction('checkout')
+    """
+
+    @PreScriptAction("checkout")
     def _pre_checkout(self, action):
-        if self.config.get('developer_mode'):
+        if self.config.get("developer_mode"):
             # We put them on base_work_dir to prevent the clobber action
             # to delete them before we use them
             for vcs_tool in VCS_TOOLS:
@@ -50,8 +51,10 @@ class VCSToolsScript(VCSScript):
                     continue
 
                 if file_path is None:
-                    self.fatal("This machine is missing %s, if this is your "
-                               "local machine you can use --cfg "
-                               "developer_config.py" % vcs_tool)
+                    self.fatal(
+                        "This machine is missing %s, if this is your "
+                        "local machine you can use --cfg "
+                        "developer_config.py" % vcs_tool
+                    )
                 elif not self.is_exe(file_path):
                     self.critical("%s is not executable." % file_path)

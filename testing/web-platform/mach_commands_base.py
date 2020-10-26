@@ -7,10 +7,16 @@ import sys
 
 def create_parser_wpt():
     from wptrunner import wptcommandline
+
     result = wptcommandline.create_parser(
-        ["firefox", "firefox_android", "chrome", "edge", "servo"])
-    result.add_argument("--no-install", action="store_true", default=False,
-                        help="Do not install test runner application")
+        ["firefox", "firefox_android", "chrome", "edge", "servo"]
+    )
+    result.add_argument(
+        "--no-install",
+        action="store_true",
+        default=False,
+        help="Do not install test runner application",
+    )
     return result
 
 
@@ -22,8 +28,12 @@ class WebPlatformTestsRunner(object):
 
     def setup_logging(self, **kwargs):
         from tools.wpt import run
-        return run.setup_logging(kwargs, {self.setup.default_log_type: sys.stdout},
-                                 formatter_defaults={"screenshot": True})
+
+        return run.setup_logging(
+            kwargs,
+            {self.setup.default_log_type: sys.stdout},
+            formatter_defaults={"screenshot": True},
+        )
 
     def run(self, logger, **kwargs):
         from wptrunner import wptrunner
@@ -42,6 +52,7 @@ class WebPlatformTestsRunner(object):
                 return 1
         elif kwargs["product"] == "firefox_android":
             from wptrunner import wptcommandline
+
             kwargs = wptcommandline.check_args(self.setup.kwargs_common(kwargs))
         elif kwargs["product"] in ("chrome", "edge", "servo"):
             kwargs = self.setup.kwargs_wptrun(kwargs)
@@ -52,7 +63,10 @@ class WebPlatformTestsRunner(object):
 
     def update_manifest(self, logger, **kwargs):
         import manifestupdate
-        return manifestupdate.run(logger=logger,
-                                  src_root=self.setup.topsrcdir,
-                                  obj_root=self.setup.topobjdir,
-                                  **kwargs)
+
+        return manifestupdate.run(
+            logger=logger,
+            src_root=self.setup.topsrcdir,
+            obj_root=self.setup.topobjdir,
+            **kwargs
+        )

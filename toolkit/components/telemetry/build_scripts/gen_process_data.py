@@ -33,17 +33,21 @@ file_footer = """
 
 
 def to_enum_label(name):
-    return name.title().replace('_', '')
+    return name.title().replace("_", "")
 
 
 def write_processes_data(processes, output):
     def p(line):
         print(line, file=output)
+
     processes = collections.OrderedDict(processes)
 
     p("static GeckoProcessType ProcessIDToGeckoProcessType[%d] = {" % len(processes))
     for i, (name, value) in enumerate(sorted(processes.items())):
-        p("  /* %d: ProcessID::%s = */ %s," % (i, to_enum_label(name), value['gecko_enum']))
+        p(
+            "  /* %d: ProcessID::%s = */ %s,"
+            % (i, to_enum_label(name), value["gecko_enum"])
+        )
     p("};")
     p("")
     p("#if defined(_MSC_VER) && !defined(__clang__)")
@@ -52,13 +56,13 @@ def write_processes_data(processes, output):
     p("static constexpr const char* ProcessIDToString[%d] = {" % len(processes))
     p("#endif")
     for i, (name, value) in enumerate(sorted(processes.items())):
-        p("  /* %d: ProcessID::%s = */ \"%s\"," % (i, to_enum_label(name), name))
+        p('  /* %d: ProcessID::%s = */ "%s",' % (i, to_enum_label(name), name))
     p("};")
 
 
 def main(output, *filenames):
     if len(filenames) > 1:
-        raise Exception('We don\'t support loading from more than one file.')
+        raise Exception("We don't support loading from more than one file.")
 
     try:
         processes = load_yaml_file(filenames[0])
@@ -73,5 +77,5 @@ def main(output, *filenames):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

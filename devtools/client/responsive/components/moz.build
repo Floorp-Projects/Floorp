@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'App.js',
-    'Device.js',
-    'DeviceForm.js',
-    'DeviceInfo.js',
-    'DeviceList.js',
-    'DeviceModal.js',
-    'DevicePixelRatioMenu.js',
-    'DeviceSelector.js',
-    'SettingsMenu.js',
-    'Toolbar.js',
-    'UserAgentInput.js',
-    'ViewportDimension.js',
+    "App.js",
+    "Device.js",
+    "DeviceForm.js",
+    "DeviceInfo.js",
+    "DeviceList.js",
+    "DeviceModal.js",
+    "DevicePixelRatioMenu.js",
+    "DeviceSelector.js",
+    "SettingsMenu.js",
+    "Toolbar.js",
+    "UserAgentInput.js",
+    "ViewportDimension.js",
 )

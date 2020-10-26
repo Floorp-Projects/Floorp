@@ -12,9 +12,9 @@ from mozilla.CellHeader import get_header_ptr
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 # JS::SymbolCode enumerators
-PrivateNameSymbol = 0xfffffffd
-InSymbolRegistry = 0xfffffffe
-UniqueSymbol = 0xffffffff
+PrivateNameSymbol = 0xFFFFFFFD
+InSymbolRegistry = 0xFFFFFFFE
+UniqueSymbol = 0xFFFFFFFF
 
 
 @ptr_pretty_printer("JS::Symbol")
@@ -24,7 +24,7 @@ class JSSymbolPtr(mozilla.prettyprinters.Pointer):
         self.value = value
 
     def to_string(self):
-        code = int(self.value['code_']) & 0xffffffff
+        code = int(self.value["code_"]) & 0xFFFFFFFF
         desc = str(get_header_ptr(self.value, self.cache.JSString_ptr_t))
         if code == InSymbolRegistry:
             return "Symbol.for({})".format(desc)

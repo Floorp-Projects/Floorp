@@ -23,7 +23,7 @@ for line in sys.stdin:
 
     output = None
     for line in fd:
-        if line.startswith('CLASS-DEF: '):
+        if line.startswith("CLASS-DEF: "):
             cname = line[11:-1]
             if cname not in classdict:
                 output = classdict[cname] = []
@@ -32,10 +32,10 @@ for line in sys.stdin:
         elif output is not None:
             output.append(line)
 
-sys.stdout.write('digraph g {\n')
+sys.stdout.write("digraph g {\n")
 
 for olist in classdict.itervalues():
     for line in olist:
         sys.stdout.write(line)
 
-sys.stdout.write('}\n')
+sys.stdout.write("}\n")

@@ -3,15 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'legacy-listeners',
-    'legacy-target-watchers',
-    'transformers',
+    "legacy-listeners",
+    "legacy-target-watchers",
+    "transformers",
 ]
 
 DevToolsModules(
-    'resource-watcher.js',
-    'target-list.js',
+    "resource-watcher.js",
+    "target-list.js",
 )
 
-if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
+    BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]

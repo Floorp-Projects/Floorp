@@ -5,17 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIIdentityCryptoService.idl',
+    "nsIIdentityCryptoService.idl",
 ]
 
-XPIDL_MODULE = 'services-crypto-component'
+XPIDL_MODULE = "services-crypto-component"
 
 SOURCES += [
-    'IdentityCryptoService.cpp',
+    "IdentityCryptoService.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

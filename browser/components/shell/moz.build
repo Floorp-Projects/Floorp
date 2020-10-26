@@ -5,77 +5,75 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # For BinaryPath::GetLong for Windows
-LOCAL_INCLUDES += [
-    '/xpcom/build'
-]
+LOCAL_INCLUDES += ["/xpcom/build"]
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 XPIDL_SOURCES += [
-    'nsIShellService.idl',
+    "nsIShellService.idl",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     XPIDL_SOURCES += [
-        'nsIMacShellService.idl',
+        "nsIMacShellService.idl",
     ]
 
     SOURCES += [
-        'nsMacShellService.cpp',
+        "nsMacShellService.cpp",
     ]
 
     LOCAL_INCLUDES += [
         # For CocoaFileUtils
-        '/xpcom/io'
+        "/xpcom/io"
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     XPIDL_SOURCES += [
-        'nsIGNOMEShellService.idl',
+        "nsIGNOMEShellService.idl",
     ]
 
     SOURCES += [
-        'nsGNOMEShellService.cpp',
+        "nsGNOMEShellService.cpp",
     ]
-    if CONFIG['MOZ_ENABLE_DBUS']:
+    if CONFIG["MOZ_ENABLE_DBUS"]:
         SOURCES += [
-            'nsGNOMEShellDBusHelper.cpp',
-            'nsGNOMEShellSearchProvider.cpp',
+            "nsGNOMEShellDBusHelper.cpp",
+            "nsGNOMEShellSearchProvider.cpp",
         ]
-        include('/ipc/chromium/chromium-config.mozbuild')
+        include("/ipc/chromium/chromium-config.mozbuild")
 
-elif CONFIG['OS_ARCH'] == 'WINNT':
+elif CONFIG["OS_ARCH"] == "WINNT":
     XPIDL_SOURCES += [
-        'nsIWindowsShellService.idl',
+        "nsIWindowsShellService.idl",
     ]
     SOURCES += [
-        'nsWindowsShellService.cpp',
-        'WindowsDefaultBrowser.cpp',
+        "nsWindowsShellService.cpp",
+        "WindowsDefaultBrowser.cpp",
     ]
     LOCAL_INCLUDES += [
-        '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
+        "../../../other-licenses/nsis/Contrib/CityHash/cityhash",
     ]
 
-XPIDL_MODULE = 'shellservice'
+XPIDL_MODULE = "shellservice"
 
 if SOURCES:
-    FINAL_LIBRARY = 'browsercomps'
+    FINAL_LIBRARY = "browsercomps"
 
 EXTRA_JS_MODULES += [
-    'HeadlessShell.jsm',
-    'ScreenshotChild.jsm',
-    'ShellService.jsm',
+    "HeadlessShell.jsm",
+    "ScreenshotChild.jsm",
+    "ShellService.jsm",
 ]
 
-for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
+for var in ("MOZ_APP_NAME", "MOZ_APP_VERSION"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
-if CONFIG['MOZ_ENABLE_DBUS']:
-    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_ENABLE_DBUS"]:
+    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Shell Integration')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")

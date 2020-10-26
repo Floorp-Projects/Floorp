@@ -200,7 +200,9 @@ def top_sort(dafsa: Dafsa):
     for node in dafsa.root_node.children.values():
         incoming[id(node)] -= 1
 
-    waiting = [node for node in dafsa.root_node.children.values() if incoming[id(node)] == 0]
+    waiting = [
+        node for node in dafsa.root_node.children.values() if incoming[id(node)] == 0
+    ]
     nodes = []
 
     while waiting:
@@ -251,7 +253,7 @@ def encode_links(node: Node, offsets, current):
             break
         guess = len(buf)
     # Set most significant bit to mark end of links in this node.
-    buf[last] |= (1 << 7)
+    buf[last] |= 1 << 7
     buf.reverse()
     return buf
 
@@ -268,11 +270,10 @@ def encode_prefix(label):
 
 
 def encode_label(label):
-    """Encodes a node label as a list of bytes with a trailing high byte >0x80.
-    """
+    """Encodes a node label as a list of bytes with a trailing high byte >0x80."""
     buf = encode_prefix(label)
     # Set most significant bit to mark end of label in this node.
-    buf[0] |= (1 << 7)
+    buf[0] |= 1 << 7
     return buf
 
 
@@ -282,8 +283,11 @@ def encode(dafsa: Dafsa):
     offsets = {}
 
     for node in reversed(top_sort(dafsa)):
-        if (len(node.children) == 1 and not next(iter(node.children.values())).is_end_node and
-                (offsets[id(next(iter(node.children.values())))] == len(output))):
+        if (
+            len(node.children) == 1
+            and not next(iter(node.children.values())).is_end_node
+            and (offsets[id(next(iter(node.children.values())))] == len(output))
+        ):
             output.extend(encode_prefix(node.character))
         else:
             output.extend(encode_links(node, offsets, len(output)))
@@ -297,21 +301,21 @@ def encode(dafsa: Dafsa):
 
 def to_cxx(data, preamble=None):
     """Generates C++ code from a list of encoded bytes."""
-    text = '/* This file is generated. DO NOT EDIT!\n\n'
-    text += 'The byte array encodes a dictionary of strings and values. See '
-    text += 'make_dafsa.py for documentation.'
-    text += '*/\n\n'
+    text = "/* This file is generated. DO NOT EDIT!\n\n"
+    text += "The byte array encodes a dictionary of strings and values. See "
+    text += "make_dafsa.py for documentation."
+    text += "*/\n\n"
 
     if preamble:
         text += preamble
-        text += '\n\n'
+        text += "\n\n"
 
-    text += 'const unsigned char kDafsa[%s] = {\n' % len(data)
+    text += "const unsigned char kDafsa[%s] = {\n" % len(data)
     for i in range(0, len(data), 12):
-        text += '  '
-        text += ', '.join('0x%02x' % byte for byte in data[i:i + 12])
-        text += ',\n'
-    text += '};\n'
+        text += "  "
+        text += ", ".join("0x%02x" % byte for byte in data[i : i + 12])
+        text += ",\n"
+    text += "};\n"
     return text
 
 
@@ -325,7 +329,7 @@ def words_to_bin(words):
     """Generates bytes from a word list"""
     dafsa = Dafsa.from_tld_data(words)
     data = encode(dafsa)
-    return struct.pack('%dB' % len(data), *data)
+    return struct.pack("%dB" % len(data), *data)
 
 
 def parse_gperf(infile):
@@ -333,35 +337,36 @@ def parse_gperf(infile):
     lines = [line.strip() for line in infile]
 
     # Extract the preamble.
-    first_delimeter = lines.index('%%')
-    preamble = '\n'.join(lines[0:first_delimeter])
+    first_delimeter = lines.index("%%")
+    preamble = "\n".join(lines[0:first_delimeter])
 
     # Extract strings after the first '%%' and before the second '%%'.
     begin = first_delimeter + 1
-    end = lines.index('%%', begin)
+    end = lines.index("%%", begin)
     lines = lines[begin:end]
     for line in lines:
-        if line[-3:-1] != ', ':
+        if line[-3:-1] != ", ":
             raise InputError('Expected "domainname, <digit>", found "%s"' % line)
         # Technically the DAFSA format could support return values in range [0-31],
         # but the values below are the only with a defined meaning.
-        if line[-1] not in '0124':
-            raise InputError('Expected value to be one of {0,1,2,4}, found "%s"' %
-                             line[-1])
+        if line[-1] not in "0124":
+            raise InputError(
+                'Expected value to be one of {0,1,2,4}, found "%s"' % line[-1]
+            )
     return (preamble, [line[:-3] + line[-1] for line in lines])
 
 
 def main(outfile, infile):
-    with open(infile, 'r') as infile:
+    with open(infile, "r") as infile:
         preamble, words = parse_gperf(infile)
         outfile.write(words_to_cxx(words, preamble))
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print('usage: %s infile outfile' % sys.argv[0])
+        print("usage: %s infile outfile" % sys.argv[0])
         sys.exit(1)
 
-    with open(sys.argv[2], 'w') as outfile:
+    with open(sys.argv[2], "w") as outfile:
         sys.exit(main(outfile, sys.argv[1]))

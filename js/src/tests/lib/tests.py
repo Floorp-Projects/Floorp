@@ -10,66 +10,90 @@ from contextlib import contextmanager
 # When run on tbpl, we run each test multiple times with the following
 # arguments.
 JITFLAGS = {
-    'all': [
+    "all": [
         [],  # no flags, normal baseline and ion
-        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
-         '--more-compartments'],
-        ['--ion-eager', '--ion-offthread-compile=off',
-         '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
-        ['--baseline-eager'],
-        ['--no-blinterp', '--no-baseline', '--no-ion', '--more-compartments'],
-        ['--blinterp-eager'],
+        [
+            "--ion-eager",
+            "--ion-offthread-compile=off",  # implies --baseline-eager
+            "--more-compartments",
+        ],
+        [
+            "--ion-eager",
+            "--ion-offthread-compile=off",
+            "--ion-check-range-analysis",
+            "--ion-extra-checks",
+            "--no-sse3",
+            "--no-threads",
+        ],
+        ["--baseline-eager"],
+        ["--no-blinterp", "--no-baseline", "--no-ion", "--more-compartments"],
+        ["--blinterp-eager"],
     ],
     # Like 'all' above but for jstests. This has fewer jit-specific
     # configurations.
-    'jstests': [
+    "jstests": [
         [],  # no flags, normal baseline and ion
-        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
-         '--more-compartments'],
-        ['--baseline-eager'],
-        ['--no-blinterp', '--no-baseline', '--no-ion', '--more-compartments'],
+        [
+            "--ion-eager",
+            "--ion-offthread-compile=off",  # implies --baseline-eager
+            "--more-compartments",
+        ],
+        ["--baseline-eager"],
+        ["--no-blinterp", "--no-baseline", "--no-ion", "--more-compartments"],
     ],
     # used by jit_test.py
-    'ion': [
-        ['--baseline-eager'],
-        ['--ion-eager', '--ion-offthread-compile=off', '--more-compartments']
+    "ion": [
+        ["--baseline-eager"],
+        ["--ion-eager", "--ion-offthread-compile=off", "--more-compartments"],
     ],
     # Used for testing WarpBuilder.
-    'warp': [
-        ['--warp'],
-        ['--warp', '--ion-eager', '--ion-offthread-compile=off']
-    ],
-    'nowarp': [
-        ['--no-warp'],
-        ['--no-warp', '--ion-eager', '--ion-offthread-compile=off',
-         '--more-compartments'],
-        ['--no-warp', '--baseline-eager'],
+    "warp": [["--warp"], ["--warp", "--ion-eager", "--ion-offthread-compile=off"]],
+    "nowarp": [
+        ["--no-warp"],
+        [
+            "--no-warp",
+            "--ion-eager",
+            "--ion-offthread-compile=off",
+            "--more-compartments",
+        ],
+        ["--no-warp", "--baseline-eager"],
     ],
     # Run reduced variants on debug builds, since they take longer time.
-    'debug': [
+    "debug": [
         [],  # no flags, normal baseline and ion
-        ['--ion-eager', '--ion-offthread-compile=off',  # implies --baseline-eager
-         '--more-compartments'],
-        ['--baseline-eager'],
+        [
+            "--ion-eager",
+            "--ion-offthread-compile=off",  # implies --baseline-eager
+            "--more-compartments",
+        ],
+        ["--baseline-eager"],
     ],
     # Cover cases useful for tsan. Note that we test --ion-eager without
     # --ion-offthread-compile=off here, because it helps catch races.
-    'tsan': [
+    "tsan": [
         [],
-        ['--ion-eager', '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3'],
-        ['--no-blinterp', '--no-baseline', '--no-ion'],
+        [
+            "--ion-eager",
+            "--ion-check-range-analysis",
+            "--ion-extra-checks",
+            "--no-sse3",
+        ],
+        ["--no-blinterp", "--no-baseline", "--no-ion"],
     ],
-    'baseline': [
-        ['--no-ion'],
+    "baseline": [
+        ["--no-ion"],
     ],
     # Interpreter-only, for tools that cannot handle binary code generation.
-    'interp': [
-        ['--no-blinterp', '--no-baseline', '--no-asmjs', '--wasm-compiler=none',
-         '--no-native-regexp']
+    "interp": [
+        [
+            "--no-blinterp",
+            "--no-baseline",
+            "--no-asmjs",
+            "--wasm-compiler=none",
+            "--no-native-regexp",
+        ]
     ],
-    'none': [
-        []  # no flags, normal baseline and ion
-    ]
+    "none": [[]],  # no flags, normal baseline and ion
 }
 
 
@@ -77,8 +101,8 @@ def get_jitflags(variant, **kwargs):
     if variant not in JITFLAGS:
         print('Invalid jitflag: "{}"'.format(variant))
         sys.exit(1)
-    if variant == 'none' and 'none' in kwargs:
-        return kwargs['none']
+    if variant == "none" and "none" in kwargs:
+        return kwargs["none"]
     return JITFLAGS[variant]
 
 
@@ -94,21 +118,21 @@ def get_environment_overlay(js_shell):
     # When updating this also update |buildBrowserEnv| in layout/tools/reftest/runreftest.py.
     env = {
         # Force Pacific time zone to avoid failures in Date tests.
-        'TZ': 'PST8PDT',
+        "TZ": "PST8PDT",
         # Force date strings to English.
-        'LC_ALL': 'en_US.UTF-8',
+        "LC_ALL": "en_US.UTF-8",
         # Tell the shell to disable crash dialogs on windows.
-        'XRE_NO_WINDOWS_CRASH_DIALOG': '1',
+        "XRE_NO_WINDOWS_CRASH_DIALOG": "1",
     }
     # Add the binary's directory to the library search path so that we find the
     # nspr and icu we built, instead of the platform supplied ones (or none at
     # all on windows).
-    if sys.platform.startswith('linux'):
-        env['LD_LIBRARY_PATH'] = os.path.dirname(js_shell)
-    elif sys.platform.startswith('darwin'):
-        env['DYLD_LIBRARY_PATH'] = os.path.dirname(js_shell)
-    elif sys.platform.startswith('win'):
-        env['PATH'] = os.path.dirname(js_shell)
+    if sys.platform.startswith("linux"):
+        env["LD_LIBRARY_PATH"] = os.path.dirname(js_shell)
+    elif sys.platform.startswith("darwin"):
+        env["DYLD_LIBRARY_PATH"] = os.path.dirname(js_shell)
+    elif sys.platform.startswith("win"):
+        env["PATH"] = os.path.dirname(js_shell)
     return env
 
 
@@ -118,8 +142,8 @@ def change_env(env_overlay):
     prior_env = {}
     for key, val in env_overlay.items():
         prior_env[key] = os.environ.get(key, None)
-        if 'PATH' in key and key in os.environ:
-            os.environ[key] = '{}{}{}'.format(val, os.pathsep, os.environ[key])
+        if "PATH" in key and key in os.environ:
+            os.environ[key] = "{}{}{}".format(val, os.pathsep, os.environ[key])
         else:
             os.environ[key] = val
 
@@ -144,13 +168,14 @@ def get_cpu_count():
     # Python 2.6+
     try:
         import multiprocessing
+
         return multiprocessing.cpu_count()
     except (ImportError, NotImplementedError):
         pass
 
     # POSIX
     try:
-        res = int(os.sysconf('SC_NPROCESSORS_ONLN'))
+        res = int(os.sysconf("SC_NPROCESSORS_ONLN"))
         if res > 0:
             return res
     except (AttributeError, ValueError):
@@ -158,7 +183,7 @@ def get_cpu_count():
 
     # Windows
     try:
-        res = int(os.environ['NUMBER_OF_PROCESSORS'])
+        res = int(os.environ["NUMBER_OF_PROCESSORS"])
         if res > 0:
             return res
     except (KeyError, ValueError):
@@ -216,17 +241,17 @@ class RefTestCase(object):
         """Return the '-f' options needed to run a test with the given path."""
         path = self.path
         prefix = []
-        while path != '':
-            assert path != '/'
+        while path != "":
+            assert path != "/"
             path = os.path.dirname(path)
-            shell_path = os.path.join(self.root, path, 'shell.js')
+            shell_path = os.path.join(self.root, path, "shell.js")
             if os.path.exists(shell_path):
                 prefix.append(shell_path)
-                prefix.append('-f')
+                prefix.append("-f")
         prefix.reverse()
 
         for extra_path in self.extra_helper_paths:
-            prefix.append('-f')
+            prefix.append("-f")
             prefix.append(extra_path)
 
         return prefix
@@ -250,17 +275,17 @@ class RefTestCase(object):
     def __str__(self):
         ans = self.path
         if not self.enable:
-            ans += ', skip'
+            ans += ", skip"
         if self.error is not None:
-            ans += ', error=' + self.error
+            ans += ", error=" + self.error
         if not self.expect:
-            ans += ', fails'
+            ans += ", fails"
         if self.random:
-            ans += ', random'
+            ans += ", random"
         if self.slow:
-            ans += ', slow'
-        if '-d' in self.options:
-            ans += ', debugMode'
+            ans += ", slow"
+        if "-d" in self.options:
+            ans += ", debugMode"
         return ans
 
     @staticmethod

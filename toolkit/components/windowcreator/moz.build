@@ -4,17 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Window Management')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Window Management")
 
-TEST_DIRS += ['test']
+TEST_DIRS += ["test"]
 
-if CONFIG['ENABLE_TESTS']:
-    XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+if CONFIG["ENABLE_TESTS"]:
+    XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 XPIDL_SOURCES += [
-    'nsIWindowCreator.idl',
-    'nsIWindowProvider.idl',
+    "nsIWindowCreator.idl",
+    "nsIWindowProvider.idl",
 ]
 
-XPIDL_MODULE = 'windowcreator'
+XPIDL_MODULE = "windowcreator"

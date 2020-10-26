@@ -24,33 +24,45 @@ def _nsinstall_internal(argv):
     usage = "usage: %prog [options] arg1 [arg2 ...] target-directory"
     p = OptionParser(usage=usage)
 
-    p.add_option('-D', action="store_true",
-                 help="Create a single directory only")
-    p.add_option('-t', action="store_true",
-                 help="Preserve time stamp")
-    p.add_option('-m', action="store",
-                 help="Set mode", metavar="mode")
-    p.add_option('-d', action="store_true",
-                 help="Create directories in target")
-    p.add_option('-R', action="store_true",
-                 help="Use relative symbolic links (ignored)")
-    p.add_option('-L', action="store", metavar="linkprefix",
-                 help="Link prefix (ignored)")
-    p.add_option('-X', action="append", metavar="file",
-                 help="Ignore a file when installing a directory recursively.")
+    p.add_option("-D", action="store_true", help="Create a single directory only")
+    p.add_option("-t", action="store_true", help="Preserve time stamp")
+    p.add_option("-m", action="store", help="Set mode", metavar="mode")
+    p.add_option("-d", action="store_true", help="Create directories in target")
+    p.add_option(
+        "-R", action="store_true", help="Use relative symbolic links (ignored)"
+    )
+    p.add_option(
+        "-L", action="store", metavar="linkprefix", help="Link prefix (ignored)"
+    )
+    p.add_option(
+        "-X",
+        action="append",
+        metavar="file",
+        help="Ignore a file when installing a directory recursively.",
+    )
 
     # The remaining arguments are not used in our tree, thus they're not
     # implented.
     def BadArg(option, opt, value, parser):
-        parser.error('option not supported: {0}'.format(opt))
+        parser.error("option not supported: {0}".format(opt))
 
-    p.add_option('-C', action="callback", metavar="CWD",
-                 callback=BadArg,
-                 help="NOT SUPPORTED")
-    p.add_option('-o', action="callback", callback=BadArg,
-                 help="Set owner (NOT SUPPORTED)", metavar="owner")
-    p.add_option('-g', action="callback", callback=BadArg,
-                 help="Set group (NOT SUPPORTED)", metavar="group")
+    p.add_option(
+        "-C", action="callback", metavar="CWD", callback=BadArg, help="NOT SUPPORTED"
+    )
+    p.add_option(
+        "-o",
+        action="callback",
+        callback=BadArg,
+        help="Set owner (NOT SUPPORTED)",
+        metavar="owner",
+    )
+    p.add_option(
+        "-g",
+        action="callback",
+        callback=BadArg,
+        help="Set group (NOT SUPPORTED)",
+        metavar="group",
+    )
 
     (options, args) = p.parse_args(argv)
 
@@ -59,8 +71,7 @@ def _nsinstall_internal(argv):
         try:
             options.m = int(options.m, 8)
         except Exception:
-            sys.stderr.write('nsinstall: {0} is not a valid mode\n'
-                             .format(options.m))
+            sys.stderr.write("nsinstall: {0} is not a valid mode\n".format(options.m))
             return 1
 
     # just create one directory?
@@ -68,7 +79,7 @@ def _nsinstall_internal(argv):
         dir = os.path.abspath(dir)
         if os.path.exists(dir):
             if not os.path.isdir(dir):
-                print('nsinstall: {0} is not a directory'.format(dir), file=sys.stderr)
+                print("nsinstall: {0} is not a directory".format(dir), file=sys.stderr)
                 return 1
             if mode:
                 os.chmod(dir, mode)
@@ -83,8 +94,7 @@ def _nsinstall_internal(argv):
             # We might have hit EEXIST due to a race condition (see bug 463411) -- try again once
             if try_again:
                 return maybe_create_dir(dir, mode, False)
-            print(
-                "nsinstall: failed to create directory {0}: {1}".format(dir, e))
+            print("nsinstall: failed to create directory {0}: {1}".format(dir, e))
             return 1
         else:
             return 0
@@ -97,7 +107,7 @@ def _nsinstall_internal(argv):
 
     # nsinstall arg1 [...] directory
     if len(args) < 2:
-        p.error('not enough arguments')
+        p.error("not enough arguments")
 
     def copy_all_entries(entries, target):
         for e in entries:
@@ -117,14 +127,14 @@ def _nsinstall_internal(argv):
         def handleTarget(srcpath, targetpath):
             # target directory was already created, just use mkdir
             os.mkdir(targetpath)
+
     else:
         # we're supposed to copy files
         def handleTarget(srcpath, targetpath):
             if os.path.isdir(srcpath):
                 if not os.path.exists(targetpath):
                     os.mkdir(targetpath)
-                entries = [os.path.join(srcpath, e)
-                           for e in os.listdir(srcpath)]
+                entries = [os.path.join(srcpath, e) for e in os.listdir(srcpath)]
                 copy_all_entries(entries, targetpath)
                 # options.t is not relevant for directories
                 if options.m:
@@ -151,6 +161,7 @@ def _nsinstall_internal(argv):
     copy_all_entries(args, target)
     return 0
 
+
 # nsinstall as a native command is always UTF-8
 
 
@@ -158,5 +169,5 @@ def nsinstall(argv):
     return _nsinstall_internal([six.ensure_text(arg, "utf-8") for arg in argv])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(_nsinstall_internal(sys.argv[1:]))

@@ -57,5 +57,5 @@ def main(output, *filenames):
     print(file_footer, file=output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.stdout, *sys.argv[1:])

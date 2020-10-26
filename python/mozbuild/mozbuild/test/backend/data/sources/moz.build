@@ -2,23 +2,25 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
+
 @template
 def Library(name):
-    '''Template for libraries.'''
+    """Template for libraries."""
     LIBRARY_NAME = name
 
-Library('dummy')
 
-SOURCES += ['bar.s', 'foo.asm']
+Library("dummy")
 
-HOST_SOURCES += ['bar.cpp', 'foo.cpp']
-HOST_SOURCES += ['bar.c', 'foo.c']
+SOURCES += ["bar.s", "foo.asm"]
 
-SOURCES += ['bar.c', 'foo.c']
+HOST_SOURCES += ["bar.cpp", "foo.cpp"]
+HOST_SOURCES += ["bar.c", "foo.c"]
 
-SOURCES += ['bar.mm', 'foo.mm']
+SOURCES += ["bar.c", "foo.c"]
 
-SOURCES += ['baz.S', 'foo.S']
+SOURCES += ["bar.mm", "foo.mm"]
 
-WASM_SOURCES += ['bar.cpp']
-WASM_SOURCES += ['bar.c']
+SOURCES += ["baz.S", "foo.S"]
+
+WASM_SOURCES += ["bar.cpp"]
+WASM_SOURCES += ["bar.c"]

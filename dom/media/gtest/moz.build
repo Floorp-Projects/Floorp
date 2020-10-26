@@ -4,125 +4,125 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
+include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 
-DEFINES['ENABLE_SET_CUBEB_BACKEND'] = True
+DEFINES["ENABLE_SET_CUBEB_BACKEND"] = True
 
 LOCAL_INCLUDES += [
-    '/dom/media/webrtc/common/',
-    '/third_party/libwebrtc',
-    '/third_party/libwebrtc/webrtc',
+    "/dom/media/webrtc/common/",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/webrtc",
 ]
 
 UNIFIED_SOURCES += [
-    'MockMediaResource.cpp',
-    'TestAudioBuffers.cpp',
-    'TestAudioCallbackDriver.cpp',
-    'TestAudioCompactor.cpp',
-    'TestAudioDriftCorrection.cpp',
-    'TestAudioMixer.cpp',
-    'TestAudioPacketizer.cpp',
-    'TestAudioRingBuffer.cpp',
-    'TestAudioSegment.cpp',
-    'TestAudioTrackEncoder.cpp',
-    'TestAudioTrackGraph.cpp',
-    'TestBenchmarkStorage.cpp',
-    'TestBitWriter.cpp',
-    'TestBlankVideoDataCreator.cpp',
-    'TestBufferReader.cpp',
-    'TestDataMutex.cpp',
-    'TestDecoderBenchmark.cpp',
-    'TestDriftCompensation.cpp',
-    'TestDynamicResampler.cpp',
-    'TestGMPUtils.cpp',
-    'TestGroupId.cpp',
-    'TestIntervalSet.cpp',
-    'TestKeyValueStorage.cpp',
-    'TestMediaDataDecoder.cpp',
-    'TestMediaDataEncoder.cpp',
-    'TestMediaEventSource.cpp',
-    'TestMediaMIMETypes.cpp',
-    'TestMediaSpan.cpp',
-    'TestMP3Demuxer.cpp',
-    'TestMP4Demuxer.cpp',
-    'TestMuxer.cpp',
-    'TestOpusParser.cpp',
-    'TestRust.cpp',
-    'TestTimeUnit.cpp',
-    'TestVideoSegment.cpp',
-    'TestVideoUtils.cpp',
-    'TestVPXDecoding.cpp',
-    'TestWebMBuffered.cpp',
+    "MockMediaResource.cpp",
+    "TestAudioBuffers.cpp",
+    "TestAudioCallbackDriver.cpp",
+    "TestAudioCompactor.cpp",
+    "TestAudioDriftCorrection.cpp",
+    "TestAudioMixer.cpp",
+    "TestAudioPacketizer.cpp",
+    "TestAudioRingBuffer.cpp",
+    "TestAudioSegment.cpp",
+    "TestAudioTrackEncoder.cpp",
+    "TestAudioTrackGraph.cpp",
+    "TestBenchmarkStorage.cpp",
+    "TestBitWriter.cpp",
+    "TestBlankVideoDataCreator.cpp",
+    "TestBufferReader.cpp",
+    "TestDataMutex.cpp",
+    "TestDecoderBenchmark.cpp",
+    "TestDriftCompensation.cpp",
+    "TestDynamicResampler.cpp",
+    "TestGMPUtils.cpp",
+    "TestGroupId.cpp",
+    "TestIntervalSet.cpp",
+    "TestKeyValueStorage.cpp",
+    "TestMediaDataDecoder.cpp",
+    "TestMediaDataEncoder.cpp",
+    "TestMediaEventSource.cpp",
+    "TestMediaMIMETypes.cpp",
+    "TestMediaSpan.cpp",
+    "TestMP3Demuxer.cpp",
+    "TestMP4Demuxer.cpp",
+    "TestMuxer.cpp",
+    "TestOpusParser.cpp",
+    "TestRust.cpp",
+    "TestTimeUnit.cpp",
+    "TestVideoSegment.cpp",
+    "TestVideoUtils.cpp",
+    "TestVPXDecoding.cpp",
+    "TestWebMBuffered.cpp",
 ]
 
-if CONFIG['MOZ_WEBM_ENCODER']:
+if CONFIG["MOZ_WEBM_ENCODER"]:
     UNIFIED_SOURCES += [
-        'TestVideoTrackEncoder.cpp',
-        'TestWebMWriter.cpp',
-        'YUVBufferGenerator.cpp',
+        "TestVideoTrackEncoder.cpp",
+        "TestWebMWriter.cpp",
+        "YUVBufferGenerator.cpp",
     ]
     LOCAL_INCLUDES += [
-        '/gfx/2d/',
+        "/gfx/2d/",
     ]
 
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        'TestCDMStorage.cpp',
-        'TestGMPCrossOrigin.cpp',
-        'TestGMPRemoveAndDelete.cpp',
+        "TestCDMStorage.cpp",
+        "TestGMPCrossOrigin.cpp",
+        "TestGMPRemoveAndDelete.cpp",
     ]
 
-if CONFIG['MOZ_WEBRTC'] and CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["MOZ_WEBRTC"] and CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        'TestAudioDeviceEnumerator.cpp',
-        'TestVideoFrameConverter.cpp',
+        "TestAudioDeviceEnumerator.cpp",
+        "TestVideoFrameConverter.cpp",
     ]
 
 TEST_HARNESS_FILES.gtest += [
-    '../test/gizmo-frag.mp4',
-    '../test/gizmo.mp4',
-    '../test/vp9cake.webm',
-    'dash_dashinit.mp4',
-    'id3v2header.mp3',
-    'negative_duration.mp4',
-    'noise.mp3',
-    'noise_vbr.mp3',
-    'short-zero-in-moov.mp4',
-    'short-zero-inband.mov',
-    'small-shot-false-positive.mp3',
-    'small-shot-partial-xing.mp3',
-    'small-shot.mp3',
-    'test.webm',
-    'test_case_1224361.vp8.ivf',
-    'test_case_1224363.vp8.ivf',
-    'test_case_1224369.vp8.ivf',
-    'test_vbri.mp3',
+    "../test/gizmo-frag.mp4",
+    "../test/gizmo.mp4",
+    "../test/vp9cake.webm",
+    "dash_dashinit.mp4",
+    "id3v2header.mp3",
+    "negative_duration.mp4",
+    "noise.mp3",
+    "noise_vbr.mp3",
+    "short-zero-in-moov.mp4",
+    "short-zero-inband.mov",
+    "small-shot-false-positive.mp3",
+    "small-shot-partial-xing.mp3",
+    "small-shot.mp3",
+    "test.webm",
+    "test_case_1224361.vp8.ivf",
+    "test_case_1224363.vp8.ivf",
+    "test_case_1224369.vp8.ivf",
+    "test_vbri.mp3",
 ]
 
 TEST_DIRS += [
-    'mp4_demuxer',
+    "mp4_demuxer",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/dom/media',
-    '/dom/media/encoder',
-    '/dom/media/gmp',
-    '/dom/media/mp4',
-    '/dom/media/platforms',
-    '/dom/media/platforms/agnostic',
-    '/dom/media/webrtc',
-    '/security/certverifier',
+    "/dom/media",
+    "/dom/media/encoder",
+    "/dom/media/gmp",
+    "/dom/media/mp4",
+    "/dom/media/platforms",
+    "/dom/media/platforms/agnostic",
+    "/dom/media/webrtc",
+    "/security/certverifier",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += [
-        '-Wno-inconsistent-missing-override',
-        '-Wno-unused-private-field',
+        "-Wno-inconsistent-missing-override",
+        "-Wno-unused-private-field",
     ]

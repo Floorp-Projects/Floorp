@@ -21,19 +21,19 @@ def parse(normalize):
 
 
 def test_parse_defaults(parse):
-    mp = parse('defaults.list')
+    mp = parse("defaults.list")
     assert len(mp.tests) == 4
 
     for test in mp.tests:
-        if test['name'].startswith('foo'):
-            assert test['pref'] == "foo.bar,true"
+        if test["name"].startswith("foo"):
+            assert test["pref"] == "foo.bar,true"
         else:
-            assert 'pref' not in test
+            assert "pref" not in test
 
     # invalid defaults
     with pytest.raises(ValueError):
-        parse('invalid-defaults.list')
+        parse("invalid-defaults.list")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

@@ -13,7 +13,7 @@ from mozbuild.util import FileAvoidWrite
 
 
 def gen_wrappers(unused, outdir, compiler, template_file, *header_list):
-    template = open(template_file, 'r').read()
+    template = open(template_file, "r").read()
 
     for header in header_list:
         with FileAvoidWrite(os.path.join(outdir, header)) as f:

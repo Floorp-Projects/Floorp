@@ -5,11 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIPaymentActionResponse.idl',
-    'nsIPaymentAddress.idl',
-    'nsIPaymentRequest.idl',
-    'nsIPaymentRequestService.idl',
-    'nsIPaymentUIService.idl',
+    "nsIPaymentActionResponse.idl",
+    "nsIPaymentAddress.idl",
+    "nsIPaymentRequest.idl",
+    "nsIPaymentRequestService.idl",
+    "nsIPaymentUIService.idl",
 ]
 
-XPIDL_MODULE = 'dom_payments'
+XPIDL_MODULE = "dom_payments"

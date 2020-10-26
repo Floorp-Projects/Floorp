@@ -4,17 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_GPSD']:
-    SOURCES += [
-        'GpsdLocationProvider.cpp'
-    ]
+if CONFIG["MOZ_GPSD"]:
+    SOURCES += ["GpsdLocationProvider.cpp"]
 
-    CXXFLAGS += CONFIG['MOZ_GPSD_CFLAGS']
+    CXXFLAGS += CONFIG["MOZ_GPSD_CFLAGS"]
 
-    OS_LIBS += CONFIG['MOZ_GPSD_LIBS']
+    OS_LIBS += CONFIG["MOZ_GPSD_LIBS"]
 
-    LOCAL_INCLUDES += [
-        '/dom/geolocation'
-    ]
+    LOCAL_INCLUDES += ["/dom/geolocation"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

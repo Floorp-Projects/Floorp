@@ -1,5 +1,4 @@
 config = {
-    'nightly_build': True,
-    'taskcluster_nightly': True,
+    "nightly_build": True,
+    "taskcluster_nightly": True,
 }
-

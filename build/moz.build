@@ -4,114 +4,126 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
 
 # This cannot be named "build" because of bug 922191.
-SPHINX_TREES['buildsystem'] = 'docs'
+SPHINX_TREES["buildsystem"] = "docs"
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['win32']
+if CONFIG["OS_ARCH"] == "WINNT":
+    DIRS += ["win32"]
 else:
-    DIRS += ['unix']
+    DIRS += ["unix"]
 
 CRAMTEST_MANIFESTS += [
-    'tests/cram/cram.ini',
+    "tests/cram/cram.ini",
 ]
 
-DEFINES['ACCEPTED_MAR_CHANNEL_IDS'] = CONFIG['ACCEPTED_MAR_CHANNEL_IDS']
+DEFINES["ACCEPTED_MAR_CHANNEL_IDS"] = CONFIG["ACCEPTED_MAR_CHANNEL_IDS"]
 
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
+if CONFIG["MOZ_BUILD_APP"] == "browser":
     PYTHON_UNITTEST_MANIFESTS += [
-        'compare-mozconfig/python.ini',
+        "compare-mozconfig/python.ini",
     ]
 
-if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:
-    FINAL_TARGET_FILES += ['/tools/rb/fix_stacks.py']
+if CONFIG["ENABLE_TESTS"] or CONFIG["MOZ_DMD"]:
+    FINAL_TARGET_FILES += ["/tools/rb/fix_stacks.py"]
 
-if CONFIG['MOZ_DMD']:
-    FINAL_TARGET_FILES += ['/memory/replace/dmd/dmd.py']
+if CONFIG["MOZ_DMD"]:
+    FINAL_TARGET_FILES += ["/memory/replace/dmd/dmd.py"]
 
 # Put a useful .gdbinit and .gdbinit.py in $objdir/build, to be picked up
 # automatically by GDB via either libxul.so-gdb.py or js-gdb.py.
-OBJDIR_PP_FILES.build += ['.gdbinit.py.in']
-OBJDIR_FILES.build += ['.gdbinit.loader']
-OBJDIR_FILES.build += ['.gdbinit']
+OBJDIR_PP_FILES.build += [".gdbinit.py.in"]
+OBJDIR_FILES.build += [".gdbinit.loader"]
+OBJDIR_FILES.build += [".gdbinit"]
 
 # Install the clang-cl runtime library for ASAN next to the binaries we produce.
-if CONFIG['MOZ_ASAN'] and CONFIG['CC_TYPE'] == 'clang-cl':
-    FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
-    FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH'].replace(".dll", ".pdb")]
+if CONFIG["MOZ_ASAN"] and CONFIG["CC_TYPE"] == "clang-cl":
+    FINAL_TARGET_FILES += ["%" + CONFIG["MOZ_CLANG_RT_ASAN_LIB_PATH"]]
+    FINAL_TARGET_FILES += [
+        "%" + CONFIG["MOZ_CLANG_RT_ASAN_LIB_PATH"].replace(".dll", ".pdb")
+    ]
 
 # Install the clang runtime library for ASAN next to the binaries we produce.
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_ASAN']:
-    FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android" and CONFIG["MOZ_ASAN"]:
+    FINAL_TARGET_FILES += ["%" + CONFIG["MOZ_CLANG_RT_ASAN_LIB_PATH"]]
 
-if CONFIG['LLVM_SYMBOLIZER']:
-    FINAL_TARGET_FILES += ['/' + CONFIG['LLVM_SYMBOLIZER']]
+if CONFIG["LLVM_SYMBOLIZER"]:
+    FINAL_TARGET_FILES += ["/" + CONFIG["LLVM_SYMBOLIZER"]]
 
-if CONFIG['MOZ_APP_BASENAME']:
+if CONFIG["MOZ_APP_BASENAME"]:
     appini_defines = {
-        'TOPOBJDIR': TOPOBJDIR,
+        "TOPOBJDIR": TOPOBJDIR,
     }
 
-    for var in ('GRE_MILESTONE', 'MOZ_APP_VERSION', 'MOZ_APP_BASENAME',
-                'MOZ_APP_VENDOR', 'MOZ_APP_ID', 'MAR_CHANNEL_ID',
-                'MOZ_APP_REMOTINGNAME'):
+    for var in (
+        "GRE_MILESTONE",
+        "MOZ_APP_VERSION",
+        "MOZ_APP_BASENAME",
+        "MOZ_APP_VENDOR",
+        "MOZ_APP_ID",
+        "MAR_CHANNEL_ID",
+        "MOZ_APP_REMOTINGNAME",
+    ):
         appini_defines[var] = CONFIG[var]
 
-    if CONFIG['MOZ_APP_DISPLAYNAME'] != CONFIG['MOZ_APP_BASENAME']:
-        appini_defines['MOZ_APP_DISPLAYNAME'] = CONFIG['MOZ_APP_DISPLAYNAME']
+    if CONFIG["MOZ_APP_DISPLAYNAME"] != CONFIG["MOZ_APP_BASENAME"]:
+        appini_defines["MOZ_APP_DISPLAYNAME"] = CONFIG["MOZ_APP_DISPLAYNAME"]
 
-    if CONFIG['MOZ_BUILD_APP'] == 'browser':
-        appini_defines['MOZ_BUILD_APP_IS_BROWSER'] = True
+    if CONFIG["MOZ_BUILD_APP"] == "browser":
+        appini_defines["MOZ_BUILD_APP_IS_BROWSER"] = True
 
-    if CONFIG['MOZ_APP_PROFILE']:
-        appini_defines['MOZ_APP_PROFILE'] = CONFIG['MOZ_APP_PROFILE']
+    if CONFIG["MOZ_APP_PROFILE"]:
+        appini_defines["MOZ_APP_PROFILE"] = CONFIG["MOZ_APP_PROFILE"]
 
-    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR', 'MOZ_UPDATER'):
+    for var in ("MOZ_CRASHREPORTER", "MOZ_PROFILE_MIGRATOR", "MOZ_UPDATER"):
         if CONFIG[var]:
             appini_defines[var] = True
 
-    appini_defines['MOZ_APPUPDATE_HOST'] = 'aus5.mozilla.org'
-    if CONFIG['MOZ_APPUPDATE_HOST']:
-        appini_defines['MOZ_APPUPDATE_HOST'] = CONFIG['MOZ_APPUPDATE_HOST']
+    appini_defines["MOZ_APPUPDATE_HOST"] = "aus5.mozilla.org"
+    if CONFIG["MOZ_APPUPDATE_HOST"]:
+        appini_defines["MOZ_APPUPDATE_HOST"] = CONFIG["MOZ_APPUPDATE_HOST"]
 
     GeneratedFile(
-        'application.ini',
-        script='../python/mozbuild/mozbuild/action/preprocessor.py',
-        entry_point='generate',
-        inputs=['application.ini.in'],
-        flags=['-D%s=%s' % (k, '1' if v is True else v)
-               for k, v in sorted(appini_defines.items(), key=lambda t: t[0])])
+        "application.ini",
+        script="../python/mozbuild/mozbuild/action/preprocessor.py",
+        entry_point="generate",
+        inputs=["application.ini.in"],
+        flags=[
+            "-D%s=%s" % (k, "1" if v is True else v)
+            for k, v in sorted(appini_defines.items(), key=lambda t: t[0])
+        ],
+    )
 
-    FINAL_TARGET_FILES += ['!application.ini']
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
-        FINAL_TARGET_PP_FILES += ['update-settings.ini']
+    FINAL_TARGET_FILES += ["!application.ini"]
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android" and CONFIG["MOZ_UPDATER"]:
+        FINAL_TARGET_PP_FILES += ["update-settings.ini"]
 
-    GeneratedFile('application.ini.h', script='appini_header.py',
-                  inputs=['!application.ini'])
+    GeneratedFile(
+        "application.ini.h", script="appini_header.py", inputs=["!application.ini"]
+    )
 
 
 # Put a .lldbinit in the bin directory and the objdir, to be picked up
 # automatically by LLDB when we debug executables using either of those two
 # directories as the current working directory.  The .lldbinit file will
 # load $(topsrcdir)/.lldbinit, which is where the actual debugging commands are.
-DEFINES['topsrcdir'] = TOPSRCDIR
-DEFINES['topobjdir'] = TOPOBJDIR
-FINAL_TARGET_PP_FILES += ['.lldbinit.in']
-OBJDIR_FILES += ['!/dist/bin/.lldbinit']
+DEFINES["topsrcdir"] = TOPSRCDIR
+DEFINES["topobjdir"] = TOPOBJDIR
+FINAL_TARGET_PP_FILES += [".lldbinit.in"]
+OBJDIR_FILES += ["!/dist/bin/.lldbinit"]
 
 # Put the .ycm_extra_conf.py file at the root of the objdir. It is used by
 # the vim plugin YouCompleteMe.
-OBJDIR_FILES += ['/.ycm_extra_conf.py']
+OBJDIR_FILES += ["/.ycm_extra_conf.py"]
 
-if CONFIG['MOZ_VALGRIND']:
+if CONFIG["MOZ_VALGRIND"]:
     OBJDIR_FILES._valgrind += [
-        'valgrind/cross-architecture.sup',
-        'valgrind/i386-pc-linux-gnu.sup',
-        'valgrind/x86_64-pc-linux-gnu.sup',
+        "valgrind/cross-architecture.sup",
+        "valgrind/i386-pc-linux-gnu.sup",
+        "valgrind/x86_64-pc-linux-gnu.sup",
     ]

@@ -5,61 +5,61 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 HOST_SOURCES += [
-    '/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
-    'mar.c',
+    "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
+    "mar.c",
 ]
 
-HostProgram('mar')
+HostProgram("mar")
 
 HOST_USE_LIBS += [
-    'hostmar',
+    "hostmar",
 ]
 
-if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+if CONFIG["HOST_OS_ARCH"] == "WINNT":
     HOST_OS_LIBS += [
-        'ws2_32',
+        "ws2_32",
     ]
 
 # C11 for static_assert
-c11_flags = ['-std=gnu11']
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    c11_flags.insert(0, '-Xclang')
+c11_flags = ["-std=gnu11"]
+if CONFIG["CC_TYPE"] == "clang-cl":
+    c11_flags.insert(0, "-Xclang")
 HOST_CFLAGS += c11_flags
 
-HOST_DEFINES['NO_SIGN_VERIFY'] = True
+HOST_DEFINES["NO_SIGN_VERIFY"] = True
 
-if CONFIG['MOZ_BUILD_APP'] != 'tools/update-packaging':
-    Program('signmar')
+if CONFIG["MOZ_BUILD_APP"] != "tools/update-packaging":
+    Program("signmar")
 
     SOURCES += HOST_SOURCES
 
     CFLAGS += c11_flags
 
     USE_LIBS += [
-        'mar',
-        'nspr',
-        'nss',
-        'signmar',
-        'verifymar',
+        "mar",
+        "nspr",
+        "nss",
+        "signmar",
+        "verifymar",
     ]
 
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         USE_STATIC_LIBS = True
 
         OS_LIBS += [
-            'ws2_32',
-            'crypt32',
-            'advapi32',
+            "ws2_32",
+            "crypt32",
+            "advapi32",
         ]
-    elif CONFIG['OS_ARCH'] == 'Darwin':
+    elif CONFIG["OS_ARCH"] == "Darwin":
         OS_LIBS += [
-          '-framework Security',
+            "-framework Security",
         ]
 
     DisableStlWrapping()
 
 
-for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
+for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION"):
     HOST_DEFINES[var] = '"%s"' % CONFIG[var]
     if SOURCES:
         DEFINES[var] = HOST_DEFINES[var]

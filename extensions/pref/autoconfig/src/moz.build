@@ -5,17 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'nsAutoConfig.cpp',
-    'nsJSConfigTriggers.cpp',
-    'nsReadConfig.cpp',
+    "nsAutoConfig.cpp",
+    "nsJSConfigTriggers.cpp",
+    "nsReadConfig.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 FINAL_TARGET_FILES.defaults.autoconfig += [
-    'prefcalls.js',
+    "prefcalls.js",
 ]

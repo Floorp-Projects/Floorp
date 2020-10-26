@@ -5,31 +5,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIAboutModule.idl',
+    "nsIAboutModule.idl",
 ]
 
-XPIDL_MODULE = 'necko_about'
+XPIDL_MODULE = "necko_about"
 
 EXPORTS += [
-    'nsAboutProtocolHandler.h',
-    'nsAboutProtocolUtils.h',
+    "nsAboutProtocolHandler.h",
+    "nsAboutProtocolUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsAboutBlank.cpp',
-    'nsAboutCache.cpp',
-    'nsAboutCacheEntry.cpp',
-    'nsAboutProtocolHandler.cpp',
+    "nsAboutBlank.cpp",
+    "nsAboutCache.cpp",
+    "nsAboutCacheEntry.cpp",
+    "nsAboutProtocolHandler.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/netwerk/base',
-    '/netwerk/cache2',
+    "/netwerk/base",
+    "/netwerk/cache2",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

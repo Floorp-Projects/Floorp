@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'index.js',
-    'list-devices.js',
-    'prepare-tcp-connection.js',
-    'run-command.js',
-    'shell.js',
-    'track-devices.js',
+    "index.js",
+    "list-devices.js",
+    "prepare-tcp-connection.js",
+    "run-command.js",
+    "shell.js",
+    "track-devices.js",
 )

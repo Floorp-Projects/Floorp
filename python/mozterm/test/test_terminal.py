@@ -14,17 +14,17 @@ from mozterm import Terminal, NullTerminal
 
 
 def test_terminal():
-    blessings = pytest.importorskip('blessings')
+    blessings = pytest.importorskip("blessings")
     term = Terminal()
     assert isinstance(term, blessings.Terminal)
 
     term = Terminal(disable_styling=True)
     assert isinstance(term, NullTerminal)
 
-    del sys.modules['blessings']
+    del sys.modules["blessings"]
     orig = sys.path[:]
     for path in orig:
-        if 'blessings' in path:
+        if "blessings" in path:
             sys.path.remove(path)
 
     term = Terminal()
@@ -47,5 +47,5 @@ def test_null_terminal():
     assert term.is_a_tty == os.isatty(sys.stdout.fileno())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

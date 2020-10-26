@@ -10,16 +10,16 @@ import time
 import six
 
 
-TARGET_CACHE_INDEX = (
-    '{trust_domain}.cache.level-{level}.{type}.{name}.hash.{digest}'
-)
+TARGET_CACHE_INDEX = "{trust_domain}.cache.level-{level}.{type}.{name}.hash.{digest}"
 EXTRA_CACHE_INDEXES = [
-    '{trust_domain}.cache.level-{level}.{type}.{name}.latest',
-    '{trust_domain}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}',
+    "{trust_domain}.cache.level-{level}.{type}.{name}.latest",
+    "{trust_domain}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}",
 ]
 
 
-def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, digest_data=None):
+def add_optimization(
+    config, taskdesc, cache_type, cache_name, digest=None, digest_data=None
+):
     """
     Allow the results of this task to be cached. This adds index routes to the
     task so it can be looked up for future runs, and optimization hints so that
@@ -41,42 +41,42 @@ def add_optimization(config, taskdesc, cache_type, cache_name, digest=None, dige
     if (digest is None) == (digest_data is None):
         raise Exception("Must pass exactly one of `digest` and `digest_data`.")
     if digest is None:
-        digest = hashlib.sha256(
-            six.ensure_binary('\n'.join(digest_data))).hexdigest()
+        digest = hashlib.sha256(six.ensure_binary("\n".join(digest_data))).hexdigest()
 
     subs = {
-        'trust_domain': config.graph_config['trust-domain'],
-        'type': cache_type,
-        'name': cache_name,
-        'digest': digest,
+        "trust_domain": config.graph_config["trust-domain"],
+        "type": cache_type,
+        "name": cache_name,
+        "digest": digest,
     }
 
     # We'll try to find a cached version of the toolchain at levels above
     # and including the current level, starting at the highest level.
     index_routes = []
-    for level in reversed(range(int(config.params['level']), 4)):
-        subs['level'] = level
+    for level in reversed(range(int(config.params["level"]), 4)):
+        subs["level"] = level
         index_routes.append(TARGET_CACHE_INDEX.format(**subs))
-    taskdesc['optimization'] = {'index-search': index_routes}
+    taskdesc["optimization"] = {"index-search": index_routes}
 
     # ... and cache at the lowest level.
-    taskdesc.setdefault('routes', []).append(
-        'index.{}'.format(TARGET_CACHE_INDEX.format(**subs)))
+    taskdesc.setdefault("routes", []).append(
+        "index.{}".format(TARGET_CACHE_INDEX.format(**subs))
+    )
 
     # ... and add some extra routes for humans
-    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
-                                            time.gmtime(config.params['build_date']))
-    taskdesc['routes'].extend([
-        'index.{}'.format(route.format(**subs))
-        for route in EXTRA_CACHE_INDEXES
-    ])
+    subs["build_date_long"] = time.strftime(
+        "%Y.%m.%d.%Y%m%d%H%M%S", time.gmtime(config.params["build_date"])
+    )
+    taskdesc["routes"].extend(
+        ["index.{}".format(route.format(**subs)) for route in EXTRA_CACHE_INDEXES]
+    )
 
-    taskdesc['attributes']['cached_task'] = {
-        'type': cache_type,
-        'name': cache_name,
-        'digest': digest,
+    taskdesc["attributes"]["cached_task"] = {
+        "type": cache_type,
+        "name": cache_name,
+        "digest": digest,
     }
 
     # Allow future pushes to find this task before it completes
     # Implementation in morphs
-    taskdesc['attributes']['eager_indexes'] = [TARGET_CACHE_INDEX.format(**subs)]
+    taskdesc["attributes"]["eager_indexes"] = [TARGET_CACHE_INDEX.format(**subs)]

@@ -4,36 +4,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-if (CONFIG['OS_TARGET'] in ('Android', 'Linux') and
-    CONFIG['CPU_ARCH'] in ('arm', 'aarch64', 'x86', 'x86_64')):
+if CONFIG["OS_TARGET"] in ("Android", "Linux") and CONFIG["CPU_ARCH"] in (
+    "arm",
+    "aarch64",
+    "x86",
+    "x86_64",
+):
     UNIFIED_SOURCES += [
-        'LulTest.cpp',
-        'LulTestDwarf.cpp',
-        'LulTestInfrastructure.cpp',
+        "LulTest.cpp",
+        "LulTestDwarf.cpp",
+        "LulTestInfrastructure.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/netwerk/base',
-    '/netwerk/protocol/http',
-    '/toolkit/components/jsoncpp/include',
-    '/tools/profiler/core',
-    '/tools/profiler/gecko',
-    '/tools/profiler/lul',
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+    "/toolkit/components/jsoncpp/include",
+    "/tools/profiler/core",
+    "/tools/profiler/gecko",
+    "/tools/profiler/lul",
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        'GeckoProfiler.cpp',
-        'ThreadProfileTest.cpp',
+        "GeckoProfiler.cpp",
+        "ThreadProfileTest.cpp",
     ]
 
 USE_LIBS += [
-    'jsoncpp',
+    "jsoncpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

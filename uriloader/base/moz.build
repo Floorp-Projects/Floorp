@@ -4,34 +4,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 XPIDL_SOURCES += [
-    'nsCURILoader.idl',
-    'nsIContentHandler.idl',
-    'nsIDocumentLoader.idl',
-    'nsITransfer.idl',
-    'nsIURIContentListener.idl',
-    'nsIURILoader.idl',
-    'nsIWebProgress.idl',
-    'nsIWebProgressListener.idl',
-    'nsIWebProgressListener2.idl',
+    "nsCURILoader.idl",
+    "nsIContentHandler.idl",
+    "nsIDocumentLoader.idl",
+    "nsITransfer.idl",
+    "nsIURIContentListener.idl",
+    "nsIURILoader.idl",
+    "nsIWebProgress.idl",
+    "nsIWebProgressListener.idl",
+    "nsIWebProgressListener2.idl",
 ]
 
-XPIDL_MODULE = 'uriloader'
+XPIDL_MODULE = "uriloader"
 
 EXPORTS += [
-    'nsDocLoader.h',
-    'nsURILoader.h',
+    "nsDocLoader.h",
+    "nsURILoader.h",
 ]
 
 UNIFIED_SOURCES += [
-    'nsDocLoader.cpp',
-    'nsURILoader.cpp',
+    "nsDocLoader.cpp",
+    "nsURILoader.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/netwerk/base',
+    "/netwerk/base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

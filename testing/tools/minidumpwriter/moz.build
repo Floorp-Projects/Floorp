@@ -4,16 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['ENABLE_TESTS'] and CONFIG['OS_ARCH'] == 'WINNT':
-    Program('minidumpwriter')
+if CONFIG["ENABLE_TESTS"] and CONFIG["OS_ARCH"] == "WINNT":
+    Program("minidumpwriter")
     OS_LIBS += [
-        'dbghelp',
+        "dbghelp",
     ]
     SOURCES += [
-        'minidumpwriter.cpp',
+        "minidumpwriter.cpp",
     ]
     USE_STATIC_LIBS = True
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        WIN32_EXE_LDFLAGS += ['-municode']
+    if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+        WIN32_EXE_LDFLAGS += ["-municode"]
 
 NO_PGO = True

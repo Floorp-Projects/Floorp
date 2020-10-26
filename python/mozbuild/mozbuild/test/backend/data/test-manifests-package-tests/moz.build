@@ -2,9 +2,9 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 MOCHITEST_MANIFESTS += [
-  'mochitest.ini',
+    "mochitest.ini",
 ]
 
 ANDROID_INSTRUMENTATION_MANIFESTS += [
-  'instrumentation.ini',
+    "instrumentation.ini",
 ]

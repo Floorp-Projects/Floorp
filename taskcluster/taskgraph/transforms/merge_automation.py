@@ -63,10 +63,16 @@ def add_payload_config(config, tasks):
         ]
 
         if "l10n-bump-info" in worker and worker["l10n-bump-info"] is None:
-            del(worker["l10n-bump-info"])
+            del worker["l10n-bump-info"]
 
         # Override defaults, useful for testing.
-        for field in ["from-repo", "from-branch", "to-repo", "to-branch", "fetch-version-from"]:
+        for field in [
+            "from-repo",
+            "from-branch",
+            "to-repo",
+            "to-branch",
+            "fetch-version-from",
+        ]:
             if merge_config.get(field):
                 worker["merge-info"][field] = merge_config[field]
 

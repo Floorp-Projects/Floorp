@@ -29,8 +29,12 @@ import binascii
 
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..',
-                             'manager', 'ssl', 'tests', 'unit'))
+
+sys.path.append(
+    os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", "manager", "ssl", "tests", "unit"
+    )
+)
 import pykey
 
 
@@ -40,12 +44,14 @@ def sign(signingKey, hashAlgorithm, hexToSign):
     of the signature."""
     # key.sign returns a hex string in the format "'<hex bytes>'H",
     # so we have to strip off the "'"s and trailing 'H'
-    return signingKey.sign(binascii.unhexlify(hexToSign),
-                           'hash:%s' % hashAlgorithm)[1:-2]
+    return signingKey.sign(binascii.unhexlify(hexToSign), "hash:%s" % hashAlgorithm)[
+        1:-2
+    ]
 
 
 class Error(Exception):
     """Base class for exceptions in this module."""
+
     pass
 
 
@@ -55,7 +61,7 @@ class UnknownParameterTypeError(Error):
     def __init__(self, value):
         super(Error, self).__init__()
         self.value = value
-        self.category = 'key'
+        self.category = "key"
 
     def __str__(self):
         return 'Unknown %s type "%s"' % (self.category, repr(self.value))
@@ -69,7 +75,7 @@ class InputTooLongError(Error):
         self.length = length
 
     def __str__(self):
-        return 'Input too long: %s > 65535' % self.length
+        return "Input too long: %s > 65535" % self.length
 
 
 def getTwoByteLenAsHex(callLenOnMe):
@@ -90,31 +96,33 @@ def createSTH(configStream):
     kSPKIHex corresponding to the hex encoding of the signed tree head
     and the hex encoding of the subject public key info from the
     specification, respectively."""
-    toSign = ''
-    prefix = ''
-    hashAlgorithm = 'sha256'
+    toSign = ""
+    prefix = ""
+    hashAlgorithm = "sha256"
     for line in configStream.readlines():
-        if ':' in line:
-            param = line.split(':')[0]
-            arg = line.split(':')[1].split('//')[0].strip()
-            if param == 'signingKey':
+        if ":" in line:
+            param = line.split(":")[0]
+            arg = line.split(":")[1].split("//")[0].strip()
+            if param == "signingKey":
                 signingKey = pykey.keyFromSpecification(arg)
-            elif param == 'spki':
+            elif param == "spki":
                 spki = pykey.keyFromSpecification(arg)
-            elif param == 'prefix':
+            elif param == "prefix":
                 prefix = arg
-            elif param == 'hash':
+            elif param == "hash":
                 hashAlgorithm = arg
             else:
                 raise UnknownParameterTypeError(param)
         else:
-            toSign = toSign + line.split('//')[0].strip()
+            toSign = toSign + line.split("//")[0].strip()
     signature = sign(signingKey, hashAlgorithm, toSign)
     lengthBytesHex = getTwoByteLenAsHex(binascii.unhexlify(signature))
     sth = prefix + toSign + lengthBytesHex + signature
     spkiHex = encoder.encode(spki.asSubjectPublicKeyInfo()).hex()
-    return ('const char* kSTHHex = "%s";\nconst char* kSPKIHex = "%s";\n' %
-            (sth, spkiHex))
+    return 'const char* kSTHHex = "%s";\nconst char* kSPKIHex = "%s";\n' % (
+        sth,
+        spkiHex,
+    )
 
 
 def main(output, inputPath):

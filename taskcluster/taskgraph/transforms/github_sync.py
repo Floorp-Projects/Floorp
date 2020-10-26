@@ -11,16 +11,15 @@ transforms = TransformSequence()
 
 @transforms.add
 def sync_github(config, tasks):
-    """Do transforms specific to github-sync tasks.
-    """
+    """Do transforms specific to github-sync tasks."""
     for task in tasks:
         # Add the secret to the scopes, only in m-c.
         # Doing this on any other tree will result in decision task failure
         # because m-c is the only one allowed to have that scope.
-        secret = task['secret']
-        if config.params['project'] == 'mozilla-central':
-            task.setdefault('scopes', [])
-            task['scopes'].append('secrets:get:' + secret)
-            task['worker'].setdefault('env', {})['GITHUB_SECRET'] = secret
-        del task['secret']
+        secret = task["secret"]
+        if config.params["project"] == "mozilla-central":
+            task.setdefault("scopes", [])
+            task["scopes"].append("secrets:get:" + secret)
+            task["worker"].setdefault("env", {})["GITHUB_SECRET"] = secret
+        del task["secret"]
         yield task

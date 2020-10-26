@@ -37,8 +37,7 @@ class LogLevelFilter(BaseHandler):
         self.level = log_levels[level.upper()]
 
     def __call__(self, item):
-        if (item["action"] != "log" or
-                log_levels[item["level"].upper()] <= self.level):
+        if item["action"] != "log" or log_levels[item["level"].upper()] <= self.level:
             return self.inner(item)
 
 
@@ -78,12 +77,15 @@ class StreamHandler(BaseHandler):
             if six.PY3:
                 import io
                 import mozfile
-                if isinstance(self.stream, io.StringIO) and isinstance(formatted, bytes):
+
+                if isinstance(self.stream, io.StringIO) and isinstance(
+                    formatted, bytes
+                ):
                     formatted = formatted.decode()
                 elif (
-                     isinstance(self.stream, io.BytesIO)
-                     or isinstance(self.stream, mozfile.NamedTemporaryFile)
-                     ) and isinstance(formatted, str):
+                    isinstance(self.stream, io.BytesIO)
+                    or isinstance(self.stream, mozfile.NamedTemporaryFile)
+                ) and isinstance(formatted, str):
                     formatted = formatted.encode()
                 self.stream.write(formatted)
             else:

@@ -5,23 +5,23 @@
 
 
 EXPORTS += [
-    'HLSDecoder.h',
-    'HLSDemuxer.h',
-    'HLSUtils.h',
+    "HLSDecoder.h",
+    "HLSDemuxer.h",
+    "HLSUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'HLSDecoder.cpp',
-    'HLSDemuxer.cpp',
-    'HLSUtils.cpp',
+    "HLSDecoder.cpp",
+    "HLSDemuxer.cpp",
+    "HLSUtils.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
 # Add libFuzzer configuration directives
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

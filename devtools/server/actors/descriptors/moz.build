@@ -5,9 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'process.js',
-    'tab.js',
-    'webextension.js',
-    'worker.js',
+    "process.js",
+    "tab.js",
+    "webextension.js",
+    "worker.js",
 )
-

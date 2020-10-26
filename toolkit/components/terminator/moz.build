@@ -4,29 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Async Tooling')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Async Tooling")
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 SOURCES += [
-    'nsTerminator.cpp',
+    "nsTerminator.cpp",
 ]
 
 EXPORTS += [
-    'nsTerminator.h',
+    "nsTerminator.h",
 ]
 
 EXTRA_COMPONENTS += [
-    'terminator.manifest',
+    "terminator.manifest",
 ]
 
 EXTRA_JS_MODULES += [
-    'TerminatorTelemetry.jsm',
+    "TerminatorTelemetry.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 profile_files = [
-    'base/*',
-    'common/*',
-    'geckoview-junit/*',
-    'mochitest/*',
-    'perf/*',
-    'profiles.json',
-    'profileserver/*',
-    'reftest/*',
-    'unittest-features/*',
-    'unittest-required/*',
-    'web-platform/*'
+    "base/*",
+    "common/*",
+    "geckoview-junit/*",
+    "mochitest/*",
+    "perf/*",
+    "profiles.json",
+    "profileserver/*",
+    "reftest/*",
+    "unittest-features/*",
+    "unittest-required/*",
+    "web-platform/*",
 ]
 
 TEST_HARNESS_FILES.reftest.profile_data += profile_files
 TEST_HARNESS_FILES.testing.mochitest.profile_data += profile_files
-TEST_HARNESS_FILES['web-platform'].prefs += profile_files
+TEST_HARNESS_FILES["web-platform"].prefs += profile_files
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "General")

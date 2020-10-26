@@ -4,18 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('FuzzingFeaturePolicy')
+Library("FuzzingFeaturePolicy")
 
 LOCAL_INCLUDES += [
-    '/dom/security/featurepolicy',
-    '/netwerk/base',
+    "/dom/security/featurepolicy",
+    "/netwerk/base",
 ]
 
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
-SOURCES += [
-    'fp_fuzzer.cpp'
-]
+SOURCES += ["fp_fuzzer.cpp"]
 
-FINAL_LIBRARY = 'xul-gtest'
-
+FINAL_LIBRARY = "xul-gtest"

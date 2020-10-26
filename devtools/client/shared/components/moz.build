@@ -5,32 +5,32 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'object-inspector',
-    'menu',
-    'reps',
-    'splitter',
-    'tabs',
-    'throttling',
-    'tree',
+    "object-inspector",
+    "menu",
+    "reps",
+    "splitter",
+    "tabs",
+    "throttling",
+    "tree",
 ]
 
 DevToolsModules(
-    'Accordion.js',
-    'Frame.js',
-    'HSplitBox.js',
-    'List.js',
-    'MdnLink.js',
-    'NotificationBox.js',
-    'SearchBox.js',
-    'SearchBoxAutocompletePopup.js',
-    'Sidebar.js',
-    'SidebarToggle.js',
-    'SmartTrace.js',
-    'StackTrace.js',
-    'Tree.js',
-    'VirtualizedTree.js',
-    'VisibilityHandler.js',
+    "Accordion.js",
+    "Frame.js",
+    "HSplitBox.js",
+    "List.js",
+    "MdnLink.js",
+    "NotificationBox.js",
+    "SearchBox.js",
+    "SearchBoxAutocompletePopup.js",
+    "Sidebar.js",
+    "SidebarToggle.js",
+    "SmartTrace.js",
+    "StackTrace.js",
+    "Tree.js",
+    "VirtualizedTree.js",
+    "VisibilityHandler.js",
 )
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]

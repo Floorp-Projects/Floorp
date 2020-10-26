@@ -4,12 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
-  'SharedMemoryFuzzer.cpp'
-]
+UNIFIED_SOURCES += ["SharedMemoryFuzzer.cpp"]
 
-EXPORTS.mozilla.ipc += [
-  'SharedMemoryFuzzer.h'
-]
+EXPORTS.mozilla.ipc += ["SharedMemoryFuzzer.h"]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

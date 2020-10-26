@@ -16,19 +16,19 @@ from awsy.awsy_test_case import AwsyTestCase
 # A description of each checkpoint and the root path to it.
 CHECKPOINTS = [
     {
-        'name': "After tabs open [+30s, forced GC]",
-        'path': "memory-report-TabsOpenForceGC-4.json.gz",
-        'name_filter': ['web ', 'Web Content'],  # We only want the content process
-        'median': True,  # We want the median from all content processes
+        "name": "After tabs open [+30s, forced GC]",
+        "path": "memory-report-TabsOpenForceGC-4.json.gz",
+        "name_filter": ["web ", "Web Content"],  # We only want the content process
+        "median": True,  # We want the median from all content processes
     },
 ]
 
 # A description of each perfherder suite and the path to its values.
 PERF_SUITES = [
-    {'name': "Base Content Resident Unique Memory", 'node': "resident-unique"},
-    {'name': "Base Content Heap Unclassified", 'node': "explicit/heap-unclassified"},
-    {'name': "Base Content JS", 'node': "js-main-runtime/", 'alertThreshold': 0.25},
-    {'name': "Base Content Explicit", 'node': "explicit/"},
+    {"name": "Base Content Resident Unique Memory", "node": "resident-unique"},
+    {"name": "Base Content Heap Unclassified", "node": "explicit/heap-unclassified"},
+    {"name": "Base Content JS", "node": "js-main-runtime/", "alertThreshold": 0.25},
+    {"name": "Base Content Explicit", "node": "explicit/"},
 ]
 
 
@@ -60,16 +60,22 @@ class TestMemoryUsage(AwsyTestCase):
         # number of content processes we can have. After this we should no
         # longer have a preallocated content process (although to be sure we
         # explicitly drop it at the end of the test).
-        process_count = self.marionette.get_pref('dom.ipc.processCount')
+        process_count = self.marionette.get_pref("dom.ipc.processCount")
         self._pages_to_load = process_count
-        self._urls = ['about:blank'] * process_count
+        self._urls = ["about:blank"] * process_count
 
-        self.logger.info("areweslimyet run by %d pages, "
-                         "%d iterations, %d perTabPause, %d settleWaitTime, "
-                         "%d content processes"
-                         % (self._pages_to_load, self._iterations,
-                            self._perTabPause, self._settleWaitTime,
-                            process_count))
+        self.logger.info(
+            "areweslimyet run by %d pages, "
+            "%d iterations, %d perTabPause, %d settleWaitTime, "
+            "%d content processes"
+            % (
+                self._pages_to_load,
+                self._iterations,
+                self._perTabPause,
+                self._settleWaitTime,
+                process_count,
+            )
+        )
         self.logger.info("done setting up!")
 
     def tearDown(self):
@@ -85,10 +91,10 @@ class TestMemoryUsage(AwsyTestCase):
         as appropriate.
         """
         if enabled:
-            self.logger.info('re-enabling preallocated process')
+            self.logger.info("re-enabling preallocated process")
         else:
-            self.logger.info('disabling preallocated process')
-        self.marionette.set_pref('dom.ipc.processPrelaunch.enabled', enabled)
+            self.logger.info("disabling preallocated process")
+        self.marionette.set_pref("dom.ipc.processPrelaunch.enabled", enabled)
 
     def test_open_tabs(self):
         """Marionette test entry that returns an array of checkpoint arrays.

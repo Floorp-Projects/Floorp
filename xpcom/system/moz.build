@@ -5,21 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIBlocklistService.idl',
-    'nsICrashReporter.idl',
-    'nsIDeviceSensors.idl',
-    'nsIGeolocationProvider.idl',
-    'nsIGIOService.idl',
-    'nsIGSettingsService.idl',
-    'nsIHapticFeedback.idl',
-    'nsIPlatformInfo.idl',
-    'nsISystemInfo.idl',
-    'nsIXULAppInfo.idl',
-    'nsIXULRuntime.idl',
+    "nsIBlocklistService.idl",
+    "nsICrashReporter.idl",
+    "nsIDeviceSensors.idl",
+    "nsIGeolocationProvider.idl",
+    "nsIGIOService.idl",
+    "nsIGSettingsService.idl",
+    "nsIHapticFeedback.idl",
+    "nsIPlatformInfo.idl",
+    "nsISystemInfo.idl",
+    "nsIXULAppInfo.idl",
+    "nsIXULRuntime.idl",
 ]
 
-XPIDL_MODULE = 'xpcom_system'
+XPIDL_MODULE = "xpcom_system"
 
-with Files('nsIBlocklistService.idl'):
-    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
-
+with Files("nsIBlocklistService.idl"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")

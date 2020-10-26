@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'TrustOverrideTest.cpp',
+    "TrustOverrideTest.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/security/certverifier',
-    '/security/manager/ssl',
+    "/security/certverifier",
+    "/security/manager/ssl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

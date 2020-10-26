@@ -10,23 +10,30 @@ import sys
 
 from six import string_types
 
-__all__ = ['read_ini', 'combine_fields']
+__all__ = ["read_ini", "combine_fields"]
 
 
 class IniParseError(Exception):
     def __init__(self, fp, linenum, msg):
         if isinstance(fp, string_types):
             path = fp
-        elif hasattr(fp, 'name'):
+        elif hasattr(fp, "name"):
             path = fp.name
         else:
-            path = getattr(fp, 'path', 'unknown')
+            path = getattr(fp, "path", "unknown")
         msg = "Error parsing manifest file '{}', line {}: {}".format(path, linenum, msg)
         super(IniParseError, self).__init__(msg)
 
 
-def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
-             separators=None, strict=True, handle_defaults=True):
+def read_ini(
+    fp,
+    defaults=None,
+    default="DEFAULT",
+    comments=None,
+    separators=None,
+    strict=True,
+    handle_defaults=True,
+):
     """
     read an .ini file and return a list of [(section, values)]
     - fp : file pointer or path to read
@@ -41,13 +48,13 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
     # variables
     defaults = defaults or {}
     default_section = {}
-    comments = comments or ('#',)
-    separators = separators or ('=', ':')
+    comments = comments or ("#",)
+    separators = separators or ("=", ":")
     sections = []
     key = value = None
     section_names = set()
     if isinstance(fp, string_types):
-        fp = io.open(fp, encoding='utf-8')
+        fp = io.open(fp, encoding="utf-8")
 
     # read the lines
     for (linenum, line) in enumerate(fp.read().splitlines(), start=1):
@@ -70,11 +77,11 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
         while comment_start == sys.maxsize and inline_prefixes:
             next_prefixes = {}
             for prefix, index in inline_prefixes.items():
-                index = stripped.find(prefix, index+1)
+                index = stripped.find(prefix, index + 1)
                 if index == -1:
                     continue
                 next_prefixes[prefix] = index
-                if index == 0 or (index > 0 and stripped[index-1].isspace()):
+                if index == 0 or (index > 0 and stripped[index - 1].isspace()):
                     comment_start = min(comment_start, index)
             inline_prefixes = next_prefixes
 
@@ -82,7 +89,7 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
             stripped = stripped[:comment_start].rstrip()
 
         # check for a new section
-        if len(stripped) > 2 and stripped[0] == '[' and stripped[-1] == ']':
+        if len(stripped) > 2 and stripped[0] == "[" and stripped[-1] == "]":
             section = stripped[1:-1].strip()
             key = value = key_indent = None
 
@@ -96,8 +103,9 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
 
             if strict:
                 # make sure this section doesn't already exist
-                assert section not in section_names, "Section '%s' already found in '%s'" % (
-                    section, section_names)
+                assert (
+                    section not in section_names
+                ), "Section '%s' already found in '%s'" % (section, section_names)
 
             section_names.add(section)
             current_section = {}
@@ -106,13 +114,16 @@ def read_ini(fp, defaults=None, default='DEFAULT', comments=None,
 
         # if there aren't any sections yet, something bad happen
         if not section_names:
-            raise IniParseError(fp, linenum, "Expected a comment or section, "
-                                             "instead found '{}'".format(stripped))
+            raise IniParseError(
+                fp,
+                linenum,
+                "Expected a comment or section, " "instead found '{}'".format(stripped),
+            )
 
         # continuation line ?
-        line_indent = len(line) - len(line.lstrip(' '))
+        line_indent = len(line) - len(line.lstrip(" "))
         if key and line_indent > key_indent:
-            value = '%s%s%s' % (value, os.linesep, stripped)
+            value = "%s%s%s" % (value, os.linesep, stripped)
             current_section[key] = value
             continue
 
@@ -156,9 +167,9 @@ def combine_fields(global_vars, local_vars):
     if not local_vars:
         return global_vars.copy()
     field_patterns = {
-        'prefs': '%s %s',
-        'skip-if': '(%s) || (%s)',
-        'support-files': '%s %s',
+        "prefs": "%s %s",
+        "skip-if": "(%s) || (%s)",
+        "support-files": "%s %s",
     }
     final_mapping = global_vars.copy()
     for field_name, value in local_vars.items():

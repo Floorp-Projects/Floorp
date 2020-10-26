@@ -4,27 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ReplaceMalloc('logalloc')
+ReplaceMalloc("logalloc")
 
 SOURCES += [
-    'FdPrintf.cpp',
-    'LogAlloc.cpp',
+    "FdPrintf.cpp",
+    "LogAlloc.cpp",
 ]
 
 DisableStlWrapping()
 NO_PGO = True
-DEFINES['MOZ_NO_MOZALLOC'] = True
+DEFINES["MOZ_NO_MOZALLOC"] = True
 
 LOCAL_INCLUDES += [
-    '/memory/build',
+    "/memory/build",
 ]
 
 # Android doesn't have pthread_atfork, but we have our own in mozglue.
-if CONFIG['OS_TARGET'] == 'Android' and FORCE_SHARED_LIB:
+if CONFIG["OS_TARGET"] == "Android" and FORCE_SHARED_LIB:
     USE_LIBS += [
-        'mozglue',
+        "mozglue",
     ]
 
 DIRS += [
-    'replay',
+    "replay",
 ]

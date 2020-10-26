@@ -4,78 +4,78 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../templates.mozbuild')
+include("../templates.mozbuild")
 
 DIRS += [
-    'acorn',
-    'css',
-    'compatibility',
-    'discovery',
-    'heapsnapshot',
-    'inspector',
-    'jsbeautify',
-    'layout',
-    'locales',
-    'node-properties',
-    'performance',
-    'performance-new',
-    'platform',
-    'protocol',
-    'qrcode',
-    'resources',
-    'screenshot',
-    'security',
-    'sprintfjs',
-    'specs',
-    'storage',
-    'transport',
-    'webconsole',
-    'worker',
+    "acorn",
+    "css",
+    "compatibility",
+    "discovery",
+    "heapsnapshot",
+    "inspector",
+    "jsbeautify",
+    "layout",
+    "locales",
+    "node-properties",
+    "performance",
+    "performance-new",
+    "platform",
+    "protocol",
+    "qrcode",
+    "resources",
+    "screenshot",
+    "security",
+    "sprintfjs",
+    "specs",
+    "storage",
+    "transport",
+    "webconsole",
+    "worker",
 ]
 
-if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
+    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-BROWSER_CHROME_MANIFESTS += ['test-helpers/browser.ini']
+BROWSER_CHROME_MANIFESTS += ["test-helpers/browser.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 DevToolsModules(
-    'accessibility.js',
-    'async-storage.js',
-    'async-utils.js',
-    'base-loader.js',
-    'builtin-modules.js',
-    'constants.js',
-    'content-observer.js',
-    'debounce.js',
-    'defer.js',
-    'DevToolsUtils.js',
-    'dom-helpers.js',
-    'dom-node-constants.js',
-    'dom-node-filter-constants.js',
-    'event-emitter.js',
-    'extend.js',
-    'flags.js',
-    'generate-uuid.js',
-    'indentation.js',
-    'indexed-db.js',
-    'l10n.js',
-    'loader-plugin-raw.jsm',
-    'Loader.jsm',
-    'natural-sort.js',
-    'path.js',
-    'picker-constants.js',
-    'plural-form.js',
-    'protocol.js',
-    'system.js',
-    'task.js',
-    'ThreadSafeDevToolsUtils.js',
-    'throttle.js',
+    "accessibility.js",
+    "async-storage.js",
+    "async-utils.js",
+    "base-loader.js",
+    "builtin-modules.js",
+    "constants.js",
+    "content-observer.js",
+    "debounce.js",
+    "defer.js",
+    "DevToolsUtils.js",
+    "dom-helpers.js",
+    "dom-node-constants.js",
+    "dom-node-filter-constants.js",
+    "event-emitter.js",
+    "extend.js",
+    "flags.js",
+    "generate-uuid.js",
+    "indentation.js",
+    "indexed-db.js",
+    "l10n.js",
+    "loader-plugin-raw.jsm",
+    "Loader.jsm",
+    "natural-sort.js",
+    "path.js",
+    "picker-constants.js",
+    "plural-form.js",
+    "protocol.js",
+    "system.js",
+    "task.js",
+    "ThreadSafeDevToolsUtils.js",
+    "throttle.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "General")

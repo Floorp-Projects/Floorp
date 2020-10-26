@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'legacy-processes-watcher.js',
-    'legacy-serviceworkers-watcher.js',
-    'legacy-sharedworkers-watcher.js',
-    'legacy-workers-watcher.js',
+    "legacy-processes-watcher.js",
+    "legacy-serviceworkers-watcher.js",
+    "legacy-sharedworkers-watcher.js",
+    "legacy-workers-watcher.js",
 )

@@ -11,8 +11,12 @@ from mozlog import structuredlog
 
 here = os.path.split(__file__)[0]
 
-sys.path.insert(0, os.path.abspath(os.path.join(here, os.pardir, "tests", "tools", "wptrunner")))
-sys.path.insert(0, os.path.abspath(os.path.join(here, os.pardir, "tests", "tools", "scripts")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(here, os.pardir, "tests", "tools", "wptrunner"))
+)
+sys.path.insert(
+    0, os.path.abspath(os.path.join(here, os.pardir, "tests", "tools", "scripts"))
+)
 
 from wptrunner.update import setup_logging, WPTUpdate
 from wptrunner.update.base import exit_unclean

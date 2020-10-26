@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'components',
-    'utils',
+    "components",
+    "utils",
 ]
 
 DevToolsModules(
-    'actions.js',
-    'index.js',
-    'reducer.js',
+    "actions.js",
+    "index.js",
+    "reducer.js",
 )

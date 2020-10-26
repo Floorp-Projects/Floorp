@@ -4,120 +4,120 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('imagetest')
+Library("imagetest")
 
 UNIFIED_SOURCES = [
-    'Common.cpp',
-    'TestADAM7InterpolatingFilter.cpp',
-    'TestAnimationFrameBuffer.cpp',
-    'TestBlendAnimationFilter.cpp',
-    'TestContainers.cpp',
-    'TestCopyOnWrite.cpp',
-    'TestDeinterlacingFilter.cpp',
-    'TestFrameAnimator.cpp',
-    'TestLoader.cpp',
-    'TestRemoveFrameRectFilter.cpp',
-    'TestStreamingLexer.cpp',
-    'TestSurfaceSink.cpp',
-    'TestSwizzleFilter.cpp',
+    "Common.cpp",
+    "TestADAM7InterpolatingFilter.cpp",
+    "TestAnimationFrameBuffer.cpp",
+    "TestBlendAnimationFilter.cpp",
+    "TestContainers.cpp",
+    "TestCopyOnWrite.cpp",
+    "TestDeinterlacingFilter.cpp",
+    "TestFrameAnimator.cpp",
+    "TestLoader.cpp",
+    "TestRemoveFrameRectFilter.cpp",
+    "TestStreamingLexer.cpp",
+    "TestSurfaceSink.cpp",
+    "TestSwizzleFilter.cpp",
 ]
 
 # skip the test on windows10-aarch64, aarch64 due to 1544961
-if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
+if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
     UNIFIED_SOURCES += [
-        'TestDecoders.cpp',
-        'TestDecodersPerf.cpp',
-        'TestDecodeToSurface.cpp',
-        'TestMetadata.cpp',
-        'TestSourceBuffer.cpp',
-        'TestSurfaceCache.cpp',
+        "TestDecoders.cpp",
+        "TestDecodersPerf.cpp",
+        "TestDecodeToSurface.cpp",
+        "TestMetadata.cpp",
+        "TestSourceBuffer.cpp",
+        "TestSurfaceCache.cpp",
     ]
 
-if CONFIG['MOZ_ENABLE_SKIA']:
+if CONFIG["MOZ_ENABLE_SKIA"]:
     UNIFIED_SOURCES += [
-        'TestDownscalingFilter.cpp',
-        'TestSurfacePipeIntegration.cpp',
+        "TestDownscalingFilter.cpp",
+        "TestSurfacePipeIntegration.cpp",
     ]
 
 SOURCES += [
     # Can't be unified because it manipulates the preprocessor environment.
-    'TestDownscalingFilterNoSkia.cpp',
+    "TestDownscalingFilterNoSkia.cpp",
 ]
 
 TEST_HARNESS_FILES.gtest += [
-    'animated-with-extra-image-sub-blocks.gif',
-    'blend.gif',
-    'blend.png',
-    'blend.webp',
-    'bug-1655846.avif',
-    'corrupt-with-bad-bmp-height.ico',
-    'corrupt-with-bad-bmp-width.ico',
-    'corrupt-with-bad-ico-bpp.ico',
-    'corrupt.jpg',
-    'downscaled.avif',
-    'downscaled.bmp',
-    'downscaled.gif',
-    'downscaled.ico',
-    'downscaled.icon',
-    'downscaled.jpg',
-    'downscaled.png',
-    'downscaled.webp',
-    'first-frame-green.gif',
-    'first-frame-green.png',
-    'first-frame-green.webp',
-    'first-frame-padding.gif',
-    'green-1x1-truncated.gif',
-    'green-large-bmp.ico',
-    'green-large-png.ico',
-    'green-multiple-sizes.ico',
-    'green.avif',
-    'green.bmp',
-    'green.gif',
-    'green.icc_srgb.webp',
-    'green.ico',
-    'green.icon',
-    'green.jpg',
-    'green.png',
-    'green.webp',
-    'invalid-truncated-metadata.bmp',
-    'large.avif',
-    'large.webp',
-    'multilayer.avif',
-    'no-frame-delay.gif',
-    'perf_cmyk.jpg',
-    'perf_gray.jpg',
-    'perf_gray.png',
-    'perf_gray_alpha.png',
-    'perf_srgb.gif',
-    'perf_srgb.png',
-    'perf_srgb_alpha.png',
-    'perf_srgb_alpha_lossless.webp',
-    'perf_srgb_alpha_lossy.webp',
-    'perf_srgb_lossless.webp',
-    'perf_srgb_lossy.webp',
-    'perf_ycbcr.jpg',
-    'rle4.bmp',
-    'rle8.bmp',
-    'stackcheck.avif',
-    'transparent-ico-with-and-mask.ico',
-    'transparent-if-within-ico.bmp',
-    'transparent-no-alpha-header.webp',
-    'transparent.gif',
-    'transparent.png',
-    'transparent.webp',
+    "animated-with-extra-image-sub-blocks.gif",
+    "blend.gif",
+    "blend.png",
+    "blend.webp",
+    "bug-1655846.avif",
+    "corrupt-with-bad-bmp-height.ico",
+    "corrupt-with-bad-bmp-width.ico",
+    "corrupt-with-bad-ico-bpp.ico",
+    "corrupt.jpg",
+    "downscaled.avif",
+    "downscaled.bmp",
+    "downscaled.gif",
+    "downscaled.ico",
+    "downscaled.icon",
+    "downscaled.jpg",
+    "downscaled.png",
+    "downscaled.webp",
+    "first-frame-green.gif",
+    "first-frame-green.png",
+    "first-frame-green.webp",
+    "first-frame-padding.gif",
+    "green-1x1-truncated.gif",
+    "green-large-bmp.ico",
+    "green-large-png.ico",
+    "green-multiple-sizes.ico",
+    "green.avif",
+    "green.bmp",
+    "green.gif",
+    "green.icc_srgb.webp",
+    "green.ico",
+    "green.icon",
+    "green.jpg",
+    "green.png",
+    "green.webp",
+    "invalid-truncated-metadata.bmp",
+    "large.avif",
+    "large.webp",
+    "multilayer.avif",
+    "no-frame-delay.gif",
+    "perf_cmyk.jpg",
+    "perf_gray.jpg",
+    "perf_gray.png",
+    "perf_gray_alpha.png",
+    "perf_srgb.gif",
+    "perf_srgb.png",
+    "perf_srgb_alpha.png",
+    "perf_srgb_alpha_lossless.webp",
+    "perf_srgb_alpha_lossy.webp",
+    "perf_srgb_lossless.webp",
+    "perf_srgb_lossy.webp",
+    "perf_ycbcr.jpg",
+    "rle4.bmp",
+    "rle8.bmp",
+    "stackcheck.avif",
+    "transparent-ico-with-and-mask.ico",
+    "transparent-if-within-ico.bmp",
+    "transparent-no-alpha-header.webp",
+    "transparent.gif",
+    "transparent.png",
+    "transparent.webp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/gfx/2d',
-    '/image',
+    "/dom/base",
+    "/gfx/2d",
+    "/image",
 ]
 
-LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

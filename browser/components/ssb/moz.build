@@ -4,28 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-JAR_MANIFESTS += ['content/jar.mn']
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+JAR_MANIFESTS += ["content/jar.mn"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 EXTRA_JS_MODULES += [
-    'SiteSpecificBrowserService.jsm',
+    "SiteSpecificBrowserService.jsm",
 ]
 
 EXTRA_JS_MODULES.ssb += [
-    'ImageTools.jsm',
+    "ImageTools.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [
-    'SiteSpecificBrowserChild.jsm',
-    'SiteSpecificBrowserParent.jsm',
+    "SiteSpecificBrowserChild.jsm",
+    "SiteSpecificBrowserParent.jsm",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES.ssb += [
-        'WindowsSupport.jsm',
+        "WindowsSupport.jsm",
     ]

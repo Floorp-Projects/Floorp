@@ -8,28 +8,28 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 TEST_DIRS += [
-    'gtest',
+    "gtest",
 ]
 
 EXPORTS += [
-    'Adts.h',
-    'AnnexB.h',
-    'H264.h',
+    "Adts.h",
+    "AnnexB.h",
+    "H264.h",
 ]
 
 UNIFIED_SOURCES += [
-    'Adts.cpp',
-    'AnnexB.cpp',
-    'H264.cpp',
+    "Adts.cpp",
+    "AnnexB.cpp",
+    "H264.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '../../../mp4/',
+    "../../../mp4/",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 # Suppress warnings for now.
 CXXFLAGS += [
-    '-Wno-sign-compare',
+    "-Wno-sign-compare",
 ]

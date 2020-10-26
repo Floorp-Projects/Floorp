@@ -8,10 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 XPIDL_SOURCES += [
-    'nsIContentSecurityManager.idl',
-    'nsIContentSecurityPolicy.idl',
-    'nsIReferrerInfo.idl'
+    "nsIContentSecurityManager.idl",
+    "nsIContentSecurityPolicy.idl",
+    "nsIReferrerInfo.idl",
 ]
 
-XPIDL_MODULE = 'dom_security'
-
+XPIDL_MODULE = "dom_security"

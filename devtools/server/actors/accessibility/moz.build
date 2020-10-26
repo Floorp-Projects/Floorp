@@ -3,18 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'audit',
+    "audit",
 ]
 
 DevToolsModules(
-  'accessibility.js',
-  'accessible.js',
-  'constants.js',
-  'parent-accessibility.js',
-  'simulator.js',
-  'walker.js',
-  'worker.js',
+    "accessibility.js",
+    "accessible.js",
+    "constants.js",
+    "parent-accessibility.js",
+    "simulator.js",
+    "walker.js",
+    "worker.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Accessibility Tools')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "Accessibility Tools")

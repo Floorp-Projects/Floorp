@@ -3,19 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-
-]
+DIRS += []
 
 CompiledModules(
-    'buildGeneratedBindingList.js',
-    'filtering.js',
-    'findGeneratedBindingFromPosition.js',
-    'getApplicableBindingsForOriginalPosition.js',
-    'index.js',
-    'locColumn.js',
-    'mappingContains.js',
-    'optimizedOut.js',
-    'positionCmp.js',
-    'rangeMetadata.js',
+    "buildGeneratedBindingList.js",
+    "filtering.js",
+    "findGeneratedBindingFromPosition.js",
+    "getApplicableBindingsForOriginalPosition.js",
+    "index.js",
+    "locColumn.js",
+    "mappingContains.js",
+    "optimizedOut.js",
+    "positionCmp.js",
+    "rangeMetadata.js",
 )

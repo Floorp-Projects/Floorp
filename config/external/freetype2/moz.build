@@ -4,11 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('freetype')
+Library("freetype")
 
-if CONFIG['MOZ_TREE_FREETYPE']:
+if CONFIG["MOZ_TREE_FREETYPE"]:
     DIRS += [
-        '/modules/freetype2',
+        "/modules/freetype2",
     ]
 else:
-    OS_LIBS += CONFIG['FT2_LIBS']
+    OS_LIBS += CONFIG["FT2_LIBS"]

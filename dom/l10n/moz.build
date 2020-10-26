@@ -8,28 +8,28 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
 EXPORTS.mozilla.dom += [
-    'DocumentL10n.h',
-    'DOMLocalization.h',
-    'L10nMutations.h',
-    'L10nOverlays.h',
+    "DocumentL10n.h",
+    "DOMLocalization.h",
+    "L10nMutations.h",
+    "L10nOverlays.h",
 ]
 
 UNIFIED_SOURCES += [
-    'DocumentL10n.cpp',
-    'DOMLocalization.cpp',
-    'L10nMutations.cpp',
-    'L10nOverlays.cpp',
+    "DocumentL10n.cpp",
+    "DOMLocalization.cpp",
+    "L10nMutations.cpp",
+    "L10nOverlays.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/base',
+    "/dom/base",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['tests/mochitest/browser.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/mochitest/browser.ini"]
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['tests/gtest']
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]

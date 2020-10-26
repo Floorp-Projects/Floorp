@@ -5,30 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestBasic.cpp',
-    'TestEventRegions.cpp',
-    'TestGestureDetector.cpp',
-    'TestHitTesting.cpp',
-    'TestInputQueue.cpp',
-    'TestPanning.cpp',
-    'TestPinching.cpp',
-    'TestScrollHandoff.cpp',
-    'TestSnapping.cpp',
-    'TestSnappingOnMomentum.cpp',
-    'TestTreeManager.cpp',
+    "TestBasic.cpp",
+    "TestEventRegions.cpp",
+    "TestGestureDetector.cpp",
+    "TestHitTesting.cpp",
+    "TestInputQueue.cpp",
+    "TestPanning.cpp",
+    "TestPinching.cpp",
+    "TestScrollHandoff.cpp",
+    "TestSnapping.cpp",
+    "TestSnappingOnMomentum.cpp",
+    "TestTreeManager.cpp",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    '/gfx/2d',
-    '/gfx/layers',
-    '/gfx/tests/gtest'  # for TestLayers.h, which is shared with the gfx gtests
+    "/gfx/2d",
+    "/gfx/layers",
+    "/gfx/tests/gtest",  # for TestLayers.h, which is shared with the gfx gtests
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

@@ -9,11 +9,11 @@ import six
 
 
 class StatusHandler(reader.LogHandler):
-
     def __init__(self):
         self.run_info = None
-        self.statuses = defaultdict(lambda: defaultdict(
-            lambda: defaultdict(lambda: defaultdict(int))))
+        self.statuses = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        )
 
     def test_id(self, test):
         if type(test) in (str, six.text_type):
@@ -26,10 +26,13 @@ class StatusHandler(reader.LogHandler):
 
     def test_status(self, item):
         self.statuses[self.run_info][self.test_id(item["test"])][item["subtest"]][
-            item["status"]] += 1
+            item["status"]
+        ] += 1
 
     def test_end(self, item):
-        self.statuses[self.run_info][self.test_id(item["test"])][None][item["status"]] += 1
+        self.statuses[self.run_info][self.test_id(item["test"])][None][
+            item["status"]
+        ] += 1
 
     def suite_end(self, item):
         self.run_info = None
@@ -56,6 +59,7 @@ def _filter(results_cmp):
                         rv[run_info][test][name] = results
 
         return rv
+
     return inner
 
 
@@ -76,7 +80,11 @@ def group_results(data):
 
 def print_results(data):
     for run_info, tests in six.iteritems(data):
-        run_str = " ".join("%s:%s" % (k, v) for k, v in run_info) if run_info else "No Run Info"
+        run_str = (
+            " ".join("%s:%s" % (k, v) for k, v in run_info)
+            if run_info
+            else "No Run Info"
+        )
         print(run_str)
         print("=" * len(run_str))
         print_run(tests)
@@ -87,20 +95,32 @@ def print_run(tests):
         print("\n" + str(test))
         print("-" * len(test))
         for name, results in six.iteritems(subtests):
-            print("[%s]: %s" % (name if name is not None else "",
-                                " ".join("%s (%i)" % (k, v) for k, v in six.iteritems(results))))
+            print(
+                "[%s]: %s"
+                % (
+                    name if name is not None else "",
+                    " ".join("%s (%i)" % (k, v) for k, v in six.iteritems(results)),
+                )
+            )
 
 
 def get_parser(add_help=True):
-    parser = argparse.ArgumentParser("unstable",
-                                     description="List tests that don't give consistent "
-                                     "results from one or more runs.", add_help=add_help)
-    parser.add_argument("--json", action="store_true", default=False,
-                        help="Output in JSON format")
-    parser.add_argument("--group", action="store_true", default=False,
-                        help="Group results from different run types")
-    parser.add_argument("log_file", nargs="+",
-                        help="Log files to read")
+    parser = argparse.ArgumentParser(
+        "unstable",
+        description="List tests that don't give consistent "
+        "results from one or more runs.",
+        add_help=add_help,
+    )
+    parser.add_argument(
+        "--json", action="store_true", default=False, help="Output in JSON format"
+    )
+    parser.add_argument(
+        "--group",
+        action="store_true",
+        default=False,
+        help="Group results from different run types",
+    )
+    parser.add_argument("log_file", nargs="+", help="Log files to read")
     return parser
 
 

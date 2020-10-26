@@ -24,7 +24,7 @@ from mozbuild.util import memoize
 actions = []
 callbacks = {}
 
-Action = namedtuple('Action', ['order', 'cb_name', 'permission', 'action_builder'])
+Action = namedtuple("Action", ["order", "cb_name", "permission", "action_builder"])
 
 
 def is_json(data):
@@ -38,23 +38,32 @@ def is_json(data):
 
 @memoize
 def read_taskcluster_yml(filename):
-    '''Load and parse .taskcluster.yml, memoized to save some time'''
+    """Load and parse .taskcluster.yml, memoized to save some time"""
     return yaml.load_yaml(filename)
 
 
 @memoize
 def hash_taskcluster_yml(filename):
-    '''
+    """
     Generate a hash of the given .taskcluster.yml.  This is the first 10 digits
     of the sha256 of the file's content, and is used by administrative scripts
     to create a hook based on this content.
-    '''
+    """
     return hash.hash_path(filename)[:10]
 
 
-def register_callback_action(name, title, symbol, description, order=10000,
-                             context=[], available=lambda parameters: True,
-                             schema=None, permission='generic', cb_name=None):
+def register_callback_action(
+    name,
+    title,
+    symbol,
+    description,
+    order=10000,
+    context=[],
+    available=lambda parameters: True,
+    schema=None,
+    permission="generic",
+    cb_name=None,
+):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -127,8 +136,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
     """
     mem = {"registered": False}  # workaround nonlocal missing in 2.x
 
-    assert isinstance(title, text_type), 'title must be a string'
-    assert isinstance(description, text_type), 'description must be a string'
+    assert isinstance(title, text_type), "title must be a string"
+    assert isinstance(description, text_type), "description must be a string"
     title = title.strip()
     description = description.strip()
 
@@ -141,61 +150,75 @@ def register_callback_action(name, title, symbol, description, order=10000,
         context = lambda params: context_value  # noqa
 
     def register_callback(cb):
-        assert isinstance(name, text_type), 'name must be a string'
-        assert isinstance(order, int), 'order must be an integer'
-        assert callable(schema) or is_json(schema), 'schema must be a JSON compatible object'
-        assert isinstance(cb, FunctionType), 'callback must be a function'
+        assert isinstance(name, text_type), "name must be a string"
+        assert isinstance(order, int), "order must be an integer"
+        assert callable(schema) or is_json(
+            schema
+        ), "schema must be a JSON compatible object"
+        assert isinstance(cb, FunctionType), "callback must be a function"
         # Allow for json-e > 25 chars in the symbol.
-        if '$' not in symbol:
-            assert 1 <= len(symbol) <= 25, 'symbol must be between 1 and 25 characters'
-        assert isinstance(symbol, text_type), 'symbol must be a string'
+        if "$" not in symbol:
+            assert 1 <= len(symbol) <= 25, "symbol must be between 1 and 25 characters"
+        assert isinstance(symbol, text_type), "symbol must be a string"
 
-        assert not mem['registered'], 'register_callback_action must be used as decorator'
-        assert cb_name not in callbacks, 'callback name {} is not unique'.format(cb_name)
+        assert not mem[
+            "registered"
+        ], "register_callback_action must be used as decorator"
+        assert cb_name not in callbacks, "callback name {} is not unique".format(
+            cb_name
+        )
 
         def action_builder(parameters, graph_config, decision_task_id):
             if not available(parameters):
                 return None
 
             # gather up the common decision-task-supplied data for this action
-            repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+            repo_param = "{}head_repository".format(
+                graph_config["project-repo-param-prefix"]
+            )
             repository = {
-                'url': parameters[repo_param],
-                'project': parameters['project'],
-                'level': parameters['level'],
+                "url": parameters[repo_param],
+                "project": parameters["project"],
+                "level": parameters["level"],
             }
 
-            revision = parameters['{}head_rev'.format(graph_config['project-repo-param-prefix'])]
+            revision = parameters[
+                "{}head_rev".format(graph_config["project-repo-param-prefix"])
+            ]
             push = {
-                'owner': 'mozilla-taskcluster-maintenance@mozilla.com',
-                'pushlog_id': parameters['pushlog_id'],
-                'revision': revision,
+                "owner": "mozilla-taskcluster-maintenance@mozilla.com",
+                "pushlog_id": parameters["pushlog_id"],
+                "revision": revision,
             }
 
-            match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters[repo_param])
+            match = re.match(
+                r"https://(hg.mozilla.org)/(.*?)/?$", parameters[repo_param]
+            )
             if not match:
-                raise Exception('Unrecognized {}'.format(repo_param))
+                raise Exception("Unrecognized {}".format(repo_param))
             action = {
-                'name': name,
-                'title': title,
-                'description': description,
+                "name": name,
+                "title": title,
+                "description": description,
                 # target taskGroupId (the task group this decision task is creating)
-                'taskGroupId': decision_task_id,
-                'cb_name': cb_name,
-                'symbol': symbol,
+                "taskGroupId": decision_task_id,
+                "cb_name": cb_name,
+                "symbol": symbol,
             }
 
             rv = {
-                'name': name,
-                'title': title,
-                'description': description,
-                'context': context(parameters),
+                "name": name,
+                "title": title,
+                "description": description,
+                "context": context(parameters),
             }
             if schema:
-                rv['schema'] = schema(graph_config=graph_config) if callable(schema) else schema
+                rv["schema"] = (
+                    schema(graph_config=graph_config) if callable(schema) else schema
+                )
 
-            trustDomain = graph_config['trust-domain']
-            level = parameters['level']
+            trustDomain = graph_config["trust-domain"]
+            level = parameters["level"]
             tcyml_hash = hash_taskcluster_yml(graph_config.taskcluster_yml)
 
             # the tcyml_hash is prefixed with `/` in the hookId, so users will be granted
@@ -203,40 +226,46 @@ def register_callback_action(name, title, symbol, description, order=10000,
             # action was named `myaction/release`, then the `*` in the scope would also
             # match that action.  To prevent such an accident, we prohibit `/` in hook
             # names.
-            if '/' in permission:
-                raise Exception('`/` is not allowed in action names; use `-`')
+            if "/" in permission:
+                raise Exception("`/` is not allowed in action names; use `-`")
 
-            rv.update({
-                'kind': 'hook',
-                'hookGroupId': 'project-{}'.format(trustDomain),
-                'hookId': 'in-tree-action-{}-{}/{}'.format(level, permission, tcyml_hash),
-                'hookPayload': {
-                    # provide the decision-task parameters as context for triggerHook
-                    "decision": {
-                        'action': action,
-                        'repository': repository,
-                        'push': push,
+            rv.update(
+                {
+                    "kind": "hook",
+                    "hookGroupId": "project-{}".format(trustDomain),
+                    "hookId": "in-tree-action-{}-{}/{}".format(
+                        level, permission, tcyml_hash
+                    ),
+                    "hookPayload": {
+                        # provide the decision-task parameters as context for triggerHook
+                        "decision": {
+                            "action": action,
+                            "repository": repository,
+                            "push": push,
+                        },
+                        # and pass everything else through from our own context
+                        "user": {
+                            "input": {"$eval": "input"},
+                            "taskId": {"$eval": "taskId"},  # target taskId (or null)
+                            "taskGroupId": {
+                                "$eval": "taskGroupId"
+                            },  # target task group
+                        },
                     },
-
-                    # and pass everything else through from our own context
-                    "user": {
-                        'input': {'$eval': 'input'},
-                        'taskId': {'$eval': 'taskId'},  # target taskId (or null)
-                        'taskGroupId': {'$eval': 'taskGroupId'},  # target task group
-                    }
-                },
-                'extra': {
-                    'actionPerm': permission,
-                },
-            })
+                    "extra": {
+                        "actionPerm": permission,
+                    },
+                }
+            )
 
             return rv
 
         actions.append(Action(order, cb_name, permission, action_builder))
 
-        mem['registered'] = True
+        mem["registered"] = True
         callbacks[cb_name] = cb
         return cb
+
     return register_callback
 
 
@@ -254,17 +283,17 @@ def render_actions_json(parameters, graph_config, decision_task_id):
     dict
         JSON object representation of the ``public/actions.json`` artifact.
     """
-    assert isinstance(parameters, Parameters), 'requires instance of Parameters'
+    assert isinstance(parameters, Parameters), "requires instance of Parameters"
     actions = []
     for action in sorted(_get_actions(graph_config), key=lambda action: action.order):
         action = action.action_builder(parameters, graph_config, decision_task_id)
         if action:
-            assert is_json(action), 'action must be a JSON compatible object'
+            assert is_json(action), "action must be a JSON compatible object"
             actions.append(action)
     return {
-        'version': 1,
-        'variables': {},
-        'actions': actions,
+        "version": 1,
+        "variables": {},
+        "actions": actions,
     }
 
 
@@ -279,22 +308,25 @@ def sanity_check_task_scope(callback, parameters, graph_config):
         if action.cb_name == callback:
             break
     else:
-        raise Exception('No action with cb_name {}'.format(callback))
+        raise Exception("No action with cb_name {}".format(callback))
 
-    repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+    repo_param = "{}head_repository".format(graph_config["project-repo-param-prefix"])
     head_repository = parameters[repo_param]
-    assert head_repository.startswith('https://hg.mozilla.org/')
-    expected_scope = 'assume:repo:{}:action:{}'.format(head_repository[8:], action.permission)
+    assert head_repository.startswith("https://hg.mozilla.org/")
+    expected_scope = "assume:repo:{}:action:{}".format(
+        head_repository[8:], action.permission
+    )
 
     # the scope should appear literally; no need for a satisfaction check. The use of
     # get_current_scopes here calls the auth service through the Taskcluster Proxy, giving
     # the precise scopes available to this task.
     if expected_scope not in taskcluster.get_current_scopes():
-        raise Exception('Expected task scope {} for this action'.format(expected_scope))
+        raise Exception("Expected task scope {} for this action".format(expected_scope))
 
 
-def trigger_action_callback(task_group_id, task_id, input, callback, parameters, root,
-                            test=False):
+def trigger_action_callback(
+    task_group_id, task_id, input, callback, parameters, root, test=False
+):
     """
     Trigger action callback with the given inputs. If `test` is true, then run
     the action callback in testing mode, without actually creating tasks.
@@ -304,8 +336,11 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
     callbacks = _get_callbacks(graph_config)
     cb = callbacks.get(callback, None)
     if not cb:
-        raise Exception('Unknown callback: {}. Known callbacks: {}'.format(
-            callback, ', '.join(callbacks)))
+        raise Exception(
+            "Unknown callback: {}. Known callbacks: {}".format(
+                callback, ", ".join(callbacks)
+            )
+        )
 
     if test:
         create.testing = True
@@ -320,7 +355,7 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
 def _load(graph_config):
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
-    import_sibling_modules(exceptions=('util.py',))
+    import_sibling_modules(exceptions=("util.py",))
     return callbacks, actions
 
 

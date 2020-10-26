@@ -53,7 +53,7 @@ class TaskGraph(object):
         for key in self.graph.visit_postorder():
             tasks[key] = self.tasks[key].to_json()
             # overwrite dependencies with the information in the taskgraph's edges.
-            tasks[key]['dependencies'] = named_links_dict.get(key, {})
+            tasks[key]["dependencies"] = named_links_dict.get(key, {})
         return tasks
 
     @classmethod
@@ -66,9 +66,9 @@ class TaskGraph(object):
         edges = set()
         for key, value in six.iteritems(tasks_dict):
             tasks[key] = Task.from_json(value)
-            if 'task_id' in value:
-                tasks[key].task_id = value['task_id']
-            for depname, dep in six.iteritems(value['dependencies']):
+            if "task_id" in value:
+                tasks[key].task_id = value["task_id"]
+            for depname, dep in six.iteritems(value["dependencies"]):
                 edges.add((key, dep, depname))
         task_graph = cls(tasks, Graph(set(tasks), edges))
         return tasks, task_graph

@@ -16,14 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
-    title='Cancel Task',
-    name='cancel',
-    symbol='cx',
-    description=(
-        'Cancel the given task'
-    ),
+    title="Cancel Task",
+    name="cancel",
+    symbol="cx",
+    description=("Cancel the given task"),
     order=350,
-    context=[{}]
+    context=[{}],
 )
 def cancel_action(parameters, graph_config, input, task_group_id, task_id):
     # Note that this is limited by the scopes afforded to generic actions to
@@ -35,6 +33,8 @@ def cancel_action(parameters, graph_config, input, task_group_id, task_id):
             # A 409 response indicates that this task is past its deadline.  It
             # cannot be cancelled at this time, but it's also not running
             # anymore, so we can ignore this error.
-            logger.info('Task {} is past its deadline and cannot be cancelled.'.format(task_id))
+            logger.info(
+                "Task {} is past its deadline and cannot be cancelled.".format(task_id)
+            )
             return
         raise

@@ -4,18 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Video/Audio Controls')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
 
-SPHINX_TREES['pictureinpicture'] = 'docs'
+SPHINX_TREES["pictureinpicture"] = "docs"
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    'PictureInPicture.jsm',
-    'PictureInPictureControls.jsm',
+    "PictureInPicture.jsm",
+    "PictureInPictureControls.jsm",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'tests/browser.ini',
+    "tests/browser.ini",
 ]

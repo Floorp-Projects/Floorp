@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'File Handling')
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
 
 EXTRA_JS_MODULES += [
-    'ContentDispatchChooser.jsm',
+    "ContentDispatchChooser.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]

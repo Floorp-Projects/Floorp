@@ -5,35 +5,35 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'nsIconProtocolHandler.cpp',
-    'nsIconURI.cpp',
+    "nsIconProtocolHandler.cpp",
+    "nsIconURI.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
 EXPORTS += [
-  'nsIconURI.h',
+    "nsIconURI.h",
 ]
 
 platform = None
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    platform = 'gtk'
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    platform = "gtk"
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    platform = 'win'
+if CONFIG["OS_ARCH"] == "WINNT":
+    platform = "win"
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    platform = 'mac'
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    platform = "mac"
 
-if CONFIG['OS_TARGET'] == 'Android':
-    platform = 'android'
+if CONFIG["OS_TARGET"] == "Android":
+    platform = "android"
 
 if platform:
     LOCAL_INCLUDES += [platform]

@@ -23,47 +23,48 @@ from . import GECKO
 
 
 def load_image_by_name(image_name, tag=None):
-    params = {'level': six.ensure_text(os.environ.get('MOZ_SCM_LEVEL', '3'))}
-    tasks = load_tasks_for_kind(params, 'docker-image')
-    task = tasks['docker-image-{}'.format(image_name)]
+    params = {"level": six.ensure_text(os.environ.get("MOZ_SCM_LEVEL", "3"))}
+    tasks = load_tasks_for_kind(params, "docker-image")
+    task = tasks["docker-image-{}".format(image_name)]
     task_id = IndexSearch().should_replace_task(
-        task, {}, task.optimization.get('index-search', []))
+        task, {}, task.optimization.get("index-search", [])
+    )
 
     if task_id in (True, False):
         print(
-            'Could not find artifacts for a docker image '
-            'named `{image_name}`. Local commits and other changes '
-            'in your checkout may cause this error. Try '
-            'updating to a fresh checkout of mozilla-central '
-            'to download image.'.format(image_name=image_name))
+            "Could not find artifacts for a docker image "
+            "named `{image_name}`. Local commits and other changes "
+            "in your checkout may cause this error. Try "
+            "updating to a fresh checkout of mozilla-central "
+            "to download image.".format(image_name=image_name)
+        )
         return False
 
     return load_image_by_task_id(task_id, tag)
 
 
 def load_image_by_task_id(task_id, tag=None):
-    artifact_url = get_artifact_url(task_id, 'public/image.tar.zst')
+    artifact_url = get_artifact_url(task_id, "public/image.tar.zst")
     result = load_image(artifact_url, tag)
-    print("Found docker image: {}:{}".format(result['image'], result['tag']))
+    print("Found docker image: {}:{}".format(result["image"], result["tag"]))
     if tag:
         print("Re-tagged as: {}".format(tag))
     else:
-        tag = '{}:{}'.format(result['image'], result['tag'])
+        tag = "{}:{}".format(result["image"], result["tag"])
     print("Try: docker run -ti --rm {} bash".format(tag))
     return True
 
 
 def build_context(name, outputFile, args=None):
-    """Build a context.tar for image with specified name.
-    """
+    """Build a context.tar for image with specified name."""
     if not name:
-        raise ValueError('must provide a Docker image name')
+        raise ValueError("must provide a Docker image name")
     if not outputFile:
-        raise ValueError('must provide a outputFile')
+        raise ValueError("must provide a outputFile")
 
     image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
-        raise Exception('image directory does not exist: %s' % image_dir)
+        raise Exception("image directory does not exist: %s" % image_dir)
 
     docker.create_context_tar(GECKO, image_dir, outputFile, image_name=name, args=args)
 
@@ -74,27 +75,27 @@ def build_image(name, tag, args=None):
     Output from image building process will be printed to stdout.
     """
     if not name:
-        raise ValueError('must provide a Docker image name')
+        raise ValueError("must provide a Docker image name")
 
     image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
-        raise Exception('image directory does not exist: %s' % image_dir)
+        raise Exception("image directory does not exist: %s" % image_dir)
 
     tag = tag or docker.docker_image(name, by_tag=True)
 
     buf = BytesIO()
     docker.stream_context_tar(GECKO, image_dir, buf, name, args)
-    docker.post_to_docker(buf.getvalue(), '/build', nocache=1, t=tag)
+    docker.post_to_docker(buf.getvalue(), "/build", nocache=1, t=tag)
 
-    print('Successfully built %s and tagged with %s' % (name, tag))
+    print("Successfully built %s and tagged with %s" % (name, tag))
 
-    if tag.endswith(':latest'):
-        print('*' * 50)
-        print('WARNING: no VERSION file found in image directory.')
-        print('Image is not suitable for deploying/pushing.')
-        print('Create an image suitable for deploying/pushing by creating')
-        print('a VERSION file in the image directory.')
-        print('*' * 50)
+    if tag.endswith(":latest"):
+        print("*" * 50)
+        print("WARNING: no VERSION file found in image directory.")
+        print("Image is not suitable for deploying/pushing.")
+        print("Create an image suitable for deploying/pushing by creating")
+        print("a VERSION file in the image directory.")
+        print("*" * 50)
 
 
 def load_image(url, imageName=None, imageTag=None):
@@ -110,10 +111,10 @@ def load_image(url, imageName=None, imageTag=None):
     # we parse out the imageTag from imageName, or default it to 'latest'
     # if no imageName and no imageTag is given, 'repositories' won't be rewritten
     if imageName and not imageTag:
-        if ':' in imageName:
-            imageName, imageTag = imageName.split(':', 1)
+        if ":" in imageName:
+            imageName, imageTag = imageName.split(":", 1)
         else:
-            imageTag = 'latest'
+            imageTag = "latest"
 
     info = {}
 
@@ -128,9 +129,10 @@ def load_image(url, imageName=None, imageTag=None):
         with zstd.ZstdDecompressor().stream_reader(req.raw) as ifh:
 
             tarin = tarfile.open(
-                mode='r|',
+                mode="r|",
                 fileobj=ifh,
-                bufsize=zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
+                bufsize=zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE,
+            )
 
             # Stream through each member of the downloaded tar file individually.
             for member in tarin:
@@ -144,7 +146,7 @@ def load_image(url, imageName=None, imageTag=None):
 
                 # If member is `repositories`, we parse and possibly rewrite the
                 # image tags.
-                if member.name == 'repositories':
+                if member.name == "repositories":
                     # Read and parse repositories
                     repos = json.loads(reader.read())
                     reader.close()
@@ -152,12 +154,12 @@ def load_image(url, imageName=None, imageTag=None):
                     # If there is more than one image or tag, we can't handle it
                     # here.
                     if len(repos.keys()) > 1:
-                        raise Exception('file contains more than one image')
-                    info['image'] = image = list(repos.keys())[0]
+                        raise Exception("file contains more than one image")
+                    info["image"] = image = list(repos.keys())[0]
                     if len(repos[image].keys()) > 1:
-                        raise Exception('file contains more than one tag')
-                    info['tag'] = tag = list(repos[image].keys())[0]
-                    info['layer'] = layer = repos[image][tag]
+                        raise Exception("file contains more than one tag")
+                    info["tag"] = tag = list(repos[image].keys())[0]
+                    info["layer"] = layer = repos[image][tag]
 
                     # Rewrite the repositories file
                     data = json.dumps({imageName or image: {imageTag or tag: layer}})
@@ -169,22 +171,21 @@ def load_image(url, imageName=None, imageTag=None):
                 # Then emit its content.
                 remaining = member.size
                 while remaining:
-                    length = min(remaining,
-                                 zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
+                    length = min(remaining, zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
                     buf = reader.read(length)
                     remaining -= len(buf)
                     yield buf
                 # Pad to fill a 512 bytes block, per tar format.
                 remainder = member.size % 512
                 if remainder:
-                    yield ('\0' * (512 - remainder)).encode("utf-8")
+                    yield ("\0" * (512 - remainder)).encode("utf-8")
 
                 reader.close()
 
-    docker.post_to_docker(download_and_modify_image(), '/images/load', quiet=0)
+    docker.post_to_docker(download_and_modify_image(), "/images/load", quiet=0)
 
     # Check that we found a repositories file
-    if not info.get('image') or not info.get('tag') or not info.get('layer'):
-        raise Exception('No repositories file found!')
+    if not info.get("image") or not info.get("tag") or not info.get("layer"):
+        raise Exception("No repositories file found!")
 
     return info

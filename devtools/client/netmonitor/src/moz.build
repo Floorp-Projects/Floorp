@@ -3,21 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'actions',
-    'components',
-    'connector',
-    'har',
-    'middleware',
-    'reducers',
-    'selectors',
-    'utils',
-    'widgets',
-    'workers',
+    "actions",
+    "components",
+    "connector",
+    "har",
+    "middleware",
+    "reducers",
+    "selectors",
+    "utils",
+    "widgets",
+    "workers",
 ]
 
 DevToolsModules(
-    'api.js',
-    'app.js',
-    'constants.js',
-    'create-store.js',
+    "api.js",
+    "app.js",
+    "constants.js",
+    "create-store.js",
 )
