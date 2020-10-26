@@ -71,8 +71,8 @@
       }
       finally {
         executedCommandID = "";
-        return correctCommandHandler;
       }
+      return correctCommandHandler;
     }
 
     var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -303,7 +303,6 @@
         todo(testItem(menu, "1|3|2", "cmd_NewItem5"), "#38:" +sa);
         // return state to original diagramed state
         menuNode.removeChild(tmpMenu0);
-        delete tmpMenu0;
 
         // This test is basically a crash test for bug 433858.
         newMenuItem1.setAttribute("hidden", "true");

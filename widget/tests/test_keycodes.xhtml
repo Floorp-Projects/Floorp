@@ -201,18 +201,18 @@ function* runKeyEventTests()
     function removeFlag(e, aFlag)
     {
       if (e.type == "keydown") {
-        var oldValue = keyDownFlags;
+        let oldValue = keyDownFlags;
         keyDownFlags &= ~aFlag;
         return oldValue != keyDownFlags;
       } else if (e.type == "keyup") {
-        var oldValue = keyUpFlags;
+        let oldValue = keyUpFlags;
         keyUpFlags &= ~aFlag;
         return oldValue != keyUpFlags;
       }
       return false;
     }
 
-    /* eslint-disable-next-line no-shadow */
+    /* eslint-disable-next-line no-shadow, complexity */
     function isStateChangingModifierKeyEvent(e)
     {
       var flags = 0;
@@ -343,7 +343,6 @@ function* runKeyEventTests()
     aEvent.preventDefault();
   }
 
-  const SHOULD_DELIVER_NONE             = 0x0;
   const SHOULD_DELIVER_KEYDOWN          = 0x1;
   const SHOULD_DELIVER_KEYPRESS         = 0x2;
   const SHOULD_DELIVER_KEYUP            = 0x4;
@@ -406,6 +405,7 @@ function* runKeyEventTests()
     currentTestName = eventToString(aEvent);
     ok(true, "Starting: " + currentTestName);
 
+    // eslint-disable-next-line complexity
     return synthesizeKey(aEvent, "button", function() {
 
       var expectEventTypeList = [];
@@ -413,7 +413,7 @@ function* runKeyEventTests()
         expectEventTypeList.push("keydown");
       if (aShouldDelivedEvent & SHOULD_DELIVER_KEYPRESS) {
         expectEventTypeList.push("keypress");
-        for (var i = 1; i < aExpectGeckoChar.length; i++) {
+        for (let i = 1; i < aExpectGeckoChar.length; i++) {
           expectEventTypeList.push("keypress");
         }
       }
@@ -424,7 +424,7 @@ function* runKeyEventTests()
 
       var longerLength = Math.max(eventList.length, expectEventTypeList.length);
       var keypressCount = 0;
-      for (var i = 0; i < longerLength; i++) {
+      for (let i = 0; i < longerLength; i++) {
         var firedEventType = i < eventList.length ? eventList[i].type : "";
         var expectEventType = i < expectEventTypeList.length ? expectEventTypeList[i] : "";
         if (firedEventType != "") {
@@ -437,6 +437,7 @@ function* runKeyEventTests()
 
         if (firedEventType != "") {
           var expectedKeyValue =
+            // eslint-disable-next-line no-nested-ternary
             typeof aExpectedKeyValues === "string" ? aExpectedKeyValues :
                      i < aExpectedKeyValues.length ? aExpectedKeyValues[i] :
                                                      undefined;
@@ -487,7 +488,7 @@ function* runKeyEventTests()
           is(e.key, expectedKeyValue, currentTestName + ", wrong key value");
           is(e.code, aExpectedCodeValue, currentTestName + ", wrong code value");
 
-          if (aExpectGeckoChar.length > 0 && e.type == "keypress") {
+          if (aExpectGeckoChar.length && e.type == "keypress") {
             is(e.charCode, aExpectGeckoChar.charCodeAt(keypressCount++),
                currentTestName + ", charcode");
             if (aExpectedGeckoKeyCode >= 0) {
@@ -517,17 +518,17 @@ function* runKeyEventTests()
   }
 
   // These tests have to be per-plaform.
-  document.addEventListener("keydown",  onKeyEvent, false);
-  document.addEventListener("keypress", onKeyEvent, false);
-  document.addEventListener("keyup",    onKeyEvent, false);
+  document.addEventListener("keydown",  onKeyEvent);
+  document.addEventListener("keypress", onKeyEvent);
+  document.addEventListener("keyup",    onKeyEvent);
   // Prevent almost all shortcut key handlers.
   SpecialPowers.addSystemEventListener(document, "keypress", consumer, true);
 
   function cleanup()
   {
-    document.removeEventListener("keydown",  onKeyEvent, false);
-    document.removeEventListener("keypress", onKeyEvent, false);
-    document.removeEventListener("keyup",    onKeyEvent, false);
+    document.removeEventListener("keydown",  onKeyEvent);
+    document.removeEventListener("keypress", onKeyEvent);
+    document.removeEventListener("keyup",    onKeyEvent);
     SpecialPowers.removeSystemEventListener(document, "keypress", consumer, true);
   }
 
@@ -4816,7 +4817,7 @@ function* runAccessKeyTests()
     });
   }
 
-  button.addEventListener("click", onClick, false);
+  button.addEventListener("click", onClick);
   
   // These tests have to be per-plaform.
   if (IS_MAC) {
@@ -4921,7 +4922,7 @@ function* runAccessKeyTests()
                   ".", true);
   }
   
-  button.removeEventListener("click", onClick, false);
+  button.removeEventListener("click", onClick);
 }
 
 function* runXULKeyTests()
@@ -4957,8 +4958,8 @@ function* runXULKeyTests()
   var buttonParent = document.getElementById("button").parentNode;
   buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup, true);
   buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup, true);
-  buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup, false);
-  buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup, false);
+  buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup);
+  buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup);
   SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
   SpecialPowers.addSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
   SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
@@ -4968,8 +4969,8 @@ function* runXULKeyTests()
   {
     buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup, true);
     buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup, true);
-    buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup, false);
-    buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup, false);
+    buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup);
+    buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup);
     SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
     SpecialPowers.removeSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
     SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
@@ -4994,12 +4995,12 @@ function* runXULKeyTests()
     keyEvents = [];
     return synthesizeKey(aEvent, "button", function() {
       if (keyElement) {
-        is(commandElements["expectedCommand"].activeCount, 1, testName + "the command element (id='expectedCommand') should be preformed");
+        is(commandElements.expectedCommand.activeCount, 1, testName + "the command element (id='expectedCommand') should be preformed");
       } else {
-        is(commandElements["expectedCommand"].activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
+        is(commandElements.expectedCommand.activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
       }
-      is(commandElements["unexpectedCommand"].activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
-      is(commandElements["expectedReservedCommand"].activeCount, 0, testName + "the command element (id='expectedReservedCommand') shouldn't be preformed");
+      is(commandElements.unexpectedCommand.activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
+      is(commandElements.expectedReservedCommand.activeCount, 0, testName + "the command element (id='expectedReservedCommand') shouldn't be preformed");
 
       function checkFiredEvents()
       {
@@ -5033,9 +5034,9 @@ function* runXULKeyTests()
         }
         keyEvents = [];
         synthesizeKey(aEvent, "button", function() {
-          is(commandElements["expectedCommand"].activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
-          is(commandElements["unexpectedCommand"].activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
-          is(commandElements["expectedReservedCommand"].activeCount, 1, testName + "the command element (id='expectedReservedCommand') should be preformed");
+          is(commandElements.expectedCommand.activeCount, 0, testName + "the command element (id='expectedCommand') shouldn't be preformed");
+          is(commandElements.unexpectedCommand.activeCount, 0, testName + "the command element (id='unexpectedCommand') shouldn't be preformed");
+          is(commandElements.expectedReservedCommand.activeCount, 1, testName + "the command element (id='expectedReservedCommand') should be preformed");
 
           checkFiredEvents();
 
@@ -5197,8 +5198,8 @@ function* runReservedKeyTests()
   for (var i = 0; i < contents.length; i++) {
     contents[i].addEventListener("keydown", onKeyInDefaultEventGroup, true);
     contents[i].addEventListener("keypress", onKeyInDefaultEventGroup, true);
-    contents[i].addEventListener("keydown", onKeyInDefaultEventGroup, false);
-    contents[i].addEventListener("keypress", onKeyInDefaultEventGroup, false);
+    contents[i].addEventListener("keydown", onKeyInDefaultEventGroup);
+    contents[i].addEventListener("keypress", onKeyInDefaultEventGroup);
     SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
     SpecialPowers.addSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
     SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
@@ -5235,8 +5236,8 @@ function* runReservedKeyTests()
     for (var i = 0; i < contents.length; i++) {
       contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup, true);
       contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, true);
-      contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup, false);
-      contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, false);
+      contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup);
+      contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup);
       SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
       SpecialPowers.removeSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
       SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
@@ -5248,7 +5249,7 @@ function* runReservedKeyTests()
   {
     keyEvents = [];
     return synthesizeKey(aEvent, "content_button", function() {
-      testName = "testReservedKey: " + eventToString(aEvent) + " ";
+      let testName = "testReservedKey: " + eventToString(aEvent) + " ";
       is(keyEvents.length, 20, testName + "wrong number events fired");
       is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content only in the system event group #0");
       is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content only in the system event group #1");
@@ -5435,7 +5436,7 @@ function* runAltRightKeyOnWindows()
     { layout: KEYBOARD_LAYOUT_LITHUANIAN },
     { layout: KEYBOARD_LAYOUT_NORWEGIAN },
     { layout: KEYBOARD_LAYOUT_RUSSIAN_MNEMONIC,
-      canTestIt: function() { return OS_VERSION >= WIN8; } },
+      canTestIt () { return OS_VERSION >= WIN8; } },
     { layout: KEYBOARD_LAYOUT_SPANISH },
     { layout: KEYBOARD_LAYOUT_SWEDISH },
     { layout: KEYBOARD_LAYOUT_THAI },

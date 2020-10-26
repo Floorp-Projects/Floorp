@@ -77,8 +77,7 @@ var gTests = [
 var gCurrentTestIndex = -1;
 var gIgnoreScrollEvent = true;
 
-var gPrefSvc = Cc["@mozilla.org/preferences-service;1"].
-               getService(Ci.nsIPrefBranch);
+var gPrefSvc = SpecialPowers.Services.prefs;
 const kPrefSmoothScroll = "general.smoothScroll";
 const kPrefNameTimeout = "mousewheel.transaction.timeout";
 const kDefaultTimeout = gPrefSvc.getIntPref(kPrefNameTimeout);
@@ -87,9 +86,9 @@ gPrefSvc.setBoolPref(kPrefSmoothScroll, false);
 
 var gTimeout = kDefaultTimeout;
 
-gBody.addEventListener("MozMouseScrollFailed", onMouseScrollFailed, false);
+gBody.addEventListener("MozMouseScrollFailed", onMouseScrollFailed);
 gBody.addEventListener("MozMouseScrollTransactionTimeout",
-                       onTransactionTimeout, false);
+                       onTransactionTimeout);
 
 function setTimeoutPrefs(aTimeout)
 {

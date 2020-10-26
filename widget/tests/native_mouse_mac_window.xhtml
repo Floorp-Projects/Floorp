@@ -137,9 +137,8 @@
 
     function eventListenOnce(elem, name, callback) {
       elem.addEventListener(name, function(e) {
-        elem.removeEventListener(name, arguments.callee, false);
         callback(e);
-      }, false);
+      }, {once: true});
     }
 
     function focusAndThen(win, callback) {
@@ -155,7 +154,7 @@
     }
 
     function clearExpectedEvents() {
-      while (gExpectedEvents.length > 0) {
+      while (!gExpectedEvents.length) {
         var expectedEvent = gExpectedEvents.shift();
         var errFun = expectedEvent.shouldFireButDoesnt ? todo : ok;
         errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
@@ -184,7 +183,8 @@
         // Didn't get expectedEvent.
         var errFun = expectedEvent.shouldFireButDoesnt ? todo : ok;
         errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
-        return processEvent(e);
+        processEvent(e);
+        return;
       }
       gEventNum++;
       is(e.screenX, expectedEvent.screenX, gEventNum + " | wrong X coord for event " + eventToString(e));
@@ -222,14 +222,11 @@
       var leftElem = document.getElementById("box");
       var rightElem = gRightWindow.document.documentElement;
       var panel = document.getElementById("panel");
-      var tooltip = (function createTooltipInRightWindow() {
-        var _tooltip = right.document.createElementNS(XUL_NS, "tooltip");
-        _tooltip.setAttribute("id", "tip");
-        _tooltip.setAttribute("width", "80");
-        _tooltip.setAttribute("height", "20");
-        right.document.documentElement.appendChild(_tooltip);
-        return _tooltip;
-      })();
+      var _tooltip = right.document.createElementNS(XUL_NS, "tooltip");
+      _tooltip.setAttribute("id", "tip");
+      _tooltip.setAttribute("width", "80");
+      _tooltip.setAttribute("height", "20");
+      right.document.documentElement.appendChild(_tooltip);
       var tests = [
 
         // Part 1: Disallow click-through
@@ -749,13 +746,17 @@
           { type: "mousemove", target: leftElem },
         ]],
       ];
+      // eslint-disable-next-line consistent-return
       function runNextTest() {
-        if (!tests.length)
-          return onTestsFinished();
-
+        if (!tests.length) {
+          onTestsFinished();
+          return;
+        }
         var test = tests.shift();
-        if (typeof test == "function")
-          return test(runNextTest);
+        if (typeof test == "function") {
+          test(runNextTest);
+          return;
+        }
 
         var [x, y, msg, elem, win, exp, flags] = test;
         testMouse(x, y, msg, elem, win, exp, flags, runNextTest);

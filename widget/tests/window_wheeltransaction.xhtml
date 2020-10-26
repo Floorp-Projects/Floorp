@@ -109,8 +109,7 @@ var gLitesnEvents = kListenEvent_None;
  */
 var gTimer;
 
-var gPrefSvc = Cc["@mozilla.org/preferences-service;1"].
-               getService(Ci.nsIPrefBranch);
+var gPrefSvc = SpecialPowers.Services.prefs;
 const kPrefSmoothScroll = "general.smoothScroll";
 const kPrefNameTimeout = "mousewheel.transaction.timeout";
 const kPrefNameIgnoreMoveDelay = "mousewheel.transaction.ignoremovedelay";
@@ -160,9 +159,9 @@ var gSubView1 = document.getElementById("subview1");
 var gSubView2 = document.getElementById("subview2");
 var gSubView3 = document.getElementById("subview3");
 
-gRootView.addEventListener("MozMouseScrollFailed", onMouseScrollFailed, false);
+gRootView.addEventListener("MozMouseScrollFailed", onMouseScrollFailed);
 gRootView.addEventListener("MozMouseScrollTransactionTimeout",
-                           onTransactionTimeout, false);
+                           onTransactionTimeout);
 
 function finish()
 {
@@ -1034,12 +1033,6 @@ function initElements()
     aElement.scrollLeft = 0;
   }
 
-  function initInRootView(aElement, aPt)
-  {
-    aElement.offset =
-      gCurrentTest.forVertical ? aPt : { x: aPt.y, y: aPt.x };
-  }
-
   const kDisplay = gCurrentTest.forVertical ? "block" : "inline-block";
   gSubView1.style.display = kDisplay;
   gSubView2.style.display = kDisplay;
@@ -1159,6 +1152,7 @@ function _getScrolledState(aElement)
 
 function _getExpectedScrolledState()
 {
+  // eslint-disable-next-line no-nested-ternary
   return gCurrentTest.isVertical ?
            gCurrentTest.isForward ? kScrolledToBottom : kScrolledToTop :
            gCurrentTest.isForward ? kScrolledToRight : kScrolledToLeft;

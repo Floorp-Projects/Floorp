@@ -98,13 +98,13 @@ function startTests()
     }
   }
 
-  textarea.addEventListener("keydown", onEvent, false);
-  textarea.addEventListener("keypress", onEvent, false);
-  textarea.addEventListener("keyup", onEvent, false);
-  textarea.addEventListener("compositionstart", onEvent, false);
-  textarea.addEventListener("compositionend", onEvent, false);
-  textarea.addEventListener("compositionupdate", onEvent, false);
-  textarea.addEventListener("input", onEvent, false);
+  textarea.addEventListener("keydown", onEvent);
+  textarea.addEventListener("keypress", onEvent);
+  textarea.addEventListener("keyup", onEvent);
+  textarea.addEventListener("compositionstart", onEvent);
+  textarea.addEventListener("compositionend", onEvent);
+  textarea.addEventListener("compositionupdate", onEvent);
+  textarea.addEventListener("input", onEvent);
 
   startTestsInternal();
 
@@ -216,13 +216,13 @@ function startTests()
     clear();
   }
 
-  textarea.removeEventListener("keydown", onEvent, false);
-  textarea.removeEventListener("keypress", onEvent, false);
-  textarea.removeEventListener("keyup", onEvent, false);
-  textarea.removeEventListener("compositionstart", onEvent, false);
-  textarea.removeEventListener("compositionupdate", onEvent, false);
-  textarea.removeEventListener("compositionend", onEvent, false);
-  textarea.removeEventListener("input", onEvent, false);
+  textarea.removeEventListener("keydown", onEvent);
+  textarea.removeEventListener("keypress", onEvent);
+  textarea.removeEventListener("keyup", onEvent);
+  textarea.removeEventListener("compositionstart", onEvent);
+  textarea.removeEventListener("compositionupdate", onEvent);
+  textarea.removeEventListener("compositionend", onEvent);
+  textarea.removeEventListener("input", onEvent);
 
   otherWindow.close();
 

@@ -21,10 +21,10 @@
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-gWindow = null;
+let gWindow = null;
 
-gSizeModeDidChange = false;
-gSizeModeDidChangeTo = 0;
+let gSizeModeDidChange = false;
+let gSizeModeDidChangeTo = 0;
 
 function sizemodeChanged(e) {
   gSizeModeDidChange = true;
@@ -63,7 +63,7 @@ function openWindow() {
 
 function runTest() {
   // Install event handler.
-  gWindow.addEventListener("sizemodechange", sizemodeChanged, false);
+  gWindow.addEventListener("sizemodechange", sizemodeChanged);
 
   // Run tests.
   expectSizeModeChange(gWindow.STATE_MINIMIZED, function () {
@@ -91,7 +91,7 @@ function runTest() {
     gWindow.resizeTo(gWindow.outerWidth, gWindow.outerHeight + 10);
   });
 
-  gWindow.removeEventListener("sizemodechange", sizemodeChanged, false);
+  gWindow.removeEventListener("sizemodechange", sizemodeChanged);
   gWindow.close();
   SimpleTest.finish();
 }
