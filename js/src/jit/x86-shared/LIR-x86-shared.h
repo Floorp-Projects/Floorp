@@ -340,16 +340,20 @@ class LWasmBitselectSimd128 : public LInstructionHelper<1, 3, 1> {
 // (v128, v128) -> v128 effect-free operations
 // lhs and dest are the same.
 // temps (if in use) are FPR.
+// The op may differ from the MIR node's op.
 class LWasmBinarySimd128 : public LInstructionHelper<1, 2, 2> {
+  wasm::SimdOp op_;
+
  public:
   LIR_HEADER(WasmBinarySimd128)
 
   static constexpr uint32_t LhsDest = 0;
   static constexpr uint32_t Rhs = 1;
 
-  LWasmBinarySimd128(const LAllocation& lhsDest, const LAllocation& rhs,
-                     const LDefinition& temp0, const LDefinition& temp1)
-      : LInstructionHelper(classOpcode) {
+  LWasmBinarySimd128(wasm::SimdOp op, const LAllocation& lhsDest,
+                     const LAllocation& rhs, const LDefinition& temp0,
+                     const LDefinition& temp1)
+      : LInstructionHelper(classOpcode), op_(op) {
     setOperand(LhsDest, lhsDest);
     setOperand(Rhs, rhs);
     setTemp(0, temp0);
@@ -358,7 +362,7 @@ class LWasmBinarySimd128 : public LInstructionHelper<1, 2, 2> {
 
   const LAllocation* lhsDest() { return getOperand(LhsDest); }
   const LAllocation* rhs() { return getOperand(Rhs); }
-  wasm::SimdOp simdOp() const { return mir_->toWasmBinarySimd128()->simdOp(); }
+  wasm::SimdOp simdOp() const { return op_; }
 };
 
 // (v128, i32) -> v128 effect-free variable-width shift operations
