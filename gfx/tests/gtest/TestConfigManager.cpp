@@ -439,17 +439,9 @@ TEST_F(GfxConfigManager, WebRenderEarlierThanWindows10) {
 
   EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
   EXPECT_TRUE(mFeatures.mWr.IsEnabled());
-#ifdef NIGHTLY_BUILD
-  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
-#else
   EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-#endif
   EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-#ifdef NIGHTLY_BUILD
-  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
-#else
   EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-#endif
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
