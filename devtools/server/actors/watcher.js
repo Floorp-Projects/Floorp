@@ -27,6 +27,11 @@ loader.lazyRequireGetter(
   Targets.TYPES.PROCESS,
   "devtools/server/actors/watcher/target-helpers/process-helper"
 );
+loader.lazyRequireGetter(
+  TARGET_HELPERS,
+  Targets.TYPES.WORKER,
+  "devtools/server/actors/watcher/target-helpers/worker-helper"
+);
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
@@ -99,8 +104,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       traits: {
         // FF77+ supports frames in Watcher actor
         [Targets.TYPES.FRAME]: true,
-        // FF83+ supports processes
+        // FF84+ supports processes
         [Targets.TYPES.PROCESS]: true,
+        // FF84+ supports workers in Watcher actor for content toolbox.
+        [Targets.TYPES.WORKER]: hasBrowserElement,
         resources: {
           // FF81+ (bug 1642295) added support for:
           // - CONSOLE_MESSAGE

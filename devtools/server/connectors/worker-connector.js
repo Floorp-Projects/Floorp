@@ -21,11 +21,14 @@ loader.lazyRequireGetter(
  * @params {String} forwardingPrefix: The prefix that will be used to forward messages
  *                  to the DevToolsServer on the worker thread.
  * @params {Object} options: An option object that will be passed with the "connect" packet.
+ * @params {Object} options.watchedData: The watchedData object that will be passed to the
+ *                  worker target actor.
  */
 function connectToWorker(connection, dbg, forwardingPrefix, options) {
   return new Promise((resolve, reject) => {
-    if (dbg.isClosed) {
+    if (!DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
       reject("closed");
+      return;
     }
 
     // Step 1: Ensure the worker debugger is initialized.
@@ -90,8 +93,9 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
       dbg.addListener(listener);
     }
 
-    if (dbg.isClosed) {
+    if (!DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
       reject("closed");
+      return;
     }
 
     // Step 2: Send a connect request to the worker debugger.
@@ -100,6 +104,11 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         type: "connect",
         forwardingPrefix,
         options,
+        workerDebuggerData: {
+          id: dbg.id,
+          type: dbg.type,
+          url: dbg.url,
+        },
       })
     );
 
@@ -134,7 +143,7 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         transport.ready();
         transport.hooks = {
           onClosed: () => {
-            if (!dbg.isClosed) {
+            if (DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
               // If the worker happens to be shutting down while we are trying
               // to close the connection, there is a small interval during
               // which no more runnables can be dispatched to the worker, but
