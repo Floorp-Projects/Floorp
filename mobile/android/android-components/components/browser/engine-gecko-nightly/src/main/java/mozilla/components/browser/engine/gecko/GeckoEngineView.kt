@@ -5,7 +5,9 @@
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.VisibleForTesting
@@ -13,6 +15,7 @@ import androidx.core.view.ViewCompat
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
@@ -38,7 +41,7 @@ class GeckoEngineView @JvmOverloads constructor(
                 val otherActivityClassName =
                     this.session?.accessibility?.view?.context?.javaClass?.simpleName
                 val otherActivityClassHashcode =
-                        this.session?.accessibility?.view?.context?.hashCode()
+                    this.session?.accessibility?.view?.context?.hashCode()
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "ATTACH VIEW: Current activity: $activityClassName hashcode " +
@@ -47,6 +50,7 @@ class GeckoEngineView @JvmOverloads constructor(
                 throw IllegalStateException(msg, e)
             }
         }
+
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
             // GeckoView will close the session automatically and we do not want that.
@@ -59,6 +63,26 @@ class GeckoEngineView @JvmOverloads constructor(
         // autofill behavior for us here.
         @Suppress("WrongConstant")
         ViewCompat.setImportantForAutofill(this, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES)
+    }
+
+    internal fun setColorScheme(preferredColorScheme: PreferredColorScheme) {
+        var colorScheme = preferredColorScheme
+        if (preferredColorScheme == PreferredColorScheme.System) {
+            colorScheme =
+                if (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                    == Configuration.UI_MODE_NIGHT_YES
+                ) {
+                    PreferredColorScheme.Dark
+                } else {
+                    PreferredColorScheme.Light
+                }
+        }
+
+        if (colorScheme == PreferredColorScheme.Dark) {
+            geckoView.coverUntilFirstPaint(DARK_COVER)
+        } else {
+            geckoView.coverUntilFirstPaint(Color.WHITE)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -142,7 +166,8 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false
 
-    override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
+    override fun canScrollVerticallyDown() =
+        true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
     override fun getInputResult(): EngineView.InputResult {
         // Direct mapping of GeckoView's returned values.
@@ -191,5 +216,9 @@ class GeckoEngineView @JvmOverloads constructor(
         // https://github.com/mozilla-mobile/android-components/issues/6664
         geckoView.visibility = visibility
         super.setVisibility(visibility)
+    }
+
+    companion object {
+        internal const val DARK_COVER = 0xFF2A2A2E.toInt()
     }
 }

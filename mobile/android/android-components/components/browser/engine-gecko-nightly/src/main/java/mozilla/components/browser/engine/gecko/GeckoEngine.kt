@@ -144,7 +144,9 @@ class GeckoEngine(
      * Creates a new Gecko-based EngineView.
      */
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
-        return GeckoEngineView(context, attrs)
+        return GeckoEngineView(context, attrs).apply {
+            setColorScheme(settings.preferredColorScheme)
+        }
     }
 
     /**

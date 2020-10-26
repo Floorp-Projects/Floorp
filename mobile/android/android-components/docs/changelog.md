@@ -15,6 +15,10 @@ permalink: /changelog/
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8823](https://github.com/mozilla-mobile/android-components/issues/8823) Downloads for data URLs were failing on nightly and beta more details in the [Fenix issue](https://github.com/mozilla-mobile/fenix/issues/16228#issuecomment-717976737).
 
+* **browser-engine-gecko-nightly**
+  * Adds optional `PreferredColorScheme` param to `GeckoEngineView`
+  * On `GeckoView` init call `coverUntilFirstPaint()` with `PreferredColorScheme`
+
 # 64.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v63.0.0...v64.0.0)
