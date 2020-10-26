@@ -11,7 +11,7 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_add_on_internal_settings.*
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
 
@@ -33,7 +33,9 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        showToolbar(args.addon.translatedName)
+        context?.let {
+            showToolbar(args.addon.translateName(it))
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

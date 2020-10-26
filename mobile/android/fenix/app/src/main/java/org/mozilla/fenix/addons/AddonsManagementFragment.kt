@@ -26,7 +26,7 @@ import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -230,13 +230,15 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     // No need to display an error message if installation was cancelled by the user.
                     if (e !is CancellationException) {
                         val rootView = activity?.getRootView() ?: view
-                        showSnackBar(
-                            rootView,
-                            getString(
-                                R.string.mozac_feature_addons_failed_to_install,
-                                addon.translatedName
+                        context?.let {
+                            showSnackBar(
+                                rootView,
+                                getString(
+                                    R.string.mozac_feature_addons_failed_to_install,
+                                    addon.translateName(it)
+                                )
                             )
-                        )
+                        }
                     }
                     addonProgressOverlay?.visibility = View.GONE
                     isInstallationInProgress = false

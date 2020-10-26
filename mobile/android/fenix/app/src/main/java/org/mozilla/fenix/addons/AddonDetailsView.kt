@@ -16,7 +16,7 @@ import androidx.core.text.getSpans
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_add_on_details.*
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.ui.translatedDescription
+import mozilla.components.feature.addons.ui.translateDescription
 import mozilla.components.feature.addons.ui.updatedAtDate
 import org.mozilla.fenix.R
 import java.text.DateFormat
@@ -100,7 +100,7 @@ class AddonDetailsView(
     }
 
     private fun bindDetails(addon: Addon) {
-        val detailsText = addon.translatedDescription
+        val detailsText = addon.translateDescription(containerView.context)
 
         val parsedText = detailsText.replace("\n", "<br/>")
         val text = HtmlCompat.fromHtml(parsedText, HtmlCompat.FROM_HTML_MODE_COMPACT)

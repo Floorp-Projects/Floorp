@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.showInformationDialog
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemptStorage
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -34,7 +34,10 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        showToolbar(title = args.addon.translatedName)
+        context?.let {
+            showToolbar(title = args.addon.translateName(it))
+        }
+
         AddonDetailsView(view, interactor = this).bind(args.addon)
     }
 

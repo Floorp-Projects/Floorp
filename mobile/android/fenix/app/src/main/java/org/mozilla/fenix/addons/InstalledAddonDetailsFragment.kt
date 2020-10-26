@@ -20,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -85,7 +85,7 @@ class InstalledAddonDetailsFragment : Fragment() {
     }
 
     private fun bindUI(view: View) {
-        val title = addon.translatedName
+        val title = addon.translateName(view.context)
         showToolbar(title)
 
         bindEnableSwitch(view)
@@ -117,13 +117,15 @@ class InstalledAddonDetailsFragment : Fragment() {
                             switch.setText(R.string.mozac_feature_addons_enabled)
                             view.settings.isVisible = shouldSettingsBeVisible()
                             view.remove_add_on.isEnabled = true
-                            showSnackBar(
-                                view,
-                                getString(
-                                    R.string.mozac_feature_addons_successfully_enabled,
-                                    addon.translatedName
+                            context?.let {
+                                showSnackBar(
+                                    view,
+                                    getString(
+                                        R.string.mozac_feature_addons_successfully_enabled,
+                                        addon.translateName(it)
+                                    )
                                 )
-                            )
+                            }
                         }
                     },
                     onError = {
@@ -131,13 +133,15 @@ class InstalledAddonDetailsFragment : Fragment() {
                             switch.isClickable = true
                             view.remove_add_on.isEnabled = true
                             switch.setState(addon.isEnabled())
-                            showSnackBar(
-                                view,
-                                getString(
-                                    R.string.mozac_feature_addons_failed_to_enable,
-                                    addon.translatedName
+                            context?.let {
+                                showSnackBar(
+                                    view,
+                                    getString(
+                                        R.string.mozac_feature_addons_failed_to_enable,
+                                        addon.translateName(it)
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 )
@@ -152,13 +156,15 @@ class InstalledAddonDetailsFragment : Fragment() {
                             privateBrowsingSwitch.isVisible = it.isEnabled()
                             switch.setText(R.string.mozac_feature_addons_disabled)
                             view.remove_add_on.isEnabled = true
-                            showSnackBar(
-                                view,
-                                getString(
-                                    R.string.mozac_feature_addons_successfully_disabled,
-                                    addon.translatedName
+                            context?.let {
+                                showSnackBar(
+                                    view,
+                                    getString(
+                                        R.string.mozac_feature_addons_successfully_disabled,
+                                        addon.translateName(it)
+                                    )
                                 )
-                            )
+                            }
                         }
                     },
                     onError = {
@@ -167,13 +173,15 @@ class InstalledAddonDetailsFragment : Fragment() {
                             privateBrowsingSwitch.isClickable = true
                             view.remove_add_on.isEnabled = true
                             switch.setState(addon.isEnabled())
-                            showSnackBar(
-                                view,
-                                getString(
-                                    R.string.mozac_feature_addons_failed_to_disable,
-                                    addon.translatedName
+                            context?.let {
+                                showSnackBar(
+                                    view,
+                                    getString(
+                                        R.string.mozac_feature_addons_failed_to_disable,
+                                        addon.translateName(it)
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 )
@@ -263,26 +271,30 @@ class InstalledAddonDetailsFragment : Fragment() {
                 onSuccess = {
                     runIfFragmentIsAttached {
                         setAllInteractiveViewsClickable(view, true)
-                        showSnackBar(
-                            view,
-                            getString(
-                                R.string.mozac_feature_addons_successfully_uninstalled,
-                                addon.translatedName
+                        context?.let {
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_successfully_uninstalled,
+                                    addon.translateName(it)
+                                )
                             )
-                        )
+                        }
                         view.findNavController().popBackStack()
                     }
                 },
                 onError = { _, _ ->
                     runIfFragmentIsAttached {
                         setAllInteractiveViewsClickable(view, true)
-                        showSnackBar(
-                            view,
-                            getString(
-                                R.string.mozac_feature_addons_failed_to_uninstall,
-                                addon.translatedName
+                        context?.let {
+                            showSnackBar(
+                                view,
+                                getString(
+                                    R.string.mozac_feature_addons_failed_to_uninstall,
+                                    addon.translateName(it)
+                                )
                             )
-                        )
+                        }
                     }
                 }
             )

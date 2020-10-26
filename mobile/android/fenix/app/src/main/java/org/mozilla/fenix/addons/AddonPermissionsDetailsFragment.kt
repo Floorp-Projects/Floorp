@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
-import mozilla.components.feature.addons.ui.translatedName
+import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -25,7 +25,9 @@ class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permis
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        showToolbar(args.addon.translatedName)
+        context?.let {
+            showToolbar(args.addon.translateName(it))
+        }
         AddonPermissionsDetailsView(view, interactor = this).bind(args.addon)
     }
 
