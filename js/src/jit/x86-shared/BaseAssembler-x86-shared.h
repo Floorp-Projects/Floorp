@@ -2885,6 +2885,15 @@ class BaseAssembler : public GenericAssembler {
   void vmovddup_rr(XMMRegisterID src, XMMRegisterID dst) {
     twoByteOpSimd("vmovddup", VEX_SD, OP2_MOVDDUP_VqWq, src, invalid_xmm, dst);
   }
+  void vmovddup_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    twoByteOpSimd("vmovddup", VEX_SD, OP2_MOVDDUP_VqWq, offset, base,
+                  invalid_xmm, dst);
+  }
+  void vmovddup_mr(int32_t offset, RegisterID base, RegisterID index,
+                   int32_t scale, XMMRegisterID dst) {
+    twoByteOpSimd("vmovddup", VEX_SD, OP2_MOVDDUP_VqWq, offset, base, index,
+                  scale, invalid_xmm, dst);
+  }
 
   void vmovhlps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vmovhlps", VEX_PS, OP2_MOVHLPS_VqUq, src1, src0, dst);

@@ -3699,9 +3699,22 @@ class AssemblerX86Shared : public AssemblerShared {
     MOZ_ASSERT(HasSSSE3());
     masm.vpshufb_rr(mask.encoding(), src.encoding(), dest.encoding());
   }
-  void vmovddup(FloatRegister src, FloatRegister dest) {
+  void vmovddup(const Operand& src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE3());
-    masm.vmovddup_rr(src.encoding(), dest.encoding());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vmovddup_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vmovddup_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vmovddup_mr(src.disp(), src.base(), src.index(), src.scale(),
+                         dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
   }
   void vmovhlps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());

@@ -274,7 +274,7 @@ void MacroAssemblerX86Shared::swizzleFloat32x4(FloatRegister input,
 
   if (LanesMatch(lanes, 0, 1, 0, 1)) {
     if (AssemblerX86Shared::HasSSE3() && !AssemblerX86Shared::HasAVX()) {
-      vmovddup(input, output);
+      vmovddup(Operand(input), output);
       return;
     }
     FloatRegister inputCopy = reusedInputSimd128Float(input, output);
