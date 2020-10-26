@@ -1156,7 +1156,6 @@ nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
   bool isDisabled = IsDisabled(aFrame, aEventState);
 
   MenuItemParams params;
-  params.backgroundIsVibrant = true;
   params.checked = aIsChecked;
   params.disabled = isDisabled;
   params.selected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
@@ -1171,23 +1170,6 @@ static void SetCGContextFillColor(CGContextRef cgContext, const sRGBColor& aColo
 
 void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
                                       const MenuItemParams& aParams) {
-  // If the background is contributed by vibrancy (which is part of the window background), we don't
-  // need to draw any background here.
-  if (!aParams.backgroundIsVibrant) {
-    HIThemeMenuItemDrawInfo drawInfo;
-    memset(&drawInfo, 0, sizeof(drawInfo));
-    drawInfo.version = 0;
-    drawInfo.itemType = kThemeMenuItemPlain;
-    drawInfo.state =
-        (aParams.disabled ? static_cast<ThemeMenuState>(kThemeMenuDisabled)
-                          : aParams.selected ? static_cast<ThemeMenuState>(kThemeMenuSelected)
-                                             : static_cast<ThemeMenuState>(kThemeMenuActive));
-
-    HIRect ignored;
-    HIThemeDrawMenuItem(&inBoxRect, &inBoxRect, &drawInfo, cgContext, HITHEME_ORIENTATION,
-                        &ignored);
-  }
-
   if (aParams.checked) {
     MenuIconParams params;
     params.disabled = aParams.disabled;

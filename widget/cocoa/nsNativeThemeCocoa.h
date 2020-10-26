@@ -105,7 +105,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   };
 
   struct MenuItemParams {
-    bool backgroundIsVibrant = false;
     bool checked = false;
     bool disabled = false;
     bool selected = false;
