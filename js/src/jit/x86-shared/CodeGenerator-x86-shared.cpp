@@ -2798,7 +2798,7 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
     }
     case LWasmShuffleSimd128::SHUFFLE_BLEND_8x16: {
       masm.shuffleInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
-                          rhs, lhsDest, ToFloatRegister(ins->temp()));
+                          rhs, lhsDest);
       break;
     }
     default: {
