@@ -91,11 +91,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     bool rtl : 1;
   };
 
-  struct MenuBackgroundParams {
-    bool disabled = false;
-    bool submenuRightOfParent = false;
-  };
-
   struct MenuIconParams {
     MenuIcon icon = MenuIcon::eCheckmark;
     bool disabled = false;
@@ -206,11 +201,10 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   using ScrollbarParams = mozilla::widget::ScrollbarParams;
 
   enum Widget : uint8_t {
-    eColorFill,       // mozilla::gfx::sRGBColor
-    eMenuBackground,  // MenuBackgroundParams
-    eMenuIcon,        // MenuIconParams
-    eMenuItem,        // MenuItemParams
-    eMenuSeparator,   // MenuItemParams
+    eColorFill,      // mozilla::gfx::sRGBColor
+    eMenuIcon,       // MenuIconParams
+    eMenuItem,       // MenuItemParams
+    eMenuSeparator,  // MenuItemParams
     eTooltip,
     eCheckbox,  // CheckboxOrRadioParams
     eRadio,     // CheckboxOrRadioParams
@@ -248,9 +242,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   struct WidgetInfo {
     static WidgetInfo ColorFill(const mozilla::gfx::sRGBColor& aParams) {
       return WidgetInfo(Widget::eColorFill, aParams);
-    }
-    static WidgetInfo MenuBackground(const MenuBackgroundParams& aParams) {
-      return WidgetInfo(Widget::eMenuBackground, aParams);
     }
     static WidgetInfo MenuIcon(const MenuIconParams& aParams) {
       return WidgetInfo(Widget::eMenuIcon, aParams);
@@ -350,11 +341,10 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     template <typename T>
     WidgetInfo(enum Widget aWidget, const T& aParams) : mVariant(aParams), mWidget(aWidget) {}
 
-    mozilla::Variant<mozilla::gfx::sRGBColor, MenuBackgroundParams, MenuIconParams, MenuItemParams,
-                     CheckboxOrRadioParams, ButtonParams, DropdownParams, SpinButtonParams,
-                     SegmentParams, UnifiedToolbarParams, TextBoxParams, SearchFieldParams,
-                     ProgressParams, MeterParams, TreeHeaderCellParams, ScaleParams,
-                     ScrollbarParams, bool>
+    mozilla::Variant<mozilla::gfx::sRGBColor, MenuIconParams, MenuItemParams, CheckboxOrRadioParams,
+                     ButtonParams, DropdownParams, SpinButtonParams, SegmentParams,
+                     UnifiedToolbarParams, TextBoxParams, SearchFieldParams, ProgressParams,
+                     MeterParams, TreeHeaderCellParams, ScaleParams, ScrollbarParams, bool>
         mVariant;
 
     enum Widget mWidget;
@@ -417,8 +407,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
   bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
-  MenuBackgroundParams ComputeMenuBackgroundParams(nsIFrame* aFrame,
-                                                   mozilla::EventStates aEventState);
   MenuIconParams ComputeMenuIconParams(nsIFrame* aParams, mozilla::EventStates aEventState,
                                        MenuIcon aIcon);
   MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
@@ -454,8 +442,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                       ControlParams aControlParams);
   void DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
                             ControlParams aControlParams, NSCellStateValue aState);
-  void DrawMenuBackground(CGContextRef cgContext, const CGRect& inBoxRect,
-                          const MenuBackgroundParams& aParams);
   NSString* GetMenuIconName(const MenuIconParams& aParams);
   NSSize GetMenuIconSize(MenuIcon aIcon);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect, const MenuIconParams& aParams);
