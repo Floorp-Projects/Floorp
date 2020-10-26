@@ -127,19 +127,50 @@ struct ScopeNote {
 //   function * foo(a, b) { return a + b; }
 //   ^             ^                       ^
 //   |             |                       |
-//   |             sourceStart             sourceEnd
+//   |             sourceStart     sourceEnd
 //   |                                     |
-//   toStringStart                         toStringEnd
+//   toStringStart               toStringEnd
 //
 // For the special case of class constructors, the spec requires us to use an
 // alternate definition of toStringStart / toStringEnd.
 //
 //   class C { constructor() { this.field = 42; } }
 //   ^                    ^                      ^ ^
-//   |                    |                      | `---------`
-//   |                    sourceStart            sourceEnd   |
-//   |                                                       |
-//   toStringStart                                           toStringEnd
+//   |                    |                      | |
+//   |                    sourceStart    sourceEnd |
+//   |                                             |
+//   toStringStart                       toStringEnd
+//
+// Implicit class constructors use the following definitions.
+//
+//   class C { someMethod() { } }
+//   ^                           ^
+//   |                           |
+//   sourceStart         sourceEnd
+//   |                           |
+//   toStringStart     toStringEnd
+//
+// Field initializer lambdas are internal details of the engine, but we still
+// provide a sensible definition of these values.
+//
+//   class C { static field = 1 }
+//   class C {        field = 1 }
+//   class C {        somefield }
+//                    ^        ^
+//                    |        |
+//          sourceStart        sourceEnd
+//
+// The non-static private class methods (including getters and setters) ALSO
+// create a hidden initializer lambda in addition to the method itself. These
+// lambdas are not exposed directly to script.
+//
+//   class C { #field() {       } }
+//   class C { get #field() {   } }
+//   class C { async #field() { } }
+//   class C { * #field() {     } }
+//             ^                 ^
+//             |                 |
+//             sourceStart       sourceEnd
 //
 // NOTE: These are counted in Code Units from the start of the script source.
 //
