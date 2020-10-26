@@ -408,13 +408,19 @@ class MacroAssemblerX86Shared : public Assembler {
   void extractLaneInt8x16(FloatRegister input, Register output, unsigned lane,
                           SimdSign sign);
 
-  void replaceLaneFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                            unsigned lane);
-  void replaceLaneFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                            unsigned lane);
+  void insertLaneSimdInt(FloatRegister input, Register value,
+                         FloatRegister output, unsigned lane,
+                         unsigned numLanes);
+  void insertLaneFloat32x4(FloatRegister input, FloatRegister value,
+                           FloatRegister output, unsigned lane);
+  void insertLaneFloat64x2(FloatRegister input, FloatRegister value,
+                           FloatRegister output, unsigned lane);
 
   void shuffleInt8x16(FloatRegister lhs, FloatRegister rhs,
-                      FloatRegister output, const uint8_t lanes[16]);
+                      FloatRegister output,
+                      const mozilla::Maybe<FloatRegister>& maybeFloatTemp,
+                      const mozilla::Maybe<Register>& maybeTemp,
+                      const uint8_t lanes[16]);
   void blendInt8x16(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
                     FloatRegister temp, const uint8_t lanes[16]);
   void blendInt16x8(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
@@ -440,6 +446,18 @@ class MacroAssemblerX86Shared : public Assembler {
   void compareFloat64x2(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
 
+  void mulInt32x4(FloatRegister lhs, Operand rhs,
+                  const mozilla::Maybe<FloatRegister>& temp,
+                  FloatRegister output);
+
+  void negFloat32x4(Operand in, FloatRegister out);
+  void negFloat64x2(Operand in, FloatRegister out);
+
+  void notInt8x16(Operand in, FloatRegister out);
+  void notInt16x8(Operand in, FloatRegister out);
+  void notInt32x4(Operand in, FloatRegister out);
+  void notFloat32x4(Operand in, FloatRegister out);
+
   void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
                        FloatRegister temp1, FloatRegister temp2,
                        FloatRegister output);
@@ -455,6 +473,9 @@ class MacroAssemblerX86Shared : public Assembler {
                     FloatRegister temp2, FloatRegister output);
   void maxFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp1,
                     FloatRegister temp2, FloatRegister output);
+
+  void absFloat32x4(Operand in, FloatRegister out);
+  void absFloat64x2(Operand in, FloatRegister out);
 
   void packedShiftByScalarInt8x16(
       FloatRegister in, Register count, Register temp, FloatRegister xtmp,
@@ -558,12 +579,9 @@ class MacroAssemblerX86Shared : public Assembler {
     vmovdqa(src, Operand(dest));
   }
   void moveSimd128Int(FloatRegister src, FloatRegister dest) {
-    if (src != dest) {
-      vmovdqa(src, dest);
-    }
+    vmovdqa(src, dest);
   }
   FloatRegister reusedInputInt32x4(FloatRegister src, FloatRegister dest) {
-    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
     }
@@ -587,6 +605,12 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   void storeUnalignedSimd128Int(FloatRegister src, const Operand& dest) {
     vmovdqu(src, dest);
+  }
+  void packedEqualInt32x4(const Operand& src, FloatRegister dest) {
+    vpcmpeqd(src, dest, dest);
+  }
+  void packedGreaterThanInt32x4(const Operand& src, FloatRegister dest) {
+    vpcmpgtd(src, dest, dest);
   }
   void packedLeftShiftByScalarInt16x8(Imm32 count, FloatRegister dest) {
     count.value &= 15;
@@ -624,12 +648,9 @@ class MacroAssemblerX86Shared : public Assembler {
     vmovaps(src, Operand(dest));
   }
   void moveSimd128Float(FloatRegister src, FloatRegister dest) {
-    if (src != dest) {
-      vmovaps(src, dest);
-    }
+    vmovaps(src, dest);
   }
   FloatRegister reusedInputSimd128Float(FloatRegister src, FloatRegister dest) {
-    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
     }
@@ -719,7 +740,6 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   FloatRegister reusedInputAlignedInt32x4(const Operand& src,
                                           FloatRegister dest) {
-    MOZ_ASSERT(dest.isSimd128());
     if (HasAVX() && src.kind() == Operand::FPREG) {
       return FloatRegister::FromCode(src.fpu());
     }
@@ -757,7 +777,6 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   FloatRegister reusedInputAlignedSimd128Float(const Operand& src,
                                                FloatRegister dest) {
-    MOZ_ASSERT(dest.isSimd128());
     if (HasAVX() && src.kind() == Operand::FPREG) {
       return FloatRegister::FromCode(src.fpu());
     }
@@ -913,11 +932,13 @@ class MacroAssemblerX86Shared : public Assembler {
   }
 
   bool maybeInlineSimd128Int(const SimdConstant& v, const FloatRegister& dest) {
-    if (v.isZeroBits()) {
+    static const SimdConstant zero = SimdConstant::SplatX4(0);
+    static const SimdConstant minusOne = SimdConstant::SplatX4(-1);
+    if (v == zero) {
       zeroSimd128Int(dest);
       return true;
     }
-    if (v.isOneBits()) {
+    if (v == minusOne) {
       vpcmpeqw(Operand(dest), dest, dest);
       return true;
     }
@@ -925,7 +946,10 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   bool maybeInlineSimd128Float(const SimdConstant& v,
                                const FloatRegister& dest) {
-    if (v.isZeroBits()) {
+    static const SimdConstant zero = SimdConstant::SplatX4(0.f);
+    if (v == zero) {
+      // This won't get inlined if the SimdConstant v contains -0 in any
+      // lane, as operator== here does a memcmp.
       zeroSimd128Float(dest);
       return true;
     }

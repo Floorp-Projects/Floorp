@@ -793,11 +793,6 @@ void MacroAssembler::bitwiseAndSimd128(const SimdConstant& rhs,
   vpandSimd128(rhs, lhsDest);
 }
 
-void MacroAssembler::bitwiseXorSimd128(const SimdConstant& rhs,
-                                       FloatRegister lhsDest) {
-  vpxorSimd128(rhs, lhsDest);
-}
-
 // ========================================================================
 // Truncate floating point.
 

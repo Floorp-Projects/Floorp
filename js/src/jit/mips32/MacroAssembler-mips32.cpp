@@ -2380,10 +2380,6 @@ void MacroAssemblerMIPSCompat::wasmLoadI64Impl(
   uint32_t offset = access.offset();
   MOZ_ASSERT_IF(offset, ptrScratch != InvalidReg);
 
-  MOZ_ASSERT(!access.isZeroExtendSimd128Load());
-  MOZ_ASSERT(!access.isSplatSimd128Load());
-  MOZ_ASSERT(!access.isWidenSimd128Load());
-
   // Maybe add the offset.
   if (offset) {
     asMasm().movePtr(ptr, ptrScratch);

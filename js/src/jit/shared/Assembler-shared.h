@@ -504,8 +504,7 @@ class MemoryAccessDesc {
   Scalar::Type type_;
   jit::Synchronization sync_;
   wasm::BytecodeOffset trapOffset_;
-  wasm::SimdOp widenOp_;
-  enum { Plain, ZeroExtend, Splat, Widen } loadOp_;
+  bool zeroExtendSimd128Load_;
 
  public:
   explicit MemoryAccessDesc(
@@ -517,8 +516,7 @@ class MemoryAccessDesc {
         type_(type),
         sync_(sync),
         trapOffset_(trapOffset),
-        widenOp_(wasm::SimdOp::Limit),
-        loadOp_(Plain) {
+        zeroExtendSimd128Load_(false) {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
   }
 
@@ -528,35 +526,13 @@ class MemoryAccessDesc {
   unsigned byteSize() const { return Scalar::byteSize(type()); }
   const jit::Synchronization& sync() const { return sync_; }
   BytecodeOffset trapOffset() const { return trapOffset_; }
-  wasm::SimdOp widenSimdOp() const {
-    MOZ_ASSERT(isWidenSimd128Load());
-    return widenOp_;
-  }
   bool isAtomic() const { return !sync_.isNone(); }
-  bool isZeroExtendSimd128Load() const { return loadOp_ == ZeroExtend; }
-  bool isSplatSimd128Load() const { return loadOp_ == Splat; }
-  bool isWidenSimd128Load() const { return loadOp_ == Widen; }
+  bool isZeroExtendSimd128Load() const { return zeroExtendSimd128Load_; }
 
   void setZeroExtendSimd128Load() {
     MOZ_ASSERT(type() == Scalar::Float32 || type() == Scalar::Float64);
     MOZ_ASSERT(!isAtomic());
-    MOZ_ASSERT(loadOp_ == Plain);
-    loadOp_ = ZeroExtend;
-  }
-
-  void setSplatSimd128Load() {
-    MOZ_ASSERT(type() == Scalar::Float64);
-    MOZ_ASSERT(!isAtomic());
-    MOZ_ASSERT(loadOp_ == Plain);
-    loadOp_ = Splat;
-  }
-
-  void setWidenSimd128Load(wasm::SimdOp op) {
-    MOZ_ASSERT(type() == Scalar::Float64);
-    MOZ_ASSERT(!isAtomic());
-    MOZ_ASSERT(loadOp_ == Plain);
-    widenOp_ = op;
-    loadOp_ = Widen;
+    zeroExtendSimd128Load_ = true;
   }
 
   void clearOffset() { offset_ = 0; }
