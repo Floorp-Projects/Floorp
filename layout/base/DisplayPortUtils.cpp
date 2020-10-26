@@ -41,7 +41,7 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 static LazyLogModule sDisplayportLog("apz.displayport");
 
 /* static */
-DisplayPortMargins DisplayPortMargins::WithAdjustment(
+DisplayPortMargins DisplayPortMargins::FromAPZ(
     const ScreenMargin& aMargins, const CSSPoint& aVisualOffset,
     const CSSPoint& aLayoutOffset, const CSSToScreenScale2D& aScale) {
   return DisplayPortMargins{aMargins, aVisualOffset, aLayoutOffset, aScale};
@@ -1109,7 +1109,7 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
 
   DisplayPortUtils::SetDisplayPortMargins(
       content, presShell,
-      DisplayPortMargins::WithAdjustment(
+      DisplayPortMargins::FromAPZ(
           aMetrics.GetDisplayPortMargins(), aMetrics.GetVisualScrollOffset(),
           frameScrollOffset, aMetrics.DisplayportPixelsPerCSSPixel()),
       0);
