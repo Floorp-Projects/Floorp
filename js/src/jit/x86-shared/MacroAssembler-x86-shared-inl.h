@@ -1114,7 +1114,11 @@ void MacroAssembler::zeroSimd128(FloatRegister dest) {
 
 void MacroAssembler::loadConstantSimd128(const SimdConstant& v,
                                          FloatRegister dest) {
-  loadConstantSimd128Int(v, dest);
+  if (v.isFloatingType()) {
+    loadConstantSimd128Float(v, dest);
+  } else {
+    loadConstantSimd128Int(v, dest);
+  }
 }
 
 // Splat

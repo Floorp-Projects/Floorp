@@ -926,13 +926,11 @@ class MacroAssemblerX86Shared : public Assembler {
   }
 
   bool maybeInlineSimd128Int(const SimdConstant& v, const FloatRegister& dest) {
-    static const SimdConstant zero = SimdConstant::SplatX4(0);
-    static const SimdConstant minusOne = SimdConstant::SplatX4(-1);
-    if (v == zero) {
+    if (v.isZeroBits()) {
       zeroSimd128Int(dest);
       return true;
     }
-    if (v == minusOne) {
+    if (v.isOneBits()) {
       vpcmpeqw(Operand(dest), dest, dest);
       return true;
     }
@@ -940,10 +938,7 @@ class MacroAssemblerX86Shared : public Assembler {
   }
   bool maybeInlineSimd128Float(const SimdConstant& v,
                                const FloatRegister& dest) {
-    static const SimdConstant zero = SimdConstant::SplatX4(0.f);
-    if (v == zero) {
-      // This won't get inlined if the SimdConstant v contains -0 in any
-      // lane, as operator== here does a memcmp.
+    if (v.isZeroBits()) {
       zeroSimd128Float(dest);
       return true;
     }
