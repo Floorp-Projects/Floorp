@@ -969,3 +969,12 @@ exports.getTopWindow = getTopWindow;
 exports.deepEqual = (a, b) => {
   return ObjectUtils.deepEqual(a, b);
 };
+
+function isWorkerDebuggerAlive(dbg) {
+  // Some workers are zombies. `isClosed` is false, but nothing works.
+  // `postMessage` is a noop, `addListener`'s `onClosed` doesn't work.
+  // (Ignore dbg without `window` as they aren't related to docShell
+  //  and probably do not suffer form this issue)
+  return !dbg.isClosed && (!dbg.window || dbg.window.docShell);
+}
+exports.isWorkerDebuggerAlive = isWorkerDebuggerAlive;

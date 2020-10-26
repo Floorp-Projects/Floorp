@@ -8,5 +8,6 @@ DevToolsModules(
     'frame-helper.js',
     'process-helper.js',
     'utils.js',
+    'worker-helper.js',
 )
 
