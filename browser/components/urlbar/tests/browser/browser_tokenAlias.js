@@ -16,6 +16,12 @@ const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
 
 let testEngine;
 
+// Allow more time for Mac machines so they don't time out in verify mode.  See
+// bug 1673062.
+if (AppConstants.platform == "macosx") {
+  requestLongerTimeout(5);
+}
+
 add_task(async function init() {
   // This test requires update2.  See also browser_tokenAlias_legacy.js.
   await SpecialPowers.pushPrefEnv({
