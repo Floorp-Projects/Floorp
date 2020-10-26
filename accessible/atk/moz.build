@@ -5,61 +5,61 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.a11y += [
-    'AccessibleWrap.h',
-    'HyperTextAccessibleWrap.h',
+    "AccessibleWrap.h",
+    "HyperTextAccessibleWrap.h",
 ]
 
 SOURCES += [
-    'AccessibleWrap.cpp',
-    'ApplicationAccessibleWrap.cpp',
-    'AtkSocketAccessible.cpp',
-    'DocAccessibleWrap.cpp',
-    'DOMtoATK.cpp',
-    'nsMaiHyperlink.cpp',
-    'nsMaiInterfaceAction.cpp',
-    'nsMaiInterfaceComponent.cpp',
-    'nsMaiInterfaceDocument.cpp',
-    'nsMaiInterfaceEditableText.cpp',
-    'nsMaiInterfaceHyperlinkImpl.cpp',
-    'nsMaiInterfaceHypertext.cpp',
-    'nsMaiInterfaceImage.cpp',
-    'nsMaiInterfaceSelection.cpp',
-    'nsMaiInterfaceTable.cpp',
-    'nsMaiInterfaceTableCell.cpp',
-    'nsMaiInterfaceText.cpp',
-    'nsMaiInterfaceValue.cpp',
-    'Platform.cpp',
-    'RootAccessibleWrap.cpp',
-    'UtilInterface.cpp',
+    "AccessibleWrap.cpp",
+    "ApplicationAccessibleWrap.cpp",
+    "AtkSocketAccessible.cpp",
+    "DocAccessibleWrap.cpp",
+    "DOMtoATK.cpp",
+    "nsMaiHyperlink.cpp",
+    "nsMaiInterfaceAction.cpp",
+    "nsMaiInterfaceComponent.cpp",
+    "nsMaiInterfaceDocument.cpp",
+    "nsMaiInterfaceEditableText.cpp",
+    "nsMaiInterfaceHyperlinkImpl.cpp",
+    "nsMaiInterfaceHypertext.cpp",
+    "nsMaiInterfaceImage.cpp",
+    "nsMaiInterfaceSelection.cpp",
+    "nsMaiInterfaceTable.cpp",
+    "nsMaiInterfaceTableCell.cpp",
+    "nsMaiInterfaceText.cpp",
+    "nsMaiInterfaceValue.cpp",
+    "Platform.cpp",
+    "RootAccessibleWrap.cpp",
+    "UtilInterface.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/accessible/base',
-    '/accessible/generic',
-    '/accessible/html',
-    '/accessible/ipc',
-    '/accessible/ipc/other',
-    '/accessible/xpcom',
-    '/accessible/xul',
-    '/other-licenses/atk-1.0',
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/ipc",
+    "/accessible/ipc/other",
+    "/accessible/xpcom",
+    "/accessible/xul",
+    "/other-licenses/atk-1.0",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    CFLAGS += CONFIG['TK_CFLAGS']
-    CXXFLAGS += CONFIG['TK_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CFLAGS += CONFIG["TK_CFLAGS"]
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG['MOZ_ENABLE_DBUS']:
-    CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
+if CONFIG["MOZ_ENABLE_DBUS"]:
+    CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     # Used in G_DEFINE_TYPE_EXTENDED macro, probably fixed in newer glib /
     # gobject headers. See bug 1243331 comment 3.
     CXXFLAGS += [
-        '-Wno-error=unused-function',
-        '-Wno-error=shadow',
-        '-Wno-unused-local-typedefs',
+        "-Wno-error=unused-function",
+        "-Wno-error=shadow",
+        "-Wno-unused-local-typedefs",
     ]

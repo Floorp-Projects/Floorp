@@ -24,37 +24,42 @@ class DeviceRunner(BaseRunner):
     The base runner class used for running gecko on
     remote devices (or emulators).
     """
-    env = {'MOZ_CRASHREPORTER': '1',
-           'MOZ_CRASHREPORTER_NO_REPORT': '1',
-           'MOZ_CRASHREPORTER_SHUTDOWN': '1',
-           'MOZ_HIDE_RESULTS_TABLE': '1',
-           'MOZ_IN_AUTOMATION': '1',
-           'MOZ_LOG': 'signaling:3,mtransport:4,DataChannel:4,jsep:4',
-           'R_LOG_LEVEL': '6',
-           'R_LOG_DESTINATION': 'stderr',
-           'R_LOG_VERBOSE': '1', }
+
+    env = {
+        "MOZ_CRASHREPORTER": "1",
+        "MOZ_CRASHREPORTER_NO_REPORT": "1",
+        "MOZ_CRASHREPORTER_SHUTDOWN": "1",
+        "MOZ_HIDE_RESULTS_TABLE": "1",
+        "MOZ_IN_AUTOMATION": "1",
+        "MOZ_LOG": "signaling:3,mtransport:4,DataChannel:4,jsep:4",
+        "R_LOG_LEVEL": "6",
+        "R_LOG_DESTINATION": "stderr",
+        "R_LOG_VERBOSE": "1",
+    }
 
     def __init__(self, device_class, device_args=None, **kwargs):
-        process_log = tempfile.NamedTemporaryFile(suffix='pidlog')
+        process_log = tempfile.NamedTemporaryFile(suffix="pidlog")
         # the env will be passed to the device, it is not a *real* env
         self._device_env = dict(DeviceRunner.env)
-        self._device_env['MOZ_PROCESS_LOG'] = process_log.name
+        self._device_env["MOZ_PROCESS_LOG"] = process_log.name
         # be sure we do not pass env to the parent class ctor
-        env = kwargs.pop('env', None)
+        env = kwargs.pop("env", None)
         if env:
             self._device_env.update(env)
 
         if six.PY2:
-            stdout = codecs.getwriter('utf-8')(sys.stdout)
+            stdout = codecs.getwriter("utf-8")(sys.stdout)
         else:
-            stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
-        process_args = {'stream': stdout,
-                        'processOutputLine': self.on_output,
-                        'onFinish': self.on_finish,
-                        'onTimeout': self.on_timeout}
-        process_args.update(kwargs.get('process_args') or {})
+            stdout = codecs.getwriter("utf-8")(sys.stdout.buffer)
+        process_args = {
+            "stream": stdout,
+            "processOutputLine": self.on_output,
+            "onFinish": self.on_finish,
+            "onTimeout": self.on_timeout,
+        }
+        process_args.update(kwargs.get("process_args") or {})
 
-        kwargs['process_args'] = process_args
+        kwargs["process_args"] = process_args
         BaseRunner.__init__(self, **kwargs)
 
         device_args = device_args or {}
@@ -77,20 +82,25 @@ class DeviceRunner(BaseRunner):
         args.extend(self.cmdargs)
         env = self._device_env
         url = None
-        if 'geckoview' in app:
+        if "geckoview" in app:
             activity = "TestRunnerActivity"
-            self.app_ctx.device.launch_activity(app, activity, e10s=True, moz_env=env,
-                                                extra_args=args, url=url)
+            self.app_ctx.device.launch_activity(
+                app, activity, e10s=True, moz_env=env, extra_args=args, url=url
+            )
         else:
             self.app_ctx.device.launch_fennec(
-                app, moz_env=env, extra_args=args, url=url)
+                app, moz_env=env, extra_args=args, url=url
+            )
 
         timeout = 10  # seconds
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
         while not self.is_running() and datetime.datetime.now() < end_time:
-            time.sleep(.5)
+            time.sleep(0.5)
         if not self.is_running():
-            print("timed out waiting for '%s' process to start" % self.app_ctx.remote_process)
+            print(
+                "timed out waiting for '%s' process to start"
+                % self.app_ctx.remote_process
+            )
 
     def stop(self, sig=None):
         if not sig and self.is_running():
@@ -101,16 +111,20 @@ class DeviceRunner(BaseRunner):
 
             self.app_ctx.device.pkill(self.app_ctx.remote_process, sig=sig)
             if self.wait(timeout) is None and sig is not None:
-                print("timed out waiting for '{}' process to exit, trying "
-                      "without signal {}".format(
-                          self.app_ctx.remote_process, sig))
+                print(
+                    "timed out waiting for '{}' process to exit, trying "
+                    "without signal {}".format(self.app_ctx.remote_process, sig)
+                )
 
             # need to call adb stop otherwise the system will attempt to
             # restart the process
             self.app_ctx.stop_application()
             if self.wait(timeout) is None:
-                print("timed out waiting for '{}' process to exit".format(
-                    self.app_ctx.remote_process))
+                print(
+                    "timed out waiting for '{}' process to exit".format(
+                        self.app_ctx.remote_process
+                    )
+                )
 
     @property
     def returncode(self):
@@ -139,7 +153,7 @@ class DeviceRunner(BaseRunner):
         while self.is_running():
             if end_time is not None and datetime.datetime.now() > end_time:
                 break
-            time.sleep(.5)
+            time.sleep(0.5)
 
         return self.returncode
 
@@ -171,7 +185,8 @@ class DeviceRunner(BaseRunner):
             dump_directory=dump_dir,
             dump_save_path=dump_save_path,
             test_name=test_name,
-            **kwargs)
+            **kwargs
+        )
         mozfile.remove(dump_dir)
         return crashed
 
@@ -181,7 +196,6 @@ class DeviceRunner(BaseRunner):
 
 
 class FennecRunner(DeviceRunner):
-
     def __init__(self, cmdargs=None, **kwargs):
         super(FennecRunner, self).__init__(**kwargs)
         self.cmdargs = cmdargs or []

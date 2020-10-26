@@ -4,132 +4,132 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "General")
 
 # These component dirs are built for all apps (including suite)
-if CONFIG['MOZ_HAS_REMOTE']:
-    DIRS += ['remote']
+if CONFIG["MOZ_HAS_REMOTE"]:
+    DIRS += ["remote"]
 
 DIRS += [
-    'aboutcheckerboard',
-    'aboutmemory',
-    'aboutperformance',
-    'alerts',
-    'antitracking',
-    'apppicker',
-    'asyncshutdown',
-    'backgroundhangmonitor',
-    'bitsdownload',
-    'browser',
-    'cascade_bloom_filter',
-    'certviewer',
-    'cleardata',
-    'clearsitedata',
-    'cloudstorage',
-    'commandlines',
-    'contentprefs',
-    'contextualidentity',
-    'crashes',
-    'crashmonitor',
-    'downloads',
-    'enterprisepolicies',
-    'extensions',
-    'featuregates',
-    'filewatcher',
-    'finalizationwitness',
-    'find',
-    'forgetaboutsite',
-    'fuzzyfox',
-    'glean',
-    'httpsonlyerror',
-    'jsoncpp/src/lib_json',
-    'kvstore',
-    'lz4',
-    'mediasniffer',
-    'mozintl',
-    'mozprotocol',
-    'osfile',
-    'parentalcontrols',
-    'passwordmgr',
-    'pdfjs',
-    'perfmonitoring',
-    'pictureinpicture',
-    'places',
-    'processtools',
-    'processsingleton',
-    'promiseworker',
-    'prompts',
-    'protobuf',
-    'remotebrowserutils',
-    'remotepagemanager',
-    'reflect',
-    'reputationservice',
-    'resistfingerprinting',
-    'search',
-    'securityreporter',
-    'sessionstore',
-    'shell',
-    'startup',
-    'statusfilter',
-    'telemetry',
-    'thumbnails',
-    'timermanager',
-    'tooltiptext',
-    'typeaheadfind',
-    'utils',
-    'url-classifier',
-    'urlformatter',
-    'viewconfig',
-    'viewsource',
-    'windowcreator',
-    'windowwatcher',
-    'workerloader',
-    'xulstore',
+    "aboutcheckerboard",
+    "aboutmemory",
+    "aboutperformance",
+    "alerts",
+    "antitracking",
+    "apppicker",
+    "asyncshutdown",
+    "backgroundhangmonitor",
+    "bitsdownload",
+    "browser",
+    "cascade_bloom_filter",
+    "certviewer",
+    "cleardata",
+    "clearsitedata",
+    "cloudstorage",
+    "commandlines",
+    "contentprefs",
+    "contextualidentity",
+    "crashes",
+    "crashmonitor",
+    "downloads",
+    "enterprisepolicies",
+    "extensions",
+    "featuregates",
+    "filewatcher",
+    "finalizationwitness",
+    "find",
+    "forgetaboutsite",
+    "fuzzyfox",
+    "glean",
+    "httpsonlyerror",
+    "jsoncpp/src/lib_json",
+    "kvstore",
+    "lz4",
+    "mediasniffer",
+    "mozintl",
+    "mozprotocol",
+    "osfile",
+    "parentalcontrols",
+    "passwordmgr",
+    "pdfjs",
+    "perfmonitoring",
+    "pictureinpicture",
+    "places",
+    "processtools",
+    "processsingleton",
+    "promiseworker",
+    "prompts",
+    "protobuf",
+    "remotebrowserutils",
+    "remotepagemanager",
+    "reflect",
+    "reputationservice",
+    "resistfingerprinting",
+    "search",
+    "securityreporter",
+    "sessionstore",
+    "shell",
+    "startup",
+    "statusfilter",
+    "telemetry",
+    "thumbnails",
+    "timermanager",
+    "tooltiptext",
+    "typeaheadfind",
+    "utils",
+    "url-classifier",
+    "urlformatter",
+    "viewconfig",
+    "viewsource",
+    "windowcreator",
+    "windowwatcher",
+    "workerloader",
+    "xulstore",
 ]
 
-if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     DIRS += [
-      'narrate',
-      'reader',
-      'viaduct',
-    ];
+        "narrate",
+        "reader",
+        "viaduct",
+    ]
 
-    if CONFIG['NS_PRINTING']:
-        DIRS += ['printing']
+    if CONFIG["NS_PRINTING"]:
+        DIRS += ["printing"]
 
-if CONFIG['BUILD_CTYPES']:
-    DIRS += ['ctypes']
+if CONFIG["BUILD_CTYPES"]:
+    DIRS += ["ctypes"]
 
-if CONFIG['MOZ_XUL']:
-    DIRS += ['autocomplete', 'printingui', 'satchel']
+if CONFIG["MOZ_XUL"]:
+    DIRS += ["autocomplete", "printingui", "satchel"]
 
-DIRS += ['captivedetect']
+DIRS += ["captivedetect"]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    DIRS += ['terminator']
+if CONFIG["OS_TARGET"] != "Android":
+    DIRS += ["terminator"]
 
-DIRS += ['build']
+DIRS += ["build"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    DIRS += ['gfx']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    DIRS += ["gfx"]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES += [
-        'DefaultCLH.jsm',
+        "DefaultCLH.jsm",
     ]
 
     XPCOM_MANIFESTS += [
-        'components.conf',
+        "components.conf",
     ]
 
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIRS += ['normandy', 'messaging-system']
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIRS += ["normandy", "messaging-system"]
 
 # This is only packaged for browser since corrupt JAR and XPI files tend to be a desktop-OS problem.
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIRS += ['corroborator']
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIRS += ["corroborator"]
 
 # about:processes is experimental
-if CONFIG['NIGHTLY_BUILD']:
-    DIRS += ['aboutprocesses']
+if CONFIG["NIGHTLY_BUILD"]:
+    DIRS += ["aboutprocesses"]

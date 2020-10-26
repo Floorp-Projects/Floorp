@@ -4,139 +4,143 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SharedLibrary('mozsandbox')
+SharedLibrary("mozsandbox")
 
 # Depend on mozglue if and only if it's a shared library;
 # this needs to match mozglue/build/moz.build:
-if CONFIG['OS_TARGET'] == 'Android':
+if CONFIG["OS_TARGET"] == "Android":
     USE_LIBS += [
-        'mozglue',
+        "mozglue",
     ]
 
 USE_LIBS += [
     # For PR_GetEnv
-    'nspr',
+    "nspr",
 ]
 
 EXPORTS.mozilla += [
-    'Sandbox.h',
-    'SandboxInfo.h',
+    "Sandbox.h",
+    "SandboxInfo.h",
 ]
 
 UNIFIED_SOURCES += [
-    '../chromium-shim/base/logging.cpp',
-    '../chromium-shim/base/threading/platform_thread_linux.cpp',
-    '../chromium/base/at_exit.cc',
-    '../chromium/base/callback_internal.cc',
-    '../chromium/base/lazy_instance_helpers.cc',
-    '../chromium/base/location.cc',
-    '../chromium/base/memory/ref_counted.cc',
-    '../chromium/base/posix/can_lower_nice_to.cc',
-    '../chromium/base/posix/safe_strerror.cc',
-    '../chromium/base/strings/string16.cc',
-    '../chromium/base/strings/string_number_conversions.cc',
-    '../chromium/base/strings/string_piece.cc',
-    '../chromium/base/strings/string_util.cc',
-    '../chromium/base/strings/string_util_constants.cc',
-    '../chromium/base/strings/stringprintf.cc',
-    '../chromium/base/strings/utf_string_conversion_utils.cc',
-    '../chromium/base/strings/utf_string_conversions.cc',
-    '../chromium/base/synchronization/condition_variable_posix.cc',
-    '../chromium/base/synchronization/lock.cc',
-    '../chromium/base/synchronization/lock_impl_posix.cc',
-    '../chromium/base/synchronization/waitable_event_posix.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/bignum-dtoa.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/bignum.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/cached-powers.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/double-to-string.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/fast-dtoa.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/fixed-dtoa.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/string-to-double.cc',
-    '../chromium/base/third_party/double_conversion/double-conversion/strtod.cc',
-    '../chromium/base/threading/platform_thread.cc',
-    '../chromium/base/threading/platform_thread_internal_posix.cc',
-    '../chromium/base/threading/platform_thread_posix.cc',
-    '../chromium/base/threading/thread_collision_warner.cc',
-    '../chromium/base/threading/thread_id_name_manager.cc',
-    '../chromium/base/threading/thread_local_storage.cc',
-    '../chromium/base/threading/thread_local_storage_posix.cc',
-    '../chromium/base/threading/thread_restrictions.cc',
-    '../chromium/base/time/time.cc',
-    '../chromium/base/time/time_exploded_posix.cc',
-    '../chromium/base/time/time_now_posix.cc',
-    '../chromium/sandbox/linux/bpf_dsl/bpf_dsl.cc',
-    '../chromium/sandbox/linux/bpf_dsl/codegen.cc',
-    '../chromium/sandbox/linux/bpf_dsl/dump_bpf.cc',
-    '../chromium/sandbox/linux/bpf_dsl/policy.cc',
-    '../chromium/sandbox/linux/bpf_dsl/policy_compiler.cc',
-    '../chromium/sandbox/linux/bpf_dsl/syscall_set.cc',
-    '../chromium/sandbox/linux/seccomp-bpf/die.cc',
-    '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
-    'broker/SandboxBrokerCommon.cpp',
-    'Sandbox.cpp',
-    'SandboxBrokerClient.cpp',
-    'SandboxFilter.cpp',
-    'SandboxFilterUtil.cpp',
-    'SandboxHooks.cpp',
-    'SandboxInfo.cpp',
-    'SandboxLogging.cpp',
-    'SandboxOpenedFiles.cpp',
-    'SandboxReporterClient.cpp',
+    "../chromium-shim/base/logging.cpp",
+    "../chromium-shim/base/threading/platform_thread_linux.cpp",
+    "../chromium/base/at_exit.cc",
+    "../chromium/base/callback_internal.cc",
+    "../chromium/base/lazy_instance_helpers.cc",
+    "../chromium/base/location.cc",
+    "../chromium/base/memory/ref_counted.cc",
+    "../chromium/base/posix/can_lower_nice_to.cc",
+    "../chromium/base/posix/safe_strerror.cc",
+    "../chromium/base/strings/string16.cc",
+    "../chromium/base/strings/string_number_conversions.cc",
+    "../chromium/base/strings/string_piece.cc",
+    "../chromium/base/strings/string_util.cc",
+    "../chromium/base/strings/string_util_constants.cc",
+    "../chromium/base/strings/stringprintf.cc",
+    "../chromium/base/strings/utf_string_conversion_utils.cc",
+    "../chromium/base/strings/utf_string_conversions.cc",
+    "../chromium/base/synchronization/condition_variable_posix.cc",
+    "../chromium/base/synchronization/lock.cc",
+    "../chromium/base/synchronization/lock_impl_posix.cc",
+    "../chromium/base/synchronization/waitable_event_posix.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/bignum-dtoa.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/bignum.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/cached-powers.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/double-to-string.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/fast-dtoa.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/fixed-dtoa.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/string-to-double.cc",
+    "../chromium/base/third_party/double_conversion/double-conversion/strtod.cc",
+    "../chromium/base/threading/platform_thread.cc",
+    "../chromium/base/threading/platform_thread_internal_posix.cc",
+    "../chromium/base/threading/platform_thread_posix.cc",
+    "../chromium/base/threading/thread_collision_warner.cc",
+    "../chromium/base/threading/thread_id_name_manager.cc",
+    "../chromium/base/threading/thread_local_storage.cc",
+    "../chromium/base/threading/thread_local_storage_posix.cc",
+    "../chromium/base/threading/thread_restrictions.cc",
+    "../chromium/base/time/time.cc",
+    "../chromium/base/time/time_exploded_posix.cc",
+    "../chromium/base/time/time_now_posix.cc",
+    "../chromium/sandbox/linux/bpf_dsl/bpf_dsl.cc",
+    "../chromium/sandbox/linux/bpf_dsl/codegen.cc",
+    "../chromium/sandbox/linux/bpf_dsl/dump_bpf.cc",
+    "../chromium/sandbox/linux/bpf_dsl/policy.cc",
+    "../chromium/sandbox/linux/bpf_dsl/policy_compiler.cc",
+    "../chromium/sandbox/linux/bpf_dsl/syscall_set.cc",
+    "../chromium/sandbox/linux/seccomp-bpf/die.cc",
+    "../chromium/sandbox/linux/seccomp-bpf/syscall.cc",
+    "broker/SandboxBrokerCommon.cpp",
+    "Sandbox.cpp",
+    "SandboxBrokerClient.cpp",
+    "SandboxFilter.cpp",
+    "SandboxFilterUtil.cpp",
+    "SandboxHooks.cpp",
+    "SandboxInfo.cpp",
+    "SandboxLogging.cpp",
+    "SandboxOpenedFiles.cpp",
+    "SandboxReporterClient.cpp",
 ]
 
 SOURCES += [
-    '../chromium/base/strings/safe_sprintf.cc',
-    '../chromium/base/third_party/icu/icu_utf.cc',
-    '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
-    '../chromium/sandbox/linux/services/syscall_wrappers.cc',
+    "../chromium/base/strings/safe_sprintf.cc",
+    "../chromium/base/third_party/icu/icu_utf.cc",
+    "../chromium/sandbox/linux/seccomp-bpf/trap.cc",
+    "../chromium/sandbox/linux/services/syscall_wrappers.cc",
 ]
 
 # This copy of SafeSPrintf doesn't need to avoid the Chromium logging
 # dependency like the one in libxul does, but this way the behavior is
 # consistent.  See also the comment in SandboxLogging.h.
-SOURCES['../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
+SOURCES["../chromium/base/strings/safe_sprintf.cc"].flags += ["-DNDEBUG"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     # Keep clang from warning about intentional 'switch' fallthrough in icu_utf.cc:
-    SOURCES['../chromium/base/third_party/icu/icu_utf.cc'].flags += ['-Wno-implicit-fallthrough']
-    SOURCES['../chromium/sandbox/linux/seccomp-bpf/trap.cc'].flags += ['-Wno-unreachable-code-return']
+    SOURCES["../chromium/base/third_party/icu/icu_utf.cc"].flags += [
+        "-Wno-implicit-fallthrough"
+    ]
+    SOURCES["../chromium/sandbox/linux/seccomp-bpf/trap.cc"].flags += [
+        "-Wno-unreachable-code-return"
+    ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow']
-    SOURCES['../chromium/sandbox/linux/services/syscall_wrappers.cc'].flags += [
-        '-Wno-empty-body',
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-shadow"]
+    SOURCES["../chromium/sandbox/linux/services/syscall_wrappers.cc"].flags += [
+        "-Wno-empty-body",
     ]
 
 # gcc lto likes to put the top level asm in syscall.cc in a different partition
 # from the function using it which breaks the build.  Work around that by
 # forcing there to be only one partition.
-for f in CONFIG['OS_CXXFLAGS']:
-    if f.startswith('-flto') and CONFIG['CC_TYPE'] != 'clang':
-        LDFLAGS += ['--param lto-partitions=1']
+for f in CONFIG["OS_CXXFLAGS"]:
+    if f.startswith("-flto") and CONFIG["CC_TYPE"] != "clang":
+        LDFLAGS += ["--param lto-partitions=1"]
 
-DEFINES['NS_NO_XPCOM'] = True
+DEFINES["NS_NO_XPCOM"] = True
 DisableStlWrapping()
 
-LOCAL_INCLUDES += ['/security/sandbox/linux']
-LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
-LOCAL_INCLUDES += ['/security/sandbox/chromium']
-LOCAL_INCLUDES += ['/nsprpub']
+LOCAL_INCLUDES += ["/security/sandbox/linux"]
+LOCAL_INCLUDES += ["/security/sandbox/chromium-shim"]
+LOCAL_INCLUDES += ["/security/sandbox/chromium"]
+LOCAL_INCLUDES += ["/nsprpub"]
 
 
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_TARGET"] != "Android":
     # Needed for clock_gettime with glibc < 2.17:
     OS_LIBS += [
-        'rt',
+        "rt",
     ]
 
 DIRS += [
-    'broker',
-    'glue',
-    'interfaces',
-    'launch',
-    'reporter',
+    "broker",
+    "glue",
+    "interfaces",
+    "launch",
+    "reporter",
 ]
 
 TEST_DIRS += [
-    'gtest',
+    "gtest",
 ]

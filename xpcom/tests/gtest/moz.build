@@ -5,136 +5,144 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'Helpers.cpp',
-    'TestArenaAllocator.cpp',
-    'TestArrayAlgorithm.cpp',
-    'TestAtoms.cpp',
-    'TestAutoRefCnt.cpp',
-    'TestBase64.cpp',
-    'TestCallTemplates.cpp',
-    'TestCloneInputStream.cpp',
-    'TestCOMPtrEq.cpp',
-    'TestCRT.cpp',
-    'TestDafsa.cpp',
-    'TestEncoding.cpp',
-    'TestEscape.cpp',
-    'TestEventPriorities.cpp',
-    'TestEventTargetQI.cpp',
-    'TestExpirationTracker.cpp',
-    'TestFile.cpp',
-    'TestGCPostBarriers.cpp',
-    'TestID.cpp',
-    'TestInputStreamLengthHelper.cpp',
-    'TestLogCommandLineHandler.cpp',
-    'TestMoveString.cpp',
-    'TestMozPromise.cpp',
-    'TestMruCache.cpp',
-    'TestMultiplexInputStream.cpp',
-    'TestNonBlockingAsyncInputStream.cpp',
-    'TestNsDeque.cpp',
-    'TestNSPRLogModulesParser.cpp',
-    'TestObserverArray.cpp',
-    'TestObserverService.cpp',
-    'TestPLDHash.cpp',
-    'TestPriorityQueue.cpp',
-    'TestRacingServiceManager.cpp',
-    'TestRecursiveMutex.cpp',
-    'TestRWLock.cpp',
-    'TestSegmentedBuffer.cpp',
-    'TestSlicedInputStream.cpp',
-    'TestSmallArrayLRUCache.cpp',
-    'TestSnappyStreams.cpp',
-    'TestStateWatching.cpp',
-    'TestStorageStream.cpp',
-    'TestStrings.cpp',
-    'TestStringStream.cpp',
-    'TestSubstringTuple.cpp',
-    'TestSynchronization.cpp',
-    'TestTArray.cpp',
-    'TestTArray2.cpp',
-    'TestTaskQueue.cpp',
-    'TestTextFormatter.cpp',
-    'TestThreadManager.cpp',
-    'TestThreadMetrics.cpp',
-    'TestThreadPool.cpp',
-    'TestThreadPoolListener.cpp',
-    'TestThrottledEventQueue.cpp',
-    'TestTimeStamp.cpp',
-    'TestTokenizer.cpp',
-    'TestUTF.cpp',
+    "Helpers.cpp",
+    "TestArenaAllocator.cpp",
+    "TestArrayAlgorithm.cpp",
+    "TestAtoms.cpp",
+    "TestAutoRefCnt.cpp",
+    "TestBase64.cpp",
+    "TestCallTemplates.cpp",
+    "TestCloneInputStream.cpp",
+    "TestCOMPtrEq.cpp",
+    "TestCRT.cpp",
+    "TestDafsa.cpp",
+    "TestEncoding.cpp",
+    "TestEscape.cpp",
+    "TestEventPriorities.cpp",
+    "TestEventTargetQI.cpp",
+    "TestExpirationTracker.cpp",
+    "TestFile.cpp",
+    "TestGCPostBarriers.cpp",
+    "TestID.cpp",
+    "TestInputStreamLengthHelper.cpp",
+    "TestLogCommandLineHandler.cpp",
+    "TestMoveString.cpp",
+    "TestMozPromise.cpp",
+    "TestMruCache.cpp",
+    "TestMultiplexInputStream.cpp",
+    "TestNonBlockingAsyncInputStream.cpp",
+    "TestNsDeque.cpp",
+    "TestNSPRLogModulesParser.cpp",
+    "TestObserverArray.cpp",
+    "TestObserverService.cpp",
+    "TestPLDHash.cpp",
+    "TestPriorityQueue.cpp",
+    "TestRacingServiceManager.cpp",
+    "TestRecursiveMutex.cpp",
+    "TestRWLock.cpp",
+    "TestSegmentedBuffer.cpp",
+    "TestSlicedInputStream.cpp",
+    "TestSmallArrayLRUCache.cpp",
+    "TestSnappyStreams.cpp",
+    "TestStateWatching.cpp",
+    "TestStorageStream.cpp",
+    "TestStrings.cpp",
+    "TestStringStream.cpp",
+    "TestSubstringTuple.cpp",
+    "TestSynchronization.cpp",
+    "TestTArray.cpp",
+    "TestTArray2.cpp",
+    "TestTaskQueue.cpp",
+    "TestTextFormatter.cpp",
+    "TestThreadManager.cpp",
+    "TestThreadMetrics.cpp",
+    "TestThreadPool.cpp",
+    "TestThreadPoolListener.cpp",
+    "TestThrottledEventQueue.cpp",
+    "TestTimeStamp.cpp",
+    "TestTokenizer.cpp",
+    "TestUTF.cpp",
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
-        'TestPipes.cpp',
-        'TestThreads.cpp',
+        "TestPipes.cpp",
+        "TestThreads.cpp",
     ]
 
 # skip the test on windows10-aarch64 due to perma-fail, bug 1422219
-if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
-    UNIFIED_SOURCES += [
-        'TestThreadUtils.cpp'
-    ]
+if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
+    UNIFIED_SOURCES += ["TestThreadUtils.cpp"]
 
 # skip the test on windows10-aarch64 and Android, aarch64 due to bug 1545670
-if CONFIG['OS_TARGET'] != 'Android' and not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
-    UNIFIED_SOURCES += [
-        'TestTimers.cpp'
-    ]
+if CONFIG["OS_TARGET"] != "Android" and not (
+    CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"
+):
+    UNIFIED_SOURCES += ["TestTimers.cpp"]
 
 
-if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TARGET'] != 'Android':
+if (
+    CONFIG["MOZ_DEBUG"]
+    and CONFIG["OS_ARCH"] not in ("WINNT")
+    and CONFIG["OS_TARGET"] != "Android"
+):
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
     # Bug 1054249: Doesn't work on Android
     UNIFIED_SOURCES += [
-        'TestDeadlockDetector.cpp',
-        'TestDeadlockDetectorScalability.cpp',
+        "TestDeadlockDetector.cpp",
+        "TestDeadlockDetectorScalability.cpp",
     ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
-        'TestFilePreferencesWin.cpp',
+        "TestFilePreferencesWin.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'TestFilePreferencesUnix.cpp',
+        "TestFilePreferencesUnix.cpp",
     ]
 
-if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl' and CONFIG['OS_TARGET'] != 'Android':
+if (
+    CONFIG["WRAP_STL_INCLUDES"]
+    and CONFIG["CC_TYPE"] != "clang-cl"
+    and CONFIG["OS_TARGET"] != "Android"
+):
     UNIFIED_SOURCES += [
-        'TestSTLWrappers.cpp',
+        "TestSTLWrappers.cpp",
     ]
 
 # Compile TestAllocReplacement separately so Windows headers don't pollute
 # the global namespace for other files.
 SOURCES += [
-    'TestAllocReplacement.cpp',
-    'TestCOMArray.cpp',
-    'TestCOMPtr.cpp', # Redefines IFoo and IBar
-    'TestHashtables.cpp', # Redefines IFoo
-    'TestNsRefPtr.cpp', # Redefines Foo
+    "TestAllocReplacement.cpp",
+    "TestCOMArray.cpp",
+    "TestCOMPtr.cpp",  # Redefines IFoo and IBar
+    "TestHashtables.cpp",  # Redefines IFoo
+    "TestNsRefPtr.cpp",  # Redefines Foo
 ]
 
 LOCAL_INCLUDES += [
-    '../../base',
+    "../../base",
 ]
 
-GeneratedFile('dafsa_test_1.inc',
-              script='../../ds/tools/make_dafsa.py',
-              inputs=['dafsa_test_1.dat'])
+GeneratedFile(
+    "dafsa_test_1.inc",
+    script="../../ds/tools/make_dafsa.py",
+    inputs=["dafsa_test_1.dat"],
+)
 
 TEST_HARNESS_FILES.gtest += [
-    'wikipedia/ar.txt',
-    'wikipedia/de-edit.txt',
-    'wikipedia/de.txt',
-    'wikipedia/ja.txt',
-    'wikipedia/ko.txt',
-    'wikipedia/ru.txt',
-    'wikipedia/th.txt',
-    'wikipedia/tr.txt',
-    'wikipedia/vi.txt',
+    "wikipedia/ar.txt",
+    "wikipedia/de-edit.txt",
+    "wikipedia/de.txt",
+    "wikipedia/ja.txt",
+    "wikipedia/ko.txt",
+    "wikipedia/ru.txt",
+    "wikipedia/th.txt",
+    "wikipedia/tr.txt",
+    "wikipedia/vi.txt",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

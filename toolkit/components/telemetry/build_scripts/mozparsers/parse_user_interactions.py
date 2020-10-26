@@ -9,10 +9,13 @@ import yaml
 import atexit
 
 from .shared_telemetry_utils import ParserError
+
 atexit.register(ParserError.exit_func)
 
-BASE_DOC_URL = 'https://firefox-source-docs.mozilla.org/toolkit/components/' + \
-               'telemetry/telemetry/collection/user_interactions.html'
+BASE_DOC_URL = (
+    "https://firefox-source-docs.mozilla.org/toolkit/components/"
+    + "telemetry/telemetry/collection/user_interactions.html"
+)
 
 
 class UserInteractionType:
@@ -46,27 +49,36 @@ class UserInteractionType:
         MAX_NAME_LENGTH = 40
         for n in [category_name, user_interaction_name]:
             if len(n) > MAX_NAME_LENGTH:
-                ParserError(("Name '{}' exceeds maximum name length of {} characters.\n"
-                             "See: {}#the-yaml-definition-file")
-                            .format(n, MAX_NAME_LENGTH, BASE_DOC_URL)).handle_later()
+                ParserError(
+                    (
+                        "Name '{}' exceeds maximum name length of {} characters.\n"
+                        "See: {}#the-yaml-definition-file"
+                    ).format(n, MAX_NAME_LENGTH, BASE_DOC_URL)
+                ).handle_later()
 
         def check_name(name, error_msg_prefix, allowed_char_regexp):
             # Check if we only have the allowed characters.
-            chars_regxp = r'^[a-zA-Z0-9' + allowed_char_regexp + r']+$'
+            chars_regxp = r"^[a-zA-Z0-9" + allowed_char_regexp + r"]+$"
             if not re.search(chars_regxp, name):
-                ParserError((error_msg_prefix + " name must be alpha-numeric. Got: '{}'.\n"
-                             "See: {}#the-yaml-definition-file")
-                            .format(name, BASE_DOC_URL)).handle_later()
+                ParserError(
+                    (
+                        error_msg_prefix + " name must be alpha-numeric. Got: '{}'.\n"
+                        "See: {}#the-yaml-definition-file"
+                    ).format(name, BASE_DOC_URL)
+                ).handle_later()
 
             # Don't allow leading/trailing digits, '.' or '_'.
-            if re.search(r'(^[\d\._])|([\d\._])$', name):
-                ParserError((error_msg_prefix + " name must not have a leading/trailing "
-                             "digit, a dot or underscore. Got: '{}'.\n"
-                             " See: {}#the-yaml-definition-file")
-                            .format(name, BASE_DOC_URL)).handle_later()
+            if re.search(r"(^[\d\._])|([\d\._])$", name):
+                ParserError(
+                    (
+                        error_msg_prefix + " name must not have a leading/trailing "
+                        "digit, a dot or underscore. Got: '{}'.\n"
+                        " See: {}#the-yaml-definition-file"
+                    ).format(name, BASE_DOC_URL)
+                ).handle_later()
 
-        check_name(category_name, 'Category', r'\.')
-        check_name(user_interaction_name, 'UserInteraction', r'_')
+        check_name(category_name, "Category", r"\.")
+        check_name(user_interaction_name, "UserInteraction", r"_")
 
     def validate_types(self, definition):
         """This function performs some basic sanity checks on the UserInteraction
@@ -83,13 +95,13 @@ class UserInteractionType:
 
         # The required and optional fields in a UserInteraction definition.
         REQUIRED_FIELDS = {
-            'bug_numbers': list,  # This contains ints. See LIST_FIELDS_CONTENT.
-            'description': six.string_types,
+            "bug_numbers": list,  # This contains ints. See LIST_FIELDS_CONTENT.
+            "description": six.string_types,
         }
 
         # The types for the data within the fields that hold lists.
         LIST_FIELDS_CONTENT = {
-            'bug_numbers': int,
+            "bug_numbers": int,
         }
 
         ALL_FIELDS = REQUIRED_FIELDS.copy()
@@ -97,23 +109,36 @@ class UserInteractionType:
         # Checks that all the required fields are available.
         missing_fields = [f for f in REQUIRED_FIELDS.keys() if f not in definition]
         if len(missing_fields) > 0:
-            ParserError(self._name + ' - missing required fields: ' +
-                        ', '.join(missing_fields) +
-                        '.\nSee: {}#required-fields'.format(BASE_DOC_URL)).handle_later()
+            ParserError(
+                self._name
+                + " - missing required fields: "
+                + ", ".join(missing_fields)
+                + ".\nSee: {}#required-fields".format(BASE_DOC_URL)
+            ).handle_later()
 
         # Do we have any unknown field?
         unknown_fields = [f for f in definition.keys() if f not in ALL_FIELDS]
         if len(unknown_fields) > 0:
-            ParserError(self._name + ' - unknown fields: ' + ', '.join(unknown_fields) +
-                        '.\nSee: {}#required-fields'.format(BASE_DOC_URL)).handle_later()
+            ParserError(
+                self._name
+                + " - unknown fields: "
+                + ", ".join(unknown_fields)
+                + ".\nSee: {}#required-fields".format(BASE_DOC_URL)
+            ).handle_later()
 
         # Checks the type for all the fields.
-        wrong_type_names = ['{} must be {}'.format(f, ALL_FIELDS[f].__name__)
-                            for f in definition.keys()
-                            if not isinstance(definition[f], ALL_FIELDS[f])]
+        wrong_type_names = [
+            "{} must be {}".format(f, ALL_FIELDS[f].__name__)
+            for f in definition.keys()
+            if not isinstance(definition[f], ALL_FIELDS[f])
+        ]
         if len(wrong_type_names) > 0:
-            ParserError(self._name + ' - ' + ', '.join(wrong_type_names) +
-                        '.\nSee: {}#required-fields'.format(BASE_DOC_URL)).handle_later()
+            ParserError(
+                self._name
+                + " - "
+                + ", ".join(wrong_type_names)
+                + ".\nSee: {}#required-fields".format(BASE_DOC_URL)
+            ).handle_later()
 
         # Check that the lists are not empty and that data in the lists
         # have the correct types.
@@ -121,17 +146,28 @@ class UserInteractionType:
         for field in list_fields:
             # Check for empty lists.
             if len(definition[field]) == 0:
-                ParserError(("Field '{}' for probe '{}' must not be empty" +
-                             ".\nSee: {}#required-fields)")
-                            .format(field, self._name, BASE_DOC_URL)).handle_later()
+                ParserError(
+                    (
+                        "Field '{}' for probe '{}' must not be empty"
+                        + ".\nSee: {}#required-fields)"
+                    ).format(field, self._name, BASE_DOC_URL)
+                ).handle_later()
             # Check the type of the list content.
-            broken_types =\
-                [not isinstance(v, LIST_FIELDS_CONTENT[field]) for v in definition[field]]
+            broken_types = [
+                not isinstance(v, LIST_FIELDS_CONTENT[field]) for v in definition[field]
+            ]
             if any(broken_types):
-                ParserError(("Field '{}' for probe '{}' must only contain values of type {}"
-                             ".\nSee: {}#the-yaml-definition-file)")
-                            .format(field, self._name, LIST_FIELDS_CONTENT[field].__name__,
-                                    BASE_DOC_URL)).handle_later()
+                ParserError(
+                    (
+                        "Field '{}' for probe '{}' must only contain values of type {}"
+                        ".\nSee: {}#the-yaml-definition-file)"
+                    ).format(
+                        field,
+                        self._name,
+                        LIST_FIELDS_CONTENT[field].__name__,
+                        BASE_DOC_URL,
+                    )
+                ).handle_later()
 
     @property
     def category(self):
@@ -148,17 +184,17 @@ class UserInteractionType:
         """Get the UserInteraction label generated from the UserInteraction
         and category names.
         """
-        return self._category_name + '.' + self._name
+        return self._category_name + "." + self._name
 
     @property
     def bug_numbers(self):
         """Get the list of related bug numbers"""
-        return self._definition['bug_numbers']
+        return self._definition["bug_numbers"]
 
     @property
     def description(self):
         """Get the UserInteraction description"""
-        return self._definition['description']
+        return self._definition["description"]
 
 
 def load_user_interactions(filename):
@@ -172,13 +208,15 @@ def load_user_interactions(filename):
     # Parse the UserInteraction definitions from the YAML file.
     user_interactions = None
     try:
-        with io.open(filename, 'r', encoding='utf-8') as f:
+        with io.open(filename, "r", encoding="utf-8") as f:
             user_interactions = yaml.safe_load(f)
     except IOError as e:
-        ParserError('Error opening ' + filename + ': ' + e.message).handle_now()
+        ParserError("Error opening " + filename + ": " + e.message).handle_now()
     except ValueError as e:
-        ParserError('Error parsing UserInteractions in {}: {}'
-                    '.\nSee: {}'.format(filename, e.message, BASE_DOC_URL)).handle_now()
+        ParserError(
+            "Error parsing UserInteractions in {}: {}"
+            ".\nSee: {}".format(filename, e.message, BASE_DOC_URL)
+        ).handle_now()
 
     user_interaction_list = []
 
@@ -191,15 +229,19 @@ def load_user_interactions(filename):
 
         # Make sure that the category has at least one UserInteraction in it.
         if not category or len(category) == 0:
-            ParserError('Category "{}" must have at least one UserInteraction in it'
-                        '.\nSee: {}'.format(category_name, BASE_DOC_URL)).handle_later()
+            ParserError(
+                'Category "{}" must have at least one UserInteraction in it'
+                ".\nSee: {}".format(category_name, BASE_DOC_URL)
+            ).handle_later()
 
         for user_interaction_name in sorted(category):
             # We found a UserInteraction type. Go ahead and parse it.
             user_interaction_info = category[user_interaction_name]
             user_interaction_list.append(
-                UserInteractionType(category_name, user_interaction_name,
-                                    user_interaction_info))
+                UserInteractionType(
+                    category_name, user_interaction_name, user_interaction_info
+                )
+            )
 
     return user_interaction_list
 

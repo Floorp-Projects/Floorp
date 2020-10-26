@@ -3,19 +3,17 @@ config = {
     # marionette options
     "marionette_address": "localhost:2828",
     "test_manifest": "unit-tests.ini",
-
-    "virtualenv_path": 'venv',
+    "virtualenv_path": "venv",
     "exes": {
-        'python': 'c:/mozilla-build/python27/python',
-        'hg': 'c:/mozilla-build/hg/hg',
+        "python": "c:/mozilla-build/python27/python",
+        "hg": "c:/mozilla-build/hg/hg",
     },
-
     "default_actions": [
-        'clobber',
-        'download-and-extract',
-        'create-virtualenv',
-        'install',
-        'run-tests',
+        "clobber",
+        "download-and-extract",
+        "create-virtualenv",
+        "install",
+        "run-tests",
     ],
     "download_symbols": "ondemand",
     "suite_definitions": {
@@ -27,10 +25,10 @@ config = {
                 "--log-html=%(html_report_file)s",
                 "--binary=%(binary)s",
                 "--address=%(address)s",
-                "--symbols-path=%(symbols_path)s"
+                "--symbols-path=%(symbols_path)s",
             ],
             "run_filename": "",
-            "testsdir": "marionette"
+            "testsdir": "marionette",
         },
     },
 }

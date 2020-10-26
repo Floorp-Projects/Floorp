@@ -9,13 +9,12 @@ from six.moves import configparser
 import mozpack.path as mozpath
 
 
-def get_application_ini_value(application_directory, section, value,
-                              fallback=None):
+def get_application_ini_value(application_directory, section, value, fallback=None):
     rc = None
     for root, dirs, files in os.walk(application_directory):
-        if 'application.ini' in files:
+        if "application.ini" in files:
             parser = configparser.ConfigParser()
-            parser.read(mozpath.join(root, 'application.ini'))
+            parser.read(mozpath.join(root, "application.ini"))
             try:
                 rc = parser.get(section, value)
             except configparser.NoOptionError:

@@ -26,7 +26,9 @@ def test_try_again(monkeypatch):
         "fuzzy",
         "Fuzzy message",
         try_task_config=push.generate_try_task_config(
-            "fuzzy", ["foo", "bar"], {"use-artifact-builds": True},
+            "fuzzy",
+            ["foo", "bar"],
+            {"use-artifact-builds": True},
         ),
     )
 
@@ -48,7 +50,7 @@ def test_try_again(monkeypatch):
     try_task_config = kwargs.pop("try_task_config")
     assert sorted(try_task_config.get("tasks")) == sorted(["foo", "bar"])
     assert try_task_config.get("env") == {"TRY_SELECTOR": "fuzzy"}
-    assert try_task_config.get('use-artifact-builds')
+    assert try_task_config.get("use-artifact-builds")
 
     with open(push.history_path, "r") as fh:
         assert len(fh.readlines()) == 1
@@ -61,7 +63,9 @@ def test_no_push_does_not_generate_history(tmpdir):
         "fuzzy",
         "Fuzzy",
         try_task_config=push.generate_try_task_config(
-            "fuzzy", ["foo", "bar"], {"use-artifact-builds": True},
+            "fuzzy",
+            ["foo", "bar"],
+            {"use-artifact-builds": True},
         ),
         push=False,
     )

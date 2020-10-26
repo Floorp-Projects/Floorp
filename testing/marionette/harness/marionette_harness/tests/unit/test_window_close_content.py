@@ -15,7 +15,6 @@ def inline(doc):
 
 
 class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
-
     def tearDown(self):
         self.close_all_windows()
         self.close_all_tabs()
@@ -64,14 +63,18 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         new_tab = self.open_tab()
         self.marionette.switch_to_window(new_tab)
 
-        self.marionette.navigate(inline("""
+        self.marionette.navigate(
+            inline(
+                """
           <input type="text">
           <script>
             window.addEventListener("beforeunload", function (event) {
               event.preventDefault();
             });
           </script>
-        """))
+        """
+            )
+        )
 
         self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
         self.marionette.close()
@@ -104,7 +107,8 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(self.start_tab)
 
         with self.marionette.using_context("chrome"):
-            self.marionette.execute_async_script("""
+            self.marionette.execute_async_script(
+                """
               Components.utils.import("resource:///modules/BrowserWindowTracker.jsm");
 
               let win = BrowserWindowTracker.getTopWindow();
@@ -112,7 +116,8 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
                 arguments[0](true);
               }, { once: true});
               win.gBrowser.discardBrowser(win.gBrowser.tabs[1]);
-            """)
+            """
+            )
 
         window_handles = self.marionette.window_handles
         window_handles.remove(self.start_tab)

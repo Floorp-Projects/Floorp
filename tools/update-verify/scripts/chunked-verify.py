@@ -12,20 +12,19 @@ import sys
 from tempfile import mkstemp
 
 sys.path.append(path.join(path.dirname(__file__), "../python"))
-logging.basicConfig(
-    stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from mozrelease.update_verify import UpdateVerifyConfig
 from util.commands import run_cmd
 
 UPDATE_VERIFY_COMMAND = ["bash", "verify.sh", "-c"]
-UPDATE_VERIFY_DIR = path.join(
-    path.dirname(__file__), "../release/updates")
+UPDATE_VERIFY_DIR = path.join(path.dirname(__file__), "../release/updates")
 
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
+
     parser = ArgumentParser("")
 
     parser.set_defaults(
@@ -39,8 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("--diff-summary", required=True, type=str)
 
     options = parser.parse_args()
-    assert options.chunks and options.thisChunk, \
-        "chunks and this-chunk are required"
+    assert options.chunks and options.thisChunk, "chunks and this-chunk are required"
     assert path.isfile(options.verifyConfig), "Update verify config must exist!"
     verifyConfigFile = options.verifyConfig
 
@@ -50,8 +48,7 @@ if __name__ == "__main__":
     try:
         verifyConfig = UpdateVerifyConfig()
         verifyConfig.read(path.join(UPDATE_VERIFY_DIR, verifyConfigFile))
-        myVerifyConfig = verifyConfig.getChunk(
-            options.chunks, options.thisChunk)
+        myVerifyConfig = verifyConfig.getChunk(options.chunks, options.thisChunk)
         # override the channel if explicitly set
         if options.verify_channel:
             myVerifyConfig.channel = options.verify_channel

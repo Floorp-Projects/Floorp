@@ -6,9 +6,9 @@
 
 Program("default-browser-agent")
 
-SPHINX_TREES['default-browser-agent'] = "docs"
+SPHINX_TREES["default-browser-agent"] = "docs"
 
-DIRS += ['rust']
+DIRS += ["rust"]
 
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
@@ -38,13 +38,13 @@ USE_LIBS += [
 ]
 
 LOCAL_INCLUDES += [
-    '/browser/components/shell/',
-    '/mfbt/',
-    '/other-licenses/nsis/Contrib/CityHash/cityhash',
-    '/third_party/WinToast',
-    '/toolkit/components/jsoncpp/include',
-    '/toolkit/mozapps/update/common',
-    '/xpcom/build',
+    "/browser/components/shell/",
+    "/mfbt/",
+    "/other-licenses/nsis/Contrib/CityHash/cityhash",
+    "/third_party/WinToast",
+    "/toolkit/components/jsoncpp/include",
+    "/toolkit/mozapps/update/common",
+    "/xpcom/build",
 ]
 
 OS_LIBS += [
@@ -61,10 +61,10 @@ OS_LIBS += [
 ]
 
 DEFINES["NS_NO_XPCOM"] = True
-DEFINES['IMPL_MFBT'] = True
+DEFINES["IMPL_MFBT"] = True
 
-DEFINES['UNICODE'] = True
-DEFINES['_UNICODE'] = True
+DEFINES["UNICODE"] = True
+DEFINES["_UNICODE"] = True
 
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
@@ -75,19 +75,19 @@ DisableStlWrapping()
 
 # We need this to be able to use wmain as the entry point on MinGW;
 # otherwise it will try to use WinMain.
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+if CONFIG["CC_TYPE"] == "clang-cl":
+    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
 else:
-    WIN32_EXE_LDFLAGS += ['-municode']
+    WIN32_EXE_LDFLAGS += ["-municode"]
 
-GENERATED_FILES += ['defaultagent.ini']
-defaultagentini = GENERATED_FILES['defaultagent.ini']
-defaultagentini.script = '/browser/locales/generate_ini.py'
+GENERATED_FILES += ["defaultagent.ini"]
+defaultagentini = GENERATED_FILES["defaultagent.ini"]
+defaultagentini.script = "/browser/locales/generate_ini.py"
 defaultagentini.inputs = [
-    'defaultagent.ini',
-    'defaultagent_append.ini',
+    "defaultagent.ini",
+    "defaultagent_append.ini",
 ]
-FINAL_TARGET_FILES += ['!defaultagent.ini']
+FINAL_TARGET_FILES += ["!defaultagent.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Installer")

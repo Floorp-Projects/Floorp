@@ -17,7 +17,6 @@ from marionette_harness import (
 
 
 class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
-
     def setUp(self):
         super(TestSwitchToWindowContent, self).setUp()
 
@@ -35,7 +34,8 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
 
     def get_selected_tab_index(self):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script("""
+            return self.marionette.execute_script(
+                """
                 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
                 let win = null;
@@ -67,7 +67,8 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
                     return i;
                   }
                 }
-            """)
+            """
+            )
 
     def test_switch_tabs_with_focus_change(self):
         new_tab = self.open_tab(focus=True)
@@ -91,8 +92,10 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
-    @skipIf(sys.platform.startswith("linux"),
-            "Bug 1557232 - Original window sometimes doesn't receive focus")
+    @skipIf(
+        sys.platform.startswith("linux"),
+        "Bug 1557232 - Original window sometimes doesn't receive focus",
+    )
     def test_switch_tabs_in_different_windows_with_focus_change(self):
         new_tab1 = self.open_tab(focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)

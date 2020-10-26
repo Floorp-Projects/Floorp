@@ -7,15 +7,25 @@
 
 # Rust is required by `rust_compiler` below. We allow_missing here
 # to propagate failures to the better error message there.
-option(env='RUSTC', nargs=1, help='Path to the rust compiler')
-option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
+option(env="RUSTC", nargs=1, help="Path to the rust compiler")
+option(env="CARGO", nargs=1, help="Path to the Cargo package manager")
 
-rustc = check_prog('_RUSTC', ['rustc'], what='rustc',
-                   paths=toolchain_search_path, input='RUSTC',
-                   allow_missing=True)
-cargo = check_prog('_CARGO', ['cargo'], what='cargo',
-                   paths=toolchain_search_path, input='CARGO',
-                   allow_missing=True)
+rustc = check_prog(
+    "_RUSTC",
+    ["rustc"],
+    what="rustc",
+    paths=toolchain_search_path,
+    input="RUSTC",
+    allow_missing=True,
+)
+cargo = check_prog(
+    "_CARGO",
+    ["cargo"],
+    what="cargo",
+    paths=toolchain_search_path,
+    input="CARGO",
+    allow_missing=True,
+)
 
 
 @template
@@ -41,29 +51,28 @@ def unwrap_rustup(prog, name):
     # "+stable" file. We'll examine the error output to try and distinguish
     # between failing rustup and failing rustc.
     @depends(prog, dependable(name))
-    @imports(_from='__builtin__', _import='open')
-    @imports('os')
+    @imports(_from="__builtin__", _import="open")
+    @imports("os")
     def unwrap(prog, name):
         if not prog:
             return
 
         def from_rustup_which():
-            out = check_cmd_output('rustup', 'which', name,
-                                   executable=prog).rstrip()
+            out = check_cmd_output("rustup", "which", name, executable=prog).rstrip()
             # If for some reason the above failed to return something, keep the
             # PROG we found originally.
             if out:
-                log.info('Actually using \'%s\'', out)
+                log.info("Actually using '%s'", out)
                 return out
 
-            log.info('No `rustup which` output, using \'%s\'', prog)
+            log.info("No `rustup which` output, using '%s'", prog)
             return prog
 
-        (retcode, stdout, stderr) = get_cmd_output(prog, '+stable')
+        (retcode, stdout, stderr) = get_cmd_output(prog, "+stable")
 
-        if name == 'cargo' and retcode != 101:
+        if name == "cargo" and retcode != 101:
             prog = from_rustup_which()
-        elif name == 'rustc':
+        elif name == "rustc":
             if retcode == 0:
                 prog = from_rustup_which()
             elif "+stable" in stderr:
@@ -81,51 +90,56 @@ def unwrap_rustup(prog, name):
 
     return unwrap
 
-rustc = unwrap_rustup(rustc, 'rustc')
-cargo = unwrap_rustup(cargo, 'cargo')
+
+rustc = unwrap_rustup(rustc, "rustc")
+cargo = unwrap_rustup(cargo, "cargo")
 
 
-set_config('CARGO', cargo)
-set_config('RUSTC', rustc)
+set_config("CARGO", cargo)
+set_config("RUSTC", rustc)
 
 
 @depends_if(rustc)
-@checking('rustc version', lambda info: info.version)
+@checking("rustc version", lambda info: info.version)
 def rustc_info(rustc):
     if not rustc:
         return
-    out = check_cmd_output(rustc, '--version', '--verbose').splitlines()
-    info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
+    out = check_cmd_output(rustc, "--version", "--verbose").splitlines()
+    info = dict((s.strip() for s in line.split(":", 1)) for line in out[1:])
     return namespace(
-        version=Version(info.get('release', '0')),
-        commit=info.get('commit-hash', 'unknown'),
-        host=info['host'],
-        llvm_version=Version(info.get('LLVM version', '0')),
+        version=Version(info.get("release", "0")),
+        commit=info.get("commit-hash", "unknown"),
+        host=info["host"],
+        llvm_version=Version(info.get("LLVM version", "0")),
     )
 
-set_config('RUSTC_VERSION', depends(rustc_info)(
-    lambda info: str(info.version) if info else None))
+
+set_config(
+    "RUSTC_VERSION",
+    depends(rustc_info)(lambda info: str(info.version) if info else None),
+)
+
 
 @depends_if(cargo)
-@checking('cargo version', lambda info: info.version)
-@imports('re')
+@checking("cargo version", lambda info: info.version)
+@imports("re")
 def cargo_info(cargo):
     if not cargo:
         return
-    out = check_cmd_output(cargo, '--version', '--verbose').splitlines()
-    info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
-    version = info.get('release')
+    out = check_cmd_output(cargo, "--version", "--verbose").splitlines()
+    info = dict((s.strip() for s in line.split(":", 1)) for line in out[1:])
+    version = info.get("release")
     # Older versions of cargo didn't support --verbose, in which case, they
     # only output a not-really-pleasant-to-parse output. Fortunately, they
     # don't error out, so we can just try some regexp matching on the output
     # we already got.
     if version is None:
-        VERSION_FORMAT = r'^cargo (\d\.\d+\.\d+).*'
+        VERSION_FORMAT = r"^cargo (\d\.\d+\.\d+).*"
 
         m = re.search(VERSION_FORMAT, out[0])
         # Fail fast if cargo changes its output on us.
         if not m:
-            die('Could not determine cargo version from output: %s', out)
+            die("Could not determine cargo version from output: %s", out)
         version = m.group(1)
 
     return namespace(
@@ -134,35 +148,42 @@ def cargo_info(cargo):
 
 
 @depends(rustc_info, cargo_info, build_project, c_compiler, target)
-@imports(_from='mozboot.util', _import='MINIMUM_RUST_VERSION')
-@imports(_from='textwrap', _import='dedent')
+@imports(_from="mozboot.util", _import="MINIMUM_RUST_VERSION")
+@imports(_from="textwrap", _import="dedent")
 def rust_compiler(rustc_info, cargo_info, build_project, c_compiler, target):
     if not rustc_info:
-        die(dedent('''\
+        die(
+            dedent(
+                """\
         Rust compiler not found.
         To compile rust language sources, you must have 'rustc' in your path.
         See https://www.rust-lang.org/ for more information.
 
         You can install rust by running './mach bootstrap'
         or by directly running the installer from https://rustup.rs/
-        '''))
-    if build_project == 'tools/crashreporter':
-        rustc_min_version = Version('1.38.0')
-    elif target.os == 'WINNT' and c_compiler.type != 'clang-cl':
-        rustc_min_version = Version('1.44.0')
+        """
+            )
+        )
+    if build_project == "tools/crashreporter":
+        rustc_min_version = Version("1.38.0")
+    elif target.os == "WINNT" and c_compiler.type != "clang-cl":
+        rustc_min_version = Version("1.44.0")
     else:
         rustc_min_version = Version(MINIMUM_RUST_VERSION)
     cargo_min_version = rustc_min_version
 
     version = rustc_info.version
-    is_nightly = 'nightly' in version.version
+    is_nightly = "nightly" in version.version
     is_version_number_match = (
-            version.major == rustc_min_version.major and
-            version.minor == rustc_min_version.minor and
-            version.patch == rustc_min_version.patch)
+        version.major == rustc_min_version.major
+        and version.minor == rustc_min_version.minor
+        and version.patch == rustc_min_version.patch
+    )
 
     if version < rustc_min_version or (is_version_number_match and is_nightly):
-        die(dedent('''\
+        die(
+            dedent(
+                """\
         Rust compiler {} is too old.
 
         To compile Rust language sources please install at least
@@ -175,48 +196,60 @@ def rust_compiler(rustc_info, cargo_info, build_project, c_compiler, target):
         If you have the 'rustup' tool installed you can upgrade
         to the latest release by typing 'rustup update'. The
         installer is available from https://rustup.rs/
-        '''.format(version, rustc_min_version, rustc_min_version)))
+        """.format(
+                    version, rustc_min_version, rustc_min_version
+                )
+            )
+        )
 
     if not cargo_info:
-        die(dedent('''\
+        die(
+            dedent(
+                """\
         Cargo package manager not found.
         To compile Rust language sources, you must have 'cargo' in your path.
         See https://www.rust-lang.org/ for more information.
 
         You can install cargo by running './mach bootstrap'
         or by directly running the installer from https://rustup.rs/
-        '''))
+        """
+            )
+        )
 
     version = cargo_info.version
     if version < cargo_min_version:
-        die(dedent('''\
+        die(
+            dedent(
+                """\
         Cargo package manager {} is too old.
 
         To compile Rust language sources please install at least
         version {} of 'cargo' and make sure it is first in your path.
 
         You can verify this by typing 'cargo --version'.
-        ''').format(version, cargo_min_version))
+        """
+            ).format(version, cargo_min_version)
+        )
 
     return True
 
 
 @depends(rustc, when=rust_compiler)
-@imports(_from='__builtin__', _import='ValueError')
+@imports(_from="__builtin__", _import="ValueError")
 def rust_supported_targets(rustc):
-    out = check_cmd_output(rustc, '--print', 'target-list').splitlines()
+    out = check_cmd_output(rustc, "--print", "target-list").splitlines()
     data = {}
     for t in out:
         try:
             info = split_triplet(t)
         except ValueError:
-            if t.startswith('thumb'):
-                cpu, rest = t.split('-', 1)
-                retry = '-'.join(('arm', rest))
-            elif t.endswith('-windows-msvc'):
-                retry = t[:-len('windows-msvc')] + 'mingw32'
-            elif t.endswith('-windows-gnu'):
-                retry = t[:-len('windows-gnu')] + 'mingw32'
+            if t.startswith("thumb"):
+                cpu, rest = t.split("-", 1)
+                retry = "-".join(("arm", rest))
+            elif t.endswith("-windows-msvc"):
+                retry = t[: -len("windows-msvc")] + "mingw32"
+            elif t.endswith("-windows-gnu"):
+                retry = t[: -len("windows-gnu")] + "mingw32"
             else:
                 continue
             try:
@@ -228,7 +261,9 @@ def rust_supported_targets(rustc):
     return data
 
 
-def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supported_targets):
+def detect_rustc_target(
+    host_or_target, compiler_info, arm_target, rust_supported_targets
+):
     # Rust's --target options are similar to, but not exactly the same
     # as, the autoconf-derived targets we use.  An example would be that
     # Rust uses distinct target triples for targetting the GNU C++ ABI
@@ -239,7 +274,8 @@ def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supporte
     # We correlate the autoconf-derived targets with the list of targets
     # rustc gives us with --print target-list.
     candidates = rust_supported_targets.get(
-        (host_or_target.cpu, host_or_target.endianness, host_or_target.os), [])
+        (host_or_target.cpu, host_or_target.endianness, host_or_target.os), []
+    )
 
     def find_candidate(candidates):
         if len(candidates) == 1:
@@ -250,20 +286,25 @@ def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supporte
         # We have multiple candidates. There are two cases where we can try to
         # narrow further down using extra information from the build system.
         # - For windows targets, correlate with the C compiler type
-        if host_or_target.kernel == 'WINNT':
-            if compiler_info.type in ('gcc', 'clang'):
-                suffix = 'windows-gnu'
+        if host_or_target.kernel == "WINNT":
+            if compiler_info.type in ("gcc", "clang"):
+                suffix = "windows-gnu"
             else:
-                suffix = 'windows-msvc'
-            narrowed = [c for c in candidates if c.rust_target.endswith('-{}'.format(suffix))]
+                suffix = "windows-msvc"
+            narrowed = [
+                c for c in candidates if c.rust_target.endswith("-{}".format(suffix))
+            ]
             if len(narrowed) == 1:
                 return narrowed[0].rust_target
             elif narrowed:
                 candidates = narrowed
 
-            vendor_aliases = {'pc': ('w64', 'windows')}
-            narrowed = [c for c in candidates
-                        if host_or_target.vendor in vendor_aliases.get(c.target.vendor, ())]
+            vendor_aliases = {"pc": ("w64", "windows")}
+            narrowed = [
+                c
+                for c in candidates
+                if host_or_target.vendor in vendor_aliases.get(c.target.vendor, ())
+            ]
 
             if len(narrowed) == 1:
                 return narrowed[0].rust_target
@@ -274,39 +315,40 @@ def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supporte
         #   Also, sadly, the only interface to check the rust target cpu features
         #   is --print target-spec-json, and it's unstable, so we have to rely on
         #   our own knowledge of what each arm target means.
-        if host_or_target.cpu == 'arm' and host_or_target.endianness == 'little':
+        if host_or_target.cpu == "arm" and host_or_target.endianness == "little":
             prefixes = []
             if arm_target.arm_arch >= 7:
-                if arm_target.thumb2 and arm_target.fpu == 'neon':
-                    prefixes.append('thumbv7neon')
+                if arm_target.thumb2 and arm_target.fpu == "neon":
+                    prefixes.append("thumbv7neon")
                 if arm_target.thumb2:
-                    prefixes.append('thumbv7a')
-                prefixes.append('armv7')
+                    prefixes.append("thumbv7a")
+                prefixes.append("armv7")
             if arm_target.arm_arch >= 6:
-                prefixes.append('armv6')
-                if host_or_target.os != 'Android':
+                prefixes.append("armv6")
+                if host_or_target.os != "Android":
                     # arm-* rust targets are armv6... except arm-linux-androideabi
-                    prefixes.append('arm')
+                    prefixes.append("arm")
             if arm_target.arm_arch >= 5:
-                prefixes.append('armv5te')
-                if host_or_target.os == 'Android':
+                prefixes.append("armv5te")
+                if host_or_target.os == "Android":
                     # arm-* rust targets are armv6... except arm-linux-androideabi
-                    prefixes.append('arm')
+                    prefixes.append("arm")
             if arm_target.arm_arch >= 4:
-                prefixes.append('armv4t')
+                prefixes.append("armv4t")
             # rust freebsd targets are the only ones that don't have a 'hf' suffix
             # for hard-float. Technically, that means if the float abi ever is not
             # hard-float, this will pick a wrong target, but since rust only
             # supports hard-float, let's assume that means freebsd only support
             # hard-float.
-            if arm_target.float_abi == 'hard' and host_or_target.os != 'FreeBSD':
-                suffix = 'hf'
+            if arm_target.float_abi == "hard" and host_or_target.os != "FreeBSD":
+                suffix = "hf"
             else:
-                suffix = ''
+                suffix = ""
             for p in prefixes:
                 for c in candidates:
-                    if c.rust_target.startswith('{}-'.format(p)) and \
-                            c.rust_target.endswith(suffix):
+                    if c.rust_target.startswith(
+                        "{}-".format(p)
+                    ) and c.rust_target.endswith(suffix):
                         return c.rust_target
 
         # See if we can narrow down on the exact alias
@@ -325,18 +367,16 @@ def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supporte
 
         # See if we can narrow down with the raw OS and raw CPU
         narrowed = [
-            c for c in candidates
-            if c.target.raw_os == host_or_target.raw_os and
-               c.target.raw_cpu == host_or_target.raw_cpu
+            c
+            for c in candidates
+            if c.target.raw_os == host_or_target.raw_os
+            and c.target.raw_cpu == host_or_target.raw_cpu
         ]
         if len(narrowed) == 1:
             return narrowed[0].rust_target
 
         # Finally, see if the vendor can be used to disambiguate.
-        narrowed = [
-            c for c in candidates
-            if c.target.vendor == host_or_target.vendor
-        ]
+        narrowed = [c for c in candidates if c.target.vendor == host_or_target.vendor]
         if len(narrowed) == 1:
             return narrowed[0].rust_target
 
@@ -345,28 +385,27 @@ def detect_rustc_target(host_or_target, compiler_info, arm_target, rust_supporte
     rustc_target = find_candidate(candidates)
 
     if rustc_target is None:
-        die("Don't know how to translate {} for rustc".format(
-            host_or_target.alias))
+        die("Don't know how to translate {} for rustc".format(host_or_target.alias))
 
     return rustc_target
 
 
-@imports('os')
-@imports(_from='six', _import='ensure_binary')
-@imports(_from='tempfile', _import='mkstemp')
-@imports(_from='textwrap', _import='dedent')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports("os")
+@imports(_from="six", _import="ensure_binary")
+@imports(_from="tempfile", _import="mkstemp")
+@imports(_from="textwrap", _import="dedent")
+@imports(_from="mozbuild.configure.util", _import="LineIO")
 def assert_rust_compile(host_or_target, rustc_target, rustc):
     # Check to see whether our rustc has a reasonably functional stdlib
     # for our chosen target.
-    target_arg = '--target=' + rustc_target
-    in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs', text=True)
-    out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
+    target_arg = "--target=" + rustc_target
+    in_fd, in_path = mkstemp(prefix="conftest", suffix=".rs", text=True)
+    out_fd, out_path = mkstemp(prefix="conftest", suffix=".rlib")
     os.close(out_fd)
     try:
         source = 'pub extern fn hello() { println!("Hello world"); }'
-        log.debug('Creating `%s` with content:', in_path)
-        with LineIO(lambda l: log.debug('| %s', l)) as out:
+        log.debug("Creating `%s` with content:", in_path)
+        with LineIO(lambda l: log.debug("| %s", l)) as out:
             out.write(source)
 
         os.write(in_fd, ensure_binary(source))
@@ -374,20 +413,29 @@ def assert_rust_compile(host_or_target, rustc_target, rustc):
 
         cmd = [
             rustc,
-            '--crate-type', 'staticlib',
+            "--crate-type",
+            "staticlib",
             target_arg,
-            '-o', out_path,
+            "-o",
+            out_path,
             in_path,
         ]
 
         def failed():
-            die(dedent('''\
+            die(
+                dedent(
+                    """\
             Cannot compile for {} with {}
             The target may be unsupported, or you may not have
             a rust std library for that target installed. Try:
 
               rustup target add {}
-            '''.format(host_or_target.alias, rustc, rustc_target)))
+            """.format(
+                        host_or_target.alias, rustc, rustc_target
+                    )
+                )
+            )
+
         check_cmd_output(*cmd, onerror=failed)
         if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
             failed()
@@ -396,20 +444,31 @@ def assert_rust_compile(host_or_target, rustc_target, rustc):
         os.remove(out_path)
 
 
-@depends(rustc, host, host_c_compiler, rustc_info.host, rust_supported_targets,
-         arm_target, when=rust_compiler)
-@checking('for rust host triplet')
-@imports(_from='textwrap', _import='dedent')
-def rust_host_triple(rustc, host, compiler_info, rustc_host, rust_supported_targets,
-                     arm_target):
-    rustc_target = detect_rustc_target(host, compiler_info, arm_target,
-                                       rust_supported_targets)
+@depends(
+    rustc,
+    host,
+    host_c_compiler,
+    rustc_info.host,
+    rust_supported_targets,
+    arm_target,
+    when=rust_compiler,
+)
+@checking("for rust host triplet")
+@imports(_from="textwrap", _import="dedent")
+def rust_host_triple(
+    rustc, host, compiler_info, rustc_host, rust_supported_targets, arm_target
+):
+    rustc_target = detect_rustc_target(
+        host, compiler_info, arm_target, rust_supported_targets
+    )
     if rustc_target != rustc_host:
         if host.alias == rustc_target:
             configure_host = host.alias
         else:
-            configure_host = '{}/{}'.format(host.alias, rustc_target)
-        die(dedent('''\
+            configure_host = "{}/{}".format(host.alias, rustc_target)
+        die(
+            dedent(
+                """\
         The rust compiler host ({rustc}) is not suitable for the configure host ({configure}).
 
         You can solve this by:
@@ -417,59 +476,79 @@ def rust_host_triple(rustc, host, compiler_info, rustc_host, rust_supported_targ
         mozconfig and adding "ac_add_options --host={rustc}".
         * Or, install the rust toolchain for {configure}, if supported, by running
         "rustup default stable-{rustc_target}"
-        '''.format(rustc=rustc_host, configure=configure_host, rustc_target=rustc_target)))
+        """.format(
+                    rustc=rustc_host,
+                    configure=configure_host,
+                    rustc_target=rustc_target,
+                )
+            )
+        )
     assert_rust_compile(host, rustc_target, rustc)
     return rustc_target
 
-@depends(rustc, target, c_compiler, rust_supported_targets, arm_target, when=rust_compiler)
-@checking('for rust target triplet')
-def rust_target_triple(rustc, target, compiler_info, rust_supported_targets, arm_target):
-    rustc_target = detect_rustc_target(target, compiler_info, arm_target, rust_supported_targets)
+
+@depends(
+    rustc, target, c_compiler, rust_supported_targets, arm_target, when=rust_compiler
+)
+@checking("for rust target triplet")
+def rust_target_triple(
+    rustc, target, compiler_info, rust_supported_targets, arm_target
+):
+    rustc_target = detect_rustc_target(
+        target, compiler_info, arm_target, rust_supported_targets
+    )
     assert_rust_compile(target, rustc_target, rustc)
     return rustc_target
 
 
-set_config('RUST_TARGET', rust_target_triple)
-set_config('RUST_HOST_TARGET', rust_host_triple)
+set_config("RUST_TARGET", rust_target_triple)
+set_config("RUST_HOST_TARGET", rust_host_triple)
 
 
 # This is used for putting source info into symbol files.
-set_config('RUSTC_COMMIT', depends(rustc_info)(lambda i: i.commit))
+set_config("RUSTC_COMMIT", depends(rustc_info)(lambda i: i.commit))
 
 # Rustdoc is required by Rust tests below.
-option(env='RUSTDOC', nargs=1, help='Path to the rustdoc program')
+option(env="RUSTDOC", nargs=1, help="Path to the rustdoc program")
 
-rustdoc = check_prog('RUSTDOC', ['rustdoc'], paths=toolchain_search_path,
-                     input='RUSTDOC', allow_missing=True)
+rustdoc = check_prog(
+    "RUSTDOC",
+    ["rustdoc"],
+    paths=toolchain_search_path,
+    input="RUSTDOC",
+    allow_missing=True,
+)
 
 # This option is separate from --enable-tests because Rust tests are particularly
 # expensive in terms of compile time (especially for code in libxul).
-option('--enable-rust-tests',
-       help='Enable building and running of Rust tests during `make check`')
+option(
+    "--enable-rust-tests",
+    help="Enable building and running of Rust tests during `make check`",
+)
 
 
-@depends('--enable-rust-tests', rustdoc)
+@depends("--enable-rust-tests", rustdoc)
 def rust_tests(enable_rust_tests, rustdoc):
     if enable_rust_tests and not rustdoc:
-        die('--enable-rust-tests requires rustdoc')
+        die("--enable-rust-tests requires rustdoc")
     return bool(enable_rust_tests)
 
 
-set_config('MOZ_RUST_TESTS', rust_tests)
+set_config("MOZ_RUST_TESTS", rust_tests)
 
 
 @depends(target, c_compiler, rustc)
-@imports('os')
+@imports("os")
 def rustc_natvis_ldflags(target, compiler_info, rustc):
-    if target.kernel == 'WINNT' and compiler_info.type == 'clang-cl':
-        sysroot = check_cmd_output(rustc, '--print', 'sysroot').strip()
-        etc = os.path.join(sysroot, 'lib/rustlib/etc')
+    if target.kernel == "WINNT" and compiler_info.type == "clang-cl":
+        sysroot = check_cmd_output(rustc, "--print", "sysroot").strip()
+        etc = os.path.join(sysroot, "lib/rustlib/etc")
         ldflags = []
         if os.path.isdir(etc):
             for f in os.listdir(etc):
-                if f.endswith('.natvis'):
-                    ldflags.append('-NATVIS:' + normsep(os.path.join(etc, f)))
+                if f.endswith(".natvis"):
+                    ldflags.append("-NATVIS:" + normsep(os.path.join(etc, f)))
         return ldflags
 
 
-set_config('RUSTC_NATVIS_LDFLAGS', rustc_natvis_ldflags)
+set_config("RUSTC_NATVIS_LDFLAGS", rustc_natvis_ldflags)

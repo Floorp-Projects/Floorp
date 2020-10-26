@@ -3,6 +3,5 @@
 
 config = {
     "vcs_share_base": "/builds/hg-shared",
-
     "tooltool_cache": "/builds/worker/tooltool-cache",
 }

@@ -16,31 +16,33 @@ transforms = TransformSequence()
 
 @transforms.add
 def make_label(config, jobs):
-    """ Generate a sane label for a new task constructed from a dependency
+    """Generate a sane label for a new task constructed from a dependency
     Using attributes from the dependent job and the current task kind"""
     for job in jobs:
-        dep_job = job['primary-dependency']
+        dep_job = job["primary-dependency"]
         attr = dep_job.attributes.get
 
-        if attr('locale', job.get('locale')):
+        if attr("locale", job.get("locale")):
             template = "{kind}-{locale}-{build_platform}/{build_type}"
-        elif attr('l10n_chunk'):
+        elif attr("l10n_chunk"):
             template = "{kind}-{build_platform}-{l10n_chunk}/{build_type}"
-        elif config.kind.startswith("release-eme-free") or \
-                config.kind.startswith("release-partner-repack"):
-            suffix = job.get("extra", {}).get("repack_suffix", None) or \
-                     job.get("extra", {}).get("repack_id", None)
+        elif config.kind.startswith("release-eme-free") or config.kind.startswith(
+            "release-partner-repack"
+        ):
+            suffix = job.get("extra", {}).get("repack_suffix", None) or job.get(
+                "extra", {}
+            ).get("repack_id", None)
             template = "{kind}-{build_platform}"
             if suffix:
-                template += "-{}".format(suffix.replace('/', '-'))
+                template += "-{}".format(suffix.replace("/", "-"))
         else:
             template = "{kind}-{build_platform}/{build_type}"
-        job['label'] = template.format(
+        job["label"] = template.format(
             kind=config.kind,
-            build_platform=attr('build_platform'),
-            build_type=attr('build_type'),
-            locale=attr('locale', job.get('locale', '')),  # Locale can be absent
-            l10n_chunk=attr('l10n_chunk', '')  # Can be empty
+            build_platform=attr("build_platform"),
+            build_type=attr("build_type"),
+            locale=attr("locale", job.get("locale", "")),  # Locale can be absent
+            l10n_chunk=attr("l10n_chunk", ""),  # Can be empty
         )
 
         yield job

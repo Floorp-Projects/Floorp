@@ -4,11 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'clipboard.js',
-    'context-menu.js',
-    'id-generator.js',
-    'l10n.js',
-    'messages.js',
-    'object-inspector.js',
-    'prefs.js',
+    "clipboard.js",
+    "context-menu.js",
+    "id-generator.js",
+    "l10n.js",
+    "messages.js",
+    "object-inspector.js",
+    "prefs.js",
 )

@@ -5,120 +5,120 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-with Files('**'):
-    BUG_COMPONENT = ('WebExtensions', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("WebExtensions", "General")
 
 EXTRA_JS_MODULES += [
-    'ConduitsChild.jsm',
-    'ConduitsParent.jsm',
-    'Extension.jsm',
-    'ExtensionActions.jsm',
-    'ExtensionActivityLog.jsm',
-    'ExtensionChild.jsm',
-    'ExtensionChildDevToolsUtils.jsm',
-    'ExtensionCommon.jsm',
-    'ExtensionContent.jsm',
-    'ExtensionPageChild.jsm',
-    'ExtensionParent.jsm',
-    'ExtensionPermissions.jsm',
-    'ExtensionPreferencesManager.jsm',
-    'ExtensionProcessScript.jsm',
-    'extensionProcessScriptLoader.js',
-    'ExtensionSettingsStore.jsm',
-    'ExtensionShortcuts.jsm',
-    'ExtensionStorage.jsm',
-    'ExtensionStorageIDB.jsm',
-    'ExtensionStorageSync.jsm',
-    'ExtensionStorageSyncKinto.jsm',
-    'ExtensionTelemetry.jsm',
-    'ExtensionUtils.jsm',
-    'FindContent.jsm',
-    'MatchURLFilters.jsm',
-    'MessageChannel.jsm',
-    'MessageManagerProxy.jsm',
-    'NativeManifests.jsm',
-    'NativeMessaging.jsm',
-    'onExtensionBrowser.js',
-    'PerformanceCounters.jsm',
-    'ProxyChannelFilter.jsm',
-    'Schemas.jsm',
-    'WebNavigation.jsm',
-    'WebNavigationContent.js',
-    'WebNavigationFrames.jsm',
+    "ConduitsChild.jsm",
+    "ConduitsParent.jsm",
+    "Extension.jsm",
+    "ExtensionActions.jsm",
+    "ExtensionActivityLog.jsm",
+    "ExtensionChild.jsm",
+    "ExtensionChildDevToolsUtils.jsm",
+    "ExtensionCommon.jsm",
+    "ExtensionContent.jsm",
+    "ExtensionPageChild.jsm",
+    "ExtensionParent.jsm",
+    "ExtensionPermissions.jsm",
+    "ExtensionPreferencesManager.jsm",
+    "ExtensionProcessScript.jsm",
+    "extensionProcessScriptLoader.js",
+    "ExtensionSettingsStore.jsm",
+    "ExtensionShortcuts.jsm",
+    "ExtensionStorage.jsm",
+    "ExtensionStorageIDB.jsm",
+    "ExtensionStorageSync.jsm",
+    "ExtensionStorageSyncKinto.jsm",
+    "ExtensionTelemetry.jsm",
+    "ExtensionUtils.jsm",
+    "FindContent.jsm",
+    "MatchURLFilters.jsm",
+    "MessageChannel.jsm",
+    "MessageManagerProxy.jsm",
+    "NativeManifests.jsm",
+    "NativeMessaging.jsm",
+    "onExtensionBrowser.js",
+    "PerformanceCounters.jsm",
+    "ProxyChannelFilter.jsm",
+    "Schemas.jsm",
+    "WebNavigation.jsm",
+    "WebNavigationContent.js",
+    "WebNavigationFrames.jsm",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android":
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES += [
-        'profiler_get_symbols.js',
-        'ProfilerGetSymbols-worker.js',
-        'ProfilerGetSymbols.jsm',
+        "profiler_get_symbols.js",
+        "ProfilerGetSymbols-worker.js",
+        "ProfilerGetSymbols.jsm",
     ]
 
 EXTRA_COMPONENTS += [
-    'extensions-toolkit.manifest',
+    "extensions-toolkit.manifest",
 ]
 
 TESTING_JS_MODULES += [
-    'ExtensionTestCommon.jsm',
-    'ExtensionXPCShellUtils.jsm',
+    "ExtensionTestCommon.jsm",
+    "ExtensionXPCShellUtils.jsm",
 ]
 
 DIRS += [
-    'schemas',
-    'storage',
-    'webrequest',
+    "schemas",
+    "storage",
+    "webrequest",
 ]
 
 XPIDL_SOURCES += [
-    'mozIExtensionProcessScript.idl',
+    "mozIExtensionProcessScript.idl",
 ]
 
-XPIDL_MODULE = 'webextensions'
+XPIDL_MODULE = "webextensions"
 
 EXPORTS.mozilla = [
-    'ExtensionPolicyService.h',
+    "ExtensionPolicyService.h",
 ]
 
 EXPORTS.mozilla.extensions = [
-    'DocumentObserver.h',
-    'MatchGlob.h',
-    'MatchPattern.h',
-    'WebExtensionContentScript.h',
-    'WebExtensionPolicy.h',
+    "DocumentObserver.h",
+    "MatchGlob.h",
+    "MatchPattern.h",
+    "WebExtensionContentScript.h",
+    "WebExtensionPolicy.h",
 ]
 
 UNIFIED_SOURCES += [
-    'ExtensionPolicyService.cpp',
-    'MatchPattern.cpp',
-    'WebExtensionPolicy.cpp',
+    "ExtensionPolicyService.cpp",
+    "MatchPattern.cpp",
+    "WebExtensionPolicy.cpp",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 
-JAR_MANIFESTS += ['jar.mn']
+JAR_MANIFESTS += ["jar.mn"]
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser/browser-serviceworker.ini',
-    'test/browser/browser.ini',
+    "test/browser/browser-serviceworker.ini",
+    "test/browser/browser.ini",
 ]
 
 MOCHITEST_MANIFESTS += [
-    'test/mochitest/mochitest-remote.ini',
-    'test/mochitest/mochitest.ini'
+    "test/mochitest/mochitest-remote.ini",
+    "test/mochitest/mochitest.ini",
 ]
-MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/xpcshell/native_messaging.ini',
-    'test/xpcshell/xpcshell-e10s.ini',
-    'test/xpcshell/xpcshell-legacy-ep.ini',
-    'test/xpcshell/xpcshell-remote.ini',
-    'test/xpcshell/xpcshell.ini',
+    "test/xpcshell/native_messaging.ini",
+    "test/xpcshell/xpcshell-e10s.ini",
+    "test/xpcshell/xpcshell-legacy-ep.ini",
+    "test/xpcshell/xpcshell-remote.ini",
+    "test/xpcshell/xpcshell.ini",
 ]
 
-SPHINX_TREES['webextensions'] = 'docs'
+SPHINX_TREES["webextensions"] = "docs"
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

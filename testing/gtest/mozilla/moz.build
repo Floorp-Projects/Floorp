@@ -3,16 +3,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-if CONFIG['ENABLE_TESTS']:
+if CONFIG["ENABLE_TESTS"]:
     SOURCES += [
-        'GTestRunner.cpp',
-        'MozGTestBench.cpp',
-        'SanityTest.cpp',
+        "GTestRunner.cpp",
+        "MozGTestBench.cpp",
+        "SanityTest.cpp",
     ]
 
-    if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG["OS_ARCH"] == "WINNT":
         LOCAL_INCLUDES += [
-            '/security/sandbox/chromium',
+            "/security/sandbox/chromium",
         ]
 
-    FINAL_LIBRARY = 'xul-gtest'
+    FINAL_LIBRARY = "xul-gtest"

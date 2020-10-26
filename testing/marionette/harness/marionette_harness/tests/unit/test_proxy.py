@@ -10,7 +10,6 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestProxyCapabilities(MarionetteTestCase):
-
     def setUp(self):
         super(TestProxyCapabilities, self).setUp()
 
@@ -21,10 +20,12 @@ class TestProxyCapabilities(MarionetteTestCase):
             self.marionette.start_session()
 
         with self.marionette.using_context("chrome"):
-            self.marionette.execute_script("""
+            self.marionette.execute_script(
+                """
                 Cu.import("resource://gre/modules/Preferences.jsm");
                 Preferences.resetBranch("network.proxy");
-            """)
+            """
+            )
 
         super(TestProxyCapabilities, self).tearDown()
 
@@ -36,65 +37,78 @@ class TestProxyCapabilities(MarionetteTestCase):
         capabilities = {"proxy": {"proxyType": "system"}}
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_autodetect(self):
         capabilities = {"proxy": {"proxyType": "autodetect"}}
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_direct(self):
         capabilities = {"proxy": {"proxyType": "direct"}}
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_manual_without_port(self):
         proxy_hostname = "marionette.test"
-        capabilities = {"proxy": {
-            "proxyType": "manual",
-            "ftpProxy": "{}:21".format(proxy_hostname),
-            "httpProxy": "{}:80".format(proxy_hostname),
-            "sslProxy": "{}:443".format(proxy_hostname),
-            "socksProxy": proxy_hostname,
-            "socksVersion": 4,
-        }}
+        capabilities = {
+            "proxy": {
+                "proxyType": "manual",
+                "ftpProxy": "{}:21".format(proxy_hostname),
+                "httpProxy": "{}:80".format(proxy_hostname),
+                "sslProxy": "{}:443".format(proxy_hostname),
+                "socksProxy": proxy_hostname,
+                "socksVersion": 4,
+            }
+        }
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_manual_socks_requires_version(self):
         proxy_port = 4444
         proxy_hostname = "marionette.test"
         proxy_host = "{}:{}".format(proxy_hostname, proxy_port)
-        capabilities = {"proxy": {
-            "proxyType": "manual",
-            "socksProxy": proxy_host,
-        }}
+        capabilities = {
+            "proxy": {
+                "proxyType": "manual",
+                "socksProxy": proxy_host,
+            }
+        }
 
         with self.assertRaises(errors.SessionNotCreatedException):
             self.marionette.start_session(capabilities)
 
     def test_proxy_type_manual_no_proxy_on(self):
-        capabilities = {"proxy": {
-            "proxyType": "manual",
-            "noProxy": ["foo", "bar"],
-        }}
+        capabilities = {
+            "proxy": {
+                "proxyType": "manual",
+                "noProxy": ["foo", "bar"],
+            }
+        }
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_manual_invalid_no_proxy_on(self):
-        capabilities = {"proxy": {
-            "proxyType": "manual",
-            "noProxy": "foo, bar",
-        }}
+        capabilities = {
+            "proxy": {
+                "proxyType": "manual",
+                "noProxy": "foo, bar",
+            }
+        }
 
         with self.assertRaises(errors.SessionNotCreatedException):
             self.marionette.start_session(capabilities)
@@ -104,15 +118,17 @@ class TestProxyCapabilities(MarionetteTestCase):
         capabilities = {"proxy": {"proxyType": "pac", "proxyAutoconfigUrl": pac_url}}
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_proxy_type_system(self):
         capabilities = {"proxy": {"proxyType": "system"}}
 
         self.marionette.start_session(capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"],
-                         capabilities["proxy"])
+        self.assertEqual(
+            self.marionette.session_capabilities["proxy"], capabilities["proxy"]
+        )
 
     def test_invalid_proxy_object(self):
         capabilities = {"proxy": "I really should be a dictionary"}
@@ -135,11 +151,14 @@ class TestProxyCapabilities(MarionetteTestCase):
             self.marionette.start_session({"proxy": {"proxyType": "pac"}})
 
         with self.assertRaises(errors.SessionNotCreatedException):
-            self.marionette.start_session({"proxy": {"proxyType": "pac",
-                                                     "proxyAutoconfigUrl": None}})
+            self.marionette.start_session(
+                {"proxy": {"proxyType": "pac", "proxyAutoconfigUrl": None}}
+            )
 
     def test_missing_socks_version_for_manual(self):
-        capabilities = {"proxy": {"proxyType": "manual", "socksProxy": "marionette.test"}}
+        capabilities = {
+            "proxy": {"proxyType": "manual", "socksProxy": "marionette.test"}
+        }
 
         with self.assertRaises(errors.SessionNotCreatedException):
             self.marionette.start_session(capabilities)

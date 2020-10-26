@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestContainerParser.cpp',
-    'TestExtractVPXCodecDetails.cpp',
+    "TestContainerParser.cpp",
+    "TestExtractVPXCodecDetails.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/media',
-    '/dom/media/mediasource',
+    "/dom/media",
+    "/dom/media/mediasource",
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
+FINAL_LIBRARY = "xul-gtest"

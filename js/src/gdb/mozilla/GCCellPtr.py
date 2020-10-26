@@ -17,47 +17,46 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 
 class GCCellPtrTypeCache(object):
     def __init__(self, cache):
-        self.TraceKind_t = gdb.lookup_type('JS::TraceKind')
-        self.AllocKind_t = gdb.lookup_type('js::gc::AllocKind')
-        self.Arena_t = gdb.lookup_type('js::gc::Arena')
-        self.Cell_t = gdb.lookup_type('js::gc::Cell')
-        self.TenuredCell_t = gdb.lookup_type('js::gc::TenuredCell')
+        self.TraceKind_t = gdb.lookup_type("JS::TraceKind")
+        self.AllocKind_t = gdb.lookup_type("js::gc::AllocKind")
+        self.Arena_t = gdb.lookup_type("js::gc::Arena")
+        self.Cell_t = gdb.lookup_type("js::gc::Cell")
+        self.TenuredCell_t = gdb.lookup_type("js::gc::TenuredCell")
 
         trace_kinds = gdb.types.make_enum_dict(self.TraceKind_t)
         alloc_kinds = gdb.types.make_enum_dict(self.AllocKind_t)
 
         def trace_kind(k):
-            return trace_kinds['JS::TraceKind::' + k]
+            return trace_kinds["JS::TraceKind::" + k]
 
         def alloc_kind(k):
-            return alloc_kinds['js::gc::AllocKind::' + k]
+            return alloc_kinds["js::gc::AllocKind::" + k]
 
         # Build a mapping from TraceKind enum values to the types they denote.
         trace_map = {
             # Inline types.
-            'Object':       'JSObject',
-            'BigInt':       'JS::BigInt',
-            'String':       'JSString',
-            'Symbol':       'JS::Symbol',
-            'Shape':        'js::Shape',
-            'ObjectGroup':  'js::ObjectGroup',
-            'Null':         'std::nullptr_t',
-
+            "Object": "JSObject",
+            "BigInt": "JS::BigInt",
+            "String": "JSString",
+            "Symbol": "JS::Symbol",
+            "Shape": "js::Shape",
+            "ObjectGroup": "js::ObjectGroup",
+            "Null": "std::nullptr_t",
             # Out-of-line types.
-            'BaseShape':    'js::BaseShape',
-            'JitCode':      'js::jit::JitCode',
-            'Script':       'js::BaseScript',
-            'Scope':        'js::Scope',
-            'RegExpShared': 'js::RegExpShared',
+            "BaseShape": "js::BaseShape",
+            "JitCode": "js::jit::JitCode",
+            "Script": "js::BaseScript",
+            "Scope": "js::Scope",
+            "RegExpShared": "js::RegExpShared",
         }
 
         # Map from AllocKind to TraceKind for out-of-line types.
         alloc_map = {
-            'BASE_SHAPE':   'BaseShape',
-            'JITCODE':      'JitCode',
-            'SCRIPT':       'Script',
-            'SCOPE':        'Scope',
-            'REGEXP_SHARED': 'RegExpShared',
+            "BASE_SHAPE": "BaseShape",
+            "JITCODE": "JitCode",
+            "SCRIPT": "Script",
+            "SCOPE": "Scope",
+            "REGEXP_SHARED": "RegExpShared",
         }
 
         self.trace_kind_to_type = {
@@ -67,12 +66,12 @@ class GCCellPtrTypeCache(object):
             alloc_kind(k): trace_kind(v) for k, v in alloc_map.items()
         }
 
-        self.Null = trace_kind('Null')
-        self.tracekind_mask = gdb.parse_and_eval('JS::OutOfLineTraceKindMask')
-        self.arena_mask = gdb.parse_and_eval('js::gc::ArenaMask')
+        self.Null = trace_kind("Null")
+        self.tracekind_mask = gdb.parse_and_eval("JS::OutOfLineTraceKindMask")
+        self.arena_mask = gdb.parse_and_eval("js::gc::ArenaMask")
 
 
-@pretty_printer('JS::GCCellPtr')
+@pretty_printer("JS::GCCellPtr")
 class GCCellPtr(object):
     def __init__(self, value, cache):
         self.value = value
@@ -81,7 +80,7 @@ class GCCellPtr(object):
         self.cache = cache
 
     def to_string(self):
-        ptr = self.value['ptr']
+        ptr = self.value["ptr"]
         kind = ptr & self.cache.mod_GCCellPtr.tracekind_mask
         if kind == self.cache.mod_GCCellPtr.Null:
             return "JS::GCCellPtr(nullptr)"
@@ -104,13 +103,19 @@ class GCCellPtr(object):
             # TenuredCell::arena()
             addr = int(tenured)
             arena_ptr = addr & ~self.cache.mod_GCCellPtr.arena_mask
-            arena = arena_ptr.reinterpret_cast(self.cache.mod_GCCellPtr.Arena_t.pointer())
+            arena = arena_ptr.reinterpret_cast(
+                self.cache.mod_GCCellPtr.Arena_t.pointer()
+            )
 
             # Arena::getAllocKind()
-            alloc_kind = arena['allocKind'].cast(self.cache.mod_GCCellPtr.AllocKind_t)
-            alloc_idx = int(alloc_kind.cast(self.cache.mod_GCCellPtr.AllocKind_t.target()))
+            alloc_kind = arena["allocKind"].cast(self.cache.mod_GCCellPtr.AllocKind_t)
+            alloc_idx = int(
+                alloc_kind.cast(self.cache.mod_GCCellPtr.AllocKind_t.target())
+            )
 
             # Map the AllocKind to a TraceKind.
             kind = self.cache.mod_GCCellPtr.alloc_kind_to_trace_kind[alloc_idx]
         type_name = self.cache.mod_GCCellPtr.trace_kind_to_type[int(kind)]
-        return "JS::GCCellPtr(({}*) {})".format(type_name, ptr.cast(self.cache.void_ptr_t))
+        return "JS::GCCellPtr(({}*) {})".format(
+            type_name, ptr.cast(self.cache.void_ptr_t)
+        )

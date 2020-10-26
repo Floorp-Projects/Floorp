@@ -24,18 +24,20 @@ class LintMeta(type):
         def create_test(project, func):
             def test(self):
                 return func(self, project)
+
             return test
 
         for project in (
-            'browser',
-            'extensions',
-            'js',
-            'memory',
-            'mobile/android',
-            'tools/update-programs',
+            "browser",
+            "extensions",
+            "js",
+            "memory",
+            "mobile/android",
+            "tools/update-programs",
         ):
-            attrs['test_%s' % project.replace('/', '_')] = create_test(
-                project, attrs['lint'])
+            attrs["test_%s" % project.replace("/", "_")] = create_test(
+                project, attrs["lint"]
+            )
 
         return type.__new__(mcs, name, bases, attrs)
 
@@ -51,13 +53,17 @@ class Lint(unittest.TestCase):
         os.chdir(self._curdir)
 
     def lint(self, project):
-        sandbox = LintSandbox({
-            'OLD_CONFIGURE': os.path.join(topsrcdir, 'old-configure'),
-            'MOZCONFIG': os.path.join(os.path.dirname(test_path), 'data',
-                                      'empty_mozconfig'),
-        }, ['configure', '--enable-project=%s' % project, '--help'])
-        sandbox.run(os.path.join(topsrcdir, 'moz.configure'))
+        sandbox = LintSandbox(
+            {
+                "OLD_CONFIGURE": os.path.join(topsrcdir, "old-configure"),
+                "MOZCONFIG": os.path.join(
+                    os.path.dirname(test_path), "data", "empty_mozconfig"
+                ),
+            },
+            ["configure", "--enable-project=%s" % project, "--help"],
+        )
+        sandbox.run(os.path.join(topsrcdir, "moz.configure"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

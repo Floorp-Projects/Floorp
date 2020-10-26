@@ -29,7 +29,7 @@ def validate_schema(schema, obj, msg_prefix):
         msg = [msg_prefix]
         for error in exc.errors:
             msg.append(str(error))
-        raise Exception('\n'.join(msg) + '\n' + pprint.pformat(obj))
+        raise Exception("\n".join(msg) + "\n" + pprint.pformat(obj))
 
 
 def optionally_keyed_by(*arguments):
@@ -51,7 +51,7 @@ def optionally_keyed_by(*arguments):
     def validator(obj):
         if isinstance(obj, dict) and len(obj) == 1:
             k, v = list(obj.items())[0]
-            if k.startswith('by-') and k[len('by-'):] in fields:
+            if k.startswith("by-") and k[len("by-") :] in fields:
                 res = {}
                 for kk, vv in v.items():
                     try:
@@ -113,8 +113,8 @@ def resolve_keyed_by(item, field, item_name, defer=None, **extra_values):
     """
     # find the field, returning the item unchanged if anything goes wrong
     container, subfield = item, field
-    while '.' in subfield:
-        f, subfield = subfield.split('.', 1)
+    while "." in subfield:
+        f, subfield = subfield.split(".", 1)
         if f not in container:
             return item
         container = container[f]
@@ -139,15 +139,17 @@ def resolve_keyed_by(item, field, item_name, defer=None, **extra_values):
 # they can be whitelisted here.
 WHITELISTED_SCHEMA_IDENTIFIERS = [
     # upstream-artifacts are handed directly to scriptWorker, which expects interCaps
-    lambda path: "[{!r}]".format(u'upstream-artifacts') in path,
-    lambda path: ("[{!r}]".format(u'test_name') in path or
-                  "[{!r}]".format(u'json_location') in path or
-                  "[{!r}]".format(u'video_location') in path),
+    lambda path: "[{!r}]".format("upstream-artifacts") in path,
+    lambda path: (
+        "[{!r}]".format("test_name") in path
+        or "[{!r}]".format("json_location") in path
+        or "[{!r}]".format("video_location") in path
+    ),
 ]
 
 
 def check_schema(schema):
-    identifier_re = re.compile('^[a-z][a-z0-9-]*$')
+    identifier_re = re.compile("^[a-z][a-z0-9-]*$")
 
     def whitelisted(path):
         return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)
@@ -161,8 +163,9 @@ def check_schema(schema):
             elif isinstance(k, text_type):
                 if not identifier_re.match(k) and not whitelisted(path):
                     raise RuntimeError(
-                        'YAML schemas should use dashed lower-case identifiers, '
-                        'not {!r} @ {}'.format(k, path))
+                        "YAML schemas should use dashed lower-case identifiers, "
+                        "not {!r} @ {}".format(k, path)
+                    )
             elif isinstance(k, (voluptuous.Optional, voluptuous.Required)):
                 check_identifier(path, k.schema)
             elif isinstance(k, (voluptuous.Any, voluptuous.All)):
@@ -170,8 +173,10 @@ def check_schema(schema):
                     check_identifier(path, v)
             elif not whitelisted(path):
                 raise RuntimeError(
-                    'Unexpected type in YAML schema: {} @ {}'.format(
-                        type(k).__name__, path))
+                    "Unexpected type in YAML schema: {} @ {}".format(
+                        type(k).__name__, path
+                    )
+                )
 
         if isinstance(sch, collections.Mapping):
             for k, v in iteritems(sch):
@@ -184,7 +189,8 @@ def check_schema(schema):
         elif isinstance(sch, voluptuous.Any):
             for v in sch.validators:
                 iter(path, v)
-    iter('schema', schema.schema)
+
+    iter("schema", schema.schema)
 
 
 class Schema(voluptuous.Schema):
@@ -192,6 +198,7 @@ class Schema(voluptuous.Schema):
     Operates identically to voluptuous.Schema, but applying some taskgraph-specific checks
     in the process.
     """
+
     def __init__(self, *args, **kwargs):
         super(Schema, self).__init__(*args, **kwargs)
         if not taskgraph.fast:
@@ -216,6 +223,6 @@ class Schema(voluptuous.Schema):
 # shortcut for a string where task references are allowed
 taskref_or_string = voluptuous.Any(
     text_type,
-    {voluptuous.Required('task-reference'): text_type},
-    {voluptuous.Required('artifact-reference'): text_type},
+    {voluptuous.Required("task-reference"): text_type},
+    {voluptuous.Required("artifact-reference"): text_type},
 )

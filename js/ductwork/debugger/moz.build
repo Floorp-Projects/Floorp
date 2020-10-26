@@ -8,23 +8,23 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "JavaScript Engine")
 
 XPIDL_SOURCES += [
-    'IJSDebugger.idl',
+    "IJSDebugger.idl",
 ]
 
-XPIDL_MODULE = 'jsdebugger'
+XPIDL_MODULE = "jsdebugger"
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 
 SOURCES += [
-    'JSDebugger.cpp',
+    "JSDebugger.cpp",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 EXTRA_JS_MODULES += [
-    'jsdebugger.jsm',
+    "jsdebugger.jsm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

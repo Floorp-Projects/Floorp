@@ -28,8 +28,17 @@ from mozbuild.util import FileAvoidWrite
 from mozbuild.action.util import log_build_task
 
 
-def process(input_dirs, inc_paths, bindings_conf, header_dir,
-            xpcrs_dir, xpt_dir, deps_dir, module, idl_files):
+def process(
+    input_dirs,
+    inc_paths,
+    bindings_conf,
+    header_dir,
+    xpcrs_dir,
+    xpt_dir,
+    deps_dir,
+    module,
+    idl_files,
+):
     p = IDLParser()
 
     xpts = []
@@ -37,25 +46,24 @@ def process(input_dirs, inc_paths, bindings_conf, header_dir,
     rule = mk.create_rule()
 
     glbl = {}
-    exec(open(bindings_conf, encoding='utf-8').read(), glbl)
-    webidlconfig = glbl['DOMInterfaces']
+    exec(open(bindings_conf, encoding="utf-8").read(), glbl)
+    webidlconfig = glbl["DOMInterfaces"]
 
     # Write out dependencies for Python modules we import. If this list isn't
     # up to date, we will not re-process XPIDL files if the processor changes.
-    rule.add_dependencies(six.ensure_text(s) for s in
-                          iter_modules_in_path(topsrcdir))
+    rule.add_dependencies(six.ensure_text(s) for s in iter_modules_in_path(topsrcdir))
 
     for path in idl_files:
         basename = os.path.basename(path)
         stem, _ = os.path.splitext(basename)
-        idl_data = open(path, encoding='utf-8').read()
+        idl_data = open(path, encoding="utf-8").read()
 
         idl = p.parse(idl_data, filename=path)
         idl.resolve(inc_paths, p, webidlconfig)
 
-        header_path = os.path.join(header_dir, '%s.h' % stem)
-        rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
-        rs_bt_path = os.path.join(xpcrs_dir, 'bt', '%s.rs' % stem)
+        header_path = os.path.join(header_dir, "%s.h" % stem)
+        rs_rt_path = os.path.join(xpcrs_dir, "rt", "%s.rs" % stem)
+        rs_bt_path = os.path.join(xpcrs_dir, "bt", "%s.rs" % stem)
 
         xpts.append(jsonxpt.build_typelib(idl))
 
@@ -85,44 +93,63 @@ def process(input_dirs, inc_paths, bindings_conf, header_dir,
     # files to be changed in any way. This means that make will re-run us every
     # time a build is run whether or not anything changed. To fix this we
     # unconditionally write out the file.
-    xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
-    with open(xpt_path, 'w', encoding='utf-8', newline='\n') as fh:
+    xpt_path = os.path.join(xpt_dir, "%s.xpt" % module)
+    with open(xpt_path, "w", encoding="utf-8", newline="\n") as fh:
         jsonxpt.write(jsonxpt.link(xpts), fh)
 
     rule.add_targets([six.ensure_text(xpt_path)])
     if deps_dir:
-        deps_path = os.path.join(deps_dir, '%s.pp' % module)
+        deps_path = os.path.join(deps_dir, "%s.pp" % module)
         with FileAvoidWrite(deps_path) as fh:
             mk.dump(fh)
 
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--depsdir',
-                        help='Directory in which to write dependency files.')
-    parser.add_argument('--bindings-conf',
-                        help='Path to the WebIDL binding configuration file.')
-    parser.add_argument('--input-dir', dest='input_dirs',
-                        action='append', default=[],
-                        help='Directory(ies) in which to find source .idl files.')
-    parser.add_argument('headerdir',
-                        help='Directory in which to write header files.')
-    parser.add_argument('xpcrsdir',
-                        help='Directory in which to write rust xpcom binding files.')
-    parser.add_argument('xptdir',
-                        help='Directory in which to write xpt file.')
-    parser.add_argument('module',
-                        help='Final module name to use for linked output xpt file.')
-    parser.add_argument('idls', nargs='+',
-                        help='Source .idl file(s).')
-    parser.add_argument('-I', dest='incpath', action='append', default=[],
-                        help='Extra directories where to look for included .idl files.')
+    parser.add_argument(
+        "--depsdir", help="Directory in which to write dependency files."
+    )
+    parser.add_argument(
+        "--bindings-conf", help="Path to the WebIDL binding configuration file."
+    )
+    parser.add_argument(
+        "--input-dir",
+        dest="input_dirs",
+        action="append",
+        default=[],
+        help="Directory(ies) in which to find source .idl files.",
+    )
+    parser.add_argument("headerdir", help="Directory in which to write header files.")
+    parser.add_argument(
+        "xpcrsdir", help="Directory in which to write rust xpcom binding files."
+    )
+    parser.add_argument("xptdir", help="Directory in which to write xpt file.")
+    parser.add_argument(
+        "module", help="Final module name to use for linked output xpt file."
+    )
+    parser.add_argument("idls", nargs="+", help="Source .idl file(s).")
+    parser.add_argument(
+        "-I",
+        dest="incpath",
+        action="append",
+        default=[],
+        help="Extra directories where to look for included .idl files.",
+    )
 
     args = parser.parse_args(argv)
     incpath = [os.path.join(topsrcdir, p) for p in args.incpath]
-    process(args.input_dirs, incpath, args.bindings_conf, args.headerdir,
-            args.xpcrsdir, args.xptdir, args.depsdir, args.module, args.idls)
+    process(
+        args.input_dirs,
+        incpath,
+        args.bindings_conf,
+        args.headerdir,
+        args.xpcrsdir,
+        args.xptdir,
+        args.depsdir,
+        args.module,
+        args.idls,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     log_build_task(main, sys.argv[1:])

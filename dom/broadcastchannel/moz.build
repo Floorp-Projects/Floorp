@@ -8,23 +8,23 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: postMessage")
 
 EXPORTS.mozilla.dom += [
-    'BroadcastChannel.h',
+    "BroadcastChannel.h",
 ]
 
 UNIFIED_SOURCES += [
-    'BroadcastChannel.cpp',
-    'BroadcastChannelChild.cpp',
-    'BroadcastChannelParent.cpp',
-    'BroadcastChannelService.cpp',
+    "BroadcastChannel.cpp",
+    "BroadcastChannelChild.cpp",
+    "BroadcastChannelParent.cpp",
+    "BroadcastChannelService.cpp",
 ]
 
 IPDL_SOURCES += [
-    'PBroadcastChannel.ipdl',
+    "PBroadcastChannel.ipdl",
 ]
 
-MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
-BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

@@ -26,21 +26,21 @@ TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
 
 SIMPLE_PASSING_TEST = "function run_test() { Assert.ok(true); }"
 SIMPLE_FAILING_TEST = "function run_test() { Assert.ok(false); }"
-SIMPLE_PREFCHECK_TEST = '''
+SIMPLE_PREFCHECK_TEST = """
 function run_test() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Assert.ok(Services.prefs.getBoolPref("fake.pref.to.test"));
 }
-'''
+"""
 
-SIMPLE_UNCAUGHT_REJECTION_TEST = '''
+SIMPLE_UNCAUGHT_REJECTION_TEST = """
 function run_test() {
   Promise.reject(new Error("Test rejection."));
   Assert.ok(true);
 }
-'''
+"""
 
-SIMPLE_UNCAUGHT_REJECTION_JSM_TEST = '''
+SIMPLE_UNCAUGHT_REJECTION_JSM_TEST = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 Promise.reject(new Error("Test rejection."));
@@ -48,36 +48,36 @@ Promise.reject(new Error("Test rejection."));
 function run_test() {
   Assert.ok(true);
 }
-'''
+"""
 
-ADD_TEST_SIMPLE = '''
+ADD_TEST_SIMPLE = """
 function run_test() { run_next_test(); }
 
 add_test(function test_simple() {
   Assert.ok(true);
   run_next_test();
 });
-'''
+"""
 
-ADD_TEST_FAILING = '''
+ADD_TEST_FAILING = """
 function run_test() { run_next_test(); }
 
 add_test(function test_failing() {
   Assert.ok(false);
   run_next_test();
 });
-'''
+"""
 
-ADD_TEST_UNCAUGHT_REJECTION = '''
+ADD_TEST_UNCAUGHT_REJECTION = """
 function run_test() { run_next_test(); }
 
 add_test(function test_uncaught_rejection() {
   Promise.reject(new Error("Test rejection."));
   run_next_test();
 });
-'''
+"""
 
-ADD_TEST_UNCAUGHT_REJECTION_JSM = '''
+ADD_TEST_UNCAUGHT_REJECTION_JSM = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
@@ -86,27 +86,27 @@ add_test(function test_uncaught_rejection() {
   Promise.reject(new Error("Test rejection."));
   run_next_test();
 });
-'''
+"""
 
-CHILD_TEST_PASSING = '''
+CHILD_TEST_PASSING = """
 function run_test () { run_next_test(); }
 
 add_test(function test_child_simple () {
   run_test_in_child("test_pass.js");
   run_next_test();
 });
-'''
+"""
 
-CHILD_TEST_FAILING = '''
+CHILD_TEST_FAILING = """
 function run_test () { run_next_test(); }
 
 add_test(function test_child_simple () {
   run_test_in_child("test_fail.js");
   run_next_test();
 });
-'''
+"""
 
-CHILD_HARNESS_SIMPLE = '''
+CHILD_HARNESS_SIMPLE = """
 function run_test () { run_next_test(); }
 
 add_test(function test_child_assert () {
@@ -115,9 +115,9 @@ add_test(function test_child_assert () {
   sendCommand("Assert.ok(true);", do_test_finished);
   run_next_test();
 });
-'''
+"""
 
-CHILD_TEST_HANG = '''
+CHILD_TEST_HANG = """
 function run_test () { run_next_test(); }
 
 add_test(function test_child_simple () {
@@ -128,26 +128,26 @@ add_test(function test_child_simple () {
               do_test_finished);
   run_next_test();
 });
-'''
+"""
 
-SIMPLE_LOOPING_TEST = '''
+SIMPLE_LOOPING_TEST = """
 function run_test () { run_next_test(); }
 
 add_test(function test_loop () {
   do_test_pending()
 });
-'''
+"""
 
-PASSING_TEST_UNICODE = '''
+PASSING_TEST_UNICODE = """
 function run_test () { run_next_test(); }
 
 add_test(function test_unicode_print () {
   Assert.equal("\u201c\u201d", "\u201c\u201d");
   run_next_test();
 });
-'''
+"""
 
-ADD_TASK_SINGLE = '''
+ADD_TASK_SINGLE = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
@@ -156,9 +156,9 @@ add_task(async function test_task() {
   await Promise.resolve(true);
   await Promise.resolve(false);
 });
-'''
+"""
 
-ADD_TASK_MULTIPLE = '''
+ADD_TASK_MULTIPLE = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
@@ -170,9 +170,9 @@ add_task(async function test_task() {
 add_task(async function test_2() {
   await Promise.resolve(true);
 });
-'''
+"""
 
-ADD_TASK_REJECTED = '''
+ADD_TASK_REJECTED = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
@@ -180,9 +180,9 @@ function run_test() { run_next_test(); }
 add_task(async function test_failing() {
   await Promise.reject(new Error("I fail."));
 });
-'''
+"""
 
-ADD_TASK_FAILURE_INSIDE = '''
+ADD_TASK_FAILURE_INSIDE = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
@@ -192,9 +192,9 @@ add_task(async function test() {
 
   Assert.ok(result);
 });
-'''
+"""
 
-ADD_TASK_RUN_NEXT_TEST = '''
+ADD_TASK_RUN_NEXT_TEST = """
 function run_test() { run_next_test(); }
 
 add_task(function () {
@@ -202,9 +202,9 @@ add_task(function () {
 
   run_next_test();
 });
-'''
+"""
 
-ADD_TASK_STACK_TRACE = '''
+ADD_TASK_STACK_TRACE = """
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 function run_test() { run_next_test(); }
@@ -215,9 +215,9 @@ add_task(async function this_test_will_fail() {
   }
   Assert.ok(false);
 });
-'''
+"""
 
-ADD_TASK_SKIP = '''
+ADD_TASK_SKIP = """
 add_task(async function skipMeNot1() {
   Assert.ok(true, "Well well well.");
 });
@@ -237,9 +237,9 @@ add_task(async function skipMeNot3() {
 add_task(async function skipMe2() {
   Assert.ok(false, "Not skipped after all.");
 }).skip();
-'''
+"""
 
-ADD_TASK_SKIPALL = '''
+ADD_TASK_SKIPALL = """
 add_task(async function skipMe1() {
   Assert.ok(false, "Not skipped after all.");
 });
@@ -259,13 +259,13 @@ add_task(async function skipMeNot() {
 add_task(async function skipMe4() {
   Assert.ok(false, "Not skipped after all.");
 });
-'''
+"""
 
-ADD_TEST_THROW_STRING = '''
+ADD_TEST_THROW_STRING = """
 function run_test() {do_throw("Passing a string to do_throw")};
-'''
+"""
 
-ADD_TEST_THROW_OBJECT = '''
+ADD_TEST_THROW_OBJECT = """
 let error = {
   message: "Error object",
   fileName: "failure.js",
@@ -273,9 +273,9 @@ let error = {
   toString: function() {return this.message;}
 };
 function run_test() {do_throw(error)};
-'''
+"""
 
-ADD_TEST_REPORT_OBJECT = '''
+ADD_TEST_REPORT_OBJECT = """
 let error = {
   message: "Error object",
   fileName: "failure.js",
@@ -283,14 +283,14 @@ let error = {
   toString: function() {return this.message;}
 };
 function run_test() {do_report_unexpected_exception(error)};
-'''
+"""
 
-ADD_TEST_VERBOSE = '''
+ADD_TEST_VERBOSE = """
 function run_test() {info("a message from info")};
-'''
+"""
 
 # A test for genuine JS-generated Error objects
-ADD_TEST_REPORT_REF_ERROR = '''
+ADD_TEST_REPORT_REF_ERROR = """
 function run_test() {
   let obj = {blah: 0};
   try {
@@ -300,31 +300,31 @@ function run_test() {
     do_report_unexpected_exception(error);
   }
 };
-'''
+"""
 
 # A test for failure to load a test due to a syntax error
-LOAD_ERROR_SYNTAX_ERROR = '''
+LOAD_ERROR_SYNTAX_ERROR = """
 function run_test(
-'''
+"""
 
 # A test for failure to load a test due to an error other than a syntax error
-LOAD_ERROR_OTHER_ERROR = '''
+LOAD_ERROR_OTHER_ERROR = """
 "use strict";
 no_such_var = "foo"; // assignment to undeclared variable
-'''
+"""
 
 # A test that crashes outright.
-TEST_CRASHING = '''
+TEST_CRASHING = """
 function run_test () {
   Components.utils.import("resource://gre/modules/ctypes.jsm", this);
   let zero = new ctypes.intptr_t(8);
   let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
   badptr.contents;
 }
-'''
+"""
 
 # A test for asynchronous cleanup functions
-ASYNC_CLEANUP = '''
+ASYNC_CLEANUP = """
 function run_test() {
   Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
@@ -373,25 +373,25 @@ function run_test() {
   });
 
 }
-'''
+"""
 
 # A test to check that add_test() tests run without run_test()
-NO_RUN_TEST_ADD_TEST = '''
+NO_RUN_TEST_ADD_TEST = """
 add_test(function no_run_test_add_test() {
   Assert.ok(true);
   run_next_test();
 });
-'''
+"""
 
 # A test to check that add_task() tests run without run_test()
-NO_RUN_TEST_ADD_TASK = '''
+NO_RUN_TEST_ADD_TASK = """
 add_task(function no_run_test_add_task() {
   Assert.ok(true);
 });
-'''
+"""
 
 # A test to check that both add_task() and add_test() work without run_test()
-NO_RUN_TEST_ADD_TEST_ADD_TASK = '''
+NO_RUN_TEST_ADD_TEST_ADD_TASK = """
 add_test(function no_run_test_add_test() {
   Assert.ok(true);
   run_next_test();
@@ -400,28 +400,28 @@ add_test(function no_run_test_add_test() {
 add_task(function no_run_test_add_task() {
   Assert.ok(true);
 });
-'''
+"""
 
 # A test to check that an empty test file without run_test(),
 # add_test() or add_task() works.
-NO_RUN_TEST_EMPTY_TEST = '''
+NO_RUN_TEST_EMPTY_TEST = """
 // This is an empty test file.
-'''
+"""
 
-NO_RUN_TEST_ADD_TEST_FAIL = '''
+NO_RUN_TEST_ADD_TEST_FAIL = """
 add_test(function no_run_test_add_test_fail() {
   Assert.ok(false);
   run_next_test();
 });
-'''
+"""
 
-NO_RUN_TEST_ADD_TASK_FAIL = '''
+NO_RUN_TEST_ADD_TASK_FAIL = """
 add_task(function no_run_test_add_task_fail() {
   Assert.ok(false);
 });
-'''
+"""
 
-NO_RUN_TEST_ADD_TASK_MULTIPLE = '''
+NO_RUN_TEST_ADD_TASK_MULTIPLE = """
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 add_task(async function test_task() {
@@ -431,25 +431,25 @@ add_task(async function test_task() {
 add_task(async function test_2() {
   await Promise.resolve(true);
 });
-'''
+"""
 
-LOAD_MOZINFO = '''
+LOAD_MOZINFO = """
 function run_test() {
   Assert.notEqual(typeof mozinfo, undefined);
   Assert.notEqual(typeof mozinfo.os, undefined);
 }
-'''
+"""
 
-CHILD_MOZINFO = '''
+CHILD_MOZINFO = """
 function run_test () { run_next_test(); }
 
 add_test(function test_child_mozinfo () {
   run_test_in_child("test_mozinfo.js");
   run_next_test();
 });
-'''
+"""
 
-HEADLESS_TRUE = '''
+HEADLESS_TRUE = """
 add_task(function headless_true() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
@@ -457,9 +457,9 @@ add_task(function headless_true() {
   Assert.equal(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
   Assert.equal(env.get("DISPLAY"), "77", "Check DISPLAY");
 });
-'''
+"""
 
-HEADLESS_FALSE = '''
+HEADLESS_FALSE = """
 add_task(function headless_false() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
@@ -467,42 +467,50 @@ add_task(function headless_false() {
   Assert.notEqual(env.get("MOZ_HEADLESS"), "1", "Check MOZ_HEADLESS");
   Assert.notEqual(env.get("DISPLAY"), "77", "Check DISPLAY");
 });
-'''
+"""
 
 
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
     """
+
     def __init__(self, name):
         super(XPCShellTestsTests, self).__init__(name)
         from buildconfig import substs
         from mozbuild.base import MozbuildObject
-        os.environ.pop('MOZ_OBJDIR', None)
+
+        os.environ.pop("MOZ_OBJDIR", None)
         self.build_obj = MozbuildObject.from_environment()
 
         objdir = self.build_obj.topobjdir.encode("utf-8")
-        self.testing_modules = os.path.join(objdir, '_tests', 'modules')
+        self.testing_modules = os.path.join(objdir, "_tests", "modules")
 
         if mozinfo.isMac:
-            self.xpcshellBin = os.path.join(objdir, "dist", substs['MOZ_MACBUNDLE_NAME'],
-                                            "Contents", "MacOS", "xpcshell")
+            self.xpcshellBin = os.path.join(
+                objdir,
+                "dist",
+                substs["MOZ_MACBUNDLE_NAME"],
+                "Contents",
+                "MacOS",
+                "xpcshell",
+            )
         else:
             self.xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
         if sys.platform == "win32":
             self.xpcshellBin += ".exe"
-        self.utility_path = os.path.join(objdir, 'dist', 'bin')
+        self.utility_path = os.path.join(objdir, "dist", "bin")
         self.symbols_path = None
-        candidate_path = os.path.join(self.build_obj.distdir, 'crashreporter-symbols')
-        if (os.path.isdir(candidate_path)):
+        candidate_path = os.path.join(self.build_obj.distdir, "crashreporter-symbols")
+        if os.path.isdir(candidate_path):
             self.symbols_path = candidate_path
 
     def setUp(self):
         self.log = six.StringIO()
         self.tempdir = tempfile.mkdtemp()
-        logger = structured.commandline.setup_logging("selftest%s" % id(self),
-                                                      {},
-                                                      {"tbpl": self.log})
+        logger = structured.commandline.setup_logging(
+            "selftest%s" % id(self), {}, {"tbpl": self.log}
+        )
         self.x = XPCShellTests(logger)
         self.x.harness_timeout = 30 if not mozinfo.info["ccov"] else 60
 
@@ -531,8 +539,7 @@ class XPCShellTestsTests(unittest.TestCase):
         """
         testlines = []
         for t in tests:
-            testlines.append("[%s]" % (t if isinstance(t, six.string_types)
-                                       else t[0]))
+            testlines.append("[%s]" % (t if isinstance(t, six.string_types) else t[0]))
             if isinstance(t, tuple):
                 testlines.extend(t[1:])
         prefslines = []
@@ -540,12 +547,18 @@ class XPCShellTestsTests(unittest.TestCase):
             # Append prefs lines as indented inside "prefs=" manifest option.
             prefslines.append("  %s" % p)
 
-        self.manifest = self.writeFile("xpcshell.ini", """
+        self.manifest = self.writeFile(
+            "xpcshell.ini",
+            """
 [DEFAULT]
 head =
 tail =
 prefs =
-""" + "\n".join(prefslines) + "\n" + "\n".join(testlines))
+"""
+            + "\n".join(prefslines)
+            + "\n"
+            + "\n".join(testlines),
+        )
 
     def assertTestResult(self, expected, shuffle=False, verbose=False, headless=False):
         """
@@ -553,31 +566,38 @@ prefs =
         returns |expected|.
         """
         kwargs = {}
-        kwargs['xpcshell'] = self.xpcshellBin
-        kwargs['symbolsPath'] = self.symbols_path
-        kwargs['manifest'] = self.manifest
-        kwargs['mozInfo'] = mozinfo.info
-        kwargs['shuffle'] = shuffle
-        kwargs['verbose'] = verbose
-        kwargs['headless'] = headless
-        kwargs['sequential'] = True
-        kwargs['testingModulesDir'] = self.testing_modules
-        kwargs['utility_path'] = self.utility_path
-        self.assertEquals(expected,
-                          self.x.runTests(kwargs),
-                          msg="""Tests should have %s, log:
+        kwargs["xpcshell"] = self.xpcshellBin
+        kwargs["symbolsPath"] = self.symbols_path
+        kwargs["manifest"] = self.manifest
+        kwargs["mozInfo"] = mozinfo.info
+        kwargs["shuffle"] = shuffle
+        kwargs["verbose"] = verbose
+        kwargs["headless"] = headless
+        kwargs["sequential"] = True
+        kwargs["testingModulesDir"] = self.testing_modules
+        kwargs["utility_path"] = self.utility_path
+        self.assertEquals(
+            expected,
+            self.x.runTests(kwargs),
+            msg="""Tests should have %s, log:
 ========
 %s
 ========
-""" % ("passed" if expected else "failed", self.log.getvalue()))
+"""
+            % ("passed" if expected else "failed", self.log.getvalue()),
+        )
 
     def _assertLog(self, s, expected):
         l = self.log.getvalue()
-        self.assertEqual(expected, s in l,
-                         msg="""Value %s %s in log:
+        self.assertEqual(
+            expected,
+            s in l,
+            msg="""Value %s %s in log:
 ========
 %s
-========""" % (s, "expected" if expected else "not expected", l))
+========"""
+            % (s, "expected" if expected else "not expected", l),
+        )
 
     def assertInLog(self, s):
         """
@@ -626,10 +646,7 @@ prefs =
         Check prefs configuration option is supported in xpcshell manifests.
         """
         self.writeFile("test_prefs.js", SIMPLE_PREFCHECK_TEST)
-        self.writeManifest(
-            tests=["test_prefs.js"],
-            prefs=["fake.pref.to.test=true"]
-        )
+        self.writeManifest(tests=["test_prefs.js"], prefs=["fake.pref.to.test=true"])
 
         self.assertTestResult(True, verbose=True)
         self.assertInLog(TEST_PASS_STRING)
@@ -644,29 +661,31 @@ prefs =
         Check prefs configuration are not logged in non verbose mode.
         """
         self.writeFile("test_prefs.js", SIMPLE_PREFCHECK_TEST)
-        self.writeManifest(
-            tests=["test_prefs.js"],
-            prefs=["fake.pref.to.test=true"]
-        )
+        self.writeManifest(tests=["test_prefs.js"], prefs=["fake.pref.to.test=true"])
 
         self.assertTestResult(True, verbose=False)
         self.assertNotInLog("Per-test extra prefs will be set:")
         self.assertNotInLog("fake.pref.to.test=true")
 
-    @unittest.skipIf(mozinfo.isWin or not mozinfo.info.get('debug'),
-                     'We don\'t have a stack fixer on hand for windows.')
+    @unittest.skipIf(
+        mozinfo.isWin or not mozinfo.info.get("debug"),
+        "We don't have a stack fixer on hand for windows.",
+    )
     def testAssertStack(self):
         """
         When an assertion is hit, we should produce a useful stack.
         """
-        self.writeFile("test_assert.js", '''
+        self.writeFile(
+            "test_assert.js",
+            """
           add_test(function test_asserts_immediately() {
             Components.classes["@mozilla.org/xpcom/debug;1"]
                       .getService(Components.interfaces.nsIDebug2)
                       .assertion("foo", "assertion failed", "test.js", 1)
             run_next_test();
           });
-        ''')
+        """,
+        )
 
         self.writeManifest(["test_assert.js"])
         self.assertTestResult(False)
@@ -675,12 +694,16 @@ prefs =
         log_lines = self.log.getvalue().splitlines()
         line_pat = "#\d\d:"
         unknown_pat = "#\d\d\: \?\?\?\[.* \+0x[a-f0-9]+\]"
-        self.assertFalse(any(re.search(unknown_pat, line) for line in log_lines),
-                         "An stack frame without symbols was found in\n%s" %
-                         pprint.pformat(log_lines))
-        self.assertTrue(any(re.search(line_pat, line) for line in log_lines),
-                        "No line resembling a stack frame was found in\n%s" %
-                        pprint.pformat(log_lines))
+        self.assertFalse(
+            any(re.search(unknown_pat, line) for line in log_lines),
+            "An stack frame without symbols was found in\n%s"
+            % pprint.pformat(log_lines),
+        )
+        self.assertTrue(
+            any(re.search(line_pat, line) for line in log_lines),
+            "No line resembling a stack frame was found in\n%s"
+            % pprint.pformat(log_lines),
+        )
 
     def testChildPass(self):
         """
@@ -758,14 +781,17 @@ prefs =
         """
         Check that add_test is skipped if |skip_if| condition is true
         """
-        self.writeFile("test_skip.js", """
+        self.writeFile(
+            "test_skip.js",
+            """
 add_test({
   skip_if: () => true,
 }, function test_should_be_skipped() {
   Assert.ok(false);
   run_next_test();
 });
-""")
+""",
+        )
         self.writeManifest(["test_skip.js"])
         self.assertTestResult(True, verbose=True)
         self.assertEquals(1, self.x.testCount)
@@ -780,13 +806,16 @@ add_test({
         """
         Check that add_task is not skipped if |skip_if| condition is false
         """
-        self.writeFile("test_not_skip.js", """
+        self.writeFile(
+            "test_not_skip.js",
+            """
 add_task({
   skip_if: () => false,
 }, function test_should_not_be_skipped() {
   Assert.ok(true);
 });
-""")
+""",
+        )
         self.writeManifest(["test_not_skip.js"])
         self.assertTestResult(True, verbose=True)
         self.assertEquals(1, self.x.testCount)
@@ -801,13 +830,16 @@ add_task({
         """
         Check that add_task is skipped if |skip_if| condition is true
         """
-        self.writeFile("test_skip.js", """
+        self.writeFile(
+            "test_skip.js",
+            """
 add_task({
   skip_if: () => true,
 }, function test_should_be_skipped() {
   Assert.ok(false);
 });
-""")
+""",
+        )
         self.writeManifest(["test_skip.js"])
         self.assertTestResult(True, verbose=True)
         self.assertEquals(1, self.x.testCount)
@@ -822,14 +854,17 @@ add_task({
         """
         Check that add_test is not skipped if |skip_if| condition is false
         """
-        self.writeFile("test_not_skip.js", """
+        self.writeFile(
+            "test_not_skip.js",
+            """
 add_test({
   skip_if: () => false,
 }, function test_should_not_be_skipped() {
   Assert.ok(true);
   run_next_test();
 });
-""")
+""",
+        )
         self.writeManifest(["test_not_skip.js"])
         self.assertTestResult(True, verbose=True)
         self.assertEquals(1, self.x.testCount)
@@ -865,8 +900,10 @@ add_test({
 
         self.assertTestResult(True, verbose=True)
 
-    @unittest.skipIf('MOZ_AUTOMATION' in os.environ,
-                     'Timeout code path occasionally times out (bug 1098121)')
+    @unittest.skipIf(
+        "MOZ_AUTOMATION" in os.environ,
+        "Timeout code path occasionally times out (bug 1098121)",
+    )
     def testHangingTimeout(self):
         """
         Check that a test that never finishes results in the correct error log.
@@ -970,8 +1007,9 @@ add_test({
         """
         Ensure a simple test with an uncaught rejection is reported.
         """
-        self.writeFile("test_simple_uncaught_rejection.js",
-                       SIMPLE_UNCAUGHT_REJECTION_TEST)
+        self.writeFile(
+            "test_simple_uncaught_rejection.js", SIMPLE_UNCAUGHT_REJECTION_TEST
+        )
         self.writeManifest(["test_simple_uncaught_rejection.js"])
 
         self.assertTestResult(False)
@@ -986,7 +1024,9 @@ add_test({
         """
         Ensure a simple test with an uncaught rejection from Promise.jsm is reported.
         """
-        self.writeFile("test_simple_uncaught_rejection_jsm.js", SIMPLE_UNCAUGHT_REJECTION_JSM_TEST)
+        self.writeFile(
+            "test_simple_uncaught_rejection_jsm.js", SIMPLE_UNCAUGHT_REJECTION_JSM_TEST
+        )
         self.writeManifest(["test_simple_uncaught_rejection_jsm.js"])
 
         self.assertTestResult(False)
@@ -1020,7 +1060,7 @@ add_test({
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
-        if mozinfo.info.get('crashreporter'):
+        if mozinfo.info.get("crashreporter"):
             self.assertInLog("\nPROCESS-CRASH")
 
     def testLogCorrectFileName(self):
@@ -1052,7 +1092,9 @@ add_test({
         """
         Ensure add_test() with an uncaught rejection is reported.
         """
-        self.writeFile("test_add_test_uncaught_rejection.js", ADD_TEST_UNCAUGHT_REJECTION)
+        self.writeFile(
+            "test_add_test_uncaught_rejection.js", ADD_TEST_UNCAUGHT_REJECTION
+        )
         self.writeManifest(["test_add_test_uncaught_rejection.js"])
 
         self.assertTestResult(False)
@@ -1064,7 +1106,9 @@ add_test({
         """
         Ensure add_test() with an uncaught rejection from Promise.jsm is reported.
         """
-        self.writeFile("test_add_test_uncaught_rejection_jsm.js", ADD_TEST_UNCAUGHT_REJECTION_JSM)
+        self.writeFile(
+            "test_add_test_uncaught_rejection_jsm.js", ADD_TEST_UNCAUGHT_REJECTION_JSM
+        )
         self.writeManifest(["test_add_test_uncaught_rejection_jsm.js"])
 
         self.assertTestResult(False)
@@ -1088,8 +1132,7 @@ add_test({
         """
         Ensure multiple calls to add_test_task() work as expected.
         """
-        self.writeFile("test_add_task_multiple.js",
-                       ADD_TASK_MULTIPLE)
+        self.writeFile("test_add_task_multiple.js", ADD_TASK_MULTIPLE)
         self.writeManifest(["test_add_task_multiple.js"])
 
         self.assertTestResult(True)
@@ -1101,8 +1144,7 @@ add_test({
         """
         Ensure rejected task reports as failure.
         """
-        self.writeFile("test_add_task_rejected.js",
-                       ADD_TASK_REJECTED)
+        self.writeFile("test_add_task_rejected.js", ADD_TASK_REJECTED)
         self.writeManifest(["test_add_task_rejected.js"])
 
         self.assertTestResult(False)
@@ -1114,8 +1156,7 @@ add_test({
         """
         Ensure tests inside task are reported as failures.
         """
-        self.writeFile("test_add_task_failure_inside.js",
-                       ADD_TASK_FAILURE_INSIDE)
+        self.writeFile("test_add_task_failure_inside.js", ADD_TASK_FAILURE_INSIDE)
         self.writeManifest(["test_add_task_failure_inside.js"])
 
         self.assertTestResult(False)
@@ -1127,8 +1168,7 @@ add_test({
         """
         Calling run_next_test() from inside add_task() results in failure.
         """
-        self.writeFile("test_add_task_run_next_test.js",
-                       ADD_TASK_RUN_NEXT_TEST)
+        self.writeFile("test_add_task_run_next_test.js", ADD_TASK_RUN_NEXT_TEST)
         self.writeManifest(["test_add_task_run_next_test.js"])
 
         self.assertTestResult(False)
@@ -1141,8 +1181,7 @@ add_test({
         Ensuring that calling Assert.ok(false) from inside add_task()
         results in a human-readable stack trace.
         """
-        self.writeFile("test_add_task_stack_trace.js",
-                       ADD_TASK_STACK_TRACE)
+        self.writeFile("test_add_task_stack_trace.js", ADD_TASK_STACK_TRACE)
         self.writeManifest(["test_add_task_stack_trace.js"])
 
         self.assertTestResult(False)
@@ -1329,7 +1368,7 @@ add_test({
         self.writeFile("test_asyncCleanup.js", ASYNC_CLEANUP)
         self.writeManifest(["test_asyncCleanup.js"])
         self.assertTestResult(False)
-        self.assertInLog("\"123456\" == \"123456\"")
+        self.assertInLog('"123456" == "123456"')
         self.assertInLog("At this stage, the test has succeeded")
         self.assertInLog("Throwing an error to force displaying the log")
 
@@ -1423,7 +1462,9 @@ add_test({
         """
         Check that multple add_task() tests work without run_test().
         """
-        self.writeFile("test_noRunTestAddTaskMultiple.js", NO_RUN_TEST_ADD_TASK_MULTIPLE)
+        self.writeFile(
+            "test_noRunTestAddTaskMultiple.js", NO_RUN_TEST_ADD_TASK_MULTIPLE
+        )
         self.writeManifest(["test_noRunTestAddTaskMultiple.js"])
 
         self.assertTestResult(True)
@@ -1491,11 +1532,14 @@ add_test({
         Check that the manifest entry overrides the explicit default.
         """
         self.writeFile("test_notHeadlessWhenFalseInManifest.js", HEADLESS_FALSE)
-        self.writeManifest([("test_notHeadlessWhenFalseInManifest.js", "headless = false")])
+        self.writeManifest(
+            [("test_notHeadlessWhenFalseInManifest.js", "headless = false")]
+        )
         self.assertTestResult(True, headless=True)
 
 
 if __name__ == "__main__":
     import mozunit
+
     mozinfo.find_and_update_from_json()
     mozunit.main()

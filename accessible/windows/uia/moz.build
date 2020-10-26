@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'uiaRawElmProvider.cpp',
+    "uiaRawElmProvider.cpp",
 ]
 
 LOCAL_INCLUDES += [
-    '/accessible/base',
-    '/accessible/generic',
-    '/accessible/html',
-    '/accessible/windows/msaa',
-    '/accessible/xpcom',
-    '/accessible/xul',
+    "/accessible/base",
+    "/accessible/generic",
+    "/accessible/html",
+    "/accessible/windows/msaa",
+    "/accessible/xpcom",
+    "/accessible/xul",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

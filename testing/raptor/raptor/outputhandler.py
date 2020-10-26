@@ -10,7 +10,7 @@ import json
 from logger.logger import RaptorLogger
 
 
-LOG = RaptorLogger(component='raptor-output-handler')
+LOG = RaptorLogger(component="raptor-output-handler")
 
 
 class OutputHandler(object):
@@ -21,7 +21,7 @@ class OutputHandler(object):
     def __call__(self, line):
         if not line.strip():
             return
-        line = line.decode('utf-8', errors='replace')
+        line = line.decode("utf-8", errors="replace")
 
         try:
             data = json.loads(line)
@@ -29,7 +29,7 @@ class OutputHandler(object):
             self.process_output(line)
             return
 
-        if isinstance(data, dict) and 'action' in data:
+        if isinstance(data, dict) and "action" in data:
             LOG.log_raw(data)
         else:
             self.process_output(json.dumps(data))

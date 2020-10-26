@@ -46,7 +46,7 @@ class Footer(BaseWidget):
             len_part = len(part)
             len_spaces = len(write_pieces)
             if written + len_part + len_spaces > max_width:
-                write_pieces.append(part[0:max_width - written - len_spaces])
+                write_pieces.append(part[0 : max_width - written - len_spaces])
                 written += len_part
                 break
 
@@ -54,5 +54,5 @@ class Footer(BaseWidget):
             written += len_part
 
         with self.term.location():
-            self.term.move(self.term.height-1, 0)
-            self.stream.write(' '.join(write_pieces))
+            self.term.move(self.term.height - 1, 0)
+            self.stream.write(" ".join(write_pieces))

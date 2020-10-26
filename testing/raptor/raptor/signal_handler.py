@@ -10,7 +10,6 @@ import signal
 
 
 class SignalHandler:
-
     def __init__(self):
         signal.signal(signal.SIGINT, self.handle_signal)
         signal.signal(signal.SIGTERM, self.handle_signal)

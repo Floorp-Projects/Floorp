@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
-    '../locale',
-    '../lwbrk',
-    '../strres',
-    '../uconv',
-    '../unicharutil',
+    "../locale",
+    "../lwbrk",
+    "../strres",
+    "../uconv",
+    "../unicharutil",
 ]

@@ -20,6 +20,7 @@ from ipdl.cxx.ast import Node, Whitespace, GroupNode, VerbatimNode
 # -----------------------------------------------------------------------------
 # Public API.
 
+
 def StmtCode(tmpl, **kwargs):
     """Perform template substitution to build opaque C++ AST nodes. See the
     module documentation for more information on the templating syntax.
@@ -57,10 +58,11 @@ def ExprVerbatim(text):
 # -----------------------------------------------------------------------------
 # Implementation
 
+
 def _code(tmpl, inline, context):
     # Remove common indentation, and strip the preceding newline from
     # '''-quoting, because we usually don't want it.
-    if tmpl.startswith('\n'):
+    if tmpl.startswith("\n"):
         tmpl = tmpl[1:]
     tmpl = textwrap.dedent(tmpl)
 
@@ -85,53 +87,54 @@ def _verbatim(text, inline):
     # For simplicitly, _verbatim is implemented using the same logic as _code,
     # but with '$' characters escaped. This ensures we only need to worry about
     # a single, albeit complex, codepath.
-    return _code(text.replace('$', '$$'), inline, {})
+    return _code(text.replace("$", "$$"), inline, {})
 
 
 # Pattern used to identify substitutions.
 _substPat = re.compile(
-    r'''
+    r"""
     \$(?:
         (?P<escaped>\$)                  | # '$$' is an escaped '$'
         (?P<list>[*,])?{(?P<expr>[^}]+)} | # ${expr}, $*{expr}, or $,{expr}
         (?P<invalid>)                      # For error reporting
     )
-    ''',
-    re.IGNORECASE | re.VERBOSE)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
 
 def _line(raw, skip_indent, lineno, context):
-    assert '\n' not in raw
+    assert "\n" not in raw
 
     # Determine the level of indentation used for this line
     line = raw.lstrip()
     offset = int(math.ceil((len(raw) - len(line)) / 4))
 
     # If line starts with a directive, don't indent it.
-    if line.startswith('#'):
+    if line.startswith("#"):
         skip_indent = True
 
     column = 0
     children = []
     for match in _substPat.finditer(line):
-        if match.group('invalid') is not None:
+        if match.group("invalid") is not None:
             raise ValueError("Invalid substitution on line %d" % lineno)
 
         # Any text from before the current entry should be written, and column
         # advanced.
         if match.start() > column:
-            before = line[column:match.start()]
+            before = line[column : match.start()]
             children.append(VerbatimNode(before))
         column = match.end()
 
         # If we have an escaped group, emit a '$' node.
-        if match.group('escaped') is not None:
-            children.append(VerbatimNode('$'))
+        if match.group("escaped") is not None:
+            children.append(VerbatimNode("$"))
             continue
 
         # At this point we should have an expression.
-        list_chr = match.group('list')
-        expr = match.group('expr')
+        list_chr = match.group("list")
+        expr = match.group("expr")
         assert expr is not None
 
         # Evaluate our expression in the context to get the values.
@@ -147,12 +150,12 @@ def _line(raw, skip_indent, lineno, context):
             values = [values]
 
         # Check if this substitution is inline, or the entire line.
-        inline = (match.span() != (0, len(line)))
+        inline = match.span() != (0, len(line))
 
         for idx, value in enumerate(values):
             # If we're using ',' as list mode, put a comma between each node.
-            if idx > 0 and list_chr == ',':
-                children.append(VerbatimNode(', '))
+            if idx > 0 and list_chr == ",":
+                children.append(VerbatimNode(", "))
 
             # If our value isn't a node, turn it into one. Verbatim should be
             # inline unless indent isn't being skipped, and the match isn't
@@ -174,11 +177,11 @@ def _line(raw, skip_indent, lineno, context):
     # If we have no children, just emit the empty string. This will become a
     # blank line.
     if len(children) == 0:
-        return VerbatimNode('')
+        return VerbatimNode("")
 
     # Add the initial indent if we aren't skipping it.
     if not skip_indent:
-        children.insert(0, VerbatimNode('', indent=True))
+        children.insert(0, VerbatimNode("", indent=True))
 
     # Wrap ourselves into a group node with the correct indent offset
     return GroupNode(children, offset=offset)

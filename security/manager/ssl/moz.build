@@ -7,252 +7,254 @@
 # osclientcerts is currently only implemented for Windows
 # osclientcerts transitively depends on winapi 0.2.8, which doesn't work with
 # AArch64
-if (CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CPU_ARCH'] != 'aarch64') or CONFIG['OS_ARCH'] == 'Darwin':
-    DIRS += [ 'osclientcerts' ]
+if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] != "aarch64") or CONFIG[
+    "OS_ARCH"
+] == "Darwin":
+    DIRS += ["osclientcerts"]
 
-TEST_DIRS += [ 'tests' ]
+TEST_DIRS += ["tests"]
 
 XPIDL_SOURCES += [
-    'nsICertificateDialogs.idl',
-    'nsICertOverrideService.idl',
-    'nsIClientAuthDialogs.idl',
-    'nsIClientAuthRememberService.idl',
-    'nsIContentSignatureVerifier.idl',
-    'nsICryptoHash.idl',
-    'nsICryptoHMAC.idl',
-    'nsIKeyModule.idl',
-    'nsILocalCertService.idl',
-    'nsINSSComponent.idl',
-    'nsINSSErrorsService.idl',
-    'nsINSSVersion.idl',
-    'nsIOSKeyStore.idl',
-    'nsIOSReauthenticator.idl',
-    'nsIPK11Token.idl',
-    'nsIPK11TokenDB.idl',
-    'nsIPKCS11Module.idl',
-    'nsIPKCS11ModuleDB.idl',
-    'nsIPKCS11Slot.idl',
-    'nsIProtectedAuthThread.idl',
-    'nsISecretDecoderRing.idl',
-    'nsISecurityUITelemetry.idl',
-    'nsISiteSecurityService.idl',
-    'nsITokenDialogs.idl',
-    'nsITokenPasswordDialogs.idl',
-    'nsIX509Cert.idl',
-    'nsIX509CertDB.idl',
-    'nsIX509CertValidity.idl',
+    "nsICertificateDialogs.idl",
+    "nsICertOverrideService.idl",
+    "nsIClientAuthDialogs.idl",
+    "nsIClientAuthRememberService.idl",
+    "nsIContentSignatureVerifier.idl",
+    "nsICryptoHash.idl",
+    "nsICryptoHMAC.idl",
+    "nsIKeyModule.idl",
+    "nsILocalCertService.idl",
+    "nsINSSComponent.idl",
+    "nsINSSErrorsService.idl",
+    "nsINSSVersion.idl",
+    "nsIOSKeyStore.idl",
+    "nsIOSReauthenticator.idl",
+    "nsIPK11Token.idl",
+    "nsIPK11TokenDB.idl",
+    "nsIPKCS11Module.idl",
+    "nsIPKCS11ModuleDB.idl",
+    "nsIPKCS11Slot.idl",
+    "nsIProtectedAuthThread.idl",
+    "nsISecretDecoderRing.idl",
+    "nsISecurityUITelemetry.idl",
+    "nsISiteSecurityService.idl",
+    "nsITokenDialogs.idl",
+    "nsITokenPasswordDialogs.idl",
+    "nsIX509Cert.idl",
+    "nsIX509CertDB.idl",
+    "nsIX509CertValidity.idl",
 ]
 
-if CONFIG['MOZ_XUL']:
+if CONFIG["MOZ_XUL"]:
     XPIDL_SOURCES += [
-        'nsICertTree.idl',
+        "nsICertTree.idl",
     ]
 
-XPIDL_MODULE = 'pipnss'
+XPIDL_MODULE = "pipnss"
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
 EXTRA_JS_MODULES.psm += [
-    'DER.jsm',
-    'RemoteSecuritySettings.jsm',
-    'X509.jsm',
+    "DER.jsm",
+    "RemoteSecuritySettings.jsm",
+    "X509.jsm",
 ]
 
 EXPORTS += [
-    'CommonSocketControl.h',
-    'CryptoTask.h',
-    'EnterpriseRoots.h',
-    'nsClientAuthRemember.h',
-    'nsNSSCallbacks.h',
-    'nsNSSCertificate.h',
-    'nsNSSComponent.h',
-    'nsNSSHelper.h',
-    'nsRandomGenerator.h',
-    'nsSecureBrowserUI.h',
-    'nsSecurityHeaderParser.h',
-    'NSSErrorsService.h',
-    'nsSSLSocketProvider.h',
-    'nsTLSSocketProvider.h',
-    'RootCertificateTelemetryUtils.h',
-    'ScopedNSSTypes.h',
-    'SharedCertVerifier.h',
-    'SSLServerCertVerification.h',
-    'TransportSecurityInfo.h',
+    "CommonSocketControl.h",
+    "CryptoTask.h",
+    "EnterpriseRoots.h",
+    "nsClientAuthRemember.h",
+    "nsNSSCallbacks.h",
+    "nsNSSCertificate.h",
+    "nsNSSComponent.h",
+    "nsNSSHelper.h",
+    "nsRandomGenerator.h",
+    "nsSecureBrowserUI.h",
+    "nsSecurityHeaderParser.h",
+    "NSSErrorsService.h",
+    "nsSSLSocketProvider.h",
+    "nsTLSSocketProvider.h",
+    "RootCertificateTelemetryUtils.h",
+    "ScopedNSSTypes.h",
+    "SharedCertVerifier.h",
+    "SSLServerCertVerification.h",
+    "TransportSecurityInfo.h",
 ]
 
 EXPORTS.mozilla += [
-    'DataStorage.h',
-    'DataStorageList.h',
-    'PublicSSL.h',
+    "DataStorage.h",
+    "DataStorageList.h",
+    "PublicSSL.h",
 ]
 
 EXPORTS.mozilla.psm += [
-    'PSMIPCCommon.h',
-    'TransportSecurityInfo.h',
-    'VerifySSLServerCertChild.h',
-    'VerifySSLServerCertParent.h',
+    "PSMIPCCommon.h",
+    "TransportSecurityInfo.h",
+    "VerifySSLServerCertChild.h",
+    "VerifySSLServerCertParent.h",
 ]
 
 EXPORTS.ipc += [
-    'DataStorageIPCUtils.h',
+    "DataStorageIPCUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    'CommonSocketControl.cpp',
-    'ContentSignatureVerifier.cpp',
-    'CryptoTask.cpp',
-    'CSTrustDomain.cpp',
-    'DataStorage.cpp',
-    'EnterpriseRoots.cpp',
-    'LocalCertService.cpp',
-    'nsCertOverrideService.cpp',
-    'nsClientAuthRemember.cpp',
-    'nsCryptoHash.cpp',
-    'nsKeyModule.cpp',
-    'nsNSSCallbacks.cpp',
-    'nsNSSCertHelper.cpp',
-    'nsNSSCertificate.cpp',
-    'nsNSSCertificateDB.cpp',
-    'nsNSSCertTrust.cpp',
-    'nsNSSComponent.cpp',
-    'nsNSSIOLayer.cpp',
-    'nsNSSModule.cpp',
-    'nsNSSVersion.cpp',
-    'nsNTLMAuthModule.cpp',
-    'nsPK11TokenDB.cpp',
-    'nsPKCS11Slot.cpp',
-    'nsPKCS12Blob.cpp',
-    'nsProtectedAuthThread.cpp',
-    'nsRandomGenerator.cpp',
-    'nsSecureBrowserUI.cpp',
-    'nsSecurityHeaderParser.cpp',
-    'NSSErrorsService.cpp',
-    'nsSiteSecurityService.cpp',
-    'NSSKeyStore.cpp',
-    'nsSSLSocketProvider.cpp',
-    'nsTLSSocketProvider.cpp',
-    'OSKeyStore.cpp',
-    'PKCS11ModuleDB.cpp',
-    'PSMIPCCommon.cpp',
-    'PSMRunnable.cpp',
-    'PublicKeyPinningService.cpp',
-    'RootCertificateTelemetryUtils.cpp',
-    'SecretDecoderRing.cpp',
-    'SharedSSLState.cpp',
-    'SSLServerCertVerification.cpp',
-    'TransportSecurityInfo.cpp',
-    'VerifySSLServerCertChild.cpp',
-    'VerifySSLServerCertParent.cpp',
-    'X509CertValidity.cpp',
+    "CommonSocketControl.cpp",
+    "ContentSignatureVerifier.cpp",
+    "CryptoTask.cpp",
+    "CSTrustDomain.cpp",
+    "DataStorage.cpp",
+    "EnterpriseRoots.cpp",
+    "LocalCertService.cpp",
+    "nsCertOverrideService.cpp",
+    "nsClientAuthRemember.cpp",
+    "nsCryptoHash.cpp",
+    "nsKeyModule.cpp",
+    "nsNSSCallbacks.cpp",
+    "nsNSSCertHelper.cpp",
+    "nsNSSCertificate.cpp",
+    "nsNSSCertificateDB.cpp",
+    "nsNSSCertTrust.cpp",
+    "nsNSSComponent.cpp",
+    "nsNSSIOLayer.cpp",
+    "nsNSSModule.cpp",
+    "nsNSSVersion.cpp",
+    "nsNTLMAuthModule.cpp",
+    "nsPK11TokenDB.cpp",
+    "nsPKCS11Slot.cpp",
+    "nsPKCS12Blob.cpp",
+    "nsProtectedAuthThread.cpp",
+    "nsRandomGenerator.cpp",
+    "nsSecureBrowserUI.cpp",
+    "nsSecurityHeaderParser.cpp",
+    "NSSErrorsService.cpp",
+    "nsSiteSecurityService.cpp",
+    "NSSKeyStore.cpp",
+    "nsSSLSocketProvider.cpp",
+    "nsTLSSocketProvider.cpp",
+    "OSKeyStore.cpp",
+    "PKCS11ModuleDB.cpp",
+    "PSMIPCCommon.cpp",
+    "PSMRunnable.cpp",
+    "PublicKeyPinningService.cpp",
+    "RootCertificateTelemetryUtils.cpp",
+    "SecretDecoderRing.cpp",
+    "SharedSSLState.cpp",
+    "SSLServerCertVerification.cpp",
+    "TransportSecurityInfo.cpp",
+    "VerifySSLServerCertChild.cpp",
+    "VerifySSLServerCertParent.cpp",
+    "X509CertValidity.cpp",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     # On Windows this file includes ntsecapi.h, which contains definitions that
     # conflict with headers included in remaining source files. We compile this
     # one independently to prevent that interferance.
     SOURCES += [
-        'OSReauthenticator.cpp',
+        "OSReauthenticator.cpp",
     ]
 else:
     UNIFIED_SOURCES += [
-        'OSReauthenticator.cpp',
+        "OSReauthenticator.cpp",
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     UNIFIED_SOURCES += [
-        'LibSecret.cpp',
+        "LibSecret.cpp",
     ]
-    CFLAGS += CONFIG['GLIB_CFLAGS']
-    CXXFLAGS += CONFIG['GLIB_CFLAGS']
+    CFLAGS += CONFIG["GLIB_CFLAGS"]
+    CXXFLAGS += CONFIG["GLIB_CFLAGS"]
 
-if CONFIG['OS_ARCH'] == 'Darwin':
+if CONFIG["OS_ARCH"] == "Darwin":
     UNIFIED_SOURCES += [
-        'KeychainSecret.cpp',
-        'OSReauthenticatorDarwin.mm',
+        "KeychainSecret.cpp",
+        "OSReauthenticatorDarwin.mm",
     ]
     OS_LIBS += [
-        '-framework LocalAuthentication',
-        '-framework Security',
+        "-framework LocalAuthentication",
+        "-framework Security",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    OS_LIBS += [
-        'credui'
-    ]
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += ["credui"]
     UNIFIED_SOURCES += [
-        'CredentialManagerSecret.cpp',
+        "CredentialManagerSecret.cpp",
     ]
 
 IPDL_SOURCES += [
-    'PSMIPCTypes.ipdlh',
-    'PVerifySSLServerCert.ipdl',
+    "PSMIPCTypes.ipdlh",
+    "PVerifySSLServerCert.ipdl",
 ]
 
-if CONFIG['MOZ_XUL']:
+if CONFIG["MOZ_XUL"]:
     UNIFIED_SOURCES += [
-        'nsCertTree.cpp',
+        "nsCertTree.cpp",
     ]
 
 UNIFIED_SOURCES += [
-    'md4.c',
+    "md4.c",
 ]
 
-if CONFIG['MOZ_NEW_CERT_STORAGE']:
+if CONFIG["MOZ_NEW_CERT_STORAGE"]:
     XPIDL_SOURCES += [
-        'nsICertStorage.idl',
+        "nsICertStorage.idl",
     ]
     UNIFIED_SOURCES += [
-        'cert_storage/src/cert_storage.cpp',
+        "cert_storage/src/cert_storage.cpp",
     ]
 else:
     XPIDL_SOURCES += [
-        'nsICertBlocklist.idl',
+        "nsICertBlocklist.idl",
     ]
     UNIFIED_SOURCES += [
-        'CertBlocklist.cpp',
+        "CertBlocklist.cpp",
     ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/dom/crypto',
-    '/netwerk/base',
-    '/security/certverifier',
+    "/dom/base",
+    "/dom/crypto",
+    "/netwerk/base",
+    "/security/certverifier",
 ]
 
 LOCAL_INCLUDES += [
-    '!/dist/public/nss',
+    "!/dist/public/nss",
 ]
 
-GeneratedFile('nsSTSPreloadListGenerated.inc',
-              script='../../../xpcom/ds/tools/make_dafsa.py',
-              inputs=['nsSTSPreloadList.inc'])
+GeneratedFile(
+    "nsSTSPreloadListGenerated.inc",
+    script="../../../xpcom/ds/tools/make_dafsa.py",
+    inputs=["nsSTSPreloadList.inc"],
+)
 
-DEFINES['SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES'] = 'True'
-DEFINES['NSS_ENABLE_ECC'] = 'True'
+DEFINES["SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES"] = "True"
+DEFINES["NSS_ENABLE_ECC"] = "True"
 
-if not CONFIG['MOZ_SYSTEM_NSS']:
+if not CONFIG["MOZ_SYSTEM_NSS"]:
     USE_LIBS += [
-        'crmf',
+        "crmf",
     ]
 
 # mozpkix is linked statically from the in-tree sources independent of whether
 # system NSS is used or not.
-USE_LIBS += [ 'mozpkix' ]
+USE_LIBS += ["mozpkix"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
-        '-Wextra',
+        "-Wextra",
         # -Wextra enables this warning, but it's too noisy to be useful.
-        '-Wno-missing-field-initializers',
+        "-Wno-missing-field-initializers",
     ]
 
     # Gecko headers aren't warning-free enough for us to enable these warnings.
     CXXFLAGS += [
-        '-Wno-unused-parameter',
+        "-Wno-unused-parameter",
     ]

@@ -4,19 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
 
 # The addons blocklist is also in mobile/android/installer/package-manifest.in
-FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons-bloomfilters.json',
-                                                    'addons.json',
-                                                    'gfx.json',
-                                                    'plugins.json']
-
-FINAL_TARGET_FILES.defaults.settings.blocklists['addons-bloomfilters'] += [
-  'addons-bloomfilters/addons-mlbf.bin',
-  'addons-bloomfilters/addons-mlbf.bin.meta.json'
+FINAL_TARGET_FILES.defaults.settings.blocklists += [
+    "addons-bloomfilters.json",
+    "addons.json",
+    "gfx.json",
+    "plugins.json",
 ]
 
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIST_SUBDIR = 'browser'
+FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
+    "addons-bloomfilters/addons-mlbf.bin",
+    "addons-bloomfilters/addons-mlbf.bin.meta.json",
+]
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIST_SUBDIR = "browser"

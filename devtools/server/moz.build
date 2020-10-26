@@ -4,26 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../templates.mozbuild')
+include("../templates.mozbuild")
 
 DIRS += [
-    'actors',
-    'connectors',
-    'performance',
-    'socket',
-    'startup',
+    "actors",
+    "connectors",
+    "performance",
+    "socket",
+    "startup",
 ]
 
-if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
+    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 DevToolsModules(
-    'devtools-server-connection.js',
-    'devtools-server.js',
+    "devtools-server-connection.js",
+    "devtools-server.js",
 )
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'General')
+with Files("**"):
+    BUG_COMPONENT = ("DevTools", "General")

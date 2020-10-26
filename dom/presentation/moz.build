@@ -7,82 +7,80 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-DIRS += ['interfaces', 'provider']
+DIRS += ["interfaces", "provider"]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
-MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.ini"]
 
 EXPORTS.mozilla.dom += [
-    'DCPresentationChannelDescription.h',
-    'ipc/PresentationBuilderChild.h',
-    'ipc/PresentationBuilderParent.h',
-    'ipc/PresentationChild.h',
-    'ipc/PresentationIPCService.h',
-    'ipc/PresentationParent.h',
-    'Presentation.h',
-    'PresentationAvailability.h',
-    'PresentationCallbacks.h',
-    'PresentationConnection.h',
-    'PresentationConnectionList.h',
-    'PresentationDeviceManager.h',
-    'PresentationReceiver.h',
-    'PresentationRequest.h',
-    'PresentationService.h',
-    'PresentationServiceBase.h',
-    'PresentationSessionInfo.h',
-    'PresentationTCPSessionTransport.h',
+    "DCPresentationChannelDescription.h",
+    "ipc/PresentationBuilderChild.h",
+    "ipc/PresentationBuilderParent.h",
+    "ipc/PresentationChild.h",
+    "ipc/PresentationIPCService.h",
+    "ipc/PresentationParent.h",
+    "Presentation.h",
+    "PresentationAvailability.h",
+    "PresentationCallbacks.h",
+    "PresentationConnection.h",
+    "PresentationConnectionList.h",
+    "PresentationDeviceManager.h",
+    "PresentationReceiver.h",
+    "PresentationRequest.h",
+    "PresentationService.h",
+    "PresentationServiceBase.h",
+    "PresentationSessionInfo.h",
+    "PresentationTCPSessionTransport.h",
 ]
 
 UNIFIED_SOURCES += [
-    'AvailabilityCollection.cpp',
-    'ControllerConnectionCollection.cpp',
-    'DCPresentationChannelDescription.cpp',
-    'ipc/PresentationBuilderChild.cpp',
-    'ipc/PresentationBuilderParent.cpp',
-    'ipc/PresentationChild.cpp',
-    'ipc/PresentationContentSessionInfo.cpp',
-    'ipc/PresentationIPCService.cpp',
-    'ipc/PresentationParent.cpp',
-    'Presentation.cpp',
-    'PresentationAvailability.cpp',
-    'PresentationCallbacks.cpp',
-    'PresentationConnection.cpp',
-    'PresentationConnectionList.cpp',
-    'PresentationDeviceManager.cpp',
-    'PresentationReceiver.cpp',
-    'PresentationRequest.cpp',
-    'PresentationService.cpp',
-    'PresentationSessionInfo.cpp',
-    'PresentationSessionRequest.cpp',
-    'PresentationTCPSessionTransport.cpp',
-    'PresentationTerminateRequest.cpp',
-    'PresentationTransportBuilderConstructor.cpp'
+    "AvailabilityCollection.cpp",
+    "ControllerConnectionCollection.cpp",
+    "DCPresentationChannelDescription.cpp",
+    "ipc/PresentationBuilderChild.cpp",
+    "ipc/PresentationBuilderParent.cpp",
+    "ipc/PresentationChild.cpp",
+    "ipc/PresentationContentSessionInfo.cpp",
+    "ipc/PresentationIPCService.cpp",
+    "ipc/PresentationParent.cpp",
+    "Presentation.cpp",
+    "PresentationAvailability.cpp",
+    "PresentationCallbacks.cpp",
+    "PresentationConnection.cpp",
+    "PresentationConnectionList.cpp",
+    "PresentationDeviceManager.cpp",
+    "PresentationReceiver.cpp",
+    "PresentationRequest.cpp",
+    "PresentationService.cpp",
+    "PresentationSessionInfo.cpp",
+    "PresentationSessionRequest.cpp",
+    "PresentationTCPSessionTransport.cpp",
+    "PresentationTerminateRequest.cpp",
+    "PresentationTransportBuilderConstructor.cpp",
 ]
 
 EXTRA_JS_MODULES += [
-    'PresentationDataChannelSessionTransport.jsm',
+    "PresentationDataChannelSessionTransport.jsm",
 ]
 
 XPCOM_MANIFESTS += [
-    'components.conf',
+    "components.conf",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     EXTRA_JS_MODULES += [
-        'PresentationNetworkHelper.jsm',
+        "PresentationNetworkHelper.jsm",
     ]
 
 IPDL_SOURCES += [
-    'ipc/PPresentation.ipdl',
-    'ipc/PPresentationBuilder.ipdl',
-    'ipc/PPresentationRequest.ipdl'
+    "ipc/PPresentation.ipdl",
+    "ipc/PPresentationBuilder.ipdl",
+    "ipc/PPresentationRequest.ipdl",
 ]
 
-LOCAL_INCLUDES += [
-    '../base'
-]
+LOCAL_INCLUDES += ["../base"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"

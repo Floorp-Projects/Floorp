@@ -10,12 +10,12 @@ config = {
         "PATH": "%(PATH)s",
     },
     "default_actions": [
-        'clobber',
-        'download-and-extract',
-        'create-virtualenv',
-        'verify-device',
-        'install',
-        'run-tests',
+        "clobber",
+        "download-and-extract",
+        "create-virtualenv",
+        "verify-device",
+        "install",
+        "run-tests",
     ],
     "tooltool_cache": "/builds/tooltool_cache",
     # from android_common.py

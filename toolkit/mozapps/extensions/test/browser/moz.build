@@ -5,26 +5,27 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    'browser.ini',
+    "browser.ini",
 ]
 
 addons = [
-    'browser_dragdrop1',
-    'browser_dragdrop2',
-    'browser_dragdrop_incompat',
-    'browser_installssl',
-    'browser_theme',
-    'options_signed',
+    "browser_dragdrop1",
+    "browser_dragdrop2",
+    "browser_dragdrop_incompat",
+    "browser_installssl",
+    "browser_theme",
+    "options_signed",
 ]
 
-output_dir = OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.mozapps.extensions.test.browser.addons
+output_dir = (
+    OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.mozapps.extensions.test.browser.addons
+)
 
 for addon in addons:
-    for file_type in ['xpi', 'zip']:
-        indir = 'addons/%s' % addon
-        path = '%s.%s' % (indir, file_type)
+    for file_type in ["xpi", "zip"]:
+        indir = "addons/%s" % addon
+        path = "%s.%s" % (indir, file_type)
 
-        GeneratedFile(path, script='../create_xpi.py', inputs=[indir])
+        GeneratedFile(path, script="../create_xpi.py", inputs=[indir])
 
-        output_dir += ['!%s' % path]
-
+        output_dir += ["!%s" % path]

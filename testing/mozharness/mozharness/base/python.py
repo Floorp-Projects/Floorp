@@ -4,8 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
-'''Python usage, esp. virtualenv.
-'''
+"""Python usage, esp. virtualenv.
+"""
 
 import errno
 import json
@@ -13,6 +13,7 @@ import os
 import socket
 import sys
 import traceback
+
 try:
     import urlparse
 except ImportError:
@@ -23,12 +24,16 @@ from six import string_types
 import mozharness
 from mozharness.base.errors import VirtualenvErrorList
 from mozharness.base.log import FATAL, WARNING
-from mozharness.base.script import (PostScriptAction, PostScriptRun,
-                                    PreScriptAction, ScriptMixin)
+from mozharness.base.script import (
+    PostScriptAction,
+    PostScriptRun,
+    PreScriptAction,
+    ScriptMixin,
+)
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
-    'external_tools',
+    "external_tools",
 )
 
 
@@ -41,45 +46,60 @@ def get_tlsv1_post():
 
     class TLSV1Adapter(requests.adapters.HTTPAdapter):
         def init_poolmanager(self, connections, maxsize, block=False):
-            self.poolmanager = PoolManager(num_pools=connections,
-                                           maxsize=maxsize,
-                                           block=block,
-                                           ssl_version=ssl.PROTOCOL_TLSv1)
+            self.poolmanager = PoolManager(
+                num_pools=connections,
+                maxsize=maxsize,
+                block=block,
+                ssl_version=ssl.PROTOCOL_TLSv1,
+            )
+
     s = requests.Session()
-    s.mount('https://', TLSV1Adapter())
+    s.mount("https://", TLSV1Adapter())
     return s.post
 
 
 # Virtualenv {{{1
 virtualenv_config_options = [
-    [["--virtualenv-path"], {
-        "action": "store",
-        "dest": "virtualenv_path",
-        "default": "venv",
-        "help": "Specify the path to the virtualenv top level directory"
-    }],
-    [["--find-links"], {
-        "action": "extend",
-        "dest": "find_links",
-        "default": ["https://pypi.pub.build.mozilla.org/pub/"],
-        "help": "URL to look for packages at"
-    }],
-    [["--pip-index"], {
-        "action": "store_true",
-        "default": False,
-        "dest": "pip_index",
-        "help": "Use pip indexes"
-    }],
-    [["--no-pip-index"], {
-        "action": "store_false",
-        "dest": "pip_index",
-        "help": "Don't use pip indexes (default)"
-    }],
+    [
+        ["--virtualenv-path"],
+        {
+            "action": "store",
+            "dest": "virtualenv_path",
+            "default": "venv",
+            "help": "Specify the path to the virtualenv top level directory",
+        },
+    ],
+    [
+        ["--find-links"],
+        {
+            "action": "extend",
+            "dest": "find_links",
+            "default": ["https://pypi.pub.build.mozilla.org/pub/"],
+            "help": "URL to look for packages at",
+        },
+    ],
+    [
+        ["--pip-index"],
+        {
+            "action": "store_true",
+            "default": False,
+            "dest": "pip_index",
+            "help": "Use pip indexes",
+        },
+    ],
+    [
+        ["--no-pip-index"],
+        {
+            "action": "store_false",
+            "dest": "pip_index",
+            "help": "Don't use pip indexes (default)",
+        },
+    ],
 ]
 
 
 class VirtualenvMixin(object):
-    '''BaseScript mixin, designed to create and use virtualenvs.
+    """BaseScript mixin, designed to create and use virtualenvs.
 
     Config items:
      * virtualenv_path points to the virtualenv location on disk.
@@ -87,7 +107,8 @@ class VirtualenvMixin(object):
      * MODULE_url list points to the module URLs (optional)
     Requires virtualenv to be in PATH.
     Depends on ScriptMixin
-    '''
+    """
+
     python_paths = {}
     site_packages_path = None
 
@@ -95,9 +116,16 @@ class VirtualenvMixin(object):
         self._virtualenv_modules = []
         super(VirtualenvMixin, self).__init__(*args, **kwargs)
 
-    def register_virtualenv_module(self, name=None, url=None, method=None,
-                                   requirements=None, optional=False,
-                                   two_pass=False, editable=False):
+    def register_virtualenv_module(
+        self,
+        name=None,
+        url=None,
+        method=None,
+        requirements=None,
+        optional=False,
+        two_pass=False,
+        editable=False,
+    ):
         """Register a module to be installed with the virtualenv.
 
         This method can be called up until create_virtualenv() to register
@@ -106,25 +134,27 @@ class VirtualenvMixin(object):
         See the documentation for install_module for how the arguments are
         applied.
         """
-        self._virtualenv_modules.append((name, url, method, requirements,
-                                         optional, two_pass, editable))
+        self._virtualenv_modules.append(
+            (name, url, method, requirements, optional, two_pass, editable)
+        )
 
     def query_virtualenv_path(self):
         """Determine the absolute path to the virtualenv."""
         dirs = self.query_abs_dirs()
 
-        if 'abs_virtualenv_dir' in dirs:
-            return dirs['abs_virtualenv_dir']
+        if "abs_virtualenv_dir" in dirs:
+            return dirs["abs_virtualenv_dir"]
 
-        p = self.config['virtualenv_path']
+        p = self.config["virtualenv_path"]
         if not p:
-            self.fatal('virtualenv_path config option not set; '
-                       'this should never happen')
+            self.fatal(
+                "virtualenv_path config option not set; " "this should never happen"
+            )
 
         if os.path.isabs(p):
             return p
         else:
-            return os.path.join(dirs['abs_work_dir'], p)
+            return os.path.join(dirs["abs_work_dir"], p)
 
     def query_python_path(self, binary="python"):
         """Return the path of a binary inside the virtualenv, if
@@ -132,12 +162,13 @@ class VirtualenvMixin(object):
         Otherwise return None
         """
         if binary not in self.python_paths:
-            bin_dir = 'bin'
+            bin_dir = "bin"
             if self._is_windows():
-                bin_dir = 'Scripts'
+                bin_dir = "Scripts"
             virtualenv_path = self.query_virtualenv_path()
             self.python_paths[binary] = os.path.abspath(
-                os.path.join(virtualenv_path, bin_dir, binary))
+                os.path.join(virtualenv_path, bin_dir, binary)
+            )
 
         return self.python_paths[binary]
 
@@ -146,12 +177,18 @@ class VirtualenvMixin(object):
             return self.site_packages_path
         python = self.query_python_path()
         self.site_packages_path = self.get_output_from_command(
-            [python, '-c',
-             'from distutils.sysconfig import get_python_lib; ' +
-             'print(get_python_lib())'])
+            [
+                python,
+                "-c",
+                "from distutils.sysconfig import get_python_lib; "
+                + "print(get_python_lib())",
+            ]
+        )
         return self.site_packages_path
 
-    def package_versions(self, pip_freeze_output=None, error_level=WARNING, log_output=False):
+    def package_versions(
+        self, pip_freeze_output=None, error_level=WARNING, log_output=False
+    ):
         """
         reads packages from `pip freeze` output and returns a dict of
         {package_name: 'version'}
@@ -162,15 +199,16 @@ class VirtualenvMixin(object):
             # get the output from `pip freeze`
             pip = self.query_python_path("pip")
             if not pip:
-                self.log("package_versions: Program pip not in path",
-                         level=error_level)
+                self.log("package_versions: Program pip not in path", level=error_level)
                 return {}
             pip_freeze_output = self.get_output_from_command(
-                [pip, "list", "--format", "freeze"], silent=True, ignore_errors=True)
+                [pip, "list", "--format", "freeze"], silent=True, ignore_errors=True
+            )
             if not isinstance(pip_freeze_output, string_types):
                 self.fatal(
                     "package_versions: Error encountered running `pip freeze`: "
-                    + pip_freeze_output)
+                    + pip_freeze_output
+                )
 
         for line in pip_freeze_output.splitlines():
             # parse the output into package, version
@@ -178,13 +216,12 @@ class VirtualenvMixin(object):
             if not line:
                 # whitespace
                 continue
-            if line.startswith('-'):
+            if line.startswith("-"):
                 # not a package, probably like '-e http://example.com/path#egg=package-dev'
                 continue
-            if '==' not in line:
-                self.fatal(
-                    "pip_freeze_packages: Unrecognized output line: %s" % line)
-            package, version = line.split('==', 1)
+            if "==" not in line:
+                self.fatal("pip_freeze_packages: Unrecognized output line: %s" % line)
+            package, version = line.split("==", 1)
             packages[package] = version
 
         if log_output:
@@ -201,9 +238,17 @@ class VirtualenvMixin(object):
         packages = self.package_versions(error_level=error_level).keys()
         return package_name.lower() in [package.lower() for package in packages]
 
-    def install_module(self, module=None, module_url=None, install_method=None,
-                       requirements=(), optional=False, global_options=[],
-                       no_deps=False, editable=False):
+    def install_module(
+        self,
+        module=None,
+        module_url=None,
+        install_method=None,
+        requirements=(),
+        optional=False,
+        global_options=[],
+        no_deps=False,
+        editable=False,
+    ):
         """
         Install module via pip.
 
@@ -223,7 +268,7 @@ class VirtualenvMixin(object):
         self.info("Installing %s into virtualenv %s" % (module, venv_path))
         if not module_url:
             module_url = module
-        if install_method in (None, 'pip'):
+        if install_method in (None, "pip"):
             if not module_url and not requirements:
                 self.fatal("Must specify module and/or requirements")
             pip = self.query_python_path("pip")
@@ -235,36 +280,38 @@ class VirtualenvMixin(object):
                 command += ["--no-deps"]
             # To avoid timeouts with our pypi server, increase default timeout:
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
-            command += ['--timeout', str(c.get('pip_timeout', 120))]
+            command += ["--timeout", str(c.get("pip_timeout", 120))]
             for requirement in requirements:
                 command += ["-r", requirement]
-            if c.get('find_links') and not c["pip_index"]:
-                command += ['--no-index']
+            if c.get("find_links") and not c["pip_index"]:
+                command += ["--no-index"]
             for opt in global_options:
                 command += ["--global-option", opt]
-        elif install_method == 'easy_install':
+        elif install_method == "easy_install":
             if not module:
                 self.fatal(
-                    "module parameter required with install_method='easy_install'")
+                    "module parameter required with install_method='easy_install'"
+                )
             if requirements:
                 # Install pip requirements files separately, since they're
                 # not understood by easy_install.
-                self.install_module(requirements=requirements,
-                                    install_method='pip')
-            command = [self.query_python_path(), '-m', 'easy_install']
+                self.install_module(requirements=requirements, install_method="pip")
+            command = [self.query_python_path(), "-m", "easy_install"]
         else:
             self.fatal(
                 "install_module() doesn't understand an install_method of %s!"
-                % install_method)
+                % install_method
+            )
 
-        for link in c.get('find_links', []):
+        for link in c.get("find_links", []):
             parsed = urlparse.urlparse(link)
 
             try:
                 socket.gethostbyname(parsed.hostname)
             except socket.gaierror as e:
-                self.info('error resolving %s (ignoring): %s' %
-                          (parsed.hostname, e.message))
+                self.info(
+                    "error resolving %s (ignoring): %s" % (parsed.hostname, e.message)
+                )
                 continue
 
             command.extend(["--find-links", link])
@@ -272,17 +319,18 @@ class VirtualenvMixin(object):
         # module_url can be None if only specifying requirements files
         if module_url:
             if editable:
-                if install_method in (None, 'pip'):
-                    command += ['-e']
+                if install_method in (None, "pip"):
+                    command += ["-e"]
                 else:
                     self.fatal(
                         "editable installs not supported for install_method %s"
-                        % install_method)
+                        % install_method
+                    )
             command += [module_url]
 
         # If we're only installing a single requirements file, use
         # the file's directory as cwd, so relative paths work correctly.
-        cwd = dirs['abs_work_dir']
+        cwd = dirs["abs_work_dir"]
         if not module and len(requirements) == 1:
             cwd = os.path.dirname(requirements[0])
 
@@ -294,19 +342,19 @@ class VirtualenvMixin(object):
             attempts=1 if optional else None,
             good_statuses=(0,),
             error_level=WARNING if optional else FATAL,
-            error_message=(
-                'Could not install python package: failed all attempts.'
-            ),
-            args=[command, ],
+            error_message=("Could not install python package: failed all attempts."),
+            args=[
+                command,
+            ],
             kwargs={
-                'error_list': VirtualenvErrorList,
-                'cwd': cwd,
-                'env': env,
+                "error_list": VirtualenvErrorList,
+                "cwd": cwd,
+                "env": env,
                 # WARNING only since retry will raise final FATAL if all
                 # retry attempts are unsuccessful - and we only want
                 # an ERROR of FATAL if *no* retry attempt works
-                'error_level': WARNING,
-            }
+                "error_level": WARNING,
+            },
         )
 
     def create_virtualenv(self, modules=(), requirements=()):
@@ -363,13 +411,15 @@ class VirtualenvMixin(object):
         # abs_src_dir is for when we're running out of a checked out copy of
         # the source code
         venv_search_dirs = [
-            os.path.join('{base_work_dir}', 'mozharness'),
-            '{abs_src_dir}',
+            os.path.join("{base_work_dir}", "mozharness"),
+            "{abs_src_dir}",
         ]
-        if 'abs_src_dir' not in dirs and 'repo_path' in self.config:
-            dirs['abs_src_dir'] = os.path.normpath(self.config['repo_path'])
+        if "abs_src_dir" not in dirs and "repo_path" in self.config:
+            dirs["abs_src_dir"] = os.path.normpath(self.config["repo_path"])
         for d in venv_search_dirs:
-            file = os.path.join(d, 'third_party', 'python', 'virtualenv', 'virtualenv.py')
+            file = os.path.join(
+                d, "third_party", "python", "virtualenv", "virtualenv.py"
+            )
             try:
                 venv_py_path = file.format(**dirs)
             except KeyError:
@@ -383,7 +433,7 @@ class VirtualenvMixin(object):
             sys.executable,
             venv_py_path,
         ]
-        virtualenv_options = c.get('virtualenv_options', [])
+        virtualenv_options = c.get("virtualenv_options", [])
         # Creating symlinks in the virtualenv may cause issues during
         # virtualenv creation or operation on non-Redhat derived
         # distros. On Redhat derived distros --always-copy causes
@@ -391,65 +441,86 @@ class VirtualenvMixin(object):
         # https://github.com/pypa/virtualenv/issues/565. Therefore
         # only use --alway-copy when not using Redhat.
         if self._is_redhat_based():
-            self.warning("creating virtualenv without --always-copy "
-                         "due to issues on Redhat derived distros")
+            self.warning(
+                "creating virtualenv without --always-copy "
+                "due to issues on Redhat derived distros"
+            )
         else:
-            virtualenv_options.append('--always-copy')
+            virtualenv_options.append("--always-copy")
 
         if os.path.exists(self.query_python_path()):
             self.info(
                 "Virtualenv %s appears to already exist; "
-                "skipping virtualenv creation." % self.query_python_path())
+                "skipping virtualenv creation." % self.query_python_path()
+            )
         else:
-            self.mkdir_p(dirs['abs_work_dir'])
-            self.run_command(virtualenv + virtualenv_options + [venv_path],
-                             cwd=dirs['abs_work_dir'],
-                             error_list=VirtualenvErrorList,
-                             partial_env={'VIRTUALENV_NO_DOWNLOAD': "1"},
-                             halt_on_failure=True)
+            self.mkdir_p(dirs["abs_work_dir"])
+            self.run_command(
+                virtualenv + virtualenv_options + [venv_path],
+                cwd=dirs["abs_work_dir"],
+                error_list=VirtualenvErrorList,
+                partial_env={"VIRTUALENV_NO_DOWNLOAD": "1"},
+                halt_on_failure=True,
+            )
 
         if not modules:
-            modules = c.get('virtualenv_modules', [])
+            modules = c.get("virtualenv_modules", [])
         if not requirements:
-            requirements = c.get('virtualenv_requirements', [])
+            requirements = c.get("virtualenv_requirements", [])
         if not modules and requirements:
-            self.install_module(requirements=requirements,
-                                install_method='pip')
+            self.install_module(requirements=requirements, install_method="pip")
         for module in modules:
             module_url = module
             global_options = []
             if isinstance(module, dict):
-                if module.get('name', None):
-                    module_name = module['name']
+                if module.get("name", None):
+                    module_name = module["name"]
                 else:
-                    self.fatal("Can't install module without module name: %s" %
-                               str(module))
-                module_url = module.get('url', None)
-                global_options = module.get('global_options', [])
+                    self.fatal(
+                        "Can't install module without module name: %s" % str(module)
+                    )
+                module_url = module.get("url", None)
+                global_options = module.get("global_options", [])
             else:
-                module_url = self.config.get('%s_url' % module, module_url)
+                module_url = self.config.get("%s_url" % module, module_url)
                 module_name = module
-            install_method = 'pip'
-            if module_name in ('pywin32',):
-                install_method = 'easy_install'
-            self.install_module(module=module_name,
-                                module_url=module_url,
-                                install_method=install_method,
-                                requirements=requirements,
-                                global_options=global_options)
+            install_method = "pip"
+            if module_name in ("pywin32",):
+                install_method = "easy_install"
+            self.install_module(
+                module=module_name,
+                module_url=module_url,
+                install_method=install_method,
+                requirements=requirements,
+                global_options=global_options,
+            )
 
-        for module, url, method, requirements, optional, two_pass, editable in \
-                self._virtualenv_modules:
+        for (
+            module,
+            url,
+            method,
+            requirements,
+            optional,
+            two_pass,
+            editable,
+        ) in self._virtualenv_modules:
             if two_pass:
                 self.install_module(
-                    module=module, module_url=url,
-                    install_method=method, requirements=requirements or (),
-                    optional=optional, no_deps=True, editable=editable
+                    module=module,
+                    module_url=url,
+                    install_method=method,
+                    requirements=requirements or (),
+                    optional=optional,
+                    no_deps=True,
+                    editable=editable,
                 )
             self.install_module(
-                module=module, module_url=url,
-                install_method=method, requirements=requirements or (),
-                optional=optional, editable=editable
+                module=module,
+                module_url=url,
+                install_method=method,
+                requirements=requirements or (),
+                optional=optional,
+                editable=editable,
             )
 
         self.info("Done creating virtualenv %s." % venv_path)
@@ -459,7 +530,7 @@ class VirtualenvMixin(object):
     def activate_virtualenv(self):
         """Import the virtualenv's packages into this Python interpreter."""
         bin_dir = os.path.dirname(self.query_python_path())
-        activate = os.path.join(bin_dir, 'activate_this.py')
+        activate = os.path.join(bin_dir, "activate_this.py")
         exec(open(activate).read(), dict(__file__=activate))
 
 
@@ -469,33 +540,34 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
         """Obtain a list of extraOptions values to identify the env."""
         opts = []
 
-        if 'TASKCLUSTER_INSTANCE_TYPE' in os.environ:
+        if "TASKCLUSTER_INSTANCE_TYPE" in os.environ:
             # Include the instance type so results can be grouped.
-            opts.append('taskcluster-%s' %
-                        os.environ['TASKCLUSTER_INSTANCE_TYPE'])
+            opts.append("taskcluster-%s" % os.environ["TASKCLUSTER_INSTANCE_TYPE"])
         else:
             # We assume !taskcluster => buildbot.
-            instance = 'unknown'
+            instance = "unknown"
 
             # Try to load EC2 instance type from metadata file. This file
             # may not exist in many scenarios (including when inside a chroot).
             # So treat it as optional.
             try:
                 # This file should exist on Linux in EC2.
-                with open('/etc/instance_metadata.json', 'rb') as fh:
+                with open("/etc/instance_metadata.json", "rb") as fh:
                     im = json.load(fh)
-                    instance = im.get('aws_instance_type',
-                                      u'unknown').encode('ascii')
+                    instance = im.get("aws_instance_type", u"unknown").encode("ascii")
             except IOError as e:
                 if e.errno != errno.ENOENT:
                     raise
-                self.info('instance_metadata.json not found; unable to '
-                          'determine instance type')
+                self.info(
+                    "instance_metadata.json not found; unable to "
+                    "determine instance type"
+                )
             except Exception:
-                self.warning('error reading instance_metadata: %s' %
-                             traceback.format_exc())
+                self.warning(
+                    "error reading instance_metadata: %s" % traceback.format_exc()
+                )
 
-            opts.append('buildbot-%s' % instance)
+            opts.append("buildbot-%s" % instance)
 
         return opts
 
@@ -518,12 +590,11 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
     def __init__(self, *args, **kwargs):
         super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
 
-        self.register_virtualenv_module('psutil>=5.6.3', method='pip',
-                                        optional=True)
-        self.register_virtualenv_module('mozsystemmonitor==0.4',
-                                        method='pip', optional=True)
-        self.register_virtualenv_module('jsonschema==2.5.1',
-                                        method='pip')
+        self.register_virtualenv_module("psutil>=5.6.3", method="pip", optional=True)
+        self.register_virtualenv_module(
+            "mozsystemmonitor==0.4", method="pip", optional=True
+        )
+        self.register_virtualenv_module("jsonschema==2.5.1", method="pip")
         self._resource_monitor = None
 
         # 2-tuple of (name, options) to assign Perfherder resource monitor
@@ -531,7 +602,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         # Perfherder metrics to be reported.
         self.resource_monitor_perfherder_id = None
 
-    @PostScriptAction('create-virtualenv')
+    @PostScriptAction("create-virtualenv")
     def _start_resource_monitoring(self, action, success=None):
         self.activate_virtualenv()
 
@@ -539,7 +610,8 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         # Remove when all machines have had their Python version updated (bug 711299).
         if sys.version_info[:2] < (2, 7):
             self.warning(
-                'Resource monitoring will not be enabled! Python 2.7+ required.')
+                "Resource monitoring will not be enabled! Python 2.7+ required."
+            )
             return
 
         try:
@@ -549,8 +621,9 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             self._resource_monitor = SystemResourceMonitor(poll_interval=1.0)
             self._resource_monitor.start()
         except Exception:
-            self.warning("Unable to start resource monitor: %s" %
-                         traceback.format_exc())
+            self.warning(
+                "Unable to start resource monitor: %s" % traceback.format_exc()
+            )
 
     @PreScriptAction
     def _resource_record_pre_action(self, action):
@@ -581,19 +654,20 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
 
             # Upload a JSON file containing the raw resource data.
             try:
-                upload_dir = self.query_abs_dirs()['abs_blob_upload_dir']
+                upload_dir = self.query_abs_dirs()["abs_blob_upload_dir"]
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
-                with open(os.path.join(upload_dir, 'resource-usage.json'), 'w') as fh:
-                    json.dump(self._resource_monitor.as_dict(), fh,
-                              sort_keys=True, indent=4)
+                with open(os.path.join(upload_dir, "resource-usage.json"), "w") as fh:
+                    json.dump(
+                        self._resource_monitor.as_dict(), fh, sort_keys=True, indent=4
+                    )
             except (AttributeError, KeyError):
-                self.exception('could not upload resource usage JSON',
-                               level=WARNING)
+                self.exception("could not upload resource usage JSON", level=WARNING)
 
         except Exception:
-            self.warning("Exception when reporting resource usage: %s" %
-                         traceback.format_exc())
+            self.warning(
+                "Exception when reporting resource usage: %s" % traceback.format_exc()
+            )
 
     def _log_resource_usage(self):
         # Delay import because not available until virtualenv is populated.
@@ -615,32 +689,36 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             return cpu_percent, cpu_times, io, (swap_in, swap_out)
 
         def log_usage(prefix, duration, cpu_percent, cpu_times, io):
-            message = '{prefix} - Wall time: {duration:.0f}s; ' \
-                'CPU: {cpu_percent}; ' \
-                'Read bytes: {io_read_bytes}; Write bytes: {io_write_bytes}; ' \
-                'Read time: {io_read_time}; Write time: {io_write_time}'
+            message = (
+                "{prefix} - Wall time: {duration:.0f}s; "
+                "CPU: {cpu_percent}; "
+                "Read bytes: {io_read_bytes}; Write bytes: {io_write_bytes}; "
+                "Read time: {io_read_time}; Write time: {io_write_time}"
+            )
 
             # XXX Some test harnesses are complaining about a string being
             # being fed into a 'f' formatter. This will help diagnose the
             # issue.
             if cpu_percent:
-                cpu_percent_str = str(round(cpu_percent)) + '%'
+                cpu_percent_str = str(round(cpu_percent)) + "%"
             else:
                 cpu_percent_str = "Can't collect data"
 
             try:
                 self.info(
                     message.format(
-                        prefix=prefix, duration=duration,
-                        cpu_percent=cpu_percent_str, io_read_bytes=io.read_bytes,
-                        io_write_bytes=io.write_bytes, io_read_time=io.read_time,
-                        io_write_time=io.write_time
+                        prefix=prefix,
+                        duration=duration,
+                        cpu_percent=cpu_percent_str,
+                        io_read_bytes=io.read_bytes,
+                        io_write_bytes=io.write_bytes,
+                        io_read_time=io.read_time,
+                        io_write_time=io.write_time,
                     )
                 )
 
             except ValueError:
-                self.warning("Exception when formatting: %s" %
-                             traceback.format_exc())
+                self.warning("Exception when formatting: %s" % traceback.format_exc())
 
         cpu_percent, cpu_times, io, (swap_in, swap_out) = resources(None)
         duration = rm.end_time - rm.start_time
@@ -653,88 +731,102 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             overall = []
 
             if cpu_percent:
-                overall.append({
-                    'name': 'cpu_percent',
-                    'value': cpu_percent,
-                })
+                overall.append(
+                    {
+                        "name": "cpu_percent",
+                        "value": cpu_percent,
+                    }
+                )
 
-            overall.extend([
-                {'name': 'io_write_bytes', 'value': io.write_bytes},
-                {'name': 'io.read_bytes', 'value': io.read_bytes},
-                {'name': 'io_write_time', 'value': io.write_time},
-                {'name': 'io_read_time', 'value': io.read_time},
-            ])
+            overall.extend(
+                [
+                    {"name": "io_write_bytes", "value": io.write_bytes},
+                    {"name": "io.read_bytes", "value": io.read_bytes},
+                    {"name": "io_write_time", "value": io.write_time},
+                    {"name": "io_read_time", "value": io.read_time},
+                ]
+            )
 
-            suites.append({
-                'name': '%s.overall' % perfherder_name,
-                'extraOptions': perfherder_options + self.perfherder_resource_options(),
-                'subtests': overall,
-
-            })
+            suites.append(
+                {
+                    "name": "%s.overall" % perfherder_name,
+                    "extraOptions": perfherder_options
+                    + self.perfherder_resource_options(),
+                    "subtests": overall,
+                }
+            )
 
             for phase in rm.phases.keys():
                 phase_duration = rm.phases[phase][1] - rm.phases[phase][0]
                 subtests = [
                     {
-                        'name': 'time',
-                        'value': phase_duration,
+                        "name": "time",
+                        "value": phase_duration,
                     }
                 ]
-                cpu_percent = rm.aggregate_cpu_percent(phase=phase,
-                                                       per_cpu=False)
+                cpu_percent = rm.aggregate_cpu_percent(phase=phase, per_cpu=False)
                 if cpu_percent is not None:
-                    subtests.append({
-                        'name': 'cpu_percent',
-                        'value': rm.aggregate_cpu_percent(phase=phase,
-                                                          per_cpu=False),
-                    })
+                    subtests.append(
+                        {
+                            "name": "cpu_percent",
+                            "value": rm.aggregate_cpu_percent(
+                                phase=phase, per_cpu=False
+                            ),
+                        }
+                    )
 
                 # We don't report I/O during each step because measured I/O
                 # is system I/O and that I/O can be delayed (e.g. writes will
                 # buffer before being flushed and recorded in our metrics).
-                suites.append({
-                    'name': '%s.%s' % (perfherder_name, phase),
-                    'subtests': subtests,
-                })
+                suites.append(
+                    {
+                        "name": "%s.%s" % (perfherder_name, phase),
+                        "subtests": subtests,
+                    }
+                )
 
             data = {
-                'framework': {'name': 'job_resource_usage'},
-                'suites': suites,
+                "framework": {"name": "job_resource_usage"},
+                "suites": suites,
             }
 
-            schema_path = os.path.join(external_tools_path,
-                                       'performance-artifact-schema.json')
-            with open(schema_path, 'rb') as fh:
+            schema_path = os.path.join(
+                external_tools_path, "performance-artifact-schema.json"
+            )
+            with open(schema_path, "rb") as fh:
                 schema = json.load(fh)
 
             # this will throw an exception that causes the job to fail if the
             # perfherder data is not valid -- please don't change this
             # behaviour, otherwise people will inadvertently break this
             # functionality
-            self.info('Validating Perfherder data against %s' % schema_path)
+            self.info("Validating Perfherder data against %s" % schema_path)
             jsonschema.validate(data, schema)
-            self.info('PERFHERDER_DATA: %s' % json.dumps(data))
+            self.info("PERFHERDER_DATA: %s" % json.dumps(data))
 
-        log_usage('Total resource usage', duration, cpu_percent, cpu_times, io)
+        log_usage("Total resource usage", duration, cpu_percent, cpu_times, io)
 
         # Print special messages so usage shows up in Treeherder.
         if cpu_percent:
-            self._tinderbox_print('CPU usage<br/>{:,.1f}%'.format(
-                                  cpu_percent))
+            self._tinderbox_print("CPU usage<br/>{:,.1f}%".format(cpu_percent))
 
-        self._tinderbox_print('I/O read bytes / time<br/>{:,} / {:,}'.format(
-                              io.read_bytes, io.read_time))
-        self._tinderbox_print('I/O write bytes / time<br/>{:,} / {:,}'.format(
-                              io.write_bytes, io.write_time))
+        self._tinderbox_print(
+            "I/O read bytes / time<br/>{:,} / {:,}".format(io.read_bytes, io.read_time)
+        )
+        self._tinderbox_print(
+            "I/O write bytes / time<br/>{:,} / {:,}".format(
+                io.write_bytes, io.write_time
+            )
+        )
 
         # Print CPU components having >1%. "cpu_times" is a data structure
         # whose attributes are measurements. Ideally we'd have an API that
         # returned just the measurements as a dict or something.
         cpu_attrs = []
         for attr in sorted(dir(cpu_times)):
-            if attr.startswith('_'):
+            if attr.startswith("_"):
                 continue
-            if attr in ('count', 'index'):
+            if attr in ("count", "index"):
                 continue
             cpu_attrs.append(attr)
 
@@ -746,13 +838,15 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             percent = value / cpu_total * 100.0 if cpu_total else 0.0
 
             if percent > 1.00:
-                self._tinderbox_print('CPU {}<br/>{:,.1f} ({:,.1f}%)'.format(
-                                      attr, value, percent))
+                self._tinderbox_print(
+                    "CPU {}<br/>{:,.1f} ({:,.1f}%)".format(attr, value, percent)
+                )
 
         # Swap on Windows isn't reported by psutil.
         if not self._is_windows():
-            self._tinderbox_print('Swap in / out<br/>{:,} / {:,}'.format(
-                                  swap_in, swap_out))
+            self._tinderbox_print(
+                "Swap in / out<br/>{:,} / {:,}".format(swap_in, swap_out)
+            )
 
         for phase in rm.phases.keys():
             start_time, end_time = rm.phases[phase]
@@ -760,126 +854,134 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             log_usage(phase, end_time - start_time, cpu_percent, cpu_times, io)
 
     def _tinderbox_print(self, message):
-        self.info('TinderboxPrint: %s' % message)
+        self.info("TinderboxPrint: %s" % message)
 
 
 # This needs to be inherited only if you have already inherited ScriptMixin
 class Python3Virtualenv(object):
-    ''' Support Python3.5+ virtualenv creation.'''
+    """ Support Python3.5+ virtualenv creation."""
+
     py3_initialized_venv = False
 
     def py3_venv_configuration(self, python_path, venv_path):
-        '''We don't use __init__ to allow integrating with other mixins.
+        """We don't use __init__ to allow integrating with other mixins.
 
         python_path - Path to Python 3 binary.
         venv_path - Path to virtual environment to be created.
-        '''
+        """
         self.py3_initialized_venv = True
         self.py3_python_path = os.path.abspath(python_path)
         version = self.get_output_from_command(
-            [self.py3_python_path, '--version'], env=self.query_env()).split()[-1]
+            [self.py3_python_path, "--version"], env=self.query_env()
+        ).split()[-1]
         # Using -m venv is only used on 3.5+ versions
-        assert version > '3.5.0'
+        assert version > "3.5.0"
         self.py3_venv_path = os.path.abspath(venv_path)
-        self.py3_pip_path = os.path.join(self.py3_path_to_executables(), 'pip')
+        self.py3_pip_path = os.path.join(self.py3_path_to_executables(), "pip")
 
     def py3_path_to_executables(self):
         platform = self.platform_name()
-        if platform.startswith('win'):
-            return os.path.join(self.py3_venv_path, 'Scripts')
+        if platform.startswith("win"):
+            return os.path.join(self.py3_venv_path, "Scripts")
         else:
-            return os.path.join(self.py3_venv_path, 'bin')
+            return os.path.join(self.py3_venv_path, "bin")
 
     def py3_venv_initialized(func):
         def call(self, *args, **kwargs):
             if not self.py3_initialized_venv:
-                raise Exception('You need to call py3_venv_configuration() '
-                                'before using this method.')
+                raise Exception(
+                    "You need to call py3_venv_configuration() "
+                    "before using this method."
+                )
             func(self, *args, **kwargs)
+
         return call
 
     @py3_venv_initialized
     def py3_create_venv(self):
-        '''Create Python environment with python3 -m venv /path/to/venv.'''
+        """Create Python environment with python3 -m venv /path/to/venv."""
         if os.path.exists(self.py3_venv_path):
-            self.info("Virtualenv %s appears to already exist; skipping "
-                      "virtualenv creation." % self.py3_venv_path)
+            self.info(
+                "Virtualenv %s appears to already exist; skipping "
+                "virtualenv creation." % self.py3_venv_path
+            )
         else:
-            self.info('Running command...')
+            self.info("Running command...")
             self.run_command(
-                '%s -m venv %s' % (self.py3_python_path, self.py3_venv_path),
+                "%s -m venv %s" % (self.py3_python_path, self.py3_venv_path),
                 error_list=VirtualenvErrorList,
                 halt_on_failure=True,
-                env=self.query_env())
+                env=self.query_env(),
+            )
 
     @py3_venv_initialized
-    def py3_install_modules(self, modules,
-                            use_mozharness_pip_config=True):
+    def py3_install_modules(self, modules, use_mozharness_pip_config=True):
         if not os.path.exists(self.py3_venv_path):
-            raise Exception('You need to call py3_create_venv() first.')
+            raise Exception("You need to call py3_create_venv() first.")
 
         for m in modules:
-            cmd = [self.py3_pip_path, 'install']
+            cmd = [self.py3_pip_path, "install"]
             if use_mozharness_pip_config:
                 cmd += self._mozharness_pip_args()
             cmd += [m]
             self.run_command(cmd, env=self.query_env())
 
     def _mozharness_pip_args(self):
-        '''We have information in Mozharness configs that apply to pip'''
+        """We have information in Mozharness configs that apply to pip"""
         c = self.config
         pip_args = []
         # To avoid timeouts with our pypi server, increase default timeout:
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
-        pip_args += ['--timeout', str(c.get('pip_timeout', 120))]
+        pip_args += ["--timeout", str(c.get("pip_timeout", 120))]
 
-        if c.get('find_links') and not c["pip_index"]:
-            pip_args += ['--no-index']
+        if c.get("find_links") and not c["pip_index"]:
+            pip_args += ["--no-index"]
 
         # Add --find-links pages to look at. Add --trusted-host automatically if
         # the host isn't secure. This allows modern versions of pip to connect
         # without requiring an override.
         trusted_hosts = set()
-        for link in c.get('find_links', []):
+        for link in c.get("find_links", []):
             parsed = urlparse.urlparse(link)
 
             try:
                 socket.gethostbyname(parsed.hostname)
             except socket.gaierror as e:
-                self.info('error resolving %s (ignoring): %s' %
-                          (parsed.hostname, e.message))
+                self.info(
+                    "error resolving %s (ignoring): %s" % (parsed.hostname, e.message)
+                )
                 continue
 
             pip_args += ["--find-links", link]
-            if parsed.scheme != 'https':
+            if parsed.scheme != "https":
                 trusted_hosts.add(parsed.hostname)
 
         for host in sorted(trusted_hosts):
-            pip_args += ['--trusted-host', host]
+            pip_args += ["--trusted-host", host]
 
         return pip_args
 
     @py3_venv_initialized
-    def py3_install_requirement_files(self, requirements, pip_args=[],
-                                      use_mozharness_pip_config=True):
-        '''
+    def py3_install_requirement_files(
+        self, requirements, pip_args=[], use_mozharness_pip_config=True
+    ):
+        """
         requirements - You can specify multiple requirements paths
-        '''
-        cmd = [self.py3_pip_path, 'install']
+        """
+        cmd = [self.py3_pip_path, "install"]
         cmd += pip_args
 
         if use_mozharness_pip_config:
             cmd += self._mozharness_pip_args()
 
         for requirement_path in requirements:
-            cmd += ['-r', requirement_path]
+            cmd += ["-r", requirement_path]
 
         self.run_command(cmd, env=self.query_env())
 
 
 # __main__ {{{1
 
-if __name__ == '__main__':
-    '''TODO: unit tests.
-    '''
+if __name__ == "__main__":
+    """TODO: unit tests."""
     pass

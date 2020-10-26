@@ -11,7 +11,9 @@ class TestChunkingMixin(unittest.TestCase):
         self.assertEquals(self.c.query_chunked_list([1, 3, 2], 1, 1), [1, 3, 2])
 
     def test_sorted(self):
-        self.assertEquals(self.c.query_chunked_list([1, 3, 2], 1, 1, sort=True), [1, 2, 3])
+        self.assertEquals(
+            self.c.query_chunked_list([1, 3, 2], 1, 1, sort=True), [1, 2, 3]
+        )
 
     def test_first_chunk(self):
         self.assertEquals(self.c.query_chunked_list([4, 5, 4, 3], 1, 2), [4, 5])

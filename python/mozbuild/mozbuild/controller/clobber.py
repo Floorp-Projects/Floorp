@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-r'''This module contains code for managing clobbering of the tree.'''
+r"""This module contains code for managing clobbering of the tree."""
 
 import errno
 import os
@@ -15,8 +15,10 @@ from mozfile.mozfile import remove as mozfileremove
 from textwrap import TextWrapper
 
 
-CLOBBER_MESSAGE = ''.join([TextWrapper().fill(line) + '\n' for line in
-                           '''
+CLOBBER_MESSAGE = "".join(
+    [
+        TextWrapper().fill(line) + "\n"
+        for line in """
 The CLOBBER file has been updated, indicating that an incremental build since \
 your last build will probably not work. A full/clobber build is required.
 
@@ -37,7 +39,9 @@ If you know this clobber doesn't apply to you or you're feeling lucky -- \
 Well, are ya? -- you can ignore this clobber requirement by running:
 
  $ touch {clobber_file}
-'''.splitlines()])
+""".splitlines()
+    ]
+)
 
 
 class Clobberer(object):
@@ -52,8 +56,8 @@ class Clobberer(object):
 
         self.topsrcdir = os.path.normpath(topsrcdir)
         self.topobjdir = os.path.normpath(topobjdir)
-        self.src_clobber = os.path.join(topsrcdir, 'CLOBBER')
-        self.obj_clobber = os.path.join(topobjdir, 'CLOBBER')
+        self.src_clobber = os.path.join(topsrcdir, "CLOBBER")
+        self.obj_clobber = os.path.join(topobjdir, "CLOBBER")
         if substs:
             self.substs = substs
         else:
@@ -61,7 +65,7 @@ class Clobberer(object):
 
         # Try looking for mozilla/CLOBBER, for comm-central
         if not os.path.isfile(self.src_clobber):
-            self.src_clobber = os.path.join(topsrcdir, 'mozilla', 'CLOBBER')
+            self.src_clobber = os.path.join(topsrcdir, "mozilla", "CLOBBER")
 
         assert os.path.isfile(self.src_clobber)
 
@@ -73,8 +77,7 @@ class Clobberer(object):
             return False
 
         # Object directory clobber older than current is fine.
-        if os.path.getmtime(self.src_clobber) <= \
-                os.path.getmtime(self.obj_clobber):
+        if os.path.getmtime(self.src_clobber) <= os.path.getmtime(self.obj_clobber):
 
             return False
 
@@ -88,17 +91,17 @@ class Clobberer(object):
         This returns a list of lines describing why the clobber was required.
         Each line is stripped of leading and trailing whitespace.
         """
-        with open(self.src_clobber, 'rt') as fh:
+        with open(self.src_clobber, "rt") as fh:
             lines = [l.strip() for l in fh.readlines()]
-            return [l for l in lines if l and not l.startswith('#')]
+            return [l for l in lines if l and not l.startswith("#")]
 
     def have_winrm(self):
         # `winrm -h` should print 'winrm version ...' and exit 1
         try:
-            p = subprocess.Popen(['winrm.exe', '-h'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
-            return p.wait() == 1 and p.stdout.read().startswith('winrm')
+            p = subprocess.Popen(
+                ["winrm.exe", "-h"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            return p.wait() == 1 and p.stdout.read().startswith("winrm")
         except Exception:
             return False
 
@@ -120,8 +123,12 @@ class Clobberer(object):
         procs = []
         for p in sorted(paths_to_delete):
             path = os.path.join(root, p)
-            if sys.platform.startswith('win') and self.have_winrm() and os.path.isdir(path):
-                procs.append(subprocess.Popen(['winrm', '-rf', path]))
+            if (
+                sys.platform.startswith("win")
+                and self.have_winrm()
+                and os.path.isdir(path)
+            ):
+                procs.append(subprocess.Popen(["winrm", "-rf", path]))
             else:
                 # We use mozfile because it is faster than shutil.rmtree().
                 mozfileremove(path)
@@ -137,16 +144,18 @@ class Clobberer(object):
         deleted.
         """
         # Determine where cargo build artifacts are stored
-        RUST_TARGET_VARS = ('RUST_HOST_TARGET', 'RUST_TARGET')
-        rust_targets = set([self.substs[x] for x in RUST_TARGET_VARS if x in self.substs])
-        rust_build_kind = 'release'
-        if self.substs.get('MOZ_DEBUG_RUST'):
-            rust_build_kind = 'debug'
+        RUST_TARGET_VARS = ("RUST_HOST_TARGET", "RUST_TARGET")
+        rust_targets = set(
+            [self.substs[x] for x in RUST_TARGET_VARS if x in self.substs]
+        )
+        rust_build_kind = "release"
+        if self.substs.get("MOZ_DEBUG_RUST"):
+            rust_build_kind = "debug"
 
         # Top-level files and directories to not clobber by default.
         no_clobber = {
-            '.mozbuild',
-            'msvc',
+            ".mozbuild",
+            "msvc",
         }
 
         # Hold off on clobbering cargo build artifacts
@@ -163,7 +172,12 @@ class Clobberer(object):
         # compilation cache.
         for target in rust_targets:
             cargo_path = os.path.join(self.topobjdir, target, rust_build_kind)
-            paths = self.collect_subdirs(cargo_path, {'incremental', })
+            paths = self.collect_subdirs(
+                cargo_path,
+                {
+                    "incremental",
+                },
+            )
             self.delete_dirs(cargo_path, paths)
 
     def maybe_do_clobber(self, cwd, allow_auto=False, fh=sys.stderr):
@@ -184,7 +198,7 @@ class Clobberer(object):
         cwd = os.path.normpath(cwd)
 
         if not self.clobber_needed():
-            print('Clobber not needed.', file=fh)
+            print("Clobber not needed.", file=fh)
             return False, False, None
 
         # So a clobber is needed. We only perform a clobber if we are
@@ -195,27 +209,43 @@ class Clobberer(object):
         # can work in some scenarios, we take the conservative approach and
         # never try.
         if not allow_auto:
-            return True, False, \
-               self._message('Automatic clobbering is not enabled\n'
-                             '  (add "mk_add_options AUTOCLOBBER=1" to your '
-                             'mozconfig).')
+            return (
+                True,
+                False,
+                self._message(
+                    "Automatic clobbering is not enabled\n"
+                    '  (add "mk_add_options AUTOCLOBBER=1" to your '
+                    "mozconfig)."
+                ),
+            )
 
         if cwd.startswith(self.topobjdir) and cwd != self.topobjdir:
-            return True, False, self._message(
-                'Cannot clobber while the shell is inside the object directory.')
+            return (
+                True,
+                False,
+                self._message(
+                    "Cannot clobber while the shell is inside the object directory."
+                ),
+            )
 
-        objdir = self.topobjdir.encode('utf-8', 'replace')
-        print('Automatically clobbering %s' % objdir, file=fh)
+        objdir = self.topobjdir.encode("utf-8", "replace")
+        print("Automatically clobbering %s" % objdir, file=fh)
         try:
             self.remove_objdir(False)
-            print('Successfully completed auto clobber.', file=fh)
+            print("Successfully completed auto clobber.", file=fh)
             return True, True, None
         except (IOError) as error:
-            return True, False, self._message(
-                'Error when automatically clobbering: ' + str(error))
+            return (
+                True,
+                False,
+                self._message("Error when automatically clobbering: " + str(error)),
+            )
 
     def _message(self, reason):
-        lines = [' ' + line for line in self.clobber_cause()]
+        lines = [" " + line for line in self.clobber_cause()]
 
-        return CLOBBER_MESSAGE.format(clobber_reason='\n'.join(lines),
-                                      no_reason='  ' + reason, clobber_file=self.obj_clobber)
+        return CLOBBER_MESSAGE.format(
+            clobber_reason="\n".join(lines),
+            no_reason="  " + reason,
+            clobber_file=self.obj_clobber,
+        )

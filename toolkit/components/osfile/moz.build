@@ -5,31 +5,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'modules',
+    "modules",
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochi/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ["tests/mochi/chrome.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 SOURCES += [
-    'NativeOSFileInternals.cpp',
+    "NativeOSFileInternals.cpp",
 ]
 
-XPIDL_MODULE = 'toolkit_osfile'
+XPIDL_MODULE = "toolkit_osfile"
 
 XPIDL_SOURCES += [
-    'nsINativeOSFileInternals.idl',
+    "nsINativeOSFileInternals.idl",
 ]
 
 EXPORTS.mozilla += [
-    'NativeOSFileInternals.h',
+    "NativeOSFileInternals.h",
 ]
 
 EXTRA_JS_MODULES += [
-    'osfile.jsm',
+    "osfile.jsm",
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'OS.File')
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")

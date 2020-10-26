@@ -4,47 +4,47 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'Networking: FTP')
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Networking: FTP")
 
 XPIDL_SOURCES += [
-    'nsIFTPChannel.idl',
-    'nsIFTPChannelParentInternal.idl',
+    "nsIFTPChannel.idl",
+    "nsIFTPChannelParentInternal.idl",
 ]
 
-XPIDL_MODULE = 'necko_ftp'
+XPIDL_MODULE = "necko_ftp"
 
 EXPORTS += [
-    'ftpCore.h',
+    "ftpCore.h",
 ]
 
 EXPORTS.mozilla.net += [
-    'FTPChannelChild.h',
-    'FTPChannelParent.h',
+    "FTPChannelChild.h",
+    "FTPChannelParent.h",
 ]
 
 UNIFIED_SOURCES += [
-    'FTPChannelChild.cpp',
-    'FTPChannelParent.cpp',
-    'nsFTPChannel.cpp',
-    'nsFtpConnectionThread.cpp',
-    'nsFtpControlConnection.cpp',
-    'nsFtpProtocolHandler.cpp',
+    "FTPChannelChild.cpp",
+    "FTPChannelParent.cpp",
+    "nsFTPChannel.cpp",
+    "nsFtpConnectionThread.cpp",
+    "nsFtpControlConnection.cpp",
+    "nsFtpProtocolHandler.cpp",
 ]
 
 IPDL_SOURCES += [
-    'PFTPChannel.ipdl',
+    "PFTPChannel.ipdl",
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    '/netwerk/base',
+    "/netwerk/base",
 ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]
 
-include('/tools/fuzzing/libfuzzer-config.mozbuild')
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

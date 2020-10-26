@@ -6,7 +6,7 @@ from IPDLCompile import IPDLCompile
 
 class IPDLTestCase(unittest.TestCase):
     def __init__(self, ipdlargv, filename):
-        unittest.TestCase.__init__(self, 'test')
+        unittest.TestCase.__init__(self, "test")
         self.filename = filename
         self.compile = IPDLCompile(filename, ipdlargv)
 
@@ -16,25 +16,32 @@ class IPDLTestCase(unittest.TestCase):
         self.checkPassed()
 
     def mkCustomMsg(self, msg):
-        return '''
+        return """
 ### Command: %s
 ### %s
 ### stderr:
-%s''' % (' '.join(self.compile.argv), msg, self.compile.stderr)
+%s""" % (
+            " ".join(self.compile.argv),
+            msg,
+            self.compile.stderr,
+        )
 
     def mkFailMsg(self):
-        return '''
+        return """
 ### Command: %s
 ### stderr:
-%s''' % (' '.join(self.compile.argv), self.compile.stderr)
+%s""" % (
+            " ".join(self.compile.argv),
+            self.compile.stderr,
+        )
 
     def shortDescription(self):
         return '%s test of "%s"' % (self.__class__.__name__, self.filename)
 
 
 class OkTestCase(IPDLTestCase):
-    '''An invocation of the IPDL compiler on a valid specification.
-The IPDL compiler should not produce errors or exceptions.'''
+    """An invocation of the IPDL compiler on a valid specification.
+    The IPDL compiler should not produce errors or exceptions."""
 
     def __init__(self, ipdlargv, filename):
         IPDLTestCase.__init__(self, ipdlargv, filename)
@@ -44,14 +51,14 @@ The IPDL compiler should not produce errors or exceptions.'''
 
 
 class ErrorTestCase(IPDLTestCase):
-    '''An invocation of the IPDL compiler on an *invalid* specification.
-The IPDL compiler *should* produce errors but not exceptions.'''
+    """An invocation of the IPDL compiler on an *invalid* specification.
+    The IPDL compiler *should* produce errors but not exceptions."""
 
     def __init__(self, ipdlargv, filename):
         IPDLTestCase.__init__(self, ipdlargv, filename)
 
         # Look for expected errors in the input file.
-        f = open(filename, 'r')
+        f = open(filename, "r")
         self.expectedErrorMessage = []
         for l in f:
             if l.startswith("//error:"):
@@ -59,18 +66,24 @@ The IPDL compiler *should* produce errors but not exceptions.'''
         f.close()
 
     def checkPassed(self):
-        self.assertNotEqual(self.expectedErrorMessage, [],
-                            self.mkCustomMsg("Error test should contain at least " +
-                                             "one line starting with //error: " +
-                                             "that indicates the expected failure."))
+        self.assertNotEqual(
+            self.expectedErrorMessage,
+            [],
+            self.mkCustomMsg(
+                "Error test should contain at least "
+                + "one line starting with //error: "
+                + "that indicates the expected failure."
+            ),
+        )
 
         for e in self.expectedErrorMessage:
-            self.assertTrue(self.compile.error(e),
-                            self.mkCustomMsg('Did not see expected error "' +
-                                             e + '"'))
+            self.assertTrue(
+                self.compile.error(e),
+                self.mkCustomMsg('Did not see expected error "' + e + '"'),
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     okdir = sys.argv[1]
@@ -87,21 +100,17 @@ if __name__ == '__main__':
         if errortests:
             # The extra subdirectory is used for non-failing files we want
             # to include from failing files.
-            errorIncludes = ['-I', os.path.join(errordir, 'extra'),
-                             '-I', errordir]
-            errorsuite.addTest(ErrorTestCase(ipdlargv + errorIncludes,
-                                             arg))
+            errorIncludes = ["-I", os.path.join(errordir, "extra"), "-I", errordir]
+            errorsuite.addTest(ErrorTestCase(ipdlargv + errorIncludes, arg))
         elif oktests:
-            if 'ERRORTESTS' == arg:
+            if "ERRORTESTS" == arg:
                 errortests = True
                 continue
-            oksuite.addTest(OkTestCase(ipdlargv + ['-I', okdir],
-                                       arg))
+            oksuite.addTest(OkTestCase(ipdlargv + ["-I", okdir], arg))
         else:
-            if 'OKTESTS' == arg:
+            if "OKTESTS" == arg:
                 oktests = True
                 continue
             ipdlargv.append(arg)
 
-    (unittest.TextTestRunner()).run(
-        unittest.TestSuite([oksuite, errorsuite]))
+    (unittest.TextTestRunner()).run(unittest.TestSuite([oksuite, errorsuite]))

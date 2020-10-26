@@ -23,9 +23,7 @@ class PingServer(object):
             request_data = request.body
 
             if request.headers.get("Content-Encoding") == "gzip":
-                request_data = zlib.decompress(
-                    request_data, zlib.MAX_WBITS | 16
-                )
+                request_data = zlib.decompress(request_data, zlib.MAX_WBITS | 16)
 
             ping_data = json.loads(request_data)
 
@@ -38,9 +36,7 @@ class PingServer(object):
 
             if ping_type == "main":
                 ping_reason = ping_data["payload"]["info"]["reason"]
-                log_message = "{} with reason '{}'".format(
-                    log_message, ping_reason
-                )
+                log_message = "{} with reason '{}'".format(log_message, ping_reason)
 
             self._logger.info(log_message)
 

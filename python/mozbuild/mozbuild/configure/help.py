@@ -12,41 +12,42 @@ from mozbuild.configure.options import Option
 
 class HelpFormatter(object):
     def __init__(self, argv0):
-        self.intro = ['Usage: %s [options]' % os.path.basename(argv0)]
+        self.intro = ["Usage: %s [options]" % os.path.basename(argv0)]
         self.options = []
 
     def add(self, option):
         assert isinstance(option, Option)
-        if option.possible_origins == ('implied',):
+        if option.possible_origins == ("implied",):
             # Don't display help if our option can only be implied.
             return
         self.options.append(option)
 
     def format_options_by_category(self, options_by_category):
         ret = []
-        for category, options in sorted(options_by_category.items(),
-                                        key=lambda x: x[0]):
-            ret.append('  ' + category + ':')
+        for category, options in sorted(
+            options_by_category.items(), key=lambda x: x[0]
+        ):
+            ret.append("  " + category + ":")
             for option in sorted(options, key=lambda opt: opt.option):
                 opt = option.option
                 if option.choices:
-                    opt += '={%s}' % ','.join(option.choices)
+                    opt += "={%s}" % ",".join(option.choices)
                 help = self.format_help(option)
                 if len(option.default):
                     if help:
-                        help += ' '
-                    help += '[%s]' % ','.join(option.default)
+                        help += " "
+                    help += "[%s]" % ",".join(option.default)
 
                 if len(opt) > 24 or not help:
-                    ret.append('    %s' % opt)
+                    ret.append("    %s" % opt)
                     if help:
-                        ret.append('%s%s' % (' ' * 30, help))
+                        ret.append("%s%s" % (" " * 30, help))
                 else:
-                    ret.append('    %-24s  %s' % (opt, help))
-            ret.append('')
+                    ret.append("    %-24s  %s" % (opt, help))
+            ret.append("")
         return ret
 
-    RE_FORMAT = re.compile(r'{([^|}]*)\|([^|}]*)}')
+    RE_FORMAT = re.compile(r"{([^|}]*)\|([^|}]*)}")
 
     # Return formatted help text for --{enable,disable,with,without}-* options.
     #
@@ -59,12 +60,12 @@ class HelpFormatter(object):
     # 'disable' or 'without'.
     def format_help(self, option):
         if not option.help:
-            return ''
+            return ""
 
-        if option.prefix in ('enable', 'with'):
-            replacement = r'\1'
-        elif option.prefix in ('disable', 'without'):
-            replacement = r'\2'
+        if option.prefix in ("enable", "with"):
+            replacement = r"\1"
+        elif option.prefix in ("disable", "without"):
+            replacement = r"\2"
         else:
             return option.help
 
@@ -77,11 +78,14 @@ class HelpFormatter(object):
             target = options_by_category if option.name else env_by_category
             target[option.category].append(option)
         options_formatted = [
-            'Options: [defaults in brackets after descriptions]'
+            "Options: [defaults in brackets after descriptions]"
         ] + self.format_options_by_category(options_by_category)
-        env_formatted = (['Environment variables:'] +
-                         self.format_options_by_category(env_by_category))
-        print('\n\n'.join('\n'.join(t)
-                          for t in (self.intro, options_formatted,
-                                    env_formatted)),
-              file=out)
+        env_formatted = ["Environment variables:"] + self.format_options_by_category(
+            env_by_category
+        )
+        print(
+            "\n\n".join(
+                "\n".join(t) for t in (self.intro, options_formatted, env_formatted)
+            ),
+            file=out,
+        )

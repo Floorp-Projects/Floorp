@@ -53,12 +53,12 @@ def test_start_with_outputTimeout(runner):
 
 
 def test_fail_to_start(runner):
-    with patch('mozprocess.ProcessHandler.__init__') as ph_mock:
-        ph_mock.side_effect = Exception('Boom!')
+    with patch("mozprocess.ProcessHandler.__init__") as ph_mock:
+        ph_mock.side_effect = Exception("Boom!")
         with raises(RunnerNotStartedError):
             runner.start(outputTimeout=0.1)
             sleep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mozunit.main()

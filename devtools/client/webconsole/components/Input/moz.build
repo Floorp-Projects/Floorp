@@ -4,10 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'ConfirmDialog.js',
-    'EagerEvaluation.js',
-    'EditorToolbar.js',
-    'EvaluationContextSelector.js',
-    'JSTerm.js',
-    'ReverseSearchInput.js',
+    "ConfirmDialog.js",
+    "EagerEvaluation.js",
+    "EditorToolbar.js",
+    "EvaluationContextSelector.js",
+    "JSTerm.js",
+    "ReverseSearchInput.js",
 )

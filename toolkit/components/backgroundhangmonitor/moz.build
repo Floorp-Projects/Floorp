@@ -12,53 +12,55 @@
 # BHR disabled for debug builds because of bug 979069.
 # BHR disabled for TSan builds because of bug 1121216.
 # BHR disabled for ASan builds because of bug 1445441.
-if CONFIG['NIGHTLY_BUILD'] and \
-   not CONFIG['MOZ_DEBUG'] and \
-   not CONFIG['MOZ_TSAN'] and \
-   not CONFIG['MOZ_ASAN']:
-    DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
+if (
+    CONFIG["NIGHTLY_BUILD"]
+    and not CONFIG["MOZ_DEBUG"]
+    and not CONFIG["MOZ_TSAN"]
+    and not CONFIG["MOZ_ASAN"]
+):
+    DEFINES["MOZ_ENABLE_BACKGROUND_HANG_MONITOR"] = 1
 
     EXTRA_JS_MODULES += [
-        'BHRTelemetryService.jsm',
+        "BHRTelemetryService.jsm",
     ]
 
     XPCOM_MANIFESTS += [
-        'components.conf',
+        "components.conf",
     ]
 
-    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 
 XPIDL_SOURCES += [
-    'nsIHangDetails.idl',
+    "nsIHangDetails.idl",
 ]
 
-XPIDL_MODULE = 'backgroundhangmonitor'
+XPIDL_MODULE = "backgroundhangmonitor"
 
 EXPORTS.mozilla += [
-    'BackgroundHangMonitor.h',
-    'HangAnnotations.h',
-    'HangDetails.h',
+    "BackgroundHangMonitor.h",
+    "HangAnnotations.h",
+    "HangDetails.h",
 ]
 
 UNIFIED_SOURCES += [
-    'BackgroundHangMonitor.cpp',
-    'HangAnnotations.cpp',
-    'HangDetails.cpp',
+    "BackgroundHangMonitor.cpp",
+    "HangAnnotations.cpp",
+    "HangDetails.cpp",
 ]
 
 IPDL_SOURCES += [
-    'HangTypes.ipdlh',
+    "HangTypes.ipdlh",
 ]
 
-if CONFIG['MOZ_GECKO_PROFILER']:
+if CONFIG["MOZ_GECKO_PROFILER"]:
     UNIFIED_SOURCES += [
-        'ThreadStackHelper.cpp',
+        "ThreadStackHelper.cpp",
     ]
 
 LOCAL_INCLUDES += [
-    '/caps', # For nsScriptSecurityManager.h
+    "/caps",  # For nsScriptSecurityManager.h
 ]
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")

@@ -14,5 +14,5 @@ def main(args):
     return mozbuild.jar.main(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(log_build_task(main, sys.argv[1:]))

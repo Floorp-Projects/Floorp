@@ -5,114 +5,108 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'external_api/moz_external_vr.h',
-    'FxROutputHandler.h',
-    'FxRWindowManager.h',
-    'gfxVR.h',
-    'ipc/VRChild.h',
-    'ipc/VRGPUChild.h',
-    'ipc/VRGPUParent.h',
-    'ipc/VRLayerChild.h',
-    'ipc/VRManagerChild.h',
-    'ipc/VRManagerParent.h',
-    'ipc/VRMessageUtils.h',
-    'ipc/VRParent.h',
-    'ipc/VRProcessChild.h',
-    'ipc/VRProcessManager.h',
-    'ipc/VRProcessParent.h',
-    'service/VRService.h',
-    'VRDisplayClient.h',
-    'VRDisplayPresentation.h',
-    'VRManager.h',
-    'VRPuppetCommandBuffer.h',
-    'VRShMem.h',
-    'VRThread.h',
+    "external_api/moz_external_vr.h",
+    "FxROutputHandler.h",
+    "FxRWindowManager.h",
+    "gfxVR.h",
+    "ipc/VRChild.h",
+    "ipc/VRGPUChild.h",
+    "ipc/VRGPUParent.h",
+    "ipc/VRLayerChild.h",
+    "ipc/VRManagerChild.h",
+    "ipc/VRManagerParent.h",
+    "ipc/VRMessageUtils.h",
+    "ipc/VRParent.h",
+    "ipc/VRProcessChild.h",
+    "ipc/VRProcessManager.h",
+    "ipc/VRProcessParent.h",
+    "service/VRService.h",
+    "VRDisplayClient.h",
+    "VRDisplayPresentation.h",
+    "VRManager.h",
+    "VRPuppetCommandBuffer.h",
+    "VRShMem.h",
+    "VRThread.h",
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/dom/canvas',
-    '/gfx/layers/d3d11',
-    '/gfx/thebes',
+    "/dom/base",
+    "/dom/canvas",
+    "/gfx/layers/d3d11",
+    "/gfx/thebes",
 ]
 
 UNIFIED_SOURCES += [
-    'gfxVR.cpp',
-    'ipc/VRChild.cpp',
-    'ipc/VRGPUChild.cpp',
-    'ipc/VRGPUParent.cpp',
-    'ipc/VRManagerChild.cpp',
-    'ipc/VRManagerParent.cpp',
-    'ipc/VRParent.cpp',
-    'ipc/VRProcessChild.cpp',
-    'ipc/VRProcessManager.cpp',
-    'ipc/VRProcessParent.cpp',
-    'VRDisplayClient.cpp',
-    'VRDisplayPresentation.cpp',
-    'VRThread.cpp',
+    "gfxVR.cpp",
+    "ipc/VRChild.cpp",
+    "ipc/VRGPUChild.cpp",
+    "ipc/VRGPUParent.cpp",
+    "ipc/VRManagerChild.cpp",
+    "ipc/VRManagerParent.cpp",
+    "ipc/VRParent.cpp",
+    "ipc/VRProcessChild.cpp",
+    "ipc/VRProcessManager.cpp",
+    "ipc/VRProcessParent.cpp",
+    "VRDisplayClient.cpp",
+    "VRDisplayPresentation.cpp",
+    "VRThread.cpp",
 ]
 
 SOURCES += [
-    'ipc/VRLayerChild.cpp',
-    'ipc/VRLayerParent.cpp',
-    'VRManager.cpp',
-    'VRPuppetCommandBuffer.cpp',
-    'VRShMem.cpp'
+    "ipc/VRLayerChild.cpp",
+    "ipc/VRLayerParent.cpp",
+    "VRManager.cpp",
+    "VRPuppetCommandBuffer.cpp",
+    "VRShMem.cpp",
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    LOCAL_INCLUDES += ['/widget/android']
+if CONFIG["OS_TARGET"] == "Android":
+    LOCAL_INCLUDES += ["/widget/android"]
 else:
     DIRS += [
-        'service',
+        "service",
     ]
     UNIFIED_SOURCES += [
-        'VRServiceHost.cpp',
+        "VRServiceHost.cpp",
     ]
 
 # Only target x64 for vrhost since WebVR is only supported on 64bit.
 # Also, only use MSVC compiler for Windows-specific linking
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['HAVE_64BIT_BUILD'] and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
-    DIRS += [
-        'vrhost'
-    ]
+if (
+    CONFIG["OS_ARCH"] == "WINNT"
+    and CONFIG["HAVE_64BIT_BUILD"]
+    and CONFIG["CC_TYPE"] not in ("clang", "gcc")
+):
+    DIRS += ["vrhost"]
 
 IPDL_SOURCES = [
-    'ipc/PVR.ipdl',
-    'ipc/PVRGPU.ipdl',
-    'ipc/PVRLayer.ipdl',
-    'ipc/PVRManager.ipdl',
+    "ipc/PVR.ipdl",
+    "ipc/PVRGPU.ipdl",
+    "ipc/PVRLayer.ipdl",
+    "ipc/PVRManager.ipdl",
 ]
 
 # For now, only enable FxR CLH for Windows Nightly builds (BUG 1565349)
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['NIGHTLY_BUILD']:
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["NIGHTLY_BUILD"]:
     XPCOM_MANIFESTS += [
-      'components.conf',
+        "components.conf",
     ]
     SOURCES += [
-      'nsFxrCommandLineHandler.cpp',
+        "nsFxrCommandLineHandler.cpp",
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    LOCAL_INCLUDES += [
-      '/layout/generic',
-      '/widget',
-      '/widget/windows'
-    ]
-    SOURCES += [
-      'FxROutputHandler.cpp',
-      'FxRWindowManager.cpp'
-    ]
+if CONFIG["OS_ARCH"] == "WINNT":
+    LOCAL_INCLUDES += ["/layout/generic", "/widget", "/widget/windows"]
+    SOURCES += ["FxROutputHandler.cpp", "FxRWindowManager.cpp"]
 
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-CXXFLAGS += CONFIG['TK_CFLAGS']
-CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-CFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+CFLAGS += CONFIG["TK_CFLAGS"]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+include("/ipc/chromium/chromium-config.mozbuild")
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = "xul"
 
-with Files('**'):
-    BUG_COMPONENT = ('Core', 'WebVR')
-
+with Files("**"):
+    BUG_COMPONENT = ("Core", "WebVR")

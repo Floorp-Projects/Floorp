@@ -5,15 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'element-container.js',
-    'element-editor.js',
-    'html-editor.js',
-    'markup-container.js',
-    'read-only-container.js',
-    'read-only-editor.js',
-    'root-container.js',
-    'slotted-node-container.js',
-    'slotted-node-editor.js',
-    'text-container.js',
-    'text-editor.js',
+    "element-container.js",
+    "element-editor.js",
+    "html-editor.js",
+    "markup-container.js",
+    "read-only-container.js",
+    "read-only-editor.js",
+    "root-container.js",
+    "slotted-node-container.js",
+    "slotted-node-editor.js",
+    "text-container.js",
+    "text-editor.js",
 )

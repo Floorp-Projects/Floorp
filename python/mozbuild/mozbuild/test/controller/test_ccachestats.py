@@ -197,7 +197,9 @@ class TestCcacheStats(unittest.TestCase):
     files in cache                     13464
     cache size                           6.2 GB
     max cache size                       7.0 GB
-    """.format(timestamp=time.strftime('%c'))
+    """.format(
+        timestamp=time.strftime("%c")
+    )
 
     STAT9 = """
     cache directory                     /Users/tlin/.ccache
@@ -222,7 +224,9 @@ class TestCcacheStats(unittest.TestCase):
     files in cache                     18525
     cache size                          13.4 GB
     max cache size                      15.0 GB
-    """.format(timestamp=time.strftime('%c'), timestamp2=time.strftime('%c'))
+    """.format(
+        timestamp=time.strftime("%c"), timestamp2=time.strftime("%c")
+    )
 
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
@@ -292,5 +296,5 @@ class TestCcacheStats(unittest.TestCase):
         self.assertTrue(stat9)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

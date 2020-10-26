@@ -9,24 +9,19 @@ import subprocess
 import re
 
 from .macintelpower import MacIntelPower
-from .mozpowerutils import (
-    average_summary,
-    frequency_summary,
-    get_logger,
-    sum_summary
-)
+from .mozpowerutils import average_summary, frequency_summary, get_logger, sum_summary
 
 OSCPU_COMBOS = {
-    'darwin-intel': MacIntelPower,
+    "darwin-intel": MacIntelPower,
 }
 
 SUMMARY_METHODS = {
-    'utilization': average_summary,
-    'power-usage': sum_summary,
-    'power-watts': frequency_summary,
-    'frequency-cpu': frequency_summary,
-    'frequency-gpu': frequency_summary,
-    'default': sum_summary
+    "utilization": average_summary,
+    "power-usage": sum_summary,
+    "power-watts": frequency_summary,
+    "frequency-cpu": frequency_summary,
+    "frequency-gpu": frequency_summary,
+    "default": sum_summary,
 }
 
 
@@ -35,6 +30,7 @@ class OsCpuComboMissingError(Exception):
     a class responsible for the OS, and CPU combination that
     was detected.
     """
+
     pass
 
 
@@ -45,6 +41,7 @@ class MissingProcessorInfoError(Exception):
     an exception occurs when we try to gather the information
     from the file.
     """
+
     pass
 
 
@@ -76,11 +73,14 @@ class MozPower(object):
 
        perfherder_data = mp.get_perfherder_data()
     """
-    def __init__(self,
-                 android=False,
-                 logger_name='mozpower',
-                 output_file_path='power-testing',
-                 **kwargs):
+
+    def __init__(
+        self,
+        android=False,
+        logger_name="mozpower",
+        output_file_path="power-testing",
+        **kwargs
+    ):
         """Initializes the MozPower object, detects OS and CPU (if not android),
         and instatiates the appropriate combo-dependent class for measurements.
 
@@ -101,33 +101,33 @@ class MozPower(object):
         self._logger = get_logger(logger_name)
 
         if android:
-            self._logger.error(
-                "Android power usage measurer has not been implemented"
-            )
+            self._logger.error("Android power usage measurer has not been implemented")
             raise NotImplementedError
         else:
             self._os = self._get_os().lower()
             cpu = self._get_processor_info().lower()
 
-            if 'intel' in cpu:
-                self._cpu = 'intel'
+            if "intel" in cpu:
+                self._cpu = "intel"
             else:
-                self._cpu = 'arm64'
+                self._cpu = "arm64"
 
         # OS+CPU combos are specified through strings such as 'darwin-intel'
         # for mac power measurement on intel-based machines. If none exist in
         # OSCPU_COMBOS, OsCpuComboMissingError will be raised.
         measurer = None
-        oscpu_combo = '%s-%s' % (self._os, self._cpu)
+        oscpu_combo = "%s-%s" % (self._os, self._cpu)
         if oscpu_combo in OSCPU_COMBOS:
             measurer = OSCPU_COMBOS[oscpu_combo]
         else:
-            raise OsCpuComboMissingError("Cannot find OS+CPU combo for %s" % oscpu_combo)
+            raise OsCpuComboMissingError(
+                "Cannot find OS+CPU combo for %s" % oscpu_combo
+            )
 
         if measurer:
             self._logger.info(
-                "Intializing measurer %s for %s power measurements, see below for errors..." %
-                (measurer.__name__, oscpu_combo)
+                "Intializing measurer %s for %s power measurements, see below for errors..."
+                % (measurer.__name__, oscpu_combo)
             )
             self.measurer = measurer(
                 logger_name=logger_name, output_file_path=output_file_path, **kwargs
@@ -156,7 +156,7 @@ class MozPower(object):
             model = platform.processor()
 
         elif self._get_os() == "Darwin":
-            proc_info_path = '/usr/sbin/sysctl'
+            proc_info_path = "/usr/sbin/sysctl"
             command = [proc_info_path, "-n", "machdep.cpu.brand_string"]
 
             if not os.path.exists(proc_info_path):
@@ -173,12 +173,12 @@ class MozPower(object):
                     error_log = e.output.decode()
                 raise MissingProcessorInfoError(
                     "Error while attempting to get darwin processor information "
-                    "from %s (exists) with the command %s: %s" %
-                    (proc_info_path, str(command), error_log)
+                    "from %s (exists) with the command %s: %s"
+                    % (proc_info_path, str(command), error_log)
                 )
 
         elif self._get_os() == "Linux":
-            proc_info_path = '/proc/cpuinfo'
+            proc_info_path = "/proc/cpuinfo"
             model_re = re.compile(r""".*model name\s+[:]\s+(.*)\s+""")
 
             if not os.path.exists(proc_info_path):
@@ -253,15 +253,16 @@ class MozPower(object):
         """
         if datatype not in SUMMARY_METHODS:
             self._logger.warning(
-                "Missing summary method for data type %s, defaulting to sum" %
-                datatype
+                "Missing summary method for data type %s, defaulting to sum" % datatype
             )
-            datatype = 'default'
+            datatype = "default"
 
         summary_func = SUMMARY_METHODS[datatype]
         return summary_func(values)
 
-    def get_full_perfherder_data(self, framework, lowerisbetter=True, alertthreshold=2.0):
+    def get_full_perfherder_data(
+        self, framework, lowerisbetter=True, alertthreshold=2.0
+    ):
         """Returns a list of complete perfherder data blobs compiled from the
         partial perfherder data blob returned from the measurer. Each key entry
         (measurement type) in the partial perfherder data is parsed into its
@@ -312,10 +313,7 @@ class MozPower(object):
         measurer_name = self.measurer.__class__.__name__
 
         suites = []
-        perfherder_data = {
-            'framework': {'name': framework},
-            'suites': suites
-        }
+        perfherder_data = {"framework": {"name": framework}, "suites": suites}
 
         for measurement_type in partial_perfherder_data:
             self._logger.info("Summarizing %s data" % measurement_type)
@@ -323,21 +321,17 @@ class MozPower(object):
 
             # Skip this measurement type if the 'values' entry
             # doesn't exist, and output a warning.
-            if 'values' not in dataset:
+            if "values" not in dataset:
                 self._logger.warning(
                     "Missing 'values' entry in partial perfherder data for measurement type %s "
-                    "obtained from %s. This measurement type will not be processed." %
-                    (measurement_type, measurer_name)
+                    "obtained from %s. This measurement type will not be processed."
+                    % (measurement_type, measurer_name)
                 )
                 continue
 
             # Get the settings, if they exist, otherwise output
             # a warning and use a default entry.
-            settings = {
-                'test': 'mozpower',
-                'unit': 'mWh',
-                'type': 'power'
-            }
+            settings = {"test": "mozpower", "unit": "mWh", "type": "power"}
 
             for setting in settings:
                 if setting in dataset:
@@ -345,38 +339,38 @@ class MozPower(object):
                 else:
                     self._logger.warning(
                         "Missing '%s' entry in partial perfherder data for measurement type %s "
-                        "obtained from %s, using %s as the default" %
-                        (setting, measurement_type, measurer_name, settings[setting])
+                        "obtained from %s, using %s as the default"
+                        % (setting, measurement_type, measurer_name, settings[setting])
                     )
 
             subtests = []
             suite = {
-                'name': "%s-%s" % (settings['test'], measurement_type),
-                'type': settings['type'],
-                'value': 0,
-                'subtests': subtests,
-                'lowerIsBetter': lowerisbetter,
-                'unit': settings['unit'],
-                'alertThreshold': alertthreshold,
+                "name": "%s-%s" % (settings["test"], measurement_type),
+                "type": settings["type"],
+                "value": 0,
+                "subtests": subtests,
+                "lowerIsBetter": lowerisbetter,
+                "unit": settings["unit"],
+                "alertThreshold": alertthreshold,
             }
 
             # Parse the 'values' entries into subtests
             values = []
-            for measure in dataset['values']:
-                value = dataset['values'][measure]
+            for measure in dataset["values"]:
+                value = dataset["values"][measure]
                 subtest = {
-                    'name': '%s-%s' % (measurement_type, measure),
-                    'value': float(value),
-                    'lowerIsBetter': lowerisbetter,
-                    'alertThreshold': alertthreshold,
-                    'unit': settings['unit']
+                    "name": "%s-%s" % (measurement_type, measure),
+                    "value": float(value),
+                    "lowerIsBetter": lowerisbetter,
+                    "alertThreshold": alertthreshold,
+                    "unit": settings["unit"],
                 }
                 values.append((value, measure))
                 subtests.append(subtest)
 
             # Summarize the data based on the measurement type
             if len(values) > 0:
-                suite['value'] = self._summarize_values(measurement_type, values)
+                suite["value"] = self._summarize_values(measurement_type, values)
             suites.append(suite)
 
         return perfherder_data
