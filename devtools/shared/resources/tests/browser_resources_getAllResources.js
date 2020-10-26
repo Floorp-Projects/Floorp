@@ -39,7 +39,7 @@ add_task(async function() {
   info("Check the resources after some resources are available");
   const messages = ["a", "b", "c"];
   await logMessages(tab.linkedBrowser, messages);
-  await waitUntil(() => availableResources.length === messages.length);
+  await waitUntil(() => availableResources.length >= messages.length);
   assertResources(
     resourceWatcher.getAllResources(ResourceWatcher.TYPES.CONSOLE_MESSAGE),
     availableResources

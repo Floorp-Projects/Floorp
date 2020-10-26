@@ -13,6 +13,14 @@
     const worker = new Worker("test_worker.js#simple-worker-" + hashSuffix);
     // eslint-disable-next-line no-unused-vars
     const sharedWorker = new SharedWorker("test_worker.js#shared-worker-" + hashSuffix);
+
+    /* exported logMessageInWorker */
+    function logMessageInWorker(message) {
+      worker.postMessage({
+        type: "log-in-worker",
+        message,
+      });
+    }
   </script>
 </head>
 <body>
