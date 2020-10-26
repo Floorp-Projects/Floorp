@@ -697,36 +697,43 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   sRGBColor trackColor, trackBorderColor;
   std::tie(trackColor, trackBorderColor) = ComputeRangeTrackColors(aState);
 
-  aDrawTarget->PushClipRect(progressClipRect);
-  PaintRoundedRectWithRadius(aDrawTarget, rect, progressColor,
-                             progressBorderColor, borderWidth, radius,
-                             aDpiRatio);
+  // Make a path that clips out the range thumb.
+  RefPtr<PathBuilder> builder =
+      aDrawTarget->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
+  AppendRectToPath(builder, aRect);
+  AppendEllipseToPath(builder, thumbRect.Center(), thumbRect.Size());
+  RefPtr<Path> path = builder->Finish();
+
+  // Draw the progress and track pieces with the thumb clipped out, so that
+  // they're not visible behind the thumb even if the thumb is partially
+  // transparent (which is the case in the disabled state).
+  aDrawTarget->PushClip(path);
+  {
+    aDrawTarget->PushClipRect(progressClipRect);
+    PaintRoundedRectWithRadius(aDrawTarget, rect, progressColor,
+                               progressBorderColor, borderWidth, radius,
+                               aDpiRatio);
+    aDrawTarget->PopClip();
+
+    aDrawTarget->PushClipRect(trackClipRect);
+    PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
+                               borderWidth, radius, aDpiRatio);
+    aDrawTarget->PopClip();
+  }
   aDrawTarget->PopClip();
 
-  aDrawTarget->PushClipRect(trackClipRect);
-  PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
-                             borderWidth, radius, aDpiRatio);
-  aDrawTarget->PopClip();
+  // Draw the thumb on top.
+  const CSSCoord thumbBorderWidth = 2.0f;
+  auto [thumbColor, thumbBorderColor] = ComputeRangeThumbColors(aState);
 
-  PaintRangeThumb(aDrawTarget, thumbRect, aState, aDpiRatio);
+  PaintStrokedEllipse(aDrawTarget, aRect, thumbColor, thumbBorderColor,
+                      thumbBorderWidth, aDpiRatio);
+
+  // TODO: Paint thumb shadow.
 
   if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
   }
-}
-
-/* static */
-void nsNativeBasicTheme::PaintRangeThumb(DrawTarget* aDrawTarget,
-                                         const Rect& aRect,
-                                         const EventStates& aState,
-                                         uint32_t aDpiRatio) {
-  const CSSCoord borderWidth = 2.0f;
-  auto [backgroundColor, borderColor] = ComputeRangeThumbColors(aState);
-
-  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
-                      borderWidth, aDpiRatio);
-
-  // TODO: Paint thumb shadow.
 }
 
 /* static */
