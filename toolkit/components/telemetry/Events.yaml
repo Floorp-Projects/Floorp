@@ -2426,13 +2426,14 @@ slow_script_warning:
     bug_numbers:
       - 1652613
       - 1667245
+      - 1672572
     description: >
       Recorded when a slow script hang is resolved.
     products:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    expiry_version: "85"
+    expiry_version: "93"
     notification_emails:
       - esmyth@mozilla.com
       - gkruitbosch@mozilla.com
