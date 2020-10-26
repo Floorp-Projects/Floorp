@@ -149,6 +149,16 @@ nsDependentCSubstring GetLeafName(const nsACString& aPath) {
   return nsDependentCSubstring(start.get(), end.get());
 }
 
+Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
+    nsIFile& aDirectory, const nsAString& aPathElement) {
+  QM_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
+                                                            aDirectory, Clone));
+
+  QM_TRY(resultFile->Append(aPathElement));
+
+  return resultFile;
+}
+
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
 MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sQueryValue;
 
