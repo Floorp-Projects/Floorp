@@ -664,44 +664,41 @@ void nsNativeBasicTheme::PaintRangeTrackBackground(
   }
 
   double progress = rangeFrame->GetValueAsFractionOfRange();
-  Rect progressRect(rect);
-  Rect trackRect(rect);
+  Rect progressClipRect(aRect);
+  Rect trackClipRect(aRect);
   if (aHorizontal) {
-    progressRect.width = rect.width * progress;
+    progressClipRect.width = aRect.width * progress;
     if (IsFrameRTL(aFrame)) {
-      progressRect.x += rect.width - progressRect.width;
+      progressClipRect.x += aRect.width - progressClipRect.width;
     } else {
-      trackRect.x += progressRect.width;
+      trackClipRect.x += progressClipRect.width;
     }
-    trackRect.width -= progressRect.width;
+    trackClipRect.width -= progressClipRect.width;
   } else {
-    progressRect.height = rect.height * progress;
-    progressRect.y += rect.height - progressRect.height;
-    trackRect.height -= progressRect.height;
+    progressClipRect.height = aRect.height * progress;
+    progressClipRect.y += aRect.height - progressClipRect.height;
+    trackClipRect.height -= progressClipRect.height;
   }
 
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = 2.0f;
 
-  // Avoid artifacts between thumb and track when progress is approaching
-  // 0.0f or 1.0f.
-  if ((aHorizontal && ((progressRect.width > (radius * 2.0f)))) ||
-      (!aHorizontal && ((progressRect.height > radius * 2.0f)))) {
-    sRGBColor progressColor, progressBorderColor;
-    std::tie(progressColor, progressBorderColor) =
-        ComputeRangeProgressColors(aState);
-    PaintRoundedRectWithRadius(aDrawTarget, progressRect, progressColor,
-                               progressBorderColor, borderWidth, radius,
-                               aDpiRatio);
-  }
-  if ((aHorizontal && ((trackRect.width > (radius * 2.0f)))) ||
-      (!aHorizontal && (trackRect.height > (radius * 2.0f)))) {
-    sRGBColor trackColor, trackBorderColor;
-    std::tie(trackColor, trackBorderColor) = ComputeRangeTrackColors(aState);
-    PaintRoundedRectWithRadius(aDrawTarget, trackRect, trackColor,
-                               trackBorderColor, borderWidth, radius,
-                               aDpiRatio);
-  }
+  sRGBColor progressColor, progressBorderColor;
+  std::tie(progressColor, progressBorderColor) =
+      ComputeRangeProgressColors(aState);
+  sRGBColor trackColor, trackBorderColor;
+  std::tie(trackColor, trackBorderColor) = ComputeRangeTrackColors(aState);
+
+  aDrawTarget->PushClipRect(progressClipRect);
+  PaintRoundedRectWithRadius(aDrawTarget, rect, progressColor,
+                             progressBorderColor, borderWidth, radius,
+                             aDpiRatio);
+  aDrawTarget->PopClip();
+
+  aDrawTarget->PushClipRect(trackClipRect);
+  PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
+                             borderWidth, radius, aDpiRatio);
+  aDrawTarget->PopClip();
 
   if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
