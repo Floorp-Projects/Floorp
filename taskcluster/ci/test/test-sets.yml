@@ -161,10 +161,6 @@ raptor-fetch-profiling:
     - raptor-wasm-godot-cranelift-firefox-profiling
     - raptor-assorted-dom-firefox-profiling
 
-raptor-fetch-geckoview:
-    - raptor-unity-webgl-geckoview
-    - raptor-unity-webgl-refbrow
-
 raptor-fetch-chromium:
     - raptor-unity-webgl-chromium
     - raptor-wasm-misc-chromium
