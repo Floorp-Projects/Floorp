@@ -363,8 +363,8 @@ add_task(async function test_simple_change_annotations() {
     {
       content: "testContent",
       flags: 0,
-      type: Ci.nsIAnnotationService.TYPE_STRING,
-      expiration: Ci.nsIAnnotationService.EXPIRE_NEVER,
+      type: PlacesUtils.history.ANNOTATION_TYPE_STRING,
+      expiration: PlacesUtils.history.ANNOTATION_EXPIRE_NEVER,
     },
     annotationInfo[0],
     "Should have stored the correct annotation data in the db"
@@ -425,8 +425,8 @@ add_task(async function test_simple_change_annotations() {
     {
       content: 1234,
       flags: 0,
-      type: Ci.nsIAnnotationService.TYPE_INT64,
-      expiration: Ci.nsIAnnotationService.EXPIRE_NEVER,
+      type: PlacesUtils.history.ANNOTATION_TYPE_INT64,
+      expiration: PlacesUtils.history.ANNOTATION_EXPIRE_NEVER,
     },
     annotationInfo[0],
     "Should have updated the annotation data in the db"

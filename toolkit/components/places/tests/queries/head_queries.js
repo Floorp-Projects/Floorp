@@ -104,23 +104,6 @@ async function task_populateDB(aArray) {
         });
       }
 
-      if (qdata.isItemAnnotation) {
-        if (qdata.removeAnnotation) {
-          PlacesUtils.annotations.removeItemAnnotation(
-            qdata.itemId,
-            qdata.annoName
-          );
-        } else {
-          PlacesUtils.annotations.setItemAnnotation(
-            qdata.itemId,
-            qdata.annoName,
-            qdata.annoVal,
-            0,
-            PlacesUtils.annotations.EXPIRE_NEVER
-          );
-        }
-      }
-
       if (qdata.isFolder) {
         await PlacesUtils.bookmarks.insert({
           parentGuid: qdata.parentGuid,
@@ -203,7 +186,6 @@ function queryData(obj) {
   this.removeAnnotation = !!obj.removeAnnotation;
   this.annoName = obj.annoName ? obj.annoName : "";
   this.annoVal = obj.annoVal ? obj.annoVal : "";
-  this.isItemAnnotation = obj.isItemAnnotation ? obj.isItemAnnotation : false;
   this.itemId = obj.itemId ? obj.itemId : 0;
   this.annoMimeType = obj.annoMimeType ? obj.annoMimeType : "";
   this.isTag = obj.isTag ? obj.isTag : false;

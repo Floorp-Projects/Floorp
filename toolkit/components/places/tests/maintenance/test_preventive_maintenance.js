@@ -14,7 +14,6 @@
 var hs = PlacesUtils.history;
 var bs = PlacesUtils.bookmarks;
 var ts = PlacesUtils.tagging;
-var as = PlacesUtils.annotations;
 var fs = PlacesUtils.favicons;
 
 var mDBConn = hs.DBConnection;
@@ -2762,7 +2761,6 @@ tests.push({
       url: this._uri2,
       annotations: new Map([["anno", "anno"]]),
     });
-    as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);
   },
 
   async check() {
@@ -2790,7 +2788,6 @@ tests.push({
       includeAnnotations: true,
     });
     Assert.equal(pageInfo.annotations.get("anno"), "anno");
-    Assert.equal(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
     await new Promise(resolve => {
       fs.getFaviconURLForPage(this._uri2, aFaviconURI => {
