@@ -28,11 +28,19 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 
+  // The test starts on about:blank and opens an about:blank
+  // tab which triggers opening the toolbar since
+  // ensureNoPreloadedBrowser sets AboutNewTab.newTabURL to about:blank.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.visibility", "never"]],
+  });
+
   // Prepare the window to avoid flicker and reflow that's unrelated to our
   // tab opening operation.
   gURLBar.focus();
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
   let textBoxRect = gURLBar

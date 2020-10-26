@@ -155,6 +155,10 @@ const RECOMMENDED_PREFS = new Map([
   // Do not warn when multiple tabs will be opened
   ["browser.tabs.warnOnOpen", false],
 
+  // Don't show the Bookmarks Toolbar on any tab (the above pref that
+  // disables the New Tab Page ends up showing the toolbar on about:blank).
+  ["browser.toolbars.bookmarks.visibility", "never"],
+
   // Disable first run splash page on Windows 10
   ["browser.usedOnWindows10.introURL", ""],
 

@@ -147,6 +147,7 @@ add_task(async function test_newWindow_noOverflow() {
   info(
     "Check toolbar in a new widow when it was already visible and not overflowed"
   );
+  ok(!gToolbar.collapsed, "Toolbar is not collapsed in original window");
   await PlacesUtils.bookmarks.eraseEverything();
   // Add a single bookmark.
   await PlacesUtils.bookmarks.insert({
