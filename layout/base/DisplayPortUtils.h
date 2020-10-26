@@ -92,10 +92,12 @@ struct DisplayPortMargins {
   // mVisualOffset and mLayoutOffset, and the Screen coordinates of mMargins.
   CSSToScreenScale2D mScale;
 
-  static DisplayPortMargins WithAdjustment(const ScreenMargin& aMargins,
-                                           const CSSPoint& aVisualOffset,
-                                           const CSSPoint& aLayoutOffset,
-                                           const CSSToScreenScale2D& aScale);
+  // Create displayport margins requested by APZ, relative to an async visual
+  // offset provided by APZ.
+  static DisplayPortMargins FromAPZ(const ScreenMargin& aMargins,
+                                    const CSSPoint& aVisualOffset,
+                                    const CSSPoint& aLayoutOffset,
+                                    const CSSToScreenScale2D& aScale);
 
   // Create displayport port margins for the given scroll frame.
   // This is for use in cases where we don't have async scroll information from
