@@ -25,6 +25,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/PaymentRequestParent.h"
+#include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/RemoteDragStartData.h"
 #include "mozilla/dom/RemoteWebProgress.h"
@@ -601,6 +602,7 @@ void BrowserParent::DestroyInternal() {
   UnsetTopLevelWebFocus(this);
   UnsetLastMouseRemoteTarget(this);
   UnsetPointerLockedRemoteTarget(this);
+  PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
 
   RemoveWindowListeners();
 
@@ -683,6 +685,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   BrowserParent::UnsetTopLevelWebFocus(this);
   BrowserParent::UnsetLastMouseRemoteTarget(this);
   BrowserParent::UnsetPointerLockedRemoteTarget(this);
+  PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
 
   if (why == AbnormalShutdown) {
     // dom_reporting_header must also be enabled for the report to be sent.
@@ -4172,6 +4175,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerLock(
   nsCString error;
   if (!SetPointerLock()) {
     error = "PointerLockDeniedInUse";
+  } else {
+    PointerEventHandler::ReleaseAllPointerCaptureRemoteTarget();
   }
   aResolve(error);
   return IPC_OK();
@@ -4180,6 +4185,19 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerLock(
 mozilla::ipc::IPCResult BrowserParent::RecvReleasePointerLock() {
   MOZ_ASSERT_IF(sPointerLockedRemoteTarget, sPointerLockedRemoteTarget == this);
   UnsetPointerLockedRemoteTarget(this);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerCapture(
+    const uint32_t& aPointerId, RequestPointerCaptureResolver&& aResolve) {
+  aResolve(
+      PointerEventHandler::SetPointerCaptureRemoteTarget(aPointerId, this));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvReleasePointerCapture(
+    const uint32_t& aPointerId) {
+  PointerEventHandler::ReleasePointerCaptureRemoteTarget(aPointerId);
   return IPC_OK();
 }
 

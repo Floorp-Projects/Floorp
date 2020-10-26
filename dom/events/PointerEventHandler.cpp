@@ -9,6 +9,8 @@
 #include "PointerEvent.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/MouseEventBinding.h"
 
 namespace mozilla {
@@ -41,12 +43,21 @@ static nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>*
 // primaryState
 static nsClassHashtable<nsUint32HashKey, PointerInfo>* sActivePointersIds;
 
+// Keeps track of which BrowserParent requested pointer capture for a pointer
+// id.
+static nsDataHashtable<nsUint32HashKey, BrowserParent*>*
+    sPointerCaptureRemoteTargetTable = nullptr;
+
 /* static */
 void PointerEventHandler::InitializeStatics() {
   MOZ_ASSERT(!sPointerCaptureList, "InitializeStatics called multiple times!");
   sPointerCaptureList =
       new nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>;
   sActivePointersIds = new nsClassHashtable<nsUint32HashKey, PointerInfo>;
+  if (XRE_IsParentProcess()) {
+    sPointerCaptureRemoteTargetTable =
+        new nsDataHashtable<nsUint32HashKey, BrowserParent*>;
+  }
 }
 
 /* static */
@@ -56,6 +67,11 @@ void PointerEventHandler::ReleaseStatics() {
   sPointerCaptureList = nullptr;
   delete sActivePointersIds;
   sActivePointersIds = nullptr;
+  if (sPointerCaptureRemoteTargetTable) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    delete sPointerCaptureRemoteTargetTable;
+    sPointerCaptureRemoteTargetTable = nullptr;
+  }
 }
 
 /* static */
@@ -119,6 +135,24 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent) {
 }
 
 /* static */
+void PointerEventHandler::RequestPointerCaptureById(uint32_t aPointerId,
+                                                    Element* aElement) {
+  SetPointerCaptureById(aPointerId, aElement);
+
+  if (BrowserChild* browserChild =
+          BrowserChild::GetFrom(aElement->OwnerDoc()->GetDocShell())) {
+    browserChild->SendRequestPointerCapture(
+        aPointerId,
+        [aPointerId](bool aSuccess) {
+          if (!aSuccess) {
+            PointerEventHandler::ReleasePointerCaptureById(aPointerId);
+          }
+        },
+        [](mozilla::ipc::ResponseRejectReason) {});
+  }
+}
+
+/* static */
 void PointerEventHandler::SetPointerCaptureById(uint32_t aPointerId,
                                                 Element* aElement) {
   MOZ_ASSERT(aElement);
@@ -141,7 +175,13 @@ PointerCaptureInfo* PointerEventHandler::GetPointerCaptureInfo(
 /* static */
 void PointerEventHandler::ReleasePointerCaptureById(uint32_t aPointerId) {
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
-  if (pointerCaptureInfo && pointerCaptureInfo->mPendingElement) {
+  if (pointerCaptureInfo) {
+    if (Element* pendingElement = pointerCaptureInfo->mPendingElement) {
+      if (BrowserChild* browserChild = BrowserChild::GetFrom(
+              pendingElement->OwnerDoc()->GetDocShell())) {
+        browserChild->SendReleasePointerCapture(aPointerId);
+      }
+    }
     pointerCaptureInfo->mPendingElement = nullptr;
   }
 }
@@ -153,6 +193,76 @@ void PointerEventHandler::ReleaseAllPointerCapture() {
     if (data && data->mPendingElement) {
       ReleasePointerCaptureById(iter.Key());
     }
+  }
+}
+
+/* static */
+bool PointerEventHandler::SetPointerCaptureRemoteTarget(
+    uint32_t aPointerId, dom::BrowserParent* aBrowserParent) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
+  MOZ_ASSERT(aBrowserParent);
+
+  if (BrowserParent::GetPointerLockedRemoteTarget()) {
+    return false;
+  }
+
+  BrowserParent* currentRemoteTarget =
+      PointerEventHandler::GetPointerCapturingRemoteTarget(aPointerId);
+  if (currentRemoteTarget && currentRemoteTarget != aBrowserParent) {
+    return false;
+  }
+
+  sPointerCaptureRemoteTargetTable->Put(aPointerId, aBrowserParent);
+  return true;
+}
+
+/* static */
+void PointerEventHandler::ReleasePointerCaptureRemoteTarget(
+    BrowserParent* aBrowserParent) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
+  MOZ_ASSERT(aBrowserParent);
+
+  sPointerCaptureRemoteTargetTable->RemoveIf([aBrowserParent](
+                                                 const auto& iter) {
+    BrowserParent* browserParent = iter.Data();
+    MOZ_ASSERT(browserParent, "Null BrowserParent in pointer captured table?");
+
+    return aBrowserParent == browserParent;
+  });
+}
+
+/* static */
+void PointerEventHandler::ReleasePointerCaptureRemoteTarget(
+    uint32_t aPointerId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
+
+  sPointerCaptureRemoteTargetTable->Remove(aPointerId);
+}
+
+/* static */
+BrowserParent* PointerEventHandler::GetPointerCapturingRemoteTarget(
+    uint32_t aPointerId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
+
+  return sPointerCaptureRemoteTargetTable->Get(aPointerId);
+}
+
+/* static */
+void PointerEventHandler::ReleaseAllPointerCaptureRemoteTarget() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(sPointerCaptureRemoteTargetTable);
+
+  for (auto iter = sPointerCaptureRemoteTargetTable->Iter(); !iter.Done();
+       iter.Next()) {
+    BrowserParent* browserParent = iter.Data();
+    MOZ_ASSERT(browserParent, "Null BrowserParent in pointer captured table?");
+
+    Unused << browserParent->SendReleaseAllPointerCapture();
+    iter.Remove();
   }
 }
 
@@ -301,7 +411,7 @@ void PointerEventHandler::ImplicitlyCapturePointer(nsIFrame* aFrame,
   if (NS_WARN_IF(!target)) {
     return;
   }
-  SetPointerCaptureById(pointerEvent->pointerId, target->AsElement());
+  RequestPointerCaptureById(pointerEvent->pointerId, target->AsElement());
 }
 
 /* static */

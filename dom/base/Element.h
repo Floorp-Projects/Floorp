@@ -1220,7 +1220,7 @@ class Element : public FragmentOrElement {
     if (!activeState) {
       return;
     }
-    PointerEventHandler::SetPointerCaptureById(aPointerId, this);
+    PointerEventHandler::RequestPointerCaptureById(aPointerId, this);
   }
   void ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError) {
     bool activeState = false;
