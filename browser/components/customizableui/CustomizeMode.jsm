@@ -897,7 +897,7 @@ CustomizeMode.prototype = {
         //       keep strong refs to it in CustomizableUI (can't iterate of
         //       WeakMaps), and there's the question of what behavior
         //       wrappers should have if consumers keep hold of them.
-        let unwrappedPaletteItem = this.unwrapToolbarItem(paletteChild, true);
+        let unwrappedPaletteItem = this.unwrapToolbarItem(paletteChild);
         this._stowedPalette.appendChild(unwrappedPaletteItem);
       }
 
@@ -1067,12 +1067,12 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
-  deferredUnwrapToolbarItem(aWrapper, aReconnectCommands) {
+  deferredUnwrapToolbarItem(aWrapper) {
     return new Promise(resolve => {
       dispatchFunction(() => {
         let item = null;
         try {
-          item = this.unwrapToolbarItem(aWrapper, aReconnectCommands);
+          item = this.unwrapToolbarItem(aWrapper);
         } catch (ex) {
           Cu.reportError(ex);
         }
@@ -1081,7 +1081,7 @@ CustomizeMode.prototype = {
     });
   },
 
-  unwrapToolbarItem(aWrapper, aReconnectCommands) {
+  unwrapToolbarItem(aWrapper) {
     if (aWrapper.nodeName != "toolbarpaletteitem") {
       return aWrapper;
     }
@@ -1110,7 +1110,7 @@ CustomizeMode.prototype = {
       toolbarItem.checked = true;
     }
 
-    if (aWrapper.hasAttribute("itemcommand") && aReconnectCommands) {
+    if (aWrapper.hasAttribute("itemcommand")) {
       let commandID = aWrapper.getAttribute("itemcommand");
       toolbarItem.setAttribute("command", commandID);
 
@@ -1222,7 +1222,7 @@ CustomizeMode.prototype = {
   _unwrapItemsInArea(target) {
     for (let toolbarItem of target.children) {
       if (this.isWrappedToolbarItem(toolbarItem)) {
-        this.unwrapToolbarItem(toolbarItem, true);
+        this.unwrapToolbarItem(toolbarItem);
       }
     }
   },
@@ -1232,7 +1232,7 @@ CustomizeMode.prototype = {
       for (let target of this.areas) {
         for (let toolbarItem of target.children) {
           if (this.isWrappedToolbarItem(toolbarItem)) {
-            await this.deferredUnwrapToolbarItem(toolbarItem, true);
+            await this.deferredUnwrapToolbarItem(toolbarItem);
           }
         }
         this._removeDragHandlers(target);
