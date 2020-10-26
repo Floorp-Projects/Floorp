@@ -298,7 +298,6 @@
   skin/classic/browser/places/folder-smart.svg                 (../shared/places/folder-smart.svg)
   skin/classic/browser/places/history.svg                      (../shared/places/history.svg)
   skin/classic/browser/places/tag.svg                          (../shared/places/tag.svg)
-  skin/classic/browser/places/unfiledBookmarks.svg             (../shared/places/unfiledBookmarks.svg)
   skin/classic/browser/places/tree-icons.css                   (../shared/places/tree-icons.css)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)
   skin/classic/browser/privatebrowsing/favicon.svg             (../shared/privatebrowsing/favicon.svg)
