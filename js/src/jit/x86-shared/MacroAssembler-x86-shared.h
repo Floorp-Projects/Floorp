@@ -414,9 +414,7 @@ class MacroAssemblerX86Shared : public Assembler {
                             unsigned lane);
 
   void shuffleInt8x16(FloatRegister lhs, FloatRegister rhs,
-                      FloatRegister output,
-                      const mozilla::Maybe<FloatRegister>& maybeFloatTemp,
-                      const mozilla::Maybe<Register>& maybeTemp,
+                      FloatRegister output, FloatRegister temp,
                       const uint8_t lanes[16]);
   void blendInt8x16(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
                     FloatRegister temp, const uint8_t lanes[16]);
@@ -442,10 +440,6 @@ class MacroAssemblerX86Shared : public Assembler {
                         Assembler::Condition cond, FloatRegister output);
   void compareFloat64x2(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
-
-  void mulInt32x4(FloatRegister lhs, Operand rhs,
-                  const mozilla::Maybe<FloatRegister>& temp,
-                  FloatRegister output);
 
   void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
                        FloatRegister temp1, FloatRegister temp2,
