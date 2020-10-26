@@ -1548,7 +1548,7 @@ static Shuffle AnalyzeShuffle(MWasmShuffleSimd128* ins) {
   // Deal with constant rhs.
   if (rhs->isWasmFloatConstant()) {
     SimdConstant rhsConstant = rhs->toWasmFloatConstant()->toSimd128();
-    if (rhsConstant.isIntegerZero()) {
+    if (rhsConstant.isZeroBits()) {
       Maybe<LWasmPermuteSimd128::Op> op = AnalyzeShuffleWithZero(&control);
       if (op) {
         return Shuffle::permute(
