@@ -338,7 +338,7 @@ var PanelMultiView = class extends AssociatedToNode {
 
     return (
       doc.getElementById(id) ||
-      viewCacheTemplate.content.querySelector("#" + id)
+      viewCacheTemplate?.content.querySelector("#" + id)
     );
   }
 
