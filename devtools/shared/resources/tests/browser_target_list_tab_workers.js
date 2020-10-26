@@ -9,15 +9,14 @@ const { TargetList } = require("devtools/shared/resources/target-list");
 const { TYPES } = TargetList;
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
-const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
+const IFRAME_FILE = "fission_iframe.html";
+const REMOTE_IFRAME_URL = URL_ROOT_ORG_SSL + IFRAME_FILE;
+const IFRAME_URL = URL_ROOT_SSL + IFRAME_FILE;
 const WORKER_FILE = "test_worker.js";
 const WORKER_URL = URL_ROOT_SSL + WORKER_FILE;
 const IFRAME_WORKER_URL = WORKER_FILE;
 
 add_task(async function() {
-  // Enabled fission's pref as the TargetList is almost disabled without it
-  await pushPref("devtools.browsertoolbox.fission", true);
-
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -27,13 +26,13 @@ add_task(async function() {
 
   // The WorkerDebuggerManager#getWorkerDebuggerEnumerator method we're using to retrieve
   // workers loops through _all_ the workers in the process, which means it goes over workers
-  // from other tabs as well. Here we add a few tab that are not going to be used in the
-  //  test, just to check that their workers won't be retrieved by getAllTargets/watchTargets.
-  await addTab(`${FISSION_TEST_URL}?id=first-untargetted-tab`);
-  await addTab(`${FISSION_TEST_URL}?id=second-untargetted-tab`);
+  // from other tabs as well. Here we add a few tabs that are not going to be used in the
+  // test, just to check that their workers won't be retrieved by getAllTargets/watchTargets.
+  await addTab(`${FISSION_TEST_URL}?id=first-untargetted-tab&noServiceWorker`);
+  await addTab(`${FISSION_TEST_URL}?id=second-untargetted-tab&noServiceWorker`);
 
   info("Test TargetList against workers via a tab target");
-  const tab = await addTab(FISSION_TEST_URL);
+  const tab = await addTab(`${FISSION_TEST_URL}?&noServiceWorker`);
 
   // Create a TargetList for the tab
   const descriptor = await mainRoot.getTab({ tab });
@@ -83,6 +82,7 @@ add_task(async function() {
     );
     ok(!targetFront.isTopLevel, "The workers are never top level");
     targets.push(targetFront);
+    info(`Handled ${targets.length} targets\n`);
   };
   const onDestroy = async ({ targetFront }) => {
     is(
@@ -135,9 +135,13 @@ add_task(async function() {
   const mainPageSpawnedWorkerTarget = targets.find(
     innerTarget => innerTarget.url === `${WORKER_FILE}#spawned-worker`
   );
+  ok(mainPageSpawnedWorkerTarget, "Retrieved spawned worker");
   const iframeSpawnedWorkerTarget = targets.find(
     innerTarget => innerTarget.url === `${WORKER_FILE}#spawned-worker-in-iframe`
   );
+  ok(iframeSpawnedWorkerTarget, "Retrieved spawned worker in iframe");
+
+  await wait(100);
 
   info(
     "Check that the target list calls onDestroy when a worker is terminated"
@@ -152,44 +156,37 @@ add_task(async function() {
     });
   });
   await TestUtils.waitForCondition(
-    () => destroyedTargets.length === 2,
+    () =>
+      destroyedTargets.includes(mainPageSpawnedWorkerTarget) &&
+      destroyedTargets.includes(iframeSpawnedWorkerTarget),
     "Wait for the target list to notify us about the terminated workers"
-  );
-  const destroyedMainPageSpawnedWorkerTarget = destroyedTargets.find(
-    innerTarget => innerTarget === mainPageSpawnedWorkerTarget
-  );
-  const destroyedIframeSpawnedWorkerTarget = destroyedTargets.find(
-    innerTarget => innerTarget === iframeSpawnedWorkerTarget
   );
 
   ok(
-    destroyedMainPageSpawnedWorkerTarget,
-    "The target list handled the terminated worker"
-  );
-  ok(
-    destroyedIframeSpawnedWorkerTarget,
-    "The target list handled the terminated worker in the iframe"
+    true,
+    "The target list handled the terminated workers (from the main page and the iframe)"
   );
 
   info(
     "Check that reloading the page will notify about the terminated worker and the new existing one"
   );
+  const targetsCountBeforeReload = targets.length;
   tab.linkedBrowser.reload();
 
   await TestUtils.waitForCondition(() => {
     return (
-      destroyedTargets.find(t => t === mainPageWorkerTarget) &&
-      destroyedTargets.find(t => t === iframeWorkerTarget)
+      destroyedTargets.includes(mainPageWorkerTarget) &&
+      destroyedTargets.includes(iframeWorkerTarget)
     );
-  }, "Wait for the target list to notify us about the terminated workers");
+  }, `Wait for the target list to notify us about the terminated workers when reloading`);
   ok(
     true,
     "The target list notified us about all the expected workers being destroyed when reloading"
   );
 
   await TestUtils.waitForCondition(
-    () => targets.length === 6,
-    "Wait for the target list to notify us about the new workers"
+    () => targets.length === targetsCountBeforeReload + 2,
+    "Wait for the target list to notify us about the new workers after reloading"
   );
 
   const mainPageWorkerTargetAfterReload = targets.find(
@@ -210,27 +207,80 @@ add_task(async function() {
     "The target list handled the worker created in the iframe once the page navigated"
   );
 
-  info("Check that target list handles adding an iframe with workers");
-  const hashSuffix = "in-created-iframe";
-  const iframeUrl = `${IFRAME_URL}?hashSuffix=${hashSuffix}`;
-  await SpecialPowers.spawn(tab.linkedBrowser, [iframeUrl], url => {
-    const iframe = content.document.createElement("iframe");
-    content.document.body.append(iframe);
-    iframe.src = url;
+  const targetCount = targets.length;
+
+  info(
+    "Check that when removing an iframe we're notified about its workers being terminated"
+  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.querySelector("iframe").remove();
   });
+  await TestUtils.waitForCondition(() => {
+    return destroyedTargets.includes(iframeWorkerTargetAfterReload);
+  }, `Wait for the target list to notify us about the terminated workers when removing an iframe`);
+
+  info("Check that target list handles adding iframes with workers");
+  const iframeUrl = `${IFRAME_URL}?noServiceWorker=true&hashSuffix=in-created-iframe`;
+  const remoteIframeUrl = `${REMOTE_IFRAME_URL}?noServiceWorker=true&hashSuffix=in-created-remote-iframe`;
+
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [iframeUrl, remoteIframeUrl],
+    (url, remoteUrl) => {
+      const firstIframe = content.document.createElement("iframe");
+      content.document.body.append(firstIframe);
+      firstIframe.src = url + "-1";
+
+      const secondIframe = content.document.createElement("iframe");
+      content.document.body.append(secondIframe);
+      secondIframe.src = url + "-2";
+
+      const firstRemoteIframe = content.document.createElement("iframe");
+      content.document.body.append(firstRemoteIframe);
+      firstRemoteIframe.src = remoteUrl + "-1";
+
+      const secondRemoteIframe = content.document.createElement("iframe");
+      content.document.body.append(secondRemoteIframe);
+      secondRemoteIframe.src = remoteUrl + "-2";
+    }
+  );
 
   // It's important to check the length of `targets` here to ensure we don't get unwanted
   // worker targets.
   await TestUtils.waitForCondition(
-    () => targets.length === 7,
-    "Wait for the target list to notify us about the worker in the new iframe"
+    () => targets.length === targetCount + 4,
+    "Wait for the target list to notify us about the workers in the new iframes"
   );
-  const spawnedIframeWorkerTarget = targets.find(
-    worker => worker.url == `${WORKER_FILE}#simple-worker-${hashSuffix}`
+  const firstSpawnedIframeWorkerTarget = targets.find(
+    worker => worker.url == `${WORKER_FILE}#simple-worker-in-created-iframe-1`
+  );
+  const secondSpawnedIframeWorkerTarget = targets.find(
+    worker => worker.url == `${WORKER_FILE}#simple-worker-in-created-iframe-2`
+  );
+  const firstSpawnedRemoteIframeWorkerTarget = targets.find(
+    worker =>
+      worker.url == `${WORKER_FILE}#simple-worker-in-created-remote-iframe-1`
+  );
+  const secondSpawnedRemoteIframeWorkerTarget = targets.find(
+    worker =>
+      worker.url == `${WORKER_FILE}#simple-worker-in-created-remote-iframe-2`
+  );
+
+  ok(
+    firstSpawnedIframeWorkerTarget,
+    "The target list handled the worker in the first new same-origin iframe"
   );
   ok(
-    spawnedIframeWorkerTarget,
-    "The target list handled the worker in the new iframe"
+    secondSpawnedIframeWorkerTarget,
+    "The target list handled the worker in the second new same-origin iframe"
+  );
+  ok(
+    firstSpawnedRemoteIframeWorkerTarget,
+    "The target list handled the worker in the first new remote iframe"
+  );
+  ok(
+    secondSpawnedRemoteIframeWorkerTarget,
+    "The target list handled the worker in the second new remote iframe"
   );
 
   info("Check that navigating away does destroy all targets");
@@ -245,16 +295,24 @@ add_task(async function() {
   );
 
   ok(
-    destroyedTargets.find(t => t === mainPageWorkerTargetAfterReload),
+    destroyedTargets.includes(mainPageWorkerTargetAfterReload),
     "main page worker target was destroyed"
   );
   ok(
-    destroyedTargets.find(t => t === iframeWorkerTargetAfterReload),
-    "iframe worker target was destroyed"
+    destroyedTargets.includes(firstSpawnedIframeWorkerTarget),
+    "first spawned same-origin iframe worker target was destroyed"
   );
   ok(
-    destroyedTargets.find(t => t === spawnedIframeWorkerTarget),
-    "spawned iframe worker target was destroyed"
+    destroyedTargets.includes(secondSpawnedIframeWorkerTarget),
+    "second spawned same-origin iframe worker target was destroyed"
+  );
+  ok(
+    destroyedTargets.includes(firstSpawnedRemoteIframeWorkerTarget),
+    "first spawned remote iframe worker target was destroyed"
+  );
+  ok(
+    destroyedTargets.includes(secondSpawnedRemoteIframeWorkerTarget),
+    "second spawned remote iframe worker target was destroyed"
   );
 
   targetList.unwatchTargets(

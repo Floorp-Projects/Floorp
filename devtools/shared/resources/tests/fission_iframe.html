@@ -7,7 +7,8 @@
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
   <script>
     "use strict";
-    const hashSuffix = new URLSearchParams(document.location.search).get("hashSuffix") || "in-iframe";
+    const params = new URLSearchParams(document.location.search);
+    const hashSuffix = params.get("hashSuffix") || "in-iframe";
     // eslint-disable-next-line no-unused-vars
     const worker = new Worker("test_worker.js#simple-worker-" + hashSuffix);
     // eslint-disable-next-line no-unused-vars
