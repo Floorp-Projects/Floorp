@@ -5939,16 +5939,6 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   return NS_OK;
 }
 
-Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
-    nsIFile& aDirectory, const nsAString& aPathElement) {
-  IDB_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_TYPED(
-                                      nsCOMPtr<nsIFile>, aDirectory, Clone));
-
-  IDB_TRY(resultFile->Append(aPathElement));
-
-  return resultFile;
-}
-
 nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
                     QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,

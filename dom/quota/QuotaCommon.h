@@ -950,6 +950,9 @@ Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath);
 
 nsDependentCSubstring GetLeafName(const nsACString& aPath);
 
+Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
+    nsIFile& aDirectory, const nsAString& aPathElement);
+
 void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
               const nsACString& aSourceFile, int32_t aSourceLine);
 
