@@ -24,10 +24,14 @@
         aNodeToFocus.id + ".focus()");
     }
 
-    async function expectFocusAfterRemove(aNodeToRemove, aExpectedFocus) {
+    async function expectFocusAfterRemove(aNodeToRemove, aExpectedFocus, aDisplayNone = false) {
       let focused = waitForEvent(EVENT_FOCUS, aExpectedFocus);
       info("Removing " + aNodeToRemove.id);
-      aNodeToRemove.remove();
+      if (aDisplayNone) {
+        aNodeToRemove.style.display = "none";
+      } else {
+        aNodeToRemove.remove();
+      }
       await focused;
       let friendlyExpected = aExpectedFocus == document ?
         "document" : aExpectedFocus.id;
@@ -53,6 +57,11 @@
       await setFocus(listbox, option);
       await expectFocusAfterRemove(option, listbox);
 
+      info("Test hiding focused element with display: none");
+      let groupingButton = getNode("groupingButton");
+      await setFocus(groupingButton);
+      await expectFocusAfterRemove(groupingButton, document, true);
+
       SimpleTest.finish();
     }
 
@@ -76,6 +85,10 @@
 
   <div role="listbox" id="listbox" tabindex="0" aria-activedescendant="option">
     <div role="option" id="option"></div>
+  </div>
+
+  <div role="grouping" id="grouping">
+    <button id="groupingButton">
   </div>
 
 </body>
