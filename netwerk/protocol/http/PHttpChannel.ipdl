@@ -16,6 +16,8 @@ include HttpChannelParams;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
 namespace mozilla {
 namespace net {
 
@@ -69,7 +71,8 @@ parent:
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
   async RemoveCorsPreflightCacheEntry(URIParams uri,
-                                      PrincipalInfo requestingPrincipal);
+                                      PrincipalInfo requestingPrincipal,
+                                      OriginAttributes originAttributes);
 
   // After receiving this message, the parent calls SendDeleteSelf, and makes
   // sure not to send any more messages after that.

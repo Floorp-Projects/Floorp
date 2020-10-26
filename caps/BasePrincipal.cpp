@@ -671,6 +671,7 @@ BasePrincipal::AllowsRelaxStrictFileOriginPolicy(nsIURI* aURI, bool* aRes) {
 
 NS_IMETHODIMP
 BasePrincipal::GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
+                                    const OriginAttributes& aOriginAttributes,
                                     nsACString& _retval) {
   _retval.Truncate();
   constexpr auto space = " "_ns;
@@ -696,7 +697,11 @@ BasePrincipal::GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  _retval.Append(space + scheme + space + host + space + port + space + spec);
+  nsAutoCString originAttributesSuffix;
+  aOriginAttributes.CreateSuffix(originAttributesSuffix);
+
+  _retval.Append(space + scheme + space + host + space + port + space + spec +
+                 space + originAttributesSuffix);
 
   return NS_OK;
 }

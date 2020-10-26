@@ -341,7 +341,9 @@ interface nsIPrincipal : nsISerializable
     /*
     *  Generates a Cache-Key for the Cors-Preflight Cache
     */
-    ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials);
+    [noscript]
+    ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials,
+                                  in const_OriginAttributes aOriginAttributes);
 
 
     /*
