@@ -5874,6 +5874,22 @@ end:
 
       ${GetParameters} $R0
 
+      ${Unless} ${Silent}
+        ; Manually check for /S in the command line due to Bug 506867
+        ClearErrors
+        ${GetOptions} "$R0" "/S" $R2
+        ${Unless} ${Errors}
+          SetSilent silent
+        ${Else}
+          ; Support for the deprecated -ms command line argument.
+          ClearErrors
+          ${GetOptions} "$R0" "-ms" $R2
+          ${Unless} ${Errors}
+            SetSilent silent
+          ${EndUnless}
+        ${EndUnless}
+      ${EndUnless}
+
       StrCmp "$R0" "" continue +1
 
       ; Require elevation if the user can elevate
@@ -5959,27 +5975,110 @@ end:
       IfFileExists "$INSTDIR\uninstall\uninstall.log" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
 
-      ; Require elevation if the user can elevate
-      ${ElevateUAC}
+      ; When silent, try to avoid elevation if we have a chance to succeed.  We
+      ; can succeed when we can write to (hence delete from) the install
+      ; directory and when we can clean up all registry entries.  Now, the
+      ; installer when elevated writes privileged registry entries for the use
+      ; of the Maintenance Service, even when the service is not and will not be
+      ; installed.  (In fact, even when a service installed in the future will
+      ; never update the installation, for example due to not being in a
+      ; privileged location.)  In practice this means we can only truly silently
+      ; remove an unelevated install: an elevated installer writing to an
+      ; unprivileged install directory will still write privileged registry
+      ; entries, requiring an elevated uninstaller to completely clean up.
+      ;
+      ; This avoids a wrinkle, whereby an uninstaller which runs unelevated will
+      ; never itself launch the Maintenance Service uninstaller, because it will
+      ; fail to remove its own service registration (removing the relevant
+      ; registry key would require elevation).  Therefore the check for the
+      ; service being unused will fail, which will prevent running the service
+      ; uninstaller.  That's both subtle and possibly leaves the service
+      ; registration hanging around, which might be a security risk.
+      ;
+      ; That is why we look for a privileged service registration for this
+      ; installation when deciding to elevate, and elevate unconditionally if we
+      ; find one, regardless of the result of the write check that would avoid
+      ; elevation.
+
+      ; The reason for requiring elevation, or "" for not required.
+      StrCpy $R4 ""
+
+      ${IfNot} ${Silent}
+        ; In normal operation, require elevation if the user can elevate so that
+        ; we are most likely to succeed.
+        StrCpy $R4 "not silent"
+      ${EndIf}
+
+      GetTempFileName $R6 "$INSTDIR"
+      FileOpen $R5 "$R6" w
+      FileWrite $R5 "Write Access Test"
+      FileClose $R5
+      Delete $R6
+      ${If} ${Errors}
+        StrCpy $R4 "write"
+      ${EndIf}
+
+      !ifdef MOZ_MAINTENANCE_SERVICE
+        ; We don't necessarily have $MaintCertKey, so use temporary registers.
+        ServicesHelper::PathToUniqueRegistryPath "$INSTDIR"
+        Pop $R5
+
+        ${If} $R5 != ""
+          ; Always use the 64bit registry for certs on 64bit systems.
+          ${If} ${RunningX64}
+          ${OrIf} ${IsNativeARM64}
+            SetRegView 64
+          ${EndIf}
+
+          EnumRegKey $R6 HKLM $R5 0
+          ClearErrors
+
+          ${If} ${RunningX64}
+          ${OrIf} ${IsNativeARM64}
+            SetRegView lastused
+          ${EndIf}
+
+          ${IfNot} "$R6" == ""
+            StrCpy $R4 "mms"
+          ${EndIf}
+        ${EndIf}
+      !endif
+
+      ${If} "$R4" != ""
+        ; In the future, we might not try to elevate to remain truly silent.  Or
+        ; we might add a command line arguments to specify behaviour.  One
+        ; reason to not do that immediately is that we have no great way to
+        ; signal that we exited without taking action.
+        ${ElevateUAC}
+      ${EndIf}
+
+      ; Now we've elevated, try the write access test again.
+      ClearErrors
+      GetTempFileName $R6 "$INSTDIR"
+      FileOpen $R5 "$R6" w
+      FileWrite $R5 "Write Access Test"
+      FileClose $R5
+      Delete $R6
+      ${If} ${Errors}
+        ; Nothing initialized so no need to call OnEndCommon
+        Quit
+      ${EndIf}
+
+      !ifdef MOZ_MAINTENANCE_SERVICE
+        ; And verify that if we need to, we're going to clean up the registry
+        ; correctly.
+        ${If} "$R4" == "mms"
+          WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+          ${If} ${Errors}
+            ; Nothing initialized so no need to call OnEndCommon
+            Quit
+          ${Endif}
+          DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+        ${EndIf}
+      !endif
 
       ; If we made it this far then this installer is being used as an uninstaller.
       WriteUninstaller "$EXEDIR\uninstaller.exe"
-
-      ${Unless} ${Silent}
-        ; Manually check for /S in the command line due to Bug 506867
-        ClearErrors
-        ${GetOptions} "$R0" "/S" $R2
-        ${Unless} ${Errors}
-          SetSilent silent
-        ${Else}
-          ; Support for the deprecated -ms command line argument.
-          ClearErrors
-          ${GetOptions} "$R0" "-ms" $R2
-          ${Unless} ${Errors}
-            SetSilent silent
-          ${EndUnless}
-        ${EndUnless}
-      ${EndUnless}
 
       ${If} ${Silent}
         StrCpy $R1 "$\"$EXEDIR\uninstaller.exe$\" /S"
