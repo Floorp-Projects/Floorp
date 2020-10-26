@@ -137,7 +137,6 @@ EXTRA_JS_MODULES += [
     'FaviconLoader.jsm',
     'HomePage.jsm',
     'LaterRun.jsm',
-    'LiveBookmarkMigrator.jsm',
     'NewTabPagePreloading.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',

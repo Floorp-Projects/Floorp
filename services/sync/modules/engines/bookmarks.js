@@ -30,7 +30,6 @@ const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkValidator: "resource://services-sync/bookmark_validator.js",
-  LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
@@ -395,18 +394,12 @@ BookmarksEngine.prototype = {
     await super._syncStartup();
 
     try {
-      // For first syncs, back up the user's bookmarks and livemarks. Livemarks
-      // are unsupported as of bug 1477671, and syncing deletes them locally and
-      // remotely.
+      // For first syncs, back up the user's bookmarks.
       let lastSync = await this.getLastSync();
       if (!lastSync) {
         this._log.debug("Bookmarks backup starting");
         await PlacesBackups.create(null, true);
         this._log.debug("Bookmarks backup done");
-
-        this._log.debug("Livemarks backup starting");
-        await LiveBookmarkMigrator.migrate();
-        this._log.debug("Livemarks backup done");
       }
     } catch (ex) {
       // Failure to create a backup is somewhat bad, but probably not bad

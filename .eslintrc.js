@@ -647,7 +647,6 @@ module.exports = {
         "browser/extensions/formautofill/test/unit/test_transformFields.js",
         "browser/extensions/report-site-issue/experimentalAPIs/pageActionExtras.js",
         "browser/extensions/report-site-issue/test/browser/head.js",
-        "browser/modules/test/unit/test_LiveBookmarkMigrator.js",
         "devtools/client/aboutdebugging/test/browser/browser_aboutdebugging_addons_debug_popup.js",
         "dom/ipc/tests/browser_memory_distribution_telemetry.js",
         "dom/push/test/xpcshell/head.js",
