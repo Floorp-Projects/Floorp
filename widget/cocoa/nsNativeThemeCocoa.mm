@@ -2368,7 +2368,6 @@ void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static const sRGBColor kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
 static const sRGBColor kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
 static const sRGBColor kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
 static const sRGBColor kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
@@ -2917,11 +2916,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         case Widget::eMenuSeparator: {
           MenuItemParams params = aWidgetInfo.Params<MenuItemParams>();
           DrawMenuSeparator(cgContext, macRect, params);
-          break;
-        }
-        case Widget::eTooltip: {
-          SetCGContextFillColor(cgContext, kTooltipBackgroundColor);
-          CGContextFillRect(cgContext, macRect);
           break;
         }
         case Widget::eCheckbox: {
