@@ -371,6 +371,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         self.env["XPCSHELL_MINIDUMP_DIR"] = self.remoteMinidumpDir
         self.env["MOZ_ANDROID_DATA_DIR"] = self.remoteBinDir
+        self.env["MOZ_FORCE_DISABLE_E10S"] = "1"
 
         # Guard against intermittent failures to retrieve abi property;
         # without an abi, xpcshell cannot find greprefs.js and crashes.
@@ -413,6 +414,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     abi = names[0].split("/")[1]
         self.log.info("Using abi %s." % abi)
         self.env["MOZ_ANDROID_CPU_ABI"] = abi
+        self.log.info("Using env %r" % (self.env,))
 
     def setupUtilities(self):
         self.initDir(self.remoteTmpDir)
