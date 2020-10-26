@@ -1808,7 +1808,10 @@ void MacroAssembler::bitwiseXorSimd128(FloatRegister rhs,
 }
 
 void MacroAssembler::bitwiseNotSimd128(FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::notInt8x16(Operand(src), dest);
+  if (src != dest) {
+    moveSimd128(src, dest);
+  }
+  bitwiseXorSimd128(SimdConstant::SplatX16(-1), dest);
 }
 
 // Bitwise and-not
@@ -1936,21 +1939,33 @@ void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
 // Floating point negation
 
 void MacroAssembler::negFloat32x4(FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::negFloat32x4(Operand(src), dest);
+  if (src != dest) {
+    moveSimd128(src, dest);
+  }
+  bitwiseXorSimd128(SimdConstant::SplatX4(-0.f), dest);
 }
 
 void MacroAssembler::negFloat64x2(FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::negFloat64x2(Operand(src), dest);
+  if (src != dest) {
+    moveSimd128(src, dest);
+  }
+  bitwiseXorSimd128(SimdConstant::SplatX2(-0.0), dest);
 }
 
 // Floating point absolute value
 
 void MacroAssembler::absFloat32x4(FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::absFloat32x4(Operand(src), dest);
+  if (src != dest) {
+    moveSimd128(src, dest);
+  }
+  bitwiseAndSimd128(SimdConstant::SplatX4(0x7FFFFFFF), dest);
 }
 
 void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::absFloat64x2(Operand(src), dest);
+  if (src != dest) {
+    moveSimd128(src, dest);
+  }
+  bitwiseAndSimd128(SimdConstant::SplatX2(int64_t(0x7FFFFFFFFFFFFFFFll)), dest);
 }
 
 // NaN-propagating minimum
