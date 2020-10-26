@@ -48,10 +48,6 @@ const DISPLAY_MODE_FULLSCREEN = 3;
 
 // Handles GeckoSession settings.
 class GeckoViewSettings extends GeckoViewModule {
-  static get useMultiprocess() {
-    return Services.prefs.getBoolPref("browser.tabs.remote.autostart", true);
-  }
-
   onInit() {
     debug`onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
