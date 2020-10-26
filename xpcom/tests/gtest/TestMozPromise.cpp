@@ -22,7 +22,7 @@ class MOZ_STACK_CLASS AutoTaskQueue {
  public:
   AutoTaskQueue()
       : mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::CONTROLLER))) {}
+            new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR))) {}
 
   ~AutoTaskQueue() { mTaskQueue->AwaitShutdownAndIdle(); }
 

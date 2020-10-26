@@ -185,7 +185,7 @@ class AutoSetOnScopeExit {
 };
 
 enum class MediaThreadType {
-  CONTROLLER,  // MediaFormatReader, RemoteDecoderManager, MediaDecodeTask and
+  SUPERVISOR,  // MediaFormatReader, RemoteDecoderManager, MediaDecodeTask and
                // others
   PLATFORM_DECODER,  // MediaDataDecoder
   PLATFORM_ENCODER,  // MediaDataEncoder
