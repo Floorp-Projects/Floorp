@@ -251,7 +251,7 @@ Function un.UninstallServiceIfNotUsed
   ; Restore back the registry view
   ${If} ${RunningX64}
   ${OrIf} ${IsNativeARM64}
-    SetRegView lastUsed
+    SetRegView lastused
   ${EndIf}
 
   ${If} $0 == 0
