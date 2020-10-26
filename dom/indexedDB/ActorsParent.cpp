@@ -17456,7 +17456,8 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   }
 
   const nsString& databaseName = mCommonParams.metadata().name();
-  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
+  const PersistenceType persistenceType =
+      mCommonParams.metadata().persistenceType();
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -17464,16 +17465,11 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   IDB_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
                                      persistenceType, mQuotaInfo.mOrigin));
 
-  nsresult rv =
-      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME)));
 
-  rv = directory->GetPath(mDatabaseDirectoryPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_UNWRAP(mDatabaseDirectoryPath,
+                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, directory, GetPath));
 
   mDatabaseFilenameBase = GetDatabaseFilenameBase(databaseName);
 
@@ -17482,20 +17478,15 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
       CloneFileAndAppend(*directory, mDatabaseFilenameBase + kSQLiteSuffix));
 
 #ifdef DEBUG
-  nsString databaseFilePath;
-  rv = dbFile->GetPath(databaseFilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {
+    IDB_TRY_INSPECT(const auto& databaseFilePath,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, dbFile, GetPath));
 
-  MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+  }
 #endif
 
-  bool exists;
-  rv = dbFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(dbFile, Exists));
 
   if (exists) {
     // Parts of this function may fail but that shouldn't prevent us from
@@ -17507,10 +17498,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     mState = State::SendingResults;
   }
 
-  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 
   return NS_OK;
 }
