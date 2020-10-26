@@ -1480,17 +1480,10 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
-
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(failedChannelURI);
-  if (!innerURI) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
-  }
-
   nsAutoCString host;
-  innerURI->GetAsciiHost(host);
+  failedChannelURI->GetAsciiHost(host);
   int32_t port;
-  innerURI->GetPort(&port);
+  failedChannelURI->GetPort(&port);
 
   tsi = do_QueryInterface(info);
   if (NS_WARN_IF(!tsi)) {
