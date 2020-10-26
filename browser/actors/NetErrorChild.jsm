@@ -24,8 +24,11 @@ class NetErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
 
+    // If you add a new function, remember to add it to RemotePageAccessManager.jsm
+    // to allow content-privileged about:neterror or about:certerror to use it.
     const exportableFunctions = [
       "RPMGetAppBuildID",
+      "RPMGetInnerMostURI",
       "RPMPrefIsLocked",
       "RPMAddToHistogram",
       "RPMRecordTelemetryEvent",
@@ -66,6 +69,15 @@ class NetErrorChild extends RemotePageChild {
         }
         break;
     }
+  }
+
+  RPMGetInnerMostURI(uriString) {
+    let uri = Services.io.newURI(uriString);
+    if (uri instanceof Ci.nsINestedURI) {
+      uri = uri.QueryInterface(Ci.nsINestedURI).innermostURI;
+    }
+
+    return uri.spec;
   }
 
   RPMGetAppBuildID() {
