@@ -748,11 +748,6 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
     // ATOK, so we need to do it here.
     BrowserParent::UnsetTopLevelWebFocusAll();
     ActivateOrDeactivate(window, true);
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(aWindow, "window-raised", nullptr);
-    }
   }
 
   // retrieve the last focused element within the window that was raised
@@ -835,11 +830,6 @@ void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   // is called.
   if (XRE_IsParentProcess()) {
     ActivateOrDeactivate(window, false);
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(aWindow, "window-lowered", nullptr);
-    }
   }
 
   // keep track of the window being lowered, so that attempts to raise the
