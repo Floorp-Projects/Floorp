@@ -592,6 +592,7 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
       access.isZeroExtendSimd128Load(),
       access.type() == Scalar::Float32 || access.type() == Scalar::Float64);
   MOZ_ASSERT_IF(access.isSplatSimd128Load(), access.type() == Scalar::Float64);
+  MOZ_ASSERT_IF(access.isWidenSimd128Load(), access.type() == Scalar::Float64);
 
   append(access, size());
   switch (access.type()) {
@@ -618,6 +619,29 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
     case Scalar::Float64:
       if (access.isSplatSimd128Load()) {
         vmovddup(srcAddr, out.fpu());
+      } else if (access.isWidenSimd128Load()) {
+        switch (access.widenSimdOp()) {
+          case wasm::SimdOp::I16x8LoadS8x8:
+            vpmovsxbw(srcAddr, out.fpu());
+            break;
+          case wasm::SimdOp::I16x8LoadU8x8:
+            vpmovzxbw(srcAddr, out.fpu());
+            break;
+          case wasm::SimdOp::I32x4LoadS16x4:
+            vpmovsxwd(srcAddr, out.fpu());
+            break;
+          case wasm::SimdOp::I32x4LoadU16x4:
+            vpmovzxwd(srcAddr, out.fpu());
+            break;
+          case wasm::SimdOp::I64x2LoadS32x2:
+            vpmovsxdq(srcAddr, out.fpu());
+            break;
+          case wasm::SimdOp::I64x2LoadU32x2:
+            vpmovzxdq(srcAddr, out.fpu());
+            break;
+          default:
+            MOZ_CRASH("Unexpected widening op for wasmLoad");
+        }
       } else {
         // vmovsd does the right thing also for access.isZeroExtendSimd128Load()
         vmovsd(srcAddr, out.fpu());
