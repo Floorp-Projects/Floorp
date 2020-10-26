@@ -6,13 +6,13 @@
 
 // The codegen enforces onTrue == output so we avoid a move to set that up.
 //
-// The remaining movaps is currently unavoidable, it moves the control mask into a temp.
+// The remaining movdqa is currently unavoidable, it moves the control mask into a temp.
 // The temp should be identical to the mask but the regalloc does not currently
 // allow this constraint to be enforced.
 
 let expected = `
 000000..  48 8b ec                  mov %rsp, %rbp
-000000..  0f 28 da                  movaps %xmm2, %xmm3
+000000..  66 0f 6f da               movdqa %xmm2, %xmm3
 000000..  66 0f db c3               pand %xmm3, %xmm0
 000000..  66 0f df d9               pandn %xmm1, %xmm3
 000000..  66 0f eb c3               por %xmm3, %xmm0
