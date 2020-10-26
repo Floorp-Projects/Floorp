@@ -3182,10 +3182,6 @@ static NSImage* GetMenuMaskImage() {
 }
 
 - (void)setUseMenuStyle:(BOOL)aValue {
-  if (!VibrancyManager::SystemSupportsVibrancy()) {
-    return;
-  }
-
   if (aValue && !mUseMenuStyle) {
     // Turn on rounded corner masking.
     NSView* effectView = VibrancyManager::CreateEffectView(VibrancyType::MENU, YES);
