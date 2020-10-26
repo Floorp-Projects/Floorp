@@ -51,6 +51,12 @@ async function testTabConsoleMessagesResources(executeInIframe) {
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
   const onAvailable = resources => {
     for (const resource of resources) {
+      if (resource.message.arguments?.[0] === "[WORKER] started") {
+        // XXX Ignore message from workers as we can't know when they're logged, and we
+        // have a dedicated test for them (browser_resources_console_messages_workers.js).
+        continue;
+      }
+
       is(
         resource.resourceType,
         ResourceWatcher.TYPES.CONSOLE_MESSAGE,
