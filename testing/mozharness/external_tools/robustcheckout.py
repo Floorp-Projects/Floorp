@@ -12,8 +12,6 @@ times and storage efficiency.
 from __future__ import absolute_import
 
 import contextlib
-import errno
-import functools
 import json
 import os
 import random
@@ -30,7 +28,6 @@ from mercurial import (
     error,
     exchange,
     extensions,
-    cmdutil,
     hg,
     match as matchmod,
     pycompat,
@@ -44,7 +41,7 @@ from mercurial import (
 # Causes worker to purge caches on process exit and for task to retry.
 EXIT_PURGE_CACHE = 72
 
-testedwith = b'4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2'
+testedwith = b'4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5'
 minimumhgversion = b'4.5'
 
 cmdtable = {}
@@ -60,13 +57,6 @@ configitem(b'robustcheckout', b'retryjittermax', default=configitems.dynamicdefa
 def getsparse():
     from mercurial import sparse
     return sparse
-
-
-def supported_hg():
-    '''Returns True if the Mercurial version is supported for robustcheckout'''
-    return b'.'.join(
-        pycompat.bytestr(v) for v in util.versiontuple(n=2)
-    ) in testedwith.split()
 
 
 def peerlookup(remote, v):
@@ -87,12 +77,14 @@ def peerlookup(remote, v):
     (b'', b'networkattempts', 3, b'Maximum number of attempts for network '
                                  b'operations'),
     (b'', b'sparseprofile', b'', b'Sparse checkout profile to use (path in repo)'),
+    (b'U', b'noupdate', False, b'the clone will include an empty working directory\n'
+                               b'(only a repository)'),
     ],
     b'[OPTION]... URL DEST',
     norepo=True)
 def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
                    purge=False, sharebase=None, networkattempts=None,
-                   sparseprofile=None):
+                   sparseprofile=None, noupdate=False):
     """Ensure a working copy has the specified revision checked out.
 
     Repository data is automatically pooled into the common directory
@@ -147,10 +139,6 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     # However, given that sparse has performance implications, we want to fail
     # fast if we can't satisfy the desired checkout request.
     if sparseprofile:
-        if not supported_hg():
-            raise error.Abort(b'sparse profile support only available for '
-                              b'Mercurial versions greater than 4.3 (using %s)' % util.version())
-
         try:
             extensions.find(b'sparse')
         except KeyError:
@@ -182,7 +170,7 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     try:
         return _docheckout(ui, url, dest, upstream, revision, branch, purge,
                            sharebase, optimes, behaviors, networkattempts,
-                           sparse_profile=sparseprofile)
+                           sparse_profile=sparseprofile, noupdate=noupdate)
     finally:
         overall = time.time() - start
 
@@ -263,7 +251,7 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
 
 def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 optimes, behaviors, networkattemptlimit, networkattempts=None,
-                sparse_profile=None):
+                sparse_profile=None, noupdate=False):
     if not networkattempts:
         networkattempts = [1]
 
@@ -271,7 +259,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         return _docheckout(ui, url, dest, upstream, revision, branch, purge,
                            sharebase, optimes, behaviors, networkattemptlimit,
                            networkattempts=networkattempts,
-                           sparse_profile=sparse_profile)
+                           sparse_profile=sparse_profile,
+                           noupdate=noupdate)
 
     @contextlib.contextmanager
     def timeit(op, behavior):
@@ -530,7 +519,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             with timeit('clone', 'clone'):
                 shareopts = {b'pool': sharebase, b'mode': b'identity'}
                 res = hg.clone(ui, {}, clonepeer, dest=dest, update=False,
-                               shareopts=shareopts)
+                               shareopts=shareopts,
+                               stream=True)
         except (error.Abort, ssl.SSLError, urllibcompat.urlerr.urlerror) as e:
             if handlepullerror(e):
                 return callself()
@@ -614,6 +604,11 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     # Now we should have the wanted revision in the store. Perform
     # working directory manipulation.
 
+    # Avoid any working directory manipulations if `-U`/`--noupdate` was passed
+    if noupdate:
+        ui.write(b'(skipping update since `-U` was passed)\n')
+        return None
+
     # Purge if requested. We purge before update because this way we're
     # guaranteed to not have conflicts on `hg update`.
     if purge and not created:
@@ -626,7 +621,6 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             old_sparse_fn = getattr(repo.dirstate, '_sparsematchfn', None)
             if old_sparse_fn is not None:
-                assert supported_hg(), 'Mercurial version not supported (must be 4.3+)'
                 # TRACKING hg50
                 # Arguments passed to `matchmod.always` were unused and have been removed
                 if util.versiontuple(n=2) >= (5, 0):
