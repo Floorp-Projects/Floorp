@@ -1180,7 +1180,7 @@ GeckoDriver.prototype.execute_ = async function(
  */
 GeckoDriver.prototype.navigateTo = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
+  const browsingContext = assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   let validURL;
@@ -1190,13 +1190,12 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
     throw new error.InvalidArgumentError(`Malformed URL: ${e.message}`);
   }
 
-  // We need to move to the top frame before navigating
+  // Switch to the top-level browsing context before navigating
   await this.listener.switchToFrame();
 
   const currentURL = await this._getCurrentURL();
   const loadEventExpected = navigate.isLoadEventExpected(currentURL, validURL);
 
-  const browsingContext = this.getBrowsingContext({ context: Context.Content });
   await navigate.waitForNavigationCompleted(
     this,
     () => {
@@ -1311,13 +1310,11 @@ GeckoDriver.prototype.getPageSource = async function() {
  */
 GeckoDriver.prototype.goBack = async function() {
   assert.content(this.context);
-  assert.open(this.getBrowsingContext({ top: true }));
+  const browsingContext = assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
-  const browsingContext = this.getBrowsingContext({ context: Context.Content });
-
   // If there is no history, just return
-  if (!browsingContext.top.embedderElement?.canGoBack) {
+  if (!browsingContext.embedderElement?.canGoBack) {
     return;
   }
 
@@ -1339,13 +1336,11 @@ GeckoDriver.prototype.goBack = async function() {
  */
 GeckoDriver.prototype.goForward = async function() {
   assert.content(this.context);
-  assert.open(this.getBrowsingContext({ top: true }));
+  const browsingContext = assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
-  const browsingContext = this.getBrowsingContext({ context: Context.Content });
-
   // If there is no history, just return
-  if (!browsingContext.top.embedderElement?.canGoForward) {
+  if (!browsingContext.embedderElement?.canGoForward) {
     return;
   }
 
@@ -1367,13 +1362,12 @@ GeckoDriver.prototype.goForward = async function() {
  */
 GeckoDriver.prototype.refresh = async function() {
   assert.content(this.context);
-  assert.open(this.getBrowsingContext({ top: true }));
+  const browsingContext = assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
-  // We need to move to the top frame before navigating
+  // Switch to the top-level browsiing context before navigating
   await this.listener.switchToFrame();
 
-  const browsingContext = this.getBrowsingContext({ context: Context.Content });
   await navigate.waitForNavigationCompleted(this, () => {
     navigate.refresh(browsingContext);
   });
@@ -2217,10 +2211,9 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
       this,
       () => actor.clickElement(webEl, this.capabilities),
       {
-        browsingContext: this.getBrowsingContext(),
+        loadEventExpected: target !== "_blank",
         // The click might trigger a navigation, so don't count on it.
         requireBeforeUnload: false,
-        loadEventExpected: target !== "_blank",
       }
     );
     return;
@@ -2239,10 +2232,9 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
         this,
         () => this.listener.clickElement(webEl, this.capabilities),
         {
-          browsingContext: this.getBrowsingContext(),
+          loadEventExpected: target !== "_blank",
           // The click might trigger a navigation, so don't count on it.
           requireBeforeUnload: false,
-          loadEventExpected: target !== "_blank",
         }
       );
       break;
