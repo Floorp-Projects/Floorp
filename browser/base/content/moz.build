@@ -79,9 +79,6 @@ with Files("test/siteIdentity/**"):
 with Files("test/sidebar/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("test/startup/**"):
-    BUG_COMPONENT = ("Firefox", "General")
-
 with Files("test/static/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
