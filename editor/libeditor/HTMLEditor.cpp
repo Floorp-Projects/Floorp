@@ -84,7 +84,6 @@ static bool IsNamedAnchorTag(const nsAtom& aTagName) {
 HTMLEditor::HTMLEditor()
     : mCRInParagraphCreatesParagraph(false),
       mCSSAware(false),
-      mSelectedCellIndex(0),
       mIsObjectResizingEnabled(
           StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),

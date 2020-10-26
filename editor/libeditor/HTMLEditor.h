@@ -758,51 +758,6 @@ class HTMLEditor final : public TextEditor,
   Element* GetSelectionContainerElement() const;
 
   /**
-   * GetFirstSelectedTableCellElement() returns a <td> or <th> element if
-   * first range of Selection (i.e., result of Selection::GetRangeAt(0))
-   * selects a <td> element or <th> element.  Even if Selection is in
-   * a cell element, this returns nullptr.  And even if 2nd or later
-   * range of Selection selects a cell element, also returns nullptr.
-   * Note that when this looks for a cell element, this resets the internal
-   * index of ranges of Selection.  When you call
-   * GetNextSelectedTableCellElement() after a call of this, it'll return 2nd
-   * selected cell if there is.
-   *
-   * @param aRv                 Returns error if there is no selection or
-   *                            first range of Selection is unexpected.
-   * @return                    A <td> or <th> element is selected by first
-   *                            range of Selection.  Note that the range must
-   *                            be: startContaienr and endContainer are same
-   *                            <tr> element, startOffset + 1 equals endOffset.
-   */
-  already_AddRefed<Element> GetFirstSelectedTableCellElement(
-      ErrorResult& aRv) const;
-
-  /**
-   * GetNextSelectedTableCellElement() is a stateful method to retrieve
-   * selected table cell elements which are selected by 2nd or later ranges
-   * of Selection.  When you call GetFirstSelectedTableCellElement(), it
-   * resets internal counter of this method.  Then, following calls of
-   * GetNextSelectedTableCellElement() scans the remaining ranges of Selection.
-   * If a range selects a <td> or <th> element, returns the cell element.
-   * If a range selects an element but neither <td> nor <th> element, this
-   * ignores the range.  If a range is in a text node, returns null without
-   * throwing exception, but stops scanning the remaining ranges even you
-   * call this again.
-   * Note that this may cross <table> boundaries since this method just
-   * scans all ranges of Selection.  Therefore, returning cells which
-   * belong to different <table> elements.
-   *
-   * @param aRv                 Returns error if Selection doesn't have
-   *                            range properly.
-   * @return                    A <td> or <th> element if one of remaining
-   *                            ranges selects a <td> or <th> element unless
-   *                            this does not meet a range in a text node.
-   */
-  already_AddRefed<Element> GetNextSelectedTableCellElement(
-      ErrorResult& aRv) const;
-
-  /**
    * DeleteTableCellContentsWithTransaction() removes any contents in cell
    * elements.  If two or more cell elements are selected, this removes
    * all selected cells' contents.  Otherwise, this removes contents of
@@ -4704,11 +4659,6 @@ class HTMLEditor final : public TextEditor,
 
   bool mCSSAware;
   UniquePtr<CSSEditUtils> mCSSEditUtils;
-
-  // mSelectedCellIndex is reset by GetFirstSelectedTableCellElement(),
-  // then, it'll be referred and incremented by
-  // GetNextSelectedTableCellElement().
-  mutable uint32_t mSelectedCellIndex;
 
   // resizing
   bool mIsObjectResizingEnabled;
