@@ -42,6 +42,12 @@ WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument() {
 void WebBrowserPersistRemoteDocument::ActorDestroy(void) { mActor = nullptr; }
 
 NS_IMETHODIMP
+WebBrowserPersistRemoteDocument::GetIsClosed(bool* aIsClosed) {
+  *aIsClosed = !mActor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebBrowserPersistRemoteDocument::GetIsPrivate(bool* aIsPrivate) {
   *aIsPrivate = mAttrs.isPrivate();
   return NS_OK;

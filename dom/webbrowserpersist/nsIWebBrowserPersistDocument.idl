@@ -59,6 +59,7 @@ interface nsIWebBrowserPersistURIMap : nsISupports
 [scriptable, builtinclass, uuid(74aa4918-5d15-46b6-9ccf-74f9696d721d)]
 interface nsIWebBrowserPersistDocument : nsISupports
 {
+  readonly attribute boolean isClosed;
   readonly attribute boolean isPrivate;
   readonly attribute AUTF8String documentURI;
   readonly attribute AUTF8String baseURI;
