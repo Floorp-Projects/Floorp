@@ -11,13 +11,7 @@
  * database.
  * If the annotation is a page annotation this will happen when the page is
  * expired, namely when the page has no visits and is not bookmarked.
- * Otherwise if it's an item annotation the annotation will be expired when
- * the item is removed, thus expiration won't handle this case at all.
  */
-
-var as = Cc["@mozilla.org/browser/annotation-service;1"].getService(
-  Ci.nsIAnnotationService
-);
 
 add_task(async function test_annos_expire_never() {
   // Set interval to a large value so we don't expire on it.
@@ -45,26 +39,6 @@ add_task(async function test_annos_expire_never() {
   pages = await getPagesWithAnnotation("page_expire2");
   Assert.equal(pages.length, 5);
 
-  // Add some bookmarked page and a couple expire never annotations for each.
-  for (let i = 0; i < 5; i++) {
-    let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
-    // We also add a visit before bookmarking.
-    await PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    let bm = await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-      url: pageURI,
-      title: null,
-    });
-    let id = await PlacesUtils.promiseItemId(bm.guid);
-    as.setItemAnnotation(id, "item_persist1", "test", 0, as.EXPIRE_NEVER);
-    as.setItemAnnotation(id, "item_persist2", "test", 0, as.EXPIRE_NEVER);
-  }
-
-  let items = await getItemsWithAnnotation("item_persist1");
-  Assert.equal(items.length, 5);
-  items = await getItemsWithAnnotation("item_persist2");
-  Assert.equal(items.length, 5);
-
   // Add other visited page and a couple expire never annotations for each.
   // We won't expire these visits, so the annotations should survive.
   for (let i = 0; i < 5; i++) {
@@ -85,16 +59,12 @@ add_task(async function test_annos_expire_never() {
   Assert.equal(pages.length, 5);
 
   // Expire all visits for the first 5 pages and the bookmarks.
-  await promiseForceExpirationStep(10);
+  await promiseForceExpirationStep(5);
 
   pages = await getPagesWithAnnotation("page_expire1");
   Assert.equal(pages.length, 0);
   pages = await getPagesWithAnnotation("page_expire2");
   Assert.equal(pages.length, 0);
-  items = await getItemsWithAnnotation("item_persist1");
-  Assert.equal(items.length, 5);
-  items = await getItemsWithAnnotation("item_persist2");
-  Assert.equal(items.length, 5);
   pages = await getPagesWithAnnotation("page_persist1");
   Assert.equal(pages.length, 5);
   pages = await getPagesWithAnnotation("page_persist2");

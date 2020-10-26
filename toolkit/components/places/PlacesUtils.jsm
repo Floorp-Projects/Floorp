@@ -1978,13 +1978,6 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "bookmarks", () => {
 
 XPCOMUtils.defineLazyServiceGetter(
   PlacesUtils,
-  "annotations",
-  "@mozilla.org/browser/annotation-service;1",
-  "nsIAnnotationService"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  PlacesUtils,
   "tagging",
   "@mozilla.org/browser/tagging-service;1",
   "nsITaggingService"

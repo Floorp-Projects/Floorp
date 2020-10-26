@@ -12,7 +12,6 @@
  */
 
 add_task(async function test_historyClear() {
-  let as = PlacesUtils.annotations;
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -24,14 +23,11 @@ add_task(async function test_historyClear() {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // This visit will be expired.
     await PlacesTestUtils.addVisits({ uri: pageURI });
-    let bm = await PlacesUtils.bookmarks.insert({
+    await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
       title: null,
     });
-    let id = await PlacesUtils.promiseItemId(bm.guid);
-    // Will persist because it's an EXPIRE_NEVER item anno.
-    as.setItemAnnotation(id, "persist", "test", 0, as.EXPIRE_NEVER);
     // Will persist because the page is bookmarked.
     await PlacesUtils.history.update({
       url: pageURI,
@@ -58,12 +54,4 @@ add_task(async function test_historyClear() {
 
   let pages = await getPagesWithAnnotation("persist");
   Assert.equal(pages.length, 5);
-
-  let items = await getItemsWithAnnotation("persist");
-  Assert.equal(items.length, 5);
-
-  for (let guid of items) {
-    // Check item exists.
-    Assert.ok(await PlacesUtils.bookmarks.fetch({ guid }), "item exists");
-  }
 });

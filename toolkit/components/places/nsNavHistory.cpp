@@ -13,7 +13,6 @@
 
 #include "mozIPlacesAutoComplete.h"
 #include "nsNavBookmarks.h"
-#include "nsAnnotationService.h"
 #include "nsFaviconService.h"
 #include "nsPlacesMacros.h"
 #include "nsPlacesTriggers.h"
@@ -116,9 +115,6 @@ using namespace mozilla::places;
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
 #define RENEW_CACHED_NOW_TIMEOUT ((int32_t)3 * PR_MSEC_PER_SEC)
-
-// character-set annotation
-#define CHARSET_ANNO "URIProperties/characterSet"_ns
 
 // These macros are used when splitting history by date.
 // These are the day containers and catch-all final container.

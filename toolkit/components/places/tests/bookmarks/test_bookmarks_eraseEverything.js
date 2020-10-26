@@ -42,11 +42,6 @@ add_task(async function test_eraseEverything() {
     url: "http://mozilla.org/",
   });
   checkBookmarkObject(unfiledBookmarkInFolder);
-  await setItemAnnotation(
-    unfiledBookmarkInFolder.guid,
-    "testanno1",
-    "testvalue1"
-  );
 
   let menuFolder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -65,7 +60,6 @@ add_task(async function test_eraseEverything() {
     url: "http://mozilla.org/",
   });
   checkBookmarkObject(menuBookmarkInFolder);
-  await setItemAnnotation(menuBookmarkInFolder.guid, "testanno1", "testvalue1");
 
   let toolbarFolder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -84,11 +78,6 @@ add_task(async function test_eraseEverything() {
     url: "http://mozilla.org/",
   });
   checkBookmarkObject(toolbarBookmarkInFolder);
-  await setItemAnnotation(
-    toolbarBookmarkInFolder.guid,
-    "testanno1",
-    "testvalue1"
-  );
 
   await PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);
@@ -103,17 +92,6 @@ add_task(async function test_eraseEverything() {
 
   Assert.equal(frecencyForUrl("http://example.com/"), frecencyForExample);
   Assert.equal(frecencyForUrl("http://example.com/"), frecencyForMozilla);
-
-  // Check there are no orphan annotations.
-  let conn = await PlacesUtils.promiseDBConnection();
-  let annoAttrs = await conn.execute(
-    `SELECT id, name FROM moz_anno_attributes`
-  );
-  Assert.equal(annoAttrs.length, 0);
-  let annos = await conn.execute(
-    `SELECT item_id, anno_attribute_id FROM moz_items_annos`
-  );
-  Assert.equal(annos.length, 0);
 });
 
 add_task(async function test_eraseEverything_roots() {

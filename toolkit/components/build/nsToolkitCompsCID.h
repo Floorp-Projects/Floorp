@@ -31,9 +31,6 @@
 #define NS_NAVHISTORYSERVICE_CONTRACTID \
   "@mozilla.org/browser/nav-history-service;1"
 
-#define NS_ANNOTATIONSERVICE_CONTRACTID \
-  "@mozilla.org/browser/annotation-service;1"
-
 #define NS_NAVBOOKMARKSSERVICE_CONTRACTID \
   "@mozilla.org/browser/nav-bookmarks-service;1"
 
@@ -88,13 +85,6 @@
   {                                                  \
     0x2ea8966f, 0x0671, 0x4c02, {                    \
       0x9c, 0x70, 0x94, 0x59, 0x56, 0xd4, 0x54, 0x34 \
-    }                                                \
-  }
-
-#define NS_ANNOTATIONSERVICE_CID                     \
-  {                                                  \
-    0x5e8d4751, 0x1852, 0x434b, {                    \
-      0xa9, 0x92, 0x2c, 0x6d, 0x2a, 0x25, 0xfa, 0x46 \
     }                                                \
   }
 

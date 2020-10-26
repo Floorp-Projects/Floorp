@@ -285,30 +285,6 @@ add_task(async function remove_multiple_bookmarks_complex() {
   await PlacesTestUtils.promiseAsyncUpdates();
 });
 
-add_task(async function remove_bookmark_orphans() {
-  let bm1 = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    url: "http://example.com/",
-    title: "a bookmark",
-  });
-  checkBookmarkObject(bm1);
-  await setItemAnnotation(bm1.guid, "testanno", "testvalue");
-
-  await PlacesUtils.bookmarks.remove(bm1.guid);
-
-  // Check there are no orphan annotations.
-  let conn = await PlacesUtils.promiseDBConnection();
-  let annoAttrs = await conn.execute(
-    `SELECT id, name FROM moz_anno_attributes`
-  );
-  Assert.equal(annoAttrs.length, 0);
-  let annos = await conn.execute(
-    `SELECT item_id, anno_attribute_id FROM moz_items_annos`
-  );
-  Assert.equal(annos.length, 0);
-});
-
 add_task(async function remove_bookmark_empty_title() {
   let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,

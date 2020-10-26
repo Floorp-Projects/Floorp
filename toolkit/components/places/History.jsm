@@ -124,6 +124,11 @@ function notify(observers, notification, args = []) {
 }
 
 var History = Object.freeze({
+  ANNOTATION_EXPIRE_NEVER: 4,
+  // Constants for the type of annotation.
+  ANNOTATION_TYPE_STRING: 3,
+  ANNOTATION_TYPE_INT64: 5,
+
   /**
    * Fetch the available information for one page.
    *
@@ -1685,8 +1690,8 @@ var update = async function(db, pageInfo) {
           // accessing page annotations via the annotation service.
           let type =
             typeof content == "string"
-              ? Ci.nsIAnnotationService.TYPE_STRING
-              : Ci.nsIAnnotationService.TYPE_INT64;
+              ? History.ANNOTATION_TYPE_STRING
+              : History.ANNOTATION_TYPE_INT64;
           let date = PlacesUtils.toPRTime(new Date());
 
           // This will replace the id every time an annotation is updated. This is
@@ -1705,7 +1710,7 @@ var update = async function(db, pageInfo) {
               id,
               anno_name: anno,
               content,
-              expiration: PlacesUtils.annotations.EXPIRE_NEVER,
+              expiration: History.ANNOTATION_EXPIRE_NEVER,
               type,
               // The date fields are unused, so we just set them both to the latest.
               date_added: date,

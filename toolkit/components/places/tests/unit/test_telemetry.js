@@ -21,7 +21,7 @@ var histograms = {
   PLACES_EXPIRATION_STEPS_TO_CLEAN2: val => Assert.ok(val > 1),
   PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => Assert.ok(val >= 0),
   PLACES_IDLE_MAINTENANCE_TIME_MS: val => Assert.ok(val > 0),
-  PLACES_ANNOS_BOOKMARKS_COUNT: val => Assert.equal(val, 1),
+  PLACES_ANNOS_BOOKMARKS_COUNT: val => Assert.equal(val, 0),
   PLACES_ANNOS_PAGES_COUNT: val => Assert.equal(val, 1),
   PLACES_MAINTENANCE_DAYSFROMLAST: val => Assert.ok(val >= 0),
 };
@@ -69,7 +69,7 @@ add_task(async function test_execute() {
   // Put some trash in the database.
   let uri = Services.io.newURI("http://moz.org/");
 
-  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+  PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [
       {
@@ -94,7 +94,6 @@ add_task(async function test_execute() {
     content += "0";
   }
 
-  await setItemAnnotation(bookmarks[1].guid, "test-anno", content);
   await PlacesUtils.history.update({
     url: uri,
     annotations: new Map([["test-anno", content]]),
