@@ -1002,7 +1002,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RTCTrackEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Sanitizer" },
+  { name: "Sanitizer", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Screen", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
