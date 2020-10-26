@@ -126,7 +126,22 @@ add_task(async function test_fullscreen_api_cross_origin_tree() {
 
   async function check_events(expected_events) {
     for (let [name, expected] of expected_events) {
-      let events = await frames.get(name).actor.sendQuery("GetEvents");
+      let actor = frames.get(name).actor;
+
+      // Each content process fires the fullscreenchange
+      // event independently and in parallel making it
+      // possible for the promises returned by
+      // `requestFullscreen` or `exitFullscreen` to
+      // resolve before all events have fired. We wait
+      // for the number of events to match before
+      // continuing to ensure we don't miss an expected
+      // event that hasn't fired yet.
+      let events;
+      await TestUtils.waitForCondition(async () => {
+        events = await actor.sendQuery("GetEvents");
+        return events.length == expected.length;
+      }, `Waiting for number of events to match`);
+
       Assert.equal(events.length, expected.length, "Number of events equal");
       events.forEach((value, i) => {
         Assert.equal(value, expected[i], "Event type matches");
