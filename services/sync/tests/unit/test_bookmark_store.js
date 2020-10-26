@@ -378,46 +378,6 @@ add_bookmark_test(async function test_move_order(engine) {
   }
 });
 
-add_bookmark_test(async function test_reparentOrphans(engine) {
-  let store = engine._store;
-
-  try {
-    let folder1 = await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      type: PlacesUtils.bookmarks.TYPE_FOLDER,
-      title: "Folder1",
-    });
-    let folder1_id = await PlacesUtils.promiseItemId(folder1.guid);
-
-    _(
-      "Create a bogus orphan record and write the record back to the store to trigger _reparentOrphans."
-    );
-    PlacesUtils.annotations.setItemAnnotation(
-      folder1_id,
-      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO,
-      folder1.guid,
-      0,
-      PlacesUtils.annotations.EXPIRE_NEVER
-    );
-    let record = await store.createRecord(folder1.guid);
-    record.title = "New title for Folder 1";
-    store._childrenToOrder = {};
-    await apply_records(engine, [record]);
-
-    _(
-      "Verify that is has been marked as an orphan even though it couldn't be moved into itself."
-    );
-    let orphanAnno = PlacesUtils.annotations.getItemAnnotation(
-      folder1_id,
-      PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO
-    );
-    Assert.equal(orphanAnno, folder1.guid);
-  } finally {
-    _("Clean up.");
-    await store.wipe();
-  }
-});
-
 // Tests Bug 806460, in which query records arrive with empty folder
 // names and missing bookmark URIs.
 add_bookmark_test(async function test_empty_query_doesnt_die(engine) {

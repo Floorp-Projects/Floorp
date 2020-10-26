@@ -172,61 +172,6 @@ async function insertBookmarksToMigrate() {
   await PlacesUtils.bookmarks.remove(exampleBmk.guid);
 }
 
-// `PlacesUtils.annotations.setItemAnnotation` prevents us from setting
-// annotations on nonexistent items, so this test helper writes to the DB
-// directly.
-function setAnnoUnchecked(itemId, name, value, type) {
-  return PlacesUtils.withConnectionWrapper(
-    "test_bookmark_tracker: setItemAnnoUnchecked",
-    async function(db) {
-      await db.executeCached(
-        `
-        INSERT OR IGNORE INTO moz_anno_attributes (name)
-        VALUES (:name)`,
-        { name }
-      );
-
-      let annoIds = await db.executeCached(
-        `
-        SELECT a.id, a.dateAdded
-        FROM moz_items_annos a WHERE a.item_id = :itemId`,
-        { itemId }
-      );
-
-      let annoId;
-      let dateAdded;
-      let lastModified = PlacesUtils.toPRTime(Date.now());
-
-      if (annoIds.length) {
-        annoId = annoIds[0].getResultByName("id");
-        dateAdded = annoIds[0].getResultByName("dateAdded");
-      } else {
-        annoId = null;
-        dateAdded = lastModified;
-      }
-
-      await db.executeCached(
-        `
-        INSERT OR REPLACE INTO moz_items_annos (id, item_id, anno_attribute_id,
-          content, flags, expiration, type, dateAdded, lastModified)
-        VALUES (:annoId, :itemId, (SELECT id FROM moz_anno_attributes
-                                   WHERE name = :name),
-                :value, 0, :expiration, :type, :dateAdded, :lastModified)`,
-        {
-          annoId,
-          itemId,
-          name,
-          value,
-          type,
-          expiration: PlacesUtils.annotations.EXPIRE_NEVER,
-          dateAdded,
-          lastModified,
-        }
-      );
-    }
-  );
-}
-
 add_task(async function test_tracking() {
   _("Test starting and stopping the tracker");
 
