@@ -159,7 +159,6 @@ public class RuntimeCreator {
                 .build();
 
         final GeckoRuntimeSettings runtimeSettings = new GeckoRuntimeSettings.Builder()
-                .useMultiprocess(env.isMultiprocess())
                 .contentBlocking(new ContentBlocking.Settings.Builder()
                         .safeBrowsingProviders(googleLegacy, google)
                         .build())
