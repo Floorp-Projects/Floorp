@@ -44,9 +44,9 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
             // without a `Context` and this can cause a variety of issues/crashes.
             // See: https://github.com/mozilla-mobile/android-components/issues/4125
             //
-            // To avoid this, we check whether the fragment is detached. If it's detached then we run
-            // in exactly that moment between fragment detach and view detach.
-            // It would be better if we could use `viewLifecycleOwner` which is bound to
+            // To avoid this, we check whether the fragment still has an activity and a view
+            // attached. If not then we run in exactly that moment between fragment detach and view
+            // detach. It would be better if we could use `viewLifecycleOwner` which is bound to
             // onCreateView() and onDestroyView() of the fragment. But:
             // - `viewLifecycleOwner` is only available in alpha versions of AndroidX currently.
             // - We found a bug where `viewLifecycleOwner.lifecycleScope` is not getting cancelled
@@ -55,10 +55,10 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
             // Once those two issues get resolved we can remove the `isAdded` check and use
             // `viewLifecycleOwner.lifecycleScope` instead of the view scope.
             //
-            // In a previous version we used `isAdded` here. But in certain situations it reported
-            // false even though the fragment was not detached. Therefore we switched to explicitly
-            // check with `isDetached`.
-            if (!fragment.isDetached) {
+            // In a previous version we tried using `isAdded` and `isDetached` here. But in certain
+            // situations they reported true/false in situations where no activity was attached to
+            // the fragment. Therefore we switched to explicitly check for the activity and view here.
+            if (fragment.activity != null && fragment.view != null) {
                 block(state)
             }
         }
@@ -93,9 +93,10 @@ fun <S : State, A : Action> Fragment.consumeFlow(
         val flow = from
             .flow(owner)
             .filter {
-                // We ignore state updates if the fragment is not added anymore.
+                // We ignore state updates if the fragment does not have an activity or view
+                // attached anymore.
                 // See comment in [consumeFrom] above.
-                !fragment.isDetached
+                fragment.activity != null && fragment.view != null
             }
 
         block(flow)
