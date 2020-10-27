@@ -378,27 +378,23 @@ void MacroAssemblerX86Shared::compareInt8x16(FloatRegister lhs, Operand rhs,
       vpcmpeqb(rhs, lhs, output);
       break;
     case Assembler::Condition::LessThan:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
       } else {
         loadAlignedSimd128Int(rhs, scratch);
       }
-
       // src := src > lhs (i.e. lhs < rhs)
-      // Improve by doing custom lowering (rhs is tied to the output register)
       vpcmpgtb(Operand(lhs), scratch, scratch);
       moveSimd128Int(scratch, output);
       break;
     case Assembler::Condition::NotEqual:
-      // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
-      // should invert the comparison by, e.g. swapping the arms of a select
-      // if that's what it's used in.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
       vpcmpeqb(rhs, lhs, output);
-      bitwiseXorSimdInt(output, Operand(scratch), output);
+      asMasm().bitwiseXorSimd128(allOnes, output);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
@@ -411,9 +407,8 @@ void MacroAssemblerX86Shared::compareInt8x16(FloatRegister lhs, Operand rhs,
       break;
     case Assembler::Condition::LessThanOrEqual:
       // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
       vpcmpgtb(rhs, lhs, output);
-      bitwiseXorSimdInt(output, Operand(scratch), output);
+      asMasm().bitwiseXorSimd128(allOnes, output);
       break;
     default:
       MOZ_CRASH("unexpected condition op");
@@ -515,27 +510,23 @@ void MacroAssemblerX86Shared::compareInt16x8(FloatRegister lhs, Operand rhs,
       vpcmpeqw(rhs, lhs, output);
       break;
     case Assembler::Condition::LessThan:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
       } else {
         loadAlignedSimd128Int(rhs, scratch);
       }
-
       // src := src > lhs (i.e. lhs < rhs)
-      // Improve by doing custom lowering (rhs is tied to the output register)
       vpcmpgtw(Operand(lhs), scratch, scratch);
       moveSimd128Int(scratch, output);
       break;
     case Assembler::Condition::NotEqual:
-      // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
-      // should invert the comparison by, e.g. swapping the arms of a select
-      // if that's what it's used in.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
       vpcmpeqw(rhs, lhs, output);
-      bitwiseXorSimdInt(output, Operand(scratch), output);
+      asMasm().bitwiseXorSimd128(allOnes, output);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
@@ -548,9 +539,8 @@ void MacroAssemblerX86Shared::compareInt16x8(FloatRegister lhs, Operand rhs,
       break;
     case Assembler::Condition::LessThanOrEqual:
       // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
       vpcmpgtw(rhs, lhs, output);
-      bitwiseXorSimdInt(output, Operand(scratch), output);
+      asMasm().bitwiseXorSimd128(allOnes, output);
       break;
     default:
       MOZ_CRASH("unexpected condition op");
@@ -620,48 +610,43 @@ void MacroAssemblerX86Shared::compareInt32x4(FloatRegister lhs, Operand rhs,
   ScratchSimd128Scope scratch(asMasm());
   switch (cond) {
     case Assembler::Condition::GreaterThan:
-      packedGreaterThanInt32x4(rhs, lhs);
+      vpcmpgtd(rhs, lhs, lhs);
       break;
     case Assembler::Condition::Equal:
-      packedEqualInt32x4(rhs, lhs);
+      vpcmpeqd(rhs, lhs, lhs);
       break;
     case Assembler::Condition::LessThan:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
       } else {
         loadAlignedSimd128Int(rhs, scratch);
       }
-
       // src := src > lhs (i.e. lhs < rhs)
-      // Improve by doing custom lowering (rhs is tied to the output register)
-      packedGreaterThanInt32x4(Operand(lhs), scratch);
+      vpcmpgtd(Operand(lhs), scratch, scratch);
       moveSimd128Int(scratch, lhs);
       break;
     case Assembler::Condition::NotEqual:
-      // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
-      // should invert the comparison by, e.g. swapping the arms of a select
-      // if that's what it's used in.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
-      packedEqualInt32x4(rhs, lhs);
-      bitwiseXorSimdInt(lhs, Operand(scratch), lhs);
+      vpcmpeqd(rhs, lhs, lhs);
+      asMasm().bitwiseXorSimd128(allOnes, lhs);
       break;
     case Assembler::Condition::GreaterThanOrEqual:
+      // This is bad, but Ion does not use it.
       // src := rhs
       if (rhs.kind() == Operand::FPREG) {
         moveSimd128Int(ToSimdFloatRegister(rhs), scratch);
       } else {
         loadAlignedSimd128Int(rhs, scratch);
       }
-      packedGreaterThanInt32x4(Operand(lhs), scratch);
+      vpcmpgtd(Operand(lhs), scratch, scratch);
       asMasm().loadConstantSimd128Int(allOnes, lhs);
       bitwiseXorSimdInt(lhs, Operand(scratch), lhs);
       break;
     case Assembler::Condition::LessThanOrEqual:
       // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
-      asMasm().loadConstantSimd128Int(allOnes, scratch);
-      packedGreaterThanInt32x4(rhs, lhs);
-      bitwiseXorSimdInt(lhs, Operand(scratch), lhs);
+      vpcmpgtd(rhs, lhs, lhs);
+      asMasm().bitwiseXorSimd128(allOnes, lhs);
       break;
     default:
       MOZ_CRASH("unexpected condition op");
@@ -750,9 +735,7 @@ void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
   }
 
   // Move lhs to output if lhs!=output; move rhs out of the way if rhs==output.
-  //
-  // TODO: The front end really needs to set things up so that this hack is not
-  // necessary.
+  // This is bad, but Ion does not need this fixup.
   ScratchSimd128Scope scratch(asMasm());
   if (!lhs.aliases(output)) {
     if (rhs.kind() == Operand::FPREG &&
@@ -778,7 +761,7 @@ void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
       break;
     case Assembler::Condition::GreaterThanOrEqual:
     case Assembler::Condition::GreaterThan:
-      // We reverse these before register allocation so that we don't have to
+      // We reverse these operations in the -inl.h file so that we don't have to
       // copy into and out of temporaries after codegen.
       MOZ_CRASH("should have reversed this");
     default:
@@ -794,9 +777,7 @@ void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
   }
 
   // Move lhs to output if lhs!=output; move rhs out of the way if rhs==output.
-  //
-  // TODO: The front end really needs to set things up so that this hack is not
-  // necessary.
+  // This is bad, but Ion does not need this fixup.
   ScratchSimd128Scope scratch(asMasm());
   if (!lhs.aliases(output)) {
     if (rhs.kind() == Operand::FPREG &&
@@ -822,7 +803,7 @@ void MacroAssemblerX86Shared::compareFloat64x2(FloatRegister lhs, Operand rhs,
       break;
     case Assembler::Condition::GreaterThanOrEqual:
     case Assembler::Condition::GreaterThan:
-      // We reverse these before register allocation so that we don't have to
+      // We reverse these operations in the -inl.h file so that we don't have to
       // copy into and out of temporaries after codegen.
       MOZ_CRASH("should have reversed this");
     default:

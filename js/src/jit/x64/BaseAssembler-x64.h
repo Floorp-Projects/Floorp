@@ -911,6 +911,11 @@ class BaseAssemblerX64 : public BaseAssembler {
                             dst);
   }
 
+  MOZ_MUST_USE JmpSrc vpxor_ripr(XMMRegisterID dst) {
+    return twoByteRipOpSimd("vpxor", VEX_PD, OP2_PXORDQ_VdqWdq, invalid_xmm,
+                            dst);
+  }
+
  private:
   MOZ_MUST_USE JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
                                        TwoByteOpcodeID opcode,

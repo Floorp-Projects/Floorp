@@ -606,12 +606,6 @@ class MacroAssemblerX86Shared : public Assembler {
   void storeUnalignedSimd128Int(FloatRegister src, const Operand& dest) {
     vmovdqu(src, dest);
   }
-  void packedEqualInt32x4(const Operand& src, FloatRegister dest) {
-    vpcmpeqd(src, dest, dest);
-  }
-  void packedGreaterThanInt32x4(const Operand& src, FloatRegister dest) {
-    vpcmpgtd(src, dest, dest);
-  }
   void packedLeftShiftByScalarInt16x8(Imm32 count, FloatRegister dest) {
     count.value &= 15;
     vpsllw(count, dest, dest);
