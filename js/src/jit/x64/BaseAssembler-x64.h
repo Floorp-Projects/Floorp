@@ -915,6 +915,10 @@ class BaseAssemblerX64 : public BaseAssembler {
     return twoByteRipOpSimd("vpxor", VEX_PD, OP2_PXORDQ_VdqWdq, invalid_xmm,
                             dst);
   }
+  MOZ_MUST_USE JmpSrc vpshufb_ripr(XMMRegisterID dst) {
+    return threeByteRipOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38,
+                              invalid_xmm, dst);
+  }
 
  private:
   MOZ_MUST_USE JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
@@ -1009,6 +1013,20 @@ class BaseAssemblerX64 : public BaseAssembler {
     }
     m_formatter.twoByteOpVex64(ty, opcode, (RegisterID)rm, invalid_xmm,
                                (XMMRegisterID)dst);
+  }
+
+  MOZ_MUST_USE JmpSrc threeByteRipOpSimd(const char* name, VexOperandType ty,
+                                         ThreeByteOpcodeID opcode,
+                                         ThreeByteEscape escape,
+                                         XMMRegisterID src0,
+                                         XMMRegisterID dst) {
+    MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
+    m_formatter.legacySSEPrefix(ty);
+    m_formatter.threeByteRipOp(opcode, escape, 0, dst);
+    JmpSrc label(m_formatter.size());
+    spew("%-11s" MEM_o32r ", %s", legacySSEOpName(name),
+         ADDR_o32r(label.offset()), XMMRegName(dst));
+    return label;
   }
 
   void threeByteOpImmSimdInt64(const char* name, VexOperandType ty,
