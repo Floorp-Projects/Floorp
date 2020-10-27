@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsASCIIMask.h"
-#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
@@ -1966,69 +1965,6 @@ TEST_F(Strings, ConvertToSpan) {
   {
     auto span = Span{cstring};
     static_assert(std::is_same_v<decltype(span), Span<char>>);
-  }
-}
-
-TEST_F(Strings, printf_string) {
-  auto getStringViaVprintfCtor = [](const char* aFormat, ...) {
-    // Ensures creation of an nsPrintfCString via the vprintf style ctor.
-    va_list ap;
-    va_start(ap, aFormat);
-    const nsPrintfCString string(aFormat, ap);
-    va_end(ap);
-    return string;
-  };
-
-  {
-    const char* format = "Characters %c %%";
-    const char* expectedOutput = "Characters B %";
-    const nsPrintfCString printfString(format, 'B');
-    const nsPrintfCString vprintfString(getStringViaVprintfCtor(format, 'B'));
-    EXPECT_TRUE(printfString.Equals(vprintfString))
-        << printfString.get() << " != " << vprintfString.get();
-    EXPECT_TRUE(printfString.EqualsASCII(expectedOutput))
-        << printfString.get() << " != " << expectedOutput;
-  }
-
-  {
-    const char* format = "Strings %s %s";
-    const char* expectedOutput = "Strings foo bar";
-    const nsPrintfCString printfString(format, "foo", "bar");
-    const nsPrintfCString vprintfString(
-        getStringViaVprintfCtor(format, "foo", "bar"));
-    EXPECT_TRUE(printfString.Equals(vprintfString))
-        << printfString.get() << " != " << vprintfString.get();
-    EXPECT_TRUE(printfString.EqualsASCII(expectedOutput))
-        << printfString.get() << " != " << expectedOutput;
-  }
-
-  {
-    const int signedThree = 3;
-    const unsigned int unsignedTen = 10;
-    const char* format = "Integers %i %.3d %.2u %o %x %X";
-    const char* expectedOutput = "Integers 3 003 10 12 a A";
-    const nsPrintfCString printfString(format, signedThree, signedThree,
-                                       unsignedTen, unsignedTen, unsignedTen,
-                                       unsignedTen);
-    const nsPrintfCString vprintfString(
-        getStringViaVprintfCtor(format, signedThree, signedThree, unsignedTen,
-                                unsignedTen, unsignedTen, unsignedTen));
-    EXPECT_TRUE(printfString.Equals(vprintfString))
-        << printfString.get() << " != " << vprintfString.get();
-    EXPECT_TRUE(printfString.EqualsASCII(expectedOutput))
-        << printfString.get() << " != " << expectedOutput;
-  }
-
-  {
-    const char* format = "Floats %f %.0f %e %.2E";
-    const char* expectedOutput = "Floats 1.500000 2 1.500000e+00 1.50E+00";
-    const nsPrintfCString printfString(format, 1.5, 1.5, 1.5, 1.5);
-    const nsPrintfCString vprintfString(
-        getStringViaVprintfCtor(format, 1.5, 1.5, 1.5, 1.5));
-    EXPECT_TRUE(printfString.Equals(vprintfString))
-        << printfString.get() << " != " << vprintfString.get();
-    EXPECT_TRUE(printfString.EqualsASCII(expectedOutput))
-        << printfString.get() << " != " << expectedOutput;
   }
 }
 
