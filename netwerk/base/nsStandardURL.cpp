@@ -112,7 +112,12 @@ int32_t nsStandardURL::nsSegmentEncoder::EncodeSegmentCount(
   // only do this if the segment is non-ASCII.  Further, if mEncoding is
   // null, then the origin charset is UTF-8 and there is nothing to do.
   if (mEncoding) {
-    size_t upTo = Encoding::ASCIIValidUpTo(AsBytes(span));
+    size_t upTo;
+    if (MOZ_UNLIKELY(mEncoding == ISO_2022_JP_ENCODING)) {
+      upTo = Encoding::ISO2022JPASCIIValidUpTo(AsBytes(span));
+    } else {
+      upTo = Encoding::ASCIIValidUpTo(AsBytes(span));
+    }
     if (upTo != span.Length()) {
       // we have to encode this segment
       char bufferArr[512];
