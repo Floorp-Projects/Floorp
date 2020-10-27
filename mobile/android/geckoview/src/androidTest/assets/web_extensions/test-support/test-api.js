@@ -180,6 +180,11 @@ this.test = class extends ExtensionAPI {
           });
         },
 
+        async getActive(tabId) {
+          const tab = context.extension.tabManager.get(tabId);
+          return tab.browser.docShellIsActive;
+        },
+
         async flushApzRepaints(tabId) {
           const tab = context.extension.tabManager.get(tabId);
           const { browsingContext } = tab.browser;

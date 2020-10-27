@@ -1695,6 +1695,9 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
+        assertThat("docShell should start out active", mainSession.active,
+            equalTo(true))
+
         // This loads in the parent process
         mainSession.loadUri(url)
         sessionRule.waitForPageStop()
@@ -1706,6 +1709,9 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
+        assertThat("docShell should be active after switching process",
+                mainSession.active,
+                equalTo(true))
 
         mainSession.loadUri(url)
         sessionRule.waitForPageStop()
@@ -1716,6 +1722,9 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
+        assertThat("docShell should be active after switching process",
+                mainSession.active,
+                equalTo(true))
 
         sessionRule.session.goBack()
         sessionRule.waitForPageStop()
@@ -1726,6 +1735,9 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO2_HTML_PATH))
+        assertThat("docShell should be active after switching process",
+                mainSession.active,
+                equalTo(true))
 
         settings.aboutConfigEnabled = aboutConfigEnabled
     }

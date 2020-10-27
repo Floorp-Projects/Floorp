@@ -1911,6 +1911,12 @@ public class GeckoSessionTestRule implements TestRule {
         return dblPid.intValue();
     }
 
+    public boolean getActive(final @NonNull GeckoSession session) {
+        final Boolean isActive = (Boolean)
+                webExtensionApiCall(session, "GetActive", null);
+        return isActive;
+    }
+
     private Object waitForMessage(String id) {
         UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
                 mTimeoutMillis);
