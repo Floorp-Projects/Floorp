@@ -67,6 +67,18 @@ extern UniquePtr<CompilationInfo> CompileGlobalScriptToStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
+// Perform some operation to reduce the time taken by instantiation.
+//
+// Part of InstantiateStencils can be done by calling PrepareForInstantiate.
+// PrepareForInstantiate is GC-free operation that can be performed
+// off-main-thread without parse global.
+extern bool PrepareForInstantiate(JSContext* cx,
+                                  CompilationInfo& compilationInfo,
+                                  CompilationGCOutput& gcOutput);
+extern bool PrepareForInstantiate(JSContext* cx,
+                                  CompilationInfoVector& compilationInfos,
+                                  CompilationGCOutput& gcOutput);
+
 extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
                                 CompilationGCOutput& gcOutput);
 
@@ -104,17 +116,6 @@ extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
 
 extern bool InstantiateStencilsForDelazify(JSContext* cx,
                                            CompilationInfo& compilationInfo);
-
-// Perform some operation to reduce the time taken by InstantiateStencils.
-//
-// This is useful for off-thread compilation/decode, to perform extra task
-// of-main-thread, and reduce task on main-thread.
-extern bool PrepareForInstantiate(JSContext* cx,
-                                  CompilationInfo& compilationInfo,
-                                  CompilationGCOutput& gcOutput);
-extern bool PrepareForInstantiate(JSContext* cx,
-                                  CompilationInfoVector& compilationInfos,
-                                  CompilationGCOutput& gcOutput);
 
 }  // namespace frontend
 

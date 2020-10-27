@@ -232,6 +232,11 @@ static JSFunction* CreateFunction(JSContext* cx,
   return fun;
 }
 
+static bool InstantiateAtoms(JSContext* cx, CompilationInfo& compilationInfo) {
+  return compilationInfo.stencil.parserAtoms.instantiateMarkedAtoms(
+      cx, compilationInfo.input.atomCache);
+}
+
 static bool InstantiateScriptSourceObject(JSContext* cx,
                                           CompilationInfo& compilationInfo,
                                           CompilationGCOutput& gcOutput) {
@@ -323,11 +328,6 @@ static bool InstantiateScopes(JSContext* cx, CompilationInfo& compilationInfo,
   // into it, and newly created ScopeStencil is pushed back to the vector.
   //
   // If the enclosing scope is Scope*, it's CompilationInput.enclosingScope.
-
-  if (!gcOutput.scopes.reserve(compilationInfo.stencil.scopeData.length())) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
 
   for (const ScopeStencil& scd : compilationInfo.stencil.scopeData) {
     Scope* scope = scd.createScope(cx, compilationInfo.input, gcOutput);
@@ -659,8 +659,17 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
     }
   }
 
+  return instantiateStencilsAfterPreparation(cx, gcOutput);
+}
+
+bool CompilationInfo::instantiateStencilsAfterPreparation(
+    JSContext* cx, CompilationGCOutput& gcOutput) {
   if (!gcOutput.functions.resize(stencil.scriptData.length())) {
     ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (!InstantiateAtoms(cx, *this)) {
     return false;
   }
 
@@ -743,7 +752,16 @@ bool CompilationInfoVector::buildDelazificationStencilMap(
 
 bool CompilationInfoVector::instantiateStencils(JSContext* cx,
                                                 CompilationGCOutput& gcOutput) {
-  if (!initial.instantiateStencils(cx, gcOutput)) {
+  if (!prepareForInstantiate(cx, gcOutput)) {
+    return false;
+  }
+
+  return instantiateStencilsAfterPreparation(cx, gcOutput);
+}
+
+bool CompilationInfoVector::instantiateStencilsAfterPreparation(
+    JSContext* cx, CompilationGCOutput& gcOutput) {
+  if (!initial.instantiateStencilsAfterPreparation(cx, gcOutput)) {
     return false;
   }
 
@@ -773,8 +791,12 @@ bool CompilationInfoVector::instantiateStencils(JSContext* cx,
     delazification.input.initFromLazy(lazy);
 
     Rooted<CompilationGCOutput> gcOutputForDelazification(cx);
-    if (!delazification.instantiateStencils(cx,
-                                            gcOutputForDelazification.get())) {
+    if (!delazification.prepareGCOutputForInstantiate(
+            cx, gcOutputForDelazification.get())) {
+      return false;
+    }
+    if (!delazification.instantiateStencilsAfterPreparation(
+            cx, gcOutputForDelazification.get())) {
       return false;
     }
   }
