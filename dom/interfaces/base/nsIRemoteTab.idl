@@ -21,13 +21,6 @@ interface nsIRemoteTab : nsISupports
   attribute boolean docShellIsActive;
 
   /**
-   * Manages the flag of the remote docshell, which is used to determine if the
-   * media element in that remote docshell should be suspended when the docshell
-   * is inactive.
-   */
-  attribute boolean suspendMediaWhenInactive;
-
-  /**
    * When set to true, this tells the child to paint and upload layers to
    * the compositor. When set to false, previous layers are cleared from
    * the compositor, but only if preserveLayers is also set to false.
