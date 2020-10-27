@@ -31,7 +31,7 @@ const {
  * ----- Start of model -----
  *
  * Everything below this comment up to the "End of model" comment is copied from:
- * https://github.com/mozilla-services/fathom-login-forms/blob/c1e5136/new-password/rulesets.js#L14-L539
+ * https://github.com/mozilla-services/fathom-login-forms/blob/3a2f8806cc8c3716be2aa426a6e9a6d2bebd737d/new-password/rulesets.js#L14-L540
  * Deviations from that file:
  *   - Remove import statements, instead using ``ChromeUtils.defineModuleGetter`` and destructuring assignments above.
  *   - Set ``DEVELOPMENT`` constant to ``false``.
@@ -138,7 +138,8 @@ function makeRuleset(coeffs, biases) {
     if (labelledBy !== null) {
       labelledBy = labelledBy
         .split(" ")
-        .map(id => element.ownerDocument.getElementById(id));
+        .map(id => element.getRootNode().getElementById(id))
+        .filter(el => el);
       if (labelledBy.length === 1) {
         return regex.test(labelledBy[0].textContent);
       } else if (labelledBy.length > 1) {
