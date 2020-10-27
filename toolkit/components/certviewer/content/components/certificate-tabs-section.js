@@ -49,11 +49,11 @@ export class CertificateTabsSection extends HTMLElement {
     if (this.isAboutCertificate) {
       tab.setAttribute("data-l10n-id", tabName);
     } else {
-      // A `dir-auto` class is used instead of an actual `dir="auto"` attribute
-      // so that the border-radius set on the first and last tabs continue to
-      // function with both RTL and LTR content/context
-      // (by using `unicode-bidi: plaintext`).
-      tab.classList.add("dir-auto");
+      // Display tabs on `about:certificate?cert=` pages as dir=auto
+      // to avoid text like `mozilla.org.*` in RTL.
+      // Not needed in the standalone version of about:certificate
+      // because the tab text there should be localized.
+      tab.dir = "auto";
     }
     this.tabsElement.appendChild(tab);
 
