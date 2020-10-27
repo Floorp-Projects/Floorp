@@ -5043,13 +5043,13 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Instantiate the stencil. */
-  frontend::CompilationGCOutput output(cx);
-  if (!compilationInfos.get().instantiateStencils(cx, output)) {
+  Rooted<frontend::CompilationGCOutput> output(cx);
+  if (!compilationInfos.get().instantiateStencils(cx, output.get())) {
     return false;
   }
 
   /* Obtain the JSScript and evaluate it. */
-  RootedScript script(cx, output.script);
+  RootedScript script(cx, output.get().script);
   RootedValue retVal(cx, UndefinedValue());
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;

@@ -339,9 +339,9 @@ bool frontend::InstantiateStencils(JSContext* cx,
     }
   }
 
+  Rooted<JSScript*> script(cx, gcOutput.script);
   tellDebuggerAboutCompiledScript(
-      cx, compilationInfo.input.options.hideScriptFromDebugger,
-      gcOutput.script);
+      cx, compilationInfo.input.options.hideScriptFromDebugger, script);
 
   return true;
 }
@@ -365,9 +365,10 @@ bool frontend::InstantiateStencils(JSContext* cx,
     }
   }
 
+  Rooted<JSScript*> script(cx, gcOutput.script);
   tellDebuggerAboutCompiledScript(
       cx, compilationInfos.initial.input.options.hideScriptFromDebugger,
-      gcOutput.script);
+      script);
 
   return true;
 }
@@ -402,12 +403,12 @@ static JSScript* CompileGlobalScriptImpl(
     return nullptr;
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
     return nullptr;
   }
 
-  return gcOutput.script;
+  return gcOutput.get().script;
 }
 
 JSScript* frontend::CompileGlobalScript(
@@ -453,13 +454,13 @@ static JSScript* CompileEvalScriptImpl(
     return nullptr;
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
     return nullptr;
   }
 
   assertException.reset();
-  return gcOutput.script;
+  return gcOutput.get().script;
 }
 
 JSScript* frontend::CompileEvalScript(JSContext* cx,
@@ -956,13 +957,13 @@ static ModuleObject* CompileModuleImpl(
     return nullptr;
   }
 
-  CompilationGCOutput gcOutput(cx);
-  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  if (!InstantiateStencils(cx, compilationInfo.get(), gcOutput.get())) {
     return nullptr;
   }
 
   assertException.reset();
-  return gcOutput.module;
+  return gcOutput.get().module;
 }
 
 ModuleObject* frontend::CompileModule(JSContext* cx,
@@ -1069,16 +1070,16 @@ bool frontend::InstantiateStencilsForDelazify(
   mozilla::DebugOnly<uint32_t> lazyFlags =
       static_cast<uint32_t>(compilationInfo.input.lazy->immutableFlags());
 
-  CompilationGCOutput gcOutput(cx);
-  if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  if (!compilationInfo.instantiateStencils(cx, gcOutput.get())) {
     return false;
   }
 
-  MOZ_ASSERT(lazyFlags == gcOutput.script->immutableFlags());
-  MOZ_ASSERT(
-      gcOutput.script->outermostScope()->hasOnChain(ScopeKind::NonSyntactic) ==
-      gcOutput.script->immutableFlags().hasFlag(
-          JSScript::ImmutableFlags::HasNonSyntacticScope));
+  MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
+  MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
+                 ScopeKind::NonSyntactic) ==
+             gcOutput.get().script->immutableFlags().hasFlag(
+                 JSScript::ImmutableFlags::HasNonSyntacticScope));
 
   assertException.reset();
   return true;
@@ -1116,25 +1117,26 @@ static JSFunction* CompileStandaloneFunction(
     return nullptr;
   }
 
-  CompilationGCOutput gcOutput(cx);
-  if (!compiler.compile(cx, compilationInfo.get(), parsedFunction, gcOutput)) {
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  if (!compiler.compile(cx, compilationInfo.get(), parsedFunction,
+                        gcOutput.get())) {
     return nullptr;
   }
 
   // Note: If AsmJS successfully compiles, the into.script will still be
   // nullptr. In this case we have compiled to a native function instead of an
   // interpreted script.
-  if (gcOutput.script) {
+  if (gcOutput.get().script) {
     if (parameterListEnd) {
       compilationInfo.get().input.source()->setParameterListEnd(
           *parameterListEnd);
     }
-    tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
-                                    gcOutput.script);
+    Rooted<JSScript*> script(cx, gcOutput.get().script);
+    tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger, script);
   }
 
   assertException.reset();
-  return gcOutput.functions[CompilationInfo::TopLevelIndex];
+  return gcOutput.get().functions[CompilationInfo::TopLevelIndex];
 }
 
 JSFunction* frontend::CompileStandaloneFunction(
@@ -1198,4 +1200,12 @@ void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
 void CompilationInfoVector::trace(JSTracer* trc) {
   initial.trace(trc);
   delazifications.trace(trc);
+}
+
+void CompilationGCOutput::trace(JSTracer* trc) {
+  TraceNullableRoot(trc, &script, "compilation-gc-output-script");
+  TraceNullableRoot(trc, &module, "compilation-gc-output-module");
+  TraceNullableRoot(trc, &sourceObject, "compilation-gc-output-source");
+  functions.trace(trc);
+  scopes.trace(trc);
 }
