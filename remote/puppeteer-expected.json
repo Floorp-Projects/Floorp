@@ -144,7 +144,7 @@
     "PASS"
   ],
   "Page.click should click on checkbox label and toggle (click.spec.ts)": [
-    "FAIL"
+    "FAIL", "PASS"
   ],
   "Page.click should fail to click a missing button (click.spec.ts)": [
     "PASS"
