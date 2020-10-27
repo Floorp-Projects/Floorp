@@ -196,15 +196,17 @@ void ProfiledThreadData::StreamTraceLoggerJSON(
   aWriter.EndObject();
 }
 
-void StreamSamplesAndMarkers(const char* aName, int aThreadId,
-                             const ProfileBuffer& aBuffer,
-                             SpliceableJSONWriter& aWriter,
-                             const nsACString& aProcessName,
-                             const nsACString& aETLDplus1,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             const mozilla::TimeStamp& aRegisterTime,
-                             const mozilla::TimeStamp& aUnregisterTime,
-                             double aSinceTime, UniqueStacks& aUniqueStacks) {
+int StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                            const ProfileBuffer& aBuffer,
+                            SpliceableJSONWriter& aWriter,
+                            const nsACString& aProcessName,
+                            const nsACString& aETLDplus1,
+                            const mozilla::TimeStamp& aProcessStartTime,
+                            const mozilla::TimeStamp& aRegisterTime,
+                            const mozilla::TimeStamp& aUnregisterTime,
+                            double aSinceTime, UniqueStacks& aUniqueStacks) {
+  int processedThreadId = 0;
+
   aWriter.StringProperty("processType",
                          MakeStringSpan(XRE_GetProcessTypeString()));
 
@@ -219,10 +221,6 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
   if (!aETLDplus1.IsEmpty()) {
     aWriter.StringProperty("eTLD+1", aETLDplus1);
   }
-
-  aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));
-  aWriter.IntProperty("pid",
-                      static_cast<int64_t>(profiler_current_process_id()));
 
   if (aRegisterTime) {
     aWriter.DoubleProperty(
@@ -250,8 +248,8 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
 
     aWriter.StartArrayProperty("data");
     {
-      aBuffer.StreamSamplesToJSON(aWriter, aThreadId, aSinceTime,
-                                  aUniqueStacks);
+      processedThreadId = aBuffer.StreamSamplesToJSON(
+          aWriter, aThreadId, aSinceTime, aUniqueStacks);
     }
     aWriter.EndArray();
   }
@@ -277,6 +275,14 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
     aWriter.EndArray();
   }
   aWriter.EndObject();
+
+  aWriter.IntProperty("pid",
+                      static_cast<int64_t>(profiler_current_process_id()));
+  aWriter.IntProperty(
+      "tid",
+      static_cast<int64_t>(aThreadId != 0 ? aThreadId : processedThreadId));
+
+  return processedThreadId;
 }
 
 void ProfiledThreadData::NotifyAboutToLoseJSContext(

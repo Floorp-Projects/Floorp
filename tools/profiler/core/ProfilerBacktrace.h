@@ -43,8 +43,8 @@ class ProfilerBacktrace {
   // Take ownership of external buffers and use them to keep, and to stream a
   // backtrace. If a ProfileBuffer is given, its underlying chunked buffer must
   // be provided as well.
-  ProfilerBacktrace(
-      const char* aName, int aThreadId,
+  explicit ProfilerBacktrace(
+      const char* aName,
       mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>
           aProfileChunkedBufferStorage,
       mozilla::UniquePtr<ProfileBuffer> aProfileBufferStorageOrNull = nullptr);
@@ -52,10 +52,11 @@ class ProfilerBacktrace {
   // Take pointers to external buffers and use them to stream a backtrace.
   // If null, the backtrace is effectively empty.
   // If both are provided, they must already be connected.
-  ProfilerBacktrace(const char* aName, int aThreadId,
-                    mozilla::ProfileChunkedBuffer*
-                        aExternalProfileChunkedBufferOrNull = nullptr,
-                    ProfileBuffer* aExternalProfileBufferOrNull = nullptr);
+  explicit ProfilerBacktrace(
+      const char* aName,
+      mozilla::ProfileChunkedBuffer* aExternalProfileChunkedBufferOrNull =
+          nullptr,
+      ProfileBuffer* aExternalProfileBufferOrNull = nullptr);
 
   ~ProfilerBacktrace();
 
@@ -72,9 +73,9 @@ class ProfilerBacktrace {
   // That is, markers that contain backtraces should not need their own stack,
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
-  void StreamJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-                  const mozilla::TimeStamp& aProcessStartTime,
-                  UniqueStacks& aUniqueStacks);
+  int StreamJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+                 const mozilla::TimeStamp& aProcessStartTime,
+                 UniqueStacks& aUniqueStacks);
 
  private:
   // Used to serialize a ProfilerBacktrace.
@@ -84,7 +85,6 @@ class ProfilerBacktrace {
       ProfilerBacktrace>;
 
   std::string mName;
-  int mThreadId;
 
   // `ProfileChunkedBuffer` in which `mProfileBuffer` stores its data; must be
   // located before `mProfileBuffer` so that it's destroyed after.
@@ -100,7 +100,7 @@ class ProfilerBacktrace {
 
 namespace mozilla {
 
-// Format: [ UniquePtr<BlockRingsBuffer> | threadId | name ]
+// Format: [ UniquePtr<BlockRingsBuffer> | name ]
 // Initial len==0 marks a nullptr or empty backtrace.
 template <>
 struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
@@ -114,7 +114,7 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
       // Empty buffer.
       return ULEB128Size(0u);
     }
-    return bufferBytes + SumBytes(aBacktrace.mThreadId, aBacktrace.mName);
+    return bufferBytes + SumBytes(aBacktrace.mName);
   }
 
   static void Write(mozilla::ProfileBufferEntryWriter& aEW,
@@ -126,7 +126,6 @@ struct mozilla::ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
       return;
     }
     aEW.WriteObject(*aBacktrace.mProfileChunkedBuffer);
-    aEW.WriteObject(aBacktrace.mThreadId);
     aEW.WriteObject(aBacktrace.mName);
   }
 };
@@ -174,10 +173,9 @@ struct mozilla::ProfileBufferEntryReader::Deserializer<
     MOZ_ASSERT(
         !profileChunkedBuffer->IsThreadSafe(),
         "ProfilerBacktrace only stores non-thread-safe ProfileChunkedBuffers");
-    int threadId = aER.ReadObject<int>();
     std::string name = aER.ReadObject<std::string>();
-    return UniquePtr<ProfilerBacktrace, Destructor>{new ProfilerBacktrace(
-        name.c_str(), threadId, std::move(profileChunkedBuffer))};
+    return UniquePtr<ProfilerBacktrace, Destructor>{
+        new ProfilerBacktrace(name.c_str(), std::move(profileChunkedBuffer))};
   }
 };
 

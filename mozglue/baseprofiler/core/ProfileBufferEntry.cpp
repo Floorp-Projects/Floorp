@@ -571,15 +571,17 @@ class EntryGetter {
     continue;                                              \
   }
 
-void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
-                                        int aThreadId, double aSinceTime,
-                                        UniqueStacks& aUniqueStacks) const {
+int ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
+                                       int aThreadId, double aSinceTime,
+                                       UniqueStacks& aUniqueStacks) const {
   UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
-  mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
+  return mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
+
+    int processedThreadId = 0;
 
     EntryGetter e(*aReader);
 
@@ -606,19 +608,20 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         break;
       }
 
-      if (e.Get().IsThreadId()) {
-        int threadId = e.Get().GetInt();
-        e.Next();
+      // Due to the skip_to_next_sample block above, if we have an entry here it
+      // must be a ThreadId entry.
+      MOZ_ASSERT(e.Get().IsThreadId());
 
-        // Ignore samples that are for the wrong thread.
-        if (threadId != aThreadId) {
-          continue;
-        }
-      } else {
-        // Due to the skip_to_next_sample block above, if we have an entry here
-        // it must be a ThreadId entry.
-        MOZ_CRASH();
+      int threadId = e.Get().GetInt();
+      e.Next();
+
+      // Ignore samples that are for the wrong thread.
+      if (threadId != aThreadId && aThreadId != 0) {
+        continue;
       }
+
+      MOZ_ASSERT(aThreadId != 0 || processedThreadId == 0,
+                 "aThreadId==0 should only be used with 1-sample buffer");
 
       ProfileSample sample;
 
@@ -794,7 +797,11 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
       }
 
       WriteSample(aWriter, sample);
+
+      processedThreadId = threadId;
     }
+
+    return processedThreadId;
   });
 }
 
@@ -817,7 +824,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                   aWriter, aName.String().c_str());
             },
             [&](ProfileChunkedBuffer& aChunkedBuffer) {
-              ProfilerBacktrace backtrace("", aThreadId, &aChunkedBuffer);
+              ProfilerBacktrace backtrace("", &aChunkedBuffer);
               backtrace.StreamJSON(aWriter, TimeStamp::ProcessCreation(),
                                    aUniqueStacks);
             })) {

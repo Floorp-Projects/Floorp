@@ -877,6 +877,45 @@ TEST(GeckoProfiler, Markers)
        mozilla::ipc::MessageDirection::eSending,
        mozilla::ipc::MessagePhase::Endpoint, false, ts1));
 
+  MOZ_RELEASE_ASSERT(profiler_add_marker(
+      "Text in main thread with stack", geckoprofiler::category::OTHER,
+      MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
+  MOZ_RELEASE_ASSERT(profiler_add_marker(
+      "Text from main thread with stack", geckoprofiler::category::OTHER,
+      MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+      geckoprofiler::markers::Text{}, ""));
+
+  std::thread registeredThread([]() {
+    AUTO_PROFILER_REGISTER_THREAD("Marker test sub-thread");
+    // Marker in non-profiled thread won't be stored.
+    MOZ_RELEASE_ASSERT(profiler_add_marker(
+        "Text in registered thread with stack", geckoprofiler::category::OTHER,
+        MarkerStack::Capture(), geckoprofiler::markers::Text{}, ""));
+    // Marker will be stored in main thread, with stack from registered thread.
+    MOZ_RELEASE_ASSERT(profiler_add_marker(
+        "Text from registered thread with stack",
+        geckoprofiler::category::OTHER,
+        MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+        geckoprofiler::markers::Text{}, ""));
+  });
+  registeredThread.join();
+
+  std::thread unregisteredThread([]() {
+    // Marker in unregistered thread won't be stored.
+    MOZ_RELEASE_ASSERT(profiler_add_marker(
+        "Text in unregistered thread with stack",
+        geckoprofiler::category::OTHER, MarkerStack::Capture(),
+        geckoprofiler::markers::Text{}, ""));
+    // Marker will be stored in main thread, but stack cannot be captured in an
+    // unregistered thread.
+    MOZ_RELEASE_ASSERT(profiler_add_marker(
+        "Text from unregistered thread with stack",
+        geckoprofiler::category::OTHER,
+        MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+        geckoprofiler::markers::Text{}, ""));
+  });
+  unregisteredThread.join();
+
   MOZ_RELEASE_ASSERT(
       profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
                           geckoprofiler::markers::Tracing{}, "category"));
@@ -978,6 +1017,10 @@ TEST(GeckoProfiler, Markers)
     S_UserTimingMarkerPayload_measure,
     S_VsyncMarkerPayload,
     S_IPCMarkerPayload,
+    S_TextWithStack,
+    S_TextToMTWithStack,
+    S_RegThread_TextToMTWithStack,
+    S_UnregThread_TextToMTWithStack,
 
     S_LAST,
   } state = State(0);
@@ -1546,6 +1589,45 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["direction"], String, "sending");
                 EXPECT_EQ_JSON(payload["phase"], String, "endpoint");
                 EXPECT_EQ_JSON(payload["sync"], Bool, false);
+
+              } else if (nameString == "Text in main thread with stack") {
+                EXPECT_EQ(state, S_TextWithStack);
+                state = State(S_TextWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
+
+              } else if (nameString == "Text from main thread with stack") {
+                EXPECT_EQ(state, S_TextToMTWithStack);
+                state = State(S_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
+
+              } else if (nameString == "Text in registered thread with stack") {
+                ADD_FAILURE()
+                    << "Unexpected 'Text in registered thread with stack'";
+
+              } else if (nameString ==
+                         "Text from registered thread with stack") {
+                EXPECT_EQ(state, S_RegThread_TextToMTWithStack);
+                state = State(S_RegThread_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_FALSE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
+
+              } else if (nameString ==
+                         "Text in unregistered thread with stack") {
+                ADD_FAILURE()
+                    << "Unexpected 'Text in unregistered thread with stack'";
+
+              } else if (nameString ==
+                         "Text from unregistered thread with stack") {
+                EXPECT_EQ(state, S_UnregThread_TextToMTWithStack);
+                state = State(S_UnregThread_TextToMTWithStack + 1);
+                EXPECT_EQ(typeString, "Text");
+                EXPECT_TRUE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["name"], String, "");
               }
             }  // marker with payload
           }    // for (marker:data)

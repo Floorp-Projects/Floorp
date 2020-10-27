@@ -116,14 +116,17 @@ class ProfiledThreadData final {
   mozilla::TimeStamp mUnregisterTime;
 };
 
-void StreamSamplesAndMarkers(const char* aName, int aThreadId,
-                             const ProfileBuffer& aBuffer,
-                             SpliceableJSONWriter& aWriter,
-                             const nsACString& aProcessName,
-                             const nsACString& aETLDplus1,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             const mozilla::TimeStamp& aRegisterTime,
-                             const mozilla::TimeStamp& aUnregisterTime,
-                             double aSinceTime, UniqueStacks& aUniqueStacks);
+// Stream all samples and markers from aBuffer with the given aThreadId (or 0
+// for everything, which is assumed to be a single backtrace sample.)
+// Returns the thread id of the output sample(s), or 0 if none was present.
+int StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                            const ProfileBuffer& aBuffer,
+                            SpliceableJSONWriter& aWriter,
+                            const nsACString& aProcessName,
+                            const nsACString& aETLDplus1,
+                            const mozilla::TimeStamp& aProcessStartTime,
+                            const mozilla::TimeStamp& aRegisterTime,
+                            const mozilla::TimeStamp& aUnregisterTime,
+                            double aSinceTime, UniqueStacks& aUniqueStacks);
 
 #endif  // ProfiledThreadData_h
