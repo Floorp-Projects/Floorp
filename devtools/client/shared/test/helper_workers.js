@@ -15,65 +15,64 @@ var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
-const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
-
-var nextId = 0;
-
-function jsonrpc(tab, method, params) {
-  return new Promise(function(resolve, reject) {
-    const currentId = nextId++;
-    const messageManager = tab.linkedBrowser.messageManager;
-    messageManager.sendAsyncMessage("jsonrpc", {
-      method: method,
-      params: params,
-      id: currentId,
-    });
-    messageManager.addMessageListener("jsonrpc", function listener(res) {
-      const {
-        data: { result, error, id },
-      } = res;
-      if (id !== currentId) {
-        return;
-      }
-
-      messageManager.removeMessageListener("jsonrpc", listener);
-      if (error != null) {
-        reject(error);
-      }
-
-      resolve(result);
-    });
-  });
-}
-
 function createWorkerInTab(tab, url) {
   info("Creating worker with url '" + url + "' in tab.");
 
-  return jsonrpc(tab, "createWorker", [url]);
+  return SpecialPowers.spawn(tab.linkedBrowser, [url], urlChild => {
+    return new Promise(resolve => {
+      const worker = new content.Worker(urlChild);
+      worker.addEventListener(
+        "message",
+        function() {
+          if (!content.workers) {
+            content.workers = [];
+          }
+          content.workers[urlChild] = worker;
+          resolve();
+        },
+        { once: true }
+      );
+    });
+  });
 }
 
 function terminateWorkerInTab(tab, url) {
   info("Terminating worker with url '" + url + "' in tab.");
 
-  return jsonrpc(tab, "terminateWorker", [url]);
+  return SpecialPowers.spawn(tab.linkedBrowser, [url], urlChild => {
+    content.workers[urlChild].terminate();
+    delete content.workers[urlChild];
+  });
 }
 
 function postMessageToWorkerInTab(tab, url, message) {
   info("Posting message to worker with url '" + url + "' in tab.");
 
-  return jsonrpc(tab, "postMessageToWorker", [url, message]);
-}
-
-function generateMouseClickInTab(tab, path) {
-  info("Generating mouse click in tab.");
-
-  return jsonrpc(tab, "generateMouseClick", [path]);
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [url, message],
+    (urlChild, messageChild) => {
+      return new Promise(function(resolve) {
+        const worker = content.workers[urlChild];
+        worker.postMessage(messageChild);
+        worker.addEventListener(
+          "message",
+          function() {
+            resolve();
+          },
+          { once: true }
+        );
+      });
+    }
+  );
 }
 
 function evalInTab(tab, string) {
   info("Evalling string in tab.");
 
-  return jsonrpc(tab, "_eval", [string]);
+  return SpecialPowers.spawn(tab.linkedBrowser, [string], stringChild => {
+    return content.eval(stringChild);
+  });
 }
 
 function connect(client) {
@@ -216,9 +215,6 @@ this.addTab = function addTab(url, win) {
       url
     ));
     const linkedBrowser = tab.linkedBrowser;
-
-    info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");
-    linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
     BrowserTestUtils.browserLoaded(linkedBrowser).then(function() {
       info("Tab added and finished loading: " + url);
