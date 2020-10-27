@@ -357,6 +357,7 @@ class StencilModuleEntry {
                                           uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(specifier);
     StencilModuleEntry entry(lineno, column);
+    specifier->markUsedByStencil();
     entry.specifier = specifier;
     return entry;
   }
@@ -367,8 +368,11 @@ class StencilModuleEntry {
                                         uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(specifier && localName && importName);
     StencilModuleEntry entry(lineno, column);
+    specifier->markUsedByStencil();
     entry.specifier = specifier;
+    localName->markUsedByStencil();
     entry.localName = localName;
+    importName->markUsedByStencil();
     entry.importName = importName;
     return entry;
   }
@@ -378,7 +382,9 @@ class StencilModuleEntry {
                                           uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(localName && exportName);
     StencilModuleEntry entry(lineno, column);
+    localName->markUsedByStencil();
     entry.localName = localName;
+    exportName->markUsedByStencil();
     entry.exportName = exportName;
     return entry;
   }
@@ -390,8 +396,13 @@ class StencilModuleEntry {
     // NOTE: The `export * from "mod";` syntax generates nullptr exportName.
     MOZ_ASSERT(specifier && importName);
     StencilModuleEntry entry(lineno, column);
+    specifier->markUsedByStencil();
     entry.specifier = specifier;
+    importName->markUsedByStencil();
     entry.importName = importName;
+    if (exportName) {
+      exportName->markUsedByStencil();
+    }
     entry.exportName = exportName;
     return entry;
   }

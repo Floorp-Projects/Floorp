@@ -230,7 +230,10 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
     case AtomIndexKind::Static2:
       return cx->staticStrings().getLength2FromIndex(atomIndex_);
 
-    case AtomIndexKind::Unresolved:
+    case AtomIndexKind::NotInstantiatedAndNotMarked:
+    case AtomIndexKind::NotInstantiatedAndMarked:
+      // NOTE: toJSAtom can be called on not-marked atom, outside of
+      //       stencil instantiation.
       break;
   }
 
@@ -507,7 +510,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
     id = result.unwrap();
   }
 
-  if (id->atomIndexKind_ == ParserAtomEntry::AtomIndexKind::Unresolved) {
+  if (id->isNotInstantiatedAndNotMarked() || id->isNotInstantiatedAndMarked()) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
     auto index = AtomIndex(compilationInfo.input.atomCache.atoms.length());
@@ -598,6 +601,17 @@ const ParserAtom* ParserAtomsTable::getStatic1(StaticParserString1 s) const {
 
 const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
   return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
+}
+
+size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
+  size_t count = 0;
+  for (auto iter = entrySet_.iter(); !iter.done(); iter.next()) {
+    const auto& entry = iter.get();
+    if (entry->isNotInstantiatedAndMarked() || entry->isAtomIndex()) {
+      count++;
+    }
+  }
+  return count;
 }
 
 template <typename CharT>
@@ -824,6 +838,11 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
   if (!atom) {
     return xdr->fail(JS::TranscodeResult_Throw);
   }
+
+  // We only transcoded ParserAtoms used for Stencils so on decode, all
+  // ParserAtoms should be marked as in-use by Stencil.
+  atom->markUsedByStencil();
+
   *atomp = atom;
   return Ok();
 }
@@ -850,7 +869,7 @@ XDRResult XDRParserAtom(XDRState<mode>* xdr, const ParserAtom** atomp) {
       atomIndex = uint32_t((*atomp)->toStaticParserString2());
       tag = ParserAtomTag::Static2;
     } else {
-      // Either AtomIndexKind::Unresolved or AtomIndexKind::AtomIndex.
+      // Either AtomIndexKind::NotInstantiated* or AtomIndexKind::AtomIndex.
 
       // Atom contents are encoded in a separate buffer, which is joined to the
       // final result in XDRIncrementalEncoder::linearize. References to atoms
