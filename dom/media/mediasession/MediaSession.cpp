@@ -32,12 +32,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(MediaSession)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaSession)
+  tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaMetadata)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionHandlers)
-  if (tmp->mDoc) {
-    tmp->mDoc->UnregisterActivityObserver(tmp);
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -59,8 +57,12 @@ MediaSession::MediaSession(nsPIDOMWindowInner* aParent)
 }
 
 void MediaSession::Shutdown() {
-  mDoc->UnregisterActivityObserver(this);
-  SetMediaSessionDocStatus(SessionDocStatus::eInactive);
+  if (mDoc) {
+    mDoc->UnregisterActivityObserver(this);
+  }
+  if (mParent) {
+    SetMediaSessionDocStatus(SessionDocStatus::eInactive);
+  }
 }
 
 void MediaSession::NotifyOwnerDocumentActivityChanged() {
