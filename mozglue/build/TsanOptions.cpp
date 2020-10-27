@@ -303,10 +303,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1664803
          "race:Sampler::sSigHandlerCoordinator\n"
 
-         // Bug 1657739
-         "race:WebRtcAec_CreateAec\n"
-         "race:EchoSubtraction\n"
-
          // Bug 1656068
          "race:WebRtcAec_Create\n"
 
