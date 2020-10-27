@@ -4,6 +4,14 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 65.0.0-SNAPSHOT (In Development)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v64.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/126?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
 # 64.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v63.0.0...v64.0.0)
