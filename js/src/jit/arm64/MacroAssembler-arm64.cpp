@@ -2621,12 +2621,40 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
 
 void MacroAssembler::nearbyIntDouble(RoundingMode mode, FloatRegister src,
                                      FloatRegister dest) {
-  MOZ_CRASH("not supported on this platform");
+  switch (mode) {
+    case RoundingMode::Up:
+      frintp(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+      return;
+    case RoundingMode::Down:
+      frintm(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+      return;
+    case RoundingMode::NearestTiesToEven:
+      frintn(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+      return;
+    case RoundingMode::TowardsZero:
+      frintz(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+      return;
+  }
+  MOZ_CRASH("unexpected mode");
 }
 
 void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
                                       FloatRegister dest) {
-  MOZ_CRASH("not supported on this platform");
+  switch (mode) {
+    case RoundingMode::Up:
+      frintp(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
+      return;
+    case RoundingMode::Down:
+      frintm(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
+      return;
+    case RoundingMode::NearestTiesToEven:
+      frintn(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
+      return;
+    case RoundingMode::TowardsZero:
+      frintz(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
+      return;
+  }
+  MOZ_CRASH("unexpected mode");
 }
 
 //}}} check_macroassembler_style

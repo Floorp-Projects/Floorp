@@ -295,7 +295,16 @@ class Assembler : public vixl::Assembler {
   static bool SupportsFastUnalignedAccesses() { return true; }
   static bool SupportsWasmSimd() { return true; }
 
-  static bool HasRoundInstruction(RoundingMode mode) { return false; }
+  static bool HasRoundInstruction(RoundingMode mode) {
+    switch (mode) {
+      case RoundingMode::Up:
+      case RoundingMode::Down:
+      case RoundingMode::NearestTiesToEven:
+      case RoundingMode::TowardsZero:
+        return true;
+    }
+    MOZ_CRASH("unexpected mode");
+  }
 
  protected:
   // Add a jump whose target is unknown until finalization.
