@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.intent
 
 import android.content.Intent
+import android.os.StrictMode
 import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -26,13 +27,14 @@ class SpeechProcessingIntentProcessor(
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return if (intent.extras?.getBoolean(HomeActivity.OPEN_TO_BROWSER_AND_LOAD) == true) {
             out.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, false)
-
-            val searchEvent = MetricsUtils.createSearchEvent(
-                activity.components.search.provider.getDefaultEngine(activity),
-                activity,
-                Event.PerformedSearch.SearchAccessPoint.WIDGET
-            )
-            searchEvent?.let { metrics.track(it) }
+            activity.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                val searchEvent = MetricsUtils.createSearchEvent(
+                    activity.components.search.provider.getDefaultEngine(activity),
+                    activity,
+                    Event.PerformedSearch.SearchAccessPoint.WIDGET
+                )
+                searchEvent?.let { metrics.track(it) }
+            }
 
             activity.openToBrowserAndLoad(
                 searchTermOrURL = intent.getStringExtra(SPEECH_PROCESSING).orEmpty(),
