@@ -27,7 +27,7 @@ add_task(async function() {
     });
     const a = document.createElement('a');
     // Pass an unknown mimetype so we don't "correct" the extension:
-    a.href = URL.createObjectURL(new Blob(["test"], {type: "application/x-gobbledygook-firefox-unknown"}));
+    a.href = "data:application/baconizer;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
     a.download = name;
     a.dispatchEvent(new MouseEvent('click'));
     is((await promiseName), expected, "got the expected sanitized name");
