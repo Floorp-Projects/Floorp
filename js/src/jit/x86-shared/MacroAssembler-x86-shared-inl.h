@@ -1217,8 +1217,7 @@ void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
 
 void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
                                     FloatRegister lhsDest, FloatRegister temp) {
-  MacroAssemblerX86Shared::shuffleInt8x16(
-      lhsDest, rhs, lhsDest, mozilla::Some(temp), mozilla::Nothing(), lanes);
+  MacroAssemblerX86Shared::shuffleInt8x16(lhsDest, rhs, lhsDest, temp, lanes);
 }
 
 void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister rhs,
