@@ -16,8 +16,6 @@ using namespace mozilla::intl;
 
 OSPreferences::OSPreferences() = default;
 
-OSPreferences::~OSPreferences() = default;
-
 bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
@@ -198,3 +196,5 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
 
   return true;
 }
+
+void OSPreferences::RemoveObservers() {}
