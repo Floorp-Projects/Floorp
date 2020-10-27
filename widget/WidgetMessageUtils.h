@@ -7,6 +7,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 #include "nsIWidget.h"
 
 namespace IPC {
@@ -30,6 +31,12 @@ struct ParamTraits<LookAndFeelInt> {
     }
     return false;
   }
+};
+
+template <>
+struct ParamTraits<mozilla::widget::ThemeChangeKind>
+    : public BitFlagsEnumSerializer<mozilla::widget::ThemeChangeKind,
+                                    mozilla::widget::ThemeChangeKind::AllBits> {
 };
 
 template <>

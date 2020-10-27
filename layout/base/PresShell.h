@@ -27,6 +27,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layout/LayoutTelemetryTools.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
 #include "nsCoord.h"
@@ -1246,7 +1247,11 @@ class PresShell final : public nsStubDocumentObserver,
 
   // Widget notificiations
   void WindowSizeMoveDone();
-  void ThemeChanged() { mPresContext->ThemeChanged(); }
+
+  void ThemeChanged(widget::ThemeChangeKind aChangeKind) {
+    mPresContext->ThemeChanged(aChangeKind);
+  }
+
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
   MOZ_CAN_RUN_SCRIPT

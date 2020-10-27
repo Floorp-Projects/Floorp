@@ -14,6 +14,7 @@
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -301,8 +302,8 @@ class ContentChild final : public PContentChild,
                                                  const bool& haveBidiKeyboards);
 
   mozilla::ipc::IPCResult RecvNotifyVisited(nsTArray<VisitedQueryResult>&&);
-  mozilla::ipc::IPCResult RecvThemeChanged(
-      LookAndFeelCache&& aLookAndFeelCache);
+  mozilla::ipc::IPCResult RecvThemeChanged(LookAndFeelCache&& aLookAndFeelCache,
+                                           widget::ThemeChangeKind);
 
   mozilla::ipc::IPCResult RecvUpdateSystemParameters(
       nsTArray<SystemParameterKVPair>&& aUpdates);

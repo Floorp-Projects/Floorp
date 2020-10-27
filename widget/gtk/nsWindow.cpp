@@ -3991,7 +3991,8 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 }
 
 void nsWindow::ThemeChanged() {
-  NotifyThemeChanged();
+  // Everything could've changed.
+  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
 
   if (!mGdkWindow || MOZ_UNLIKELY(mIsDestroyed)) return;
 
@@ -4017,8 +4018,9 @@ void nsWindow::OnDPIChanged() {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
-      // Update menu's font size etc
-      presShell->ThemeChanged();
+      // Update menu's font size etc.
+      // This affects style / layout because it affects system font sizes.
+      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
     mWidgetListener->UIResolutionChanged();
   }
@@ -4027,12 +4029,9 @@ void nsWindow::OnDPIChanged() {
 void nsWindow::OnCheckResize() { mPendingConfigures++; }
 
 void nsWindow::OnCompositedChanged() {
-  if (mWidgetListener) {
-    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
-      // Update CSD after the change in alpha visibility
-      presShell->ThemeChanged();
-    }
-  }
+  // Update CSD after the change in alpha visibility. This only affects
+  // system metrics, not other theme shenanigans.
+  NotifyThemeChanged(ThemeChangeKind::MediaQueriesOnly);
 }
 
 void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {

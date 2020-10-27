@@ -181,6 +181,7 @@ EXPORTS.mozilla.widget += [
     "PuppetBidiKeyboard.h",
     "Screen.h",
     "ScreenManager.h",
+    "ThemeChangeKind.h",
     "WidgetMessageUtils.h",
     "WindowSurface.h",
 ]
