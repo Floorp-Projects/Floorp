@@ -359,3 +359,62 @@ function checkVideoDidPlay(browser, args) {
     content.document.body.remove(video);
   });
 }
+
+/**
+ * Return a wakelock observer that has a `check()` method that allows us to wait
+ * until the wakelock state changes to our expected state.
+ * @param needLock
+ *        the wakolock should be locked or not
+ * @param isTabInForeground
+ *        the wakelock should be in the foreground or not
+ */
+function getWakeLockState(topic, needLock, isTabInForeground) {
+  const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
+  const powerManager = powerManagerService.getService(
+    Ci.nsIPowerManagerService
+  );
+  const tabState = isTabInForeground ? "foreground" : "background";
+  return {
+    check: async () => {
+      if (needLock) {
+        const expectedLockState = `locked-${tabState}`;
+        if (powerManager.getWakeLockState(topic) != expectedLockState) {
+          await wakeLockObserved(
+            powerManager,
+            topic,
+            state => state == expectedLockState
+          );
+        }
+        ok(true, `requested '${topic}' wakelock in ${tabState}`);
+      } else {
+        if (powerManager.getWakeLockState(topic) != "unlocked") {
+          await wakeLockObserved(
+            powerManager,
+            topic,
+            state => state == "unlocked"
+          );
+        }
+        ok(
+          powerManager.getWakeLockState(topic) == "unlocked",
+          `doesn't request lock for '${topic}'`
+        );
+      }
+    },
+  };
+}
+
+function wakeLockObserved(powerManager, observeTopic, checkFn) {
+  return new Promise(resolve => {
+    function wakeLockListener() {}
+    wakeLockListener.prototype = {
+      QueryInterface: ChromeUtils.generateQI(["nsIDOMMozWakeLockListener"]),
+      callback(topic, state) {
+        if (topic == observeTopic && checkFn(state)) {
+          powerManager.removeWakeLockListener(wakeLockListener.prototype);
+          resolve();
+        }
+      },
+    };
+    powerManager.addWakeLockListener(wakeLockListener.prototype);
+  });
+}
