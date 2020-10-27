@@ -281,9 +281,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1607706
          "race:TemporaryIPCBlobParent::CreateAndShareFile\n"
 
-         // Bug 1607762
-         "race:nsHtml5OwningUTF16Buffer::Release\n"
-
          // Bug 1608068
          "race:makeOwnBaseShape\n"
          "race:numDynamicSlots\n"
