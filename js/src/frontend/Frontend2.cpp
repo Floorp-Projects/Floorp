@@ -617,16 +617,15 @@ bool Smoosh::compileGlobalScript(JSContext* cx,
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   Sprinter sprinter(cx);
+  Rooted<JSScript*> script(cx, gcOutput.script);
   if (!sprinter.init()) {
     return false;
   }
-  if (!Disassemble(cx, gcOutput.script, true, &sprinter,
-                   DisassembleSkeptically::Yes)) {
+  if (!Disassemble(cx, script, true, &sprinter, DisassembleSkeptically::Yes)) {
     return false;
   }
   printf("%s\n", sprinter.string());
-  if (!Disassemble(cx, gcOutput.script, true, &sprinter,
-                   DisassembleSkeptically::No)) {
+  if (!Disassemble(cx, script, true, &sprinter, DisassembleSkeptically::No)) {
     return false;
   }
   // (don't bother printing it)
