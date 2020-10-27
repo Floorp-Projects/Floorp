@@ -299,7 +299,11 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
     if (fd != AT_FDCWD && (flags & AT_EMPTY_PATH) != 0 &&
         strcmp(path, "") == 0) {
-      return ConvertError(fstatsyscall(fd, buf));
+#ifdef __NR_fstat64
+      return DoSyscall(__NR_fstat64, fd, buf);
+#else
+      return DoSyscall(__NR_fstat, fd, buf);
+#endif
     }
 
     if (fd != AT_FDCWD && path[0] != '/') {
