@@ -9,54 +9,13 @@
  * the parent process.
  */
 
-const { Cc, Ci } = require("chrome");
-
-const FRAME_SCRIPT_UTILS_URL =
-  "chrome://mochitests/content/browser/devtools/client/shared/test/frame-script-utils.js";
-
-let gMM = null;
+let gSelectedBrowser = null;
 
 /**
  * Loads the relevant frame scripts into the provided browser's message manager.
  */
-exports.pmmLoadFrameScripts = gBrowser => {
-  gMM = gBrowser.selectedBrowser.messageManager;
-  gMM.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
-};
-
-/**
- * Clears the cached message manager.
- */
-exports.pmmClearFrameScripts = () => {
-  gMM = null;
-};
-
-/**
- * Sends a message to the message listener, attaching an id to the payload data.
- * Resolves a returned promise when the response is received from the message
- * listener, with the same id as part of the response payload data.
- */
-exports.pmmUniqueMessage = function(message, payload) {
-  if (!gMM) {
-    throw new Error(
-      "`pmmLoadFrameScripts()` must be called when using MessageManager."
-    );
-  }
-
-  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
-  payload.id = generateUUID().toString();
-
-  return new Promise(resolve => {
-    gMM.addMessageListener(message + ":response", function onHandler({ data }) {
-      if (payload.id == data.id) {
-        gMM.removeMessageListener(message + ":response", onHandler);
-        resolve(data.data);
-      }
-    });
-    gMM.sendAsyncMessage(message, payload);
-  });
+exports.pmmInitWithBrowser = gBrowser => {
+  gSelectedBrowser = gBrowser.selectedBrowser;
 };
 
 /**
@@ -96,29 +55,28 @@ exports.pmmStopProfiler = async function() {
  * Calls a method on the nsProfiler module.
  */
 exports.pmmSendProfilerCommand = (method, args = []) => {
-  return exports.pmmUniqueMessage("devtools:test:profiler", { method, args });
-};
-
-/**
- * Evaluates a script in content, returning a promise resolved with the
- * returned result.
- */
-exports.pmmEvalInDebuggee = script => {
-  return exports.pmmUniqueMessage("devtools:test:eval", { script });
+  // This script is loaded via the CommonJS module so the global
+  // SpecialPowers isn't available, so get it from the browser's window.
+  return gSelectedBrowser.ownerGlobal.SpecialPowers.spawn(
+    gSelectedBrowser,
+    [method, args],
+    (methodChild, argsChild) => {
+      return Services.profiler[methodChild](...argsChild);
+    }
+  );
 };
 
 /**
  * Evaluates a console method in content.
  */
 exports.pmmConsoleMethod = function(method, ...args) {
-  // Terrible ugly hack -- this gets stringified when it uses the
-  // message manager, so an undefined arg in `console.profileEnd()`
-  // turns into a stringified "null", which is terrible. This method
-  // is only used for test helpers, so swap out the argument if its undefined
-  // with an empty string. Differences between empty string and undefined are
-  // tested on the front itself.
-  if (args[0] == null) {
-    args[0] = "";
-  }
-  return exports.pmmUniqueMessage("devtools:test:console", { method, args });
+  // This script is loaded via the CommonJS module so the global
+  // SpecialPowers isn't available, so get it from the browser's window.
+  return gSelectedBrowser.ownerGlobal.SpecialPowers.spawn(
+    gSelectedBrowser,
+    [method, args],
+    (methodChild, argsChild) => {
+      content.console[methodChild].apply(content.console, argsChild);
+    }
+  );
 };
