@@ -190,6 +190,7 @@ var UrlbarUtils = {
   // information someplace better.
   WEB_ENGINE_NAMES: new Set([
     "百度", // Baidu
+    "百度搜索", // "Baidu Search", the name of Baidu's OpenSearch engine.
     "Bing",
     "DuckDuckGo",
     "Ecosia",
