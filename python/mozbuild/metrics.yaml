@@ -120,3 +120,17 @@ mozbuild:
     expires: never
     send_in_pings:
       - usage
+  project:
+    type: string
+    description: The project being built.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1654084
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1654084#c2
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - mhentges@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
