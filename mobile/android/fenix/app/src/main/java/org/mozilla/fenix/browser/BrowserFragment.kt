@@ -164,7 +164,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 navController = findNavController(),
                 settings = settings,
                 appLinksUseCases = context.components.useCases.appLinksUseCases,
-                container = browserToolbarView.view.parent as ViewGroup
+                container = browserLayout as ViewGroup
             )
             session.register(
                 openInAppOnboardingObserver!!,
