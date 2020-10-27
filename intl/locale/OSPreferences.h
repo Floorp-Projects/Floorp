@@ -77,6 +77,10 @@ class OSPreferences : public mozIOSPreferences {
     return RefPtr<OSPreferences>(GetInstance()).forget();
   }
 
+  static bool GetPatternForSkeleton(const nsAString& aSkeleton,
+                                    const nsACString& aLocale,
+                                    nsAString& aRetVal);
+
   static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
                                           nsAString& aRetVal);
 
@@ -120,9 +124,6 @@ class OSPreferences : public mozIOSPreferences {
                                    DateTimeFormatStyle aTimeStyle,
                                    const nsACString& aLocale,
                                    nsAString& aRetVal);
-
-  bool GetPatternForSkeleton(const nsAString& aSkeleton,
-                             const nsACString& aLocale, nsAString& aRetVal);
 
   /**
    * This is a host environment specific method that will be implemented

@@ -74,8 +74,6 @@ nsresult DateTimeFormat::FormatDateTime(
   UErrorCode status = U_ZERO_ERROR;
 
   nsAutoString skeleton;
-  nsAutoString pattern;
-
   switch (aSkeleton) {
     case Skeleton::yyyyMM:
       skeleton.AssignASCII("yyyyMM");
@@ -87,28 +85,10 @@ nsresult DateTimeFormat::FormatDateTime(
       MOZ_ASSERT_UNREACHABLE("Unhandled skeleton enum");
   }
 
-  UDateTimePatternGenerator* patternGenerator =
-      udatpg_open(mLocale->get(), &status);
-  if (U_SUCCESS(status)) {
-    int32_t patternLength;
-    pattern.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-    patternLength = udatpg_getBestPattern(
-        patternGenerator,
-        reinterpret_cast<const UChar*>(skeleton.BeginReading()),
-        skeleton.Length(), reinterpret_cast<UChar*>(pattern.BeginWriting()),
-        DATETIME_FORMAT_INITIAL_LEN, &status);
-    pattern.SetLength(patternLength);
-
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-      status = U_ZERO_ERROR;
-      udatpg_getBestPattern(
-          patternGenerator,
-          reinterpret_cast<const UChar*>(skeleton.BeginReading()),
-          skeleton.Length(), reinterpret_cast<UChar*>(pattern.BeginWriting()),
-          patternLength, &status);
-    }
+  nsAutoString pattern;
+  if (!OSPreferences::GetPatternForSkeleton(skeleton, *mLocale, pattern)) {
+    return NS_ERROR_FAILURE;
   }
-  udatpg_close(patternGenerator);
 
   nsAutoString timeZoneID;
   BuildTimeZoneString(aExplodedTime->tm_params, timeZoneID);
