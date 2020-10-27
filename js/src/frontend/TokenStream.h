@@ -2565,6 +2565,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     }
   }
 
+  void reportIllegalCharacter(int32_t cp);
+
   MOZ_MUST_USE bool putIdentInCharBuffer(const Unit* identStart);
 
   using IsIntegerUnit = bool (*)(int32_t);
