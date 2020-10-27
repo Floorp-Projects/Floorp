@@ -340,3 +340,5 @@ fa3daa92292dde4bf9405c56e43a464e53c349a2 - Sylvestre Ledru - Bug 1519636 - Ride 
 6d386a2162b90d72529adbc283391fc4732eff32 - Csoregi Natalia - Backed out changeset 4ad80127f89f (bug 1519636) for bustage on MarkupMap.h and nsAccessibilityService.cpp. CLOSED TREE
 020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=Ehsan
 c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre, CLOSED TREE
+994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
+e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml`
