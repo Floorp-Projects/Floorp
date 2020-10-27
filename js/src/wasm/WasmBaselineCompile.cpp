@@ -192,6 +192,7 @@ class BaseStackFrame;
 
 enum class UseABI { Wasm, Builtin, System };
 enum class InterModule { False = false, True = true };
+enum class RhsDestOp { True = true };
 
 #if defined(JS_CODEGEN_NONE)
 #  define RABALDR_SCRATCH_I32
@@ -8239,6 +8240,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType src,
                                   LhsDestType srcDest));
 
+  template <typename RhsDestType, typename LhsType>
+  void emitVectorBinop(void (*op)(MacroAssembler& masm, RhsDestType src,
+                                  LhsType srcDest, RhsDestOp));
+
   template <typename RhsType, typename LhsDestType, typename TempType>
   void emitVectorBinop(void (*)(MacroAssembler& masm, RhsType rs,
                                 LhsDestType rsd, TempType temp));
@@ -12973,6 +12978,25 @@ static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
   masm.maxFloat64x2(rs, rsd, temp1, temp2);
 }
 
+static void PMinF32x4(MacroAssembler& masm, RegV128 rsd, RegV128 rs,
+                      RhsDestOp) {
+  masm.pseudoMinFloat32x4(rsd, rs);
+}
+
+static void PMinF64x2(MacroAssembler& masm, RegV128 rsd, RegV128 rs,
+                      RhsDestOp) {
+  masm.pseudoMinFloat64x2(rsd, rs);
+}
+
+static void PMaxF32x4(MacroAssembler& masm, RegV128 rsd, RegV128 rs,
+                      RhsDestOp) {
+  masm.pseudoMaxFloat32x4(rsd, rs);
+}
+
+static void PMaxF64x2(MacroAssembler& masm, RegV128 rsd, RegV128 rs,
+                      RhsDestOp) {
+  masm.pseudoMaxFloat64x2(rsd, rs);
+}
 #  elif defined(JS_CODEGEN_ARM64)
 static void MinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.minFloat32x4(rs, rsd);
@@ -12989,7 +13013,6 @@ static void MaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.maxFloat64x2(rs, rsd);
 }
-#  endif
 
 static void PMinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.pseudoMinFloat32x4(rs, rsd);
@@ -13006,6 +13029,7 @@ static void PMaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 static void PMaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.pseudoMaxFloat64x2(rs, rsd);
 }
+#  endif
 
 static void DotI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.widenDotInt16x8(rs, rsd);
@@ -13569,6 +13593,17 @@ void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm, RhsType src,
   RhsType rs = pop<RhsType>();
   LhsDestType rsd = pop<LhsDestType>();
   op(masm, rs, rsd);
+  free(rs);
+  push(rsd);
+}
+
+template <typename RhsDestType, typename LhsType>
+void BaseCompiler::emitVectorBinop(void (*op)(MacroAssembler& masm,
+                                              RhsDestType src, LhsType srcDest,
+                                              RhsDestOp)) {
+  RhsDestType rsd = pop<RhsDestType>();
+  LhsType rs = pop<LhsType>();
+  op(masm, rsd, rs, RhsDestOp::True);
   free(rs);
   push(rsd);
 }
