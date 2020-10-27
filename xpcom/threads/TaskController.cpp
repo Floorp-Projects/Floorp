@@ -23,6 +23,11 @@
 #include "nsThread.h"
 #include "prsystem.h"
 
+#ifdef XP_WIN
+typedef HRESULT(WINAPI* SetThreadDescriptionPtr)(HANDLE hThread,
+                                                 PCWSTR lpThreadDescription);
+#endif
+
 namespace mozilla {
 
 std::unique_ptr<TaskController> TaskController::sSingleton;
@@ -104,6 +109,10 @@ void ThreadFuncPoolThread(TaskController* aController, size_t aIndex) {
   aController->RunPoolThread();
 }
 
+#ifdef XP_WIN
+static SetThreadDescriptionPtr sSetThreadDescriptionFunc = nullptr;
+#endif
+
 bool TaskController::InitializeInternal() {
   InputTaskManager::Init();
   mMTProcessingRunnable = NS_NewRunnableFunction(
@@ -112,6 +121,12 @@ bool TaskController::InitializeInternal() {
   mMTBlockingProcessingRunnable = NS_NewRunnableFunction(
       "TaskController::ExecutePendingMTTasks()",
       []() { TaskController::Get()->ProcessPendingMTTask(true); });
+
+#ifdef XP_WIN
+  sSetThreadDescriptionFunc =
+      reinterpret_cast<SetThreadDescriptionPtr>(::GetProcAddress(
+          ::GetModuleHandle(L"Kernel32.dll"), "SetThreadDescription"));
+#endif
 
   return true;
 }
@@ -166,6 +181,22 @@ void TaskController::RunPoolThread() {
   // lock. This is required since it's perfectly feasible for task destructors
   // to post events themselves.
   RefPtr<Task> lastTask;
+
+#ifdef XP_WIN
+  nsAutoString threadWName;
+  threadWName.AppendLiteral(u"TaskController Thread #");
+  threadWName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
+
+  if (sSetThreadDescriptionFunc) {
+    sSetThreadDescriptionFunc(
+        ::GetCurrentThread(),
+        reinterpret_cast<const WCHAR*>(threadWName.BeginReading()));
+  }
+#endif
+  nsAutoCString threadName;
+  threadName.AppendLiteral("TaskController Thread #");
+  threadName.AppendInt(static_cast<int64_t>(mThreadPoolIndex));
+  PROFILER_REGISTER_THREAD(threadName.BeginReading());
 
   MutexAutoLock lock(mGraphMutex);
   while (true) {
