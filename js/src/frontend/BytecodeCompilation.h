@@ -105,6 +105,15 @@ extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
 extern bool InstantiateStencilsForDelazify(JSContext* cx,
                                            CompilationInfo& compilationInfo);
 
+// Perform some operation to reduce the time taken by InstantiateStencils.
+//
+// This is useful for off-thread compilation/decode, to perform extra task
+// of-main-thread, and reduce task on main-thread.
+extern bool PrepareForInstantiate(JSContext* cx,
+                                  CompilationInfo& compilationInfo);
+extern bool PrepareForInstantiate(JSContext* cx,
+                                  CompilationInfoVector& compilationInfos);
+
 }  // namespace frontend
 
 }  // namespace js

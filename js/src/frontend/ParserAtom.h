@@ -105,14 +105,25 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   // Mapping into from ParserAtoms to JSAtoms.
   enum class AtomIndexKind : uint8_t {
-    Unresolved,  // Not yet resolved
-    AtomIndex,   // Index into CompilationAtomCache
-    WellKnown,   // WellKnownAtomId to index into cx->names() set
-    Static1,     // Index into StaticStrings length-1 set
-    Static2,     // Index into StaticStrings length-2 set
+    // Not yet instantiated, and not yet marked as used by stencil data.
+    NotInstantiatedAndNotMarked,
+    // Not yet instantiated, and already marked as used by stencil data.
+    // While creating stencil, not-instantiated atom is marked while storing
+    // into stencil field.
+    // While XDR decoding, all not-instantiated atoms are marked while decoding,
+    // given they should be used.
+    NotInstantiatedAndMarked,
+    // Index into CompilationAtomCache
+    AtomIndex,
+    // WellKnownAtomId to index into cx->names() set
+    WellKnown,
+    // Index into StaticStrings length-1 set
+    Static1,
+    // Index into StaticStrings length-2 set
+    Static2,
   };
   uint32_t atomIndex_ = 0;
-  AtomIndexKind atomIndexKind_ = AtomIndexKind::Unresolved;
+  AtomIndexKind atomIndexKind_ = AtomIndexKind::NotInstantiatedAndNotMarked;
 
   // Encoding type.
   bool hasTwoByteChars_ = false;
@@ -180,6 +191,22 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
 
+  bool isNotInstantiatedAndNotMarked() const {
+    return atomIndexKind_ == AtomIndexKind::NotInstantiatedAndNotMarked;
+  }
+  bool isNotInstantiatedAndMarked() const {
+    return atomIndexKind_ == AtomIndexKind::NotInstantiatedAndMarked;
+  }
+
+  void markUsedByStencil() const {
+    if (isNotInstantiatedAndNotMarked()) {
+      // Use const method + const_cast here to avoid marking static strings'
+      // field mutable.
+      const_cast<ParserAtomEntry*>(this)->atomIndexKind_ =
+          AtomIndexKind::NotInstantiatedAndMarked;
+    }
+  }
+
   bool equalsJSAtom(JSAtom* other) const;
 
   template <typename CharT>
@@ -198,6 +225,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
     return StaticParserString2(atomIndex_);
   }
 
+  bool isAtomIndex() const {
+    return atomIndexKind_ == AtomIndexKind::AtomIndex;
+  }
   bool isWellKnownAtomId() const {
     return atomIndexKind_ == AtomIndexKind::WellKnown;
   }
@@ -488,6 +518,10 @@ class ParserAtomsTable {
 
  public:
   bool empty() const { return entrySet_.empty(); }
+
+  // The number of atoms with either NotInstantiatedAndMarked or AtomIndex kind,
+  // that requires space in CompilationAtomCache.atoms while instantiation.
+  size_t requiredNonStaticAtomCount() const;
 
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
                                                  const char* asciiPtr,

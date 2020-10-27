@@ -372,6 +372,16 @@ bool frontend::InstantiateStencils(JSContext* cx,
   return true;
 }
 
+bool frontend::PrepareForInstantiate(JSContext* cx,
+                                     CompilationInfo& compilationInfo) {
+  return compilationInfo.prepareForInstantiate(cx);
+}
+
+bool frontend::PrepareForInstantiate(JSContext* cx,
+                                     CompilationInfoVector& compilationInfos) {
+  return compilationInfos.prepareForInstantiate(cx);
+}
+
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,

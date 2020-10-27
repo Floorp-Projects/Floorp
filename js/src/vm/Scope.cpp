@@ -223,6 +223,15 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
 template <typename ConcreteScope>
 static UniquePtr<ParserScopeData<ConcreteScope>> CopyScopeData(
     JSContext* cx, ParserScopeData<ConcreteScope>* data) {
+  // Mark atoms as used by Stencils.
+  auto* names = data->trailingNames.start();
+  uint32_t length = data->length;
+  for (size_t i = 0; i < length; i++) {
+    if (const ParserAtom* name = names[i].name()) {
+      name->markUsedByStencil();
+    }
+  }
+
   return CopyScopeDataImpl<ConcreteScope>(cx, data);
 }
 
