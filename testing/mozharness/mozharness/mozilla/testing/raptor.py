@@ -467,6 +467,16 @@ class Raptor(
                 },
             ],
             [
+                ["--setenv"],
+                {
+                    "action": "append",
+                    "metavar": "NAME=VALUE",
+                    "dest": "environment",
+                    "default": [],
+                    "help": "Set a variable in the test environment. May be used multiple times.",
+                },
+            ],
+            [
                 ["--cold"],
                 {
                     "action": "store_true",
@@ -592,6 +602,7 @@ class Raptor(
             "conditioned_profile_scenario", "settled"
         )
         self.extra_prefs = self.config.get("extra_prefs")
+        self.environment = self.config.get("environment")
         self.is_release_build = self.config.get("is_release_build")
         self.debug_mode = self.config.get("debug_mode", False)
         self.chromium_dist_path = None
@@ -870,6 +881,10 @@ class Raptor(
         if self.config.get("extra_prefs"):
             options.extend(
                 ["--setpref={}".format(i) for i in self.config.get("extra_prefs")]
+            )
+        if self.config.get("environment"):
+            options.extend(
+                ["--setenv={}".format(i) for i in self.config.get("environment")]
             )
 
         for (arg,), details in Raptor.browsertime_options:

@@ -300,6 +300,14 @@ def create_parser(mach_interface=False):
         metavar="PREF=VALUE",
         help="Set a browser preference. May be used multiple times.",
     )
+    add_arg(
+        "--setenv",
+        dest="environment",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help="Set a variable in the test environment. May be used multiple times.",
+    )
     if not mach_interface:
         add_arg(
             "--run-local",

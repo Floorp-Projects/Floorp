@@ -47,6 +47,9 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         else:
             self.runner.env["MOZ_WEBRENDER"] = "0"
 
+        for var, val in self.config.get("environment", {}):
+            self.runner.env[var] = val
+
     def launch_desktop_browser(self, test):
         raise NotImplementedError
 
