@@ -337,6 +337,9 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   uint32_t offset = access.offset();
   MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
+  // Not yet supported: not used by baseline compiler
+  MOZ_ASSERT(!access.isSplatSimd128Load());
+
   MOZ_ASSERT(ptr_ == ptrScratch_);
 
   ARMRegister memoryBase(memoryBase_, 64);
@@ -383,11 +386,11 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
         Ldr(SelectGPReg(outany, out64), srcAddr);
         break;
       case Scalar::Float32:
-        // LDR does the right thing also for access.isZeroExtendSimdLoad()
+        // LDR does the right thing also for access.isZeroExtendSimd128Load()
         Ldr(SelectFPReg(outany, out64, 32), srcAddr);
         break;
       case Scalar::Float64:
-        // LDR does the right thing also for access.isZeroExtendSimdLoad()
+        // LDR does the right thing also for access.isZeroExtendSimd128Load()
         Ldr(SelectFPReg(outany, out64, 64), srcAddr);
         break;
       case Scalar::Simd128:
