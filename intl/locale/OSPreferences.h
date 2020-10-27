@@ -125,6 +125,10 @@ class OSPreferences : public mozIOSPreferences {
                                    const nsACString& aLocale,
                                    nsACString& aRetVal);
 
+  bool OverrideDateTimePattern(DateTimeFormatStyle aDateStyle,
+                               DateTimeFormatStyle aTimeStyle,
+                               const nsACString& aLocale, nsACString& aRetVal);
+
   /**
    * This is a host environment specific method that will be implemented
    * separately for each platform.
@@ -154,6 +158,18 @@ class OSPreferences : public mozIOSPreferences {
   bool ReadDateTimePattern(DateTimeFormatStyle aDateFormatStyle,
                            DateTimeFormatStyle aTimeFormatStyle,
                            const nsACString& aLocale, nsACString& aRetVal);
+
+  /**
+   * This is called by the destructor to clean up any OS specific observers
+   * that are registered.
+   */
+  void RemoveObservers();
+
+  /**
+   * This is called by the destructor to clean up any OS specific observers
+   * that are registered.
+   */
+  static void PreferenceChanged(const char* aPrefName, void* /* aClosure */);
 };
 
 }  // namespace intl
