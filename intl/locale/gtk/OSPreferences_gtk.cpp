@@ -136,8 +136,8 @@ static int HourCycle() {
 bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                         DateTimeFormatStyle aTimeStyle,
                                         const nsACString& aLocale,
-                                        nsAString& aRetVal) {
-  nsAutoString skeleton;
+                                        nsACString& aRetVal) {
+  nsAutoCString skeleton;
   if (!GetDateTimeSkeletonForStyle(aDateStyle, aTimeStyle, aLocale, skeleton)) {
     return false;
   }

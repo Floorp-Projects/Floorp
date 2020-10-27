@@ -43,6 +43,6 @@ bool OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList) {
 bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                         DateTimeFormatStyle aTimeStyle,
                                         const nsACString& aLocale,
-                                        nsAString& aRetVal) {
+                                        nsACString& aRetVal) {
   return false;
 }
