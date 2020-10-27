@@ -2860,6 +2860,10 @@ class BaseAssembler : public GenericAssembler {
     threeByteOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38, src1, src0,
                     dst);
   }
+  void vpshufb_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    threeByteOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38, address,
+                    src0, dst);
+  }
 
   void vshufps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0,
                    XMMRegisterID dst) {
@@ -4994,6 +4998,17 @@ class BaseAssembler : public GenericAssembler {
       m_buffer.putByteUnchecked(escape);
       m_buffer.putByteUnchecked(opcode);
       memoryModRM(address, reg);
+    }
+
+    void threeByteRipOp(ThreeByteOpcodeID opcode, ThreeByteEscape escape,
+                        int ripOffset, int reg) {
+      m_buffer.ensureSpace(MaxInstructionSize);
+      emitRexIfNeeded(reg, 0, 0);
+      m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
+      m_buffer.putByteUnchecked(escape);
+      m_buffer.putByteUnchecked(opcode);
+      putModRm(ModRmMemoryNoDisp, noBase, reg);
+      m_buffer.putIntUnchecked(ripOffset);
     }
 
     void threeByteOpVex(VexOperandType ty, ThreeByteOpcodeID opcode,
