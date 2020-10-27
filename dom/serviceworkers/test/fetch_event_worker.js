@@ -224,12 +224,18 @@ onfetch = function(ev) {
   } else if (ev.request.url.includes("nonexistent_worker_script.js")) {
     ev.respondWith(
       Promise.resolve(
-        new Response("postMessage('worker-intercept-success')", {})
+        new Response("postMessage('worker-intercept-success')", {
+          headers: { "Content-Type": "text/javascript" },
+        })
       )
     );
   } else if (ev.request.url.includes("nonexistent_imported_script.js")) {
     ev.respondWith(
-      Promise.resolve(new Response("check_intercepted_script();", {}))
+      Promise.resolve(
+        new Response("check_intercepted_script();", {
+          headers: { "Content-Type": "text/javascript" },
+        })
+      )
     );
   } else if (ev.request.url.includes("deliver-gzip")) {
     // Don't handle the request, this will make Necko perform a network request, at
