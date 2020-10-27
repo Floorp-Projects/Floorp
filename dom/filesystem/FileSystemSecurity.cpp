@@ -7,6 +7,7 @@
 #include "FileSystemSecurity.h"
 #include "FileSystemUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
@@ -21,7 +22,7 @@ StaticRefPtr<FileSystemSecurity> gFileSystemSecurity;
 /* static */
 already_AddRefed<FileSystemSecurity> FileSystemSecurity::Get() {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 
   RefPtr<FileSystemSecurity> service = gFileSystemSecurity.get();
   return service.forget();
@@ -30,7 +31,7 @@ already_AddRefed<FileSystemSecurity> FileSystemSecurity::Get() {
 /* static */
 already_AddRefed<FileSystemSecurity> FileSystemSecurity::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 
   if (!gFileSystemSecurity) {
     gFileSystemSecurity = new FileSystemSecurity();
@@ -43,18 +44,18 @@ already_AddRefed<FileSystemSecurity> FileSystemSecurity::GetOrCreate() {
 
 FileSystemSecurity::FileSystemSecurity() {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 }
 
 FileSystemSecurity::~FileSystemSecurity() {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 }
 
 void FileSystemSecurity::GrantAccessToContentProcess(
     ContentParentId aId, const nsAString& aDirectoryPath) {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 
   nsTArray<nsString>* paths;
   if (!mPaths.Get(aId, &paths)) {
@@ -69,7 +70,7 @@ void FileSystemSecurity::GrantAccessToContentProcess(
 
 void FileSystemSecurity::Forget(ContentParentId aId) {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 
   mPaths.Remove(aId);
 }
@@ -77,7 +78,7 @@ void FileSystemSecurity::Forget(ContentParentId aId) {
 bool FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
                                                    const nsAString& aPath) {
   MOZ_ASSERT(NS_IsMainThread());
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
 
 #if defined(XP_WIN)
   if (StringBeginsWith(aPath, u"..\\"_ns) ||

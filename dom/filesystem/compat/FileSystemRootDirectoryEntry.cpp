@@ -7,6 +7,7 @@
 #include "FileSystemRootDirectoryEntry.h"
 #include "FileSystemRootDirectoryReader.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "CallbackRunnables.h"
 
 namespace mozilla {
 namespace dom {

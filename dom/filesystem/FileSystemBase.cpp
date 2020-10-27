@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/FileSystemBase.h"
 
+#include "mozilla/dom/FileSystemUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "OSFileSystem.h"
 
