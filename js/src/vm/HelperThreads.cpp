@@ -879,24 +879,12 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
   }
 }
 
-void js::CancelOffThreadParses(JSRuntime* rt) {
-  AutoLockHelperThreadState lock;
-
+static void WaitForOffThreadParses(JSRuntime* rt,
+                                   AutoLockHelperThreadState& lock) {
   if (HelperThreadState().threads(lock).empty()) {
     return;
   }
 
-#ifdef DEBUG
-  GlobalHelperThreadState::ParseTaskVector& waitingOnGC =
-      HelperThreadState().parseWaitingOnGC(lock);
-  for (size_t i = 0; i < waitingOnGC.length(); i++) {
-    MOZ_ASSERT(!waitingOnGC[i]->runtimeMatches(rt));
-  }
-#endif
-
-  // Instead of forcibly canceling pending parse tasks, just wait for all
-  // scheduled and in progress ones to complete. Otherwise the final GC may not
-  // collect everything due to zones being used off thread.
   while (true) {
     bool pending = false;
     GlobalHelperThreadState::ParseTaskVector& worklist =
@@ -923,6 +911,26 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
     }
     HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
   }
+}
+
+void js::WaitForOffThreadParses(JSRuntime* rt) {
+  AutoLockHelperThreadState lock;
+  WaitForOffThreadParses(rt, lock);
+}
+
+void js::CancelOffThreadParses(JSRuntime* rt) {
+  AutoLockHelperThreadState lock;
+
+#ifdef DEBUG
+  for (const auto& task : HelperThreadState().parseWaitingOnGC(lock)) {
+    MOZ_ASSERT(!task->runtimeMatches(rt));
+  }
+#endif
+
+  // Instead of forcibly canceling pending parse tasks, just wait for all
+  // scheduled and in progress ones to complete. Otherwise the final GC may not
+  // collect everything due to zones being used off thread.
+  WaitForOffThreadParses(rt, lock);
 
   // Clean up any parse tasks which haven't been finished by the main thread.
   auto& finished = HelperThreadState().parseFinishedList(lock);
@@ -945,9 +953,7 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
   }
 
 #ifdef DEBUG
-  GlobalHelperThreadState::ParseTaskVector& worklist =
-      HelperThreadState().parseWorklist(lock);
-  for (const auto& task : worklist) {
+  for (const auto& task : HelperThreadState().parseWorklist(lock)) {
     MOZ_ASSERT(!task->runtimeMatches(rt));
   }
 #endif
