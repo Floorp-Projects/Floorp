@@ -137,6 +137,20 @@ a.perf-photon-button:focus {
   outline: 0;
 }
 
+.perf-photon-button-ghost {
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+}
+
+.perf-photon-button-ghost:hover:enabled {
+  background-color: var(--grey-90-a10);
+}
+
+.perf-photon-button-ghost:hover:active:enabled {
+  background-color: var(--grey-90-a20);
+}
+
 .perf-photon-button-micro {
   height: 24px;
 }
@@ -207,4 +221,53 @@ a.perf-photon-button:focus {
 
 .perf-presets-custom-bold {
   font-weight: bold;
+}
+
+/* OnboardingMessage component styles */
+
+/*
+ * The grid layout of the onboarding message is:
+ *
+ *  +-----------------------------+---+
+ *  |     onboarding message      | X |
+ *  +-----------------------------+---+
+ */
+.perf-onboarding {
+  background-color: var(--theme-selection-background-hover);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: grid;
+  font-size: 13px;
+  grid-template-columns: auto 36px;
+  /* Compensate some of the 65px margin-top set on .perf-button-container */
+  margin-bottom: -50px;
+  /* Override the max-width set on ".perf > *" */
+  max-width: unset;
+  width: 100%;
+}
+
+.perf-onboarding-message {
+  background-image: url(chrome://devtools/skin/images/fox-smiling.svg);
+  background-position: 12px center;
+  background-repeat: no-repeat;
+  background-size: 22px;
+  justify-self: center;
+  margin: 12px 0;
+  padding-inline-start: 46px;
+}
+
+.perf-onboarding-message:dir(rtl) {
+  background-position-x: right 12px;
+}
+
+.perf-onboarding-message-row {
+  margin: 6px 0;
+}
+
+.perf-onboarding-close-button {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-top: 4px;
 }

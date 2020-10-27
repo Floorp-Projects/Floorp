@@ -121,6 +121,7 @@ declare namespace MockedExports {
       getBoolPref: GetPref<boolean>;
       setBoolPref: SetPref<boolean>;
       addObserver: any;
+      removeObserver: any;
     };
     profiler: any;
     platform: string;
