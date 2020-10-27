@@ -62,6 +62,7 @@ let RemotePageAccessManager = {
         "services.settings.last_update_seconds",
       ],
       RPMGetAppBuildID: ["*"],
+      RPMGetInnerMostURI: ["*"],
       RPMIsWindowPrivate: ["*"],
       RPMAddToHistogram: ["*"],
     },
@@ -103,6 +104,7 @@ let RemotePageAccessManager = {
       ],
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
+      RPMGetInnerMostURI: ["*"],
       RPMGetHttpResponseHeader: ["*"],
     },
     "about:newinstall": {
