@@ -4,7 +4,10 @@
 
 ("use strict");
 
-const EXPORTED_SYMBOLS = ["MarionetteFrameParent"];
+const EXPORTED_SYMBOLS = [
+  "getMarionetteFrameActorProxy",
+  "MarionetteFrameParent",
+];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -292,4 +295,58 @@ class MarionetteFrameParent extends JSWindowActorParent {
         throw new TypeError(`Invalid capture format: ${format}`);
     }
   }
+}
+
+/**
+ * Proxy that will dynamically create MarionetteFrame actors for a dynamically
+ * provided browsing context until the method can be fully executed by the
+ * JSWindowActor pair.
+ *
+ * @param {function(): BrowsingContext} browsingContextFn
+ *     A function that returns the reference to the browsing context for which
+ *     the query should run.
+ */
+function getMarionetteFrameActorProxy(browsingContextFn) {
+  /**
+   * Methods which modify the content page cannot be retried safely.
+   * See Bug 1673345.
+   */
+  const NO_RETRY_METHODS = [
+    "clickElement",
+    "executeScript",
+    "performActions",
+    "releaseActions",
+    "sendKeysToElement",
+    "singleTap",
+  ];
+
+  return new Proxy(
+    {},
+    {
+      get(target, methodName) {
+        return async (...args) => {
+          while (true) {
+            try {
+              // TODO: Scenarios where the window/tab got closed and
+              // currentWindowGlobal is null will be handled in Bug 1662808.
+              const actor = browsingContextFn().currentWindowGlobal.getActor(
+                "MarionetteFrame"
+              );
+              const result = await actor[methodName](...args);
+              return result;
+            } catch (e) {
+              if (e.name !== "AbortError") {
+                // Only AbortError(s) are retried, let any other error through.
+                throw e;
+              }
+
+              if (NO_RETRY_METHODS.includes(methodName)) {
+                return null;
+              }
+            }
+          }
+        };
+      },
+    }
+  );
 }
