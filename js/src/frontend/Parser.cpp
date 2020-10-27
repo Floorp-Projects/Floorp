@@ -1994,6 +1994,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
   for (const ScriptAtom& binding : pc_->closedOverBindingsForLazy()) {
     if (binding) {
+      binding->markUsedByStencil();
       gcthings.infallibleAppend(AsVariant(binding));
     } else {
       gcthings.infallibleAppend(AsVariant(NullScriptThing()));

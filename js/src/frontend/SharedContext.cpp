@@ -432,6 +432,9 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   MOZ_ASSERT(&script == &functionStencil());
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
+  if (atom_) {
+    atom_->markUsedByStencil();
+  }
   script.functionAtom = atom_;
   script.functionFlags = flags_;
   script.nargs = nargs_;
@@ -465,6 +468,9 @@ void FunctionBox::copyUpdatedEnclosingScopeIndex() {
 
 void FunctionBox::copyUpdatedAtomAndFlags() {
   ScriptStencil& script = functionStencil();
+  if (atom_) {
+    atom_->markUsedByStencil();
+  }
   script.functionAtom = atom_;
   script.functionFlags = flags_;
 }

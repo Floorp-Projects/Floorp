@@ -642,6 +642,12 @@ static void FunctionsFromExistingLazy(CompilationInfo& compilationInfo,
 
 bool CompilationInfo::instantiateStencils(JSContext* cx,
                                           CompilationGCOutput& gcOutput) {
+  if (!preparationIsPerformed) {
+    if (!prepareForInstantiate(cx)) {
+      return false;
+    }
+  }
+
   if (!gcOutput.functions.resize(stencil.scriptData.length())) {
     return false;
   }
@@ -756,6 +762,32 @@ bool CompilationInfoVector::instantiateStencils(JSContext* cx,
 
     CompilationGCOutput gcOutputForDelazification(cx);
     if (!delazification.instantiateStencils(cx, gcOutputForDelazification)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool CompilationInfo::prepareForInstantiate(JSContext* cx) {
+  if (!input.atomCache.atoms.reserve(
+          stencil.parserAtoms.requiredNonStaticAtomCount())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  preparationIsPerformed = true;
+
+  return true;
+}
+
+bool CompilationInfoVector::prepareForInstantiate(JSContext* cx) {
+  if (!initial.prepareForInstantiate(cx)) {
+    return false;
+  }
+
+  for (auto& delazification : delazifications) {
+    if (!delazification.prepareForInstantiate(cx)) {
       return false;
     }
   }

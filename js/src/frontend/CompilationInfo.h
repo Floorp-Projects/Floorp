@@ -373,6 +373,10 @@ struct CompilationInfo {
   CompilationInput input;
   CompilationStencil stencil;
 
+  // Set to true once prepareForInstantiate is called.
+  // NOTE: This field isn't XDR-encoded.
+  bool preparationIsPerformed = false;
+
   // Track the state of key allocations and roll them back as parts of parsing
   // get retried. This ensures iteration during stencil instantiation does not
   // encounter discarded frontend state.
@@ -388,6 +392,7 @@ struct CompilationInfo {
   CompilationInfo(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
       : input(options), stencil(cx->runtime()) {}
 
+  MOZ_MUST_USE bool prepareForInstantiate(JSContext* cx);
   MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
                                         CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
@@ -442,6 +447,7 @@ struct CompilationInfoVector {
   CompilationInfoVector& operator=(const CompilationInfoVector&) = delete;
   CompilationInfoVector& operator=(CompilationInfoVector&&) = delete;
 
+  MOZ_MUST_USE bool prepareForInstantiate(JSContext* cx);
   MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
                                         CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool deserializeStencils(JSContext* cx,

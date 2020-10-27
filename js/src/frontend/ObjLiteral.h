@@ -593,6 +593,7 @@ class ObjLiteralStencil {
   bool addAtom(JSContext* cx, const frontend::ParserAtom* atom,
                uint32_t* index) {
     *index = atoms_.length();
+    atom->markUsedByStencil();
     if (!atoms_.append(atom)) {
       js::ReportOutOfMemory(cx);
       return false;
