@@ -95,8 +95,7 @@ class DecodePool final : public nsIObserver {
 
   static StaticRefPtr<DecodePool> sSingleton;
   static uint32_t sNumCores;
-
-  RefPtr<DecodePoolImpl> mImpl;
+  bool mShuttingDown = false;
 
   // mMutex protects mIOThread.
   Mutex mMutex;
