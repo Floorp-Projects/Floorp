@@ -237,6 +237,15 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
       break;
   }
 
+  return instantiate(cx, atomCache);
+}
+
+JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
+                                     CompilationAtomCache& atomCache) const {
+  // NOTE: toJSAtom can be called on not-marked atom, outside of
+  //       stencil instantiation.
+  MOZ_ASSERT(isNotInstantiatedAndNotMarked() || isNotInstantiatedAndMarked());
+
   JSAtom* atom;
   if (hasLatin1Chars()) {
     atom = AtomizeChars(cx, latin1Chars(), length());
@@ -612,6 +621,19 @@ size_t ParserAtomsTable::requiredNonStaticAtomCount() const {
     }
   }
   return count;
+}
+
+bool ParserAtomsTable::instantiateMarkedAtoms(
+    JSContext* cx, CompilationAtomCache& atomCache) const {
+  for (auto iter = entrySet_.iter(); !iter.done(); iter.next()) {
+    const auto& entry = iter.get();
+    if (entry->isNotInstantiatedAndMarked()) {
+      if (!entry->instantiate(cx, atomCache)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 template <typename CharT>

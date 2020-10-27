@@ -401,6 +401,9 @@ struct CompilationInfo {
                                           CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
                                         CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
+      JSContext* cx, CompilationGCOutput& gcOutput);
+
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
 
@@ -457,6 +460,9 @@ struct CompilationInfoVector {
                                           CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
                                         CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool instantiateStencilsAfterPreparation(
+      JSContext* cx, CompilationGCOutput& gcOutput);
+
   MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
                                         const JS::TranscodeRange& range,
                                         bool* succeededOut);
