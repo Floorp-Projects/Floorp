@@ -2,13 +2,12 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from helper_events_test_runner.js */
 
-"use strict";
+("use strict");
 
 // Test that markup view chrome event bubbles are shown when
 // devtools.chrome.enabled = true.
 
 const TEST_URL = URL_ROOT + "doc_markup_events_chrome_listeners.html";
-const FRAMESCRIPT_URL = `data:,(${frameScript.toString()})()`;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -18,9 +17,13 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: `${FRAMESCRIPT_URL}:1:109`,
+        filename:
+          getRootDirectory(gTestPath) +
+          "browser_markup_events_chrome_not_blocked.js:45:34",
         attributes: ["Bubbling", "DOM2"],
-        handler: `() => { /* Do nothing */ }`,
+        handler: `() => {
+          /* Do nothing */
+        }`,
       },
     ],
   },
@@ -32,21 +35,19 @@ add_task(async function() {
 
   const { tab, inspector, testActor } = await openInspectorForURL(TEST_URL);
   const browser = tab.linkedBrowser;
-  const mm = browser.messageManager;
 
   const eventBadgeAdded = inspector.markup.once("badge-added-event");
   info("Loading frame script");
-  mm.loadFrameScript(`${FRAMESCRIPT_URL}`, false);
+
+  await SpecialPowers.spawn(browser, [], () => {
+    const div = content.document.querySelector("div");
+    div.addEventListener("click", () => {
+      /* Do nothing */
+    });
+  });
   await eventBadgeAdded;
 
   for (const test of TEST_DATA) {
     await checkEventsForNode(test, inspector, testActor);
   }
 });
-
-function frameScript() {
-  const div = content.document.querySelector("div");
-  div.addEventListener("click", () => {
-    /* Do nothing */
-  });
-}
