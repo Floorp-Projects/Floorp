@@ -538,11 +538,11 @@ function getScreenshotUrlForAddon(addon) {
  *          The url with UTM parameters if it is an AMO URL.
  *          Otherwise the url in unmodified form.
  */
-function formatAmoUrl(contentAttribute, url) {
+function formatUTMParams(contentAttribute, url) {
   let parsedUrl = new URL(url);
   let domain = `.${parsedUrl.hostname}`;
   if (
-    !domain.endsWith(".addons.mozilla.org") &&
+    !domain.endsWith(".mozilla.org") &&
     // For testing: addons-dev.allizom.org and addons.allizom.org
     !domain.endsWith(".allizom.org")
   ) {
@@ -687,7 +687,10 @@ class SupportLink extends HTMLAnchorElement {
   }
 
   setHref() {
-    this.href = SUPPORT_URL + this.getAttribute("support-page");
+    let base = SUPPORT_URL + this.getAttribute("support-page");
+    this.href = this.hasAttribute("utmcontent")
+      ? formatUTMParams(this.getAttribute("utmcontent"), base)
+      : base;
   }
 }
 customElements.define("support-link", SupportLink, { extends: "a" });
@@ -1216,7 +1219,7 @@ class SearchAddons extends HTMLElement {
       return;
     }
 
-    let url = formatAmoUrl(
+    let url = formatUTMParams(
       "addons-manager-search",
       AddonRepository.getSearchURL(query)
     );
@@ -2701,7 +2704,7 @@ class AddonDetails extends HTMLElement {
       if (link.hidden) {
         creatorRow.appendChild(new Text(addon.creator.name));
       } else {
-        link.href = formatAmoUrl(
+        link.href = formatUTMParams(
           "addons-manager-user-profile-link",
           addon.creator.url
         );
@@ -2748,7 +2751,7 @@ class AddonDetails extends HTMLElement {
     if (addon.averageRating) {
       ratingRow.querySelector("five-star-rating").rating = addon.averageRating;
       let reviews = ratingRow.querySelector("a");
-      reviews.href = formatAmoUrl(
+      reviews.href = formatUTMParams(
         "addons-manager-reviews-link",
         addon.reviewURL
       );
@@ -3460,7 +3463,7 @@ class RecommendedAddonCard extends HTMLElement {
       });
       // This is intentionally a link to the add-on listing instead of the
       // author page, because the add-on listing provides more relevant info.
-      authorInfo.querySelector("a").href = formatAmoUrl(
+      authorInfo.querySelector("a").href = formatUTMParams(
         "discopane-entry-link",
         addon.amoListingUrl
       );
@@ -4544,7 +4547,7 @@ function openAmoInTab(el) {
   let amoUrl = Services.urlFormatter.formatURLPref(
     "extensions.getAddons.link.url"
   );
-  amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
+  amoUrl = formatUTMParams("find-more-link-bottom", amoUrl);
   windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
 }
 

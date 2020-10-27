@@ -4,11 +4,28 @@
 
 "use strict";
 
-const SUPPORT_URL = Services.urlFormatter.formatURL(
-  Services.prefs.getStringPref("app.support.baseURL")
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
 );
-const SUMO_URL = SUPPORT_URL + "recommended-extensions-program";
+
+AddonTestUtils.initMochitest(this);
+
+const SUPPORT_URL = "http://support.allizom.org/support-dummy/";
+const SUMO_URL = SUPPORT_URL + "add-on-badges";
 const SUPPORTED_BADGES = ["recommended", "line", "verified"];
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.support.baseURL", SUPPORT_URL]],
+  });
+});
+
+const server = AddonTestUtils.createHttpServer({
+  hosts: ["support.allizom.org"],
+});
+server.registerPathHandler("/support-dummy", (request, response) => {
+  response.write("Dummy");
+});
 
 async function checkRecommendedBadge(id, badges = []) {
   async function checkBadge() {
@@ -21,12 +38,33 @@ async function checkRecommendedBadge(id, badges = []) {
         hidden,
         `badge ${badgeName} is ${hidden ? "hidden" : "shown"}`
       );
+      // Verify the utm params.
+      ok(
+        badge.href.startsWith(SUMO_URL),
+        "links to sumo correctly " + badge.href
+      );
       if (!hidden) {
         info(`Verify the ${badgeName} badge links to the support page`);
-        let tabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, SUMO_URL);
+        let tabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, badge.href);
         EventUtils.synthesizeMouseAtCenter(badge, {}, win);
         BrowserTestUtils.removeTab(await tabLoaded);
       }
+      let url = new URL(badge.href);
+      is(
+        url.searchParams.get("utm_content"),
+        "promoted-addon-badge",
+        "content param correct"
+      );
+      is(
+        url.searchParams.get("utm_source"),
+        "firefox-browser",
+        "source param correct"
+      );
+      is(
+        url.searchParams.get("utm_medium"),
+        "firefox-browser",
+        "medium param correct"
+      );
     }
     for (let badgeName of badges) {
       if (!SUPPORTED_BADGES.includes(badgeName)) {
