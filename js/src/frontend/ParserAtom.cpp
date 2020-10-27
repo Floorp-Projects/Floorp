@@ -240,6 +240,31 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
   return instantiate(cx, atomCache);
 }
 
+JSAtom* ParserAtomEntry::toExistingJSAtom(
+    JSContext* cx, CompilationAtomCache& atomCache) const {
+  switch (atomIndexKind_) {
+    case AtomIndexKind::AtomIndex:
+      return atomCache.atoms[atomIndex_];
+
+    case AtomIndexKind::WellKnown:
+      return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
+
+    case AtomIndexKind::Static1: {
+      char16_t ch = static_cast<char16_t>(atomIndex_);
+      return cx->staticStrings().getUnit(ch);
+    }
+
+    case AtomIndexKind::Static2:
+      return cx->staticStrings().getLength2FromIndex(atomIndex_);
+
+    case AtomIndexKind::NotInstantiatedAndNotMarked:
+    case AtomIndexKind::NotInstantiatedAndMarked:
+      MOZ_CRASH("ParserAtom should already be instantiatedd");
+  }
+
+  return nullptr;
+}
+
 JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
                                      CompilationAtomCache& atomCache) const {
   // NOTE: toJSAtom can be called on not-marked atom, outside of
