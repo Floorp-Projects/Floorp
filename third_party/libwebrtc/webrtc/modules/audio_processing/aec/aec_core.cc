@@ -33,6 +33,7 @@ extern "C" {
 #include "system_wrappers/include/cpu_features_wrapper.h"
 #include "system_wrappers/include/metrics.h"
 #include "typedefs.h"  // NOLINT(build/include)
+#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 namespace {
@@ -155,6 +156,7 @@ const float WebRtcAec_kNormalSmoothingCoefficients[2][2] = {{0.9f, 0.1f},
 // Number of partitions forming the NLP's "preferred" bands.
 enum { kPrefBandSize = 24 };
 
+rtc::CriticalSection WebRtcAec_CriticalSection;
 WebRtcAecFilterFar WebRtcAec_FilterFar;
 WebRtcAecScaleErrorSignal WebRtcAec_ScaleErrorSignal;
 WebRtcAecFilterAdaptation WebRtcAec_FilterAdaptation;
@@ -1505,31 +1507,36 @@ AecCore* WebRtcAec_CreateAec(int instance_count) {
   aec->extended_filter_enabled = 0;
   aec->refined_adaptive_filter_enabled = false;
 
-  // Assembly optimization
-  WebRtcAec_FilterFar = FilterFar;
-  WebRtcAec_ScaleErrorSignal = ScaleErrorSignal;
-  WebRtcAec_FilterAdaptation = FilterAdaptation;
-  WebRtcAec_Overdrive = Overdrive;
-  WebRtcAec_Suppress = Suppress;
-  WebRtcAec_ComputeCoherence = ComputeCoherence;
-  WebRtcAec_UpdateCoherenceSpectra = UpdateCoherenceSpectra;
-  WebRtcAec_StoreAsComplex = StoreAsComplex;
-  WebRtcAec_PartitionDelay = PartitionDelay;
-  WebRtcAec_WindowData = WindowData;
+  rtc::CritScope cs_init(&WebRtcAec_CriticalSection);
+  static bool initted = false;
+  if (!initted) {
+    // Assembly optimization
+    WebRtcAec_FilterFar = FilterFar;
+    WebRtcAec_ScaleErrorSignal = ScaleErrorSignal;
+    WebRtcAec_FilterAdaptation = FilterAdaptation;
+    WebRtcAec_Overdrive = Overdrive;
+    WebRtcAec_Suppress = Suppress;
+    WebRtcAec_ComputeCoherence = ComputeCoherence;
+    WebRtcAec_UpdateCoherenceSpectra = UpdateCoherenceSpectra;
+    WebRtcAec_StoreAsComplex = StoreAsComplex;
+    WebRtcAec_PartitionDelay = PartitionDelay;
+    WebRtcAec_WindowData = WindowData;
 
 #if defined(WEBRTC_ARCH_X86_FAMILY)
-  if (WebRtc_GetCPUInfo(kSSE2)) {
-    WebRtcAec_InitAec_SSE2();
-  }
+    if (WebRtc_GetCPUInfo(kSSE2)) {
+      WebRtcAec_InitAec_SSE2();
+    }
 #endif
 
 #if defined(MIPS_FPU_LE)
-  WebRtcAec_InitAec_mips();
+    WebRtcAec_InitAec_mips();
 #endif
 
 #if defined(WEBRTC_HAS_NEON)
-  WebRtcAec_InitAec_neon();
+    WebRtcAec_InitAec_neon();
 #endif
+    initted = true;
+  }
 
   return aec;
 }
