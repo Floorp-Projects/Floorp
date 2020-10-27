@@ -20,22 +20,6 @@
 #include "freestanding/DllBlocklist.h"
 #include "freestanding/FunctionTableResolver.h"
 
-#if defined(_MSC_VER)
-extern "C" IMAGE_DOS_HEADER __ImageBase;
-#endif
-
-namespace {
-
-template <typename T>
-T* GetRemoteAddress(T* aLocalAddress, HMODULE aLocal, HMODULE aRemote) {
-  ptrdiff_t diff =
-      mozilla::nt::PEHeaders::HModuleToBaseAddr<uint8_t*>(aRemote) -
-      mozilla::nt::PEHeaders::HModuleToBaseAddr<uint8_t*>(aLocal);
-  return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(aLocalAddress) + diff);
-}
-
-}  // namespace
-
 namespace mozilla {
 
 #if defined(MOZ_ASAN) || defined(_M_ARM64)
@@ -91,33 +75,16 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
   // it onto the child process's IAT, thus enabling the child process's hook to
   // safely make its ntdll calls.
 
-  HMODULE ourModule;
-#  if defined(_MSC_VER)
-  ourModule = reinterpret_cast<HMODULE>(&__ImageBase);
-#  else
-  ourModule = ::GetModuleHandleW(nullptr);
-#  endif  // defined(_MSC_VER)
-
-  mozilla::nt::PEHeaders ourExeImage(ourModule);
-  if (!ourExeImage) {
+  nt::CrossExecTransferManager transferMgr(aChildProcess);
+  if (!transferMgr) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
   }
-
-  // We used to pass ourModule to RestoreImportDirectory based on the assumption
-  // that the executable is mapped onto the same address in a different process,
-  // but our telemetry told us it was not guaranteed.  That's why we retrieve
-  // HMODULE from |aChildProcess|.
-  LauncherResult<HMODULE> remoteImageBaseResult =
-      nt::GetProcessExeModule(aChildProcess);
-  if (remoteImageBaseResult.isErr()) {
-    return remoteImageBaseResult.propagateErr();
-  }
-  HMODULE remoteImageBase = remoteImageBaseResult.unwrap();
+  const nt::PEHeaders& ourExeImage = transferMgr.LocalPEHeaders();
 
   // As part of our mitigation of binary tampering, copy our import directory
   // from the original in our executable file.
-  LauncherVoidResult importDirRestored = RestoreImportDirectory(
-      aFullImagePath, ourExeImage, aChildProcess, remoteImageBase);
+  LauncherVoidResult importDirRestored =
+      RestoreImportDirectory(aFullImagePath, transferMgr);
   if (importDirRestored.isErr()) {
     return importDirRestored;
   }
@@ -151,27 +118,22 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
 
-  SIZE_T bytesWritten;
-
   {  // Scope for prot
     PIMAGE_THUNK_DATA firstIatThunkDst = ntdllThunks.value().data();
     const IMAGE_THUNK_DATA* firstIatThunkSrc =
         aCachedNtdllThunk ? aCachedNtdllThunk : firstIatThunkDst;
     SIZE_T iatLength = ntdllThunks.value().LengthBytes();
 
-    firstIatThunkDst =
-        GetRemoteAddress(firstIatThunkDst, ourModule, remoteImageBase);
-
-    AutoVirtualProtect prot(firstIatThunkDst, iatLength, PAGE_READWRITE,
-                            aChildProcess);
+    AutoVirtualProtect prot =
+        transferMgr.Protect(firstIatThunkDst, iatLength, PAGE_READWRITE);
     if (!prot) {
       return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
-    ok = !!::WriteProcessMemory(aChildProcess, firstIatThunkDst,
-                                firstIatThunkSrc, iatLength, &bytesWritten);
-    if (!ok || bytesWritten != iatLength) {
-      return LAUNCHER_ERROR_FROM_LAST();
+    LauncherVoidResult writeResult =
+        transferMgr.Transfer(firstIatThunkDst, firstIatThunkSrc, iatLength);
+    if (writeResult.isErr()) {
+      return writeResult.propagateErr();
     }
   }
 
@@ -184,12 +146,10 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     newFlags |= eDllBlocklistInitFlagIsChildProcess;
   }
 
-  ok = !!::WriteProcessMemory(
-      aChildProcess,
-      GetRemoteAddress(&gBlocklistInitFlags, ourModule, remoteImageBase),
-      &newFlags, sizeof(newFlags), &bytesWritten);
-  if (!ok || bytesWritten != sizeof(newFlags)) {
-    return LAUNCHER_ERROR_FROM_LAST();
+  LauncherVoidResult writeResult =
+      transferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
+  if (writeResult.isErr()) {
+    return writeResult.propagateErr();
   }
 
   return Ok();
@@ -203,19 +163,12 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
   // we should not attempt to bootstrap a child process because it's likely
   // to fail again.  Instead, we only restore the import directory entry.
   if (!(gBlocklistInitFlags & eDllBlocklistInitFlagWasBootstrapped)) {
-    HMODULE exeImageBase;
-#  if defined(_MSC_VER)
-    exeImageBase = reinterpret_cast<HMODULE>(&__ImageBase);
-#  else
-    exeImageBase = ::GetModuleHandleW(nullptr);
-#  endif  // defined(_MSC_VER)
-
-    mozilla::nt::PEHeaders localImage(exeImageBase);
-    if (!localImage) {
+    nt::CrossExecTransferManager transferMgr(aChildProcess);
+    if (!transferMgr) {
       return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
     }
 
-    return RestoreImportDirectory(aFullImagePath, localImage, aChildProcess);
+    return RestoreImportDirectory(aFullImagePath, transferMgr);
   }
 
   return InitializeDllBlocklistOOPInternal(aFullImagePath, aChildProcess,
