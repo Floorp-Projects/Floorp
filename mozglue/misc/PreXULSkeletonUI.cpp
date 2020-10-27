@@ -52,6 +52,8 @@ typedef HDC(WINAPI* GetWindowDCProc)(HWND);
 GetWindowDCProc sGetWindowDC = NULL;
 typedef int(WINAPI* FillRectProc)(HDC, const RECT*, HBRUSH);
 FillRectProc sFillRect = NULL;
+typedef BOOL(WINAPI* DeleteObjectProc)(HGDIOBJ);
+DeleteObjectProc sDeleteObject = NULL;
 typedef int(WINAPI* ReleaseDCProc)(HWND, HDC);
 ReleaseDCProc sReleaseDC = NULL;
 typedef int(WINAPI* StretchDIBitsProc)(HDC, int, int, int, int, int, int, int,
@@ -94,9 +96,12 @@ class MOZ_RAII AutoCloseRegKey {
   HKEY mKey;
 };
 
+int CSSToDevPixels(double cssPixels, double scaling) {
+  return floor(cssPixels * scaling + 0.5);
+}
+
 int CSSToDevPixels(int cssPixels, double scaling) {
-  double asDouble = (double)cssPixels * scaling;
-  return floor(asDouble + 0.5);
+  return CSSToDevPixels((double)cssPixels, scaling);
 }
 
 struct ColorRect {
@@ -107,7 +112,8 @@ struct ColorRect {
   uint32_t height;
 };
 
-void DrawSkeletonUI(HWND hWnd) {
+void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
+                    double urlbarWidthCSS) {
   if (!sGetSystemMetricsForDpi || !sGetDpiForWindow) {
     return;
   }
@@ -144,21 +150,23 @@ void DrawSkeletonUI(HWND hWnd) {
   uint32_t toolbarForegroundColor = 0xe5e5e5;
   // controlled by css variable --tab-line-color
   uint32_t tabLineColor = 0x0a75d3;
+  // controlled by css variable --toolbar-color
+  uint32_t urlbarColor = 0xffffff;
 
   int chromeHorMargin = CSSToDevPixels(2, sCSSToDevPixelScaling);
   int dpi = sGetDpiForWindow(hWnd);
-  int topOffset = sGetSystemMetricsForDpi(SM_CYBORDER, dpi);
+  int verticalOffset = sGetSystemMetricsForDpi(SM_CYBORDER, dpi);
   int nonClientHorMargins = sGetSystemMetricsForDpi(SM_CXFRAME, dpi) +
                             sGetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
-  int horizontolOffset = nonClientHorMargins - chromeHorMargin;
+  int horizontalOffset = nonClientHorMargins - chromeHorMargin;
 
   // found in tabs.inc.css, "--tab-min-height" - depends on uidensity variable
-  int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + topOffset;
+  int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + verticalOffset;
   // found in tabs.inc.css, ".titlebar-spacer"
   int titlebarSpacerWidth =
-      CSSToDevPixels(40, sCSSToDevPixelScaling) + horizontolOffset;
+      CSSToDevPixels(40, sCSSToDevPixelScaling) + horizontalOffset;
   // found in tabs.inc.css, ".tab-line"
-  int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + topOffset;
+  int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + verticalOffset;
   int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
 
   int toolbarHeight = CSSToDevPixels(39, sCSSToDevPixelScaling);
@@ -173,6 +181,14 @@ void DrawSkeletonUI(HWND hWnd) {
   int toolbarPlaceholderMarginRight = CSSToDevPixels(11, sCSSToDevPixelScaling);
   int toolbarPlaceholderWidth = CSSToDevPixels(90, sCSSToDevPixelScaling);
   int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
+
+  int urlbarTextPlaceholderMarginTop =
+      CSSToDevPixels(10, sCSSToDevPixelScaling);
+  int urlbarTextPlaceholderMarginLeft =
+      CSSToDevPixels(10, sCSSToDevPixelScaling);
+  int urlbarTextPlaceHolderWidth = CSSToDevPixels(
+      std::min((int)urlbarWidthCSS - 10, 260), sCSSToDevPixelScaling);
+  int urlbarTextPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
 
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
@@ -219,7 +235,7 @@ void DrawSkeletonUI(HWND hWnd) {
   ColorRect leftToolbarPlaceholder = {};
   leftToolbarPlaceholder.color = toolbarForegroundColor;
   leftToolbarPlaceholder.x =
-      toolbar.x + toolbarPlaceholderMarginLeft + horizontolOffset;
+      toolbar.x + toolbarPlaceholderMarginLeft + horizontalOffset;
   leftToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
   leftToolbarPlaceholder.width = toolbarPlaceholderWidth;
   leftToolbarPlaceholder.height = toolbarPlaceholderHeight;
@@ -228,7 +244,7 @@ void DrawSkeletonUI(HWND hWnd) {
   // of the toolbar
   ColorRect rightToolbarPlaceholder = {};
   rightToolbarPlaceholder.color = toolbarForegroundColor;
-  rightToolbarPlaceholder.x = sWindowWidth - horizontolOffset -
+  rightToolbarPlaceholder.x = sWindowWidth - horizontalOffset -
                               toolbarPlaceholderMarginRight -
                               toolbarPlaceholderWidth;
   rightToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
@@ -243,6 +259,26 @@ void DrawSkeletonUI(HWND hWnd) {
   chromeContentDivider.width = sWindowWidth;
   chromeContentDivider.height = 1;
 
+  // The urlbar
+  ColorRect urlbar = {};
+  urlbar.color = urlbarColor;
+  urlbar.x = CSSToDevPixels(urlbarHorizontalOffsetCSS, sCSSToDevPixelScaling) +
+             horizontalOffset;
+  urlbar.y = CSSToDevPixels(39, sCSSToDevPixelScaling);
+  urlbar.width = CSSToDevPixels(urlbarWidthCSS, sCSSToDevPixelScaling);
+  urlbar.height = CSSToDevPixels(30, sCSSToDevPixelScaling);
+
+  // The urlbar placeholder rect representating text that will fill the urlbar
+  // The placeholder rects should all be y-aligned.
+  ColorRect urlbarTextPlaceholder = {};
+  urlbarTextPlaceholder.color = toolbarForegroundColor;
+  urlbarTextPlaceholder.x = urlbar.x + urlbarTextPlaceholderMarginLeft;
+  // This is equivalent to rightToolbarPlaceholder.y and
+  // leftToolbarPlaceholder.y
+  urlbarTextPlaceholder.y = urlbar.y + urlbarTextPlaceholderMarginTop;
+  urlbarTextPlaceholder.width = urlbarTextPlaceHolderWidth;
+  urlbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
+
   ColorRect rects[] = {
       tabBar,
       tabLine,
@@ -252,6 +288,8 @@ void DrawSkeletonUI(HWND hWnd) {
       leftToolbarPlaceholder,
       rightToolbarPlaceholder,
       chromeContentDivider,
+      urlbar,
+      urlbarTextPlaceholder,
   };
 
   int totalChromeHeight = chromeContentDivider.y + chromeContentDivider.height;
@@ -291,6 +329,8 @@ void DrawSkeletonUI(HWND hWnd) {
   sReleaseDC(hWnd, hdc);
 
   free(pixelBuffer);
+
+  sDeleteObject(brush);
 }
 
 LRESULT WINAPI PreXULSkeletonUIProc(HWND hWnd, UINT msg, WPARAM wParam,
@@ -379,6 +419,7 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   sRedrawWindow = (RedrawWindowProc)::GetProcAddress(user32Dll, "RedrawWindow");
   sGetWindowDC = (GetWindowDCProc)::GetProcAddress(user32Dll, "GetWindowDC");
   sFillRect = (FillRectProc)::GetProcAddress(user32Dll, "FillRect");
+  sDeleteObject = (DeleteObjectProc)::GetProcAddress(gdi32Dll, "DeleteObject");
   sReleaseDC = (ReleaseDCProc)::GetProcAddress(user32Dll, "ReleaseDC");
   sLoadIconW = (LoadIconWProc)::GetProcAddress(user32Dll, "LoadIconW");
   sLoadCursorW = (LoadCursorWProc)::GetProcAddress(user32Dll, "LoadCursorW");
@@ -437,6 +478,25 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   }
 
   dataLen = sizeof(double);
+  double urlbarHorizontalOffsetCSS;
+  result = ::RegGetValueW(
+      regKey, nullptr, L"urlbarHorizontalOffsetCSS", RRF_RT_REG_BINARY, nullptr,
+      reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS), &dataLen);
+  if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
+    printf_stderr("Error reading urlbarHorizontalOffsetCSS %lu\n",
+                  GetLastError());
+    return;
+  }
+
+  double urlbarWidthCSS;
+  result = ::RegGetValueW(regKey, nullptr, L"urlbarWidthCSS", RRF_RT_REG_BINARY,
+                          nullptr, reinterpret_cast<PBYTE>(&urlbarWidthCSS),
+                          &dataLen);
+  if (result != ERROR_SUCCESS || dataLen != sizeof(double)) {
+    printf_stderr("Error reading urlbarWidthCSS %lu\n", GetLastError());
+    return;
+  }
+
   result = ::RegGetValueW(
       regKey, nullptr, L"cssToDevPixelScaling", RRF_RT_REG_BINARY, nullptr,
       reinterpret_cast<PBYTE>(&sCSSToDevPixelScaling), &dataLen);
@@ -454,7 +514,8 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-  DrawSkeletonUI(sPreXULSkeletonUIWindow);
+  DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbarHorizontalOffsetCSS,
+                 urlbarWidthCSS);
   sRedrawWindow(sPreXULSkeletonUIWindow, NULL, NULL, RDW_INVALIDATE);
 }
 
@@ -465,7 +526,9 @@ HWND ConsumePreXULSkeletonUIHandle() {
 }
 
 void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
-                                   int height, double cssToDevPixelScaling) {
+                                   int height, double urlbarHorizontalOffsetCSS,
+                                   double urlbarWidthCSS,
+                                   double cssToDevPixelScaling) {
   if (!sPreXULSkeletonUIEnabled) {
     return;
   }
@@ -502,6 +565,23 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                             reinterpret_cast<PBYTE>(&height), sizeof(height));
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting height to Windows registry\n");
+    return;
+  }
+
+  result = ::RegSetValueExW(regKey, L"urlbarHorizontalOffsetCSS", 0, REG_BINARY,
+                            reinterpret_cast<PBYTE>(&urlbarHorizontalOffsetCSS),
+                            sizeof(urlbarHorizontalOffsetCSS));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr(
+        "Failed persisting urlbarHorizontalOffsetCSS to Windows registry\n");
+    return;
+  }
+
+  result = ::RegSetValueExW(regKey, L"urlbarWidthCSS", 0, REG_BINARY,
+                            reinterpret_cast<PBYTE>(&urlbarWidthCSS),
+                            sizeof(urlbarWidthCSS));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting urlbarWidthCSS to Windows registry\n");
     return;
   }
 

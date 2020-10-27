@@ -48,6 +48,7 @@
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
 #include "nsContentList.h"
+#include "nsIDOMWindowUtils.h"
 
 #include "prenv.h"
 #include "mozilla/AutoRestore.h"
@@ -1797,8 +1798,45 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     return NS_OK;
   }
 
+  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
+  Document* doc = windowElement->GetComposedDoc();
+  Element* urlbar = doc->GetElementById(u"urlbar"_ns);
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
+  nsCOMPtr<nsIDOMWindowUtils> utils =
+      nsGlobalWindowOuter::Cast(window)->WindowUtils();
+  RefPtr<dom::DOMRect> urlbarRect;
+  rv = utils->GetBoundsWithoutFlushing(urlbar, getter_AddRefs(urlbarRect));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  double urlbarX = urlbarRect->X();
+  double urlbarWidth = urlbarRect->Width();
+
+  // Hard-coding the following values and this behavior in general is rather
+  // fragile, and can easily get out of sync with the actual front-end values.
+  // This is not intended as a long-term solution, but only as the relatively
+  // straightforward implementation of an experimental feature. If we want to
+  // ship the skeleton UI to all users, we should strongly consider a more
+  // robust solution than this. The vertical position of the urlbar will be
+  // fixed.
+  nsAutoString attributeValue;
+  urlbar->GetAttribute(u"breakout-extend"_ns, attributeValue);
+  // Scale down the urlbar if it is focused
+  if (attributeValue.EqualsLiteral("true")) {
+    // defined in browser.inc.css as 2px
+    int urlbarBreakoutExtend = 2;
+    // defined in urlbar-searchbar.inc.css as 5px
+    int urlbarMarginInline = 5;
+
+    // breakout-extend measurements are defined in urlbar-searchbar.inc.css
+    urlbarX += (double)(urlbarBreakoutExtend + urlbarMarginInline);
+    urlbarWidth -= (double)(2 * (urlbarBreakoutExtend + urlbarMarginInline));
+  }
+
   PersistPreXULSkeletonUIValues(aRect.X(), aRect.Y(), aRect.Width(),
-                                aRect.Height(),
+                                aRect.Height(), urlbarX, urlbarWidth,
                                 mWindow->GetDefaultScale().scale);
 #endif
 

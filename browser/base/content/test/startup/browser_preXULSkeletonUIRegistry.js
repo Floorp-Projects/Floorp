@@ -75,6 +75,8 @@ add_task(async function testWritesSizeValuesOnChange() {
     "height",
     "screenX",
     "screenY",
+    "urlbarHorizontalOffsetCSS",
+    "urlbarWidthCSS",
     "cssToDevPixelScaling",
   ];
 
