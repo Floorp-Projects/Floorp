@@ -950,24 +950,21 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
   *aRv = NS_ERROR_FAILURE;
   RefPtr<nsHostRecord> rec = InitRecord(key);
 
+  nsTArray<NetAddr> addresses;
+  PRNetAddr prAddr;
+  if (key.af == PR_AF_INET || key.af == PR_AF_UNSPEC) {
+    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("127.0.0.1", &prAddr) == PR_SUCCESS);
+    addresses.AppendElement(NetAddr(&prAddr));
+  }
+  if (key.af == PR_AF_INET6 || key.af == PR_AF_UNSPEC) {
+    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("::1", &prAddr) == PR_SUCCESS);
+    addresses.AppendElement(NetAddr(&prAddr));
+  }
+
+  RefPtr<AddrInfo> ai = new AddrInfo(rec->host, 0, std::move(addresses));
+
   RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
   MutexAutoLock lock(addrRec->addr_info_lock);
-
-  PRNetAddr prAddr;
-
-  if (key.af == PR_AF_INET) {
-    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("127.0.0.1", &prAddr) == PR_SUCCESS);
-  } else {
-    MOZ_RELEASE_ASSERT(PR_StringToNetAddr("::1", &prAddr) == PR_SUCCESS);
-  }
-
-  RefPtr<AddrInfo> ai;
-  *aRv = GetAddrInfo(rec->host, rec->af, addrRec->flags, getter_AddRefs(ai),
-                     addrRec->mGetTtl);
-  if (NS_WARN_IF(NS_FAILED(*aRv))) {
-    return nullptr;
-  }
-
   addrRec->addr_info = ai;
   addrRec->SetExpiration(TimeStamp::NowLoRes(), mDefaultCacheLifetime,
                          mDefaultGracePeriod);
