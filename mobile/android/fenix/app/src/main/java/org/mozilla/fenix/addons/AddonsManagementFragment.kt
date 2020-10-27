@@ -41,7 +41,7 @@ import java.util.concurrent.CancellationException
 /**
  * Fragment use for managing add-ons.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) {
 
     /**
