@@ -99,14 +99,11 @@ function createScript(url) {
   info(`Creating script: ${url}`);
   // This is not ideal if called multiple times, as it loads the frame script
   // separately each time.  See bug 1443680.
-  loadFrameScriptUtils();
-  const command = `
-    let script = document.createElement("script");
-    script.setAttribute("src", "${url}");
-    document.body.appendChild(script);
-    null;
-  `;
-  return evalInDebuggee(command);
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [url], urlChild => {
+    const script = content.document.createElement("script");
+    script.setAttribute("src", urlChild);
+    content.document.body.appendChild(script);
+  });
 }
 
 /**

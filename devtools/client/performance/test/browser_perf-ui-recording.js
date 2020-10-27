@@ -8,9 +8,8 @@
  */
 
 const {
-  pmmLoadFrameScripts,
+  pmmInitWithBrowser,
   pmmIsProfilerActive,
-  pmmClearFrameScripts,
 } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const {
@@ -28,7 +27,7 @@ add_task(async function() {
     win: window,
   });
 
-  pmmLoadFrameScripts(gBrowser);
+  pmmInitWithBrowser(gBrowser);
 
   ok(
     !(await pmmIsProfilerActive()),
@@ -50,6 +49,4 @@ add_task(async function() {
   );
 
   await teardownToolboxAndRemoveTab(panel);
-
-  pmmClearFrameScripts();
 });

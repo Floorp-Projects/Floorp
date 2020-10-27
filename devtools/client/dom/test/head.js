@@ -38,9 +38,6 @@ async function addTestTab(url) {
 
   const tab = await addTab(url);
 
-  // Load devtools/shared/test/frame-script-utils.js
-  loadFrameScriptUtils();
-
   // Select the DOM panel and wait till it's initialized.
   const panel = await initDOMPanel(tab);
 
