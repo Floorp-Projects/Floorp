@@ -63,11 +63,11 @@ import kotlin.coroutines.CoroutineContext
  * </code>
  *
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class AutoPushFeature(
     private val context: Context,
     private val service: PushService,
-    config: PushConfig,
+    val config: PushConfig,
     coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
     private val connection: PushConnection = RustPushConnection(
         senderId = config.senderId,
@@ -300,7 +300,7 @@ class AutoPushFeature(
     internal fun tryVerifySubscriptions() {
         logger.info("Trying to check validity of push subscriptions.")
 
-        if (shouldVerifyNow()) {
+        if (config.disableRateLimit || shouldVerifyNow()) {
             logger.info("Checking now..")
 
             verifyActiveSubscriptions()
@@ -412,10 +412,12 @@ data class AutoPushSubscriptionChanged(
  * @param serverHost The sync server address.
  * @param protocol The socket protocol to use when communicating with the server.
  * @param serviceType The push services that the AutoPush server supports.
+ * @param disableRateLimit A flag to disable our rate-limit logic. This is useful when debugging.
  */
 data class PushConfig(
     val senderId: String,
     val serverHost: String = "updates.push.services.mozilla.com",
     val protocol: Protocol = Protocol.HTTPS,
-    val serviceType: ServiceType = ServiceType.FCM
+    val serviceType: ServiceType = ServiceType.FCM,
+    val disableRateLimit: Boolean = false
 )

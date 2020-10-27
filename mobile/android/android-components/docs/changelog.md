@@ -19,6 +19,13 @@ permalink: /changelog/
   * Adds optional `PreferredColorScheme` param to `GeckoEngineView`
   * On `GeckoView` init call `coverUntilFirstPaint()` with `PreferredColorScheme`
 
+* **feature-push**
+  * Added `disableRateLimit` to `PushConfig` to allow for easier debugging of push during development.
+  * Made `AutoPushFeature` aware of the `PushConfig.disableRateLimit` flag.
+
+* **feature-accounts-push**
+  * Made `FxaPushSupportFeature` aware of the `PushConfig.disableRateLimit` flag.
+
 # 64.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v63.0.0...v64.0.0)

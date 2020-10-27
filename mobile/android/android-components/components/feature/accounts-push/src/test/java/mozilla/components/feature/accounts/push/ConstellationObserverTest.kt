@@ -26,7 +26,7 @@ class ConstellationObserverTest {
 
     @Test
     fun `do nothing if subscription has not expired`() {
-        val observer = ConstellationObserver(context, push, verifier)
+        val observer = ConstellationObserver(push, verifier)
 
         observer.onDevicesUpdate(state)
 
@@ -42,7 +42,7 @@ class ConstellationObserverTest {
 
     @Test
     fun `do nothing if verifier is false`() {
-        val observer = ConstellationObserver(context, push, verifier)
+        val observer = ConstellationObserver(push, verifier)
 
         observer.onDevicesUpdate(state)
 
@@ -63,7 +63,7 @@ class ConstellationObserverTest {
 
     @Test
     fun `invoke registration renewal`() {
-        val observer = ConstellationObserver(context, push, verifier)
+        val observer = ConstellationObserver(push, verifier)
 
         `when`(state.currentDevice).thenReturn(device)
         `when`(device.subscriptionExpired).thenReturn(true)

@@ -12,6 +12,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
+import mozilla.components.feature.push.PushConfig
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -40,11 +41,13 @@ class AccountObserverTest {
     private val pushScope: String = "testScope"
     private val account: OAuthAccount = mock()
     private val constellation: DeviceConstellation = mock()
+    private val config: PushConfig = mock()
 
     @Before
     fun setup() {
         `when`(accountManager.authenticatedAccount()).thenReturn(account)
         `when`(account.deviceConstellation()).thenReturn(constellation)
+        `when`(pushFeature.config).thenReturn(config)
     }
 
     @Test
@@ -107,6 +110,7 @@ class AccountObserverTest {
 
         observer.onAuthenticated(account, AuthType.Signin)
 
+        verify(pushFeature).config
         verify(pushFeature).subscribe(eq(pushScope), nullable(), any(), any())
         verify(constellation).registerDeviceObserver(any(), any(), anyBoolean())
 
@@ -139,6 +143,8 @@ class AccountObserverTest {
             mock(),
             false
         )
+
+        verify(pushFeature).config
 
         observer.onAuthenticated(account, AuthType.Existing)
 
@@ -180,8 +186,6 @@ class AccountObserverTest {
         observer.onLoggedOut()
 
         verify(pushFeature).unsubscribe(eq(pushScope), any(), any())
-
-        verifyNoMoreInteractions(pushFeature)
     }
 
     @Test
@@ -197,6 +201,7 @@ class AccountObserverTest {
         observer.onAuthenticationProblems()
         observer.onProfileUpdated(mock())
 
+        verify(pushFeature).config
         verifyNoMoreInteractions(pushFeature)
     }
 

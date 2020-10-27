@@ -412,6 +412,25 @@ class AutoPushFeatureTest {
     }
 
     @Test
+    fun `initialize does execute verifyActiveSubscription with rate-limiting disabled`() = runBlockingTest {
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = PushConfig(senderId = "push-test", disableRateLimit = true),
+                coroutineContext = coroutineContext,
+                connection = mock()
+            )
+        )
+
+        lastVerified = System.currentTimeMillis() - SKIP_INTERVAL
+
+        feature.initialize()
+
+        verify(feature).verifyActiveSubscriptions()
+    }
+
+    @Test
     fun `verification always happens on first attempt`() = runBlockingTest {
         val feature = spy(
             AutoPushFeature(

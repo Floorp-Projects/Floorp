@@ -105,6 +105,18 @@ class VerificationDelegateTest {
         assertEquals(1, lastVerifiedPref.second)
     }
 
+    @Test
+    fun `rate-limiting disabled short circuits check`() {
+        val timestamp = System.currentTimeMillis()
+        lastVerifiedPref = Pair(timestamp, 501)
+
+        val verifier = VerificationDelegate(testContext, true)
+
+        val result = verifier.allowedToRenew()
+
+        assertTrue(result)
+    }
+
     companion object {
         var lastVerifiedPref: Pair<Long, Int>
             get() {

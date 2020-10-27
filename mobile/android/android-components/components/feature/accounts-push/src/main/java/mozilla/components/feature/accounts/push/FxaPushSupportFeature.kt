@@ -112,7 +112,8 @@ internal class AccountObserver(
 ) : SyncAccountObserver {
 
     private val logger = Logger(AccountObserver::class.java.simpleName)
-    private val constellationObserver = ConstellationObserver(context, push)
+    private val verificationDelegate = VerificationDelegate(context, push.config.disableRateLimit)
+    private val constellationObserver = ConstellationObserver(push, verificationDelegate)
     private val pushReset = OneTimeFxaPushReset(context, push)
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
@@ -155,9 +156,8 @@ internal class AccountObserver(
  * when notified by the FxA server. See [Device.subscriptionExpired].
  */
 internal class ConstellationObserver(
-    context: Context,
     private val push: PushProcessor,
-    private val verifier: VerificationDelegate = VerificationDelegate(context)
+    private val verifier: VerificationDelegate
 ) : DeviceConstellationObserver {
 
     private val logger = Logger(ConstellationObserver::class.java.simpleName)
@@ -237,12 +237,16 @@ internal class AutoPushObserver(
 }
 
 /**
- * A helper that rate limits how often we should notify our servers to renew push registration.
+ * A helper that rate limits how often we should notify our servers to renew push registration. For debugging, we
+ * can override this rate-limit check by enabling the [disableRateLimit] flag.
  *
  * Implementation notes: This saves the timestamp of our renewal and the number of times we have renewed our
  * registration within the [PERIODIC_INTERVAL_MILLISECONDS] interval of time.
  */
-internal class VerificationDelegate(context: Context) : SharedPreferencesCache<VerificationState>(context) {
+internal class VerificationDelegate(
+    context: Context,
+    private val disableRateLimit: Boolean = false
+) : SharedPreferencesCache<VerificationState>(context) {
     override val logger: Logger = Logger(VerificationDelegate::class.java.simpleName)
     override val cacheKey: String = PREF_LAST_VERIFIED
     override val cacheName: String = PREFERENCE_NAME
@@ -276,6 +280,11 @@ internal class VerificationDelegate(context: Context) : SharedPreferencesCache<V
      */
     fun allowedToRenew(): Boolean {
         logger.info("Allowed to renew?")
+
+        if (disableRateLimit) {
+            logger.info("Rate limit override is enabled - allowed to renew!")
+            return true
+        }
 
         // within time frame
         val currentTime = System.currentTimeMillis()

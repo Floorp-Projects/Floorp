@@ -18,22 +18,24 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class FxaPushSupportFeatureTest {
 
+    private val pushFeature: AutoPushFeature = mock()
+    private val accountManager: FxaAccountManager = mock()
+
     @Before
     fun setup() {
         preference(testContext).edit().remove(PREF_FXA_SCOPE).apply()
+        `when`(pushFeature.config).thenReturn(mock())
     }
 
     @Test
     fun `account observer registered`() {
-        val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
-
         FxaPushSupportFeature(testContext, accountManager, pushFeature)
 
         verify(accountManager).register(any())
@@ -42,9 +44,6 @@ class FxaPushSupportFeatureTest {
 
     @Test
     fun `feature generates and caches a scope`() {
-        val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
-
         FxaPushSupportFeature(testContext, accountManager, pushFeature)
 
         assertTrue(preference(testContext).contains(PREF_FXA_SCOPE))
@@ -52,9 +51,6 @@ class FxaPushSupportFeatureTest {
 
     @Test
     fun `feature does not generate a scope if one already exists`() {
-        val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
-
         preference(testContext).edit().putString(PREF_FXA_SCOPE, "testScope").apply()
 
         FxaPushSupportFeature(testContext, accountManager, pushFeature)
@@ -65,9 +61,6 @@ class FxaPushSupportFeatureTest {
 
     @Test
     fun `feature generates a partially predictable push scope`() {
-        val accountManager: FxaAccountManager = mock()
-        val pushFeature: AutoPushFeature = mock()
-
         FxaPushSupportFeature(testContext, accountManager, pushFeature)
 
         val cachedScope = preference(testContext).getString(PREF_FXA_SCOPE, "")
