@@ -35,15 +35,7 @@ static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame) {
 
 static bool IsSmallScrollbar(nsIFrame* aFrame) {
   ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  if (style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin) {
-    return true;
-  }
-  nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-  if (scrollbarFrame && scrollbarFrame->StyleDisplay()->EffectiveAppearance() ==
-                            StyleAppearance::ScrollbarSmall) {
-    return true;
-  }
-  return false;
+  return style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
 }
 
 static bool IsParentScrollbarRolledOver(nsIFrame* aFrame) {
@@ -64,7 +56,6 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
       case StyleAppearance::ScrollbarthumbVertical:
         return IntSize{0, 26};
       case StyleAppearance::Scrollbar:
-      case StyleAppearance::ScrollbarSmall:
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
         if (nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) !=
