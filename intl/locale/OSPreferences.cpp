@@ -63,7 +63,7 @@ bool OSPreferences::CanonicalizeLanguageTag(nsCString& aLoc) {
 bool OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
                                                DateTimeFormatStyle aTimeStyle,
                                                const nsACString& aLocale,
-                                               nsAString& aRetVal) {
+                                               nsACString& aRetVal) {
   UDateFormatStyle timeStyle = UDAT_NONE;
   UDateFormatStyle dateStyle = UDAT_NONE;
 
@@ -133,7 +133,7 @@ bool OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
   if (U_FAILURE(status)) {
     return false;
   }
-  aRetVal.Assign((const char16_t*)pattern, patsize);
+  aRetVal = NS_ConvertUTF16toUTF8(pattern, patsize);
   return true;
 }
 
@@ -148,24 +148,26 @@ bool OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
 bool OSPreferences::GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
                                                 DateTimeFormatStyle aTimeStyle,
                                                 const nsACString& aLocale,
-                                                nsAString& aRetVal) {
-  nsAutoString pattern;
+                                                nsACString& aRetVal) {
+  nsAutoCString pattern;
   if (!GetDateTimePatternForStyle(aDateStyle, aTimeStyle, aLocale, pattern)) {
     return false;
   }
+
+  nsAutoString patternAsUtf16 = NS_ConvertUTF8toUTF16(pattern);
 
   const int32_t kSkeletonMax = 160;
   UChar skeleton[kSkeletonMax];
 
   UErrorCode status = U_ZERO_ERROR;
-  int32_t skelsize =
-      udatpg_getSkeleton(nullptr, (const UChar*)pattern.BeginReading(),
-                         pattern.Length(), skeleton, kSkeletonMax, &status);
+  int32_t skelsize = udatpg_getSkeleton(
+      nullptr, (const UChar*)patternAsUtf16.BeginReading(),
+      patternAsUtf16.Length(), skeleton, kSkeletonMax, &status);
   if (U_FAILURE(status)) {
     return false;
   }
 
-  aRetVal.Assign((const char16_t*)skeleton, skelsize);
+  aRetVal = NS_ConvertUTF16toUTF8(skeleton, skelsize);
   return true;
 }
 
@@ -178,9 +180,11 @@ bool OSPreferences::GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
  * For example:
  * "Hm" skeleton for "en-US" will return "H:m"
  */
-bool OSPreferences::GetPatternForSkeleton(const nsAString& aSkeleton,
+bool OSPreferences::GetPatternForSkeleton(const nsACString& aSkeleton,
                                           const nsACString& aLocale,
-                                          nsAString& aRetVal) {
+                                          nsACString& aRetVal) {
+  aRetVal.Truncate();
+
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg =
       udatpg_open(PromiseFlatCString(aLocale).get(), &status);
@@ -188,18 +192,25 @@ bool OSPreferences::GetPatternForSkeleton(const nsAString& aSkeleton,
     return false;
   }
 
+  nsAutoString skeletonAsUtf16 = NS_ConvertUTF8toUTF16(aSkeleton);
+  nsAutoString result;
+
   int32_t len =
-      udatpg_getBestPattern(pg, (const UChar*)aSkeleton.BeginReading(),
-                            aSkeleton.Length(), nullptr, 0, &status);
+      udatpg_getBestPattern(pg, (const UChar*)skeletonAsUtf16.BeginReading(),
+                            skeletonAsUtf16.Length(), nullptr, 0, &status);
   if (status == U_BUFFER_OVERFLOW_ERROR) {  // expected
-    aRetVal.SetLength(len);
+    result.SetLength(len);
     status = U_ZERO_ERROR;
-    udatpg_getBestPattern(pg, (const UChar*)aSkeleton.BeginReading(),
-                          aSkeleton.Length(), (UChar*)aRetVal.BeginWriting(),
-                          len, &status);
+    udatpg_getBestPattern(pg, (const UChar*)skeletonAsUtf16.BeginReading(),
+                          skeletonAsUtf16.Length(),
+                          (UChar*)result.BeginWriting(), len, &status);
   }
 
   udatpg_close(pg);
+
+  if (U_SUCCESS(status)) {
+    aRetVal = NS_ConvertUTF16toUTF8(result);
+  }
 
   return U_SUCCESS(status);
 }
@@ -214,7 +225,7 @@ bool OSPreferences::GetPatternForSkeleton(const nsAString& aSkeleton,
  * An example output is "{1}, {0}".
  */
 bool OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
-                                                nsAString& aRetVal) {
+                                                nsACString& aRetVal) {
   bool result = false;
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg =
@@ -224,7 +235,7 @@ bool OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
     const UChar* value = udatpg_getDateTimeFormat(pg, &resultSize);
     MOZ_ASSERT(resultSize >= 0);
 
-    aRetVal.Assign((char16_t*)value, resultSize);
+    aRetVal = NS_ConvertUTF16toUTF8(value, resultSize);
     result = true;
   }
   udatpg_close(pg);
@@ -306,7 +317,7 @@ NS_IMETHODIMP
 OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
                                   int32_t aTimeFormatStyle,
                                   const nsACString& aLocale,
-                                  nsAString& aRetVal) {
+                                  nsACString& aRetVal) {
   DateTimeFormatStyle dateStyle = ToDateTimeFormatStyle(aDateFormatStyle);
   if (dateStyle == DateTimeFormatStyle::Invalid) {
     return NS_ERROR_INVALID_ARG;
@@ -330,7 +341,7 @@ OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
   key.Append(':');
   key.AppendInt(aTimeFormatStyle);
 
-  nsString pattern;
+  nsCString pattern;
   if (mPatternCache.Get(key, &pattern)) {
     aRetVal = pattern;
     return NS_OK;

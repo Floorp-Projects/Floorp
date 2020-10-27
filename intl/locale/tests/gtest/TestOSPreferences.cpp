@@ -53,7 +53,7 @@ TEST(Intl_Locale_OSPreferences, GetRegionalPrefsLocales)
  */
 TEST(Intl_Locale_OSPreferences, GetDateTimePattern)
 {
-  nsAutoString pattern;
+  nsAutoCString pattern;
   OSPreferences* osprefs = OSPreferences::GetInstance();
 
   struct Test {
@@ -70,7 +70,6 @@ TEST(Intl_Locale_OSPreferences, GetDateTimePattern)
 
   for (unsigned i = 0; i < mozilla::ArrayLength(tests); i++) {
     const Test& t = tests[i];
-    nsAutoString pattern;
     if (NS_SUCCEEDED(osprefs->GetDateTimePattern(
             t.dateStyle, t.timeStyle, nsDependentCString(t.locale), pattern))) {
       ASSERT_TRUE((t.dateStyle == 0 && t.timeStyle == 0) || !pattern.IsEmpty());
