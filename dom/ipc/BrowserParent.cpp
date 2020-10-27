@@ -3700,28 +3700,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvRemotePaintIsReady() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvNotifyCompositorTransaction() {
-  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  if (!frameLoader) {
-    return IPC_OK();
-  }
-
-  nsIFrame* docFrame = frameLoader->GetPrimaryFrameOfOwningContent();
-
-  if (!docFrame) {
-    // Bad, but nothing we can do about it (XXX/cjones: or is there?
-    // maybe bug 589337?).  When the new frame is created, we'll
-    // probably still be the current render frame and will get to draw
-    // our content then.  Or, we're shutting down and this update goes
-    // to /dev/null.
-    return IPC_OK();
-  }
-
-  docFrame->InvalidateLayer(DisplayItemType::TYPE_REMOTE);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRemoteIsReadyToHandleInputEvents() {
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt

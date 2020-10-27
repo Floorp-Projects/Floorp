@@ -310,7 +310,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mLayersId{0},
       mEffectsInfo{EffectsInfo::FullyHidden()},
       mDidFakeShow(false),
-      mNotified(false),
       mTriedBrowserInit(false),
       mOrientation(hal::eScreenOrientation_PortraitPrimary),
       mIgnoreKeyPressEvent(false),
@@ -2818,13 +2817,6 @@ void BrowserChild::InitAPZState() {
       new ContentProcessController(this);
   APZChild* apzChild = new APZChild(contentController);
   cbc->SendPAPZConstructor(apzChild, mLayersId);
-}
-
-void BrowserChild::NotifyPainted() {
-  if (!mNotified) {
-    SendNotifyCompositorTransaction();
-    mNotified = true;
-  }
 }
 
 IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
