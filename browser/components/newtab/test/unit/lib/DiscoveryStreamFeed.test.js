@@ -1200,6 +1200,54 @@ describe("DiscoveryStreamFeed", () => {
       ]);
     });
 
+    it("should sort based on priority", async () => {
+      const { data: result } = await feed.scoreItems([
+        { id: 6, flight_id: 6, priority: 2, item_score: 0.7, min_score: 0.1 },
+        { id: 2, flight_id: 3, priority: 1, item_score: 0.2, min_score: 0.1 },
+        { id: 4, flight_id: 4, item_score: 0.6, min_score: 0.1 },
+        { id: 5, flight_id: 5, priority: 2, item_score: 0.8, min_score: 0.1 },
+        { id: 3, flight_id: 3, item_score: 0.8, min_score: 0.1 },
+        { id: 1, flight_id: 1, priority: 1, item_score: 0.3, min_score: 0.1 },
+      ]);
+
+      assert.deepEqual(result, [
+        {
+          id: 1,
+          flight_id: 1,
+          priority: 1,
+          score: 0.3,
+          item_score: 0.3,
+          min_score: 0.1,
+        },
+        {
+          id: 2,
+          flight_id: 3,
+          priority: 1,
+          score: 0.2,
+          item_score: 0.2,
+          min_score: 0.1,
+        },
+        {
+          id: 5,
+          flight_id: 5,
+          priority: 2,
+          score: 0.8,
+          item_score: 0.8,
+          min_score: 0.1,
+        },
+        {
+          id: 6,
+          flight_id: 6,
+          priority: 2,
+          score: 0.7,
+          item_score: 0.7,
+          min_score: 0.1,
+        },
+        { id: 3, flight_id: 3, item_score: 0.8, score: 0.8, min_score: 0.1 },
+        { id: 4, flight_id: 4, item_score: 0.6, score: 0.6, min_score: 0.1 },
+      ]);
+    });
+
     it("should remove items with scores lower than min_score", async () => {
       const { data: result, filtered } = await feed.scoreItems([
         { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.9 },
