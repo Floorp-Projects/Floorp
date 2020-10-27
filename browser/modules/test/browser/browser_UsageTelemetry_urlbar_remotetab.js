@@ -70,7 +70,7 @@ function snapshotHistograms() {
   };
 }
 
-function assertHistogramResults(histograms, type, index, method) {
+function assertTelemetryResults(histograms, type, index, method) {
   TelemetryTestUtils.assertHistogram(histograms.resultIndexHist, index, 1);
 
   TelemetryTestUtils.assertHistogram(
@@ -87,6 +87,13 @@ function assertHistogramResults(histograms, type, index, method) {
   );
 
   TelemetryTestUtils.assertHistogram(histograms.resultMethodHist, method, 1);
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    `urlbar.picked.${type}`,
+    index,
+    1
+  );
 }
 
 add_task(async function setup() {
@@ -194,7 +201,7 @@ add_task(async function test_remotetab() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "remotetab",
     1,

@@ -530,86 +530,42 @@ class UrlbarController {
 
     // Do not modify existing telemetry types.  To add a new type:
     //
-    // * Set telemetryType appropriately below.
-    // * Add the type to UrlbarUtils.SELECTED_RESULT_TYPES.
-    // * See n_values in Histograms.json for FX_URLBAR_SELECTED_RESULT_TYPE_2
-    //   and FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2.  If your new type causes
-    //   the number of types to become larger than n_values, you'll need to
-    //   replace these histograms with new ones.  See "Changing a histogram" in
-    //   the histogram telemetry doc for more.
+    // * Set telemetryType appropriately. Since telemetryType is used as the
+    //   probe name, it must be alphanumeric with optional underscores.
+    // * Add a new keyed scalar probe into the urlbar.picked category for the
+    //   newly added telemetryType.
     // * Add a test named browser_UsageTelemetry_urlbar_newType.js to
     //   browser/modules/test/browser.
-    let telemetryType;
-    switch (result.type) {
-      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        telemetryType = "switchtab";
-        break;
-      case UrlbarUtils.RESULT_TYPE.SEARCH:
-        if (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
-          telemetryType = "formhistory";
-        } else if (result.providerName == "TabToSearch") {
-          telemetryType = "tabtosearch";
-        } else {
-          telemetryType = result.payload.suggestion
-            ? "searchsuggestion"
-            : "searchengine";
-        }
-        break;
-      case UrlbarUtils.RESULT_TYPE.URL:
-        if (result.autofill) {
-          telemetryType = "autofill";
-        } else if (
-          result.source == UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&
-          result.heuristic
-        ) {
-          telemetryType = "visiturl";
-        } else {
-          telemetryType =
-            result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
-              ? "bookmark"
-              : "history";
-        }
-        break;
-      case UrlbarUtils.RESULT_TYPE.KEYWORD:
-        telemetryType = "keyword";
-        break;
-      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-        telemetryType = "extension";
-        break;
-      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        telemetryType = "remotetab";
-        break;
-      case UrlbarUtils.RESULT_TYPE.TIP:
-        telemetryType = "tip";
-        break;
-      case UrlbarUtils.RESULT_TYPE.DYNAMIC:
-        telemetryType = "dynamic";
-        break;
-      default:
-        Cu.reportError(`Unknown Result Type ${result.type}`);
-        return;
-    }
-    // The "topsite" type overrides the above ones, because it starts from a
-    // unique user interaction, that we want to count apart.
-    if (result.providerName == "UrlbarProviderTopSites") {
-      telemetryType = "topsite";
-    }
+    //
+    // The "topsite" type overrides the other ones, because it starts from a
+    // unique user interaction, that we want to count apart. We do this here
+    // rather than in telemetryTypeFromResult because other consumers, like
+    // events telemetry, are reporting this information separately.
+    let telemetryType =
+      result.providerName == "UrlbarProviderTopSites"
+        ? "topsite"
+        : UrlbarUtils.telemetryTypeFromResult(result);
+    Services.telemetry.keyedScalarAdd(
+      `urlbar.picked.${telemetryType}`,
+      resultIndex,
+      1
+    );
 
+    // These histograms should be removed after a deprecation time where we'll
+    // confirm goodness of the new scalar above.
+    if (!(telemetryType in UrlbarUtils.SELECTED_RESULT_TYPES)) {
+      Cu.reportError(`Unsupported telemetry type ${telemetryType}`);
+      return;
+    }
     Services.telemetry
       .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
       .add(resultIndex);
-    if (telemetryType in UrlbarUtils.SELECTED_RESULT_TYPES) {
-      Services.telemetry
-        .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE_2")
-        .add(UrlbarUtils.SELECTED_RESULT_TYPES[telemetryType]);
-      Services.telemetry
-        .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2")
-        .add(telemetryType, resultIndex);
-    } else {
-      Cu.reportError(
-        "Unknown FX_URLBAR_SELECTED_RESULT_TYPE_2 type: " + telemetryType
-      );
-    }
+    Services.telemetry
+      .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE_2")
+      .add(UrlbarUtils.SELECTED_RESULT_TYPES[telemetryType]);
+    Services.telemetry
+      .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2")
+      .add(telemetryType, resultIndex);
   }
 
   /**
@@ -796,9 +752,9 @@ class TelemetryEvent {
    * @param {string} details.selIndex Index of the selected result, undefined
    *        for "blur".
    * @param {string} details.selType type of the selected element, undefined
-   *        for "blur". One of "none", "autofill", "visit", "bookmark",
-   *        "history", "keyword", "search", "searchsuggestion", "switchtab",
-   *         "remotetab", "extension", "oneoff".
+   *        for "blur". One of "unknown", "autofill", "visiturl", "bookmark",
+   *        "history", "keyword", "searchengine", "searchsuggestion",
+   *        "switchtab", "remotetab", "extension", "oneoff".
    * @param {string} details.provider The name of the provider for the selected
    *        result.
    * @note event can be null, that usually happens for paste&go or drop&go.
@@ -911,7 +867,7 @@ class TelemetryEvent {
   }
 
   /**
-   * Extracts a type from an element, to be used in the telemetry event.
+   * Extracts a telemetry type from an element for event telemetry.
    * @param {Element} element The element to analyze.
    * @returns {string} a string type for the telemetry event.
    */
@@ -920,43 +876,16 @@ class TelemetryEvent {
       return "none";
     }
     let row = element.closest(".urlbarView-row");
-    if (row.result) {
-      switch (row.result.type) {
-        case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-          return "switchtab";
-        case UrlbarUtils.RESULT_TYPE.SEARCH:
-          if (row.result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
-            return "formhistory";
-          }
-          if (row.result.providerName == "TabToSearch") {
-            return "tabtosearch";
-          }
-          return row.result.payload.suggestion ? "searchsuggestion" : "search";
-        case UrlbarUtils.RESULT_TYPE.URL:
-          if (row.result.autofill) {
-            return "autofill";
-          }
-          if (row.result.heuristic) {
-            return "visit";
-          }
-          return row.result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
-            ? "bookmark"
-            : "history";
-        case UrlbarUtils.RESULT_TYPE.KEYWORD:
-          return "keyword";
-        case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-          return "extension";
-        case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-          return "remotetab";
-        case UrlbarUtils.RESULT_TYPE.TIP:
-          if (element.classList.contains("urlbarView-tip-help")) {
-            return "tiphelp";
-          }
-          return "tip";
-        case UrlbarUtils.RESULT_TYPE.DYNAMIC:
-          return "dynamic";
+    if (row.result && row.result.providerName != "UrlbarProviderTopSites") {
+      // Element handlers go here.
+      if (
+        row.result.type == UrlbarUtils.RESULT_TYPE.TIP &&
+        element.classList.contains("urlbarView-tip-help")
+      ) {
+        return "tiphelp";
       }
     }
-    return "none";
+    // Now handle the result.
+    return UrlbarUtils.telemetryTypeFromResult(row.result);
   }
 }
