@@ -202,11 +202,9 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   RootedAtom displayAtom(cx);
   if (script.functionAtom) {
-    displayAtom.set(
-        script.functionAtom->toJSAtom(cx, compilationInfo.input.atomCache));
-    if (!displayAtom) {
-      return nullptr;
-    }
+    displayAtom.set(script.functionAtom->toExistingJSAtom(
+        cx, compilationInfo.input.atomCache));
+    MOZ_ASSERT(displayAtom);
   }
   RootedFunction fun(
       cx, NewFunctionWithProto(cx, maybeNative, script.nargs,
@@ -377,11 +375,9 @@ static bool SetTypeAndNameForExposedFunctions(JSContext* cx,
       JSAtom* funcAtom = nullptr;
       if (scriptStencil.functionFlags.hasInferredName() ||
           scriptStencil.functionFlags.hasGuessedAtom()) {
-        funcAtom = scriptStencil.functionAtom->toJSAtom(
+        funcAtom = scriptStencil.functionAtom->toExistingJSAtom(
             cx, compilationInfo.input.atomCache);
-        if (!funcAtom) {
-          return false;
-        }
+        MOZ_ASSERT(funcAtom);
       }
       if (scriptStencil.functionFlags.hasInferredName()) {
         fun->setInferredName(funcAtom);

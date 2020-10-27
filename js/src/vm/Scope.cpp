@@ -164,10 +164,7 @@ Shape* js::CreateEnvironmentShape(
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      name = bi.name()->toJSAtom(cx, atomCache);
-      if (!name) {
-        return nullptr;
-      }
+      name = bi.name()->toExistingJSAtom(cx, atomCache);
       MOZ_ASSERT(name);
       cx->markAtom(name);
       shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), stackBase,
@@ -319,10 +316,8 @@ static UniquePtr<typename ConcreteScope::Data> LiftParserScopeData(
   for (size_t i = 0; i < length; i++) {
     JSAtom* jsatom = nullptr;
     if (names[i].name()) {
-      jsatom = names[i].name()->toJSAtom(cx, atomCache);
-      if (jsatom == nullptr) {
-        return nullptr;
-      }
+      jsatom = names[i].name()->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(jsatom);
     }
     jsatoms.infallibleAppend(jsatom);
   }

@@ -24,7 +24,7 @@
 
 namespace js {
 
-static bool InterpretObjLiteralValue(JSContext* cx,
+static void InterpretObjLiteralValue(JSContext* cx,
                                      const ObjLiteralAtomVector& atoms,
                                      frontend::CompilationAtomCache& atomCache,
                                      const ObjLiteralInsn& insn,
@@ -32,32 +32,26 @@ static bool InterpretObjLiteralValue(JSContext* cx,
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
       *valOut = insn.getConstValue();
-      return true;
+      return;
     case ObjLiteralOpcode::ConstAtom: {
       uint32_t index = insn.getAtomIndex();
-      // TODO-Stencil
-      //   This needs to be coalesced to wherever jsatom creation is eventually
-      //   Seems like InterpretLiteralObj would be called from main-thread
-      //   stencil instantiation.
-      JSAtom* jsatom = atoms[index]->toJSAtom(cx, atomCache);
-      if (!jsatom) {
-        return false;
-      }
+      JSAtom* jsatom = atoms[index]->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(jsatom);
       *valOut = StringValue(jsatom);
-      return true;
+      return;
     }
     case ObjLiteralOpcode::Null:
       *valOut = NullValue();
-      return true;
+      return;
     case ObjLiteralOpcode::Undefined:
       *valOut = UndefinedValue();
-      return true;
+      return;
     case ObjLiteralOpcode::True:
       *valOut = BooleanValue(true);
-      return true;
+      return;
     case ObjLiteralOpcode::False:
       *valOut = BooleanValue(false);
-      return true;
+      return;
     default:
       MOZ_CRASH("Unexpected object-literal instruction opcode");
   }
@@ -84,23 +78,15 @@ static JSObject* InterpretObjLiteralObj(
     if (insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
-      // TODO-Stencil
-      //   Just a note, but it seems like this is an OK place to convert atoms
-      //   since the other GC allocations in the function (properties vector,
-      //   etc.) would need to be addressed.
       const frontend::ParserAtom* atom = atoms[insn.getKey().getAtomIndex()];
-      JSAtom* jsatom = atom->toJSAtom(cx, atomCache);
-      if (!jsatom) {
-        return nullptr;
-      }
+      JSAtom* jsatom = atom->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(jsatom);
       propId = AtomToId(jsatom);
     }
 
     JS::Value propVal;
     if (!noValues) {
-      if (!InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal)) {
-        return nullptr;
-      }
+      InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal);
     }
 
     if (!properties.emplaceBack(propId, propVal)) {
@@ -132,9 +118,7 @@ static JSObject* InterpretObjLiteralArray(
     MOZ_ASSERT(insn.isValid());
 
     JS::Value propVal;
-    if (!InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal)) {
-      return nullptr;
-    }
+    InterpretObjLiteralValue(cx, atoms, atomCache, insn, &propVal);
     if (!elements.append(propVal)) {
       return nullptr;
     }
