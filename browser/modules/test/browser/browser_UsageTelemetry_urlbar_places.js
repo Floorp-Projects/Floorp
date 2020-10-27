@@ -83,7 +83,7 @@ function snapshotHistograms() {
   };
 }
 
-function assertHistogramResults(histograms, type, index, method) {
+function assertTelemetryResults(histograms, type, index, method) {
   TelemetryTestUtils.assertHistogram(histograms.resultIndexHist, index, 1);
 
   TelemetryTestUtils.assertHistogram(
@@ -100,6 +100,13 @@ function assertHistogramResults(histograms, type, index, method) {
   );
 
   TelemetryTestUtils.assertHistogram(histograms.resultMethodHist, method, 1);
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    `urlbar.picked.${type}`,
+    index,
+    1
+  );
 }
 
 add_task(async function setup() {
@@ -167,7 +174,7 @@ add_task(async function test_history() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "history",
     1,
@@ -198,7 +205,7 @@ add_task(async function test_bookmark() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "bookmark",
     1,
@@ -224,7 +231,7 @@ add_task(async function test_keyword() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "keyword",
     0,
@@ -253,7 +260,7 @@ add_task(async function test_switchtab() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "switchtab",
     1,
@@ -278,7 +285,7 @@ add_task(async function test_visitURL() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "visiturl",
     0,
@@ -312,7 +319,7 @@ add_task(async function test_autofill() {
   await p;
 
   assertSearchTelemetryEmpty(histograms.search_hist);
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "autofill",
     0,

@@ -902,7 +902,7 @@ class UrlbarInput {
         this.handleRevert();
         this.controller.engagementEvent.record(event, {
           selIndex,
-          numChars: this._lastSearchString.length,
+          searchString: this._lastSearchString,
           selType: this.controller.engagementEvent.typeFromElement(element),
           provider: result.providerName,
         });

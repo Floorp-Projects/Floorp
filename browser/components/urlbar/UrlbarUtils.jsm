@@ -119,7 +119,7 @@ var UrlbarUtils = {
     visiturl: 8,
     remotetab: 9,
     extension: 10,
-    "preloaded-top-site": 11,
+    "preloaded-top-site": 11, // This is currently unused.
     tip: 12,
     topsite: 13,
     formhistory: 14,
@@ -911,6 +911,62 @@ var UrlbarUtils = {
         }
       );
     });
+  },
+
+  /**
+   * Extracts a telemetry type from a result, used by scalars and event
+   * telemetry.
+   *
+   * @param {UrlbarResult} result The result to analyze.
+   * @returns {string} A string type for telemetry.
+   * @note New types should be added to Scalars.yaml under the urlbar.picked
+   *       category and documented in the in-tree documentation. A data-review
+   *       is always necessary.
+   */
+  telemetryTypeFromResult(result) {
+    if (!result) {
+      return "unknown";
+    }
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        return "switchtab";
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
+        if (result.source == UrlbarUtils.RESULT_SOURCE.HISTORY) {
+          return "formhistory";
+        }
+        if (result.providerName == "TabToSearch") {
+          return "tabtosearch";
+        }
+        return result.payload.suggestion ? "searchsuggestion" : "searchengine";
+      case UrlbarUtils.RESULT_TYPE.URL:
+        if (result.autofill) {
+          return "autofill";
+        }
+        if (
+          result.source == UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL &&
+          result.heuristic
+        ) {
+          return "visiturl";
+        }
+        return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+          ? "bookmark"
+          : "history";
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        return "keyword";
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        return "extension";
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        return "remotetab";
+      case UrlbarUtils.RESULT_TYPE.TIP:
+        return "tip";
+      case UrlbarUtils.RESULT_TYPE.DYNAMIC:
+        if (result.providerName == "TabToSearch") {
+          // This is the onboarding result.
+          return "tabtosearch";
+        }
+        return "dynamic";
+    }
+    return "unknown";
   },
 };
 
