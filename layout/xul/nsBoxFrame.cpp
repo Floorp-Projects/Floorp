@@ -1054,38 +1054,6 @@ nsresult nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox,
   return NS_OK;
 }
 
-nsresult nsBoxFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild) {
-  int32_t ord = aChild->StyleXUL()->mBoxOrdinal;
-
-  nsIFrame* child = mFrames.FirstChild();
-  nsIFrame* newPrevSib = nullptr;
-
-  while (child) {
-    if (ord < child->StyleXUL()->mBoxOrdinal) {
-      break;
-    }
-
-    if (child != aChild) {
-      newPrevSib = child;
-    }
-
-    child = GetNextXULBox(child);
-  }
-
-  if (aChild->GetPrevSibling() == newPrevSib) {
-    // This box is not moving.
-    return NS_OK;
-  }
-
-  // Take |aChild| out of its old position in the child list.
-  mFrames.RemoveFrame(aChild);
-
-  // Insert it after |newPrevSib| or at the start if it's null.
-  mFrames.InsertFrame(nullptr, newPrevSib, aChild);
-
-  return NS_OK;
-}
-
 /**
  * This wrapper class lets us redirect mouse hits from descendant frames
  * of a menu to the menu itself, if they didn't specify 'allowevents'.

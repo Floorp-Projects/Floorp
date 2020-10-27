@@ -54,8 +54,6 @@ nsresult nsIFrame::EndXULLayout(nsBoxLayoutState& aState) {
   return SyncXULLayout(aState);
 }
 
-nsresult nsIFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild) { return NS_OK; }
-
 nsresult nsIFrame::GetXULClientRect(nsRect& aClientRect) {
   aClientRect = mRect;
   aClientRect.MoveTo(0, 0);

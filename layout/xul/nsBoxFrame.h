@@ -60,8 +60,6 @@ class nsBoxFrame : public nsContainerFrame {
   }
   virtual nsBoxLayout* GetXULLayoutManager() override { return mLayoutManager; }
 
-  virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild) override;
-
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
