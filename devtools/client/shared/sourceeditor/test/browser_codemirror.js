@@ -6,11 +6,9 @@
 const URI =
   "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/" +
   "test/codemirror/codemirror.html";
-loadHelperScript("helper_codemirror_runner.js");
 
-async function test() {
+add_task(async function test() {
   requestLongerTimeout(3);
-  waitForExplicitFinish();
 
   /*
    * In devtools/client/shared/sourceeditor/test/codemirror/search_test.js there is a test
@@ -24,14 +22,12 @@ async function test() {
    * In theory we don't need to set the pref for all of CodeMirror, in practice
    * it seems very difficult to set a pref for just one of the tests.
    */
-  await pushPref("privacy.reduceTimerPrecision", true);
-  await pushPref(
-    "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
-    2000
-  );
-  // Needed for a loadFrameScript(data:) call in helper_codemirror_runner.js
-  await pushPref("security.allow_parent_unrestricted_js_loads", true);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.reduceTimerPrecision", true],
+      ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000],
+    ],
+  });
 
-  const tab = await addTab(URI);
-  runCodeMirrorTest(tab.linkedBrowser);
-}
+  await runCodeMirrorTest(URI);
+});
