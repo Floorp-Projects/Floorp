@@ -2269,9 +2269,9 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
-    LookAndFeelCache&& aLookAndFeelCache) {
+    LookAndFeelCache&& aLookAndFeelCache, widget::ThemeChangeKind aKind) {
   LookAndFeel::SetCache(aLookAndFeelCache);
-  LookAndFeel::NotifyChangedAllWindows();
+  LookAndFeel::NotifyChangedAllWindows(aKind);
   return IPC_OK();
 }
 

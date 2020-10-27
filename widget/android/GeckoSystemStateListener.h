@@ -19,7 +19,10 @@ class GeckoSystemStateListener final
  public:
   static void OnDeviceChanged() {
     MOZ_ASSERT(NS_IsMainThread());
-    mozilla::LookAndFeel::NotifyChangedAllWindows();
+    // TODO(emilio, bug 1673318): This could become more granular and avoid work
+    // if we get whether these are layout/style-affecting from the caller.
+    mozilla::LookAndFeel::NotifyChangedAllWindows(
+        widget::ThemeChangeKind::StyleAndLayout);
   }
 };
 
