@@ -273,67 +273,43 @@ nsresult DateTimeFormat::FormatUDateTime(
   if (!dateTimeFormat) {
     // We didn't have a cached formatter for this key, so create one.
 
-    // Get the date style for the formatter.
-    nsAutoString patternDate;
+    nsAutoString pattern;
+    int32_t dateFormatStyle;
     switch (aDateFormatSelector) {
       case kDateFormatLong:
-        rv = OSPreferences::GetInstance()->GetDateTimePattern(
-            mozIOSPreferences::dateTimeFormatStyleLong,
-            mozIOSPreferences::dateTimeFormatStyleNone,
-            nsDependentCString(mLocale->get()), patternDate);
-        NS_ENSURE_SUCCESS(rv, rv);
+        dateFormatStyle = mozIOSPreferences::dateTimeFormatStyleLong;
         break;
       case kDateFormatShort:
-        rv = OSPreferences::GetInstance()->GetDateTimePattern(
-            mozIOSPreferences::dateTimeFormatStyleShort,
-            mozIOSPreferences::dateTimeFormatStyleNone,
-            nsDependentCString(mLocale->get()), patternDate);
-        NS_ENSURE_SUCCESS(rv, rv);
+        dateFormatStyle = mozIOSPreferences::dateTimeFormatStyleShort;
         break;
       case kDateFormatNone:
+        dateFormatStyle = mozIOSPreferences::dateTimeFormatStyleNone;
         break;
       default:
         NS_ERROR("Unknown nsDateFormatSelector");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    // Get the time style for the formatter.
-    nsAutoString patternTime;
+    int32_t timeFormatStyle;
     switch (aTimeFormatSelector) {
       case kTimeFormatLong:
-        rv = OSPreferences::GetInstance()->GetDateTimePattern(
-            mozIOSPreferences::dateTimeFormatStyleNone,
-            mozIOSPreferences::dateTimeFormatStyleLong,
-            nsDependentCString(mLocale->get()), patternTime);
-        NS_ENSURE_SUCCESS(rv, rv);
+        timeFormatStyle = mozIOSPreferences::dateTimeFormatStyleLong;
         break;
       case kTimeFormatShort:
-        rv = OSPreferences::GetInstance()->GetDateTimePattern(
-            mozIOSPreferences::dateTimeFormatStyleNone,
-            mozIOSPreferences::dateTimeFormatStyleShort,
-            nsDependentCString(mLocale->get()), patternTime);
-        NS_ENSURE_SUCCESS(rv, rv);
+        timeFormatStyle = mozIOSPreferences::dateTimeFormatStyleShort;
         break;
       case kTimeFormatNone:
+        timeFormatStyle = mozIOSPreferences::dateTimeFormatStyleNone;
         break;
       default:
-        NS_ERROR("Unknown nsTimeFormatSelector");
+        NS_ERROR("Unknown nsDateFormatSelector");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    nsAutoString pattern;
-    if (patternTime.Length() == 0) {
-      pattern.Assign(patternDate);
-    } else if (patternDate.Length() == 0) {
-      pattern.Assign(patternTime);
-    } else {
-      OSPreferences::GetDateTimeConnectorPattern(
-          nsDependentCString(mLocale->get()), pattern);
-      int32_t index = pattern.Find("{1}");
-      if (index != kNotFound) pattern.Replace(index, 3, patternDate);
-      index = pattern.Find("{0}");
-      if (index != kNotFound) pattern.Replace(index, 3, patternTime);
-    }
+    rv = OSPreferences::GetInstance()->GetDateTimePattern(
+        dateFormatStyle, timeFormatStyle, nsDependentCString(mLocale->get()),
+        pattern);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (aTimeParameters) {
       nsAutoString timeZoneID;
