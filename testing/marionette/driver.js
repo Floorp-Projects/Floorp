@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
+  getMarionetteFrameActorProxy:
+    "chrome://marionette/content/actors/MarionetteFrameParent.jsm",
   IdlePromise: "chrome://marionette/content/sync.js",
   interaction: "chrome://marionette/content/interaction.js",
   l10n: "chrome://marionette/content/l10n.js",
@@ -378,8 +380,7 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
  *     The parent actor.
  */
 GeckoDriver.prototype.getActor = function(options = {}) {
-  const browsingContext = this.getBrowsingContext(options);
-  return browsingContext.currentWindowGlobal.getActor("MarionetteFrame");
+  return getMarionetteFrameActorProxy(() => this.getBrowsingContext(options));
 };
 
 /**
