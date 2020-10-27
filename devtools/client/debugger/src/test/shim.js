@@ -4,9 +4,6 @@
 
 // @flow
 
-import { readFileSync } from "fs";
-import path from "path";
-
 global.requestAnimationFrame = callback => setTimeout(callback, 0);
 global.isWorker = false;
 
@@ -53,19 +50,13 @@ global.loader = {
 };
 
 global.DebuggerConfig = {};
-const rootPath = path.join(__dirname, "../../");
-function getL10nBundle() {
-  const read = file => readFileSync(path.join(rootPath, file));
 
-  try {
-    return read("./assets/panel/debugger.properties");
-  } catch (e) {
-    return read("../locales/en-US/debugger.properties");
-  }
-}
+// $FlowIgnore
+const { LocalizationHelper } = require("devtools/shared/l10n");
+global.L10N = new LocalizationHelper(
+  "devtools/client/locales/debugger.properties"
+);
 
-global.L10N = require("devtools-launchpad").L10N;
-global.L10N.setBundle(getL10nBundle());
 global.performance = { now: () => 0 };
 
 const { URL } = require("url");
