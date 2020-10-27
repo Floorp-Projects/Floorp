@@ -1047,30 +1047,12 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   rv = GetProtocolHandlerInfo(scheme, getter_AddRefs(handler));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsHandlerInfoAction preferredAction;
-  handler->GetPreferredAction(&preferredAction);
-  bool alwaysAsk = true;
-  handler->GetAlwaysAskBeforeHandling(&alwaysAsk);
-
-  // if we are not supposed to ask, and the preferred action is to use
-  // a helper app or the system default, we just launch the URI.
-  if (!alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
-                     preferredAction == nsIHandlerInfo::useSystemDefault)) {
-    rv = handler->LaunchWithURI(uri, aBrowsingContext);
-    // We are not supposed to ask, but when file not found the user most likely
-    // uninstalled the application which handles the uri so we will continue
-    // by application chooser dialog.
-    if (rv != NS_ERROR_FILE_NOT_FOUND) {
-      return rv;
-    }
-  }
-
   nsCOMPtr<nsIContentDispatchChooser> chooser =
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->Ask(handler, uri, aTriggeringPrincipal, aBrowsingContext,
-                      nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
+  return chooser->HandleURI(handler, uri, aTriggeringPrincipal,
+                            aBrowsingContext);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
