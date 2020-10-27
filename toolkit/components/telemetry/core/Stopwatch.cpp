@@ -520,8 +520,6 @@ bool Timers::FinishUserInteraction(
       markerText.Append(aAdditionalText.Value());
     }
 
-    printf("Adding marker: %s\n",
-           NS_ConvertUTF16toUTF8(aUserInteraction).get());
     PROFILER_MARKER_TEXT(NS_ConvertUTF16toUTF8(aUserInteraction), OTHER,
                          MarkerTiming::IntervalUntilNowFrom(timer->StartTime()),
                          markerText);
