@@ -267,6 +267,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // the entry will cache the JSAtom pointer to return later.
   JSAtom* toJSAtom(JSContext* cx, CompilationAtomCache& atomCache) const;
 
+  // Same as toJSAtom, but this is guaranteed to be instantiated.
+  JSAtom* toExistingJSAtom(JSContext* cx,
+                           CompilationAtomCache& atomCache) const;
+
   // Convert NotInstantiatedAndMarked entry to a js-atom.
   JSAtom* instantiate(JSContext* cx, CompilationAtomCache& atomCache) const;
 

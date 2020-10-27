@@ -1302,31 +1302,23 @@ static ArrayObject* ModuleBuilderInitArray(
     const frontend::StencilModuleEntry& entry = vector[i];
 
     if (entry.specifier) {
-      specifier = entry.specifier->toJSAtom(cx, atomCache);
-      if (!specifier) {
-        return nullptr;
-      }
+      specifier = entry.specifier->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(specifier);
     }
 
     if (entry.localName) {
-      localName = entry.localName->toJSAtom(cx, atomCache);
-      if (!localName) {
-        return nullptr;
-      }
+      localName = entry.localName->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(localName);
     }
 
     if (entry.importName) {
-      importName = entry.importName->toJSAtom(cx, atomCache);
-      if (!importName) {
-        return nullptr;
-      }
+      importName = entry.importName->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(importName);
     }
 
     if (entry.exportName) {
-      exportName = entry.exportName->toJSAtom(cx, atomCache);
-      if (!exportName) {
-        return nullptr;
-      }
+      exportName = entry.exportName->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(exportName);
     }
 
     switch (arrayType) {

@@ -70,10 +70,8 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     mozilla::Span<JS::GCCellPtr>& output;
 
     bool operator()(const ScriptAtom& data) {
-      JSAtom* atom = data->toJSAtom(cx, atomCache);
-      if (!atom) {
-        return false;
-      }
+      JSAtom* atom = data->toExistingJSAtom(cx, atomCache);
+      MOZ_ASSERT(atom);
       output[i] = JS::GCCellPtr(atom);
       return true;
     }
