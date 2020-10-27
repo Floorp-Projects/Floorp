@@ -3107,7 +3107,8 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // we've already toggled the state from onclick since the user could
   // explicitly dispatch DOMActivate on the element.
   //
-  // This is a compatibility hack.
+  // These are compatibility hacks and are defined as legacy-pre-activation
+  // and legacy-canceled-activation behavior in HTML.
   //
 
   // Track whether we're in the outermost Dispatch invocation that will
@@ -3639,7 +3640,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         // tell the form that we are about to exit a click handler
         // so the form knows not to defer subsequent submissions
         // the pending ones that were created during the handler
-        // will be flushed or forgoten.
+        // will be flushed or forgotten.
         mForm->OnSubmitClickEnd();
         break;
       default:
@@ -3647,12 +3648,23 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }
 
-  // now check to see if the event was "cancelled"
+  bool preventDefault =
+      aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault;
+  if (IsDisabled() && oldType != NS_FORM_INPUT_CHECKBOX &&
+      oldType != NS_FORM_INPUT_RADIO) {
+    // Behave as if defaultPrevented when the element becomes disabled by event
+    // listeners. Checkboxes and radio buttons should still process clicks for
+    // web compat. See:
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
+    preventDefault = true;
+  }
+
+  // now check to see if the event was canceled
   if (mCheckedIsToggled && outerActivateEvent) {
-    if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
-      // if it was cancelled and a radio button, then set the old
+    if (preventDefault) {
+      // if it was canceled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
-      // original value
+      // original value (legacy-canceled-activation)
       if (oldType == NS_FORM_INPUT_RADIO) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
         HTMLInputElement* selectedRadioButton =
@@ -3704,7 +3716,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       StepNumberControlForUserEvent(keyEvent->mKeyCode == NS_VK_UP ? 1 : -1);
       FireChangeEventIfNeeded();
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-    } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+    } else if (!preventDefault) {
       switch (aVisitor.mEvent->mMessage) {
         case eFocus: {
           // see if we should select the contents of the textbox. This happens
