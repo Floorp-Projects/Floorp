@@ -1720,3 +1720,9 @@ f527acfab80d736b0186ac3014a9d10fadf021ef # cinnabar
 # 08a0e1e4864c9dfeff34aa3528a550aa84a8994d - Sylvestre Ledru - Bug 1617369 - Reformat recent rust changes with rustfmt r=emilio
 6b1bce83bc5b896c814d08319fcb99db8aa0d1f1 # cinnabar
 7f26dcf1b6d119a4664c3bff9749523f1e400068 # gecko-dev
+# 994ae8e4833c90447d91f0e26a718573cff5a514 - Ricky Stewart - Bug 1654103: Standardize on Black for Python code in `mozilla-central`.
+72edd6842030e7c21bd0be5a563864f51e01bdf7 # cinnabar
+02a7b4ebdf98983f97b3a2007798356b0c39c1c4 # gecko-dev
+# e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove excluded files from `black.yml`
+f1e360978f1a755728ff09137fc1f78297f09d5c # cinnabar
+210585edd26491e28ecbdc383f7232b95af651fc # gecko-dev
