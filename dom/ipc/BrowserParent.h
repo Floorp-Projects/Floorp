@@ -754,8 +754,6 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvRemotePaintIsReady();
 
-  mozilla::ipc::IPCResult RecvNotifyCompositorTransaction();
-
   mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents();
 
   mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp(
