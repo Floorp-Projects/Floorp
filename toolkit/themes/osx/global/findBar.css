@@ -62,13 +62,6 @@ label.findbar-find-fast:-moz-lwtheme {
   box-shadow: @roundButtonPressedShadow@;
 }
 
-@media (-moz-mac-yosemite-theme: 0) {
-  html|input.findbar-textbox,
-  .findbar-find-next {
-    border-radius: 10000px;
-  }
-}
-
 html|input.findbar-textbox {
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
   -moz-context-properties: fill, fill-opacity;

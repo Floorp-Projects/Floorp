@@ -37,19 +37,6 @@
   margin-inline-end: 6px;
 }
 
-/* Match selected item styling for -moz-appearance values on OSX 10.9 */
-@media (-moz-mac-yosemite-theme: 0) {
-  .sidebar-placesTreechildren::-moz-tree-image(selected),
-  .sidebar-placesTreechildren::-moz-tree-twisty(selected),
-  .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
-    color: #fff;
-  }
-
-  .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
-    font-weight: bold;
-  }
-}
-
 #sidebar-search-container {
   /* Native searchbar styling already adds 4px margin on Mac, so
    * adding 4px padding results in 8px of total whitespace. */

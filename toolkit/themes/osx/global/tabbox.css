@@ -51,13 +51,6 @@ tab[visuallyselected="true"]:not(:-moz-window-inactive) {
   color: #FFF;
 }
 
-@media (-moz-mac-yosemite-theme: 0) {
-  tab[visuallyselected="true"] {
-    color: #FFF;
-    text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
-  }
-}
-
 .tab-middle {
   padding: 1px 6px 2px;
 }
