@@ -1035,10 +1035,19 @@ async function runTests(tests, options = {}) {
  * @param {boolean} mic - True to share a microphone device.
  * @param {Number} [screenOrWin] - One of either SHARE_WINDOW or SHARE_SCREEN
  *   to share a window or screen. Defaults to neither.
+ * @param {boolean} remember - True to persist the permission to the
+ *   SitePermissions database as SitePermissions.SCOPE_PERSISTENT. Note that
+ *   callers are responsible for clearing this persistent permission.
  * @return {Promise}
  * @resolves {undefined} - Once the sharing is complete.
  */
-async function shareDevices(browser, camera, mic, screenOrWin = 0) {
+async function shareDevices(
+  browser,
+  camera,
+  mic,
+  screenOrWin = 0,
+  remember = false
+) {
   if (camera || mic) {
     let promise = promisePopupNotificationShown(
       "webRTC-shareDevices",
@@ -1052,6 +1061,12 @@ async function shareDevices(browser, camera, mic, screenOrWin = 0) {
     checkDeviceSelectors(mic, camera);
     let observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
     let observerPromise2 = expectObserverCalled("recording-device-events");
+
+    let rememberCheck = PopupNotifications.panel.querySelector(
+      ".popup-notification-checkbox"
+    );
+    rememberCheck.checked = remember;
+
     promise = promiseMessage("ok", () => {
       PopupNotifications.panel.firstElementChild.button.click();
     });
