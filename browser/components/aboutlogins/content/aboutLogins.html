@@ -16,7 +16,6 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-intro.js"></script>
-    <script type="module" src="chrome://browser/content/aboutlogins/components/login-footer.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
@@ -256,7 +255,6 @@
             <p class="time-changed meta-info" data-l10n-id="login-item-time-changed" data-l10n-args='{"timeChanged": 0}'></p>
             <p class="time-used meta-info" data-l10n-id="login-item-time-used" data-l10n-args='{"timeUsed": 0}'></p>
           </form>
-          <login-footer hidden></login-footer>
         </div>
       </div>
     </template>
@@ -281,30 +279,8 @@
         <button role="menuitem" class="menuitem-button menuitem-preferences ghost-button" data-event-name="AboutLoginsOpenPreferences" data-l10n-id="menu-menuitem-preferences"></button>
         <hr role="separator" class="menuitem-separator"></hr>
         <button role="menuitem" class="menuitem-button menuitem-help ghost-button" data-event-name="AboutLoginsGetHelp" data-l10n-id="about-logins-menu-menuitem-help"></button>
-        <hr role="separator" class="menuitem-separator"></hr>
-        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-android ghost-button" data-event-name="AboutLoginsOpenMobileAndroid" data-l10n-id="menu-menuitem-android-app"></button>
-        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-ios ghost-button" data-event-name="AboutLoginsOpenMobileIos" data-l10n-id="menu-menuitem-iphone-app"></button>
       </ul>
     </template>
 
-    <template id="login-footer-template">
-      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-footer.css">
-      <footer>
-        <p>
-          <strong data-l10n-id="login-app-promo-title"></strong><br>
-          <span data-l10n-id="login-app-promo-subtitle"></span>
-        </p>
-        <div class="buttons">
-          <button class="app-store" data-event-name="AboutLoginsOpenMobileIos">
-            <img class="image-app-store" data-l10n-id="login-app-promo-apple" src="" alt=""/>
-          </button>
-          <button class="play-store" data-event-name="AboutLoginsOpenMobileAndroid">
-            <img class="image-play-store" data-l10n-id="login-app-promo-android" src="" alt=""/>
-          </button>
-        </div>
-        <button class="close" data-event-name="AboutLoginsHideFooter"></button>
-      </footer>
-    </template>
   </body>
 </html>
