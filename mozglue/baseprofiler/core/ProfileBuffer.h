@@ -51,10 +51,11 @@ class ProfileBuffer final {
   // Stream JSON for samples in the buffer to aWriter, using the supplied
   // UniqueStacks object.
   // Only streams samples for the given thread ID and which were taken at or
-  // after aSinceTime.
-  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                           double aSinceTime,
-                           UniqueStacks& aUniqueStacks) const;
+  // after aSinceTime. If ID is 0, ignore the stored thread ID; this should only
+  // be used when the buffer contains only one sample.
+  // Return the thread ID of the streamed sample(s), or 0.
+  int StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+                          double aSinceTime, UniqueStacks& aUniqueStacks) const;
 
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const TimeStamp& aProcessStartTime,

@@ -3603,8 +3603,8 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
     return nullptr;
   }
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(
-      "SyncProfile", profiler_current_thread_id(), std::move(buffer)));
+  return UniqueProfilerBacktrace(
+      new ProfilerBacktrace("SyncProfile", std::move(buffer)));
 }
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {

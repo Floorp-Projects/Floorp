@@ -17,11 +17,10 @@ namespace mozilla {
 namespace baseprofiler {
 
 ProfilerBacktrace::ProfilerBacktrace(
-    const char* aName, int aThreadId,
+    const char* aName,
     UniquePtr<ProfileChunkedBuffer> aProfileChunkedBufferStorage,
     UniquePtr<ProfileBuffer> aProfileBufferStorageOrNull /* = nullptr */)
     : mName(aName),
-      mThreadId(aThreadId),
       mOptionalProfileChunkedBufferStorage(
           std::move(aProfileChunkedBufferStorage)),
       mProfileChunkedBuffer(mOptionalProfileChunkedBufferStorage.get()),
@@ -42,11 +41,10 @@ ProfilerBacktrace::ProfilerBacktrace(
 }
 
 ProfilerBacktrace::ProfilerBacktrace(
-    const char* aName, int aThreadId,
+    const char* aName,
     ProfileChunkedBuffer* aExternalProfileChunkedBufferOrNull /* = nullptr */,
     ProfileBuffer* aExternalProfileBufferOrNull /* = nullptr */)
     : mName(aName),
-      mThreadId(aThreadId),
       mProfileChunkedBuffer(aExternalProfileChunkedBufferOrNull),
       mProfileBuffer(aExternalProfileBufferOrNull) {
   if (!mProfileChunkedBuffer) {
@@ -73,28 +71,32 @@ ProfilerBacktrace::ProfilerBacktrace(
 
 ProfilerBacktrace::~ProfilerBacktrace() {}
 
-void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                                   const TimeStamp& aProcessStartTime,
-                                   UniqueStacks& aUniqueStacks) {
+int ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
+                                  const TimeStamp& aProcessStartTime,
+                                  UniqueStacks& aUniqueStacks) {
+  int processedThreadId = 0;
+
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
   // ProfileBuffer::AddJITInfoForRange because ProfileBuffer does not contain
   // any JitReturnAddr entries. For synchronous samples, JIT frames get expanded
   // at sample time.
   if (mProfileBuffer) {
-    StreamSamplesAndMarkers(mName.c_str(), mThreadId, *mProfileBuffer, aWriter,
-                            "", "", aProcessStartTime,
-                            /* aRegisterTime */ TimeStamp(),
-                            /* aUnregisterTime */ TimeStamp(),
-                            /* aSinceTime */ 0, aUniqueStacks);
+    processedThreadId = StreamSamplesAndMarkers(
+        mName.c_str(), 0, *mProfileBuffer, aWriter, "", "", aProcessStartTime,
+        /* aRegisterTime */ TimeStamp(),
+        /* aUnregisterTime */ TimeStamp(),
+        /* aSinceTime */ 0, aUniqueStacks);
   } else if (mProfileChunkedBuffer) {
     ProfileBuffer profileBuffer(*mProfileChunkedBuffer);
-    StreamSamplesAndMarkers(mName.c_str(), mThreadId, profileBuffer, aWriter,
-                            "", "", aProcessStartTime,
-                            /* aRegisterTime */ TimeStamp(),
-                            /* aUnregisterTime */ TimeStamp(),
-                            /* aSinceTime */ 0, aUniqueStacks);
+    processedThreadId = StreamSamplesAndMarkers(
+        mName.c_str(), 0, profileBuffer, aWriter, "", "", aProcessStartTime,
+        /* aRegisterTime */ TimeStamp(),
+        /* aUnregisterTime */ TimeStamp(),
+        /* aSinceTime */ 0, aUniqueStacks);
   }
   // If there are no buffers, the backtrace is empty and nothing is streamed.
+
+  return processedThreadId;
 }
 
 }  // namespace baseprofiler
@@ -112,10 +114,9 @@ ProfileBufferEntryReader::
   MOZ_ASSERT(
       !profileChunkedBuffer->IsThreadSafe(),
       "ProfilerBacktrace only stores non-thread-safe ProfileChunkedBuffers");
-  int threadId = aER.ReadObject<int>();
   std::string name = aER.ReadObject<std::string>();
   return UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>{
-      new baseprofiler::ProfilerBacktrace(name.c_str(), threadId,
+      new baseprofiler::ProfilerBacktrace(name.c_str(),
                                           std::move(profileChunkedBuffer))};
 };
 
