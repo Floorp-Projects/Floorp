@@ -13,9 +13,8 @@ const {
   PROFILER_BUFFER_SIZE_PREF,
 } = require("devtools/client/performance/test/helpers/prefs");
 const {
-  pmmLoadFrameScripts,
+  pmmInitWithBrowser,
   pmmStopProfiler,
-  pmmClearFrameScripts,
 } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const {
   initPerformanceInTab,
@@ -38,7 +37,7 @@ const {
 
 add_task(async function() {
   // Make sure the profiler module is stopped so we can set a new buffer limit.
-  pmmLoadFrameScripts(gBrowser);
+  pmmInitWithBrowser(gBrowser);
   await pmmStopProfiler();
 
   // Keep the profiler's buffer large, but still get to 1% relatively quick.
@@ -206,6 +205,4 @@ add_task(async function() {
   await stopRecording(panel);
 
   await teardownToolboxAndRemoveTab(panel);
-
-  pmmClearFrameScripts();
 });

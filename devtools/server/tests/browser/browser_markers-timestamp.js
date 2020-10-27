@@ -8,8 +8,7 @@
 
 const {
   pmmConsoleMethod,
-  pmmLoadFrameScripts,
-  pmmClearFrameScripts,
+  pmmInitWithBrowser,
 } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
@@ -19,7 +18,7 @@ add_task(async function() {
   const front = await target.getFront("performance");
   const rec = await front.startRecording({ withMarkers: true });
 
-  pmmLoadFrameScripts(gBrowser);
+  pmmInitWithBrowser(gBrowser);
   pmmConsoleMethod("timeStamp");
   pmmConsoleMethod("timeStamp", "myLabel");
 
@@ -56,8 +55,6 @@ add_task(async function() {
     "myLabel",
     "Labeled timestamps have correct causeName"
   );
-
-  pmmClearFrameScripts();
 
   await target.destroy();
   gBrowser.removeCurrentTab();

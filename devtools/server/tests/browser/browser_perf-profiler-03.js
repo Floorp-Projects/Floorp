@@ -13,13 +13,12 @@
 const {
   pmmIsProfilerActive,
   pmmStartProfiler,
-  pmmLoadFrameScripts,
-  pmmClearFrameScripts,
+  pmmInitWithBrowser,
 } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(async function() {
   // Ensure the profiler is already running when the test starts.
-  pmmLoadFrameScripts(gBrowser);
+  pmmInitWithBrowser(gBrowser);
   const entries = 1000000;
   const interval = 1;
   const features = ["js"];
@@ -50,8 +49,6 @@ add_task(async function() {
     !(await pmmIsProfilerActive()),
     "The built-in profiler module should have been automatically stopped."
   );
-
-  pmmClearFrameScripts();
 
   gBrowser.removeCurrentTab();
   gBrowser.removeCurrentTab();

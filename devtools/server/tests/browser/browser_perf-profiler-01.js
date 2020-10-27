@@ -11,7 +11,7 @@
 
 const {
   pmmIsProfilerActive,
-  pmmLoadFrameScripts,
+  pmmInitWithBrowser,
 } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(async function() {
@@ -19,7 +19,7 @@ add_task(async function() {
 
   const front = await target.getFront("performance");
 
-  pmmLoadFrameScripts(gBrowser);
+  pmmInitWithBrowser(gBrowser);
 
   ok(
     !(await pmmIsProfilerActive()),

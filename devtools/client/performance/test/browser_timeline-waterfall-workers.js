@@ -10,12 +10,12 @@ async function spawnTest() {
   let { panel } = await initPerformance(WORKER_URL);
   let { $$, $, PerformanceController } = panel.panelWin;
 
-  loadFrameScripts();
-
   await startRecording(panel);
   ok(true, "Recording has started.");
 
-  evalInDebuggee("performWork()");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.performWork();
+  });
 
   await waitUntil(() => {
     // Wait until we get the worker markers.
@@ -67,29 +67,4 @@ function testWorkerMarkerUI(node) {
     "The marker node specifies if it is off the main thread or not.");
 }
 
-/**
- * Takes a string `script` and evaluates it directly in the content
- * in potentially a different process.
- */
-function evalInDebuggee(script) {
-  let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-
-  if (!mm) {
-    throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
-  }
-  return new Promise(resolve => {
-    let id = generateUUID().toString();
-    mm.sendAsyncMessage("devtools:test:eval", {script: script, id: id});
-    mm.addMessageListener("devtools:test:eval:response", handler);
-
-    function handler({data}) {
-      if (id !== data.id) {
-        return;
-      }
-
-      mm.removeMessageListener("devtools:test:eval:response", handler);
-      resolve(data.value);
-    }
-  });
-}
 /* eslint-enable */
