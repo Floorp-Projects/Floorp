@@ -138,7 +138,8 @@ function getElementByXPath(document, path) {
  * @returns {Promise<HTMLElement>}
  */
 async function getElementFromDocumentByText(document, text) {
-  const xpath = `//*[contains(text(), '${text}')]`;
+  // Fallback on aria-label if there are no results for the text xpath.
+  const xpath = `//*[contains(text(), '${text}')] | //*[contains(@aria-label, '${text}')]`;
   return waitUntil(
     () => getElementByXPath(document, xpath),
     `Trying to find the element with the text "${text}".`
