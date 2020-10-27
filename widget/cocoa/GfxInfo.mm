@@ -122,10 +122,34 @@ void GfxInfo::GetDeviceInfo() {
   }
   IOObjectRelease(io_iter);
 
-#if defined(__x86_64__)
-  // Until we support GPU detection for ARM hardware, skip this assert.
-  MOZ_DIAGNOSTIC_ASSERT(mNumGPUsDetected > 0, "Failed to detect any GPUs");
+#if defined(__aarch64__)
+  // If we found IOPCI VGA devices, don't look for AGXAccelerator devices
+  if (mNumGPUsDetected > 0) {
+    return;
+  }
+
+  CFMutableDictionaryRef agx_dev_dict = IOServiceMatching("AGXAccelerator");
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, agx_dev_dict, &io_iter) ==
+      kIOReturnSuccess) {
+
+    io_registry_entry_t entry = IO_OBJECT_NULL;
+    while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
+
+      CFTypeRef vendor_id_ref = SearchPortForProperty(entry, CFSTR("vendor-id"));
+      if (vendor_id_ref) {
+        mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
+            "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
+        CFRelease(vendor_id_ref);
+        ++mNumGPUsDetected;
+      }
+      IOObjectRelease(entry);
+    }
+
+    IOObjectRelease(io_iter);
+  }
 #endif
+
+  MOZ_DIAGNOSTIC_ASSERT(mNumGPUsDetected > 0, "Failed to detect any GPUs");
 }
 
 nsresult GfxInfo::Init() {
