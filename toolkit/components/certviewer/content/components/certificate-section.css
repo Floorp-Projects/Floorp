@@ -40,12 +40,16 @@ h1 {
   font-size: 1.363rem;
 }
 
-.tab:first-of-type {
-  border-start-start-radius: 4px;
+/* .tab can be LTR (by `dir="auto"`) for `about:certificate?cert=`
+   pages, so set the border-radius according to the parent's direction. */
+.certificate-tabs:dir(rtl) > .tab:first-of-type,
+.certificate-tabs:dir(ltr) > .tab:last-of-type {
+  border-top-right-radius: 4px;
 }
 
-.tab:last-of-type {
-  border-start-end-radius: 4px;
+.certificate-tabs:dir(ltr) > .tab:first-of-type,
+.certificate-tabs:dir(rtl) > .tab:last-of-type {
+  border-top-left-radius: 4px;
 }
 
 .tab:hover {
@@ -63,10 +67,4 @@ h1 {
   color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;
-}
-
-.tab.dir-auto {
-  /* Display tabs on `about:certificate?cert=` pages as dir=auto
-     to avoid text like `mozilla.org.*` in RTL  */
-  unicode-bidi: plaintext;
 }
