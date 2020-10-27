@@ -282,6 +282,9 @@ JSAtom* ParserAtomEntry::instantiate(JSContext* cx,
     return nullptr;
   }
   auto index = atomCache.atoms.length();
+
+  // This cannot be infallibleAppend because there are toJSAtom consumers that
+  // doesn't reserve CompilationAtomCache.atoms beforehand
   if (!atomCache.atoms.append(atom)) {
     js::ReportOutOfMemory(cx);
     return nullptr;
