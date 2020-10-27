@@ -27,6 +27,8 @@ static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
 static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
 static const size_t SMALL_MARK_STACK_BASE_CAPACITY = 256;
 
+enum class SlotsOrElementsKind { Elements, FixedSlots, DynamicSlots };
+
 namespace gc {
 
 enum IncrementalProgress { NotFinished = 0, Finished };
@@ -82,8 +84,7 @@ class MarkStack {
    * the context of push or pop operation.
    */
   enum Tag {
-    SlotsRangeTag,
-    ElementsRangeTag,
+    SlotsOrElementsRangeTag,
     ObjectTag,
     GroupTag,
     JitCodeTag,
@@ -111,19 +112,26 @@ class MarkStack {
     template <typename T>
     T* as() const;
 
-    JSObject* asSlotsRangeObject() const;
-    JSObject* asElementsRangeObject() const;
+    JSObject* asRangeObject() const;
     JSRope* asTempRope() const;
 
     void assertValid() const;
   };
 
   struct SlotsOrElementsRange {
-    SlotsOrElementsRange(Tag, JSObject* obj, size_t start);
+    SlotsOrElementsRange(SlotsOrElementsKind kind, JSObject* obj, size_t start);
     void assertValid() const;
 
-    size_t start;
-    TaggedPtr ptr;
+    SlotsOrElementsKind kind() const;
+    size_t start() const;
+    TaggedPtr ptr() const;
+
+    static constexpr size_t StartShift = 2;
+    static constexpr size_t KindMask = (1 << StartShift) - 1;
+
+   private:
+    uintptr_t startAndKind_;
+    TaggedPtr ptr_;
   };
 
   explicit MarkStack(size_t maxCapacity = DefaultCapacity);
@@ -147,7 +155,7 @@ class MarkStack {
   template <typename T>
   MOZ_MUST_USE bool push(T* ptr);
 
-  MOZ_MUST_USE bool push(JSObject* obj, HeapSlot::Kind kind, size_t start);
+  MOZ_MUST_USE bool push(JSObject* obj, SlotsOrElementsKind kind, size_t start);
   MOZ_MUST_USE bool push(const SlotsOrElementsRange& array);
 
   // GCMarker::eagerlyMarkChildren uses unused marking stack as temporary
@@ -407,10 +415,8 @@ class GCMarker : public JSTracer {
   template <typename T>
   inline void pushTaggedPtr(T* ptr);
 
-  enum class RangeKind { Elements, FixedSlots, DynamicSlots };
-
-  inline void pushValueRange(JSObject* obj, RangeKind kind, size_t start,
-                             size_t end);
+  inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
+                             size_t start, size_t end);
 
   bool isMarkStackEmpty() { return stack.isEmpty() && auxStack.isEmpty(); }
 
