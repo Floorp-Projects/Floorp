@@ -27,7 +27,6 @@ interface nsIProxyInfo;
 interface nsISecurityConsoleMessage;
 interface nsISocketTransport;
 interface nsIURI;
-interface nsIWebSocketConnection;
 
 /**
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
@@ -41,8 +40,6 @@ interface nsIHttpUpgradeListener : nsISupports
                                          in nsIAsyncOutputStream aSocketOut);
 
     [must_use] void onUpgradeFailed(in nsresult aErrorCode);
-
-    [must_use] void onWebSocketConnectionAvailable(in nsIWebSocketConnection aConnection);
 };
 
 /**
