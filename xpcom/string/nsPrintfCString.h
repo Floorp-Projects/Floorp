@@ -15,6 +15,18 @@
  *
  *   NS_WARNING(nsPrintfCString("Unexpected value: %f", 13.917).get());
  *
+ * nsPrintfCString also allows for vprintf like calling. This is useful for
+ * functions that have already received variadic arguments and want to create
+ * a nsPrintfCString. For example:
+ *
+ * void LogToSeveralLocations(const char* aFormat,...) {
+ *   va_list ap;
+ *   va_start(ap, aFormat);
+ *   nsPrintfCString logString(aFormat, ap);
+ *   va_end(ap);
+ *   // Use logString
+ *  }
+ *
  * nsPrintfCString has a small built-in auto-buffer.  For larger strings, it
  * will allocate on the heap.
  *
@@ -30,6 +42,11 @@ class nsPrintfCString : public nsAutoCStringN<16> {
     va_start(ap, aFormat);
     AppendPrintf(aFormat, ap);
     va_end(ap);
+  }
+
+  nsPrintfCString(const char_type* aFormat, va_list aArgs)
+      MOZ_FORMAT_PRINTF(2, 0) {
+    AppendPrintf(aFormat, aArgs);
   }
 };
 
