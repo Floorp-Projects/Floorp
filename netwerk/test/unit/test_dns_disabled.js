@@ -1,17 +1,15 @@
 "use strict";
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
   Ci.nsIThreadManager
 );
-var mainThread = threadManager.currentThread;
-
-var disabledPref;
-var localdomainPref;
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
+const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
+  Ci.nsINativeDNSResolverOverride
 );
-var defaultOriginAttributes = {};
+const mainThread = threadManager.currentThread;
 
 function makeListenerBlock(next) {
   return {
@@ -38,72 +36,59 @@ function makeListenerDontBlock(next, expectedAnswer) {
   };
 }
 
-function do_test({
-  dnsDisabled,
-  mustBlock,
-  testDomain,
-  nextCallback,
-  expectedAnswer,
-}) {
-  prefs.setBoolPref("network.dns.disabled", dnsDisabled);
-  try {
-    dns.asyncResolve(
-      testDomain,
-      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
-      0,
-      null, // resolverInfo
-      mustBlock
-        ? makeListenerBlock(nextCallback)
-        : makeListenerDontBlock(nextCallback, expectedAnswer),
-      mainThread,
-      defaultOriginAttributes
-    );
-  } catch (e) {
-    Assert.ok(mustBlock === true);
-    nextCallback();
-  }
-}
-
-function all_done() {
-  // Reset locally modified prefs
-  prefs.setCharPref("network.dns.localDomains", localdomainPref);
-  prefs.setBoolPref("network.dns.disabled", disabledPref);
-  do_test_finished();
-}
-
-function testNotBlocked() {
-  do_test({
-    dnsDisabled: false,
-    mustBlock: false,
-    testDomain: "foo.bar",
-    nextCallback: all_done,
+function do_test({ dnsDisabled, mustBlock, testDomain, expectedAnswer }) {
+  return new Promise(resolve => {
+    Services.prefs.setBoolPref("network.dns.disabled", dnsDisabled);
+    try {
+      dns.asyncResolve(
+        testDomain,
+        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
+        0,
+        null, // resolverInfo
+        mustBlock
+          ? makeListenerBlock(resolve)
+          : makeListenerDontBlock(resolve, expectedAnswer),
+        mainThread,
+        {} // Default origin attributes
+      );
+    } catch (e) {
+      Assert.ok(mustBlock === true);
+      resolve();
+    }
   });
 }
 
-function testBlocked() {
-  do_test({
-    dnsDisabled: true,
-    mustBlock: true,
-    testDomain: "foo.bar",
-    nextCallback: testNotBlocked,
+function setup() {
+  override.addIPOverride("foo.bar", "127.0.0.1");
+  registerCleanupFunction(function() {
+    override.clearOverrides();
+    Services.prefs.clearUserPref("network.dns.disabled");
   });
 }
+setup();
 
 // IP literals should be resolved even if dns is disabled
-function testIPLiteral() {
-  do_test({
+add_task(async function testIPLiteral() {
+  return do_test({
     dnsDisabled: true,
     mustBlock: false,
     testDomain: "0x01010101",
-    nextCallback: testBlocked,
     expectedAnswer: "1.1.1.1",
   });
-}
+});
 
-function run_test() {
-  do_test_pending();
-  disabledPref = prefs.getBoolPref("network.dns.disabled");
-  localdomainPref = prefs.getCharPref("network.dns.localDomains");
-  prefs.setCharPref("network.dns.localDomains", "foo.bar");
-  testIPLiteral();
-}
+add_task(async function testBlocked() {
+  return do_test({
+    dnsDisabled: true,
+    mustBlock: true,
+    testDomain: "foo.bar",
+  });
+});
+
+add_task(async function testNotBlocked() {
+  return do_test({
+    dnsDisabled: false,
+    mustBlock: false,
+    testDomain: "foo.bar",
+  });
+});
