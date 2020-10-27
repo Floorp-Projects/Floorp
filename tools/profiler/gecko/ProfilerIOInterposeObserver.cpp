@@ -151,7 +151,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
                       : MarkerStack::NoStack(),
             // This is the important piece that changed.
             // It will send a marker to the main thread.
-            MarkerThreadId(profiler_main_thread_id())),
+            MarkerThreadId::MainThread()),
         FileIOMarker,
         // aOperation
         ProfilerString8View::WrapNullTerminatedString(
@@ -185,7 +185,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
             MarkerTiming::Interval(aObservation.Start(), aObservation.End()),
             doCaptureStack ? MarkerStack::Capture() : MarkerStack::NoStack(),
             // Store this marker on the main thread.
-            MarkerThreadId(profiler_main_thread_id())),
+            MarkerThreadId::MainThread()),
         FileIOMarker,
         // aOperation
         ProfilerString8View::WrapNullTerminatedString(
