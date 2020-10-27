@@ -8,7 +8,6 @@
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::gfx;
 
 static constexpr CSSIntCoord kGtkMinimumScrollbarSize = 12;
 static constexpr CSSIntCoord kGtkMinimumThinScrollbarSize = 6;
@@ -118,12 +117,12 @@ void nsNativeBasicThemeGTK::PaintScrollbarHorizontal(
     DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, bool aIsRoot) {
   sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget->FillRect(aRect, gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbarVerticalAndCorner(
     DrawTarget* aDrawTarget, const Rect& aRect, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, uint32_t aDpiRatio, bool aIsRoot) {
   sRGBColor trackColor = ComputeScrollbarColor(aStyle, aDocumentState, aIsRoot);
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget->FillRect(aRect, gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
