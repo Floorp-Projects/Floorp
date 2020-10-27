@@ -482,13 +482,20 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     """
 
     from mach.telemetry import MACH_METRICS_PATH
-    from mozbuild.telemetry import get_cpu_brand, get_psutil_stats
+    from mozbuild.telemetry import (
+        get_cpu_brand,
+        get_distro_and_version,
+        get_psutil_stats,
+    )
 
     mach_metrics = telemetry.metrics(MACH_METRICS_PATH)
     mach_metrics.mach.duration.stop()
     mach_metrics.mach.success.set(success)
     system_metrics = mach_metrics.mach.system
     system_metrics.cpu_brand.set(get_cpu_brand())
+    distro, version = get_distro_and_version()
+    system_metrics.distro.set(distro)
+    system_metrics.distro_version.set(version)
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
     if has_psutil:

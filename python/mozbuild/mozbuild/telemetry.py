@@ -9,6 +9,7 @@ This file contains a voluptuous schema definition for build system telemetry, an
 to fill an instance of that schema for a single mach invocation.
 """
 
+import distro
 import json
 import os
 import math
@@ -417,3 +418,16 @@ def verify_statedir(statedir):
         os.mkdir(submitted)
 
     return outgoing, submitted, telemetry_log
+
+
+def get_distro_and_version():
+    if sys.platform.startswith("linux"):
+        dist, version, _ = distro.linux_distribution(full_distribution_name=False)
+        return dist, version
+    elif sys.platform.startswith("darwin"):
+        return "macos", platform.mac_ver()[0]
+    elif sys.platform.startswith("win32") or sys.platform.startswith("msys"):
+        ver = sys.getwindowsversion()
+        return "windows", "%s.%s.%s" % (ver.major, ver.minor, ver.build)
+    else:
+        return sys.platform, ""

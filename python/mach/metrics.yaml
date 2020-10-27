@@ -88,6 +88,34 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
+  distro:
+    type: string
+    description: The name of the operating system distribution.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1655845
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1655845#c3
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - mhentges@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
+  distro_version:
+    type: string
+    description: The high-level OS version.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1655845
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1655845#c3
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - mhentges@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
   logical_cores:
     type: counter
     description: Number of logical CPU cores present.
