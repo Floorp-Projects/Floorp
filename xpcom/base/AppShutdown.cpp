@@ -164,7 +164,6 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
 
     nsCOMPtr<nsICertStorage> certStorage =
         do_GetService("@mozilla.org/security/certstorage;1", &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get nsICertStorage");
     if (NS_SUCCEEDED(rv)) {
       SpinEventLoopUntil([&]() {
         int32_t remainingOps;
