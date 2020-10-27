@@ -2732,7 +2732,7 @@ void gfxPlatform::InitWebRenderConfig() {
         gfxConfig::IsEnabled(Feature::WEBRENDER));
   }
 
-  if (Preferences::GetBool("gfx.webrender.software", false)) {
+  if (StaticPrefs::gfx_webrender_software_AtStartup()) {
     gfxVars::SetUseSoftwareWebRender(gfxConfig::IsEnabled(Feature::WEBRENDER));
   }
 
