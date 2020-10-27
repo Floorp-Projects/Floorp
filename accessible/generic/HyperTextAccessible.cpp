@@ -727,11 +727,30 @@ uint32_t HyperTextAccessible::FindLineBoundary(
       return FindOffset(tmpOffset, eDirNext, eSelectEndLine);
     }
 
-    case eThisLineBegin:
+    case eThisLineBegin: {
       if (IsEmptyLastLineOffset(aOffset)) return aOffset;
 
       // Move to begin of the current line (as home key was pressed).
-      return FindOffset(aOffset, eDirPrevious, eSelectBeginLine);
+      uint32_t thisLineBeginOffset =
+          FindOffset(aOffset, eDirPrevious, eSelectBeginLine);
+      if (IsCharAt(thisLineBeginOffset, kEmbeddedObjectChar)) {
+        // We landed on an embedded character, don't mess with possible embedded
+        // line breaks, and assume the offset is correct.
+        return thisLineBeginOffset;
+      }
+
+      // Sometimes, there is the possibility layout returned an
+      // offset smaller than it should. Sanity-check by moving to the end of the
+      // previous line and see if that has a greater offset.
+      uint32_t tmpOffset = FindOffset(aOffset, eDirPrevious, eSelectLine);
+      tmpOffset = FindOffset(tmpOffset, eDirNext, eSelectEndLine);
+      if (tmpOffset > thisLineBeginOffset && tmpOffset < aOffset) {
+        // We found a previous line offset. Return the next character after it
+        // as our start offset if it points to a line end char.
+        return IsLineEndCharAt(tmpOffset) ? tmpOffset + 1 : tmpOffset;
+      }
+      return thisLineBeginOffset;
+    }
 
     case eThisLineEnd:
       if (IsEmptyLastLineOffset(aOffset)) return aOffset;
@@ -787,6 +806,21 @@ uint32_t HyperTextAccessible::FindLineBoundary(
 
           return thisLineEndOffset;
         }
+        return nextLineBeginOffset;
+      }
+
+      // If the resulting offset is not greater than the offset we started from,
+      // layout could not find the offset for us. This can happen with certain
+      // inline-block elements.
+      if (nextLineBeginOffset <= aOffset) {
+        // Walk back from the tmpOffset to the offset we started from,
+        // stopping after a line end character.
+        nextLineBeginOffset = tmpOffset;
+        while (nextLineBeginOffset >= aOffset &&
+               !IsLineEndCharAt(nextLineBeginOffset - 1)) {
+          nextLineBeginOffset--;
+        }
+        return nextLineBeginOffset;
       }
 
       return nextLineBeginOffset;
