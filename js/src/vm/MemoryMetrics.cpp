@@ -625,7 +625,7 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
   // Wait for any off-thread parsing to finish, as that currently allocates GC
   // things.
   JSRuntime* rt = cx->runtime();
-  CancelOffThreadParses(rt);
+  WaitForOffThreadParses(rt);
 
   // Finish any ongoing incremental GC that may change the data we're gathering
   // and ensure that we don't do anything that could start another one.
