@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  --highlight-color: var(--blue-55);
-  --slider-thumb-color: var(--grey-50);
-  --slider-track-color: var(--grey-30);
-}
-
 :root.theme-light {
   /**
    * Override this variable to match the Photon guidelines and make sure the
@@ -15,11 +9,6 @@
    * See Bug 1673582 to apply this back to devtools main variable.css file.
    */
   --theme-highlight-blue: var(--blue-60);
-}
-
-:root.theme-dark {
-  --slider-thumb-color: var(--grey-40);
-  --slider-track-color: var(--grey-60);
 }
 
 .perf {
