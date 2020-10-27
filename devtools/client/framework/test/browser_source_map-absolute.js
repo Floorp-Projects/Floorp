@@ -27,7 +27,7 @@ add_task(async function() {
   await sourceSeen;
 
   info(`checking original location for ${JS_URL}:6`);
-  const newLoc = await await new Promise(r =>
+  const newLoc = await new Promise(r =>
     service.subscribeByURL(JS_URL, 6, 4, r)
   );
 
