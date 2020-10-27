@@ -29,12 +29,9 @@ function beginTest() {
     });
 }
 
-if (!IsMacOSSnowLeopardOrEarlier()) {
-  SimpleTest.waitForExplicitFinish();
-  SetupEMEPref(beginTest);
-} else {
-  todo(false, "Test disabled on this platform.");
-}
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(beginTest);
+
 </script>
 </pre>
 </body>
