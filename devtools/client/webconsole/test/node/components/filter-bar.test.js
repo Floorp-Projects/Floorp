@@ -77,7 +77,7 @@ describe("FilterBar component:", () => {
     // Text filter input
     const textFilter = textInput.children().eq(0);
     expect(textFilter.attr("class")).toBe("devtools-filterinput");
-    expect(textFilter.attr("placeholder")).toBe("Filter output");
+    expect(textFilter.attr("placeholder")).toBe("Filter Output");
     expect(textFilter.attr("type")).toBe("search");
     expect(textFilter.attr("value")).toBe("");
 
@@ -193,7 +193,8 @@ describe("FilterBar component:", () => {
         label: "CSS",
         filterKey: "css",
         active: false,
-        title: "webconsole.cssFilterButton.inactive.tooltip",
+        title:
+          "Stylesheets will be reparsed to check for errors. Refresh the page to also see errors from stylesheets modified from Javascript.",
       }),
       filterBtn({ label: "XHR", filterKey: "netxhr", active: false }),
       filterBtn({ label: "Requests", filterKey: "net", active: false }),
