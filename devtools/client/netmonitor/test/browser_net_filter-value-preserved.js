@@ -21,6 +21,7 @@ add_task(async function() {
   input.value = "hello";
 
   await monitor.toolbox.switchHost("right");
+  await waitForTick();
 
   is(
     toolbars.querySelectorAll(".devtools-toolbar").length,
