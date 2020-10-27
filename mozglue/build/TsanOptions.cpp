@@ -285,9 +285,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsHtml5ExecutorFlusher::Run\n"
          "race:geckoservo::glue::traverse_subtree\n"
 
-         // Bug 1608462
-         "deadlock:ScriptPreloader::OffThreadDecodeCallback\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
