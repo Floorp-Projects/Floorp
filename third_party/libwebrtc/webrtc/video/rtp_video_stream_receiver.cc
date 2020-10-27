@@ -383,6 +383,7 @@ void RtpVideoStreamReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
         header, packet.size(), IsPacketRetransmitted(header, in_order));
   }
 
+  rtc::CritScope lock(&receive_cs_);
   for (RtpPacketSinkInterface* secondary_sink : secondary_sinks_) {
     secondary_sink->OnRtpPacket(packet);
   }
