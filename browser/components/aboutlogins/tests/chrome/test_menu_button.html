@@ -147,6 +147,8 @@ add_task(async function test_menu_keyboard_cycling() {
     "menuitem-export",
     "menuitem-preferences",
     "menuitem-help",
+    "menuitem-mobile-android",
+    "menuitem-mobile-ios",
   ];
   if (SpecialPowers.getBoolPref("signon.management.page.fileImport.enabled")) {
     allItems = ["menuitem-import-file", ...allItems];

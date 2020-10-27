@@ -78,6 +78,12 @@ browser/chrome/browser/search-extensions/mercadolivre/favicon.ico
 browser/chrome/browser/search-extensions/qwant/favicon.ico
 browser/chrome/browser/search-extensions/qwantjr/favicon.ico
 
+# Bug 1550165 - We want to support both Norwegian languages codes (nb and nn) for App Store and Play Store icons
+browser/chrome/browser/content/browser/aboutlogins/third-party/app-store/app_nb.png
+browser/chrome/browser/content/browser/aboutlogins/third-party/app-store/app_nn.png
+browser/chrome/browser/content/browser/aboutlogins/third-party/play-store/play_nb.png
+browser/chrome/browser/content/browser/aboutlogins/third-party/play-store/play_nn.png
+
 # Bug 1606928 - There's no reliable way to connect Top Sites favicons with the favicons in the Search Service
 browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/bbc-uk.ico
 browser/chrome/browser/search-extensions/bbc-alba/favicon.ico
