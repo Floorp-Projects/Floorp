@@ -8,6 +8,15 @@
   --slider-track-color: var(--grey-30);
 }
 
+:root.theme-light {
+  /**
+   * Override this variable to match the Photon guidelines and make sure the
+   * links have enough contrast on the background of the onboarding message.
+   * See Bug 1673582 to apply this back to devtools main variable.css file.
+   */
+  --theme-highlight-blue: var(--blue-60);
+}
+
 :root.theme-dark {
   --slider-thumb-color: var(--grey-40);
   --slider-track-color: var(--grey-60);
@@ -63,7 +72,7 @@
   padding: 0;
   background: none;
   border: none;
-  color: var(--blue-60);
+  color: var(--theme-highlight-blue);
   text-decoration: underline;
   white-space: nowrap;
   cursor: pointer;
@@ -144,11 +153,11 @@ a.perf-photon-button:focus {
 }
 
 .perf-photon-button-ghost:hover:enabled {
-  background-color: var(--grey-90-a10);
+  background-color: var(--theme-toolbarbutton-hover-background);
 }
 
 .perf-photon-button-ghost:hover:active:enabled {
-  background-color: var(--grey-90-a20);
+  background-color: var(--theme-toolbarbutton-active-background);
 }
 
 .perf-photon-button-micro {
