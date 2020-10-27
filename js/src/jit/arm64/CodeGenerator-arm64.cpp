@@ -1162,6 +1162,22 @@ void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
                      ins->mir());
 }
 
+void CodeGenerator::visitNearbyInt(LNearbyInt* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister output = ToFloatRegister(lir->output());
+
+  RoundingMode roundingMode = lir->mir()->roundingMode();
+  masm.nearbyIntDouble(roundingMode, input, output);
+}
+
+void CodeGenerator::visitNearbyIntF(LNearbyIntF* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
+  FloatRegister output = ToFloatRegister(lir->output());
+
+  RoundingMode roundingMode = lir->mir()->roundingMode();
+  masm.nearbyIntFloat32(roundingMode, input, output);
+}
+
 void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
     LWasmBuiltinTruncateDToInt32* lir) {
   MOZ_CRASH("NYI");
@@ -1747,8 +1763,6 @@ void CodeGenerator::visitCopySignD(LCopySignD*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitCopySignF(LCopySignF*) { MOZ_CRASH("NYI"); }
 
-void CodeGenerator::visitNearbyInt(LNearbyInt*) { MOZ_CRASH("NYI"); }
-
 void CodeGenerator::visitPopcntI64(LPopcntI64*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitRotateI64(LRotateI64*) { MOZ_CRASH("NYI"); }
@@ -1756,8 +1770,6 @@ void CodeGenerator::visitRotateI64(LRotateI64*) { MOZ_CRASH("NYI"); }
 void CodeGenerator::visitWasmStore(LWasmStore*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitCompareI64(LCompareI64*) { MOZ_CRASH("NYI"); }
-
-void CodeGenerator::visitNearbyIntF(LNearbyIntF*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitWasmSelect(LWasmSelect*) { MOZ_CRASH("NYI"); }
 
