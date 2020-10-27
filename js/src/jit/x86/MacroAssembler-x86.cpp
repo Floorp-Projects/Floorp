@@ -86,6 +86,16 @@ void MacroAssemblerX86::vpandSimd128(const SimdConstant& v,
   propagateOOM(val->uses.append(CodeOffset(masm.size())));
 }
 
+void MacroAssemblerX86::vpxorSimd128(const SimdConstant& v,
+                                     FloatRegister srcDest) {
+  SimdData* val = getSimdData(v);
+  if (!val) {
+    return;
+  }
+  masm.vpxor_mr(nullptr, srcDest.encoding(), srcDest.encoding());
+  propagateOOM(val->uses.append(CodeOffset(masm.size())));
+}
+
 void MacroAssemblerX86::finish() {
   // Last instruction may be an indirect jump so eagerly insert an undefined
   // instruction byte to prevent processors from decoding data values into
