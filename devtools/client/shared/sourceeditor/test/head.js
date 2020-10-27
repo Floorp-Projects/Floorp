@@ -154,3 +154,45 @@ function codemirrorSetStatus(statusMsg, type, customMsg) {
     info(customMsg);
   }
 }
+
+async function runCodeMirrorTest(uri) {
+  const actorURI =
+    "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/test/CodeMirrorTestActors.jsm";
+
+  const { CodeMirrorTestParent } = ChromeUtils.import(actorURI);
+
+  ChromeUtils.registerWindowActor("CodeMirrorTest", {
+    parent: {
+      moduleURI: actorURI,
+    },
+    child: {
+      moduleURI: actorURI,
+      events: {
+        DOMWindowCreated: {},
+      },
+    },
+  });
+
+  const donePromise = new Promise(resolve => {
+    CodeMirrorTestParent.setCallback((name, data) => {
+      switch (name) {
+        case "setStatus":
+          const { statusMsg, type, customMsg } = data;
+          codemirrorSetStatus(statusMsg, type, customMsg);
+          break;
+        case "done":
+          resolve(!data.failed);
+          break;
+      }
+    });
+  });
+
+  await addTab(uri);
+  const result = await donePromise;
+  ok(result, "CodeMirror tests all passed");
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+
+  ChromeUtils.unregisterWindowActor("CodeMirrorTest");
+}
