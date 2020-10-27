@@ -1696,14 +1696,34 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
     case Shuffle::Operand::LEFT:
     case Shuffle::Operand::RIGHT: {
       LAllocation src;
+      // All permute operators currently favor reusing the input register so
+      // we're not currently exercising code paths below that do not reuse.
+      // Those paths have been exercised in the past however and are believed
+      // to be correct.
+      bool useAtStartAndReuse = false;
+      switch (*s.permuteOp) {
+        case LWasmPermuteSimd128::MOVE:
+        case LWasmPermuteSimd128::BROADCAST_8x16:
+        case LWasmPermuteSimd128::BROADCAST_16x8:
+        case LWasmPermuteSimd128::PERMUTE_8x16:
+        case LWasmPermuteSimd128::PERMUTE_16x8:
+        case LWasmPermuteSimd128::PERMUTE_32x4:
+        case LWasmPermuteSimd128::ROTATE_RIGHT_8x16:
+        case LWasmPermuteSimd128::SHIFT_LEFT_8x16:
+        case LWasmPermuteSimd128::SHIFT_RIGHT_8x16:
+          useAtStartAndReuse = true;
+          break;
+        default:
+          MOZ_CRASH("Unexpected operator");
+      }
       if (s.opd == Shuffle::Operand::LEFT) {
-        if (*s.permuteOp == LWasmPermuteSimd128::MOVE) {
+        if (useAtStartAndReuse) {
           src = useRegisterAtStart(ins->lhs());
         } else {
           src = useRegister(ins->lhs());
         }
       } else {
-        if (*s.permuteOp == LWasmPermuteSimd128::MOVE) {
+        if (useAtStartAndReuse) {
           src = useRegisterAtStart(ins->rhs());
         } else {
           src = useRegister(ins->rhs());
@@ -1711,7 +1731,7 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
       }
       auto* lir =
           new (alloc()) LWasmPermuteSimd128(src, *s.permuteOp, s.control);
-      if (*s.permuteOp == LWasmPermuteSimd128::MOVE) {
+      if (useAtStartAndReuse) {
         defineReuseInput(lir, ins, LWasmPermuteSimd128::Src);
       } else {
         define(lir, ins);
