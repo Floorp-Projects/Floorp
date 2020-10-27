@@ -92,7 +92,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
   friend class AudioBufferSourceNodeEngine;
   // START is sent during Start().
   // STOP is sent during Stop().
-  // BUFFERSTART and BUFFEREND are sent when SetBuffer() and Start() have
+  // BUFFERSTART and DURATION are sent when SetBuffer() and Start() have
   // been called (along with sending the buffer).
   enum EngineParameters {
     SAMPLE_RATE,
@@ -101,9 +101,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
     // BUFFERSTART is the "offset" passed to start(), multiplied by
     // buffer.sampleRate.
     BUFFERSTART,
-    // BUFFEREND is the sum of "offset" and "duration" passed to start(),
-    // multiplied by buffer.sampleRate, or the size of the buffer, if smaller.
-    BUFFEREND,
+    DURATION,
     LOOP,
     LOOPSTART,
     LOOPEND,
