@@ -110,18 +110,19 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     }
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfo.get(),
+                                     gcOutput.get())) {
     return nullptr;
   }
 
-  MOZ_ASSERT(gcOutput.script);
+  MOZ_ASSERT(gcOutput.get().script);
   if (!js::UseOffThreadParseGlobal()) {
-    gcOutput.script->scriptSource()->setIncrementalEncoder(
+    gcOutput.get().script->scriptSource()->setIncrementalEncoder(
         xdrEncoder.release());
   }
 
-  Rooted<JSScript*> script(cx, gcOutput.script);
+  Rooted<JSScript*> script(cx, gcOutput.get().script);
   if (!script) {
     return nullptr;
   }

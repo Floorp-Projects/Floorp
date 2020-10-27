@@ -5768,13 +5768,14 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
     return res;
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput)) {
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(),
+                                     gcOutput.get())) {
     return JS::TranscodeResult_Throw;
   }
 
-  MOZ_ASSERT(gcOutput.script);
-  scriptp.set(gcOutput.script);
+  MOZ_ASSERT(gcOutput.get().script);
+  scriptp.set(gcOutput.get().script);
 
   return JS::TranscodeResult_Ok;
 }
@@ -5830,15 +5831,17 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     return JS::TranscodeResult_Throw;
   }
 
-  frontend::CompilationGCOutput gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput)) {
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(),
+                                     gcOutput.get())) {
     return JS::TranscodeResult_Throw;
   }
 
-  MOZ_ASSERT(gcOutput.script);
-  gcOutput.script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+  MOZ_ASSERT(gcOutput.get().script);
+  gcOutput.get().script->scriptSource()->setIncrementalEncoder(
+      xdrEncoder.release());
 
-  scriptp.set(gcOutput.script);
+  scriptp.set(gcOutput.get().script);
 
   return JS::TranscodeResult_Ok;
 }

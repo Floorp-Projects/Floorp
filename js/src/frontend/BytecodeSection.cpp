@@ -114,7 +114,7 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     }
 
     bool operator()(const ScopeIndex& index) {
-      output[i] = JS::GCCellPtr(gcOutput.scopes[index].get());
+      output[i] = JS::GCCellPtr(gcOutput.scopes[index]);
       return true;
     }
 
