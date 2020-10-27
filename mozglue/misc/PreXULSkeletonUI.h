@@ -16,6 +16,8 @@ MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance);
 MFBT_API HWND ConsumePreXULSkeletonUIHandle();
 MFBT_API void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                             int height,
+                                            double urlbarHorizontalOffsetCSS,
+                                            double urlbarWidthCSS,
                                             double cssToDevPixelScaling);
 MFBT_API bool GetPreXULSkeletonUIEnabled();
 MFBT_API void SetPreXULSkeletonUIEnabled(bool value);
