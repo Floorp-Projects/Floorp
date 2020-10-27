@@ -456,7 +456,7 @@ add_task(async function test_audio_background_tab() {
  * the process priority does not change, unless that WebAudio context is
  * suspended.
  */
-add_task(async function test_audio_background_tab() {
+add_task(async function test_web_audio_background_tab() {
   let originalTab = gBrowser.selectedTab;
 
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
@@ -468,6 +468,10 @@ add_task(async function test_audio_background_tab() {
       oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
       oscillator.connect(audioCtx.destination);
       oscillator.start();
+      while (audioCtx.state != "running") {
+        info(`wait until AudioContext starts running`);
+        await new Promise(r => (audioCtx.onstatechange = r));
+      }
       // we'll stash the AudioContext away so that it's easier to access
       // in the next SpecialPowers.spawn.
       content.audioCtx = audioCtx;
