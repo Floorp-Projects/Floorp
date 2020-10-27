@@ -39,11 +39,15 @@ async function runTests() {
     aElement.focus();
     aElement.value = "";
 
+    let initializing = false;
     let cancelBeforeInput = false;
     let beforeInputEvent = null;
     let inputEvent = null;
     let action = "";
     let beforeInputHandler = (aEvent) => {
+      if (initializing) {
+        return;
+      }
       ok(!beforeInputEvent,
         `${aDescription}Multiple "beforeinput" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
       if (cancelBeforeInput) {
@@ -60,6 +64,9 @@ async function runTests() {
       beforeInputEvent = aEvent;
     };
     let inputHandler = (aEvent) => {
+      if (initializing) {
+        return;
+      }
       ok(!inputEvent,
         `${aDescription}Multiple "input" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
       ok(aEvent.isTrusted,
@@ -81,197 +88,157 @@ async function runTests() {
     aElement.addEventListener("beforeinput", beforeInputHandler, true);
     aElement.addEventListener("input", inputHandler, true);
 
-    (function test_typing_a_in_empty_editor_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'typing "a"';
-      sendString("a");
-      is(aElement.value, "",
-        `${aDescription}${action} shouldn't insert "a" since "beforeinput" was canceled"`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertText",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
-      is(beforeInputEvent.data, "a",
-        `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_typing_a_in_empty_editor() {
+    function test_typing_a_in_empty_editor(aTestData) {
       aElement.value = "";
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'typing "a"';
+      action = aTestData.action;
       sendString("a");
-      is(aElement.value, "a",
-        `${aDescription}${action} should've inserted "a"`);
+      let expectedValue = aTestData.cancelBeforeInput ? "" : "a";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event by ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "insertText",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
+        `${aDescription}inputType of "beforeinput" event by ${aTestData.action} should be "insertText"`);
       is(beforeInputEvent.data, "a",
-        `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
+        `${aDescription}data of "beforeinput" event by ${aTestData.action} should be "a"`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "insertText",
-        `${aDescription}inputType of "input" event by ${action} should be "insertText"`);
+        `${aDescription}inputType of "input" event by ${aTestData.action} should be "insertText"`);
       is(inputEvent.data, "a",
-        `${aDescription}data of "input" event by ${action} should be "a"`);
+        `${aDescription}data of "input" event by ${aTestData.action} should be "a"`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event by ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_typing_a_in_empty_editor({
+      action: 'typing "a" and canceling beforeinput',
+      cancelBeforeInput: true,
+    });
+    test_typing_a_in_empty_editor({
+      action: 'typing "a"',
+      cancelBeforeInput: false,
+    });
 
-    (function test_typing_backspace_to_delete_last_character_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'removing "a" with "Backspace"';
-      synthesizeKey("KEY_Backspace");
-      is(aElement.value, "a",
-        `${aDescription}${action} shouldn't remove "a" since "beforeinput" was canceled"`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_typing_backspace_to_delete_last_character() {
+    function test_typing_backspace_to_delete_last_character(aTestData) {
       aElement.value = "a";
       aElement.setSelectionStart = "a".length;
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'removing "a" with "Backspace"';
+      action = aTestData.action;
       synthesizeKey("KEY_Backspace");
-      is(aElement.value, "",
-        `${aDescription}${action} should've removed "a"`);
+      let expectedValue = aTestData.cancelBeforeInput ? "a" : "";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event by ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
+        `${aDescription}inputType of "beforeinput" event by ${aTestData.action} should be "deleteContentBackward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
+        `${aDescription}data of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "input" event by ${action} should be "deleteContentBackward"`);
+        `${aDescription}inputType of "input" event by ${aTestData.action} should be "deleteContentBackward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event by ${action} should be null`);
+        `${aDescription}data of "input" event by ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event by ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_typing_backspace_to_delete_last_character({
+      actin: 'typing "Backspace" to delete "a" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_backspace_to_delete_last_character({
+      actin: 'typing "Backspace" to delete "a"',
+      cancelBeforeInput: false,
+    });
 
-    (function test_typing_enter_in_empty_editor_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'typing "Enter"';
-      synthesizeKey("KEY_Enter");
-      if (aIsTextarea) {
-        is(aElement.value, "",
-          `${aDescription}${action} shouldn't insert a line break since "beforeinput" was canceled"`);
-      } else {
-        is(aElement.value, "",
-          `${aDescription}${action} shouldn't insert a line break since it's a single line editor"`);
-      }
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertLineBreak",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      if (aIsTextarea) {
-        ok(!inputEvent,
-          `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-      } else {
-        ok(!inputEvent,
-          `${aDescription}$"input" event shouldn't have been fired at ${action} since it's a single line editor"`);
-      }
-    })();
-
-    (function test_typing_enter_in_empty_editor() {
+    function test_typing_enter_in_empty_editor(aTestData) {
       aElement.value = "";
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'typing "Enter"';
+      action = aTestData.action;
       synthesizeKey("KEY_Enter");
       if (aIsTextarea) {
-        is(aElement.value, "\n",
-          `${aDescription}${action} should've inserted a line break"`);
+        let expectedValue = aTestData.cancelBeforeInput ? "" : "\n";
+        is(aElement.value, expectedValue,
+          `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       } else {
         is(aElement.value, "",
-          `${aDescription}${action} shouldn't insert a line break since it's a single line editor"`);
+          `${aDescription}the value should be "" after ${aTestData.action}`);
       }
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event by ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "insertLineBreak",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
+        `${aDescription}inputType of "beforeinput" event by ${aTestData.action} should be "insertLineBreak"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
+        `${aDescription}data of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       if (aIsTextarea) {
         ok(inputEvent,
-          `${aDescription}"input" event should've been fired at ${action}`);
+          `${aDescription}"input" event should've been fired at ${aTestData.action}`);
         is(inputEvent.inputType, "insertLineBreak",
-          `${aDescription}inputType of "input" event by ${action} should be "insertLineBreak"`);
+          `${aDescription}inputType of "input" event by ${aTestData.action} should be "insertLineBreak"`);
         is(inputEvent.data, null,
-          `${aDescription}data of "input" event by ${action} should be null`);
+          `${aDescription}data of "input" event by ${aTestData.action} should be null`);
         is(inputEvent.dataTransfer, null,
-          `${aDescription}dataTransfer of "input" event by ${action} should be null`);
+          `${aDescription}dataTransfer of "input" event by ${aTestData.action} should be null`);
         is(inputEvent.getTargetRanges().length, 0,
-          `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
+          `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
       } else {
         ok(!inputEvent,
-          `${aDescription}$"input" event shouldn't have been fired at ${action} since it's a single line editor"`);
+          `${aDescription}$"input" event shouldn't have been fired at ${aTestData.action} since it's a single line editor"`);
       }
-    })();
+    }
+    test_typing_enter_in_empty_editor({
+      action: 'typing "Enter" in empty editor and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_enter_in_empty_editor({
+      action: 'typing "Enter" in empty editor',
+      cancelBeforeInput: false,
+    });
 
     (function test_setting_value() {
       cancelBeforeInput = false;
@@ -372,120 +339,105 @@ async function runTests() {
         `${aDescription}"input" event shouldn't have been fired by ${action}`);
     })();
 
-    (function test_typing_delete_to_delete_last_character_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'typing "Delete"';
-      synthesizeKey("KEY_Delete");
-      is(aElement.value, " ",
-        `${aDescription}${action} shouldn't remove the content since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_typing_delete_to_delete_last_character() {
-      aElement.value = "";
+    function test_typing_delete_to_delete_last_character(aTestData) {
       aElement.value = " ";
       aElement.selectionStart = 0;
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'typing "Delete"';
+      action = aTestData.action;
       synthesizeKey("KEY_Delete");
-      is(aElement.value, "",
-        `${aDescription}${action} should've removed " "`);
+      let expectedValue = aTestData.cancelBeforeInput ? " " : "";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event by ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
+        `${aDescription}inputType of "beforeinput" event by ${aTestData.action} should be "deleteContentForward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event by ${action} should be null`);
+        `${aDescription}data of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event by ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "input" event by ${action} should be "deleteContentForward"`);
+        `${aDescription}inputType of "input" event by ${aTestData.action} should be "deleteContentForward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event by ${action} should be null`);
+        `${aDescription}data of "input" event by ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event by ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event by ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_typing_delete_to_delete_last_character({
+      action: 'typing "Delete" to delete space and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_delete_to_delete_last_character({
+      action: 'typing "Delete" to delete space',
+      cancelBeforeInput: false,
+    });
 
-    (function test_undoing_deleting_last_character_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
+    function test_undoing_deleting_last_character(aTestData) {
+      initializing = true;
+      aElement.value = "a";
+      aElement.selectionStart = 0;
+      synthesizeKey("KEY_Delete");
+      initializing = false;
+
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'doing "Undo"';
+      action = aTestData.action;
       synthesizeKey("z", {accelKey: true});
-      is(aElement.value, "",
-        `${aDescription}${action} shouldn't restore`);
+      let expectedValue = aTestData.cancelBeforeInput ? "" : "a";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "historyUndo",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "historyUndo"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_undoing_deleting_last_character() {
-      cancelBeforeInput = false;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'doing "Undo"';
-      synthesizeKey("z", {accelKey: true});
-      is(aElement.value, " ",
-        `${aDescription}${action} should restore " "`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "historyUndo",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "historyUndo",
-        `${aDescription}inputType of "input" event for ${action} should be "historyUndo"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "historyUndo"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_undoing_deleting_last_character({
+      action: 'undoing deleting last character and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_undoing_deleting_last_character({
+      action: "undoing deleting last character",
+      cancelBeforeInput: false,
+    });
 
     (function test_undoing_without_undoable_transaction() {
       cancelBeforeInput = false;
@@ -493,7 +445,7 @@ async function runTests() {
       inputEvent = null;
       action = 'doing "Undo" again';
       synthesizeKey("z", {accelKey: true});
-      is(aElement.value, " ",
+      is(aElement.value, "a",
         `${aDescription}${action} shouldn't modify the value since no undo transaction`);
       ok(!beforeInputEvent,
         `${aDescription}"beforeinput" event shouldn't have been fired at ${action} since no undo transaction`);
@@ -501,61 +453,58 @@ async function runTests() {
         `${aDescription}"input" event shouldn't have been fired at ${action} since no undo transaction`);
     })();
 
-    (function test_redoing_deleting_last_character_and_canceling_beforeinput() {
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'doing "Redo"';
-      synthesizeKey("Z", {accelKey: true, shiftKey: true});
-      is(aElement.value, " ",
-        `${aDescription}${action} shouldn't restore`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "historyRedo",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
-    })();
+    function test_redoing_deleting_last_character(aTestData) {
+      initializing = true;
+      aElement.value = "a";
+      aElement.selectionStart = 0;
+      synthesizeKey("KEY_Delete");
+      synthesizeKey("z", {accelKey: true});
+      initializing = false;
 
-    (function test_redoing_deleting_last_character() {
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'doing "Redo"';
+      action = aTestData.action;
       synthesizeKey("Z", {accelKey: true, shiftKey: true});
-      is(aElement.value, "",
-        `${aDescription}${action} should remove " "`);
+      let expectedValue = aTestData.cancelBeforeInput ? "a" : "";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "historyRedo",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "historyRedo"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "historyRedo",
-        `${aDescription}inputType of "input" event for ${action} should be "historyRedo"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "historyRedo"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_redoing_deleting_last_character({
+      action: 'redoing deleting last character and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_redoing_deleting_last_character({
+      action: "redoing deleting last character",
+      cancelBeforeInput: false,
+    });
 
     (function test_redoing_without_redoable_transaction() {
       cancelBeforeInput = false;
@@ -571,224 +520,208 @@ async function runTests() {
         `${aDescription}"input" event shouldn't have been fired at ${action} since no redo transaction`);
     })();
 
-    (function test_typing_backspace_with_selecting_all_characters_and_canceling_beforeinput() {
-      aElement.value = "a";
+    function test_typing_backspace_with_selecting_all_characters(aTestData) {
+      aElement.value = "abc";
       aElement.focus();
       aElement.select();
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'removing "a" with "Backspace" (with selection)';
-      synthesizeKey("KEY_Backspace");
-      is(aElement.value, "a",
-        `${aDescription}"a" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_typing_backspace_with_selecting_all_characters() {
-      aElement.value = "a";
-      aElement.focus();
-      aElement.select();
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       beforeInputEvent = null;
       inputEvent = null;
       synthesizeKey("KEY_Backspace");
-      is(aElement.value, "",
-        `${aDescription}"a" should've been removed by ${action}`);
+      let expectedValue = aTestData.cancelBeforeInput ? "abc" : "";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteContentBackward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteContentBackward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_typing_backspace_with_selecting_all_characters({
+      action: 'typing "Backspace" to delete all selected characters and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_backspace_with_selecting_all_characters({
+      action: 'typing "Backspace" to delete all selected characters',
+      cancelBeforeInput: false,
+    });
 
-    (function test_typing_delete_with_selecting_all_characters_and_canceling_beforeinput() {
-      aElement.value = "a";
+    function test_typing_delete_with_selecting_all_characters(aTestData) {
+      aElement.value = "abc";
       aElement.focus();
       aElement.select();
-      cancelBeforeInput = true;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       beforeInputEvent = null;
       inputEvent = null;
-      action = 'removing "a" with "Delete" (with selection)';
+      action = aTestData.action;
       synthesizeKey("KEY_Delete");
-      is(aElement.value, "a",
-        `${aDescription}"a" should've been removed by ${action} since "beforeinput" was canceled`);
+      let expectedValue = aTestData.cancelBeforeInput ? "abc" : "";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteContentForward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}${action} should not fire "input" event since "beforeinput" was canceled`);
-    })();
-
-    (function test_typing_delete_with_selecting_all_characters() {
-      aElement.value = "a";
-      aElement.focus();
-      aElement.select();
-      cancelBeforeInput = false;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'removing "a" with "Delete" (with selection)';
-      synthesizeKey("KEY_Delete");
-      is(aElement.value, "",
-        `${aDescription}" " should've been removed by ${action}`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteContentForward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_typing_delete_with_selecting_all_characters({
+      action: 'typing "Delete" to delete all selected characters and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_typing_delete_with_selecting_all_characters({
+      action: 'typing "Delete" to delete all selected characters and canceling "beforeinput"',
+      cancelBeforeInput: false,
+    });
 
-    (function test_deleting_word_backward_from_its_end_and_canceling_beforeinput() {
+    function test_deleting_word_backward_from_its_end(aTestData) {
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
       aElement.setSelectionRange("abc def".length, "abc def".length);
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'removing last word, "def", with backward deletion from its end';
-      SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
-      is(aElement.value, "abc def",
-        `${aDescription}"def" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_deleting_word_backward_from_its_end() {
-      aElement.value = "abc def";
-      aElement.focus();
-      document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
-      aElement.setSelectionRange("abc def".length, "abc def".length);
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       beforeInputEvent = null;
       inputEvent = null;
       SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
-      is(aElement.value, "abc ",
-        `${aDescription}"def" should've been removed by ${action}`);
+      let expectedValue = aTestData.cancelBeforeInput ? "abc def" : "abc ";
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteWordBackward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordBackward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteWordBackward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteWordBackward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteWordBackward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteWordBackward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_deleting_word_backward_from_its_end({
+      action: 'deleting word backward from its end and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_deleting_word_backward_from_its_end({
+      action: 'deleting word backward from its end',
+      cancelBeforeInput: false,
+    });
 
-    (function test_deleting_word_forward_from_its_start_and_canceling_beforeinput() {
+    function test_deleting_word_forward_from_its_start(aTestData) {
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
       aElement.setSelectionRange(0, 0);
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = `removing first word, "${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}", with forward deletion from its start`;
-      SpecialPowers.doCommand(window, "cmd_deleteWordForward");
-      is(aElement.value, "abc def",
-        `${aDescription}"${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      ok(!inputEvent,
-        `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_deleting_word_forward_from_its_start() {
-      aElement.value = "abc def";
-      aElement.focus();
-      document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
-      aElement.setSelectionRange(0, 0);
-      cancelBeforeInput = false;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       beforeInputEvent = null;
       inputEvent = null;
       SpecialPowers.doCommand(window, "cmd_deleteWordForward");
-      is(aElement.value, kWordSelectEatSpaceToNextWord ? "def" : " def",
-        `${aDescription}"${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}" should've been removed by ${action}`);
+      let expectedValue;
+      if (aTestData.cancelBeforeInput) {
+        expectedValue = "abc def";
+      } else {
+        expectedValue = kWordSelectEatSpaceToNextWord ? "def" : " def";
+      }
+      is(aElement.value, expectedValue,
+        `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteWordForward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordForward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteWordForward"`);
       is(beforeInputEvent.data, null,
         `${aDescription}data of "beforeinput" event for ${action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
+        `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+      if (aTestData.cancelBeforeInput) {
+        ok(!inputEvent,
+          `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+        return;
+      }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteWordForward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteWordForward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteWordForward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+        `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+    }
+    test_deleting_word_forward_from_its_start({
+      action: 'deleting word forward from its start and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_deleting_word_forward_from_its_start({
+      action: "deleting word forward from its start",
+      cancelBeforeInput: false,
+    });
 
     (function test_deleting_word_backward_from_middle_of_second_word() {
       aElement.value = "abc def";
@@ -1018,125 +951,117 @@ async function runTests() {
         `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
     })();
 
-    (function test_switching_text_direction_from_default_and_canceling_beforeinput() {
-      aElement.focus();
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'switching text direction from "ltr" to "rtl"';
-      SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-      is(aElement.getAttribute("dir"), null,
-        `${aDescription}dir attribute of the element should not be set" by ${action} since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "rtl",
-        `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
-    })();
+    function test_switching_text_direction_from_default(aTestData) {
+      try {
+        aElement.removeAttribute("dir");
+        aElement.scrollTop; // XXX Update the root frame
+        aElement.focus();
+        cancelBeforeInput = aTestData.cancelBeforeInput;
+        beforeInputEvent = null;
+        inputEvent = null;
+        action = aTestData.action;
+        SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+        if (aTestData.cancelBeforeInput) {
+          is(aElement.getAttribute("dir"), null,
+            `${aDescription}dir attribute of the element shouldn't have been set by ${aTestData.action}`);
+        } else {
+          is(aElement.getAttribute("dir"), "rtl",
+            `${aDescription}dir attribute of the element should've been set to "rtl" by ${aTestData.action}`);
+        }
+        ok(beforeInputEvent,
+          `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
+        is(beforeInputEvent.cancelable, true,
+          `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
+        is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+          `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "formatSetBlockTextDirection"`);
+        is(beforeInputEvent.data, "rtl",
+          `${aDescription}data of "beforeinput" event for ${aTestData.action} should be "rtl"`);
+        is(beforeInputEvent.dataTransfer, null,
+          `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
+        is(beforeInputEvent.getTargetRanges().length, 0,
+          `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+        if (aTestData.cancelBeforeInput) {
+          ok(!inputEvent,
+            `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+          return;
+        }
+        ok(inputEvent,
+          `${aDescription}"input" event should've been fired at ${aTestData.action}`);
+        is(inputEvent.inputType, "formatSetBlockTextDirection",
+          `${aDescription}inputType of "input" event for ${aTestData.action} should be "formatSetBlockTextDirection"`);
+        is(inputEvent.data, "rtl",
+          `${aDescription}data of "input" event for ${aTestData.action} should be "rtl"`);
+        is(inputEvent.dataTransfer, null,
+          `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
+        is(inputEvent.getTargetRanges().length, 0,
+          `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+      } finally {
+        aElement.removeAttribute("dir");
+        aElement.scrollTop; // XXX Update the root frame
+      }
+    }
+    test_switching_text_direction_from_default({
+      action: 'switching text direction from default to "rtl" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_switching_text_direction_from_default({
+      action: 'switching text direction from default to "rtl"',
+      cancelBeforeInput: false,
+    });
 
-    (function test_switching_text_direction_from_rtl_to_ltr_and_canceling_beforeinput() {
-      aElement.setAttribute("dir", "rtl");
-      aElement.scrollTop; // XXX Update the root frame
-      aElement.focus();
-      cancelBeforeInput = true;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'switching text direction from "rtl" to "ltr"';
-      SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-      is(aElement.getAttribute("dir"), "rtl",
-        `${aDescription}dir attribute of the element should not have been modified by ${action} since "beforeinput" was canceled`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "ltr",
-        `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(!inputEvent,
-        `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
-    })();
-
-    (function test_switching_text_direction_from_default() {
-      aElement.removeAttribute("dir");
-      aElement.scrollTop; // XXX Update the root frame
-      aElement.focus();
-      cancelBeforeInput = false;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'switching text direction from "ltr" to "rtl"';
-      SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-      is(aElement.getAttribute("dir"), "rtl",
-        `${aDescription}dir attribute of the element should've been set to "rtl" by ${action}`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "rtl",
-        `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
-      is(inputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(inputEvent.data, "rtl",
-        `${aDescription}data of "input" event for ${action} should be "rtl"`);
-      is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
-      is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
-
-    (function test_switching_text_direction_from_rtl_to_ltr() {
-      aElement.focus();
-      cancelBeforeInput = false;
-      beforeInputEvent = null;
-      inputEvent = null;
-      action = 'switching text direction from "rtl" to "ltr"';
-      SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-      is(aElement.getAttribute("dir"), "ltr",
-        `${aDescription}dir attribute of the element should've been set to "ltr" by ${action}`);
-      ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
-      is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "ltr",
-        `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
-      is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "beforeinput" event by ${action} should return empty array`);
-      ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
-      is(inputEvent.inputType, "formatSetBlockTextDirection",
-        `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(inputEvent.data, "ltr",
-        `${aDescription}data of "input" event for ${action} should be "ltr"`);
-      is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
-      is(inputEvent.getTargetRanges().length, 0,
-        `${aDescription}getTargetRanges() of "input" event by ${action} should return empty array`);
-    })();
+    function test_switching_text_direction_from_rtl_to_ltr(aTestData) {
+      try {
+        aElement.setAttribute("dir", "rtl");
+        aElement.scrollTop; // XXX Update the root frame
+        aElement.focus();
+        cancelBeforeInput = aTestData.cancelBeforeInput;
+        beforeInputEvent = null;
+        inputEvent = null;
+        action = aTestData.action;
+        SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+        let expectedDirValue = aTestData.cancelBeforeInput ? "rtl" : "ltr";
+        is(aElement.getAttribute("dir"), expectedDirValue,
+          `${aDescription}dir attribute of the element should be "${expectedDirValue}" after ${aTestData.action}`);
+        ok(beforeInputEvent,
+          `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
+        is(beforeInputEvent.cancelable, true,
+          `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
+        is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+          `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "formatSetBlockTextDirection"`);
+        is(beforeInputEvent.data, "ltr",
+          `${aDescription}data of "beforeinput" event for ${aTestData.action} should be "ltr"`);
+        is(beforeInputEvent.dataTransfer, null,
+          `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
+        is(beforeInputEvent.getTargetRanges().length, 0,
+          `${aDescription}getTargetRanges() of "beforeinput" event by ${aTestData.action} should return empty array`);
+        if (aTestData.cancelBeforeInput) {
+          ok(!inputEvent,
+            `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+          return;
+        }
+        ok(inputEvent,
+          `${aDescription}"input" event should've been fired at ${aTestData.action}`);
+        is(inputEvent.inputType, "formatSetBlockTextDirection",
+          `${aDescription}inputType of "input" event for ${aTestData.action} should be "formatSetBlockTextDirection"`);
+        is(inputEvent.data, "ltr",
+          `${aDescription}data of "input" event for ${aTestData.action} should be "ltr"`);
+        is(inputEvent.dataTransfer, null,
+          `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
+        is(inputEvent.getTargetRanges().length, 0,
+          `${aDescription}getTargetRanges() of "input" event by ${aTestData.action} should return empty array`);
+      } finally {
+        aElement.removeAttribute("dir");
+        aElement.scrollTop; // XXX Update the root frame
+      }
+    }
+    test_switching_text_direction_from_rtl_to_ltr({
+      action: 'switching text direction from "rtl" to "ltr" and canceling "beforeinput"',
+      cancelBeforeInput: true,
+    });
+    test_switching_text_direction_from_rtl_to_ltr({
+      action: 'switching text direction from "rtl" to "ltr" and canceling "beforeinput"',
+      cancelBeforeInput: false,
+    });
 
     aElement.removeEventListener("beforeinput", beforeInputHandler, true);
     aElement.removeEventListener("input", inputHandler, true);
