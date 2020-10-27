@@ -873,14 +873,12 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
+    // Generate better code (on x86) by loading as a double with an
+    // operation that sign extends directly.
+    MemoryAccessDesc access(Scalar::Float64, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
-    // Expand load-and-extend as integer load followed by widen.
-    auto* scalar = load(addr.base, &access, ValType::I64);
-    if (!inDeadCode() && !scalar) {
-      return nullptr;
-    }
-    return scalarToSimd128(scalar, op);
+    access.setWidenSimd128Load(op);
+    return load(addr.base, &access, ValType::V128);
   }
 
   MDefinition* loadZeroSimd128(Scalar::Type viewType, size_t numBytes,

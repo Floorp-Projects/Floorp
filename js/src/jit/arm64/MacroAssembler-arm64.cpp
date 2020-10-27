@@ -339,6 +339,7 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
 
   // Not yet supported: not used by baseline compiler
   MOZ_ASSERT(!access.isSplatSimd128Load());
+  MOZ_ASSERT(!access.isWidenSimd128Load());
 
   MOZ_ASSERT(ptr_ == ptrScratch_);
 

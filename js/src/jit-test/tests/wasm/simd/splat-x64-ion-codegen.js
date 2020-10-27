@@ -50,6 +50,36 @@ if (!getBuildConfiguration().windows) {
 000000..  f2 41 0f 12 04 3f         movddupq \\(%r15,%rdi,1\\), %xmm0
 000000..  5d                        pop %rbp
 `],
+        ['v128.load8x8_s', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 20 04 3f      pmovsxbwq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
+        ['v128.load8x8_u', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 30 04 3f      pmovzxbwq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
+        ['v128.load16x4_s', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 23 04 3f      pmovsxwdq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
+        ['v128.load16x4_u', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 33 04 3f      pmovzxwdq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
+        ['v128.load32x2_s', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 25 04 3f      pmovsxdqq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
+        ['v128.load32x2_u', `
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 41 0f 38 35 04 3f      pmovzxdqq \\(%r15,%rdi,1\\), %xmm0
+000000..  5d                        pop %rbp
+`],
     ] ) {
 
         let ins = wasmEvalText(`
