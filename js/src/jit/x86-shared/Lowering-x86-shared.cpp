@@ -736,6 +736,11 @@ void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
   MOZ_ASSERT(ins->control()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
+  // Enforcing lhs == output avoids one setup move.  We would like to also
+  // enforce merging the control with the temp (with usRegisterAtStart(control)
+  // and tempCopy()), but the register allocator ignores those constraints
+  // at present.
+
   auto* lir = new (alloc()) LWasmBitselectSimd128(
       useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()),
       useRegister(ins->control()), tempSimd128());

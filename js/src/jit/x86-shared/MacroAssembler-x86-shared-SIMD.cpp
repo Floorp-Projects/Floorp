@@ -1148,6 +1148,9 @@ void MacroAssemblerX86Shared::selectSimd128(FloatRegister mask,
                                             FloatRegister onFalse,
                                             FloatRegister temp,
                                             FloatRegister output) {
+  // Normally the codegen will attempt to enforce these register assignments so
+  // that the moves are avoided.
+
   if (onTrue != output) {
     vmovaps(onTrue, output);
   }
