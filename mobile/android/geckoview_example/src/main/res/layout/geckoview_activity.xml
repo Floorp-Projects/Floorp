@@ -1,22 +1,26 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/main"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_height="match_parent">
 
-    <org.mozilla.geckoview.GeckoView
+    <org.mozilla.geckoview_example.NestedGeckoView
         android:id="@+id/gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/toolbar"
         android:scrollbars="none"
+        app:layout_behavior="org.mozilla.geckoview_example.GeckoViewBottomBehavior"
         />
 
     <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?android:actionBarSize"
-            android:layout_alignParentBottom="true"/>
+            android:layout_gravity="bottom"
+            android:background="#eeeeee"
+            app:layout_behavior="org.mozilla.geckoview_example.ToolbarBottomBehavior"
+            app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed" />
 
     <ProgressBar
             android:id="@+id/page_progress"
@@ -24,4 +28,5 @@
             android:layout_width="match_parent"
             android:layout_height="3dp"
             android:layout_alignTop="@id/gecko_view" />
-</RelativeLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
