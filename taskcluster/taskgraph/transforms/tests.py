@@ -1189,9 +1189,13 @@ def get_mobile_project(task):
 
 
 @transforms.add
-def disable_fennec_e10s(config, tasks):
+def adjust_mobile_e10s(config, tasks):
     for task in tasks:
-        if get_mobile_project(task) == "fennec":
+        project = get_mobile_project(task)
+        if project == "geckoview":
+            # Geckoview is always-e10s
+            task["e10s"] = True
+        elif project == "fennec":
             # Fennec is non-e10s
             task["e10s"] = False
         yield task
