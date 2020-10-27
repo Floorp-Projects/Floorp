@@ -7,6 +7,35 @@
 // insecure in terms of the site identity panel. We achieve this by running an
 // HTTP-over-TLS "proxy" and having Firefox request an http:// URI over it.
 
+/**
+ * Tests that the page info dialog "security" section labels a
+ * connection as unencrypted and does not show certificate.
+ * @param {string} uri - URI of the page to test with.
+ */
+async function testPageInfoNotEncrypted(uri) {
+  let pageInfo = BrowserPageInfo(uri, "securityTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(securityTab),
+    "Security tab should be visible."
+  );
+  let labelText = pageInfoDoc.getElementById("security-technical-shortform")
+    .value;
+  is(
+    labelText,
+    "Connection Not Encrypted",
+    "pageInfo 'Security Details' should show not encrypted"
+  );
+  let viewCertBtn = pageInfoDoc.getElementById("security-view-cert");
+  ok(
+    viewCertBtn.collapsed,
+    "pageInfo 'View Cert' button should not be visible"
+  );
+  pageInfo.close();
+}
+
 // But first, a quick test that we don't incorrectly treat a
 // blob:https://example.com URI as secure.
 add_task(async function() {
@@ -27,6 +56,7 @@ add_task(async function() {
     await BrowserTestUtils.browserLoaded(browser);
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "localResource", "identity should be 'localResource'");
+    await testPageInfoNotEncrypted(uri);
   });
 });
 
@@ -163,5 +193,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab("http://example.com/", async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
     is(identityMode, "notSecure", "identity should be 'not secure'");
+
+    await testPageInfoNotEncrypted("http://example.com");
   });
 });
