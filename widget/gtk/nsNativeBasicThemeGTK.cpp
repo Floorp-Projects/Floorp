@@ -44,7 +44,6 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   uint32_t dpiRatio = GetDPIRatio(aFrame);
 
   switch (aAppearance) {
-    case StyleAppearance::Scrollbar:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarbuttonUp:
