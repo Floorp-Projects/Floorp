@@ -351,6 +351,11 @@ const WebRTCIndicator = {
         this.onCommand(event);
         break;
       }
+      case "DOMWindowClose":
+      case "close": {
+        this.onClose(event);
+        break;
+      }
     }
   },
 
@@ -368,6 +373,12 @@ const WebRTCIndicator = {
     window.addEventListener("click", this);
     window.addEventListener("change", this);
     window.addEventListener("sizemodechange", this);
+
+    // There are two ways that the dialog can close - either via the
+    // .close() window method, or via the OS. We handle both of those
+    // cases here.
+    window.addEventListener("DOMWindowClose", this);
+    window.addEventListener("close", this);
 
     if (this.statusBar) {
       // We only want these events for the system status bar menus.
@@ -390,6 +401,48 @@ const WebRTCIndicator = {
     this.loaded = true;
   },
 
+  onClose(event) {
+    // This event is fired from when the indicator window tries to be closed.
+    // If we preventDefault() the event, we are able to cancel that close
+    // attempt.
+    //
+    // We want to do that if we're not showing the global mute toggles
+    // and we're still sharing a camera or a microphone so that we can
+    // keep the status bar indicators present (since those status bar
+    // indicators are bound to this window).
+    if (
+      !this.showGlobalMuteToggles &&
+      (webrtcUI.showCameraIndicator || webrtcUI.showMicrophoneIndicator)
+    ) {
+      event.preventDefault();
+      this.setVisibility(false);
+    }
+
+    if (!this.isClosingInternally) {
+      // Something has tried to close the indicator, but it wasn't webrtcUI.
+      // This means we might still have some streams being shared. To protect
+      // the user from unknowingly sharing streams, we shut those streams
+      // down.
+      //
+      // This only includes the camera and microphone streams if the user
+      // has the global mute toggles enabled, since these toggles visually
+      // associate the indicator with those streams.
+      let activeStreams = webrtcUI.getActiveStreams(
+        this.showGlobalMuteToggles /* camera */,
+        this.showGlobalMuteToggles /* microphone */,
+        true /* screen */,
+        true /* window */
+      );
+      webrtcUI.stopSharingStreams(
+        activeStreams,
+        this.showGlobalMuteToggles /* camera */,
+        this.showGlobalMuteToggles /* microphone */,
+        true /* screen */,
+        true /* window */
+      );
+    }
+  },
+
   onUnload() {
     Services.ppmm.sharedData.set("WebRTC:GlobalCameraMute", false);
     Services.ppmm.sharedData.set("WebRTC:GlobalMicrophoneMute", false);
@@ -399,20 +452,6 @@ const WebRTCIndicator = {
       for (let menu of this.statusBarMenus) {
         this.statusBar.removeItem(menu);
       }
-    }
-
-    if (!this.isClosingInternally) {
-      // Something has closed the indicator, but it wasn't webrtcUI. This
-      // means we might still have some streams being shared. To protect
-      // the user from unknowingly sharing streams, we shut those streams
-      // down.
-      let activeStreams = webrtcUI.getActiveStreams(
-        true /* camera */,
-        true /* microphone */,
-        true /* screen */,
-        true /* window */
-      );
-      webrtcUI.stopSharingStreams(activeStreams);
     }
   },
 
