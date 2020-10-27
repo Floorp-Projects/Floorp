@@ -108,7 +108,7 @@ rawPackets.set(`1 + @`, {
       "preview": {
         "kind": "Error",
         "name": "SyntaxError",
-        "message": "illegal character",
+        "message": "illegal character U+0040",
         "stack": "",
         "fileName": "debugger eval code",
         "lineNumber": 1,
@@ -117,7 +117,7 @@ rawPackets.set(`1 + @`, {
     },
     "actorID": "server0.conn0.child1/obj26"
   },
-  "exceptionMessage": "SyntaxError: illegal character",
+  "exceptionMessage": "SyntaxError: illegal character U+0040",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "hasException": true,
   "frame": {
