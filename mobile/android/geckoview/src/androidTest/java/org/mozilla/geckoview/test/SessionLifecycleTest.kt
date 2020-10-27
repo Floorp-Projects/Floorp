@@ -127,6 +127,8 @@ class SessionLifecycleTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
+        assertThat("docShell should start active", mainSession.active, equalTo(true))
+
         // Deactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks do not run
         mainSession.setActive(false)
         mainSession.evaluateJS(
@@ -139,9 +141,13 @@ class SessionLifecycleTest : BaseSessionTest() {
         mainSession.waitForJS("new Promise(resolve => { resolve() })")
         val isNotGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor !== 'green'") as Boolean
         assertThat("requestAnimationFrame has not run yet", isNotGreen, equalTo(true))
+        assertThat("docShell shouldn't be active after calling setActive",
+                mainSession.active, equalTo(false))
 
         // Reactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks now run
         mainSession.setActive(true)
+        assertThat("docShell should be active after calling setActive(true)",
+                mainSession.active, equalTo(true))
         mainSession.waitForJS("new Promise(resolve => requestAnimationFrame(() => { resolve(); }))");
         var isGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor === 'green'") as Boolean
         assertThat("requestAnimationFrame has run", isGreen, equalTo(true))
