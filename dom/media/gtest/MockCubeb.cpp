@@ -128,6 +128,12 @@ void MockCubebStream::Process10Ms() {
   }
   if (mForceErrorState) {
     mForceErrorState = false;
+    // Let the audio thread (this thread!) run to completion before
+    // being released, by joining and releasing on main.
+    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        __func__, [cubeb = reinterpret_cast<MockCubeb*>(context), this] {
+          cubeb->StopStream(this);
+        }));
     mStateCallback(stream, mUserPtr, CUBEB_STATE_ERROR);
     mErrorForcedEvent.Notify();
     mStreamStop = true;
