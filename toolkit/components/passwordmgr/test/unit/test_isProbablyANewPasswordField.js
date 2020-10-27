@@ -8,6 +8,21 @@ const LoginAutoComplete = Cc[
   "@mozilla.org/login-manager/autocompletesearch;1"
 ].getService(Ci.nsILoginAutoCompleteSearch).wrappedJSObject;
 
+function labelledByDocument() {
+  let doc = MockDocument.createTestDocument(
+    "http://localhost:8080/test/",
+    `<div>
+       <label id="paper-input-label-2">Password</label>
+       <input aria-labelledby="paper-input-label-2" type="password">
+     </div>`
+  );
+  let div = doc.querySelector("div");
+  // Put the div contents inside shadow DOM.
+  div.attachShadow({ mode: "open" }).append(...div.children);
+  return doc;
+}
+const LABELLEDBY_SHADOW_TESTCASE = labelledByDocument();
+
 const TESTCASES = [
   // Note there is no test case for `<input type="password" autocomplete="new-password">`
   // since _isProbablyANewPasswordField explicitly does not run in that case.
@@ -79,6 +94,14 @@ const TESTCASES = [
     `,
     expectedResult: [false, true, true],
   },
+  {
+    description: "Password field with aria-labelledby inside shadow DOM",
+    document: LABELLEDBY_SHADOW_TESTCASE,
+    inputs: LABELLEDBY_SHADOW_TESTCASE.querySelector(
+      "div"
+    ).shadowRoot.querySelectorAll("input[type='password']"),
+    expectedResult: [false],
+  },
 ];
 
 add_task(async function test_returns_false_when_pref_disabled() {
@@ -92,17 +115,22 @@ add_task(async function test_returns_false_when_pref_disabled() {
   // Use registration form test case, where we know it should return true if enabled
   const testcase = TESTCASES[1];
   info("Starting testcase: " + testcase.description);
-  const document = MockDocument.createTestDocument(
-    "http://localhost:8080/test/",
-    testcase.document
-  );
-  const input = document.querySelectorAll(`input[type="password"]`);
-  const result = LoginAutoComplete._isProbablyANewPasswordField(input);
-  Assert.strictEqual(
-    result,
-    false,
-    `When the pref is set to disable, the result is always false, e.g. for the testcase, ${testcase.description} `
-  );
+  const document =
+    testcase.document instanceof Document
+      ? testcase.document
+      : MockDocument.createTestDocument(
+          "http://localhost:8080/test/",
+          testcase.document
+        );
+  for (let [i, input] of testcase.inputs ||
+    document.querySelectorAll(`input[type="password"]`).entries()) {
+    const result = LoginAutoComplete._isProbablyANewPasswordField(input);
+    Assert.strictEqual(
+      result,
+      false,
+      `When the pref is set to disable, the result is always false, e.g. for the testcase, ${testcase.description} ${i}`
+    );
+  }
 
   info("Re-enabling new-password heuristic pref");
   Services.prefs.setStringPref(NEW_PASSWORD_HEURISTIC_ENABLED_PREF, threshold);
@@ -114,13 +142,17 @@ for (let testcase of TESTCASES) {
   (function() {
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
-      let document = MockDocument.createTestDocument(
-        "http://localhost:8080/test/",
-        testcase.document
-      );
+      let document =
+        testcase.document instanceof Document
+          ? testcase.document
+          : MockDocument.createTestDocument(
+              "http://localhost:8080/test/",
+              testcase.document
+            );
 
       const results = [];
-      for (let input of document.querySelectorAll(`input[type="password"]`)) {
+      for (let input of testcase.inputs ||
+        document.querySelectorAll(`input[type="password"]`)) {
         const result = LoginAutoComplete._isProbablyANewPasswordField(input);
         results.push(result);
       }
