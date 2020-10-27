@@ -374,13 +374,15 @@ bool frontend::InstantiateStencils(JSContext* cx,
 }
 
 bool frontend::PrepareForInstantiate(JSContext* cx,
-                                     CompilationInfo& compilationInfo) {
-  return compilationInfo.prepareForInstantiate(cx);
+                                     CompilationInfo& compilationInfo,
+                                     CompilationGCOutput& gcOutput) {
+  return compilationInfo.prepareForInstantiate(cx, gcOutput);
 }
 
 bool frontend::PrepareForInstantiate(JSContext* cx,
-                                     CompilationInfoVector& compilationInfos) {
-  return compilationInfos.prepareForInstantiate(cx);
+                                     CompilationInfoVector& compilationInfos,
+                                     CompilationGCOutput& gcOutput) {
+  return compilationInfos.prepareForInstantiate(cx, gcOutput);
 }
 
 template <typename Unit>
