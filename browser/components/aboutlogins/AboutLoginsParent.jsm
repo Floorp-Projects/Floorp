@@ -60,12 +60,130 @@ const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 const PASSWORD_SYNC_NOTIFICATION_ID = "enable-password-sync";
 
+const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
 const SHOW_PASSWORD_SYNC_NOTIFICATION_PREF =
   "signon.management.page.showPasswordSyncNotification";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+
+// App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
+// This array mirrors the file names from the App store directory (./content/third-party/app-store)
+const APP_STORE_LOCALES = [
+  "az",
+  "ar",
+  "bg",
+  "cs",
+  "da",
+  "de",
+  "el",
+  "en",
+  "es-mx",
+  "es",
+  "et",
+  "fi",
+  "fr",
+  "he",
+  "hu",
+  "id",
+  "it",
+  "ja",
+  "ko",
+  "lt",
+  "lv",
+  "my",
+  "nb",
+  "nl",
+  "nn",
+  "pl",
+  "pt-br",
+  "pt-pt",
+  "ro",
+  "ru",
+  "si",
+  "sk",
+  "sv",
+  "th",
+  "tl",
+  "tr",
+  "vi",
+  "zh-hans",
+  "zh-hant",
+];
+
+// Google play badges sourced from https://play.google.com/intl/en_us/badges/
+// This array mirrors the file names from the play store directory (./content/third-party/play-store)
+const PLAY_STORE_LOCALES = [
+  "af",
+  "ar",
+  "az",
+  "be",
+  "bg",
+  "bn",
+  "bs",
+  "ca",
+  "cs",
+  "da",
+  "de",
+  "el",
+  "en",
+  "es",
+  "et",
+  "eu",
+  "fa",
+  "fr",
+  "gl",
+  "gu",
+  "he",
+  "hi",
+  "hr",
+  "hu",
+  "hy",
+  "id",
+  "is",
+  "it",
+  "ja",
+  "ka",
+  "kk",
+  "km",
+  "kn",
+  "ko",
+  "lo",
+  "lt",
+  "lv",
+  "mk",
+  "mr",
+  "ms",
+  "my",
+  "nb",
+  "ne",
+  "nl",
+  "nn",
+  "pa",
+  "pl",
+  "pt-br",
+  "pt",
+  "ro",
+  "ru",
+  "si",
+  "sk",
+  "sl",
+  "sq",
+  "sr",
+  "sv",
+  "ta",
+  "te",
+  "th",
+  "tl",
+  "tr",
+  "uk",
+  "ur",
+  "uz",
+  "vi",
+  "zh-cn",
+  "zh-tw",
+];
 
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
@@ -147,6 +265,10 @@ class AboutLoginsParent extends JSWindowActorParent {
         Services.logins.removeLogin(login);
         break;
       }
+      case "AboutLogins:HideFooter": {
+        Services.prefs.setBoolPref(HIDE_MOBILE_FOOTER_PREF, true);
+        break;
+      }
       case "AboutLogins:SortChanged": {
         Services.prefs.setCharPref("signon.management.page.sort", message.data);
         break;
@@ -174,6 +296,31 @@ class AboutLoginsParent extends JSWindowActorParent {
           Services.urlFormatter.formatURLPref("app.support.baseURL") +
           "firefox-lockwise";
         ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
+          relatedToCurrent: true,
+        });
+        break;
+      }
+      case "AboutLogins:OpenMobileAndroid": {
+        const MOBILE_ANDROID_URL_PREF =
+          "signon.management.page.mobileAndroidURL";
+        const linkTrackingSource = message.data.source;
+        let MOBILE_ANDROID_URL = Services.prefs.getStringPref(
+          MOBILE_ANDROID_URL_PREF
+        );
+        // Append the `utm_creative` query parameter value:
+        MOBILE_ANDROID_URL += linkTrackingSource;
+        ownerGlobal.openWebLinkIn(MOBILE_ANDROID_URL, "tab", {
+          relatedToCurrent: true,
+        });
+        break;
+      }
+      case "AboutLogins:OpenMobileIos": {
+        const MOBILE_IOS_URL_PREF = "signon.management.page.mobileAppleURL";
+        const linkTrackingSource = message.data.source;
+        let MOBILE_IOS_URL = Services.prefs.getStringPref(MOBILE_IOS_URL_PREF);
+        // Append the `utm_creative` query parameter value:
+        MOBILE_IOS_URL += linkTrackingSource;
+        ownerGlobal.openWebLinkIn(MOBILE_IOS_URL, "tab", {
           relatedToCurrent: true,
         });
         break;
@@ -245,6 +392,25 @@ class AboutLoginsParent extends JSWindowActorParent {
             AboutLogins.updatePasswordSyncNotificationState(syncState);
           }
 
+          const playStoreBadgeLanguage = Services.locale.negotiateLanguages(
+            Services.locale.appLocalesAsBCP47,
+            PLAY_STORE_LOCALES,
+            "en-us",
+            Services.locale.langNegStrategyLookup
+          )[0];
+
+          const appStoreBadgeLanguage = Services.locale.negotiateLanguages(
+            Services.locale.appLocalesAsBCP47,
+            APP_STORE_LOCALES,
+            "en-us",
+            Services.locale.langNegStrategyLookup
+          )[0];
+
+          const selectedBadgeLanguages = {
+            appStoreBadgeLanguage,
+            playStoreBadgeLanguage,
+          };
+
           let selectedSort = Services.prefs.getCharPref(
             "signon.management.page.sort",
             "name"
@@ -258,6 +424,7 @@ class AboutLoginsParent extends JSWindowActorParent {
             logins,
             selectedSort,
             syncState,
+            selectedBadgeLanguages,
             masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
             passwordRevealVisible: Services.policies.isAllowed(
               "passwordReveal"
@@ -791,10 +958,16 @@ var AboutLogins = {
     // by other more Sync-specific pages.
     const loggedIn = state.status != UIState.STATUS_NOT_CONFIGURED;
 
+    // Pass the pref set if user has dismissed mobile promo footer
+    const dismissedMobileFooter = Services.prefs.getBoolPref(
+      HIDE_MOBILE_FOOTER_PREF
+    );
+
     return {
       loggedIn,
       email: state.email,
       avatarURL: state.avatarURL,
+      hideMobileFooter: !loggedIn || dismissedMobileFooter,
       fxAccountsEnabled: FXA_ENABLED,
     };
   },

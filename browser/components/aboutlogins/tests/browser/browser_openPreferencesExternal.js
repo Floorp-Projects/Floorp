@@ -19,6 +19,18 @@ add_task(async function test_open_feedback() {
       pref: "app.support.baseURL",
       selector: ".menuitem-help",
     },
+    {
+      urlFinal: "https://example.com/android?utm_creative=Elipsis_Menu",
+      urlBase: "https://example.com/android?utm_creative=",
+      pref: "signon.management.page.mobileAndroidURL",
+      selector: ".menuitem-mobile-android",
+    },
+    {
+      urlFinal: "https://example.com/apple?utm_creative=Elipsis_Menu",
+      urlBase: "https://example.com/apple?utm_creative=",
+      pref: "signon.management.page.mobileAppleURL",
+      selector: ".menuitem-mobile-ios",
+    },
   ];
 
   for (const { urlFinal, urlBase, pref, selector } of menuArray) {
