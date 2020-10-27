@@ -36,7 +36,6 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
-#include "js/Printf.h"       // JS_smprintf
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
@@ -1830,17 +1829,6 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::computeErrorMetadata(
   return true;
 }
 
-template <typename Unit, class AnyCharsAccess>
-void TokenStreamSpecific<Unit, AnyCharsAccess>::reportIllegalCharacter(
-    int32_t cp) {
-  UniqueChars display = JS_smprintf("U+%04X", cp);
-  if (!display) {
-    ReportOutOfMemory(anyCharsAccess().cx);
-    return;
-  }
-  error(JSMSG_ILLEGAL_CHARACTER, display.get());
-}
-
 // We have encountered a '\': check for a Unicode escape sequence after it.
 // Return the length of the escape sequence and the encoded code point (by
 // value) if we found a Unicode escape sequence, and skip all code units
@@ -2847,7 +2835,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
                               modifier, NameVisibility::Public, ttp);
       }
 
-      reportIllegalCharacter(cp);
+      error(JSMSG_ILLEGAL_CHARACTER);
       return badToken();
     }  // !isAsciiCodePoint(unit)
 
@@ -3359,7 +3347,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // We consumed a bad ASCII code point/unit.  Put it back so the
         // error location is the bad code point.
         ungetCodeUnit(unit);
-        reportIllegalCharacter(unit);
+        error(JSMSG_ILLEGAL_CHARACTER);
         return badToken();
     }  // switch (AssertedCast<uint8_t>(CodeUnitValue(toUnit(unit))))
 

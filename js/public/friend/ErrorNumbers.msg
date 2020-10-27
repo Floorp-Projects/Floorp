@@ -288,7 +288,7 @@ MSG_DEF(JSMSG_BAD_ESCAPE,              0, JSEXN_SYNTAXERR, "invalid escape seque
 MSG_DEF(JSMSG_MISSING_PRIVATE_NAME,    0, JSEXN_SYNTAXERR, "'#' not followed by identifier")
 MSG_DEF(JSMSG_PRIVATE_DELETE,          0, JSEXN_SYNTAXERR, "private fields can't be deleted")
 MSG_DEF(JSMSG_MISSING_PRIVATE_DECL,    1, JSEXN_SYNTAXERR, "reference to undeclared private field or method {0}")
-MSG_DEF(JSMSG_ILLEGAL_CHARACTER,       1, JSEXN_SYNTAXERR, "illegal character {0}")
+MSG_DEF(JSMSG_ILLEGAL_CHARACTER,       0, JSEXN_SYNTAXERR, "illegal character")
 MSG_DEF(JSMSG_IMPORT_META_OUTSIDE_MODULE, 0, JSEXN_SYNTAXERR, "import.meta may only appear in a module")
 MSG_DEF(JSMSG_IMPORT_DECL_AT_TOP_LEVEL, 0, JSEXN_SYNTAXERR, "import declarations may only appear at top level of a module")
 MSG_DEF(JSMSG_OF_AFTER_FOR_LOOP_DECL,  0, JSEXN_SYNTAXERR, "a declaration in the head of a for-of loop can't have an initializer")
