@@ -449,8 +449,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   void SetBackgroundColor(const nscolor& aColor);
 
-  void NotifyPainted();
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual mozilla::ipc::IPCResult RecvUpdateEffects(
       const EffectsInfo& aEffects);
 
@@ -821,7 +819,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   Maybe<bool> mLayersConnected;
   EffectsInfo mEffectsInfo;
   bool mDidFakeShow;
-  bool mNotified;
   bool mTriedBrowserInit;
   hal::ScreenOrientation mOrientation;
 
