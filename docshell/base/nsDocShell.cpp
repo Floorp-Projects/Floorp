@@ -4809,18 +4809,6 @@ nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
 }
 
 NS_IMETHODIMP
-nsDocShell::SetSuspendMediaWhenInactive(bool aSuspendMediaWhenInactive) {
-  mSuspendMediaWhenInactive = aSuspendMediaWhenInactive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetSuspendMediaWhenInactive(bool* aSuspendMediaWhenInactive) {
-  *aSuspendMediaWhenInactive = mSuspendMediaWhenInactive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive) {
   // Keep track ourselves.
   // Changing the activeness on a discarded browsing context has no effect.

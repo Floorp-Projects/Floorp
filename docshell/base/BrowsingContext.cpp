@@ -2213,7 +2213,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DisplayMode>,
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
-  MOZ_ASSERT(!GetParent(), "Set muted flag on non top-level context!");
+  MOZ_ASSERT(IsTop(), "Set muted flag on non top-level context!");
   USER_ACTIVATION_LOG("Set audio muted %d for %s browsing context 0x%08" PRIx64,
                       GetMuted(), XRE_IsParentProcess() ? "Parent" : "Child",
                       Id());

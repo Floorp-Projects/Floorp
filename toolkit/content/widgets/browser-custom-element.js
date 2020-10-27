@@ -387,25 +387,11 @@
     }
 
     set suspendMediaWhenInactive(val) {
-      if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          frameLoader.remoteTab.suspendMediaWhenInactive = val;
-        }
-      } else if (this.docShell) {
-        this.docShell.suspendMediaWhenInactive = val;
-      }
+      this.browsingContext.suspendMediaWhenInactive = val;
     }
 
     get suspendMediaWhenInactive() {
-      if (this.isRemoteBrowser) {
-        let { frameLoader } = this;
-        if (frameLoader && frameLoader.remoteTab) {
-          return frameLoader.remoteTab.suspendMediaWhenInactive;
-        }
-        return false;
-      }
-      return this.docShell && this.docShell.suspendMediaWhenInactive;
+      return !!this.browsingContext?.suspendMediaWhenInactive;
     }
 
     set docShellIsActive(val) {
