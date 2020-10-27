@@ -35,7 +35,7 @@ function snapshotHistograms() {
   };
 }
 
-function assertHistogramResults(histograms, type, index, method) {
+function assertTelemetryResults(histograms, type, index, method) {
   TelemetryTestUtils.assertHistogram(histograms.resultIndexHist, index, 1);
 
   TelemetryTestUtils.assertHistogram(
@@ -52,6 +52,13 @@ function assertHistogramResults(histograms, type, index, method) {
   );
 
   TelemetryTestUtils.assertHistogram(histograms.resultMethodHist, method, 1);
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    `urlbar.picked.${type}`,
+    index,
+    1
+  );
 }
 
 add_task(async function setup() {
@@ -102,7 +109,7 @@ add_task(async function test() {
   });
   EventUtils.synthesizeKey("KEY_Enter");
 
-  assertHistogramResults(
+  assertTelemetryResults(
     histograms,
     "tip",
     0,

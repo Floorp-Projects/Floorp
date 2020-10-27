@@ -46,40 +46,6 @@ FX_URLBAR_SELECTED_RESULT_METHOD
     Before QuantumBar, it was possible to right-click a result to highlight but
     not pick it. Then the user could press Enter. This is no more possible.
 
-FX_URLBAR_SELECTED_RESULT_INDEX
-  This probe tracks the indexes of picked results in the results list.
-  It's an enumerated histogram with 17 buckets.
-
-FX_URLBAR_SELECTED_RESULT_TYPE_2
-  This probe tracks the types of picked results.
-  It's an enumerated histogram with 32 buckets.
-  Values can be:
-
-    0. autofill
-    1. bookmark
-    2. history
-    3. keyword
-    4. searchengine
-    5. searchsuggestion
-    6. switchtab
-    7. tag
-    8. visiturl
-    9. remotetab
-    10. extension
-    11. preloaded-top-site
-    12. tip
-    13. topsite
-    14. formhistory
-
-FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2
-  This probe tracks picked result type, for each one it tracks the index where
-  it appeared.
-  It's a keyed histogram where the keys are result types (see
-  `UrlbarUtils.SELECTED_RESULT_TYPES`_). For each key, this records the indexes
-  of picked results for that result type.
-
-  .. _UrlbarUtils.SELECTED_RESULT_TYPES: https://searchfox.org/mozilla-central/search?q=symbol:UrlbarUtils%23SELECTED_RESULT_TYPES&redirect=false
-
 Scalars
 -------
 
@@ -146,7 +112,7 @@ urlbar.tips
     Incremented when the redirect search tip is shown.
 
 urlbar.searchmode.*
-  This is set of keyed scalars whose values are uints are are incremented each
+  This is a set of keyed scalars whose values are uints incremented each
   time search mode is entered in the Urlbar. The suffix on the scalar name
   describes how search mode was entered. Possibilities include:
 
@@ -197,6 +163,53 @@ urlbar.searchmode.*
   Amazon.ca, Amazon.de, etc.) to "Amazon" and we flatten all localized
   Wikipedia sites (Wikipedia (en), Wikipedia (fr), etc.) to "Wikipedia". This
   is done to reduce the number of keys used by these scalars.
+
+urlbar.picked.*
+  This is a set of keyed scalars whose values are uints incremented each
+  time a result is picked from the Urlbar. The suffix on the scalar name
+  is the result type. The keys for the scalars above are the 0-based index of
+  the result in the urlbar panel when it was picked.
+
+  .. note::
+    Available from Firefox 84 on. Use the *FX_URLBAR_SELECTED_** histograms in
+    earlier versions. See the `Obsolete probes`_ section below.
+
+  Valid result types are:
+
+  - ``autofill``
+    An origin or a URL completed the user typed text inline.
+  - ``bookmark``
+    A bookmarked URL.
+  - ``dynamic``
+    A specially crafted result, often used in experiments when basic types are
+    not flexible enough for a rich layout.
+  - ``extension``
+    Added by an add-on through the omnibox WebExtension API.
+  - ``formhistory``
+    A search suggestion from previous search history.
+  - ``history``
+    A URL from history.
+  - ``keyword``
+    A bookmark keyword.
+  - ``remotetab``
+    A tab synced from another device.
+  - ``searchengine``
+    A search result, but not a suggestion. May be the default search action
+    or a search alias.
+  - ``searchsuggestion``
+    A remote search suggestion.
+  - ``switchtab``
+    An open tab.
+  - ``tabtosearch``
+    A tab to search result.
+  - ``tip``
+    A tip result.
+  - ``topsite``
+    An entry from top sites.
+  - ``unknown``
+    An unknown result type, a bug should be filed to figure out what it is.
+  - ``visiturl``
+    The user typed string can be directly visited.
 
 Event Telemetry
 ---------------
@@ -270,10 +283,11 @@ Event Extra
   - ``selType``
     The type of the selected result at the time of submission.
     This is only present for ``engagement`` events.
-    It can be one of: ``none``, ``autofill``, ``visit``, ``bookmark``,
-    ``history``, ``keyword``, ``search``, ``searchsuggestion``, ``switchtab``,
-    ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``, ``canonized``,
-    ``tip``, ``tiphelp``, ``formhistory``, ``tabtosearch``
+    It can be one of: ``none``, ``autofill``, ``visiturl``, ``bookmark``,
+    ``history``, ``keyword``, ``searchengine``, ``searchsuggestion``,
+    ``switchtab``, ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``,
+    ``canonized``, ``tip``, ``tiphelp``, ``formhistory``, ``tabtosearch``,
+    ``unknown``
     In practice, ``tabtosearch`` should not appear in real event telemetry.
     Opening a tab-to-search result enters search mode and entering search mode
     does not currently mark the end of an engagement. It is noted here for
@@ -363,14 +377,13 @@ Obsolete probes
 Obsolete histograms
 ~~~~~~~~~~~~~~~~~~~
 
-FX_URLBAR_SELECTED_RESULT_TYPE (OBSOLETE)
-  This probe is obsolete and was replaced with
-  ``FX_URLBAR_SELECTED_RESULT_TYPE_2`` in Firefox 78 in order to increase the
-  number of buckets.
+FX_URLBAR_SELECTED_RESULT_INDEX (OBSOLETE)
+  This probe tracked the indexes of picked results in the results list.
+  It was an enumerated histogram with 17 buckets.
 
+FX_URLBAR_SELECTED_RESULT_TYPE and FX_URLBAR_SELECTED_RESULT_TYPE_2 (from Firefox 78 on) (OBSOLETE)
   This probe tracked the types of picked results.
-  It's an enumerated histogram with 14 buckets.
-  Values can be:
+  It was an enumerated histogram with 17 buckets:
 
     0. autofill
     1. bookmark
@@ -386,19 +399,16 @@ FX_URLBAR_SELECTED_RESULT_TYPE (OBSOLETE)
     11. preloaded-top-site
     12. tip
     13. topsite
+    14. formhistory
+    15. dynamic
+    16. tabtosearch
 
-FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE (OBSOLETE)
-  This probe is obsolete and was replaced with
-  ``FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2`` in Firefox 78 in order to
-  increase the number of buckets.
-
-  This probe tracked picked result type, for each one it tracks the index where
+FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE and FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2 (from Firefox 78 on) (OBSOLETE)
+  This probe tracked picked result type, for each one it tracked the index where
   it appeared.
-  It's a keyed histogram where the keys are result types (see
-  `UrlbarUtils.SELECTED_RESULT_TYPES`_). For each key, this records the indexes
+  It was a keyed histogram where the keys were result types (see
+  FX_URLBAR_SELECTED_RESULT_TYPE above). For each key, this recorded the indexes
   of picked results for that result type.
-
-  .. _UrlbarUtils.SELECTED_RESULT_TYPES: https://searchfox.org/mozilla-central/search?q=symbol:UrlbarUtils%23SELECTED_RESULT_TYPES&redirect=false
 
 Obsolete search probes
 ----------------------
