@@ -4263,7 +4263,6 @@ class nsIFrame : public nsQueryFrame {
   }
 
   nsresult XULRedraw(nsBoxLayoutState& aState);
-  virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild);
 
   static bool AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
                              bool& aHeightSet);
