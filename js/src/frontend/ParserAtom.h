@@ -267,6 +267,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // the entry will cache the JSAtom pointer to return later.
   JSAtom* toJSAtom(JSContext* cx, CompilationAtomCache& atomCache) const;
 
+  // Convert NotInstantiatedAndMarked entry to a js-atom.
+  JSAtom* instantiate(JSContext* cx, CompilationAtomCache& atomCache) const;
+
   // Convert this entry to a number.
   bool toNumber(JSContext* cx, double* result) const;
 
@@ -522,6 +525,9 @@ class ParserAtomsTable {
   // The number of atoms with either NotInstantiatedAndMarked or AtomIndex kind,
   // that requires space in CompilationAtomCache.atoms while instantiation.
   size_t requiredNonStaticAtomCount() const;
+
+  bool instantiateMarkedAtoms(JSContext* cx,
+                              CompilationAtomCache& atomCache) const;
 
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
                                                  const char* asciiPtr,

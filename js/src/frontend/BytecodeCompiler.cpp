@@ -376,12 +376,18 @@ bool frontend::InstantiateStencils(JSContext* cx,
 bool frontend::PrepareForInstantiate(JSContext* cx,
                                      CompilationInfo& compilationInfo,
                                      CompilationGCOutput& gcOutput) {
+  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
+                                     JS::ProfilingCategoryPair::JS_Parsing);
+
   return compilationInfo.prepareForInstantiate(cx, gcOutput);
 }
 
 bool frontend::PrepareForInstantiate(JSContext* cx,
                                      CompilationInfoVector& compilationInfos,
                                      CompilationGCOutput& gcOutput) {
+  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
+                                     JS::ProfilingCategoryPair::JS_Parsing);
+
   return compilationInfos.prepareForInstantiate(cx, gcOutput);
 }
 
