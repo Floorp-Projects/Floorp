@@ -30,6 +30,7 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_print.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -127,6 +128,17 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
           : PrintTargetPS::LANDSCAPE);
 }
 
+#define DECLARE_KNOWN_MONOCHROME_SETTING(key_, value_) {"cups-" key_, value_},
+
+struct {
+  const char* mKey;
+  const char* mValue;
+} kKnownMonochromeSettings[] = {
+  CUPS_EACH_MONOCHROME_PRINTER_SETTING(DECLARE_KNOWN_MONOCHROME_SETTING)
+};
+
+#undef DECLARE_KNOWN_MONOCHROME_SETTING
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
@@ -162,6 +174,12 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
 
   mGtkPageSetup = gtk_page_setup_copy(mGtkPageSetup);
   mGtkPrintSettings = gtk_print_settings_copy(mGtkPrintSettings);
+
+  if (!aPS->GetPrintInColor() && StaticPrefs::print_cups_monochrome_enabled()) {
+    for (const auto& setting : kKnownMonochromeSettings) {
+      gtk_print_settings_set(mGtkPrintSettings, setting.mKey, setting.mValue);
+    }
+  }
 
   GtkPaperSize* properPaperSize;
   if (gtk_paper_size_is_equal(geckosHackishPaperSize, standardGtkPaperSize)) {

@@ -199,14 +199,10 @@ bool nsPrinterCUPS::SupportsDuplex() const {
 }
 
 bool nsPrinterCUPS::SupportsMonochrome() const {
-#ifdef XP_MACOSX
   if (!SupportsColor()) {
     return true;
   }
-  return StaticPrefs::print_mac_monochrome_enabled();
-#else
-  return true;
-#endif
+  return StaticPrefs::print_cups_monochrome_enabled();
 }
 
 bool nsPrinterCUPS::SupportsColor() const {
