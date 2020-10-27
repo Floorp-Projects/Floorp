@@ -734,8 +734,7 @@ void MacroAssemblerX86Shared::minMaxFloat32x4(bool isMin, FloatRegister lhs_,
 
   vmovaps(temp1, temp2);                     // clear NaN lanes of result
   vpandn(output, temp2, temp2);              //   result now in temp2
-  asMasm().loadConstantSimd128Float(quietBits, output);
-  vandps(output, temp1, temp1);              // setup QNaN bits in NaN lanes
+  asMasm().bitwiseAndSimd128(quietBits, temp1); // setup QNaN bits in NaN lanes
   vorps(temp1, temp2, temp2);                //   and OR into result
   vmovaps(lhs, temp1);                       // find NaN lanes
   vcmpunordps(Operand(temp1), temp1);        //   in lhs
@@ -788,8 +787,7 @@ void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs_,
 
   vmovapd(temp1, temp2);                     // clear NaN lanes of result
   vpandn(output, temp2, temp2);              //   result now in temp2
-  asMasm().loadConstantSimd128Float(quietBits, output);
-  vandpd(output, temp1, temp1);              // setup QNaN bits in NaN lanes
+  asMasm().bitwiseAndSimd128(quietBits, temp1); // setup QNaN bits in NaN lanes
   vorpd(temp1, temp2, temp2);                //   and OR into result
   vmovapd(lhs, temp1);                       // find NaN lanes
   vcmpunordpd(Operand(temp1), temp1);        //   in lhs
