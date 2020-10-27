@@ -31,18 +31,15 @@ function test()
 
   for (var i = 0; i < formatcontrolchars.length; i++)
   {
-    var char = formatcontrolchars[i];
-
     try
     {
-      eval("hi" + char + "there = 'howdie';");
+      eval("hi" + formatcontrolchars[i] + "there = 'howdie';");
     }
     catch(ex)
     {
       actual = ex + '';
     }
 
-    var hex = char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-    reportCompare(`${expect} U+${hex}`, actual, summary + ': ' + i);
+    reportCompare(expect, actual, summary + ': ' + i);
   }
 }

@@ -1,20 +1,14 @@
 load(libdir + "syntax.js");
 
-function check_syntax_error_at(e, code, name) {
-  assertEq(e instanceof SyntaxError, true, name + ": " + code);
-  assertEq(e.message, "illegal character U+0040", name + ": " + code);
-}
-test_syntax(["@"], check_syntax_error_at, false);
+var JSMSG_ILLEGAL_CHARACTER = "illegal character";
 
-function check_syntax_error_ellipsis(e, code, name) {
-  assertEq(e instanceof SyntaxError, true, name + ": " + code);
-  assertEq(e.message, "illegal character U+2026", name + ": " + code);
-}
-test_syntax(["…"], check_syntax_error_ellipsis, false);
+var postfixes = [
+  "@",
+];
 
-function check_syntax_error_clown(e, code, name) {
+function check_syntax_error(e, code, name) {
   assertEq(e instanceof SyntaxError, true, name + ": " + code);
-  assertEq(e.message, "illegal character U+1F921", name + ": " + code);
+  assertEq(e.message, JSMSG_ILLEGAL_CHARACTER, name + ": " + code);
 }
-test_syntax(["🤡"], check_syntax_error_clown, false);
 
+test_syntax(postfixes, check_syntax_error, false);
