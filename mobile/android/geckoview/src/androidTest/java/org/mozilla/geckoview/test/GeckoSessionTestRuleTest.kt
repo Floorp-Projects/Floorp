@@ -1637,8 +1637,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @IgnoreCrash
     @Test fun contentCrashIgnored() {
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-
         mainSession.loadUri(CONTENT_CRASH_URL)
         mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
@@ -1648,7 +1646,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test(expected = ChildCrashedException::class)
     fun contentCrashFails() {
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         assumeThat(sessionRule.env.shouldShutdownOnCrash(), equalTo(false))
 
         sessionRule.session.loadUri(CONTENT_CRASH_URL)
