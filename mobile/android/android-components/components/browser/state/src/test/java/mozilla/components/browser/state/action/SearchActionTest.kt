@@ -42,7 +42,7 @@ class SearchActionTest {
             regionSearchEngines = searchEngineList,
             regionDefaultSearchEngineId = "id2",
             customSearchEngines = emptyList(),
-            defaultSearchEngineId = null,
+            userSelectedSearchEngineId = null,
             hiddenSearchEngines = emptyList()
         )).joinBlocking()
 
@@ -76,7 +76,7 @@ class SearchActionTest {
             customSearchEngines = searchEngineList,
             regionSearchEngines = emptyList(),
             regionDefaultSearchEngineId = "default",
-            defaultSearchEngineId = null,
+            userSelectedSearchEngineId = null,
             hiddenSearchEngines = emptyList()
         )).joinBlocking()
 
@@ -167,7 +167,7 @@ class SearchActionTest {
     }
 
     @Test
-    fun `SetDefaultSearchEngineAction sets a default search engine id`() {
+    fun `SelectSearchEngineAction sets a default search engine id`() {
         val searchEngine = SearchEngine(
             id = "id1",
             name = "search1",
@@ -183,17 +183,17 @@ class SearchActionTest {
             )
         )
 
-        assertNull(store.state.search.defaultSearchEngineId)
+        assertNull(store.state.search.userSelectedSearchEngineId)
 
-        store.dispatch(SearchAction.SetDefaultSearchEngineAction(searchEngine.id)).joinBlocking()
-        assertEquals(searchEngine.id, store.state.search.defaultSearchEngineId)
+        store.dispatch(SearchAction.SelectSearchEngineAction(searchEngine.id)).joinBlocking()
+        assertEquals(searchEngine.id, store.state.search.userSelectedSearchEngineId)
 
-        assertEquals(searchEngine.id, store.state.search.defaultSearchEngineId)
+        assertEquals(searchEngine.id, store.state.search.userSelectedSearchEngineId)
 
-        store.dispatch(SearchAction.SetDefaultSearchEngineAction("unrecognized_id")).joinBlocking()
+        store.dispatch(SearchAction.SelectSearchEngineAction("unrecognized_id")).joinBlocking()
         // We allow setting an ID of a search engine that is not in the state since loading happens
         // asynchronously and the search engine may not be loaded yet.
-        assertEquals("unrecognized_id", store.state.search.defaultSearchEngineId)
+        assertEquals("unrecognized_id", store.state.search.userSelectedSearchEngineId)
     }
 
     @Test

@@ -45,7 +45,7 @@ class SearchMiddleware(
             is SearchAction.SetRegionAction -> loadSearchEngines(context.store, action.regionState)
             is SearchAction.UpdateCustomSearchEngineAction -> saveCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> removeCustomSearchEngine(action)
-            is SearchAction.SetDefaultSearchEngineAction -> updateDefaultSearchEngine(action)
+            is SearchAction.SelectSearchEngineAction -> updateSearchEngineSelection(action)
         }
 
         next(action)
@@ -61,7 +61,7 @@ class SearchMiddleware(
         region: RegionState
     ) = scope.launch {
         val regionBundle = async(ioDispatcher) { bundleStorage.load(region, coroutineContext = ioDispatcher) }
-        val defaultSearchEngineId = async(ioDispatcher) { metadataStorage.getDefaultSearchEngineId() }
+        val userSelectedSearchEngineId = async(ioDispatcher) { metadataStorage.getUserSelectedSearchEngineId() }
         val customSearchEngines = async(ioDispatcher) { customStorage.loadSearchEngineList() }
         val hiddenSearchEngineIds = async(ioDispatcher) { metadataStorage.getHiddenSearchEngines() }
 
@@ -78,7 +78,7 @@ class SearchMiddleware(
         val action = SearchAction.SetSearchEnginesAction(
             regionSearchEngines = filteredRegionSearchEngines,
             regionDefaultSearchEngineId = regionBundle.await().defaultSearchEngineId,
-            defaultSearchEngineId = defaultSearchEngineId.await(),
+            userSelectedSearchEngineId = userSelectedSearchEngineId.await(),
             customSearchEngines = customSearchEngines.await(),
             hiddenSearchEngines = hiddenSearchEngines
         )
@@ -86,10 +86,10 @@ class SearchMiddleware(
         store.dispatch(action)
     }
 
-    private fun updateDefaultSearchEngine(
-        action: SearchAction.SetDefaultSearchEngineAction
+    private fun updateSearchEngineSelection(
+        action: SearchAction.SelectSearchEngineAction
     ) = scope.launch {
-        metadataStorage.setDefaultSearchEngineId(action.searchEngineId)
+        metadataStorage.setUserSelectedSearchEngineId(action.searchEngineId)
     }
 
     private fun removeCustomSearchEngine(
@@ -164,12 +164,12 @@ class SearchMiddleware(
          * Gets the ID of the default search engine the user has picked. Returns `null` if the user
          * has not made a choice.
          */
-        suspend fun getDefaultSearchEngineId(): String?
+        suspend fun getUserSelectedSearchEngineId(): String?
 
         /**
          * Sets the ID of the default search engine the user has picked.
          */
-        suspend fun setDefaultSearchEngineId(id: String)
+        suspend fun setUserSelectedSearchEngineId(id: String)
 
         /**
          * Sets the list of IDs of hidden search engines.

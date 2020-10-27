@@ -32,7 +32,7 @@ class BrowserStoreKtTest {
                             type = SearchEngine.Type.BUNDLED
                         )
                     ),
-                    defaultSearchEngineId = "google",
+                    userSelectedSearchEngineId = "google",
                     complete = true
                 )
             )
@@ -40,7 +40,7 @@ class BrowserStoreKtTest {
 
         val latch = CountDownLatch(1)
 
-        store.waitForDefaultSearchEngine { searchEngine ->
+        store.waitForSelectedOrDefaultSearchEngine { searchEngine ->
             assertNotNull(searchEngine)
             assertEquals("google", searchEngine!!.id)
             latch.countDown()
@@ -55,7 +55,7 @@ class BrowserStoreKtTest {
 
         val latch = CountDownLatch(1)
 
-        store.waitForDefaultSearchEngine { searchEngine ->
+        store.waitForSelectedOrDefaultSearchEngine { searchEngine ->
             assertNotNull(searchEngine)
             assertEquals("google", searchEngine!!.id)
             latch.countDown()
@@ -70,7 +70,7 @@ class BrowserStoreKtTest {
                     type = SearchEngine.Type.BUNDLED
                 )
             ),
-            defaultSearchEngineId = null,
+            userSelectedSearchEngineId = null,
             regionDefaultSearchEngineId = "google",
             customSearchEngines = emptyList(),
             hiddenSearchEngines = emptyList()
@@ -85,14 +85,14 @@ class BrowserStoreKtTest {
 
         val latch = CountDownLatch(1)
 
-        store.waitForDefaultSearchEngine { searchEngine ->
+        store.waitForSelectedOrDefaultSearchEngine { searchEngine ->
             assertNull(searchEngine)
             latch.countDown()
         }
 
         store.dispatch(SearchAction.SetSearchEnginesAction(
             regionSearchEngines = listOf(),
-            defaultSearchEngineId = null,
+            userSelectedSearchEngineId = null,
             regionDefaultSearchEngineId = "default",
             customSearchEngines = emptyList(),
             hiddenSearchEngines = emptyList()

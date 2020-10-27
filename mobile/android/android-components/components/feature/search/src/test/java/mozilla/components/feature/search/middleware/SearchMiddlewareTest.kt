@@ -110,13 +110,13 @@ class SearchMiddlewareTest {
         wait(store, dispatcher)
 
         assertTrue(store.state.search.customSearchEngines.isNotEmpty())
-        assertNull(store.state.search.defaultSearchEngineId)
+        assertNull(store.state.search.userSelectedSearchEngineId)
     }
 
     @Test
     fun `Loads default search engine ID`() {
         val storage = SearchMetadataStorage(testContext)
-        runBlocking { storage.setDefaultSearchEngineId("test-id") }
+        runBlocking { storage.setUserSelectedSearchEngineId("test-id") }
 
         val middleware = SearchMiddleware(
             testContext,
@@ -135,7 +135,7 @@ class SearchMiddlewareTest {
 
         wait(store, dispatcher)
 
-        assertEquals("test-id", store.state.search.defaultSearchEngineId)
+        assertEquals("test-id", store.state.search.userSelectedSearchEngineId)
     }
 
     @Test
@@ -157,13 +157,13 @@ class SearchMiddlewareTest {
 
             wait(store, dispatcher)
 
-            assertNull(store.state.search.defaultSearchEngineId)
+            assertNull(store.state.search.userSelectedSearchEngineId)
 
-            store.dispatch(SearchAction.SetDefaultSearchEngineAction(id)).joinBlocking()
+            store.dispatch(SearchAction.SelectSearchEngineAction(id)).joinBlocking()
 
             wait(store, dispatcher)
 
-            assertEquals(id, store.state.search.defaultSearchEngineId)
+            assertEquals(id, store.state.search.userSelectedSearchEngineId)
         }
 
         run {
@@ -180,7 +180,7 @@ class SearchMiddlewareTest {
 
             wait(store, dispatcher)
 
-            assertEquals(id, store.state.search.defaultSearchEngineId)
+            assertEquals(id, store.state.search.userSelectedSearchEngineId)
         }
     }
 

@@ -11,10 +11,11 @@ import mozilla.components.browser.state.search.SearchEngine
  * Value type that represents the state of search.
  *
  * @property region The region of the user.
- * @property regionSearchEngines The list of [SearchEngine]s for the "home" region of the user.
- * @property customSearchEngines The list of custom [SearchEngine]s of the user.
- * @property hiddenSearchEngines The list of [SearchEngine]s the user has explicitly hidden.
- * @property defaultSearchEngineId The ID of default [SearchEngine]
+ * @property regionSearchEngines The list of bundled [SearchEngine]s for the "home" region of the user.
+ * @property customSearchEngines The list of custom [SearchEngine]s, added by the user.
+ * @property hiddenSearchEngines The list of bundled [SearchEngine]s the user has explicitly hidden.
+ * @property userSelectedSearchEngineId The ID of the default [SearchEngine] selected by the user. Or
+ * `null` if the user hasn't made an explicit choice.
  * @property regionDefaultSearchEngineId The ID of the default [SearchEngine] of the "home" region
  * of the user.
  * @property complete Flag that indicates whether loading the list of search engines has completed.
@@ -25,7 +26,7 @@ data class SearchState(
     val regionSearchEngines: List<SearchEngine> = emptyList(),
     val customSearchEngines: List<SearchEngine> = emptyList(),
     val hiddenSearchEngines: List<SearchEngine> = emptyList(),
-    val defaultSearchEngineId: String? = null,
+    val userSelectedSearchEngineId: String? = null,
     val regionDefaultSearchEngineId: String? = null,
     val complete: Boolean = false
 )
@@ -37,13 +38,15 @@ val SearchState.searchEngines: List<SearchEngine>
     get() = (regionSearchEngines + customSearchEngines)
 
 /**
- * The default search engine of the user.
+ * The primary search engine to be used by default for searches. This will either be the user
+ * selected search engine, if the user has made an explicit choice, or the default search engine for
+ * the user's region.
  */
-val SearchState.defaultSearchEngine: SearchEngine?
+val SearchState.selectedOrDefaultSearchEngine: SearchEngine?
     get() {
         // Does the user have a default search engine set and is it in the list of available search engines?
-        if (defaultSearchEngineId != null) {
-            searchEngines.find { engine -> defaultSearchEngineId == engine.id }?.let { return it }
+        if (userSelectedSearchEngineId != null) {
+            searchEngines.find { engine -> userSelectedSearchEngineId == engine.id }?.let { return it }
         }
 
         // Do we have a default search engine for the region of the user and is it available?
