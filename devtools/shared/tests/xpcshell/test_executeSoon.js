@@ -11,7 +11,6 @@
  */
 
 var { executeSoon } = require("devtools/shared/DevToolsUtils");
-var defer = require("devtools/shared/defer");
 
 add_task(async function() {
   await waitForTick();
@@ -30,7 +29,7 @@ add_task(async function() {
 });
 
 function waitForTick() {
-  const deferred = defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    executeSoon(resolve);
+  });
 }
