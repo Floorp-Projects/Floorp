@@ -64,7 +64,7 @@ class WebRequestService final {
       dom::ContentParent* aContentParent);
 
  private:
-  ~WebRequestService();
+  ~WebRequestService() = default;
 
   friend ChannelEntry;
 
