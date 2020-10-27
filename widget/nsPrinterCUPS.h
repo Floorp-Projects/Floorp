@@ -98,4 +98,28 @@ class nsPrinterCUPS final : public nsPrinterBase {
   mutable PrinterInfoMutex mPrinterInfoMutex;
 };
 
+// There's no standard setting in Core Printing for monochrome. Or rather,
+// there is (PMSetColorMode) but it does nothing. Similarly, the relevant gtk
+// setting only works on Windows, yay.
+//
+// So on CUPS the right setting to use depends on the print driver. So we set /
+// look for a variety of driver-specific keys that are known to work across
+// printers.
+//
+// We set all the known settings, because the alternative to that is parsing ppd
+// files from the printer and find the relevant known choices that can apply,
+// and that is a lot more complex, similarly sketchy (requires the same amount
+// of driver-specific knowledge), and requires using deprecated CUPS APIs.
+#define CUPS_EACH_MONOCHROME_PRINTER_SETTING(macro_)         \
+  macro_("ColorModel", "Gray")                /* Generic */  \
+      macro_("BRMonoColor", "Mono")           /* Brother */  \
+      macro_("BRPrintQuality", "Black")       /* Brother */  \
+      macro_("INK", "MONO")                   /* Epson */    \
+      macro_("HPColorMode", "GrayscalePrint") /* HP */       \
+      macro_("ColorMode", "Mono")             /* Samsung */  \
+      macro_("PrintoutMode", "Normal.Gray")   /* Foomatic */ \
+      macro_("ProcessColorModel", "Mono")     /* Samsung */  \
+      macro_("ARCMode", "CMBW")               /* Sharp */    \
+      macro_("XRXColor", "BW")                /* Xerox */
+
 #endif /* nsPrinterCUPS_h___ */
