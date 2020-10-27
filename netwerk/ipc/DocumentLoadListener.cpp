@@ -543,8 +543,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   // OnStart/StopRequest with itself. We don't need this, and instead
   // we want the original request so that we get different ones for
   // each part of a multipart channel.
-  nsCOMPtr<nsIViewSourceChannel> viewSourceChannel;
-  if (aPid && (viewSourceChannel = do_QueryInterface(mChannel))) {
+  if (nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
+          do_QueryInterface(mChannel)) {
     viewSourceChannel->SetReplaceRequest(false);
   }
 
@@ -2121,7 +2121,7 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       VariantIndex<0>{}, OnStartRequestParams{aRequest}});
 
   if (mOpenPromiseResolved || mInitiatedRedirectToRealChannel) {
-    // I we have already resolved the promise, there's no point to continue
+    // If we have already resolved the promise, there's no point to continue
     // attempting a process switch or redirecting to the real channel.
     // We can also have multiple calls to OnStartRequest when dealing with
     // multi-part content, but only want to redirect once.
@@ -2174,6 +2174,31 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     // If we're not switching, then check if we're currently remote.
     if (loadingContext->GetContentParent()) {
       willBeRemote = true;
+    }
+  }
+
+  // If the channel is going to be handled in the parent process, resume
+  // replacing the `request` parameter. This is necessary as docshell listeners
+  // expect to be able to QueryInterface the nsIRequest parameter to
+  // `nsIViewSourceChannel`.
+  nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
+      do_QueryInterface(mChannel);
+  if (!willBeRemote && viewSourceChannel) {
+    MOZ_ALWAYS_SUCCEEDS(viewSourceChannel->SetReplaceRequest(true));
+
+    // Replace the request parameter for already-recorded calls.
+    for (auto& variant : mStreamListenerFunctions) {
+      variant.match(
+          [&](OnStartRequestParams& aParams) {
+            aParams.request = viewSourceChannel;
+          },
+          [&](OnDataAvailableParams& aParams) {
+            aParams.request = viewSourceChannel;
+          },
+          [&](OnStopRequestParams& aParams) {
+            aParams.request = viewSourceChannel;
+          },
+          [&](OnAfterLastPartParams& aParams) {});
     }
   }
 
