@@ -500,6 +500,9 @@ var webrtcUI = {
    * newest stream's <xul:browser> and window, focus the window, and
    * select the browser.
    *
+   * For camera and microphone streams, this will also revoke any associated
+   * persistent permissions from SitePermissions.
+   *
    * @param {Array<Object>} activeStreams - An array of streams obtained via webrtcUI.getActiveStreams.
    * @param {boolean} stopCameras - True to stop the camera streams (defaults to true)
    * @param {boolean} stopMics - True to stop the microphone streams (defaults to true)
@@ -572,49 +575,54 @@ var webrtcUI = {
       }
 
       for (let permission of permissions) {
-        let windowId = tab._sharingState.webRTC.windowId;
+        if (clearRequested[permission.id]) {
+          let windowId = tab._sharingState.webRTC.windowId;
 
-        if (permission.id == "screen") {
-          windowId = `screen:${webrtcState.windowId}`;
-        } else if (permission.id == "camera" || permission.id == "microphone") {
-          // If we set persistent permissions or the sharing has
-          // started due to existing persistent permissions, we need
-          // to handle removing these even for frames with different hostnames.
-          let origins = browser.getDevicePermissionOrigins("webrtc");
-          for (let origin of origins) {
-            // It's not possible to stop sharing one of camera/microphone
-            // without the other.
-            let principal;
-            for (let id of ["camera", "microphone"]) {
-              if (webrtcState[id]) {
-                if (!principal) {
-                  principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-                    origin
-                  );
-                }
-                let perm = SitePermissions.getForPrincipal(principal, id);
-                if (
-                  perm.state == SitePermissions.ALLOW &&
-                  perm.scope == SitePermissions.SCOPE_PERSISTENT
-                ) {
-                  SitePermissions.removeFromPrincipal(principal, id);
+          if (permission.id == "screen") {
+            windowId = `screen:${webrtcState.windowId}`;
+          } else if (
+            permission.id == "camera" ||
+            permission.id == "microphone"
+          ) {
+            // If we set persistent permissions or the sharing has
+            // started due to existing persistent permissions, we need
+            // to handle removing these even for frames with different hostnames.
+            let origins = browser.getDevicePermissionOrigins("webrtc");
+            for (let origin of origins) {
+              // It's not possible to stop sharing one of camera/microphone
+              // without the other.
+              let principal;
+              for (let id of ["camera", "microphone"]) {
+                if (webrtcState[id]) {
+                  if (!principal) {
+                    principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                      origin
+                    );
+                  }
+                  let perm = SitePermissions.getForPrincipal(principal, id);
+                  if (
+                    perm.state == SitePermissions.ALLOW &&
+                    perm.scope == SitePermissions.SCOPE_PERSISTENT
+                  ) {
+                    SitePermissions.removeFromPrincipal(principal, id);
+                  }
                 }
               }
             }
           }
+
+          let bc = webrtcState.browsingContext;
+          bc.currentWindowGlobal
+            .getActor("WebRTC")
+            .sendAsyncMessage("webrtc:StopSharing", windowId);
+          webrtcUI.forgetActivePermissionsFromBrowser(browser);
+
+          SitePermissions.removeFromPrincipal(
+            browser.contentPrincipal,
+            permission.id,
+            browser
+          );
         }
-
-        let bc = webrtcState.browsingContext;
-        bc.currentWindowGlobal
-          .getActor("WebRTC")
-          .sendAsyncMessage("webrtc:StopSharing", windowId);
-        webrtcUI.forgetActivePermissionsFromBrowser(browser);
-
-        SitePermissions.removeFromPrincipal(
-          browser.contentPrincipal,
-          permission.id,
-          browser
-        );
       }
     }
 
