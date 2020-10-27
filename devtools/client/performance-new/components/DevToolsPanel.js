@@ -39,6 +39,9 @@ const Description = createFactory(
 const DevToolsPresetSelection = createFactory(
   require("devtools/client/performance-new/components/DevToolsPresetSelection")
 );
+const OnboardingMessage = createFactory(
+  require("devtools/client/performance-new/components/OnboardingMessage")
+);
 
 const selectors = require("devtools/client/performance-new/store/selectors");
 
@@ -60,6 +63,7 @@ class DevToolsPanel extends PureComponent {
 
     return div(
       { className: `perf perf-devtools` },
+      OnboardingMessage(),
       RecordingButton(),
       Description(),
       hr({ className: "perf-presets-hr" }),

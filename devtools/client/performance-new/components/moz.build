@@ -9,6 +9,7 @@ DevToolsModules(
     "DevToolsPanel.js",
     "DevToolsPresetSelection.js",
     "DirectoryPicker.js",
+    "OnboardingMessage.js",
     "Presets.js",
     "ProfilerEventHandling.js",
     "Range.js",
