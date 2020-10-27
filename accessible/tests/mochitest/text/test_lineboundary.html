@@ -206,6 +206,20 @@
                          [3, 3, kEmbedChar + kEmbedChar + " f", 2, 6],
                          [4, 6, kEmbedChar + " f", 3, 6] ]);
 
+      // Inline block span with nested spans and BRs
+      testTextAtOffset([ "inlineBlockWithSpansAndBrs" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a\n", 0, 2],
+                         [2, 3, "b\n", 2, 4],
+                         [4, 5, "c", 4, 5] ]);
+
+      // Spans with BRs and whitespaces.      
+      testTextAtOffset([ "spansWithWhitespaces" ], BOUNDARY_LINE_START,
+                       [ [0, 6, "Line 1\n", 0, 7],
+                         [7, 13, "Line 2\n", 7, 14],
+                         [14, 20, "Line 3\n", 14, 21],
+                         [21, 27, "Line 4\n", 21, 28],
+                         [28, 28, "", 28, 28] ]);
+
       SimpleTest.finish();
     }
 
@@ -313,5 +327,15 @@ two words
   <div id="noBrInEmbedButOneBefore">a<br>b <a href="https://mozilla.org/">c</a> d</div>
   <div id="noBrInEmbedButOneAfter">a <a href="https://mozilla.org/">b</a><br>c</div>
   <div id="twoEmbedsWithBRs">a <a href="https://mozilla.org">b<br>c</a><a href="https://mozilla.org">d<br>e</a> f</div>
+  <span id="inlineBlockWithSpansAndBrs" style="display: inline-block;"><span>a<br>b<br><span></span></span>c</span>
+  <div id="spansWithWhitespaces">				<!-- Don't indent the following block -->
+<span>Line 1<br/>
+</span>
+<span>Line 2<br/>
+</span>
+<span>Line 3<br/>
+</span>
+<span>Line 4<br/>
+</span></div><!-- OK to indent again -->
 </body>
 </html>
