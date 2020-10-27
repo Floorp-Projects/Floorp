@@ -110,9 +110,11 @@ extern bool InstantiateStencilsForDelazify(JSContext* cx,
 // This is useful for off-thread compilation/decode, to perform extra task
 // of-main-thread, and reduce task on main-thread.
 extern bool PrepareForInstantiate(JSContext* cx,
-                                  CompilationInfo& compilationInfo);
+                                  CompilationInfo& compilationInfo,
+                                  CompilationGCOutput& gcOutput);
 extern bool PrepareForInstantiate(JSContext* cx,
-                                  CompilationInfoVector& compilationInfos);
+                                  CompilationInfoVector& compilationInfos,
+                                  CompilationGCOutput& gcOutput);
 
 }  // namespace frontend
 

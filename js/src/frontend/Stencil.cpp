@@ -654,7 +654,7 @@ static void FunctionsFromExistingLazy(CompilationInfo& compilationInfo,
 bool CompilationInfo::instantiateStencils(JSContext* cx,
                                           CompilationGCOutput& gcOutput) {
   if (!preparationIsPerformed) {
-    if (!prepareForInstantiate(cx)) {
+    if (!prepareForInstantiate(cx, gcOutput)) {
       return false;
     }
   }
@@ -782,7 +782,7 @@ bool CompilationInfoVector::instantiateStencils(JSContext* cx,
   return true;
 }
 
-bool CompilationInfo::prepareForInstantiate(JSContext* cx) {
+bool CompilationInfo::prepareInputAndStencilForInstantiate(JSContext* cx) {
   if (!input.atomCache.atoms.reserve(
           stencil.parserAtoms.requiredNonStaticAtomCount())) {
     ReportOutOfMemory(cx);
@@ -794,13 +794,39 @@ bool CompilationInfo::prepareForInstantiate(JSContext* cx) {
   return true;
 }
 
-bool CompilationInfoVector::prepareForInstantiate(JSContext* cx) {
-  if (!initial.prepareForInstantiate(cx)) {
+bool CompilationInfo::prepareGCOutputForInstantiate(
+    JSContext* cx, CompilationGCOutput& gcOutput) {
+  if (!gcOutput.functions.reserve(stencil.scriptData.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  if (!gcOutput.scopes.reserve(stencil.scopeData.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
+bool CompilationInfo::prepareForInstantiate(JSContext* cx,
+                                            CompilationGCOutput& gcOutput) {
+  if (!prepareInputAndStencilForInstantiate(cx)) {
+    return false;
+  }
+  if (!prepareGCOutputForInstantiate(cx, gcOutput)) {
+    return false;
+  }
+  return true;
+}
+
+bool CompilationInfoVector::prepareForInstantiate(
+    JSContext* cx, CompilationGCOutput& gcOutput) {
+  if (!initial.prepareForInstantiate(cx, gcOutput)) {
     return false;
   }
 
   for (auto& delazification : delazifications) {
-    if (!delazification.prepareForInstantiate(cx)) {
+    if (!delazification.prepareInputAndStencilForInstantiate(cx)) {
       return false;
     }
   }
