@@ -414,8 +414,7 @@ class MacroAssemblerX86Shared : public Assembler {
                             unsigned lane);
 
   void shuffleInt8x16(FloatRegister lhs, FloatRegister rhs,
-                      FloatRegister output, FloatRegister temp,
-                      const uint8_t lanes[16]);
+                      FloatRegister output, const uint8_t lanes[16]);
   void blendInt8x16(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
                     FloatRegister temp, const uint8_t lanes[16]);
   void blendInt16x8(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
