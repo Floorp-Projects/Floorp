@@ -39,11 +39,13 @@ object MockWebServerHelper {
      */
     fun createAlwaysOkMockWebServer(): MockWebServer {
         return MockWebServer().apply {
-            setDispatcher(object : Dispatcher() {
+            val dispatcher = object : Dispatcher() {
+                @Throws(InterruptedException::class)
                 override fun dispatch(request: RecordedRequest): MockResponse {
                     return MockResponse().setBody("OK")
                 }
-            })
+            }
+            this.dispatcher = dispatcher
         }
     }
 }
@@ -62,10 +64,10 @@ const val HTTP_NOT_FOUND = 404
 class AndroidAssetDispatcher : Dispatcher() {
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
-    override fun dispatch(request: RecordedRequest?): MockResponse {
+    override fun dispatch(request: RecordedRequest): MockResponse {
         val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
         try {
-            val pathWithoutQueryParams = Uri.parse(request?.path?.drop(1)).path
+            val pathWithoutQueryParams = Uri.parse(request.path!!.drop(1)).path
             assetManager.open(pathWithoutQueryParams!!).use { inputStream ->
                 return fileToResponse(pathWithoutQueryParams, inputStream)
             }
@@ -81,7 +83,7 @@ class AndroidAssetDispatcher : Dispatcher() {
 private fun fileToResponse(path: String, file: InputStream): MockResponse {
     return MockResponse()
         .setResponseCode(HTTP_OK)
-        .setBody(fileToBytes(file))
+        .setBody(fileToBytes(file)!!)
         .addHeader("content-type: " + contentType(path))
 }
 
