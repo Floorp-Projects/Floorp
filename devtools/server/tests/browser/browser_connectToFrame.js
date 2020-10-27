@@ -17,55 +17,57 @@ add_task(async function() {
   browser.setAttribute("type", "content");
   document.body.appendChild(browser);
 
-  const mm = browser.messageManager;
+  await TestUtils.waitForCondition(
+    () => browser.browsingContext.currentWindowGlobal,
+    "browser has no window global"
+  );
 
   // Register a test actor in the child process so that we can know if and when
   // this fake actor is destroyed.
-  mm.loadFrameScript(
-    "data:text/javascript,new " +
-      function FrameScriptScope() {
-        /* global sendAsyncMessage */
-        /* eslint-disable no-shadow */
-        const { require } = ChromeUtils.import(
-          "resource://devtools/shared/Loader.jsm"
+  await SpecialPowers.spawn(browser, [], () => {
+    /* eslint-disable no-shadow */
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
+    );
+    const { DevToolsServer } = require("devtools/server/devtools-server");
+    const {
+      ActorRegistry,
+    } = require("devtools/server/actors/utils/actor-registry");
+    /* eslint-enable no-shadow */
+
+    DevToolsServer.init();
+
+    const { Actor } = require("devtools/shared/protocol/Actor");
+    class ConnectToFrameTestActor extends Actor {
+      constructor(conn, tab) {
+        super(conn);
+        dump("instantiate test actor\n");
+        this.typeName = "connectToFrameTest";
+        this.requestTypes = {
+          hello: this.hello,
+        };
+      }
+      hello() {
+        return { msg: "world" };
+      }
+
+      destroy() {
+        SpecialPowers.notifyObserversInParentProcess(
+          null,
+          "devtools-test-actor-destroyed",
+          ""
         );
-        const { DevToolsServer } = require("devtools/server/devtools-server");
-        const {
-          ActorRegistry,
-        } = require("devtools/server/actors/utils/actor-registry");
-        /* eslint-enable no-shadow */
+      }
+    }
 
-        DevToolsServer.init();
-
-        const { Actor } = require("devtools/shared/protocol/Actor");
-        class ConnectToFrameTestActor extends Actor {
-          constructor(conn, tab) {
-            super(conn);
-            dump("instantiate test actor\n");
-            this.typeName = "connectToFrameTest";
-            this.requestTypes = {
-              hello: this.hello,
-            };
-          }
-          hello() {
-            return { msg: "world" };
-          }
-
-          destroy() {
-            sendAsyncMessage("test-actor-destroyed", null);
-          }
-        }
-
-        ActorRegistry.addTargetScopedActor(
-          {
-            constructorName: "ConnectToFrameTestActor",
-            constructorFun: ConnectToFrameTestActor,
-          },
-          "connectToFrameTestActor"
-        );
+    ActorRegistry.addTargetScopedActor(
+      {
+        constructorName: "ConnectToFrameTestActor",
+        constructorFun: ConnectToFrameTestActor,
       },
-    false
-  );
+      "connectToFrameTestActor"
+    );
+  });
 
   // Instantiate a minimal server
   DevToolsServer.init();
@@ -99,13 +101,9 @@ add_task(async function() {
 
     // Ensure that our test actor got cleaned up;
     // its destroy method should be called
-    const onActorDestroyed = new Promise(resolve => {
-      mm.addMessageListener("test-actor-destroyed", function listener() {
-        mm.removeMessageListener("test-actor-destroyed", listener);
-        ok(true, "Actor is cleaned up");
-        resolve();
-      });
-    });
+    const onActorDestroyed = TestUtils.topicObserved(
+      "devtools-test-actor-destroyed"
+    );
 
     // Then close the client. That should end up cleaning our test actor
     await client.close();
