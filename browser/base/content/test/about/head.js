@@ -241,10 +241,12 @@ async function waitForBookmarksToolbarVisibility({
   visible,
   message,
 }) {
-  return TestUtils.waitForCondition(() => {
+  let result = await TestUtils.waitForCondition(() => {
     let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
     return visible ? !toolbar.collapsed : toolbar.collapsed;
   }, message || "waiting for toolbar to become " + (visible ? "visible" : "hidden"));
+  ok(result, message);
+  return result;
 }
 
 function isBookmarksToolbarVisible(win = window) {
