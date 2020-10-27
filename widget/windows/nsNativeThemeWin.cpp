@@ -709,7 +709,6 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Tabpanels:
       return Some(eUXTab);
     case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarbuttonUp:
@@ -1113,7 +1112,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::MozWinBrowsertabbarToolbox:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::Scrollcorner: {
       aState = 0;
       aPart = RP_BACKGROUND;
@@ -2619,7 +2617,6 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
   }
 
   switch (aAppearance) {
-    case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::Scrollbar:
     case StyleAppearance::Scrollcorner:
     case StyleAppearance::Statusbar:

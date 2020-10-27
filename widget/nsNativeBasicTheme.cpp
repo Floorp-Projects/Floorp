@@ -1369,7 +1369,6 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
           static_cast<uint32_t>(kMinimumSpinnerButtonWidth) * dpiRatio;
       break;
     case StyleAppearance::Scrollbar:
-    case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarbuttonUp:
