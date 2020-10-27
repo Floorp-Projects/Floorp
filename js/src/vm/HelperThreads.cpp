@@ -689,7 +689,7 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
       frontend::CompileGlobalScriptToStencil(cx, options, data, scopeKind);
 
   if (compilationInfo_) {
-    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_)) {
+    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_, gcOutput_)) {
       compilationInfo_ = nullptr;
     }
   }
@@ -755,7 +755,7 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   compilationInfo_ = frontend::ParseModuleToStencil(cx, options, data);
 
   if (compilationInfo_) {
-    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_)) {
+    if (!frontend::PrepareForInstantiate(cx, *compilationInfo_, gcOutput_)) {
       compilationInfo_ = nullptr;
     }
   }
@@ -802,7 +802,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     compilationInfos_ = std::move(compilationInfos.get());
 
     if (compilationInfos_) {
-      if (!frontend::PrepareForInstantiate(cx, *compilationInfos_)) {
+      if (!frontend::PrepareForInstantiate(cx, *compilationInfos_, gcOutput_)) {
         compilationInfos_ = nullptr;
       }
     }
