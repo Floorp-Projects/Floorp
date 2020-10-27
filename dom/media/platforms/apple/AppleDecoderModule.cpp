@@ -153,9 +153,11 @@ bool AppleDecoderModule::CanCreateVP9Decoder() {
 /* static */
 bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
   static bool sRegisterIfAvailable = []() {
-    if (VTRegisterSupplementalVideoDecoderIfAvailable) {
-      VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
-      return true;
+    if (__builtin_available(macos 10.16, *)) {
+      if (VTRegisterSupplementalVideoDecoderIfAvailable) {
+        VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
+        return true;
+      }
     }
     return false;
   }();
