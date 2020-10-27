@@ -15,6 +15,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    "MockCubeb.cpp",
     "MockMediaResource.cpp",
     "TestAudioBuffers.cpp",
     "TestAudioCallbackDriver.cpp",
