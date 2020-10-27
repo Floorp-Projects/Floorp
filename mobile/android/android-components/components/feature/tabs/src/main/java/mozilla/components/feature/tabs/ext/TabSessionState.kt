@@ -9,7 +9,9 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.tabstray.Tab
 
-internal fun TabSessionState.toTab(mediaState: MediaState.State) = Tab(
+internal fun TabSessionState.toTab(
+    mediaState: MediaState.State
+) = Tab(
     id,
     content.url,
     content.title,
@@ -19,5 +21,7 @@ internal fun TabSessionState.toTab(mediaState: MediaState.State) = Tab(
         MediaState.State.PLAYING -> Media.State.PLAYING
         MediaState.State.PAUSED -> Media.State.PAUSED
         else -> null
-    }
+    },
+    mediaSessionState?.playbackState,
+    mediaSessionState?.controller
 )

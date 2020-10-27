@@ -60,12 +60,14 @@ fun createCustomTab(
     config: CustomTabConfig = CustomTabConfig(),
     contextId: String? = null,
     engineSession: EngineSession? = null,
+    mediaSessionState: MediaSessionState? = null,
     crashed: Boolean = false
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
         content = ContentState(url),
         config = config,
+        mediaSessionState = mediaSessionState,
         contextId = contextId,
         engineState = EngineState(
             engineSession = engineSession,

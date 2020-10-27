@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property positionState The current simplified [MediaSession.PositionState] of this media session.
  * @property muted True if media session is muted.
  * @property fullscreen True if media session is fullscreen.
+ * @property timestamp The timestamp of when [MediaSessionState] was created.
  */
 data class MediaSessionState(
     val controller: MediaSession.Controller,
@@ -26,5 +27,14 @@ data class MediaSessionState(
     val features: MediaSession.Feature = MediaSession.Feature(),
     val positionState: MediaSession.PositionState = MediaSession.PositionState(),
     val muted: Boolean = false,
-    val fullscreen: Boolean = false
-)
+    val fullscreen: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+) : Comparable<MediaSessionState> {
+    override operator fun compareTo(other: MediaSessionState): Int {
+        if (playbackState == other.playbackState) {
+            return timestamp.compareTo(other.timestamp)
+        }
+
+        return playbackState.compareTo(other.playbackState)
+    }
+}

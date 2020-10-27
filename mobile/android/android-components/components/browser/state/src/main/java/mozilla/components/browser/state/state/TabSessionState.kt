@@ -74,7 +74,8 @@ fun createTab(
     lastAccess: Long = 0L,
     source: SessionState.Source = SessionState.Source.NONE,
     engineSession: EngineSession? = null,
-    crashed: Boolean = false
+    crashed: Boolean = false,
+    mediaSessionState: MediaSessionState? = null
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -93,6 +94,7 @@ fun createTab(
         engineState = EngineState(
             engineSession = engineSession,
             crashed = crashed
-        )
+        ),
+        mediaSessionState = mediaSessionState
     )
 }

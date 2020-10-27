@@ -11,10 +11,13 @@ import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.R
 import mozilla.components.feature.media.service.AbstractMediaService
+import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -188,6 +191,90 @@ class MediaNotificationTest {
         assertEquals("", notification.text)
         assertEquals("A site is playing media", notification.title)
 
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification for playing state`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
+                ))
+        )
+
+        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
+            .create(state.tabs[0], mock())
+
+        assertEquals("https://www.mozilla.org", notification.text)
+        assertEquals("Mozilla", notification.title)
+        assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification for paused state`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
+                ))
+        )
+
+        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
+            .create(state.tabs[0], mock())
+
+        assertEquals("https://www.mozilla.org", notification.text)
+        assertEquals("Mozilla", notification.title)
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification for stopped state`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla",
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.STOPPED)
+                ))
+        )
+
+        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
+            .create(state.tabs[0], mock())
+
+        assertEquals("", notification.text)
+        assertEquals("", notification.title)
+    }
+
+    @Test
+    fun `media session notification for playing state in private mode`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PLAYING)
+                ))
+        )
+
+        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
+            .create(state.tabs[0], mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+        assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+    }
+
+    @Test
+    fun `media session notification for paused state in private mode`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla", private = true,
+                    mediaSessionState = MediaSessionState(mock(), playbackState = MediaSession.PlaybackState.PAUSED)
+                ))
+        )
+
+        val notification = MediaNotification(context, AbstractMediaSessionService::class.java)
+            .create(state.tabs[0], mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
         assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
     }
 }

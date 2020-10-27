@@ -28,7 +28,10 @@ class MediaSession {
         val height: Long = 0L,
         val audioTrackCount: Int = 0,
         val videoTrackCount: Int = 0
-    )
+    ) {
+        val portrait: Boolean
+            get() = height > width
+    }
 
     /**
      * The representation of a media session's metadata.
@@ -107,6 +110,11 @@ class MediaSession {
         UNKNOWN,
 
         /**
+         * Playback of this [MediaSession] has stopped (either completed or aborted).
+         */
+        STOPPED,
+
+        /**
          * This [MediaSession] is paused.
          */
         PAUSED,
@@ -114,12 +122,7 @@ class MediaSession {
         /**
          * This [MediaSession] is currently playing.
          */
-        PLAYING,
-
-        /**
-         * Playback of this [MediaSession] has stopped (either completed or aborted).
-         */
-        STOPPED
+        PLAYING
     }
 
     /**
