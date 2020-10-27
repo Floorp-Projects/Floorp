@@ -841,6 +841,8 @@ public class GeckoViewActivity
             loadFromIntent(getIntent());
         }
 
+        mGeckoView.setDynamicToolbarMaxHeight(findViewById(R.id.toolbar).getLayoutParams().height);
+
         mToolbarView.getLocationView().setCommitListener(mCommitListener);
         mToolbarView.updateTabCount();
     }
