@@ -213,6 +213,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Mësoni më tepër</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Hapni një skedë të re Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Kërko</string>
     <!-- Text preview for larger sized widgets -->
@@ -625,6 +627,8 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Hapi skedat</string>
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Emër koleksioni</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hiqe</string>
 
@@ -1618,6 +1622,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Përfitoni maksimumin nga %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Klikoni për më tepër hollësi</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Koleksiononi gjërat që kanë rëndësi për ju</string>
