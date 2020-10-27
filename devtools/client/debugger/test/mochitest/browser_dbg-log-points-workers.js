@@ -19,7 +19,7 @@ add_task(async function() {
 
   await getDebuggerSplitConsole(dbg);
   await hasConsoleMessage(dbg, "timer");
-  const { link } = await await findConsoleMessage(dbg, "timer");
+  const { link } = await findConsoleMessage(dbg, "timer");
   is(
     link,
     "simple-worker.js:4:9",
