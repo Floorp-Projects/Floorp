@@ -3368,6 +3368,19 @@ void TestProfiler() {
 
     // Just making sure all payloads know how to (de)serialize and stream.
 
+    baseprofiler::AddMarker("m2fileio", mozilla::baseprofiler::category::OTHER,
+                            {}, mozilla::baseprofiler::markers::FileIO{}, "op2",
+                            "src2", "f2", MarkerThreadId{});
+    baseprofiler::AddMarker(
+        "m2fileio-capture", mozilla::baseprofiler::category::OTHER,
+        MarkerStack::Capture(), mozilla::baseprofiler::markers::FileIO{}, "op2",
+        "src2", "f2", MarkerThreadId{});
+    baseprofiler::AddMarker(
+        "m2fileio-take-backtrace", mozilla::baseprofiler::category::OTHER,
+        MarkerStack::TakeBacktrace(baseprofiler::profiler_capture_backtrace()),
+        mozilla::baseprofiler::markers::FileIO{}, "op2", "src2", "f2",
+        MarkerThreadId{});
+
     MOZ_RELEASE_ASSERT(
         baseprofiler::AddMarker("markers 2.0 without options (omitted)",
                                 mozilla::baseprofiler::category::OTHER));
@@ -3521,6 +3534,7 @@ void TestProfiler() {
     // Check for some expected marker schema JSON output.
     MOZ_RELEASE_ASSERT(profileSV.find("\"markerSchema\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"Text\",") != svnpos);
+    MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"FileIO\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"tracing\",") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"name\": \"UserTimingMark\",") !=
                        svnpos);
@@ -3535,6 +3549,7 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(profileSV.find("\"display\": [") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-chart\"") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"marker-table\"") != svnpos);
+    MOZ_RELEASE_ASSERT(profileSV.find("\"searchable\": true") != svnpos);
     MOZ_RELEASE_ASSERT(profileSV.find("\"format\": \"string\"") != svnpos);
     // TODO: Add more checks for what's expected in the profile. Some of them
     // are done in gtest's.
