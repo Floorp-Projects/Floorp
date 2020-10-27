@@ -9,6 +9,8 @@
 #include "FileSystemFileEntry.h"
 #include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/FileSystem.h"
+#include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"

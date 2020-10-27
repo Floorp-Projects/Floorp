@@ -7,6 +7,10 @@
 #ifndef mozilla_dom_FileSystemUtils_h
 #define mozilla_dom_FileSystemUtils_h
 
+#include "nsIGlobalObject.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+
 class nsIFile;
 class nsIRunnable;
 
