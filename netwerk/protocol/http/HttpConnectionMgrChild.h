@@ -41,12 +41,6 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
       Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
       Maybe<PAltSvcTransactionChild*> aTrans);
 
-  already_AddRefed<PWebSocketConnectionChild> AllocPWebSocketConnectionChild(
-      PHttpTransactionChild* aTransWithStickyConn);
-  mozilla::ipc::IPCResult RecvPWebSocketConnectionConstructor(
-      PWebSocketConnectionChild* aActor,
-      PHttpTransactionChild* aTransWithStickyConn) override;
-
  private:
   virtual ~HttpConnectionMgrChild();
 
