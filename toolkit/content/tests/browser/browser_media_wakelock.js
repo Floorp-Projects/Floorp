@@ -15,6 +15,8 @@ Services.scriptloader.loadSubScript(
 );
 
 const LOCATION = "https://example.com/browser/toolkit/content/tests/browser/";
+const AUDIO_WAKELOCK_NAME = "audio-playing";
+const VIDEO_WAKELOCK_NAME = "video-playing";
 
 add_task(async function testCheckWakelockWhenChangeTabVisibility() {
   await checkWakelockWhenChangeTabVisibility({
@@ -100,34 +102,38 @@ async function checkWakelockWhenChangeTabVisibility({
   );
 
   info(`wait for media starting playing`);
-  let audioWakeLock = getWakeLockState("audio-playing", lockAudio, true);
-  let videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
   await waitUntilVideoStarted(mediaTab, additionalParams);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock: lockAudio,
+    isForegroundLock: true,
+  });
+  await waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, {
+    needLock: lockVideo,
+    isForegroundLock: true,
+  });
 
   info(`switch media tab to background`);
-  const isPageConsideredAsForeground = !!additionalParams?.elementIdForEnteringPIPMode;
-  audioWakeLock = getWakeLockState(
-    "audio-playing",
-    lockAudio,
-    isPageConsideredAsForeground
-  );
-  videoWakeLock = getWakeLockState(
-    "video-playing",
-    lockVideo,
-    isPageConsideredAsForeground
-  );
   await BrowserTestUtils.switchTab(window.gBrowser, originalTab);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  const isPageConsideredAsForeground = !!additionalParams?.elementIdForEnteringPIPMode;
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock: lockAudio,
+    isForegroundLock: isPageConsideredAsForeground,
+  });
+  await waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, {
+    needLock: lockVideo,
+    isForegroundLock: isPageConsideredAsForeground,
+  });
 
   info(`switch media tab to foreground again`);
-  audioWakeLock = getWakeLockState("audio-playing", lockAudio, true);
-  videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
   await BrowserTestUtils.switchTab(window.gBrowser, mediaTab);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock: lockAudio,
+    isForegroundLock: true,
+  });
+  await waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, {
+    needLock: lockVideo,
+    isForegroundLock: true,
+  });
 
   info(`remove tab`);
   if (mediaTab.PIPWindow) {

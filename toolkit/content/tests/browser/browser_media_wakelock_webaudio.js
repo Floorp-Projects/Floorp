@@ -2,19 +2,21 @@
  * Test if wakelock can be required correctly when we play web audio. The
  * wakelock should only be required when web audio is audible.
  */
-add_task(async function testCheckWakelockWhenChangeTabVisibility() {
+
+const AUDIO_WAKELOCK_NAME = "audio-playing";
+const VIDEO_WAKELOCK_NAME = "video-playing";
+
+add_task(async function testCheckAudioWakelockWhenChangeTabVisibility() {
   await checkWakelockWhenChangeTabVisibility({
     description: "playing audible web audio",
-    lockAudio: true,
-    lockVideo: false,
+    needLock: true,
   });
   await checkWakelockWhenChangeTabVisibility({
     description: "suspended web audio",
     additionalParams: {
       suspend: true,
     },
-    lockAudio: false,
-    lockVideo: false,
+    needLock: false,
   });
 });
 
@@ -25,19 +27,23 @@ add_task(
       "about:blank"
     );
 
-    let audioWakeLock = getWakeLockState("audio-playing", true, true);
-    let videoWakeLock = getWakeLockState("video-playing", false, true);
-
     info(`make a short noise on web audio`);
-    await createWebAudioDocument(tab, { stopTimeOffset: 0.1 });
-    await audioWakeLock.check();
-    await videoWakeLock.check();
+    await Promise.all([
+      // As the sound would only happen for a really short period, calling
+      // checking wakelock first helps to ensure that we won't miss that moment.
+      waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+        needLock: true,
+        isForegroundLock: true,
+      }),
+      createWebAudioDocument(tab, { stopTimeOffset: 0.1 }),
+    ]);
+    await ensureNeverAcquireVideoWakelock();
 
-    audioWakeLock = getWakeLockState("audio-playing", false, true);
-    videoWakeLock = getWakeLockState("video-playing", false, true);
-
-    await audioWakeLock.check();
-    await videoWakeLock.check();
+    info(`audio wakelock should be released after web audio becomes silent`);
+    await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, false, {
+      needLock: false,
+    });
+    await ensureNeverAcquireVideoWakelock();
 
     await BrowserTestUtils.removeTab(tab);
   }
@@ -49,8 +55,7 @@ add_task(
 async function checkWakelockWhenChangeTabVisibility({
   description,
   additionalParams,
-  lockAudio,
-  lockVideo,
+  needLock,
   elementIdForEnteringPIPMode,
 }) {
   const originalTab = gBrowser.selectedTab;
@@ -59,25 +64,28 @@ async function checkWakelockWhenChangeTabVisibility({
     window.gBrowser,
     "about:blank"
   );
-  let audioWakeLock = getWakeLockState("audio-playing", lockAudio, true);
-  let videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
   await createWebAudioDocument(mediaTab, additionalParams);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock,
+    isForegroundLock: true,
+  });
+  await ensureNeverAcquireVideoWakelock();
 
   info(`switch media tab to background`);
-  audioWakeLock = getWakeLockState("audio-playing", lockAudio, false);
-  videoWakeLock = getWakeLockState("video-playing", lockVideo, false);
   await BrowserTestUtils.switchTab(window.gBrowser, originalTab);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock,
+    isForegroundLock: false,
+  });
+  await ensureNeverAcquireVideoWakelock();
 
   info(`switch media tab to foreground again`);
-  audioWakeLock = getWakeLockState("audio-playing", lockAudio, true);
-  videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
   await BrowserTestUtils.switchTab(window.gBrowser, mediaTab);
-  await audioWakeLock.check();
-  await videoWakeLock.check();
+  await waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+    needLock,
+    isForegroundLock: true,
+  });
+  await ensureNeverAcquireVideoWakelock();
 
   info(`remove media tab`);
   BrowserTestUtils.removeTab(mediaTab);
@@ -111,4 +119,9 @@ function createWebAudioDocument(tab, { stopTimeOffset, suspend } = {}) {
       }
     }
   );
+}
+
+function ensureNeverAcquireVideoWakelock() {
+  // Web audio won't play any video, we never need video wakelock.
+  return waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, { needLock: false });
 }
