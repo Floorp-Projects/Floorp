@@ -54,6 +54,9 @@ async function runTests() {
      *                    Set string value if the test needs to check value of
      *                    aElement.
      *                    Set undefined if the test does not need to check it.
+     *                  - valueForCanceled [optional]:
+     *                    Set string value if canceling "beforeinput" does not
+     *                    keep the value before calling aFunc.
      *                  - beforeInputEvent [optional]:
      *                    Set object which has `cancelable`, `inputType` and `data`
      *                    if a "beforeinput" event should be fired.
@@ -110,17 +113,33 @@ async function runTests() {
         inputEvent = aEvent;
       };
 
+      if (aTestData.cancelBeforeInput &&
+          (aExpected.beforeInputEvent === null || aExpected.beforeInputEvent === undefined)) {
+        ok(false,
+          `${aDescription}cancelBeforeInput must not be true for ${aTestData.action} because "beforeinput" event is not expected`);
+        return;
+      }
+
       try {
         aElement.addEventListener("beforeinput", beforeInputHandler, true);
         aElement.addEventListener("input", inputHandler, true);
+
+        let initialValue = aElement.value;
 
         aFunc();
 
         (function verify() {
           try {
             if (aExpected.value !== undefined) {
-              is(aElement.value, aExpected.value,
-                `${aDescription}the value should be "${aExpected.value}" after ${aTestData.action}`);
+              if (aTestData.cancelBeforeInput && aExpected.valueForCanceled === undefined) {
+                is(aElement.value, initialValue,
+                  `${aDescription}the value should be "${initialValue}" after ${aTestData.action}`);
+              } else {
+                let expectedValue =
+                  aTestData.cancelBeforeInput ? aExpected.valueForCanceled : aExpected.value;
+                is(aElement.value, expectedValue,
+                  `${aDescription}the value should be "${expectedValue}" after ${aTestData.action}`);
+              }
             }
             if (aExpected.beforeInputEvent === null || aExpected.beforeInputEvent === undefined) {
               ok(!beforeInputEvent,
@@ -178,6 +197,7 @@ async function runTests() {
 
     function test_typing_a_in_empty_editor(aTestData) {
       aElement.value = "";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -185,7 +205,7 @@ async function runTests() {
           sendString("a");
         },
         {
-          value: aTestData.cancelBeforeInput ? "" : "a",
+          value: "a",
           beforeInputEvent: {
             cancelable: true,
             inputType: "insertText",
@@ -209,6 +229,7 @@ async function runTests() {
 
     function test_typing_backspace_to_delete_last_character(aTestData) {
       aElement.value = "a";
+      aElement.focus();
       aElement.setSelectionStart = "a".length;
 
       runTest(
@@ -217,7 +238,7 @@ async function runTests() {
           synthesizeKey("KEY_Backspace");
         },
         {
-          value: aTestData.cancelBeforeInput ? "a" : "",
+          value: "",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteContentBackward",
@@ -241,6 +262,7 @@ async function runTests() {
 
     function test_typing_enter_in_empty_editor(aTestData) {
       aElement.value = "";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -249,7 +271,7 @@ async function runTests() {
         },
         aIsTextarea
           ? {
-              value: aTestData.cancelBeforeInput ? "" : "\n",
+              value: "\n",
               beforeInputEvent: {
                 cancelable: true,
                 inputType: "insertLineBreak",
@@ -280,9 +302,8 @@ async function runTests() {
     });
 
     (function test_setting_value(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -296,9 +317,8 @@ async function runTests() {
     });
 
     (function test_setting_empty_value(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "foo-bar";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -312,9 +332,8 @@ async function runTests() {
     });
 
     (function test_typing_space_in_empty_editor(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -339,9 +358,8 @@ async function runTests() {
     });
 
     (function test_typing_delete_at_end_of_editor(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = " ";
+      aElement.focus();
 
       runTest(
         aTestData,
@@ -362,9 +380,8 @@ async function runTests() {
     });
 
     (function test_typing_arrow_left_to_move_caret(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = " ";
+      aElement.focus();
       aElement.selectionStart = 1;
 
       runTest(
@@ -380,6 +397,7 @@ async function runTests() {
 
     function test_typing_delete_to_delete_last_character(aTestData) {
       aElement.value = " ";
+      aElement.focus();
       aElement.selectionStart = 0;
 
       runTest(
@@ -388,7 +406,7 @@ async function runTests() {
           synthesizeKey("KEY_Delete");
         },
         {
-          value: aTestData.cancelBeforeInput ? " " : "",
+          value: "",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteContentForward",
@@ -412,6 +430,7 @@ async function runTests() {
 
     function test_undoing_deleting_last_character(aTestData) {
       aElement.value = "a";
+      aElement.focus();
       aElement.selectionStart = 0;
       synthesizeKey("KEY_Delete");
 
@@ -421,7 +440,7 @@ async function runTests() {
           synthesizeKey("z", {accelKey: true});
         },
         {
-          value: aTestData.cancelBeforeInput ? "" : "a",
+          value: "a",
           beforeInputEvent: {
             cancelable: true,
             inputType: "historyUndo",
@@ -444,9 +463,8 @@ async function runTests() {
     });
 
     (function test_undoing_without_undoable_transaction(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "a";
+      aElement.focus();
       aElement.selectionStart = 0;
       synthesizeKey("KEY_Delete");
       synthesizeKey("z", {accelKey: true});
@@ -464,6 +482,7 @@ async function runTests() {
 
     function test_redoing_deleting_last_character(aTestData) {
       aElement.value = "a";
+      aElement.focus();
       aElement.selectionStart = 0;
       synthesizeKey("KEY_Delete");
       synthesizeKey("z", {accelKey: true});
@@ -474,7 +493,7 @@ async function runTests() {
           synthesizeKey("Z", {accelKey: true, shiftKey: true});
         },
         {
-          value: aTestData.cancelBeforeInput ? "a" : "",
+          value: "",
           beforeInputEvent: {
             cancelable: true,
             inputType: "historyRedo",
@@ -498,6 +517,7 @@ async function runTests() {
 
     (function test_redoing_without_redoable_transaction(aTestData) {
       aElement.value = "a";
+      aElement.focus();
       aElement.selectionStart = 0;
       synthesizeKey("KEY_Delete");
       synthesizeKey("z", {accelKey: true});
@@ -525,7 +545,7 @@ async function runTests() {
           synthesizeKey("KEY_Backspace");
         },
         {
-          value: aTestData.cancelBeforeInput ? "abc" : "",
+          value: "",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteContentBackward",
@@ -558,7 +578,7 @@ async function runTests() {
           synthesizeKey("KEY_Delete");
         },
         {
-          value: aTestData.cancelBeforeInput ? "abc" : "",
+          value: "",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteContentForward",
@@ -592,7 +612,7 @@ async function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
         },
         {
-          value: aTestData.cancelBeforeInput ? "abc def" : "abc ",
+          value: "abc ",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteWordBackward",
@@ -626,12 +646,7 @@ async function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteWordForward");
         },
         {
-         value: (function () {
-            if (aTestData.cancelBeforeInput) {
-              return "abc def";
-            }
-            return kWordSelectEatSpaceToNextWord ? "def" : " def";
-          })(),
+         value: kWordSelectEatSpaceToNextWord ? "def" : " def",
           beforeInputEvent: {
             cancelable: true,
             inputType: "deleteWordForward",
@@ -654,8 +669,6 @@ async function runTests() {
     });
 
     (function test_deleting_word_backward_from_middle_of_second_word(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
@@ -685,8 +698,6 @@ async function runTests() {
     });
 
     (function test_deleting_word_forward_from_middle_of_first_word(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
@@ -721,8 +732,6 @@ async function runTests() {
     });
 
     (function test_deleting_characters_backward_to_start_of_line(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
@@ -751,8 +760,6 @@ async function runTests() {
     });
 
     (function test_deleting_characters_forward_to_end_of_line(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
@@ -781,8 +788,6 @@ async function runTests() {
     });
 
     (function test_deleting_characters_backward_to_start_of_line_with_non_collapsed_selection(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
@@ -812,8 +817,6 @@ async function runTests() {
     });
 
     (function test_deleting_characters_forward_to_end_of_line_with_non_collapsed_selection(aTestData) {
-      ok(!aTestData.cancelBeforeInput,
-        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       aElement.value = "abc def";
       aElement.focus();
       document.documentElement.scrollTop;  // XXX Needs reflow here for working with nsFrameSelection, must be a bug.
