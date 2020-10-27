@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsNativeTheme.h"
+#include "ScrollbarDrawingMac.h"
 
 @class CellDrawView;
 @class NSProgressBarCell;
@@ -203,27 +204,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     bool reverse = false;
   };
 
-  struct ScrollbarParams {
-    ScrollbarParams()
-        : overlay(false),
-          rolledOver(false),
-          small(false),
-          horizontal(false),
-          rtl(false),
-          onDarkBackground(false),
-          custom(false) {}
-
-    bool overlay : 1;
-    bool rolledOver : 1;
-    bool small : 1;
-    bool horizontal : 1;
-    bool rtl : 1;
-    bool onDarkBackground : 1;
-    bool custom : 1;
-    // Two colors only used when custom is true.
-    nscolor trackColor = NS_RGBA(0, 0, 0, 0);
-    nscolor faceColor = NS_RGBA(0, 0, 0, 0);
-  };
+  using ScrollbarParams = mozilla::widget::ScrollbarParams;
 
   enum Widget : uint8_t {
     eColorFill,       // mozilla::gfx::sRGBColor
@@ -380,6 +361,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     enum Widget mWidget;
   };
 
+  using ScrollbarDrawingMac = mozilla::widget::ScrollbarDrawingMac;
+
   nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -451,7 +434,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                                                    mozilla::EventStates aEventState);
   mozilla::Maybe<ScaleParams> ComputeHTMLScaleParams(nsIFrame* aFrame,
                                                      mozilla::EventStates aEventState);
-  ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal);
 
   // HITheme drawing routines
   void DrawTextBox(CGContextRef context, const HIRect& inBoxRect, TextBoxParams aParams);
@@ -501,19 +483,10 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                           const UnifiedToolbarParams& aParams);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect, bool aIsMain);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
-  void DrawScrollbarThumb(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
-                          ScrollbarParams aParams);
-  void DrawScrollbarTrack(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
-                          ScrollbarParams aParams);
-  void DrawScrollCorner(mozilla::gfx::DrawTarget& aDT, const mozilla::gfx::Rect& aRect,
-                        ScrollbarParams aParams);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsFocused);
   void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsActive);
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
                                bool aSelectionIsActive);
-
-  // Scrollbars
-  bool IsParentScrollbarRolledOver(nsIFrame* aFrame);
 
   void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::gfx::DrawTarget& aDrawTarget,
                     const mozilla::gfx::Rect& aWidgetRect, const mozilla::gfx::Rect& aDirtyRect,

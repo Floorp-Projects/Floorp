@@ -23,6 +23,7 @@
 
 #if defined(XP_WIN)
 #  include "npapi.h"
+#  include "WinUtils.h"
 #endif
 
 namespace mozilla {

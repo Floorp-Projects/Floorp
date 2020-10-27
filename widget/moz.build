@@ -217,6 +217,7 @@ UNIFIED_SOURCES += [
     "PuppetBidiKeyboard.cpp",
     "PuppetWidget.cpp",
     "Screen.cpp",
+    'ScrollbarDrawingMac.cpp',
     "SharedWidgetUtils.cpp",
     "TextEventDispatcher.cpp",
     "VsyncDispatcher.cpp",
