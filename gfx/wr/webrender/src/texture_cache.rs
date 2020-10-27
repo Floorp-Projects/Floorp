@@ -912,6 +912,14 @@ impl TextureCache {
         }
     }
 
+    pub fn dump_color8_linear_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.shared_textures.array_color8_linear.dump_as_svg(output)
+    }
+
+    pub fn dump_glyphs_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.shared_textures.array_color8_glyphs.dump_as_svg(output)
+    }
+
     /// Expire picture cache tiles that haven't been referenced in the last frame.
     /// The picture cache code manually keeps tiles alive by calling `request` on
     /// them if it wants to retain a tile that is currently not visible.
@@ -1580,6 +1588,77 @@ impl TextureArray {
             uv_rect_kind: params.uv_rect_kind,
             shader
         }
+    }
+
+
+    #[allow(dead_code)]
+    pub fn dump_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        use svg_fmt::*;
+
+        let num_arrays = self.units.len() as f32;
+        let num_layers = self.layers_per_allocation as f32;
+
+        let text_spacing = 15.0;
+        let array_spacing = 60.0;
+        let layer_spacing = 10.0;
+        let layer_size = 100.0;
+
+        let svg_w = array_spacing * 2.0 + num_layers * (layer_size + layer_spacing);
+        let svg_h = layer_spacing * 2.0 + num_arrays * (text_spacing * 2.0 + array_spacing + layer_size);
+
+        writeln!(output, "{}", BeginSvg { w: svg_w, h: svg_h })?;
+
+        // Background.
+        writeln!(output,
+            "    {}",
+            rectangle(0.0, 0.0, svg_w, svg_h)
+                .inflate(1.0, 1.0)
+                .fill(rgb(50, 50, 50))
+        )?;
+
+        let mut x = array_spacing;
+        let mut y = array_spacing;
+        for unit in &self.units {
+            writeln!(output, "    {}", text(x, y, format!("{:?}", unit.texture_id)).color(rgb(230, 230, 230)))?;
+            for region in &unit.regions {
+                let slab_size = region.slab_size;
+
+                let y = y + text_spacing;
+
+                let region_text = if slab_size.width == 0 {
+                    "(empty)".to_string()
+                } else {
+                    format!("{}x{}", slab_size.width, slab_size.height)
+                };
+
+                writeln!(output, "    {}", text(x, y, region_text).color(rgb(230, 230, 230)))?;
+
+                let y = y + text_spacing;
+
+                // Texture array layer.
+                let layer_background = if region.is_empty() { rgb(30, 30, 30) } else { rgb(40, 40, 130) };
+                writeln!(output, "    {}", rectangle(x, y, layer_size, layer_size).inflate(1.0, 1.0).fill(rgb(10, 10, 10)))?;
+                writeln!(output, "    {}", rectangle(x, y, layer_size, layer_size).fill(layer_background))?;
+
+                let sw = (slab_size.width as f32 / 512.0) * layer_size;
+                let sh = (slab_size.height as f32 / 512.0) * layer_size;
+
+                for slot in &region.free_slots {
+                    let sx = x + slot.0 as f32 * sw;
+                    let sy = y + slot.1 as f32 * sh;
+
+                    // Allocation slot.
+                    writeln!(output, "    {}", rectangle(sx, sy, sw, sh).inflate(-0.5, -0.5).fill(rgb(30, 30, 30)))?;
+                }
+
+                x += layer_spacing + layer_size;
+            }
+
+            y += array_spacing + layer_size;
+            x = array_spacing;
+        }
+
+        writeln!(output, "{}", EndSvg)
     }
 }
 

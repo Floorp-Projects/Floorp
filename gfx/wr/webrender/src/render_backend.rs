@@ -1740,13 +1740,21 @@ impl RenderBackend {
                 let file_name = format!("scratch-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_frame(&doc.scratch.primitive, file_name);
                 let file_name = format!("render-tasks-{}-{}.svg", id.namespace_id.0, id.id);
-                let mut svg_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
+                let mut render_tasks_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
                     .expect("Failed to open the SVG file.");
                 dump_render_tasks_as_svg(
                     &rendered_document.frame.render_tasks,
                     &rendered_document.frame.passes,
-                    &mut svg_file
+                    &mut render_tasks_file
                 ).unwrap();
+                let file_name = format!("texture-cache-color-linear-{}-{}.svg", id.namespace_id.0, id.id);
+                let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
+                    .expect("Failed to open the SVG file.");
+                self.resource_cache.texture_cache.dump_color8_linear_as_svg(&mut texture_file).unwrap();
+                let file_name = format!("texture-cache-glyphs-{}-{}.svg", id.namespace_id.0, id.id);
+                let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
+                    .expect("Failed to open the SVG file.");
+                self.resource_cache.texture_cache.dump_glyphs_as_svg(&mut texture_file).unwrap();
             }
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
