@@ -48,40 +48,6 @@ struct Tracing {
   }
 };
 
-struct FileIO {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("FileIO");
-  }
-  static void StreamJSONMarkerData(JSONWriter& aWriter,
-                                   const ProfilerString8View& aOperation,
-                                   const ProfilerString8View& aSource,
-                                   const ProfilerString8View& aFilename,
-                                   MarkerThreadId aOperationThreadId) {
-    aWriter.StringProperty("operation", aOperation);
-    aWriter.StringProperty("source", aSource);
-    if (aFilename.Length() != 0) {
-      aWriter.StringProperty("filename", aFilename);
-    }
-    if (!aOperationThreadId.IsUnspecified()) {
-      aWriter.IntProperty("threadId", aOperationThreadId.ThreadId());
-    }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::markerChart, MS::Location::markerTable,
-              MS::Location::timelineFileIO};
-    schema.AddKeyLabelFormatSearchable("operation", "Operation",
-                                       MS::Format::string,
-                                       MS::Searchable::searchable);
-    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::string,
-                                       MS::Searchable::searchable);
-    schema.AddKeyLabelFormatSearchable("filename", "Filename",
-                                       MS::Format::filePath,
-                                       MS::Searchable::searchable);
-    return schema;
-  }
-};
-
 struct UserTimingMark {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("UserTimingMark");
