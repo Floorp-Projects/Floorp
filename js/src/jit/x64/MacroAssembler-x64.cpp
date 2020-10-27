@@ -87,6 +87,16 @@ void MacroAssemblerX64::vpandSimd128(const SimdConstant& v,
   propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
 
+void MacroAssemblerX64::vpxorSimd128(const SimdConstant& v,
+                                     FloatRegister dest) {
+  SimdData* val = getSimdData(v);
+  if (!val) {
+    return;
+  }
+  JmpSrc j = masm.vpxor_ripr(dest.encoding());
+  propagateOOM(val->uses.append(CodeOffset(j.offset())));
+}
+
 void MacroAssemblerX64::bindOffsets(
     const MacroAssemblerX86Shared::UsesVector& uses) {
   for (CodeOffset use : uses) {

@@ -745,6 +745,7 @@ void LIRGenerator::visitWasmBitselectSimd128(MWasmBitselectSimd128* ins) {
 void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
+  wasm::SimdOp op = ins->simdOp();
 
   MOZ_ASSERT(lhs->type() == MIRType::Simd128);
   MOZ_ASSERT(rhs->type() == MIRType::Simd128);
@@ -754,16 +755,79 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
     ReorderCommutative(&lhs, &rhs, ins);
   }
 
-  LDefinition tempReg0 = LDefinition::BogusTemp();
-  LDefinition tempReg1 = LDefinition::BogusTemp();
-  switch (ins->simdOp()) {
+  // Swap operands and change operation if necessary, these are all x86/x64
+  // dependent transformations.  Except where noted, this is about avoiding
+  // unnecessary moves and fixups in the code generator macros.
+  bool swap = false;
+  switch (op) {
     case wasm::SimdOp::V128AndNot: {
-      // x86/x64 specific: Code generation requires the operands to be reversed.
-      MDefinition* tmp = lhs;
-      lhs = rhs;
-      rhs = tmp;
+      // Code generation requires the operands to be reversed.
+      swap = true;
       break;
     }
+    case wasm::SimdOp::I8x16LtS: {
+      swap = true;
+      op = wasm::SimdOp::I8x16GtS;
+      break;
+    }
+    case wasm::SimdOp::I8x16GeS: {
+      swap = true;
+      op = wasm::SimdOp::I8x16LeS;
+      break;
+    }
+    case wasm::SimdOp::I16x8LtS: {
+      swap = true;
+      op = wasm::SimdOp::I16x8GtS;
+      break;
+    }
+    case wasm::SimdOp::I16x8GeS: {
+      swap = true;
+      op = wasm::SimdOp::I16x8LeS;
+      break;
+    }
+    case wasm::SimdOp::I32x4LtS: {
+      swap = true;
+      op = wasm::SimdOp::I32x4GtS;
+      break;
+    }
+    case wasm::SimdOp::I32x4GeS: {
+      swap = true;
+      op = wasm::SimdOp::I32x4LeS;
+      break;
+    }
+    case wasm::SimdOp::F32x4Gt: {
+      swap = true;
+      op = wasm::SimdOp::F32x4Lt;
+      break;
+    }
+    case wasm::SimdOp::F32x4Ge: {
+      swap = true;
+      op = wasm::SimdOp::F32x4Le;
+      break;
+    }
+    case wasm::SimdOp::F64x2Gt: {
+      swap = true;
+      op = wasm::SimdOp::F64x2Lt;
+      break;
+    }
+    case wasm::SimdOp::F64x2Ge: {
+      swap = true;
+      op = wasm::SimdOp::F64x2Le;
+      break;
+    }
+    default:
+      break;
+  }
+  if (swap) {
+    MDefinition* tmp = lhs;
+    lhs = rhs;
+    rhs = tmp;
+  }
+
+  // Allocate temp registers
+  LDefinition tempReg0 = LDefinition::BogusTemp();
+  LDefinition tempReg1 = LDefinition::BogusTemp();
+  switch (op) {
     case wasm::SimdOp::I64x2Mul:
     case wasm::SimdOp::V8x16Swizzle:
       tempReg0 = tempSimd128();
@@ -795,7 +859,7 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   LAllocation rhsAlloc =
       lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
   auto* lir = new (alloc())
-      LWasmBinarySimd128(lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
+      LWasmBinarySimd128(op, lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
   defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);
 }
 

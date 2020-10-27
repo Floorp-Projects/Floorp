@@ -36,7 +36,7 @@ void MacroAssemblerX86Shared::checkedConvertFloat32x4ToInt32x4(
 
   ScratchSimd128Scope scratch(asMasm());
   asMasm().loadConstantSimd128Int(InvalidResult, scratch);
-  packedEqualInt32x4(Operand(dest), scratch);
+  vpcmpeqd(Operand(dest), scratch, scratch);
   // TODO (bug 1156228): If we have SSE4.1, we can use PTEST here instead of
   // the two following instructions.
   vmovmskps(scratch, temp);
@@ -115,7 +115,7 @@ void MacroAssemblerX86Shared::checkedConvertFloat32x4ToUint32x4(
   // positive in A, and N, B, and V-lanes will be 0x80000000 in A. Compute a
   // mask of non-A-lanes into |tempF|.
   zeroSimd128Float(tempF);
-  packedGreaterThanInt32x4(Operand(out), tempF);
+  vpcmpgtd(Operand(out), tempF, tempF);
 
   // Clear the A-lanes in B.
   bitwiseAndSimdInt(scratch, Operand(tempF), scratch);
