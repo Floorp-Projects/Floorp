@@ -7360,7 +7360,7 @@ nscoord nsGridContainerFrame::ReflowInFragmentainer(
   // and put them in a separate array.
   nsTArray<const GridItemInfo*> sortedItems(aState.mGridItems.Length());
   nsTArray<nsIFrame*> placeholders(aState.mAbsPosItems.Length());
-  aState.mIter.Reset(CSSOrderAwareFrameIterator::eIncludeAll);
+  aState.mIter.Reset(CSSOrderAwareFrameIterator::ChildFilter::IncludeAll);
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     if (!child->IsPlaceholderFrame()) {
@@ -7860,7 +7860,7 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
 
   // Collect our grid items and sort them in grid order.
   nsTArray<GridItemInfo*> sortedItems(aState.mGridItems.Length());
-  aState.mIter.Reset(CSSOrderAwareFrameIterator::eIncludeAll);
+  aState.mIter.Reset(CSSOrderAwareFrameIterator::ChildFilter::IncludeAll);
   size_t absposIndex = 0;
   const LogicalAxis masonryAxis =
       IsMasonry(eLogicalAxisBlock) ? eLogicalAxisBlock : eLogicalAxisInline;
@@ -8376,7 +8376,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
     bSize = ReflowInFragmentainer(aState, aContentArea, aDesiredSize, aStatus,
                                   *fragmentainer, aContainerSize);
   } else {
-    aState.mIter.Reset(CSSOrderAwareFrameIterator::eIncludeAll);
+    aState.mIter.Reset(CSSOrderAwareFrameIterator::ChildFilter::IncludeAll);
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
       nsIFrame* child = *aState.mIter;
       const GridItemInfo* info = nullptr;
@@ -8686,8 +8686,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       using Filter = CSSOrderAwareFrameIterator::ChildFilter;
       using Order = CSSOrderAwareFrameIterator::OrderState;
       bool ordered = gridReflowInput.mIter.ItemsAreAlreadyInOrder();
-      auto orderState = ordered ? Order::eKnownOrdered : Order::eKnownUnordered;
-      iter.emplace(this, kPrincipalList, Filter::eSkipPlaceholders, orderState);
+      auto orderState = ordered ? Order::Ordered : Order::Unordered;
+      iter.emplace(this, kPrincipalList, Filter::SkipPlaceholders, orderState);
       gridItems.emplace();
       for (; !iter->AtEnd(); iter->Next()) {
         auto child = **iter;
@@ -9265,10 +9265,11 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   typedef CSSOrderAwareFrameIterator::OrderState OrderState;
   OrderState order =
       HasAnyStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
-          ? OrderState::eKnownOrdered
-          : OrderState::eKnownUnordered;
+          ? OrderState::Ordered
+          : OrderState::Unordered;
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::eIncludeAll, order);
+      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      order);
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
     BuildDisplayListForChild(aBuilder, child, aLists,
@@ -9448,9 +9449,9 @@ void nsGridContainerFrame::CalculateBaselines(
     // iterator ('aIter' is the forward iterator from the GridReflowInput).
     using Iter = ReverseCSSOrderAwareFrameIterator;
     auto orderState = aIter->ItemsAreAlreadyInOrder()
-                          ? Iter::OrderState::eKnownOrdered
-                          : Iter::OrderState::eKnownUnordered;
-    Iter iter(this, kPrincipalList, Iter::ChildFilter::eSkipPlaceholders,
+                          ? Iter::OrderState::Ordered
+                          : Iter::OrderState::Unordered;
+    Iter iter(this, kPrincipalList, Iter::ChildFilter::SkipPlaceholders,
               orderState);
     iter.SetItemCount(aGridItems->Length());
     FindItemInGridOrderResult gridOrderLastItem = FindLastItemInGridOrder(

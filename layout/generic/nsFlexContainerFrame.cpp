@@ -76,8 +76,8 @@ static CSSOrderAwareFrameIterator::OrderState OrderStateForIter(
     const nsFlexContainerFrame* aFlexContainer) {
   return aFlexContainer->HasAnyStateBits(
              NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
-             ? CSSOrderAwareFrameIterator::OrderState::eKnownOrdered
-             : CSSOrderAwareFrameIterator::OrderState::eKnownUnordered;
+             ? CSSOrderAwareFrameIterator::OrderState::Ordered
+             : CSSOrderAwareFrameIterator::OrderState::Unordered;
 }
 
 // Returns the OrderingProperty enum that we should pass to
@@ -85,8 +85,8 @@ static CSSOrderAwareFrameIterator::OrderState OrderStateForIter(
 static CSSOrderAwareFrameIterator::OrderingProperty OrderingPropertyForIter(
     const nsFlexContainerFrame* aFlexContainer) {
   return IsLegacyBox(aFlexContainer)
-             ? CSSOrderAwareFrameIterator::OrderingProperty::eUseBoxOrdinalGroup
-             : CSSOrderAwareFrameIterator::OrderingProperty::eUseOrder;
+             ? CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup
+             : CSSOrderAwareFrameIterator::OrderingProperty::Order;
 }
 
 // Returns the "align-items" value that's equivalent to the legacy "box-align"
@@ -2746,7 +2746,7 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayListSet childLists(tempLists, tempLists.BlockBorderBackgrounds());
 
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::eIncludeAll,
+      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
   for (; !iter.AtEnd(); iter.Next()) {
@@ -3952,8 +3952,9 @@ void nsFlexContainerFrame::GenerateFlexLines(
   uint32_t itemIdxInContainer = 0;
 
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::eIncludeAll,
-      CSSOrderAwareFrameIterator::eUnknownOrder, OrderingPropertyForIter(this));
+      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      CSSOrderAwareFrameIterator::OrderState::Unknown,
+      OrderingPropertyForIter(this));
 
   AddOrRemoveStateBits(NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER,
                        iter.ItemsAreAlreadyInOrder());
@@ -4060,7 +4061,8 @@ void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
   // Construct flex items for this flex container fragment from existing flex
   // items in SharedFlexData.
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::eSkipPlaceholders,
+      this, kPrincipalList,
+      CSSOrderAwareFrameIterator::ChildFilter::SkipPlaceholders,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
   FlexItemIterator itemIter(aData.mLines);
