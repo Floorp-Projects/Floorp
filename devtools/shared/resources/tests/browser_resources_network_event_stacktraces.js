@@ -52,13 +52,13 @@ async function testNetworkEventStackTraceResources(requestStub) {
         resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
       ) {
         ok(
-          !networkEvents.has(resource.channelId),
+          !networkEvents.has(resource.resourceId),
           "The network event does not exist"
         );
 
         is(
-          resource.stacktrace,
-          requestStub.expected.stacktrace,
+          resource.stacktraceAvailable,
+          requestStub.expected.stacktraceAvailable,
           "The stacktrace is available"
         );
         is(
@@ -67,12 +67,15 @@ async function testNetworkEventStackTraceResources(requestStub) {
           "The last frame of the stacktrace is available"
         );
 
-        stackTraces.set(resource.channelId, true);
+        stackTraces.set(resource.resourceId, true);
         return;
       }
 
       if (resource.resourceType === ResourceWatcher.TYPES.NETWORK_EVENT) {
-        ok(stackTraces.has(resource.resourceId), "The stack trace exists");
+        ok(
+          stackTraces.has(resource.stacktraceResourceId),
+          "The stack trace does exists"
+        );
 
         networkEvents.set(resource.resourceId, true);
       }
