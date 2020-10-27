@@ -6489,27 +6489,15 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   MOZ_MUST_USE bool supportsRoundInstruction(RoundingMode mode) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     return Assembler::HasRoundInstruction(mode);
-#else
-    return false;
-#endif
   }
 
   void roundF32(RoundingMode roundingMode, RegF32 f0) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     masm.nearbyIntFloat32(roundingMode, f0, f0);
-#else
-    MOZ_CRASH("NYI");
-#endif
   }
 
   void roundF64(RoundingMode roundingMode, RegF64 f0) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
     masm.nearbyIntDouble(roundingMode, f0, f0);
-#else
-    MOZ_CRASH("NYI");
-#endif
   }
 
   //////////////////////////////////////////////////////////////////////
