@@ -255,9 +255,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1606800
          "race:CallInitFunc\n"
 
-         // Bug 1606803
-         "race:ipv6_is_present\n"
-
          // Bug 1606864
          "race:nsSocketTransport::Close\n"
          "race:nsSocketTransport::OnSocketDetached\n"
