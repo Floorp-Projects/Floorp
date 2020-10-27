@@ -169,34 +169,39 @@ async function runTests() {
     aWindow.addEventListener("beforeinput", beforeInputHandler, true);
     aWindow.addEventListener("input", inputHandler, true);
 
-    (function test_typing_a_in_empty_editor() {
+    (function test_typing_a_in_empty_editor(aTestData) {
+      editTarget.innerHTML = "";
       reset();
-      cancelBeforeInput = false;
-      action = 'inserting "a"';
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       synthesizeKey("a", {}, aWindow);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "a",
-        `${aDescription}"a" should've been inserted by ${action}`);
+        `${aDescription}"a" should've been inserted by ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "insertText",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "insertText"`);
       is(beforeInputEvent.data, "a",
-        `${aDescription}data of "beforeinput" event for ${action} should be "a"`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be "a"`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, selectionRanges);
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "insertText",
-        `${aDescription}inputType of "input" event for ${action} should be "insertText"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "insertText"`);
       is(inputEvent.data, "a",
-        `${aDescription}data of "input" event for ${action} should be "a"`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be "a"`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: 'typing "a" in empty editor',
+    });
 
     function test_typing_b_at_end_of_editor(aTestData) {
       reset();
@@ -275,27 +280,33 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_typing_backspace_in_empty_editor() {
+    (function test_typing_backspace_in_empty_editor(aTestData) {
+      editTarget.innerHTML = "";
       reset();
-      cancelBeforeInput = false;
-      action = 'typing "Backspace" in empty editor';
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       synthesizeKey("KEY_Backspace", {}, aWindow);
-      is(editTarget.innerHTML, "<br>",
-        `${aDescription}$shouldn't change empty editor by ${action}`);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
+      let expectedValue = editTarget.tagName === "DIV" ? "" : "<br>";
+      is(editTarget.innerHTML, expectedValue,
+        `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+        `${aDescription}"beforeinput" event should be fired at ${aTestData.action} even if it won't remove any content`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentBackward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteContentBackward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, selectionRanges);
       ok(!inputEvent,
-        `${aDescription}"input" event shouldn't be fired at ${action}`);
-    })();
+        `${aDescription}"input" event shouldn't be fired at ${aTestData.action}`);
+    })({
+      action: 'typing "Backspace" in empty editor',
+    });
 
     function test_typing_enter_at_end_of_editor(aTestData) {
       reset();
@@ -432,13 +443,13 @@ async function runTests() {
           `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       }
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "insertParagraph",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "insertParagraph"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "insertParagraph"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, selectionRanges);
       if (aTestData.cancelBeforeInput) {
         ok(!inputEvent,
@@ -446,13 +457,13 @@ async function runTests() {
         return;
       }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "insertParagraph",
-        `${aDescription}inputType of "input" event for ${action} should be "insertParagraph"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "insertParagraph"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
     }
     test_typing_enter_in_non_empty_last_line({
@@ -464,23 +475,43 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_setting_innerHTML() {
+    (function test_setting_innerHTML(aTestData) {
+      initializing = true;
+      editTarget.innerHTML = "";
+      initializing = false;
+
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       reset();
       editTarget.innerHTML = "foo-bar";
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       ok(!beforeInputEvent,
         `${aDescription}"beforeinput" event should not be fired when setting value`);
       ok(!inputEvent,
         `${aDescription}"input" event should not be fired when setting value`);
-    })();
+    })({
+      action: "setting innerHTML to non-empty value",
+    });
 
-    (function test_setting_innerHTML_to_empty() {
+    (function test_setting_innerHTML_to_empty(aTestData) {
+      initializing = true;
+      editTarget.innerHTML = "foo-bar";
+      initializing = false;
+
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       reset();
       editTarget.innerHTML = "";
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       ok(!beforeInputEvent,
         `${aDescription}"beforeinput" event should not be fired when setting empty value`);
       ok(!inputEvent,
         `${aDescription}"input" event should not be fired when setting empty value`);
-    })();
+    })({
+      action: "setting innerHTML to empty value",
+    });
 
     function test_typing_white_space_in_empty_editor(aTestData) {
       reset();
@@ -526,36 +557,56 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_typing_delete_at_end_of_editor() {
+    (function test_typing_delete_at_end_of_editor(aTestData) {
+      initializing = true;
+      editTarget.innerHTML = "&nbsp;";
+      selection.collapse(editTarget.firstChild, 1);
+      initializing = false;
+
       reset();
-      action = 'typing "Delete" at end';
+      action = aTestData.action;
+      cancelBeforeInput = aTestData.cancelBeforeInput;
       synthesizeKey("KEY_Delete", {}, aWindow);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "&nbsp;",
-        `${aDescription}shouldn't modify the editor by ${action} since there is no content to remove`);
+        `${aDescription}innerHTML should be "&nbsp;" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+        `${aDescription}"beforeinput" event should be fired at ${aTestData.action} even if it won't remove any content`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteContentForward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteContentForward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, selectionRanges);
       ok(!inputEvent,
-        `${aDescription}${action} should not fire "input" event since no content has been removed`);
-    })();
+        `${aDescription}${aTestData.action} should not fire "input" event`);
+    })({
+      action: 'typing "Delete" at end of editor',
+    });
 
-    (function test_typing_arrow_left_to_move_caret() {
+    (function test_typing_arrow_left_to_move_caret(aTestData) {
+      initializing = true;
+      editTarget.innerHTML = "&nbsp;";
+      selection.collapse(editTarget.firstChild, 1);
+      initializing = false;
+
       reset();
-      action = 'typing "ArrowLeft"';
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       synthesizeKey("KEY_ArrowLeft", {}, aWindow);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       ok(!beforeInputEvent,
-        `${aDescription}${action} should not fire "beforeinput" event since no content has been modified`);
+        `${aDescription}${aTestData.action} should not fire "beforeinput" event`);
       ok(!inputEvent,
-        `${aDescription}${action} should not fire "input" event since no content has been modified`);
-    })();
+        `${aDescription}${aTestData.action} should not fire "input" event`);
+    })({
+      action: 'typing "ArrowLeft" to move caret',
+    });
 
     function test_typing_delete_to_delete_last_character(aTestData) {
       reset();
@@ -654,7 +705,7 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_undoing_without_undoable_transaction() {
+    (function test_undoing_without_undoable_transaction(aTestData) {
       reset();
       initializing = true;
       htmlEditor.enableUndo(false);
@@ -665,15 +716,20 @@ async function runTests() {
       synthesizeKey("z", {accelKey: true}, aWindow);
       initializing = false;
 
-      action = 'doing "Undo" again';
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       synthesizeKey("z", {accelKey: true}, aWindow);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "&nbsp;",
-        `${aDescription}the editor shouldn't have been modified by ${action} since there is no undo transaction`);
+        `${aDescription}innerHTML should be "&nbsp;" after ${aTestData.action}`);
       ok(!beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action} since there is no undo transaction`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since there is no undo transaction`);
-    })();
+        `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+    })({
+      action: "trying to undo without undoable transaction",
+    });
 
     function test_redoing_deleting_last_character(aTestData) {
       reset();
@@ -727,7 +783,7 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_redoing_without_redoable_transaction() {
+    (function test_redoing_without_redoable_transaction(aTestData) {
       reset();
       initializing = true;
       htmlEditor.enableUndo(false);
@@ -739,15 +795,20 @@ async function runTests() {
       synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
       initializing = false;
 
-      action = 'doing "Redo" again';
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "<br>",
-        `${aDescription}the editor shouldn't have been modified by ${action} since there is no redo transaction`);
+        `${aDescription}innerHTML should be "<br>" after ${aTestData.action}`);
       ok(!beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action} since there is no redo transaction`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       ok(!inputEvent,
-        `${aDescription}"input" event shouldn't have been fired at ${action} since there is no redo transaction`);
-    })();
+        `${aDescription}"input" event shouldn't have been fired at ${aTestData.action}`);
+    })({
+      action: "trying to redo without redoable transaction",
+    });
 
     function test_inserting_linebreak(aTestData) {
       reset();
@@ -1000,28 +1061,31 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_deleting_word_backward_from_middle_of_second_word() {
+    (function test_deleting_word_backward_from_middle_of_second_word(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc de".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters backward from middle of second word";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       // Only on Windows, we collapse selection to start before handling this command.
       let expectedInputType = kIsWin ? "deleteWordBackward" : "deleteContentBackward";
-      is(editTarget.innerHTML, kIsWin ? "abc ef" : "abc df",
-        `${aDescription}${kIsWin ? "characters between current word start and selection start" : "selected characters"} should've been removed by ${action}`);
+      let expectedValue = kIsWin ? "abc ef" : "abc df";
+      is(editTarget.innerHTML, expectedValue,
+        `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       if (kIsWin) {
         checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
                                               startOffset: "abc ".length,
@@ -1031,24 +1095,28 @@ async function runTests() {
         checkTargetRanges(beforeInputEvent, selectionRanges);
       }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters backward from middle of second word",
+    });
 
-    (function test_deleting_word_forward_from_middle_of_first_word() {
+    (function test_deleting_word_forward_from_middle_of_first_word(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters forward from middle of first word";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       // Only on Windows, we collapse selection to start before handling this command.
       let expectedInputType = kIsWin ? "deleteWordForward" : "deleteContentForward";
       let expectedValue = "ac def";
@@ -1056,17 +1124,17 @@ async function runTests() {
         expectedValue = kWordSelectEatSpaceToNextWord ? "adef" : "a def";
       }
       is(editTarget.innerHTML, expectedValue,
-        `${aDescription}${kIsWin ? "characters between selection start and next word start" : "selected characters"} should've been removed by ${action}`);
+        `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       if (kIsWin) {
         checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
                                               startOffset: selectionRanges[0].startOffset,
@@ -1076,108 +1144,121 @@ async function runTests() {
         checkTargetRanges(beforeInputEvent, selectionRanges);
       }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters forward from middle of first word",
+    });
 
-    (function test_deleting_characters_backward_to_start_of_line() {
+    (function test_deleting_characters_backward_to_start_of_line(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.collapse(editTarget.firstChild, "abc d".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters backward to start of line";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "ef",
-        `${aDescription}characters between start of line and caret should've been removed by ${action}`);
+        `${aDescription}innerHTML should be "ef" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteSoftLineBackward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineBackward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteSoftLineBackward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
                                             startOffset: 0,
                                             endContainer: selectionRanges[0].endContainer,
                                             endOffset: selectionRanges[0].endOffset}]);
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteSoftLineBackward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineBackward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteSoftLineBackward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters backward to start of line",
+    });
 
-    (function test_deleting_characters_forward_to_end_of_line() {
+    (function test_deleting_characters_forward_to_end_of_line(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.collapse(editTarget.firstChild, "ab".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters forward to end of line";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, "ab",
-        `${aDescription}characters between caret and end of line should've been removed by ${action}`);
+        `${aDescription}innerHTML should be "ab" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "deleteSoftLineForward",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineForward"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "deleteSoftLineForward"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
                                             startOffset: selectionRanges[0].startOffset,
                                             endContainer: selectionRanges[0].startContainer,
                                             endOffset: "abc def".length}]);
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "deleteSoftLineForward",
-        `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineForward"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "deleteSoftLineForward"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters forward to end of line",
+    });
 
-    (function test_deleting_characters_backward_to_start_of_line_with_non_collapsed_selection() {
+    (function test_deleting_characters_backward_to_start_of_line_with_non_collapsed_selection(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc_de".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters backward to start of line (with selection in second word)";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       // Only on Windows, we collapse selection to start before handling this command.
       let expectedInputType = kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward";
-      is(editTarget.innerHTML, kIsWin ? "ef" : "abc df",
-        `${aDescription}${kIsWin ? "characters between start of line and caret" : "selected characters"} should've been removed by ${action}`);
+      let expectedValue =  kIsWin ? "ef" : "abc df";
+      is(editTarget.innerHTML, expectedValue,
+        `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       if (kIsWin) {
         checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
                                               startOffset: 0,
@@ -1187,38 +1268,43 @@ async function runTests() {
         checkTargetRanges(beforeInputEvent, selectionRanges);
       }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters backward to start of line (with selection in second word)",
+    });
 
-    (function test_deleting_characters_forward_to_end_of_line_with_non_collapsed_selection() {
+    (function test_deleting_characters_forward_to_end_of_line_with_non_collapsed_selection(aTestData) {
       editTarget.innerHTML = "abc def";
       editTarget.focus();
       selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
       reset();
-      cancelBeforeInput = false;
-      action = "removing characters forward to end of line (with selection in second word)";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       // Only on Windows, we collapse selection to start before handling this command.
       let expectedInputType = kIsWin ? "deleteSoftLineForward" : "deleteContentForward";
-      is(editTarget.innerHTML, kIsWin ? "a" : "ac def",
-        `${aDescription}${kIsWin ? "characters between caret anc end of line" : "selected characters"} should've been removed by ${action}`);
+      let expectedValue = kIsWin ? "a" : "ac def";
+      is(editTarget.innerHTML, expectedValue,
+        `${aDescription}innerHTML should be "${expectedValue}" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(beforeInputEvent.data, null,
-        `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be null`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       if (kIsWin) {
         checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].startContainer,
                                               startOffset: selectionRanges[0].startOffset,
@@ -1228,15 +1314,17 @@ async function runTests() {
         checkTargetRanges(beforeInputEvent, selectionRanges);
       }
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, expectedInputType,
-        `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "${expectedInputType}"`);
       is(inputEvent.data, null,
-        `${aDescription}data of "input" event for ${action} should be null`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be null`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "removing characters forward to end of line (with selection in second word)",
+    });
 
     function test_switching_text_direction_from_default(aTestData) {
       try {
@@ -1401,36 +1489,40 @@ async function runTests() {
       cancelBeforeInput: false,
     });
 
-    (function test_inserting_link_with_relative_url() {
+    (function test_inserting_link_with_relative_url(aTestData) {
       editTarget.innerHTML = "link";
       selection.selectAllChildren(editTarget);
       reset();
-      cancelBeforeInput = false;
-      action = "setting link with relative URL";
+      cancelBeforeInput = aTestData.cancelBeforeInput;
+      action = aTestData.action;
       SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "foo/bar.html");
+      ok(!aTestData.cancelBeforeInput,
+        `${aDescription}cancelBeforeInput must not be true for ${aTestData.action}`);
       is(editTarget.innerHTML, '<a href="foo/bar.html">link</a>',
-        `${aDescription}the text should've been wrapped by <a href> element by ${action}`);
+        `${aDescription}innerHTML should be "<a href="foo/bar.html">link</a>" after ${aTestData.action}`);
       ok(beforeInputEvent,
-        `${aDescription}"beforeinput" event should've been fired at ${action}`);
+        `${aDescription}"beforeinput" event should've been fired at ${aTestData.action}`);
       is(beforeInputEvent.cancelable, true,
-        `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        `${aDescription}"beforeinput" event for ${aTestData.action} should be cancelable`);
       is(beforeInputEvent.inputType, "insertLink",
-        `${aDescription}inputType of "beforeinput" event for ${action} should be "insertLink"`);
+        `${aDescription}inputType of "beforeinput" event for ${aTestData.action} should be "insertLink"`);
       is(beforeInputEvent.data, "foo/bar.html",
-        `${aDescription}data of "beforeinput" event for ${action} should be "foo/bar.html"`);
+        `${aDescription}data of "beforeinput" event for ${aTestData.action} should be "foo/bar.html"`);
       is(beforeInputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "beforeinput" event for ${aTestData.action} should be null`);
       checkTargetRanges(beforeInputEvent, selectionRanges);
       ok(inputEvent,
-        `${aDescription}"input" event should've been fired at ${action}`);
+        `${aDescription}"input" event should've been fired at ${aTestData.action}`);
       is(inputEvent.inputType, "insertLink",
-        `${aDescription}inputType of "input" event for ${action} should be "insertLink"`);
+        `${aDescription}inputType of "input" event for ${aTestData.action} should be "insertLink"`);
       is(inputEvent.data, "foo/bar.html",
-        `${aDescription}data of "input" event for ${action} should be "foo/bar.html"`);
+        `${aDescription}data of "input" event for ${aTestData.action} should be "foo/bar.html"`);
       is(inputEvent.dataTransfer, null,
-        `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+        `${aDescription}dataTransfer of "input" event for ${aTestData.action} should be null`);
       checkTargetRanges(inputEvent, []);
-    })();
+    })({
+      action: "setting link with relative URL",
+    });
 
     (function test_format_commands() {
       for (let test of [{command: "cmd_bold",
