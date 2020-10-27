@@ -78,7 +78,7 @@ add_task(async function() {
 
   execute(hud, `1 + @`);
   const messageNode = await waitFor(() =>
-    findMessage(hud, "illegal character")
+    findMessage(hud, "illegal character U+0040")
   );
   is(
     messageNode.querySelector(".frames"),
