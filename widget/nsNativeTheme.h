@@ -38,6 +38,9 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
+  nsNativeTheme();
+
+ public:
   enum ScrollbarButtonType {
     eScrollbarButton_UpTop = 0,
     eScrollbarButton_Down = 1 << 0,
@@ -49,12 +52,9 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
     eTreeSortDirection_Natural,
     eTreeSortDirection_Ascending
   };
-
-  nsNativeTheme();
-
   // Returns the content state (hover, focus, etc), see EventStateManager.h
-  mozilla::EventStates GetContentState(nsIFrame* aFrame,
-                                       mozilla::StyleAppearance aAppearance);
+  static mozilla::EventStates GetContentState(
+      nsIFrame* aFrame, mozilla::StyleAppearance aAppearance);
 
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
@@ -88,7 +88,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
     return GetCheckedOrSelected(aFrame, true);
   }
 
-  bool IsFocused(nsIFrame* aFrame) {
+  static bool IsFocused(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsGkAtoms::focused);
   }
 
