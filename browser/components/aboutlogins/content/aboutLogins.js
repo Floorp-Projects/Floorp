@@ -15,10 +15,6 @@ const gElements = {
   loginIntro: document.querySelector("login-intro"),
   loginItem: document.querySelector("login-item"),
   loginFilter: document.querySelector("login-filter"),
-  // loginFooter is nested inside of loginItem
-  get loginFooter() {
-    return this.loginItem.shadowRoot.querySelector("login-footer");
-  },
 };
 
 let numberOfLogins = 0;
@@ -37,7 +33,6 @@ function handleAllLogins(logins) {
 
 function handleSyncState(syncState) {
   gElements.fxAccountsButton.updateState(syncState);
-  gElements.loginFooter.hidden = syncState.hideMobileFooter;
   gElements.loginIntro.updateState(syncState);
 }
 
@@ -93,9 +88,6 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "Setup": {
       handleAllLogins(event.detail.value.logins);
-      gElements.loginFooter.showStoreIconsForLocales(
-        event.detail.value.selectedBadgeLanguages
-      );
       handleSyncState(event.detail.value.syncState);
       gElements.loginList.setSortDirection(event.detail.value.selectedSort);
       document.documentElement.classList.add("initialized");
