@@ -361,46 +361,41 @@ function checkVideoDidPlay(browser, args) {
 }
 
 /**
- * Return a wakelock observer that has a `check()` method that allows us to wait
- * until the wakelock state changes to our expected state.
+ * check if current wakelock is equal to expected state, if not, then wait until
+ * the wakelock changes its state to expected state.
  * @param needLock
  *        the wakolock should be locked or not
- * @param isTabInForeground
- *        the wakelock should be in the foreground or not
+ * @param isForegroundLock
+ *        when the lock is on, the wakelock should be in the foreground or not
  */
-function getWakeLockState(topic, needLock, isTabInForeground) {
+async function waitForExpectedWakeLockState(
+  topic,
+  { needLock, isForegroundLock }
+) {
   const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
   const powerManager = powerManagerService.getService(
     Ci.nsIPowerManagerService
   );
-  const tabState = isTabInForeground ? "foreground" : "background";
-  return {
-    check: async () => {
-      if (needLock) {
-        const expectedLockState = `locked-${tabState}`;
-        if (powerManager.getWakeLockState(topic) != expectedLockState) {
-          await wakeLockObserved(
-            powerManager,
-            topic,
-            state => state == expectedLockState
-          );
-        }
-        ok(true, `requested '${topic}' wakelock in ${tabState}`);
-      } else {
-        if (powerManager.getWakeLockState(topic) != "unlocked") {
-          await wakeLockObserved(
-            powerManager,
-            topic,
-            state => state == "unlocked"
-          );
-        }
-        ok(
-          powerManager.getWakeLockState(topic) == "unlocked",
-          `doesn't request lock for '${topic}'`
-        );
-      }
-    },
-  };
+  const wakelockState = powerManager.getWakeLockState(topic);
+  let expectedLockState = "unlocked";
+  if (needLock) {
+    expectedLockState = isForegroundLock
+      ? "locked-foreground"
+      : "locked-background";
+  }
+  if (wakelockState != expectedLockState) {
+    info(`wait until wakelock becomes ${expectedLockState}`);
+    await wakeLockObserved(
+      powerManager,
+      topic,
+      state => state == expectedLockState
+    );
+  }
+  is(
+    powerManager.getWakeLockState(topic),
+    expectedLockState,
+    `the wakelock state for '${topic}' is equal to '${expectedLockState}'`
+  );
 }
 
 function wakeLockObserved(powerManager, observeTopic, checkFn) {
