@@ -230,7 +230,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
           return seenEls.add(obj);
         } else if (!seenEls) {
           // Child: Resolve ElementIdentifier by using ContentDOMReference
-          return element.resolveElement(obj);
+          return element.resolveElement(obj, win);
         }
         throw new TypeError("seenEls is not an instance of ReferenceStore");
 
