@@ -219,7 +219,7 @@ linux1804-tests:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
-    - jittest
+    # - jittest  # See comment in linux1804-ccov-tests set.
     - jsreftest
     - marionette
     - mochitest-a11y
@@ -247,7 +247,7 @@ linux1804-qr-tests:
     - cppunit
     - crashtest
     - gtest
-    - jittest
+    # - jittest  # See comment in linux1804-ccov-tests set.
     - jsreftest
     - mochitest-a11y
     - mochitest-chrome
@@ -262,6 +262,13 @@ linux1804-qr-tests:
     - mochitest-webgl2-ext
     - reftest
     - xpcshell
+
+linux1804-ccov-tests:
+    # jittest run on regular linux builds is redundant with SM(p), so we omit it
+    # from the linux1804-tests and linux1804-qr-tests sets. But, we still want
+    # to run it on ccov builds, so we have this set that has it and which runs
+    # on ccov builds.
+    - jittest
 
 linux-qr-smoketests:
     - crashtest
@@ -292,7 +299,7 @@ windows-tests:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
-    - jittest
+    # - jittest  # See comment in windows-ccov-tests set.
     - jsreftest
     - marionette
     - mochitest-a11y
@@ -310,6 +317,12 @@ windows-tests:
     - test-verify-gpu
     - test-verify-wpt
     - xpcshell
+
+windows-ccov-tests:
+    # jittest run on regular windows builds is redundant with SM(p), so we omit
+    # it from the windows-tests set. But, we still want to run it on ccov builds,
+    # so we have this set that has it and which runs on ccov builds.
+    - jittest
 
 windows10-tests:
     - mochitest-webgl1-core
