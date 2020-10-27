@@ -90,6 +90,9 @@ class WindowProxyHolder;
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
   FIELD(IsActive, bool)                                                      \
+  /* Top()-only. If true, new-playing media will be suspended when in an     \
+   * inactive browsing context. */                                           \
+  FIELD(SuspendMediaWhenInactive, bool)                                      \
   /* If true, we're within the nested event loop in window.open, and this    \
    * context may not be used as the target of a load */                      \
   FIELD(PendingInitialization, bool)                                         \
@@ -463,6 +466,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
 
+  bool SuspendMediaWhenInactive() const {
+    return GetSuspendMediaWhenInactive();
+  }
+
   bool AuthorStyleDisabledDefault() const {
     return GetAuthorStyleDisabledDefault();
   }
@@ -820,6 +827,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
       return opener && opener->Group() == Group();
     }
     return true;
+  }
+
+  bool CanSet(FieldIndex<IDX_SuspendMediaWhenInactive>, bool, ContentParent*) {
+    return IsTop();
   }
 
   bool CanSet(FieldIndex<IDX_DisplayMode>, const enum DisplayMode& aDisplayMode,

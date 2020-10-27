@@ -109,6 +109,8 @@ interface BrowsingContext {
 
   [SetterThrows] attribute float textZoom;
 
+  [SetterThrows] attribute boolean suspendMediaWhenInactive;
+
   // Default value for nsIContentViewer::authorStyleDisabled in any new
   // browsing contexts created as a descendant of this one.
   //
