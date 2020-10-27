@@ -48,8 +48,8 @@ class MOZ_TRIVIAL_CTOR_DTOR Kernel32ExportsSolver final
 
   void Init();
   void Resolve(RTL_RUN_ONCE& aRunOnce);
-  void Transfer(HANDLE aTargetProcess,
-                Kernel32ExportsSolver* aTargetAddress) const;
+  LauncherVoidResult Transfer(nt::CrossExecTransferManager& aTransferMgr,
+                              Kernel32ExportsSolver* aTargetAddress) const;
 };
 
 extern Kernel32ExportsSolver gK32;

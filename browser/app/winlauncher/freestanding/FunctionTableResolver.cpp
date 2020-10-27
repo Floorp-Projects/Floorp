@@ -95,18 +95,18 @@ void Kernel32ExportsSolver::Resolve(RTL_RUN_ONCE& aRunOnce) {
   ::RtlRunOnceExecuteOnce(&aRunOnce, &ResolveOnce, this, nullptr);
 }
 
-void Kernel32ExportsSolver::Transfer(
-    HANDLE aTargetProcess, Kernel32ExportsSolver* aTargetAddress) const {
-  SIZE_T bytesWritten = 0;
-  BOOL ok = ::WriteProcessMemory(aTargetProcess, &aTargetAddress->mOffsets,
-                                 &mOffsets, sizeof(mOffsets), &bytesWritten);
-  if (!ok) {
-    return;
+LauncherVoidResult Kernel32ExportsSolver::Transfer(
+    nt::CrossExecTransferManager& aTransferMgr,
+    Kernel32ExportsSolver* aTargetAddress) const {
+  LauncherVoidResult writeResult = aTransferMgr.Transfer(
+      &aTargetAddress->mOffsets, &mOffsets, sizeof(mOffsets));
+  if (writeResult.isErr()) {
+    return writeResult.propagateErr();
   }
 
   State stateInChild = State::Initialized;
-  ::WriteProcessMemory(aTargetProcess, &aTargetAddress->mState, &stateInChild,
-                       sizeof(stateInChild), &bytesWritten);
+  return aTransferMgr.Transfer(&aTargetAddress->mState, &stateInChild,
+                               sizeof(stateInChild));
 }
 
 }  // namespace freestanding
