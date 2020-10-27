@@ -5,6 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/FileSystemUtils.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsIEventTarget.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

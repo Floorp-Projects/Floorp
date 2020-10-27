@@ -10,8 +10,10 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionTraversalCallback.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsThreadUtils.h"
 
 class nsIGlobalObject;
 
