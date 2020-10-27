@@ -77,12 +77,12 @@ class OSPreferences : public mozIOSPreferences {
     return RefPtr<OSPreferences>(GetInstance()).forget();
   }
 
-  static bool GetPatternForSkeleton(const nsAString& aSkeleton,
+  static bool GetPatternForSkeleton(const nsACString& aSkeleton,
                                     const nsACString& aLocale,
-                                    nsAString& aRetVal);
+                                    nsACString& aRetVal);
 
   static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
-                                          nsAString& aRetVal);
+                                          nsACString& aRetVal);
 
   /**
    * Triggers a refresh of retrieving data from host environment.
@@ -102,7 +102,7 @@ class OSPreferences : public mozIOSPreferences {
   nsTArray<nsCString> mRegionalPrefsLocales;
 
   const size_t kMaxCachedPatterns = 15;
-  nsDataHashtable<nsCStringHashKey, nsString> mPatternCache;
+  nsDataHashtable<nsCStringHashKey, nsCString> mPatternCache;
 
  private:
   virtual ~OSPreferences();
@@ -118,12 +118,12 @@ class OSPreferences : public mozIOSPreferences {
   bool GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
                                   DateTimeFormatStyle aTimeStyle,
                                   const nsACString& aLocale,
-                                  nsAString& aRetVal);
+                                  nsACString& aRetVal);
 
   bool GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
                                    DateTimeFormatStyle aTimeStyle,
                                    const nsACString& aLocale,
-                                   nsAString& aRetVal);
+                                   nsACString& aRetVal);
 
   /**
    * This is a host environment specific method that will be implemented
@@ -153,7 +153,7 @@ class OSPreferences : public mozIOSPreferences {
    */
   bool ReadDateTimePattern(DateTimeFormatStyle aDateFormatStyle,
                            DateTimeFormatStyle aTimeFormatStyle,
-                           const nsACString& aLocale, nsAString& aRetVal);
+                           const nsACString& aLocale, nsACString& aRetVal);
 };
 
 }  // namespace intl

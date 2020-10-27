@@ -131,7 +131,7 @@ static CFLocaleRef CreateCFLocaleFor(const nsACString& aLocale) {
 bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                         DateTimeFormatStyle aTimeStyle,
                                         const nsACString& aLocale,
-                                        nsAString& aRetVal) {
+                                        nsACString& aRetVal) {
   CFLocaleRef locale = CreateCFLocaleFor(aLocale);
   if (!locale) {
     return false;
@@ -147,10 +147,12 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
   CFRelease(locale);
 
   CFRange range = CFRangeMake(0, CFStringGetLength(format));
-  aRetVal.SetLength(range.length);
+  nsAutoString str;
+  str.SetLength(range.length);
   CFStringGetCharacters(format, range,
-                        reinterpret_cast<UniChar*>(aRetVal.BeginWriting()));
+                        reinterpret_cast<UniChar*>(str.BeginWriting()));
   CFRelease(formatter);
 
+  aRetVal = NS_ConvertUTF16toUTF8(str);
   return true;
 }

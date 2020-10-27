@@ -73,7 +73,7 @@ nsresult DateTimeFormat::FormatDateTime(
 
   UErrorCode status = U_ZERO_ERROR;
 
-  nsAutoString skeleton;
+  nsAutoCString skeleton;
   switch (aSkeleton) {
     case Skeleton::yyyyMM:
       skeleton.AssignASCII("yyyyMM");
@@ -85,10 +85,11 @@ nsresult DateTimeFormat::FormatDateTime(
       MOZ_ASSERT_UNREACHABLE("Unhandled skeleton enum");
   }
 
-  nsAutoString pattern;
-  if (!OSPreferences::GetPatternForSkeleton(skeleton, *mLocale, pattern)) {
+  nsAutoCString str;
+  if (!OSPreferences::GetPatternForSkeleton(skeleton, *mLocale, str)) {
     return NS_ERROR_FAILURE;
   }
+  nsAutoString pattern = NS_ConvertUTF8toUTF16(str);
 
   nsAutoString timeZoneID;
   BuildTimeZoneString(aExplodedTime->tm_params, timeZoneID);
@@ -253,7 +254,6 @@ nsresult DateTimeFormat::FormatUDateTime(
   if (!dateTimeFormat) {
     // We didn't have a cached formatter for this key, so create one.
 
-    nsAutoString pattern;
     int32_t dateFormatStyle;
     switch (aDateFormatSelector) {
       case kDateFormatLong:
@@ -286,10 +286,12 @@ nsresult DateTimeFormat::FormatUDateTime(
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
+    nsAutoCString str;
     rv = OSPreferences::GetInstance()->GetDateTimePattern(
         dateFormatStyle, timeFormatStyle, nsDependentCString(mLocale->get()),
-        pattern);
+        str);
     NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoString pattern = NS_ConvertUTF8toUTF16(str);
 
     if (aTimeParameters) {
       nsAutoString timeZoneID;
