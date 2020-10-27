@@ -558,7 +558,14 @@ class MOZ_RAII PEHeaders final {
     return Some(Range(base, imageSize));
   }
 
-  PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() {
+  bool IsWithinImage(const void* aAddress) const {
+    uintptr_t addr = reinterpret_cast<uintptr_t>(aAddress);
+    uintptr_t imageBase = reinterpret_cast<uintptr_t>(mMzHeader);
+    uintptr_t imageLimit = reinterpret_cast<uintptr_t>(mImageLimit);
+    return addr >= imageBase && addr <= imageLimit;
+  }
+
+  PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() const {
     // If the import directory is already tampered, we skip bounds check
     // because it could be located outside the mapped image.
     return mIsImportDirectoryTampered
@@ -627,7 +634,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_IMPORT_DESCRIPTOR
-  GetImportDescriptor(const char* aModuleNameASCII) {
+  GetImportDescriptor(const char* aModuleNameASCII) const {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
          IsValid(curImpDesc); ++curImpDesc) {
       auto curName = mIsImportDirectoryTampered
@@ -675,7 +682,7 @@ class MOZ_RAII PEHeaders final {
    */
   Maybe<Span<IMAGE_THUNK_DATA>> GetIATThunksForModule(
       const char* aModuleNameASCII,
-      const Range<const uint8_t>* aBoundaries = nullptr) {
+      const Range<const uint8_t>* aBoundaries = nullptr) const {
     PIMAGE_IMPORT_DESCRIPTOR impDesc = GetImportDescriptor(aModuleNameASCII);
     if (!impDesc) {
       return Nothing();
@@ -1281,6 +1288,103 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
 
   return static_cast<HMODULE>(baseAddress);
 }
+
+#if defined(_MSC_VER)
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+#endif
+
+// This class manages data transfer from the local process's executable
+// to another process's executable via WriteProcessMemory.
+// Bug 1662560 told us the same executable may be mapped onto a different
+// address in a different process.  This means when we transfer data within
+// the mapped executable such as a global variable or IAT from the current
+// process to another process, we need to shift its address by the difference
+// between two executable's mapped imagebase.
+class CrossExecTransferManager final {
+  HANDLE mRemoteProcess;
+  uint8_t* mLocalImagebase;
+  PEHeaders mLocalExec;
+  uint8_t* mRemoteImagebase;
+
+  static HMODULE GetLocalExecModule() {
+#if defined(_MSC_VER)
+    return reinterpret_cast<HMODULE>(&__ImageBase);
+#else
+    return ::GetModuleHandleW(nullptr);
+#endif
+  }
+
+  LauncherVoidResult EnsureRemoteImagebase() {
+    if (!mRemoteImagebase) {
+      LauncherResult<HMODULE> remoteImageBaseResult =
+          GetProcessExeModule(mRemoteProcess);
+      if (remoteImageBaseResult.isErr()) {
+        return remoteImageBaseResult.propagateErr();
+      }
+
+      mRemoteImagebase =
+          reinterpret_cast<uint8_t*>(remoteImageBaseResult.unwrap());
+    }
+    return Ok();
+  }
+
+  template <typename T>
+  T* LocalExecToRemoteExec(T* aLocalAddress) const {
+    MOZ_ASSERT(mRemoteImagebase);
+    MOZ_ASSERT(mLocalExec.IsWithinImage(aLocalAddress));
+
+    if (!mRemoteImagebase || !mLocalExec.IsWithinImage(aLocalAddress)) {
+      return aLocalAddress;
+    }
+
+    uintptr_t offset = reinterpret_cast<uintptr_t>(aLocalAddress) -
+                       reinterpret_cast<uintptr_t>(mLocalImagebase);
+    return reinterpret_cast<T*>(mRemoteImagebase + offset);
+  }
+
+ public:
+  explicit CrossExecTransferManager(HANDLE aRemoteProcess)
+      : mRemoteProcess(aRemoteProcess),
+        mLocalImagebase(
+            PEHeaders::HModuleToBaseAddr<uint8_t*>(GetLocalExecModule())),
+        mLocalExec(mLocalImagebase),
+        mRemoteImagebase(nullptr) {}
+
+  CrossExecTransferManager(HANDLE aRemoteProcess, HMODULE aLocalImagebase)
+      : mRemoteProcess(aRemoteProcess),
+        mLocalImagebase(
+            PEHeaders::HModuleToBaseAddr<uint8_t*>(aLocalImagebase)),
+        mLocalExec(mLocalImagebase),
+        mRemoteImagebase(nullptr) {}
+
+  explicit operator bool() const { return !!mLocalExec; }
+  HANDLE RemoteProcess() const { return mRemoteProcess; }
+  const PEHeaders& LocalPEHeaders() const { return mLocalExec; }
+
+  AutoVirtualProtect Protect(void* aLocalAddress, size_t aLength,
+                             DWORD aProtFlags) {
+    // If EnsureRemoteImagebase() fails, a subsequent operaion will fail.
+    Unused << EnsureRemoteImagebase();
+    return AutoVirtualProtect(LocalExecToRemoteExec(aLocalAddress), aLength,
+                              aProtFlags, mRemoteProcess);
+  }
+
+  LauncherVoidResult Transfer(LPVOID aDestinationAddress,
+                              LPCVOID aBufferToWrite, SIZE_T aBufferSize) {
+    LauncherVoidResult result = EnsureRemoteImagebase();
+    if (result.isErr()) {
+      return result.propagateErr();
+    }
+
+    if (!::WriteProcessMemory(mRemoteProcess,
+                              LocalExecToRemoteExec(aDestinationAddress),
+                              aBufferToWrite, aBufferSize, nullptr)) {
+      return LAUNCHER_ERROR_FROM_LAST();
+    }
+
+    return Ok();
+  }
+};
 
 #if !defined(MOZILLA_INTERNAL_API)
 

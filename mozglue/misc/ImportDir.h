@@ -40,23 +40,15 @@ inline LauncherResult<nt::DataDirectoryEntry> GetImageDirectoryViaFileIo(
  *
  * @param aFullImagePath Wide-character string containing the absolute path
  *                       to the binary whose import directory we are touching.
- * @param aLocalExeImage The binary's PE headers that have been loaded into our
- *                       process for examination.
- * @param aTargetProcess Handle to the child process whose import table we are
- *                       touching.
- * @param aRemoteExeImage HMODULE referencing the child process's executable
- *                        binary that we are touching. This value is used to
- *                        determine the base address of the binary within the
- *                        target process.  If nullptr is passed, we use
- *                        |aTargetProcess| to retrieve a value.
+ * @param aTransferMgr   Encapsulating the transfer from the current process to
+ *                       the child process whose import table we are touching.
  */
 inline LauncherVoidResult RestoreImportDirectory(
-    const wchar_t* aFullImagePath, const nt::PEHeaders& aLocalExeImage,
-    HANDLE aTargetProcess, HMODULE aRemoteExeImage = nullptr) {
+    const wchar_t* aFullImagePath, nt::CrossExecTransferManager& aTransferMgr) {
   uint32_t importDirEntryRva;
   PIMAGE_DATA_DIRECTORY importDirEntry =
-      aLocalExeImage.GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT,
-                                               &importDirEntryRva);
+      aTransferMgr.LocalPEHeaders().GetImageDirectoryEntryPtr(
+          IMAGE_DIRECTORY_ENTRY_IMPORT, &importDirEntryRva);
   if (!importDirEntry) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
   }
@@ -82,31 +74,17 @@ inline LauncherVoidResult RestoreImportDirectory(
 
   nt::DataDirectoryEntry toWrite = realImportDirectory.unwrap();
 
-  if (!aRemoteExeImage) {
-    LauncherResult<HMODULE> remoteImageBase =
-        nt::GetProcessExeModule(aTargetProcess);
-    if (remoteImageBase.isErr()) {
-      return remoteImageBase.propagateErr();
-    }
-    aRemoteExeImage = remoteImageBase.unwrap();
-  }
-
-  void* remoteAddress =
-      nt::PEHeaders::HModuleToBaseAddr<char*>(aRemoteExeImage) +
-      importDirEntryRva;
-
   {  // Scope for prot
-    AutoVirtualProtect prot(remoteAddress, sizeof(IMAGE_DATA_DIRECTORY),
-                            PAGE_READWRITE, aTargetProcess);
+    AutoVirtualProtect prot = aTransferMgr.Protect(
+        importDirEntry, sizeof(IMAGE_DATA_DIRECTORY), PAGE_READWRITE);
     if (!prot) {
       return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
-    SIZE_T bytesWritten;
-    if (!::WriteProcessMemory(aTargetProcess, remoteAddress, &toWrite,
-                              sizeof(IMAGE_DATA_DIRECTORY), &bytesWritten) ||
-        bytesWritten != sizeof(IMAGE_DATA_DIRECTORY)) {
-      return LAUNCHER_ERROR_FROM_LAST();
+    LauncherVoidResult writeResult = aTransferMgr.Transfer(
+        importDirEntry, &toWrite, sizeof(IMAGE_DATA_DIRECTORY));
+    if (writeResult.isErr()) {
+      return writeResult.propagateErr();
     }
   }
 

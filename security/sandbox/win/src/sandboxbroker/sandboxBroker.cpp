@@ -336,10 +336,11 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
     nsModuleHandle moduleHandle(
         ::LoadLibraryExW(aPath, nullptr, LOAD_LIBRARY_AS_DATAFILE));
     if (moduleHandle) {
-      nt::PEHeaders exeImage(moduleHandle.get());
-      if (!!exeImage) {
+      nt::CrossExecTransferManager transferMgr(targetInfo.hProcess,
+                                               moduleHandle);
+      if (!!transferMgr) {
         LauncherVoidResult importsRestored =
-            RestoreImportDirectory(aPath, exeImage, targetInfo.hProcess);
+            RestoreImportDirectory(aPath, transferMgr);
         if (importsRestored.isErr()) {
           RefPtr<DllServices> dllSvc(DllServices::Get());
           dllSvc->HandleLauncherError(
@@ -883,8 +884,7 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
                          "SetIntegrityLevel should never fail with these "
                          "arguments, what happened?");
 
-  result =
-      mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
+  result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
   SANDBOX_ENSURE_SUCCESS(result,
                          "SetDelayedIntegrityLevel should never fail with "
                          "these arguments, what happened?");
