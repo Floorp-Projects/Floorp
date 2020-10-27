@@ -7,7 +7,7 @@
 
 scrollbar {
   appearance: auto;
-  -moz-default-appearance: scrollbar;
+  -moz-default-appearance: scrollbar-horizontal;
   cursor: default;
   background-color: white;
 }
@@ -27,6 +27,11 @@ html|select[multiple] {
   scrollbar[disabled="true"] {
     visibility: hidden;
   }
+}
+
+scrollbar[orient="vertical"] {
+  appearance: auto;
+  -moz-default-appearance: scrollbar-vertical;
 }
 
 /* ..... track ..... */

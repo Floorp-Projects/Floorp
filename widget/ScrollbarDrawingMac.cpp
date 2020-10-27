@@ -55,7 +55,8 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
         return IntSize{26, 0};
       case StyleAppearance::ScrollbarthumbVertical:
         return IntSize{0, 26};
-      case StyleAppearance::Scrollbar:
+      case StyleAppearance::ScrollbarVertical:
+      case StyleAppearance::ScrollbarHorizontal:
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
         if (nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) !=
