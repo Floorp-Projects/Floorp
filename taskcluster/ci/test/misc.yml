@@ -50,7 +50,7 @@ test-verify:
     run-on-projects:
         by-test-platform:
             # do not run on ccov or asan
-            .*-ccov/.*: []
+            .*-ccov.*/.*: []
             .*-asan/.*: []
             .*shippable.*: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
@@ -123,7 +123,7 @@ test-verify-gpu:
     run-on-projects:
         by-test-platform:
             # do not run on ccov or asan
-            .*-ccov/.*: []
+            .*-ccov.*/.*: []
             .*-asan/.*: []
             .*shippable.*: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
@@ -163,7 +163,7 @@ test-coverage:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            .*-ccov/.*: built-projects
+            .*-ccov.*/.*: built-projects
             default: []
     tier: 2
     mozharness:
@@ -225,7 +225,7 @@ test-coverage-gpu:
     run-on-projects:
         by-test-platform:
             # only run on mozilla-central and try.
-            .*-ccov/.*: ['mozilla-central']
+            .*-ccov.*/.*: ['mozilla-central']
             default: []
     tier:
         by-test-platform:

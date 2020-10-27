@@ -51,7 +51,7 @@ awsy-tp6:
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
         by-test-platform:
-            .*-ccov/.*: []  # don't run on coverage
+            .*-ccov.*/.*: []  # don't run on coverage
             .*-devedition/.*: []  # don't run on devedition
             (linux|win|mac)(?!.*shippable)(?!.*ccov).*/opt: []
             default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']

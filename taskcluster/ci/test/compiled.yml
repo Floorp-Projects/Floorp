@@ -65,7 +65,7 @@ gtest:
             windows10-64-shippable.*: 3
             windows10-64-pgo.*: 3
             windows10-64-asan.*: 3
-            linux.*64-ccov/opt: 3
+            linux.*64-ccov.*/opt: 3
             default: default
 
 jittest:
@@ -88,8 +88,8 @@ jittest:
             default: 6
     max-run-time:
         by-test-platform:
-            windows10-64-ccov/.*: 7200
-            macosx.*-ccov/.*: 7200
+            windows10-64-ccov.*/.*: 7200
+            macosx.*-ccov.*/.*: 7200
             android-hw.*: 5400
             default: 3600
     mozharness:
