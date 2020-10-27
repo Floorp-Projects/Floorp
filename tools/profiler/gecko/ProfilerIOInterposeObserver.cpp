@@ -3,11 +3,45 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProfilerIOInterposeObserver.h"
-
 #include "GeckoProfiler.h"
-#include "ProfilerMarkerPayload.h"
 
 using namespace mozilla;
+
+namespace geckoprofiler::markers {
+struct FileIOMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("FileIO");
+  }
+  static void StreamJSONMarkerData(JSONWriter& aWriter,
+                                   const ProfilerString8View& aOperation,
+                                   const ProfilerString8View& aSource,
+                                   const ProfilerString8View& aFilename,
+                                   MarkerThreadId aOperationThreadId) {
+    aWriter.StringProperty("operation", aOperation);
+    aWriter.StringProperty("source", aSource);
+    if (aFilename.Length() != 0) {
+      aWriter.StringProperty("filename", aFilename);
+    }
+    if (!aOperationThreadId.IsUnspecified()) {
+      aWriter.IntProperty("threadId", aOperationThreadId.ThreadId());
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable,
+              MS::Location::timelineFileIO};
+    schema.AddKeyLabelFormatSearchable("operation", "Operation",
+                                       MS::Format::string,
+                                       MS::Searchable::searchable);
+    schema.AddKeyLabelFormatSearchable("source", "Source", MS::Format::string,
+                                       MS::Searchable::searchable);
+    schema.AddKeyLabelFormatSearchable("filename", "Filename",
+                                       MS::Format::filePath,
+                                       MS::Searchable::searchable);
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
 
 static auto GetFilename(IOInterposeObserver::Observation& aObservation) {
   AUTO_PROFILER_STATS(IO_filename);
@@ -19,14 +53,6 @@ static auto GetFilename(IOInterposeObserver::Observation& aObservation) {
     CopyUTF16toUTF8(filename16, filename8);
   }
   return filename8;
-}
-
-static UniqueProfilerBacktrace GetBacktraceUnless(bool aPrevent) {
-  if (aPrevent) {
-    return nullptr;
-  }
-  AUTO_PROFILER_STATS(IO_backtrace);
-  return profiler_get_backtrace();
 }
 
 void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
@@ -47,6 +73,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
     return;
   }
 
+  const bool doCaptureStack = !(features & ProfilerFeature::NoIOStacks);
   if (IsMainThread()) {
     // This is the main thread.
     // Capture a marker if any "IO" feature is on.
@@ -58,12 +85,25 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
     AUTO_PROFILER_STATS(IO_MT);
     nsAutoCString type{aObservation.FileType()};
     type.AppendLiteral("IO");
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        type.get(), OTHER, FileIOMarkerPayload,
-        (aObservation.ObservedOperationString(), aObservation.Reference(),
-         GetFilename(aObservation).get(), aObservation.Start(),
-         aObservation.End(),
-         GetBacktraceUnless(features & ProfilerFeature::NoIOStacks)));
+
+    // Store the marker in the current thread.
+    PROFILER_MARKER(
+        type, OTHER,
+        MarkerOptions(
+            MarkerTiming::Interval(aObservation.Start(), aObservation.End()),
+            MarkerStack::MaybeCapture(doCaptureStack)),
+        FileIOMarker,
+        // aOperation
+        ProfilerString8View::WrapNullTerminatedString(
+            aObservation.ObservedOperationString()),
+        // aSource
+        ProfilerString8View::WrapNullTerminatedString(aObservation.Reference()),
+        // aFilename
+        GetFilename(aObservation),
+        // aOperationThreadId - Do not include a thread ID, as it's the same as
+        // the markers. Only include this field when the marker is being sent
+        // from another thread.
+        MarkerThreadId{});
 
   } else if (profiler_thread_is_being_profiled()) {
     // This is a non-main thread that is being profiled.
@@ -71,23 +111,57 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
       return;
     }
     AUTO_PROFILER_STATS(IO_off_MT);
-    FileIOMarkerPayload payload{
-        aObservation.ObservedOperationString(),
-        aObservation.Reference(),
-        GetFilename(aObservation).get(),
-        aObservation.Start(),
-        aObservation.End(),
-        GetBacktraceUnless(features & ProfilerFeature::NoIOStacks)};
+
     nsAutoCString type{aObservation.FileType()};
     type.AppendLiteral("IO");
-    // Store the marker in the both:
-    // - The current thread.
-    profiler_add_marker(type.get(), JS::ProfilingCategoryPair::OTHER, payload);
-    // - The main thread (with a distinct marker name and the thread id).
-    payload.SetIOThreadId(profiler_current_thread_id());
+
+    // Share a backtrace between the marker on this thread, and the marker on
+    // the main thread.
+    UniquePtr<ProfileChunkedBuffer> backtrace =
+        doCaptureStack ? profiler_capture_backtrace() : nullptr;
+
+    // Store the marker in the current thread.
+    PROFILER_MARKER(
+        type, OTHER,
+        MarkerOptions(
+            MarkerTiming::Interval(aObservation.Start(), aObservation.End()),
+            backtrace ? MarkerStack::UseBacktrace(*backtrace)
+                      : MarkerStack::NoStack()),
+        FileIOMarker,
+        // aOperation
+        ProfilerString8View::WrapNullTerminatedString(
+            aObservation.ObservedOperationString()),
+        // aSource
+        ProfilerString8View::WrapNullTerminatedString(aObservation.Reference()),
+        // aFilename
+        GetFilename(aObservation),
+        // aOperationThreadId - Do not include a thread ID, as it's the same as
+        // the markers. Only include this field when the marker is being sent
+        // from another thread.
+        MarkerThreadId{});
+
+    // Store the marker in the main thread as well, with a distinct marker name
+    // and thread id.
     type.AppendLiteral(" (non-main thread)");
-    profiler_add_marker_for_mainthread(JS::ProfilingCategoryPair::OTHER,
-                                       type.get(), payload);
+    PROFILER_MARKER(
+        type, OTHER,
+        MarkerOptions(
+            MarkerTiming::Interval(aObservation.Start(), aObservation.End()),
+            backtrace ? MarkerStack::UseBacktrace(*backtrace)
+                      : MarkerStack::NoStack(),
+            // This is the important piece that changed.
+            // It will send a marker to the main thread.
+            MarkerThreadId(profiler_main_thread_id())),
+        FileIOMarker,
+        // aOperation
+        ProfilerString8View::WrapNullTerminatedString(
+            aObservation.ObservedOperationString()),
+        // aSource
+        ProfilerString8View::WrapNullTerminatedString(aObservation.Reference()),
+        // aFilename
+        GetFilename(aObservation),
+        // aOperationThreadId - Include the thread ID in the payload.
+        MarkerThreadId::CurrentThread());
 
   } else {
     // This is a thread that is not being profiled. We still want to capture
@@ -102,13 +176,25 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
     } else {
       type.AppendLiteral("IO (unregistered thread)");
     }
-    profiler_add_marker_for_mainthread(
-        JS::ProfilingCategoryPair::OTHER, type.get(),
-        FileIOMarkerPayload(
-            aObservation.ObservedOperationString(), aObservation.Reference(),
-            GetFilename(aObservation).get(), aObservation.Start(),
-            aObservation.End(),
-            GetBacktraceUnless(features & ProfilerFeature::NoIOStacks),
-            Some(profiler_current_thread_id())));
+
+    // Only store this marker on the main thread, as this thread was not being
+    // profiled.
+    PROFILER_MARKER(
+        type, OTHER,
+        MarkerOptions(
+            MarkerTiming::Interval(aObservation.Start(), aObservation.End()),
+            doCaptureStack ? MarkerStack::Capture() : MarkerStack::NoStack(),
+            // Store this marker on the main thread.
+            MarkerThreadId(profiler_main_thread_id())),
+        FileIOMarker,
+        // aOperation
+        ProfilerString8View::WrapNullTerminatedString(
+            aObservation.ObservedOperationString()),
+        // aSource
+        ProfilerString8View::WrapNullTerminatedString(aObservation.Reference()),
+        // aFilename
+        GetFilename(aObservation),
+        // aOperationThreadId - Note which thread this marker is coming from.
+        MarkerThreadId::CurrentThread());
   }
 }

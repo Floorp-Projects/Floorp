@@ -316,16 +316,16 @@ add_task(async function() {
         continue;
       }
 
-      // Convert to lower case before comparing because the OS X test machines
-      // have the 'Firefox' folder in 'Library/Application Support' created
-      // as 'firefox' for some reason.
-      let filename = marker.filename.toLowerCase();
-
-      if (!filename) {
+      if (!marker.filename) {
         // We are still missing the filename on some mainthreadio markers,
         // these markers are currently useless for the purpose of this test.
         continue;
       }
+
+      // Convert to lower case before comparing because the OS X test machines
+      // have the 'Firefox' folder in 'Library/Application Support' created
+      // as 'firefox' for some reason.
+      let filename = marker.filename.toLowerCase();
 
       if (!WIN && filename == "/dev/urandom") {
         continue;

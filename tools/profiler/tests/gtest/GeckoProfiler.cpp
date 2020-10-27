@@ -759,19 +759,9 @@ TEST(GeckoProfiler, Markers)
       "FileIOMarkerPayload marker", OTHER, FileIOMarkerPayload,
       ("operation", "source", "filename", ts1, ts2, nullptr));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
-      "FileIOMarkerPayload marker 2.0", geckoprofiler::category::OTHER,
-      MarkerTiming::Interval(ts1, ts2), geckoprofiler::markers::FileIO{},
-      "operation", "source", "filename", MarkerThreadId{}));
-
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "FileIOMarkerPayload marker off-MT", OTHER, FileIOMarkerPayload,
       ("operation2", "source2", "filename2", ts1, ts2, nullptr, Some(123)));
-
-  MOZ_RELEASE_ASSERT(profiler_add_marker(
-      "FileIOMarkerPayload marker 2.0 off-MT", geckoprofiler::category::OTHER,
-      MarkerTiming::Interval(ts1, ts2), geckoprofiler::markers::FileIO{},
-      "operation2", "source2", "filename2", MarkerThreadId{123}));
 
   // Other markers in alphabetical order of payload class names.
 
@@ -996,9 +986,7 @@ TEST(GeckoProfiler, Markers)
     S_Markers2ExplicitDefaultEmptyOptions,
     S_Markers2ExplicitDefaultWithOptions,
     S_FileIOMarkerPayload,
-    S_FileIOMarker2,
     S_FileIOMarkerPayloadOffMT,
-    S_FileIOMarker2OffMT,
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
@@ -1025,7 +1013,7 @@ TEST(GeckoProfiler, Markers)
     S_LAST,
   } state = State(0);
 
-  // These will be set when first read from S_FileIOMarkerPayload, then
+  // These will be set when first read from S_FirstMarker, then
   // compared in following markers.
   // TODO: Compute these values from the timestamps.
   double ts1Double = 0.0;
@@ -1369,32 +1357,9 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["filename"], String, "filename");
                 EXPECT_FALSE(payload.isMember("threadId"));
 
-              } else if (nameString == "FileIOMarkerPayload marker 2.0") {
-                EXPECT_EQ(state, S_FileIOMarker2);
-                state = State(S_FileIOMarker2 + 1);
-                EXPECT_EQ(typeString, "FileIO");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["operation"], String, "operation");
-                EXPECT_EQ_JSON(payload["source"], String, "source");
-                EXPECT_EQ_JSON(payload["filename"], String, "filename");
-                EXPECT_FALSE(payload.isMember("threadId"));
-
               } else if (nameString == "FileIOMarkerPayload marker off-MT") {
                 EXPECT_EQ(state, S_FileIOMarkerPayloadOffMT);
                 state = State(S_FileIOMarkerPayloadOffMT + 1);
-                EXPECT_EQ(typeString, "FileIO");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["operation"], String, "operation2");
-                EXPECT_EQ_JSON(payload["source"], String, "source2");
-                EXPECT_EQ_JSON(payload["filename"], String, "filename2");
-                EXPECT_EQ_JSON(payload["threadId"], Int, 123);
-
-              } else if (nameString ==
-                         "FileIOMarkerPayload marker 2.0 off-MT") {
-                EXPECT_EQ(state, S_FileIOMarker2OffMT);
-                state = State(S_FileIOMarker2OffMT + 1);
                 EXPECT_EQ(typeString, "FileIO");
                 EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
                 EXPECT_TRUE(payload["stack"].isNull());
@@ -1692,30 +1657,7 @@ TEST(GeckoProfiler, Markers)
           ASSERT_EQ(data.size(), 0u);
 
         } else if (nameString == "FileIO") {
-          EXPECT_EQ(display.size(), 3u);
-          EXPECT_EQ(display[0u].asString(), "marker-chart");
-          EXPECT_EQ(display[1u].asString(), "marker-table");
-          EXPECT_EQ(display[2u].asString(), "timeline-fileio");
-
-          ASSERT_EQ(data.size(), 3u);
-
-          ASSERT_TRUE(data[0u].isObject());
-          EXPECT_EQ_JSON(data[0u]["key"], String, "operation");
-          EXPECT_EQ_JSON(data[0u]["label"], String, "Operation");
-          EXPECT_EQ_JSON(data[0u]["format"], String, "string");
-          EXPECT_EQ_JSON(data[0u]["searchable"], Bool, true);
-
-          ASSERT_TRUE(data[1u].isObject());
-          EXPECT_EQ_JSON(data[1u]["key"], String, "source");
-          EXPECT_EQ_JSON(data[1u]["label"], String, "Source");
-          EXPECT_EQ_JSON(data[1u]["format"], String, "string");
-          EXPECT_EQ_JSON(data[1u]["searchable"], Bool, true);
-
-          ASSERT_TRUE(data[2u].isObject());
-          EXPECT_EQ_JSON(data[2u]["key"], String, "filename");
-          EXPECT_EQ_JSON(data[2u]["label"], String, "Filename");
-          EXPECT_EQ_JSON(data[2u]["format"], String, "file-path");
-          EXPECT_EQ_JSON(data[2u]["searchable"], Bool, true);
+          // These are defined in ProfilerIOInterposeObserver.cpp
 
         } else if (nameString == "tracing") {
           EXPECT_EQ(display.size(), 3u);
@@ -1862,7 +1804,6 @@ TEST(GeckoProfiler, Markers)
 
       // Check that we've got all expected schema.
       EXPECT_TRUE(testedSchemaNames.find("Text") != testedSchemaNames.end());
-      EXPECT_TRUE(testedSchemaNames.find("FileIO") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("tracing") != testedSchemaNames.end());
       EXPECT_TRUE(testedSchemaNames.find("UserTimingMark") !=
                   testedSchemaNames.end());
