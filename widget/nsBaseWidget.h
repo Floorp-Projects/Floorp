@@ -14,6 +14,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/NativeLayer.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
@@ -349,7 +350,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   // Should be called by derived implementations to notify on system color and
   // theme changes.
-  void NotifyThemeChanged();
+  void NotifyThemeChanged(mozilla::widget::ThemeChangeKind);
   void NotifyUIStateChanged(UIStateChangeType aShowFocusRings);
 
 #ifdef ACCESSIBILITY

@@ -1673,12 +1673,12 @@ void nsBaseWidget::NotifySizeMoveDone() {
   }
 }
 
-void nsBaseWidget::NotifyThemeChanged() {
+void nsBaseWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
   if (!mWidgetListener) {
     return;
   }
   if (PresShell* presShell = mWidgetListener->GetPresShell()) {
-    presShell->ThemeChanged();
+    presShell->ThemeChanged(aKind);
   }
 }
 

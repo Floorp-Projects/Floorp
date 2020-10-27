@@ -14,6 +14,7 @@
 #include "nsColor.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 
 struct gfxFontStyle;
 
@@ -547,7 +548,7 @@ class LookAndFeel {
    */
   static LookAndFeelCache GetCache();
   static void SetCache(const LookAndFeelCache& aCache);
-  static void NotifyChangedAllWindows();
+  static void NotifyChangedAllWindows(widget::ThemeChangeKind);
 };
 
 }  // namespace mozilla

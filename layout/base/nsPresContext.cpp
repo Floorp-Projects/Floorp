@@ -203,6 +203,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPrefBidiDirection(false),
       mPrefScrollbarSide(0),
       mPendingThemeChanged(false),
+      mPendingThemeChangeKind(0),
       mPendingUIResolutionChanged(false),
       mPostedPrefChangedRunnable(false),
       mIsGlyph(false),
@@ -1352,10 +1353,12 @@ nsITheme* nsPresContext::EnsureTheme() {
   return mTheme;
 }
 
-void nsPresContext::ThemeChanged() {
+void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
   // NOTE(emilio): This ideally wouldn't need to be a _TEXT() marker, but
   // otherwise the stack is not captured, see bug 1670046.
   PROFILER_MARKER_TEXT("ThemeChanged", LAYOUT, MarkerStack::Capture(), ""_ns);
+
+  mPendingThemeChangeKind |= unsigned(aKind);
 
   if (!mPendingThemeChanged) {
     sLookAndFeelChanged = true;
@@ -1373,6 +1376,9 @@ void nsPresContext::ThemeChanged() {
 
 void nsPresContext::ThemeChangedInternal() {
   mPendingThemeChanged = false;
+
+  const auto kind = widget::ThemeChangeKind(mPendingThemeChangeKind);
+  mPendingThemeChangeKind = 0;
 
   // Tell the theme that it changed, so it can flush any handles to stale theme
   // data.
@@ -1396,7 +1402,7 @@ void nsPresContext::ThemeChangedInternal() {
       ContentParent::GetAll(cp);
       LookAndFeelCache lnfCache = LookAndFeel::GetCache();
       for (ContentParent* c : cp) {
-        Unused << c->SendThemeChanged(lnfCache);
+        Unused << c->SendThemeChanged(lnfCache, kind);
       }
     }
   }
@@ -1413,15 +1419,18 @@ void nsPresContext::ThemeChangedInternal() {
   // queries on them.
   //
   // Changes in theme can change system colors (whose changes are properly
-  // reflected in computed style data), system fonts (whose changes are not),
-  // and -moz-appearance (whose changes likewise are not), so we need to
-  // recascade for the first, and reflow for the rest.
+  // reflected in computed style data), system fonts (whose changes are
+  // some reflected (like sizes and such) and some not), and -moz-appearance
+  // (whose changes are not), so we need to recascade for the first, and reflow
+  // for the rest.
+  auto restyleHint = (kind & widget::ThemeChangeKind::Style)
+                         ? RestyleHint::RecascadeSubtree()
+                         : RestyleHint{0};
+  auto changeHint = (kind & widget::ThemeChangeKind::Layout)
+                        ? NS_STYLE_HINT_REFLOW
+                        : nsChangeHint(0);
   MediaFeatureValuesChanged(
-      {
-          RestyleHint::RecascadeSubtree(),
-          NS_STYLE_HINT_REFLOW,
-          MediaFeatureChangeReason::SystemMetricsChange,
-      },
+      {restyleHint, changeHint, MediaFeatureChangeReason::SystemMetricsChange},
       MediaFeatureChangePropagation::All);
 }
 

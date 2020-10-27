@@ -2502,7 +2502,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 }
 
 - (void)systemMetricsChanged {
-  if (mGeckoChild) mGeckoChild->NotifyThemeChanged();
+  // TODO(emilio): We could make this more fine-grained by only passing true
+  // here when system colors / fonts change, but right now we tunnel all the
+  // relevant notifications through here.
+  if (mGeckoChild) mGeckoChild->NotifyThemeChanged(widget::ThemeChangeKind::StyleAndLayout);
 }
 
 - (void)scrollbarSystemMetricChanged {

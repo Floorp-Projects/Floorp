@@ -85,6 +85,7 @@ using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using struct LookAndFeelCache from "mozilla/widget/WidgetMessageUtils.h";
+using mozilla::widget::ThemeChangeKind from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -560,10 +561,10 @@ child:
     async NotifyVisited(VisitedQueryResult[] uri);
 
     /**
-     * Tell the child that the system theme has changed, and that a repaint
-     * is necessary.
+     * Tell the child that the system theme has changed, and that a repaint is
+     * necessary.
      */
-    async ThemeChanged(LookAndFeelCache lookAndFeelCache);
+    async ThemeChanged(LookAndFeelCache aCache, ThemeChangeKind aKind);
 
     async UpdateSystemParameters(SystemParameterKVPair[] aUpdates);
 
