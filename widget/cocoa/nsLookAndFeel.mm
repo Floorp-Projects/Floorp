@@ -22,13 +22,6 @@
 // This must be included last:
 #include "nsObjCExceptions.h"
 
-enum { mozNSScrollerStyleLegacy = 0, mozNSScrollerStyleOverlay = 1 };
-typedef NSInteger mozNSScrollerStyle;
-
-@interface NSScroller (AvailableSinceLion)
-+ (mozNSScrollerStyle)preferredScrollerStyle;
-@end
-
 // Available from 10.12 onwards; test availability at runtime before using
 @interface NSWorkspace (AvailableSinceSierra)
 @property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
@@ -473,7 +466,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
     case IntID::UseOverlayScrollbars:
       if (!mUseOverlayScrollbarsCached) {
-        mUseOverlayScrollbars = SystemWantsOverlayScrollbars() ? 1 : 0;
+        mUseOverlayScrollbars = NSScroller.preferredScrollerStyle == NSScrollerStyleOverlay ? 1 : 0;
         mUseOverlayScrollbarsCached = true;
       }
       aResult = mUseOverlayScrollbars;
@@ -613,11 +606,6 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
 }
 
 bool nsLookAndFeel::UseOverlayScrollbars() { return GetInt(IntID::UseOverlayScrollbars) != 0; }
-
-bool nsLookAndFeel::SystemWantsOverlayScrollbars() {
-  return ([NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
-          [NSScroller preferredScrollerStyle] == mozNSScrollerStyleOverlay);
-}
 
 bool nsLookAndFeel::AllowOverlayScrollbarsOverlap() { return (UseOverlayScrollbars()); }
 
