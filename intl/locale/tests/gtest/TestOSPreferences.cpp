@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/intl/OSPreferences.h"
 
 using namespace mozilla::intl;
@@ -77,4 +78,71 @@ TEST(Intl_Locale_OSPreferences, GetDateTimePattern)
   }
 
   ASSERT_TRUE(1);
+}
+
+/**
+ * Test that is possible to override the OS defaults through a pref.
+ */
+TEST(Intl_Locale_OSPreferences, GetDateTimePatternPrefOverrides)
+{
+  nsresult nr;
+  nsAutoCString default_pattern, pattern;
+  OSPreferences* osprefs = OSPreferences::GetInstance();
+
+  struct {
+    const char* DatePref;
+    const char* TimePref;
+    int32_t DateTimeFormatStyle;
+  } configs[] = {{"intl.date_time.pattern_override.date_short",
+                  "intl.date_time.pattern_override.time_short",
+                  mozIOSPreferences::dateTimeFormatStyleShort},
+                 {"intl.date_time.pattern_override.date_medium",
+                  "intl.date_time.pattern_override.time_medium",
+                  mozIOSPreferences::dateTimeFormatStyleMedium},
+                 {"intl.date_time.pattern_override.date_long",
+                  "intl.date_time.pattern_override.time_long",
+                  mozIOSPreferences::dateTimeFormatStyleLong},
+                 {"intl.date_time.pattern_override.date_full",
+                  "intl.date_time.pattern_override.time_full",
+                  mozIOSPreferences::dateTimeFormatStyleFull}};
+
+  for (const auto& config : configs) {
+    // Get default value for the OS
+    nr = osprefs->GetDateTimePattern(config.DateTimeFormatStyle,
+                                     mozIOSPreferences::dateTimeFormatStyleNone,
+                                     nsDependentCString(""), default_pattern);
+    ASSERT_TRUE(NS_SUCCEEDED(nr));
+
+    // Override date format
+    mozilla::Preferences::SetCString(config.DatePref, "yy-MM");
+    nr = osprefs->GetDateTimePattern(config.DateTimeFormatStyle,
+                                     mozIOSPreferences::dateTimeFormatStyleNone,
+                                     nsDependentCString(""), pattern);
+    ASSERT_TRUE(NS_SUCCEEDED(nr));
+    ASSERT_TRUE(pattern.EqualsASCII("yy-MM"));
+
+    // Override time format
+    mozilla::Preferences::SetCString(config.TimePref, "HH:mm");
+    nr = osprefs->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleNone,
+                                     config.DateTimeFormatStyle,
+                                     nsDependentCString(""), pattern);
+    ASSERT_TRUE(NS_SUCCEEDED(nr));
+    ASSERT_TRUE(pattern.EqualsASCII("HH:mm"));
+
+    // Override both
+    nr = osprefs->GetDateTimePattern(config.DateTimeFormatStyle,
+                                     config.DateTimeFormatStyle,
+                                     nsDependentCString(""), pattern);
+    ASSERT_TRUE(NS_SUCCEEDED(nr));
+    ASSERT_TRUE(pattern.EqualsASCII("yy-MM, HH:mm"));
+
+    // Clear overrides, we should get the default value back.
+    mozilla::Preferences::SetCString(config.DatePref, "");
+    mozilla::Preferences::SetCString(config.TimePref, "");
+    nr = osprefs->GetDateTimePattern(config.DateTimeFormatStyle,
+                                     mozIOSPreferences::dateTimeFormatStyleNone,
+                                     nsDependentCString(""), pattern);
+    ASSERT_TRUE(NS_SUCCEEDED(nr));
+    ASSERT_EQ(default_pattern, pattern);
+  }
 }

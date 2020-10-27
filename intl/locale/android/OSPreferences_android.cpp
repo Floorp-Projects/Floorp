@@ -13,8 +13,6 @@ using namespace mozilla::intl;
 
 OSPreferences::OSPreferences() {}
 
-OSPreferences::~OSPreferences() {}
-
 bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   if (!mozilla::jni::IsAvailable()) {
     return false;
@@ -46,3 +44,5 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                         nsACString& aRetVal) {
   return false;
 }
+
+void OSPreferences::RemoveObservers() {}

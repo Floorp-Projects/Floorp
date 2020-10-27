@@ -26,6 +26,11 @@ mozilla::StaticRefPtr<OSPreferences> OSPreferences::sInstance;
 OSPreferences* OSPreferences::GetInstance() {
   if (!sInstance) {
     sInstance = new OSPreferences();
+
+    DebugOnly<nsresult> rv = Preferences::RegisterPrefixCallback(
+        PreferenceChanged, "intl.date_time.pattern_override");
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
     ClearOnShutdown(&sInstance);
   }
   return sInstance;
@@ -41,6 +46,20 @@ void OSPreferences::Refresh() {
     if (obs) {
       obs->NotifyObservers(nullptr, "intl:system-locales-changed", nullptr);
     }
+  }
+}
+
+OSPreferences::~OSPreferences() {
+  Preferences::UnregisterPrefixCallback(PreferenceChanged,
+                                        "intl.date_time.pattern_override");
+  RemoveObservers();
+}
+
+/*static*/
+void OSPreferences::PreferenceChanged(const char* aPrefName,
+                                      void* /* aClosure */) {
+  if (sInstance) {
+    sInstance->mPatternCache.Clear();
   }
 }
 
@@ -168,6 +187,126 @@ bool OSPreferences::GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
   }
 
   aRetVal = NS_ConvertUTF16toUTF8(skeleton, skelsize);
+  return true;
+}
+
+/**
+ * This method checks for preferences that override the defaults
+ */
+bool OSPreferences::OverrideDateTimePattern(DateTimeFormatStyle aDateStyle,
+                                            DateTimeFormatStyle aTimeStyle,
+                                            const nsACString& aLocale,
+                                            nsACString& aRetVal) {
+  const auto PrefToMaybeString = [](const char* pref) -> Maybe<nsAutoCString> {
+    nsAutoCString value;
+    nsresult nr = Preferences::GetCString(pref, value);
+    if (NS_FAILED(nr) || value.IsEmpty()) {
+      return Nothing();
+    }
+    return Some(std::move(value));
+  };
+
+  Maybe<nsAutoCString> timeSkeleton;
+  switch (aTimeStyle) {
+    case DateTimeFormatStyle::Short:
+      timeSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.time_short");
+      break;
+    case DateTimeFormatStyle::Medium:
+      timeSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.time_medium");
+      break;
+    case DateTimeFormatStyle::Long:
+      timeSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.time_long");
+      break;
+    case DateTimeFormatStyle::Full:
+      timeSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.time_full");
+      break;
+    default:
+      break;
+  }
+
+  Maybe<nsAutoCString> dateSkeleton;
+  switch (aDateStyle) {
+    case DateTimeFormatStyle::Short:
+      dateSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.date_short");
+      break;
+    case DateTimeFormatStyle::Medium:
+      dateSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.date_medium");
+      break;
+    case DateTimeFormatStyle::Long:
+      dateSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.date_long");
+      break;
+    case DateTimeFormatStyle::Full:
+      dateSkeleton =
+          PrefToMaybeString("intl.date_time.pattern_override.date_full");
+      break;
+    default:
+      break;
+  }
+
+  nsAutoCString locale;
+  if (aLocale.IsEmpty()) {
+    AutoTArray<nsCString, 10> regionalPrefsLocales;
+    LocaleService::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales);
+    locale.Assign(regionalPrefsLocales[0]);
+  } else {
+    locale.Assign(aLocale);
+  }
+
+  const auto FillConnectorPattern = [&locale](
+                                        const nsAutoCString& datePattern,
+                                        const nsAutoCString& timePattern) {
+    nsAutoCString pattern;
+    GetDateTimeConnectorPattern(nsDependentCString(locale.get()), pattern);
+    int32_t index = pattern.Find("{1}");
+    if (index != kNotFound) {
+      pattern.Replace(index, 3, datePattern);
+    }
+    index = pattern.Find("{0}");
+    if (index != kNotFound) {
+      pattern.Replace(index, 3, timePattern);
+    }
+    return pattern;
+  };
+
+  if (timeSkeleton && dateSkeleton) {
+    aRetVal.Assign(FillConnectorPattern(*dateSkeleton, *timeSkeleton));
+  } else if (timeSkeleton) {
+    if (aDateStyle != DateTimeFormatStyle::None) {
+      nsAutoCString pattern;
+      if (!ReadDateTimePattern(aDateStyle, DateTimeFormatStyle::None, aLocale,
+                               pattern) &&
+          !GetDateTimePatternForStyle(aDateStyle, DateTimeFormatStyle::None,
+                                      aLocale, pattern)) {
+        return false;
+      }
+      aRetVal.Assign(FillConnectorPattern(pattern, *timeSkeleton));
+    } else {
+      aRetVal.Assign(*timeSkeleton);
+    }
+  } else if (dateSkeleton) {
+    if (aTimeStyle != DateTimeFormatStyle::None) {
+      nsAutoCString pattern;
+      if (!ReadDateTimePattern(DateTimeFormatStyle::None, aTimeStyle, aLocale,
+                               pattern) &&
+          !GetDateTimePatternForStyle(DateTimeFormatStyle::None, aTimeStyle,
+                                      aLocale, pattern)) {
+        return false;
+      }
+      aRetVal.Assign(FillConnectorPattern(*dateSkeleton, pattern));
+    } else {
+      aRetVal.Assign(*dateSkeleton);
+    }
+  } else {
+    return false;
+  }
+
   return true;
 }
 
@@ -347,9 +486,11 @@ OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
     return NS_OK;
   }
 
-  if (!ReadDateTimePattern(dateStyle, timeStyle, aLocale, pattern)) {
-    if (!GetDateTimePatternForStyle(dateStyle, timeStyle, aLocale, pattern)) {
-      return NS_ERROR_FAILURE;
+  if (!OverrideDateTimePattern(dateStyle, timeStyle, aLocale, pattern)) {
+    if (!ReadDateTimePattern(dateStyle, timeStyle, aLocale, pattern)) {
+      if (!GetDateTimePatternForStyle(dateStyle, timeStyle, aLocale, pattern)) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 

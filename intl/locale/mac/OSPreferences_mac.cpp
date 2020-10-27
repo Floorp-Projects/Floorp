@@ -28,12 +28,6 @@ OSPreferences::OSPreferences() {
       CFNotificationSuspensionBehaviorDeliverImmediately);
 }
 
-OSPreferences::~OSPreferences() {
-  ::CFNotificationCenterRemoveObserver(
-      ::CFNotificationCenterGetLocalCenter(), this,
-      kCTFontManagerRegisteredFontsChangedNotification, 0);
-}
-
 bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
@@ -155,4 +149,10 @@ bool OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
 
   aRetVal = NS_ConvertUTF16toUTF8(str);
   return true;
+}
+
+void OSPreferences::RemoveObservers() {
+  ::CFNotificationCenterRemoveObserver(
+      ::CFNotificationCenterGetLocalCenter(), this,
+      kCTFontManagerRegisteredFontsChangedNotification, 0);
 }
