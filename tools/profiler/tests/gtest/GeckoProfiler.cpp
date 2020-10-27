@@ -11,6 +11,7 @@
 
 #include "GeckoProfiler.h"
 #include "mozilla/ProfilerMarkerTypes.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "platform.h"
 #include "ProfileBuffer.h"
 #include "ProfilerMarkerPayload.h"
@@ -755,13 +756,10 @@ TEST(GeckoProfiler, Markers)
 
   // Keep this one first! (It's used to record `ts1` and `ts2`, to compare
   // to serialized numbers in other markers.)
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "FileIOMarkerPayload marker", OTHER, FileIOMarkerPayload,
-      ("operation", "source", "filename", ts1, ts2, nullptr));
-
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "FileIOMarkerPayload marker off-MT", OTHER, FileIOMarkerPayload,
-      ("operation2", "source2", "filename2", ts1, ts2, nullptr, Some(123)));
+  MOZ_RELEASE_ASSERT(
+      profiler_add_marker("FirstMarker", geckoprofiler::category::OTHER,
+                          MarkerTiming::Interval(ts1, ts2),
+                          geckoprofiler::markers::Text{}, "FirstMarker"));
 
   // Other markers in alphabetical order of payload class names.
 
@@ -985,8 +983,7 @@ TEST(GeckoProfiler, Markers)
     S_Markers2DefaultWithOptions,
     S_Markers2ExplicitDefaultEmptyOptions,
     S_Markers2ExplicitDefaultWithOptions,
-    S_FileIOMarkerPayload,
-    S_FileIOMarkerPayloadOffMT,
+    S_FirstMarker,
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
@@ -1336,38 +1333,13 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ(typeString, "NoPayloadUserData");
                 EXPECT_FALSE(payload["stack"].isNull());
 
-              } else if (nameString == "FileIOMarkerPayload marker") {
-                EXPECT_EQ(state, S_FileIOMarkerPayload);
-                state = State(S_FileIOMarkerPayload + 1);
-                EXPECT_EQ(typeString, "FileIO");
-
+              } else if (nameString == "FirstMarker") {
                 // Record start and end times, to compare with timestamps in
                 // following markers.
-                EXPECT_EQ(ts1Double, 0.0);
+                EXPECT_EQ(state, S_FirstMarker);
                 ts1Double = marker[START_TIME].asDouble();
-                EXPECT_NE(ts1Double, 0.0);
-                EXPECT_EQ(ts2Double, 0.0);
                 ts2Double = marker[END_TIME].asDouble();
-                EXPECT_NE(ts2Double, 0.0);
-                EXPECT_EQ_JSON(marker[PHASE], UInt, PHASE_INTERVAL);
-
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["operation"], String, "operation");
-                EXPECT_EQ_JSON(payload["source"], String, "source");
-                EXPECT_EQ_JSON(payload["filename"], String, "filename");
-                EXPECT_FALSE(payload.isMember("threadId"));
-
-              } else if (nameString == "FileIOMarkerPayload marker off-MT") {
-                EXPECT_EQ(state, S_FileIOMarkerPayloadOffMT);
-                state = State(S_FileIOMarkerPayloadOffMT + 1);
-                EXPECT_EQ(typeString, "FileIO");
-                EXPECT_TIMING_INTERVAL_AT(ts1Double, ts2Double);
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["operation"], String, "operation2");
-                EXPECT_EQ_JSON(payload["source"], String, "source2");
-                EXPECT_EQ_JSON(payload["filename"], String, "filename2");
-                EXPECT_EQ_JSON(payload["threadId"], Int, 123);
-
+                state = State(S_FirstMarker + 1);
               } else if (nameString == "GCMajorMarkerPayload marker") {
                 EXPECT_EQ(state, S_GCMajorMarkerPayload);
                 state = State(S_GCMajorMarkerPayload + 1);
