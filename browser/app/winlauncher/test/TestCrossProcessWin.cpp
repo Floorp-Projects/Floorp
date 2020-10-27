@@ -6,6 +6,7 @@
 
 #define MOZ_USE_LAUNCHER_ERROR
 
+#include "freestanding/FunctionTableResolver.cpp"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"
 
@@ -20,6 +21,17 @@ void PrintLauncherError(const LauncherResult<T>& aResult,
   printf("TEST-FAILED | TestCrossProcessWin | %s - %lx at %s:%d\n", aMsg,
          err.mError.AsHResult(), err.mFile, err.mLine);
 }
+
+#define VERIFY_FUNCTION_RESOLVED(mod, name)                      \
+  do {                                                           \
+    if (reinterpret_cast<FARPROC>(freestanding::gK32.m##name) != \
+        ::GetProcAddress(mod, #name)) {                          \
+      printf(                                                    \
+          "TEST-FAILED | TestCrossProcessWin | "                 \
+          "Kernel32ExportsSolver::" #name " did not match.\n");  \
+      return 1;                                                  \
+    }                                                            \
+  } while (0)
 
 class ChildProcess final {
   nsAutoHandle mChildProcess;
@@ -56,6 +68,19 @@ class ChildProcess final {
           ::GetCurrentProcessId(), sReadOnlyProcessId);
       return 1;
     }
+
+    static RTL_RUN_ONCE sRunOnce = RTL_RUN_ONCE_INIT;
+    freestanding::gK32.Resolve(sRunOnce);
+    if (!freestanding::gK32.IsResolved()) {
+      printf(
+          "TEST-FAILED | TestCrossProcessWin | "
+          "Kernel32ExportsSolver::Resolve failed.\n");
+    }
+
+    HMODULE k32mod = ::GetModuleHandleW(L"kernel32.dll");
+    VERIFY_FUNCTION_RESOLVED(k32mod, FlushInstructionCache);
+    VERIFY_FUNCTION_RESOLVED(k32mod, GetSystemInfo);
+    VERIFY_FUNCTION_RESOLVED(k32mod, VirtualProtect);
 
     return 0;
   }
@@ -150,7 +175,22 @@ int wmain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
+  freestanding::gK32.Init();
+  if (!freestanding::gK32.IsInitialized()) {
+    printf(
+        "TEST-FAILED | TestCrossProcessWin | "
+        "Kernel32ExportsSolver initialization failed.\n");
+    return 1;
+  }
+
   LauncherVoidResult writeResult =
+      freestanding::gK32.Transfer(transferMgr, &freestanding::gK32);
+  if (writeResult.isErr()) {
+    PrintLauncherError(writeResult, "Kernel32ExportsSolver::Transfer failed");
+    return 1;
+  }
+
+  writeResult =
       transferMgr.Transfer(&ChildProcess::sExecutableImageBase,
                            &remoteImageBase.inspect(), sizeof(HMODULE));
   if (writeResult.isErr()) {

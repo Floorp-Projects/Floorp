@@ -43,23 +43,28 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
 static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
     const IMAGE_THUNK_DATA* aCachedNtdllThunk) {
+  nt::CrossExecTransferManager transferMgr(aChildProcess);
+  if (!transferMgr) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
   freestanding::gK32.Init();
   if (freestanding::gK32.IsInitialized()) {
-    freestanding::gK32.Transfer(aChildProcess, &freestanding::gK32);
+    Unused << freestanding::gK32.Transfer(transferMgr, &freestanding::gK32);
   }
 
   CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");
 
   bool ok = freestanding::stub_NtMapViewOfSection.SetDetour(
-      aChildProcess, intcpt, "NtMapViewOfSection",
+      transferMgr, intcpt, "NtMapViewOfSection",
       &freestanding::patched_NtMapViewOfSection);
   if (!ok) {
     return LAUNCHER_ERROR_FROM_DETOUR_ERROR(intcpt.GetLastDetourError());
   }
 
   ok = freestanding::stub_LdrLoadDll.SetDetour(
-      aChildProcess, intcpt, "LdrLoadDll", &freestanding::patched_LdrLoadDll);
+      transferMgr, intcpt, "LdrLoadDll", &freestanding::patched_LdrLoadDll);
   if (!ok) {
     return LAUNCHER_ERROR_FROM_DETOUR_ERROR(intcpt.GetLastDetourError());
   }
@@ -75,10 +80,6 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
   // it onto the child process's IAT, thus enabling the child process's hook to
   // safely make its ntdll calls.
 
-  nt::CrossExecTransferManager transferMgr(aChildProcess);
-  if (!transferMgr) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
-  }
   const nt::PEHeaders& ourExeImage = transferMgr.LocalPEHeaders();
 
   // As part of our mitigation of binary tampering, copy our import directory

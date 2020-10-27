@@ -80,10 +80,18 @@ int ParentMain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
+  mozilla::nt::CrossExecTransferManager transferMgr(childProcess);
+  if (!transferMgr) {
+    printf(
+        "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | "
+        "CrossExecTransferManager instantiation failed.\n");
+    return 1;
+  }
+
   mozilla::CrossProcessDllInterceptor intcpt(childProcess.get());
   intcpt.Init("TestDllInterceptorCrossProcess.exe");
 
-  if (!gOrigReturnResult.Set(childProcess.get(), intcpt, "ReturnResult",
+  if (!gOrigReturnResult.Set(transferMgr, intcpt, "ReturnResult",
                              &ReturnResultHook)) {
     printf(
         "TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Failed to add "

@@ -221,23 +221,19 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
   FuncHookCrossProcess() {}
 #endif  // defined(DEBUG)
 
-  bool Set(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
-           FuncPtrT aHookDest) {
+  bool Set(nt::CrossExecTransferManager& aTransferMgr,
+           InterceptorT& aInterceptor, const char* aName, FuncPtrT aHookDest) {
     FuncPtrT origFunc;
     if (!aInterceptor.AddHook(aName, reinterpret_cast<intptr_t>(aHookDest),
                               reinterpret_cast<void**>(&origFunc))) {
       return false;
     }
 
-    bool ret = CopyStubToChildProcess(origFunc, aProcess);
-    if (!ret) {
-      aInterceptor.SetLastDetourError(FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
-                                      ::GetLastError());
-    }
-    return ret;
+    return CopyStubToChildProcess(aTransferMgr, aInterceptor, origFunc);
   }
 
-  bool SetDetour(HANDLE aProcess, InterceptorT& aInterceptor, const char* aName,
+  bool SetDetour(nt::CrossExecTransferManager& aTransferMgr,
+                 InterceptorT& aInterceptor, const char* aName,
                  FuncPtrT aHookDest) {
     FuncPtrT origFunc;
     if (!aInterceptor.AddDetour(aName, reinterpret_cast<intptr_t>(aHookDest),
@@ -245,12 +241,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
       return false;
     }
 
-    bool ret = CopyStubToChildProcess(origFunc, aProcess);
-    if (!ret) {
-      aInterceptor.SetLastDetourError(FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
-                                      ::GetLastError());
-    }
-    return ret;
+    return CopyStubToChildProcess(aTransferMgr, aInterceptor, origFunc);
   }
 
   explicit operator bool() const { return !!mOrigFunc; }
@@ -271,11 +262,21 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
 #endif  // defined(DEBUG)
 
  private:
-  bool CopyStubToChildProcess(FuncPtrT aStub, HANDLE aProcess) {
-    SIZE_T bytesWritten;
-    return ::WriteProcessMemory(aProcess, &mOrigFunc, &aStub, sizeof(FuncPtrT),
-                                &bytesWritten) &&
-           bytesWritten == sizeof(FuncPtrT);
+  bool CopyStubToChildProcess(nt::CrossExecTransferManager& aTransferMgr,
+                              InterceptorT& aInterceptor, FuncPtrT aStub) {
+    LauncherVoidResult writeResult =
+        aTransferMgr.Transfer(&mOrigFunc, &aStub, sizeof(FuncPtrT));
+    if (writeResult.isErr()) {
+#ifdef MOZ_USE_LAUNCHER_ERROR
+      const mozilla::WindowsError& err = writeResult.inspectErr().mError;
+#else
+      const mozilla::WindowsError& err = writeResult.inspectErr();
+#endif
+      aInterceptor.SetLastDetourError(FUNCHOOKCROSSPROCESS_COPYSTUB_ERROR,
+                                      err.AsHResult());
+      return false;
+    }
+    return true;
   }
 
  private:
