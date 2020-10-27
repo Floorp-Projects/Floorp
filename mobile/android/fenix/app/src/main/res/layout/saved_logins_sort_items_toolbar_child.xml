@@ -2,11 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sort_logins_menu_root"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackgroundBorderless">
 
@@ -15,9 +14,14 @@
         style="@style/ToolbarTitleTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:singleLine="true"
         android:text="@string/preferences_passwords_saved_logins"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/toolbar_chevron_icon"
+        app:layout_constraintEnd_toStartOf="@id/toolbar_chevron_icon"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -37,13 +41,12 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_marginStart="@dimen/saved_logins_sort_menu_dropdown_chevron_icon_margin_start"
-        android:layout_toEndOf="@+id/toolbar_title"
         android:adjustViewBounds="true"
         android:contentDescription="@string/saved_logins_menu_dropdown_chevron_icon_content_description"
-        app:srcCompat="@drawable/ic_chevron"
-        app:layout_constraintBottom_toBottomOf="@+id/toolbar_title"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/toolbar_title"
-        app:layout_constraintTop_toTopOf="@+id/toolbar_title" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_chevron" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
