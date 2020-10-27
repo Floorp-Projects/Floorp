@@ -8868,8 +8868,8 @@
   value: 144.0f
   mirror: always
 
-# Whether support for monochrome printing is enabled on mac.
-- name: print.mac.monochrome.enabled
+# Whether support for monochrome printing is enabled for CUPS.
+- name: print.cups.monochrome.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
