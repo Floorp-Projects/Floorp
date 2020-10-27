@@ -30,6 +30,7 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.channels.Channels
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
 import kotlin.random.Random
@@ -261,6 +262,7 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "BuildID", buildId, nameSet)
         sendPart(gzipOs, boundary, "Vendor", vendor, nameSet)
         sendPart(gzipOs, boundary, "Breadcrumbs", breadcrumbs, nameSet)
+        sendPart(gzipOs, boundary, "useragent_locale", Locale.getDefault().toString(), nameSet)
 
         extrasFilePath?.let {
             val regex = "$FILE_REGEX$EXTRAS_FILE_EXT".toRegex()

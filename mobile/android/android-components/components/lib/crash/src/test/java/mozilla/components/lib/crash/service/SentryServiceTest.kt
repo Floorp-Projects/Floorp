@@ -284,6 +284,7 @@ class SentryServiceTest {
         verify(client).addTag(eq("ac.git"), any())
         verify(client).addTag(eq("ac.as.build_version"), any())
         verify(client).addTag(eq("ac.glean.build_version"), any())
+        verify(client).addTag(eq("user.locale"), any())
         verify(clientContext).clearBreadcrumbs()
     }
 

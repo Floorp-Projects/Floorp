@@ -19,6 +19,7 @@ import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 import java.util.Date
+import java.util.Locale
 import mozilla.components.concept.base.crash.Breadcrumb as CrashBreadcrumb
 
 /**
@@ -75,6 +76,7 @@ class SentryService(
             addTag("ac.git", Build.gitHash)
             addTag("ac.as.build_version", Build.applicationServicesVersion)
             addTag("ac.glean.build_version", Build.gleanSdkVersion)
+            addTag("user.locale", Locale.getDefault().toString())
         }
     }
 
