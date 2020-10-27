@@ -962,6 +962,36 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  /*
+   * This function is used to sort any type of story, both spocs and recs.
+   * This uses hierarchical sorting, first sorting by priority, then by score within a priority.
+   * This function could be sorting an array of spocs or an array of recs.
+   * A rec would have priority undefined, and a spoc would probably have a priority set.
+   * Priority is sorted ascending, so low numbers are the highest priority.
+   * Score is sorted descending, so high numbers are the highest score.
+   * Undefined priority values are considered the lowest priority.
+   * A negative priority is considered the same as undefined, lowest priority.
+   * A negative priority is unlikely and not currently supported or expected.
+   * A negative score is a possible use case.
+   */
+  sortItem(a, b) {
+    // If the priorities are the same, sort based on score.
+    // If both item priorities are undefined,
+    // we can safely sort via score.
+    if (a.priority === b.priority) {
+      return b.score - a.score;
+    } else if (!a.priority || a.priority <= 0) {
+      // If priority is undefined or an unexpected value,
+      // consider it lowest priority.
+      return 1;
+    } else if (!b.priority || b.priority <= 0) {
+      // Also consider this case lowest priority.
+      return -1;
+    }
+    // Our primary sort for items with priority.
+    return a.priority - b.priority;
+  }
+
   async scoreItems(items, type) {
     const filtered = [];
     const scoreStart = Cu.now();
@@ -988,7 +1018,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         return false;
       })
       // Sort by highest scores.
-      .sort((a, b) => b.score - a.score);
+      .sort(this.sortItem);
 
     if (this.personalized && personalizedByType) {
       this.providerSwitcher.dispatchRelevanceScoreDuration(scoreStart);
