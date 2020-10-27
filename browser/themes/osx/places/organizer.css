@@ -10,12 +10,6 @@
   width: 160px;
 }
 
-@media (-moz-mac-yosemite-theme: 0) {
-  #placesList {
-    box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
-  }
-}
-
 #placesList > treechildren::-moz-tree-cell-text {
   margin-inline-end: 6px;
 }
@@ -39,19 +33,6 @@
 #placesList > treechildren::-moz-tree-separator {
   border-top: 1px solid #505d6d;
   margin: 0 10px;
-}
-
-/* Match selected item styling for -moz-appearance values on OSX 10.9 */
-@media (-moz-mac-yosemite-theme: 0) {
-  #placesList > treechildren::-moz-tree-image(selected),
-  #placesList > treechildren::-moz-tree-twisty(selected),
-  #placesList > treechildren::-moz-tree-cell-text(selected) {
-    color: #fff;
-  }
-
-  #placesList > treechildren::-moz-tree-cell-text(selected) {
-    font-weight: bold;
-  }
 }
 
 #placesToolbar {

@@ -43,6 +43,14 @@
 
 #navigator-toolbox {
   appearance: none;
+  --tabs-border-color: rgba(0,0,0,.2);
+}
+
+#navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
+  --tabs-border-color: rgba(0,0,0,.05);
+}
+
+#navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
 
@@ -102,14 +110,6 @@
   margin-left: 12px;
 }
 
-/* The fullscreen button doesnt show on Yosemite(10.10) or above so dont give it a
-   border there */
-@media (-moz-mac-yosemite-theme: 0) {
-  .titlebar-spacer[type="fullscreen-button"] {
-    margin-right: 4px;
-  }
-}
-
 /** End titlebar **/
 
 :root[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
@@ -122,27 +122,10 @@
   color: var(--toolbar-color);
 }
 
-/* Draw the bottom border of the tabs toolbar when it's not using
-   -moz-default-appearance: toolbar. */
-:root:is([sizemode="fullscreen"],[customizing]) #nav-bar:not([tabs-hidden="true"]),
-:root:not([tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
+/* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
+:root:not(:is([inFullscreen], [tabsintitlebar])) #nav-bar:not([tabs-hidden="true"]),
 #nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
   box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
-}
-
-/* Always draw a border on Yosemite to ensure the border is well-defined there
- * (the default border is too light). */
-@media (-moz-mac-yosemite-theme) {
-  #navigator-toolbox:not(:-moz-lwtheme) {
-    --tabs-border-color: rgba(0,0,0,.2);
-  }
-  #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
-    --tabs-border-color: rgba(0,0,0,.05);
-  }
-
-  :root[tabsintitlebar] #nav-bar:not([tabs-hidden="true"]):not(:-moz-lwtheme) {
-    box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
-  }
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
