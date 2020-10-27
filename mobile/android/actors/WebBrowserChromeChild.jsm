@@ -42,6 +42,12 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
   ) {
     debug`shouldLoadURI ${aURI.displaySpec}`;
 
+    if (!GeckoViewSettings.useMultiprocess) {
+      // If we're in non-e10s mode there's no other process we can load this
+      // page in.
+      return true;
+    }
+
     if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
       E10SUtils.redirectLoad(
         aDocShell,

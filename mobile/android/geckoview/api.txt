@@ -632,6 +632,7 @@ package org.mozilla.geckoview {
     method @Nullable public Rect getScreenSizeOverride();
     method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
     method public boolean getUseMaxScreenDepth();
+    method @Deprecated public boolean getUseMultiprocess();
     method public boolean getWebFontsEnabled();
     method public boolean getWebManifestEnabled();
     method @NonNull public GeckoRuntimeSettings setAboutConfigEnabled(boolean);
@@ -684,6 +685,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
     method @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
+    method @Deprecated @NonNull public GeckoRuntimeSettings.Builder useMultiprocess(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webManifest(boolean);
     method @NonNull protected GeckoRuntimeSettings newSettings(@Nullable GeckoRuntimeSettings);

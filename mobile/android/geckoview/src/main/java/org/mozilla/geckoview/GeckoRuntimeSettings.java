@@ -46,6 +46,22 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
+         * Set whether multiprocess support should be enabled.
+         *
+         * @param use A flag determining whether multiprocess should be enabled.
+         *            Default is true.
+         * @return This Builder instance.
+         *
+         * @deprecated This method will be removed in GeckoView 82, at which point GeckoView will
+         *             only operate in multiprocess mode.
+         */
+        @Deprecated // Bug 1650118
+        public @NonNull Builder useMultiprocess(final boolean use) {
+            getSettings().mUseMultiprocess.set(use);
+            return this;
+        }
+
+        /**
          * Set the custom Gecko process arguments.
          *
          * @param args The Gecko process arguments.
@@ -487,6 +503,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "general.aboutConfig.enable", false);
     /* package */ final Pref<Boolean> mForceUserScalable = new Pref<>(
             "browser.ui.zoom.force-user-scalable", false);
+    /* package */ final Pref<Boolean> mUseMultiprocess = new Pref<>(
+            "browser.tabs.remote.autostart", true);
     /* package */ final Pref<Boolean> mAutofillLogins = new Pref<Boolean>(
         "signon.autofillForms", true);
 
@@ -558,6 +576,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         commitLocales();
         commitResetPrefs();
     }
+
+    /**
+     * Whether multiprocess is enabled.
+     *
+     * @return true if multiprocess is enabled, false otherwise.
+     *
+     * @deprecated This method will be removed in GeckoView 82, at which point GeckoView will only
+     *             operate in multiprocess mode.
+     */
+    @Deprecated // Bug 1650118
+    public boolean getUseMultiprocess() {
+        return mUseMultiprocess.get();
+    }
+
 
     /**
      * Get the custom Gecko process arguments.

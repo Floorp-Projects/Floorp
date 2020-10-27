@@ -38,6 +38,12 @@ public class Environment {
         return !getEnvVar("MOZ_CRASHREPORTER_SHUTDOWN").isEmpty();
     }
 
+    public boolean isMultiprocess() {
+        return Boolean.valueOf(InstrumentationRegistry.getArguments()
+                .getString("use_multiprocess",
+                        "true"));
+    }
+
     public boolean isDebugging() {
         return Debug.isDebuggerConnected();
     }

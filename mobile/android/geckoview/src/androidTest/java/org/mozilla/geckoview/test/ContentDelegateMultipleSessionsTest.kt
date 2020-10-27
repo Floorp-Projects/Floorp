@@ -119,6 +119,9 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
 
     @IgnoreCrash
     @Test fun crashContentMultipleSessions() {
+        // This test doesn't make sense without multiprocess
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+
         val newSession = getSecondGeckoSession()
 
         // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
@@ -158,6 +161,8 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
 
     @IgnoreCrash
     @Test fun killContentMultipleSessions() {
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+
         val newSession = getSecondGeckoSession()
 
         val mainSessionKilled = GeckoResult<Void>()
