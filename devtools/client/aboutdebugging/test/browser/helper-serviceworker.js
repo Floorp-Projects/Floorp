@@ -29,16 +29,22 @@ async function enableServiceWorkerDebugging() {
  * @param {String} message
  *        The name of the expected message.
  */
-function onTabMessage(tab, message) {
-  const mm = tab.linkedBrowser.messageManager;
-  return new Promise(resolve => {
-    mm.addMessageListener(message, function listener() {
-      mm.removeMessageListener(message, listener);
-      resolve();
+function onServiceWorkerMessage(tab, message) {
+  info("Make the test page notify us when the service worker sends a message.");
+  return SpecialPowers.spawn(tab.linkedBrowser, [message], function(
+    messageChild
+  ) {
+    return new Promise(resolve => {
+      const win = content.wrappedJSObject;
+      win.navigator.serviceWorker.addEventListener("message", function(event) {
+        if (event.data == messageChild) {
+          resolve();
+        }
+      });
     });
   });
 }
-/* exported onTabMessage */
+/* exported onServiceWorkerMessage */
 
 async function _waitForServiceWorkerStatus(workerText, status, document) {
   await waitUntil(() => {
@@ -76,25 +82,6 @@ async function waitForRegistration(tab) {
   );
 }
 /* exported waitForRegistration */
-
-/**
- * Helper to listen once on a message sent using postMessage from the provided tab.
- *
- * @param {Tab} tab
- *        The tab on which the message will be received.
- * @param {String} message
- *        The name of the expected message.
- */
-function forwardServiceWorkerMessage(tab) {
-  info("Make the test page notify us when the service worker sends a message.");
-  return ContentTask.spawn(tab.linkedBrowser, {}, function() {
-    const win = content.wrappedJSObject;
-    win.navigator.serviceWorker.addEventListener("message", function(event) {
-      sendAsyncMessage(event.data);
-    });
-  });
-}
-/* exported forwardServiceWorkerMessage */
 
 /**
  * Unregister the service worker from the content page. The content page should define
