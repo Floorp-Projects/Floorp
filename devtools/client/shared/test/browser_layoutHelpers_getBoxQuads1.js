@@ -13,37 +13,24 @@ add_task(async function() {
 
   info("Running tests");
 
-  // `FullZoom` isn't available from the ContentTask. This code is defined by browser
-  // frontend and runs in the parent process. Here, we use the message manager
-  // to allow the Content Task to call this zoom helper whenever it needs to.
-  const mm = tab.linkedBrowser.messageManager;
-  mm.addMessageListener("devtools-test:command", async function({ data }) {
-    switch (data) {
-      case "zoom-enlarge":
-        window.FullZoom.enlarge();
-        break;
-      case "zoom-reset":
-        await window.FullZoom.reset();
-        break;
-      case "zoom-reduce":
-        window.FullZoom.reduce();
-        break;
-    }
-    mm.sendAsyncMessage("devtools-test:done");
-  });
-
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    // This function allows the Content Task to easily call `FullZoom` API via
-    // the message manager.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    // This function allows the Content Task to easily call `FullZoom` API in
+    // the parent process.
     function sendCommand(cmd) {
-      const onDone = new Promise(done => {
-        addMessageListener("devtools-test:done", function listener() {
-          removeMessageListener("devtools-test:done", listener);
-          done();
-        });
+      return SpecialPowers.spawnChrome([cmd], async data => {
+        const window = this.browsingContext.topChromeWindow;
+        switch (data) {
+          case "zoom-enlarge":
+            window.FullZoom.enlarge();
+            break;
+          case "zoom-reset":
+            await window.FullZoom.reset();
+            break;
+          case "zoom-reduce":
+            window.FullZoom.reduce();
+            break;
+        }
       });
-      sendAsyncMessage("devtools-test:command", cmd);
-      return onDone;
     }
 
     const doc = content.document;
