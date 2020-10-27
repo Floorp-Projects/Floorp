@@ -782,7 +782,6 @@ void AudioCallbackDriver::Stop() {
   if (cubeb_stream_stop(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not stop cubeb stream for MTG.");
   }
-  mStarted = false;
 }
 
 void AudioCallbackDriver::Shutdown() {
@@ -1072,9 +1071,11 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
     if (streamState == AudioStreamState::Running) {
       MOZ_ASSERT(!ThreadRunning());
       FallbackToSystemClockDriver();
+      mStarted = false;
     }
   } else if (aState == CUBEB_STATE_STOPPED) {
     MOZ_ASSERT(!ThreadRunning());
+    mStarted = false;
   }
 }
 
