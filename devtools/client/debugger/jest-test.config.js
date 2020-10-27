@@ -30,6 +30,9 @@ module.exports = {
     "!**/*.mock.js",
     "!**/*.spec.js",
   ],
+  transform: {
+    "\\.[jt]sx?$": "babel-jest",
+  },
   transformIgnorePatterns: ["node_modules/(?!(devtools-|react-aria-))"],
   setupTestFrameworkScriptFile: "<rootDir>/src/test/tests-setup.js",
   setupFiles: ["<rootDir>/src/test/shim.js", "jest-localstorage-mock"],
