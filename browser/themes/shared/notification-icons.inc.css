@@ -73,6 +73,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/geo-detailed.svg);
 }
 
+.open-protocol-handler-icon {
+  list-style-image: url(chrome://browser/skin/open-in-new.svg);
+}
+
 .xr-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
 }
