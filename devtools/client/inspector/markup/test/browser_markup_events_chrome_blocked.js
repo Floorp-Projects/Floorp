@@ -8,7 +8,6 @@
 // devtools.chrome.enabled = false.
 
 const TEST_URL = URL_ROOT + "doc_markup_events_chrome_listeners.html";
-const FRAMESCRIPT_URL = `data:,(${frameScript.toString()})()`;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -25,12 +24,16 @@ add_task(async function() {
 
   const { tab, inspector, testActor } = await openInspectorForURL(TEST_URL);
   const browser = tab.linkedBrowser;
-  const mm = browser.messageManager;
 
   const badgeEventAdded = inspector.markup.once("badge-added-event");
 
   info("Loading frame script");
-  mm.loadFrameScript(`${FRAMESCRIPT_URL}`, false);
+  await SpecialPowers.spawn(browser, [], () => {
+    const div = content.document.querySelector("div");
+    div.addEventListener("click", () => {
+      /* Do nothing */
+    });
+  });
 
   // We need to check that the "badge-added-event" event is not triggered so we
   // need to wait for 5 seconds here.
@@ -41,10 +44,3 @@ add_task(async function() {
     await checkEventsForNode(test, inspector, testActor);
   }
 });
-
-function frameScript() {
-  const div = content.document.querySelector("div");
-  div.addEventListener("click", () => {
-    /* Do nothing */
-  });
-}
