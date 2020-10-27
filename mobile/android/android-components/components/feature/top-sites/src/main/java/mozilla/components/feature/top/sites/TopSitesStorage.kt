@@ -28,6 +28,14 @@ interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
     fun removeTopSite(topSite: TopSite)
 
     /**
+     * Renames the given [TopSite].
+     *
+     * @param topSite The top site.
+     * @param title The new title for the top site.
+     */
+    fun renameTopSite(topSite: TopSite, title: String)
+
+    /**
      * Return a unified list of top sites based on the given number of sites desired.
      * If `includeFrecent` is true, fill in any missing top sites with frecent top site results.
      *

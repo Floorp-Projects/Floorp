@@ -65,6 +65,16 @@ class DefaultTopSitesStorage(
         }
     }
 
+    override fun renameTopSite(topSite: TopSite, title: String) {
+        scope.launch {
+            if (topSite.type != FRECENT) {
+                pinnedSitesStorage.renamePinnedSite(topSite, title)
+            }
+
+            notifyObservers { onStorageUpdated() }
+        }
+    }
+
     override suspend fun getTopSites(
         totalSites: Int,
         includeFrecent: Boolean

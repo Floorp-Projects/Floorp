@@ -37,6 +37,9 @@ permalink: /changelog/
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8784) create download directory when it doesn't exists for more information see [mozilla-mobile/fenix#15527](https://github.com/mozilla-mobile/fenix/issues/5829).
 
+* **feature-top-sites**
+  * Added `RenameTopSiteUseCase` to rename pinned site entries. [#8751](https://github.com/mozilla-mobile/android-components/issues/8751)
+
 # 63.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v62.0.0...v63.0.0)

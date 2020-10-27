@@ -58,6 +58,29 @@ class PinnedSiteDaoTest {
     }
 
     @Test
+    fun testUpdatingTopSite() {
+        val topSite = PinnedSiteEntity(
+                title = "Mozilla",
+                url = "https://www.mozilla.org",
+                isDefault = false,
+                createdAt = 200
+        ).also {
+            it.id = pinnedSiteDao.insertPinnedSite(it)
+        }
+
+        topSite.title = "Mozilla (IT)"
+        topSite.url = "https://www.mozilla.org/it"
+        pinnedSiteDao.updatePinnedSite(topSite)
+
+        val pinnedSites = pinnedSiteDao.getPinnedSites()
+
+        assertEquals(1, pinnedSites.size)
+        assertEquals(topSite, pinnedSites[0])
+        assertEquals(topSite.title, pinnedSites[0].title)
+        assertEquals(topSite.url, pinnedSites[0].url)
+    }
+
+    @Test
     fun testRemovingTopSite() {
         val topSite1 = PinnedSiteEntity(
             title = "Mozilla",
