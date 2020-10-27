@@ -191,6 +191,10 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.flushApzRepaints() = sessionRule.flushApzRepaints(this)
 
+    var GeckoSession.active: Boolean
+            get() = sessionRule.getActive(this)
+            set(value) = setActive(value)
+
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
 

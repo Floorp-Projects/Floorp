@@ -23,6 +23,9 @@ const APIS = {
   GetPrefs({ prefs }) {
     return browser.test.getPrefs(prefs);
   },
+  GetActive({ tab }) {
+    return browser.test.getActive(tab.id);
+  },
   RemoveCertOverride({ host, port }) {
     browser.test.removeCertOverride(host, port);
   },
