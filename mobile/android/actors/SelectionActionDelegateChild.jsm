@@ -1,104 +1,104 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewChildModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewChildModule.jsm"
+const { GeckoViewActorChild } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewActorChild.jsm"
 );
-var { XPCOMUtils } = ChromeUtils.import(
+const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const EXPORTED_SYMBOLS = ["SelectionActionDelegateChild"];
 
 // Dispatches GeckoView:ShowSelectionAction and GeckoView:HideSelectionAction to
 // the GeckoSession on accessible caret changes.
-class GeckoViewSelectionActionChild extends GeckoViewChildModule {
+class SelectionActionDelegateChild extends GeckoViewActorChild {
   constructor(aModuleName, aMessageManager) {
     super(aModuleName, aMessageManager);
 
     this._seqNo = 0;
     this._isActive = false;
     this._previousMessage = "";
-
-    this._actions = [
-      {
-        id: "org.mozilla.geckoview.HIDE",
-        predicate: _ => true,
-        perform: _ => this.handleEvent({ type: "pagehide" }),
-      },
-      {
-        id: "org.mozilla.geckoview.CUT",
-        predicate: e =>
-          !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
-        perform: _ => docShell.doCommand("cmd_cut"),
-      },
-      {
-        id: "org.mozilla.geckoview.COPY",
-        predicate: e => !e.collapsed && !this._isPasswordField(e),
-        perform: _ => docShell.doCommand("cmd_copy"),
-      },
-      {
-        id: "org.mozilla.geckoview.PASTE",
-        predicate: e =>
-          e.selectionEditable &&
-          Services.clipboard.hasDataMatchingFlavors(
-            ["text/unicode"],
-            Ci.nsIClipboard.kGlobalClipboard
-          ),
-        perform: _ => this._performPaste(),
-      },
-      {
-        id: "org.mozilla.geckoview.DELETE",
-        predicate: e => !e.collapsed && e.selectionEditable,
-        perform: _ => docShell.doCommand("cmd_delete"),
-      },
-      {
-        id: "org.mozilla.geckoview.COLLAPSE_TO_START",
-        predicate: e => !e.collapsed && e.selectionEditable,
-        perform: e => docShell.doCommand("cmd_moveLeft"),
-      },
-      {
-        id: "org.mozilla.geckoview.COLLAPSE_TO_END",
-        predicate: e => !e.collapsed && e.selectionEditable,
-        perform: e => docShell.doCommand("cmd_moveRight"),
-      },
-      {
-        id: "org.mozilla.geckoview.UNSELECT",
-        predicate: e => !e.collapsed && !e.selectionEditable,
-        perform: e => docShell.doCommand("cmd_selectNone"),
-      },
-      {
-        id: "org.mozilla.geckoview.SELECT_ALL",
-        predicate: e => {
-          if (e.reason === "longpressonemptycontent") {
-            return false;
-          }
-          if (e.selectionEditable && e.target && e.target.activeElement) {
-            const element = e.target.activeElement;
-            let value = "";
-            if (element.value) {
-              value = element.value;
-            } else if (
-              element.isContentEditable ||
-              e.target.designMode === "on"
-            ) {
-              value = element.innerText;
-            }
-            // Do not show SELECT_ALL if the editable is empty
-            // or all the editable text is already selected.
-            return value !== "" && value !== e.selectedTextContent;
-          }
-          return true;
-        },
-        perform: e => docShell.doCommand("cmd_selectAll"),
-      },
-    ];
   }
+
+  _actions = [
+    {
+      id: "org.mozilla.geckoview.HIDE",
+      predicate: _ => true,
+      perform: _ => this.handleEvent({ type: "pagehide" }),
+    },
+    {
+      id: "org.mozilla.geckoview.CUT",
+      predicate: e =>
+        !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
+      perform: _ => this.docShell.doCommand("cmd_cut"),
+    },
+    {
+      id: "org.mozilla.geckoview.COPY",
+      predicate: e => !e.collapsed && !this._isPasswordField(e),
+      perform: _ => this.docShell.doCommand("cmd_copy"),
+    },
+    {
+      id: "org.mozilla.geckoview.PASTE",
+      predicate: e =>
+        e.selectionEditable &&
+        Services.clipboard.hasDataMatchingFlavors(
+          ["text/unicode"],
+          Ci.nsIClipboard.kGlobalClipboard
+        ),
+      perform: _ => this._performPaste(),
+    },
+    {
+      id: "org.mozilla.geckoview.DELETE",
+      predicate: e => !e.collapsed && e.selectionEditable,
+      perform: _ => this.docShell.doCommand("cmd_delete"),
+    },
+    {
+      id: "org.mozilla.geckoview.COLLAPSE_TO_START",
+      predicate: e => !e.collapsed && e.selectionEditable,
+      perform: e => this.docShell.doCommand("cmd_moveLeft"),
+    },
+    {
+      id: "org.mozilla.geckoview.COLLAPSE_TO_END",
+      predicate: e => !e.collapsed && e.selectionEditable,
+      perform: e => this.docShell.doCommand("cmd_moveRight"),
+    },
+    {
+      id: "org.mozilla.geckoview.UNSELECT",
+      predicate: e => !e.collapsed && !e.selectionEditable,
+      perform: e => this.docShell.doCommand("cmd_selectNone"),
+    },
+    {
+      id: "org.mozilla.geckoview.SELECT_ALL",
+      predicate: e => {
+        if (e.reason === "longpressonemptycontent") {
+          return false;
+        }
+        if (e.selectionEditable && e.target && e.target.activeElement) {
+          const element = e.target.activeElement;
+          let value = "";
+          if (element.value) {
+            value = element.value;
+          } else if (
+            element.isContentEditable ||
+            e.target.designMode === "on"
+          ) {
+            value = element.innerText;
+          }
+          // Do not show SELECT_ALL if the editable is empty
+          // or all the editable text is already selected.
+          return value !== "" && value !== e.selectedTextContent;
+        }
+        return true;
+      },
+      perform: e => this.docShell.doCommand("cmd_selectAll"),
+    },
+  ];
 
   _performPaste() {
     this.handleEvent({ type: "pagehide" });
-    docShell.doCommand("cmd_paste");
+    this.docShell.doCommand("cmd_paste");
   }
 
   _isPasswordField(aEvent) {
@@ -161,23 +161,6 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
     offset.top -= offsetY.value;
 
     return offset;
-  }
-
-  onEnable() {
-    debug`onEnable`;
-    addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
-    addEventListener("pagehide", this, { capture: true, mozSystemGroup: true });
-    addEventListener("deactivate", this, { mozSystemGroup: true });
-  }
-
-  onDisable() {
-    debug`onDisable`;
-    removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
-    removeEventListener("pagehide", this, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    removeEventListener("deactivate", this, { mozSystemGroup: true });
   }
 
   /**
@@ -322,7 +305,6 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
   }
 }
 
-const { debug, warn } = GeckoViewSelectionActionChild.initLogging(
-  "GeckoViewSelectionAction"
+const { debug, warn } = SelectionActionDelegateChild.initLogging(
+  "SelectionActionDelegate"
 );
-const module = GeckoViewSelectionActionChild.create(this);

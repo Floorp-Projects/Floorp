@@ -643,8 +643,19 @@ function startup() {
     {
       name: "GeckoViewSelectionAction",
       onEnable: {
-        frameScript:
-          "chrome://geckoview/content/GeckoViewSelectionActionChild.js",
+        actors: {
+          SelectionActionDelegate: {
+            child: {
+              moduleURI: "resource:///actors/SelectionActionDelegateChild.jsm",
+              events: {
+                mozcaretstatechanged: { mozSystemGroup: true },
+                pagehide: { capture: true, mozSystemGroup: true },
+                deactivate: { mozSystemGroup: true },
+              },
+            },
+            allFrames: true,
+          },
+        },
       },
     },
     {

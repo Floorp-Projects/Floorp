@@ -15,7 +15,6 @@ geckoview.jar:
   content/GeckoViewAutofillChild.js
   content/GeckoViewMediaChild.js
   content/GeckoViewMediaControlChild.js
-  content/GeckoViewSelectionActionChild.js
   content/SessionStateAggregator.js
 
 % content branding %content/branding/
