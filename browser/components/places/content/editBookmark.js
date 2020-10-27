@@ -789,6 +789,9 @@ var gEditItemOverlay = {
       this._element("chooseFolderSeparator").hidden = this._element(
         "chooseFolderMenuItem"
       ).hidden = false;
+      // Stop editing if we were (will no-op if not). This avoids permanently
+      // breaking the tree if/when it is reshown.
+      this._folderTree.stopEditing(false);
       // Unlinking the view will break the connection with the result. We don't
       // want to pay for live updates while the view is not visible.
       this._folderTree.view = null;
