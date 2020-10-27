@@ -6621,6 +6621,9 @@ function setToolbarVisibility(
           currentURI: gBrowser.currentURI,
           isNullPrincipal: gBrowser.contentPrincipal.isNullPrincipal,
         });
+        // If there is nothing visible in the toolbar, then don't show
+        // it on the New Tab page.
+        isVisible &&= BookmarkingUI.bookmarksToolbarHasVisibleChildren();
         break;
     }
   }
