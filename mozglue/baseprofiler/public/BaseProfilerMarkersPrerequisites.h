@@ -477,11 +477,6 @@ class MarkerStack {
     return MarkerStack(true);
   }
 
-  // Optionally capture a stack, useful for avoiding long-winded ternaries.
-  static MarkerStack MaybeCapture(bool aDoCapture) {
-    return MarkerStack(aDoCapture);
-  }
-
   // Use an existing backtrace stored elsewhere, which the user must guarantee
   // is alive during the add-marker call. If empty, equivalent to NoStack().
   static MarkerStack UseBacktrace(

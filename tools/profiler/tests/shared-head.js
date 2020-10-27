@@ -104,7 +104,7 @@ function getPayloadsOfType(thread, type) {
  * Applies the marker schema to create individual objects for each marker
  *
  * @param {Object} thread The thread from a profile.
- * @return {InflatedMarker[]} The markers.
+ * @return {Array} The markers.
  */
 function getInflatedMarkerData(thread) {
   const { markers, stringTable } = thread;
@@ -152,38 +152,4 @@ async function stopAndGetProfile() {
   const profile = await Services.profiler.getProfileDataAsync();
   Services.profiler.StopProfiler();
   return profile;
-}
-
-/**
- * Verifies that a marker is an interval marker.
- *
- * @param {InflatedMarker} marker
- * @returns {boolean}
- */
-function isIntervalMarker(inflatedMarker) {
-  return (
-    inflatedMarker.phase === 1 &&
-    typeof inflatedMarker.startTime === "number" &&
-    typeof inflatedMarker.endTime === "number"
-  );
-}
-
-/**
- * @param {Profile} profile
- * @returns {Thread[]}
- */
-function getThreads(profile) {
-  const threads = [];
-
-  function getThreadsRecursive(process) {
-    for (const thread of process.threads) {
-      threads.push(thread);
-    }
-    for (const subprocess of process.processes) {
-      getThreadsRecursive(subprocess);
-    }
-  }
-
-  getThreadsRecursive(profile);
-  return threads;
 }

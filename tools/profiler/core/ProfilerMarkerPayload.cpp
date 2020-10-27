@@ -218,6 +218,52 @@ void TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
+ProfileBufferEntryWriter::Length FileIOMarkerPayload::TagAndSerializationBytes()
+    const {
+  return CommonPropsTagAndSerializationBytes() +
+         ProfileBufferEntryWriter::SumBytes(
+             WrapProfileBufferRawPointer(mSource), mOperation, mFilename,
+             mIOThreadId);
+}
+
+void FileIOMarkerPayload::SerializeTagAndPayload(
+    ProfileBufferEntryWriter& aEntryWriter) const {
+  static const DeserializerTag tag = TagForDeserializer(Deserialize);
+  SerializeTagAndCommonProps(tag, aEntryWriter);
+  aEntryWriter.WriteObject(WrapProfileBufferRawPointer(mSource));
+  aEntryWriter.WriteObject(mOperation);
+  aEntryWriter.WriteObject(mFilename);
+  aEntryWriter.WriteObject(mIOThreadId);
+}
+
+// static
+UniquePtr<ProfilerMarkerPayload> FileIOMarkerPayload::Deserialize(
+    ProfileBufferEntryReader& aEntryReader) {
+  ProfilerMarkerPayload::CommonProps props =
+      DeserializeCommonProps(aEntryReader);
+  auto source = aEntryReader.ReadObject<const char*>();
+  auto operation = aEntryReader.ReadObject<UniqueFreePtr<char>>();
+  auto filename = aEntryReader.ReadObject<UniqueFreePtr<char>>();
+  auto ioThreadId = aEntryReader.ReadObject<Maybe<int>>();
+  return UniquePtr<ProfilerMarkerPayload>(
+      new FileIOMarkerPayload(std::move(props), source, std::move(operation),
+                              std::move(filename), ioThreadId));
+}
+
+void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                        const TimeStamp& aProcessStartTime,
+                                        UniqueStacks& aUniqueStacks) const {
+  StreamCommonProps("FileIO", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("operation", MakeStringSpan(mOperation.get()));
+  aWriter.StringProperty("source", MakeStringSpan(mSource));
+  if (mFilename) {
+    aWriter.StringProperty("filename", MakeStringSpan(mFilename.get()));
+  }
+  if (mIOThreadId.isSome()) {
+    aWriter.IntProperty("threadId", *mIOThreadId);
+  }
+}
+
 ProfileBufferEntryWriter::Length
 UserTimingMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
