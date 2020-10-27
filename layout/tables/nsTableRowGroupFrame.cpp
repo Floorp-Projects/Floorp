@@ -1656,21 +1656,19 @@ nsresult nsTableRowGroupFrame::GetFrameName(nsAString& aResult) const {
 
 LogicalMargin nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM) {
   LogicalMargin border(aWM);
-  nsTableRowFrame* firstRowFrame = nullptr;
-  nsTableRowFrame* lastRowFrame = nullptr;
-  for (nsTableRowFrame* rowFrame = GetFirstRow(); rowFrame;
+  nsTableRowFrame* firstRowFrame = GetFirstRow();
+  if (!firstRowFrame) {
+    return border;
+  }
+  nsTableRowFrame* lastRowFrame = firstRowFrame;
+  for (nsTableRowFrame* rowFrame = firstRowFrame->GetNextRow(); rowFrame;
        rowFrame = rowFrame->GetNextRow()) {
-    if (!firstRowFrame) {
-      firstRowFrame = rowFrame;
-    }
     lastRowFrame = rowFrame;
   }
-  if (firstRowFrame) {
-    border.BStart(aWM) = PresContext()->DevPixelsToAppUnits(
-        firstRowFrame->GetBStartBCBorderWidth());
-    border.BEnd(aWM) = PresContext()->DevPixelsToAppUnits(
-        lastRowFrame->GetBEndBCBorderWidth());
-  }
+  border.BStart(aWM) = PresContext()->DevPixelsToAppUnits(
+      firstRowFrame->GetBStartBCBorderWidth());
+  border.BEnd(aWM) =
+      PresContext()->DevPixelsToAppUnits(lastRowFrame->GetBEndBCBorderWidth());
   return border;
 }
 
