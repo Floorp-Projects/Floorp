@@ -556,13 +556,8 @@ bool BrowserTabsRemoteAutostart() {
   // Uber override pref for emergency blocking
   if (gBrowserTabsRemoteAutostart) {
     const char* forceDisable = PR_GetEnv("MOZ_FORCE_DISABLE_E10S");
-#if defined(MOZ_WIDGET_ANDROID)
-    // We need this for xpcshell on Android
-    if (forceDisable && *forceDisable) {
-#else
     // The environment variable must match the application version to apply.
     if (forceDisable && gAppData && !strcmp(forceDisable, gAppData->version)) {
-#endif
       gBrowserTabsRemoteAutostart = false;
       status = kE10sForceDisabled;
     }

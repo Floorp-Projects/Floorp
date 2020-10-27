@@ -1227,7 +1227,8 @@ void GeckoViewSupport::Open(
     jni::Object::Param aQueue, jni::Object::Param aCompositor,
     jni::Object::Param aDispatcher, jni::Object::Param aSessionAccessibility,
     jni::Object::Param aInitData, jni::String::Param aId,
-    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode) {
+    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode,
+    bool aRemote) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("mozilla::widget::GeckoViewSupport::Open", OTHER);
@@ -1251,9 +1252,12 @@ void GeckoViewSupport::Open(
       java::EventDispatcher::Ref::From(aDispatcher), nullptr);
   androidView->mInitData = java::GeckoBundle::Ref::From(aInitData);
 
-  nsAutoCString chromeFlags("chrome,dialog=0,remote,resizable,scrollbars");
+  nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars");
   if (aPrivateMode) {
     chromeFlags += ",private";
+  }
+  if (aRemote) {
+    chromeFlags += ",remote";
   }
   nsCOMPtr<mozIDOMWindowProxy> domWindow;
   ww->OpenWindow(nullptr, url, nsDependentCString(aId->ToCString().get()),

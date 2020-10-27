@@ -151,7 +151,7 @@ var ModuleManager = {
   remoteTypeFor(aURI, currentType) {
     return E10SUtils.getRemoteTypeForURI(
       aURI,
-      /* multiProcess */ true,
+      GeckoViewSettings.useMultiprocess,
       /* useRemoteSubframes */ false,
       currentType,
       this.browser.currentURI
@@ -510,15 +510,17 @@ function createBrowser() {
   browser.setAttribute("flex", "1");
   browser.setAttribute("maychangeremoteness", "true");
 
-  const pointerEventsEnabled = Services.prefs.getBoolPref(
-    "dom.w3c_pointer_events.multiprocess.android.enabled",
-    false
-  );
-  if (pointerEventsEnabled) {
-    Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
+  if (GeckoViewSettings.useMultiprocess) {
+    const pointerEventsEnabled = Services.prefs.getBoolPref(
+      "dom.w3c_pointer_events.multiprocess.android.enabled",
+      false
+    );
+    if (pointerEventsEnabled) {
+      Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
+    }
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
   }
-  browser.setAttribute("remote", "true");
-  browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
 
   return browser;
 }

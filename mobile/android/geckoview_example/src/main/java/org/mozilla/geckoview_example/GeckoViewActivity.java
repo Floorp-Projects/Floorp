@@ -373,6 +373,7 @@ public class GeckoViewActivity
             WebExtensionDelegate,
             SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOGTAG = "GeckoViewActivity";
+    private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
     private static final String SEARCH_URI_BASE = "https://www.google.com/search?q=";
     private static final String ACTION_SHUTDOWN = "org.mozilla.geckoview_example.SHUTDOWN";
@@ -705,6 +706,8 @@ public class GeckoViewActivity
                         ActionBar.LayoutParams.WRAP_CONTENT));
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
+        final boolean useMultiprocess =
+                getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
         mFullAccessibilityTree = getIntent().getBooleanExtra(FULL_ACCESSIBILITY_TREE_EXTRA, false);
         mProgressView = findViewById(R.id.page_progress);
 
@@ -723,6 +726,7 @@ public class GeckoViewActivity
                 runtimeSettingsBuilder.extras(extras);
             }
             runtimeSettingsBuilder
+                    .useMultiprocess(useMultiprocess)
                     .remoteDebuggingEnabled(mRemoteDebugging.value())
                     .consoleOutput(true)
                     .contentBlocking(new ContentBlocking.Settings.Builder()
