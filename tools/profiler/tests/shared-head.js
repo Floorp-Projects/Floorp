@@ -187,3 +187,30 @@ function getThreads(profile) {
   getThreadsRecursive(profile);
   return threads;
 }
+
+/**
+ * Find a specific marker schema from any process of a profile.
+ *
+ * @param {Profile} profile
+ * @param {string} name
+ * @returns {MarkerSchema}
+ */
+function getSchema(profile, name) {
+  {
+    const schema = profile.meta.markerSchema.find(s => s.name === name);
+    if (schema) {
+      return schema;
+    }
+  }
+  for (const subprocess of profile.processes) {
+    const schema = subprocess.meta.markerSchema.find(s => s.name === name);
+    if (schema) {
+      return schema;
+    }
+  }
+  console.error("Parent process schema", profile.meta.markerSchema);
+  for (const subprocess of profile.processes) {
+    console.error("Child process schema", subprocess.meta.markerSchema);
+  }
+  throw new Error(`Could not find a schema for "${name}".`);
+}

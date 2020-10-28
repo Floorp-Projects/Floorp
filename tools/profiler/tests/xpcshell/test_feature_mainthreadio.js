@@ -19,17 +19,37 @@ add_task(async () => {
 
   {
     const filename = "profiler-mainthreadio-test-firstrun";
-    const markers = await startProfilerAndGetFileIOPayloads(
+    const { markers, schema } = await runProfilerWithFileIO(
       ["mainthreadio"],
       filename
     );
     info("Check the FileIO markers when using the mainthreadio feature");
     checkInflatedFileIOMarkers(markers, filename);
+
+    checkSchema(schema, {
+      name: "FileIO",
+      display: ["marker-chart", "marker-table", "timeline-fileio"],
+      data: [
+        {
+          key: "operation",
+          label: "Operation",
+          format: "string",
+          searchable: true,
+        },
+        { key: "source", label: "Source", format: "string", searchable: true },
+        {
+          key: "filename",
+          label: "Filename",
+          format: "file-path",
+          searchable: true,
+        },
+      ],
+    });
   }
 
   {
     const filename = "profiler-mainthreadio-test-no-instrumentation";
-    const markers = await startProfilerAndGetFileIOPayloads([], filename);
+    const { markers } = await runProfilerWithFileIO([], filename);
     equal(
       markers.length,
       0,
@@ -40,22 +60,23 @@ add_task(async () => {
 
   {
     const filename = "profiler-mainthreadio-test-secondrun";
-    const markers = await startProfilerAndGetFileIOPayloads(
-      ["mainthreadio"],
-      filename
-    );
+    const { markers } = await runProfilerWithFileIO(["mainthreadio"], filename);
     info("Check the FileIO markers when re-starting the mainthreadio feature");
     checkInflatedFileIOMarkers(markers, filename);
   }
 });
 
 /**
- * Start the profiler and get FileIO markers.
+ * Start the profiler and get FileIO markers and schema.
+ *
  * @param {Array} features The list of profiler features
  * @param {string} filename A filename to trigger a write operation
- * @returns {InflatedMarkers[]}
+ * @returns {{
+ *   markers: InflatedMarkers[];
+ *   schema: MarkerSchema;
+ * }}
  */
-async function startProfilerAndGetFileIOPayloads(features, filename) {
+async function runProfilerWithFileIO(features, filename) {
   const entries = 10000;
   const interval = 10;
   const threads = [];
@@ -96,5 +117,9 @@ async function startProfilerAndGetFileIOPayloads(features, filename) {
   Services.profiler.StopProfiler();
   const mainThread = profile.threads.find(({ name }) => name === "GeckoMain");
 
-  return getInflatedFileIOMarkers(mainThread, filename);
+  const schema = getSchema(profile, "FileIO");
+
+  const markers = getInflatedFileIOMarkers(mainThread, filename);
+
+  return { schema, markers };
 }
