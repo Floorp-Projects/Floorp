@@ -67,7 +67,7 @@ namespace widget {
         |       | WindowSurfaceWayland          |<------>| nsWindow       |
         |       |                               |        ------------------
         |       |  -----------------------      |
-        |       |  | WindowBackBufferShm |      |
+        |       |  | WindowBackBuffer    |      |
         |       |  |                     |      |
         |       |  | ------------------- |      |
         |       |  | |  WaylandShmPool | |      |
@@ -75,7 +75,7 @@ namespace widget {
         |       |  -----------------------      |
         |       |                               |
         |       |  -----------------------      |
-        |       |  | WindowBackBufferShm |      |
+        |       |  | WindowBackBuffer    |      |
         |       |  |                     |      |
         |       |  | ------------------- |      |
         |       |  | |  WaylandShmPool | |      |
@@ -88,7 +88,7 @@ namespace widget {
   | WindowSurfaceWayland          |<------>| nsWindow       |
   |                               |        ------------------
   |  -----------------------      |
-  |  | WindowBackBufferShm |      |
+  |  | WindowBackBuffer    |      |
   |  |                     |      |
   |  | ------------------- |      |
   |  | |  WaylandShmPool | |      |
@@ -96,7 +96,7 @@ namespace widget {
   |  -----------------------      |
   |                               |
   |  -----------------------      |
-  |  | WindowBackBufferShm |      |
+  |  | WindowBackBuffer    |      |
   |  |                     |      |
   |  | ------------------- |      |
   |  | |  WaylandShmPool | |      |
@@ -136,17 +136,14 @@ WindowImageSurface cache when whole screen is invalidated.
 
 WindowBackBuffer
 
-Is an abstraction class which provides a wl_buffer for drawing.
+Is a class which provides a wl_buffer for drawing.
 Wl_buffer is a main Wayland object with actual graphics data.
 Wl_buffer basically represent one complete window screen.
 When double buffering is involved every window (GdkWindow for instance)
 utilises two wl_buffers which are cycled. One is filed with data by application
 and one is rendered by compositor.
 
-
-WindowBackBufferShm
-
-It's WindowBackBuffer implementation by shared memory (shm).
+WindowBackBuffer is implemented by shared memory (shm).
 It owns wl_buffer object, owns WaylandShmPool
 (which provides the shared memory) and ties them together.
 
@@ -351,7 +348,7 @@ static void buffer_release(void* data, wl_buffer* buffer) {
 
 static const struct wl_buffer_listener buffer_listener = {buffer_release};
 
-bool WindowBackBufferShm::Create(int aWidth, int aHeight) {
+bool WindowBackBuffer::Create(int aWidth, int aHeight) {
   MOZ_ASSERT(!IsAttached(), "We can't create attached buffers.");
 
   ReleaseShmSurface();
@@ -371,14 +368,14 @@ bool WindowBackBufferShm::Create(int aWidth, int aHeight) {
   mWidth = aWidth;
   mHeight = aHeight;
 
-  LOGWAYLAND(("WindowBackBufferShm::Create [%p] wl_buffer %p ID %d\n",
-              (void*)this, (void*)mWLBuffer,
+  LOGWAYLAND(("WindowBackBuffer::Create [%p] wl_buffer %p ID %d\n", (void*)this,
+              (void*)mWLBuffer,
               mWLBuffer ? wl_proxy_get_id((struct wl_proxy*)mWLBuffer) : -1));
   return true;
 }
 
-void WindowBackBufferShm::ReleaseShmSurface() {
-  LOGWAYLAND(("WindowBackBufferShm::Release [%p]\n", (void*)this));
+void WindowBackBuffer::ReleaseShmSurface() {
+  LOGWAYLAND(("WindowBackBuffer::Release [%p]\n", (void*)this));
   if (mWLBuffer) {
     wl_buffer_destroy(mWLBuffer);
     mWLBuffer = nullptr;
@@ -386,27 +383,26 @@ void WindowBackBufferShm::ReleaseShmSurface() {
   mWidth = mHeight = 0;
 }
 
-void WindowBackBufferShm::Clear() {
+void WindowBackBuffer::Clear() {
   memset(mShmPool.GetImageData(), 0, mHeight * mWidth * BUFFER_BPP);
 }
 
-WindowBackBufferShm::WindowBackBufferShm(
-    WindowSurfaceWayland* aWindowSurfaceWayland)
-    : WindowBackBuffer(aWindowSurfaceWayland),
+WindowBackBuffer::WindowBackBuffer(WindowSurfaceWayland* aWindowSurfaceWayland)
+    : mWindowSurfaceWayland(aWindowSurfaceWayland),
       mShmPool(),
       mWLBuffer(nullptr),
       mWidth(0),
       mHeight(0),
       mAttached(false) {}
 
-WindowBackBufferShm::~WindowBackBufferShm() { ReleaseShmSurface(); }
+WindowBackBuffer::~WindowBackBuffer() { ReleaseShmSurface(); }
 
-bool WindowBackBufferShm::Resize(int aWidth, int aHeight) {
+bool WindowBackBuffer::Resize(int aWidth, int aHeight) {
   if (aWidth == mWidth && aHeight == mHeight) {
     return true;
   }
-  LOGWAYLAND(("WindowBackBufferShm::Resize [%p] %d %d\n", (void*)this, aWidth,
-              aHeight));
+  LOGWAYLAND(
+      ("WindowBackBuffer::Resize [%p] %d %d\n", (void*)this, aWidth, aHeight));
   Create(aWidth, aHeight);
   return (mWLBuffer != nullptr);
 }
@@ -428,9 +424,9 @@ void WindowBackBuffer::Attach(wl_surface* aSurface) {
   }
 }
 
-void WindowBackBufferShm::Detach(wl_buffer* aBuffer) {
-  LOGWAYLAND(("WindowBackBufferShm::Detach [%p] wl_buffer %p ID %d\n",
-              (void*)this, (void*)aBuffer,
+void WindowBackBuffer::Detach(wl_buffer* aBuffer) {
+  LOGWAYLAND(("WindowBackBuffer::Detach [%p] wl_buffer %p ID %d\n", (void*)this,
+              (void*)aBuffer,
               aBuffer ? wl_proxy_get_id((struct wl_proxy*)aBuffer) : -1));
   mAttached = false;
 
@@ -438,9 +434,9 @@ void WindowBackBufferShm::Detach(wl_buffer* aBuffer) {
   mWindowSurfaceWayland->CommitWaylandBuffer();
 }
 
-bool WindowBackBufferShm::SetImageDataFromBuffer(
+bool WindowBackBuffer::SetImageDataFromBuffer(
     class WindowBackBuffer* aSourceBuffer) {
-  auto sourceBuffer = static_cast<class WindowBackBufferShm*>(aSourceBuffer);
+  auto sourceBuffer = static_cast<class WindowBackBuffer*>(aSourceBuffer);
   if (!IsMatchingSize(sourceBuffer)) {
     if (!Resize(sourceBuffer->mWidth, sourceBuffer->mHeight)) {
       return false;
@@ -453,8 +449,8 @@ bool WindowBackBufferShm::SetImageDataFromBuffer(
   return true;
 }
 
-already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
-  LOGWAYLAND(("WindowBackBufferShm::Lock [%p] [%d x %d] wl_buffer %p ID %d\n",
+already_AddRefed<gfx::DrawTarget> WindowBackBuffer::Lock() {
+  LOGWAYLAND(("WindowBackBuffer::Lock [%p] [%d x %d] wl_buffer %p ID %d\n",
               (void*)this, mWidth, mHeight, (void*)mWLBuffer,
               mWLBuffer ? wl_proxy_get_id((struct wl_proxy*)mWLBuffer) : -1));
 
@@ -532,7 +528,7 @@ WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(int aWidth,
     return nullptr;
   }
 
-  WindowBackBuffer* buffer = new WindowBackBufferShm(this);
+  WindowBackBuffer* buffer = new WindowBackBuffer(this);
   if (!buffer->Create(aWidth, aHeight)) {
     delete buffer;
     return nullptr;
