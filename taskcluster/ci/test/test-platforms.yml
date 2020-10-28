@@ -226,15 +226,11 @@ windows7-32-qr/opt:
 windows10-64-ccov/opt:
     build-platform: win64-ccov/opt
     test-sets:
-        - marionette-gpu-tests  # fails on -qr because one test requires WR disabled
-
-windows10-64-ccov-qr/opt:
-    build-platform: win64-ccov/opt
-    test-sets:
         - awsy
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-talos
+        - marionette-gpu-tests
         - windows-tests
         - windows-ccov-tests
         - windows10-tests
