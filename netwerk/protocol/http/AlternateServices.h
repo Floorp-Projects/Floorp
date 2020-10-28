@@ -30,7 +30,7 @@ https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
 #include "nsIStreamListener.h"
 #include "nsISpeculativeConnect.h"
 #include "mozilla/BasePrincipal.h"
-#include "NullHttpTransaction.h"
+#include "SpeculativeTransaction.h"
 
 class nsILoadInfo;
 
@@ -241,12 +241,16 @@ class AltSvcMappingValidator final {
 // When http over socket process is enabled, this class should live only in
 // socket process.
 template <class Validator>
-class AltSvcTransaction final : public NullHttpTransaction {
+class AltSvcTransaction final : public SpeculativeTransaction {
  public:
   AltSvcTransaction(nsHttpConnectionInfo* ci, nsIInterfaceRequestor* callbacks,
                     uint32_t caps, Validator* aValidator, bool aIsHttp3);
 
   ~AltSvcTransaction() override;
+
+  // AltSvcTransaction is used to validate the alt-svc record, so we don't want
+  // to fetch HTTPS RR for this.
+  virtual nsresult FetchHTTPSRR() override { return NS_ERROR_NOT_IMPLEMENTED; }
 
  private:
   // check on alternate route.

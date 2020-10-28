@@ -20,8 +20,8 @@ class HttpTransactionShell;
 class nsHttpConnectionInfo;
 class HttpConnectionBase;
 class nsHttpConnectionMgr;
-class NullHttpTransaction;
 class HttpConnectionMgrParent;
+class SpeculativeTransaction;
 
 //----------------------------------------------------------------------------
 // Abstract base class for HTTP connection manager in chrome process
@@ -146,7 +146,7 @@ class HttpConnectionMgrShell : public nsISupports {
   // real transaction for this connectionInfo.
   [[nodiscard]] virtual nsresult SpeculativeConnect(
       nsHttpConnectionInfo*, nsIInterfaceRequestor*, uint32_t caps = 0,
-      NullHttpTransaction* = nullptr) = 0;
+      SpeculativeTransaction* = nullptr, bool aFetchHTTPSRR = false) = 0;
 
   // "VerifyTraffic" means marking connections now, and then check again in
   // N seconds to see if there's been any traffic and if not, kill
@@ -176,54 +176,54 @@ class HttpConnectionMgrShell : public nsISupports {
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
                               HTTPCONNECTIONMGRSHELL_IID)
 
-#define NS_DECL_HTTPCONNECTIONMGRSHELL                                       \
-  virtual nsresult Init(                                                     \
-      uint16_t maxUrgentExcessiveConns, uint16_t maxConnections,             \
-      uint16_t maxPersistentConnectionsPerHost,                              \
-      uint16_t maxPersistentConnectionsPerProxy, uint16_t maxRequestDelay,   \
-      bool throttleEnabled, uint32_t throttleVersion,                        \
-      uint32_t throttleSuspendFor, uint32_t throttleResumeFor,               \
-      uint32_t throttleReadLimit, uint32_t throttleReadInterval,             \
-      uint32_t throttleHoldTime, uint32_t throttleMaxTime,                   \
-      bool beConservativeForProxy) override;                                 \
-  virtual nsresult Shutdown() override;                                      \
-  virtual nsresult UpdateRequestTokenBucket(EventTokenBucket* aBucket)       \
-      override;                                                              \
-  virtual nsresult DoShiftReloadConnectionCleanup() override;                \
-  virtual nsresult DoShiftReloadConnectionCleanupWithConnInfo(               \
-      nsHttpConnectionInfo*) override;                                       \
-  virtual nsresult PruneDeadConnections() override;                          \
-  virtual void AbortAndCloseAllConnections(int32_t, ARefBase*) override;     \
-  virtual nsresult UpdateParam(nsParamName name, uint16_t value) override;   \
-  virtual void PrintDiagnostics() override;                                  \
-  virtual nsresult UpdateCurrentTopLevelOuterContentWindowId(                \
-      uint64_t aWindowId) override;                                          \
-  virtual nsresult AddTransaction(HttpTransactionShell*, int32_t priority)   \
-      override;                                                              \
-  virtual nsresult AddTransactionWithStickyConn(                             \
-      HttpTransactionShell* trans, int32_t priority,                         \
-      HttpTransactionShell* transWithStickyConn) override;                   \
-  virtual nsresult RescheduleTransaction(HttpTransactionShell*,              \
-                                         int32_t priority) override;         \
-  void virtual UpdateClassOfServiceOnTransaction(                            \
-      HttpTransactionShell*, uint32_t classOfService) override;              \
-  virtual nsresult CancelTransaction(HttpTransactionShell*, nsresult reason) \
-      override;                                                              \
-  virtual nsresult ReclaimConnection(HttpConnectionBase* conn) override;     \
-  virtual nsresult ProcessPendingQ(nsHttpConnectionInfo*) override;          \
-  virtual nsresult ProcessPendingQ() override;                               \
-  virtual nsresult GetSocketThreadTarget(nsIEventTarget**) override;         \
-  virtual nsresult SpeculativeConnect(                                       \
-      nsHttpConnectionInfo*, nsIInterfaceRequestor*, uint32_t caps = 0,      \
-      NullHttpTransaction* = nullptr) override;                              \
-  virtual nsresult VerifyTraffic() override;                                 \
-  virtual void ExcludeHttp2(const nsHttpConnectionInfo* ci) override;        \
-  virtual void ExcludeHttp3(const nsHttpConnectionInfo* ci) override;        \
-  virtual nsresult ClearConnectionHistory() override;                        \
-  virtual nsresult CompleteUpgrade(HttpTransactionShell* aTrans,             \
-                                   nsIHttpUpgradeListener* aUpgradeListener) \
-      override;                                                              \
-  nsHttpConnectionMgr* AsHttpConnectionMgr() override;                       \
+#define NS_DECL_HTTPCONNECTIONMGRSHELL                                         \
+  virtual nsresult Init(                                                       \
+      uint16_t maxUrgentExcessiveConns, uint16_t maxConnections,               \
+      uint16_t maxPersistentConnectionsPerHost,                                \
+      uint16_t maxPersistentConnectionsPerProxy, uint16_t maxRequestDelay,     \
+      bool throttleEnabled, uint32_t throttleVersion,                          \
+      uint32_t throttleSuspendFor, uint32_t throttleResumeFor,                 \
+      uint32_t throttleReadLimit, uint32_t throttleReadInterval,               \
+      uint32_t throttleHoldTime, uint32_t throttleMaxTime,                     \
+      bool beConservativeForProxy) override;                                   \
+  virtual nsresult Shutdown() override;                                        \
+  virtual nsresult UpdateRequestTokenBucket(EventTokenBucket* aBucket)         \
+      override;                                                                \
+  virtual nsresult DoShiftReloadConnectionCleanup() override;                  \
+  virtual nsresult DoShiftReloadConnectionCleanupWithConnInfo(                 \
+      nsHttpConnectionInfo*) override;                                         \
+  virtual nsresult PruneDeadConnections() override;                            \
+  virtual void AbortAndCloseAllConnections(int32_t, ARefBase*) override;       \
+  virtual nsresult UpdateParam(nsParamName name, uint16_t value) override;     \
+  virtual void PrintDiagnostics() override;                                    \
+  virtual nsresult UpdateCurrentTopLevelOuterContentWindowId(                  \
+      uint64_t aWindowId) override;                                            \
+  virtual nsresult AddTransaction(HttpTransactionShell*, int32_t priority)     \
+      override;                                                                \
+  virtual nsresult AddTransactionWithStickyConn(                               \
+      HttpTransactionShell* trans, int32_t priority,                           \
+      HttpTransactionShell* transWithStickyConn) override;                     \
+  virtual nsresult RescheduleTransaction(HttpTransactionShell*,                \
+                                         int32_t priority) override;           \
+  void virtual UpdateClassOfServiceOnTransaction(                              \
+      HttpTransactionShell*, uint32_t classOfService) override;                \
+  virtual nsresult CancelTransaction(HttpTransactionShell*, nsresult reason)   \
+      override;                                                                \
+  virtual nsresult ReclaimConnection(HttpConnectionBase* conn) override;       \
+  virtual nsresult ProcessPendingQ(nsHttpConnectionInfo*) override;            \
+  virtual nsresult ProcessPendingQ() override;                                 \
+  virtual nsresult GetSocketThreadTarget(nsIEventTarget**) override;           \
+  virtual nsresult SpeculativeConnect(                                         \
+      nsHttpConnectionInfo*, nsIInterfaceRequestor*, uint32_t caps = 0,        \
+      SpeculativeTransaction* = nullptr, bool aFetchHTTPSRR = false) override; \
+  virtual nsresult VerifyTraffic() override;                                   \
+  virtual void ExcludeHttp2(const nsHttpConnectionInfo* ci) override;          \
+  virtual void ExcludeHttp3(const nsHttpConnectionInfo* ci) override;          \
+  virtual nsresult ClearConnectionHistory() override;                          \
+  virtual nsresult CompleteUpgrade(HttpTransactionShell* aTrans,               \
+                                   nsIHttpUpgradeListener* aUpgradeListener)   \
+      override;                                                                \
+  nsHttpConnectionMgr* AsHttpConnectionMgr() override;                         \
   HttpConnectionMgrParent* AsHttpConnectionMgrParent() override;
 
 }  // namespace net

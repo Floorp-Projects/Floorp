@@ -12,6 +12,7 @@
 #include "nsAHttpConnection.h"
 #include "EventTokenBucket.h"
 #include "nsCOMPtr.h"
+#include "nsIAsyncOutputStream.h"
 #include "nsThreadUtils.h"
 #include "nsIDNSListener.h"
 #include "nsIInterfaceRequestor.h"

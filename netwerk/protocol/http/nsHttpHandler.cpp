@@ -3028,4 +3028,8 @@ bool nsHttpHandler::FallbackToOriginIfConfigsAreECHAndAllFailed() const {
       network_dns_echconfig_fallback_to_origin_when_all_failed();
 }
 
+bool nsHttpHandler::UseHTTPSRRForSpeculativeConnection() const {
+  return StaticPrefs::network_dns_use_https_rr_for_speculative_connection();
+}
+
 }  // namespace mozilla::net

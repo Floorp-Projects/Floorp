@@ -41,6 +41,7 @@
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "HttpConnectionUDP.h"
+#include "SpeculativeTransaction.h"
 #include "TCPFastOpenLayer.h"
 
 namespace mozilla {
@@ -473,23 +474,13 @@ nsresult nsHttpConnectionMgr::DoShiftReloadConnectionCleanupWithConnInfo(
 
 class SpeculativeConnectArgs : public ARefBase {
  public:
-  SpeculativeConnectArgs()
-      : mParallelSpeculativeConnectLimit(0),
-        mIgnoreIdle(false),
-        mIsFromPredictor(false),
-        mAllow1918(false) {
-    mOverridesOK = false;
-  }
+  SpeculativeConnectArgs() : mFetchHTTPSRR(false) {}
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs, override)
 
  public:  // intentional!
-  RefPtr<NullHttpTransaction> mTrans;
+  RefPtr<SpeculativeTransaction> mTrans;
 
-  bool mOverridesOK;
-  uint32_t mParallelSpeculativeConnectLimit;
-  bool mIgnoreIdle;
-  bool mIsFromPredictor;
-  bool mAllow1918;
+  bool mFetchHTTPSRR;
 
  private:
   virtual ~SpeculativeConnectArgs() = default;
@@ -498,7 +489,7 @@ class SpeculativeConnectArgs : public ARefBase {
 
 nsresult nsHttpConnectionMgr::SpeculativeConnect(
     nsHttpConnectionInfo* ci, nsIInterfaceRequestor* callbacks, uint32_t caps,
-    NullHttpTransaction* nullTransaction) {
+    SpeculativeTransaction* aTransaction, bool aFetchHTTPSRR) {
   if (!IsNeckoChild() && NS_IsMainThread()) {
     // HACK: make sure PSM gets initialized on the main thread.
     net_EnsurePSMInit();
@@ -532,17 +523,17 @@ nsresult nsHttpConnectionMgr::SpeculativeConnect(
 
   caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
   caps |= NS_HTTP_ERROR_SOFTLY;
-  args->mTrans = nullTransaction
-                     ? nullTransaction
-                     : new NullHttpTransaction(ci, wrappedCallbacks, caps);
+  args->mTrans = aTransaction
+                     ? aTransaction
+                     : new SpeculativeTransaction(ci, wrappedCallbacks, caps);
+  args->mFetchHTTPSRR = aFetchHTTPSRR;
 
   if (overrider) {
-    args->mOverridesOK = true;
-    args->mParallelSpeculativeConnectLimit =
-        overrider->GetParallelSpeculativeConnectLimit();
-    args->mIgnoreIdle = overrider->GetIgnoreIdle();
-    args->mIsFromPredictor = overrider->GetIsFromPredictor();
-    args->mAllow1918 = overrider->GetAllow1918();
+    args->mTrans->SetParallelSpeculativeConnectLimit(
+        overrider->GetParallelSpeculativeConnectLimit());
+    args->mTrans->SetIgnoreIdle(overrider->GetIgnoreIdle());
+    args->mTrans->SetIsFromPredictor(overrider->GetIsFromPredictor());
+    args->mTrans->SetAllow1918(overrider->GetAllow1918());
   }
 
   return PostEvent(&nsHttpConnectionMgr::OnMsgSpeculativeConnect, 0, args);
@@ -4015,47 +4006,54 @@ nsresult ConnectionHandle::TakeTransport(nsISocketTransport** aTransport,
   return mConn->TakeTransport(aTransport, aInputStream, aOutputStream);
 }
 
-void nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase* param) {
+void nsHttpConnectionMgr::DoSpeculativeConnection(
+    SpeculativeTransaction* aTrans, bool aFetchHTTPSRR) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(aTrans);
 
-  SpeculativeConnectArgs* args = static_cast<SpeculativeConnectArgs*>(param);
-
-  LOG(("nsHttpConnectionMgr::OnMsgSpeculativeConnect [ci=%s]\n",
-       args->mTrans->ConnectionInfo()->HashKey().get()));
-
-  nsConnectionEntry* ent =
-      GetOrCreateConnectionEntry(args->mTrans->ConnectionInfo(), false,
-                                 args->mTrans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+  nsConnectionEntry* ent = GetOrCreateConnectionEntry(
+      aTrans->ConnectionInfo(), false, aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3);
 
   uint32_t parallelSpeculativeConnectLimit =
-      gHttpHandler->ParallelSpeculativeConnectLimit();
-  bool ignoreIdle = false;
-  bool isFromPredictor = false;
-  bool allow1918 = false;
+      aTrans->ParallelSpeculativeConnectLimit()
+          ? *aTrans->ParallelSpeculativeConnectLimit()
+          : gHttpHandler->ParallelSpeculativeConnectLimit();
+  bool ignoreIdle = aTrans->IgnoreIdle() ? *aTrans->IgnoreIdle() : false;
+  bool isFromPredictor =
+      aTrans->IsFromPredictor() ? *aTrans->IsFromPredictor() : false;
+  bool allow1918 = aTrans->Allow1918() ? *aTrans->Allow1918() : false;
 
-  if (args->mOverridesOK) {
-    parallelSpeculativeConnectLimit = args->mParallelSpeculativeConnectLimit;
-    ignoreIdle = args->mIgnoreIdle;
-    isFromPredictor = args->mIsFromPredictor;
-    allow1918 = args->mAllow1918;
-  }
-
-  bool keepAlive = args->mTrans->Caps() & NS_HTTP_ALLOW_KEEPALIVE;
+  bool keepAlive = aTrans->Caps() & NS_HTTP_ALLOW_KEEPALIVE;
   if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
       ((ignoreIdle &&
         (ent->mIdleConns.Length() < parallelSpeculativeConnectLimit)) ||
        !ent->mIdleConns.Length()) &&
       !(keepAlive && RestrictConnections(ent)) &&
-      !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
+      !AtActiveConnectionLimit(ent, aTrans->Caps())) {
+    if (aFetchHTTPSRR) {
+      Unused << aTrans->FetchHTTPSRR();
+    }
     DebugOnly<nsresult> rv =
-        CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true,
-                        isFromPredictor, false, allow1918, nullptr);
+        CreateTransport(ent, aTrans, aTrans->Caps(), true, isFromPredictor,
+                        false, allow1918, nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else {
     LOG(
         ("OnMsgSpeculativeConnect Transport "
          "not created due to existing connection count\n"));
   }
+}
+
+void nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase* param) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  SpeculativeConnectArgs* args = static_cast<SpeculativeConnectArgs*>(param);
+
+  LOG(
+      ("nsHttpConnectionMgr::OnMsgSpeculativeConnect [ci=%s, "
+       "mFetchHTTPSRR=%d]\n",
+       args->mTrans->ConnectionInfo()->HashKey().get(), args->mFetchHTTPSRR));
+  DoSpeculativeConnection(args->mTrans, args->mFetchHTTPSRR);
 }
 
 bool ConnectionHandle::IsPersistent() {

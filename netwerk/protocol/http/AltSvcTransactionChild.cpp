@@ -63,12 +63,12 @@ void AltSvcTransactionChild::OnTransactionClose(bool aValidateResult) {
   task();
 }
 
-already_AddRefed<NullHttpTransaction>
+already_AddRefed<SpeculativeTransaction>
 AltSvcTransactionChild::CreateTransaction() {
-  RefPtr<NullHttpTransaction> nullTransaction =
+  RefPtr<SpeculativeTransaction> transaction =
       new AltSvcTransaction<AltSvcTransactionChild>(mConnInfo, nullptr, mCaps,
                                                     this, mConnInfo->IsHttp3());
-  return nullTransaction.forget();
+  return transaction.forget();
 }
 
 }  // namespace net

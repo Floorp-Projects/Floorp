@@ -39,7 +39,7 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
   mozilla::ipc::IPCResult RecvSpeculativeConnect(
       HttpConnectionInfoCloneArgs aConnInfo,
       Maybe<SpeculativeConnectionOverriderArgs> aOverriderArgs, uint32_t aCaps,
-      Maybe<PAltSvcTransactionChild*> aTrans);
+      Maybe<PAltSvcTransactionChild*> aTrans, const bool& aFetchHTTPSRR);
 
  private:
   virtual ~HttpConnectionMgrChild();

@@ -8701,6 +8701,12 @@
   value: 50
   mirror: always
 
+# Whether to use https rr for speculative connections.
+- name: network.dns.use_https_rr_for_speculative_connection
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

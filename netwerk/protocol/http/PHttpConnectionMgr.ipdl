@@ -32,7 +32,8 @@ child:
   async CancelTransaction(PHttpTransaction aTrans, nsresult aReason);
   async SpeculativeConnect(HttpConnectionInfoCloneArgs aConnInfo,
                            SpeculativeConnectionOverriderArgs? aOverriderArgs,
-                           uint32_t aCaps, PAltSvcTransaction? aTrans);
+                           uint32_t aCaps, PAltSvcTransaction? aTrans,
+                           bool aFetchHTTPSRR);
 };
 
 } // namespace net
