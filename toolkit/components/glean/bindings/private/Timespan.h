@@ -80,7 +80,7 @@ class TimespanMetric {
   }
 
  private:
-  uint32_t mId;
+  const uint32_t mId;
 };
 }  // namespace impl
 
@@ -94,7 +94,7 @@ class GleanTimespan final : public nsIGleanTimespan {
  private:
   virtual ~GleanTimespan() = default;
 
-  impl::TimespanMetric mTimespan;
+  const impl::TimespanMetric mTimespan;
 };
 
 }  // namespace glean

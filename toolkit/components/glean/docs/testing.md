@@ -24,33 +24,7 @@ For more information on logging in Firefox Desktop, see the
 `about:glean` is a page in a running Firefox that allows you to
 [debug the Glean SDK](https://mozilla.github.io/glean/book/user/debugging/index.html)
 in Firefox Desktop.
-It does this through query parameters:
-* `logPings=true` To turn on debug-level logging of ping assembly and sending in
-  `glean_core`.
-  (Note you need to set `glean_core`'s log level to at least Debug
-  (3) for these logs to make it out through `RUST_LOG` or `MOZ_LOG`)
-* `tagPings=my-debug-tag` Set the
-  [debug ping tag](https://mozilla.github.io/glean/book/dev/core/internal/debug-pings.html)
-  to "my-debug-tag" for all pings assembled from this point on.
-  Tagged pings are rerouted to the
-  [Debug Ping Viewer](https://glean-debug-view-dev-237806.firebaseapp.com/)
-  for ease of manual testing.
-* `sendPing=ping-name` Send the ping named
-  "ping-name" immediately with whatever data we have on hand for it.
-
-If multiple query parameters are specified,
-`logPings` will take effect before
-`tagPings` which will take effect before
-`sendPing`. That means
-`about:glean?sendPing=baseline&tagPings=my-debug-tag&logPings=true`
-will log and assemble the
-"baseline" ping immediately with a debug tag of "my-debug-tag".
-
-**Note:** At present no pings are registered in FOG so `sendPing` will not work.
-However, builtin pings like "deletion-request" will respect the
-`logPings` and `tagPings` values you set.
-This will be fixed in
-[bug 1653605](https://bugzilla.mozilla.org/show_bug.cgi?id=1653605).
+It does this through the displayed user interface (just follow the instructions).
 
 ## Rust
 
@@ -107,3 +81,32 @@ These tests require Python 3+.
 If your default Python is Python 2, you may need to instead run:
 
 `mach python-test --python 3 toolkit/components/glean/pytest`
+
+## C++
+
+To test the C++ parts of FOG's implementation
+(like metric types)
+you should use `gtest`.
+FOG's `gtest` tests are in
+[`gtest/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/).
+
+You can either add a test case to an existing file or add a new file.
+If you add a new file, remember to add it to the
+[`moz.build`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/moz.build))
+or the test runner won't be able to find it.
+
+All tests should start with `FOG` so that all tests are run with
+`./mach gtest FOG*`.
+
+## JS
+
+To test the JS parts of FOG's implementation
+(like metric types)
+you should use `xpcshell`.
+FOG's `xpcshell` tests are in
+[`xpcshell/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell).
+
+You can either add a test case to an existing file or add a new file.
+If you add a new file, remember to add it to the
+[`xpcshell.ini`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/xpcshell.ini)
+or the test runner will not be able to find it.
