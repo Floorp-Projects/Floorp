@@ -221,9 +221,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1506812
          "race:BeginBackgroundRead\n"
 
-         // Bug 1506910
-         "race:gMozillaPoisonValue\n"
-
          // Bug 1601286
          "race:setFlagBit\n"
          "race:isFatInline\n"

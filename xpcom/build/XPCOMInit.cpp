@@ -259,8 +259,6 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
 
   sInitialized = true;
 
-  mozPoisonValueInit();
-
   NS_LogInit();
 
   NS_InitAtomTable();
@@ -495,7 +493,6 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
 
 EXPORT_XPCOM_API(nsresult)
 NS_InitMinimalXPCOM() {
-  mozPoisonValueInit();
   NS_SetMainThread();
   mozilla::TimeStamp::Startup();
   NS_LogInit();
