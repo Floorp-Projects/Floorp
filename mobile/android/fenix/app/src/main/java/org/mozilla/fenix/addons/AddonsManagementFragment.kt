@@ -141,7 +141,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private fun hasExistingAddonInstallationDialogFragment(): Boolean {
         return parentFragmentManager.findFragmentByTag(INSTALLATION_DIALOG_FRAGMENT_TAG)
-            as? AddonInstallationDialogFragment != null
+                as? AddonInstallationDialogFragment != null
     }
 
     private fun showPermissionDialog(addon: Addon) {

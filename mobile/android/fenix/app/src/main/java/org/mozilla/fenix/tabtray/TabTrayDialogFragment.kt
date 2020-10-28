@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
@@ -71,7 +72,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
     private val snackbarAnchor: View?
         get() = if (tabTrayView.fabView.new_tab_button.isVisible ||
-                    tabTrayView.mode != Mode.Normal) tabTrayView.fabView.new_tab_button
+            tabTrayView.mode != Mode.Normal
+        ) tabTrayView.fabView.new_tab_button
         /* During selection of the tabs to the collection, the FAB is not visible,
            which leads to not attaching a needed AnchorView. That's why, we're not only checking, if it's not visible,
            but also if we're not in a "Normal" mode, so after selecting tabs for a collection, we're pushing snackbar
@@ -177,6 +179,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val activity = activity as HomeActivity
@@ -194,8 +197,12 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     activity = activity,
                     profiler = activity.components.core.engine.profiler,
                     sessionManager = activity.components.core.sessionManager,
+                    browserStore = activity.components.core.store,
+                    tabsUseCases = activity.components.useCases.tabsUseCases,
+                    scope = lifecycleScope,
                     browsingModeManager = activity.browsingModeManager,
                     tabCollectionStorage = activity.components.core.tabCollectionStorage,
+                    bookmarksStorage = activity.components.core.bookmarksStorage,
                     navController = findNavController(),
                     dismissTabTray = ::dismissAllowingStateLoss,
                     dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
@@ -203,7 +210,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     tabTrayDialogFragmentStore = tabTrayDialogStore,
                     selectTabUseCase = selectTabUseCase,
                     showChooseCollectionDialog = ::showChooseCollectionDialog,
-                    showAddNewCollectionDialog = ::showAddNewCollectionDialog
+                    showAddNewCollectionDialog = ::showAddNewCollectionDialog,
+                    showUndoSnackbarForTabs = ::showUndoSnackbarForTabs,
+                    showBookmarksSnackbar = ::showBookmarksSnackbar
                 )
             ),
             store = tabTrayDialogStore,
@@ -265,6 +274,20 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         } else if (!(activity as HomeActivity).browsingModeManager.mode.isPrivate) {
             dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+    }
+
+    private fun showUndoSnackbarForTabs() {
+        lifecycleScope.allowUndo(
+            requireView().tabLayout,
+            getString(R.string.snackbar_message_tabs_closed),
+            getString(R.string.snackbar_deleted_undo),
+            {
+                requireComponents.useCases.tabsUseCases.undo.invoke()
+            },
+            operation = { },
+            elevation = ELEVATION,
+            anchorView = snackbarAnchor
+        )
     }
 
     private fun showUndoSnackbarForTab(sessionId: String) {
@@ -356,6 +379,26 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             snackbar.view.elevation = ELEVATION
             snackbar.show()
         }
+    }
+
+    private fun showBookmarksSnackbar() {
+        val snackbar = FenixSnackbar
+            .make(
+                duration = FenixSnackbar.LENGTH_LONG,
+                isDisplayedWithBrowserToolbar = false,
+                view = (view as View)
+            )
+            .setAnchorView(snackbarAnchor)
+            .setText(requireContext().getString(R.string.snackbar_message_bookmarks_saved))
+            .setAction(requireContext().getString(R.string.snackbar_message_bookmarks_view)) {
+                dismissAllowingStateLoss()
+                findNavController().navigate(
+                    TabTrayDialogFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                )
+            }
+
+        snackbar.view.elevation = ELEVATION
+        snackbar.show()
     }
 
     override fun onBackPressed(): Boolean {

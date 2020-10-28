@@ -14,12 +14,39 @@ class TabTrayFragmentInteractorTest {
     private val interactor = TabTrayFragmentInteractor(controller)
 
     @Test
+    fun onShareSelectedTabsClicked() {
+        val tab = Tab("1234", "mozilla.org")
+        val tab2 = Tab("5678", "pocket.com")
+        val selectedTabs = setOf(tab, tab2)
+        interactor.onShareSelectedTabsClicked(selectedTabs)
+        verify { controller.handleShareSelectedTabsClicked(selectedTabs) }
+    }
+
+    @Test
+    fun onBookmarkSelectedTabs() {
+        val tab = Tab("1234", "mozilla.org")
+        val tab2 = Tab("5678", "pocket.com")
+        val selectedTabs = setOf(tab, tab2)
+        interactor.onBookmarkSelectedTabs(selectedTabs)
+        verify { controller.handleBookmarkSelectedTabs(selectedTabs) }
+    }
+
+    @Test
+    fun onDeleteSelectedTabs() {
+        val tab = Tab("1234", "mozilla.org")
+        val tab2 = Tab("5678", "pocket.com")
+        val selectedTabs = setOf(tab, tab2)
+        interactor.onDeleteSelectedTabs(selectedTabs)
+        verify { controller.handleDeleteSelectedTabs(selectedTabs) }
+    }
+
+    @Test
     fun onNewTabTapped() {
         interactor.onNewTabTapped(private = true)
-        verify { controller.onNewTabTapped(true) }
+        verify { controller.handleNewTabTapped(true) }
 
         interactor.onNewTabTapped(private = false)
-        verify { controller.onNewTabTapped(false) }
+        verify { controller.handleNewTabTapped(false) }
     }
 
     @Test
@@ -34,38 +61,38 @@ class TabTrayFragmentInteractorTest {
     @Test
     fun onTabTrayDismissed() {
         interactor.onTabTrayDismissed()
-        verify { controller.onTabTrayDismissed() }
+        verify { controller.handleTabTrayDismissed() }
     }
 
     @Test
     fun onShareTabsClicked() {
-        interactor.onShareTabsClicked(private = true)
-        verify { controller.onShareTabsClicked(true) }
+        interactor.onShareTabsOfTypeClicked(private = true)
+        verify { controller.handleShareTabsOfTypeClicked(true) }
 
-        interactor.onShareTabsClicked(private = false)
-        verify { controller.onShareTabsClicked(false) }
+        interactor.onShareTabsOfTypeClicked(private = false)
+        verify { controller.handleShareTabsOfTypeClicked(false) }
     }
 
     @Test
     fun onSaveToCollectionClicked() {
         val tab = Tab("1234", "mozilla.org")
         interactor.onSaveToCollectionClicked(setOf(tab))
-        verify { controller.onSaveToCollectionClicked(setOf(tab)) }
+        verify { controller.handleSaveToCollectionClicked(setOf(tab)) }
     }
 
     @Test
     fun onCloseAllTabsClicked() {
         interactor.onCloseAllTabsClicked(private = false)
-        verify { controller.onCloseAllTabsClicked(false) }
+        verify { controller.handleCloseAllTabsClicked(false) }
 
         interactor.onCloseAllTabsClicked(private = true)
-        verify { controller.onCloseAllTabsClicked(true) }
+        verify { controller.handleCloseAllTabsClicked(true) }
     }
 
     @Test
     fun onSyncedTabClicked() {
         interactor.onSyncedTabClicked(mockk(relaxed = true))
-        verify { controller.onSyncedTabClicked(any()) }
+        verify { controller.handleSyncedTabClicked(any()) }
     }
 
     @Test

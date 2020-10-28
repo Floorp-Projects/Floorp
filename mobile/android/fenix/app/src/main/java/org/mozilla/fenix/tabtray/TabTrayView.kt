@@ -30,12 +30,11 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter.*
+import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -89,6 +88,9 @@ class TabTrayView(
     private val concatAdapter = ConcatAdapter(tabsAdapter)
     private val tabTrayItemMenu: TabTrayItemMenu
     private var menu: BrowserMenu? = null
+
+    private val multiselectSelectionMenu: MultiselectSelectionMenu
+    private var multiselectMenu: BrowserMenu? = null
 
     private var tabsTouchHelper: TabsTouchHelper
     private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
@@ -230,7 +232,7 @@ class TabTrayView(
                 hasOpenTabs = checkOpenTabs
             ) {
                 when (it) {
-                    is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsClicked(
+                    is TabTrayItemMenu.Item.ShareAllTabs -> interactor.onShareTabsOfTypeClicked(
                         isPrivateModeSelected
                     )
                     is TabTrayItemMenu.Item.OpenTabSettings -> interactor.onTabSettingsClicked()
@@ -242,18 +244,30 @@ class TabTrayView(
                 }
             }
 
+        multiselectSelectionMenu = MultiselectSelectionMenu(
+            context = view.context
+        ) {
+            when (it) {
+                is MultiselectSelectionMenu.Item.BookmarkTabs -> interactor.onBookmarkSelectedTabs(
+                    mode.selectedItems
+                )
+                is MultiselectSelectionMenu.Item.DeleteTabs -> interactor.onDeleteSelectedTabs(
+                    mode.selectedItems
+                )
+            }
+        }
+
         view.tab_tray_overflow.setOnClickListener {
             components.analytics.metrics.track(Event.TabsTrayMenuOpened)
             menu = tabTrayItemMenu.menuBuilder.build(container.context)
-            menu?.show(it)
-                ?.also { pu ->
-                    (pu.contentView as? CardView)?.setCardBackgroundColor(
-                        ContextCompat.getColor(
-                            view.context,
-                            R.color.foundation_normal_theme
-                        )
+            menu?.show(it)?.also { popupMenu ->
+                (popupMenu.contentView as? CardView)?.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        view.context,
+                        R.color.foundation_normal_theme
                     )
-                }
+                )
+            }
         }
 
         adjustNewTabButtonsForNormalMode()
@@ -469,6 +483,8 @@ class TabTrayView(
                 fabView.new_tab_button.isVisible = false
                 view.tab_tray_new_tab.isVisible = false
                 view.collect_multi_select.isVisible = state.mode.selectedItems.isNotEmpty()
+                view.share_multi_select.isVisible = state.mode.selectedItems.isNotEmpty()
+                view.menu_multi_select.isVisible = state.mode.selectedItems.isNotEmpty()
 
                 view.multiselect_title.text = view.context.getString(
                     R.string.tab_tray_multi_select_title,
@@ -476,6 +492,20 @@ class TabTrayView(
                 )
                 view.collect_multi_select.setOnClickListener {
                     interactor.onSaveToCollectionClicked(state.mode.selectedItems)
+                }
+                view.share_multi_select.setOnClickListener {
+                    interactor.onShareSelectedTabsClicked(state.mode.selectedItems)
+                }
+                view.menu_multi_select.setOnClickListener {
+                    multiselectMenu = multiselectSelectionMenu.menuBuilder.build(container.context)
+                    multiselectMenu?.show(it)?.also { popupMenu ->
+                        (popupMenu.contentView as? CardView)?.setCardBackgroundColor(
+                            ContextCompat.getColor(
+                                view.context,
+                                R.color.foundation_normal_theme
+                            )
+                        )
+                    }
                 }
                 view.exit_multi_select.setOnClickListener {
                     interactor.onBackPressed()
@@ -544,6 +574,8 @@ class TabTrayView(
     private fun toggleUIMultiselect(multiselect: Boolean) {
         view.multiselect_title.isVisible = multiselect
         view.collect_multi_select.isVisible = multiselect
+        view.share_multi_select.isVisible = multiselect
+        view.menu_multi_select.isVisible = multiselect
         view.exit_multi_select.isVisible = multiselect
 
         view.topBar.setBackgroundColor(
@@ -707,9 +739,7 @@ class TabTrayView(
         // We offset the tab index by the number of items in the other adapters.
         // We add the offset, because the layoutManager is initialized with `reverseLayout`.
         return if (view.context.settings().listTabView) {
-            selectedBrowserTabIndex +
-                    collectionsButtonAdapter.itemCount +
-                    syncedTabsController.adapter.itemCount
+            selectedBrowserTabIndex + collectionsButtonAdapter.itemCount + syncedTabsController.adapter.itemCount
         } else {
             selectedBrowserTabIndex
         }
@@ -719,75 +749,18 @@ class TabTrayView(
         private const val TAB_COUNT_SHOW_CFR = 6
         private const val DEFAULT_TAB_ID = 0
         private const val PRIVATE_TAB_ID = 1
+
         // Minimum number of list items for which to show the tabs tray as expanded.
         private const val EXPAND_AT_LIST_SIZE = 4
+
         // Minimum number of grid items for which to show the tabs tray as expanded.
         private const val EXPAND_AT_GRID_SIZE = 3
         private const val SLIDE_OFFSET = 0
         private const val SELECTION_DELAY = 500
         private const val NORMAL_HANDLE_PERCENT_WIDTH = 0.1F
         private const val COLUMN_WIDTH_DP = 180
+
         // The remaining padding offset needed to provide a 16dp column spacing between the grid items.
         const val GRID_ITEM_PARENT_PADDING = 8
-    }
-}
-
-class TabTrayItemMenu(
-    private val context: Context,
-    private val shouldShowSaveToCollection: () -> Boolean,
-    private val hasOpenTabs: () -> Boolean,
-    private val onItemTapped: (Item) -> Unit = {}
-) {
-
-    sealed class Item {
-        object ShareAllTabs : Item()
-        object OpenTabSettings : Item()
-        object SaveToCollection : Item()
-        object CloseAllTabs : Item()
-        object OpenRecentlyClosed : Item()
-    }
-
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
-
-    private val menuItems by lazy {
-        listOf(
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_item_save),
-                textColorResource = R.color.primary_text_normal_theme
-            ) {
-                context.components.analytics.metrics.track(Event.TabsTraySaveToCollectionPressed)
-                onItemTapped.invoke(Item.SaveToCollection)
-            }.apply { visible = shouldShowSaveToCollection },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_item_share),
-                textColorResource = R.color.primary_text_normal_theme
-            ) {
-                context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
-                onItemTapped.invoke(Item.ShareAllTabs)
-            }.apply { visible = hasOpenTabs },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_tab_settings),
-                textColorResource = R.color.primary_text_normal_theme
-            ) {
-                onItemTapped.invoke(Item.OpenTabSettings)
-            },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_recently_closed),
-                textColorResource = R.color.primary_text_normal_theme
-            ) {
-                onItemTapped.invoke(Item.OpenRecentlyClosed)
-            },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.tab_tray_menu_item_close),
-                textColorResource = R.color.primary_text_normal_theme
-            ) {
-                context.components.analytics.metrics.track(Event.TabsTrayCloseAllTabsPressed)
-                onItemTapped.invoke(Item.CloseAllTabs)
-            }.apply { visible = hasOpenTabs }
-        )
     }
 }

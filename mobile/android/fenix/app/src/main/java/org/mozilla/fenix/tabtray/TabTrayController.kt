@@ -4,13 +4,20 @@
 
 package org.mozilla.fenix.tabtray
 
-import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
@@ -18,7 +25,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.home.HomeFragment
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
@@ -29,13 +35,16 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  */
 @Suppress("TooManyFunctions")
 interface TabTrayController {
-    fun onNewTabTapped(private: Boolean)
-    fun onTabTrayDismissed()
+    fun handleNewTabTapped(private: Boolean)
+    fun handleTabTrayDismissed()
     fun handleTabSettingsClicked()
-    fun onShareTabsClicked(private: Boolean)
-    fun onSyncedTabClicked(syncTab: SyncTab)
-    fun onSaveToCollectionClicked(selectedTabs: Set<Tab>)
-    fun onCloseAllTabsClicked(private: Boolean)
+    fun handleShareTabsOfTypeClicked(private: Boolean)
+    fun handleShareSelectedTabsClicked(selectedTabs: Set<Tab>)
+    fun handleSyncedTabClicked(syncTab: SyncTab)
+    fun handleSaveToCollectionClicked(selectedTabs: Set<Tab>)
+    fun handleBookmarkSelectedTabs(selectedTabs: Set<Tab>)
+    fun handleDeleteSelectedTabs(selectedTabs: Set<Tab>)
+    fun handleCloseAllTabsClicked(private: Boolean)
     fun handleBackPressed(): Boolean
     fun onModeRequested(): TabTrayDialogFragmentState.Mode
     fun handleAddSelectedTab(tab: Tab)
@@ -68,8 +77,12 @@ class DefaultTabTrayController(
     private val activity: HomeActivity,
     private val profiler: Profiler?,
     private val sessionManager: SessionManager,
+    private val browserStore: BrowserStore,
     private val browsingModeManager: BrowsingModeManager,
     private val tabCollectionStorage: TabCollectionStorage,
+    private val bookmarksStorage: BookmarksStorage,
+    private val scope: CoroutineScope,
+    private val tabsUseCases: TabsUseCases,
     private val navController: NavController,
     private val dismissTabTray: () -> Unit,
     private val dismissTabTrayAndNavigateHome: (String) -> Unit,
@@ -77,10 +90,12 @@ class DefaultTabTrayController(
     private val tabTrayDialogFragmentStore: TabTrayDialogFragmentStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val showChooseCollectionDialog: (List<Session>) -> Unit,
-    private val showAddNewCollectionDialog: (List<Session>) -> Unit
+    private val showAddNewCollectionDialog: (List<Session>) -> Unit,
+    private val showUndoSnackbarForTabs: () -> Unit,
+    private val showBookmarksSnackbar: () -> Unit
 ) : TabTrayController {
 
-    override fun onNewTabTapped(private: Boolean) {
+    override fun handleNewTabTapped(private: Boolean) {
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(private)
         navController.navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
@@ -95,11 +110,11 @@ class DefaultTabTrayController(
         navController.navigate(TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment())
     }
 
-    override fun onTabTrayDismissed() {
+    override fun handleTabTrayDismissed() {
         dismissTabTray()
     }
 
-    override fun onSaveToCollectionClicked(selectedTabs: Set<Tab>) {
+    override fun handleSaveToCollectionClicked(selectedTabs: Set<Tab>) {
         val sessionList = selectedTabs.map {
             sessionManager.findSessionById(it.id) ?: return
         }
@@ -117,9 +132,19 @@ class DefaultTabTrayController(
         }
     }
 
-    override fun onShareTabsClicked(private: Boolean) {
-        val tabs = getListOfSessions(private)
+    override fun handleShareTabsOfTypeClicked(private: Boolean) {
+        val tabs = browserStore.state.getNormalOrPrivateTabs(private)
         val data = tabs.map {
+            ShareData(url = it.content.url, title = it.content.title)
+        }
+        val directions = TabTrayDialogFragmentDirections.actionGlobalShareFragment(
+            data = data.toTypedArray()
+        )
+        navController.navigate(directions)
+    }
+
+    override fun handleShareSelectedTabsClicked(selectedTabs: Set<Tab>) {
+        val data = selectedTabs.map {
             ShareData(url = it.url, title = it.title)
         }
         val directions = TabTrayDialogFragmentDirections.actionGlobalShareFragment(
@@ -128,7 +153,40 @@ class DefaultTabTrayController(
         navController.navigate(directions)
     }
 
-    override fun onSyncedTabClicked(syncTab: SyncTab) {
+    override fun handleBookmarkSelectedTabs(selectedTabs: Set<Tab>) {
+        selectedTabs.forEach {
+            scope.launch(IO) {
+                val shouldAddBookmark = bookmarksStorage.getBookmarksWithUrl(it.url)
+                    .firstOrNull { it.url == it.url } == null
+                if (shouldAddBookmark) {
+                    bookmarksStorage.addItem(
+                        BookmarkRoot.Mobile.id,
+                        url = it.url,
+                        title = it.title,
+                        position = null
+                    )
+                }
+            }
+        }
+        tabTrayDialogFragmentStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+        showBookmarksSnackbar()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun handleDeleteSelectedTabs(selectedTabs: Set<Tab>) {
+        if (browserStore.state.normalTabs.size == selectedTabs.size) {
+            dismissTabTrayAndNavigateHome(HomeFragment.ALL_NORMAL_TABS)
+        } else {
+            selectedTabs.map { it.id }.let {
+                tabsUseCases.removeTabs(it)
+            }
+
+            tabTrayDialogFragmentStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
+            showUndoSnackbarForTabs()
+        }
+    }
+
+    override fun handleSyncedTabClicked(syncTab: SyncTab) {
         activity.openToBrowserAndLoad(
             searchTermOrURL = syncTab.active().url,
             newTab = true,
@@ -137,7 +195,7 @@ class DefaultTabTrayController(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun onCloseAllTabsClicked(private: Boolean) {
+    override fun handleCloseAllTabsClicked(private: Boolean) {
         val sessionsToClose = if (private) {
             HomeFragment.ALL_PRIVATE_TABS
         } else {
@@ -162,11 +220,6 @@ class DefaultTabTrayController(
         } else {
             false
         }
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun getListOfSessions(private: Boolean): List<Session> {
-        return sessionManager.sessionsOfType(private = private).toList()
     }
 
     override fun onModeRequested(): TabTrayDialogFragmentState.Mode {

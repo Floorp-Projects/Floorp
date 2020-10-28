@@ -22,7 +22,22 @@ interface TabTrayInteractor {
     /**
      * Called when user clicks the share tabs button.
      */
-    fun onShareTabsClicked(private: Boolean)
+    fun onShareTabsOfTypeClicked(private: Boolean)
+
+    /**
+     * Called when user clicks button to share selected tabs in multiselect.
+     */
+    fun onShareSelectedTabsClicked(selectedTabs: Set<Tab>)
+
+    /**
+     * Called when user clicks bookmark button in menu to bookmark selected tabs in multiselect.
+     */
+    fun onBookmarkSelectedTabs(selectedTabs: Set<Tab>)
+
+    /**
+     * Called when user clicks delete button in menu to delete selected tabs in multiselect.
+     */
+    fun onDeleteSelectedTabs(selectedTabs: Set<Tab>)
 
     /**
      * Called when user clicks the tab settings button.
@@ -91,11 +106,11 @@ interface TabTrayInteractor {
 @Suppress("TooManyFunctions")
 class TabTrayFragmentInteractor(private val controller: TabTrayController) : TabTrayInteractor {
     override fun onNewTabTapped(private: Boolean) {
-        controller.onNewTabTapped(private)
+        controller.handleNewTabTapped(private)
     }
 
     override fun onTabTrayDismissed() {
-        controller.onTabTrayDismissed()
+        controller.handleTabTrayDismissed()
     }
 
     override fun onTabSettingsClicked() {
@@ -106,20 +121,32 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
         controller.handleRecentlyClosedClicked()
     }
 
-    override fun onShareTabsClicked(private: Boolean) {
-        controller.onShareTabsClicked(private)
+    override fun onShareTabsOfTypeClicked(private: Boolean) {
+        controller.handleShareTabsOfTypeClicked(private)
+    }
+
+    override fun onShareSelectedTabsClicked(selectedTabs: Set<Tab>) {
+        controller.handleShareSelectedTabsClicked(selectedTabs)
+    }
+
+    override fun onBookmarkSelectedTabs(selectedTabs: Set<Tab>) {
+        controller.handleBookmarkSelectedTabs(selectedTabs)
+    }
+
+    override fun onDeleteSelectedTabs(selectedTabs: Set<Tab>) {
+        controller.handleDeleteSelectedTabs(selectedTabs)
     }
 
     override fun onSaveToCollectionClicked(selectedTabs: Set<Tab>) {
-        controller.onSaveToCollectionClicked(selectedTabs)
+        controller.handleSaveToCollectionClicked(selectedTabs)
     }
 
     override fun onCloseAllTabsClicked(private: Boolean) {
-        controller.onCloseAllTabsClicked(private)
+        controller.handleCloseAllTabsClicked(private)
     }
 
     override fun onSyncedTabClicked(syncTab: SyncTab) {
-        controller.onSyncedTabClicked(syncTab)
+        controller.handleSyncedTabClicked(syncTab)
     }
 
     override fun onBackPressed(): Boolean {
