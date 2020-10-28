@@ -393,7 +393,7 @@ ConnectionData.prototype = Object.freeze({
       },
       close: {
         value: async () => {
-          status.isPending = false;
+          status.isPending = true;
           status.command = "<close>";
           try {
             return await this.close();
@@ -404,8 +404,8 @@ ConnectionData.prototype = Object.freeze({
       },
       executeCached: {
         value: async (sql, ...rest) => {
-          status.isPending = false;
-          status.command = sql;
+          status.isPending = true;
+          status.command = "cached: " + sql;
           try {
             return await this.executeCached(sql, ...rest);
           } finally {
