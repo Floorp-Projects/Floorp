@@ -147,6 +147,18 @@ class ArrayBufferViewObject : public NativeObject {
     return buffer->isDetached();
   }
 
+  size_t byteOffset() const {
+    size_t offset = size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
+    MOZ_ASSERT(offset <= INT32_MAX);
+    return offset;
+  }
+
+  Value byteOffsetValue() const {
+    size_t offset = byteOffset();
+    MOZ_ASSERT(offset <= INT32_MAX);
+    return Int32Value(offset);
+  }
+
   static void trace(JSTracer* trc, JSObject* obj);
 };
 
