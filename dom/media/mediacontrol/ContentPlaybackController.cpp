@@ -5,8 +5,10 @@
 #include "ContentPlaybackController.h"
 
 #include "MediaControlUtils.h"
+#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/Telemetry.h"
 #include "nsFocusManager.h"
 

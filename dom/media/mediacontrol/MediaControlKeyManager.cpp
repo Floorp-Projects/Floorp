@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/widget/MediaKeysEventSourceFactory.h"
+#include "nsContentUtils.h"
 
 #undef LOG
 #define LOG(msg, ...)                        \
