@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<head>
+    <style>
+    @page {
+        size: 5in 3in;
+        margin: 0;
+    }
+
+    @font-face {
+      font-family: Ahem;
+      src: url(../fonts/Ahem.ttf);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    .text {
+        display: inline-block;
+        border: 2px solid;
+        background-color: grey;
+        width: 220px;
+        font: 50px/1 Ahem;
+    }
+
+    .pos {
+        position: absolute;
+        top: calc(3in - 25px);
+        left: 0px;
+    }
+    </style>
+</head>
+<body>
+    <div class="text pos">XpXp</div>
+</body>
+</html>
