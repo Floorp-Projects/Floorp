@@ -44,5 +44,6 @@ dom/media/encoder/
 dom/media/fake-cdm/
 dom/media/flac/
 dom/media/fuzz/
+dom/media/gmp/
 dom/quota/
 dom/simpledb/
