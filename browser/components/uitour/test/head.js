@@ -16,6 +16,8 @@ const { PermissionTestUtils } = ChromeUtils.import(
 const SINGLE_TRY_TIMEOUT = 100;
 const NUMBER_OF_TRIES = 30;
 
+let gProxyCallbackMap = new Map();
+
 function waitForConditionPromise(
   condition,
   timeoutMsg,
@@ -300,20 +302,14 @@ function isTourBrowser(aBrowser) {
   );
 }
 
-function promisePageEvent() {
-  return new Promise(resolve => {
-    Services.mm.addMessageListener("UITour:onPageEvent", function onPageEvent(
-      aMessage
-    ) {
-      Services.mm.removeMessageListener("UITour:onPageEvent", onPageEvent);
-      SimpleTest.executeSoon(resolve);
-    });
-  });
-}
-
 function loadUITourTestPage(callback, host = "https://example.org/") {
   if (gTestTab) {
+    gProxyCallbackMap.clear();
     gBrowser.removeTab(gTestTab);
+  }
+
+  if (!window.gProxyCallbackMap) {
+    window.gProxyCallbackMap = gProxyCallbackMap;
   }
 
   let url = getRootDirectory(gTestPath) + "uitour.html";
@@ -354,9 +350,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
         get(target, prop, receiver) {
           return (...args) => {
             let browser = gTestTab.linkedBrowser;
-            const proxyFunctionName = "UITourHandler:proxiedfunction-";
             // We need to proxy any callback functions using messages:
-            let callbackMap = new Map();
             let fnIndices = [];
             args = args.map((arg, index) => {
               // Replace function arguments with "", and add them to the list of
@@ -365,22 +359,8 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               // those messages on our side and call the corresponding function with
               // the arguments we got from the content side.
               if (typeof arg == "function") {
-                callbackMap.set(index, arg);
+                gProxyCallbackMap.set(index, arg);
                 fnIndices.push(index);
-                let handler = function(msg) {
-                  // Please note that this handler assumes that the callback is used only once.
-                  // That means that a single gContentAPI.observer() call can't be used to observe
-                  // multiple events.
-                  browser.messageManager.removeMessageListener(
-                    proxyFunctionName + index,
-                    handler
-                  );
-                  callbackMap.get(index).apply(null, msg.data);
-                };
-                browser.messageManager.addMessageListener(
-                  proxyFunctionName + index,
-                  handler
-                );
                 return "";
               }
               return arg;
@@ -390,7 +370,7 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               args,
               fnIndices,
             };
-            return ContentTask.spawn(browser, taskArgs, async function(
+            return SpecialPowers.spawn(browser, [taskArgs], async function(
               contentArgs
             ) {
               let contentWin = Cu.waiveXrays(content);
@@ -404,9 +384,17 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
                   if (arg === "" && contentArgs.fnIndices.includes(index)) {
                     return function() {
                       callbacksCalled++;
-                      sendAsyncMessage(
-                        "UITourHandler:proxiedfunction-" + index,
-                        Array.from(arguments)
+                      SpecialPowers.spawnChrome(
+                        [index, Array.from(arguments)],
+                        (indexParent, argumentsParent) => {
+                          // Please note that this handler only allows the callback to be used once.
+                          // That means that a single gContentAPI.observer() call can't be used
+                          // to observe multiple events.
+                          let window = this.browsingContext.topChromeWindow;
+                          let cb = window.gProxyCallbackMap.get(indexParent);
+                          window.gProxyCallbackMap.delete(indexParent);
+                          cb.apply(null, argumentsParent);
+                        }
                       );
                       if (callbacksCalled >= contentArgs.fnIndices.length) {
                         resolveCallbackPromise();
@@ -479,6 +467,7 @@ function UITourTest(usingAddTask = false) {
       gBrowser.removeTab(gTestTab);
     }
     delete window.gTestTab;
+    delete window.gProxyCallbackMap;
     Services.prefs.clearUserPref("browser.uitour.enabled");
     PermissionTestUtils.remove(testHttpsOrigin, "uitour");
     PermissionTestUtils.remove(testHttpOrigin, "uitour");
@@ -498,6 +487,7 @@ function done(usingAddTask = false) {
         gBrowser.removeTab(gTestTab);
       }
       gTestTab = null;
+      gProxyCallbackMap.clear();
 
       let highlight = document.getElementById("UITourHighlightContainer");
       is_element_hidden(
