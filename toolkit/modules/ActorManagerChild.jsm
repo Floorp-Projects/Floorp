@@ -51,16 +51,6 @@ class Dispatcher {
   constructor(mm, data) {
     this.mm = mm;
 
-    // Temporarily disable to prevent an exception until this file is removed.
-    if (!data) {
-      data = {
-        actors: new Map(),
-        events: new Map(),
-        messages: new Map(),
-        observers: new Map(),
-      };
-    }
-
     this.actors = data.actors;
     this.events = data.events;
     this.messages = data.messages;
