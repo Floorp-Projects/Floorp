@@ -169,6 +169,10 @@ class LintRoller(object):
         else:
             logger.setLevel(logging.WARNING)
 
+        self.log = logging.LoggerAdapter(
+            logger, {"lintname": "mozlint", "pid": os.getpid()}
+        )
+
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
 
@@ -194,7 +198,12 @@ class LintRoller(object):
             try:
                 setupargs = copy.deepcopy(self.lintargs)
                 setupargs["name"] = linter["name"]
+                start_time = time.time()
                 res = findobject(linter["setup"])(**setupargs)
+                self.log.debug(
+                    f"setup for {linter['name']} finished in "
+                    f"{round(time.time() - start_time, 2)} seconds"
+                )
             except Exception:
                 traceback.print_exc()
                 res = 1
