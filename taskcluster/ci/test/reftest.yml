@@ -94,7 +94,6 @@ jsreftest:
             android-hw.*/(opt|pgo)?: 6
             windows.*\/opt: 2
             windows10-64-asan/opt: 3
-            windows10-64-ccov/debug: 5
             windows10-64-ccov/opt: 5
             linux.*64-ccov.*/.*: 5
             linux1804-64-qr/opt: 4
@@ -141,7 +140,6 @@ reftest:
             windows.*/opt: 2
             windows.*/debug: 4
             windows10-64-asan/opt: 3
-            windows10-64-ccov/debug: 9
             windows10-64-ccov/opt: 9
             default: 8
     e10s: true
