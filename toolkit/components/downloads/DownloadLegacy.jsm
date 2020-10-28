@@ -389,6 +389,14 @@ DownloadLegacyTransfer.prototype = {
         becauseBlockedByReputationCheck: true,
         reputationCheckVerdict: DownloadError.BLOCK_VERDICT_INSECURE,
       };
+      // hasBlockedData needs to be true
+      // because the unblock UI is hidden if there is
+      // no data to be unblocked.
+      serialisedDownload.hasBlockedData = true;
+      // We cannot use the legacy saver here, as the original channel
+      // is already closed. A copy saver would create a new channel once
+      // start() is called.
+      serialisedDownload.saver = "copy";
     }
 
     Downloads.createDownload(serialisedDownload)
