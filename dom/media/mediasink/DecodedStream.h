@@ -7,6 +7,7 @@
 #ifndef DecodedStream_h_
 #define DecodedStream_h_
 
+#include "AudibilityMonitor.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaSegment.h"

@@ -12,10 +12,10 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
+#include "AudioSink.h"
 #include "MediaSink.h"
 
 namespace mozilla {
-class AudioSink;
 class MediaData;
 template <class T>
 class MediaQueue;

@@ -19,9 +19,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_media.h"
 
-namespace mozilla {
-
-extern LazyLogModule gMediaDecoderLog;
+extern mozilla::LazyLogModule gMediaDecoderLog;
 
 #undef FMT
 
@@ -39,6 +37,8 @@ extern LazyLogModule gMediaDecoderLog;
 #else
 #  define VSINK_ADD_PROFILER_MARKER(tag, startTime, endTime)
 #endif
+
+namespace mozilla {
 
 using namespace mozilla::layers;
 
@@ -108,7 +108,7 @@ RefPtr<VideoSink::EndedPromise> VideoSink::OnEnded(TrackType aType) {
   return nullptr;
 }
 
-TimeUnit VideoSink::GetEndTime(TrackType aType) const {
+media::TimeUnit VideoSink::GetEndTime(TrackType aType) const {
   AssertOwnerThread();
   MOZ_ASSERT(mAudioSink->IsStarted(), "Must be called after playback starts.");
 
@@ -117,10 +117,10 @@ TimeUnit VideoSink::GetEndTime(TrackType aType) const {
   } else if (aType == TrackInfo::kAudioTrack) {
     return mAudioSink->GetEndTime(aType);
   }
-  return TimeUnit::Zero();
+  return media::TimeUnit::Zero();
 }
 
-TimeUnit VideoSink::GetPosition(TimeStamp* aTimeStamp) const {
+media::TimeUnit VideoSink::GetPosition(TimeStamp* aTimeStamp) const {
   AssertOwnerThread();
   return mAudioSink->GetPosition(aTimeStamp);
 }
@@ -210,7 +210,8 @@ void VideoSink::SetPlaying(bool aPlaying) {
   EnsureHighResTimersOnOnlyIfPlaying();
 }
 
-nsresult VideoSink::Start(const TimeUnit& aStartTime, const MediaInfo& aInfo) {
+nsresult VideoSink::Start(const media::TimeUnit& aStartTime,
+                          const MediaInfo& aInfo) {
   AssertOwnerThread();
   VSINK_LOG("[%s]", __func__);
 
@@ -270,7 +271,7 @@ void VideoSink::Stop() {
     mEndPromiseHolder.ResolveIfExists(true, __func__);
     mEndPromise = nullptr;
   }
-  mVideoFrameEndTime = TimeUnit::Zero();
+  mVideoFrameEndTime = media::TimeUnit::Zero();
 
   EnsureHighResTimersOnOnlyIfPlaying();
 }
@@ -367,7 +368,7 @@ void VideoSink::TryUpdateRenderedVideoFrames() {
   }
 
   TimeStamp nowTime;
-  const TimeUnit clockTime = mAudioSink->GetPosition(&nowTime);
+  const media::TimeUnit clockTime = mAudioSink->GetPosition(&nowTime);
   if (clockTime >= v->mTime) {
     // Time to render this frame.
     UpdateRenderedVideoFrames();
@@ -490,7 +491,7 @@ void VideoSink::UpdateRenderedVideoFrames() {
   uint32_t droppedInSink = 0;
 
   // Skip frames up to the playback position.
-  TimeUnit lastFrameEndTime;
+  media::TimeUnit lastFrameEndTime;
   while (VideoQueue().GetSize() > mMinVideoQueueSize &&
          clockTime >= VideoQueue().PeekFront()->GetEndTime()) {
     RefPtr<VideoData> frame = VideoQueue().PopFront();
