@@ -2124,7 +2124,7 @@ void ImageLayer::DumpPacket(layerscope::LayersPacket* aPacket,
 void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   ContainerLayer::PrintInfo(aStream, aPrefix);
   if (mId.IsValid()) {
-    aStream << " [id=" << uint64_t(mId) << "]";
+    aStream << " [id=" << mId << "]";
   }
   if (mEventRegionsOverride & EventRegionsOverride::ForceDispatchToContent) {
     aStream << " [force-dtc]";
