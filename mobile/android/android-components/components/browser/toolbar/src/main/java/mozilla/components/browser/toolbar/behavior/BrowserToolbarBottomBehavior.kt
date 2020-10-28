@@ -28,6 +28,9 @@ private const val SMALL_ELEVATION_CHANGE = 0.01f
 /**
  * A [CoordinatorLayout.Behavior] implementation to be used when placing [BrowserToolbar] at the bottom of the screen.
  *
+ * This is safe to use even if the [BrowserToolbar] may be added / removed from a parent layout later
+ * or if it could have Visibility.GONE set.
+ *
  * This implementation will:
  * - Show/Hide the [BrowserToolbar] automatically when scrolling vertically.
  * - On showing a [Snackbar] position it above the [BrowserToolbar].
@@ -65,7 +68,7 @@ class BrowserToolbarBottomBehavior(
      * Reference to the actual [BrowserToolbar] that we'll animate.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal lateinit var browserToolbar: BrowserToolbar
+    internal var browserToolbar: BrowserToolbar? = null
 
     /**
      * Depending on how user's touch was consumed by EngineView / current website,
@@ -92,19 +95,10 @@ class BrowserToolbarBottomBehavior(
         axes: Int,
         type: Int
     ): Boolean {
-        return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
-            startedScroll = true
-            shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
-            snapAnimator.cancel()
-            true
-        } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
-            // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
-            // state where they cannot show the toolbar
-            snapAnimator.cancel()
-            forceExpand(child)
-            false
+        return if (browserToolbar != null) {
+            startNestedScroll(axes, type, child)
         } else {
-            false
+            return false // not interested in subsequent scroll events
         }
     }
 
@@ -114,13 +108,8 @@ class BrowserToolbarBottomBehavior(
         target: View,
         type: Int
     ) {
-        startedScroll = false
-        if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
-            if (child.translationY >= (child.height / 2f)) {
-                animateSnap(child, SnapDirection.DOWN)
-            } else {
-                animateSnap(child, SnapDirection.UP)
-            }
+        if (browserToolbar != null) {
+            stopNestedScroll(type, child)
         }
     }
 
@@ -129,7 +118,9 @@ class BrowserToolbarBottomBehavior(
         child: BrowserToolbar,
         ev: MotionEvent
     ): Boolean {
-        gesturesDetector.handleTouchEvent(ev)
+        if (browserToolbar != null) {
+            gesturesDetector.handleTouchEvent(ev)
+        }
         return false // allow events to be passed to below listeners
     }
 
@@ -172,12 +163,13 @@ class BrowserToolbarBottomBehavior(
         if (snapAnimator.isStarted) {
             snapAnimator.end()
         } else {
-            browserToolbar.translationY =
-                if (browserToolbar.translationY >= browserToolbar.height / 2) {
-                    browserToolbar.height.toFloat()
+            browserToolbar?.apply {
+                translationY = if (translationY >= height / 2) {
+                    height.toFloat()
                 } else {
                     0f
                 }
+            }
         }
     }
 
@@ -200,17 +192,19 @@ class BrowserToolbarBottomBehavior(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun tryToScrollVertically(distance: Float) {
-        if (shouldScroll && startedScroll) {
-            browserToolbar.translationY =
-                max(0f, min(browserToolbar.height.toFloat(), browserToolbar.translationY + distance))
-        } else {
-            // Force expand the toolbar if the user scrolled up, it is not already expanded and
-            // an animation to expand it is not already in progress,
-            // otherwise the user could get stuck in a state where they cannot show the toolbar
-            val isAnimatingUp = snapAnimator.isStarted && lastSnapStartedWasUp
-            if (distance < 0 && browserToolbar.translationY != 0f && !isAnimatingUp) {
-                snapAnimator.cancel()
-                forceExpand(browserToolbar)
+        browserToolbar?.let { toolbar ->
+            if (shouldScroll && startedScroll) {
+                toolbar.translationY =
+                    max(0f, min(toolbar.height.toFloat(), toolbar.translationY + distance))
+            } else {
+                // Force expand the toolbar if the user scrolled up, it is not already expanded and
+                // an animation to expand it is not already in progress,
+                // otherwise the user could get stuck in a state where they cannot show the toolbar
+                val isAnimatingUp = snapAnimator.isStarted && lastSnapStartedWasUp
+                if (distance < 0 && toolbar.translationY != 0f && !isAnimatingUp) {
+                    snapAnimator.cancel()
+                    forceExpand(toolbar)
+                }
             }
         }
     }
@@ -237,6 +231,36 @@ class BrowserToolbarBottomBehavior(
                 snapToolbarVertically()
             }
         ))
+
+    @VisibleForTesting
+    internal fun startNestedScroll(axes: Int, type: Int, toolbar: BrowserToolbar): Boolean {
+        return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
+            startedScroll = true
+            shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
+            snapAnimator.cancel()
+            true
+        } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
+            // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
+            // state where they cannot show the toolbar
+            snapAnimator.cancel()
+            forceExpand(toolbar)
+            false
+        } else {
+            false
+        }
+    }
+
+    @VisibleForTesting
+    internal fun stopNestedScroll(type: Int, toolbar: BrowserToolbar) {
+        startedScroll = false
+        if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
+            if (toolbar.translationY >= (toolbar.height / 2f)) {
+                animateSnap(toolbar, SnapDirection.DOWN)
+            } else {
+                animateSnap(toolbar, SnapDirection.UP)
+            }
+        }
+    }
 }
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
