@@ -74,7 +74,7 @@ class CSSOrderAwareFrameIteratorT {
         mListID(aListID)
 #endif
   {
-    MOZ_ASSERT(aContainer->IsFlexOrGridContainer(),
+    MOZ_ASSERT(CanUse(aContainer),
                "Only use this iterator in a container that honors 'order'");
 
     size_t count = 0;
@@ -114,19 +114,24 @@ class CSSOrderAwareFrameIteratorT {
       SkipPlaceholders();
     }
   }
+
+  CSSOrderAwareFrameIteratorT(CSSOrderAwareFrameIteratorT&&) = default;
+
   ~CSSOrderAwareFrameIteratorT() {
     MOZ_ASSERT(IsForward() == mItemCount.isNothing());
   }
 
   bool IsForward() const;
 
-  nsIFrame* operator*() const {
+  nsIFrame* get() const {
     MOZ_ASSERT(!AtEnd());
     if (mIter.isSome()) {
       return **mIter;
     }
     return (*mArray)[mArrayIndex];
   }
+
+  nsIFrame* operator*() const { return get(); }
 
   /**
    * Return the child index of the current item, placeholders not counted.
@@ -224,6 +229,8 @@ class CSSOrderAwareFrameIteratorT {
   bool ItemsAreAlreadyInOrder() const { return mIter.isSome(); }
 
  private:
+  static bool CanUse(const nsIFrame*);
+
   Iterator begin(const nsFrameList& aList);
   Iterator end(const nsFrameList& aList);
 
