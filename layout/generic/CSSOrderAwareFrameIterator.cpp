@@ -7,8 +7,25 @@
 /* Iterator class for frame lists that respect CSS "order" during layout */
 
 #include "CSSOrderAwareFrameIterator.h"
+#include "nsIFrameInlines.h"
+
+static bool CanUse(const nsIFrame* aFrame) {
+  return aFrame->IsFlexOrGridContainer() || aFrame->IsXULBoxFrame() ||
+         (aFrame->GetContent() &&
+          aFrame->GetContent()->IsXULElement(nsGkAtoms::treecols));
+}
 
 namespace mozilla {
+
+template <>
+bool CSSOrderAwareFrameIterator::CanUse(const nsIFrame* aFrame) {
+  return ::CanUse(aFrame);
+}
+
+template <>
+bool ReverseCSSOrderAwareFrameIterator::CanUse(const nsIFrame* aFrame) {
+  return ::CanUse(aFrame);
+}
 
 template <>
 int CSSOrderAwareFrameIterator::CSSOrderComparator(nsIFrame* const& a,
