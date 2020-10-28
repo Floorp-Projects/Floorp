@@ -12,7 +12,7 @@ namespace mozilla {
 namespace net {
 
 class nsHttpConnectionInfo;
-class NullHttpTransaction;
+class SpeculativeTransaction;
 
 class AltSvcTransactionChild final : public PAltSvcTransactionChild {
  public:
@@ -24,7 +24,7 @@ class AltSvcTransactionChild final : public PAltSvcTransactionChild {
   void OnTransactionDestroy(bool aValidateResult);
   void OnTransactionClose(bool aValidateResult);
 
-  already_AddRefed<NullHttpTransaction> CreateTransaction();
+  already_AddRefed<SpeculativeTransaction> CreateTransaction();
 
  private:
   virtual ~AltSvcTransactionChild();

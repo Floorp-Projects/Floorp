@@ -7,7 +7,7 @@
 #define AltSvcTransactionParent_h__
 
 #include "mozilla/net/PAltSvcTransactionParent.h"
-#include "mozilla/net/NullHttpTransaction.h"
+#include "mozilla/net/SpeculativeTransaction.h"
 
 namespace mozilla {
 namespace net {
@@ -23,7 +23,7 @@ class AltSvcMappingValidator;
   }
 
 class AltSvcTransactionParent final : public PAltSvcTransactionParent,
-                                      public NullHttpTransaction {
+                                      public SpeculativeTransaction {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(ALTSVCTRANSACTIONPARENT_IID)

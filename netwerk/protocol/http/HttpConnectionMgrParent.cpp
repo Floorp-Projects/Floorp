@@ -200,7 +200,7 @@ nsresult HttpConnectionMgrParent::GetSocketThreadTarget(nsIEventTarget**) {
 
 nsresult HttpConnectionMgrParent::SpeculativeConnect(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
-    uint32_t aCaps, NullHttpTransaction* aTransaction) {
+    uint32_t aCaps, SpeculativeTransaction* aTransaction, bool aFetchHTTPSRR) {
   NS_ENSURE_ARG_POINTER(aConnInfo);
 
   nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
@@ -221,13 +221,13 @@ nsresult HttpConnectionMgrParent::SpeculativeConnect(
   RefPtr<HttpConnectionMgrParent> self = this;
   auto task = [self, connInfo{std::move(connInfo)},
                overriderArgs{std::move(overriderArgs)}, aCaps,
-               trans{std::move(trans)}]() {
+               trans{std::move(trans)}, aFetchHTTPSRR]() {
     Maybe<AltSvcTransactionParent*> maybeTrans;
     if (trans) {
       maybeTrans.emplace(trans.get());
     }
     Unused << self->SendSpeculativeConnect(connInfo, overriderArgs, aCaps,
-                                           maybeTrans);
+                                           maybeTrans, aFetchHTTPSRR);
   };
 
   gIOService->CallOrWaitForSocketProcess(std::move(task));
