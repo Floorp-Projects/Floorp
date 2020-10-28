@@ -29,9 +29,8 @@ inline uintptr_t mozPoisonValue() { return gMozillaPoisonValue; }
 
 /**
  * Overwrite the memory block of aSize bytes at aPtr with the poison value.
- * aPtr MUST be aligned at a sizeof(uintptr_t) boundary.
- * Only an even number of sizeof(uintptr_t) bytes are overwritten, the last
- * few bytes (if any) is not overwritten.
+ * Only a multiple of sizeof(uintptr_t) bytes are overwritten, the last
+ * few bytes (if any) are not overwritten.
  */
 inline void mozWritePoison(void* aPtr, size_t aSize) {
   const uintptr_t POISON = mozPoisonValue();
@@ -42,12 +41,6 @@ inline void mozWritePoison(void* aPtr, size_t aSize) {
     memcpy(p, &POISON, sizeof(POISON));
   }
 }
-
-/**
- * Initialize the poison value.
- * This should only be called once.
- */
-extern MFBT_API void mozPoisonValueInit();
 
 /* Values annotated by CrashReporter */
 extern MFBT_DATA uintptr_t gMozillaPoisonBase;
