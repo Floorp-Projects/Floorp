@@ -26,6 +26,10 @@ ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm",
+  this
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -1068,6 +1072,75 @@ add_task(async function test_encryptedPing() {
     JSON.parse(new TextDecoder("utf-8").decode(decryptedJWE)),
     payload,
     "decrypted payload should match"
+  );
+});
+
+add_task(async function test_encryptedPing_overrideId() {
+  if (gIsAndroid) {
+    // The underlying jwcrypto module being used here is not currently available on Android.
+    return;
+  }
+  Cu.importGlobalProperties(["crypto"]);
+
+  const publicKey = {
+    crv: "P-256",
+    ext: true,
+    kty: "EC",
+    x: "h12feyTYBZ__wO_AnM1a5-KTDlko3-YyQ_en19jyrs0",
+    y: "6GSfzo14ehDyH5E-xCOedJDAYlN0AGPMCtIgFbheLko",
+  };
+
+  const prefPioneerId = "12345";
+  const overriddenPioneerId = "c0ffeeaa-bbbb-abab-baba-eeff0ceeff0c";
+  const schemaName = "abc";
+  const schemaNamespace = "def";
+  const schemaVersion = 2;
+
+  Services.prefs.setStringPref("toolkit.telemetry.pioneerId", prefPioneerId);
+
+  let archiveTester = new TelemetryArchiveTesting.Checker();
+  await archiveTester.promiseInit();
+
+  // Submit a ping with a custom payload, which will be encrypted.
+  let payload = { canary: "test" };
+  let pingPromise = TelemetryController.submitExternalPing(
+    "test-pioneer-study-override",
+    payload,
+    {
+      studyName: "pioneer-dev-1@allizom.org",
+      addPioneerId: true,
+      overridePioneerId: overriddenPioneerId,
+      useEncryption: true,
+      encryptionKeyId: "pioneer-dev-20200423",
+      publicKey,
+      schemaName,
+      schemaNamespace,
+      schemaVersion,
+    }
+  );
+
+  // Wait for the ping to be submitted, to have the ping id to scan the
+  // archive for.
+  const pingId = await pingPromise;
+
+  // And then wait for the ping to be available in the archive.
+  await TestUtils.waitForCondition(
+    () => archiveTester.promiseFindPing("test-pioneer-study-override", []),
+    "Failed to find the pioneer ping"
+  );
+
+  let archivedCopy = await TelemetryArchive.promiseArchivedPingById(pingId);
+
+  Assert.notEqual(
+    archivedCopy.payload.encryptedData,
+    payload,
+    "The encrypted payload must not match the plaintext."
+  );
+
+  Assert.equal(
+    archivedCopy.payload.pioneerId,
+    overriddenPioneerId,
+    "Pioneer ID in ping must match the provided override."
   );
 });
 
