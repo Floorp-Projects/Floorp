@@ -11,6 +11,8 @@
 #include "gtest/gtest-printers.h"
 #include "gtest/gtest.h"
 
+using namespace mozilla;
+
 // Runs UpdateClock() and checks that the reported correction level doesn't
 // change for enough time to trigger a correction update on the first
 // following UpdateClock(). Returns the first reported correction level.

@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "BlankDecoderModule.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 
