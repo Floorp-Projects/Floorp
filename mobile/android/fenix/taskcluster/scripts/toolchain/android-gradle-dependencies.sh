@@ -21,10 +21,10 @@ pushd $PROJECT_DIR
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
 GRADLE_ARGS="--parallel -PgoogleRepo=$NEXUS_PREFIX/google/ -PjcenterRepo=$NEXUS_PREFIX/jcenter/"
 # We build everything to be sure to fetch all dependencies
-./gradlew $GRADLE_ARGS assemble assembleAndroidTest ktlint detekt
+./gradlew $GRADLE_ARGS assemble assembleAndroidTest testClasses ktlint detekt
 # Some tests may be flaky, although they still download dependencies. So we let the following
 # command fail, if needed.
-set +e; ./gradlew $GRADLE_ARGS -Pcoverage test; set -e
+set +e; ./gradlew $GRADLE_ARGS -Pcoverage test mozilla-detekt-rules:test mozilla-lint-rules:test; set -e
 
 
 # ./gradlew lint is missing because of https://github.com/mozilla-mobile/fenix/issues/10439. So far,
