@@ -1080,6 +1080,10 @@ static inline Value PrivateValue(void* ptr) {
   return v;
 }
 
+static inline Value PrivateValue(uintptr_t ptr) {
+  return PrivateValue(reinterpret_cast<void*>(ptr));
+}
+
 static inline Value PrivateUint32Value(uint32_t ui) {
   Value v;
   v.setPrivateUint32(ui);

@@ -377,6 +377,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   // views of this buffer unusable for modifying that original memory.)
   static void detach(JSContext* cx, Handle<ArrayBufferObject*> buffer);
 
+  static constexpr size_t offsetOfByteLengthSlot() {
+    return getFixedSlotOffset(BYTE_LENGTH_SLOT);
+  }
+
  private:
   void setFirstView(ArrayBufferViewObject* view);
 

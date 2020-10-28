@@ -7776,6 +7776,28 @@ class MGetNextEntryForIterator
   Mode mode() const { return mode_; }
 };
 
+// Read the byte length of an array buffer as int32.
+class MArrayBufferByteLengthInt32 : public MUnaryInstruction,
+                                    public SingleObjectPolicy::Data {
+  explicit MArrayBufferByteLengthInt32(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(ArrayBufferByteLengthInt32)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::FixedSlot);
+  }
+};
+
 // Read the length of an array buffer view.
 class MArrayBufferViewLength : public MUnaryInstruction,
                                public SingleObjectPolicy::Data {
