@@ -100,3 +100,20 @@ about-processes-cpu-user-and-kernel-not-ready = (measuring)
 
 # Special case: process or thread is currently idle.
 about-processes-cpu-user-and-kernel-idle = idle ({ NUMBER($total, maximumFractionDigits: 2) }{ $unit })
+
+## Displaying Memory (total and delta)
+## Variables:
+##    $total (Number) The amount of memory currently used by the process.
+##    $totalUnit (String) The unit in which to display $total. One of "B",
+##                        "KB", "MB", "GB".
+##    $delta (Number) The absolute value of the amount of memory added recently.
+##    $deltaSign (String) Either "+" if the amount of memory has increased
+##                        or "-" if it has decreased.
+##    $deltaUnit (String) The unit in which to display $delta. One of "B",
+##                        "KB", "MB", "GB".
+
+# Common case.
+about-processes-total-memory-size = { NUMBER($total, maximumFractionDigits:0) }{ $totalUnit } ({ $deltaSign }{ NUMBER($delta, maximumFractionDigits:0) }{ $deltaUnit })
+
+# Special case: no change.
+about-processes-total-memory-size-no-change = { NUMBER($total, maximumFractionDigits:0) }{ $totalUnit }
