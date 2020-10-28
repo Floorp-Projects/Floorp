@@ -2834,23 +2834,22 @@ nsresult NS_ShouldSecureUpgrade(
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::CSP);
         } else {
-          RefPtr<dom::Document> doc;
-          nsINode* node = aLoadInfo->LoadingNode();
-          if (node) {
-            doc = node->OwnerDoc();
-          }
+          AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
 
-          nsAutoString brandName;
-          nsresult rv = nsContentUtils::GetLocalizedString(
-              nsContentUtils::eBRAND_PROPERTIES, "brandShortName", brandName);
-          if (NS_SUCCEEDED(rv)) {
-            AutoTArray<nsString, 3> params = {brandName, reportSpec,
-                                              reportScheme};
-            nsContentUtils::ReportToConsole(
-                nsIScriptError::warningFlag, "DATA_URI_BLOCKED"_ns, doc,
-                nsContentUtils::eSECURITY_PROPERTIES,
-                "BrowserUpgradeInsecureDisplayRequest", params);
-          }
+          nsAutoString localizedMsg;
+          nsContentUtils::FormatLocalizedString(
+              nsContentUtils::eSECURITY_PROPERTIES, "MixedContentAutoUpgrade",
+              params, localizedMsg);
+
+          // Prepending ixed Content to the outgoing console message
+          nsString message;
+          message.AppendLiteral(u"Mixed Content: ");
+          message.Append(localizedMsg);
+
+          uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+          nsContentUtils::ReportToConsoleByWindowID(
+              message, nsIScriptError::warningFlag, "Mixed Content Message"_ns,
+              innerWindowId, aURI);
           Telemetry::AccumulateCategorical(
               Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::BrowserDisplay);
         }
