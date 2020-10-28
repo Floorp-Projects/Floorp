@@ -125,10 +125,11 @@ class AlternateServerPlayback:
                 )
             elif i.response and self.mitm_version in ("4.0.2", "4.0.4", "5.1.1"):
                 # see: https://github.com/mitmproxy/mitmproxy/issues/3856
-                l = self.flowmap.setdefault(
-                    self._hash(i), {"items": [], "reply_count": 0}
+                f = self.flowmap.setdefault(
+                    self._hash(i), {"flow": None, "reply_count": 0}
                 )
-                l["items"].append(i)
+                # overwrite with new flow if already hashed
+                f["flow"] = i
             else:
                 ctx.log.info(
                     "Recorded request %s has no response. Removing from recording list"
@@ -201,7 +202,8 @@ class AlternateServerPlayback:
             if self.flowmap[hsh]["reply_count"] == 0:
                 self._recordings_used += 1
             self.flowmap[hsh]["reply_count"] += 1
-            return self.flowmap[hsh]["items"][-1]
+            # return the most recently added flow with this hash
+            return self.flowmap[hsh]["flow"]
 
     def configure(self, updated):
         if not self.configured and ctx.options.server_replay_files:
