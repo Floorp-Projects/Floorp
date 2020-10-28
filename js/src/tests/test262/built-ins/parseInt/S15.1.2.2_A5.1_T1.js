@@ -11,8 +11,6 @@ esid: sec-parseint-string-radix
 description: Check if parseInt still accepts octal
 ---*/
 
-if (parseInt('010') !== 10) {
-  $ERROR("parseInt should no longer accept octal");
-}
+assert.sameValue(parseInt('010'), 10, 'parseInt(\'010\') must return 10');
 
 reportCompare(0, 0);

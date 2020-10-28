@@ -3,38 +3,38 @@
 /*---
 esid: sec-%typedarray%.prototype.slice
 description: >
-  Throws a TypeError buffer is detached on Get custom constructor. Using other
+  Throws a TypeError if _O_.[[ViewedArrayBuffer]] is detached. Using other
   targetType
 info: |
   22.2.3.24 %TypedArray%.prototype.slice ( start, end )
 
   ...
-  9. Let A be ? TypedArraySpeciesCreate(O, « count »).
-  ...
-  14. If SameValue(srcType, targetType) is false, then
-    a. Let n be 0.
-    b. Repeat, while k < final
-      ...
-      ii. Let kValue be ? Get(O, Pk).
-      ...
+  Let A be ? TypedArraySpeciesCreate(O, « count »).
+  If count > 0, then
+    If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
   ...
 includes: [testTypedArray.js, detachArrayBuffer.js]
-features: [Symbol.species, TypedArray]
+features: [align-detached-buffer-semantics-with-web-reality, Symbol.species, TypedArray]
 ---*/
 
 testWithTypedArrayConstructors(function(TA) {
+  let counter = 0;
   var sample = new TA(1);
 
   sample.constructor = {};
   sample.constructor[Symbol.species] = function(count) {
     var other = TA === Int8Array ? Int16Array : Int8Array;
+    counter++;
     $DETACHBUFFER(sample.buffer);
     return new other(count);
   };
 
   assert.throws(TypeError, function() {
+    counter++;
     sample.slice();
-  }, "step 14.b.ii - ? Get(O, Pk), O has a detached buffer");
+  }, '`sample.slice()` throws TypeError');
+
+  assert.sameValue(counter, 2, 'The value of `counter` is 2');
 });
 
 reportCompare(0, 0);

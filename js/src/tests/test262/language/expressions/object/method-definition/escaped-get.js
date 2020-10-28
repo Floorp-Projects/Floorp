@@ -22,5 +22,5 @@ negative:
 $DONOTEVALUATE();
 
 ({
-  g\u0065t m() {}
+  \u0067\u0065\u0074 m() {}
 });

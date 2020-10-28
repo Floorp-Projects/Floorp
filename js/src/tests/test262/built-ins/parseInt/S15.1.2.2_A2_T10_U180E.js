@@ -25,8 +25,8 @@ features: [u180e]
 
 var mongolianVowelSeparator = "\u180E";
 
-assert.sameValue(parseInt(mongolianVowelSeparator + "1"), NaN, "Single leading U+180E");
-assert.sameValue(parseInt(mongolianVowelSeparator + mongolianVowelSeparator + mongolianVowelSeparator + "1"), NaN, "Multiple leading U+180E");
-assert.sameValue(parseInt(mongolianVowelSeparator), NaN, "Only U+180E");
+assert.sameValue(parseInt(mongolianVowelSeparator + "1"), NaN, 'parseInt(mongolianVowelSeparator + "1") must return NaN');
+assert.sameValue(parseInt(mongolianVowelSeparator + mongolianVowelSeparator + mongolianVowelSeparator + "1"), NaN, 'parseInt( mongolianVowelSeparator + mongolianVowelSeparator + mongolianVowelSeparator + "1" ) must return NaN');
+assert.sameValue(parseInt(mongolianVowelSeparator), NaN, 'parseInt("\\"\\\\u180E\\"") must return NaN');
 
 reportCompare(0, 0);
