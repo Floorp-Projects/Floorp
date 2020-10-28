@@ -455,6 +455,7 @@ else:
 
 if use_minidump:
     env.setdefault("MINIDUMP_SAVE_PATH", env["MOZ_UPLOAD_DIR"])
+    env.setdefault("DUMP_SYMS", os.path.join(DIR.fetches, "dump_syms", "dump_syms"))
     injector_lib = None
     if platform.system() == "Linux":
         injector_lib = os.path.join(
@@ -518,13 +519,6 @@ if not args.nobuild:
 
     if use_minidump:
         # Convert symbols to breakpad format.
-        hostdir = os.path.join(OBJDIR, "dist", "host", "bin")
-        if not os.path.isdir(hostdir):
-            os.makedirs(hostdir)
-        shutil.copy(
-            os.path.join(DIR.tooltool, "breakpad-tools", "dump_syms"),
-            os.path.join(hostdir, "dump_syms"),
-        )
         run_command(
             [
                 "make",
