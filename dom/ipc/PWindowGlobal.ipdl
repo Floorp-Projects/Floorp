@@ -77,6 +77,11 @@ child:
 
   async AddBlockedFrameNodeByClassifier(MaybeDiscardedBrowsingContext aNode);
 
+  /**
+   * Request from UI to reset the scaling zoom that is controlled by APZ.
+   */
+  async ResetScalingZoom();
+
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
                    ClonedMessageData? aStack);

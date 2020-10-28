@@ -162,6 +162,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvAddBlockedFrameNodeByClassifier(
       const MaybeDiscardedBrowsingContext& aNode);
 
+  mozilla::ipc::IPCResult RecvResetScalingZoom();
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
