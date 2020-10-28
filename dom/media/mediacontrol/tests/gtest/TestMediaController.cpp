@@ -12,6 +12,8 @@ using namespace mozilla::dom;
 #define CONTROLLER_ID 0
 #define FAKE_CONTEXT_ID 0
 
+#define FIRST_CONTROLLER_ID 0
+
 TEST(MediaController, DefaultValueCheck)
 {
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
