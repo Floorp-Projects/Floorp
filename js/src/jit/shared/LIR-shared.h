@@ -4065,6 +4065,18 @@ class LGetNextEntryForIterator : public LInstructionHelper<1, 2, 3> {
   const LDefinition* temp2() { return getTemp(2); }
 };
 
+class LArrayBufferByteLengthInt32 : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(ArrayBufferByteLengthInt32)
+
+  explicit LArrayBufferByteLengthInt32(const LAllocation& obj)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+};
+
 // Read the length of an array buffer view.
 class LArrayBufferViewLength : public LInstructionHelper<1, 1, 0> {
  public:

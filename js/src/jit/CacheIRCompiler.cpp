@@ -3161,6 +3161,19 @@ bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  masm.loadArrayBufferByteLengthInt32(obj, scratch);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadTypedArrayLengthResult(ObjOperandId objId,
                                                      uint32_t getterOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

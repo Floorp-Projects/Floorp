@@ -3122,6 +3122,14 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitArrayBufferByteLengthInt32(
+    MArrayBufferByteLengthInt32* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  auto* lir = new (alloc())
+      LArrayBufferByteLengthInt32(useRegisterAtStart(ins->object()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitArrayBufferViewLength(MArrayBufferViewLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   define(new (alloc())
