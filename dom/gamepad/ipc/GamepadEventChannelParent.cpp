@@ -6,6 +6,7 @@
 #include "GamepadEventChannelParent.h"
 #include "GamepadPlatformService.h"
 #include "mozilla/dom/GamepadMonitoring.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
