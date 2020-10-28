@@ -1569,6 +1569,11 @@ void Http3Session::SetSecInfo() {
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
                             secInfo.signature_scheme);
   }
+
+  if (!mSocketControl->HasServerCert() &&
+      StaticPrefs::network_ssl_tokens_cache_enabled()) {
+    mSocketControl->RebuildCertificateInfoFromSSLTokenCache();
+  }
 }
 
 void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
