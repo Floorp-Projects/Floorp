@@ -12,6 +12,7 @@
 #include "AudioSampleFormat.h"
 #include "WebAudioUtils.h"
 #include "AudioBlock.h"
+#include "MediaData.h"
 
 namespace mozilla {
 
