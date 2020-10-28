@@ -106,8 +106,17 @@ function finish() {
   window.close();
 }
 
-function runTests()
+async function runTests()
 {
+  // This ensures we actually test the lazy-load of images in printpreview_images.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.image-lazy-loading.root-margin.top", 0],
+      ["dom.image-lazy-loading.root-margin.bottom", 0],
+      ["dom.image-lazy-loading.root-margin.left", 0],
+      ["dom.image-lazy-loading.root-margin.right", 0],
+    ],
+  });
   startTest1();
 }
 
