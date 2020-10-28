@@ -47,6 +47,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -133,7 +134,6 @@ void nsBoxFrame::SetInitialChildList(ChildListID aListID,
   if (aListID == kPrincipalList) {
     // initialize our list of infos.
     nsBoxLayoutState state(PresContext());
-    CheckBoxOrder();
     if (mLayoutManager)
       mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
   }
@@ -783,12 +783,6 @@ void nsBoxFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   if (mLayoutManager)
     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, newFrames);
 
-  // Make sure to check box order _after_ notifying the layout
-  // manager; otherwise the slice we give the layout manager will
-  // just be bogus.  If the layout manager cares about the order, we
-  // just lose.
-  CheckBoxOrder();
-
   PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
 }
@@ -803,12 +797,6 @@ void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 
   // notify the layout manager
   if (mLayoutManager) mLayoutManager->ChildrenAppended(this, state, newFrames);
-
-  // Make sure to check box order _after_ notifying the layout
-  // manager; otherwise the slice we give the layout manager will
-  // just be bogus.  If the layout manager cares about the order, we
-  // just lose.
-  CheckBoxOrder();
 
   // XXXbz why is this NS_FRAME_FIRST_REFLOW check here?
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
@@ -970,14 +958,17 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
                                              const nsDisplayListSet& aLists) {
-  nsIFrame* kid = mFrames.FirstChild();
+  // Iterate over the children in CSS order.
+  auto iter = CSSOrderAwareFrameIterator(
+      this, mozilla::layout::kPrincipalList,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      CSSOrderAwareFrameIterator::OrderState::Unknown,
+      CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
   // Put each child's background onto the BlockBorderBackgrounds list
   // to emulate the existing two-layer XUL painting scheme.
   nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
-  // The children should be in the right order
-  while (kid) {
-    BuildDisplayListForChild(aBuilder, kid, set);
-    kid = kid->GetNextSibling();
+  for (; !iter.AtEnd(); iter.Next()) {
+    BuildDisplayListForChild(aBuilder, iter.get(), set);
   }
 }
 
@@ -1019,22 +1010,6 @@ void nsBoxFrame::RegUnregAccessKey(bool aDoReg) {
 void nsBoxFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) {
   if (HasAnyStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)) {
     aResult.AppendElement(OwnedAnonBox(PrincipalChildList().FirstChild()));
-  }
-}
-
-// Helper less-than-or-equal function, used in CheckBoxOrder() as a
-// template-parameter for the sorting functions.
-static bool IsBoxOrdinalLEQ(nsIFrame* aFrame1, nsIFrame* aFrame2) {
-  // If we've got a placeholder frame, use its out-of-flow frame's ordinal val.
-  nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
-  nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
-  return aRealFrame1->StyleXUL()->mBoxOrdinal <=
-         aRealFrame2->StyleXUL()->mBoxOrdinal;
-}
-
-void nsBoxFrame::CheckBoxOrder() {
-  if (!nsIFrame::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
-    nsIFrame::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
   }
 }
 

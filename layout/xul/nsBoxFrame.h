@@ -190,8 +190,6 @@ class nsBoxFrame : public nsContainerFrame {
  protected:
   void RegUnregAccessKey(bool aDoReg);
 
-  void CheckBoxOrder();
-
  private:
   void CacheAttributes();
 
