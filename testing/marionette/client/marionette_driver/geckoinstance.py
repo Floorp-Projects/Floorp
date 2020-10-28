@@ -91,6 +91,8 @@ class GeckoInstance(object):
         "marionette.prefs.recommended": False,
         # Disable download and usage of OpenH264, and Widevine plugins
         "media.gmp-manager.updateEnabled": False,
+        # Disable the GFX sanity window
+        "media.sanity-test.disabled": True,
         "media.volume_scale": "0.01",
         # Do not prompt for temporary redirects
         "network.http.prompt-temp-redirect": False,

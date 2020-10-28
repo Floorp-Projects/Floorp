@@ -122,6 +122,9 @@ lazy_static! {
         // Disable download and usage of OpenH264, and Widevine plugins
         ("media.gmp-manager.updateEnabled", Pref::new(false)),
 
+        // Disable the GFX sanity window
+        ("media.sanity-test.disabled", Pref::new(true)),
+
         // Do not prompt with long usernames or passwords in URLs
         // TODO: Remove once minimum supported Firefox release is 61.
         ("network.http.phishy-userpass-length", Pref::new(255)),
