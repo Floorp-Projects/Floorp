@@ -340,6 +340,9 @@
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Encaboxar</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Modificóse la coleición de complementos. L\'aplicación va zarrase p\'aplicar los cambeos…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar agora</string>
@@ -726,6 +729,8 @@
     <string name="preference_phone_feature_location">Allugamientu</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Avisos</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Almacenamientu permanente</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Entrugar pa permitir</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1204,6 +1209,9 @@
     <string name="etp_panel_off">DESACTIVÓSE nesti sitiu</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">La proteición ameyorada escontra\'l rastrexu ta desactivada pa estos sitios web</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Dir p\'atrás</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Los tos drechos</string>
     <!-- About page link text to open open source licenses screen -->

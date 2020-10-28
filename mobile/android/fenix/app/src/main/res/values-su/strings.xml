@@ -292,6 +292,8 @@
     <string name="preferences_theme">Téma</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Tepas</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Réngkak</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Sesuaikeun</string>
     <!-- Preference description for banner about signing in -->
@@ -328,6 +330,8 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Paluruh markah</string>
 
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Paluruh tab anu singkron</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Setélan akun</string>
 
@@ -343,10 +347,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Iber</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Koléksi Émboh sakahayang</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Heug</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Bolay</string>
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Ngaran koléksi</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Pamilik koléksi (Sandiasma)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Koléksi Émboh geus dirobah. Kaluar ti aplikasi pikeun nerapkeun parobahan…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -534,6 +548,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Taya tab nu anyar ditutup di dieu</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Tab</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Panémbong tab</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Béréndélan</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grid</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Tutup tab</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -610,6 +633,8 @@
     <string name="collection_rename">Ganti ngaran koléksi</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Buka tab</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Ngaran koléksi</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Piceun</string>
     <!-- Text for the menu button to delete a top site from history -->
@@ -648,6 +673,10 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Hapus %1$d item</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Poé ieu</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Kamari</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 jam terakhir</string>
 

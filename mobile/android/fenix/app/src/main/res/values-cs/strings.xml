@@ -220,6 +220,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Zjistit více</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Otevřít nový panel Firefoxu</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Vyhledávání</string>
     <!-- Text preview for larger sized widgets -->
@@ -349,6 +351,20 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Oznámení</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Vlastní sbírka doplňků</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Zrušit</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Název sbírky</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Vlastník sbírky (ID uživatele)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Nastavení sbírky změněno. Pro aplikování změn se nyní aplikace ukončí…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -536,6 +552,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Nemáte žádné nedávno zavřené panely</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Panely</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Zobrazení panelů</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Seznam</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Mřížka</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zavírat panely</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -620,6 +645,8 @@
     <string name="collection_open_tabs">Otevřít panely</string>
 
 
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Název sbírky</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odebrat</string>
 
@@ -658,6 +685,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Položek ke smazání: %1$d</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Dnes</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Včera</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Posledních 24 hodin</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -1605,6 +1636,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Pro více informací klepněte zde</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">Uložte si důležité věci do sbírek</string>
