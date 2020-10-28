@@ -1282,7 +1282,8 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
 void nsContainerFrame::ReflowOverflowContainerChildren(
     nsPresContext* aPresContext, const ReflowInput& aReflowInput,
     nsOverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
-    nsReflowStatus& aStatus, ChildFrameMerger aMergeFunc) {
+    nsReflowStatus& aStatus, ChildFrameMerger aMergeFunc,
+    Maybe<nsSize> aContainerSize) {
   MOZ_ASSERT(aPresContext, "null pointer");
 
   nsFrameList* overflowContainers =
@@ -1335,7 +1336,8 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
           frame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
           "overflow container frame must have overflow container bit set");
       WritingMode wm = frame->GetWritingMode();
-      nsSize containerSize = aReflowInput.AvailableSize(wm).GetPhysicalSize(wm);
+      nsSize containerSize = aContainerSize.valueOr(
+          aReflowInput.AvailableSize(wm).GetPhysicalSize(wm));
       LogicalRect prevRect = prevInFlow->GetLogicalRect(wm, containerSize);
 
       // Initialize reflow params
