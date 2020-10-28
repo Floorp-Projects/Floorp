@@ -996,53 +996,12 @@ private:
 
 // CTFontCreateCopyWithAttributes or CTFontCreateCopyWithSymbolicTraits cannot be used on 10.10
 // and later, as they will return different underlying fonts depending on the size requested.
-// It is not possible to use descriptors with CTFontCreateWithFontDescriptor, since that does not
-// work with non-system fonts. As a result, create the strike specific CTFonts from the underlying
-// CGFont.
 #ifdef MOZ_SKIA
-extern "C" bool Gecko_OnSierraExactly();
-extern "C" bool Gecko_OnHighSierraOrLater();
+extern "C" bool Gecko_OnSierraOrLater();
 #endif
 static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFloat textSize,
                                                          const CGAffineTransform* transform)
 {
-    SkUniqueCFRef<CGFontRef> baseCGFont(CTFontCopyGraphicsFont(baseFont, nullptr));
-
-    // The last parameter (CTFontDescriptorRef attributes) *must* be nullptr.
-    // If non-nullptr then with fonts with variation axes, the copy will fail in
-    // CGFontVariationFromDictCallback when it assumes kCGFontVariationAxisName is CFNumberRef
-    // which it quite obviously is not.
-
-    // Because we cannot setup the CTFont descriptor to match, the same restriction applies here
-    // as other uses of CTFontCreateWithGraphicsFont which is that such CTFonts should not escape
-    // the scaler context, since they aren't 'normal'.
-
-#ifdef MOZ_SKIA
-    // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
-    // versions (see bug 1331683).
-    //
-    // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
-    // variation settings from the CGFont to CTFont, so we don't need to do
-    // the extra work here -- and this seems to avoid Core Text crashiness
-    // seen in bug 1454094.
-    //
-    // However, for installed fonts it seems we DO need to copy the variations
-    // explicitly even on 10.13, otherwise fonts fail to render (as in bug
-    // 1455494) when non-default values are used. Fortunately, the crash
-    // mentioned above occurs with data fonts, not (AFAICT) with system-
-    // installed fonts.
-    //
-    // So we only need to do this "the hard way" on Sierra, and for installed
-    // fonts on HighSierra+; otherwise, just let the standard CTFont function
-    // do its thing.
-    //
-    // NOTE in case this ever needs further adjustment: there is similar logic
-    // in four places in the tree (sadly):
-    //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
-    //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
-    //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
-    //    ctfont_create_exact_copy in SkFontHost_mac.cpp
-
     // To figure out if a font is installed locally or used from a @font-face
     // resource, we check whether its descriptor can provide a URL. This will
     // be present for installed fonts, but not for those activated from an
@@ -1059,32 +1018,71 @@ static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGF
         return result;
     };
 
-    if (Gecko_OnSierraExactly() ||
-        (Gecko_OnHighSierraOrLater() && IsInstalledFont(baseFont)))
-#endif
-    {
-        // Not UniqueCFRef<> because CGFontCopyVariations can return null!
-        CFDictionaryRef variations = CGFontCopyVariations(baseCGFont.get());
-        if (variations) {
+    // If we have a system font we need to use the CGFont APIs to avoid having the
+    // underlying font change for us when using CTFontCreateCopyWithAttributes.
+    if (IsInstalledFont(baseFont)) {
+        SkUniqueCFRef<CGFontRef> baseCGFont(CTFontCopyGraphicsFont(baseFont, nullptr));
+
+        // The last parameter (CTFontDescriptorRef attributes) *must* be nullptr.
+        // If non-nullptr then with fonts with variation axes, the copy will fail in
+        // CGFontVariationFromDictCallback when it assumes kCGFontVariationAxisName is CFNumberRef
+        // which it quite obviously is not.
+
+        // Because we cannot setup the CTFont descriptor to match, the same restriction applies here
+        // as other uses of CTFontCreateWithGraphicsFont which is that such CTFonts should not escape
+        // the scaler context, since they aren't 'normal'.
+
+        // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+        // versions (see bug 1331683).
+        //
+        // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
+        // variation settings from the CGFont to CTFont, so we don't need to do
+        // the extra work here -- and this seems to avoid Core Text crashiness
+        // seen in bug 1454094.
+        //
+        // However, for installed fonts it seems we DO need to copy the variations
+        // explicitly even on 10.13, otherwise fonts fail to render (as in bug
+        // 1455494) when non-default values are used. Fortunately, the crash
+        // mentioned above occurs with data fonts, not (AFAICT) with system-
+        // installed fonts.
+        //
+        // So we only need to do this "the hard way" on Sierra, and for installed
+        // fonts on HighSierra+; otherwise, just let the standard CTFont function
+        // do its thing.
+        //
+        // NOTE in case this ever needs further adjustment: there is similar logic
+        // in four places in the tree (sadly):
+        //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
+        //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
+        //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
+        //    ctfont_create_exact_copy in SkFontHost_mac.cpp
+
+        if (Gecko_OnSierraOrLater())
+        {
+          // Not UniqueCFRef<> because CGFontCopyVariations can return null!
+          CFDictionaryRef variations = CGFontCopyVariations(baseCGFont.get());
+          if (variations) {
             SkUniqueCFRef<CFDictionaryRef>
-                varAttr(CFDictionaryCreate(nullptr,
-                                           (const void**)&kCTFontVariationAttribute,
-                                           (const void**)&variations,
-                                           1,
-                                           &kCFTypeDictionaryKeyCallBacks,
-                                           &kCFTypeDictionaryValueCallBacks));
+              varAttr(CFDictionaryCreate(nullptr,
+                                         (const void**)&kCTFontVariationAttribute,
+                                         (const void**)&variations,
+                                         1,
+                                         &kCFTypeDictionaryKeyCallBacks,
+                                         &kCFTypeDictionaryValueCallBacks));
             CFRelease(variations);
 
             SkUniqueCFRef<CTFontDescriptorRef>
-                varDesc(CTFontDescriptorCreateWithAttributes(varAttr.get()));
+              varDesc(CTFontDescriptorCreateWithAttributes(varAttr.get()));
 
             return SkUniqueCFRef<CTFontRef>(
-                    CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, varDesc.get()));
-        }
+                                            CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, varDesc.get()));
+          }
+      }
+      return SkUniqueCFRef<CTFontRef>(
+                                      CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, nullptr));
+    } else {
+        return SkUniqueCFRef<CTFontRef>(CTFontCreateCopyWithAttributes(baseFont, textSize, transform, nullptr));
     }
-
-    return SkUniqueCFRef<CTFontRef>(
-            CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, nullptr));
 }
 
 SkScalerContext_Mac::SkScalerContext_Mac(sk_sp<SkTypeface_Mac> typeface,
