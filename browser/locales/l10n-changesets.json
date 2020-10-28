@@ -321,7 +321,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "82b848208ab688839b49523268b8eb54841a89ec"
+        "revision": "dd2f4ffb52e624d0ad9d834a31697f519dc84542"
     },
     "dsb": {
         "pin": false,
@@ -1227,7 +1227,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "68485ca87b3228dd3ff5f3f715342805515db49f"
+        "revision": "454ccf06fb206180aa606e42edd09b2964c12008"
     },
     "pa-IN": {
         "pin": false,
