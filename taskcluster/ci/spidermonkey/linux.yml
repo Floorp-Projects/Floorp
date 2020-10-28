@@ -96,6 +96,7 @@ sm-smoosh-linux64/debug:
             - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
+            - linux64-dump-syms
     run-on-projects: ['mozilla-central']
 
 sm-smoosh-linux64/opt:
@@ -114,6 +115,7 @@ sm-smoosh-linux64/opt:
             - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
+            - linux64-dump-syms
     run-on-projects: ['mozilla-central']
 
 sm-warp-linux64/debug:
@@ -177,6 +179,7 @@ sm-arm64-sim-cranelift-linux64/debug:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
+            - linux64-dump-syms
     run-on-projects: ['mozilla-central']
 
 sm-asan-linux64/opt:
@@ -235,6 +238,7 @@ sm-tsan-linux64/opt:
             - linux64-binutils
             - linux64-clang
             - linux64-rust
+            - linux64-dump-syms
 
 sm-rootanalysis-linux64/debug:
     description: "Spidermonkey Root Analysis"
@@ -261,6 +265,7 @@ sm-nonunified-linux64/debug:
             - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
+            - linux64-dump-syms
 
 sm-fuzzing-linux64/opt:
     description: "Spidermonkey Fuzzing"
