@@ -24,8 +24,8 @@ NS_INTERFACE_MAP_END_INHERITING(NullHttpTransaction)
 AltSvcTransactionParent::AltSvcTransactionParent(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
     uint32_t aCaps, AltSvcMappingValidator* aValidator)
-    : NullHttpTransaction(aConnInfo, aCallbacks,
-                          aCaps & ~NS_HTTP_ALLOW_KEEPALIVE),
+    : SpeculativeTransaction(aConnInfo, aCallbacks,
+                             aCaps & ~NS_HTTP_ALLOW_KEEPALIVE),
       mValidator(aValidator) {
   LOG(("AltSvcTransactionParent %p ctor", this));
   MOZ_ASSERT(mValidator);

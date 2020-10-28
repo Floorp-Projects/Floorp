@@ -14,6 +14,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsAHttpConnection.h"
+#include "nsCOMArray.h"
 #include "nsRefPtrHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsDeque.h"

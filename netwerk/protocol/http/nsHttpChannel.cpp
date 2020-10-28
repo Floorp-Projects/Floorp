@@ -1041,7 +1041,8 @@ void nsHttpChannel::SpeculativeConnect() {
       mConnectionInfo, callbacks,
       mCaps & (NS_HTTP_DISALLOW_SPDY | NS_HTTP_TRR_MODE_MASK |
                NS_HTTP_DISABLE_IPV4 | NS_HTTP_DISABLE_IPV6 |
-               NS_HTTP_DISALLOW_HTTP3));
+               NS_HTTP_DISALLOW_HTTP3),
+      gHttpHandler->UseHTTPSRRForSpeculativeConnection());
 }
 
 void nsHttpChannel::DoNotifyListenerCleanup() {
@@ -6892,7 +6893,7 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
-    if (mUseHTTPSSVC) {
+    if (mUseHTTPSSVC || gHttpHandler->UseHTTPSRRForSpeculativeConnection()) {
       rv = mDNSPrefetch->FetchHTTPSSVC(mCaps & NS_HTTP_REFRESH_DNS);
       if (NS_FAILED(rv)) {
         LOG(("  FetchHTTPSSVC failed with 0x%08" PRIx32,

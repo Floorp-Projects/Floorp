@@ -153,6 +153,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
     return mCurrentTopLevelOuterContentWindowId;
   }
 
+  void DoSpeculativeConnection(SpeculativeTransaction* aTrans,
+                               bool aFetchHTTPSRR);
+
  private:
   virtual ~nsHttpConnectionMgr();
 
