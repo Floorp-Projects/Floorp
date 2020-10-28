@@ -1609,13 +1609,20 @@ static bool TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
   return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp);
 }
 
-static bool TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  return TypedArrayObject::Getter<TypedArrayObject::byteOffsetValue>(cx, argc,
-                                                                     vp);
+static bool ByteOffsetGetterImpl(JSContext* cx, const CallArgs& args) {
+  auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
+  args.rval().set(tarr->byteOffsetValue());
+  return true;
 }
 
-bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
+static bool TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<TypedArrayObject::is, ByteOffsetGetterImpl>(cx,
+                                                                          args);
+}
+
+static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
   Rooted<TypedArrayObject*> tarray(
       cx, &args.thisv().toObject().as<TypedArrayObject>());
