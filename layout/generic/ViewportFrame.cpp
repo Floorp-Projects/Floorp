@@ -329,8 +329,8 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
       // Reflow our one-and-only principal child frame
       nsIFrame* kidFrame = mFrames.FirstChild();
       ReflowOutput kidDesiredSize(aReflowInput);
-      WritingMode wm = kidFrame->GetWritingMode();
-      LogicalSize availableSpace = aReflowInput.AvailableSize(wm);
+      const WritingMode kidWM = kidFrame->GetWritingMode();
+      LogicalSize availableSpace = aReflowInput.AvailableSize(kidWM);
       ReflowInput kidReflowInput(aPresContext, aReflowInput, kidFrame,
                                  availableSpace);
 
