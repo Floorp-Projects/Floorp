@@ -30,11 +30,11 @@ const HARDCODED_ASSUMPTIONS_THREAD = {
 };
 
 // How close we accept our rounding up/down.
-const APPROX_FACTOR = 1.1;
+const APPROX_FACTOR = 1.51;
 const MS_PER_NS = 1000000;
 const MEMORY_REGEXP = /([0-9.,]+)(TB|GB|MB|KB|B)( \(([-+]?)([0-9.,]+)(GB|MB|KB|B)\))?/;
 //Example: "383.55MB (-12.5MB)"
-const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ms)\)/;
+const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ns|ms|s|min)\)/;
 //Example: "13% (4,470ms)"
 
 // Wait for `about:processes` to be updated.
@@ -126,13 +126,26 @@ function getMemoryMultiplier(unit, sign = "+") {
 }
 
 function getTimeMultiplier(unit) {
-  if (unit == "ms") {
-    return 1;
+  switch (unit) {
+    case "ns":
+      return 0.0000001;
+    case "µs":
+      return 0.0001;
+    case "ms":
+      return 1;
+    case "s":
+      return 1000;
+    case "m":
+      return 60000;
   }
   throw new Error("Invalid time unit: " + unit);
 }
 function testCpu(string, total, slope, assumptions) {
   info(`Testing CPU display ${string} vs total ${total}, slope ${slope}`);
+  if (string == "(measuring)") {
+    info("Still measuring");
+    return;
+  }
   let [, extractedPercentage, extractedTotal, extractedUnit] = CPU_REGEXP.exec(
     string
   );
@@ -567,12 +580,31 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       Assert.ok(
         numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
       );
-      Assert.equal(numberOfThreads, row.process.threads.length);
+      Assert.equal(
+        numberOfThreads,
+        row.process.threads.length,
+        "The number we display should be the number of threads"
+      );
 
       info("Testing that we can open the list of threads");
       let twisty = threads.row.getElementsByClassName("twisty")[0];
       twisty.click();
+
+      // Since `twisty.click()` is partially async, we need to wait
+      // until all the threads are properly displayed.
+      await promiseAboutProcessesUpdated({ doc, tbody, tabAboutProcesses });
       let numberOfThreadsFound = 0;
+      await TestUtils.waitForCondition(() => {
+        numberOfThreadsFound = 0;
+        for (
+          let threadRow = threads.row.nextSibling;
+          threadRow && threadRow.classList.contains("thread");
+          threadRow = threadRow.nextSibling
+        ) {
+          numberOfThreadsFound++;
+        }
+        return numberOfThreadsFound == numberOfThreads;
+      }, `We should see ${numberOfThreads} threads, found ${numberOfThreadsFound}`);
       for (
         let threadRow = threads.row.nextSibling;
         threadRow && threadRow.classList.contains("thread");
@@ -582,7 +614,6 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         let cpuContent = children[2].textContent;
         let tidContent = document.l10n.getAttributes(children[0].children[0])
           .args.tid;
-        ++numberOfThreadsFound;
 
         info("Sanity checks: tid");
         let tid = Number.parseInt(tidContent);
@@ -597,11 +628,6 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
           HARDCODED_ASSUMPTIONS_THREAD
         );
       }
-      Assert.equal(
-        numberOfThreads,
-        numberOfThreadsFound,
-        "Found as many threads as expected"
-      );
     }
 
     // Testing subframes.
