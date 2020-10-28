@@ -6,7 +6,6 @@ import contextlib
 import os
 import re
 import textwrap
-import time
 
 from marionette_driver.addons import Addons
 from marionette_driver.errors import MarionetteException
@@ -76,15 +75,32 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
     def search(self, text):
         """Perform a search via the browser's URL bar."""
 
+        # Reload newtab to prevent urlbar from not accepting correct input
+        with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
+            self.marionette.navigate("about:newtab")
+
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script("gURLBar.select();")
             urlbar = self.marionette.find_element(By.ID, "urlbar-input")
             urlbar.send_keys(keys.Keys.DELETE)
             urlbar.send_keys(text + keys.Keys.ENTER)
-
-        # Wait for 0.1 seconds before proceeding to decrease the chance
-        # of Firefox being shut down before Telemetry is recorded
-        time.sleep(0.1)
+        # This script checks that the search terms used for searching
+        # appear in the URL when the page loads.
+        script = """\
+        let location = document.location.toString()
+        function validate(term){
+            return location.includes(term)
+        }
+        return arguments[0].every(validate)
+        """
+        # Wait for search page to load
+        with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
+            Wait(self.marionette, 30, .5).until(
+                lambda driver: driver.execute_script(
+                    script, script_args=[text.split()]
+                ),
+                message="Search terms not found, maybe the page didn't load?"
+            )
 
     def search_in_new_tab(self, text):
         """Open a new tab and perform a search via the browser's URL bar,
