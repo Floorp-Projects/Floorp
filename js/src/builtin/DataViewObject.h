@@ -62,13 +62,17 @@ class DataViewObject : public ArrayBufferViewObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  static Value byteLengthValue(const DataViewObject* view) {
-    size_t byteLength = size_t(view->getFixedSlot(LENGTH_SLOT).toPrivate());
-    MOZ_ASSERT(byteLength <= INT32_MAX);
-    return Int32Value(byteLength);
+  size_t byteLength() const {
+    size_t len = size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
+    MOZ_ASSERT(len <= INT32_MAX);
+    return len;
   }
 
-  uint32_t byteLength() const { return byteLengthValue(this).toInt32(); }
+  Value byteLengthValue() const {
+    size_t len = byteLength();
+    MOZ_ASSERT(len <= INT32_MAX);
+    return Int32Value(len);
+  }
 
   template <typename NativeType>
   bool offsetIsInBounds(uint64_t offset) const {

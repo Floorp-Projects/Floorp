@@ -1622,6 +1622,19 @@ static bool TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc,
                                                                           args);
 }
 
+static bool ByteLengthGetterImpl(JSContext* cx, const CallArgs& args) {
+  auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
+  args.rval().set(tarr->byteLengthValue());
+  return true;
+}
+
+static bool TypedArray_byteLengthGetter(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<TypedArrayObject::is, ByteLengthGetterImpl>(cx,
+                                                                          args);
+}
+
 static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
   Rooted<TypedArrayObject*> tarray(
@@ -1674,8 +1687,7 @@ static bool TypedArray_toStringTagGetter(JSContext* cx, unsigned argc,
 /* static */ const JSPropertySpec TypedArrayObject::protoAccessors[] = {
     JS_PSG("length", TypedArray_lengthGetter, 0),
     JS_PSG("buffer", TypedArray_bufferGetter, 0),
-    JS_PSG("byteLength",
-           TypedArrayObject::Getter<TypedArrayObject::byteLengthValue>, 0),
+    JS_PSG("byteLength", TypedArray_byteLengthGetter, 0),
     JS_PSG("byteOffset", TypedArray_byteOffsetGetter, 0),
     JS_SYM_GET(toStringTag, TypedArray_toStringTagGetter, 0),
     JS_PS_END};
