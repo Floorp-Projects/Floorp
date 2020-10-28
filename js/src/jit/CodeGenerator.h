@@ -112,6 +112,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                          Register scratch);
   void emitIntToString(Register input, Register output, Label* ool);
 
+  void emitTypeOfObject(Register obj, Register output, Label* done);
+
   template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
   void visitOutOfLineCallVM(
       OutOfLineCallVM<Fn, fn, ArgSeq, StoreOutputTo>* ool);

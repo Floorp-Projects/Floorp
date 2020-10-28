@@ -4757,7 +4757,8 @@ class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
   ALLOW_CLONE(MBitNot)
 };
 
-class MTypeOf : public MUnaryInstruction, public BoxInputsPolicy::Data {
+class MTypeOf : public MUnaryInstruction,
+                public BoxExceptPolicy<0, MIRType::Object>::Data {
   bool inputMaybeCallableOrEmulatesUndefined_;
 
   explicit MTypeOf(MDefinition* def)
