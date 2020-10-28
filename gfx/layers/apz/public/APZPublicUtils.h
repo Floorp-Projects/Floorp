@@ -27,28 +27,6 @@
 
 namespace mozilla {
 
-struct ExternalPixel;
-
-template <>
-struct IsPixel<ExternalPixel> : std::true_type {};
-
-typedef gfx::CoordTyped<ExternalPixel> ExternalCoord;
-typedef gfx::IntCoordTyped<ExternalPixel> ExternalIntCoord;
-typedef gfx::PointTyped<ExternalPixel> ExternalPoint;
-typedef gfx::IntPointTyped<ExternalPixel> ExternalIntPoint;
-typedef gfx::SizeTyped<ExternalPixel> ExternalSize;
-typedef gfx::IntSizeTyped<ExternalPixel> ExternalIntSize;
-typedef gfx::RectTyped<ExternalPixel> ExternalRect;
-typedef gfx::IntRectTyped<ExternalPixel> ExternalIntRect;
-typedef gfx::MarginTyped<ExternalPixel> ExternalMargin;
-typedef gfx::IntMarginTyped<ExternalPixel> ExternalIntMargin;
-typedef gfx::IntRegionTyped<ExternalPixel> ExternalIntRegion;
-
-typedef gfx::Matrix4x4Typed<ExternalPixel, ParentLayerPixel>
-    ExternalToParentLayerMatrix4x4;
-
-struct ExternalPixel {};
-
 namespace layers {
 
 // clang-format off
