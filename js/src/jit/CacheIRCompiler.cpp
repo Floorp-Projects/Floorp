@@ -3979,8 +3979,7 @@ bool CacheIRCompiler::emitTypedArrayByteOffsetResult(ObjOperandId objId) {
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
   Register obj = allocator.useRegister(masm, objId);
 
-  masm.unboxInt32(Address(obj, ArrayBufferViewObject::byteOffsetOffset()),
-                  scratch);
+  masm.loadArrayBufferViewByteOffsetInt32(obj, scratch);
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
