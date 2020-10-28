@@ -215,7 +215,7 @@ const size_t TypedArrayLengthSlot = 1;
     MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);           \
     const JS::Value& lenSlot =                                              \
         JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);             \
-    *length = mozilla::AssertedCast<uint32_t>(lenSlot.toInt32());           \
+    *length = mozilla::AssertedCast<uint32_t>(size_t(lenSlot.toPrivate())); \
     *isSharedMemory = JS_GetTypedArraySharedness(obj);                      \
     *data = static_cast<type*>(JS::GetPrivate(obj));                        \
   }

@@ -8721,7 +8721,7 @@ void CodeGenerator::visitArrayBufferByteLengthInt32(
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.unboxInt32(Address(obj, ArrayBufferViewObject::lengthOffset()), out);
+  masm.loadArrayBufferViewLengthInt32(obj, out);
 }
 
 void CodeGenerator::visitArrayBufferViewByteOffset(
@@ -12985,8 +12985,7 @@ void CodeGenerator::visitLoadTypedArrayElementHole(
   Register scratch = out.scratchReg();
   Register scratch2 = ToRegister(lir->temp());
   Register index = ToRegister(lir->index());
-  masm.unboxInt32(Address(object, ArrayBufferViewObject::lengthOffset()),
-                  scratch);
+  masm.loadArrayBufferViewLengthInt32(object, scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;
@@ -13031,8 +13030,7 @@ void CodeGenerator::visitLoadTypedArrayElementHoleBigInt(
   // Load the length.
   Register scratch = out.scratchReg();
   Register index = ToRegister(lir->index());
-  masm.unboxInt32(Address(object, ArrayBufferViewObject::lengthOffset()),
-                  scratch);
+  masm.loadArrayBufferViewLengthInt32(object, scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;

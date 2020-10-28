@@ -58,7 +58,7 @@ void ArrayBufferViewObject::notifyBufferDetached() {
   MOZ_ASSERT(!isSharedMemory());
   MOZ_ASSERT(hasBuffer());
 
-  setFixedSlot(LENGTH_SLOT, Int32Value(0));
+  setFixedSlot(LENGTH_SLOT, PrivateValue(size_t(0)));
   setFixedSlot(BYTEOFFSET_SLOT, PrivateValue(size_t(0)));
 
   setPrivate(nullptr);
@@ -98,7 +98,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   }
 
   initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(byteOffset));
-  initFixedSlot(LENGTH_SLOT, Int32Value(length));
+  initFixedSlot(LENGTH_SLOT, PrivateValue(length));
   initFixedSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
 
   if (buffer) {

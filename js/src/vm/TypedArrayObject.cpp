@@ -519,7 +519,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static void initTypedArraySlots(TypedArrayObject* tarray, int32_t len) {
     MOZ_ASSERT(len >= 0);
     tarray->initFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
-    tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
+    tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(len));
     tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
                           PrivateValue(size_t(0)));
 

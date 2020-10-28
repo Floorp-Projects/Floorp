@@ -97,11 +97,12 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return Int32Value(byteOffset);
   }
   static Value byteLengthValue(const TypedArrayObject* tarr) {
-    return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() *
-                      tarr->bytesPerElement());
+    return Int32Value(tarr->length() * tarr->bytesPerElement());
   }
   static Value lengthValue(const TypedArrayObject* tarr) {
-    return tarr->getFixedSlot(LENGTH_SLOT);
+    size_t length = size_t(tarr->getFixedSlot(LENGTH_SLOT).toPrivate());
+    MOZ_ASSERT(length <= INT32_MAX);
+    return Int32Value(length);
   }
 
   static bool ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
