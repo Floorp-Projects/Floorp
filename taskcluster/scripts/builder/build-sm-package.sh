@@ -21,15 +21,19 @@ tar -xvf $UPLOAD_DIR/mozjs-*.tar.*z*
 
 : ${PYTHON3:=python3}
 
-# Build the freshly extracted, packaged SpiderMonkey.
-pushd ./mozjs-*/js/src
+status=0
+(
+    # Build the freshly extracted, packaged SpiderMonkey.
+    cd ./mozjs-*/js/src
 
-# MOZ_AUTOMATION enforces certain requirements that don't apply to
-# packaged builds. Unset it.
-unset MOZ_AUTOMATION
+    # MOZ_AUTOMATION enforces certain requirements that don't apply to
+    # packaged builds. Unset it.
+    unset MOZ_AUTOMATION
 
-AUTOMATION=1 $PYTHON3 ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
-popd
+    AUTOMATION=1 $PYTHON3 ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
+) || status=$?
 
 # Copy artifacts for upload by TaskCluster
 cp -rL ./mozjs-*/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py,libmozjs*} $UPLOAD_DIR
+
+exit $status
