@@ -125,8 +125,6 @@ customElements.define(
 
       this.mPPBrowser = null;
 
-      this.mMessageManager = null;
-
       this.mOnPageTextBoxChange = () => {
         this.navigate(0, Number(this.mPageTextBox.value), 0);
       };
@@ -154,11 +152,6 @@ customElements.define(
         this.mSimplifyPageToolbarSeparator.hidden = true;
       }
       this.mPPBrowser = aPPBrowser;
-      this.mMessageManager = aPPBrowser.messageManager;
-      this.mMessageManager.addMessageListener(
-        "Printing:Preview:UpdatePageCount",
-        this
-      );
       this.updateToolbar();
 
       let ltr = document.documentElement.matches(":root:-moz-locale-dir(ltr)");
@@ -196,14 +189,7 @@ customElements.define(
     }
 
     destroy() {
-      if (this.mMessageManager) {
-        this.mMessageManager.removeMessageListener(
-          "Printing:Preview:UpdatePageCount",
-          this
-        );
-        delete this.mMessageManager;
-        delete this.mPPBrowser;
-      }
+      delete this.mPPBrowser;
     }
 
     disconnectedCallback() {
@@ -276,10 +262,14 @@ customElements.define(
         }
       }
 
-      this.mMessageManager.sendAsyncMessage("Printing:Preview:Navigate", {
-        navType,
-        pageNum,
-      });
+      this.mPPBrowser.sendMessageToActor(
+        "Printing:Preview:Navigate",
+        {
+          navType,
+          pageNum,
+        },
+        "Printing"
+      );
     }
 
     print() {
@@ -445,12 +435,9 @@ customElements.define(
       PSSVC.savePrintSettingsToPrefs(settings, true, flags);
     }
 
-    receiveMessage(message) {
-      if (message.name == "Printing:Preview:UpdatePageCount") {
-        let totalPages = message.data.totalPages;
-        this.mTotalPages.value = totalPages;
-        this.mPageTextBox.max = totalPages;
-      }
+    updatePageCount(totalPages) {
+      this.mTotalPages.value = totalPages;
+      this.mPageTextBox.max = totalPages;
     }
   },
   { extends: "toolbar" }

@@ -155,7 +155,6 @@ with Files("docs/**"):
 
 EXTRA_JS_MODULES += [
     "AboutPagesUtils.jsm",
-    "ActorChild.jsm",
     "ActorManagerChild.jsm",
     "ActorManagerParent.jsm",
     "AppMenuNotifications.jsm",

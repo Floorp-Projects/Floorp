@@ -23,12 +23,9 @@ add_task(async function test() {
 
   // Enter print preview
   let ppBrowser = PrintPreviewListener.getPrintPreviewBrowser();
-  let printPreviewEntered = BrowserTestUtils.waitForMessage(
-    ppBrowser.messageManager,
-    "Printing:Preview:Entered"
-  );
+  let ppPromise = PrintHelper.waitForOldPrintPreview(ppBrowser);
   document.getElementById("cmd_printPreview").doCommand();
-  await printPreviewEntered;
+  await ppPromise;
 
   await BrowserTestUtils.waitForCondition(
     () => gInPrintPreviewMode,
