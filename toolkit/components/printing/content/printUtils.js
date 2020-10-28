@@ -18,10 +18,16 @@
  *
  * To compound that, we need to support remote browsers, and that means
  * kicking off the print jobs in the content process. This means we send
- * messages back and forth to that process via the Printing actor.
+ * messages back and forth to that process. browser-content.js contains
+ * the object that listens and responds to the messages that PrintUtils
+ * sends.
  *
  * This also means that <xul:browser>'s that hope to use PrintUtils must have
  * their type attribute set to "content".
+ *
+ * PrintUtils sends messages at different points in its implementation, but
+ * their documentation is consolidated here for ease-of-access.
+ *
  *
  * Messages sent:
  *
@@ -33,6 +39,23 @@
  *
  *   Printing:Preview:Exit
  *     This message is sent to take content out of print preview mode.
+ *
+ *
+ * Messages Received
+ *
+ *   Printing:Preview:Entered
+ *     This message is sent by the content process once it has completed
+ *     putting the content into print preview mode. We must wait for that to
+ *     to complete before switching the chrome UI to print preview mode,
+ *     otherwise we have layout issues.
+ *
+ *   Printing:Preview:StateChange, Printing:Preview:ProgressChange
+ *     Due to a timing issue resulting in a main-process crash, we have to
+ *     manually open the progress dialog for print preview. The progress
+ *     dialog is opened here in PrintUtils, and then we listen for update
+ *     messages from the child. Bug 1088061 has been filed to investigate
+ *     other solutions.
+ *
  */
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -55,18 +78,14 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrintingParent",
-  "resource://gre/actors/PrintingParent.jsm"
-);
-
 var gFocusedElement = null;
-
-var gPendingPrintPreviews = new Map();
 
 var PrintUtils = {
   SAVE_TO_PDF_PRINTER: "Mozilla Save to PDF",
+
+  init() {
+    window.messageManager.addMessageListener("Printing:Error", this);
+  },
 
   get _bundle() {
     delete this._bundle;
@@ -404,11 +423,6 @@ var PrintUtils = {
    *        with aListenerObj as null iff this window is already displaying
    *        print preview (in which case, the previous aListenerObj passed
    *        to it will be used).
-   *
-   *        Due to a timing issue resulting in a main-process crash, we have to
-   *        manually open the progress dialog for print preview. The progress
-   *        dialog is opened here in PrintUtils, and then we listen for update
-   *        messages from the child. Bug 1558588 is about removing this.
    */
   printPreview(aTrigger, aListenerObj) {
     if (aTrigger) {
@@ -579,6 +593,61 @@ var PrintUtils = {
     );
   },
 
+  receiveMessage(aMessage) {
+    if (aMessage.name == "Printing:Error") {
+      this._displayPrintingError(
+        aMessage.data.nsresult,
+        aMessage.data.isPrinting
+      );
+      return undefined;
+    }
+
+    // If we got here, then the message we've received must involve
+    // updating the print progress UI.
+    if (!this._webProgressPP.value) {
+      // We somehow didn't get a nsIWebProgressListener to be updated...
+      // I guess there's nothing to do.
+      return undefined;
+    }
+
+    let listener = this._webProgressPP.value;
+    let mm = aMessage.target.messageManager;
+    let data = aMessage.data;
+
+    switch (aMessage.name) {
+      case "Printing:Preview:ProgressChange": {
+        return listener.onProgressChange(
+          null,
+          null,
+          data.curSelfProgress,
+          data.maxSelfProgress,
+          data.curTotalProgress,
+          data.maxTotalProgress
+        );
+      }
+
+      case "Printing:Preview:StateChange": {
+        if (data.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+          // Strangely, the printing engine sends 2 STATE_STOP messages when
+          // print preview is finishing. One has the STATE_IS_DOCUMENT flag,
+          // the other has the STATE_IS_NETWORK flag. However, the webProgressPP
+          // listener stops listening once the first STATE_STOP is sent.
+          // Any subsequent messages result in NS_ERROR_FAILURE errors getting
+          // thrown. This should all get torn out once bug 1088061 is fixed.
+          mm.removeMessageListener("Printing:Preview:StateChange", this);
+          mm.removeMessageListener("Printing:Preview:ProgressChange", this);
+
+          // Enable toobar elements that we disabled during update.
+          let printPreviewTB = document.getElementById("print-preview-toolbar");
+          printPreviewTB.disableUpdateTriggers(false);
+        }
+
+        return listener.onStateChange(null, null, data.stateFlags, data.status);
+      }
+    }
+    return undefined;
+  },
+
   _setPrinterDefaultsForSelectedPrinter(
     aPSSVC,
     aPrintSettings,
@@ -702,180 +771,8 @@ var PrintUtils = {
       oldPPBrowser = this._currentPPBrowser;
     }
     this._currentPPBrowser = ppBrowser;
+    let mm = ppBrowser.messageManager;
 
-    let waitForPrintProgressToEnableToolbar = false;
-    if (this._webProgressPP.value) {
-      waitForPrintProgressToEnableToolbar = true;
-    }
-
-    gPendingPrintPreviews.set(ppBrowser, waitForPrintProgressToEnableToolbar);
-
-    // If we happen to have gotten simplify page checked, we will lazily
-    // instantiate a new tab that parses the original page using ReaderMode
-    // primitives. When it's ready, and in order to enter on preview, we send
-    // over a message to print preview browser passing up the simplified tab as
-    // reference. If not, we pass the original tab instead as content source.
-    if (this._shouldSimplify) {
-      let simplifiedBrowser = this._listener.getSimplifiedSourceBrowser();
-      if (!simplifiedBrowser) {
-        simplifiedBrowser = this._listener.createSimplifiedBrowser();
-
-        // Here, we send down a message to simplified browser in order to parse
-        // the original page. After we have parsed it, content will tell parent
-        // that the document is ready for print previewing.
-        simplifiedBrowser.sendMessageToActor(
-          "Printing:Preview:ParseDocument",
-          {
-            URL: this._originalURL,
-            windowID: oldPPBrowser.outerWindowID,
-          },
-          "Printing"
-        );
-
-        // Here we log telemetry data for when the user enters simplify mode.
-        this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_OPENED_COUNT");
-
-        return;
-      }
-    }
-
-    this.sendEnterPrintPreviewToChild(
-      ppBrowser,
-      this._sourceBrowser,
-      this._shouldSimplify,
-      changingPrintPreviewBrowsers
-    );
-  },
-
-  sendEnterPrintPreviewToChild(
-    ppBrowser,
-    sourceBrowser,
-    simplifiedMode,
-    changingBrowsers
-  ) {
-    ppBrowser.sendMessageToActor(
-      "Printing:Preview:Enter",
-      {
-        browsingContextId: sourceBrowser.browsingContext.id,
-        simplifiedMode,
-        changingBrowsers,
-        lastUsedPrinterName: this.getLastUsedPrinterName(),
-      },
-      "Printing"
-    );
-  },
-
-  printPreviewEntered(ppBrowser, previewResult) {
-    let waitForPrintProgressToEnableToolbar = gPendingPrintPreviews.get(
-      ppBrowser
-    );
-    gPendingPrintPreviews.delete(ppBrowser);
-
-    for (let { resolve, reject } of this._onEntered) {
-      if (previewResult.failed) {
-        reject();
-      } else {
-        resolve();
-      }
-    }
-
-    this._onEntered = [];
-    if (previewResult.failed) {
-      // Something went wrong while putting the document into print preview
-      // mode. Bail out.
-      this._ppBrowsers.clear();
-      this._listener.onEnter();
-      this._listener.onExit();
-      return;
-    }
-
-    // Stash the focused element so that we can return to it after exiting
-    // print preview.
-    gFocusedElement = document.commandDispatcher.focusedElement;
-
-    let printPreviewTB = document.getElementById("print-preview-toolbar");
-    if (printPreviewTB) {
-      if (previewResult.changingBrowsers) {
-        printPreviewTB.destroy();
-        printPreviewTB.initialize(ppBrowser);
-      } else {
-        // printPreviewTB.initialize above already calls updateToolbar.
-        printPreviewTB.updateToolbar();
-      }
-
-      // If we don't have a progress listener to enable the toolbar do it now.
-      if (!waitForPrintProgressToEnableToolbar) {
-        printPreviewTB.disableUpdateTriggers(false);
-      }
-
-      ppBrowser.collapsed = false;
-      ppBrowser.focus();
-      return;
-    }
-
-    // Set the original window as an active window so any mozPrintCallbacks can
-    // run without delayed setTimeouts.
-    if (this._listener.activateBrowser) {
-      this._listener.activateBrowser(this._sourceBrowser);
-    } else {
-      this._sourceBrowser.docShellIsActive = true;
-    }
-
-    // show the toolbar after we go into print preview mode so
-    // that we can initialize the toolbar with total num pages
-    printPreviewTB = document.createXULElement("toolbar", {
-      is: "printpreview-toolbar",
-    });
-    printPreviewTB.setAttribute("fullscreentoolbar", true);
-    printPreviewTB.setAttribute("flex", "1");
-    printPreviewTB.id = "print-preview-toolbar";
-
-    let navToolbox = this._listener.getNavToolbox();
-    navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
-    printPreviewTB.initialize(ppBrowser);
-
-    // The print preview processing may not have fully completed, so if we
-    // have a progress listener, disable the toolbar elements that can trigger
-    // updates and it will enable them when completed.
-    if (waitForPrintProgressToEnableToolbar) {
-      printPreviewTB.disableUpdateTriggers(true);
-    }
-
-    // Enable simplify page checkbox when the page is an article
-    if (this._sourceBrowser.isArticle) {
-      printPreviewTB.enableSimplifyPage();
-    } else {
-      this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_UNAVAILABLE_COUNT");
-      printPreviewTB.disableSimplifyPage();
-    }
-
-    // copy the window close handler
-    if (window.onclose) {
-      this._closeHandlerPP = window.onclose;
-    } else {
-      this._closeHandlerPP = null;
-    }
-    window.onclose = function() {
-      PrintUtils.exitPrintPreview();
-      return false;
-    };
-
-    // disable chrome shortcuts...
-    window.addEventListener("keydown", this.onKeyDownPP, true);
-    window.addEventListener("keypress", this.onKeyPressPP, true);
-
-    ppBrowser.collapsed = false;
-    ppBrowser.focus();
-    // on Enter PP Call back
-    this._listener.onEnter();
-  },
-
-  readerModeReady(sourceBrowser) {
-    let ppBrowser = this._listener.getSimplifiedPrintPreviewBrowser();
-    this.sendEnterPrintPreviewToChild(ppBrowser, sourceBrowser, true, true);
-  },
-
-  getLastUsedPrinterName() {
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
     );
@@ -904,12 +801,171 @@ var PrintUtils = {
       }
     }
 
-    return lastUsedPrinterName;
+    let sendEnterPreviewMessage = function(browser, simplified) {
+      mm.sendAsyncMessage("Printing:Preview:Enter", {
+        browsingContextId: browser.browsingContext.id,
+        simplifiedMode: simplified,
+        changingBrowsers: changingPrintPreviewBrowsers,
+        lastUsedPrinterName,
+      });
+    };
+
+    // If we happen to have gotten simplify page checked, we will lazily
+    // instantiate a new tab that parses the original page using ReaderMode
+    // primitives. When it's ready, and in order to enter on preview, we send
+    // over a message to print preview browser passing up the simplified tab as
+    // reference. If not, we pass the original tab instead as content source.
+    if (this._shouldSimplify) {
+      let simplifiedBrowser = this._listener.getSimplifiedSourceBrowser();
+      if (simplifiedBrowser) {
+        sendEnterPreviewMessage(simplifiedBrowser, true);
+      } else {
+        simplifiedBrowser = this._listener.createSimplifiedBrowser();
+
+        // After instantiating the simplified tab, we attach a listener as
+        // callback. Once we discover reader mode has been loaded, we fire
+        // up a message to enter on print preview.
+        let spMM = simplifiedBrowser.messageManager;
+        spMM.addMessageListener(
+          "Printing:Preview:ReaderModeReady",
+          function onReaderReady() {
+            spMM.removeMessageListener(
+              "Printing:Preview:ReaderModeReady",
+              onReaderReady
+            );
+            sendEnterPreviewMessage(simplifiedBrowser, true);
+          }
+        );
+
+        // Here, we send down a message to simplified browser in order to parse
+        // the original page. After we have parsed it, content will tell parent
+        // that the document is ready for print previewing.
+        spMM.sendAsyncMessage("Printing:Preview:ParseDocument", {
+          URL: this._originalURL,
+          windowID: oldPPBrowser.outerWindowID,
+        });
+
+        // Here we log telemetry data for when the user enters simplify mode.
+        this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_OPENED_COUNT");
+      }
+    } else {
+      sendEnterPreviewMessage(this._sourceBrowser, false);
+    }
+
+    let waitForPrintProgressToEnableToolbar = false;
+    if (this._webProgressPP.value) {
+      mm.addMessageListener("Printing:Preview:StateChange", this);
+      mm.addMessageListener("Printing:Preview:ProgressChange", this);
+      waitForPrintProgressToEnableToolbar = true;
+    }
+
+    let onEntered = message => {
+      mm.removeMessageListener("Printing:Preview:Entered", onEntered);
+      for (let { resolve, reject } of this._onEntered) {
+        if (message.data.failed) {
+          reject();
+        } else {
+          resolve();
+        }
+      }
+      this._onEntered = [];
+      if (message.data.failed) {
+        // Something went wrong while putting the document into print preview
+        // mode. Bail out.
+        this._ppBrowsers.clear();
+        this._listener.onEnter();
+        this._listener.onExit();
+        return;
+      }
+
+      // Stash the focused element so that we can return to it after exiting
+      // print preview.
+      gFocusedElement = document.commandDispatcher.focusedElement;
+
+      let printPreviewTB = document.getElementById("print-preview-toolbar");
+      if (printPreviewTB) {
+        if (message.data.changingBrowsers) {
+          printPreviewTB.destroy();
+          printPreviewTB.initialize(ppBrowser);
+        } else {
+          // printPreviewTB.initialize above already calls updateToolbar.
+          printPreviewTB.updateToolbar();
+        }
+
+        // If we don't have a progress listener to enable the toolbar do it now.
+        if (!waitForPrintProgressToEnableToolbar) {
+          printPreviewTB.disableUpdateTriggers(false);
+        }
+
+        ppBrowser.collapsed = false;
+        ppBrowser.focus();
+        return;
+      }
+
+      // Set the original window as an active window so any mozPrintCallbacks can
+      // run without delayed setTimeouts.
+      if (this._listener.activateBrowser) {
+        this._listener.activateBrowser(this._sourceBrowser);
+      } else {
+        this._sourceBrowser.docShellIsActive = true;
+      }
+
+      // show the toolbar after we go into print preview mode so
+      // that we can initialize the toolbar with total num pages
+      printPreviewTB = document.createXULElement("toolbar", {
+        is: "printpreview-toolbar",
+      });
+      printPreviewTB.setAttribute("fullscreentoolbar", true);
+      printPreviewTB.setAttribute("flex", "1");
+      printPreviewTB.id = "print-preview-toolbar";
+
+      let navToolbox = this._listener.getNavToolbox();
+      navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
+      printPreviewTB.initialize(ppBrowser);
+
+      // The print preview processing may not have fully completed, so if we
+      // have a progress listener, disable the toolbar elements that can trigger
+      // updates and it will enable them when completed.
+      if (waitForPrintProgressToEnableToolbar) {
+        printPreviewTB.disableUpdateTriggers(true);
+      }
+
+      // Enable simplify page checkbox when the page is an article
+      if (this._sourceBrowser.isArticle) {
+        printPreviewTB.enableSimplifyPage();
+      } else {
+        this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_UNAVAILABLE_COUNT");
+        printPreviewTB.disableSimplifyPage();
+      }
+
+      // copy the window close handler
+      if (window.onclose) {
+        this._closeHandlerPP = window.onclose;
+      } else {
+        this._closeHandlerPP = null;
+      }
+      window.onclose = function() {
+        PrintUtils.exitPrintPreview();
+        return false;
+      };
+
+      // disable chrome shortcuts...
+      window.addEventListener("keydown", this.onKeyDownPP, true);
+      window.addEventListener("keypress", this.onKeyPressPP, true);
+
+      ppBrowser.collapsed = false;
+      ppBrowser.focus();
+      // on Enter PP Call back
+      this._listener.onEnter();
+    };
+
+    mm.addMessageListener("Printing:Preview:Entered", onEntered);
   },
 
   exitPrintPreview() {
     for (let browser of this._ppBrowsers) {
-      browser.sendMessageToActor("Printing:Preview:Exit", {}, "Printing");
+      let browserMM = browser.messageManager;
+      browserMM.sendAsyncMessage("Printing:Preview:Exit");
     }
     this._ppBrowsers.clear();
     this._currentPPBrowser = null;
@@ -1009,3 +1065,5 @@ var PrintUtils = {
     }
   },
 };
+
+PrintUtils.init();

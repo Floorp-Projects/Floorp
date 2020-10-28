@@ -365,19 +365,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  Printing: {
-    parent: {
-      moduleURI: "resource://gre/actors/PrintingParent.jsm",
-    },
-    child: {
-      moduleURI: "resource://gre/actors/PrintingChild.jsm",
-      events: {
-        PrintingError: { capture: true },
-        printPreviewUpdate: { capture: true },
-      },
-    },
-  },
-
   PurgeSessionHistory: {
     child: {
       moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
@@ -567,7 +554,23 @@ let JSWINDOWACTORS = {
  * If Fission is being simulated, and an actor needs to receive events from
  * sub-frames, it must use "allFrames".
  */
-let LEGACY_ACTORS = {};
+let LEGACY_ACTORS = {
+  Printing: {
+    child: {
+      module: "resource://gre/actors/PrintingChild.jsm",
+      events: {
+        PrintingError: { capture: true },
+        printPreviewUpdate: { capture: true },
+      },
+      messages: [
+        "Printing:Preview:Enter",
+        "Printing:Preview:Exit",
+        "Printing:Preview:Navigate",
+        "Printing:Preview:ParseDocument",
+      ],
+    },
+  },
+};
 
 class ActorSet {
   constructor(group, actorSide) {
