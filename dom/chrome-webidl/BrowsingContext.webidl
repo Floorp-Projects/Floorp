@@ -213,6 +213,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   readonly attribute nsISHistory? sessionHistory;
 
   readonly attribute MediaController? mediaController;
+
+  void resetScalingZoom();
 };
 
 [Exposed=Window, ChromeOnly]
