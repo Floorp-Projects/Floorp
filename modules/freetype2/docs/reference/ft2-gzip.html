@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>GZIP Streams - FreeType-2.10.2 API Reference</title>
+        <title>GZIP Streams - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1098,6 +1098,8 @@
 <hr />
 <h1 id="gzip-streams">GZIP Streams<a class="headerlink" href="#gzip-streams" title="Permanent link">&para;</a></h1>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
+<p>In certain builds of the library, gzip compression recognition is automatically handled when calling <code><a href="ft2-base_interface.html#ft_new_face">FT_New_Face</a></code> or <code><a href="ft2-base_interface.html#ft_open_face">FT_Open_Face</a></code>. This means that if no font driver is capable of handling the raw compressed file, the library will try to open a gzipped stream from it and re-open the face with it.</p>
+<p>The stream implementation is very basic and resets the decompression process each time seeking backwards is needed within the stream, which significantly undermines the performance.</p>
 <p>This section contains the declaration of Gzip-specific functions.</p>
 <h2 id="ft_stream_opengzip">FT_Stream_OpenGzip<a class="headerlink" href="#ft_stream_opengzip" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_GZIP_H (freetype/ftgzip.h).</p>
@@ -1125,8 +1127,6 @@
 
 <p>The source stream must be opened <em>before</em> calling this function.</p>
 <p>Calling the internal function <code>FT_Stream_Close</code> on the new stream will <strong>not</strong> call <code>FT_Stream_Close</code> on the source stream. None of the stream objects will be released to the heap.</p>
-<p>The stream implementation is very basic and resets the decompression process each time seeking backwards is needed within the stream.</p>
-<p>In certain builds of the library, gzip compression recognition is automatically handled when calling <code><a href="ft2-base_interface.html#ft_new_face">FT_New_Face</a></code> or <code><a href="ft2-base_interface.html#ft_open_face">FT_Open_Face</a></code>. This means that if no font driver is capable of handling the raw compressed file, the library will try to open a gzipped stream from it and re-open the face with it.</p>
 <p>This function may return <code>FT_Err_Unimplemented_Feature</code> if your build of FreeType was not compiled with zlib support.</p>
 <hr>
 

@@ -18,12 +18,12 @@
 
 #include <ft2build.h>
   /* we use our special ftconfig.h file, not the standard one */
-#include <ftconfig.h>
-#include FT_INTERNAL_DEBUG_H
-#include FT_SYSTEM_H
-#include FT_ERRORS_H
-#include FT_TYPES_H
-#include FT_INTERNAL_STREAM_H
+#include FT_CONFIG_CONFIG_H
+#include <freetype/internal/ftdebug.h>
+#include <freetype/ftsystem.h>
+#include <freetype/fterrors.h>
+#include <freetype/fttypes.h>
+#include <freetype/internal/ftstream.h>
 
   /* memory-mapping includes and definitions */
 #ifdef HAVE_UNISTD_H
@@ -351,7 +351,7 @@
     stream->read = 0;
 
     FT_TRACE1(( "FT_Stream_Open:" ));
-    FT_TRACE1(( " opened `%s' (%d bytes) successfully\n",
+    FT_TRACE1(( " opened `%s' (%ld bytes) successfully\n",
                 filepathname, stream->size ));
 
     return FT_Err_Ok;

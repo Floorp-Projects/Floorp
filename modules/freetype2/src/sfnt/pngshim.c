@@ -17,10 +17,9 @@
  */
 
 
-#include <ft2build.h>
-#include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
-#include FT_TRUETYPE_TAGS_H
+#include <freetype/internal/ftdebug.h>
+#include <freetype/internal/ftstream.h>
+#include <freetype/tttags.h>
 #include FT_CONFIG_STANDARD_LIBRARY_H
 
 
@@ -61,7 +60,12 @@
     /* predates clang; the `__BYTE_ORDER__' preprocessor symbol was */
     /* introduced in gcc 4.6 and clang 3.2, respectively.           */
     /* `__builtin_shuffle' for gcc was introduced in gcc 4.7.0.     */
-#if ( ( defined( __GNUC__ )                                &&             \
+    /*                                                              */
+    /* Intel compilers do not currently support __builtin_shuffle;  */
+
+    /* The Intel check must be first. */
+#if !defined( __INTEL_COMPILER )                                       && \
+    ( ( defined( __GNUC__ )                                &&             \
         ( ( __GNUC__ >= 5 )                              ||               \
         ( ( __GNUC__ == 4 ) && ( __GNUC_MINOR__ >= 7 ) ) ) )         ||   \
       ( defined( __clang__ )                                       &&     \

@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Outline Processing - FreeType-2.10.2 API Reference</title>
+        <title>Outline Processing - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1831,9 +1831,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>This advanced function uses <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> as an argument, allowing FreeType rasterizer to be used for direct composition, translucency, etc. You should know how to set up <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> for this function to work.</p>
-<p>The field <code>params.source</code> will be set to <code>outline</code> before the scan converter is called, which means that the value you give to it is actually ignored.</p>
-<p>The gray-level rasterizer always uses 256 gray levels. If you want less gray levels, you have to provide your own span callback. See the <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_DIRECT</a></code> value of the <code>flags</code> field in the <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> structure for more details.</p>
+<p>This advanced function uses <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> as an argument. The field <code>params.source</code> will be set to <code>outline</code> before the scan converter is called, which means that the value you give to it is actually ignored. Either <code>params.target</code> must point to preallocated bitmap, or <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_DIRECT</a></code> must be set in <code>params.flags</code> allowing FreeType rasterizer to be used for direct composition, translucency, etc. See <code><a href="ft2-raster.html#ft_raster_params">FT_Raster_Params</a></code> for more details.</p>
 <hr>
 
 <h2 id="ft_outline_decompose">FT_Outline_Decompose<a class="headerlink" href="#ft_outline_decompose" title="Permanent link">&para;</a></h2>
@@ -2108,6 +2106,7 @@
 #<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_ignore_dropouts">FT_OUTLINE_IGNORE_DROPOUTS</a>  0x8
 #<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_smart_dropouts">FT_OUTLINE_SMART_DROPOUTS</a>   0x10
 #<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_include_stubs">FT_OUTLINE_INCLUDE_STUBS</a>    0x20
+#<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_overlap">FT_OUTLINE_OVERLAP</a>          0x40
 
 #<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_high_precision">FT_OUTLINE_HIGH_PRECISION</a>   0x100
 #<span class="keyword">define</span> <a href="ft2-outline_processing.html#ft_outline_single_pass">FT_OUTLINE_SINGLE_PASS</a>      0x200
@@ -2148,6 +2147,9 @@
 </td></tr>
 <tr><td class="val" id="ft_outline_include_stubs">FT_OUTLINE_INCLUDE_STUBS</td><td class="desc">
 <p>If set, turn pixels on for &lsquo;stubs&rsquo;, otherwise exclude them. Ignored if <code><a href="ft2-outline_processing.html#ft_outline_xxx">FT_OUTLINE_IGNORE_DROPOUTS</a></code> is set. See below for more information.</p>
+</td></tr>
+<tr><td class="val" id="ft_outline_overlap">FT_OUTLINE_OVERLAP</td><td class="desc">
+<p>This flag indicates that this outline contains overlapping contrours and the anti-aliased renderer should perform oversampling to mitigate possible artifacts. This flag should <em>not</em> be set for well designed glyphs without overlaps because it quadruples the rendering time.</p>
 </td></tr>
 <tr><td class="val" id="ft_outline_high_precision">FT_OUTLINE_HIGH_PRECISION</td><td class="desc">
 <p>This flag indicates that the scan-line converter should try to convert this outline to bitmaps with the highest possible quality. It is typically set for small character sizes. Note that this is only a hint that might be completely ignored by a given scan-converter.</p>

@@ -12,12 +12,12 @@
 # fully.
 
 AC_INIT([FreeType], [@VERSION@], [freetype@nongnu.org], [freetype])
-AC_CONFIG_SRCDIR([ftconfig.in])
+AC_CONFIG_SRCDIR([ftconfig.h.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='23:2:17'
+version_info='23:4:17'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -109,11 +109,11 @@ AC_CHECK_SIZEOF([long])
 AC_TYPE_LONG_LONG_INT
 
 
-# check whether cpp computation of size of int and long in ftconfig.in works
+# check whether cpp computation of size of int and long in ftconfig.h.in works
 
-AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.in works])
+AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.h.in works])
 orig_CPPFLAGS="${CPPFLAGS}"
-CPPFLAGS="-I${srcdir} -I. -I${srcdir}/../../include/freetype/config ${CPPFLAGS}"
+CPPFLAGS="-I${srcdir} -I. -I${srcdir}/../../include ${CPPFLAGS}"
 
 ac_clean_files=
 if test ! -f ft2build.h; then
@@ -123,11 +123,11 @@ fi
 
 cat > conftest.c <<\_ACEOF
 #include <limits.h>
-#define FT_CONFIG_OPTIONS_H "ftoption.h"
-#define FT_CONFIG_STANDARD_LIBRARY_H "ftstdlib.h"
+#define FT_CONFIG_OPTIONS_H <freetype/config/ftoption.h>
+#define FT_CONFIG_STANDARD_LIBRARY_H <freetype/config/ftstdlib.h>
 #define FT_UINT_MAX  UINT_MAX
 #define FT_ULONG_MAX ULONG_MAX
-#include "ftconfig.in"
+#include "ftconfig.h.in"
 _ACEOF
 echo >> conftest.c "#if FT_SIZEOF_INT == "${ac_cv_sizeof_int}
 echo >> conftest.c "ac_cpp_ft_sizeof_int="${ac_cv_sizeof_int}
@@ -1158,25 +1158,13 @@ AC_CONFIG_FILES([ftoption.h:${srcdir}/../../include/freetype/config/ftoption.h],
    rm ftoption.tmp],
   [FTOPTION_H_SED="$FTOPTION_H_SED"])
 
-# configuration file -- stay in 8.3 limit
-#
-# since #undef doesn't survive in configuration header files we replace
-# `/undef' with `#undef' after creating the output file
-
-AC_CONFIG_HEADERS([ftconfig.h:ftconfig.in],
-  [mv ftconfig.h ftconfig.tmp
-   sed 's|/undef|#undef|' < ftconfig.tmp > ftconfig.h
-   rm ftconfig.tmp])
+AC_CONFIG_HEADERS([ftconfig.h])
 
 # create the Unix-specific sub-Makefiles `builds/unix/unix-def.mk'
 # and `builds/unix/unix-cc.mk' that will be used by the build system
 #
 AC_CONFIG_FILES([unix-cc.mk:unix-cc.in
                  unix-def.mk:unix-def.in])
-
-# re-generate the Jamfile to use libtool now
-#
-# AC_CONFIG_FILES([../../Jamfile:../../Jamfile.in])
 
 AC_OUTPUT
 
@@ -1193,9 +1181,9 @@ Library configuration:
 # Warn if docwriter is not installed
 
 if test $have_docwriter = no; then
-  AC_MSG_NOTICE([
-  Warning: \`make refdoc' will fail since pip package \`docwriter' is not
-  installed.  To install, run \`$PIP install docwriter', or to use a Python
+  AC_MSG_WARN([
+  \`make refdoc' will fail since pip package \`docwriter' is not installed.
+  To install, run \`$PIP install docwriter', or to use a Python
   virtual environment, run \`make refdoc-venv' (requires pip package
   \`virtualenv'). These operations require Python >= 3.5.
   ])

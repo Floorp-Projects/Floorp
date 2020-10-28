@@ -38,7 +38,7 @@ The libtool-specific number  does not equal the release  number but is
 tied to it.
 
 The  release  number  is  available  at  *compile*  time  through  the
-following macros defined in FT_FREETYPE_H:
+following macros defined in `freetype.h':
 
   - FREETYPE_MAJOR: major release number
   - FREETYPE_MINOR: minor release number
@@ -60,6 +60,8 @@ found on _most_ systems, but not all of them:
 
     release     libtool     so
   -------------------------------
+     2.10.4     23.4.17   6.17.4
+     2.10.3     23.3.17   6.17.3
      2.10.2     23.2.17   6.17.2
      2.10.1     23.1.17   6.17.1
      2.10.0     23.0.17   6.17.0
@@ -99,7 +101,7 @@ other release numbers.
   AC_TRY_CPP([
 
 #include <ft2build.h>
-#include FT_FREETYPE_H
+#include <freetype/freetype.h>
 
 #if FREETYPE_MAJOR*10000 + FREETYPE_MINOR*100 + FREETYPE_PATCH < 21002
 #  error FreeType version too low.

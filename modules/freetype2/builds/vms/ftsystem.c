@@ -19,11 +19,11 @@
 #include <ft2build.h>
   /* we use our special ftconfig.h file, not the standard one */
 #include <ftconfig.h>
-#include FT_INTERNAL_DEBUG_H
-#include FT_SYSTEM_H
-#include FT_ERRORS_H
-#include FT_TYPES_H
-#include FT_INTERNAL_OBJECTS_H
+#include <freetype/internal/ftdebug.h>
+#include <freetype/ftsystem.h>
+#include <freetype/fterrors.h>
+#include <freetype/fttypes.h>
+#include <freetype/internal/ftobjs.h>
 
   /* memory-mapping includes and definitions */
 #ifdef HAVE_UNISTD_H

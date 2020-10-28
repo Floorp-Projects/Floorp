@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Subpixel Rendering - FreeType-2.10.2 API Reference</title>
+        <title>Subpixel Rendering - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1140,7 +1140,7 @@
 <hr />
 <h1 id="subpixel-rendering">Subpixel Rendering<a class="headerlink" href="#subpixel-rendering" title="Permanent link">&para;</a></h1>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>FreeType provides two alternative subpixel rendering technologies. Should you define <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> in your <code>ftoption.h</code> file, this enables patented ClearType-style rendering. Otherwise, Harmony LCD rendering is enabled. These technologies are controlled differently and API described below, although always available, performs its function when appropriate method is enabled and does nothing otherwise.</p>
+<p>FreeType provides two alternative subpixel rendering technologies. Should you define <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> in your <code>ftoption.h</code> file, this enables ClearType-style rendering. Otherwise, Harmony LCD rendering is enabled. These technologies are controlled differently and API described below, although always available, performs its function when appropriate method is enabled and does nothing otherwise.</p>
 <p>ClearType-style LCD rendering exploits the color-striped structure of LCD pixels, increasing the available resolution in the direction of the stripe (usually horizontal RGB) by a factor of&nbsp;3. Using the subpixels coverages unfiltered can create severe color fringes especially when rendering thin features. Indeed, to produce black-on-white text, the nearby color subpixels must be dimmed equally.</p>
 <p>A good 5-tap FIR filter should be applied to subpixel coverages regardless of pixel boundaries and should have these properties:</p>
 <ol>
@@ -1210,7 +1210,7 @@
                            <a href="ft2-lcd_rendering.html#ft_lcdfilter">FT_LcdFilter</a>  filter );
 </code></pre></div>
 
-<p>This function is used to apply color filtering to LCD decimated bitmaps, like the ones used when calling <code><a href="ft2-base_interface.html#ft_render_glyph">FT_Render_Glyph</a></code> with <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_LCD</a></code> or <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_LCD_V</a></code>.</p>
+<p>This function is used to change filter applied to LCD decimated bitmaps, like the ones used when calling <code><a href="ft2-base_interface.html#ft_render_glyph">FT_Render_Glyph</a></code> with <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_LCD</a></code> or <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_LCD_V</a></code>.</p>
 <h4>input</h4>
 
 <table class="fields">
@@ -1228,8 +1228,8 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>This feature is always disabled by default. Clients must make an explicit call to this function with a <code>filter</code> value other than <code><a href="ft2-lcd_rendering.html#ft_lcdfilter">FT_LCD_FILTER_NONE</a></code> in order to enable it.</p>
-<p>Due to <strong>PATENTS</strong> covering subpixel rendering, this function doesn't do anything except returning <code>FT_Err_Unimplemented_Feature</code> if the configuration macro <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> is not defined in your build of the library, which should correspond to all default builds of FreeType.</p>
+<p>Since 2.10.3 the LCD filtering is enabled with <code><a href="ft2-lcd_rendering.html#ft_lcdfilter">FT_LCD_FILTER_DEFAULT</a></code>. It is no longer necessary to call this function explicitly except to choose a different filter or disable filtering altogether with <code><a href="ft2-lcd_rendering.html#ft_lcdfilter">FT_LCD_FILTER_NONE</a></code>.</p>
+<p>This function does nothing but returns <code>FT_Err_Unimplemented_Feature</code> if the configuration macro <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> is not defined in your build of the library.</p>
 <h4>since</h4>
 
 <p>2.3.0</p>
@@ -1259,7 +1259,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>Due to <strong>PATENTS</strong> covering subpixel rendering, this function doesn't do anything except returning <code>FT_Err_Unimplemented_Feature</code> if the configuration macro <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> is not defined in your build of the library, which should correspond to all default builds of FreeType.</p>
+<p>This function does nothing but returns <code>FT_Err_Unimplemented_Feature</code> if the configuration macro <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> is not defined in your build of the library.</p>
 <p>LCD filter weights can also be set per face using <code><a href="ft2-base_interface.html#ft_face_properties">FT_Face_Properties</a></code> with <code><a href="ft2-parameter_tags.html#ft_param_tag_lcd_filter_weights">FT_PARAM_TAG_LCD_FILTER_WEIGHTS</a></code>.</p>
 <h4>since</h4>
 
