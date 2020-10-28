@@ -267,10 +267,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:makeOwnBaseShape\n"
          "race:numDynamicSlots\n"
 
-         // Bug 1608357
-         "race:nsHtml5ExecutorFlusher::Run\n"
-         "race:geckoservo::glue::traverse_subtree\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
