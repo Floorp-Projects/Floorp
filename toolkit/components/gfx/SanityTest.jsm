@@ -8,6 +8,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
+const TEST_DISABLED_PREF = "media.sanity-test.disabled";
 const PAGE_WIDTH = 160;
 const PAGE_HEIGHT = 234;
 const LEFT_EDGE = 8;
@@ -430,6 +431,9 @@ SanityTest.prototype = {
 
   observe(subject, topic, data) {
     if (topic != "profile-after-change") {
+      return;
+    }
+    if (Services.prefs.getBoolPref(TEST_DISABLED_PREF, false)) {
       return;
     }
 

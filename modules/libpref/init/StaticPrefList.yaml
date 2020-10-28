@@ -7248,6 +7248,13 @@
     mirror: always
 #endif
 
+# Set to true in marionette tests to disable the sanity test
+# which would lead to unnecessary start of the RDD process.
+-   name: media.sanity-test.disabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 #ifdef MOZ_WMF
 
 -   name: media.wmf.enabled
