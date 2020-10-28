@@ -16,8 +16,9 @@
 #include "mozilla/Attributes.h"
 #include "gfxContext.h"
 #include "mozilla/ArenaAllocator.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
@@ -1413,6 +1414,25 @@ class nsDisplayListBuilder {
 
    private:
     nsDisplayListBuilder* mBuilder;
+  };
+
+  /**
+   * A helper class to temporarily set mBuildingExtraPagesForPageNum.
+   */
+  class MOZ_RAII AutoPageNumberSetter {
+   public:
+    AutoPageNumberSetter(nsDisplayListBuilder* aBuilder, const uint8_t aPageNum)
+        : mBuilder(aBuilder),
+          mOldPageNum(aBuilder->GetBuildingExtraPagesForPageNum()) {
+      mBuilder->SetBuildingExtraPagesForPageNum(aPageNum);
+    }
+    ~AutoPageNumberSetter() {
+      mBuilder->SetBuildingExtraPagesForPageNum(mOldPageNum);
+    }
+
+   private:
+    nsDisplayListBuilder* mBuilder;
+    uint8_t mOldPageNum;
   };
 
   /**
