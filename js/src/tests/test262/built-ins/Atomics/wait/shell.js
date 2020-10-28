@@ -10,6 +10,7 @@ defines:
   - $262.agent.getReport
   - $262.agent.safeBroadcastAsync
   - $262.agent.safeBroadcast
+  - $262.agent.setTimeout
   - $262.agent.tryYield
   - $262.agent.trySleep
 ---*/
@@ -55,6 +56,8 @@ defines:
       }
     })(this);
   }
+
+  $262.agent.setTimeout = setTimeout;
 
   $262.agent.getReportAsync = function() {
     return new Promise(function(resolve) {

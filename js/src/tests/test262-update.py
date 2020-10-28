@@ -28,6 +28,10 @@ UNSUPPORTED_FEATURES = set(
         "top-level-await",
         "Atomics.waitAsync",
         "legacy-regexp",
+        "TypedArray.prototype.item",
+        "Array.prototype.item",
+        "String.prototype.item",
+        "arbitrary-module-namespace-names",
     ]
 )
 FEATURE_CHECK_NEEDED = {

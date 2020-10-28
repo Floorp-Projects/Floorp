@@ -31,7 +31,7 @@ includes: [nativeFunctionMatcher.js]
   try {
     validateNativeFunctionSource(s);
   } catch (unused) {
-    $ERROR(`${JSON.stringify(s)} should pass`);
+    throw new Error(`${JSON.stringify(s)} should pass`);
   }
 });
 
@@ -55,7 +55,7 @@ includes: [nativeFunctionMatcher.js]
     fail = true;
   } catch (unused) {}
   if (fail) {
-    $ERROR(`${JSON.stringify(s)} should fail`);
+    throw new Error(`${JSON.stringify(s)} should fail`);
   }
 });
 

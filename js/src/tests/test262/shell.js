@@ -411,10 +411,11 @@ Test262Error.prototype.toString = function () {
   return "Test262Error: " + this.message;
 };
 
-var $ERROR;
-$ERROR = function $ERROR(message) {
-  throw new Test262Error(message);
+Test262Error.thrower = (...args) => {
+  throw new Test262Error(...args);
 };
+
+var $ERROR = Test262Error.thrower;
 
 function $DONOTEVALUATE() {
   throw "Test262: This statement should not be evaluated.";
@@ -425,7 +426,7 @@ function $DONOTEVALUATE() {
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// https://github.com/tc39/test262/blob/master/INTERPRETING.md#host-defined-functions
+// https://github.com/tc39/test262/blob/main/INTERPRETING.md#host-defined-functions
 ;(function createHostObject(global) {
     "use strict";
 

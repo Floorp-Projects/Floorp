@@ -263,8 +263,24 @@ skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-o
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1670495
+# https://bugzilla.mozilla.org/show_bug.cgi?id=605515
 skip script test262/language/identifier-resolution/assign-to-global-undefined-strict.js
+skip script test262/language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval-.js
+skip script test262/language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--16.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--8.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--12.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--18.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--14.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--2.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--10.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--6.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--4.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v-.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--20.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1670496
 skip script test262/intl402/DateTimeFormat/constructor-options-order-fractionalSecondDigits.js
@@ -277,6 +293,28 @@ skip script test262/built-ins/Function/prototype/toString/built-in-function-obje
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
 ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670062
+skip script test262/intl402/Collator/constructor-options-throwing-getters.js
+
+# These two tests assume that assignment to function calls is a SyntaxError.  We
+# historically implemented otherwise, as web reality.  Perhaps that can be
+# reevaluated at some point.
+skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
+skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1672862
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex-desc-configurable.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1673793
+# All of these tests pass except with --more-compartments.
+ignore-flag(--more-compartments) script test262/built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 # All of these tests pass except with --more-compartments.
@@ -646,6 +684,25 @@ fails-if(!xulRuntime.shell) script test262/built-ins/TypedArray/prototype/set/ty
 fails-if(!xulRuntime.shell) script test262/built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-other-type-sab.js
 fails-if(!xulRuntime.shell) script test262/built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-same-type-sab.js
 fails-if(!xulRuntime.shell) script test262/built-ins/TypedArray/prototype/set/typedarray-arg-set-values-same-buffer-same-type-sab.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/add/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/and/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/compareExchange/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/exchange/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/isLockFree/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/load/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/or/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/store/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/sub/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/xor/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/Object/seal/seal-sharedarraybuffer.js
+fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/slice/not-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/is-a-constructor.js
+fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-sab-non-strict.js
+fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-sab-strict-strict.js
+fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-non-strict.js
+fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-strict-strict.js
+fails-if(!xulRuntime.shell) script test262/language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js
+fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js
 
 # Can be enabled when Intl.DisplayNames is no longer installed through addIntlExtras.
 skip script test262/intl402/DisplayNames/proto-from-ctor-realm.js
@@ -668,6 +725,12 @@ skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-val
 # test262 importer merges all includes in a per directory shell.js file, breaking this harness test case.
 skip script test262/harness/detachArrayBuffer.js
 
+# Likewise here -- shell.js defines an |AsyncFunction| global property for
+# various tests in this directory that have an include that defines it, but this
+# particular test *doesn't* have that include and *shouldn't* define
+# |AsyncFunction| yet *checks* that no such global property exists, so it fails.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1672850
+skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 
 ####################################################
 # Tests disabled due to invalid test expectations  #
