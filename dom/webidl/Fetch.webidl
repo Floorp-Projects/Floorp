@@ -8,7 +8,9 @@
  */
 
 typedef object JSON;
-typedef (Blob or BufferSource or FormData or URLSearchParams or USVString) BodyInit;
+typedef (Blob or BufferSource or FormData or URLSearchParams or USVString) XMLHttpRequestBodyInit;
+/* no support for request body streams yet */
+typedef XMLHttpRequestBodyInit BodyInit;
 
 interface mixin Body {
   [Throws]
