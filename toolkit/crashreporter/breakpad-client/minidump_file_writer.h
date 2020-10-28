@@ -150,6 +150,15 @@ public:
   template <typename CharType>
   bool WriteStringCore(const CharType *str, unsigned int length,
                        MDLocationDescriptor *location);
+
+
+  // Calculate the number of uint16_t values required to store a wchar_t string
+  // when its converted to UTF-16.
+  static unsigned int CalculateNumOfU16s(const wchar_t *str, unsigned int length);
+
+  // Calculate the number of uint16_t values required to store a UTF-8 string
+  // when its converted to UTF-16.
+  static unsigned int CalculateNumOfU16s(const char *str, unsigned int length);
 };
 
 // Represents an untyped allocated chunk
