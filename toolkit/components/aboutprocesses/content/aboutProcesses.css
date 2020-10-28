@@ -102,13 +102,13 @@ td.type, td.favicon {
   background-repeat: no-repeat;
   background-origin: border-box;
   background-size: 16px 16px;
-  background-position: 8px center;
-  padding-inline-start: 32px;
+  background-position: 11px center;
+  padding-inline-start: 38px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 td.type:dir(rtl), td.favicon:dir(rtl) {
-  background-position-x: right 8px;
+  background-position-x: right 11px;
 }
 #process-tbody > tr > td:first-child {
   text-overflow: ellipsis;
