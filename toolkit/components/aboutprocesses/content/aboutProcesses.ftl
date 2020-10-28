@@ -5,6 +5,10 @@
 # Page title
 about-processes-title = Process Manager
 
+# The Actions column
+about-processes-column-action =
+    .title = Actions
+
 ## Tooltips
 
 about-processes-shutdown-process =
