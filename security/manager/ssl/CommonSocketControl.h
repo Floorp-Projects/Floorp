@@ -20,6 +20,7 @@ class CommonSocketControl : public mozilla::psm::TransportSecurityInfo,
 
   uint32_t GetProviderFlags() const { return mProviderFlags; }
   void SetSSLVersionUsed(int16_t version) { mSSLVersionUsed = version; }
+  void RebuildCertificateInfoFromSSLTokenCache();
 
  protected:
   ~CommonSocketControl() = default;
