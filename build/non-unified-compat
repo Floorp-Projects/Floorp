@@ -31,6 +31,7 @@ dom/indexedDB/
 dom/interfaces/
 dom/ipc/
 dom/jsurl/
+dom/l10n/
 dom/localstorage/
 dom/quota/
 dom/simpledb/
