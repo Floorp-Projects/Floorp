@@ -9,6 +9,15 @@ const kUnregisterAreaTestWidget = "test-widget-for-unregisterArea-areaType";
 const kTestWidget = "test-widget-no-area-areaType";
 registerCleanupFunction(removeCustomToolbars);
 
+registerCleanupFunction(() => {
+  try {
+    CustomizableUI.destroyWidget(kTestWidget);
+    CustomizableUI.destroyWidget(kUnregisterAreaTestWidget);
+  } catch (ex) {
+    Cu.reportError(ex);
+  }
+});
+
 function checkAreaType(widget) {
   try {
     // widget.areaType returns either null or undefined
