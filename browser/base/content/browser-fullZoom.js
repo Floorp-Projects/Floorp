@@ -438,6 +438,12 @@ var FullZoom = {
     return result;
   },
 
+  resetScalingZoom: function FullZoom_resetScaling(
+    browser = gBrowser.selectedBrowser
+  ) {
+    browser.browsingContext?.resetScalingZoom();
+  },
+
   /**
    * Set the zoom level for a given browser.
    *
