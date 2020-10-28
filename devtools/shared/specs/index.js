@@ -143,6 +143,11 @@ const Types = (exports.__TypesForTests = [
     spec: "devtools/shared/specs/network-event",
     front: null,
   },
+  {
+    types: ["network"],
+    spec: "devtools/shared/specs/network",
+    front: "devtools/client/fronts/network",
+  },
   /* imageData isn't an actor but just a DictType */
   {
     types: ["imageData", "disconnectedNode", "disconnectedNodeArray"],
