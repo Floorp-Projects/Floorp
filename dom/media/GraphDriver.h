@@ -750,10 +750,7 @@ class AudioCallbackDriver : public GraphDriver,
     /* There is a running AudioStream. */
     Running,
     /* There is an AudioStream that is draining, and will soon stop. */
-    Stopping,
-    /* There is an AudioStream that has errored, the Fallback driver needs to
-     * continue advancing the graph. */
-    Errored,
+    Stopping
   };
   Atomic<AudioStreamState> mAudioStreamState;
   /* State of the fallback driver, see inline comments. */
