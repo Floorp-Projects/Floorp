@@ -2013,7 +2013,7 @@
 
 - name: LoadConstantStringResult
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     str: StringField
@@ -2028,7 +2028,7 @@
 
 - name: LoadTypeOfObjectResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 4
   args:
     obj: ObjId
