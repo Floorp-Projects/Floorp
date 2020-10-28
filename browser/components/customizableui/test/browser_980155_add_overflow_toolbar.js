@@ -11,6 +11,16 @@ add_task(async function addOverflowingToolbar() {
   let originalWindowWidth = window.outerWidth;
 
   let widgetIds = [];
+  registerCleanupFunction(() => {
+    try {
+      for (let id of widgetIds) {
+        CustomizableUI.destroyWidget(id);
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  });
+
   for (let i = 0; i < 10; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
