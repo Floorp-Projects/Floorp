@@ -8,6 +8,7 @@
 #define mozilla_dom_gamepad_GamepadLightIndicator_h
 
 #include "mozilla/dom/GamepadLightIndicatorBinding.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {

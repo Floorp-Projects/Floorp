@@ -22,6 +22,7 @@ dom/file/
 dom/filehandle/
 dom/filesystem/
 dom/flex/
+dom/gamepad/
 dom/indexedDB/
 dom/localstorage/
 dom/quota/

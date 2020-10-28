@@ -7,6 +7,7 @@
 #include "GamepadTestChannelParent.h"
 
 #include "mozilla/dom/GamepadPlatformService.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -18,7 +19,7 @@ already_AddRefed<GamepadTestChannelParent> GamepadTestChannelParent::Create() {
 }
 
 GamepadTestChannelParent::GamepadTestChannelParent() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
@@ -27,7 +28,7 @@ GamepadTestChannelParent::GamepadTestChannelParent() {
 }
 
 GamepadTestChannelParent::~GamepadTestChannelParent() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);

@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/GamepadTouchBinding.h"
 #include "mozilla/dom/GamepadTouchState.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {

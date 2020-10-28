@@ -12,6 +12,7 @@
 // found in the LICENSE file.
 
 #include "mozilla/dom/GamepadRemapping.h"
+#include "mozilla/dom/GamepadPlatformService.h"
 
 namespace mozilla {
 namespace dom {
