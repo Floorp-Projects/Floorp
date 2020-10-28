@@ -1605,8 +1605,15 @@ static bool GetTemplateObjectForNative(JSContext* cx,
   return true;
 }
 
+static bool LengthGetterImpl(JSContext* cx, const CallArgs& args) {
+  auto* tarr = &args.thisv().toObject().as<TypedArrayObject>();
+  args.rval().set(tarr->lengthValue());
+  return true;
+}
+
 static bool TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
-  return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<TypedArrayObject::is, LengthGetterImpl>(cx, args);
 }
 
 static bool ByteOffsetGetterImpl(JSContext* cx, const CallArgs& args) {
