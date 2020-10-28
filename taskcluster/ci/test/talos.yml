@@ -24,8 +24,6 @@ job-defaults:
                     - talos/mac_config.py
                 windows.*:
                     - talos/windows_config.py
-                windows10-64-ccov/debug:
-                    - talos/windows_vm_config.py
                 windows10-64-ccov/opt:
                     - talos/windows_vm_config.py
                 linux64-ccov.*/.*:
