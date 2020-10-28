@@ -7,8 +7,6 @@
 #ifndef jit_ABIFunctions_h
 #define jit_ABIFunctions_h
 
-#include "jstypes.h" // JS_FUNC_TO_DATA_PTR
-
 namespace js {
 namespace jit {
 
