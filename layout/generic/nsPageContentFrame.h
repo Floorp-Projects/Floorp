@@ -57,6 +57,10 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
   nsSharedPageData* mPD = nullptr;
+
+  // The combined InkOverflow from the previous and current page that does not
+  // yet have space allocated for it.
+  nscoord mRemainingOverflow = 0;
 };
 
 #endif /* nsPageContentFrame_h___ */

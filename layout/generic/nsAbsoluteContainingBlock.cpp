@@ -156,8 +156,15 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                                        const nsRect& aContainingBlock,
                                        AbsPosReflowFlags aFlags,
                                        nsOverflowAreas* aOverflowAreas) {
-  nsReflowStatus reflowStatus;
+  // PageContentFrame replicates fixed pos children so we really don't want
+  // them contributing to overflow areas because that means we'll create new
+  // pages ad infinitum if one of them overflows the page.
+  if (aDelegatingFrame->IsPageContentFrame()) {
+    MOZ_ASSERT(mChildListID == nsAtomicContainerFrame::kFixedList);
+    aOverflowAreas = nullptr;
+  }
 
+  nsReflowStatus reflowStatus;
   const bool reflowAll = aReflowInput.ShouldReflowAllKids();
   const bool isGrid = !!(aFlags & AbsPosReflowFlags::IsGridContainerCB);
   nsIFrame* kidFrame;
