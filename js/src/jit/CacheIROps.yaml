@@ -1761,6 +1761,13 @@
   args:
     obj: ObjId
 
+- name: LoadArrayBufferByteLengthInt32Result
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: LoadTypedArrayLengthResult
   shared: true
   transpile: true

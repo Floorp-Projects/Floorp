@@ -8192,10 +8192,7 @@ AttachDecision CallIRGenerator::tryAttachArrayBufferByteLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  size_t offset =
-      NativeObject::getFixedSlotOffset(ArrayBufferObject::BYTE_LENGTH_SLOT);
-
-  writer.loadFixedSlotTypedResult(objArgId, offset, ValueType::Int32);
+  writer.loadArrayBufferByteLengthInt32Result(objArgId);
 
   // This stub does not need to be monitored because it always returns int32.
   writer.returnFromIC();

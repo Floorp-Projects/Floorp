@@ -952,7 +952,9 @@ void ArrayBufferObject::setDataPointer(BufferContents contents) {
 }
 
 uint32_t ArrayBufferObject::byteLength() const {
-  return getFixedSlot(BYTE_LENGTH_SLOT).toInt32();
+  size_t len = size_t(getFixedSlot(BYTE_LENGTH_SLOT).toPrivate());
+  MOZ_ASSERT(len <= INT32_MAX);
+  return len;
 }
 
 inline size_t ArrayBufferObject::associatedBytes() const {
@@ -967,7 +969,7 @@ inline size_t ArrayBufferObject::associatedBytes() const {
 
 void ArrayBufferObject::setByteLength(uint32_t length) {
   MOZ_ASSERT(length <= INT32_MAX);
-  setFixedSlot(BYTE_LENGTH_SLOT, Int32Value(length));
+  setFixedSlot(BYTE_LENGTH_SLOT, PrivateValue(length));
 }
 
 size_t ArrayBufferObject::wasmMappedSize() const {

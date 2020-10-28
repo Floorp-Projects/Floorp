@@ -1492,6 +1492,17 @@ bool WarpCacheIRTranspiler::emitLoadFunctionNameResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadArrayBufferByteLengthInt32Result(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MArrayBufferByteLengthInt32::New(alloc(), obj);
+  add(length);
+
+  pushResult(length);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
     ObjOperandId objId, uint32_t getterOffset) {
   MDefinition* obj = getOperand(objId);
