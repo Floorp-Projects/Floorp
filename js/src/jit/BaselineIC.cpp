@@ -625,11 +625,6 @@ uint32_t ICStub::getEnteredCount() const {
   }
 }
 
-void ICFallbackStub::trackNotAttached(JSContext* cx, JSScript* script) {
-  maybeInvalidateWarp(cx, script);
-  state().trackNotAttached();
-}
-
 void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
   if (!state_.usedByTranspiler()) {
     return;
@@ -778,7 +773,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
         break;
     }
     if (!attached) {
-      stub->trackNotAttached(cx, frame->invalidationScript());
+      stub->state().trackNotAttached();
     }
   }
 }
@@ -1829,12 +1824,7 @@ static bool TryAttachGetPropStub(const char* name, JSContext* cx,
         MOZ_ASSERT_UNREACHABLE("No deferred GetProp stubs");
         break;
     }
-
-    if (!attached) {
-      stub->trackNotAttached(cx, frame->invalidationScript());
-    }
   }
-
   return attached;
 }
 
@@ -2218,7 +2208,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
   if (!attached && canAttachStub) {
-    stub->trackNotAttached(cx, frame->invalidationScript());
+    stub->state().trackNotAttached();
   }
   return true;
 }
@@ -2860,7 +2850,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
   if (!attached && canAttachStub) {
-    stub->trackNotAttached(cx, frame->invalidationScript());
+    stub->state().trackNotAttached();
   }
 
   return true;
@@ -3052,7 +3042,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   }
 
   if (!handled && canAttachStub) {
-    stub->trackNotAttached(cx, frame->invalidationScript());
+    stub->state().trackNotAttached();
   }
   return true;
 }
@@ -3120,10 +3110,6 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
         MOZ_ASSERT_UNREACHABLE("No deferred optimizations for spread calls");
         break;
     }
-  }
-
-  if (!handled) {
-    stub->trackNotAttached(cx, frame->invalidationScript());
   }
 
   if (!SpreadCallOperation(cx, script, pc, thisv, callee, arr, newTarget,
@@ -3428,7 +3414,7 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
     // ensure we've recorded at least one failure, so we can detect there was a
     // non-optimizable case
     if (!stub->state().hasFailures()) {
-      stub->trackNotAttached(cx, frame->invalidationScript());
+      stub->state().trackNotAttached();
     }
     return true;
   }
