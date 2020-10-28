@@ -296,6 +296,16 @@
   padding-inline: 5px;
 }
 
+/* Invert the colors in the search mode indicator in dark mode. */
+:root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator {
+  background-color: #0060df;
+  outline-color: #d6ebff;
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator-title {
+  color: #d6ebff;
+}
+
 #urlbar-search-mode-indicator-close {
   display: none;
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
