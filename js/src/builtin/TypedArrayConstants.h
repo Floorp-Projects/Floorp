@@ -13,8 +13,6 @@
 // Slots for objects using the typed array layout
 
 #define JS_TYPEDARRAYLAYOUT_BUFFER_SLOT 0
-#define JS_TYPEDARRAYLAYOUT_LENGTH_SLOT 1
-#define JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT 2
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots and flags for ArrayBuffer objects
