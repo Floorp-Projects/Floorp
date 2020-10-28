@@ -259,9 +259,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsSocketTransport::Close\n"
          "race:nsSocketTransport::OnSocketDetached\n"
 
-         // Bug 1607138
-         "race:gXPCOMThreadsShutDown\n"
-
          // Bug 1607446
          "race:nsJARChannel::Suspend\n"
          "race:nsJARChannel::Resume\n"
