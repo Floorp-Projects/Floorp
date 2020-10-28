@@ -37,10 +37,7 @@ add_task(async function pp_after_orientation_change() {
   let originalTabNavigated = BrowserTestUtils.browserStopped(browserToPrint);
 
   // Enter print preview:
-  let printPreviewEntered = BrowserTestUtils.waitForMessage(
-    ppBrowser.messageManager,
-    "Printing:Preview:Entered"
-  );
+  let printPreviewEntered = PrintHelper.waitForOldPrintPreview(ppBrowser);
   document.getElementById("cmd_printPreview").doCommand();
   await printPreviewEntered;
 
@@ -63,10 +60,7 @@ add_task(async function pp_after_orientation_change() {
       : "landscape";
   let printPreviewToolbar = document.getElementById("print-preview-toolbar");
 
-  printPreviewEntered = BrowserTestUtils.waitForMessage(
-    ppBrowser.messageManager,
-    "Printing:Preview:Entered"
-  );
+  printPreviewEntered = PrintHelper.waitForOldPrintPreview(ppBrowser);
   printPreviewToolbar.orient(orientToSwitchTo);
   await printPreviewEntered;
 
