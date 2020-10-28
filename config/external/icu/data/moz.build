@@ -24,7 +24,7 @@ data_dir = {
     "little": SRCDIR,
     "big": OBJDIR,
 }
-endianness = CONFIG.get("TARGET_ENDIANNESS", "little")
+endianness = CONFIG["TARGET_ENDIANNESS"] or "little"
 DEFINES["ICU_DATA_FILE"] = '"%s/%s"' % (data_dir[endianness], data_file[endianness])
 DEFINES["ICU_DATA_SYMBOL"] = "%sicudt%s_dat" % (prefix, CONFIG["MOZ_ICU_VERSION"])
 SOURCES += [
