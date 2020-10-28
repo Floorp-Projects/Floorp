@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+    <ShortName>YouTube</ShortName>
+    <Description>Search for videos on YouTube</Description>
+    <Tags>youtube video</Tags>
+    <Image height="16" width="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABa0lEQVR42u2YoYoCURSGBzSLk62L0TJvsEywWAxabRaFlQ2GQdY38AF8Ci0Gsy9gECybRU0GkQn++4fLbjm7K8wdmQPng6+I3rkfqHPnBIZhGIbxCAiCkL7QiL7SFu3QHu3TIX2nY5rQCf1wTtxrY/eeoftMz63RcmtG7hqhj82+0RX9pDeKJ3tz1165vVQf3XxMTxQF80Tj/zbfoFeKgnqljb8C1hQFd/3b5mv0riDgTmtSQJtCiW0pIFEUkEgBc0UBcylgkXnhKAIqlWcELKSATeaFp1PgeAT6faBUyjNgIwXsfQR8s90CcZxXwF4KOHgM+GG5BOp13wEHKeDiP8CRpsBsBoShr4CLFJB6DJA5n4HBACiXswakUsA9hwCZ3Q5oNjPdjfUH6P8K6f8R6/8b1X8j03+U0H+Y03+c1v9Ao/+RUv9Dvf6xiv7Blv7RojzcHRVouDui1TzG610P4/WuOF43DMMwjAf4ArcA0xFiL427AAAAAElFTkSuQmCC</Image>
+    <Url type="text/html" template="https://www.youtube.com/results?search_query={searchTerms}&amp;page={startPage?}&amp;utm_source=opensearch" />
+    <Query role="example" searchTerms="cat" />
+</SearchPlugin>
