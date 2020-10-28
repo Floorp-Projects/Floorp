@@ -246,8 +246,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void HistoryCommitIndexAndLength();
 
-  void ResetScalingZoom();
-
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
