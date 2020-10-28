@@ -50,6 +50,13 @@ nsresult HTTPSRecordResolver::FetchHTTPSRRInternal(
 NS_IMETHODIMP HTTPSRecordResolver::OnLookupComplete(nsICancelable* aRequest,
                                                     nsIDNSRecord* aRecord,
                                                     nsresult aStatus) {
+  nsCOMPtr<nsIDNSAddrRecord> addrRecord = do_QueryInterface(aRecord);
+  // This will be called again when receving the result of speculatively loading
+  // the addr records of the target name. In this case, just return NS_OK.
+  if (addrRecord) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = do_QueryInterface(aRecord);
   if (!record || NS_FAILED(aStatus)) {
     return mTransaction->OnHTTPSRRAvailable(nullptr, nullptr);
@@ -63,6 +70,29 @@ NS_IMETHODIMP HTTPSRecordResolver::OnLookupComplete(nsICancelable* aRequest,
   }
 
   return mTransaction->OnHTTPSRRAvailable(record, svcbRecord);
+}
+
+void HTTPSRecordResolver::PrefetchAddrRecord(const nsACString& aTargetName,
+                                             bool aRefreshDNS) {
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  if (!dns) {
+    return;
+  }
+
+  uint32_t flags = nsIDNSService::GetFlagsFromTRRMode(
+      mTransaction->ConnectionInfo()->GetTRRMode());
+  if (aRefreshDNS) {
+    flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+  }
+
+  nsCOMPtr<nsICancelable> tmpOutstanding;
+
+  Unused << dns->AsyncResolveNative(
+      aTargetName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+      flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this,
+      GetCurrentEventTarget(),
+      mTransaction->ConnectionInfo()->GetOriginAttributes(),
+      getter_AddRefs(tmpOutstanding));
 }
 
 }  // namespace net

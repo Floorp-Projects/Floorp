@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsThreadUtils.h"
-#include "nsIDNSListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITimer.h"
 #include "TimingStruct.h"
@@ -36,6 +35,7 @@ class nsISVCBRecord;
 namespace mozilla {
 namespace net {
 
+class HTTPSRecordResolver;
 class nsHttpChunkedDecoder;
 class nsHttpHeaderArray;
 class nsHttpRequestHead;
@@ -54,7 +54,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
                                 public nsIInputStreamCallback,
                                 public nsIOutputStreamCallback,
                                 public ARefBase,
-                                public nsIDNSListener,
                                 public nsITimerCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -62,7 +61,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   NS_DECL_HTTPTRANSACTIONSHELL
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
-  NS_DECL_NSIDNSLISTENER
   NS_DECL_NSITIMERCALLBACK
 
   nsHttpTransaction();
@@ -159,6 +157,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo);
 
   void SetClassOfService(uint32_t cos);
+
+  virtual nsresult OnHTTPSRRAvailable(
+      nsIDNSHTTPSSVCRecord* aHTTPSSVCRecord,
+      nsISVCBRecord* aHighestPriorityRecord) override;
 
  private:
   friend class DeleteHttpTransaction;
@@ -491,6 +493,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mFastFallbackTriggered = false;
   nsCOMPtr<nsITimer> mFastFallbackTimer;
   nsCOMPtr<nsISVCBRecord> mFastFallbackRecord;
+  RefPtr<HTTPSRecordResolver> mResolver;
 
   // IMPORTANT: when adding new values, always add them to the end, otherwise
   // it will mess up telemetry.

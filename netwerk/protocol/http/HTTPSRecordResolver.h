@@ -24,6 +24,7 @@ class HTTPSRecordResolver : public nsIDNSListener {
   explicit HTTPSRecordResolver(nsAHttpTransaction* aTransaction);
   nsresult FetchHTTPSRRInternal(nsIEventTarget* aTarget,
                                 nsICancelable** aDNSRequest);
+  void PrefetchAddrRecord(const nsACString& aTargetName, bool aRefreshDNS);
 
  protected:
   virtual ~HTTPSRecordResolver();
