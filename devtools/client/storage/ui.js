@@ -848,33 +848,13 @@ class StorageUI {
    * because the value depends on each storage type. See Bug 1654998.
    */
   async _readSupportsTraits(type, host) {
-    const storage = this._getStorage(type, host);
+    const { traits } = this._getStorage(type, host);
 
-    const { traits } = storage;
-    if (traits.hasSupportsTraits) {
-      this.actorSupportsAddItem = traits.supportsAddItem;
-      this.actorSupportsRemoveItem = traits.supportsRemoveItem;
-      this.actorSupportsRemoveAll = traits.supportsRemoveAll;
-      this.actorSupportsRemoveAllSessionCookies =
-        traits.supportsRemoveAllSessionCookies;
-    } else {
-      // Backward compatibility. This branch can be removed when Firefox 80 is
-      // on the release channel.
-      const target = this.currentTarget;
-      this.actorSupportsAddItem = await target.actorHasMethod(type, "addItem");
-      this.actorSupportsRemoveItem = await target.actorHasMethod(
-        type,
-        "removeItem"
-      );
-      this.actorSupportsRemoveAll = await target.actorHasMethod(
-        type,
-        "removeAll"
-      );
-      this.actorSupportsRemoveAllSessionCookies = await target.actorHasMethod(
-        type,
-        "removeAllSessionCookies"
-      );
-    }
+    this.actorSupportsAddItem = traits.supportsAddItem;
+    this.actorSupportsRemoveItem = traits.supportsRemoveItem;
+    this.actorSupportsRemoveAll = traits.supportsRemoveAll;
+    this.actorSupportsRemoveAllSessionCookies =
+      traits.supportsRemoveAllSessionCookies;
   }
 
   /**
