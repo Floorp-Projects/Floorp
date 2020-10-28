@@ -36,5 +36,9 @@ dom/locales/
 dom/localstorage/
 dom/manifest/
 dom/mathml/
+dom/media/benchmark/
+dom/media/bridge/
+dom/media/doctor/
+dom/media/eme/
 dom/quota/
 dom/simpledb/
