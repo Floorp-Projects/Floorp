@@ -1,3 +1,782 @@
+2020-10-20  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.10.4 released.
+	==========================
+
+
+	Tag sources with `VER-2-10-4'.
+
+	* docs/VERSION.TXT: Add entry for version 2.10.4.
+	* docs/CHANGES: Updated.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/index.html, docs/freetype-config.1:
+	s/2.10.3/2.10.4/, s/2103/2104/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 4.
+
+	* builds/unix/configure.raw (version_info): Set to 23:4:17.
+	* CMakeLists.txt (VERSION_PATCH): Set to 4.
+
+2020-10-19  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix heap buffer overflow (#59308).
+
+	This is CVE-2020-15999.
+
+	* src/sfnt/pngshim.c (Load_SBit_Png): Test bitmap size earlier.
+
+2020-10-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/tt{colr,cpal}.c: Fix signedness warnings from VC++.
+
+2020-10-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/sfwoff2.c (Read255UShort): Tweak types to please VC++.
+
+2020-10-10  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.10.3 released.
+	==========================
+
+
+	Tag sources with `VER-2-10-3'.
+
+	* docs/VERSION.TXT: Add entry for version 2.10.3.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/index.html, docs/freetype-config.1:
+	s/2.10.2/2.10.3/, s/2102/2103/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 3.
+
+	* builds/unix/configure.raw (version_info): Set to 23:3:17.
+	* CMakeLists.txt (VERSION_PATCH): Set to 3.
+
+2020-09-25  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Synchronize with ttfautohint.
+
+	This corresponds to the following commits in the ttfautohint git
+	repository:
+
+	  bb6842bd3bd437b7b4a7921b0376c860f5e73d18  Typo, formatting.
+	  d5c91ddb1cb310257a3dfe9a8e20e1fc51335faa  Add Medefaidrin script.
+
+	* src/autofit/afblue.dat: Add blue zone data for Medefaidrin.
+	* src/autofit/afblue.c, src/autofit/afblue.h: Regenerated.
+
+	* src/autofit/afscript.h: Add Medefaidrin standard characters.
+
+	* src/autofit/afranges.c, src/autofit/afstyles.h: Add Medefaidrin
+	data.
+
+2020-09-25  Werner Lemberg  <wl@gnu.org>
+
+	Move `scripts/make_distribution_archives.py` to `src/tools`.
+
+	* scr/tools/scripts/make_distribution_archives.py: (_TOP_DIR,
+	_SCRIPT_DIR): Updated to new location.
+	(main): s/shutils.copyfile/shutils.copy/ to preserve file
+	permissions.
+	(main): Prefix source file paths with `git_dir` while copying files
+	to allow calls of the script from other places than the top-level
+	directory.
+
+2020-09-24  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffgload.c (cff_slot_load): Scale `vertBearingY`.
+
+	Towards the end of the the function there is a call to
+	`FT_Outline_Get_CBox` that retrieves the glyph bbox in scaled units.
+	That sets `horiBearing{X,Y}` and `vertBearingX` but `vertBearingY`
+	is left alone, and is not scaled.
+
+	Patch from Eric Muller <emuller@amazon.com>.
+
+2020-09-24  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Trace glyph metrics.
+
+2020-09-22  Werner Lemberg  <wl@gnu.org>
+
+	[meson] Move auxiliary scripts to `builds/meson`.
+
+	Suggested by Alexei.
+
+	* scripts/*.py: Move meson scripts to...
+	* builds/meson/*.py: ... this new location.
+
+	* meson.build: Updated.
+
+2020-09-21  David Turner  <david@freetype.org>
+
+	Add python script for building tarballs.
+
+	* scripts/make_distribution_archives.py: New file.
+
+	This standalone Python script should be equivalent to running `make
+	dist` with the Make-based build system, with the following minor
+	differences:
+
+	- Since `make distclean` doesn't always clean up `objs/` properly,
+	  `make dist` archives may contain some stale binaries like
+	  `objs/.libs/libfreetype.so.6` or others.
+
+	- `config.guess` and `config.sub` are not updated unless option
+	  `--gnu-config-dir=DIR` is used to specify the location of these
+	  files.
+
+	- Some bits of the auto-generated reference documentation may
+	  appear in slightly different order, probably due to issues related
+	  to mkdocs and docwriter.
+
+	As an example, the call
+
+	  scripts/make_distribution_archives.py /tmp/freetype2-dist
+
+	creates the following files under `/tmp/freetype2-dist`:
+
+	  freetype-<version>.tar.gz
+	  freetype-<version>.tar.xz
+	  ft<winversion>.zip
+
+2020-09-21  Werner Lemberg  <wl@gnu.org>
+
+	* scripts/extract_freetype_version.py: Fix regex typos.
+
+2020-09-21  David Turner  <david@freetype.org>
+
+	Add Meson build project file.
+
+	Example usage:
+
+	  # Configure Meson build in directory `build-meson` to generate
+	  # release binaries comparable to to the ones from the
+	  # autotools/make build system.
+	  meson setup build-meson \
+	        --prefix=/usr/local \
+	        --buildtype=debugoptimized \
+	        --strip \
+	        -Db_ndebug=true
+
+	  # After configuring the Meson build with the above command,
+	  # compile and install to `/usr/local/`; this includes a pkg-config
+	  # file.
+	  ninja -C build-meson install
+
+	  # Alternatively, compile and install to `/tmp/aa/usr/local/...`
+	  # for packaging.
+	  DESTDIR=/tmp/aa ninja -C build-meson install
+
+	  # Generate documentation under `build-meson/docs`.
+	  ninja -C build-meson docs
+
+	Library size comparison for stripped `libfreetype.so` generated by
+	all three build systems:
+
+	  - Default build (autotools + libtool): 712 KiB
+	  - CMake build (RelWithDebInfo):        712 KiB
+	  - Meson build:                         712 KiB
+
+
+	* meson.build: New top-level Meson build file for the library.
+
+	* meson_options.txt: New file.  It holds user-selectable options for
+	the build, which can be printed with `meson configure`, and selected
+	at `meson setup` or `meson --reconfigure` time with
+	`-D<option>=<value>`.
+
+	* scripts/parse_modules_cfg.py: A script invoked by `meson.build` to
+	parse `modules.cfg` and extract important information out of it
+	(i.e., the list of modules).
+
+	* scripts/process_ftoption_h.py: New script invoked by `meson.build`
+	to process the original `ftoption.h` file.  It enables or disables
+	configuration macro variables based on the available dependencies.
+	This is similar to what other build systems are using (i.e., Meson's
+	`configure_file()` command is not used here).
+
+	* scripts/extract_freetype_version.py: New script invoked by
+	`meson.build` to extract the FreeType version number from
+	`<freetype/freetype.h>`.
+
+	* scripts/extract_libtool_version.py: New script invoked by
+	`meson.build` to extract the libtool `revision_info` data from
+	`builds/unix/configure.raw`, and to generate the corresponding
+	shared library suffix.
+
+	* scripts/generate_reference_docs.py: New script invoked by
+	`meson.build` to generate the FreeType 2 reference documentation
+	(using the `docwriter` and `mkdocs` packages, which must be already
+	installed).
+
+2020-09-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[raster] Improve the second pass (#58373).
+
+	Besides dropout control the second horizontal sweep is supposed to
+	clean up straight horizontal edges that are mishandled by the first
+	vertical sweep when a line passes through pixel centers.  This line
+	would present as perfectly aligned span edges in the second sweep.
+
+	* src/raster/ftraster.c (Horizontal_Sweep_Span): Replace the old
+	implementation with a better one focusing on aligned span edges only.
+
+2020-09-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[raster] Tune SMART macro (#58352).
+
+	Windows seems to perform smart dropout control at 26.6 precision.
+	To mimick Windows independent of increased precision, we need to tweak
+	the macro so that some close calls break down rather than up.
+
+	* src/raster/ftraster.c (SMART): Tweak the macro.
+
+2020-09-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[raster] Introduce SMART macro.
+
+	* src/raster/ftraster.c (SMART): New macro for smart dropout rounding.
+	(Verstical_Sweep_Drop, Horizontal_Sweep_Drop): Use it.
+
+2020-09-03  Boris Dalstein  <dalboris@gmail.com>
+
+	[build] Make CMake install basic version information.
+
+	* CMakeLists.txt: Do it.
+
+2020-09-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reduce Infinality footprint (cont'd).
+
+	* src/truetype/ttinterp.c (Ins_DELTAP): Shrink variable scope.
+	(Ins_SHPIX, Ins_MIRP): Revise if-logic.
+
+2020-09-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reduce Infinality footprint.
+
+	* src/truetype/ttinterp.c (Ins_SHPIX, Ins_MSIRP, Ins_MIAP, Ins_MDRP,
+	Ins_MIRP): Shrink variable scopes and consolidate ifdefs.
+
+2020-09-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Refactor compensation color.
+
+	* src/truetype/ttinterp.h (TT_Round_Func): Change the last argument.
+	* src/truetype/ttinterp.c (Ins_ROUND, Ins_NROUND, Ins_MDAP, Ins_MIAP,
+	Ins_MDRP, Ins_MIRP): Move compensation retrieval from here...
+	(Round_*): ... to here.
+	* src/truetype/ttobjs.c (tt_size_init_bytecode): Reserve zero
+	compensation at color index 3.
+
+2020-08-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Don't set target in direct mode.
+
+	* src/smooth/ftsmooth.c (ft_smooth_raster_overlap): Remove assignment.
+	(ft_smooth_raster_lcd) [!FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Ditto.
+
+2020-08-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/smooth/ftsmooth.c (ft_smooth_raster_overlap): Limit width.
+
+	Segmentation fault reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=24729
+
+2020-08-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgload.c (TT_Get_VMetrics): Add tracing message.
+
+2020-08-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Retain OVERLAP_SIMPLE and OVERLAP_COMPOUND.
+
+	For glyphs with OVERLAP_SIMPLE or OVERLAP_COMPOUND, set
+	FT_OUTLINE_OVERLAP to render them with direct oversampling, which
+	mitigates artifacts (see 3bb512bc9f62).
+
+	* include/freetype/ftimage.h (FT_OUTLINE_OVERLAP): Redefine to rhyme
+	with OVERLAP_SIMPLE.
+	* src/base/ftgloadr.c (FT_GlyphLoader_Rewind): Reset outline flags.
+	* src/truetype/ttgload.c
+	(TT_Load_Simple_Glyph): Retain OVERLAP_SIMPLE.
+	(load_truetype_glyph): Retain OVERLAP_COMPOUND.
+
+2020-08-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Load_Glyph): More tracing.
+
+2020-07-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Hide internal functions with SunPro.
+
+	* include/freetype/internal/compiler-macros.h
+	(FT_INTERNAL_FUNCTION_ATTRIBUTE) <__SUNPRO_C>: Define as __hidden.
+
+2020-07-28  Anuj Verma  <anujv@iitbhilai.ac.in>
+
+	Fix static compilation with Visual C.
+
+	* include/freetype/internal/compiler-macros.h
+	(FT_INTERNAL_FUNCTION_ATTRIBUTE) <_WIN32>: Define as empty.
+
+2020-07-28  Priyesh Kumar  <priyeshkkumar@gmail.com>
+
+	Fix `-Wformat' compiler warnings.
+
+	* src/*: Fix format specifiers.
+
+	* builds/unix/ftsystem.c (FT_Stream_Open): Ditto.
+
+2020-07-25  Werner Lemberg  <wl@gnu.org>
+
+	Fix `-Wformat' compiler warnings.
+
+	Problem reported by Priyesh kumar <priyeshkkumar@gmail.com>
+
+	* src/base/ftoutln.c (FT_Outline_Decompose): Fix number of arguments
+	to tracing macro.
+
+	* src/bdf/bdfdrivr.c (bdf_cmap_char_next, bdf_get_bdf_property):
+	Ditto.
+
+	* src/cache/ftcbasic.c (ftc_basic_family_get_count): Ditto.
+	Reformulate message.
+
+	* src/pcf/pcfdrivr.c (pcf_get_bdf_property): Ditto.
+
+	* src/sfnt/sfwoff2.c (woff2_open_font): Ditto.
+	Trace table offset, too.
+
+	* src/truetype/ttgxvar.c (ft_var_apply_tuple): Ditto.
+
+2020-07-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfwoff2.c (woff2_decompress): Fix compiler warning.
+
+	Reported by Hin-Tak.
+
+2020-07-12  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/configure.raw: Fix inclusion of `ftoption.h'.
+
+2020-07-07  Werner Lemberg  <wl@gnu.org>
+
+	Fix clang warnings.
+
+	* include/freetype/internal/autohint.h
+	(FT_DECLARE_AUTOHINTER_INTERFACE): New macro.
+	* src/autofit/afmodule.h: Use it to declare
+	`af_autofitter_interface'.
+
+	* include/freetype/internal/ftobjs.h (FT_DECLARE_GLYPH): New macro.
+	* src/base/ftbase.h: Use it to declare `ft_bitmap_glyph_class' and
+	`ft_outline_glyph_class'.
+
+	* src/base/ftglyph.c: Include `ftbase.h'.
+
+	* src/cff/cffparse.c (cff_parser_run): Fix type of `t2_size'.
+
+	* src/pcf/pcfdrivr.c (pcf_cmap_char_next): Fix type of `result'.
+
+	* src/psaux/psauxmod.c (psaux_module_class): Use `FT_DEFINE_MODULE'.
+	* src/psaux/psauxmod.h: Declare `afm_parser_funcs',
+	`t1_cmap_classes', `cff_decoder_funcs', and `psaux_module_class'.
+
+	* src/pshinter/pshmod.c: Include `pshmod.h'.
+
+	* src/sfnt/sfwoff2.c (ROUND4, WRITE_SHORT): Fix implicit sign
+	conversion.
+	(compute_ULong_sum): Fix return type.
+	Fix implicit sign conversion.
+	(store_points): Fix type of `last_flag', `repeat_count', and `flag'.
+	Use casts to avoid warnings.
+	(reconstruct_glyf): Fix implicit sign conversion.
+	Use cast to avoid warning.
+	(get_x_mins): Fix implicit sign conversion.
+	* src/sfnt/ttcmap.c: Undef `TTCMAPCITEM'.
+	* src/sfnt/ttcmap.h: Define `TTCMAPCITEM' and include `ttcmapc.h' to
+	declare cmap classes.
+
+	* src/smooth/ftsmooth.c (ft_smooth_overlap_spans): Use cast.
+
+	* src/truetype/ttinterp.c (Ins_MIAP): Fix typo.
+
+2020-07-07  David Turner  <david@freetype.org>
+
+	[build] Really fix multi and C++ builds.
+
+	The following builds were still failing due to previous changes:
+
+	  make multi
+	  make multi CC="c++"
+	  make CC="c++"
+
+	This patch fixes the issues, which were missing includes to get the
+	right macro definitions in multi-build mode.
+
+	Also, `FT_UNUSED' is actually used by third-party code, so move it
+	back to `public-macros.h' to avoid breaking it.
+
+	* include/freetype/config/public-macros.h (FT_EXPORT): Remove
+	special definition for C++.
+	(FT_UNUSED): Define here instead of...
+	* include/freetype/config/compiler-macros.h: ... here.
+	(FT_FUNCTION_DECLARATION): Remove special definition for C++.
+	(FT_LOCAL_ARRAY_DEF): Fix definition.
+
+	* src/cache/ftccback.h, src/lzw/ftzopen.h, src/gxvalid/gxvmort.h,
+	src/gxvalid/gxvmorx.h: Add `FT_BEGIN_HEADER' and `FT_END_HEADER'.
+
+2020-07-06  David Turner  <david@freetype.org>
+
+	[build] Fix multi and C++ builds.
+
+	The following builds were failing due to previous changes:
+
+	  make multi
+	  make multi CC="c++"
+
+	* include/freetype/config/ftconfig.h: Remove `FT_END_HEADER'.
+
+	* include/freetype/config/ftheader.h (FT_BEGIN_HEADER,
+	FT_END_HEADER): Protect against redefinition.
+
+	* src/cache/ftccache.h, src/cache/ftcmru.h, src/pcf/pcfutil.h,
+	src/psaux/pserror.h, src/psaux/psft.h, src/psaux/psstack.h,
+	src/sfnt/woff2tags.h: Include `compiler-macros.h'.
+
+	* src/sfnt/woff2tags.c: Include `woff2tags.h'.
+
+2020-07-06  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Improve `t1_decoder_parse_metrics' (#58646).
+
+	* src/psaux/t1decode.c (t1_decoder_parse_metrics): Copy
+	corresponding code from old engine's `t1_decoder_parse_charstrings'
+	function to handle `op_callsubr' and `op_return'.
+
+2020-07-05  David Turner  <david@freetype.org>
+
+	[build] Improve visibility support of library function names.
+
+	* include/freetype/config/public-macros.h
+	(FT_PUBLIC_FUNCTION_ATTRIBUTE): New macro to tag functions as
+	public (and thus exportable).
+	(FT_EXPORT): Use it.
+
+	* include/freetype/config/compiler-macros.h
+	(FT_INTERNAL_FUNCTION_ATTRIBUTE): New macro to tag functions as
+	internal to the library (and thus hidden).  Note that on ELF
+	systems, all internal functions have hidden visibility, which avoids
+	the need to enforce this when invoking the compiler (e.g., with an
+	option like `-fvisibility=hidden').
+
+	(FT_FUNCTION_DECLARATION, FT_FUNCTION_DEFINITION): New base macros
+	to deal with C and C++ linkage issues at the same time.
+
+	(FT_LOCAL, FT_LOCAL_DEF, FT_LOCAL_ARRAY, FT_LOCAL_ARRAY_DEF,
+	FT_BASE, FT_BASE_DEF, FT_EXPORT_VAR, FT_BASE_CALLBACK,
+	FT_BASE_CALLBACK_DEF): Redefined using new macros.
+
+2020-07-05  David Turner  <david@freetype.org>
+
+	[build] Split off more stuff from `ftconfig.h'.
+
+	* builds/unix/ftconfig.h.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: Split off macro definitions
+	required by the FreeType API headers to...
+	* include/freetype/config/public-macros.h: ...this new file.
+
+	* builds/unix/ftconfig.h.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: Split off macro definitions used
+	by the library but not to be exposed to clients to...
+	* include/freetype/config/compiler-macros.h: ...this new file.
+
+	* include/freetype/internal/*.h, src/raster/ftraster.h: Include
+	`compiler-macros.h' where needed.
+
+2020-07-05  David Turner  <david@freetype.org>
+
+	[build] Move mac support code to `mac-support.h'.
+
+	* builds/unix/ftconfig.h.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: Split off mac-specific stuff
+	to...
+	* include/freetype/config/mac-support.h: ...this new file.
+
+	* CMakeLists.txt, builds/unix/configure.raw: Remove `/undef ->
+	#undef' string replacement; the affected code is no longer part of
+	the `ftconfig.h' template.
+
+2020-07-05  David Turner  <david@freetype.org>
+
+	[build] Put integer type definitions into `integer-types.h'.
+
+	Refactor some of the `ftconfig.h' headers and template to move the
+	definition of the FreeType integer types (e.g., `FT_Int16') to a
+	common header file `freetype/config/integer-types.h'.
+
+	* builds/unix/ftconfig.h.in, builds/vms/ftconfig.h,
+	include/freetype/config/ftconfig.h: Split off integer type
+	definition stuff to...
+	* include/freetype/config/integer-types.h: ...this new file.
+
+	* builds/unix/ftconfig.h.in: Control the definition of
+	`FT_SIZEOF_INT' and `FT_SIZEOF_LONG' with macro
+	`FT_USE_AUTOCONF_SIZEOF_TYPES'.  If these are not defined, auto
+	detection happens in `integer-types.h' as usual based on `INTXX_MAX'
+	values.  Otherwise the autoconf-detected values are used.
+
+	* builds/unix/configure.raw (CPPFLAGS): Don't include path to
+	`config' directory.  Instead, ...
+	(FT_CONFIG_STANDARD_LIBRARY_H): Use complete path.
+
+2020-07-05  David Turner  <david@freetype.org>
+
+	[build] Rename `build/unix/ftconfig.in' to `ftconfig.h.in'.
+
+	Since we are no longer limited to 8.3 file names, it is simpler to
+	follow the usual conventions for template files.
+
+	* builds/unix/ftconfig.in: Renamed to...
+	* builds/unix/ftconfig.h.in: ...this.
+
+	* CMakeLists.txt, builds/unix/configure.raw: Updated.
+
+2020-07-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Introduce direct oversampling for overlaps.
+
+	This implements oversampling to mitigate artifacts in pixels partially
+	covered by overlapping contours.  It turns out that the 4x4
+	oversampling is sufficient but, at least, quadruples the rendering
+	time.  The outline has to set FT_OUTLINE_OVERLAP to use this method.
+
+	* include/freetype/ftimage.h (FT_OUTLINE_OVERLAP): New flag.
+	* src/smooth/ftsmooth.c (ft_smooth_render): Check it to...
+	(ft_smooth_raster_overlap): ... inflate outline and set up direct
+	rendering for oversampling with...
+	(ft_smooth_overlap_spans): ... new span function that integrates them.
+
+2020-07-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Use direct rendering mode in Harmony.
+
+	Instead of rendering 3 bitmaps side by side and reshuffling, we use
+	direct rendering to deliver the bitmaps on each third byte.
+
+	* src/smooth/ftsmooth.c (ft_smooth_raster_lcd)
+	[!FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Set up direct mode with...
+	(ft_smooth_lcd_spans): ... new span function.
+
+2020-07-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Separate LCD paths from gray rendering.
+
+	This makes `ft_smooth_render' a lot smaller and easier to follow. It
+	also cleanly separates Harmony and ClearType-style LCD rendering
+	algorithms. Now I only wish to move LCD filtering and geometry from
+	FT_Library to FT_Renderer.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render): Move LCD code from here...
+	(ft_smooth_raster_lcd, ft_smooth_raster_lcdv): ... to here.
+	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Reorganize #ifdef's.
+
+2020-06-20  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[cff] Fix handling of `style_name == NULL' (#58630).
+
+	* src/cff/cffobjs.c (cff_face_init): If a call to `cff_strcpy' fails
+	by returning NULL in `cff_face_init', `remove_style' is still
+	called.  This means that the NULL pointer is dereferenced, causing a
+	crash.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[cff] Fix another two memory leaks (#58629).
+
+	* src/cff/cffobjs.c (cff_size_init): If a call to `funcs->create'
+	fails to allocate one of the `internal->subfont' variables, make
+	sure to free `internal->topfont' and any successfully allocated
+	subfonts.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[psaux] Fix memory leak (#58626).
+
+	* src/psaux/psstack.c (cf2_stack_init): If `cf2_stack_init' fails to
+	allocate the stack, return error early.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[base] Fix memory leak (#58624).
+
+	* src/base/ftobjs.c (FT_New_Size): Avoid trying to free
+	`size->internal' unless `size' has been allocated.  This mistake
+	appeared in the fix for issue #58611.
+
+2020-06-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Rework d1180b5f9598 until further notice.
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Reject large
+	outlines.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[cff, cid] Fix segfaults in case of error (#58621).
+
+	* src/cff/cffobjs.c (cff_slot_done), src/cid/cidobjs.c
+	(cid_slot_done): If `ft_glyphslot_init' fails to allocate
+	`internal', then the class' `done_slot' callback (called by
+	`ft_glyphslot_done') must not dereference the pointer to `internal'.
+
+2020-06-19  Werner Lemberg  <wl@gnu.org>
+
+	[base] Fix UBSAN error.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=23166
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Avoid values
+	larger than 32 bits.
+
+2020-06-19  Werner Lemberg  <wl@gnu.org>
+
+	[woff2] Fix segfault.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=23402
+
+	* src/sfnt/sfwoff2.c (get_x_mins): Check whether `loca' table
+	exists.
+
+2020-06-19  Stephen McDowell  <svenevs.dev@gmail.com>
+
+	[sfnt] Support Intel compilers.
+
+	* src/sfnt/pngshim.c (premultiply_data): Intel compilers do not
+	currently support `__builtin_shuffle'.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[base] Fix memory leak (#58611).
+
+	* src/base/ftobjs.c (FT_New_Size): When the call to `clazz->init_size'
+	fails, make sure to free `size->internal'.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[cff] Fix memory leak (#58610).
+
+	* src/cff/cffobjs.c (cff_size_init): When the call to
+	`funcs->create' fails, make sure to free `internal'.
+
+2020-06-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffload.c (cff_index_get_pointers): Rename `t' to `tbl'.
+
+2020-06-19  Sebastian Rasmussen  <sebras@gmail.com>
+
+	[cff] Free table upon error allocating other data (#58609).
+
+	* src/cff/cffload.c (cff_index_get_pointers): When new_bytes fails
+	to allocate, make sure to free the table.  Do the same for both
+	allocations if there is a later error.
+
+2020-06-13  Werner Lemberg  <wl@gnu.org>
+
+	Remove redundant inclusion of `ft2build.h'.
+
+	* */*: Remove `#include <ft2build.h>' where possible.
+
+	* include/freetype/freetype.h: Remove cpp error about missing
+	inclusion of `ft2build.h'.
+
+2020-06-08  David Turner  <david@freetype.org>
+
+	Make macros for header file names optional.
+
+	We no longer have to take care of the 8.3 file name limit; this
+	allows us (a) to introduce longer, meaningful file names, and (b) to
+	avoid macro names in `#include' lines altogether since some
+	compilers (most notably Visual C++) doesn't support this properly.
+
+	*/*: Replace
+
+	   #include FOO_H
+
+	with
+
+	   #include <freetype/foo.h>
+
+	or something similar.  Also update the documentation.
+
+2020-06-02  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttcmap.c (tt_face_build_cmaps): Trace number of cmaps.
+
+2020-05-18  David Turner  <david@freetype.org>
+
+	Remove obsolete HAVE_STDINT_H probing macro.
+
+	This macro was updated by the unix configure script and the
+	`CMakeLists.txt' one, but is never used in the source tree (nor is
+	<stdint.h> included anywhere).
+
+	* CMakeLists.txt, builds/unix/ftconfig.in: Don't handle
+	`HAVE_STDINT_H'.
+
+2020-05-18  David Turner  <david@freetype.org>
+
+	Remove Jamfile files from the tree.
+
+	These have not been used in a very, very long time, so better remove
+	them.  A corresponding patch will be submitted to the
+	`freetype2-demos' repository.
+
+	* src/Jamfile, src/*/Jamfile, Jamrules: Delete.
+
+2020-05-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Turn on LCD filtering during FreeType initialization.
+
+	* src/smooth/ftsmooth.c (ft_smooth_init): Enable LCD filtering.
+
+	* include/freetype/ftlcdfil.h: Document it, remove patent warnings.
+	* include/freetype/freetype.h (FT_Render_Mode): Updated.
+	* include/freetype/config/ftoption.h, devel/ftoption.h
+	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Do not mention patents.
+
+2020-05-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Stop using dedicated LCD modules and classes.
+
+	The LCD modules were never truly independent. They mostly served as
+	a way to disable patented LCD rendering, which is no longer necessary.
+	The `smooth' module now handles LCD modes as well.
+
+	* src/smooth/ftsmooth.c (ft_smooth_lcd_renderer_class.
+	ft_smooth_lcdv_renderer_class): Deleted.
+	(ft_render_smooth): Reworked from `ft_render_smooth_generic'.
+	* src/smooth/ftsmooth.h: Remove dedicated LCD classes.
+	* src/smooth/module.mk: Remove dedicated LCD modules.
+	* include/freetype/config/ftmodule.h: Ditto.
+	* builds/amiga/include/config/ftmodule.h: Ditto.
+	* include/freetype/ftmodapi.h: Do not mention LCD modules.
+
 2020-05-09  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.10.2 released.
@@ -4079,7 +4858,7 @@
 2018-05-13  Shao Yu Zhang  <shaozhang@fb.com>
 	    Werner Lemberg  <wl@gnu.org>
 
-	[sfnt] Preliminary support of coloured layer outlines (#44689).
+	[sfnt] Preliminary support of colored layer outlines (#44689).
 
 	This commit enables OpenType's COLR/CPAL table handling; a typical
 	application are color emojis that can be scaled to any size.

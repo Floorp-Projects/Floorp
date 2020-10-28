@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Header File Macros - FreeType-2.10.2 API Reference</title>
+        <title>Header File Macros - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1756,13 +1756,17 @@
 <hr />
 <h1 id="header-file-macros">Header File Macros<a class="headerlink" href="#header-file-macros" title="Permanent link">&para;</a></h1>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>The following macros are defined to the name of specific FreeType&nbsp;2 header files. They can be used directly in <code>#include</code> statements as in:
+<p>In addition to the normal scheme of including header files like
+<div class="highlight"><pre><span></span><code>  #include &lt;freetype/freetype.h&gt;
+  #include &lt;freetype/ftmm.h&gt;
+  #include &lt;freetype/ftglyph.h&gt;
+</code></pre></div></p>
+<p>it is possible to used named macros instead. They can be used directly in <code>#include</code> statements as in
 <div class="highlight"><pre><span></span><code>  #include FT_FREETYPE_H
   #include FT_MULTIPLE_MASTERS_H
   #include FT_GLYPH_H
 </code></pre></div></p>
-<p>There are several reasons why we are now using macros to name public header files. The first one is that such macros are not limited to the infamous 8.3&nbsp;naming rule required by DOS (and <code>FT_MULTIPLE_MASTERS_H</code> is a lot more meaningful than <code>ftmm.h</code>).</p>
-<p>The second reason is that it allows for more flexibility in the way FreeType&nbsp;2 is installed on a given system.</p>
+<p>These macros were introduced to overcome the infamous 8.3&nbsp;naming rule required by DOS (and <code>FT_MULTIPLE_MASTERS_H</code> is a lot more meaningful than <code>ftmm.h</code>).</p>
 <h2 id="ft_config_config_h">FT_CONFIG_CONFIG_H<a class="headerlink" href="#ft_config_config_h" title="Permanent link">&para;</a></h2>
 <div class = "codehilite"><pre><code>#<span class="keyword">ifndef</span> <b>FT_CONFIG_CONFIG_H</b>
 #<span class="keyword">define</span> <b>FT_CONFIG_CONFIG_H</b>  &lt;freetype/config/ftconfig.h&gt;
