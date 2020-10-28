@@ -2507,11 +2507,11 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
   // raise an invalid argument exception or create a correct object with zero
   // elements.
   if (count <= 0 || uint32_t(count) >= INT32_MAX / obj->bytesPerElement()) {
-    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
+    obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(size_t(0)));
     return;
   }
 
-  obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(count));
+  obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(count));
 
   size_t nbytes = count * obj->bytesPerElement();
   MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),

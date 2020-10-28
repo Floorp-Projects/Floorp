@@ -69,9 +69,9 @@ class DataViewObject : public ArrayBufferViewObject {
   }
 
   static Value byteLengthValue(const DataViewObject* view) {
-    Value v = view->getFixedSlot(LENGTH_SLOT);
-    MOZ_ASSERT(v.toInt32() >= 0);
-    return v;
+    size_t byteLength = size_t(view->getFixedSlot(LENGTH_SLOT).toPrivate());
+    MOZ_ASSERT(byteLength <= INT32_MAX);
+    return Int32Value(byteLength);
   }
 
   uint32_t byteOffset() const { return byteOffsetValue(this).toInt32(); }
