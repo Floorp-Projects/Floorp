@@ -6,6 +6,9 @@
 #include "AudioRingBuffer.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/PodOperations.h"
+
+using namespace mozilla;
 
 TEST(TestAudioRingBuffer, BasicFloat)
 {

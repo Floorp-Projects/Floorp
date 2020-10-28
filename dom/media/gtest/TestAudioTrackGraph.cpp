@@ -18,6 +18,8 @@
 
 #define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"
 
+using namespace mozilla;
+
 namespace {
 /**
  * Waits for an occurrence of aEvent on the current thread (by blocking it,

@@ -12,6 +12,8 @@
 #include "mozilla/DataMutex.h"
 #include "nsTArray.h"
 
+#include "mozilla/DataMutex.h"
+
 #include <thread>
 #include <atomic>
 #include <chrono>
