@@ -50,6 +50,7 @@
 
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIDocShell.h"
 #include "nsIScriptContext.h"
 
 #include "nsLayoutCID.h"
