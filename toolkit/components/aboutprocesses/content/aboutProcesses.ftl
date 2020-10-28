@@ -26,21 +26,21 @@ about-processes-column-cpu-total = CPU
 
 about-processes-browser-process-name = { -brand-short-name } (process { $pid })
 about-processes-web-process-name = Web (process { $pid }, shared)
-about-processes-webIsolated-process-name = Web (process { $pid }) for { $origin }
-about-processes-webLargeAllocation = Web (process { $pid }, large) for { $origin }
-about-processes-withCoopCoep-process-name = Web (process { $pid }, cross-origin isolated) for { $origin }
+about-processes-web-isolated-process-name = Web (process { $pid }) for { $origin }
+about-processes-web-large-allocation = Web (process { $pid }, large) for { $origin }
+about-processes-with-coop-coep-process-name = Web (process { $pid }, cross-origin isolated) for { $origin }
 about-processes-file-process-name = Files (process { $pid })
 about-processes-extension-process-name = Extensions (process { $pid })
 about-processes-privilegedabout-process-name = About (process { $pid })
 about-processes-plugin-process-name = Plugins (process { $pid })
 about-processes-privilegedmozilla-process-name = Web (process { $pid }) for { -vendor-short-name } sites
-about-processes-gmpPlugin-process-name = Gecko Media Plugins (process { $pid })
+about-processes-gmp-plugin-process-name = Gecko Media Plugins (process { $pid })
 about-processes-gpu-process-name = GPU (process { $pid })
 about-processes-vr-process-name = VR (process { $pid })
 about-processes-rdd-process-name = Data Decoder (process { $pid })
 about-processes-socket-process-name = Network (process { $pid })
-about-processes-remoteSandboxBroker-process-name = Remote Sandbox Broker (process { $pid })
-about-processes-forkServer-process-name = Fork Server (process { $pid })
+about-processes-remote-sandbox-broker-process-name = Remote Sandbox Broker (process { $pid })
+about-processes-fork-server-process-name = Fork Server (process { $pid })
 about-processes-preallocated-process-name = Preallocated (process { $pid })
 about-processes-unknown-process-name = Other ({ $type }, process { $pid })
 
