@@ -530,6 +530,8 @@ class nsDisplayListBuilder {
   const nsIFrame* FindReferenceFrameFor(const nsIFrame* aFrame,
                                         nsPoint* aOffset = nullptr) const;
 
+  const Maybe<nsPoint>& AdditionalOffset() const { return mAdditionalOffset; }
+
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
    * establishes the coordinate system for the display list
@@ -689,7 +691,7 @@ class nsDisplayListBuilder {
   const nsIFrame* GetCurrentFrame() { return mCurrentFrame; }
   const nsIFrame* GetCurrentReferenceFrame() { return mCurrentReferenceFrame; }
 
-  const nsPoint& GetCurrentFrameOffsetToReferenceFrame() {
+  const nsPoint& GetCurrentFrameOffsetToReferenceFrame() const {
     return mCurrentOffsetToReferenceFrame;
   }
 
@@ -1141,6 +1143,14 @@ class nsDisplayListBuilder {
       mBuilder->mCurrentOffsetToReferenceFrame = aOffset;
     }
 
+    void SetAdditionalOffset(const nsPoint& aOffset) {
+      MOZ_ASSERT(!mBuilder->mAdditionalOffset);
+      mBuilder->mAdditionalOffset = mozilla::Some(aOffset);
+
+      mBuilder->mCurrentOffsetToReferenceFrame += aOffset;
+      mBuilder->mAdditionalOffsetFrame = mBuilder->mCurrentReferenceFrame;
+    }
+
     bool IsAnimatedGeometryRoot() const { return mCurrentAGRState == AGR_YES; }
 
     void RestoreBuildingInvisibleItemsValue() {
@@ -1160,6 +1170,7 @@ class nsDisplayListBuilder {
           mPrevAncestorHasApzAwareEventHandler;
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
       mBuilder->mInInvalidSubtree = mPrevInInvalidSubtree;
+      mBuilder->mAdditionalOffset = mPrevAdditionalOffset;
     }
 
    private:
@@ -1170,6 +1181,7 @@ class nsDisplayListBuilder {
     nsRect mPrevHitTestArea;
     CompositorHitTestInfo mPrevHitTestInfo;
     nsPoint mPrevOffset;
+    mozilla::Maybe<nsPoint> mPrevAdditionalOffset;
     nsRect mPrevVisibleRect;
     nsRect mPrevDirtyRect;
     RefPtr<AnimatedGeometryRoot> mPrevAGR;
@@ -1902,6 +1914,9 @@ class nsDisplayListBuilder {
   const nsIFrame* mCurrentReferenceFrame;
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint mCurrentOffsetToReferenceFrame;
+
+  const nsIFrame* mAdditionalOffsetFrame;
+  mozilla::Maybe<nsPoint> mAdditionalOffset;
 
   RefPtr<AnimatedGeometryRoot> mRootAGR;
   RefPtr<AnimatedGeometryRoot> mCurrentAGR;
@@ -5456,8 +5471,6 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
     mHasZIndexOverride = true;
     mOverrideZIndex = aZIndex;
   }
-
-  void SetReferenceFrame(const nsIFrame* aFrame);
 
   /**
    * This creates a copy of this item, but wrapping aItem instead of
