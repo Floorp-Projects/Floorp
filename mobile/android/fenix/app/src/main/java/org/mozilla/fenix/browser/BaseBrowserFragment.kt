@@ -321,7 +321,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                 browserAnimator = browserAnimator,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 openInFenixIntent = openInFenixIntent,
-                bookmarkTapped = { viewLifecycleOwner.lifecycleScope.launch { bookmarkTapped(it) } },
+                bookmarkTapped = { url: String, title: String ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        bookmarkTapped(url, title)
+                    }
+                },
                 scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSitesStorage = requireComponents.core.topSitesStorage,
@@ -1052,10 +1056,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         }
     }
 
-    private suspend fun bookmarkTapped(session: Session) = withContext(IO) {
+    private suspend fun bookmarkTapped(sessionUrl: String, sessionTitle: String) = withContext(IO) {
         val bookmarksStorage = requireComponents.core.bookmarksStorage
         val existing =
-            bookmarksStorage.getBookmarksWithUrl(session.url).firstOrNull { it.url == session.url }
+            bookmarksStorage.getBookmarksWithUrl(sessionUrl).firstOrNull { it.url == sessionUrl }
         if (existing != null) {
             // Bookmark exists, go to edit fragment
             withContext(Main) {
@@ -1068,8 +1072,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             // Save bookmark, then go to edit fragment
             val guid = bookmarksStorage.addItem(
                 BookmarkRoot.Mobile.id,
-                url = session.url,
-                title = session.title,
+                url = sessionUrl,
+                title = sessionTitle,
                 position = null
             )
 

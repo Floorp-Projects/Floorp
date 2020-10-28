@@ -73,7 +73,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @RelaxedMockK private lateinit var activity: HomeActivity
     @RelaxedMockK private lateinit var navController: NavController
     @RelaxedMockK private lateinit var findInPageLauncher: () -> Unit
-    @RelaxedMockK private lateinit var bookmarkTapped: (Session) -> Unit
+    @RelaxedMockK private lateinit var bookmarkTapped: (String, String) -> Unit
     @RelaxedMockK private lateinit var sessionManager: SessionManager
     @RelaxedMockK private lateinit var currentSession: Session
     @RelaxedMockK private lateinit var openInFenixIntent: Intent
@@ -224,14 +224,48 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun handleToolbarBookmarkPress() = runBlockingTest {
+    fun handleToolbarBookmarkPressWithReaderModeInactive() = runBlockingTest {
         val item = ToolbarMenu.Item.Bookmark
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = false, activeUrl = "https://1234.org"),
+            title = title
+        )
+        browserStore =
+            BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
+        every { currentSession.id } returns readerTab.id
+        every { currentSession.title } returns title
+        every { currentSession.url } returns "https://mozilla.org"
 
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
-        verify { bookmarkTapped(currentSession) }
+        verify { bookmarkTapped("https://mozilla.org", title) }
+    }
+
+    @Test
+    fun handleToolbarBookmarkPressWithReaderModeActive() = runBlockingTest {
+        val item = ToolbarMenu.Item.Bookmark
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = true, activeUrl = "https://mozilla.org"),
+            title = title
+        )
+        browserStore = BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
+        every { currentSession.id } returns readerTab.id
+        every { currentSession.title } returns title
+        every { currentSession.url } returns readerUrl
+
+        val controller = createController(scope = this)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BOOKMARK)) }
+        verify { bookmarkTapped("https://mozilla.org", title) }
     }
 
     @Test

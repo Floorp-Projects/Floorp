@@ -65,7 +65,7 @@ class DefaultBrowserToolbarMenuController(
     private val swipeRefresh: SwipeRefreshLayout,
     private val customTabSession: Session?,
     private val openInFenixIntent: Intent,
-    private val bookmarkTapped: (Session) -> Unit,
+    private val bookmarkTapped: (String, String) -> Unit,
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSitesStorage: DefaultTopSitesStorage,
@@ -273,7 +273,7 @@ class DefaultBrowserToolbarMenuController(
             }
             ToolbarMenu.Item.Bookmark -> {
                 sessionManager.selectedSession?.let {
-                    bookmarkTapped(it)
+                    getProperUrl(it)?.let { url -> bookmarkTapped(url, it.title) }
                 }
             }
             ToolbarMenu.Item.Bookmarks -> browserAnimator.captureEngineViewAndDrawStatically {
