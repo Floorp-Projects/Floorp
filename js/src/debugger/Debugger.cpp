@@ -5149,7 +5149,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
 
       // If target line isn't in script, we are done with it.
       MOZ_ASSERT(line >= compiledScript->lineno());
-      if (compiledScript->lineno() + GetScriptLineExtent(compiledScript) <
+      if (compiledScript->lineno() + GetScriptLineExtent(compiledScript) <=
           line) {
         continue;
       }
@@ -5388,7 +5388,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       if (script->hasBytecode()) {
         // Check if line is within script (or any of its inner scripts).
         if (line < script->lineno() ||
-            script->lineno() + GetScriptLineExtent(script->asJSScript()) <
+            script->lineno() + GetScriptLineExtent(script->asJSScript()) <=
                 line) {
           return;
         }
