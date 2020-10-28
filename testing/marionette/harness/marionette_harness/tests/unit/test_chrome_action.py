@@ -15,6 +15,8 @@ class TestPointerActions(WindowManagerMixin, MarionetteTestCase):
         super(TestPointerActions, self).setUp()
 
         self.actors_enabled = self.marionette.get_pref("marionette.actors.enabled")
+        if self.actors_enabled is None:
+            self.actors_enabled = self.marionette.get_pref("fission.autostart")
 
         self.mouse_chain = self.marionette.actions.sequence(
             "pointer", "pointer_id", {"pointerType": "mouse"}
