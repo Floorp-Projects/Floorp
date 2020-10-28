@@ -45,5 +45,6 @@ dom/media/fake-cdm/
 dom/media/flac/
 dom/media/fuzz/
 dom/media/gmp/
+dom/media/gmp-plugin-openh264/
 dom/quota/
 dom/simpledb/
