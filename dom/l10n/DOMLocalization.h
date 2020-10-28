@@ -18,6 +18,8 @@
 namespace mozilla {
 namespace dom {
 
+class L10nMutations;
+
 class DOMLocalization : public intl::Localization {
  public:
   NS_DECL_ISUPPORTS_INHERITED

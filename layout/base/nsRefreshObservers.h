@@ -12,6 +12,8 @@
 #ifndef LAYOUT_BASE_NSREFRESHOBSERVERS_H_
 #define LAYOUT_BASE_NSREFRESHOBSERVERS_H_
 
+#include <functional>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupports.h"
