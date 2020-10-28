@@ -60,10 +60,18 @@ add_task(async function test() {
 
   // Enter print preview
   let ppBrowser = PrintPreviewListener.getPrintPreviewBrowser();
-  let printPreviewEntered = BrowserTestUtils.waitForMessage(
-    ppBrowser.messageManager,
-    "Printing:Preview:Entered"
+
+  const { PrintingParent } = ChromeUtils.import(
+    "resource://gre/actors/PrintingParent.jsm"
   );
+  let printPreviewEntered = new Promise(resolve => {
+    PrintingParent.setTestListener(browserPreviewing => {
+      if (browserPreviewing == ppBrowser) {
+        PrintingParent.setTestListener(null);
+        resolve();
+      }
+    });
+  });
   document.getElementById("cmd_printPreview").doCommand();
   await printPreviewEntered;
 
