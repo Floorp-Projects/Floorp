@@ -237,7 +237,7 @@ class MarionetteBranch extends Branch {
    * implementation for commands that already support Fission.
    */
   get useActors() {
-    return this.get("actors.enabled", false);
+    return this.get("actors.enabled", Services.appinfo.fissionAutostart);
   }
 }
 
