@@ -146,14 +146,14 @@ WPT tests conformance to the [WebDriver] standard and uses
 [geckodriver].  Together with the Marionette remote protocol in
 Gecko, they make up Mozilla’s WebDriver implementation.
 
-This command supports a `--webdriver-arg '-vv'` argument that
+This command supports a `--webdriver-arg='-vv'` argument that
 enables more detailed logging, as well as `--jsdebugger` for opening
 the Browser Toolbox.
 
 A particularly useful trick is to combine this with the [headless
 mode] for Firefox we learned about earlier:
 
-	% MOZ_HEADLESS=1 ./mach wpt --webdriver-arg '-vv' testing/web-platform/tests/webdriver
+	% MOZ_HEADLESS=1 ./mach wpt --webdriver-arg='-vv' testing/web-platform/tests/webdriver
 
 [WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
 
