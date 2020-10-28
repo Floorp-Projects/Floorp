@@ -276,6 +276,25 @@ class UrlbarView {
   }
 
   /**
+   * @param {number} index
+   *   The index from which to fetch the result.
+   * @returns {UrlbarResult}
+   *   The result at `index`. Null if the view is closed or if there are no
+   *   results.
+   */
+  getResultAtIndex(index) {
+    if (
+      !this.isOpen ||
+      !this._rows.children.length ||
+      index >= this._rows.children.length
+    ) {
+      return null;
+    }
+
+    return this._rows.children[index].result;
+  }
+
+  /**
    * Returns the element closest to the given element that can be
    * selected/picked.  If the element itself can be selected, it's returned.  If
    * there is no such element, null is returned.
@@ -299,6 +318,18 @@ class UrlbarView {
       closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
     }
     return this._isElementVisible(closest) ? closest : null;
+  }
+
+  /**
+   * @param {UrlbarResult} result A result.
+   * @returns {boolean} True if the given result is selected.
+   */
+  resultIsSelected(result) {
+    if (this.selectedRowIndex < 0) {
+      return false;
+    }
+
+    return result.rowIndex == this.selectedRowIndex;
   }
 
   /**
@@ -602,18 +633,26 @@ class UrlbarView {
       );
     }
 
-    if (
-      firstResult.heuristic &&
-      !this.selectedElement &&
-      !this.oneOffSearchButtons.selectedButton
-    ) {
-      // Select the heuristic result.  The heuristic may not be the first result
-      // added, which is why we do this check here when each result is added and
-      // not above.
-      this._selectElement(this._getFirstSelectableElement(), {
-        updateInput: false,
-        setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
-      });
+    if (!this.selectedElement && !this.oneOffSearchButtons.selectedButton) {
+      if (firstResult.heuristic) {
+        // Select the heuristic result.  The heuristic may not be the first result
+        // added, which is why we do this check here when each result is added and
+        // not above.
+        this._selectElement(this._getFirstSelectableElement(), {
+          updateInput: false,
+          setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
+        });
+      } else if (
+        UrlbarPrefs.get("update2") &&
+        firstResult.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW &&
+        queryContext.trimmedSearchString != "@"
+      ) {
+        // Filtered keyword offer results can be in the first position but not
+        // be heuristic results. We do this so the user can press Tab to select
+        // them, resembling tab-to-search. In that case, the input value is
+        // still associated with the first result.
+        this.input.setResultForCurrentValue(firstResult);
+      }
     }
 
     // Announce tab-to-search results to screen readers as the user types.

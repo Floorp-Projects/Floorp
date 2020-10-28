@@ -489,6 +489,16 @@ class UrlbarInput {
       return;
     }
 
+    // We don't select a heuristic result when we're autofilling a token alias,
+    // but we want pressing Enter to behave like the first result was selected.
+    if (!result && this.value.startsWith("@")) {
+      let tokenAliasResult = this.view.getResultAtIndex(0);
+      if (tokenAliasResult?.autofill && tokenAliasResult?.payload.keyword) {
+        this.pickResult(tokenAliasResult, event);
+        return;
+      }
+    }
+
     let url;
     let selType = this.controller.engagementEvent.typeFromElement(element);
     let typedValue = this.value;
@@ -990,8 +1000,6 @@ class UrlbarInput {
    *   Whether the value has been canonized
    */
   setValueFromResult(result = null, event = null) {
-    let canonizedUrl;
-
     // Usually this is set by a previous input event, but in certain cases, like
     // when opening Top Sites on a loaded page, it wouldn't happen. To avoid
     // confusing the user, we always enforce it when a result changes our value.
@@ -1013,58 +1021,18 @@ class UrlbarInput {
       // are shown; then we must reset the input value.
       // Note that for Top Sites the last search string would be empty, thus we
       // must restore the last text value.
+      // Note that unselected autofill results will still arrive in this
+      // function with a non-null `result`. They are handled below.
       this.value = this._lastSearchString || this._valueOnLastSearch;
-    } else {
-      // For autofilled results, the value that should be canonized is not the
-      // autofilled value but the value that the user typed.
-      canonizedUrl = this._maybeCanonizeURL(
-        event,
-        result.autofill ? this._lastSearchString : this.value
-      );
-      if (canonizedUrl) {
-        this.value = canonizedUrl;
-      } else if (result.autofill) {
-        let { value, selectionStart, selectionEnd } = result.autofill;
-        this._autofillValue(value, selectionStart, selectionEnd);
-      } else if (
-        result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
-      ) {
-        // Enter search mode without starting a query. This will just preview
-        // search mode.
-        let enteredSearchMode = this.maybePromoteResultToSearchMode({
-          result,
-          checkValue: false,
-          startQuery: false,
-        });
-        if (!enteredSearchMode) {
-          this._setValue(this._getValueFromResult(result), true);
-          this.searchMode = null;
-        }
-      } else {
-        // If the url is trimmed but it's invalid (for example it has an unknown
-        // single word host, or an unknown domain suffix), trimming
-        // it would end up executing a search instead of visiting it.
-        let allowTrim = true;
-        if (
-          result.type == UrlbarUtils.RESULT_TYPE.URL &&
-          UrlbarPrefs.get("trimURLs") &&
-          result.payload.url.startsWith(BrowserUtils.trimURLProtocol)
-        ) {
-          let fixupInfo = this._getURIFixupInfo(
-            BrowserUtils.trimURL(result.payload.url)
-          );
-          if (fixupInfo?.keywordAsSent) {
-            allowTrim = false;
-          }
-        }
-        this._setValue(this._getValueFromResult(result), allowTrim);
-      }
+      this.setResultForCurrentValue(result);
+      return false;
     }
-    this.setResultForCurrentValue(result);
 
-    // The value setter clobbers the actiontype attribute, so update this after
-    // that.
-    if (result) {
+    // The value setter clobbers the actiontype attribute, so we need this
+    // helper to restore it afterwards.
+    const setValueAndRestoreActionType = (value, allowTrim) => {
+      this._setValue(value, allowTrim);
+
       switch (result.type) {
         case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
           this.setAttribute("actiontype", "switchtab");
@@ -1073,9 +1041,66 @@ class UrlbarInput {
           this.setAttribute("actiontype", "extension");
           break;
       }
+    };
+
+    // For autofilled results, the value that should be canonized is not the
+    // autofilled value but the value that the user typed.
+    let canonizedUrl = this._maybeCanonizeURL(
+      event,
+      result.autofill ? this._lastSearchString : this.value
+    );
+    if (canonizedUrl) {
+      setValueAndRestoreActionType(canonizedUrl, true);
+      this.setResultForCurrentValue(result);
+      return true;
     }
 
-    return !!canonizedUrl;
+    if (result.autofill) {
+      let { value, selectionStart, selectionEnd } = result.autofill;
+      this._autofillValue(value, selectionStart, selectionEnd);
+    }
+
+    if (result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW) {
+      let enteredSearchMode;
+      // Only preview search mode if the result is selected.
+      if (this.view.resultIsSelected(result)) {
+        // Not starting a query means we will only preview search mode.
+        enteredSearchMode = this.maybePromoteResultToSearchMode({
+          result,
+          checkValue: false,
+          startQuery: false,
+        });
+      }
+      if (!enteredSearchMode) {
+        setValueAndRestoreActionType(this._getValueFromResult(result), true);
+        this.searchMode = null;
+      }
+      this.setResultForCurrentValue(result);
+      return false;
+    }
+
+    // If the url is trimmed but it's invalid (for example it has an unknown
+    // single word host, or an unknown domain suffix), trimming
+    // it would end up executing a search instead of visiting it.
+    let allowTrim = true;
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.URL &&
+      UrlbarPrefs.get("trimURLs") &&
+      result.payload.url.startsWith(BrowserUtils.trimURLProtocol)
+    ) {
+      let fixupInfo = this._getURIFixupInfo(
+        BrowserUtils.trimURL(result.payload.url)
+      );
+      if (fixupInfo?.keywordAsSent) {
+        allowTrim = false;
+      }
+    }
+
+    if (!result.autofill) {
+      setValueAndRestoreActionType(this._getValueFromResult(result), allowTrim);
+    }
+    this.setResultForCurrentValue(result);
+    return false;
   }
 
   /**
@@ -1890,8 +1915,7 @@ class UrlbarInput {
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
         let value = "";
         if (result.payload.keyword) {
-          value +=
-            result.payload.keyword + (UrlbarPrefs.get("update2") ? "" : " ");
+          value += result.payload.keyword + " ";
         }
         value += result.payload.suggestion || result.payload.query;
         return value;

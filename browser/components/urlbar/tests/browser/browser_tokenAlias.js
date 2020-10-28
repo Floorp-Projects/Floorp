@@ -547,6 +547,53 @@ add_task(async function rightEntersSearchMode() {
   );
 });
 
+// Pressing Tab when an @ alias is autofilled should enter search mode preview.
+add_task(async function rightEntersSearchMode() {
+  for (let value of [ALIAS.substring(0, ALIAS.length - 1), ALIAS]) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value,
+      selectionStart: value.length,
+      selectionEnd: value.length,
+    });
+
+    Assert.equal(
+      UrlbarTestUtils.getSelectedRowIndex(window),
+      -1,
+      "There is no selected result."
+    );
+
+    EventUtils.synthesizeKey("KEY_Tab");
+    Assert.equal(
+      UrlbarTestUtils.getSelectedRowIndex(window),
+      0,
+      "The first result is selected."
+    );
+
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: testEngine.name,
+      entry: "keywordoffer",
+      isPreview: true,
+    });
+    Assert.equal(gURLBar.value, "", "value should be empty");
+
+    let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+    EventUtils.synthesizeKey("KEY_Enter");
+    await searchPromise;
+
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: testEngine.name,
+      entry: "keywordoffer",
+      isPreview: false,
+    });
+    await UrlbarTestUtils.exitSearchMode(window);
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape")
+  );
+});
+
 /**
  * This test checks that if an engine is marked as hidden then
  * it should not appear in the popup when using the "@" token alias in the search bar.
@@ -651,6 +698,66 @@ add_task(async function nonPrefixedKeyword() {
   );
 
   await Services.search.removeEngine(engine);
+});
+
+// Tests that we show all engines with a token alias that match the search
+// string.
+add_task(async function multipleMatchingEngines() {
+  let testEngineFoo = await Services.search.addEngineWithDetails("TestFoo", {
+    alias: `${ALIAS}foo`,
+    template: "http://example-2.com/?search={searchTerms}",
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "@te",
+    fireInputEvent: true,
+  });
+
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "Two results are shown."
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    -1,
+    "Neither result is selected."
+  );
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.ok(result.autofill, "The first result is autofilling.");
+  Assert.equal(
+    result.searchParams.keyword,
+    ALIAS,
+    "The autofilled engine is shown first."
+  );
+
+  result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(
+    result.searchParams.keyword,
+    `${ALIAS}foo`,
+    "The other engine is shown second."
+  );
+
+  EventUtils.synthesizeKey("KEY_Tab");
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
+  Assert.equal(gURLBar.value, "", "Urlbar should be empty.");
+  EventUtils.synthesizeKey("KEY_Tab");
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 1);
+  Assert.equal(gURLBar.value, "", "Urlbar should be empty.");
+  EventUtils.synthesizeKey("KEY_Tab");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    -1,
+    "Tabbing all the way through the matching engines should return to the input."
+  );
+  Assert.equal(
+    gURLBar.value,
+    "@te",
+    "Urlbar should contain the search string."
+  );
+
+  await Services.search.removeEngine(testEngineFoo);
 });
 
 async function assertFirstResultIsAlias(isAlias, expectedAlias) {
