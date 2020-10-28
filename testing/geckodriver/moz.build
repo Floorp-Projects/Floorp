@@ -12,7 +12,7 @@ RUST_TESTS = [
     "marionette",
     # TODO: Move to mozbase/rust/moz.build once those crates can be
     # tested separately.
-    # "mozdevice",  // Tests require adb, and cannot be run in CI
+    "mozdevice",
     "mozprofile",
     "mozrunner",
     "mozversion",

@@ -1,11 +1,15 @@
 use crate::*;
 
-// Currently the API is not safe for multiple requests at the same time. It is
-// recommended to run each of the unit tests on its own. Use the following
-// command to accomplish that:
+// Currently the mozdevice API is not safe for multiple requests at the same
+// time. It is recommended to run each of the unit tests on its own. Also adb
+// specific tests cannot be run in CI yet. To check those locally, also run
+// the ignored tests.
 //
-//     $ cargo test -- --test-threads=1
+// Use the following command to accomplish that:
+//
+//     $ cargo test -- --ignored --test-threads=1
 
+use crate::{AndroidStorage, AndroidStorageInput};
 use std::collections::BTreeSet;
 use std::panic;
 use tempfile::{tempdir, TempDir};
@@ -69,22 +73,17 @@ fn run_device_test<F>(test: F) -> ()
 where
     F: FnOnce(&Device, &TempDir, &Path) -> () + panic::UnwindSafe,
 {
-    fn clean_remote_dir(device: &Device, path: &Path) {
-        let command = format!("rm -fr {}", path.display());
-        let _ = device.execute_host_shell_command(&command);
-    }
-
     let host = Host {
         ..Default::default()
     };
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
     let remote_path = Path::new("/data/local/tmp/mozdevice/");
 
-    clean_remote_dir(&device, remote_path);
+    let _ = device.remove(remote_path);
 
     let result = panic::catch_unwind(|| test(&device, &tmp_dir, &remote_path));
 
@@ -95,6 +94,7 @@ where
 }
 
 #[test]
+#[ignore]
 fn host_features() {
     let host = Host {
         ..Default::default()
@@ -106,6 +106,7 @@ fn host_features() {
 }
 
 #[test]
+#[ignore]
 fn host_devices() {
     let host = Host {
         ..Default::default()
@@ -116,7 +117,8 @@ fn host_devices() {
 }
 
 #[test]
-fn host_device_or_default_valid_serial() {
+#[ignore]
+fn host_device_or_default() {
     let host = Host {
         ..Default::default()
     };
@@ -125,22 +127,26 @@ fn host_device_or_default_valid_serial() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(Some(&expected_device.serial))
+        .device_or_default::<String>(Some(&expected_device.serial), AndroidStorageInput::App)
         .expect("connected device with serial");
+    assert_eq!(device.run_as_package, None);
     assert_eq!(device.serial, expected_device.serial);
+    assert!(device.tempfile.starts_with("/data/local/tmp"));
 }
 
 #[test]
+#[ignore]
 fn host_device_or_default_invalid_serial() {
     let host = Host {
         ..Default::default()
     };
 
-    host.device_or_default::<String>(Some(&"foobar".to_owned()))
+    host.device_or_default::<String>(Some(&"foobar".to_owned()), AndroidStorageInput::Auto)
         .expect_err("invalid serial");
 }
 
 #[test]
+#[ignore]
 fn host_device_or_default_no_serial() {
     let host = Host {
         ..Default::default()
@@ -150,12 +156,69 @@ fn host_device_or_default_no_serial() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("connected device with serial");
     assert_eq!(device.serial, expected_device.serial);
 }
 
 #[test]
+#[ignore]
+fn host_device_or_default_storage_as_app() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::App)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::App);
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_auto() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
+        .expect("connected device");
+    if device.is_rooted {
+        assert_eq!(device.storage, AndroidStorage::Internal);
+    } else {
+        assert_eq!(device.storage, AndroidStorage::App);
+    }
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_internal() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Internal)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Internal);
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_sdcard() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Sdcard)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Sdcard);
+}
+
+#[test]
+#[ignore]
 fn device_shell_command() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         assert_eq!(
@@ -168,6 +231,7 @@ fn device_shell_command() {
 }
 
 #[test]
+#[ignore]
 fn device_forward_port_hardcoded() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         assert_eq!(
@@ -181,16 +245,18 @@ fn device_forward_port_hardcoded() {
 }
 
 // #[test]
+// #[ignore]
 // TODO: "adb server response to `forward tcp:0 ...` was not a u16: \"000559464\"")
-fn device_forward_port_system_allocated() {
-    run_device_test(|device: &Device, _: &TempDir, _: &Path| {
-        let local_port = device.forward_port(0, 3037).expect("local_port");
-        assert_ne!(local_port, 0);
-        // TODO: check with forward --list
-    });
-}
+// fn device_forward_port_system_allocated() {
+//     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
+//         let local_port = device.forward_port(0, 3037).expect("local_port");
+//         assert_ne!(local_port, 0);
+//         // TODO: check with forward --list
+//     });
+// }
 
 #[test]
+#[ignore]
 fn device_kill_forward_port_no_forwarded_port() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         device
@@ -200,6 +266,7 @@ fn device_kill_forward_port_no_forwarded_port() {
 }
 
 #[test]
+#[ignore]
 fn device_kill_forward_port_twice() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         let local_port = device
@@ -217,6 +284,7 @@ fn device_kill_forward_port_twice() {
 }
 
 #[test]
+#[ignore]
 fn device_kill_forward_all_ports_no_forwarded_port() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         device
@@ -226,6 +294,7 @@ fn device_kill_forward_all_ports_no_forwarded_port() {
 }
 
 #[test]
+#[ignore]
 fn device_kill_forward_all_ports_twice() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         let local_port1 = device
@@ -247,6 +316,7 @@ fn device_kill_forward_all_ports_twice() {
 }
 
 #[test]
+#[ignore]
 fn device_reverse_port_hardcoded() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         assert_eq!(4035, device.reverse_port(4035, 4036).expect("remote_port"));
@@ -255,16 +325,18 @@ fn device_reverse_port_hardcoded() {
 }
 
 // #[test]
+// #[ignore]
 // TODO: No adb response: ParseInt(ParseIntError { kind: Empty })
-fn device_reverse_port_system_allocated() {
-    run_device_test(|device: &Device, _: &TempDir, _: &Path| {
-        let reverse_port = device.reverse_port(0, 4037).expect("remote port");
-        assert_ne!(reverse_port, 0);
-        // TODO: check with reverse --list
-    });
-}
+// fn device_reverse_port_system_allocated() {
+//     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
+//         let reverse_port = device.reverse_port(0, 4037).expect("remote port");
+//         assert_ne!(reverse_port, 0);
+//         // TODO: check with reverse --list
+//     });
+// }
 
 #[test]
+#[ignore]
 fn device_kill_reverse_port_no_reverse_port() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         device
@@ -274,24 +346,26 @@ fn device_kill_reverse_port_no_reverse_port() {
 }
 
 // #[test]
+// #[ignore]
 // TODO: "adb error: adb server response did not contain expected hexstring length: \"\""
-fn device_kill_reverse_port_twice() {
-    run_device_test(|device: &Device, _: &TempDir, _: &Path| {
-        let remote_port = device
-            .reverse_port(4039, 4040)
-            .expect("reversed local port");
-        assert_eq!(remote_port, 4039);
-        // TODO: check with reverse --list
-        device
-            .kill_reverse_port(remote_port)
-            .expect("to remove reverse port");
-        device
-            .kill_reverse_port(remote_port)
-            .expect_err("listener 'tcp:4039' not found");
-    });
-}
+// fn device_kill_reverse_port_twice() {
+//     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
+//         let remote_port = device
+//             .reverse_port(4039, 4040)
+//             .expect("reversed local port");
+//         assert_eq!(remote_port, 4039);
+//         // TODO: check with reverse --list
+//         device
+//             .kill_reverse_port(remote_port)
+//             .expect("to remove reverse port");
+//         device
+//             .kill_reverse_port(remote_port)
+//             .expect_err("listener 'tcp:4039' not found");
+//     });
+// }
 
 #[test]
+#[ignore]
 fn device_kill_reverse_all_ports_no_reversed_port() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         device
@@ -301,6 +375,7 @@ fn device_kill_reverse_all_ports_no_reversed_port() {
 }
 
 #[test]
+#[ignore]
 fn device_kill_reverse_all_ports_twice() {
     run_device_test(|device: &Device, _: &TempDir, _: &Path| {
         let local_port1 = device
@@ -322,6 +397,7 @@ fn device_kill_reverse_all_ports_twice() {
 }
 
 #[test]
+#[ignore]
 fn device_push() {
     run_device_test(|device: &Device, _: &TempDir, remote_root_path: &Path| {
         fn adjust_mode(mode: u32) -> u32 {
@@ -355,7 +431,6 @@ fn device_push() {
 
         let modes = vec![0o421, 0o644, 0o666, 0o777];
         for mode in modes {
-            let perms = get_permissions(mode);
             let adjusted_mode = adjust_mode(mode);
             let adjusted_perms = get_permissions(adjusted_mode);
             device
@@ -390,6 +465,7 @@ fn device_push() {
 }
 
 #[test]
+#[ignore]
 fn device_push_dir() {
     run_device_test(
         |device: &Device, tmp_dir: &TempDir, remote_root_path: &Path| {
