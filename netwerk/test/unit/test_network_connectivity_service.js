@@ -97,10 +97,11 @@ add_task(async function testDNS() {
     "network.connectivity-service.DNSv6.domain",
     "does-not-exist.example"
   );
-  ncs.recheckDNS();
-  await promiseObserverNotification(
+  let observerNotification = promiseObserverNotification(
     "network:connectivity-service:dns-checks-complete"
   );
+  ncs.recheckDNS();
+  await observerNotification;
 
   equal(
     ncs.DNSv4,
@@ -123,6 +124,9 @@ add_task(async function testDNS() {
     "network.connectivity-service.DNSv6.domain",
     kDNSv6Domain
   );
+  observerNotification = promiseObserverNotification(
+    "network:connectivity-service:dns-checks-complete"
+  );
   Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
   // This will cause the state to go to UNKNOWN for a bit, until the check is completed.
   equal(
@@ -136,9 +140,7 @@ add_task(async function testDNS() {
     "Check DNSv6 support (expect UNKNOWN)"
   );
 
-  await promiseObserverNotification(
-    "network:connectivity-service:dns-checks-complete"
-  );
+  await observerNotification;
 
   equal(
     ncs.DNSv4,
@@ -174,10 +176,11 @@ add_task(async function testDNS() {
   Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
   Services.prefs.setCharPref("network.connectivity-service.IPv4.url", URL);
   Services.prefs.setCharPref("network.connectivity-service.IPv6.url", URLv6);
-  ncs.recheckIPConnectivity();
-  await promiseObserverNotification(
+  observerNotification = promiseObserverNotification(
     "network:connectivity-service:ip-checks-complete"
   );
+  ncs.recheckIPConnectivity();
+  await observerNotification;
 
   equal(
     ncs.IPv4,
@@ -193,10 +196,11 @@ add_task(async function testDNS() {
   // check that the CPS status is NOT_AVAILABLE when the endpoint is down.
   await new Promise(resolve => httpserver.stop(resolve));
   await new Promise(resolve => httpserverv6.stop(resolve));
-  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
-  await promiseObserverNotification(
+  observerNotification = promiseObserverNotification(
     "network:connectivity-service:ip-checks-complete"
   );
+  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
+  await observerNotification;
 
   equal(
     ncs.IPv4,
