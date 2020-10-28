@@ -1,3 +1,67 @@
+CHANGES BETWEEN 2.10.3 and 2.10.4
+
+  I. IMPORTANT BUG FIXES
+
+  - A heap buffer overflow has been found  in the handling of embedded
+    PNG bitmaps, introduced in FreeType version 2.6.
+
+      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15999
+
+    If you  use option  FT_CONFIG_OPTION_USE_PNG  you  should  upgrade
+    immediately.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.2 and 2.10.3
+
+  I. IMPORTANT CHANGES
+
+  - New flag `FT_OUTLINE_OVERLAP'.  If set, make the smooth rasterizer
+    do  4x4 oversampling  to  mitigate artifacts  in pixels  partially
+    covered  by  overlapping  contours.    Note  that  this  at  least
+    quadruples the rendering time.
+
+    If  a  glyph  in  a  TrueType font  has  the  `OVERLAP_SIMPLE'  or
+    `OVERLAP_COMPOUND'  bit set,  FreeType automatically  selects this
+    rendering mode.
+
+
+  II. MISCELLANEOUS
+
+  - Using the  arcane method of  including FreeType header  files with
+    macros like  `FT_FREETYPE_H' is no longer  mandatory (but retained
+    as an optional feature for backward compatibility).
+
+  - Support for  building the library  with Meson.  Building  the demo
+    programs with Meson will follow in a forthcoming release.
+
+  - Minor improvements to the B/W rasterizer.
+
+  - Auto-hinter support for Medefaidrin script.
+
+  - Fix various  memory leaks (mainly  for CFF) and other  issues that
+    might cause crashes in rare circumstances.
+
+  - Jam support has been removed.
+
+  - In  `ftview', custom  LCD  filter values  are  now normalized  and
+    balanced.  Unorthodox filters are still available through the `-L'
+    command line option.
+
+  - The GUI demo programs can now be resized.
+
+  - Demo programs that accept command  line option `-k' can now handle
+    function keys, too.  The  corresponding character codes start with
+    0xF1.  As  an example, the  POSIX shell syntax (accepted  by bash,
+    ksh, and zsh)
+
+      -k $'\xF3q'
+
+    emulates the pressing of function key `F3' followed by key `q'.
+
+
+======================================================================
 
 CHANGES BETWEEN 2.10.1 and 2.10.2
 
@@ -246,7 +310,7 @@ CHANGES BETWEEN 2.9 and 2.9.1
       use the `pkg-config' interface.
 
       The `configure'  script no longer installs  `freetype-config' by
-      default.  For  backwards compatibility,  a new  configure option
+      default.  For  backward  compatibility,  a new  configure option
       `--enable-freetype-config'   is  provided   that  reverts   this
       decision.
 

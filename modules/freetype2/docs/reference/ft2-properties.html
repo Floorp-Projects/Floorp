@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Driver properties - FreeType-2.10.2 API Reference</title>
+        <title>Driver properties - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1353,7 +1353,6 @@
 <p>All glyphs that pass through the auto-hinter will be emboldened unless this property is set to TRUE. The same is true for the CFF, Type&nbsp;1, and CID font modules if the &lsquo;Adobe&rsquo; engine is selected (which is the default).</p>
 <p>Stem darkening emboldens glyphs at smaller sizes to make them more readable on common low-DPI screens when using linear alpha blending and gamma correction, see <code><a href="ft2-base_interface.html#ft_render_glyph">FT_Render_Glyph</a></code>. When not using linear alpha blending and gamma correction, glyphs will appear heavy and fuzzy!</p>
 <p>Gamma correction essentially lightens fonts since shades of grey are shifted to higher pixel values (=&nbsp;higher brightness) to match the original intention to the reality of our screens. The side-effect is that glyphs &lsquo;thin out&rsquo;. Mac OS&nbsp;X and Adobe's proprietary font rendering library implement a counter-measure: stem darkening at smaller sizes where shades of gray dominate. By emboldening a glyph slightly in relation to its pixel size, individual pixels get higher coverage of filled-in outlines and are therefore &lsquo;blacker&rsquo;. This counteracts the &lsquo;thinning out&rsquo; of glyphs, making text remain readable at smaller sizes.</p>
-<p>By default, the Adobe engines for CFF, Type&nbsp;1, and CID fonts darken stems at smaller sizes, regardless of hinting, to enhance contrast. Setting this property, stem darkening gets switched off.</p>
 <p>For the auto-hinter, stem-darkening is experimental currently and thus switched off by default (this is, <code>no-stem-darkening</code> is set to TRUE by default). Total consistency with the CFF driver is not achieved right now because the emboldening method differs and glyphs must be scaled down on the Y-axis to keep outline points inside their precomputed blue zones. The smaller the size (especially 9ppem and down), the higher the loss of emboldening versus the CFF driver.</p>
 <p>Note that stem darkening is never applied if <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code> is set.</p>
 <h4>note</h4>

@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Base Interface - FreeType-2.10.2 API Reference</title>
+        <title>Base Interface - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -2518,6 +2518,7 @@
 <tr><td class="val" id="bbox">bbox</td><td class="desc">
 <p>The font bounding box. Coordinates are expressed in font units (see <code>units_per_EM</code>). The box is large enough to contain any glyph from the font. Thus, <code>bbox.yMax</code> can be seen as the &lsquo;maximum ascender&rsquo;, and <code>bbox.yMin</code> as the &lsquo;minimum descender&rsquo;. Only relevant for scalable formats.</p>
 <p>Note that the bounding box might be off by (at least) one pixel for hinted fonts. See <code><a href="ft2-base_interface.html#ft_size_metrics">FT_Size_Metrics</a></code> for further discussion.</p>
+<p>Note that the bounding box does not vary in OpenType variable fonts and should only be used in relation to the default instance.</p>
 </td></tr>
 <tr><td class="val" id="units_per_em">units_per_EM</td><td class="desc">
 <p>The number of font units per EM square for this face. This is typically 2048 for TrueType fonts, and 1000 for Type&nbsp;1 fonts. Only relevant for scalable formats.</p>
@@ -3884,6 +3885,7 @@
 
 <h4>note</h4>
 
+<p>This function is provided as a convenience, but keep in mind that <code><a href="ft2-basic_types.html#ft_matrix">FT_Matrix</a></code> coefficients are only 16.16 fixed point values, which can limit the accuracy of the results. Using floating-point computations to perform the transform directly in client code instead will always yield better numbers.</p>
 <p>The transformation is only applied to scalable image formats after the glyph has been loaded. It means that hinting is unaltered by the transformation and is performed on the character size given in the last call to <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code> or <code><a href="ft2-base_interface.html#ft_set_pixel_sizes">FT_Set_Pixel_Sizes</a></code>.</p>
 <p>Note that this also transforms the <code>face.glyph.advance</code> field, but <strong>not</strong> the values in <code>face.glyph.metrics</code>.</p>
 <hr>
@@ -4207,7 +4209,6 @@
 
 <h4>note</h4>
 
-<p>Should you define <code>FT_CONFIG_OPTION_SUBPIXEL_RENDERING</code> in your <code>ftoption.h</code>, which enables patented ClearType-style rendering, the LCD-optimized glyph bitmaps should be filtered to reduce color fringes inherent to this technology. You can either set up LCD filtering with <code><a href="ft2-lcd_rendering.html#ft_library_setlcdfilter">FT_Library_SetLcdFilter</a></code> or <code><a href="ft2-base_interface.html#ft_face_properties">FT_Face_Properties</a></code>, or do the filtering yourself. The default FreeType LCD rendering technology does not require filtering.</p>
 <p>The selected render mode only affects vector glyphs of a font. Embedded bitmaps often have a different pixel mode like <code><a href="ft2-basic_types.html#ft_pixel_mode">FT_PIXEL_MODE_MONO</a></code>. You can use <code><a href="ft2-bitmap_handling.html#ft_bitmap_convert">FT_Bitmap_Convert</a></code> to transform them into 8-bit pixmaps.</p>
 <hr>
 

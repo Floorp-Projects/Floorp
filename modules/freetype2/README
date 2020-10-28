@@ -1,4 +1,4 @@
-  FreeType 2.10.2
+  FreeType 2.10.4
   ===============
 
   Homepage: https://www.freetype.org
@@ -27,9 +27,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.10.2.tar.xz
-    freetype-doc-2.10.2.tar.gz
-    ftdoc2102.zip
+    freetype-doc-2.10.4.tar.xz
+    freetype-doc-2.10.4.tar.gz
+    ftdoc2104.zip
 
   To view the documentation online, go to
 
@@ -65,6 +65,18 @@
   `freetype-devel@nongnu.org'.   Don't  forget   to  send  a  detailed
   explanation of the problem --  there is nothing worse than receiving
   a terse message that only says `it doesn't work'.
+
+
+  Patches
+  =======
+
+  Please  submit patches  to  the `freetype-devel@nongnu.org'  mailing
+  list  --  and thank  you  in  advance  for  your work  on  improving
+  FreeType!
+
+  Details on the process can be found here:
+
+    https://www.freetype.org/developer.html#patches
 
 
   Enjoy!

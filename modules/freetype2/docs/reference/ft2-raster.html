@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>Scanline Converter - FreeType-2.10.2 API Reference</title>
+        <title>Scanline Converter - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1374,14 +1374,15 @@
 <p>User-supplied data that is passed to each drawing callback.</p>
 </td></tr>
 <tr><td class="val" id="clip_box">clip_box</td><td class="desc">
-<p>An optional clipping box. It is only used in direct rendering mode. Note that coordinates here should be expressed in <em>integer</em> pixels (and not in 26.6 fixed-point units).</p>
+<p>An optional span clipping box expressed in <em>integer</em> pixels (not in 26.6 fixed-point units).</p>
 </td></tr>
 </table>
 
 <h4>note</h4>
 
-<p>An anti-aliased glyph bitmap is drawn if the <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_AA</a></code> bit flag is set in the <code>flags</code> field, otherwise a monochrome bitmap is generated.</p>
-<p>If the <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_DIRECT</a></code> bit flag is set in <code>flags</code>, the raster will call the <code>gray_spans</code> callback to draw gray pixel spans. This allows direct composition over a pre-existing bitmap through user-provided callbacks to perform the span drawing and composition. Not supported by the monochrome rasterizer.</p>
+<p>The <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_AA</a></code> bit flag must be set in the <code>flags</code> to generate an anti-aliased glyph bitmap, otherwise a monochrome bitmap is generated. The <code>target</code> should have appropriate pixel mode and its dimensions define the clipping region.</p>
+<p>If both <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_AA</a></code> and <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_DIRECT</a></code> bit flags are set in <code>flags</code>, the raster calls an <code><a href="ft2-raster.html#ft_spanfunc">FT_SpanFunc</a></code> callback <code>gray_spans</code> with <code>user</code> data as an argument ignoring <code>target</code>. This allows direct composition over a pre-existing user surface to perform the span drawing and composition. To optionally clip the spans, set the <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_CLIP</a></code> flag and <code>clip_box</code>. The monochrome raster does not support the direct mode.</p>
+<p>The gray-level rasterizer always uses 256 gray levels. If you want fewer gray levels, you have to use <code><a href="ft2-raster.html#ft_raster_flag_xxx">FT_RASTER_FLAG_DIRECT</a></code> and reduce the levels in the callback function.</p>
 <hr>
 
 <h2 id="ft_raster_flag_xxx">FT_RASTER_FLAG_XXX<a class="headerlink" href="#ft_raster_flag_xxx" title="Permanent link">&para;</a></h2>

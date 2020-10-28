@@ -10,7 +10,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.10.2">
+        <meta name="description" content="API Reference Documentation for FreeType-2.10.4">
       
       
       
@@ -40,7 +40,7 @@
     
     
       
-        <title>FreeType's header inclusion scheme - FreeType-2.10.2 API Reference</title>
+        <title>FreeType's header inclusion scheme - FreeType-2.10.4 API Reference</title>
       
     
     
@@ -98,7 +98,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="FreeType-2.10.2 API Reference" aria-label="FreeType-2.10.2 API Reference" class="md-header-nav__button md-logo">
+        <a href="." title="FreeType-2.10.4 API Reference" aria-label="FreeType-2.10.4 API Reference" class="md-header-nav__button md-logo">
           
             <img alt="logo" src="images/favico.ico" width="24" height="24">
           
@@ -111,7 +111,7 @@
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           
             <span class="md-header-nav__topic">
-              FreeType-2.10.2 API Reference
+              FreeType-2.10.4 API Reference
             </span>
             <span class="md-header-nav__topic">
               
@@ -168,12 +168,12 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="FreeType-2.10.2 API Reference" class="md-nav__button md-logo">
+    <a href="." title="FreeType-2.10.4 API Reference" class="md-nav__button md-logo">
       
         <img alt="logo" src="images/favico.ico" width="48" height="48">
       
     </a>
-    FreeType-2.10.2 API Reference
+    FreeType-2.10.4 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1070,13 +1070,12 @@
 <hr />
 <h1 id="freetypes-header-inclusion-scheme">FreeType's header inclusion scheme<a class="headerlink" href="#freetypes-header-inclusion-scheme" title="Permanent link">&para;</a></h1>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>To be as flexible as possible (and for historical reasons), FreeType uses a very special inclusion scheme to load header files, for example
+<p>To be as flexible as possible (and for historical reasons), you must load file <code>ft2build.h</code> first before other header files, for example
 <div class="highlight"><pre><span></span><code>  #include &lt;ft2build.h&gt;
 
-  #include FT_FREETYPE_H
-  #include FT_OUTLINE_H
+  #include &lt;freetype/freetype.h&gt;
+  #include &lt;freetype/ftoutln.h&gt;
 </code></pre></div></p>
-<p>A compiler and its preprocessor only needs an include path to find the file <code>ft2build.h</code>; the exact locations and names of the other FreeType header files are hidden by &lsquo;<a href="ft2-header_file_macros.html#header_file_macros">Header File Macros</a>&rsquo;, loaded by <code>ft2build.h</code>. The API documentation always gives the header macro name needed for a particular function.</p>
                 
                   
                 
