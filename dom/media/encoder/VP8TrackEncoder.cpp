@@ -5,6 +5,7 @@
 
 #include "VP8TrackEncoder.h"
 
+#include "DriftCompensation.h"
 #include "GeckoProfiler.h"
 #include "ImageToI420.h"
 #include "mozilla/gfx/2D.h"
