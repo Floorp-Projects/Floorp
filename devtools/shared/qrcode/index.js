@@ -4,9 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
-
 // Lazily require encoder and decoder in case only one is needed
 Object.defineProperty(this, "Encoder", {
   get: () => require("devtools/shared/qrcode/encoder/index").Encoder,
@@ -94,11 +91,11 @@ exports.encodeToDataURI = function(message, quality, version) {
  */
 exports.decodeFromURI = function(URI) {
   if (!decoder) {
-    return promise.reject();
+    return Promise.reject();
   }
-  const deferred = defer();
-  decoder.decodeFromURI(URI, deferred.resolve, deferred.reject);
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    decoder.decodeFromURI(URI, resolve, reject);
+  });
 };
 
 /**
