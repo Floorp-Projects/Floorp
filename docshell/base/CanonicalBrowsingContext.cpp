@@ -1562,6 +1562,15 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
   });
 }
 
+void CanonicalBrowsingContext::ResetScalingZoom() {
+  // This currently only ever gets called in the parent process, and we
+  // pass the message on to the WindowGlobalChild for the rootmost browsing
+  // context.
+  if (WindowGlobalParent* topWindow = GetTopWindowContext()) {
+    Unused << topWindow->SendResetScalingZoom();
+  }
+}
+
 void CanonicalBrowsingContext::SetCrossGroupOpenerId(uint64_t aOpenerId) {
   MOZ_DIAGNOSTIC_ASSERT(IsTopContent());
   MOZ_DIAGNOSTIC_ASSERT(mCrossGroupOpenerId == 0,
