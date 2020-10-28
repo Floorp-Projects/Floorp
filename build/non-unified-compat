@@ -40,5 +40,6 @@ dom/media/benchmark/
 dom/media/bridge/
 dom/media/doctor/
 dom/media/eme/
+dom/media/encoder/
 dom/quota/
 dom/simpledb/
