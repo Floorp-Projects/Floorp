@@ -95,11 +95,11 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """
         # Wait for search page to load
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
-            Wait(self.marionette, 30, .5).until(
+            Wait(self.marionette, 30, 0.5).until(
                 lambda driver: driver.execute_script(
                     script, script_args=[text.split()]
                 ),
-                message="Search terms not found, maybe the page didn't load?"
+                message="Search terms not found, maybe the page didn't load?",
             )
 
     def search_in_new_tab(self, text):
