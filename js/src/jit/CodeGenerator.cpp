@@ -8728,7 +8728,7 @@ void CodeGenerator::visitArrayBufferViewByteOffset(
     LArrayBufferViewByteOffset* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.unboxInt32(Address(obj, ArrayBufferViewObject::byteOffsetOffset()), out);
+  masm.loadArrayBufferViewByteOffsetInt32(obj, out);
 }
 
 void CodeGenerator::visitArrayBufferViewElements(

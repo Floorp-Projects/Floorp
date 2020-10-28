@@ -520,7 +520,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     MOZ_ASSERT(len >= 0);
     tarray->initFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
     tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
-    tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
+    tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
+                          PrivateValue(size_t(0)));
 
     // Verify that the private slot is at the expected place.
     MOZ_ASSERT(tarray->numFixedSlots() == TypedArrayObject::DATA_SLOT);
