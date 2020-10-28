@@ -5,7 +5,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/JSActorBinding.h"
 #include "mozilla/dom/JSActorService.h"
+#include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/JSWindowActorProtocol.h"
+#include "mozilla/dom/PContent.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {

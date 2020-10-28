@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/CSPMessageUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsSerializationHelper.h"
 #include "BackgroundUtils.h"
 
@@ -21,7 +22,7 @@ void ParamTraits<nsIContentSecurityPolicy*>::Write(
   }
 
   CSPInfo csp;
-  Unused << NS_WARN_IF(NS_FAILED(CSPToCSPInfo(aParam, &csp)));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(CSPToCSPInfo(aParam, &csp)));
   IPDLParamTraits<CSPInfo>::Write(aMsg, nullptr, csp);
 }
 

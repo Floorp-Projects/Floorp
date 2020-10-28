@@ -17,6 +17,10 @@
 #include "mozilla/dom/JSWindowActorProtocol.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 namespace dom {

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DocShellMessageUtils.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "nsSerializationHelper.h"
 
 namespace mozilla {
@@ -20,7 +21,7 @@ void IPDLParamTraits<nsDocShellLoadState*>::Write(IPC::Message* aMsg,
 bool IPDLParamTraits<nsDocShellLoadState*>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     RefPtr<nsDocShellLoadState>* aResult) {
-  DocShellLoadStateInit loadState;
+  dom::DocShellLoadStateInit loadState;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &loadState)) {
     return false;
   }
