@@ -1819,7 +1819,7 @@
 # adaptative version of this.
 - name: dom.image-lazy-loading.root-margin.top
   type: float
-  value: 0
+  value: 300
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.top.percentage
@@ -1829,7 +1829,7 @@
 
 - name: dom.image-lazy-loading.root-margin.bottom
   type: float
-  value: 0
+  value: 300
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.bottom.percentage
@@ -1839,7 +1839,7 @@
 
 - name: dom.image-lazy-loading.root-margin.left
   type: float
-  value: 0
+  value: 300
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.left.percentage
@@ -1849,7 +1849,7 @@
 
 - name: dom.image-lazy-loading.root-margin.right
   type: float
-  value: 0
+  value: 300
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.right.percentage
