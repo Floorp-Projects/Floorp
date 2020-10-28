@@ -19,12 +19,8 @@ const BUFFER_DURATION_MS = 10000;
 // How often we should update
 const UPDATE_INTERVAL_MS = 2000;
 
-const NS_PER_US = 1000;
-const NS_PER_MS = 1000000;
+const MS_PER_NS = 1000000;
 const NS_PER_S = 1000000000;
-const NS_PER_MIN = NS_PER_S * 60;
-const NS_PER_HOUR = NS_PER_MIN * 60;
-const NS_PER_DAY = NS_PER_HOUR * 24;
 
 const ONE_GIGA = 1024 * 1024 * 1024;
 const ONE_MEGA = 1024 * 1024;
@@ -317,7 +313,7 @@ var State = {
     if (prev.pid != cur.pid) {
       throw new Error("Assertion failed: A process cannot change pid.");
     }
-    let deltaT = (cur.date - prev.date) * NS_PER_MS;
+    let deltaT = (cur.date - prev.date) * MS_PER_NS;
     let threads = null;
     if (SHOW_THREADS) {
       let prevThreads = new Map();
@@ -423,10 +419,10 @@ var View = {
           fluentName = "about-processes-web-process-name";
           break;
         case "webIsolated":
-          fluentName = "about-processes-web-isolated-process-name";
+          fluentName = "about-processes-webIsolated-process-name";
           break;
         case "webLargeAllocation":
-          fluentName = "about-processes-web-large-allocation-process-name";
+          fluentName = "about-processes-webLargeAllocation-process-name";
           break;
         case "file":
           fluentName = "about-processes-file-process-name";
@@ -439,7 +435,7 @@ var View = {
           fluentName = "about-processes-privilegedabout-process-name";
           break;
         case "withCoopCoep":
-          fluentName = "about-processes-with-coop-coep-process-name";
+          fluentName = "about-processes-withCoopCoep-process-name";
           break;
         case "browser":
           fluentName = "about-processes-browser-process-name";
@@ -448,7 +444,7 @@ var View = {
           fluentName = "about-processes-plugin-process-name";
           break;
         case "gmpPlugin":
-          fluentName = "about-processes-gmp-plugin-process-name";
+          fluentName = "about-processes-gmpPlugin-process-name";
           break;
         case "gpu":
           fluentName = "about-processes-gpu-process-name";
@@ -463,10 +459,10 @@ var View = {
           fluentName = "about-processes-socket-process-name";
           break;
         case "remoteSandboxBroker":
-          fluentName = "about-processes-remote-sandbox-broker-process-name";
+          fluentName = "about-processes-remoteSandboxBroker-process-name";
           break;
         case "forkServer":
-          fluentName = "about-processes-fork-server-process-name";
+          fluentName = "about-processes-forkServer-process-name";
           break;
         case "preallocated":
           fluentName = "about-processes-preallocated-process-name";
@@ -530,60 +526,29 @@ var View = {
 
     // Column: Resident size
     {
-      let formattedTotal = this._formatMemory(data.totalResidentUniqueSize);
-      if (data.deltaResidentUniqueSize) {
-        let formattedDelta = this._formatMemory(data.deltaResidentUniqueSize);
-        this._addCell(row, {
-          fluentName: "about-processes-total-memory-size",
-          fluentArgs: {
-            total: formattedTotal.amount,
-            totalUnit: formattedTotal.unit,
-            delta: Math.abs(formattedDelta.amount),
-            deltaUnit: formattedDelta.unit,
-            deltaSign: data.deltaResidentUniqueSize > 0 ? "+" : "-",
-          },
-          classes: ["totalMemorySize"],
-        });
-      } else {
-        this._addCell(row, {
-          fluentName: "about-processes-total-memory-size-no-change",
-          fluentArgs: {
-            total: formattedTotal.amount,
-            totalUnit: formattedTotal.unit,
-          },
-          classes: ["totalMemorySize"],
-        });
-      }
+      let { formatedDelta, formatedValue } = this._formatMemoryAndDelta(
+        data.totalResidentUniqueSize,
+        data.deltaResidentUniqueSize
+      );
+      let content = formatedDelta
+        ? `${formatedValue}${formatedDelta}`
+        : formatedValue;
+      this._addCell(row, {
+        content,
+        classes: ["totalMemorySize"],
+      });
     }
 
     // Column: CPU: User and Kernel
     {
-      let { duration, unit } = this._getDuration(data.totalCpu);
-      if (data.slopeCpu == null) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-not-ready",
-          classes: ["cpu"],
-        });
-      } else if (data.slopeCpu == 0) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-idle",
-          fluentArgs: {
-            total: duration,
-            unit,
-          },
-          classes: ["cpu"],
-        });
-      } else {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel",
-          fluentArgs: {
-            percent: data.slopeCpu * 100,
-            total: duration,
-            unit,
-          },
-          classes: ["cpu"],
-        });
-      }
+      let slope = this._formatPercentage(data.slopeCpu);
+      let content = `${slope} (${(
+        data.totalCpu / MS_PER_NS
+      ).toLocaleString(undefined, { maximumFractionDigits: 0 })}ms)`;
+      this._addCell(row, {
+        content,
+        classes: ["cpu"],
+      });
     }
 
     // Column: Kill button – but not for all processes.
@@ -785,32 +750,14 @@ var View = {
 
     // Column: CPU: User and Kernel
     {
-      let { duration, unit } = this._getDuration(data.totalCpu);
-      if (data.slopeCpu == null) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-not-ready",
-          classes: ["cpu"],
-        });
-      } else if (data.slopeCpu == 0) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-idle",
-          fluentArgs: {
-            total: duration,
-            unit,
-          },
-          classes: ["cpu"],
-        });
-      } else {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel",
-          fluentArgs: {
-            percent: data.slopeCpu * 100,
-            total: duration,
-            unit,
-          },
-          classes: ["cpu"],
-        });
-      }
+      let slope = this._formatPercentage(data.slopeCpu);
+      let text = `${slope} (${(
+        data.totalCpu / MS_PER_NS
+      ).toLocaleString(undefined, { maximumFractionDigits: 0 })} ms)`;
+      this._addCell(row, {
+        content: text,
+        classes: ["cpu"],
+      });
     }
 
     // Column: Buttons (empty)
@@ -838,26 +785,43 @@ var View = {
     return elt;
   },
 
-  _getDuration(rawDurationNS) {
-    if (rawDurationNS <= NS_PER_US) {
-      return { duration: rawDurationNS, unit: "ns" };
+  /**
+   * Utility method to format an optional percentage.
+   *
+   * As a special case, we also handle `null`, which represents the case in which we do
+   * not have sufficient information to compute a percentage.
+   *
+   * @param {Number?} value The value to format. Must be either `null` or a non-negative number.
+   * A value of 1 means 100%. A value larger than 1 is possible as processes can use several
+   * cores.
+   * @return {String}
+   */
+  _formatPercentage(value) {
+    if (value == null) {
+      return "?";
     }
-    if (rawDurationNS <= NS_PER_MS) {
-      return { duration: rawDurationNS / NS_PER_US, unit: "µs" };
+    if (value < 0 || typeof value != "number") {
+      throw new Error(`Invalid percentage value ${value}`);
     }
-    if (rawDurationNS <= NS_PER_S) {
-      return { duration: rawDurationNS / NS_PER_MS, unit: "ms" };
+    if (value == 0) {
+      // Let's make sure that we do not confuse idle and "close to 0%",
+      // otherwise this results in weird displays.
+      return "idle";
     }
-    if (rawDurationNS <= NS_PER_MIN) {
-      return { duration: rawDurationNS / NS_PER_S, unit: "s" };
+    // Now work with actual percentages.
+    let percentage = value * 100;
+    if (percentage < 0.01) {
+      // Tiny percentage, let's display something more useful than "0".
+      return "~0%";
     }
-    if (rawDurationNS <= NS_PER_HOUR) {
-      return { duration: rawDurationNS / NS_PER_MIN, unit: "m" };
+    if (percentage < 1) {
+      // Still a small percentage, but it should fit within 2 digits.
+      return `${percentage.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      })}%`;
     }
-    if (rawDurationNS <= NS_PER_DAY) {
-      return { duration: rawDurationNS / NS_PER_HOUR, unit: "h" };
-    }
-    return { duration: rawDurationNS / NS_PER_DAY, unit: "d" };
+    // For other percentages, just return a round number.
+    return `${Math.round(percentage)}%`;
   },
 
   /**
@@ -874,31 +838,69 @@ var View = {
     if (value == null) {
       return { unit: "?", amount: 0 };
     }
-    if (typeof value != "number") {
+    if (value < 0 || typeof value != "number") {
       throw new Error(`Invalid memory value ${value}`);
     }
-    let abs = Math.abs(value);
-    if (abs >= ONE_GIGA) {
+    if (value >= ONE_GIGA) {
       return {
         unit: "GB",
-        amount: value / ONE_GIGA,
+        amount: Math.ceil((value / ONE_GIGA) * 100) / 100,
       };
     }
-    if (abs >= ONE_MEGA) {
+    if (value >= ONE_MEGA) {
       return {
         unit: "MB",
-        amount: value / ONE_MEGA,
+        amount: Math.ceil((value / ONE_MEGA) * 100) / 100,
       };
     }
-    if (abs >= ONE_KILO) {
+    if (value >= ONE_KILO) {
       return {
         unit: "KB",
-        amount: value / ONE_KILO,
+        amount: Math.ceil((value / ONE_KILO) * 100) / 100,
       };
     }
     return {
       unit: "B",
-      amount: value,
+      amount: Math.round(value),
+    };
+  },
+
+  /**
+   * Format a value representing an amount of memory and a delta.
+   *
+   * @param {Number?} value The value to format. Must be either `null` or a non-negative number.
+   * @param {Number?} value The delta to format. Must be either `null` or a non-negative number.
+   * @return {
+   *   {unitValue: "GB" | "MB" | "KB" | B" | "?"},
+   *    formatedValue: string,
+   *   {unitDelta: "GB" | "MB" | "KB" | B" | "?"},
+   *    formatedDelta: string
+   * }
+   */
+  _formatMemoryAndDelta(value, delta) {
+    let formatedDelta;
+    let unitDelta;
+    if (delta == null) {
+      formatedDelta == "";
+      unitDelta = null;
+    } else if (delta == 0) {
+      formatedDelta = null;
+      unitDelta = null;
+    } else if (delta >= 0) {
+      let { unit, amount } = this._formatMemory(delta);
+      formatedDelta = ` (+${amount}${unit})`;
+      unitDelta = unit;
+    } else {
+      let { unit, amount } = this._formatMemory(-delta);
+      formatedDelta = ` (-${amount}${unit})`;
+      unitDelta = unit;
+    }
+    let { unit: unitValue, amount } = this._formatMemory(value);
+    return {
+      unitValue,
+      unitDelta,
+      formatedDelta,
+      formatedValue: `${amount}${unitValue}`,
     };
   },
 };
