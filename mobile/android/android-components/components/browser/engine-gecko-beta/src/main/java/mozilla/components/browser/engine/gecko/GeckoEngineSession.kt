@@ -797,7 +797,7 @@ class GeckoEngineSession(
                     url = url,
                     mimeType = contentType
                 )
-                val response = webResponse.toResponse(isBlobUri = url.startsWith("blob:"))
+                val response = webResponse.toResponse()
 
                 notifyObservers {
                     onExternalResource(
