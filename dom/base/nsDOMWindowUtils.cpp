@@ -531,7 +531,7 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(
 
   DisplayPortUtils::SetDisplayPortMargins(
       aElement, presShell,
-      DisplayPortMargins::WithNoAdjustment(displayportMargins), aPriority);
+      DisplayPortMargins::ForContent(aElement, displayportMargins), aPriority);
 
   return NS_OK;
 }
