@@ -1164,7 +1164,7 @@ var Control = {
           order = a.name.localeCompare(b.name) || a.pid - b.pid;
           break;
         case "column-cpu-total":
-          order = b.totalCpu - a.totalCpu;
+          order = b.slopeCpu - a.slopeCpu;
           break;
 
         case "column-memory-resident":
@@ -1195,7 +1195,7 @@ var Control = {
             a.pid - b.pid;
           break;
         case "column-cpu-total":
-          order = b.totalCpu - a.totalCpu;
+          order = b.slopeCpu - a.slopeCpu;
           break;
         case "column-memory-resident":
           order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
