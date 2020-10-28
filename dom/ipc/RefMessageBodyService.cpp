@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RefMessageBodyService.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {

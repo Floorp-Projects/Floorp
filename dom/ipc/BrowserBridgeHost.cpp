@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowserBridgeHost.h"
 
 #include "mozilla/Unused.h"
+#include "nsFrameLoader.h"
 
 namespace mozilla {
 namespace dom {

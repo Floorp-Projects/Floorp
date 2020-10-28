@@ -8,6 +8,7 @@
 
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #include "nsIObserverService.h"

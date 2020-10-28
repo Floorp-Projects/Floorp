@@ -29,6 +29,7 @@ dom/html/
 dom/imptests/
 dom/indexedDB/
 dom/interfaces/
+dom/ipc/
 dom/localstorage/
 dom/quota/
 dom/simpledb/

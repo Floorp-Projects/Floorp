@@ -6,6 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/JSProcessActorProtocol.h"
+#include "mozilla/dom/InProcessChild.h"
+#include "mozilla/dom/JSProcessActorBinding.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/JSActorBinding.h"
+#include "mozilla/dom/PContent.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
