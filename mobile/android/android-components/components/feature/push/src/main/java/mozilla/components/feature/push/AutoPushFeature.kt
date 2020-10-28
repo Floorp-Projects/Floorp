@@ -289,6 +289,8 @@ class AutoPushFeature(
                     subscriptionChanges.forEach { sub ->
                         notifyObservers { onSubscriptionChanged(sub.scope) }
                     }
+                } else {
+                    logger.info("No change to subscriptions. Doing nothing.")
                 }
             }
         }
@@ -296,9 +298,11 @@ class AutoPushFeature(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun tryVerifySubscriptions() {
-        logger.info("Checking validity of push subscriptions.")
+        logger.info("Trying to check validity of push subscriptions.")
 
         if (shouldVerifyNow()) {
+            logger.info("Checking now..")
+
             verifyActiveSubscriptions()
 
             prefLastVerified = System.currentTimeMillis()
@@ -361,6 +365,8 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
 
     if (isFatal) {
         onError(PushError.Rust(e, e.message.orEmpty()))
+    } else {
+        Logger.warn("Non-fatal error occurred in AutoPushFeature.", e)
     }
 }
 
