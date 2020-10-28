@@ -97,9 +97,23 @@ struct DisplayPortMargins {
                                            const CSSPoint& aLayoutOffset,
                                            const CSSToScreenScale2D& aScale);
 
-  static DisplayPortMargins WithNoAdjustment(const ScreenMargin& aMargins);
+  // Create displayport port margins for the given scroll frame.
+  // This is for use in cases where we don't have async scroll information from
+  // APZ to use to adjust the margins. The visual and layout offset are set
+  // based on the main thread's view of them. If a scale isn't provided, one
+  // is computed based on the main thread's knowledge.
+  static DisplayPortMargins ForScrollFrame(
+      nsIScrollableFrame* aScrollFrame, const ScreenMargin& aMargins,
+      const Maybe<CSSToScreenScale2D>& aScale = Nothing());
 
-  static DisplayPortMargins Empty() { return WithNoAdjustment(ScreenMargin()); }
+  // Convenience version of the above that takes a content element.
+  static DisplayPortMargins ForContent(nsIContent* aContent,
+                                       const ScreenMargin& aMargins);
+
+  // Another convenience version that sets empty margins.
+  static DisplayPortMargins Empty(nsIContent* aContent) {
+    return ForContent(aContent, ScreenMargin());
+  }
 
   // Get the margins relative to the layout viewport.
   // |aGeometryType| tells us whether the margins are being queried for the
