@@ -12,7 +12,7 @@ Client-side, this consists of:
 * assembling :doc:`concepts/pings` with the general information and the data payload
 * sending them to the server and local ping retention
 
-*Note:* the `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_ documents the process and requirements that are applied here.
+*Note:* Mozilla's `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_ documents the process and requirements that are applied here.
 
 .. toctree::
    :maxdepth: 5
