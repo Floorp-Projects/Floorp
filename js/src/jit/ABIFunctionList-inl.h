@@ -36,7 +36,7 @@
 #include "js/Conversions.h"  // JS::ToInt32
 // JSJitGetterOp, JSJitSetterOp, JSJitMethodOp
 #include "js/experimental/JitInfo.h"
-#include "js/Utility.h"      // js_free
+#include "js/Utility.h"  // js_free
 
 #include "proxy/Proxy.h"  // js::ProxyGetProperty
 
@@ -57,15 +57,14 @@ namespace jit {
 // List of all ABI functions to be used with callWithABI. Each entry stores
 // the fully qualified name of the C++ function. This list must be sorted.
 #if JS_GC_PROBES
-#  define ABIFUNCTION_JS_GC_PROBES_LIST(_) \
-    _(js::jit::TraceCreateObject)
+#  define ABIFUNCTION_JS_GC_PROBES_LIST(_) _(js::jit::TraceCreateObject)
 #else
 #  define ABIFUNCTION_JS_GC_PROBES_LIST(_)
 #endif
 
 #if defined(JS_CODEGEN_ARM)
-#  define ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)    \
-    _(__aeabi_idivmod)                          \
+#  define ABIFUNCTION_JS_CODEGEN_ARM_LIST(_) \
+    _(__aeabi_idivmod)                       \
     _(__aeabi_uidivmod)
 #else
 #  define ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)
@@ -82,91 +81,91 @@ namespace jit {
 #  define ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)
 #endif
 
-#define ABIFUNCTION_LIST(_)                                 \
-  ABIFUNCTION_JS_GC_PROBES_LIST(_)                          \
-  ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)                        \
-  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                    \
-  _(js::ArgumentsObject::finishForIonPure)                  \
-  _(js::ArrayShiftMoveElements)                             \
-  _(js::ecmaAtan2)                                          \
-  _(js::ecmaHypot)                                          \
-  _(js::ecmaPow)                                            \
-  _(js::EmulatesUndefined)                                  \
-  _(js::ExecuteRegExpAtomRaw)                               \
-  _(js_free)                                                \
-  _(js::hypot3)                                             \
-  _(js::hypot4)                                             \
-  _(js::Int32ToStringPure)                                  \
-  _(js::irregexp::CaseInsensitiveCompareNonUnicode)         \
-  _(js::irregexp::CaseInsensitiveCompareUnicode)            \
-  _(js::irregexp::GrowBacktrackStack)                       \
-  _(js::jit::AllocateAndInitTypedArrayBuffer)               \
-  _(js::jit::AllocateBigIntNoGC)                            \
-  _(js::jit::AllocateFatInlineString)                       \
-  _(js::jit::AllocateString)                                \
-  _(js::jit::AssertValidBigIntPtr)                          \
-  _(js::jit::AssertValidObjectOrNullPtr)                    \
-  _(js::jit::AssertValidObjectPtr)                          \
-  _(js::jit::AssertValidStringPtr)                          \
-  _(js::jit::AssertValidSymbolPtr)                          \
-  _(js::jit::AssertValidValue)                              \
-  _(js::jit::AssumeUnreachable)                             \
-  _(js::jit::Bailout)                                       \
-  _(js::jit::BigIntNumberEqual<EqualityKind::Equal>)        \
-  _(js::jit::BigIntNumberEqual<EqualityKind::NotEqual>)     \
-  _(js::jit::BigIntNumberCompare<ComparisonKind::LessThan>) \
-  _(js::jit::NumberBigIntCompare<ComparisonKind::LessThan>) \
+#define ABIFUNCTION_LIST(_)                                           \
+  ABIFUNCTION_JS_GC_PROBES_LIST(_)                                    \
+  ABIFUNCTION_JS_CODEGEN_ARM_LIST(_)                                  \
+  ABIFUNCTION_WASM_CODEGEN_DEBUG_LIST(_)                              \
+  _(js::ArgumentsObject::finishForIonPure)                            \
+  _(js::ArrayShiftMoveElements)                                       \
+  _(js::ecmaAtan2)                                                    \
+  _(js::ecmaHypot)                                                    \
+  _(js::ecmaPow)                                                      \
+  _(js::EmulatesUndefined)                                            \
+  _(js::ExecuteRegExpAtomRaw)                                         \
+  _(js_free)                                                          \
+  _(js::hypot3)                                                       \
+  _(js::hypot4)                                                       \
+  _(js::Int32ToStringPure)                                            \
+  _(js::irregexp::CaseInsensitiveCompareNonUnicode)                   \
+  _(js::irregexp::CaseInsensitiveCompareUnicode)                      \
+  _(js::irregexp::GrowBacktrackStack)                                 \
+  _(js::jit::AllocateAndInitTypedArrayBuffer)                         \
+  _(js::jit::AllocateBigIntNoGC)                                      \
+  _(js::jit::AllocateFatInlineString)                                 \
+  _(js::jit::AllocateString)                                          \
+  _(js::jit::AssertValidBigIntPtr)                                    \
+  _(js::jit::AssertValidObjectOrNullPtr)                              \
+  _(js::jit::AssertValidObjectPtr)                                    \
+  _(js::jit::AssertValidStringPtr)                                    \
+  _(js::jit::AssertValidSymbolPtr)                                    \
+  _(js::jit::AssertValidValue)                                        \
+  _(js::jit::AssumeUnreachable)                                       \
+  _(js::jit::Bailout)                                                 \
+  _(js::jit::BigIntNumberEqual<EqualityKind::Equal>)                  \
+  _(js::jit::BigIntNumberEqual<EqualityKind::NotEqual>)               \
+  _(js::jit::BigIntNumberCompare<ComparisonKind::LessThan>)           \
+  _(js::jit::NumberBigIntCompare<ComparisonKind::LessThan>)           \
   _(js::jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>) \
   _(js::jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>) \
-  _(js::jit::CreateMatchResultFallbackFunc)                 \
-  _(js::jit::EqualStringsHelperPure)                        \
-  _(js::jit::FinishBailoutToBaseline)                       \
-  _(js::jit::FrameIsDebuggeeCheck)                          \
-  _(js::jit::GetDynamicNamePure)                            \
-  _(js::jit::GetIndexFromString)                            \
-  _(js::jit::GetInt32FromStringPure)                        \
-  _(js::jit::GetNativeDataPropertyByValuePure<false>)       \
-  _(js::jit::GetNativeDataPropertyByValuePure<true>)        \
-  _(js::jit::GetNativeDataPropertyPure<false>)              \
-  _(js::jit::GetNativeDataPropertyPure<true>)               \
-  _(js::jit::GlobalHasLiveOnDebuggerStatement)              \
-  _(js::jit::GroupHasPropertyTypes)                         \
-  _(js::jit::HandleCodeCoverageAtPC)                        \
-  _(js::jit::HandleCodeCoverageAtPrologue)                  \
-  _(js::jit::HandleException)                               \
-  _(js::jit::HasNativeDataPropertyPure<false>)              \
-  _(js::jit::HasNativeDataPropertyPure<true>)               \
-  _(js::jit::HasNativeElementPure)                          \
-  _(js::jit::InitBaselineFrameForOsr)                       \
-  _(js::jit::InvalidationBailout)                           \
-  _(js::jit::InvokeFromInterpreterStub)                     \
-  _(js::jit::LazyLinkTopActivation)                         \
-  _(js::jit::ObjectHasGetterSetterPure)                     \
-  _(js::jit::ObjectIsCallable)                              \
-  _(js::jit::ObjectIsConstructor)                           \
-  _(js::jit::PostGlobalWriteBarrier)                        \
-  _(js::jit::PostWriteBarrier)                              \
-  _(js::jit::PostWriteElementBarrier<IndexInBounds::Yes>)   \
-  _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>) \
-  _(js::jit::Printf0)                                       \
-  _(js::jit::Printf1)                                       \
-  _(js::jit::SetNativeDataPropertyPure<false>)              \
-  _(js::jit::SetNativeDataPropertyPure<true>)               \
-  _(js::jit::StringFromCharCodeNoGC)                        \
-  _(js::jit::TypeOfObject)                                  \
-  _(js::jit::WrapObjectPure)                                \
-  _(js::MapIteratorObject::next)                            \
-  _(js::NativeObject::addDenseElementPure)                  \
-  _(js::NativeObject::growSlotsPure)                        \
-  _(js::NumberMod)                                          \
-  _(js::NumberToStringPure)                                 \
-  _(js::powi)                                               \
-  _(js::ProxyGetProperty)                                   \
-  _(js::RegExpInstanceOptimizableRaw)                       \
-  _(js::RegExpPrototypeOptimizableRaw)                      \
-  _(js::SetIteratorObject::next)                            \
-  _(js::StringToNumberPure)                                 \
-  _(js::TraceLogStartEventPrivate)                          \
+  _(js::jit::CreateMatchResultFallbackFunc)                           \
+  _(js::jit::EqualStringsHelperPure)                                  \
+  _(js::jit::FinishBailoutToBaseline)                                 \
+  _(js::jit::FrameIsDebuggeeCheck)                                    \
+  _(js::jit::GetDynamicNamePure)                                      \
+  _(js::jit::GetIndexFromString)                                      \
+  _(js::jit::GetInt32FromStringPure)                                  \
+  _(js::jit::GetNativeDataPropertyByValuePure<false>)                 \
+  _(js::jit::GetNativeDataPropertyByValuePure<true>)                  \
+  _(js::jit::GetNativeDataPropertyPure<false>)                        \
+  _(js::jit::GetNativeDataPropertyPure<true>)                         \
+  _(js::jit::GlobalHasLiveOnDebuggerStatement)                        \
+  _(js::jit::GroupHasPropertyTypes)                                   \
+  _(js::jit::HandleCodeCoverageAtPC)                                  \
+  _(js::jit::HandleCodeCoverageAtPrologue)                            \
+  _(js::jit::HandleException)                                         \
+  _(js::jit::HasNativeDataPropertyPure<false>)                        \
+  _(js::jit::HasNativeDataPropertyPure<true>)                         \
+  _(js::jit::HasNativeElementPure)                                    \
+  _(js::jit::InitBaselineFrameForOsr)                                 \
+  _(js::jit::InvalidationBailout)                                     \
+  _(js::jit::InvokeFromInterpreterStub)                               \
+  _(js::jit::LazyLinkTopActivation)                                   \
+  _(js::jit::ObjectHasGetterSetterPure)                               \
+  _(js::jit::ObjectIsCallable)                                        \
+  _(js::jit::ObjectIsConstructor)                                     \
+  _(js::jit::PostGlobalWriteBarrier)                                  \
+  _(js::jit::PostWriteBarrier)                                        \
+  _(js::jit::PostWriteElementBarrier<IndexInBounds::Yes>)             \
+  _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>)           \
+  _(js::jit::Printf0)                                                 \
+  _(js::jit::Printf1)                                                 \
+  _(js::jit::SetNativeDataPropertyPure<false>)                        \
+  _(js::jit::SetNativeDataPropertyPure<true>)                         \
+  _(js::jit::StringFromCharCodeNoGC)                                  \
+  _(js::jit::TypeOfObject)                                            \
+  _(js::jit::WrapObjectPure)                                          \
+  _(js::MapIteratorObject::next)                                      \
+  _(js::NativeObject::addDenseElementPure)                            \
+  _(js::NativeObject::growSlotsPure)                                  \
+  _(js::NumberMod)                                                    \
+  _(js::NumberToStringPure)                                           \
+  _(js::powi)                                                         \
+  _(js::ProxyGetProperty)                                             \
+  _(js::RegExpInstanceOptimizableRaw)                                 \
+  _(js::RegExpPrototypeOptimizableRaw)                                \
+  _(js::SetIteratorObject::next)                                      \
+  _(js::StringToNumberPure)                                           \
+  _(js::TraceLogStartEventPrivate)                                    \
   _(js::TraceLogStopEventPrivate)
 
 // List of all ABI functions to be used with callWithABI, which are

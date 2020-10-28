@@ -134,12 +134,6 @@ void MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type) {
   passABIArg(MoveOperand(reg), type);
 }
 
-void MacroAssembler::callWithABI(void* fun, MoveOp::Type result,
-                                 CheckUnsafeCallWithABI check) {
-  AutoProfilerCallInstrumentation profiler(*this);
-  callWithABINoProfiler(fun, result, check);
-}
-
 void MacroAssembler::callWithABI(DynFn fun, MoveOp::Type result,
                                  CheckUnsafeCallWithABI check) {
   AutoProfilerCallInstrumentation profiler(*this);

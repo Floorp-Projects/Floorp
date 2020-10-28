@@ -648,9 +648,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void passABIArg(FloatRegister reg, MoveOp::Type type);
 
   inline void callWithABI(
-      void* fun, MoveOp::Type result = MoveOp::GENERAL,
-      CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
-  inline void callWithABI(
       DynFn fun, MoveOp::Type result = MoveOp::GENERAL,
       CheckUnsafeCallWithABI check = CheckUnsafeCallWithABI::Check);
   template <typename Sig, Sig fun>
