@@ -12,7 +12,6 @@ import mozilla.appservices.places.BookmarkRoot
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -151,7 +150,6 @@ class BookmarksTest {
         }
     }
 
-    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/10690")
     @Test
     fun editBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -164,7 +162,6 @@ class BookmarksTest {
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
             IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
-            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
         }.clickEdit {
             verifyEditBookmarksView()
             verifyBookmarkNameEditBox()
@@ -173,9 +170,6 @@ class BookmarksTest {
             changeBookmarkTitle(testBookmark.title)
             changeBookmarkUrl(testBookmark.url)
             saveEditBookmark()
-
-            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
-
             verifyBookmarkTitle(testBookmark.title)
             verifyBookmarkedURL(testBookmark.url)
             verifyKeyboardHidden()
