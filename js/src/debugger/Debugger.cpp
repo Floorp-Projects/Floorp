@@ -5136,6 +5136,13 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     while (!partialMatchVector.empty()) {
       script = partialMatchVector.popCopy();
 
+      // As a performance optimization, we can skip scripts that are definitely
+      // out-of-bounds for the target line. This was checked before adding to
+      // the partialMatchVector, but the bound may have improved since then.
+      if (script->extent().sourceEnd <= sourceOffsetLowerBound) {
+        continue;
+      }
+
       MOZ_ASSERT(script->isFunction());
       MOZ_ASSERT(script->isReadyForDelazification());
 
@@ -5148,9 +5155,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       }
 
       // If target line isn't in script, we are done with it.
-      MOZ_ASSERT(line >= compiledScript->lineno());
-      if (compiledScript->lineno() + GetScriptLineExtent(compiledScript) <=
-          line) {
+      if (!scriptIsLineMatch(compiledScript)) {
         continue;
       }
 
@@ -5177,8 +5182,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         }
         BaseScript* inner = thing.as<JSObject>().as<JSFunction>().baseScript();
 
-        // If target line isn't in script, we are done with it.
-        if (line < inner->lineno()) {
+        if (!scriptIsPartialLineMatch(inner)) {
           continue;
         }
 
@@ -5279,6 +5283,18 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   /* The line matching scripts must cover. */
   uint32_t line = 0;
 
+  // As a performance optimization (and to avoid delazifying as many scripts),
+  // we would like to know the source offset of the target line.
+  //
+  // Since we do not have a simple way to compute this precisely, we instead
+  // track a lower-bound of the offset value. As we collect SourceExtent
+  // examples with (line,column) <-> sourceStart mappings, we can improve the
+  // bound. The target line is within the range [sourceOffsetLowerBound, Inf).
+  //
+  // NOTE: Using a SourceExtent for updating the bound happens independently of
+  //       if the script matches the target line or not in the in the end.
+  mutable uint32_t sourceOffsetLowerBound = 0;
+
   /* True if the query has an 'innermost' property whose value is true. */
   bool innermost = false;
 
@@ -5319,6 +5335,51 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     }
 
     return true;
+  }
+
+  void updateSourceOffsetLowerBound(const SourceExtent& extent) {
+    // We trying to find the offset of (target-line, 0) so just ignore any
+    // extents on target line to keep things simple.
+    MOZ_ASSERT(extent.lineno <= line);
+    if (extent.lineno == line) {
+      return;
+    }
+
+    // The extent.sourceStart position is now definitely *before* the target
+    // line, so update sourceOffsetLowerBound if extent.sourceStart is a tighter
+    // bound.
+    if (extent.sourceStart > sourceOffsetLowerBound) {
+      sourceOffsetLowerBound = extent.sourceStart;
+    }
+  }
+
+  // A partial match is a script that starts before the target line, but may or
+  // may not end before it. If we can prove the script definitely ends before
+  // the target line, we may return false here.
+  bool scriptIsPartialLineMatch(BaseScript* script) {
+    const SourceExtent& extent = script->extent();
+
+    // Check that start of script is before or on target line.
+    if (extent.lineno > line) {
+      return false;
+    }
+
+    // Use the implicit (line, column) <-> sourceStart mapping from the
+    // SourceExtent to update our bounds on possible matches. We call this
+    // without knowing if the script is a match or not.
+    updateSourceOffsetLowerBound(script->extent());
+
+    // As an optional performance optimization, we rule out any script that ends
+    // before the lower-bound on where target line exists.
+    return extent.sourceEnd > sourceOffsetLowerBound;
+  }
+
+  // True if any part of script source is on the target line.
+  bool scriptIsLineMatch(JSScript* script) {
+    MOZ_ASSERT(scriptIsPartialLineMatch(script));
+
+    uint32_t lineCount = GetScriptLineExtent(script);
+    return (script->lineno() + lineCount > line);
   }
 
   static void considerScript(JSRuntime* rt, void* data, BaseScript* script,
@@ -5385,11 +5446,13 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     bool partial = false;
 
     if (hasLine) {
+      if (!scriptIsPartialLineMatch(script)) {
+        return;
+      }
+
       if (script->hasBytecode()) {
         // Check if line is within script (or any of its inner scripts).
-        if (line < script->lineno() ||
-            script->lineno() + GetScriptLineExtent(script->asJSScript()) <=
-                line) {
+        if (!scriptIsLineMatch(script->asJSScript())) {
           return;
         }
       } else {
@@ -5398,9 +5461,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         // add scripts that are ready for delazification and they may in turn
         // process their inner functions.
         if (!script->isReadyForDelazification()) {
-          return;
-        }
-        if (line < script->lineno()) {
           return;
         }
         partial = true;
