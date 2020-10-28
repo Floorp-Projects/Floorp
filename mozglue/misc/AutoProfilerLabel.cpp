@@ -6,7 +6,6 @@
 
 #include "mozilla/AutoProfilerLabel.h"
 
-#include "mozilla/Assertions.h"
 #include "mozilla/PlatformMutex.h"
 
 namespace mozilla {
