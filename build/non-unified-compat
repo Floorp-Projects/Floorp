@@ -41,5 +41,8 @@ dom/media/bridge/
 dom/media/doctor/
 dom/media/eme/
 dom/media/encoder/
+dom/media/fake-cdm/
+dom/media/flac/
+dom/media/fuzz/
 dom/quota/
 dom/simpledb/
