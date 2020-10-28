@@ -13,8 +13,11 @@
 #include "SharedSSLState.h"
 #include "sslt.h"
 #include "ssl.h"
+#include "mozilla/net/SSLTokensCache.h"
 
 using namespace mozilla;
+
+extern LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS_INHERITED(CommonSocketControl, TransportSecurityInfo,
                             nsISSLSocketControl)
@@ -212,6 +215,39 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   // All tests pass
   *_retval = true;
   return NS_OK;
+}
+
+void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
+  nsAutoCString key;
+  GetPeerId(key);
+  mozilla::net::SessionCacheInfo info;
+  if (!mozilla::net::SSLTokensCache::GetSessionCacheInfo(key, info)) {
+    MOZ_LOG(
+        gPIPNSSLog, LogLevel::Debug,
+        ("CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache cannot "
+         "find cached info."));
+    return;
+  }
+
+  RefPtr<nsNSSCertificate> nssc = nsNSSCertificate::ConstructFromDER(
+      BitwiseCast<char*, uint8_t*>(info.mServerCertBytes.Elements()),
+      info.mServerCertBytes.Length());
+  if (!nssc) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("RebuildCertificateInfoFromSSLTokenCache failed to construct "
+             "server cert"));
+    return;
+  }
+
+  SetServerCert(nssc, info.mEVStatus);
+  SetCertificateTransparencyStatus(info.mCertificateTransparencyStatus);
+  if (info.mSucceededCertChainBytes) {
+    SetSucceededCertChain(std::move(*info.mSucceededCertChainBytes));
+  }
+
+  if (info.mIsBuiltCertChainRootBuiltInRoot) {
+    SetIsBuiltCertChainRootBuiltInRoot(*info.mIsBuiltCertChainRootBuiltInRoot);
+  }
 }
 
 NS_IMETHODIMP
