@@ -45,13 +45,6 @@ const watcherSpecPrototype = {
       },
       oneway: true,
     },
-
-    getNetworkActor: {
-      request: {},
-      response: {
-        network: RetVal("network"),
-      },
-    },
   },
 
   events: {

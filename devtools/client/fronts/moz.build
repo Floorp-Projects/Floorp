@@ -29,7 +29,6 @@ DevToolsModules(
     "layout.js",
     "manifest.js",
     "memory.js",
-    "network.js",
     "node.js",
     "object.js",
     "perf.js",

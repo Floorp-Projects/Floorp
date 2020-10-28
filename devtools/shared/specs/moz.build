@@ -33,7 +33,6 @@ DevToolsModules(
     "memory.js",
     "network-event.js",
     "network-monitor.js",
-    "network.js",
     "node.js",
     "object.js",
     "perf.js",

@@ -27,14 +27,8 @@ add_task(async function() {
   document.querySelector(".requests-list-blocking-button").click();
 
   info("Adding sample block strings");
-  const waitForBlockingContents = waitForDOM(
-    document,
-    ".request-blocking-contents"
-  );
   await waitForBlockingAction(store, () => Actions.addBlockedUrl("test-page"));
   await waitForBlockingAction(store, () => Actions.addBlockedUrl("Two"));
-  await waitForBlockingContents;
-
   is(getListitems(document), 2);
 
   info("Reloading page, URLs should be blocked in request list");
