@@ -204,6 +204,56 @@ bool MinidumpFileWriter::CopyStringToMDString(const char *str,
   return result;
 }
 
+unsigned int MinidumpFileWriter::CalculateNumOfU16s(const wchar_t *str, unsigned int length) {
+  if (sizeof(wchar_t) == sizeof(uint16_t)) {
+    // Shortcut if wchar_t is the same size as MDString's buffer
+    return length;
+  } else {
+    uint16_t out[2];
+    unsigned int num_of_u16s = 0;
+
+    // Copy the string character by character
+    while (length) {
+      UTF32ToUTF16Char(*str, out);
+      if (!out[0])
+        return false;
+
+      // Process one character at a time
+      --length;
+      ++str;
+
+      // Count the number of UTF-16 characters needed for every wchar_t
+      // and add it to the total.
+      int out_count = out[1] ? 2 : 1;
+      num_of_u16s += out_count;
+    }
+
+    return num_of_u16s;
+  }
+}
+
+unsigned int MinidumpFileWriter::CalculateNumOfU16s(const char *str, unsigned int length) {
+  uint16_t out[2];
+  unsigned int num_of_u16s = 0;
+
+  while (length) {
+    int conversion_count = UTF8ToUTF16Char(str, length, out);
+    if (!conversion_count) {
+      break;
+    }
+    // Move the pointer along based on the number of converted characters
+    length -= conversion_count;
+    str += conversion_count;
+
+    // Add one or two to the total
+    int out_count = out[1] ? 2 : 1;
+    num_of_u16s += out_count;
+  }
+
+  return num_of_u16s;
+}
+
+
 template <typename CharType>
 bool MinidumpFileWriter::WriteStringCore(const CharType *str,
                                          unsigned int length,
@@ -218,20 +268,22 @@ bool MinidumpFileWriter::WriteStringCore(const CharType *str,
   for (; mdstring_length < length && str[mdstring_length]; ++mdstring_length)
     ;
 
+  unsigned int num_of_u16s = MinidumpFileWriter::CalculateNumOfU16s(str, mdstring_length);
+
   // Allocate the string buffer
   TypedMDRVA<MDString> mdstring(this);
-  if (!mdstring.AllocateObjectAndArray(mdstring_length + 1, sizeof(uint16_t)))
+  if (!mdstring.AllocateObjectAndArray(num_of_u16s + 1, sizeof(uint16_t)))
     return false;
 
   // Set length excluding the NULL and copy the string
   mdstring.get()->length =
-      static_cast<uint32_t>(mdstring_length * sizeof(uint16_t));
+      static_cast<uint32_t>(num_of_u16s * sizeof(uint16_t));
   bool result = CopyStringToMDString(str, mdstring_length, &mdstring);
 
   // NULL terminate
   if (result) {
     uint16_t ch = 0;
-    result = mdstring.CopyIndexAfterObject(mdstring_length, &ch, sizeof(ch));
+    result = mdstring.CopyIndexAfterObject(num_of_u16s, &ch, sizeof(ch));
 
     if (result)
       *location = mdstring.location();
