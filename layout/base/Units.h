@@ -35,6 +35,7 @@ struct ScreenPixel;
 struct ParentLayerPixel;
 struct DesktopPixel;
 struct ImagePixel;
+struct ExternalPixel;
 
 template <>
 struct IsPixel<CSSPixel> : std::true_type {};
@@ -54,6 +55,8 @@ template <>
 struct IsPixel<ParentLayerPixel> : std::true_type {};
 template <>
 struct IsPixel<DesktopPixel> : std::true_type {};
+template <>
+struct IsPixel<ExternalPixel> : std::true_type {};
 
 typedef gfx::CoordTyped<CSSPixel> CSSCoord;
 typedef gfx::IntCoordTyped<CSSPixel> CSSIntCoord;
@@ -153,6 +156,18 @@ typedef gfx::IntSizeTyped<DesktopPixel> DesktopIntSize;
 typedef gfx::RectTyped<DesktopPixel> DesktopRect;
 typedef gfx::IntRectTyped<DesktopPixel> DesktopIntRect;
 
+typedef gfx::CoordTyped<ExternalPixel> ExternalCoord;
+typedef gfx::IntCoordTyped<ExternalPixel> ExternalIntCoord;
+typedef gfx::PointTyped<ExternalPixel> ExternalPoint;
+typedef gfx::IntPointTyped<ExternalPixel> ExternalIntPoint;
+typedef gfx::SizeTyped<ExternalPixel> ExternalSize;
+typedef gfx::IntSizeTyped<ExternalPixel> ExternalIntSize;
+typedef gfx::RectTyped<ExternalPixel> ExternalRect;
+typedef gfx::IntRectTyped<ExternalPixel> ExternalIntRect;
+typedef gfx::MarginTyped<ExternalPixel> ExternalMargin;
+typedef gfx::IntMarginTyped<ExternalPixel> ExternalIntMargin;
+typedef gfx::IntRegionTyped<ExternalPixel> ExternalIntRegion;
+
 typedef gfx::ScaleFactor<CSSPixel, CSSPixel> CSSToCSSScale;
 typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;
@@ -243,6 +258,8 @@ typedef gfx::Matrix4x4Typed<ParentLayerPixel, ParentLayerPixel>
     ParentLayerToParentLayerMatrix4x4;
 typedef gfx::Matrix4x4Typed<ParentLayerPixel, RenderTargetPixel>
     ParentLayerToRenderTargetMatrix4x4;
+typedef gfx::Matrix4x4Typed<ExternalPixel, ParentLayerPixel>
+    ExternalToParentLayerMatrix4x4;
 
 /*
  * The pixels that content authors use to specify sizes in.
@@ -561,6 +578,8 @@ struct ParentLayerPixel {};
  *   desktop pixels may vary across multiple displays.
  */
 struct DesktopPixel {};
+
+struct ExternalPixel {};
 
 // Operators to apply ScaleFactors directly to Coords, Points, Rects, Sizes and
 // Margins
