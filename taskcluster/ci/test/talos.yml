@@ -24,7 +24,7 @@ job-defaults:
                     - talos/mac_config.py
                 windows.*:
                     - talos/windows_config.py
-                windows10-64-ccov/opt:
+                windows10-64-ccov-qr/opt:
                     - talos/windows_vm_config.py
                 linux64-ccov.*/.*:
                     - talos/linux64_config_taskcluster.py
@@ -556,6 +556,7 @@ talos-webgl:
             .*-ccov.*/.*: []
             android.*: []
             (linux64|windows|macos).*-qr.*: ['webgl-ipc', 'webrender-sw']
+            windows10-64-ccov-qr/opt: []
             default: ['webgl-ipc']
     run-on-projects:
         by-test-platform:
