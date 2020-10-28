@@ -3627,11 +3627,11 @@ MDefinition* MReturnFromCtor::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
-  if (!input()->isBox()) {
-    return this;
+  MDefinition* unboxed = input();
+  if (unboxed->isBox()) {
+    unboxed = unboxed->toBox()->input();
   }
 
-  MDefinition* unboxed = input()->toBox()->input();
   JSType type;
   switch (unboxed->type()) {
     case MIRType::Double:
