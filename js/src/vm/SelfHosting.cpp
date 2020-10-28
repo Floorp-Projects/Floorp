@@ -1235,8 +1235,8 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
-  args.rval().set(TypedArrayObject::lengthValue(
-      &args[0].toObject().as<TypedArrayObject>()));
+  auto* tarr = &args[0].toObject().as<TypedArrayObject>();
+  args.rval().set(tarr->lengthValue());
   return true;
 }
 

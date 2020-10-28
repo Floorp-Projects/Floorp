@@ -451,7 +451,7 @@ class ElementSpecific {
         return false;
       }
 
-      len = std::min(len, target->length());
+      len = std::min<size_t>(len, target->length());
       if (i >= len) {
         break;
       }
