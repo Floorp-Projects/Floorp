@@ -32,6 +32,9 @@ dom/interfaces/
 dom/ipc/
 dom/jsurl/
 dom/l10n/
+dom/locales/
 dom/localstorage/
+dom/manifest/
+dom/mathml/
 dom/quota/
 dom/simpledb/
