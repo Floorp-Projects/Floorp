@@ -47,5 +47,9 @@ dom/media/fuzz/
 dom/media/gmp/
 dom/media/gmp-plugin-openh264/
 dom/media/gtest/
+dom/media/hls/
+dom/media/imagecapture/
+dom/media/ipc/
+dom/media/mediacapabilities/
 dom/quota/
 dom/simpledb/
