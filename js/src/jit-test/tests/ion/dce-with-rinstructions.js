@@ -1,6 +1,6 @@
 // |jit-test| --ion-limit-script-size=off
 
-setJitCompilerOption("baseline.warmup.trigger", 10);
+setJitCompilerOption("baseline.warmup.trigger", 9);
 setJitCompilerOption("ion.warmup.trigger", 20);
 setJitCompilerOption("ion.full.warmup.trigger", 20);
 var i;
@@ -1164,12 +1164,9 @@ function rstring_replace_g(i) {
 
 var uceFault_typeof = eval(`(${uceFault})`.replace('uceFault', 'uceFault_typeof'))
 function rtypeof(i) {
-    var inputs = [ {}, [], 1, true, undefined, function(){}, null ];
-    var types = [ "object", "object", "number", "boolean", "undefined", "function", "object"];
-    if (typeof Symbol === "function") {
-      inputs.push(Symbol());
-      types.push("symbol");
-    }
+    var inputs = [ {}, [], 1, true, undefined, function(){}, null, Symbol() ];
+    var types = [ "object", "object", "number", "boolean", "undefined", "function", "object", "symbol"];
+
     var x = typeof (inputs[i % inputs.length]);
     var y = types[i % types.length];
 

@@ -599,6 +599,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::StrictSetElem:
       case JSOp::ToPropertyKey:
       case JSOp::OptimizeSpreadCall:
+      case JSOp::Typeof:
+      case JSOp::TypeofExpr:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
@@ -669,8 +671,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::ClassConstructor:
       case JSOp::DerivedConstructor:
       case JSOp::ToAsyncIter:
-      case JSOp::Typeof:
-      case JSOp::TypeofExpr:
       case JSOp::ObjWithProto:
       case JSOp::GetAliasedVar:
       case JSOp::SetAliasedVar:
