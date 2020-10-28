@@ -92,9 +92,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
   inline size_t bytesPerElement() const;
 
   static Value byteOffsetValue(const TypedArrayObject* tarr) {
-    Value v = tarr->getFixedSlot(BYTEOFFSET_SLOT);
-    MOZ_ASSERT(v.toInt32() >= 0);
-    return v;
+    size_t byteOffset = size_t(tarr->getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
+    MOZ_ASSERT(byteOffset <= INT32_MAX);
+    return Int32Value(byteOffset);
   }
   static Value byteLengthValue(const TypedArrayObject* tarr) {
     return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() *

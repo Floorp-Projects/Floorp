@@ -26,7 +26,7 @@ using namespace js;
  */
 /* static */
 void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
-  NativeObject* obj = &objArg->as<NativeObject>();
+  ArrayBufferViewObject* obj = &objArg->as<ArrayBufferViewObject>();
   HeapSlot& bufSlot = obj->getFixedSlotRef(BUFFER_SLOT);
   TraceEdge(trc, &bufSlot, "ArrayBufferViewObject.buffer");
 
@@ -35,7 +35,7 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
     if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
       ArrayBufferObject& buf =
           gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
-      uint32_t offset = uint32_t(obj->getFixedSlot(BYTEOFFSET_SLOT).toInt32());
+      size_t offset = size_t(obj->getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
       MOZ_ASSERT(offset <= INT32_MAX);
 
       MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
@@ -59,7 +59,7 @@ void ArrayBufferViewObject::notifyBufferDetached() {
   MOZ_ASSERT(hasBuffer());
 
   setFixedSlot(LENGTH_SLOT, Int32Value(0));
-  setFixedSlot(BYTEOFFSET_SLOT, Int32Value(0));
+  setFixedSlot(BYTEOFFSET_SLOT, PrivateValue(size_t(0)));
 
   setPrivate(nullptr);
 }
@@ -97,7 +97,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     setIsSharedMemory();
   }
 
-  initFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+  initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(byteOffset));
   initFixedSlot(LENGTH_SLOT, Int32Value(length));
   initFixedSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
 
