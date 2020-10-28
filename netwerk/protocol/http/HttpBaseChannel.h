@@ -616,6 +616,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ComputeCrossOriginOpenerPolicyMismatch();
 
+  nsresult ValidateMIMEType();
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
