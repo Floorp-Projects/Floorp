@@ -8,11 +8,13 @@
 #define mozilla_dom_GamepadManager_h_
 
 #include "nsIObserver.h"
+#include "nsRefPtrHashtable.h"
 // Needed for GamepadMappingType
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadServiceType.h"
 
 class nsGlobalWindowInner;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace gfx {

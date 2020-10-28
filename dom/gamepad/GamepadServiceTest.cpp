@@ -66,7 +66,8 @@ GamepadServiceTest::~GamepadServiceTest() = default;
 void GamepadServiceTest::InitPBackgroundActor() {
   MOZ_ASSERT(!mChild);
 
-  PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
+  ::mozilla::ipc::PBackgroundChild* actor =
+      ::mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
