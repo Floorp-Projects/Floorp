@@ -640,6 +640,8 @@ void ICFallbackStub::maybeInvalidateWarp(JSContext* cx, JSScript* script) {
 
   if (script->hasIonScript()) {
     Invalidate(cx, script);
+  } else {
+    CancelOffThreadIonCompile(script);
   }
 }
 
