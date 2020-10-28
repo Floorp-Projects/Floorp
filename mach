@@ -18,6 +18,7 @@ py2commands="
     firefox-ui-functional
     geckodriver
     geckodriver-test
+    jsshell-bench
     marionette-test
     jstestbrowser
     jstests
