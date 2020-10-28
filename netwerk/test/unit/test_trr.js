@@ -75,34 +75,8 @@ function setup() {
 }
 
 setup();
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("network.trr.mode");
-  Services.prefs.clearUserPref("network.trr.uri");
-  Services.prefs.clearUserPref("network.trr.credentials");
-  Services.prefs.clearUserPref("network.trr.wait-for-portal");
-  Services.prefs.clearUserPref("network.trr.allow-rfc1918");
-  Services.prefs.clearUserPref("network.trr.useGET");
-  Services.prefs.clearUserPref("network.trr.confirmationNS");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
-  Services.prefs.clearUserPref("network.trr.blacklist-duration");
-  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
-  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
-  Services.prefs.clearUserPref("network.trr.disable-ECS");
-  Services.prefs.clearUserPref("network.trr.early-AAAA");
-  Services.prefs.clearUserPref("network.trr.skip-AAAA-when-not-supported");
-  Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
-  Services.prefs.clearUserPref("network.trr.excluded-domains");
-  Services.prefs.clearUserPref("network.trr.builtin-excluded-domains");
-  Services.prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
-  Services.prefs.clearUserPref("captivedetect.canonicalURL");
-
-  Services.prefs.clearUserPref("network.http.spdy.enabled");
-  Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
-  Services.prefs.clearUserPref("network.dns.localDomains");
-  Services.prefs.clearUserPref("network.dns.native-is-localhost");
-  Services.prefs.clearUserPref(
-    "network.trr.send_empty_accept-encoding_headers"
-  );
+registerCleanupFunction(async () => {
+  trr_clear_prefs();
 });
 
 // This is an IP that is local, so we don't crash when connecting to it,
