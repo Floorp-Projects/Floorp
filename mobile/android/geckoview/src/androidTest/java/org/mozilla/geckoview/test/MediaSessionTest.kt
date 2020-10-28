@@ -167,7 +167,7 @@ class MediaSessionTest : BaseSessionTest() {
         session1.loadTestPath(path)
 
         session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
-            @AssertCalled(count = 1)
+            @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
@@ -199,7 +199,7 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(true))
             }
 
-            @AssertCalled(count = 5)
+            @AssertCalled(count = 5, order = [2])
             override fun onMetadata(
                     session: GeckoSession,
                     mediaSession: MediaSession,
@@ -262,7 +262,7 @@ class MediaSessionTest : BaseSessionTest() {
                       greaterThanOrEqualTo(0.0))
             }
 
-            @AssertCalled(count = 5)
+            @AssertCalled(count = 5, order = [2])
             override fun onPlay(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
@@ -355,7 +355,7 @@ class MediaSessionTest : BaseSessionTest() {
         session1.loadTestPath(path)
 
         session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
-            @AssertCalled(count = 1)
+            @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
@@ -363,7 +363,7 @@ class MediaSessionTest : BaseSessionTest() {
                 mediaSession1 = mediaSession
             }
 
-            @AssertCalled(count = 2)
+            @AssertCalled(count = 2, order = [2])
             override fun onPlay(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
@@ -714,7 +714,7 @@ class MediaSessionTest : BaseSessionTest() {
         val session1 = sessionRule.createOpenSession()
 
         session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
-            @AssertCalled(count = 1)
+            @AssertCalled(count = 1, order = [1])
             override fun onActivated(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
@@ -728,7 +728,7 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(true))
             }
 
-            @AssertCalled(count = 1)
+            @AssertCalled(count = 1, order = [2])
             override fun onPlay(
                     session: GeckoSession,
                     mediaSession: MediaSession) {
