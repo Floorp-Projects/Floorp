@@ -22,6 +22,9 @@
 #  include "nsDirectoryServiceDefs.h"
 #endif
 
+#include "nsAppRunner.h"
+#include "ProcessUtils.h"
+
 using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
@@ -169,7 +172,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  SharedPreferenceDeserializer deserializer;
+  ::mozilla::ipc::SharedPreferenceDeserializer deserializer;
   if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
                                                 prefsLen, prefMapSize)) {
     return false;

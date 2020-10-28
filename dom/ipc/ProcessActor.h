@@ -12,6 +12,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "mozilla/dom/JSActor.h"
 #include "mozilla/dom/JSActorManager.h"
