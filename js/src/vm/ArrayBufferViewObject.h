@@ -32,15 +32,9 @@ class ArrayBufferViewObject : public NativeObject {
 
   // Slot containing length of the view in number of typed elements.
   static constexpr size_t LENGTH_SLOT = 1;
-  static_assert(LENGTH_SLOT == JS_TYPEDARRAYLAYOUT_LENGTH_SLOT,
-                "self-hosted code with burned-in constants must get the "
-                "right length slot");
 
   // Offset of view within underlying (Shared)ArrayBufferObject.
   static constexpr size_t BYTEOFFSET_SLOT = 2;
-  static_assert(BYTEOFFSET_SLOT == JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT,
-                "self-hosted code with burned-in constants must get the "
-                "right byteOffset slot");
 
   static constexpr size_t RESERVED_SLOTS = 3;
 
