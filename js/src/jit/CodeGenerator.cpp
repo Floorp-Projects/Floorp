@@ -4829,7 +4829,7 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = int32_t (*)(JSString* str);
+    using Fn = int32_t (*)(JSString * str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
     masm.callWithABI<Fn, GetIndexFromString>();
@@ -12612,31 +12612,25 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   }
 }
 
-void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
-  LTypeOfV* ins = ool->ins();
+void CodeGenerator::emitTypeOfObject(Register obj, Register output,
+                                     Label* done) {
   const JSAtomState& names = gen->runtime->names();
 
-  ValueOperand input = ToValue(ins, LTypeOfV::Input);
-  Register temp = ToTempUnboxRegister(ins->tempToUnbox());
-  Register output = ToRegister(ins->output());
-
-  Register obj = masm.extractObject(input, temp);
-
-  Label slowCheck, isObject, isCallable, isUndefined, done;
+  Label slowCheck, isObject, isCallable, isUndefined;
   masm.typeOfObject(obj, output, &slowCheck, &isObject, &isCallable,
                     &isUndefined);
 
   masm.bind(&isCallable);
   masm.movePtr(ImmGCPtr(names.function), output);
-  masm.jump(ool->rejoin());
+  masm.jump(done);
 
   masm.bind(&isUndefined);
   masm.movePtr(ImmGCPtr(names.undefined), output);
-  masm.jump(ool->rejoin());
+  masm.jump(done);
 
   masm.bind(&isObject);
   masm.movePtr(ImmGCPtr(names.object), output);
-  masm.jump(ool->rejoin());
+  masm.jump(done);
 
   masm.bind(&slowCheck);
 
@@ -12649,8 +12643,27 @@ void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
   masm.callWithABI<Fn, TypeOfObject>();
   masm.storeCallPointerResult(output);
   restoreVolatile(output);
+}
 
+void CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool) {
+  LTypeOfV* ins = ool->ins();
+
+  ValueOperand input = ToValue(ins, LTypeOfV::Input);
+  Register temp = ToTempUnboxRegister(ins->tempToUnbox());
+  Register output = ToRegister(ins->output());
+
+  Register obj = masm.extractObject(input, temp);
+  emitTypeOfObject(obj, output, ool->rejoin());
   masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitTypeOfO(LTypeOfO* lir) {
+  Register obj = ToRegister(lir->object());
+  Register output = ToRegister(lir->output());
+
+  Label done;
+  emitTypeOfObject(obj, output, &done);
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitToAsyncIter(LToAsyncIter* lir) {
@@ -15283,7 +15296,7 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
 
   masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp2);
 
-  using Fn = bool (*)(JSContext* cx, JSObject* obj, Shape* propShape);
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, Shape * propShape);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);

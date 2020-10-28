@@ -1193,6 +1193,13 @@ void LIRGenerator::lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins) {
 
 void LIRGenerator::visitTypeOf(MTypeOf* ins) {
   MDefinition* opd = ins->input();
+
+  if (opd->type() == MIRType::Object) {
+    auto* lir = new (alloc()) LTypeOfO(useRegister(opd));
+    define(lir, ins);
+    return;
+  }
+
   MOZ_ASSERT(opd->type() == MIRType::Value);
 
   LTypeOfV* lir = new (alloc()) LTypeOfV(useBox(opd), tempToUnbox());
