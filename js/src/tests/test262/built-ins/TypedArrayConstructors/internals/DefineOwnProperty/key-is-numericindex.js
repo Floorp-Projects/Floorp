@@ -10,10 +10,15 @@ info: |
   3. If Type(P) is String, then
     a. Let numericIndex be ! CanonicalNumericIndexString(P).
     b. If numericIndex is not undefined, then
-      ...
-      x. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false,
-      return false.
-  ...
+      If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+      If IsAccessorDescriptor(Desc) is true, return false.
+      If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, return false.
+      If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
+      If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
+      If Desc has a [[Value]] field, then
+        Let value be Desc.[[Value]].
+        Return ? IntegerIndexedElementSet(O, numericIndex, value).
+
 includes: [testTypedArray.js, propertyHelper.js]
 features: [Reflect, TypedArray]
 ---*/
@@ -24,7 +29,7 @@ testWithTypedArrayConstructors(function(TA) {
   assert.sameValue(
     Reflect.defineProperty(sample, "0", {
       value: 8,
-      configurable: false,
+      configurable: true,
       enumerable: true,
       writable: true
     }),

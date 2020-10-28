@@ -1,11 +1,10 @@
-// |reftest| skip -- has YAML errors
+// |reftest| skip -- Intl.Segmenter is not supported
 // Copyright 2018 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
 esid: sec-intl.segmenter
-description:
-    Return abrupt completion from GetOption granularity
+description: Return abrupt completion from GetOption granularity
 info: |
     Intl.Segmenter ([ locales [ , options ]])
 

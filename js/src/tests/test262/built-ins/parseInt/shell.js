@@ -26,3 +26,22 @@ function decimalToPercentHexString(n) {
   var hex = "0123456789ABCDEF";
   return "%" + hex[(n >> 4) & 0xf] + hex[n & 0xf];
 }
+
+// file: isConstructor.js
+// Copyright (C) 2017 André Bargull. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+
+/*---
+description: |
+    Test if a given function is a constructor function.
+defines: [isConstructor]
+---*/
+
+function isConstructor(f) {
+    try {
+        Reflect.construct(function(){}, [], f);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}

@@ -1,5 +1,7 @@
-commit 323905b70e644d90faa957235f8ac59eac4ba8ba
-Author: Alexey Shvayka <shvaikalesh@gmail.com>
-Date:   Wed Sep 9 22:59:23 2020 +0300
+commit 00014894735c3bee62bed234594abf387ea0c57b
+Author: Rick Waldron <waldron.rick@gmail.com>
+Date:   Wed Oct 21 20:14:28 2020 -0400
 
-    Improve RegExp.prototype[@@replace] poisoned stdlib test
+    Update test/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+    
+    Co-authored-by: Ross Kirsling <rkirsling@gmail.com>

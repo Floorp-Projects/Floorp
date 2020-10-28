@@ -1,4 +1,5 @@
 // Copyright 2017 the V8 project authors. All rights reserved.
+// Copyright 2020 Apple Inc. All rights reserved.
 // This code is governed by the license found in the LICENSE file.
 
 /*---
@@ -18,6 +19,6 @@ assert.sameValue((new Intl.NumberFormat('en', {
     style: 'currency',
     currency: 'CLF',
     maximumFractionDigits: 3
-})).resolvedOptions().maximumSignificantDigits, 3);
+})).resolvedOptions().maximumFractionDigits, 3);
 
 reportCompare(0, 0);

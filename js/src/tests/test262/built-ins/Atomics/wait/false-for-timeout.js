@@ -17,9 +17,7 @@ features: [Atomics, SharedArrayBuffer, Symbol, Symbol.toPrimitive, TypedArray]
 flags: [CanBlockIsTrue]
 ---*/
 
-const i32a = new Int32Array(
-  new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)
-);
+const i32a = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4));
 
 const valueOf = {
   valueOf: function() {

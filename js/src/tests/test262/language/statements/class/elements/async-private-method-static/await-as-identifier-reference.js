@@ -32,6 +32,10 @@ info: |
 $DONOTEVALUATE();
 
 
-class C { static async #method() {
+class C {
+  static async #method() {
     void await;
-}}
+  }
+}
+
+

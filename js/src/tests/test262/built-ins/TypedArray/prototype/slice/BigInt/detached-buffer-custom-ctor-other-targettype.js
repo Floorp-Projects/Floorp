@@ -3,38 +3,52 @@
 /*---
 esid: sec-%typedarray%.prototype.slice
 description: >
-  Throws a TypeError buffer is detached on Get custom constructor. Using other
-  targetType
+  Throws a TypeError if _O_.[[ViewedArrayBuffer]] is detached during create with custom constructor (other targetType)
 info: |
-  22.2.3.24 %TypedArray%.prototype.slice ( start, end )
+  %TypedArray%.prototype.slice ( start, end )
 
-  ...
-  9. Let A be ? TypedArraySpeciesCreate(O, « count »).
-  ...
-  14. If SameValue(srcType, targetType) is false, then
-    a. Let n be 0.
-    b. Repeat, while k < final
-      ...
-      ii. Let kValue be ? Get(O, Pk).
-      ...
-  ...
+    Let A be ? TypedArraySpeciesCreate(O, « count »).
+
+  TypedArraySpeciesCreate ( exemplar, argumentList )
+
+    Let result be ? TypedArrayCreate(constructor, argumentList).
+
+  TypedArrayCreate ( constructor, argumentList )
+
+    Let newTypedArray be ? Construct(constructor, argumentList).
+    Perform ? ValidateTypedArray(newTypedArray).
+
+  ValidateTypedArray ( O )
+    The abstract operation ValidateTypedArray takes argument O. It performs the following steps when called:
+
+    Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
+    Assert: O has a [[ViewedArrayBuffer]] internal slot.
+    Let buffer be O.[[ViewedArrayBuffer]].
+    If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    ...
+
 includes: [testBigIntTypedArray.js, detachArrayBuffer.js]
-features: [BigInt, Symbol.species, TypedArray]
+features: [align-detached-buffer-semantics-with-web-reality, BigInt, Symbol.species, TypedArray]
 ---*/
 
 testWithBigIntTypedArrayConstructors(function(TA) {
+  let counter = 0;
   var sample = new TA(1);
 
   sample.constructor = {};
   sample.constructor[Symbol.species] = function(count) {
     var other = TA === BigInt64Array ? BigUint64Array : BigInt64Array;
+    counter++;
     $DETACHBUFFER(sample.buffer);
     return new other(count);
   };
 
   assert.throws(TypeError, function() {
+    counter++;
     sample.slice();
-  }, "step 14.b.ii - ? Get(O, Pk), O has a detached buffer");
+  }, '`sample.slice()` throws TypeError');
+
+  assert.sameValue(counter, 2, 'The value of `counter` is 2');
 });
 
 reportCompare(0, 0);

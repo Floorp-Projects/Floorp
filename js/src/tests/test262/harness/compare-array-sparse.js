@@ -8,23 +8,23 @@ includes: [compareArray.js]
 ---*/
 
 if (compareArray([,], [,]) !== true) {
-  $ERROR('Sparse arrays of the same length are equivalent.');
+  throw new Error('Sparse arrays of the same length are equivalent.');
 }
 
 if (compareArray([,], [,,]) !== false) {
-  $ERROR('Sparse arrays of differing lengths are not equivalent.');
+  throw new Error('Sparse arrays of differing lengths are not equivalent.');
 }
 
 if (compareArray([,,], [,]) !== false) {
-  $ERROR('Sparse arrays of differing lengths are not equivalent.');
+  throw new Error('Sparse arrays of differing lengths are not equivalent.');
 }
 
 if (compareArray([,], []) !== false) {
-  $ERROR('Sparse arrays are not equivalent to empty arrays.');
+  throw new Error('Sparse arrays are not equivalent to empty arrays.');
 }
 
 if (compareArray([], [,]) !== false) {
-  $ERROR('Sparse arrays are not equivalent to empty arrays.');
+  throw new Error('Sparse arrays are not equivalent to empty arrays.');
 }
 
 reportCompare(0, 0);

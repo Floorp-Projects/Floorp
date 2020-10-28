@@ -30,11 +30,11 @@ info: |
 
 features: [Atomics.waitAsync, Atomics, TypedArray, SharedArrayBuffer]
 ---*/
-assert.sameValue(typeof Atomics.waitAsync, 'function');
+assert.sameValue(typeof Atomics.waitAsync, 'function', 'The value of `typeof Atomics.waitAsync` is "function"');
 
 const index = {
   valueOf() {
-    throw new Test262Error("index coerced");
+    throw new Test262Error();
   }
 };
 
@@ -47,7 +47,7 @@ for (const nonSharedArrayType of nonSharedArrayTypes) {
   const typedArray = new nonSharedArrayType(new SharedArrayBuffer(8));
   assert.throws(TypeError, function() {
     Atomics.waitAsync(typedArray, index, 0, 0);
-  });
+  }, '`Atomics.waitAsync(typedArray, index, 0, 0)` throws a TypeError exception');
 }
 
 reportCompare(0, 0);

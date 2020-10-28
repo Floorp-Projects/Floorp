@@ -32,6 +32,9 @@ info: |
 $DONOTEVALUATE();
 
 
-var C = class { async method() {
+var C = class {
+  async method() {
     \u0061wait: ;
-}};
+  }
+};
+
