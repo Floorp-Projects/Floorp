@@ -100,10 +100,8 @@ class ArrayBufferViewObject : public NativeObject {
     return dataPointerEither_();
   }
 
-  static Value bufferValue(const ArrayBufferViewObject* view) {
-    return view->getFixedSlot(BUFFER_SLOT);
-  }
-  bool hasBuffer() const { return bufferValue(this).isObject(); }
+  Value bufferValue() const { return getFixedSlot(BUFFER_SLOT); }
+  bool hasBuffer() const { return bufferValue().isObject(); }
 
   ArrayBufferObject* bufferUnshared() const {
     MOZ_ASSERT(!isSharedMemory());
@@ -122,7 +120,7 @@ class ArrayBufferViewObject : public NativeObject {
     return &obj->as<SharedArrayBufferObject>();
   }
   ArrayBufferObjectMaybeShared* bufferEither() const {
-    JSObject* obj = bufferValue(this).toObjectOrNull();
+    JSObject* obj = bufferValue().toObjectOrNull();
     if (!obj) {
       return nullptr;
     }

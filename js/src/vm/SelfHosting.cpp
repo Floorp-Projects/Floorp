@@ -1199,7 +1199,7 @@ static bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc,
     return false;
   }
 
-  args.rval().set(TypedArrayObject::bufferValue(tarray));
+  args.rval().set(tarray->bufferValue());
   return true;
 }
 
