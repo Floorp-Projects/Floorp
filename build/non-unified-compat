@@ -21,6 +21,7 @@ dom/fetch/
 dom/file/
 dom/filehandle/
 dom/filesystem/
+dom/flex/
 dom/indexedDB/
 dom/localstorage/
 dom/quota/
