@@ -91,9 +91,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   inline Scalar::Type type() const;
   inline size_t bytesPerElement() const;
 
-  static Value byteLengthValue(const TypedArrayObject* tarr) {
-    return Int32Value(tarr->length() * tarr->bytesPerElement());
-  }
   static Value lengthValue(const TypedArrayObject* tarr) {
     size_t length = size_t(tarr->getFixedSlot(LENGTH_SLOT).toPrivate());
     MOZ_ASSERT(length <= INT32_MAX);
@@ -102,7 +99,18 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
-  uint32_t byteLength() const { return byteLengthValue(this).toInt32(); }
+  size_t byteLength() const {
+    size_t len = length() * bytesPerElement();
+    MOZ_ASSERT(len <= INT32_MAX);
+    return len;
+  }
+
+  Value byteLengthValue() const {
+    size_t len = byteLength();
+    MOZ_ASSERT(len <= INT32_MAX);
+    return Int32Value(len);
+  }
+
   uint32_t length() const { return lengthValue(this).toInt32(); }
 
   bool hasInlineElements() const;
