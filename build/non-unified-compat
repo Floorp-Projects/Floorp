@@ -23,6 +23,8 @@ dom/filehandle/
 dom/filesystem/
 dom/flex/
 dom/gamepad/
+dom/geolocation/
+dom/grid/
 dom/indexedDB/
 dom/localstorage/
 dom/quota/
