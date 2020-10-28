@@ -13,6 +13,8 @@
 #include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "nsISupportsImpl.h"
 
+class AudioDeviceInfo;
+
 namespace mozilla {
 
 class TimeStamp;
