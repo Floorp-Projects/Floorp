@@ -82,14 +82,15 @@ var tests = [
       let highlight = document.getElementById("UITourHighlight");
       is_element_hidden(highlight, "Highlight should initially be hidden");
 
-      gContentAPI.showHighlight("urlbar");
-      waitForElementToBeVisible(
-        highlight,
-        done,
-        "Highlight should be shown on a unsecure host when override pref is set"
-      );
+      gContentAPI.showHighlight("urlbar").then(() => {
+        waitForElementToBeVisible(
+          highlight,
+          done,
+          "Highlight should be shown on a unsecure host when override pref is set"
+        );
 
-      Services.prefs.setBoolPref("browser.uitour.requireSecure", true);
+        Services.prefs.setBoolPref("browser.uitour.requireSecure", true);
+      });
     }, "http://example.org/");
   },
   function test_disabled(done) {
@@ -98,14 +99,15 @@ var tests = [
     let bookmarksMenu = document.getElementById("bookmarks-menu-button");
     is(bookmarksMenu.open, false, "Bookmark menu should initially be closed");
 
-    gContentAPI.showMenu("bookmarks");
-    is(
-      bookmarksMenu.open,
-      false,
-      "Bookmark menu should not open when feature is disabled"
-    );
+    gContentAPI.showMenu("bookmarks").then(() => {
+      is(
+        bookmarksMenu.open,
+        false,
+        "Bookmark menu should not open when feature is disabled"
+      );
 
-    Services.prefs.setBoolPref("browser.uitour.enabled", true);
+      Services.prefs.setBoolPref("browser.uitour.enabled", true);
+    });
     done();
   },
   function test_highlight(done) {
