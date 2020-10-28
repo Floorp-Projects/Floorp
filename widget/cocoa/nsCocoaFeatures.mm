@@ -167,7 +167,7 @@ bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
   return (macOSVersion() >= MACOS_VERSION_10_13_HEX);
 }
 
-bool Gecko_OnHighSierraOrLater() { return nsCocoaFeatures::OnHighSierraOrLater(); }
+bool Gecko_OnSierraOrLater() { return nsCocoaFeatures::OnSierraOrLater(); }
 
 /* static */ bool nsCocoaFeatures::OnMojaveOrLater() {
   return (macOSVersion() >= MACOS_VERSION_10_14_HEX);
