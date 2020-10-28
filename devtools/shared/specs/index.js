@@ -139,6 +139,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/memory",
   },
   {
+    types: ["network"],
+    spec: "devtools/shared/specs/network",
+    front: "devtools/client/fronts/network",
+  },
+  {
     types: ["netEvent"],
     spec: "devtools/shared/specs/network-event",
     front: null,
