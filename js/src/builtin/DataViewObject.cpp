@@ -885,7 +885,7 @@ bool DataViewObject::fun_setFloat64(JSContext* cx, unsigned argc, Value* vp) {
 bool DataViewObject::bufferGetterImpl(JSContext* cx, const CallArgs& args) {
   Rooted<DataViewObject*> thisView(
       cx, &args.thisv().toObject().as<DataViewObject>());
-  args.rval().set(DataViewObject::bufferValue(thisView));
+  args.rval().set(thisView->bufferValue());
   return true;
 }
 

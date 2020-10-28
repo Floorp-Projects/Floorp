@@ -1649,7 +1649,7 @@ static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   if (!TypedArrayObject::ensureHasBuffer(cx, tarray)) {
     return false;
   }
-  args.rval().set(TypedArrayObject::bufferValue(tarray));
+  args.rval().set(tarray->bufferValue());
   return true;
 }
 
