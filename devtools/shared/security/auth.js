@@ -6,7 +6,6 @@
 
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
-var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "prompt", "devtools/shared/security/prompt");
@@ -319,69 +318,69 @@ OOBCert.Client.prototype = {
    */
   // eslint-disable-next-line no-shadow
   authenticate({ host, port, cert, transport }) {
-    const deferred = defer();
-    let oobData;
+    return new Promise((resolve, reject) => {
+      let oobData;
 
-    let activeSendDialog;
-    const closeDialog = () => {
-      // Close any prompts the client may have been showing from previous
-      // authentication steps
-      if (activeSendDialog?.close) {
-        activeSendDialog.close();
-        activeSendDialog = null;
-      }
-    };
-
-    transport.hooks = {
-      onPacket: async packet => {
-        closeDialog();
-        const { authResult } = packet;
-        switch (authResult) {
-          case AuthenticationResult.PENDING:
-            // Step B.8
-            // Client creates hash(ClientCert) + K(random 128-bit number)
-            oobData = await this._createOOB();
-            activeSendDialog = this.sendOOB({
-              host,
-              port,
-              cert,
-              authResult,
-              oob: oobData,
-            });
-            break;
-          case AuthenticationResult.ALLOW:
-            // Step B.12
-            // Client verifies received value matches K
-            if (packet.k != oobData.k) {
-              transport.close(new Error("Auth secret mismatch"));
-              return;
-            }
-            // Step B.13
-            // Debugging begins
-            transport.hooks = null;
-            deferred.resolve(transport);
-            break;
-          case AuthenticationResult.ALLOW_PERSIST:
-            // Server previously persisted Client as allowed
-            // Step C.5
-            // Debugging begins
-            transport.hooks = null;
-            deferred.resolve(transport);
-            break;
-          default:
-            transport.close(new Error("Invalid auth result: " + authResult));
-            break;
+      let activeSendDialog;
+      const closeDialog = () => {
+        // Close any prompts the client may have been showing from previous
+        // authentication steps
+        if (activeSendDialog?.close) {
+          activeSendDialog.close();
+          activeSendDialog = null;
         }
-      },
-      onClosed(reason) {
-        closeDialog();
-        // Transport died before auth completed
-        transport.hooks = null;
-        deferred.reject(reason);
-      },
-    };
-    transport.ready();
-    return deferred.promise;
+      };
+
+      transport.hooks = {
+        onPacket: async packet => {
+          closeDialog();
+          const { authResult } = packet;
+          switch (authResult) {
+            case AuthenticationResult.PENDING:
+              // Step B.8
+              // Client creates hash(ClientCert) + K(random 128-bit number)
+              oobData = await this._createOOB();
+              activeSendDialog = this.sendOOB({
+                host,
+                port,
+                cert,
+                authResult,
+                oob: oobData,
+              });
+              break;
+            case AuthenticationResult.ALLOW:
+              // Step B.12
+              // Client verifies received value matches K
+              if (packet.k != oobData.k) {
+                transport.close(new Error("Auth secret mismatch"));
+                return;
+              }
+              // Step B.13
+              // Debugging begins
+              transport.hooks = null;
+              resolve(transport);
+              break;
+            case AuthenticationResult.ALLOW_PERSIST:
+              // Server previously persisted Client as allowed
+              // Step C.5
+              // Debugging begins
+              transport.hooks = null;
+              resolve(transport);
+              break;
+            default:
+              transport.close(new Error("Invalid auth result: " + authResult));
+              break;
+          }
+        },
+        onClosed(reason) {
+          closeDialog();
+          // Transport died before auth completed
+          transport.hooks = null;
+          reject(reason);
+        },
+      };
+      transport.ready();
+    });
   },
 
   /**
