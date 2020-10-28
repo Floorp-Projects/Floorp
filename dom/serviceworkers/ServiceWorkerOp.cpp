@@ -44,6 +44,8 @@
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/Notification.h"
+#include "mozilla/dom/NotificationEvent.h"
+#include "mozilla/dom/NotificationEventBinding.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -52,7 +54,9 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/MozURL.h"
 
