@@ -263,10 +263,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsJARChannel::Suspend\n"
          "race:nsJARChannel::Resume\n"
 
-         // Bug 1607588
-         "race:nssSlot_GetToken\n"
-         "race:nssToken_Destroy\n"
-
          // Bug 1607704
          "race:nsUrlClassifierDBServiceWorker::OpenDb\n"
          "race:nsUrlClassifierDBServiceWorker::Shutdown\n"
