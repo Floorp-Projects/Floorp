@@ -176,3 +176,67 @@ function checkInflatedFileIOMarkers(markers, filename) {
     }
   }
 }
+
+/**
+ * Do deep equality checks for schema, but then surface nice errors for a user to know
+ * what to do if the check fails.
+ */
+function checkSchema(actual, expected) {
+  const schemaName = expected.name;
+  info(`Checking marker schema for "${schemaName}"`);
+
+  try {
+    ok(
+      actual,
+      `Schema was found for "${schemaName}". See the test output for more information.`
+    );
+    // Check individual properties to surface easier to debug errors.
+    deepEqual(
+      expected.display,
+      actual.display,
+      `The "display" property for ${schemaName} schema matches. See the test output for more information.`
+    );
+    if (expected.data) {
+      ok(actual.data, `Schema was found for "${schemaName}"`);
+      for (const expectedDatum of expected.data) {
+        const actualDatum = actual.data.find(d => d.key === expectedDatum.key);
+        deepEqual(
+          expectedDatum,
+          actualDatum,
+          `The "${schemaName}" field "${expectedDatum.key}" matches expectations. See the test output for more information.`
+        );
+      }
+      equal(
+        expected.data.length,
+        actual.data.length,
+        "The expected and actual data have the same number of items"
+      );
+    }
+
+    // Finally do a true deep equal.
+    deepEqual(expected, actual, "The entire schema is deepEqual");
+  } catch (error) {
+    // The test results are not very human readable. This is a bit of a hacky
+    // solution to make it more readable.
+    dump("-----------------------------------------------------\n");
+    dump("The expected marker schema:\n");
+    dump("-----------------------------------------------------\n");
+    dump(JSON.stringify(expected, null, 2));
+    dump("\n");
+    dump("-----------------------------------------------------\n");
+    dump("The actual marker schema:\n");
+    dump("-----------------------------------------------------\n");
+    dump(JSON.stringify(actual, null, 2));
+    dump("\n");
+    dump("-----------------------------------------------------\n");
+    dump("A marker schema was not equal to expectations. If you\n");
+    dump("are modifying the schema, then please copy and paste\n");
+    dump("the new schema into this test.\n");
+    dump("-----------------------------------------------------\n");
+    dump("Copy this: " + JSON.stringify(actual));
+    dump("\n");
+    dump("-----------------------------------------------------\n");
+
+    throw error;
+  }
+}
