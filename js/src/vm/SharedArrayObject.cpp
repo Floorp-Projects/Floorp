@@ -278,7 +278,7 @@ bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
   }
 
   setReservedSlot(RAWBUF_SLOT, PrivateValue(buffer));
-  setReservedSlot(LENGTH_SLOT, PrivateUint32Value(length));
+  setReservedSlot(LENGTH_SLOT, PrivateValue(length));
   return true;
 }
 
