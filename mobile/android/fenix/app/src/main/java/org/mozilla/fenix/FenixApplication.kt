@@ -171,24 +171,21 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         fun queueInitExperiments() {
+            @Suppress("ControlFlowWithEmptyBody")
             if (settings().isExperimentationEnabled) {
                 queue.runIfReadyOrQueue {
                     Experiments.initialize(
                         applicationContext = applicationContext,
-                        onExperimentsUpdated = {
-                            ExperimentsManager.initSearchWidgetExperiment(this)
-                        },
+                        onExperimentsUpdated = null,
                         configuration = mozilla.components.service.experiments.Configuration(
                             httpClient = components.core.client,
                             kintoEndpoint = KINTO_ENDPOINT_PROD
                         )
                     )
-                    ExperimentsManager.initSearchWidgetExperiment(this)
                 }
             } else {
                 // We should make a better way to opt out for when we have more experiments
                 // See https://github.com/mozilla-mobile/fenix/issues/6278
-                ExperimentsManager.optOutSearchWidgetExperiment(this)
             }
         }
 

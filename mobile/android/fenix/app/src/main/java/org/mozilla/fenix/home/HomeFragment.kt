@@ -28,7 +28,6 @@ import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
@@ -75,7 +74,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.cfr.SearchWidgetCFR
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.StoreProvider
@@ -424,21 +422,6 @@ class HomeFragment : Fragment() {
                 homeFragmentStore.dispatch(
                     HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
                 )
-            }
-        }
-
-        // We call this onLayout so that the bottom bar width is correctly set for us to center
-        // the CFR in.
-        view.toolbar_wrapper.doOnLayout {
-            val willNavigateToSearch = !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)
-            if (!browsingModeManager.mode.isPrivate && !willNavigateToSearch) {
-                SearchWidgetCFR(
-                    context = view.context,
-                    settings = view.context.settings(),
-                    metrics = view.context.components.analytics.metrics
-                ) {
-                    view.toolbar_wrapper
-                }.displayIfNecessary()
             }
         }
 

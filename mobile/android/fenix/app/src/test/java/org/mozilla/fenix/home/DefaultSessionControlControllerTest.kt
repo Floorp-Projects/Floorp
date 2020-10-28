@@ -388,7 +388,6 @@ class DefaultSessionControlControllerTest {
                 from = BrowserDirection.FromHome,
                 engine = searchEngine
             )
-            settings.incrementActiveSearchCount()
             metrics.track(any<Event.PerformedSearch>())
         }
 

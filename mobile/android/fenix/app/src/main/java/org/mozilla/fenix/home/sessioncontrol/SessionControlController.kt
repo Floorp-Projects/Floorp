@@ -414,7 +414,6 @@ class DefaultSessionControlController(
             Event.EnteredUrl(false)
         } else {
             val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.ACTION
-            activity.settings().incrementActiveSearchCount()
             searchAccessPoint.let { sap ->
                 MetricsUtils.createSearchEvent(
                     activity.components.search.provider.getDefaultEngine(activity),

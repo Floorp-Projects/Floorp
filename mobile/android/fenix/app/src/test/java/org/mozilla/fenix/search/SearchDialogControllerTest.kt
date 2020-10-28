@@ -123,7 +123,6 @@ class SearchDialogControllerTest {
                 engine = searchEngine
             )
         }
-        verify { settings.incrementActiveSearchCount() }
     }
 
     @Test

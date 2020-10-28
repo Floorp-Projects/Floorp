@@ -44,7 +44,6 @@ import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
-import org.mozilla.fenix.GleanMetrics.SearchWidgetCfr
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
@@ -578,18 +577,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
             { VoiceSearch.tapped.record(it) }
-        )
-        is Event.SearchWidgetCFRDisplayed -> EventWrapper<NoExtraKeys>(
-            { SearchWidgetCfr.displayed.record(it) }
-        )
-        is Event.SearchWidgetCFRCanceled -> EventWrapper<NoExtraKeys>(
-            { SearchWidgetCfr.canceled.record(it) }
-        )
-        is Event.SearchWidgetCFRNotNowPressed -> EventWrapper<NoExtraKeys>(
-            { SearchWidgetCfr.notNowPressed.record(it) }
-        )
-        is Event.SearchWidgetCFRAddWidgetPressed -> EventWrapper<NoExtraKeys>(
-            { SearchWidgetCfr.addWidgetPressed.record(it) }
         )
         is Event.TabCounterMenuItemTapped -> EventWrapper(
             { Events.tabCounterMenuAction.record(it) },

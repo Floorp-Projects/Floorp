@@ -91,8 +91,6 @@ class SearchDialogController(
         val event = if (url.isUrl()) {
             Event.EnteredUrl(false)
         } else {
-            settings.incrementActiveSearchCount()
-
             val searchAccessPoint = when (store.state.searchAccessPoint) {
                 Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.ACTION
                 else -> store.state.searchAccessPoint
@@ -149,7 +147,6 @@ class SearchDialogController(
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
-        settings.incrementActiveSearchCount()
         clearToolbarFocus()
 
         activity.openToBrowserAndLoad(
