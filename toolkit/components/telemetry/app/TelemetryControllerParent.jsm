@@ -377,7 +377,8 @@ var Impl = {
    * @param {String}  [aOptions.schemaNamespace=null] the schema namespace to use if encryption is enabled.
    * @param {String}  [aOptions.schemaVersion=null] the schema version to use if encryption is enabled.
    * @param {Boolean} [aOptions.addPioneerId=false] true if the ping should contain the Pioneer id, false otherwise.
-   *
+   * @param {Boolean} [aOptions.overridePioneerId=undefined] if set, override the
+   *                  pioneer id to the provided value. Only works if aOptions.addPioneerId=true.
    * @returns {Object} An object that contains the assembled ping data.
    */
   assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
@@ -453,6 +454,8 @@ var Impl = {
    * @param {String}  [aOptions.schemaNamespace=null] the schema namespace to use if encryption is enabled.
    * @param {String}  [aOptions.schemaVersion=null] the schema version to use if encryption is enabled.
    * @param {Boolean} [aOptions.addPioneerId=false] true if the ping should contain the Pioneer id, false otherwise.
+   * @param {Boolean} [aOptions.overridePioneerId=undefined] if set, override the
+   *                  pioneer id to the provided value. Only works if aOptions.addPioneerId=true.
    * @param {String} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
@@ -505,10 +508,16 @@ var Impl = {
         payload.encryptionKeyId = aOptions.encryptionKeyId;
 
         if (aOptions.addPioneerId === true) {
-          // This will throw if there is no pioneer ID set.
-          payload.pioneerId = Services.prefs.getStringPref(
-            "toolkit.telemetry.pioneerId"
-          );
+          if (aOptions.overridePioneerId) {
+            // The caller provided a substitute id, let's use that
+            // instead of querying the pref.
+            payload.pioneerId = aOptions.overridePioneerId;
+          } else {
+            // This will throw if there is no pioneer ID set.
+            payload.pioneerId = Services.prefs.getStringPref(
+              "toolkit.telemetry.pioneerId"
+            );
+          }
           payload.studyName = aOptions.studyName;
         }
 
@@ -561,6 +570,8 @@ var Impl = {
    * @param {String}  [aOptions.schemaNamespace=null] the schema namespace to use if encryption is enabled.
    * @param {String}  [aOptions.schemaVersion=null] the schema version to use if encryption is enabled.
    * @param {Boolean} [aOptions.addPioneerId=false] true if the ping should contain the Pioneer id, false otherwise.
+   * @param {Boolean} [aOptions.overridePioneerId=undefined] if set, override the
+   *                  pioneer id to the provided value. Only works if aOptions.addPioneerId=true.
    * @param {String} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
