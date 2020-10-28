@@ -253,7 +253,7 @@ TEST(TestAudioTrackGraph, NotifyDeviceStarted)
   WaitFor(cubeb->StreamDestroyEvent());
 }
 
-TEST(TestAudioTrackGraph, ErrorCallback)
+TEST(TestAudioTrackGraph, ErrorStateCrash)
 {
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
@@ -262,29 +262,12 @@ TEST(TestAudioTrackGraph, ErrorCallback)
       MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
-  // Dummy track to make graph rolling. Add it and remove it to remove the
-  // graph from the global hash table and let it shutdown.
-  RefPtr<SourceMediaTrack> sourceTrack;
-  Unused << WaitFor(Invoke([&] {
-    sourceTrack = graph->CreateSourceTrack(MediaSegment::AUDIO);
-    return graph->NotifyWhenDeviceStarted(sourceTrack);
-  }));
-
-  // We open an input through this track so that there's something triggering
-  // EnsureNextIteration on the fallback driver after the callback driver has
-  // gotten the error.
-  RefPtr<AudioInputProcessing> listener;
-  RefPtr<AudioInputProcessingPullListener> pullListener;
+  RefPtr<SourceMediaTrack> dummySource;
   auto started = Invoke([&] {
-    listener = new AudioInputProcessing(2, sourceTrack, PRINCIPAL_HANDLE_NONE);
-    listener->SetPassThrough(true);
-    pullListener = new AudioInputProcessingPullListener(listener);
-    sourceTrack->AddListener(pullListener);
-    sourceTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StartInputProcessing>(listener));
-    sourceTrack->SetPullingEnabled(true);
-    sourceTrack->OpenAudioInput((void*)1, listener);
-    return graph->NotifyWhenDeviceStarted(sourceTrack);
+    // Dummy track to make graph rolling. Add it and remove it to remove the
+    // graph from the global hash table and let it shutdown.
+    dummySource = graph->CreateSourceTrack(MediaSegment::AUDIO);
+    return graph->NotifyWhenDeviceStarted(dummySource);
   });
 
   MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
@@ -293,29 +276,10 @@ TEST(TestAudioTrackGraph, ErrorCallback)
 
   // Force a cubeb state_callback error and see that we don't crash.
   DispatchFunction([&] { stream->ForceError(); });
+  WaitFor(stream->ErrorForcedEvent());
 
-  // Wait for both the error to take effect, and the driver to restart.
-  bool errored = false, init = false;
-  MediaEventListener errorListener = stream->ErrorForcedEvent().Connect(
-      AbstractThread::GetCurrent(), [&] { errored = true; });
-  MediaEventListener initListener = cubeb->StreamInitEvent().Connect(
-      AbstractThread::GetCurrent(), [&] { init = true; });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return errored && init; });
-  errorListener.Disconnect();
-  initListener.Disconnect();
-
-  // Clean up.
-  DispatchFunction([&] {
-    sourceTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(listener));
-    sourceTrack->RemoveListener(pullListener);
-    sourceTrack->SetPullingEnabled(false);
-    Maybe<CubebUtils::AudioDeviceID> id =
-        Some(reinterpret_cast<CubebUtils::AudioDeviceID>(1));
-    sourceTrack->CloseAudioInput(id);
-    sourceTrack->Destroy();
-  });
+  // Test has finished, destroy the track to shut down the MTG.
+  DispatchMethod(dummySource, &SourceMediaTrack::Destroy);
   WaitFor(cubeb->StreamDestroyEvent());
 }
 
