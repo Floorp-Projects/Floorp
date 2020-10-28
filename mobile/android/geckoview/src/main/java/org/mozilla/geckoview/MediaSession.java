@@ -42,8 +42,6 @@ public class MediaSession {
     /**
      * Get whether the media session is active.
      * Only active media sessions can be controlled.
-     * Inactive media session may receive state events since some state events
-     * may be dispatched before the media session becomes active.
      *
      * Changes in the active state are notified via {@link Delegate#onActivated}
      * and {@link Delegate#onDeactivated} respectively.
@@ -188,6 +186,8 @@ public class MediaSession {
     public interface Delegate {
         /**
          * Notify that the given media session has become active.
+         * It is always the first event dispatched for a new or previously
+         * deactivated media session.
          *
          * @param session The associated GeckoSession.
          * @param mediaSession The media session for the given GeckoSession.
@@ -695,6 +695,14 @@ public class MediaSession {
             mMediaSession = new MediaSession(session);
         }
 
+        private void ensureActivated(final Delegate delegate) {
+            if (mMediaSession.isActive()) {
+                return;
+            }
+            mMediaSession.setActive(true);
+            delegate.onActivated(mSession, mMediaSession);
+        }
+
         @Override
         public void handleMessage(
                 final Delegate delegate,
@@ -706,26 +714,31 @@ public class MediaSession {
             }
 
             if (ACTIVATED_EVENT.equals(event)) {
-                mMediaSession.setActive(true);
-                delegate.onActivated(mSession, mMediaSession);
+                ensureActivated(delegate);
             } else if (DEACTIVATED_EVENT.equals(event)) {
                 mMediaSession.setActive(false);
                 delegate.onDeactivated(mSession, mMediaSession);
             } else if (METADATA_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 final Metadata meta =
                         Metadata.fromBundle(message.getBundle("metadata"));
                 delegate.onMetadata(mSession, mMediaSession, meta);
             } else if (POSITION_STATE_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 final PositionState state =
                         PositionState.fromBundle(message.getBundle("state"));
                 delegate.onPositionState(mSession, mMediaSession, state);
             } else if (PLAYBACK_NONE_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 delegate.onStop(mSession, mMediaSession);
             } else if (PLAYBACK_PAUSED_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 delegate.onPause(mSession, mMediaSession);
             } else if (PLAYBACK_PLAYING_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 delegate.onPlay(mSession, mMediaSession);
             } else if (FEATURES_EVENT.equals(event)) {
+                ensureActivated(delegate);
                 final long features = Feature.fromBundle(
                         message.getBundle("features"));
                 delegate.onFeatures(mSession, mMediaSession, features);
