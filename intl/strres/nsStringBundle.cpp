@@ -469,6 +469,12 @@ nsresult nsStringBundleBase::ParseProperties(nsIPersistentProperties** aProps) {
 }
 
 nsresult nsStringBundle::LoadProperties() {
+  // Something such as Necko might use string bundle after ClearOnShutdown is
+  // called. LocaleService etc is already down, so we cannot get bundle data.
+  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   if (mProps) {
     return NS_OK;
   }
