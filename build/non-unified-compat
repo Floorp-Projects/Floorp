@@ -51,5 +51,6 @@ dom/media/hls/
 dom/media/imagecapture/
 dom/media/ipc/
 dom/media/mediacapabilities/
+dom/media/mediacontrol/
 dom/quota/
 dom/simpledb/

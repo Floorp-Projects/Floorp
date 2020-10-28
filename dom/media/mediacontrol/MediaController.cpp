@@ -10,6 +10,7 @@
 #include "MediaControlUtils.h"
 #include "MediaControlKeySource.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/MediaSession.h"
