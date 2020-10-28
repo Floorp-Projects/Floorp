@@ -82,3 +82,21 @@ about-processes-frame-name-one = Subframe: { $url }
 #   $number (Number) The number of subframes in this group. Always ≥ 1.
 #   $shortUrl (String) The shared prefix for the subframes in the group.
 about-processes-frame-name-many = Subframes ({ $number }): { $shortUrl }
+
+## Displaying CPU (percentage and total)
+## Variables:
+##    $percent (Number) The percentage of CPU used by the process or thread.
+##                      Always > 0, generally <= 200.
+##    $total (Number) The amount of time used by the process or thread since
+##                    its start.
+##    $unit (String) The unit in which to display $total. One of "ns", "µs", "ms",
+##                   "s", "m", "h", "d".
+
+# Common case.
+about-processes-cpu-user-and-kernel = { NUMBER($percent, maximumSignificantDigits: 2, style: "percent") } ({ NUMBER($total, maximumFractionDigits: 0) }{ $unit })
+
+# Special case: data is not available yet.
+about-processes-cpu-user-and-kernel-not-ready = (measuring)
+
+# Special case: process or thread is currently idle.
+about-processes-cpu-user-and-kernel-idle = idle ({ NUMBER($total, maximumFractionDigits: 2) }{ $unit })
