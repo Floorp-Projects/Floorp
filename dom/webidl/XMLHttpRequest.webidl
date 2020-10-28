@@ -84,7 +84,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute XMLHttpRequestUpload upload;
 
   [Throws]
-  void send(optional (Document or BodyInit)? body = null);
+  void send(optional (Document or XMLHttpRequestBodyInit)? body = null);
 
   [Throws]
   void abort();
