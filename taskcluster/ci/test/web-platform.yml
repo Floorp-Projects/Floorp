@@ -117,7 +117,7 @@ web-platform-tests-reftest:
     treeherder-symbol: W(Wr)
     virtualization:
         by-test-platform:
-            windows10-64.*-qr/.*: virtual-with-gpu
+            windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
             default: virtual
     chunks:
         by-test-platform:
