@@ -213,7 +213,9 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 
   uint32_t byteLength() const {
-    return getReservedSlot(LENGTH_SLOT).toPrivateUint32();
+    size_t len = size_t(getReservedSlot(LENGTH_SLOT).toPrivate());
+    MOZ_ASSERT(len <= INT32_MAX);
+    return len;
   }
 
   bool isWasm() const { return rawBufferObject()->isWasm(); }
