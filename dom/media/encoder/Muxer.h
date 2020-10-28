@@ -11,6 +11,8 @@
 namespace mozilla {
 
 class ContainerWriter;
+class EncodedFrame;
+class TrackMetadataBase;
 
 // Generic Muxer class that helps pace the output from track encoders to the
 // ContainerWriter, so time never appears to go backwards.

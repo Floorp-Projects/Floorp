@@ -6,6 +6,7 @@
 #include "TrackEncoder.h"
 
 #include "AudioChannelFormat.h"
+#include "DriftCompensation.h"
 #include "GeckoProfiler.h"
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
@@ -13,6 +14,7 @@
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 
