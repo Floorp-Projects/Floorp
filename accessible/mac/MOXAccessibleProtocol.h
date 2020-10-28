@@ -264,6 +264,9 @@
 // AXEditableAncestor
 - (id _Nullable)moxEditableAncestor;
 
+// AXMozDebugDescription
+- (NSString* _Nullable)moxMozDebugDescription;
+
 #pragma mark - AttributeSetters
 
 // AXValue

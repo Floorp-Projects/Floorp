@@ -195,6 +195,11 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 // override
 - (id)moxEditableAncestor;
 
+#ifndef RELEASE_OR_BETA
+// override
+- (NSString*)moxMozDebugDescription;
+#endif
+
 // override
 - (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
 
@@ -227,10 +232,5 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
 - (void)expire;
 // override
 - (BOOL)isExpired;
-
-// ---- NSAccessibility methods ---- //
-
-// override
-- (NSString*)description;
 
 @end
