@@ -57,7 +57,7 @@ For now.
 The Rust API is implemented in the
 [`private` module of the `fog` crate](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/metrics).
 
-Each metric gets its own file, mimicking the structure in
+Each metric type gets its own file, mimicking the structure in
 [`glean_core`](https://github.com/mozilla/glean/tree/master/glean-core/src/metrics).
 
 Every method on the metric type is public for now,
@@ -71,10 +71,50 @@ Test methods must first call
 `dispatcher::block_on_queue()`
 before retrieving stored data to ensure pending operations have been completed before we read the value.
 
-## C++
+## C++ and JS
 
-To Be Implemented.
+The C++ and JS APIs are implemented [atop the Rust API](code_organization.md).
+We treat them both together since, though they're different languages,
+they're both implemented in C++ and share much of their implementation.
 
-## JS
-
-To Be Implemented.
+Each metric type has six pieces you'll need to cover:
+1. **MLA FFI** - Using our convenient macros,
+   define the Multi-Language Architecture's FFI layer above the Rust API in
+   [`api/src/ffi/mod.rs`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/api/src/ffi/mod.rs).
+2. **C++ Impl** - Implement a type called `XMetric`
+   (e.g. `CounterMetric`) in `mozilla::glean::impl` in
+   [`bindings/private/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/private/).
+   Its methods should be named the same as the ones in the Rust API,
+   transformed to `CamelCase`. They should all be public.
+3. **IDL** - Duplicate the public API (including its docs) to
+   [`xpcom/nsIGleanMetrics.idl`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcom/nsIGleanMetrics.idl)
+   with the name `nsIGleanX` (e.g. `nsIGleanCounter`).
+   Inherit from `nsISupports`.
+   The naming style for members here is `lowerCamelCase`.
+   You'll need a
+   [GUID](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Generating_GUIDs)
+   because this is XPCOM,
+   but you'll only need the canonical form since we're only exposing to JS.
+4. **JS Impl** - Add an `nsIGleanX`-deriving, `XMetric`-owning type called `GleanX`
+   (e.g. `GleanCounter`) in the same header and `.cpp` as `XMetric` in
+   [`bindings/private/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/bindings/private/).
+   Don't declare any methods beyond a ctor
+   (takes a `uint32_t` metric id, init-constructs a `impl::XMetric` member)
+   and dtor (`default`): the IDL will do the rest so long as you remember to add
+   `NS_DECL_ISUPPORTS` and `NS_DECL_NSIGLEANX`.
+   In the definition of `GleanX`, member identifiers are back to
+   `CamelCase` and need macros like `NS_IMETHODIMP`.
+   Delegate operations to the owned `XMetric`, returning `NS_OK`
+   no matter what in non-test methods.
+   (Test-only methods can return `NS_ERROR` codes on failures).
+5. **Tests** - Two languages means two test suites.
+   Add a never-expiring test-only metric of your type to
+   [`test_metrics.yaml`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/test_metrics.yaml).
+   Feel free to be clever with the name, but be sure to make clear that it is test-only.
+    * **C++ Tests (GTest)** - Add a small test case to
+      [`gtest/TestFog.cpp`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/gtest/TestFog.cpp).
+      For more details, peruse the [testing docs](testing.md).
+    * **JS Tests (xpcshell)** - Add a small test case to
+      [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/test_Glean.js).
+      For more details, peruse the [testing docs](testing.md).
+6. **API Documentation** - TODO

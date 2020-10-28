@@ -67,7 +67,7 @@ class CounterMetric {
   }
 
  private:
-  uint32_t mId;
+  const uint32_t mId;
 };
 }  // namespace impl
 
@@ -81,7 +81,7 @@ class GleanCounter final : public nsIGleanCounter {
  private:
   virtual ~GleanCounter() = default;
 
-  impl::CounterMetric mCounter;
+  const impl::CounterMetric mCounter;
 };
 
 }  // namespace glean
