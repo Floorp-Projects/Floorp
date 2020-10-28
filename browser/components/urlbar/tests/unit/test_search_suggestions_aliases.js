@@ -211,9 +211,11 @@ add_task(async function tokenAlias_noTrailingSpace() {
         makeSearchResult(context, {
           engineName: SUGGESTIONS_ENGINE_NAME,
           alias,
-          keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
+          keywordOffer: UrlbarPrefs.get("update2")
+            ? UrlbarUtils.KEYWORD_OFFER.SHOW
+            : UrlbarUtils.KEYWORD_OFFER.HIDE,
           query: "",
-          heuristic: true,
+          heuristic: !UrlbarPrefs.get("update2"),
         }),
       ],
     });

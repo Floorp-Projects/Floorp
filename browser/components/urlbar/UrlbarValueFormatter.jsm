@@ -440,13 +440,18 @@ class UrlbarValueFormatter {
   }
 
   _getSearchAlias() {
-    // To determine whether the input contains a valid alias, check the value of
-    // the selected result -- whether it's a search result with an alias.  The
-    // selected result is null when the popup is closed, but we want to continue
-    // highlighting the alias when the popup is closed, and that's why we keep
-    // around the previously selected result in _selectedResult.
+    // To determine whether the input contains a valid alias, check if the
+    // selected result is a search result with an alias. If there is no selected
+    // result, we check the first result in the view, for cases when we do not
+    // highlight token alias results. The selected result is null when the popup
+    // is closed, but we want to continue highlighting the alias when the popup
+    // is closed, and that's why we keep around the previously selected result
+    // in _selectedResult.
     this._selectedResult =
-      this.urlbarInput.view.selectedResult || this._selectedResult;
+      this.urlbarInput.view.selectedResult ||
+      this.urlbarInput.view.getResultAtIndex(0) ||
+      this._selectedResult;
+
     if (
       this._selectedResult &&
       this._selectedResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
