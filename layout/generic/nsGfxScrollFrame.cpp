@@ -2246,9 +2246,9 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
     // If we have tiling but no APZ, then set a 0-margin display port on
     // active scroll containers so that we paint by whole tile increments
     // when scrolling.
-    DisplayPortUtils::SetDisplayPortMargins(mOuter->GetContent(),
-                                            mOuter->PresShell(),
-                                            DisplayPortMargins::Empty(), 0);
+    DisplayPortUtils::SetDisplayPortMargins(
+        mOuter->GetContent(), mOuter->PresShell(),
+        DisplayPortMargins::Empty(mOuter->GetContent()), 0);
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         mOuter);
   }
@@ -3945,7 +3945,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // to be disabled on the next paint.
         DisplayPortUtils::SetDisplayPortMargins(
             mOuter->GetContent(), mOuter->PresShell(),
-            DisplayPortMargins::Empty(), 0,
+            DisplayPortMargins::Empty(mOuter->GetContent()), 0,
             DisplayPortUtils::RepaintMode::DoNotRepaint);
         // Call DecideScrollableLayer to recompute mWillBuildScrollableLayer
         // and recompute the current animated geometry root if needed. It's

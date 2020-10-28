@@ -174,8 +174,9 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
   // re-get it.
   sf = nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
   bool scrollUpdated = false;
-  auto displayPortMargins =
-      DisplayPortMargins::WithNoAdjustment(aRequest.GetDisplayPortMargins());
+  auto displayPortMargins = DisplayPortMargins::ForScrollFrame(
+      sf, aRequest.GetDisplayPortMargins(),
+      Some(aRequest.DisplayportPixelsPerCSSPixel()));
   CSSPoint apzScrollOffset = aRequest.GetVisualScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
   CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
@@ -217,8 +218,9 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     // tile-align the recentered displayport because tile-alignment depends on
     // the scroll position, and the scroll position here is out of our control.
     // See bug 966507 comment 21 for a more detailed explanation.
-    displayPortMargins = DisplayPortMargins::WithNoAdjustment(
-        RecenterDisplayPort(aRequest.GetDisplayPortMargins()));
+    displayPortMargins = DisplayPortMargins::ForScrollFrame(
+        sf, RecenterDisplayPort(aRequest.GetDisplayPortMargins()),
+        Some(aRequest.DisplayportPixelsPerCSSPixel()));
   }
 
   // APZ transforms inputs assuming we applied the exact scroll offset it
@@ -438,8 +440,8 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
     DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
     // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
-    DisplayPortUtils::SetDisplayPortMargins(content, aPresShell,
-                                            DisplayPortMargins::Empty(), 0);
+    DisplayPortUtils::SetDisplayPortMargins(
+        content, aPresShell, DisplayPortMargins::Empty(content), 0);
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         content->GetPrimaryFrame());
   }
