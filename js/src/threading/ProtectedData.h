@@ -7,7 +7,6 @@
 #ifndef threading_ProtectedData_h
 #define threading_ProtectedData_h
 
-#include "mozilla/Atomics.h"
 #include "jstypes.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
