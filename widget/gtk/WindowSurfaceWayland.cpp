@@ -209,14 +209,23 @@ RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
 }
 
 static int WaylandAllocateShmMemory(int aSize) {
-  static int counter = 0;
-  nsPrintfCString shmName("/wayland.mozilla.ipc.%d", counter++);
-  int fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
-  if (fd >= 0) {
-    shm_unlink(shmName.get());
-  } else {
-    printf_stderr("Unable to SHM memory segment\n");
-    MOZ_CRASH();
+  int fd = -1;
+  do {
+    static int counter = 0;
+    nsPrintfCString shmName("/wayland.mozilla.ipc.%d", counter++);
+    fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
+    if (fd >= 0) {
+      // We don't want to use leaked file
+      if (shm_unlink(shmName.get()) != 0) {
+        NS_WARNING("shm_unlink failed");
+        return -1;
+      }
+    }
+  } while (fd < 0 && errno == EEXIST);
+
+  if (fd < 0) {
+    NS_WARNING(nsPrintfCString("shm_open failed: %s", strerror(errno)).get());
+    return -1;
   }
 
   int ret = 0;
@@ -225,59 +234,103 @@ static int WaylandAllocateShmMemory(int aSize) {
     ret = posix_fallocate(fd, 0, aSize);
   } while (ret == EINTR);
   if (ret != 0) {
+    NS_WARNING(
+        nsPrintfCString("posix_fallocate() fails to allocate shm memory: %s",
+                        strerror(ret))
+            .get());
     close(fd);
-    MOZ_CRASH("posix_fallocate() fails to allocate shm memory");
+    return -1;
   }
 #else
   do {
     ret = ftruncate(fd, aSize);
   } while (ret < 0 && errno == EINTR);
   if (ret < 0) {
+    NS_WARNING(nsPrintfCString("ftruncate() fails to allocate shm memory: %s",
+                               strerror(ret))
+                   .get());
     close(fd);
-    MOZ_CRASH("ftruncate() fails to allocate shm memory");
+    fd = -1;
   }
 #endif
 
   return fd;
 }
 
-WaylandShmPool::WaylandShmPool(RefPtr<nsWaylandDisplay> aWaylandDisplay,
-                               int aSize)
-    : mAllocatedSize(aSize) {
-  mShmPoolFd = WaylandAllocateShmMemory(mAllocatedSize);
-  mImageData = mmap(nullptr, mAllocatedSize, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    mShmPoolFd, 0);
-  MOZ_RELEASE_ASSERT(mImageData != MAP_FAILED,
-                     "Unable to map drawing surface!");
-
-  mShmPool =
-      wl_shm_create_pool(aWaylandDisplay->GetShm(), mShmPoolFd, mAllocatedSize);
-
-  // We set our queue to get mShmPool events at compositor thread.
-  wl_proxy_set_queue((struct wl_proxy*)mShmPool,
-                     aWaylandDisplay->GetEventQueue());
-}
-
-bool WaylandShmPool::Resize(int aSize) {
-  // We do size increase only
-  if (aSize <= mAllocatedSize) return true;
-
-  if (ftruncate(mShmPoolFd, aSize) < 0) return false;
-
+static bool WaylandReAllocateShmMemory(int aFd, int aSize) {
+  if (ftruncate(aFd, aSize) < 0) {
+    return false;
+  }
 #ifdef HAVE_POSIX_FALLOCATE
   do {
-    errno = posix_fallocate(mShmPoolFd, 0, aSize);
+    errno = posix_fallocate(aFd, 0, aSize);
   } while (errno == EINTR);
-  if (errno != 0) return false;
+  if (errno != 0) {
+    return false;
+  }
 #endif
+  return true;
+}
 
-  wl_shm_pool_resize(mShmPool, aSize);
+WaylandShmPool::WaylandShmPool()
+    : mShmPool(nullptr),
+      mShmPoolFd(-1),
+      mAllocatedSize(0),
+      mImageData(MAP_FAILED){};
 
-  munmap(mImageData, mAllocatedSize);
+void WaylandShmPool::Release() {
+  if (mImageData != MAP_FAILED) {
+    munmap(mImageData, mAllocatedSize);
+    mImageData = MAP_FAILED;
+  }
+  if (mShmPool) {
+    wl_shm_pool_destroy(mShmPool);
+    mShmPool = 0;
+  }
+  if (mShmPoolFd >= 0) {
+    close(mShmPoolFd);
+    mShmPoolFd = -1;
+  }
+}
 
+bool WaylandShmPool::Create(RefPtr<nsWaylandDisplay> aWaylandDisplay,
+                            int aSize) {
+  // We do size increase only
+  if (aSize <= mAllocatedSize) {
+    return true;
+  }
+
+  if (mShmPoolFd < 0) {
+    mShmPoolFd = WaylandAllocateShmMemory(aSize);
+    if (mShmPoolFd < 0) {
+      return false;
+    }
+  } else {
+    if (!WaylandReAllocateShmMemory(mShmPoolFd, aSize)) {
+      Release();
+      return false;
+    }
+  }
+
+  if (mImageData != MAP_FAILED) {
+    munmap(mImageData, mAllocatedSize);
+  }
   mImageData =
       mmap(nullptr, aSize, PROT_READ | PROT_WRITE, MAP_SHARED, mShmPoolFd, 0);
-  if (mImageData == MAP_FAILED) return false;
+  if (mImageData == MAP_FAILED) {
+    NS_WARNING("Unable to map drawing surface!");
+    Release();
+    return false;
+  }
+
+  if (mShmPool) {
+    wl_shm_pool_resize(mShmPool, aSize);
+  } else {
+    mShmPool = wl_shm_create_pool(aWaylandDisplay->GetShm(), mShmPoolFd, aSize);
+    // We set our queue to get mShmPool events at compositor thread.
+    wl_proxy_set_queue((struct wl_proxy*)mShmPool,
+                       aWaylandDisplay->GetEventQueue());
+  }
 
   mAllocatedSize = aSize;
   return true;
@@ -289,11 +342,7 @@ void WaylandShmPool::SetImageDataFromPool(class WaylandShmPool* aSourcePool,
   memcpy(mImageData, aSourcePool->GetImageData(), aImageDataSize);
 }
 
-WaylandShmPool::~WaylandShmPool() {
-  munmap(mImageData, mAllocatedSize);
-  wl_shm_pool_destroy(mShmPool);
-  close(mShmPoolFd);
-}
+WaylandShmPool::~WaylandShmPool() { Release(); }
 
 static void buffer_release(void* data, wl_buffer* buffer) {
   auto surface = reinterpret_cast<WindowBackBuffer*>(data);
@@ -302,14 +351,14 @@ static void buffer_release(void* data, wl_buffer* buffer) {
 
 static const struct wl_buffer_listener buffer_listener = {buffer_release};
 
-void WindowBackBufferShm::Create(int aWidth, int aHeight) {
+bool WindowBackBufferShm::Create(int aWidth, int aHeight) {
   MOZ_ASSERT(!IsAttached(), "We can't create attached buffers.");
-  MOZ_ASSERT(!mWLBuffer, "there is wl_buffer already!");
 
-  int newBufferSize = aWidth * aHeight * BUFFER_BPP;
-  if (!mShmPool.Resize(newBufferSize)) {
-    mWLBuffer = nullptr;
-    return;
+  ReleaseShmSurface();
+
+  int size = aWidth * aHeight * BUFFER_BPP;
+  if (!mShmPool.Create(GetWaylandDisplay(), size)) {
+    return false;
   }
 
   mWLBuffer =
@@ -325,14 +374,16 @@ void WindowBackBufferShm::Create(int aWidth, int aHeight) {
   LOGWAYLAND(("WindowBackBufferShm::Create [%p] wl_buffer %p ID %d\n",
               (void*)this, (void*)mWLBuffer,
               mWLBuffer ? wl_proxy_get_id((struct wl_proxy*)mWLBuffer) : -1));
+  return true;
 }
 
 void WindowBackBufferShm::ReleaseShmSurface() {
   LOGWAYLAND(("WindowBackBufferShm::Release [%p]\n", (void*)this));
-
-  wl_buffer_destroy(mWLBuffer);
+  if (mWLBuffer) {
+    wl_buffer_destroy(mWLBuffer);
+    mWLBuffer = nullptr;
+  }
   mWidth = mHeight = 0;
-  mWLBuffer = nullptr;
 }
 
 void WindowBackBufferShm::Clear() {
@@ -340,16 +391,13 @@ void WindowBackBufferShm::Clear() {
 }
 
 WindowBackBufferShm::WindowBackBufferShm(
-    WindowSurfaceWayland* aWindowSurfaceWayland, int aWidth, int aHeight)
+    WindowSurfaceWayland* aWindowSurfaceWayland)
     : WindowBackBuffer(aWindowSurfaceWayland),
-      mShmPool(aWindowSurfaceWayland->GetWaylandDisplay(),
-               aWidth * aHeight * BUFFER_BPP),
+      mShmPool(),
       mWLBuffer(nullptr),
-      mWidth(aWidth),
-      mHeight(aHeight),
-      mAttached(false) {
-  Create(aWidth, aHeight);
-}
+      mWidth(0),
+      mHeight(0),
+      mAttached(false) {}
 
 WindowBackBufferShm::~WindowBackBufferShm() { ReleaseShmSurface(); }
 
@@ -357,13 +405,9 @@ bool WindowBackBufferShm::Resize(int aWidth, int aHeight) {
   if (aWidth == mWidth && aHeight == mHeight) {
     return true;
   }
-
   LOGWAYLAND(("WindowBackBufferShm::Resize [%p] %d %d\n", (void*)this, aWidth,
               aHeight));
-
-  ReleaseShmSurface();
   Create(aWidth, aHeight);
-
   return (mWLBuffer != nullptr);
 }
 
@@ -488,11 +532,13 @@ WindowBackBuffer* WindowSurfaceWayland::CreateWaylandBuffer(int aWidth,
     return nullptr;
   }
 
-  WindowBackBuffer* buffer = new WindowBackBufferShm(this, aWidth, aHeight);
-  if (buffer) {
-    mShmBackupBuffer[availableBuffer] = buffer;
+  WindowBackBuffer* buffer = new WindowBackBufferShm(this);
+  if (!buffer->Create(aWidth, aHeight)) {
+    delete buffer;
+    return nullptr;
   }
 
+  mShmBackupBuffer[availableBuffer] = buffer;
   return buffer;
 }
 
