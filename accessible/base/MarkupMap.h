@@ -454,6 +454,21 @@ MARKUPMAP(
           aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
         return new ARIAGridAccessibleWrap(aElement, aContext->Document());
       }
+
+      // Make sure that our children are proper layout table parts
+      for (nsIContent* child = aElement->GetFirstChild(); child;
+           child = child->GetNextSibling()) {
+        if (child->IsAnyOfHTMLElements(nsGkAtoms::thead, nsGkAtoms::tfoot,
+                                       nsGkAtoms::tbody, nsGkAtoms::tr)) {
+          // These children elements need to participate in the layout table
+          // and need table row(group) frames.
+          nsIFrame* childFrame = child->GetPrimaryFrame();
+          if (childFrame && (!childFrame->IsTableRowGroupFrame() &&
+                             !childFrame->IsTableRowFrame())) {
+            return new ARIAGridAccessibleWrap(aElement, aContext->Document());
+          }
+        }
+      }
       return nullptr;
     },
     0)
