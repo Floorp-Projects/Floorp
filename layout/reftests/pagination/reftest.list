@@ -179,3 +179,9 @@ fails == bfc-004.html bfc-004-ref.html # bug 1602484
 == bfc-006.html bfc-006-ref.html
 == bfc-007.html bfc-006-ref.html
 == bfc-008.html bfc-006-ref.html
+
+asserts(10) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-simple-1.html inline-block-frag-simple-1-ref.html # Bug 1655630
+asserts(10) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-simple-2.html inline-block-frag-simple-2-ref.html # Bug 1655630
+asserts(2-3) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-1.html inline-block-frag-offset-1-ref.html # Bug 1655630
+asserts(2-3) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-2.html inline-block-frag-offset-2-ref.html # Bug 1655630
+asserts(2) pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-text-1.html inline-block-frag-text-1-ref.html # Bug 1655630
