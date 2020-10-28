@@ -263,9 +263,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsJARChannel::Suspend\n"
          "race:nsJARChannel::Resume\n"
 
-         // Bug 1607706
-         "race:TemporaryIPCBlobParent::CreateAndShareFile\n"
-
          // Bug 1608068
          "race:makeOwnBaseShape\n"
          "race:numDynamicSlots\n"
