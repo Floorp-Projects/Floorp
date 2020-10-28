@@ -121,15 +121,6 @@ if (runningInParent && "mozIAsyncHistory" in Ci) {
   _Services.prefs.setBoolPref("places.history.enabled", true);
 }
 
-try {
-  if (runningInParent) {
-    // Disable IPv6 lookups for 'localhost' on windows.
-    if ("@mozilla.org/windows-registry-key;1" in Cc) {
-      _Services.prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
-    }
-  }
-} catch (e) {}
-
 // Configure crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER,
 // MOZ_CRASHREPORTER_NO_REPORT, and handle checking for minidumps.
