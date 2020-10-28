@@ -551,6 +551,16 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvAddBlockedFrameNodeByClassifier(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvResetScalingZoom() {
+  if (Document* doc = mWindowGlobal->GetExtantDoc()) {
+    if (PresShell* ps = doc->GetPresShell()) {
+      ps->SetResolutionAndScaleTo(1.0,
+                                  ResolutionChangeOrigin::MainThreadAdjustment);
+    }
+  }
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalChild::RecvRawMessage(
     const JSActorMessageMeta& aMeta, const Maybe<ClonedMessageData>& aData,
     const Maybe<ClonedMessageData>& aStack) {
