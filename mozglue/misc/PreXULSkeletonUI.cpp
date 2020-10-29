@@ -72,6 +72,10 @@ static uint32_t* sPixelBuffer = nullptr;
 static StaticAutoPtr<Vector<ColorRect>> sAnimatedRects;
 static int sTotalChromeHeight = 0;
 static volatile LONG sAnimationControlFlag = 0;
+static bool sMaximized = false;
+static int sNonClientVerticalMargins = 0;
+static int sNonClientHorizontalMargins = 0;
+static uint32_t sDpi = 0;
 
 // Color values needed by the animation loop
 static uint32_t sBackgroundColor;
@@ -97,8 +101,6 @@ typedef BOOL(WINAPI* ShowWindowProc)(HWND, int);
 ShowWindowProc sShowWindow = NULL;
 typedef BOOL(WINAPI* SetWindowPosProc)(HWND, HWND, int, int, int, int, UINT);
 SetWindowPosProc sSetWindowPos = NULL;
-typedef BOOL(WINAPI* RedrawWindowProc)(HWND, const RECT*, HRGN, UINT);
-RedrawWindowProc sRedrawWindow = NULL;
 typedef HDC(WINAPI* GetWindowDCProc)(HWND);
 GetWindowDCProc sGetWindowDC = NULL;
 typedef int(WINAPI* FillRectProc)(HDC, const RECT*, HBRUSH);
@@ -107,6 +109,12 @@ typedef BOOL(WINAPI* DeleteObjectProc)(HGDIOBJ);
 DeleteObjectProc sDeleteObject = NULL;
 typedef int(WINAPI* ReleaseDCProc)(HWND, HDC);
 ReleaseDCProc sReleaseDC = NULL;
+typedef HMONITOR(WINAPI* MonitorFromWindowProc)(HWND, DWORD);
+MonitorFromWindowProc sMonitorFromWindow = NULL;
+typedef BOOL(WINAPI* GetMonitorInfoWProc)(HMONITOR, LPMONITORINFO);
+GetMonitorInfoWProc sGetMonitorInfoW = NULL;
+typedef LONG_PTR(WINAPI* SetWindowLongPtrWProc)(HWND, int, LONG_PTR);
+SetWindowLongPtrWProc sSetWindowLongPtrW = NULL;
 typedef int(WINAPI* StretchDIBitsProc)(HDC, int, int, int, int, int, int, int,
                                        int, const VOID*, const BITMAPINFO*,
                                        UINT, DWORD);
@@ -117,23 +125,6 @@ CreateSolidBrushProc sCreateSolidBrush = NULL;
 static uint32_t sWindowWidth;
 static uint32_t sWindowHeight;
 static double sCSSToDevPixelScaling;
-
-// We style our initial blank window as a WS_POPUP to eliminate the window
-// caption and all that jazz. Alternatively, we could do a big dance in our
-// window proc to paint into the nonclient area similarly to what we do in
-// nsWindow, but it would be nontrivial code duplication, and the added
-// complexity would not be worth it, given that we can just change the
-// window style to our liking when we consume sPreXULSkeletonUIWindow from
-// nsWindow.
-static DWORD sWindowStyle = WS_POPUP;
-
-// We add WS_EX_TOOLWINDOW here so that we do not produce a toolbar entry.
-// We were not able to avoid flickering in the toolbar without this change,
-// as the call to ::SetWindowLongPtrW to restyle the window inside
-// nsWindow causes the toolbar entry to momentarily disappear. Not sure of
-// the cause of this, but it doesn't feel too wrong to be missing a toolbar
-// entry only so long as we are displaying a skeleton UI.
-static DWORD sWindowStyleEx = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
 
 static const int kAnimationCSSPixelsPerFrame = 21;
 static const int kAnimationCSSExtraWindowSize = 300;
@@ -199,22 +190,26 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   uint32_t urlbarColor = 0xffffff;
 
   int chromeHorMargin = CSSToDevPixels(2, sCSSToDevPixelScaling);
-  int dpi = sGetDpiForWindow(hWnd);
-  int verticalOffset = sGetSystemMetricsForDpi(SM_CYBORDER, dpi);
-  int nonClientHorMargins = sGetSystemMetricsForDpi(SM_CXFRAME, dpi) +
-                            sGetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
-  int horizontalOffset = nonClientHorMargins - chromeHorMargin;
+  int verticalOffset = sMaximized ? sNonClientVerticalMargins : 0;
+  int horizontalOffset =
+      sNonClientHorizontalMargins - (sMaximized ? 0 : chromeHorMargin);
 
+  // found in browser-aero.css, ":root[sizemode=normal][tabsintitlebar]"
+  int topBorderHeight =
+      sMaximized ? 0 : CSSToDevPixels(1, sCSSToDevPixelScaling);
   // found in tabs.inc.css, "--tab-min-height" - depends on uidensity variable
   int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + verticalOffset;
   // found in tabs.inc.css, ".titlebar-spacer"
   int titlebarSpacerWidth =
-      CSSToDevPixels(40, sCSSToDevPixelScaling) + horizontalOffset;
+      (sMaximized ? 0 : CSSToDevPixels(40, sCSSToDevPixelScaling)) +
+      horizontalOffset;
   // found in tabs.inc.css, ".tab-line"
   int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + verticalOffset;
   int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
-
   int toolbarHeight = CSSToDevPixels(39, sCSSToDevPixelScaling);
+  // found in urlbar-searchbar.inc.css, "#urlbar[breakout]"
+  int urlbarTopOffset = CSSToDevPixels(5, sCSSToDevPixelScaling);
+  int urlbarHeight = CSSToDevPixels(30, sCSSToDevPixelScaling);
 
   int tabPlaceholderBarMarginTop = CSSToDevPixels(13, sCSSToDevPixelScaling);
   int tabPlaceholderBarMarginLeft = CSSToDevPixels(10, sCSSToDevPixelScaling);
@@ -235,11 +230,18 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
       std::min((int)urlbarWidthCSS - 10, 260), sCSSToDevPixelScaling);
   int urlbarTextPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
 
+  ColorRect topBorder = {};
+  topBorder.color = 0x00000000;
+  topBorder.x = 0;
+  topBorder.y = 0;
+  topBorder.width = sWindowWidth;
+  topBorder.height = topBorderHeight;
+
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
   tabBar.color = tabBarColor;
   tabBar.x = 0;
-  tabBar.y = 0;
+  tabBar.y = topBorder.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
 
@@ -247,7 +249,7 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   ColorRect tabLine = {};
   tabLine.color = tabLineColor;
   tabLine.x = titlebarSpacerWidth;
-  tabLine.y = 0;
+  tabLine.y = topBorder.height;
   tabLine.width = selectedTabWidth;
   tabLine.height = tabLineHeight;
 
@@ -255,9 +257,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   ColorRect selectedTab = {};
   selectedTab.color = sBackgroundColor;
   selectedTab.x = titlebarSpacerWidth;
-  selectedTab.y = tabLineHeight;
+  selectedTab.y = tabLine.y + tabLineHeight;
   selectedTab.width = selectedTabWidth;
-  selectedTab.height = tabBarHeight;
+  selectedTab.height = tabBar.y + tabBar.height - selectedTab.y;
 
   // A placeholder rect representing text that will fill the selected tab title
   ColorRect tabTextPlaceholder = {};
@@ -271,7 +273,7 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   ColorRect toolbar = {};
   toolbar.color = sBackgroundColor;
   toolbar.x = 0;
-  toolbar.y = tabBarHeight;
+  toolbar.y = tabBar.y + tabBarHeight;
   toolbar.width = sWindowWidth;
   toolbar.height = toolbarHeight;
 
@@ -309,9 +311,9 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   urlbar.color = urlbarColor;
   urlbar.x = CSSToDevPixels(urlbarHorizontalOffsetCSS, sCSSToDevPixelScaling) +
              horizontalOffset;
-  urlbar.y = CSSToDevPixels(39, sCSSToDevPixelScaling);
+  urlbar.y = tabBar.y + tabBarHeight + urlbarTopOffset;
   urlbar.width = CSSToDevPixels(urlbarWidthCSS, sCSSToDevPixelScaling);
-  urlbar.height = CSSToDevPixels(30, sCSSToDevPixelScaling);
+  urlbar.height = urlbarHeight;
 
   // The urlbar placeholder rect representating text that will fill the urlbar
   // The placeholder rects should all be y-aligned.
@@ -325,6 +327,7 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
   urlbarTextPlaceholder.height = urlbarTextPlaceholderHeight;
 
   ColorRect rects[] = {
+      topBorder,
       tabBar,
       tabLine,
       selectedTab,
@@ -337,6 +340,12 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
       urlbarTextPlaceholder,
   };
 
+  sTotalChromeHeight = chromeContentDivider.y + chromeContentDivider.height;
+  if (sTotalChromeHeight > sWindowHeight) {
+    printf_stderr("Exiting drawing skeleton UI because window is too small.\n");
+    return;
+  }
+
   if (!sAnimatedRects->append(tabTextPlaceholder) ||
       !sAnimatedRects->append(leftToolbarPlaceholder) ||
       !sAnimatedRects->append(rightToolbarPlaceholder) ||
@@ -344,8 +353,6 @@ void DrawSkeletonUI(HWND hWnd, double urlbarHorizontalOffsetCSS,
     sAnimatedRects = nullptr;
     return;
   }
-
-  sTotalChromeHeight = chromeContentDivider.y + chromeContentDivider.height;
 
   sPixelBuffer =
       (uint32_t*)calloc(sWindowWidth * sTotalChromeHeight, sizeof(uint32_t));
@@ -555,8 +562,33 @@ DWORD WINAPI AnimateSkeletonUI(void* aUnused) {
 
 LRESULT WINAPI PreXULSkeletonUIProc(HWND hWnd, UINT msg, WPARAM wParam,
                                     LPARAM lParam) {
+  // NOTE: this block was copied from WinUtils.cpp, and needs to be kept in
+  // sync.
   if (msg == WM_NCCREATE && sEnableNonClientDpiScaling) {
     sEnableNonClientDpiScaling(hWnd);
+  }
+
+  // NOTE: this block was paraphrased from the WM_NCCALCSIZE handler in
+  // nsWindow.cpp, and will need to be kept in sync.
+  if (msg == WM_NCCALCSIZE) {
+    RECT* clientRect =
+        wParam ? &(reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam))->rgrc[0]
+               : (reinterpret_cast<RECT*>(lParam));
+
+    // These match the margins set in browser-tabsintitlebar.js with
+    // default prefs on Windows. Bug 1673092 tracks lining this up with
+    // that more correctly instead of hard-coding it.
+    int horizontalOffset =
+        sNonClientHorizontalMargins -
+        (sMaximized ? 0 : CSSToDevPixels(2, sCSSToDevPixelScaling));
+    int verticalOffset =
+        sNonClientHorizontalMargins -
+        (sMaximized ? 0 : CSSToDevPixels(2, sCSSToDevPixelScaling));
+    clientRect->top = clientRect->top;
+    clientRect->left += horizontalOffset;
+    clientRect->right -= horizontalOffset;
+    clientRect->bottom -= verticalOffset;
+    return 0;
   }
 
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -635,10 +667,6 @@ bool LoadGdi32AndUser32Procedures() {
   if (!sSetWindowPos) {
     return false;
   }
-  sRedrawWindow = (RedrawWindowProc)::GetProcAddress(user32Dll, "RedrawWindow");
-  if (!sRedrawWindow) {
-    return false;
-  }
   sGetWindowDC = (GetWindowDCProc)::GetProcAddress(user32Dll, "GetWindowDC");
   if (!sGetWindowDC) {
     return false;
@@ -659,7 +687,21 @@ bool LoadGdi32AndUser32Procedures() {
   if (!sLoadCursorW) {
     return false;
   }
-
+  sMonitorFromWindow =
+      (MonitorFromWindowProc)::GetProcAddress(user32Dll, "MonitorFromWindow");
+  if (!sMonitorFromWindow) {
+    return false;
+  }
+  sGetMonitorInfoW =
+      (GetMonitorInfoWProc)::GetProcAddress(user32Dll, "GetMonitorInfoW");
+  if (!sGetMonitorInfoW) {
+    return false;
+  }
+  sSetWindowLongPtrW =
+      (SetWindowLongPtrWProc)::GetProcAddress(user32Dll, "SetWindowLongPtrW");
+  if (!sSetWindowLongPtrW) {
+    return false;
+  }
   sStretchDIBits =
       (StretchDIBitsProc)::GetProcAddress(gdi32Dll, "StretchDIBits");
   if (!sStretchDIBits) {
@@ -737,19 +779,31 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
     return;
   }
 
+  uint32_t windowWidth;
   result = ::RegGetValueW(regKey, nullptr, L"width", RRF_RT_REG_DWORD, nullptr,
-                          reinterpret_cast<PBYTE>(&sWindowWidth), &dataLen);
+                          reinterpret_cast<PBYTE>(&windowWidth), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading width %lu\n", GetLastError());
     return;
   }
 
+  uint32_t windowHeight;
   result = ::RegGetValueW(regKey, nullptr, L"height", RRF_RT_REG_DWORD, nullptr,
-                          reinterpret_cast<PBYTE>(&sWindowHeight), &dataLen);
+                          reinterpret_cast<PBYTE>(&windowHeight), &dataLen);
   if (result != ERROR_SUCCESS) {
     printf_stderr("Error reading height %lu\n", GetLastError());
     return;
   }
+
+  uint32_t maximized;
+  result =
+      ::RegGetValueW(regKey, nullptr, L"maximized", RRF_RT_REG_DWORD, nullptr,
+                     reinterpret_cast<PBYTE>(&maximized), &dataLen);
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Error reading maximized %lu\n", GetLastError());
+    return;
+  }
+  sMaximized = maximized != 0;
 
   dataLen = sizeof(double);
   double urlbarHorizontalOffsetCSS;
@@ -779,24 +833,63 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
     return;
   }
 
-  sPreXULSkeletonUIWindow =
-      sCreateWindowExW(sWindowStyleEx, L"MozillaWindowClass", L"", sWindowStyle,
-                       screenX, screenY, sWindowWidth, sWindowHeight, nullptr,
-                       nullptr, hInstance, nullptr);
+  int showCmd = SW_SHOWNORMAL;
+  DWORD windowStyle = kPreXULSkeletonUIWindowStyle;
+  if (sMaximized) {
+    showCmd = SW_SHOWMAXIMIZED;
+    windowStyle |= WS_MAXIMIZE;
+  }
 
-  sShowWindow(sPreXULSkeletonUIWindow, SW_SHOWNORMAL);
+  sPreXULSkeletonUIWindow =
+      sCreateWindowExW(kPreXULSkeletonUIWindowStyleEx, L"MozillaWindowClass",
+                       L"", windowStyle, screenX, screenY, windowWidth,
+                       windowHeight, nullptr, nullptr, hInstance, nullptr);
+  sShowWindow(sPreXULSkeletonUIWindow, showCmd);
+
+  sDpi = sGetDpiForWindow(sPreXULSkeletonUIWindow);
+  sNonClientHorizontalMargins =
+      sGetSystemMetricsForDpi(SM_CXFRAME, sDpi) +
+      sGetSystemMetricsForDpi(SM_CXPADDEDBORDER, sDpi);
+  sNonClientVerticalMargins = sGetSystemMetricsForDpi(SM_CYFRAME, sDpi) +
+                              sGetSystemMetricsForDpi(SM_CXPADDEDBORDER, sDpi);
+
+  if (sMaximized) {
+    HMONITOR monitor =
+        sMonitorFromWindow(sPreXULSkeletonUIWindow, MONITOR_DEFAULTTONULL);
+    if (!monitor) {
+      // NOTE: we specifically don't clean up the window here. If we're unable
+      // to finish setting up the window how we want it, we still need to keep
+      // it around and consume it with the first real toplevel window we
+      // create, to avoid flickering.
+      return;
+    }
+    MONITORINFO mi = {sizeof(MONITORINFO)};
+    if (!sGetMonitorInfoW(monitor, &mi)) {
+      return;
+    }
+
+    sWindowWidth =
+        mi.rcWork.right - mi.rcWork.left + sNonClientHorizontalMargins * 2;
+    sWindowHeight =
+        mi.rcWork.bottom - mi.rcWork.top + sNonClientVerticalMargins * 2;
+  } else {
+    sWindowWidth = windowWidth;
+    sWindowHeight = windowHeight;
+  }
+
   sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
   DrawSkeletonUI(sPreXULSkeletonUIWindow, urlbarHorizontalOffsetCSS,
                  urlbarWidthCSS);
-  sRedrawWindow(sPreXULSkeletonUIWindow, NULL, NULL, RDW_INVALIDATE);
 
   if (sAnimatedRects) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
   }
 }
+
+bool WasPreXULSkeletonUIMaximized() { return sMaximized; }
 
 HWND ConsumePreXULSkeletonUIHandle() {
   // NOTE: we need to make sure that everything that runs here is a no-op if
@@ -824,7 +917,8 @@ HWND ConsumePreXULSkeletonUIHandle() {
 }
 
 void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
-                                   int height, double urlbarHorizontalOffsetCSS,
+                                   int height, bool maximized,
+                                   double urlbarHorizontalOffsetCSS,
                                    double urlbarWidthCSS,
                                    double cssToDevPixelScaling) {
   if (!sPreXULSkeletonUIEnabled) {
@@ -864,6 +958,14 @@ void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
   if (result != ERROR_SUCCESS) {
     printf_stderr("Failed persisting height to Windows registry\n");
     return;
+  }
+
+  DWORD maximizedDword = maximized ? 1 : 0;
+  result = ::RegSetValueExW(regKey, L"maximized", 0, REG_DWORD,
+                            reinterpret_cast<PBYTE>(&maximizedDword),
+                            sizeof(maximizedDword));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting maximized to Windows registry\n");
   }
 
   result = ::RegSetValueExW(regKey, L"urlbarHorizontalOffsetCSS", 0, REG_BINARY,
