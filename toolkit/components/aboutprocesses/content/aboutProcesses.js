@@ -419,10 +419,10 @@ var View = {
           fluentName = "about-processes-web-process-name";
           break;
         case "webIsolated":
-          fluentName = "about-processes-webIsolated-process-name";
+          fluentName = "about-processes-web-isolated-process-name";
           break;
         case "webLargeAllocation":
-          fluentName = "about-processes-webLargeAllocation-process-name";
+          fluentName = "about-processes-web-large-allocation-process-name";
           break;
         case "file":
           fluentName = "about-processes-file-process-name";
@@ -435,7 +435,7 @@ var View = {
           fluentName = "about-processes-privilegedabout-process-name";
           break;
         case "withCoopCoep":
-          fluentName = "about-processes-withCoopCoep-process-name";
+          fluentName = "about-processes-with-coop-coep-process-name";
           break;
         case "browser":
           fluentName = "about-processes-browser-process-name";
@@ -444,7 +444,7 @@ var View = {
           fluentName = "about-processes-plugin-process-name";
           break;
         case "gmpPlugin":
-          fluentName = "about-processes-gmpPlugin-process-name";
+          fluentName = "about-processes-gmp-plugin-process-name";
           break;
         case "gpu":
           fluentName = "about-processes-gpu-process-name";
@@ -459,10 +459,10 @@ var View = {
           fluentName = "about-processes-socket-process-name";
           break;
         case "remoteSandboxBroker":
-          fluentName = "about-processes-remoteSandboxBroker-process-name";
+          fluentName = "about-processes-remote-sandbox-broker-process-name";
           break;
         case "forkServer":
-          fluentName = "about-processes-forkServer-process-name";
+          fluentName = "about-processes-fork-server-process-name";
           break;
         case "preallocated":
           fluentName = "about-processes-preallocated-process-name";
