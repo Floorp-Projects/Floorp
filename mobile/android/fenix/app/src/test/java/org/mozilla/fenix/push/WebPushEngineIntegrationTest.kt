@@ -57,6 +57,7 @@ class WebPushEngineIntegrationTest {
     @After
     fun teardown() {
         unmockkStatic(Base64::class)
+        scope.cleanupTestCoroutines()
     }
 
     @Test

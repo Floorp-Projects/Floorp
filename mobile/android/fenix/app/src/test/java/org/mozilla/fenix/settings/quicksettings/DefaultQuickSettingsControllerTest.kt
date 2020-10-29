@@ -22,6 +22,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -65,6 +66,11 @@ class DefaultQuickSettingsControllerTest {
         displayPermissions = displayPermissions,
         dismiss = dismiss
     ))
+
+    @After
+    fun cleanUp() {
+        coroutinesScope.cleanupTestCoroutines()
+    }
 
     @Test
     fun `handlePermissionsShown should delegate to an injected parameter`() {

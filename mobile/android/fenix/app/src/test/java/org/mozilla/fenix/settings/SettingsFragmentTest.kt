@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -47,6 +48,11 @@ class SettingsFragmentTest {
 
         mockkObject(Config)
         every { Config.channel } returns ReleaseChannel.Nightly
+    }
+
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

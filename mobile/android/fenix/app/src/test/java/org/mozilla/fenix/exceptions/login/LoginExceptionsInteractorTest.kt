@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.logins.exceptions.LoginException
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -25,6 +26,11 @@ class LoginExceptionsInteractorTest {
     fun setup() {
         loginExceptionStorage = mockk(relaxed = true)
         interactor = DefaultLoginExceptionsInteractor(scope, loginExceptionStorage)
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
     }
 
     @Test

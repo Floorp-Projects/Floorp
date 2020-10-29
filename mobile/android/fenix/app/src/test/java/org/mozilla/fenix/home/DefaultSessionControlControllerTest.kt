@@ -20,6 +20,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,8 +43,10 @@ import mozilla.components.feature.tab.collections.Tab as ComponentTab
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
+    private val testDispatcher = TestCoroutineDispatcher()
+
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val fragmentStore: HomeFragmentStore = mockk(relaxed = true)
@@ -68,6 +71,7 @@ class DefaultSessionControlControllerTest {
     private val searchEngineManager = mockk<SearchEngineManager>(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val analytics: Analytics = mockk(relaxed = true)
+    private val scope = TestCoroutineScope()
 
     private lateinit var controller: DefaultSessionControlController
 
@@ -103,13 +107,19 @@ class DefaultSessionControlControllerTest {
             addTabUseCase = tabsUseCases.addTab,
             fragmentStore = fragmentStore,
             navController = navController,
-            viewLifecycleScope = TestCoroutineScope(),
+            viewLifecycleScope = scope,
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             showDeleteCollectionPrompt = showDeleteCollectionPrompt,
             showTabTray = showTabTray,
             handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
         )
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

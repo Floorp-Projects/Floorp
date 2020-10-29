@@ -13,10 +13,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.engine.prompt.ShareData
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -33,7 +33,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryControllerTest {
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-    private val scope: CoroutineScope = TestCoroutineScope()
+    private val scope = TestCoroutineScope()
     private val store: HistoryFragmentStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
@@ -62,6 +62,11 @@ class HistoryControllerTest {
     @Before
     fun setUp() {
         every { store.state } returns state
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
     }
 
     @Test

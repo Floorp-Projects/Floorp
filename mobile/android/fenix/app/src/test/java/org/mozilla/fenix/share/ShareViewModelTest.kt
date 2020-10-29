@@ -27,6 +27,7 @@ import mozilla.components.feature.share.RecentApp
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -69,6 +70,11 @@ class ShareViewModelTest {
 
         viewModel = spyk(ShareViewModel(application))
         viewModel.ioDispatcher = testIoDispatcher
+    }
+
+    @After
+    fun cleanUp() {
+        testIoDispatcher.cleanupTestCoroutines()
     }
 
     @Test

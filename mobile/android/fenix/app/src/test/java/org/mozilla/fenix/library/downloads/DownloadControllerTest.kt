@@ -7,10 +7,10 @@ package org.mozilla.fenix.library.downloads
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.state.content.DownloadState
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
@@ -22,11 +22,10 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class DownloadControllerTest {
     private val downloadItem = DownloadItem("0", "title", "url", "77", "jpg", DownloadState.Status.COMPLETED)
-    private val scope: CoroutineScope = TestCoroutineScope()
+    private val scope = TestCoroutineScope()
     private val store: DownloadFragmentStore = mockk(relaxed = true)
     private val state: DownloadFragmentState = mockk(relaxed = true)
     private val openToFileManager: (DownloadItem, BrowsingMode?) -> Unit = mockk(relaxed = true)
-    private val invalidateOptionsMenu: () -> Unit = mockk(relaxed = true)
     private val controller = DefaultDownloadController(
         store,
         openToFileManager
@@ -35,6 +34,11 @@ class DownloadControllerTest {
     @Before
     fun setUp() {
         every { store.state } returns state
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
     }
 
     @Test

@@ -14,6 +14,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -50,6 +51,11 @@ class DefaultCollectionCreationControllerTest {
             store, dismiss, metrics,
             tabCollectionStorage, sessionManager, testCoroutineScope
         )
+    }
+
+    @After
+    fun cleanUp() {
+        testCoroutineScope.cleanupTestCoroutines()
     }
 
     @Test

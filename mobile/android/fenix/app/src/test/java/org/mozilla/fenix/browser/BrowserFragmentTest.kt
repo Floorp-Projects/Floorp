@@ -23,6 +23,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -76,6 +77,11 @@ class BrowserFragmentTest {
         store = BrowserStore()
         every { context.components.core.store } returns store
         testTab = createTab(url = "https://mozilla.org")
+    }
+
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

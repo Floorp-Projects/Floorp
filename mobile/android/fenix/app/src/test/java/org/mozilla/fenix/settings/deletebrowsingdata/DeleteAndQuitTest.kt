@@ -18,6 +18,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -34,8 +35,10 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class DeleteAndQuitTest {
 
+    val testDispatcher = TestCoroutineDispatcher()
+
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
@@ -56,6 +59,11 @@ class DeleteAndQuitTest {
         every { activity.components.core.engine } returns engine
         every { activity.components.settings } returns settings
         every { activity.components.core.icons } returns iconsStorage
+    }
+
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

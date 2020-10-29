@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,8 +28,10 @@ import org.mozilla.fenix.components.PermissionStorage
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultDeleteBrowsingDataControllerTest {
 
+    val testDispatcher = TestCoroutineDispatcher()
+
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private var removeAllTabs: TabsUseCases.RemoveAllTabsUseCase = mockk(relaxed = true)
     private var historyStorage: HistoryStorage = mockk(relaxed = true)
@@ -49,6 +52,11 @@ class DefaultDeleteBrowsingDataControllerTest {
             engine = engine,
             coroutineContext = coroutineContext
         )
+    }
+
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

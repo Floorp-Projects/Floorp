@@ -18,6 +18,7 @@ import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -66,6 +67,11 @@ class SyncedTabsControllerTest {
         view = LayoutInflater.from(testContext).inflate(R.layout.about_list_item, null)
         controller =
             SyncedTabsController(lifecycleOwner, view, store, concatAdapter, coroutineContext)
+    }
+
+    @After
+    fun cleanUp() {
+        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
