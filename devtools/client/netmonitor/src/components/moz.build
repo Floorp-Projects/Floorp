@@ -13,6 +13,7 @@ DIRS += [
 
 DevToolsModules(
     "App.js",
+    "AppErrorBoundary.js",
     "CustomRequestPanel.js",
     "DropHarHandler.js",
     "MonitorPanel.js",
