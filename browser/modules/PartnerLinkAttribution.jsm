@@ -21,13 +21,14 @@ var PartnerLinkAttribution = {
   async makeRequest({ targetURL, source }) {
     let partner = targetURL.match(/^https?:\/\/(?:www.)?([^.]*)/)[1];
 
-    function record(objectString, value = "") {
-      recordTelemetryEvent("interaction", objectString, value, {
-        partner,
-        source,
+    function record(method, objectString) {
+      recordTelemetryEvent({
+        method,
+        objectString,
+        value: partner,
       });
     }
-    record("click");
+    record("click", source);
 
     const attributionUrl = Services.prefs.getStringPref(
       Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
@@ -100,13 +101,7 @@ async function sendRequest(attributionUrl, source, targetURL) {
   return response.ok;
 }
 
-function recordTelemetryEvent(method, objectString, value, extra) {
+function recordTelemetryEvent({ method, objectString, value }) {
   Services.telemetry.setEventRecordingEnabled("partner_link", true);
-  Services.telemetry.recordEvent(
-    "partner_link",
-    method,
-    objectString,
-    value,
-    extra
-  );
+  Services.telemetry.recordEvent("partner_link", method, objectString, value);
 }
