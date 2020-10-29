@@ -790,18 +790,13 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-category-label,
+.identity-popup-permission-label,
 .protections-popup-footer-button-label {
   margin-inline-start: 1em;
 }
 
 .identity-popup-permission-label {
   margin-inline-start: 10px;
-}
-
-.identity-popup-permission-label-subitem {
-  /* Align label with other labels with icon. */
-  /* icon width + icon inline margin + label inline margin */
-  margin-inline-start: calc(16px + 3px + 10px);
 }
 
 .protections-popup-category-state-label,

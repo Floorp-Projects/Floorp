@@ -59,7 +59,7 @@ add_task(async function test_helperapp() {
       };
     });
 
-    let askedUserPromise = waitForProtocolAppChooserDialog(browser, true);
+    let askedUserPromise = waitForProtocolAskDialog(browser, true);
 
     BrowserTestUtils.loadURI(browser, kProt + ":test");
     let dialog = await Promise.race([
@@ -68,7 +68,7 @@ add_task(async function test_helperapp() {
     ]);
     ok(dialog, "Should have gotten a dialog");
 
-    let closePromise = waitForProtocolAppChooserDialog(browser, false);
+    let closePromise = waitForProtocolAskDialog(browser, false);
     dialog.close();
     await closePromise;
     askedUserPromise = null;

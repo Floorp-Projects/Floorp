@@ -107,11 +107,8 @@ add_task(async function test_CertificateError() {
 
   let hostText = pageInfo.document.getElementById("hostText");
   let permList = pageInfo.document.getElementById("permList");
-  let excludedPermissions = pageInfo.window.getExcludedPermissions();
   let permissions = SitePermissions.listPermissions().filter(
-    p =>
-      SitePermissions.getPermissionLabel(p) != null &&
-      !excludedPermissions.includes(p)
+    p => SitePermissions.getPermissionLabel(p) != null
   );
 
   await TestUtils.waitForCondition(
@@ -158,11 +155,8 @@ add_task(async function test_NetworkError() {
 
   let hostText = pageInfo.document.getElementById("hostText");
   let permList = pageInfo.document.getElementById("permList");
-  let excludedPermissions = pageInfo.window.getExcludedPermissions();
   let permissions = SitePermissions.listPermissions().filter(
-    p =>
-      SitePermissions.getPermissionLabel(p) != null &&
-      !excludedPermissions.includes(p)
+    p => SitePermissions.getPermissionLabel(p) != null
   );
 
   await TestUtils.waitForCondition(
