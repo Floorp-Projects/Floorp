@@ -13245,6 +13245,7 @@ void nsDocShell::MoveLoadingToActiveEntry() {
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("nsDocShell %p MoveLoadingToActiveEntry", this));
 
+  bool hadActiveEntry = !!mActiveEntry;
   mActiveEntry = nullptr;
   mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> loadingEntry;
   mActiveEntryIsLoadingFromSessionHistory =
@@ -13270,10 +13271,17 @@ void nsDocShell::MoveLoadingToActiveEntry() {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
         if (!loadingEntry->mLoadIsFromSessionHistory) {
+          // We try to mimic as closely as possible what will happen in
+          // CanonicalBrowsingContext::SessionHistoryCommit. We'll be
+          // incrementing the session history length if we're not replacing,
+          // this is a top-level load or it's not the initial load in an iframe,
+          // and ShouldUpdateSessionHistory(loadType) returns true.
           // It is possible that this leads to wrong length temporarily, but
           // so would not having the check for replace.
           if (!LOAD_TYPE_HAS_FLAGS(
-                  mLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
+                  mLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) &&
+              (mBrowsingContext->IsTop() || hadActiveEntry) &&
+              mBrowsingContext->ShouldUpdateSessionHistory(loadType)) {
             changeID = rootSH->AddPendingHistoryChange();
           }
         } else {
