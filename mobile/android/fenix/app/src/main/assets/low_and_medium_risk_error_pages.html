@@ -71,6 +71,10 @@
   </body>
 
   <script type="text/javascript">
+    if (window.history.length == 1) {
+        document.getElementById('advancedPanelBackButton').style.display = 'none';
+    }
+
     function toggleAdvancedAndScroll() {
       toggleAdvanced();
 

@@ -34,4 +34,9 @@
   </body>
 
   <script src="./errorPageScripts.js"></script>
+  <script type="text/javascript">
+    if (window.history.length == 1) {
+        document.getElementById('backButton').style.display = 'none';
+    }
+  </script>
 </html>
