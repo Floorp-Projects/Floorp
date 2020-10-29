@@ -14,19 +14,16 @@
 py2commands="
     android
     awsy-test
-    crashtest
     firefox-ui-functional
     geckodriver
     geckodriver-test
     jsshell-bench
     marionette-test
-    jstestbrowser
     jstests
     mozharness
     prettier-format
     raptor
     raptor-test
-    reftest
     telemetry-tests-client
     test
     web-platform-tests
