@@ -337,9 +337,6 @@
   #urlbar-search-mode-indicator {
     background-color: Highlight;
     outline-color: Highlight;
-  }
-
-  #urlbar-search-mode-indicator-title {
     color: HighlightText;
   }
 
