@@ -63,7 +63,6 @@ let extensionControlledContentIds = {
   newTabURL: "browserNewTabExtensionContent",
   webNotificationsDisabled: "browserNotificationsPermissionExtensionContent",
   "services.passwordSavingEnabled": "passwordManagerExtensionContent",
-  defaultSearch: "browserDefaultSearchExtensionContent",
   "proxy.settings": "proxyExtensionContent",
   get "websites.trackingProtectionMode"() {
     return {
@@ -78,7 +77,6 @@ const extensionControlledL10nKeys = {
   newTabURL: "new-tab-url",
   webNotificationsDisabled: "web-notifications",
   "services.passwordSavingEnabled": "password-saving",
-  defaultSearch: "default-search",
   "privacy.containers": "privacy-containers",
   "websites.trackingProtectionMode": "websites-content-blocking-all-trackers",
   "proxy.settings": "proxy-config",
