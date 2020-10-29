@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/ShipporiMincho-Regular.subset.otf);
+}
+.ref, .test {
+  font: 40px test;
+  writing-mode: vertical-rl;
+  float: left;
+}
+.ref {
+  text-orientation: upright;
+}
+.hide {
+  color: transparent;
+}
+</style>
+<p>The three wavy dash glyphs below should all look the same:
+
+<div class=ref>&#x301c;</div><!-- with explicit orientation:upright -->
+<div class=test>&#x301c;<span class=hide>&#x3105;</span></div><!-- with bopomofo letter -->
+<div class=test>&#x301c;<span class=hide>&#x4e01;</span></div><!-- with CJK ideograph -->
