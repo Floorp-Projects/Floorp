@@ -314,7 +314,7 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
 }
 
 static inline bool AllowDirectBitmapSurfaceDrawing() {
-  if (!StaticPrefs::dom_ipc_plugins_asyncdrawing_enabled()) {
+  if (!mozilla::StaticPrefs::dom_ipc_plugins_asyncdrawing_enabled()) {
     return false;
   }
   return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();

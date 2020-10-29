@@ -46,6 +46,7 @@
 #include <gtk/gtk.h>
 #include <unistd.h>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/IntentionalCrash.h"
 
 struct _PlatformData {
@@ -591,12 +592,12 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData,
                                       std::string& error) {}
 
-string pluginGetClipboardText(InstanceData* instanceData) {
+std::string pluginGetClipboardText(InstanceData* instanceData) {
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   // XXX this is a BAD WAY to interact with GtkClipboard.  We use this
   // deprecated interface only to test nested event loop handling.
   gchar* text = gtk_clipboard_wait_for_text(cb);
-  string retText = text ? text : "";
+  std::string retText = text ? text : "";
 
   g_free(text);
 

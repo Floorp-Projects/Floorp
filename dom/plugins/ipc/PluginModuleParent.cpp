@@ -18,9 +18,12 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
+#include "mozilla/plugins/PPluginBackgroundDestroyerParent.h"
+#include "mozilla/plugins/PStreamNotifyParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Services.h"
@@ -32,6 +35,7 @@
 #include "nsICrashService.h"
 #include "nsIObserverService.h"
 #include "nsNPAPIPlugin.h"
+#include "nsPluginInstanceOwner.h"
 #include "nsPrintfCString.h"
 #include "prsystem.h"
 #include "prclist.h"
@@ -1347,9 +1351,9 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
 void PluginModuleChromeParent::HandleOrphanedMinidump() {
   if (CrashReporter::FinalizeOrphanedMinidump(
           OtherPid(), GeckoProcessType_Plugin, &mOrphanedDumpId)) {
-    CrashReporterHost::RecordCrash(GeckoProcessType_Plugin,
-                                   nsICrashService::CRASH_TYPE_CRASH,
-                                   mOrphanedDumpId);
+    ipc::CrashReporterHost::RecordCrash(GeckoProcessType_Plugin,
+                                        nsICrashService::CRASH_TYPE_CRASH,
+                                        mOrphanedDumpId);
   } else {
     NS_WARNING(nsPrintfCString("plugin process pid = %d crashed without "
                                "leaving a minidump behind",
@@ -2426,8 +2430,9 @@ mozilla::ipc::IPCResult PluginModuleParent::RecvReturnSitesWithData(
 layers::TextureClientRecycleAllocator*
 PluginModuleParent::EnsureTextureAllocatorForDirectBitmap() {
   if (!mTextureAllocatorForDirectBitmap) {
-    mTextureAllocatorForDirectBitmap = new TextureClientRecycleAllocator(
-        ImageBridgeChild::GetSingleton().get());
+    mTextureAllocatorForDirectBitmap =
+        new layers::TextureClientRecycleAllocator(
+            layers::ImageBridgeChild::GetSingleton().get());
   }
   return mTextureAllocatorForDirectBitmap;
 }
@@ -2435,8 +2440,8 @@ PluginModuleParent::EnsureTextureAllocatorForDirectBitmap() {
 layers::TextureClientRecycleAllocator*
 PluginModuleParent::EnsureTextureAllocatorForDXGISurface() {
   if (!mTextureAllocatorForDXGISurface) {
-    mTextureAllocatorForDXGISurface = new TextureClientRecycleAllocator(
-        ImageBridgeChild::GetSingleton().get());
+    mTextureAllocatorForDXGISurface = new layers::TextureClientRecycleAllocator(
+        layers::ImageBridgeChild::GetSingleton().get());
   }
   return mTextureAllocatorForDXGISurface;
 }
