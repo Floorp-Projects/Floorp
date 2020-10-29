@@ -45,6 +45,9 @@ function protocolChromeScript() {
 add_task(async function test_protocolHandler() {
   await SpecialPowers.pushPrefEnv({set: [
     ["extensions.allowPrivateBrowsingByDefault", false],
+    // Disabling the external protocol permission prompt. We don't need it
+    // for this test.
+    ["security.external_protocol_requires_permission", false],
   ]});
   let extensionData = {
     manifest: {
@@ -137,7 +140,7 @@ add_task(async function test_protocolHandler() {
 
   // Expect the chooser window to be open, close it.
   chromeScript = SpecialPowers.loadChromeScript(async () => {
-    const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xhtml";
+    const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/appChooser.xhtml";
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
     let windowOpen = BrowserTestUtils.domWindowOpenedAndLoaded();
