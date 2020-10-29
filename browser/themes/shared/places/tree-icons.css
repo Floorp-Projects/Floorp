@@ -35,10 +35,6 @@ treechildren::-moz-tree-image(container, queryFolder_menu________) {
   list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg");
 }
 
-treechildren::-moz-tree-image(container, queryFolder_unfiled_____) {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg");
-}
-
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/folder-smart.svg");
