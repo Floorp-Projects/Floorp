@@ -369,50 +369,43 @@ ARCHIVE_FILES = {
     "mozharness": [
         {
             "source": buildconfig.topsrcdir,
-            "base": "testing",
-            "pattern": "mozharness/**",
+            "base": "testing/mozharness",
+            "pattern": "**",
         },
         {
             "source": buildconfig.topsrcdir,
-            "base": "third_party/python/virtualenv",
-            "dest": "mozharness/third_party/python/virtualenv",
-            "pattern": "**",
+            "base": "",
+            "pattern": "third_party/python/virtualenv/**",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "testing/mozbase/manifestparser",
             "pattern": "manifestparser/**",
-            "dest": "mozharness",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "testing/mozbase/mozfile",
             "pattern": "mozfile/**",
-            "dest": "mozharness",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "testing/mozbase/mozinfo",
             "pattern": "mozinfo/**",
-            "dest": "mozharness",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "testing/mozbase/mozprocess",
             "pattern": "mozprocess/**",
-            "dest": "mozharness",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "third_party/python/six",
             "pattern": "six.py",
-            "dest": "mozharness",
         },
         {
             "source": buildconfig.topsrcdir,
             "base": "third_party/python/distro",
             "pattern": "distro.py",
-            "dest": "mozharness",
         },
     ],
     "reftest": [
@@ -782,7 +775,7 @@ if buildconfig.substs.get("commtopsrcdir"):
         "source": commtopsrcdir,
         "base": "mozharness",
         "pattern": "**",
-        "dest": "mozharness/configs",
+        "dest": "configs",
     }
     ARCHIVE_FILES["mozharness"].append(mozharness_comm)
     marionette_comm = {
