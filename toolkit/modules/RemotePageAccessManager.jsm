@@ -151,7 +151,6 @@ let RemotePageAccessManager = {
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMSetBoolPref: [
-        "browser.contentblocking.report.hide_lockwise_app",
         "browser.contentblocking.report.show_mobile_app",
         "browser.contentblocking.report.hide_vpn_banner",
       ],
@@ -164,7 +163,6 @@ let RemotePageAccessManager = {
         "privacy.trackingprotection.fingerprinting.enabled",
         "privacy.trackingprotection.enabled",
         "privacy.trackingprotection.socialtracking.enabled",
-        "browser.contentblocking.report.hide_lockwise_app",
         "browser.contentblocking.report.show_mobile_app",
         "browser.contentblocking.report.hide_vpn_banner",
         "browser.contentblocking.report.vpn.enabled",
