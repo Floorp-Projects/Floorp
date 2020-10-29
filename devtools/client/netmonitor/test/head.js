@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This file (head.js) is injected into all other test contexts within
+ * this directory, allowing one to utilize the functions here in said
+ * tests without referencing head.js explicitly.
+ */
+
 /* import-globals-from ../../shared/test/shared-head.js */
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, waitForDispatch, testFilterButtons,
@@ -10,7 +16,8 @@
 
 "use strict";
 
-// shared-head.js handles imports, constants, and utility functions
+// The below file (shared-head.js) handles imports, constants, and
+// utility functions, and is loaded into this context.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this

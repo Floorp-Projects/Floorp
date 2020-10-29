@@ -29,6 +29,7 @@
 @import "chrome://devtools/content/netmonitor/src/assets/styles/search.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/UrlPreview.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/HeadersPanel.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/AppErrorBoundary.css";
 
 /* General */
 

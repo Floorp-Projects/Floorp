@@ -15,6 +15,11 @@ const {
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 
 // Components
+loader.lazyGetter(this, "AppErrorBoundary", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/AppErrorBoundary")
+  );
+});
 loader.lazyGetter(this, "MonitorPanel", function() {
   return createFactory(
     require("devtools/client/netmonitor/src/components/MonitorPanel")
@@ -73,24 +78,27 @@ class App extends Component {
 
     return div(
       { className: "network-monitor" },
-      !statisticsOpen
-        ? DropHarHandler(
-            {
-              actions,
-              openSplitConsole,
-            },
-            MonitorPanel({
-              actions,
+      AppErrorBoundary(
+        { className: "app-error-boundary" },
+        !statisticsOpen
+          ? DropHarHandler(
+              {
+                actions,
+                openSplitConsole,
+              },
+              MonitorPanel({
+                actions,
+                connector,
+                openSplitConsole,
+                sourceMapURLService,
+                openLink,
+                toolboxDoc,
+              })
+            )
+          : StatisticsPanel({
               connector,
-              openSplitConsole,
-              sourceMapURLService,
-              openLink,
-              toolboxDoc,
             })
-          )
-        : StatisticsPanel({
-            connector,
-          })
+      )
     );
   }
 }
