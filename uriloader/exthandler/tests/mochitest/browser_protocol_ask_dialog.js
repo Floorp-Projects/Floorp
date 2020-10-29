@@ -17,8 +17,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const CONTENT_HANDLING_URL =
-  "chrome://mozapps/content/handling/appChooser.xhtml";
+const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xhtml";
 
 let gOldMailHandlers = [];
 
@@ -82,10 +81,7 @@ add_task(async function test_closed_by_tab_closure() {
   );
 
   // Wait for the window and then click the link.
-  let dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  let dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
 
   BrowserTestUtils.synthesizeMouseAtCenter(
     "a:link",
@@ -100,10 +96,7 @@ add_task(async function test_closed_by_tab_closure() {
     CONTENT_HANDLING_URL,
     "Dialog URL is as expected"
   );
-  let dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  let dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
 
   info("Removing tab to close the dialog.");
   gBrowser.removeTab(tab);
@@ -122,10 +115,7 @@ add_task(async function test_closed_by_tab_navigation() {
   );
 
   // Wait for the window and then click the link.
-  let dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  let dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
 
   BrowserTestUtils.synthesizeMouseAtCenter(
     "a:link",
@@ -139,10 +129,7 @@ add_task(async function test_closed_by_tab_navigation() {
     CONTENT_HANDLING_URL,
     "Dialog URL is as expected"
   );
-  let dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  let dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
   info(
     "Set up unload handler to ensure we don't break when the window global gets cleared"
   );
@@ -191,10 +178,7 @@ add_task(async function test_multiple_dialogs() {
   );
 
   // Wait for the window and then click the link.
-  let dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  let dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
   BrowserTestUtils.synthesizeMouseAtCenter(
     "a:link",
     {},
@@ -226,20 +210,14 @@ add_task(async function test_multiple_dialogs() {
   is(dialogs.length, 1, "Should only have 1 dialog open");
 
   // Close the dialog:
-  let dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  let dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
   dialog.close();
   dialog = await dialogClosedPromise;
 
   ok(!dialog._openedURL, "The dialog should have been closed.");
 
   // Then reopen the dialog again, to make sure we don't keep blocking:
-  dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
   BrowserTestUtils.synthesizeMouseAtCenter(
     "a:link",
     {},
@@ -253,10 +231,7 @@ add_task(async function test_multiple_dialogs() {
     "Second dialog URL is as expected"
   );
 
-  dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
   info("Removing tab to close the dialog.");
   gBrowser.removeTab(tab);
   await dialogClosedPromise;
@@ -274,10 +249,7 @@ add_task(async function invisible_iframes() {
   );
 
   // Ensure we notice the dialog opening:
-  let dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  let dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
   await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     let frame = content.document.createElement("iframe");
     frame.style.display = "none";
@@ -292,10 +264,7 @@ add_task(async function invisible_iframes() {
     "Dialog opens as expected for invisible iframe"
   );
   // Close the dialog:
-  let dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  let dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
   dialog.close();
   await dialogClosedPromise;
   gBrowser.removeTab(tab);
@@ -311,10 +280,7 @@ add_task(async function nested_iframes() {
   );
 
   // Ensure we notice the dialog opening:
-  let dialogWindowPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    true
-  );
+  let dialogWindowPromise = waitForProtocolAskDialog(tab.linkedBrowser, true);
   let innerLoaded = BrowserTestUtils.browserLoaded(
     tab.linkedBrowser,
     true,
@@ -360,10 +326,7 @@ add_task(async function nested_iframes() {
     "Dialog opens as expected for deeply nested cross-origin iframe"
   );
   // Close the dialog:
-  let dialogClosedPromise = waitForProtocolAppChooserDialog(
-    tab.linkedBrowser,
-    false
-  );
+  let dialogClosedPromise = waitForProtocolAskDialog(tab.linkedBrowser, false);
   dialog.close();
   await dialogClosedPromise;
   gBrowser.removeTab(tab);
