@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionsBinding.h"
+#include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Services.h"
 #include "nsIPermissionManager.h"
