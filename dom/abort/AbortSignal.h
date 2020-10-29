@@ -17,7 +17,7 @@ namespace dom {
 class AbortSignal;
 class AbortSignalImpl;
 
-// This class must be implemented by objects who want to follow a
+// This class must be implemented by objects who want to follow an
 // AbortSignalImpl.
 class AbortFollower : public nsISupports {
  public:
@@ -32,10 +32,15 @@ class AbortFollower : public nsISupports {
   AbortSignalImpl* Signal() const { return mFollowingSignal; }
 
  protected:
+  // Subclasses of this class must call these Traverse and Unlink functions
+  // during corresponding cycle collection operations.
+  static void Traverse(AbortFollower* aFollower,
+                       nsCycleCollectionTraversalCallback& cb);
+
+  static void Unlink(AbortFollower* aFollower) { aFollower->Unfollow(); }
+
   virtual ~AbortFollower();
 
-  // Subclasses of AbortFollower must Traverse this member and call
-  // Unfollow() when Unlinking.
   RefPtr<AbortSignalImpl> mFollowingSignal;
 };
 
@@ -52,6 +57,15 @@ class AbortSignalImpl : public nsISupports {
   void RemoveFollower(AbortFollower* aFollower);
 
  protected:
+  // Subclasses of this class must call these Traverse and Unlink functions
+  // during corresponding cycle collection operations.
+  static void Traverse(AbortSignalImpl* aSignal,
+                       nsCycleCollectionTraversalCallback& cb);
+
+  static void Unlink(AbortSignalImpl* aSignal) {
+    // To be filled in shortly.
+  }
+
   virtual ~AbortSignalImpl() = default;
 
  private:
