@@ -2,40 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * This dialog builds its content based on arguments passed into it.
- * window.arguments[0]:
- *   The title of the dialog.
- * window.arguments[1]:
- *   The url of the image that appears to the left of the description text
- * window.arguments[2]:
- *   The text of the description that will appear above the choices the user
- *   can choose from.
- * window.arguments[3]:
- *   The text of the label directly above the choices the user can choose from.
- * window.arguments[4]:
- *   This is the text to be placed in the label for the checkbox.  If no text is
- *   passed (ie, it's an empty string), the checkbox will be hidden.
- * window.arguments[5]:
- *   The accesskey for the checkbox
- * window.arguments[6]:
- *   This is the text that is displayed below the checkbox when it is checked.
- * window.arguments[7]:
- *   This is the nsIHandlerInfo that gives us all our precious information.
- * window.arguments[8]:
- *   This is the nsIURI that we are being brought up for in the first place.
- * window.arguments[9]:
- *   This is the nsIPrincipal that has triggered the dialog; may be null.
- * window.arguments[10]:
- *   The browsingContext from which the request originates; may be null.
- */
-
-const { EnableDelayHelper } = ChromeUtils.import(
-  "resource://gre/modules/SharedPromptUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+const { EnableDelayHelper } = ChromeUtils.import(
+  "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
 class MozHandler extends window.MozElements.MozRichlistitem {
@@ -82,97 +54,62 @@ let loadPromise = new Promise(resolve => {
   window.addEventListener("load", resolve, { once: true });
 });
 
-var dialog = {
-  // Member Variables
-
-  _handlerInfo: null,
-  _URI: null,
-  _itemChoose: null,
-  _okButton: null,
-  _browsingContext: null,
-  _buttonDisabled: true,
-
-  // Methods
-
+let dialog = {
   /**
    * This function initializes the content of the dialog.
    */
   initialize: function initialize() {
-    this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
-    this._URI = window.arguments[8].QueryInterface(Ci.nsIURI);
-    let principal = window.arguments[9]?.QueryInterface(Ci.nsIPrincipal);
-    this._browsingContext = window.arguments[10];
-    let usePrivateBrowsing = false;
-    if (this._browsingContext) {
-      usePrivateBrowsing = this._browsingContext.usePrivateBrowsing;
-    }
+    let args = window.arguments[0].wrappedJSObject || window.arguments[0];
+    let { handler, outArgs, usePrivateBrowsing, enableButtonDelay } = args;
+
+    this._handlerInfo = handler.QueryInterface(Ci.nsIHandlerInfo);
+    this._outArgs = outArgs;
 
     this.isPrivate =
       usePrivateBrowsing ||
       (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
 
+    this._dialog = document.querySelector("dialog");
     this._itemChoose = document.getElementById("item-choose");
-    this._okButton = document.getElementById("handling").getButton("extra1");
+    this._rememberCheck = document.getElementById("remember");
 
-    var description = {
-      image: document.getElementById("description-image"),
-      text: document.getElementById("description-text"),
-    };
-    var options = document.getElementById("item-action-text");
-    var checkbox = {
-      desc: document.getElementById("remember"),
-      text: document.getElementById("remember-text"),
-    };
+    let rememberLabel = document.getElementById("remember-label");
+    document.l10n.setAttributes(rememberLabel, "chooser-dialog-remember", {
+      scheme: this._handlerInfo.type,
+    });
 
-    // Setting values
-    document.title = window.arguments[0];
-    description.image.src = window.arguments[1];
-    description.text.textContent = window.arguments[2];
-    options.value = window.arguments[3];
-    checkbox.desc.label = window.arguments[4];
-    checkbox.desc.accessKey = window.arguments[5];
-    checkbox.text.textContent = window.arguments[6];
+    // Register event listener for the checkbox hint.
+    this._rememberCheck.addEventListener("change", () => this.onCheck());
 
-    if (principal && principal.isContentPrincipal) {
-      let hostContainer = document.getElementById("originating-host");
-      document.l10n.pauseObserving();
-      document.l10n.setAttributes(hostContainer, "handler-dialog-host", {
-        host: principal.exposablePrePath,
-        scheme: this._URI.scheme,
-      });
-      document.mozSubdialogReady = document.l10n
-        .translateElements([hostContainer])
-        .then(() => window.sizeToContent());
-      document.l10n.resumeObserving();
-      hostContainer.parentNode.removeAttribute("hidden");
-    }
+    let description = document.getElementById("description");
+    document.l10n.setAttributes(description, "chooser-dialog-description", {
+      scheme: this._handlerInfo.type,
+    });
 
-    // Hide stuff that needs to be hidden
-    if (!checkbox.desc.label) {
-      checkbox.desc.hidden = true;
-    }
+    document.addEventListener("dialogaccept", () => {
+      this.onAccept();
+    });
 
     // UI is ready, lets populate our list
     this.populateList();
-    // Explicitly not an 'accept' button to avoid having `enter` accept the dialog.
-    document.addEventListener("dialogextra1", () => {
-      this.onOK();
-    });
-    document.addEventListener("dialogaccept", e => {
-      e.preventDefault();
+
+    document.mozSubdialogReady = document.l10n.ready.then(() => {
+      window.sizeToContent();
     });
 
-    this._delayHelper = new EnableDelayHelper({
-      disableDialog: () => {
-        this._buttonDisabled = true;
-        this.updateOKButton();
-      },
-      enableDialog: () => {
-        this._buttonDisabled = false;
-        this.updateOKButton();
-      },
-      focusTarget: window,
-    });
+    if (enableButtonDelay) {
+      this._delayHelper = new EnableDelayHelper({
+        disableDialog: () => {
+          this._acceptBtnDisabled = true;
+          this.updateAcceptButton();
+        },
+        enableDialog: () => {
+          this._acceptBtnDisabled = false;
+          this.updateAcceptButton();
+        },
+        focusTarget: window,
+      });
+    }
   },
 
   /**
@@ -218,12 +155,10 @@ var dialog = {
         if (this.isPrivate) {
           let policy = WebExtensionPolicy.getByURI(uri);
           if (policy && !policy.privateBrowsingAllowed) {
-            var bundle = document.getElementById("base-strings");
-            var disabledLabel = bundle.getString(
-              "privatebrowsing.disabled.label"
-            );
             elm.setAttribute("disabled", true);
-            elm.setAttribute("description", disabledLabel);
+            this.getPrivateBrowsingDisabledLabel().then(label => {
+              elm.setAttribute("description", label);
+            });
             if (app == preferredHandler) {
               preferredHandler = null;
             }
@@ -262,7 +197,7 @@ var dialog = {
       let gIOSvc = Cc["@mozilla.org/gio-service;1"].getService(
         Ci.nsIGIOService
       );
-      var gioApps = gIOSvc.getAppsForURIScheme(this._URI.scheme);
+      var gioApps = gIOSvc.getAppsForURIScheme(this._handlerInfo.type);
       for (let handler of gioApps.enumerate(Ci.nsIHandlerApp)) {
         // OS handler share the same name, it's most likely the same app, skipping...
         if (handler.name == this._handlerInfo.defaultDescription) {
@@ -295,9 +230,8 @@ var dialog = {
   /**
    * Brings up a filepicker and allows a user to choose an application.
    */
-  chooseApplication: function chooseApplication() {
-    var bundle = document.getElementById("base-strings");
-    var title = bundle.getString("choose.application.title");
+  async chooseApplication() {
+    let title = await this.getChooseAppWindowTitle();
 
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
@@ -342,43 +276,51 @@ var dialog = {
   /**
    * Function called when the OK button is pressed.
    */
-  onOK: function onOK() {
-    if (this._buttonDisabled) {
-      return;
-    }
-    var checkbox = document.getElementById("remember");
-    if (!checkbox.hidden) {
-      // We need to make sure that the default is properly set now
-      if (this.selectedItem.obj) {
-        // default OS handler doesn't have this property
-        this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
-        this._handlerInfo.preferredApplicationHandler = this.selectedItem.obj;
-      } else {
-        this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-      }
-    }
-    this._handlerInfo.alwaysAskBeforeHandling = !checkbox.checked;
-
-    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
-      Ci.nsIHandlerService
-    );
-    hs.store(this._handlerInfo);
-
-    this._handlerInfo.launchWithURI(this._URI, this._browsingContext);
-    window.close();
+  onAccept() {
+    this.updateHandlerData(this._rememberCheck.checked);
+    this._outArgs.setProperty("openHandler", true);
   },
 
   /**
-   * Determines if the OK button should be disabled or not
+   * Determines if the accept button should be disabled or not
    */
-  updateOKButton: function updateOKButton() {
-    this._okButton.disabled = this._itemChoose.selected || this._buttonDisabled;
+  updateAcceptButton() {
+    this._dialog.setAttribute(
+      "buttondisabledaccept",
+      this._acceptBtnDisabled || this._itemChoose.selected
+    );
+  },
+
+  /**
+   * Update the handler info to reflect the user choice.
+   * @param {boolean} skipAsk - Whether we should persist the application
+   * choice and skip asking next time.
+   */
+  updateHandlerData(skipAsk) {
+    // We need to make sure that the default is properly set now
+    if (this.selectedItem.obj) {
+      // default OS handler doesn't have this property
+      this._outArgs.setProperty(
+        "preferredAction",
+        Ci.nsIHandlerInfo.useHelperApp
+      );
+      this._outArgs.setProperty(
+        "preferredApplicationHandler",
+        this.selectedItem.obj
+      );
+    } else {
+      this._outArgs.setProperty(
+        "preferredAction",
+        Ci.nsIHandlerInfo.useSystemDefault
+      );
+    }
+    this._outArgs.setProperty("alwaysAskBeforeHandling", !skipAsk);
   },
 
   /**
    * Updates the UI based on the checkbox being checked or not.
    */
-  onCheck: function onCheck() {
+  onCheck() {
     if (document.getElementById("remember").checked) {
       document.getElementById("remember-text").setAttribute("visible", "true");
     } else {
@@ -393,7 +335,7 @@ var dialog = {
     if (this.selectedItem == this._itemChoose) {
       this.chooseApplication();
     } else {
-      this.onOK();
+      this._dialog.acceptDialog();
     }
   },
 
@@ -406,6 +348,31 @@ var dialog = {
     return document.getElementById("items").selectedItem;
   },
   set selectedItem(aItem) {
-    return (document.getElementById("items").selectedItem = aItem);
+    document.getElementById("items").selectedItem = aItem;
+  },
+
+  /**
+   *  Lazy l10n getter for the title of the app chooser window
+   */
+  async getChooseAppWindowTitle() {
+    if (!this._chooseAppWindowTitle) {
+      this._chooseAppWindowTitle = await document.l10n.formatValues([
+        "choose-other-app-window-title",
+      ]);
+    }
+    return this._chooseAppWindowTitle;
+  },
+
+  /**
+   * Lazy l10n getter for handler menu items which are disabled due to private
+   * browsing.
+   */
+  async getPrivateBrowsingDisabledLabel() {
+    if (!this._privateBrowsingDisabledLabel) {
+      this._privateBrowsingDisabledLabel = await document.l10n.formatValues([
+        "choose-dialog-privatebrowsing-disabled",
+      ]);
+    }
+    return this._privateBrowsingDisabledLabel;
   },
 };

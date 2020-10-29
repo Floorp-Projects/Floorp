@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://mozapps/content/handling/handler.css"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window>
+
+<window aria-describedby="description"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+<dialog buttons="accept,cancel"
+        defaultButton="none"
+        data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/handlerDialog.ftl"/>
+  </linkset>
+
+  <script src="chrome://mozapps/content/handling/permissionDialog.js"
+          type="application/javascript"/>
+
+
+  <vbox id="description-box">
+    <description id="description"></description>
+    <label id="change-app"
+           hidden="true"
+           is="text-link"
+           data-l10n-id="permission-dialog-set-change-app-link"></label>
+    <description id="description-extra"
+                 hidden="true"
+                 data-l10n-id="permission-dialog-unset-description">
+    </description>
+  </vbox>
+
+  <hbox id="rememberContainer">
+    <html:input type="checkbox" id="remember"/>
+    <html:label id="remember-label" for="remember"></html:label>
+  </hbox>
+</dialog>
+</window>

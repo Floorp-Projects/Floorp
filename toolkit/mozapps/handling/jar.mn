@@ -4,6 +4,8 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-  content/mozapps/handling/handler.css                          (content/handler.css)
-* content/mozapps/handling/dialog.xhtml                         (content/dialog.xhtml)
-  content/mozapps/handling/dialog.js                            (content/dialog.js)
+  content/mozapps/handling/handler.css               (content/handler.css)
+  content/mozapps/handling/appChooser.xhtml          (content/appChooser.xhtml)
+  content/mozapps/handling/appChooser.js             (content/appChooser.js)
+  content/mozapps/handling/permissionDialog.xhtml    (content/permissionDialog.xhtml)
+  content/mozapps/handling/permissionDialog.js       (content/permissionDialog.js)
