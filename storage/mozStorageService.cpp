@@ -21,6 +21,7 @@
 #include "mozilla/LateWriteChecks.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStoragePendingStatement.h"
+#include "mozilla/StaticPrefs_storage.h"
 
 #include "sqlite3.h"
 #include "mozilla/AutoSQLiteLifetime.h"
@@ -175,10 +176,27 @@ already_AddRefed<Service> Service::getSingleton() {
   return nullptr;
 }
 
+int Service::AutoVFSRegistration::Init(UniquePtr<sqlite3_vfs> aVFS) {
+  MOZ_ASSERT(!mVFS);
+  if (aVFS) {
+    mVFS = std::move(aVFS);
+    return sqlite3_vfs_register(mVFS.get(), 0);
+  }
+  NS_WARNING("Failed to register VFS");
+  return SQLITE_OK;
+}
+
+Service::AutoVFSRegistration::~AutoVFSRegistration() {
+  if (mVFS) {
+    int rc = sqlite3_vfs_unregister(mVFS.get());
+    if (rc != SQLITE_OK) {
+      NS_WARNING("Failed to unregister sqlite vfs wrapper.");
+    }
+  }
+}
+
 Service::Service()
     : mMutex("Service::mMutex"),
-      mSqliteExclVFS(nullptr),
-      mSqliteVFS(nullptr),
       mRegistrationMutex("Service::mRegistrationMutex"),
       mConnections() {}
 
@@ -186,16 +204,7 @@ Service::~Service() {
   mozilla::UnregisterWeakMemoryReporter(this);
   mozilla::UnregisterStorageSQLiteDistinguishedAmount();
 
-  int srv = sqlite3_vfs_unregister(mSqliteVFS);
-  if (srv != SQLITE_OK) NS_WARNING("Failed to unregister sqlite vfs wrapper.");
-  srv = sqlite3_vfs_unregister(mSqliteExclVFS);
-  if (srv != SQLITE_OK) NS_WARNING("Failed to unregister sqlite vfs wrapper.");
-
   gService = nullptr;
-  delete mSqliteVFS;
-  mSqliteVFS = nullptr;
-  delete mSqliteExclVFS;
-  mSqliteExclVFS = nullptr;
 }
 
 void Service::registerConnection(Connection* aConnection) {
@@ -294,8 +303,10 @@ void Service::minimizeMemory() {
   }
 }
 
-sqlite3_vfs* ConstructTelemetryVFS(bool);
-const char* GetVFSName(bool);
+UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool);
+const char* GetTelemetryVFSName(bool);
+
+UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName);
 
 static const char* sObserverTopics[] = {"memory-pressure",
                                         "xpcom-shutdown-threads"};
@@ -304,19 +315,24 @@ nsresult Service::initialize() {
   MOZ_ASSERT(NS_IsMainThread(), "Must be initialized on the main thread");
 
   int rc = AutoSQLiteLifetime::getInitResult();
-  if (rc != SQLITE_OK) return convertResultCode(rc);
-
-  mSqliteVFS = ConstructTelemetryVFS(false);
-  MOZ_ASSERT(mSqliteVFS, "Non-exclusive VFS should be created");
-  if (mSqliteVFS) {
-    rc = sqlite3_vfs_register(mSqliteVFS, 0);
-    if (rc != SQLITE_OK) return convertResultCode(rc);
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
   }
-  mSqliteExclVFS = ConstructTelemetryVFS(true);
-  MOZ_ASSERT(mSqliteExclVFS, "Exclusive VFS should be created");
-  if (mSqliteExclVFS) {
-    rc = sqlite3_vfs_register(mSqliteExclVFS, 0);
-    if (rc != SQLITE_OK) return convertResultCode(rc);
+
+  rc = mTelemetrySqliteVFS.Init(ConstructTelemetryVFS(false));
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
+  }
+
+  rc = mTelemetryExclSqliteVFS.Init(ConstructTelemetryVFS(true));
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
+  }
+
+  rc = mObfuscatingSqliteVFS.Init(ConstructObfuscatingVFS(GetTelemetryVFSName(
+      StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
   }
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();

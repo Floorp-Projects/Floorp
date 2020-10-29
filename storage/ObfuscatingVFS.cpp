@@ -17,38 +17,10 @@
 **
 ** This extension requires SQLite 3.32.0 or later.
 **
-** To build this extension as a separately loaded shared library or
-** DLL, use compiler command-lines similar to the following:
-**
-**   (linux)    gcc -fPIC -shared obfsvfs.c -o obfsvfs.so
-**   (mac)      clang -fPIC -dynamiclib obfsvfs.c -o obfsvfs.dylib
-**   (windows)  cl obfsvfs.c -link -dll -out:obfsvfs.dll
-**
-** You may want to add additional compiler options, of course,
-** according to the needs of your project.
-**
-** If you want to statically link this extension with your product,
-** then compile it like any other C-language module but add the
-** "-DSQLITE_OBFSVFS_STATIC" option so that this module knows that
-** it is being statically linked rather than dynamically linked
 **
 ** LOADING
 **
-** To load this extension as a shared library, you first have to
-** bring up a dummy SQLite database connection to use as the argument
-** to the sqlite3_load_extension() API call.  Then you invoke the
-** sqlite3_load_extension() API and shutdown the dummy database
-** connection.  All subsequent database connections that are opened
-** will include this extension.  For example:
-**
-**     sqlite3 *db;
-**     sqlite3_open(":memory:", &db);
-**     sqlite3_load_extention(db, "./obfsvfs");
-**     sqlite3_close(db);
-**
-** If this extension is compiled with -DSQLITE_OBFSVFS_STATIC and
-** statically linked against the application, initialize it using
-** a single API call as follows:
+** Initialize it using a single API call as follows:
 **
 **     sqlite3_obfsvfs_init();
 **
@@ -97,12 +69,7 @@
 **
 **    *   Requires SQLite 3.32.0 or later.
 */
-#ifdef SQLITE_OBFSVFS_STATIC
-#  include "sqlite3.h"
-#else
-#  include "sqlite3ext.h"
-SQLITE_EXTENSION_INIT1
-#endif
+#include "sqlite3.h"
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
@@ -192,31 +159,6 @@ static int obfsCurrentTimeInt64(sqlite3_vfs*, sqlite3_int64*);
 static int obfsSetSystemCall(sqlite3_vfs*, const char*, sqlite3_syscall_ptr);
 static sqlite3_syscall_ptr obfsGetSystemCall(sqlite3_vfs*, const char* z);
 static const char* obfsNextSystemCall(sqlite3_vfs*, const char* zName);
-
-static sqlite3_vfs obfs_vfs = {
-    3,                    /* iVersion (set when registered) */
-    0,                    /* szOsFile (set when registered) */
-    1024,                 /* mxPathname */
-    0,                    /* pNext */
-    "obfsvfs",            /* zName */
-    0,                    /* pAppData (set when registered) */
-    obfsOpen,             /* xOpen */
-    obfsDelete,           /* xDelete */
-    obfsAccess,           /* xAccess */
-    obfsFullPathname,     /* xFullPathname */
-    obfsDlOpen,           /* xDlOpen */
-    obfsDlError,          /* xDlError */
-    obfsDlSym,            /* xDlSym */
-    obfsDlClose,          /* xDlClose */
-    obfsRandomness,       /* xRandomness */
-    obfsSleep,            /* xSleep */
-    obfsCurrentTime,      /* xCurrentTime */
-    obfsGetLastError,     /* xGetLastError */
-    obfsCurrentTimeInt64, /* xCurrentTimeInt64 */
-    obfsSetSystemCall,    /* xSetSystemCall */
-    obfsGetSystemCall,    /* xGetSystemCall */
-    obfsNextSystemCall    /* xNextSystemCall */
-};
 
 static const sqlite3_io_methods obfs_io_methods = {
     3,                         /* iVersion */
@@ -677,49 +619,55 @@ static const char* obfsNextSystemCall(sqlite3_vfs* pVfs, const char* zName) {
   return ORIGVFS(pVfs)->xNextSystemCall(ORIGVFS(pVfs), zName);
 }
 
-/*
-** Register the obfuscator VFS as the default VFS for the system.
-*/
-static int obfsRegisterVfs(void) {
-  int rc = SQLITE_OK;
-  sqlite3_vfs* pOrig;
-  if (sqlite3_vfs_find("obfs") != 0) return SQLITE_OK;
-  pOrig = sqlite3_vfs_find(0);
-  obfs_vfs.iVersion = pOrig->iVersion;
-  obfs_vfs.pAppData = pOrig;
-  obfs_vfs.szOsFile = pOrig->szOsFile + sizeof(ObfsFile);
-  rc = sqlite3_vfs_register(&obfs_vfs, 1);
-  return rc;
+namespace mozilla {
+namespace storage {
+
+UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
+  MOZ_ASSERT(aBaseVFSName);
+
+  if (sqlite3_vfs_find("obfs") != nullptr) {
+    return nullptr;
+  }
+  sqlite3_vfs* const pOrig = sqlite3_vfs_find(aBaseVFSName);
+  if (pOrig == nullptr) {
+    return nullptr;
+  }
+
+#ifdef DEBUG
+  // If the VFS version is higher than the last known one, you should update
+  // this VFS adding appropriate methods for any methods added in the version
+  // change.
+  static constexpr int kLastKnownVfsVersion = 3;
+  MOZ_ASSERT(pOrig->iVersion <= kLastKnownVfsVersion);
+#endif
+
+  const sqlite3_vfs obfs_vfs = {
+      pOrig->iVersion,                                      /* iVersion  */
+      static_cast<int>(pOrig->szOsFile + sizeof(ObfsFile)), /* szOsFile */
+      1024,                                                 /* mxPathname */
+      nullptr,                                              /* pNext */
+      "obfsvfs",                                            /* zName */
+      pOrig,                                                /* pAppData */
+      obfsOpen,                                             /* xOpen */
+      obfsDelete,                                           /* xDelete */
+      obfsAccess,                                           /* xAccess */
+      obfsFullPathname,                                     /* xFullPathname */
+      obfsDlOpen,                                           /* xDlOpen */
+      obfsDlError,                                          /* xDlError */
+      obfsDlSym,                                            /* xDlSym */
+      obfsDlClose,                                          /* xDlClose */
+      obfsRandomness,                                       /* xRandomness */
+      obfsSleep,                                            /* xSleep */
+      obfsCurrentTime,                                      /* xCurrentTime */
+      obfsGetLastError,                                     /* xGetLastError */
+      obfsCurrentTimeInt64, /* xCurrentTimeInt64 */
+      obfsSetSystemCall,    /* xSetSystemCall */
+      obfsGetSystemCall,    /* xGetSystemCall */
+      obfsNextSystemCall    /* xNextSystemCall */
+  };
+
+  return MakeUnique<sqlite3_vfs>(obfs_vfs);
 }
 
-#if defined(SQLITE_OBFSVFS_STATIC)
-/* This variant of the initializer runs when the extension is
-** statically linked.
-*/
-int sqlite3_register_obfsvfs(const char* NotUsed) {
-  (void)NotUsed;
-  return obfsRegisterVfs();
-}
-#endif /* defined(SQLITE_OBFSVFS_STATIC */
-
-#if !defined(SQLITE_OBFSVFS_STATIC)
-/* This variant of the initializer function is used when the
-** extension is shared library to be loaded at run-time.
-*/
-#  ifdef _WIN32
-__declspec(dllexport)
-#  endif
-    /*
-    ** This routine is called by sqlite3_load_extension() when the
-    ** extension is first loaded.
-    ***/
-    int sqlite3_obfsvfs_init(sqlite3* db, char** pzErrMsg,
-                             const sqlite3_api_routines* pApi) {
-  int rc;
-  SQLITE_EXTENSION_INIT2(pApi);
-  (void)pzErrMsg; /* not used */
-  rc = obfsRegisterVfs();
-  if (rc == SQLITE_OK) rc = SQLITE_OK_LOAD_PERMANENTLY;
-  return rc;
-}
-#endif /* !defined(SQLITE_OBFSVFS_STATIC) */
+}  // namespace storage
+}  // namespace mozilla
