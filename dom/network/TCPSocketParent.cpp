@@ -16,6 +16,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsISocketTransport.h"
 #include "nsNetUtil.h"
+#include "TCPSocket.h"
 
 namespace IPC {
 

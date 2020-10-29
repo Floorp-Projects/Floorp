@@ -25,8 +25,10 @@ struct JSContext;
 namespace mozilla {
 namespace net {
 extern LazyLogModule gUDPSocketLog;
-#define UDPSOCKET_LOG(args) MOZ_LOG(gUDPSocketLog, LogLevel::Debug, args)
-#define UDPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gUDPSocketLog, LogLevel::Debug)
+#define UDPSOCKET_LOG(args) \
+  MOZ_LOG(::mozilla::net::gUDPSocketLog, LogLevel::Debug, args)
+#define UDPSOCKET_LOG_ENABLED() \
+  MOZ_LOG_TEST(::mozilla::net::gUDPSocketLog, LogLevel::Debug)
 }  // namespace net
 
 namespace dom {

@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UDPSocketChild.h"
+#include "UDPSocket.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"

@@ -39,5 +39,6 @@ dom/mathml/
 dom/media/
 dom/messagechannel/
 dom/midi/
+dom/network/
 dom/quota/
 dom/simpledb/
