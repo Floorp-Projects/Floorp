@@ -972,7 +972,7 @@ const browsingContextTargetPrototype = {
    * The content window is no longer being debugged after this call.
    */
   _destroyThreadActor() {
-    this.threadActor.exit();
+    this.threadActor.destroy();
     this.threadActor = null;
 
     if (this._sources) {

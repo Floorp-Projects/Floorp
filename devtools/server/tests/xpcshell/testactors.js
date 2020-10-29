@@ -217,7 +217,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
     if (!this._attached) {
       return { error: "wrongState" };
     }
-    this.threadActor.exit();
+    this.threadActor.destroy();
     return { type: "detached" };
   },
 

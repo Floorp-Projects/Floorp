@@ -206,20 +206,15 @@ const ContentProcessTargetActor = TargetActorMixin(
       }
       Resources.unwatchAllTargetResources(this);
 
-      if (this.threadActor) {
-        // We have to manually call `exit` as calling `destroy` won't completely destroy it.
-        // ThreadActor.destroy do not call protocoljs.Actor.destroy, ThreadActor.exit does it.
-        // Also do this before destroying _dbg and _sources as the thread actor may still
-        // use them while cleaning up things.
-        this.threadActor.exit();
-        this.threadActor = null;
-      }
-
       // Notify the client that this target is being destroyed.
       // So that we can destroy the target front and all its children.
       this.emit("tabDetached");
 
       Actor.prototype.destroy.call(this);
+
+      if (this.threadActor) {
+        this.threadActor = null;
+      }
 
       // Tell the live lists we aren't watching any more.
       if (this._workerList) {
