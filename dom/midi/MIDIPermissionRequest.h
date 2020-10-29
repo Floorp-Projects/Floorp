@@ -8,6 +8,7 @@
 #define mozilla_dom_MIDIPermissionRequest_h
 
 #include "mozilla/dom/Promise.h"
+#include "nsContentPermissionHelper.h"
 
 namespace mozilla {
 namespace dom {

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MIDIOutputMap_h
 #define mozilla_dom_MIDIOutputMap_h
 
+#include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
