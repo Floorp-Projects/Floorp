@@ -92,7 +92,7 @@
     <string name="mozac_feature_prompt_repost_title">Inviare nuovamente i dati a questo sito?</string>
     <string name="mozac_feature_prompt_repost_message">Il ricaricamento può causare la ripetizione di azioni recenti svolte sulla pagina, generando, per esempio, pagamenti o commenti duplicati.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
-    <string name="mozac_feature_prompt_repost_positive_button_text">Invia nuovamente i dati</string>
+    <string name="mozac_feature_prompt_repost_positive_button_text">Reinvia i dati</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">Annulla</string>
 </resources>
