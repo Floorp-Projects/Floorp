@@ -1751,17 +1751,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // This is so as to ensure there are no areas of stack inadvertently ignored
   // by a stackmap, nor covered by two stackmaps.  Hence any failure of this
   // assertion is serious and should be investigated.
-
-  // This condition isn't kept for Cranelift
-  // (https://github.com/bytecodealliance/wasmtime/issues/2281), but this is ok
-  // to disable this assertion because when CL compiles a function, in the
-  // prologue, it (generates code) copies all of the in-memory arguments into
-  // registers. So, because of that, none of the in-memory argument words are
-  // actually live.
-#ifndef JS_CODEGEN_ARM64
   MOZ_ASSERT_IF(highestByteVisitedInPrevFrame != 0,
                 highestByteVisitedInPrevFrame + 1 == scanStart);
-#endif
 
   uintptr_t* stackWords = (uintptr_t*)scanStart;
 
