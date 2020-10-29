@@ -639,8 +639,12 @@ bool WebRenderBridgeParent::UpdateResources(
   }
 
   if (scheduleRelease) {
-    aUpdates.Notify(wr::Checkpoint::FrameTexturesUpdated,
-                    std::move(scheduleRelease));
+    // When software WR is enabled, shared surfaces are read during rendering
+    // rather than copied to the texture cache.
+    wr::Checkpoint when = gfx::gfxVars::UseSoftwareWebRender()
+                              ? wr::Checkpoint::FrameRendered
+                              : wr::Checkpoint::FrameTexturesUpdated;
+    aUpdates.Notify(when, std::move(scheduleRelease));
   }
   return true;
 }
@@ -810,14 +814,10 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     // We already have a mapping for this image key, so ensure we release the
     // previous external image ID. This can happen when an image is animated,
     // and it is changing the external image that the animation points to.
-    if (gfx::gfxVars::UseSoftwareWebRender()) {
-      mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
-    } else {
-      if (!aScheduleRelease) {
-        aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
-      }
-      aScheduleRelease->Add(aKey, it->second);
+    if (!aScheduleRelease) {
+      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
     }
+    aScheduleRelease->Add(aKey, it->second);
     it->second = aExtId;
   }
 
