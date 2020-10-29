@@ -7,9 +7,13 @@
 #ifndef mozilla_dom_MIDIMessageQueue_h
 #define mozilla_dom_MIDIMessageQueue_h
 
+#include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
 namespace mozilla {
+
+class TimeStamp;
+
 namespace dom {
 
 class MIDIMessage;

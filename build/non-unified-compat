@@ -38,5 +38,6 @@ dom/manifest/
 dom/mathml/
 dom/media/
 dom/messagechannel/
+dom/midi/
 dom/quota/
 dom/simpledb/
