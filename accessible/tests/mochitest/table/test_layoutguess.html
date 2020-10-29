@@ -14,6 +14,9 @@
 
   <script type="application/javascript">
     function isLayoutTable(id) {
+      // This helps us know if the absence of layout-guess is simply because
+      // it is not a table.
+      ok(isAccessible(id, nsIAccessibleTable), `${id} has table interface`);
       testAttrs(id, { "layout-guess": "true" }, true);
     }
     function isDataTable(id) {
@@ -115,6 +118,9 @@
 
       // layout table having datatable="0" attribute and containing data table structure (tfoot element)
       isLayoutTable("table22");
+
+      // repurposed table for tabbed UI
+      isLayoutTable("table23");
 
       // layout display:block table with 1 column
       isLayoutTable("displayblock_table1");
@@ -506,6 +512,15 @@
         <td>Cell1</td><td>cell2</td>
       </tr>
     </tfoot>
+  </table>
+
+  <table id="table23" border="1">
+    <tr role="tablist">
+      <td role="tab">Tab 1</td><td role="tab">Tab 2</td>
+    </tr>
+    <tr>
+      <td role="tabpanel" colspan="2">Hello</td>
+    </tr>
   </table>
 
   <!-- display:block table -->
