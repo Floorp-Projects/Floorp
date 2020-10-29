@@ -5,8 +5,8 @@
 "use strict";
 
 class WatchpointMap {
-  constructor(thread) {
-    this.thread = thread;
+  constructor(threadActor) {
+    this.threadActor = threadActor;
     this._watchpoints = new Map();
   }
 
@@ -31,17 +31,17 @@ class WatchpointMap {
     }
 
     const maybeHandlePause = type => {
-      const frame = this.thread.dbg.getNewestFrame();
+      const frame = this.threadActor.dbg.getNewestFrame();
 
       if (
-        !this.thread.hasMoved(frame, type) ||
         this.thread.skipBreakpoints ||
-        this.thread.sources.isFrameBlackBoxed(frame)
+        !this.threadActor.hasMoved(frame, type) ||
+        this.threadActor.sourcesManager.isFrameBlackBoxed(frame)
       ) {
         return;
       }
 
-      this.thread._pauseAndRespond(frame, {
+      this.threadActor._pauseAndRespond(frame, {
         type: type,
         message: label,
       });
