@@ -1968,6 +1968,75 @@ TEST_F(Strings, ConvertToSpan) {
   }
 }
 
+TEST_F(Strings, printf) {
+  {
+    const char* format = "Characters %c %%";
+    const char* expectedOutput = "Characters B %";
+    nsCString cString;
+    cString.AppendPrintf(format, 'B');
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    const char* format = "Strings %s %s";
+    const char* expectedOutput = "Strings foo bar";
+    nsCString cString;
+    cString.AppendPrintf(format, "foo", "bar");
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    const int signedThree = 3;
+    const unsigned int unsignedTen = 10;
+    const char* format = "Integers %i %.3d %.2u %o %x %X";
+    const char* expectedOutput = "Integers 3 003 10 12 a A";
+    nsCString cString;
+    cString.AppendPrintf(format, signedThree, signedThree, unsignedTen,
+                         unsignedTen, unsignedTen, unsignedTen);
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    const char* format = "Floats %f %.0f %e %.2E";
+    const char* expectedOutput = "Floats 1.500000 2 1.500000e+00 1.50E+00";
+    nsCString cString;
+    cString.AppendPrintf(format, 1.5, 1.5, 1.5, 1.5);
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    const char* expectedOutput = "Just a string";
+    const char* format = "%s";
+    nsCString cString;
+    cString.AppendPrintf(format, "Just a string");
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    const char* anotherString = "another string";
+    const char* format = "Just a string and %s";
+    const char* expectedOutput = "Just a string and another string";
+    nsCString cString;
+    cString.AppendPrintf(format, anotherString);
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+  {
+    // This case tickles an unexpected overload resolution in MSVC where a
+    // va_list overload will be selected if available. See bug 1673670 and
+    // 1673917 for more detail.
+    char anotherString[] = "another string";
+    const char* format = "Just a string and %s";
+    const char* expectedOutput = "Just a string and another string";
+    nsCString cString;
+    // Calling with a non-const pointer triggers selection of va_list overload
+    // in MSVC at time of writing.
+    cString.AppendPrintf(format, (char*)anotherString);
+    EXPECT_TRUE(cString.EqualsASCII(expectedOutput))
+        << cString.get() << " != " << expectedOutput;
+  }
+}
+
 // Note the five calls in the loop, so divide by 100k
 MOZ_GTEST_BENCH_F(Strings, PerfStripWhitespace, [this] {
   nsCString test1(mExample1Utf8);
