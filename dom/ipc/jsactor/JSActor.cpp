@@ -60,10 +60,7 @@ JSActor::JSActor(nsISupports* aGlobal) {
   }
 }
 
-void JSActor::StartDestroy() {
-  InvokeCallback(CallbackFunction::WillDestroy);
-  mCanSend = false;
-}
+void JSActor::StartDestroy() { mCanSend = false; }
 
 void JSActor::AfterDestroy() {
   mCanSend = false;
@@ -95,11 +92,7 @@ void JSActor::InvokeCallback(CallbackFunction callback) {
   }
 
   // Destroy callback is optional.
-  if (callback == CallbackFunction::WillDestroy) {
-    if (callbacksHolder.mWillDestroy.WasPassed()) {
-      callbacksHolder.mWillDestroy.Value()->Call(this);
-    }
-  } else if (callback == CallbackFunction::DidDestroy) {
+  if (callback == CallbackFunction::DidDestroy) {
     if (callbacksHolder.mDidDestroy.WasPassed()) {
       callbacksHolder.mDidDestroy.Value()->Call(this);
     }

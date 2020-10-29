@@ -51,14 +51,6 @@ class TestProcessActorChild extends JSProcessActorChild {
     return "TestProcessActorChild";
   }
 
-  willDestroy() {
-    Services.obs.notifyObservers(
-      this,
-      "test-js-content-actor-willdestroy",
-      true
-    );
-  }
-
   didDestroy() {
     Services.obs.notifyObservers(
       this,
