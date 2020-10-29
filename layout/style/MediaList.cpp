@@ -39,6 +39,8 @@ void MediaList::SetStyleSheet(StyleSheet* aSheet) {
   mStyleSheet = aSheet;
 }
 
+nsISupports* MediaList::GetParentObject() const { return mStyleSheet; }
+
 template <typename Func>
 void MediaList::DoMediaChange(Func aCallback, ErrorResult& aRv) {
   if (IsReadOnly()) {
