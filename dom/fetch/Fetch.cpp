@@ -108,7 +108,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortSignalMainThread)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortSignalMainThread)
 
-// This class helps the proxying of AbortSignalImpl changes cross threads.
+// This class orchestrates the proxying of AbortSignal operations between the
+// main thread and a worker thread.
 class AbortSignalProxy final : public AbortFollower {
   // This is created and released on the main-thread.
   RefPtr<AbortSignalImpl> mSignalImplMainThread;
@@ -116,8 +117,10 @@ class AbortSignalProxy final : public AbortFollower {
   // The main-thread event target for runnable dispatching.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
-  // This value is used only for the creation of AbortSignalImpl on the
-  // main-thread. They are not updated.
+  // This value is used only when creating mSignalImplMainThread on the main
+  // thread, to create it in already-aborted state if necessary.  It does *not*
+  // reflect the instantaneous is-aborted status of the worker thread's
+  // AbortSignal.
   const bool mAborted;
 
   // This runnable propagates changes from the AbortSignalImpl on workers to the
@@ -157,7 +160,7 @@ class AbortSignalProxy final : public AbortFollower {
     MOZ_ASSERT(!NS_IsMainThread());
     RefPtr<AbortSignalProxyRunnable> runnable =
         new AbortSignalProxyRunnable(this);
-    mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    MainThreadEventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   }
 
   AbortSignalImpl* GetOrCreateSignalImplForMainThread() {
@@ -172,6 +175,8 @@ class AbortSignalProxy final : public AbortFollower {
     MOZ_ASSERT(!NS_IsMainThread());
     return Signal();
   }
+
+  nsIEventTarget* MainThreadEventTarget() { return mMainThreadEventTarget; }
 
   void Shutdown() {
     MOZ_ASSERT(!NS_IsMainThread());
