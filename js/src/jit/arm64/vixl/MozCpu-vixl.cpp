@@ -33,7 +33,7 @@
 #  include <libkern/OSCacheControl.h>
 #endif
 
-#if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
+#if defined(__aarch64__) && (defined(__linux__) || defined(__android__))
 #   if defined(__linux__)
 #    include <linux/membarrier.h>
 #    include <sys/syscall.h>
@@ -100,7 +100,7 @@ void CPU::SetUp() {
 
 
 uint32_t CPU::GetCacheType() {
-#if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
+#if defined(__aarch64__) && (defined(__linux__) || defined(__android__))
   uint64_t cache_type_register;
   // Copy the content of the cache type register to a core register.
   __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
@@ -116,7 +116,7 @@ uint32_t CPU::GetCacheType() {
 }
 
 bool CPU::CanFlushICacheFromBackgroundThreads() {
-#if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
+#if defined(__aarch64__) && (defined(__linux__) || defined(__android__))
   // On linux, check the kernel supports membarrier(2), that is, it's a kernel
   // above Linux 4.16 included.
   //
@@ -185,7 +185,7 @@ void CPU::EnsureIAndDCacheCoherency(void *address, size_t length, bool codeIsThr
   FlushInstructionCache(GetCurrentProcess(), address, length);
 #elif defined(XP_DARWIN)
   sys_icache_invalidate(address, length);
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) && (defined(__linux__) || defined(__android__))
   // Implement the cache synchronisation for all targets where AArch64 is the
   // host, even if we're building the simulator for an AAarch64 host. This
   // allows for cases where the user wants to simulate code as well as run it
