@@ -8179,7 +8179,10 @@ var MailIntegration = {
       "@mozilla.org/uriloader/external-protocol-service;1"
     ].getService(Ci.nsIExternalProtocolService);
     if (extProtocolSvc) {
-      extProtocolSvc.loadURI(aURL);
+      extProtocolSvc.loadURI(
+        aURL,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
     }
   },
 };
