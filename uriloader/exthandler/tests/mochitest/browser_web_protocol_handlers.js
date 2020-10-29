@@ -3,10 +3,6 @@ let testURL =
   "uriloader/exthandler/tests/mochitest/protocolHandler.html";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.external_protocol_requires_permission", false]],
-  });
-
   // Load a page registering a protocol handler.
   let browser = gBrowser.selectedBrowser;
   BrowserTestUtils.loadURI(browser, testURL);

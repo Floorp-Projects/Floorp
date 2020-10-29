@@ -16,9 +16,13 @@ webidl BrowsingContext;
 [scriptable, uuid(456ca3b2-02be-4f97-89a2-08c08d3ad88f)]
 interface nsIContentDispatchChooser : nsISupports {
  /**
-  * Opens the handler associated with the given resource.
-  * If the caller does not have permission or no handler is set, we ask the
-  * user to grant permission and pick a handler.
+  * This request is passed to the helper app dialog because Gecko can not
+  * handle content of this type.
+  */
+  const unsigned long REASON_CANNOT_HANDLE = 0;
+
+ /**
+  * Asks the user what to do with the content.
   *
   * @param aHander
   *        The interface describing the details of how this content should or
@@ -29,10 +33,13 @@ interface nsIContentDispatchChooser : nsISupports {
   *        The principal making the request.
   * @param aBrowsingContext
   *        The browsing context where the load should happen.
+  * @param aReason
+  *        The reason why we are asking (see above).
   */
-  void handleURI(in nsIHandlerInfo aHandler,
+  void ask(in nsIHandlerInfo aHandler,
            in nsIURI aURI,
            in nsIPrincipal aTriggeringPrincipal,
-           in BrowsingContext aBrowsingContext);
+           in BrowsingContext aBrowsingContext,
+           in unsigned long aReason);
 };
 
