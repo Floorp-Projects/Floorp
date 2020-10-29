@@ -96,6 +96,14 @@ bool TableAccessible::IsProbablyLayoutTable() {
       for (nsIContent* rowElm = childElm->GetFirstChild(); rowElm;
            rowElm = rowElm->GetNextSibling()) {
         if (rowElm->IsHTMLElement(nsGkAtoms::tr)) {
+          if (Accessible* row = thisacc->Document()->GetAccessible(rowElm)) {
+            if (const nsRoleMapEntry* roleMapEntry = row->ARIARoleMap()) {
+              if (roleMapEntry->role != roles::ROW) {
+                RETURN_LAYOUT_ANSWER(true, "Repurposed tr with different role");
+              }
+            }
+          }
+
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
             if (cellElm->IsHTMLElement()) {
@@ -115,11 +123,22 @@ bool TableAccessible::IsProbablyLayoutTable() {
                                      "legitimate table structures");
               }
 
-              Accessible* cell = thisacc->Document()->GetAccessible(cellElm);
-              if (cell && cell->ChildCount() == 1 &&
-                  cell->FirstChild()->IsAbbreviation()) {
-                RETURN_LAYOUT_ANSWER(false,
-                                     "has abbr -- legitimate table structures");
+              if (Accessible* cell =
+                      thisacc->Document()->GetAccessible(cellElm)) {
+                if (const nsRoleMapEntry* roleMapEntry = cell->ARIARoleMap()) {
+                  if (roleMapEntry->role != roles::CELL &&
+                      roleMapEntry->role != roles::COLUMNHEADER &&
+                      roleMapEntry->role != roles::ROWHEADER &&
+                      roleMapEntry->role != roles::GRID_CELL) {
+                    RETURN_LAYOUT_ANSWER(true,
+                                         "Repurposed cell with different role");
+                  }
+                }
+                if (cell->ChildCount() == 1 &&
+                    cell->FirstChild()->IsAbbreviation()) {
+                  RETURN_LAYOUT_ANSWER(
+                      false, "has abbr -- legitimate table structures");
+                }
               }
             }
           }
