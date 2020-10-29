@@ -55,5 +55,6 @@ dom/media/mediacontrol/
 dom/media/mediasession/
 dom/media/mediasource/
 dom/media/mp3/
+dom/media/mp4/
 dom/quota/
 dom/simpledb/
