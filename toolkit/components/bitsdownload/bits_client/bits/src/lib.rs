@@ -493,17 +493,25 @@ impl BitsJob {
 
             let language_id = DWORD::from(LANGIDFROMLCID(GetThreadLocale()));
 
+            let context = BitsErrorContext::from(context);
+            let context_str = com_call_taskmem_getter!(
+                |desc| error_obj,
+                IBackgroundCopyError::GetErrorContextDescription(language_id, desc)
+            )
+            .map(|s| taskmem_into_lossy_string(s))
+            .unwrap_or_else(|_| format!("{:?}", context));
+            let error_str = com_call_taskmem_getter!(
+                |desc| error_obj,
+                IBackgroundCopyError::GetErrorDescription(language_id, desc)
+            )
+            .map(|s| taskmem_into_lossy_string(s))
+            .unwrap_or_else(|_| format!("{:#08x}", hresult));
+
             Ok(BitsJobError {
-                context: BitsErrorContext::from(context),
-                context_str: taskmem_into_lossy_string(com_call_taskmem_getter!(
-                    |desc| error_obj,
-                    IBackgroundCopyError::GetErrorContextDescription(language_id, desc)
-                )?),
+                context,
+                context_str,
                 error: hresult,
-                error_str: taskmem_into_lossy_string(com_call_taskmem_getter!(
-                    |desc| error_obj,
-                    IBackgroundCopyError::GetErrorDescription(language_id, desc)
-                )?),
+                error_str,
             })
         }
     }
