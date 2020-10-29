@@ -4,6 +4,7 @@
 function run_test() {
   test_methods_presence(FluentBundle);
   test_methods_calling(FluentBundle, FluentResource);
+  test_number_options(FluentBundle, FluentResource);
 
   ok(true);
 }
@@ -27,5 +28,20 @@ function test_methods_calling(FluentBundle, FluentResource) {
 
   const msg2 = bundle.getMessage("key2");
   equal(bundle.formatPattern(msg2.value, { name: "Amy" }), "Hello Amy");
+  ok(true);
+}
+
+function test_number_options(FluentBundle, FluentResource) {
+  const bundle = new FluentBundle(["en-US", "pl"], {
+    useIsolating: false,
+  });
+  bundle.addResource(new FluentResource(`
+key = { NUMBER(0.53, style: "percent") } { NUMBER(0.12, style: "percent", minimumFractionDigits: 0) }
+    { NUMBER(-2.5, style: "percent") } { NUMBER(2.91, style: "percent") } { NUMBER("wrong", style: "percent") }
+`));
+
+  const msg = bundle.getMessage("key");
+  equal(bundle.formatPattern(msg.value), "53.00% 12%\n-250.0% 291.00% ");
+
   ok(true);
 }

@@ -227,7 +227,8 @@ ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
     MOZ_ASSERT(U_SUCCESS(ec), "Failed to format the currency unit.");
   }
   if (aOptions->style == ffi::FluentNumberStyleRaw::Percent) {
-    formatter = formatter.unit(icu::NoUnit::percent());
+    formatter = formatter.unit(icu::NoUnit::percent())
+                    .scale(icu::number::Scale::powerOfTen(2));
   }
 
   if (aOptions->minimum_significant_digits >= 0 ||
