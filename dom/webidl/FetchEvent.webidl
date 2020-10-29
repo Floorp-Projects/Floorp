@@ -15,6 +15,7 @@ interface FetchEvent : ExtendableEvent {
   [SameObject, BinaryName="request_"] readonly attribute Request request;
   readonly attribute DOMString clientId;
   readonly attribute DOMString resultingClientId;
+  readonly attribute Promise<void> handled;
 
   [Throws]
   void respondWith(Promise<Response> r);
