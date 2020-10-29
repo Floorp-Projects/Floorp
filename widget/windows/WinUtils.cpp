@@ -463,6 +463,9 @@ void WinUtils::Initialize() {
 LRESULT WINAPI WinUtils::NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
                                                            WPARAM wParam,
                                                            LPARAM lParam) {
+  // NOTE: this function was copied out into the body of the pre-XUL skeleton
+  // UI window proc (PreXULSkeletonUI.cpp). If this function changes at any
+  // point, we should probably factor this out and use it from both locations.
   if (msg == WM_NCCREATE && sEnableNonClientDpiScaling) {
     sEnableNonClientDpiScaling(hWnd);
   }

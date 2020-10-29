@@ -606,7 +606,7 @@ class nsWindow final : public nsWindowBase {
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
   bool mIsEarlyBlankWindow;
-  bool mWasPreXulSkeletonUI;
+  bool mIsShowingPreXULSkeletonUI;
   bool mResizable;
   DWORD_PTR mOldStyle;
   DWORD_PTR mOldExStyle;
