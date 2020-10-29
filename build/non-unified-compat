@@ -40,5 +40,7 @@ dom/media/
 dom/messagechannel/
 dom/midi/
 dom/network/
+dom/notification/
+dom/offline/
 dom/quota/
 dom/simpledb/
