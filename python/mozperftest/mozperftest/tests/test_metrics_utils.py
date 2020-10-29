@@ -25,11 +25,18 @@ def test_metric_fields_old_format():
     assert metric_fields("firstPaint") == {"name": "firstPaint"}
 
 
-def test_metric_fields_new_format():
-    assert metric_fields("name:foo,extraOptions:bar") == {
-        "name": "foo",
-        "extraOptions": "bar",
-    }
+@pytest.mark.parametrize(
+    "metrics, expected",
+    [
+        [
+            "name:foo,extraOptions:bar",
+            {"name": "foo", "extraOptions": "bar"},
+        ],
+        ["name:foo", {"name": "foo"}],
+    ],
+)
+def test_metric_fields_simple(metrics, expected):
+    assert metric_fields(metrics) == expected
 
 
 @pytest.mark.parametrize(
