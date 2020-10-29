@@ -37,5 +37,6 @@ dom/localstorage/
 dom/manifest/
 dom/mathml/
 dom/media/
+dom/messagechannel/
 dom/quota/
 dom/simpledb/
