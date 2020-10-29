@@ -2981,77 +2981,75 @@ pref("font.size.monospace.x-math", 13);
   //   - Microsoft Old Hangul
   pref("intl.ime.hack.set_input_scope_of_url_bar_to_default", true);
 
-  #ifdef NS_ENABLE_TSF
-    // Enable/Disable TSF support.
-    pref("intl.tsf.enable", true);
+  // Enable/Disable TSF support.
+  pref("intl.tsf.enable", true);
 
-    // Support IMEs implemented with IMM in TSF mode.
-    pref("intl.tsf.support_imm", true);
+  // Support IMEs implemented with IMM in TSF mode.
+  pref("intl.tsf.support_imm", true);
 
-    // This is referred only when both "intl.tsf.enable" and
-    // "intl.tsf.support_imm" are true.  When this is true, default IMC is
-    // associated with focused window only when active keyboard layout is a
-    // legacy IMM-IME.
-    pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
+  // This is referred only when both "intl.tsf.enable" and
+  // "intl.tsf.support_imm" are true.  When this is true, default IMC is
+  // associated with focused window only when active keyboard layout is a
+  // legacy IMM-IME.
+  pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
 
-    // Enables/Disables hack for specific TIP.
+  // Enables/Disables hack for specific TIP.
 
-    // On Windows 10 Build 17643 (an Insider Preview build of RS5), Microsoft
-    // have fixed the caller of ITextACPStore::GetTextExt() to return
-    // TS_E_NOLAYOUT to TIP as-is, rather than converting to E_FAIL.
-    // Therefore, if TIP supports asynchronous layout computation perfectly, we
-    // can return TS_E_NOLAYOUT and TIP waits next OnLayoutChange()
-    // notification.  However, some TIPs still have some bugs of asynchronous
-    // layout support.  We keep hacking the result of GetTextExt() like running
-    // on Windows 10, however, there could be unknown TIP bugs if we stop
-    // hacking the result.  So, user can stop checking build ID to make Gecko
-    // hack the result forcibly.
-    #ifdef EARLY_BETA_OR_EARLIER
-      pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", true);
-    #else
-      pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", false);
-    #endif
+  // On Windows 10 Build 17643 (an Insider Preview build of RS5), Microsoft
+  // have fixed the caller of ITextACPStore::GetTextExt() to return
+  // TS_E_NOLAYOUT to TIP as-is, rather than converting to E_FAIL.
+  // Therefore, if TIP supports asynchronous layout computation perfectly, we
+  // can return TS_E_NOLAYOUT and TIP waits next OnLayoutChange()
+  // notification.  However, some TIPs still have some bugs of asynchronous
+  // layout support.  We keep hacking the result of GetTextExt() like running
+  // on Windows 10, however, there could be unknown TIP bugs if we stop
+  // hacking the result.  So, user can stop checking build ID to make Gecko
+  // hack the result forcibly.
+  #ifdef EARLY_BETA_OR_EARLIER
+    pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", true);
+  #else
+    pref("intl.tsf.hack.allow_to_stop_hacking_on_build_17643_or_later", false);
+  #endif
 
-    // Whether creates native caret for ATOK or not.
-    pref("intl.tsf.hack.atok.create_native_caret", true);
-    // Whether use available composition string rect for result of
-    // ITextStoreACP::GetTextExt() even if the specified range is same as the
-    // range of composition string but some character rects of them are not
-    // available.  Note that this is ignored if active ATOK is or older than
-    // 2016 and create_native_caret is true.
-    pref("intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string", true);
-    // Whether use available composition string rect for result of
-    // ITextStoreACP::GetTextExt() even if the specified range is same as or is
-    // in the range of composition string but some character rects of them are
-    // not available.
-    pref("intl.tsf.hack.japanist10.do_not_return_no_layout_error_of_composition_string", true);
-    // Whether use composition start position for the result of
-    // ITfContextView::GetTextExt() if the specified range is larger than
-    // composition start offset.
-    // For Free ChangJie 2010
-    pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
-    // For Microsoft Pinyin and Microsoft Wubi
-    pref("intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error", true);
-    // For Microsoft ChangJie and Microsoft Quick
-    pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true);
-    // Whether use previous character rect for the result of
-    // ITfContextView::GetTextExt() if the specified range is the first
-    // character of selected clause of composition string.
-    pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
-    // Whether use previous character rect for the result of
-    // ITfContextView::GetTextExt() if the specified range is the caret of
-    // composition string.
-    pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret", true);
-    // Whether hack ITextStoreACP::QueryInsert() or not.  The method should
-    // return new selection after specified length text is inserted at
-    // specified range. However, Microsoft's some Chinese TIPs expect that the
-    // result is same as specified range.  If following prefs are true,
-    // ITextStoreACP::QueryInsert() returns specified range only when one of
-    // the TIPs is active. For Microsoft Pinyin and Microsoft Wubi.
-    pref("intl.tsf.hack.ms_simplified_chinese.query_insert_result", true);
-    // For Microsoft ChangJie and Microsoft Quick
-    pref("intl.tsf.hack.ms_traditional_chinese.query_insert_result", true);
-  #endif // NS_ENABLE_TSF
+  // Whether creates native caret for ATOK or not.
+  pref("intl.tsf.hack.atok.create_native_caret", true);
+  // Whether use available composition string rect for result of
+  // ITextStoreACP::GetTextExt() even if the specified range is same as the
+  // range of composition string but some character rects of them are not
+  // available.  Note that this is ignored if active ATOK is or older than
+  // 2016 and create_native_caret is true.
+  pref("intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string", true);
+  // Whether use available composition string rect for result of
+  // ITextStoreACP::GetTextExt() even if the specified range is same as or is
+  // in the range of composition string but some character rects of them are
+  // not available.
+  pref("intl.tsf.hack.japanist10.do_not_return_no_layout_error_of_composition_string", true);
+  // Whether use composition start position for the result of
+  // ITfContextView::GetTextExt() if the specified range is larger than
+  // composition start offset.
+  // For Free ChangJie 2010
+  pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
+  // For Microsoft Pinyin and Microsoft Wubi
+  pref("intl.tsf.hack.ms_simplified_chinese.do_not_return_no_layout_error", true);
+  // For Microsoft ChangJie and Microsoft Quick
+  pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true);
+  // Whether use previous character rect for the result of
+  // ITfContextView::GetTextExt() if the specified range is the first
+  // character of selected clause of composition string.
+  pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
+  // Whether use previous character rect for the result of
+  // ITfContextView::GetTextExt() if the specified range is the caret of
+  // composition string.
+  pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret", true);
+  // Whether hack ITextStoreACP::QueryInsert() or not.  The method should
+  // return new selection after specified length text is inserted at
+  // specified range. However, Microsoft's some Chinese TIPs expect that the
+  // result is same as specified range.  If following prefs are true,
+  // ITextStoreACP::QueryInsert() returns specified range only when one of
+  // the TIPs is active. For Microsoft Pinyin and Microsoft Wubi.
+  pref("intl.tsf.hack.ms_simplified_chinese.query_insert_result", true);
+  // For Microsoft ChangJie and Microsoft Quick
+  pref("intl.tsf.hack.ms_traditional_chinese.query_insert_result", true);
 
   // If composition_font is set, Gecko sets the font to IME.  IME may use
   // the fonts on their window like candidate window.  If they are empty,

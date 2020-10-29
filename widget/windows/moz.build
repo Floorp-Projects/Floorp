@@ -132,6 +132,7 @@ SOURCES += [
 # Needs INITGUID and we don't allow INITGUID in unified sources since bug 970429.
 SOURCES += [
     "InputDeviceUtils.cpp",
+    "TSFTextStore.cpp",
 ]
 
 if CONFIG["NS_PRINTING"]:
@@ -147,11 +148,6 @@ if CONFIG["NS_PRINTING"]:
 if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
     UNIFIED_SOURCES += [
         "WindowsEMF.cpp",
-    ]
-
-if CONFIG["NS_ENABLE_TSF"]:
-    SOURCES += [
-        "TSFTextStore.cpp",
     ]
 
 XPCOM_MANIFESTS += [
