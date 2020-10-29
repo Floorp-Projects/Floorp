@@ -58,11 +58,9 @@ class LayoutApp extends PureComponent {
       grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
       highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings)
         .isRequired,
-      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelEditor: PropTypes.func.isRequired,
-      onShowBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onShowGridOutlineHighlight: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
