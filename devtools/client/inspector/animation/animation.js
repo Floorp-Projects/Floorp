@@ -87,6 +87,14 @@ class AnimationInspector {
 
   initComponents() {
     const {
+      onShowBoxModelHighlighterForNode,
+    } = this.inspector.getCommonComponentProps();
+
+    const { onHideBoxModelHighlighter } = this.inspector
+      .getPanel("boxmodel")
+      .getComponentProps();
+
+    const {
       addAnimationsCurrentTimeListener,
       emitForTests: emitEventForTest,
       getAnimatedPropertyMap,
@@ -129,6 +137,8 @@ class AnimationInspector {
         getComputedStyle,
         getNodeFromActor,
         isAnimationsRunning,
+        onHideBoxModelHighlighter,
+        onShowBoxModelHighlighterForNode,
         removeAnimationsCurrentTimeListener,
         rewindAnimationsCurrentTime,
         selectAnimation,

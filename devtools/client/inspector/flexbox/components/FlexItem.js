@@ -16,17 +16,13 @@ loader.lazyRequireGetter(
 
 const Types = require("devtools/client/inspector/flexbox/types");
 
-const {
-  highlightNode,
-  unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
-
 class FlexItem extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       flexItem: PropTypes.shape(Types.flexItem).isRequired,
       index: PropTypes.number.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -34,9 +30,10 @@ class FlexItem extends PureComponent {
 
   render() {
     const {
-      dispatch,
       flexItem,
       index,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       scrollToTop,
       setSelectedNode,
     } = this.props;
@@ -49,10 +46,10 @@ class FlexItem extends PureComponent {
           e.stopPropagation();
           scrollToTop();
           setSelectedNode(nodeFront);
-          dispatch(unhighlightNode());
+          onHideBoxModelHighlighter();
         },
-        onMouseOut: () => dispatch(unhighlightNode()),
-        onMouseOver: () => dispatch(highlightNode(nodeFront)),
+        onMouseOut: () => onHideBoxModelHighlighter(),
+        onMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
       },
       dom.span({ className: "flex-item-index" }, index),
       getNodeRep(nodeFront)

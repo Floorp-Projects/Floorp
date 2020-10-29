@@ -20,19 +20,15 @@ const {
   getInspectorStr,
 } = require("devtools/client/inspector/animation/utils/l10n");
 
-const {
-  highlightNode,
-  unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
-
 class AnimationTarget extends Component {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
-      dispatch: PropTypes.func.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       highlightedNode: PropTypes.string.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setHighlightedNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -98,12 +94,10 @@ class AnimationTarget extends Component {
     await this.ensureNodeFront();
 
     if (this.state.nodeFront) {
-      this.props.dispatch(
-        highlightNode(this.state.nodeFront, {
-          hideInfoBar: true,
-          hideGuides: true,
-        })
-      );
+      this.props.onShowBoxModelHighlighterForNode(this.state.nodeFront, {
+        hideInfoBar: true,
+        hideGuides: true,
+      });
     }
   }
 
@@ -118,7 +112,7 @@ class AnimationTarget extends Component {
   render() {
     const {
       emitEventForTest,
-      dispatch,
+      onHideBoxModelHighlighter,
       highlightedNode,
       setHighlightedNode,
     } = this.props;
@@ -149,7 +143,7 @@ class AnimationTarget extends Component {
         onDOMNodeClick: () => this.select(),
         onDOMNodeMouseOut: () => {
           if (!isHighlighted) {
-            dispatch(unhighlightNode());
+            onHideBoxModelHighlighter();
           }
         },
         onDOMNodeMouseOver: () => {
@@ -162,7 +156,7 @@ class AnimationTarget extends Component {
 
           if (!isHighlighted) {
             // At first, hide highlighter which was created by onDOMNodeMouseOver.
-            dispatch(unhighlightNode());
+            onHideBoxModelHighlighter();
           }
 
           setHighlightedNode(isHighlighted ? null : nodeFront);

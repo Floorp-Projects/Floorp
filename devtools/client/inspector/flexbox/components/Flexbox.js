@@ -40,11 +40,12 @@ const Types = require("devtools/client/inspector/flexbox/types");
 class Flexbox extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       flexbox: PropTypes.shape(Types.flexbox).isRequired,
       flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
@@ -52,12 +53,18 @@ class Flexbox extends PureComponent {
   }
 
   renderFlexItemList() {
-    const { dispatch, scrollToTop, setSelectedNode } = this.props;
+    const {
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      scrollToTop,
+      setSelectedNode,
+    } = this.props;
     const { flexItems } = this.props.flexContainer;
 
     return FlexItemList({
-      dispatch,
       flexItems,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       scrollToTop,
       setSelectedNode,
     });
@@ -89,11 +96,11 @@ class Flexbox extends PureComponent {
 
   render() {
     const {
-      dispatch,
-      flexbox,
       flexContainer,
       getSwatchColorPickerTooltip,
+      onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
+      onShowBoxModelHighlighterForNode,
       onToggleFlexboxHighlighter,
       setSelectedNode,
     } = this.props;
@@ -106,17 +113,15 @@ class Flexbox extends PureComponent {
     }
 
     const { flexItemShown } = flexContainer;
-    const { color, highlighted } = flexbox;
 
     return dom.div(
       { className: "layout-flexbox-wrapper" },
       Header({
-        color,
-        dispatch,
         flexContainer,
         getSwatchColorPickerTooltip,
-        highlighted,
+        onHideBoxModelHighlighter,
         onSetFlexboxOverlayColor,
+        onShowBoxModelHighlighterForNode,
         onToggleFlexboxHighlighter,
         setSelectedNode,
       }),

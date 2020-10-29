@@ -41,10 +41,15 @@ class LayoutView {
       return;
     }
 
-    const { setSelectedNode } = this.inspector.getCommonComponentProps();
+    const {
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.inspector.getCommonComponentProps();
 
     const {
+      onHideBoxModelHighlighter,
       onShowBoxModelEditor,
+      onShowBoxModelHighlighter,
       onShowRulePreviewTooltip,
       onToggleGeometryEditor,
     } = this.inspector.getPanel("boxmodel").getComponentProps();
@@ -73,9 +78,12 @@ class LayoutView {
 
     const layoutApp = LayoutApp({
       getSwatchColorPickerTooltip: () => this.swatchColorPickerTooltip,
+      onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
       onSetGridOverlayColor,
       onShowBoxModelEditor,
+      onShowBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       onShowRulePreviewTooltip,
       onShowGridOutlineHighlight,
       onToggleFlexboxHighlighter,

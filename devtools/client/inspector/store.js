@@ -20,13 +20,11 @@ function createReducer(laterReducers = {}) {
   });
 }
 
-module.exports = inspector => {
+module.exports = () => {
   const store = createStore(createReducer(), {
     // Enable log middleware in tests
     shouldLog: true,
-    // Pass the client inspector instance so thunks (dispatched functions)
-    // can access it from their arguments
-    thunkOptions: { inspector },
+    thunkOptions: {},
   });
 
   // Map of registered reducers loaded on-demand.
