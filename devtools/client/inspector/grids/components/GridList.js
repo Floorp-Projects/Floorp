@@ -21,10 +21,11 @@ const Types = require("devtools/client/inspector/grids/types");
 class GridList extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -32,10 +33,11 @@ class GridList extends PureComponent {
 
   render() {
     const {
-      dispatch,
       getSwatchColorPickerTooltip,
       grids,
+      onHideBoxModelHighlighter,
       onSetGridOverlayColor,
+      onShowBoxModelHighlighterForNode,
       onToggleGridHighlighter,
       setSelectedNode,
     } = this.props;
@@ -59,12 +61,13 @@ class GridList extends PureComponent {
           .filter(grid => !grid.isSubgrid)
           .map(grid =>
             GridItem({
-              dispatch,
               key: grid.id,
               getSwatchColorPickerTooltip,
               grid,
               grids,
+              onHideBoxModelHighlighter,
               onSetGridOverlayColor,
+              onShowBoxModelHighlighterForNode,
               onToggleGridHighlighter,
               setSelectedNode,
             })

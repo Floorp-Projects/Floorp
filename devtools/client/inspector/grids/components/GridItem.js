@@ -29,19 +29,15 @@ loader.lazyRequireGetter(
 
 const Types = require("devtools/client/inspector/grids/types");
 
-const {
-  highlightNode,
-  unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
-
 class GridItem extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grid: PropTypes.shape(Types.grid).isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -111,11 +107,13 @@ class GridItem extends PureComponent {
       subgrids.map(g => {
         return createElement(GridItem, {
           key: g.id,
-          dispatch: this.props.dispatch,
           getSwatchColorPickerTooltip: this.props.getSwatchColorPickerTooltip,
           grid: g,
           grids,
+          onHideBoxModelHighlighter: this.props.onHideBoxModelHighlighter,
           onSetGridOverlayColor: this.props.onSetGridOverlayColor,
+          onShowBoxModelHighlighterForNode: this.props
+            .onShowBoxModelHighlighterForNode,
           onToggleGridHighlighter: this.props.onToggleGridHighlighter,
           setSelectedNode: this.props.setSelectedNode,
         });
@@ -124,7 +122,11 @@ class GridItem extends PureComponent {
   }
 
   render() {
-    const { dispatch, grid } = this.props;
+    const {
+      grid,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+    } = this.props;
 
     return createElement(
       Fragment,
@@ -144,8 +146,9 @@ class GridItem extends PureComponent {
             defaultRep: Rep.ElementNode,
             mode: MODE.TINY,
             object: translateNodeFrontToGrip(grid.nodeFront),
-            onDOMNodeMouseOut: () => dispatch(unhighlightNode()),
-            onDOMNodeMouseOver: () => dispatch(highlightNode(grid.nodeFront)),
+            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+            onDOMNodeMouseOver: () =>
+              onShowBoxModelHighlighterForNode(grid.nodeFront),
             onInspectIconClick: (_, e) => {
               // Stoping click propagation to avoid firing onGridCheckboxClick()
               e.stopPropagation();

@@ -74,8 +74,17 @@ class CompatibilityView {
   }
 
   async _init() {
-    const { setSelectedNode } = this.inspector.getCommonComponentProps();
+    const {
+      onShowBoxModelHighlighterForNode: showBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.inspector.getCommonComponentProps();
+    const {
+      onHideBoxModelHighlighter: hideBoxModelHighlighter,
+    } = this.inspector.getPanel("boxmodel").getComponentProps();
+
     const compatibilityApp = new CompatibilityApp({
+      hideBoxModelHighlighter,
+      showBoxModelHighlighterForNode,
       setSelectedNode,
     });
 

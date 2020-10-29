@@ -32,7 +32,6 @@ const Settings = createFactory(
 class CompatibilityApp extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       // getString prop is injected by the withLocalization wrapper
       getString: PropTypes.func.isRequired,
       isSettingsVisibile: PropTypes.bool.isRequired,
@@ -41,19 +40,22 @@ class CompatibilityApp extends PureComponent {
         .isRequired,
       topLevelTargetIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
         .isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
     const {
-      dispatch,
       getString,
       isSettingsVisibile,
       isTopLevelTargetProcessing,
       selectedNodeIssues,
       topLevelTargetIssues,
+      hideBoxModelHighlighter,
       setSelectedNode,
+      showBoxModelHighlighterForNode,
     } = this.props;
 
     const selectedNodeIssuePane = IssuePane({
@@ -63,9 +65,10 @@ class CompatibilityApp extends PureComponent {
     const topLevelTargetIssuePane =
       topLevelTargetIssues.length > 0 || !isTopLevelTargetProcessing
         ? IssuePane({
-            dispatch,
             issues: topLevelTargetIssues,
+            hideBoxModelHighlighter,
             setSelectedNode,
+            showBoxModelHighlighterForNode,
           })
         : null;
 

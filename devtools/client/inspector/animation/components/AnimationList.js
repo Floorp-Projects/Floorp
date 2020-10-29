@@ -19,10 +19,11 @@ class AnimationList extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
-      dispatch: PropTypes.func.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
       setHighlightedNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
@@ -34,10 +35,11 @@ class AnimationList extends PureComponent {
   render() {
     const {
       animations,
-      dispatch,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       selectAnimation,
       setHighlightedNode,
       setSelectedNode,
@@ -52,10 +54,11 @@ class AnimationList extends PureComponent {
       animations.map(animation =>
         AnimationItem({
           animation,
-          dispatch,
           emitEventForTest,
           getAnimatedPropertyMap,
           getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
           selectAnimation,
           setHighlightedNode,
           setSelectedNode,

@@ -20,22 +20,29 @@ const NodeItem = createFactory(
 class NodeList extends PureComponent {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
       nodes: PropTypes.arrayOf(Types.node).isRequired,
+      hideBoxModelHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { dispatch, nodes, setSelectedNode } = this.props;
+    const {
+      nodes,
+      hideBoxModelHighlighter,
+      setSelectedNode,
+      showBoxModelHighlighterForNode,
+    } = this.props;
 
     return dom.ul(
       { className: "compatibility-node-list" },
       nodes.map(node =>
         NodeItem({
-          dispatch,
           node,
+          hideBoxModelHighlighter,
           setSelectedNode,
+          showBoxModelHighlighterForNode,
         })
       )
     );
