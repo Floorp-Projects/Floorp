@@ -94,11 +94,11 @@ class AbortSignalMainThread final : public AbortSignalImpl {
 NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignalMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AbortSignalMainThread)
-  // This is filled with new operations shortly.
+  AbortSignalImpl::Unlink(static_cast<AbortSignalImpl*>(tmp));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AbortSignalMainThread)
-  // This is filled with new operations shortly.
+  AbortSignalImpl::Traverse(static_cast<AbortSignalImpl*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortSignalMainThread)
