@@ -42,7 +42,8 @@ internal sealed class FxaDeviceConstellationException : Exception() {
 class FxaDeviceConstellation(
     private val account: FirefoxAccount,
     private val scope: CoroutineScope,
-    private val crashReporter: CrashReporting? = null
+    @VisibleForTesting
+    internal val crashReporter: CrashReporting? = null
 ) : DeviceConstellation, Observable<AccountEventsObserver> by ObserverRegistry() {
     private val logger = Logger("FxaDeviceConstellation")
 
@@ -150,7 +151,7 @@ class FxaDeviceConstellation(
         targetDeviceId: String,
         outgoingCommand: DeviceCommandOutgoing
     ) = withContext(scope.coroutineContext) {
-        handleFxaExceptions(logger, "sending device command") {
+        val result = handleFxaExceptions(logger, "sending device command", { error -> error }) {
             when (outgoingCommand) {
                 is DeviceCommandOutgoing.SendTab -> {
                     account.sendSingleTab(targetDeviceId, outgoingCommand.title, outgoingCommand.url)
@@ -158,6 +159,14 @@ class FxaDeviceConstellation(
                 }
                 else -> logger.debug("Skipped sending unsupported command type: $outgoingCommand")
             }
+            null
+        }
+
+        if (result != null) {
+            crashReporter?.submitCaughtException(SendCommandException(result))
+            false
+        } else {
+            true
         }
     }
 

@@ -57,3 +57,8 @@ sealed class AccountManagerException(message: String) : Exception(message) {
         "Auth recovery circuit breaker triggered by: $operation"
     )
 }
+
+/**
+ * FxaException wrapper easily identifying it as the result of a failed operation of sending tabs.
+ */
+class SendCommandException(fxaException: FxaException) : Exception(fxaException)

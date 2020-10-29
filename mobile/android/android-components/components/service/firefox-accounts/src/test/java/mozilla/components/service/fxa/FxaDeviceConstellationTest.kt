@@ -12,27 +12,31 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent // the app-services variation
+import mozilla.appservices.fxaclient.FxaException
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.appservices.syncmanager.DeviceSettings
+import mozilla.components.concept.sync.AccountEvent
+import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceCapability
-import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DeviceCommandIncoming
 import mozilla.components.concept.sync.DeviceCommandOutgoing
-import mozilla.components.concept.sync.AccountEventsObserver
-import mozilla.components.concept.sync.AccountEvent
-import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
+import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
+import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -40,10 +44,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.FirefoxAccount as NativeFirefoxAccount
 import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
@@ -61,7 +67,7 @@ class FxaDeviceConstellationTest {
     fun setup() {
         account = mock()
         val scope = CoroutineScope(coroutinesTestRule.testDispatcher) + SupervisorJob()
-        constellation = FxaDeviceConstellation(account, scope)
+        constellation = FxaDeviceConstellation(account, scope, mock())
     }
 
     @Test
@@ -200,6 +206,21 @@ class FxaDeviceConstellationTest {
         ))
 
         verify(account).sendSingleTab("targetID", "Mozilla", "https://www.mozilla.org")
+    }
+
+    @Test
+    fun `send command to device will report exceptions`() = runBlocking(coroutinesTestRule.testDispatcher) {
+        val exception = FxaException.Unspecified("")
+        val exceptionCaptor = argumentCaptor<SendCommandException>()
+        doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
+
+        val success = constellation.sendCommandToDevice(
+            "targetID", DeviceCommandOutgoing.SendTab("Mozilla", "https://www.mozilla.org")
+        )
+
+        assertFalse(success)
+        verify(constellation.crashReporter!!).submitCaughtException(exceptionCaptor.capture())
+        assertSame(exception, exceptionCaptor.value.cause)
     }
 
     @Test
