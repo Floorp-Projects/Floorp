@@ -60,8 +60,6 @@ add_task(async function test_webextension_addon_debugging_connect() {
   await threadFront.resume();
   is(threadFront.paused, false, "The addon threadActor has been resumed");
 
-  await threadFront.detach();
-
   const waitTransportClosed = new Promise(resolve => {
     client._transport.once("close", resolve);
   });

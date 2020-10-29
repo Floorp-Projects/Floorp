@@ -96,8 +96,6 @@ When the user navigates away from a page, a `tabNavigated` event will be fired. 
 
 ```javascript
 async function onTab() {
-  // Detach from the previous thread.
-  await client.activeThread.detach();
   // Detach from the previous tab.
   await targetFront.detach();
   // Start debugging the new tab.
@@ -121,7 +119,6 @@ client.attachThread(response.threadActor).then(function(threadFront) {
   // Attach listeners for thread events.
   threadFront.on("paused", onPause);
   threadFront.on("resumed", fooListener);
-  threadFront.on("detached", fooListener);
 
   // Resume the thread.
   threadFront.resume();
@@ -182,7 +179,6 @@ function debugTab() {
         // Attach listeners for thread events.
         threadFront.on("paused", onPause);
         threadFront.on("resumed", fooListener);
-        threadFront.on("detached", fooListener);
 
         // Resume the thread.
         threadFront.resume();
@@ -196,13 +192,10 @@ function debugTab() {
  * Handler for location changes.
  */
 function onTab() {
-  // Detach from the previous thread.
-  client.activeThread.detach().then(() => {
-    // Detach from the previous tab.
-    client.detach().then(() => {
-      // Start debugging the new tab.
-      debugTab();
-    });
+  // Detach from the previous tab.
+  client.detach().then(() => {
+    // Start debugging the new tab.
+    debugTab();
   });
 }
 
