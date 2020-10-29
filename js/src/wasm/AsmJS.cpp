@@ -6730,7 +6730,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   }
 
   buffer.set(&AsAnyArrayBuffer(bufferVal));
-  uint64_t memoryLength = uint64_t(ByteLength32(buffer));
+  uint64_t memoryLength = uint64_t(buffer->byteLength());
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
     UniqueChars msg(JS_smprintf(

@@ -1649,8 +1649,8 @@ void CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins) {
   }
 
   Label done, outOfRange;
-  masm.wasmBoundsCheck32(Assembler::AboveOrEqual, ptrReg,
-                         ToRegister(boundsCheckLimit), &outOfRange);
+  masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptrReg,
+                       ToRegister(boundsCheckLimit), &outOfRange);
   // Offset is ok, let's load value.
   if (isFloat) {
     if (size == 32) {
@@ -1768,8 +1768,8 @@ void CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) {
   }
 
   Label outOfRange;
-  masm.wasmBoundsCheck32(Assembler::AboveOrEqual, ptrReg,
-                         ToRegister(boundsCheckLimit), &outOfRange);
+  masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptrReg,
+                       ToRegister(boundsCheckLimit), &outOfRange);
 
   // Offset is ok, let's store value.
   if (isFloat) {

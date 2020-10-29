@@ -26,13 +26,10 @@
 
 namespace js {
 
-class ArrayBufferObject;
 class ArrayBufferObjectMaybeShared;
 class JSStringBuilder;
-class SharedArrayRawBuffer;
 class StructTypeDescr;
 class TypedArrayObject;
-class WasmArrayRawBuffer;
 class WasmFunctionScope;
 class WasmInstanceScope;
 class SharedArrayRawBuffer;
@@ -186,17 +183,6 @@ bool IsSharedWasmMemoryObject(JSObject* obj);
 MOZ_MUST_USE bool CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
                                MutableHandleFunction fnval,
                                MutableHandleAnyRef refval);
-
-// Abstractions that clarify that we are working on a 32-bit memory and check
-// that the buffer length does not exceed that's memory's fixed limits.
-//
-// Once the larger ArrayBuffers are stable these may become accessors on the
-// objects themselves: wasmByteLength32() etc.
-uint32_t ByteLength32(Handle<ArrayBufferObjectMaybeShared*> buffer);
-uint32_t ByteLength32(const ArrayBufferObjectMaybeShared& buffer);
-uint32_t ByteLength32(const WasmArrayRawBuffer* buffer);
-uint32_t ByteLength32(const ArrayBufferObject& buffer);
-uint32_t VolatileByteLength32(const SharedArrayRawBuffer* buffer);
 
 }  // namespace wasm
 
@@ -412,21 +398,21 @@ class WasmMemoryObject : public NativeObject {
   // `buffer()` returns the current buffer object always.  If the buffer
   // represents shared memory then `buffer().byteLength()` never changes, and
   // in particular it may be a smaller value than that returned from
-  // `volatileMemoryLength32()` below.
+  // `volatileMemoryLength()` below.
   //
   // Generally, you do not want to call `buffer().byteLength()`, but to call
-  // `volatileMemoryLength32()`, instead.
+  // `volatileMemoryLength()`, instead.
   ArrayBufferObjectMaybeShared& buffer() const;
 
   // The current length of the memory.  In the case of shared memory, the
   // length can change at any time.  Also note that this will acquire a lock
   // for shared memory, so do not call this from a signal handler.
-  uint32_t volatileMemoryLength32() const;
+  uint32_t volatileMemoryLength() const;
 
   bool isShared() const;
   bool isHuge() const;
   bool movingGrowable() const;
-  uint32_t boundsCheckLimit32() const;
+  uint32_t boundsCheckLimit() const;
 
   // If isShared() is true then obtain the underlying buffer object.
   SharedArrayRawBuffer* sharedArrayRawBuffer() const;
