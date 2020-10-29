@@ -1624,16 +1624,11 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
 #endif
 
     if (conflicting.empty()) {
-      if (!conflicting.appendAll(aliasedConflicting)) {
-        return false;
-      }
+      conflicting = std::move(aliasedConflicting);
     } else {
       if (maximumSpillWeight(aliasedConflicting) <
           maximumSpillWeight(conflicting)) {
-        conflicting.clear();
-        if (!conflicting.appendAll(aliasedConflicting)) {
-          return false;
-        }
+        conflicting = std::move(aliasedConflicting);
       }
     }
     return true;

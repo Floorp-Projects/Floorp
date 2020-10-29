@@ -277,7 +277,7 @@ JS_FRIEND_API bool js::AppendUnique(JSContext* cx, MutableHandleIdVector base,
       }
     }
   }
-  return base.appendAll(uniqueOthers);
+  return base.appendAll(std::move(uniqueOthers));
 }
 
 /* static */
