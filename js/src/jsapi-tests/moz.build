@@ -137,6 +137,7 @@ SOURCES += [
 
 if not CONFIG["JS_CODEGEN_NONE"]:
     UNIFIED_SOURCES += [
+        "testJitABIcalls.cpp",
         "testJitDCEinGVN.cpp",
         "testJitFoldsTo.cpp",
         "testJitGVN.cpp",
