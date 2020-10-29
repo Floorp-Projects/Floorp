@@ -25,7 +25,7 @@ except ImportError:
     build = None
 
 from mozlog import commandline
-from mozprofile.cli import parse_preferences
+from mozprofile.cli import parse_preferences, parse_key_value
 
 from browsertime import BrowsertimeDesktop, BrowsertimeAndroid
 from cmdline import parse_args, CHROMIUM_DISTROS
@@ -57,6 +57,8 @@ def main(args=sys.argv[1:]):
 
     if args.extra_prefs and args.extra_prefs.get("fission.autostart", False):
         args.enable_fission = True
+
+    args.environment = dict(parse_key_value(args.environment or [], context="--setenv"))
 
     commandline.setup_logging("raptor", args, {"tbpl": sys.stdout})
     LOG.info("Python version: %s" % sys.version)
@@ -130,6 +132,7 @@ def main(args=sys.argv[1:]):
             interrupt_handler=SignalHandler(),
             enable_webrender=args.enable_webrender,
             extra_prefs=args.extra_prefs or {},
+            environment=args.environment or {},
             device_name=args.device_name,
             no_conditioned_profile=args.no_conditioned_profile,
             disable_perf_tuning=args.disable_perf_tuning,
