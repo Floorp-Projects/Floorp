@@ -3222,7 +3222,7 @@
       this.removeTabs(selectedTabs);
     },
 
-    removeTabs(tabs, { animate = true } = {}) {
+    removeTabs(tabs) {
       // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
       // can be considered equivalent to closing the window.
       if (
@@ -3240,8 +3240,7 @@
       try {
         let tabsWithBeforeUnload = [];
         let lastToClose;
-        let aParams = { animate, prewarmed: true };
-
+        let aParams = { animate: true, prewarmed: true };
         for (let tab of tabs) {
           if (tab.selected) {
             lastToClose = tab;
