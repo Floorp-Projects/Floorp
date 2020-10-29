@@ -37,7 +37,7 @@ exports.viewSourceInStyleEditor = async function(
   const originalLocation = stylesheetFront
     ? await getOriginalLocation(
         toolbox,
-        stylesheetFront.actorID,
+        stylesheetFront.resourceId,
         generatedLine,
         generatedColumn
       )

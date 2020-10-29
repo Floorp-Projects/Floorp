@@ -1391,7 +1391,8 @@ function SelectorView(tree, selectorInfo) {
     };
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
     this._unsubscribeCallback = this.sourceMapURLService.subscribeByID(
-      this.generatedLocation.sheet.actorID,
+      this.generatedLocation.sheet.resourceId ||
+        this.generatedLocation.sheet.actorID,
       this.generatedLocation.line,
       this.generatedLocation.column,
       this._updateLocation
