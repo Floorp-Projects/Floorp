@@ -311,11 +311,6 @@ skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex-desc-configurable.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1673793
-# All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer-realm.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 # All of these tests pass except with --more-compartments.
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
