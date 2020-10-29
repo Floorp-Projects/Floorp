@@ -12,7 +12,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 loader.lazyRequireGetter(
   this,
@@ -22,15 +21,19 @@ loader.lazyRequireGetter(
 
 const Types = require("devtools/client/inspector/flexbox/types");
 
+const {
+  highlightNode,
+  unhighlightNode,
+} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
+
 class FlexContainer extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       color: PropTypes.string.isRequired,
       flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
-      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
-      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -69,12 +72,7 @@ class FlexContainer extends PureComponent {
   }
 
   render() {
-    const {
-      color,
-      flexContainer,
-      onHideBoxModelHighlighter,
-      onShowBoxModelHighlighterForNode,
-    } = this.props;
+    const { color, flexContainer, dispatch } = this.props;
     const { nodeFront, properties } = flexContainer;
 
     return createElement(
@@ -85,8 +83,8 @@ class FlexContainer extends PureComponent {
           className: "flex-header-container-label",
         },
         getNodeRep(nodeFront, {
-          onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-          onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+          onDOMNodeMouseOut: () => dispatch(unhighlightNode()),
+          onDOMNodeMouseOver: () => dispatch(highlightNode(nodeFront)),
         }),
         dom.div({
           className: "layout-color-swatch",
@@ -121,10 +119,4 @@ class FlexContainer extends PureComponent {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    color: state.flexbox.color,
-  };
-};
-
-module.exports = connect(mapStateToProps)(FlexContainer);
+module.exports = FlexContainer;

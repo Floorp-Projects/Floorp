@@ -149,7 +149,7 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
-  this.store = createStore();
+  this.store = createStore(this);
   this.isReady = false;
 
   // Map [panel id => panel instance]

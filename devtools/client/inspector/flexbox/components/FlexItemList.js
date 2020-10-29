@@ -21,22 +21,15 @@ const Types = require("devtools/client/inspector/flexbox/types");
 class FlexItemList extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       flexItems: PropTypes.arrayOf(PropTypes.shape(Types.flexItem)).isRequired,
-      onHideBoxModelHighlighter: PropTypes.func.isRequired,
-      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       scrollToTop: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const {
-      flexItems,
-      onHideBoxModelHighlighter,
-      onShowBoxModelHighlighterForNode,
-      scrollToTop,
-      setSelectedNode,
-    } = this.props;
+    const { dispatch, flexItems, scrollToTop, setSelectedNode } = this.props;
 
     return dom.div(
       { className: "flex-item-list" },
@@ -53,10 +46,9 @@ class FlexItemList extends PureComponent {
       flexItems.map((flexItem, index) =>
         FlexItem({
           key: flexItem.actorID,
+          dispatch,
           flexItem,
           index: index + 1,
-          onHideBoxModelHighlighter,
-          onShowBoxModelHighlighterForNode,
           scrollToTop,
           setSelectedNode,
         })
