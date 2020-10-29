@@ -19,10 +19,8 @@ class AbortSignalImpl;
 
 // This class must be implemented by objects who want to follow a
 // AbortSignalImpl.
-class AbortFollower {
+class AbortFollower : public nsISupports {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   virtual void RunAbortAlgorithm() = 0;
 
   void Follow(AbortSignalImpl* aSignal);
