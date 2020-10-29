@@ -59,5 +59,8 @@ dom/media/mp4/
 dom/media/ogg/
 dom/media/platforms/
 dom/media/systemservices/
+dom/media/test/
+dom/media/tests/
+dom/media/wave/
 dom/quota/
 dom/simpledb/
