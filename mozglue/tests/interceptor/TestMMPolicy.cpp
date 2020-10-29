@@ -89,7 +89,8 @@ bool ValidateFreeRegion(LPVOID aRegion, size_t aDesiredLen) {
 
 bool TestFindRegion() {
   // Skip the near-null addresses
-  uint8_t* minAddr = reinterpret_cast<uint8_t*>(gPolicy.GetAllocGranularity());
+  uint8_t* minAddr = reinterpret_cast<uint8_t*>(
+      std::max(gPolicy.GetAllocGranularity(), 0x1000000ul));
   // 64bit address space is too large to deplete.  32bit space is enough.
   uint8_t* maxAddr = reinterpret_cast<uint8_t*>(std::min(
       gPolicy.GetMaxUserModeAddress(), static_cast<uintptr_t>(0xffffffff)));
