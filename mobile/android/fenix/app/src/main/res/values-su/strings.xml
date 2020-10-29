@@ -817,6 +817,8 @@
     <string name="preference_phone_feature_location">Lokasi</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Iber</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Panyimpen panceg</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Nyuhunkeun diidinan</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1109,6 +1111,10 @@
     <string name="onboarding_account_sign_in_header">Mimitian nyingkronkeun markah, kecap konci, jeung nu lianna maké akun Firefox anjeun.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Lenyepan</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Anjeun asup salaku %s dina séjén panyungsi Firefox di ieu telepon. Anjeun rék asup maké ieu akun?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Enya, asupkeun</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1198,6 +1204,8 @@
     <string name="sign_in_with_camera">Asup maké kaméra anjeun</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Maké surél wéh</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Teu boga akun? <u>Jieun</u> pikeun nyingkronkeun Firefox dina sakabéh parabot.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox bakal eureun nyingkronkeun jeung akun anjeun, ngan moal mupus sakur data langlangan anjeun dina ieu alat.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
