@@ -168,14 +168,6 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
     nsAutoString adapterVendorID;
     mGfxInfo->GetAdapterVendorID(adapterVendorID);
     if (adapterVendorID == u"0x8086") {
-      bool hasBattery = false;
-      mGfxInfo->GetHasBattery(&hasBattery);
-      if (hasBattery && !mFeatureWrCompositor->IsEnabled()) {
-        mFeatureWrQualified->Disable(FeatureStatus::Blocked,
-                                     "Battery Intel requires os compositor",
-                                     "INTEL_BATTERY_REQUIRES_DCOMP"_ns);
-      }
-
       bool mixed;
       int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
       if (maxRefreshRate > 60) {
