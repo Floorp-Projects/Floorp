@@ -118,6 +118,7 @@ class Accessible extends Component {
       parents: PropTypes.object,
       relations: PropTypes.object,
       toolbox: PropTypes.object.isRequired,
+      toolboxHighlighter: PropTypes.object.isRequired,
       highlightAccessible: PropTypes.func.isRequired,
       unhighlightAccessible: PropTypes.func.isRequired,
     };
@@ -219,21 +220,19 @@ class Accessible extends Component {
   }
 
   async showHighlighter(nodeFront) {
-    if (!this.props.toolbox) {
+    if (!this.props.toolboxHighlighter) {
       return;
     }
 
-    const { highlighterFront } = nodeFront;
-    await highlighterFront.highlight(nodeFront);
+    await this.props.toolboxHighlighter.highlight(nodeFront);
   }
 
-  async hideHighlighter(nodeFront) {
-    if (!this.props.toolbox) {
+  async hideHighlighter() {
+    if (!this.props.toolboxHighlighter) {
       return;
     }
 
-    const { highlighterFront } = nodeFront;
-    await highlighterFront.unhighlight();
+    await this.props.toolboxHighlighter.unhighlight();
   }
 
   showAccessibleHighlighter(accessibleFront) {
@@ -290,8 +289,7 @@ class Accessible extends Component {
 
     if (isNodeFront(object)) {
       valueProps.defaultRep = ElementNode;
-      valueProps.onDOMNodeMouseOut = () =>
-        this.hideHighlighter(this.props.nodeFront);
+      valueProps.onDOMNodeMouseOut = () => this.hideHighlighter();
       valueProps.onDOMNodeMouseOver = () =>
         this.showHighlighter(this.props.nodeFront);
       valueProps.onInspectIconClick = () =>
