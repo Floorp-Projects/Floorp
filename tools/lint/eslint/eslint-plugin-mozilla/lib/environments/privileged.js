@@ -334,7 +334,6 @@ module.exports = {
     MatchPatternSet: false,
     MediaCapabilities: false,
     MediaCapabilitiesInfo: false,
-    MediaControlService: false,
     MediaDeviceInfo: false,
     MediaDevices: false,
     MediaElementAudioSourceNode: false,

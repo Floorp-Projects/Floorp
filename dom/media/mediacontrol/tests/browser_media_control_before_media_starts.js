@@ -1,14 +1,16 @@
+/* eslint-disable no-undef */
+
 // Import this in order to use `triggerPictureInPicture()`.
-/* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
+/* import-globals-from ../../../../toolkit/components/pictureinpicture/tests/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
   this
 );
 
 const PAGE_NON_AUTOPLAY =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 const IFRAME_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_iframe_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
 const testVideoId = "video";
 
 add_task(async function setupTestingPref() {
