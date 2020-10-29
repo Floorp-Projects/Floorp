@@ -150,7 +150,7 @@ BreakpointActor.prototype = {
 
     if (
       this.threadActor.sourcesManager.isFrameBlackBoxed(frame) ||
-      this.threadActor.skipBreakpoints
+      this.threadActor.skipBreakpointsOption
     ) {
       return undefined;
     }

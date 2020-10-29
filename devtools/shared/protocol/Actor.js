@@ -176,6 +176,12 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
             // No need to send a response.
             return;
           }
+          // `ThreadActor.attach` manually send the response in middle of its processing
+          // using `DevToolsServerConnection.send` manually. So that it isn't a oneway method,
+          // but we shouldn't try to emit a response here, or it would be duplicated.
+          if (spec.name == "attach" && actorProto.typeName == "thread") {
+            return;
+          }
           if (this.isDestroyed()) {
             console.error(
               `Tried to send a '${spec.name}' method reply on an already destroyed actor` +
