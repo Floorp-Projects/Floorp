@@ -32,22 +32,20 @@ function addTemporaryAddon(path) {
 }
 
 function removeAddon(addon) {
-  info("Removing addon.");
+  return new Promise(resolve => {
+    info("Removing addon.");
 
-  const defer = require("devtools/shared/defer");
-  const deferred = defer();
+    const listener = {
+      onUninstalled: function(uninstalledAddon) {
+        if (uninstalledAddon != addon) {
+          return;
+        }
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      },
+    };
 
-  const listener = {
-    onUninstalled: function(uninstalledAddon) {
-      if (uninstalledAddon != addon) {
-        return;
-      }
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve();
-    },
-  };
-  AddonManager.addAddonListener(listener);
-  addon.uninstall();
-
-  return deferred.promise;
+    AddonManager.addAddonListener(listener);
+    addon.uninstall();
+  });
 }
