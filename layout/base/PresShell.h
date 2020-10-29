@@ -1239,7 +1239,7 @@ class PresShell final : public nsStubDocumentObserver,
    *
    * |aOrigin| specifies who originated the resolution change. For changes
    * sent by APZ, pass ResolutionChangeOrigin::Apz. For changes sent by
-   * the main thread, use pass ResolutionChangeOrigin::MainThread (similar
+   * the main thread, pass ResolutionChangeOrigin::MainThreadAdjustment (similar
    * to the |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
    */
   nsresult SetResolutionAndScaleTo(float aResolution,
