@@ -23,6 +23,7 @@
 #include "prprf.h"  // leaving it for PR_vsnprintf()
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
+#include "VideoUtils.h"
 
 #include <algorithm>
 #include <numeric>
