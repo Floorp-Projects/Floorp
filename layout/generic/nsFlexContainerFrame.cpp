@@ -1551,21 +1551,22 @@ static nscoord PartiallyResolveAutoMinSize(
   // Compute the transferred size suggestion, which is the cross size converted
   // through the aspect ratio (if the item has an aspect ratio and a definite
   // cross size).
-  nscoord transferredSizeSuggestion = nscoord_MAX;
   if (aFlexItem.HasIntrinsicRatio() &&
       aFlexItem.IsCrossSizeDefinite(aItemReflowInput)) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    transferredSizeSuggestion = MainSizeFromAspectRatio(
+    nscoord transferredSizeSuggestion = MainSizeFromAspectRatio(
         aFlexItem.CrossSize(), aFlexItem.IntrinsicRatio(), aAxisTracker);
 
     // Clamp the transferred size suggestion by any definite min and max
     // cross size converted through the aspect ratio.
     transferredSizeSuggestion = ClampMainSizeViaCrossAxisConstraints(
         transferredSizeSuggestion, aFlexItem, aAxisTracker);
+
+    FLEX_LOGV(" Transferred size suggestion: %d", transferredSizeSuggestion);
+    return transferredSizeSuggestion;
   }
 
-  FLEX_LOGV(" Transferred size suggestion: %d", transferredSizeSuggestion);
-  return transferredSizeSuggestion;
+  return nscoord_MAX;
 }
 
 // Note: If & when we handle "min-height: min-content" for flex items,
