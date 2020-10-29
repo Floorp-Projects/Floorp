@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 /**
  * Create a new tab and load the content from a given window (optional), if
  * caller doesn't provide any window, then we would create tab in the current
