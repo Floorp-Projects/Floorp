@@ -11,6 +11,7 @@
 #include "MediaTrackListener.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/MediaManager.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"

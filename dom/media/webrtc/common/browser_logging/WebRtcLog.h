@@ -6,6 +6,7 @@
 #define WEBRTCLOG_H_
 
 #include "mozilla/Logging.h"
+#include "nsStringFwd.h"
 
 nsCString StartAecLog();
 void StopAecLog();

@@ -14,6 +14,7 @@
 #include "mozilla/net/StunAddrsRequestChild.h"
 #include "MediaTransportHandler.h"
 #include "nsIHttpChannelInternal.h"
+#include "RTCDtlsTransport.h"
 
 #include "TransceiverImpl.h"
 
@@ -23,7 +24,6 @@ namespace mozilla {
 class DataChannel;
 class PeerIdentity;
 namespace dom {
-class RTCDtlsTransport;
 class MediaStreamTrack;
 }  // namespace dom
 }  // namespace mozilla
@@ -199,7 +199,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   std::string mParentName;
 
   std::vector<RefPtr<TransceiverImpl>> mTransceivers;
-  std::map<std::string, RefPtr<RTCDtlsTransport>>
+  std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
 
   // The main thread.
