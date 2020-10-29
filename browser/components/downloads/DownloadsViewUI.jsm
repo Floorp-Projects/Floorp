@@ -628,7 +628,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
         return [s.blockedUncommon2, [s.unblockTypeUncommon2, s.unblockTip2]];
       case Downloads.Error.BLOCK_VERDICT_INSECURE:
-        return [s.blockedInsecure, [s.blockedInsecure, s.unblockTip2]];
+        return [s.blockedInsecure, [s.unblockInsecure, s.unblockTip2]];
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         return [
           s.blockedPotentiallyUnwanted,
