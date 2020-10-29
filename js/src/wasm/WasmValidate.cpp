@@ -2009,11 +2009,11 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-  if (memory.initial > MaxMemory32LimitField) {
+  if (memory.initial > MaxMemoryLimitField) {
     return d.fail("initial memory size too big");
   }
 
-  if (memory.maximum && *memory.maximum > MaxMemory32LimitField) {
+  if (memory.maximum && *memory.maximum > MaxMemoryLimitField) {
     return d.fail("maximum memory size too big");
   }
 

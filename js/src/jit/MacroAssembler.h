@@ -2757,15 +2757,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
   std::pair<CodeOffset, uint32_t> wasmReserveStackChecked(
       uint32_t amount, wasm::BytecodeOffset trapOffset);
 
-  // Emit a bounds check against the wasm heap limit for 32-bit memory, jumping
-  // to 'label' if 'cond' holds. If JitOptions.spectreMaskIndex is true, in
-  // speculative executions 'index' is saturated in-place to 'boundsCheckLimit'.
-  void wasmBoundsCheck32(Condition cond, Register index,
-                         Register boundsCheckLimit, Label* label)
+  // Emit a bounds check against the wasm heap limit, jumping to 'label' if
+  // 'cond' holds. If JitOptions.spectreMaskIndex is true, in speculative
+  // executions 'index' is saturated in-place to 'boundsCheckLimit'.
+  void wasmBoundsCheck(Condition cond, Register index,
+                       Register boundsCheckLimit, Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
-  void wasmBoundsCheck32(Condition cond, Register index,
-                         Address boundsCheckLimit, Label* label)
+  void wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit,
+                       Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
   // Each wasm load/store instruction appends its own wasm::Trap::OutOfBounds.
