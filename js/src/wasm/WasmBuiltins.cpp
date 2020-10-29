@@ -303,7 +303,7 @@ static bool WasmHandleDebugTrap() {
   JitActivation* activation = CallingActivation();
   JSContext* cx = activation->cx();
   Frame* fp = activation->wasmExitFP();
-  Instance* instance = GetNearestEffectiveTls(fp)->instance;
+  Instance* instance = fp->instance();
   const Code& code = instance->code();
   MOZ_ASSERT(code.metadata().debugEnabled);
 
@@ -508,7 +508,7 @@ static void* WasmHandleTrap() {
       if (!CheckRecursionLimit(cx)) {
         return nullptr;
       }
-      if (activation->wasmExitTls()->isInterrupted()) {
+      if (activation->wasmExitFP()->tls()->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
       return ReportError(cx, JSMSG_OVER_RECURSED);

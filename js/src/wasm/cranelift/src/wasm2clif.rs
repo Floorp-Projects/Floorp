@@ -107,16 +107,6 @@ fn init_sig_from_wsig(
         ir::ArgumentPurpose::VMContext,
     ));
 
-    // Add a callee-TLS and caller-TLS argument.
-    sig.params.push(ir::AbiParam::special(
-        POINTER_TYPE,
-        ir::ArgumentPurpose::CalleeTLS,
-    ));
-    sig.params.push(ir::AbiParam::special(
-        POINTER_TYPE,
-        ir::ArgumentPurpose::CallerTLS,
-    ));
-
     Ok(sig)
 }
 
@@ -632,15 +622,6 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
                 POINTER_TYPE,
                 ir::ArgumentPurpose::VMContext,
             ));
-            // Add a callee-TLS and caller-TLS argument.
-            sig.params.push(ir::AbiParam::special(
-                POINTER_TYPE,
-                ir::ArgumentPurpose::CalleeTLS,
-            ));
-            sig.params.push(ir::AbiParam::special(
-                POINTER_TYPE,
-                ir::ArgumentPurpose::CallerTLS,
-            ));
             if let Some(ret) = &call.ret {
                 sig.returns.push(ir::AbiParam::new(*ret));
             }
@@ -662,8 +643,6 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
         built_arguments.push(instance, &mut pos.func.dfg.value_lists);
         built_arguments.extend(arguments.iter().cloned(), &mut pos.func.dfg.value_lists);
         built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);
-        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);  // callee_tls
-        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);  // caller_tls
         pos.func.dfg[call_ins].put_value_list(built_arguments);
 
         self.switch_to_wasm_tls_realm(pos);
@@ -954,10 +933,6 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         pos.ins()
             .trapz(callee_func, ir::TrapCode::IndirectCallToNull);
 
-        // Get the caller TLS value.
-        let vmctx_gv = self.get_vmctx_gv(&mut pos.func);
-        let caller_vmctx = pos.ins().global_value(POINTER_TYPE, vmctx_gv);
-
         // Handle external tables, set up environment.
         // A function table call could redirect execution to another module with a different realm,
         // so switch to this realm just in case.
@@ -975,8 +950,6 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         args.push(callee_func, &mut pos.func.dfg.value_lists);
         args.extend(call_args.iter().cloned(), &mut pos.func.dfg.value_lists);
         args.push(callee_vmctx, &mut pos.func.dfg.value_lists);
-        args.push(callee_vmctx, &mut pos.func.dfg.value_lists);
-        args.push(caller_vmctx, &mut pos.func.dfg.value_lists);
         if let Some(sigid) = sigid_value {
             args.push(sigid, &mut pos.func.dfg.value_lists);
         }
@@ -1022,21 +995,12 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
                 POINTER_SIZE as i32,
             );
 
-            // Save the caller TLS value.
-            let vmctx_gv = self.get_vmctx_gv(&mut pos.func);
-            let caller_vmctx = pos.ins().global_value(POINTER_TYPE, vmctx_gv);
-
             // Switch to the callee's realm.
             self.switch_to_import_realm(&mut pos, fit_tls, gv_addr);
             self.load_pinned_reg(&mut pos, fit_tls);
 
             // The `tls` field is the VM context pointer for the callee.
             args.push(fit_tls, &mut pos.func.dfg.value_lists);
-
-            // callee-TLS slot (ABI-2020).
-            args.push(fit_tls, &mut pos.func.dfg.value_lists);
-            // caller-TLS slot (ABI-2020).
-            args.push(caller_vmctx, &mut pos.func.dfg.value_lists);
 
             // Now make an indirect call to `fit_code`.
             // TODO: We don't need the `FuncRef` that was allocated for this callee since we're
@@ -1059,11 +1023,6 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
                 .func
                 .special_param(ir::ArgumentPurpose::VMContext)
                 .expect("Missing vmctx arg");
-            args.push(vmctx, &mut pos.func.dfg.value_lists);
-
-            // callee-TLS slot (ABI-2020).
-            args.push(vmctx, &mut pos.func.dfg.value_lists);
-            // caller-TLS slot (ABI-2020).
             args.push(vmctx, &mut pos.func.dfg.value_lists);
 
             Ok(pos
