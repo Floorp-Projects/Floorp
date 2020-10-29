@@ -11,6 +11,7 @@
 #include "VideoConduit.h"
 #include "VideoStreamFactory.h"
 #include "common/YuvStamper.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/StaticPrefs_media.h"
