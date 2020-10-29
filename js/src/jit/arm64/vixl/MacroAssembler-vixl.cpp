@@ -659,13 +659,27 @@ void MacroAssembler::Movi(const VRegister& vd,
 void MacroAssembler::Movi(const VRegister& vd,
                           uint64_t hi,
                           uint64_t lo) {
-  // TODO: Move 128-bit values in a more efficient way.
   VIXL_ASSERT(vd.Is128Bits());
   UseScratchRegisterScope temps(this);
+
+  // When hi == lo, the following generates good code.
+  //
+  // In situations where the constants are complex and hi != lo, the following
+  // can turn into up to 10 instructions: 2*(mov + 3*movk + dup/insert).  To do
+  // any better, we could try to estimate whether splatting the high value and
+  // updating the low value would generate fewer instructions than vice versa
+  // (what we do now).
+  //
+  // (A PC-relative load from memory to the vector register (ADR + LD2) is going
+  // to have fairly high latency but is fairly compact; not clear what the best
+  // tradeoff is.)
+
   Movi(vd.V2D(), lo);
-  Register temp = temps.AcquireX();
-  Mov(temp, hi);
-  Ins(vd.V2D(), 1, temp);
+  if (hi != lo) {
+    Register temp = temps.AcquireX();
+    Mov(temp, hi);
+    Ins(vd.V2D(), 1, temp);
+  }
 }
 
 
