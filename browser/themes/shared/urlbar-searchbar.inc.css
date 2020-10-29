@@ -331,6 +331,24 @@
   display: block;
 }
 
+/* Windows high-contrast themes */
+%ifdef XP_WIN
+@media (-moz-windows-default-theme: 0) {
+  #urlbar-search-mode-indicator {
+    background-color: Highlight;
+    outline-color: Highlight;
+  }
+
+  #urlbar-search-mode-indicator-title {
+    color: HighlightText;
+  }
+
+  #urlbar-search-mode-indicator-close {
+    stroke-opacity: 1.0;
+  }
+}
+%endif
+
 @supports -moz-bool-pref("browser.urlbar.experimental.searchModeIndicatorHover") {
   #urlbar-search-mode-indicator-close:hover {
     background-color: #ededf0; /* Grey 20 */
