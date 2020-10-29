@@ -3,21 +3,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 partner_link:
-  interaction:
-    objects: ["click", "attribution"]
+  click:
+    objects: ["newtab", "urlbar"]
     release_channel_collection: opt-out
     products:
       - "firefox"
     record_in_processes: ["main"]
     description: >
-      This is recorded when clicking a partner link.
+      This is recorded when clicking a partner link. The value is the partner.
     bug_numbers: [1637217, 1644442, 1643426]
     notification_emails:
       - "dao@mozilla.com"
     expiry_version: never
-    extra_keys:
-      partner: Name of the partner, e.g. "amazon" or "google".
-      source: Which part of the UI request came from, i.e. "newtab" or "urlbar".
+  attribution:
+    objects: ["success", "failure", "abort"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded when sending an attribution request for a partner link. The value is the partner.
+    bug_numbers: [1637217, 1644442, 1643426]
+    notification_emails:
+      - "dao@mozilla.com"
+    expiry_version: never
 
 activity_stream:
   event:
