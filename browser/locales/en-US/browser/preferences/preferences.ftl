@@ -107,10 +107,6 @@ extension-controlled-password-saving = An extension, <img data-l10n-name="icon"/
 # is being controlled by an extension.
 extension-controlled-web-notifications= An extension, <img data-l10n-name="icon"/> { $name }, is controlling this setting.
 
-# This string is shown to notify the user that the default search engine
-# is being controlled by an extension.
-extension-controlled-default-search = An extension, <img data-l10n-name="icon"/> { $name }, has set your default search engine.
-
 # This string is shown to notify the user that Container Tabs
 # are being enabled by an extension.
 extension-controlled-privacy-containers = An extension, <img data-l10n-name="icon"/> { $name }, requires Container Tabs.
