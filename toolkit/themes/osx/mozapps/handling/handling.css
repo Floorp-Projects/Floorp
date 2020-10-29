@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#description-image:not([src]) {
-  height: 32px;
-  width: 32px;
-}
-
 richlistitem[type] {
   min-height: 36px; /* Don't forget to update the richlistbox height! */
   padding-inline-start: 2px;
