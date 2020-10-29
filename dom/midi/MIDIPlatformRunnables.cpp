@@ -14,7 +14,7 @@ namespace dom {
 
 NS_IMETHODIMP
 MIDIBackgroundRunnable::Run() {
-  AssertIsOnBackgroundThread();
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   if (!MIDIPlatformService::IsRunning()) {
     return NS_OK;
   }

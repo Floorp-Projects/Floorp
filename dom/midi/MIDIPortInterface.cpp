@@ -8,8 +8,8 @@
 #include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/dom/MIDITypes.h"
 
-MIDIPortInterface::MIDIPortInterface(const MIDIPortInfo& aPortInfo,
-                                     bool aSysexEnabled)
+mozilla::dom::MIDIPortInterface::MIDIPortInterface(
+    const MIDIPortInfo& aPortInfo, bool aSysexEnabled)
     : mId(aPortInfo.id()),
       mName(aPortInfo.name()),
       mManufacturer(aPortInfo.manufacturer()),
@@ -22,6 +22,6 @@ MIDIPortInterface::MIDIPortInterface(const MIDIPortInfo& aPortInfo,
       mConnectionState(MIDIPortConnectionState::Open),
       mShuttingDown(false) {}
 
-MIDIPortInterface::~MIDIPortInterface() { Shutdown(); }
+mozilla::dom::MIDIPortInterface::~MIDIPortInterface() { Shutdown(); }
 
-void MIDIPortInterface::Shutdown() { mShuttingDown = true; }
+void mozilla::dom::MIDIPortInterface::Shutdown() { mShuttingDown = true; }

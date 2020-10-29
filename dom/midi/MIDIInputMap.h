@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MIDIInputMap_h
 #define mozilla_dom_MIDIInputMap_h
 
+#include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
