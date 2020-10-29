@@ -53,6 +53,9 @@
   scale: inherit;
   translate: inherit;
   /* When the table wrapper is a Flex/Grid item we need these: */
+  flex-grow: inherit;
+  flex-shrink: inherit;
+  flex-basis: inherit;
   align-self: inherit;
   justify-self: inherit;
   grid-column-start: inherit;
