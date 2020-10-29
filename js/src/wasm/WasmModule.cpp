@@ -570,7 +570,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
   }
 
   if (memoryObj) {
-    uint32_t memoryLength = memoryObj->volatileMemoryLength32();
+    uint32_t memoryLength = memoryObj->volatileMemoryLength();
     uint8_t* memoryBase =
         memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
 
@@ -720,7 +720,7 @@ bool Module::instantiateMemory(JSContext* cx,
     MOZ_ASSERT_IF(!metadata().isAsmJS(), memory->buffer().isWasm());
 
     if (!CheckLimits(cx, declaredMin, declaredMax,
-                     uint64_t(memory->volatileMemoryLength32()),
+                     uint64_t(memory->volatileMemoryLength()),
                      memory->buffer().wasmMaxSize(), metadata().isAsmJS(),
                      "Memory")) {
       return false;
@@ -732,7 +732,7 @@ bool Module::instantiateMemory(JSContext* cx,
   } else {
     MOZ_ASSERT(!metadata().isAsmJS());
 
-    if (declaredMin / PageSize > MaxMemory32Pages) {
+    if (declaredMin / PageSize > MaxMemoryPages) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_MEM_IMP_LIMIT);
       return false;
@@ -741,7 +741,7 @@ bool Module::instantiateMemory(JSContext* cx,
     RootedArrayBufferObjectMaybeShared buffer(cx);
     Limits l(declaredMin, declaredMax,
              declaredShared ? Shareable::True : Shareable::False);
-    if (!CreateWasmBuffer(cx, MemoryKind::Memory32, l, &buffer)) {
+    if (!CreateWasmBuffer(cx, l, &buffer)) {
       return false;
     }
 
