@@ -170,7 +170,6 @@ fn extract_error_params<'a>(err: ErrorKind<'a>) -> Option<ErrorParams<'a>> {
             SelectorParseErrorKind::EmptySelector | SelectorParseErrorKind::DanglingCombinator => {
                 (None, None)
             },
-            SelectorParseErrorKind::EmptyNegation => (None, Some(ErrorString::Snippet(")".into()))),
             err => match extract_error_param(ParseErrorKind::Custom(
                 StyleParseErrorKind::SelectorError(err),
             )) {
@@ -364,9 +363,6 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                             },
                             SelectorParseErrorKind::ClassNeedsIdent(_) => {
                                 Some(cstr!("PEClassSelNotIdent"))
-                            },
-                            SelectorParseErrorKind::EmptyNegation => {
-                                Some(cstr!("PENegationBadArg"))
                             },
                             _ => None,
                         }
