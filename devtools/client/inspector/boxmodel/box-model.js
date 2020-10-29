@@ -47,13 +47,11 @@ function BoxModel(inspector, window) {
 
   this.updateBoxModel = this.updateBoxModel.bind(this);
 
-  this.onHideBoxModelHighlighter = this.onHideBoxModelHighlighter.bind(this);
   this.onHideGeometryEditor = this.onHideGeometryEditor.bind(this);
   this.onMarkupViewLeave = this.onMarkupViewLeave.bind(this);
   this.onMarkupViewNodeHover = this.onMarkupViewNodeHover.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onShowBoxModelEditor = this.onShowBoxModelEditor.bind(this);
-  this.onShowBoxModelHighlighter = this.onShowBoxModelHighlighter.bind(this);
   this.onShowRulePreviewTooltip = this.onShowRulePreviewTooltip.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onToggleGeometryEditor = this.onToggleGeometryEditor.bind(this);
@@ -106,9 +104,7 @@ BoxModel.prototype = {
    */
   getComponentProps() {
     return {
-      onHideBoxModelHighlighter: this.onHideBoxModelHighlighter,
       onShowBoxModelEditor: this.onShowBoxModelEditor,
-      onShowBoxModelHighlighter: this.onShowBoxModelHighlighter,
       onShowRulePreviewTooltip: this.onShowRulePreviewTooltip,
       onToggleGeometryEditor: this.onToggleGeometryEditor,
     };
@@ -227,20 +223,6 @@ BoxModel.prototype = {
       });
 
     this._lastRequest = lastRequest;
-  },
-
-  /**
-   * Hides the box-model highlighter on the currently selected element.
-   */
-  onHideBoxModelHighlighter() {
-    // As React components aren't destroyed when the panel closes,
-    // this function may still be called and throw because of destroyed fronts.
-    if (!this.inspector) {
-      return;
-    }
-    this.inspector.highlighters.hideHighlighterType(
-      this.inspector.highlighters.TYPES.BOXMODEL
-    );
   },
 
   /**
@@ -391,25 +373,6 @@ BoxModel.prototype = {
         cssProperties: this.inspector.cssProperties,
       },
       event
-    );
-  },
-
-  /**
-   * Shows the box-model highlighter on the currently selected element.
-   *
-   * @param  {Object} options
-   *         Options passed to the highlighter actor.
-   */
-  onShowBoxModelHighlighter(options = {}) {
-    if (!this.inspector) {
-      return;
-    }
-
-    const { nodeFront } = this.inspector.selection;
-    this.inspector.highlighters.showHighlighterTypeForNode(
-      this.inspector.highlighters.TYPES.BOXMODEL,
-      nodeFront,
-      options
     );
   },
 
