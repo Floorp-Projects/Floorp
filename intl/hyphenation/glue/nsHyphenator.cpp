@@ -161,12 +161,13 @@ static UniquePtr<base::SharedMemory> LoadFromURI(nsIURI* aURI,
         bytesRead != available) {
       return nullptr;
     }
-    if (!shm->Freeze()) {
-      return nullptr;
-    }
 
     if (!mapped_hyph_is_valid_hyphenator(
             reinterpret_cast<const uint8_t*>(buffer), bytesRead)) {
+      return nullptr;
+    }
+
+    if (!shm->Freeze()) {
       return nullptr;
     }
 
