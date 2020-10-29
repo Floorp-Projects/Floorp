@@ -10,4 +10,4 @@ mozrunner>=7.1.0
 psutil>=3.1.1
 simplejson>=2.1.1
 requests>=2.9.1
-wptserve>=2.0.0
+wptserve>=3.0

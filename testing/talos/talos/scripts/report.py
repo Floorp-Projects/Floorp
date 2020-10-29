@@ -4,6 +4,7 @@ import argparse
 import collections
 import csv
 import os
+import six
 import sys
 from calendar import day_name
 from datetime import datetime
@@ -80,7 +81,7 @@ def generate_report(tuple_list, filepath, mode="variance"):
                 week_avgs.append(average)
 
             outliers = is_normal(week_avgs)
-            for j in range(7):
+            for j in six.moves.range(7):
                 if j in outliers:
                     line[j + 1] = "**" + str(line[j + 1]) + "**"
 
@@ -102,7 +103,7 @@ def is_normal(y):
     outliers = []
     # find a baseline for the week
     if (min(y[0:4]) * limit) <= max(y[0:4]):
-        for i in range(1, 5):
+        for i in six.moves.range(1, 5):
             if y[i] > (y[i - 1] * limit) or y[i] > (y[i + 1] * limit):
                 outliers.append(i)
                 continue
@@ -112,7 +113,7 @@ def is_normal(y):
 
     # look at weekends now
     avg = sum(clean_week) / len(clean_week)
-    for i in range(5, 7):
+    for i in six.moves.range(5, 7):
         # look for something outside of the 20% window
         if (y[i] * 1.2) < avg or y[i] > (avg * 1.2):
             outliers.append(i)
@@ -128,11 +129,11 @@ def main():
     tuple_list = get_all_test_tuples()
     f = "report"
     if args.platform:
-        tuple_list = filter(lambda x: x[4] == args.platform, tuple_list)
+        tuple_list = [x for x in tuple_list if x[4] == args.platform]
         f += "-%s" % args.platform
 
     if args.test:
-        tuple_list = filter(lambda x: x[3] == args.test, tuple_list)
+        tuple_list = [x for x in tuple_list if x[3] == args.test]
         f += "-%s" % args.test
 
     f += "-%s" % args.mode
