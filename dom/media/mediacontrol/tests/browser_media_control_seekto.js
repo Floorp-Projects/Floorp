@@ -1,5 +1,6 @@
+/* eslint-disable no-undef */
 const PAGE_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 
 const testVideoId = "video";
 
