@@ -6,6 +6,7 @@
 
 #include "MessagePortService.h"
 #include "MessagePortParent.h"
+#include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/dom/SharedMessageBody.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/ipc/BackgroundParent.h"
