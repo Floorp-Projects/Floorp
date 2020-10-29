@@ -464,8 +464,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     if (
       aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
-      aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
-      aWhere === Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB
+      aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB
     ) {
       browser = this.handleNewSession(
         aUri,

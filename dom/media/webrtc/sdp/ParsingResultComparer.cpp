@@ -8,6 +8,7 @@
 #include "sdp/ParsingResultComparer.h"
 #include "sdp/SipccSdpParser.h"
 #include "sdp/RsdparsaSdpParser.h"
+#include "sdp/SdpTelemetry.h"
 
 #include <string>
 #include <ostream>

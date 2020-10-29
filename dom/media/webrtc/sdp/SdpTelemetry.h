@@ -7,6 +7,7 @@
 #ifndef _SDPTELEMETRY_H_
 #define _SDPTELEMETRY_H_
 
+#include "sdp/SdpParser.h"
 #include "sdp/SdpPref.h"
 
 namespace mozilla {

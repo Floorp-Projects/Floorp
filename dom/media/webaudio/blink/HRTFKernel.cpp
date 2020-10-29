@@ -79,7 +79,7 @@ HRTFKernel::HRTFKernel(float* impulseResponse, size_t length, float sampleRate)
     }
   }
 
-  m_fftFrame = MakeUnique<FFTBlock>(fftSize);
+  m_fftFrame = mozilla::MakeUnique<FFTBlock>(fftSize);
   m_fftFrame->PadAndMakeScaledDFT(impulseResponse, length);
 }
 

@@ -676,8 +676,11 @@ WasmArrayRawBuffer* ArrayBufferObject::BufferContents::wasmBuffer() const {
 template <typename ObjT, typename RawbufT>
 static bool CreateSpecificWasmBuffer(
     JSContext* cx, uint32_t initialSize, const Maybe<uint64_t>& maxSize,
+    wasm::MemoryKind memKind,
     MutableHandleArrayBufferObjectMaybeShared maybeSharedObject) {
   bool useHugeMemory = wasm::IsHugeMemoryEnabled();
+
+  MOZ_RELEASE_ASSERT(memKind == wasm::MemoryKind::Memory32);
 
   Maybe<uint64_t> clampedMaxSize = maxSize;
   if (clampedMaxSize) {
@@ -688,7 +691,7 @@ static bool CreateSpecificWasmBuffer(
     // wasm::PageSize == 0
     if (!useHugeMemory &&
         clampedMaxSize.value() >= (UINT32_MAX - wasm::PageSize)) {
-      uint64_t clamp = (wasm::MaxMemoryLimitField - 2) * wasm::PageSize;
+      uint64_t clamp = (wasm::MaxMemory32LimitField - 2) * wasm::PageSize;
       MOZ_ASSERT(clamp < UINT32_MAX);
       MOZ_ASSERT(initialSize <= clamp);
       clampedMaxSize = Some(clamp);
@@ -806,14 +809,12 @@ static bool CreateSpecificWasmBuffer(
   return true;
 }
 
-bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
+bool js::CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
+                          const wasm::Limits& memory,
                           MutableHandleArrayBufferObjectMaybeShared buffer) {
   MOZ_ASSERT(memory.initial % wasm::PageSize == 0);
   MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
   MOZ_RELEASE_ASSERT(memory.initial <= ArrayBufferObject::MaxBufferByteLength);
-  static_assert(ArrayBufferObject::MaxBufferByteLength <= UINT32_MAX,
-                "wasm memory uses uint32_t and is limited by"
-                "MaxBufferByteLength");
 
   if (memory.shared == wasm::Shareable::True) {
     if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
@@ -823,10 +824,10 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
     }
     return CreateSpecificWasmBuffer<SharedArrayBufferObject,
                                     SharedArrayRawBuffer>(
-        cx, uint32_t(memory.initial), memory.maximum, buffer);
+        cx, uint32_t(memory.initial), memory.maximum, memKind, buffer);
   }
   return CreateSpecificWasmBuffer<ArrayBufferObject, WasmArrayRawBuffer>(
-      cx, uint32_t(memory.initial), memory.maximum, buffer);
+      cx, uint32_t(memory.initial), memory.maximum, memKind, buffer);
 }
 
 bool ArrayBufferObject::prepareForAsmJS() {
@@ -1026,6 +1027,7 @@ bool ArrayBufferObject::wasmGrowToSizeInPlace(
   // wasm-visible length of the buffer has been increased so it must be the
   // last fallible operation.
 
+  // Note, caller must guard on limit appropriate for the memory type
   if (newSize > ArrayBufferObject::MaxBufferByteLength) {
     return false;
   }
@@ -1068,6 +1070,7 @@ bool ArrayBufferObject::wasmMovingGrowToSize(
   // On failure, do not throw and ensure that the original buffer is
   // unmodified and valid.
 
+  // Note, caller must guard on the limit appropriate to the memory type
   if (newSize > ArrayBufferObject::MaxBufferByteLength) {
     return false;
   }

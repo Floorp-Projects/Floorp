@@ -14,6 +14,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
+#include "nsContentUtils.h"
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
 

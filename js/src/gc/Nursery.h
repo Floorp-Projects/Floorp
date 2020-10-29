@@ -135,7 +135,7 @@ class TenuringTracer : public JSTracer {
 
   // The store buffers need to be able to call these directly.
   void traceObject(JSObject* src);
-  void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
+  void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t end);
   void traceSlots(JS::Value* vp, uint32_t nslots);
   void traceString(JSString* src);
   void traceBigInt(JS::BigInt* src);

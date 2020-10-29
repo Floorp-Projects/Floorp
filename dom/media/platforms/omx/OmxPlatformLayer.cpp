@@ -6,6 +6,8 @@
 
 #include "OmxPlatformLayer.h"
 
+#include "OmxDataDecoder.h"
+#include "OMX_Component.h"
 #include "OMX_VideoExt.h"  // For VP8.
 
 #ifdef MOZ_OMX

@@ -6,9 +6,11 @@
 
 #include "DAV1DDecoder.h"
 
+#include "ImageContainer.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsThreadUtils.h"
+#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \
@@ -190,9 +192,9 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     const Dav1dPicture& aPicture) {
   VideoData::YCbCrBuffer b;
   if (aPicture.p.bpc == 10) {
-    b.mColorDepth = ColorDepth::COLOR_10;
+    b.mColorDepth = gfx::ColorDepth::COLOR_10;
   } else if (aPicture.p.bpc == 12) {
-    b.mColorDepth = ColorDepth::COLOR_12;
+    b.mColorDepth = gfx::ColorDepth::COLOR_12;
   }
 
   // On every other case use the default (BT601).
@@ -200,13 +202,13 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     switch (aPicture.seq_hdr->mtrx) {
       case DAV1D_MC_BT2020_NCL:
       case DAV1D_MC_BT2020_CL:
-        b.mYUVColorSpace = YUVColorSpace::BT2020;
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
         break;
       case DAV1D_MC_BT601:
-        b.mYUVColorSpace = YUVColorSpace::BT601;
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
         break;
       case DAV1D_MC_BT709:
-        b.mYUVColorSpace = YUVColorSpace::BT709;
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
         break;
       case DAV1D_MC_IDENTITY:
         b.mYUVColorSpace = gfx::YUVColorSpace::Identity;
@@ -234,7 +236,7 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
         b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
     }
   }
-  if (b.mYUVColorSpace == YUVColorSpace::UNKNOWN) {
+  if (b.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
     b.mYUVColorSpace = DefaultColorSpace({aPicture.p.w, aPicture.p.h});
   }
   b.mColorRange = aPicture.seq_hdr->color_range ? gfx::ColorRange::FULL

@@ -10,6 +10,7 @@
 #include "prdtoa.h"
 #include "AudioStream.h"
 #include "VideoUtils.h"
+#include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"

@@ -68,11 +68,6 @@ interface nsIBrowserDOMWindow : nsISupports
    */
   const short OPEN_NEWTAB        = 3;
   /**
-   * Open in an existing content tab based on the URI. If a match can't be
-   * found, revert to OPEN_NEWTAB behavior.
-   */
-  const short OPEN_SWITCHTAB     = 4;
-  /**
    * Open in a hidden browser. Used for printing.
    */
   const short OPEN_PRINT_BROWSER = 4;

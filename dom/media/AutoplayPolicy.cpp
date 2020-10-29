@@ -22,6 +22,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
+#include "nsIPrincipal.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsIPermissionManager.h"

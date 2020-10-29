@@ -596,7 +596,8 @@ nsAutoString GetDatabaseFilenameBase(const nsAString& aDatabaseName) {
 }
 
 Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
-    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId) {
+    nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
+    const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
 
   IDB_TRY_INSPECT(const auto& protocolHandler,
@@ -612,21 +613,36 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
                                            nsCOMPtr<nsIURIMutator>, fileHandler,
                                            NewFileURIMutator, &aDatabaseFile));
 
-  // aDirectoryLockId should only be -1 when we are called from
-  // FileManager::InitDirectory when the temporary storage hasn't been
-  // initialized yet. At that time, the in-memory objects (e.g. OriginInfo) are
-  // only being created so it doesn't make sense to tunnel quota information to
-  // TelemetryVFS to get corresponding QuotaObject instances for SQLite files.
-  const nsCString directoryLockIdClause =
+  // aDirectoryLockId should only be -1 when we are called
+  // - from FileManager::InitDirectory when the temporary storage hasn't been
+  //    initialized yet. At that time, the in-memory objects (e.g. OriginInfo)
+  //    are only being created so it doesn't make sense to tunnel quota
+  //    information to TelemetryVFS to get corresponding QuotaObject instances
+  //    for SQLite files.
+  // - from DeleteDatabaseOp::LoadPreviousVersion, since this might require
+  //   temporarily exceeding the quota limit before the database can be deleted.
+  const auto directoryLockIdClause =
       aDirectoryLockId >= 0
           ? "&directoryLockId="_ns + IntToCString(aDirectoryLockId)
           : EmptyCString();
 
+  const auto keyClause = [&aMaybeKey] {
+    nsAutoCString keyClause;
+    if (aMaybeKey) {
+      keyClause.AssignLiteral("&key=");
+      for (uint8_t byte : IndexedDBCipherStrategy::SerializeKey(*aMaybeKey)) {
+        keyClause.AppendPrintf("%02x", byte);
+      }
+    }
+    return keyClause;
+  }();
+
   IDB_TRY_UNWRAP(
-      auto result, ([&mutator, &directoryLockIdClause] {
+      auto result, ([&mutator, &directoryLockIdClause, &keyClause] {
         nsCOMPtr<nsIFileURL> result;
         nsresult rv = NS_MutateURI(mutator)
-                          .SetQuery("cache=private"_ns + directoryLockIdClause)
+                          .SetQuery("cache=private"_ns + directoryLockIdClause +
+                                    keyClause)
                           .Finalize(result);
         return NS_SUCCEEDED(rv) ? Result<nsCOMPtr<nsIFileURL>, nsresult>{result}
                                 : Err(rv);
@@ -737,63 +753,25 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-template <typename V>
-auto ValOrErr(V aVal, const nsresult aRv) {
-  return NS_SUCCEEDED(aRv) ? WrapMovingNotNull(std::move(aVal))
-                           : Result<MovingNotNull<V>, nsresult>{Err(aRv)};
+Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> OpenDatabase(
+    mozIStorageService& aStorageService, nsIFileURL& aFileURL,
+    const uint32_t aTelemetryId = 0) {
+  const nsAutoCString telemetryFilename =
+      aTelemetryId ? "indexedDB-"_ns + IntToCString(aTelemetryId) +
+                         NS_ConvertUTF16toUTF8(kSQLiteSuffix)
+                   : nsAutoCString();
+
+  IDB_TRY_UNWRAP(auto connection,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<mozIStorageConnection>, aStorageService,
+                     OpenDatabaseWithFileURL, &aFileURL, telemetryFilename));
+
+  return WrapMovingNotNull(std::move(connection));
 }
 
-template <class FileOrURLType>
-struct StorageOpenTraits;
-
-template <>
-struct StorageOpenTraits<nsIFileURL> {
-  static Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> Open(
-      mozIStorageService& aStorageService, nsIFileURL& aFileURL,
-      const uint32_t aTelemetryId = 0) {
-    const nsAutoCString telemetryFilename =
-        aTelemetryId ? "indexedDB-"_ns + IntToCString(aTelemetryId) +
-                           NS_ConvertUTF16toUTF8(kSQLiteSuffix)
-                     : nsAutoCString();
-
-    nsCOMPtr<mozIStorageConnection> connection;
-    nsresult rv = aStorageService.OpenDatabaseWithFileURL(
-        &aFileURL, telemetryFilename, getter_AddRefs(connection));
-    return ValOrErr(std::move(connection), rv);
-  }
-
-#ifdef DEBUG
-  static void GetPath(nsIFileURL& aFileURL, nsCString& aPath) {
-    MOZ_ALWAYS_SUCCEEDS(aFileURL.GetFileName(aPath));
-  }
-#endif
-};
-
-template <>
-struct StorageOpenTraits<nsIFile> {
-  static Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> Open(
-      mozIStorageService& aStorageService, nsIFile& aFile,
-      const uint32_t aTelemetryId = 0) {
-    nsCOMPtr<mozIStorageConnection> connection;
-    nsresult rv = aStorageService.OpenUnsharedDatabase(
-        &aFile, getter_AddRefs(connection));
-    return ValOrErr(std::move(connection), rv);
-  }
-
-#ifdef DEBUG
-  static void GetPath(nsIFile& aFile, nsCString& aPath) {
-    nsString path;
-    MOZ_ALWAYS_SUCCEEDS(aFile.GetPath(path));
-
-    LossyCopyUTF16toASCII(path, aPath);
-  }
-#endif
-};
-
-template <class FileOrURLType>
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
-                          FileOrURLType& aFileOrURL,
+                          nsIFileURL& aFileURL,
                           const uint32_t aTelemetryId = 0) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -802,8 +780,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
   IDB_TRY_UNWRAP(
       auto connection,
-      StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL,
-                                             aTelemetryId)
+      OpenDatabase(aStorageService, aFileURL, aTelemetryId)
           .map([](auto connection) -> ConnectionType {
             return Some(std::move(connection));
           })
@@ -813,7 +790,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 #ifdef DEBUG
     {
       nsCString path;
-      StorageOpenTraits<FileOrURLType>::GetPath(aFileOrURL, path);
+      MOZ_ALWAYS_SUCCEEDS(aFileURL.GetFileName(path));
 
       nsPrintfCString message(
           "Received NS_ERROR_STORAGE_BUSY when attempting to open database "
@@ -832,8 +809,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
       IDB_TRY_UNWRAP(
           connection,
-          StorageOpenTraits<FileOrURLType>::Open(aStorageService, aFileOrURL,
-                                                 aTelemetryId)
+          OpenDatabase(aStorageService, aFileURL, aTelemetryId)
               .map([](auto connection) -> ConnectionType {
                 return Some(std::move(connection));
               })
@@ -883,14 +859,15 @@ Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
                         const nsAString& aName, const nsACString& aOrigin,
                         const int64_t aDirectoryLockId,
-                        const uint32_t aTelemetryId) {
+                        const uint32_t aTelemetryId,
+                        const Maybe<CipherKey>& aMaybeKey) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectoryLockId >= -1);
 
   AUTO_PROFILER_LABEL("CreateStorageConnection", DOM);
 
   IDB_TRY_INSPECT(const auto& dbFileUrl,
-                  GetDatabaseFileURL(aDBFile, aDirectoryLockId));
+                  GetDatabaseFileURL(aDBFile, aDirectoryLockId, aMaybeKey));
 
   IDB_TRY_INSPECT(
       const auto& storageService,
@@ -958,9 +935,11 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
     if (newDatabase) {
       // Set the page size first.
-      if (kSQLitePageSizeOverride) {
+      const auto sqlitePageSizeOverride =
+          aMaybeKey ? 8192 : kSQLitePageSizeOverride;
+      if (sqlitePageSizeOverride) {
         IDB_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
-            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
+            "PRAGMA page_size = %" PRIu32 ";", sqlitePageSizeOverride)));
       }
 
       // We have to set the auto_vacuum mode before opening a transaction.
@@ -1130,7 +1109,8 @@ nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
 
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
-                     const uint32_t aTelemetryId) {
+                     const uint32_t aTelemetryId,
+                     const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aDirectoryLockId >= 0);
@@ -1143,8 +1123,9 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
   IDB_TRY(OkIf(exists), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
           IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-  IDB_TRY_INSPECT(const auto& dbFileUrl,
-                  GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId));
+  IDB_TRY_INSPECT(
+      const auto& dbFileUrl,
+      GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aMaybeKey));
 
   IDB_TRY_INSPECT(
       const auto& storageService,
@@ -1165,7 +1146,8 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 GetStorageConnection(const nsAString& aDatabaseFilePath,
                      const int64_t aDirectoryLockId,
-                     const uint32_t aTelemetryId) {
+                     const uint32_t aTelemetryId,
+                     const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
@@ -1177,7 +1159,8 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
   IDB_TRY(OkIf(dbFile), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
           IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-  return GetStorageConnection(*dbFile, aDirectoryLockId, aTelemetryId);
+  return GetStorageConnection(*dbFile, aDirectoryLockId, aTelemetryId,
+                              aMaybeKey);
 }
 
 /*******************************************************************************
@@ -5486,18 +5469,21 @@ class DatabaseMaintenance final : public Runnable {
   int64_t mDirectoryLockId;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
   const PersistenceType mPersistenceType;
+  const Maybe<CipherKey> mMaybeKey;
 
  public:
   DatabaseMaintenance(Maintenance* aMaintenance, DirectoryLock* aDirectoryLock,
                       PersistenceType aPersistenceType,
                       const GroupAndOrigin& aGroupAndOrigin,
-                      const nsString& aDatabasePath)
+                      const nsString& aDatabasePath,
+                      const Maybe<CipherKey>& aMaybeKey)
       : Runnable("dom::indexedDB::DatabaseMaintenance"),
         mMaintenance(aMaintenance),
         mDirectoryLock(aDirectoryLock),
         mGroupAndOrigin(aGroupAndOrigin),
         mDatabasePath(aDatabasePath),
-        mPersistenceType(aPersistenceType) {
+        mPersistenceType(aPersistenceType),
+        mMaybeKey{aMaybeKey} {
     MOZ_ASSERT(aDirectoryLock);
 
     MOZ_ASSERT(mDirectoryLock->Id() >= 0);
@@ -6147,7 +6133,10 @@ StaticAutoPtr<DatabaseActorHashtable> gLiveDatabaseHashtable;
 
 using PrivateBrowsingInfoHashtable =
     nsDataHashtable<nsCStringHashKey, CipherKey>;
-StaticAutoPtr<PrivateBrowsingInfoHashtable> gPrivateBrowsingInfoHashtable;
+// XXX Maybe we can avoid a mutex here by moving all accesses to the background
+// thread.
+StaticAutoPtr<DataMutex<PrivateBrowsingInfoHashtable>>
+    gPrivateBrowsingInfoHashtable;
 
 StaticRefPtr<ConnectionPool> gConnectionPool;
 
@@ -6183,7 +6172,8 @@ void IncreaseBusyCount() {
     gLiveDatabaseHashtable = new DatabaseActorHashtable();
 
     MOZ_ASSERT(!gPrivateBrowsingInfoHashtable);
-    gPrivateBrowsingInfoHashtable = new PrivateBrowsingInfoHashtable();
+    gPrivateBrowsingInfoHashtable = new DataMutex<PrivateBrowsingInfoHashtable>(
+        "gPrivateBrowsingInfoHashtable");
 
     MOZ_ASSERT(!gLoggingInfoHashtable);
     gLoggingInfoHashtable = new DatabaseLoggingInfoHashtable();
@@ -8153,7 +8143,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
   IDB_TRY_UNWRAP(
       MovingNotNull<nsCOMPtr<mozIStorageConnection>> storageConnection,
       GetStorageConnection(aDatabase.FilePath(), aDatabase.DirectoryLockId(),
-                           aDatabase.TelemetryId()));
+                           aDatabase.TelemetryId(), aDatabase.MaybeKeyRef()));
 
   RefPtr<DatabaseConnection> connection = new DatabaseConnection(
       std::move(storageConnection), aDatabase.GetFileManagerPtr());
@@ -12655,7 +12645,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
       IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
                      CreateStorageConnection(
                          aDatabaseFile, aDirectory, VoidString(), aOrigin,
-                         /* aDirectoryLockId */ -1, aTelemetryId));
+                         /* aDirectoryLockId */ -1, aTelemetryId, Nothing{}));
 
       mozStorageTransaction transaction(connection.get(), false);
 
@@ -13950,6 +13940,12 @@ nsresult Maintenance::DirectoryWork() {
                   // Not much we can do here...
                   Ok{});
 
+          // Don't do any maintenance for private browsing databases, which are
+          // only temporary.
+          if (OriginAttributes::IsPrivateBrowsing(quotaInfo.mOrigin)) {
+            return Ok{};
+          }
+
           if (persistent) {
             // We have to check that all persistent origins are cleaned up, but
             // there's no way to do that by one call, we need to initialize (and
@@ -14113,9 +14109,12 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
           MOZ_ASSERT(directoryLock);
         }
 
+        // No key needs to be passed here, because we skip encrypted databases
+        // in DoDirectoryWork as long as they are only used in private browsing
+        // mode.
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            *directoryInfo.mGroupAndOrigin, databasePath);
+            *directoryInfo.mGroupAndOrigin, databasePath, Nothing{});
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
@@ -14299,10 +14298,11 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   const nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
-  IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-                 GetStorageConnection(*databaseFile, mDirectoryLockId,
-                                      TelemetryIdForFile(databaseFile)),
-                 QM_VOID);
+  IDB_TRY_UNWRAP(
+      const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+      GetStorageConnection(*databaseFile, mDirectoryLockId,
+                           TelemetryIdForFile(databaseFile), mMaybeKey),
+      QM_VOID);
 
   AutoClose autoClose(connection);
 
@@ -15646,7 +15646,10 @@ nsresult FactoryOp::Open() {
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed);
 
   if (mInPrivateBrowsing) {
-    if (!gPrivateBrowsingInfoHashtable->Contains(mDatabaseId)) {
+    const auto lockedPrivateBrowsingInfoHashtable =
+        gPrivateBrowsingInfoHashtable->Lock();
+
+    if (!lockedPrivateBrowsingInfoHashtable->Contains(mDatabaseId)) {
       IndexedDBCipherStrategy cipherStrategy;
 
       // XXX Generate key using proper random data, such that we can ensure the
@@ -15657,7 +15660,7 @@ nsresult FactoryOp::Open() {
       // XXX Propagate the error to the caller rather than asserting.
       MOZ_RELEASE_ASSERT(keyOrErr.isOk());
 
-      gPrivateBrowsingInfoHashtable->Put(mDatabaseId, keyOrErr.unwrap());
+      lockedPrivateBrowsingInfoHashtable->Put(mDatabaseId, keyOrErr.unwrap());
     }
   }
 
@@ -16375,10 +16378,24 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
       CloneFileAndAppend(*dbDirectory, databaseFilenameBase +
                                            kFileManagerDirectoryNameSuffix));
 
+  Maybe<const CipherKey> maybeKey;
+  if (mInPrivateBrowsing) {
+    CipherKey key;
+
+    {
+      const auto lockedPrivateBrowsingInfoHashtable =
+          gPrivateBrowsingInfoHashtable->Lock();
+      MOZ_ALWAYS_TRUE(
+          lockedPrivateBrowsingInfoHashtable->Get(mDatabaseId, &key));
+    }
+
+    maybeKey.emplace(std::move(key));
+  }
+
   IDB_TRY_UNWRAP(NotNull<nsCOMPtr<mozIStorageConnection>> connection,
                  CreateStorageConnection(*dbFile, *fmDirectory, databaseName,
                                          mQuotaInfo.mOrigin, mDirectoryLockId,
-                                         mTelemetryId));
+                                         mTelemetryId, maybeKey));
 
   AutoSetProgressHandler asph;
   IDB_TRY(asph.Register(*connection, this));
@@ -17072,7 +17089,13 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   Maybe<const CipherKey> maybeKey;
   if (mInPrivateBrowsing) {
     CipherKey key;
-    MOZ_ALWAYS_TRUE(gPrivateBrowsingInfoHashtable->Get(mDatabaseId, &key));
+
+    {
+      const auto lockedPrivateBrowsingInfoHashtable =
+          gPrivateBrowsingInfoHashtable->Lock();
+      MOZ_ALWAYS_TRUE(
+          lockedPrivateBrowsingInfoHashtable->Get(mDatabaseId, &key));
+    }
 
     maybeKey.emplace(std::move(key));
   }
@@ -17365,8 +17388,24 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
     return;
   }
 
+  const auto maybeKey = [this]() -> Maybe<const CipherKey> {
+    CipherKey key;
+
+    const auto lockedPrivateBrowsingInfoHashtable =
+        gPrivateBrowsingInfoHashtable->Lock();
+    if (!lockedPrivateBrowsingInfoHashtable->Get(mDatabaseId, &key)) {
+      return Nothing{};
+    }
+    return Some(std::move(key));
+  }();
+
+  // Pass -1 as the directoryLockId to disable quota checking, since we might
+  // temporarily exceed quota before deleting the database.
+  IDB_TRY_INSPECT(const auto& dbFileUrl,
+                  GetDatabaseFileURL(aDatabaseFile, -1, maybeKey), QM_VOID);
+
   IDB_TRY_UNWRAP(const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
-                 OpenDatabaseAndHandleBusy(*ss, aDatabaseFile), QM_VOID);
+                 OpenDatabaseAndHandleBusy(*ss, *dbFileUrl), QM_VOID);
 
 #ifdef DEBUG
   {

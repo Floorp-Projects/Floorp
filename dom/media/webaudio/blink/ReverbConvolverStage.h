@@ -34,6 +34,7 @@
 #include "nsTArray.h"
 #include "mozilla/FFTBlock.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 namespace WebCore {
 
@@ -66,8 +67,8 @@ class ReverbConvolverStage {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  UniquePtr<FFTBlock> m_fftKernel;
-  UniquePtr<FFTConvolver> m_fftConvolver;
+  mozilla::UniquePtr<FFTBlock> m_fftKernel;
+  mozilla::UniquePtr<FFTConvolver> m_fftConvolver;
 
   ReverbAccumulationBuffer* m_accumulationBuffer;
   int m_accumulationReadIndex;
