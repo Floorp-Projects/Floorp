@@ -8,6 +8,10 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BasicCardPaymentBinding.h"
 #include "mozilla/dom/PaymentRequestParent.h"
+#include "nsArrayUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsIMutableArray.h"
 #include "nsSimpleEnumerator.h"
 #include "PaymentRequestService.h"
 

@@ -42,5 +42,6 @@ dom/midi/
 dom/network/
 dom/notification/
 dom/offline/
+dom/payments/
 dom/quota/
 dom/simpledb/

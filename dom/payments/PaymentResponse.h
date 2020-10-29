@@ -17,6 +17,7 @@ namespace dom {
 
 class PaymentAddress;
 class PaymentRequest;
+struct PaymentValidationErrors;
 class Promise;
 
 class GeneralData final {
