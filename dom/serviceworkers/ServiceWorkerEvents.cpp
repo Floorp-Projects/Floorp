@@ -153,6 +153,14 @@ already_AddRefed<FetchEvent> FetchEvent::Constructor(
   e->mRequest = aOptions.mRequest;
   e->mClientId = aOptions.mClientId;
   e->mResultingClientId = aOptions.mResultingClientId;
+  RefPtr<nsIGlobalObject> global = do_QueryObject(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  ErrorResult rv;
+  e->mHandled = Promise::Create(global, rv);
+  if (rv.Failed()) {
+    rv.SuppressException();
+    return nullptr;
+  }
   return e.forget();
 }
 
