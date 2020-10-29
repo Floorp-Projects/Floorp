@@ -96,15 +96,6 @@ exports.WorkerTargetActor = TargetActorMixin(
     },
 
     destroy() {
-      if (this.threadActor) {
-        // We have to manually call `exit` as calling `destroy` won't completely destroy it.
-        // ThreadActor.destroy do not call protocoljs.Actor.destroy, ThreadActor.exit does it.
-        // We also need do this before destroying _sources as the thread actor may still
-        // use it while cleaning up things.
-        this.threadActor.exit();
-        this.threadActor = null;
-      }
-
       Actor.prototype.destroy.call(this);
 
       if (this._sources) {
@@ -115,6 +106,7 @@ exports.WorkerTargetActor = TargetActorMixin(
       this.workerGlobal = null;
       this._dbg = null;
       this._consoleActor = null;
+      this.threadActor = null;
     },
   }
 );
