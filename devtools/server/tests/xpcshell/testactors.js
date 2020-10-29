@@ -13,7 +13,9 @@ const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { TabSources } = require("devtools/server/actors/utils/TabSources");
+const {
+  SourcesManager,
+} = require("devtools/server/actors/utils/sources-manager");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const protocol = require("devtools/shared/protocol");
 const {
@@ -184,7 +186,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
 
   get sources() {
     if (!this._sources) {
-      this._sources = new TabSources(this.threadActor);
+      this._sources = new SourcesManager(this.threadActor);
     }
     return this._sources;
   },

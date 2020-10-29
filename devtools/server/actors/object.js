@@ -66,7 +66,7 @@ const proto = {
    *          - createValueGrip
    *              Creates a value grip for the given object
    *          - sources
-   *              TabSources getter that manages the sources of a thread
+   *              SourcesManager getter that manages the sources of a thread
    *          - createEnvironmentActor
    *              Creates and return an environment actor
    *          - getGripDepth

@@ -114,7 +114,7 @@ webExtensionTargetPrototype.initialize = function(
   });
 
   // Bind the _allowSource helper to this, it is used in the
-  // BrowsingContextTargetActor to lazily create the TabSources instance.
+  // BrowsingContextTargetActor to lazily create the SourcesManager instance.
   this._allowSource = this._allowSource.bind(this);
   this._onParentExit = this._onParentExit.bind(this);
 

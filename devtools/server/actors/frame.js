@@ -38,7 +38,7 @@ function isValidSavedFrame(threadActor, savedFrame) {
   );
 }
 function getSavedFrameSource(threadActor, savedFrame) {
-  return threadActor.sources.getSourceActorByInternalSourceId(
+  return threadActor.sourcesManager.getSourceActorByInternalSourceId(
     savedFrame.sourceId
   );
 }
@@ -185,7 +185,9 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     form.arguments = this._args();
 
     if (this.frame.script) {
-      const location = this.threadActor.sources.getFrameLocation(this.frame);
+      const location = this.threadActor.sourcesManager.getFrameLocation(
+        this.frame
+      );
       form.where = {
         actor: location.sourceActor.actorID,
         line: location.line,

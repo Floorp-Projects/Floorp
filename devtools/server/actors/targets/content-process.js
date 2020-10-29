@@ -19,7 +19,9 @@ const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { Pool } = require("devtools/shared/protocol");
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { TabSources } = require("devtools/server/actors/utils/TabSources");
+const {
+  SourcesManager,
+} = require("devtools/server/actors/utils/sources-manager");
 const { Actor } = require("devtools/shared/protocol");
 const {
   contentProcessTargetSpec,
@@ -114,7 +116,7 @@ const ContentProcessTargetActor = TargetActorMixin(
           this.threadActor,
           "threadActor should exist when creating sources."
         );
-        this._sources = new TabSources(this.threadActor);
+        this._sources = new SourcesManager(this.threadActor);
       }
       return this._sources;
     },

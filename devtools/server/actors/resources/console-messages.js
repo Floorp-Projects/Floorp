@@ -39,7 +39,7 @@ const {
 class ConsoleMessageWatcher {
   async watch(targetActor, { onAvailable }) {
     // The following code expects the ThreadActor to be instantiated, via:
-    // prepareConsoleMessageForRemote > TabSources.getActorIdForInternalSourceId
+    // prepareConsoleMessageForRemote > SourcesManager.getActorIdForInternalSourceId
     // The Thread Actor is instantiated via Target.attach, but we should
     // probably review this and only instantiate the actor instead of attaching the target.
     if (!targetActor.threadActor) {

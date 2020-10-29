@@ -12,7 +12,9 @@ const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const Targets = require("devtools/server/actors/targets/index");
 
 const makeDebuggerUtil = require("devtools/server/actors/utils/make-debugger");
-const { TabSources } = require("devtools/server/actors/utils/TabSources");
+const {
+  SourcesManager,
+} = require("devtools/server/actors/utils/sources-manager");
 
 const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
 
@@ -83,7 +85,7 @@ exports.WorkerTargetActor = TargetActorMixin(
 
     get sources() {
       if (this._sources === null) {
-        this._sources = new TabSources(this.threadActor);
+        this._sources = new SourcesManager(this.threadActor);
       }
 
       return this._sources;
