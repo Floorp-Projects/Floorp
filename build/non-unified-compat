@@ -45,5 +45,6 @@ dom/offline/
 dom/payments/
 dom/performance/
 dom/permission/
+dom/plugins/
 dom/quota/
 dom/simpledb/
