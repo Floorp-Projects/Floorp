@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class Performance;
+
 // https://w3c.github.io/paint-timing/#sec-PerformancePaintTiming
 // Unlike timeToContentfulPaint, this timing is generated during
 // displaylist building, when a frame is contentful, we collect

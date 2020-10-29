@@ -8,6 +8,8 @@
 #define mozilla_dom_PerformanceServerTiming_h
 
 #include "mozilla/Attributes.h"
+#include "nsCOMPtr.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
 

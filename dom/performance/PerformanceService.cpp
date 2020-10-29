@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
