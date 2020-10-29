@@ -1046,8 +1046,8 @@ OutlineTypedObject* OutlineTypedObject::createUnattached(JSContext* cx,
 }
 
 void OutlineTypedObject::attach(ArrayBufferObject& buffer, uint32_t offset) {
-  MOZ_ASSERT(offset <= buffer.byteLength());
-  MOZ_ASSERT(size() <= buffer.byteLength() - offset);
+  MOZ_ASSERT(offset <= ByteLength32(buffer));
+  MOZ_ASSERT(size() <= ByteLength32(buffer) - offset);
   MOZ_ASSERT(buffer.hasTypedObjectViews());
   MOZ_ASSERT(!buffer.isDetached());
 
