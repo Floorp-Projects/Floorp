@@ -21,6 +21,13 @@ const {
   unescapeCSSComment,
 } = require("devtools/shared/css/parsing-utils");
 
+loader.lazyRequireGetter(
+  this,
+  ["getIndentationFromPrefs", "getIndentationFromString"],
+  "devtools/shared/indentation",
+  true
+);
+
 // Used to test whether a newline appears anywhere in some text.
 const NEWLINE_RX = /[\r\n]/;
 // Used to test whether a bit of text starts an empty comment, either
@@ -474,7 +481,28 @@ RuleRewriter.prototype = {
    *         that holds the default indentation that should be used
    *         for edits to the rule.
    */
-  getDefaultIndentation: function() {
+  getDefaultIndentation: async function() {
+    if (!this.rule.parentStyleSheet) {
+      return null;
+    }
+
+    if (this.rule.parentStyleSheet.resourceId) {
+      const prefIndent = getIndentationFromPrefs();
+      if (prefIndent) {
+        const { indentUnit, indentWithTabs } = prefIndent;
+        return indentWithTabs ? "\t" : " ".repeat(indentUnit);
+      }
+
+      const styleSheetsFront = await this.rule.targetFront.getFront(
+        "stylesheets"
+      );
+      const { str: source } = await styleSheetsFront.getText(
+        this.rule.parentStyleSheet.resourceId
+      );
+      const { indentUnit, indentWithTabs } = getIndentationFromString(source);
+      return indentWithTabs ? "\t" : " ".repeat(indentUnit);
+    }
+
     return this.rule.parentStyleSheet.guessIndentation();
   },
 

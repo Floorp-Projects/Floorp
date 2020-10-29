@@ -348,7 +348,7 @@ RuleEditor.prototype = {
         this._unsubscribeSourceMap();
       }
       this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByID(
-        this.rule.sheet.actorID,
+        this.rule.sheet.resourceId || this.rule.sheet.actorID,
         this.rule.ruleLine,
         this.rule.ruleColumn,
         this._updateLocation

@@ -19,6 +19,11 @@ const {
   ELEMENT_STYLE,
 } = require("devtools/shared/specs/styles");
 
+const {
+  TYPES,
+  getResourceWatcher,
+} = require("devtools/server/actors/resources/index");
+
 loader.lazyRequireGetter(
   this,
   "CssLogic",
@@ -126,6 +131,20 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this._observedRules = [];
     this._styleApplied = this._styleApplied.bind(this);
     this._watchedSheets = new Set();
+
+    const watcher = getResourceWatcher(
+      this.inspector.targetActor,
+      TYPES.STYLESHEET
+    );
+
+    if (watcher) {
+      this.styleSheetWatcher = watcher;
+      this.onResourceUpdated = this.onResourceUpdated.bind(this);
+      this.inspector.targetActor.on(
+        "resource-updated-form",
+        this.onResourceUpdated
+      );
+    }
   },
 
   destroy: function() {
@@ -193,7 +212,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     // the keyframe cache.
     this.cssLogic.reset();
     if (kind === UPDATE_GENERAL) {
-      this.emit("stylesheet-updated", styleSheet);
+      this.emit("stylesheet-updated");
     }
   },
 
@@ -235,6 +254,14 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *         The actor for this style sheet
    */
   _sheetRef: function(sheet) {
+    if (this.styleSheetWatcher) {
+      // We need to clean up this function in bug 1672090 when server-side stylesheet
+      // watcher is enabled.
+      console.warn(
+        "This function should not be called when server-side stylesheet watcher is enabled"
+      );
+    }
+
     const targetActor = this.inspector.targetActor;
     const actor = targetActor.createStyleSheetActor(sheet);
     return actor;
@@ -953,6 +980,15 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
           ruleSet.add(parent);
         }
       }
+    }
+
+    // We need to clean up the following codes when server-side stylesheet
+    // watcher is enabled in bug 1672090.
+    if (this.styleSheetWatcher) {
+      return;
+    }
+
+    for (const rule of ruleSet) {
       if (rule.rawRule.parentStyleSheet) {
         const parent = this._sheetRef(rule.rawRule.parentStyleSheet);
         if (!sheetSet.has(parent)) {
@@ -1074,6 +1110,36 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     }
   },
 
+  onResourceUpdated(resources) {
+    const kinds = new Set();
+
+    for (const resource of resources) {
+      if (resource.resourceType !== TYPES.STYLESHEET) {
+        continue;
+      }
+
+      if (resource.updateType !== "style-applied") {
+        continue;
+      }
+
+      const kind = resource.event.kind;
+      kinds.add(kind);
+
+      for (const styleActor of [...this.refMap.values()]) {
+        const resourceId = this.styleSheetWatcher.getResourceId(
+          styleActor._parentSheet
+        );
+        if (resource.resourceId === resourceId) {
+          styleActor._onStyleApplied(kind);
+        }
+      }
+    }
+
+    for (const kind of kinds) {
+      this._styleApplied(kind);
+    }
+  },
+
   /**
    * Helper function to addNewRule to get or create a style tag in the provided
    * document.
@@ -1116,8 +1182,20 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @returns {StyleRuleActor} the new rule
    */
   async addNewRule(node, pseudoClasses) {
-    const style = this.getStyleElement(node.rawNode.ownerDocument);
-    const sheet = style.sheet;
+    let sheet = null;
+    if (this.styleSheetWatcher) {
+      const doc = node.rawNode.ownerDocument;
+      if (this.styleElements.has(doc)) {
+        sheet = this.styleElements.get(doc);
+      } else {
+        sheet = await this.styleSheetWatcher.addStyleSheet(doc);
+        this.styleElements.set(doc, sheet);
+      }
+    } else {
+      const style = this.getStyleElement(node.rawNode.ownerDocument);
+      sheet = style.sheet;
+    }
+
     const cssRules = sheet.cssRules;
     const rawNode = node.rawNode;
     const classes = [...rawNode.classList];
@@ -1137,12 +1215,19 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     const index = sheet.insertRule(selector + " {}", cssRules.length);
 
-    // If inserting the rule succeeded, go ahead and edit the source
-    // text if requested.
-    const sheetActor = this._sheetRef(sheet);
-    let { str: authoredText } = await sheetActor.getText();
-    authoredText += "\n" + selector + " {\n" + "}";
-    await sheetActor.update(authoredText, false);
+    if (this.styleSheetWatcher) {
+      const resourceId = this.styleSheetWatcher.getResourceId(sheet);
+      let authoredText = await this.styleSheetWatcher.getText(resourceId);
+      authoredText += "\n" + selector + " {\n" + "}";
+      await this.styleSheetWatcher.update(resourceId, authoredText, false);
+    } else {
+      // If inserting the rule succeeded, go ahead and edit the source
+      // text if requested.
+      const sheetActor = this._sheetRef(sheet);
+      let { str: authoredText } = await sheetActor.getText();
+      authoredText += "\n" + selector + " {\n" + "}";
+      await sheetActor.update(authoredText, false);
+    }
 
     const cssRule = sheet.cssRules.item(index);
     const ruleActor = this._styleRef(cssRule);
@@ -1384,8 +1469,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
-        this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
-        this.sheetActor.on("style-applied", this._onStyleApplied);
+        if (!this.pageStyle.styleSheetWatcher) {
+          this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
+          this.sheetActor.on("style-applied", this._onStyleApplied);
+        }
       }
     } else {
       // Fake a rule
@@ -1434,7 +1521,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // If a rule has been modified via CSSOM, then we should fall
         // back to non-authored editing.
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
-        !this.sheetActor.hasRulesModifiedByCSSOM() &&
+        !InspectorUtils.hasRulesModifiedByCSSOM(this._parentSheet) &&
         // Special case about:PreferenceStyleSheet, as it is generated on
         // the fly and the URI is not registered with the about:handler
         // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
@@ -1526,18 +1613,36 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         this.type === CSSRule.KEYFRAME_RULE
           ? this.rawRule.keyText
           : this.rawRule.selectorText;
-      data.source = {
-        // Inline stylesheets have a null href; Use window URL instead.
-        type: this.sheetActor.href ? "stylesheet" : "inline",
-        href:
-          this.sheetActor.href || this.sheetActor.window.location.toString(),
-        id: this.sheetActor.actorID,
-        index: this.sheetActor.styleSheetIndex,
-        // Whether the stylesheet lives in a different frame than the host document.
-        isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,
-      };
       // Used to differentiate between changes to rules with identical selectors.
       data.ruleIndex = this._ruleIndex;
+
+      if (this.pageStyle.styleSheetWatcher) {
+        const watcher = this.pageStyle.styleSheetWatcher;
+        const sheet = this._parentSheet;
+        const inspectorActor = this.pageStyle.inspector;
+        const resourceId = watcher.getResourceId(sheet);
+        const styleSheetIndex = watcher.getStyleSheetIndex(resourceId);
+        data.source = {
+          // Inline stylesheets have a null href; Use window URL instead.
+          type: sheet.href ? "stylesheet" : "inline",
+          href: sheet.href || inspectorActor.window.location.toString(),
+          id: resourceId,
+          index: styleSheetIndex,
+          // Whether the stylesheet lives in a different frame than the host document.
+          isFramed: inspectorActor.window !== inspectorActor.window.top,
+        };
+      } else {
+        data.source = {
+          // Inline stylesheets have a null href; Use window URL instead.
+          type: this.sheetActor.href ? "stylesheet" : "inline",
+          href:
+            this.sheetActor.href || this.sheetActor.window.location.toString(),
+          id: this.sheetActor.actorID,
+          index: this.sheetActor.styleSheetIndex,
+          // Whether the stylesheet lives in a different frame than the host document.
+          isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,
+        };
+      }
     }
 
     return data;
@@ -1594,9 +1699,15 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       }
     }
     if (this._parentSheet) {
-      form.parentStyleSheet = this.pageStyle._sheetRef(
-        this._parentSheet
-      ).actorID;
+      if (this.pageStyle.styleSheetWatcher) {
+        form.parentStyleSheet = this.pageStyle.styleSheetWatcher.getResourceId(
+          this._parentSheet
+        );
+      } else {
+        form.parentStyleSheet = this.pageStyle._sheetRef(
+          this._parentSheet
+        ).actorID;
+      }
     }
 
     // One tricky thing here is that other methods in this actor must
@@ -1798,10 +1909,13 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // the rules.  Now, recompute our new rule from the style sheet,
       // so that we aren't left with a reference to a dangling rule.
       const oldRule = this.rawRule;
+      const oldActor = this.pageStyle.refMap.get(oldRule);
       this.rawRule = this._getRuleFromIndex(this._parentSheet);
-      // Also tell the page style so that future calls to _styleRef
-      // return the same StyleRuleActor.
-      this.pageStyle.updateStyleRef(oldRule, this.rawRule, this);
+      if (oldActor) {
+        // Also tell the page style so that future calls to _styleRef
+        // return the same StyleRuleActor.
+        this.pageStyle.updateStyleRef(oldRule, this.rawRule, this);
+      }
       const line = InspectorUtils.getRelativeRuleLine(this.rawRule);
       const column = InspectorUtils.getRuleColumn(this.rawRule);
       if (line !== this.line || column !== this.column) {
@@ -1825,13 +1939,30 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        ignore it and parse the stylehseet again. The authoredText
    *        may be outdated if a descendant of this rule has changed.
    */
-  getAuthoredCssText: function(skipCache = false) {
+  getAuthoredCssText: async function(skipCache = false) {
     if (!this.canSetRuleText || !SUPPORTED_RULE_TYPES.includes(this.type)) {
       return Promise.resolve("");
     }
 
     if (typeof this.authoredText === "string" && !skipCache) {
       return Promise.resolve(this.authoredText);
+    }
+
+    if (this.pageStyle.styleSheetWatcher) {
+      await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
+        this._parentSheet
+      );
+      const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+        this._parentSheet
+      );
+      const cssText = await this.pageStyle.styleSheetWatcher.getText(
+        resourceId
+      );
+      const { text } = getRuleText(cssText, this.line, this.column);
+
+      // Cache the result on the rule actor to avoid parsing again next time
+      this.authoredText = text;
+      return this.authoredText;
     }
 
     return this.sheetActor.getText().then(longStr => {
@@ -1874,7 +2005,23 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     } else {
       // Get the rule's authored text and skip any cached value.
       ruleBodyText = await this.getAuthoredCssText(true);
-      const { str: stylesheetText } = await this.sheetActor.getText();
+
+      let stylesheetText = null;
+      if (this.pageStyle.styleSheetWatcher) {
+        await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
+          this._parentSheet
+        );
+        const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+          this._parentSheet
+        );
+        stylesheetText = await this.pageStyle.styleSheetWatcher.getText(
+          resourceId
+        );
+      } else {
+        const { str } = await this.sheetActor.getText();
+        stylesheetText = str;
+      }
+
       const [start, end] = getSelectorOffsets(
         stylesheetText,
         this.line,
@@ -1932,6 +2079,27 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
       this.rawNode.setAttributeDevtools("style", newText);
+    } else if (this.pageStyle.styleSheetWatcher) {
+      await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
+        this._parentSheet
+      );
+      const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+        this._parentSheet
+      );
+      let cssText = await this.pageStyle.styleSheetWatcher.getText(resourceId);
+
+      const { offset, text } = getRuleText(cssText, this.line, this.column);
+      cssText =
+        cssText.substring(0, offset) +
+        newText +
+        cssText.substring(offset + text.length);
+
+      await this.pageStyle.styleSheetWatcher.update(
+        resourceId,
+        cssText,
+        false,
+        UPDATE_PRESERVING_RULES
+      );
     } else {
       // For stylesheet rules, set the text in the stylesheet.
       const parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet);
@@ -2040,18 +2208,49 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         return null;
       }
 
-      const sheetActor = this.pageStyle._sheetRef(parentStyleSheet);
-      let { str: authoredText } = await sheetActor.getText();
-      const [startOffset, endOffset] = getSelectorOffsets(
-        authoredText,
-        this.line,
-        this.column
-      );
-      authoredText =
-        authoredText.substring(0, startOffset) +
-        value +
-        authoredText.substring(endOffset);
-      await sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
+      if (this.pageStyle.styleSheetWatcher) {
+        await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
+          this._parentSheet
+        );
+        const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+          this._parentSheet
+        );
+        let authoredText = await this.pageStyle.styleSheetWatcher.getText(
+          resourceId
+        );
+
+        const [startOffset, endOffset] = getSelectorOffsets(
+          authoredText,
+          this.line,
+          this.column
+        );
+        authoredText =
+          authoredText.substring(0, startOffset) +
+          value +
+          authoredText.substring(endOffset);
+
+        await this.pageStyle.styleSheetWatcher.update(
+          resourceId,
+          authoredText,
+          false,
+          UPDATE_PRESERVING_RULES
+        );
+      } else {
+        const sheetActor = this.pageStyle._sheetRef(parentStyleSheet);
+        let { str: authoredText } = await sheetActor.getText();
+
+        const [startOffset, endOffset] = getSelectorOffsets(
+          authoredText,
+          this.line,
+          this.column
+        );
+        authoredText =
+          authoredText.substring(0, startOffset) +
+          value +
+          authoredText.substring(endOffset);
+
+        await sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
+      }
     } else {
       const cssRules = parentStyleSheet.cssRules;
       const cssText = rule.cssText;
