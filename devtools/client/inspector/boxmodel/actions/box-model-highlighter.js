@@ -19,17 +19,51 @@
 
 module.exports = {
   /**
+   * Show the box model highlighter for the currently selected node front.
+   * The selected node is obtained from the Selection instance on the Inspector.
+   *
+   * @param {Object} options
+   *        Optional configuration options passed to the box model highlighter
+   */
+  highlightSelectedNode(options = {}) {
+    return async thunkOptions => {
+      const { inspector } = thunkOptions;
+      if (!inspector || inspector._destroyed) {
+        return;
+      }
+
+      const { nodeFront } = inspector.selection;
+      if (!nodeFront) {
+        return;
+      }
+
+      await inspector.highlighters.showHighlighterTypeForNode(
+        inspector.highlighters.TYPES.BOXMODEL,
+        nodeFront,
+        options
+      );
+    };
+  },
+
+  /**
    * Show the box model highlighter for the given node front.
    *
    * @param {NodeFront} nodeFront
    *        Node that should be highlighted.
+   * @param {Object} options
+   *        Optional configuration options passed to the box model highlighter
    */
-  highlightNode(nodeFront) {
+  highlightNode(nodeFront, options = {}) {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
+      if (!inspector || inspector._destroyed) {
+        return;
+      }
+
       await inspector.highlighters.showHighlighterTypeForNode(
         inspector.highlighters.TYPES.BOXMODEL,
-        nodeFront
+        nodeFront,
+        options
       );
     };
   },
@@ -40,6 +74,10 @@ module.exports = {
   unhighlightNode() {
     return async thunkOptions => {
       const { inspector } = thunkOptions;
+      if (!inspector || inspector._destroyed) {
+        return;
+      }
+
       await inspector.highlighters.hideHighlighterType(
         inspector.highlighters.TYPES.BOXMODEL
       );
