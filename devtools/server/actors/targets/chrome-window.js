@@ -20,10 +20,11 @@ const {
 } = require("devtools/server/actors/targets/browsing-context");
 
 const { extend } = require("devtools/shared/extend");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   chromeWindowTargetSpec,
 } = require("devtools/shared/specs/targets/chrome-window");
+const Targets = require("devtools/server/actors/targets/index");
+const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the
@@ -104,7 +105,8 @@ chromeWindowTargetPrototype._detach = function() {
   return true;
 };
 
-exports.ChromeWindowTargetActor = ActorClassWithSpec(
+exports.ChromeWindowTargetActor = TargetActorMixin(
+  Targets.TYPES.FRAME,
   chromeWindowTargetSpec,
   chromeWindowTargetPrototype
 );
