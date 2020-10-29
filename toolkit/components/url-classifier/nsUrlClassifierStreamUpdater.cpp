@@ -60,7 +60,7 @@ static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char* aFmt, ...) {
 
   va_list ap;
   va_start(ap, aFmt);
-  raw.AppendPrintf(aFmt, ap);
+  raw.AppendVprintf(aFmt, ap);
   va_end(ap);
 
   nsCOMPtr<nsIURLFormatter> urlFormatter =
