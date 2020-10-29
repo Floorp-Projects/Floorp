@@ -11,6 +11,7 @@
 #include "FFmpegLibWrapper.h"
 #include "FFmpegVideoDecoder.h"
 #include "PlatformDecoderModule.h"
+#include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/StaticPrefs_media.h"
 

@@ -20,6 +20,7 @@
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "prsystem.h"
+#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \

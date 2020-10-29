@@ -910,10 +910,6 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
                 sandbox::MITIGATION_DLL_SEARCH_ORDER |
                 sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
 
-#if defined(_WIN64)
-  mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
-#endif
-
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");

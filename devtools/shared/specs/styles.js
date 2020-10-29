@@ -96,7 +96,6 @@ const pageStyleSpec = generateActorSpec({
   events: {
     "stylesheet-updated": {
       type: "styleSheetUpdated",
-      styleSheet: Arg(0, "stylesheet"),
     },
   },
 

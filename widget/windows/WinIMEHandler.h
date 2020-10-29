@@ -162,12 +162,10 @@ class IMEHandler final {
   static void DefaultProcOfPluginEvent(nsWindow* aWindow,
                                        const NPEvent* aPluginEvent);
 
-#ifdef NS_ENABLE_TSF
   /**
    * This is called by TSFStaticSink when active IME is changed.
    */
   static void OnKeyboardLayoutChanged();
-#endif  // #ifdef NS_ENABLE_TSF
 
 #ifdef DEBUG
   /**
@@ -207,7 +205,6 @@ class IMEHandler final {
    */
   static bool MaybeCreateNativeCaret(nsWindow* aWindow);
 
-#ifdef NS_ENABLE_TSF
   static decltype(SetInputScopes)* sSetInputScopes;
   static void SetInputScopeForIMM32(nsWindow* aWindow,
                                     const nsAString& aHTMLInputType,
@@ -252,7 +249,6 @@ class IMEHandler final {
    * allowed for Windows 8 and higher.
    */
   static HWND GetOnScreenKeyboardWindow();
-#endif  // #ifdef NS_ENABLE_TSF
 };
 
 }  // namespace widget

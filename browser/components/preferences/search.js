@@ -310,29 +310,6 @@ var gSearchPane = {
         list.selectedItem = item;
       }
     });
-
-    // We don't currently support overriding the engine for private mode with
-    // extensions.
-    if (isPrivate) {
-      return;
-    }
-
-    handleControllingExtension(SEARCH_TYPE, SEARCH_KEY);
-    let searchEngineListener = {
-      observe(subject, topic, data) {
-        handleControllingExtension(SEARCH_TYPE, SEARCH_KEY);
-      },
-    };
-    Services.obs.addObserver(
-      searchEngineListener,
-      "browser-search-engine-modified"
-    );
-    window.addEventListener("unload", () => {
-      Services.obs.removeObserver(
-        searchEngineListener,
-        "browser-search-engine-modified"
-      );
-    });
   },
 
   handleEvent(aEvent) {

@@ -649,8 +649,9 @@ uint32_t MacroAssembler::pushFakeReturnAddress(Register scratch) {
 
 CodeOffset MacroAssembler::wasmTrapInstruction() { return ud2(); }
 
-void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
-                                     Register boundsCheckLimit, Label* label) {
+void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
+                                       Register boundsCheckLimit,
+                                       Label* label) {
   cmp32(index, boundsCheckLimit);
   j(cond, label);
   if (JitOptions.spectreIndexMasking) {
@@ -658,8 +659,8 @@ void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
   }
 }
 
-void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
-                                     Address boundsCheckLimit, Label* label) {
+void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
+                                       Address boundsCheckLimit, Label* label) {
   cmp32(index, Operand(boundsCheckLimit));
   j(cond, label);
   if (JitOptions.spectreIndexMasking) {

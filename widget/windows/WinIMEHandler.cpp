@@ -12,9 +12,7 @@
 #include "nsWindowDefs.h"
 #include "WinTextEventDispatcherListener.h"
 
-#ifdef NS_ENABLE_TSF
-#  include "TSFTextStore.h"
-#endif  // #ifdef NS_ENABLE_TSF
+#include "TSFTextStore.h"
 
 #include "OSKInputPaneManager.h"
 #include "nsLookAndFeel.h"
@@ -59,19 +57,16 @@ bool IMEHandler::sPluginHasFocus = false;
 bool IMEHandler::sNativeCaretIsCreated = false;
 bool IMEHandler::sHasNativeCaretBeenRequested = false;
 
-#ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
 bool IMEHandler::sAssociateIMCOnlyWhenIMM_IMEActive = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
-#endif  // #ifdef NS_ENABLE_TSF
 
 static POWER_PLATFORM_ROLE sPowerPlatformRole = PlatformRoleUnspecified;
 static bool sDeterminedPowerPlatformRole = false;
 
 // static
 void IMEHandler::Initialize() {
-#ifdef NS_ENABLE_TSF
   TSFTextStore::Initialize();
   sIsInTSFMode = TSFTextStore::IsInTSFMode();
   sIsIMMEnabled =
@@ -91,7 +86,6 @@ void IMEHandler::Initialize() {
           GetProcAddress(module, "SetInputScopes"));
     }
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   IMMHandler::Initialize();
 
@@ -100,12 +94,10 @@ void IMEHandler::Initialize() {
 
 // static
 void IMEHandler::Terminate() {
-#ifdef NS_ENABLE_TSF
   if (sIsInTSFMode) {
     TSFTextStore::Terminate();
     sIsInTSFMode = false;
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   IMMHandler::Terminate();
   WinTextEventDispatcherListener::Shutdown();
@@ -114,11 +106,9 @@ void IMEHandler::Terminate() {
 // static
 void* IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType) {
   if (aDataType == NS_RAW_NATIVE_IME_CONTEXT) {
-#ifdef NS_ENABLE_TSF
     if (IsTSFAvailable()) {
       return TSFTextStore::GetThreadManager();
     }
-#endif  // #ifdef NS_ENABLE_TSF
     IMEContext context(aWindow);
     if (context.IsValid()) {
       return context.get();
@@ -136,7 +126,6 @@ void* IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType) {
     return aWindow;
   }
 
-#ifdef NS_ENABLE_TSF
   void* result = TSFTextStore::GetNativeData(aDataType);
   if (!result || !(*(static_cast<void**>(result)))) {
     return nullptr;
@@ -147,18 +136,13 @@ void* IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType) {
   //     sending a message can fix this.
   sIsInTSFMode = true;
   return result;
-#else   // #ifdef NS_ENABLE_TSF
-  return nullptr;
-#endif  // #ifdef NS_ENABLE_TSF #else
 }
 
 // static
 bool IMEHandler::ProcessRawKeyMessage(const MSG& aMsg) {
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     return TSFTextStore::ProcessRawKeyMessage(aMsg);
   }
-#endif           // #ifdef NS_ENABLE_TSF
   return false;  // noting to do in IMM mode.
 }
 
@@ -189,7 +173,6 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
     MaybeCreateNativeCaret(aWindow);
   }
 
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     TSFTextStore::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
     if (aResult.mConsumed) {
@@ -205,7 +188,6 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
       return false;
     }
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   bool keepGoing =
       IMMHandler::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
@@ -236,31 +218,24 @@ bool IMEHandler::IsA11yHandlingNativeCaret() {
 #endif  // #ifndef ACCESSIBILITY #else
 }
 
-#ifdef NS_ENABLE_TSF
 // static
 bool IMEHandler::IsIMMActive() { return TSFTextStore::IsIMM_IMEActive(); }
 
-#endif  // #ifdef NS_ENABLE_TSF
-
 // static
 bool IMEHandler::IsComposing() {
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     return TSFTextStore::IsComposing() || IMMHandler::IsComposing();
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   return IMMHandler::IsComposing();
 }
 
 // static
 bool IMEHandler::IsComposingOn(nsWindow* aWindow) {
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     return TSFTextStore::IsComposingOn(aWindow) ||
            IMMHandler::IsComposingOn(aWindow);
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   return IMMHandler::IsComposingOn(aWindow);
 }
@@ -268,7 +243,6 @@ bool IMEHandler::IsComposingOn(nsWindow* aWindow) {
 // static
 nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
                                const IMENotification& aIMENotification) {
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     switch (aIMENotification.mMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE: {
@@ -337,7 +311,6 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
         return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
-#endif  // NS_ENABLE_TSF
 
   switch (aIMENotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
@@ -370,14 +343,12 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
       sFocusedWindow = nullptr;
       IMEHandler::MaybeDismissOnScreenKeyboard(aWindow);
       IMMHandler::OnFocusChange(false, aWindow);
-#ifdef NS_ENABLE_TSF
       // If a plugin gets focus while TSF has focus, we need to notify TSF of
       // the blur.
       if (TSFTextStore::ThinksHavingFocus()) {
         return TSFTextStore::OnFocusChange(false, aWindow,
                                            aWindow->GetInputContext());
       }
-#endif  // NS_ENABLE_TSF
       return NS_OK;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -392,7 +363,6 @@ IMENotificationRequests IMEHandler::GetIMENotificationRequests() {
     return IMENotificationRequests();
   }
 
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     if (!sIsIMMEnabled) {
       return TSFTextStore::GetIMENotificationRequests();
@@ -405,7 +375,6 @@ IMENotificationRequests IMEHandler::GetIMENotificationRequests() {
     return IMMHandler::GetIMENotificationRequests() |
            TSFTextStore::GetIMENotificationRequests();
   }
-#endif  // NS_ENABLE_TSF
 
   return IMMHandler::GetIMENotificationRequests();
 }
@@ -418,11 +387,9 @@ IMEHandler::GetNativeTextEventDispatcherListener() {
 
 // static
 bool IMEHandler::GetOpenState(nsWindow* aWindow) {
-#ifdef NS_ENABLE_TSF
   if (IsTSFAvailable() && !IsIMMActive()) {
     return TSFTextStore::GetIMEOpenState();
   }
-#endif  // NS_ENABLE_TSF
 
   IMEContext context(aWindow);
   return context.GetOpenState();
@@ -442,7 +409,6 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
     NotifyIME(aWindow, IMENotification(NOTIFY_IME_OF_BLUR));
   }
 
-#ifdef NS_ENABLE_TSF
   // We need to do nothing here for TSF. Just restore the default context
   // if it's been disassociated.
   if (!sIsInTSFMode) {
@@ -450,17 +416,14 @@ void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
     // SetInputScopes API. Use an empty string to do this.
     SetInputScopeForIMM32(aWindow, u""_ns, u""_ns, false);
   }
-#endif  // #ifdef NS_ENABLE_TSF
   AssociateIMEContext(aWindow, true);
 }
 
-#ifdef NS_ENABLE_TSF
 // static
 bool IMEHandler::NeedsToAssociateIMC() {
   return !sForceDisableCurrentIMM_IME &&
          (!sAssociateIMCOnlyWhenIMM_IMEActive || !IsIMMActive());
 }
-#endif  // #ifdef NS_ENABLE_TSF
 
 // static
 void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
@@ -490,7 +453,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   bool open =
       (adjustOpenState && aInputContext.mIMEState.mOpen == IMEState::OPEN);
 
-#ifdef NS_ENABLE_TSF
   // Note that even while a plugin has focus, we need to notify TSF of that.
   if (sIsInTSFMode) {
     TSFTextStore::SetInputContext(aWindow, aInputContext, aAction);
@@ -514,7 +476,6 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
                           aInputContext.mHTMLInputInputmode,
                           aInputContext.mInPrivateBrowsing);
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
   AssociateIMEContext(aWindow, enable);
 
@@ -560,7 +521,6 @@ void IMEHandler::InitInputContext(nsWindow* aWindow,
   // For a11y, the default enabled state should be 'enabled'.
   aInputContext.mIMEState.mEnabled = IMEState::ENABLED;
 
-#ifdef NS_ENABLE_TSF
   if (sIsInTSFMode) {
     TSFTextStore::SetInputContext(
         aWindow, aInputContext,
@@ -572,7 +532,6 @@ void IMEHandler::InitInputContext(nsWindow* aWindow,
     }
     return;
   }
-#endif  // #ifdef NS_ENABLE_TSF
 
 #ifdef DEBUG
   // NOTE: IMC may be null if IMM module isn't installed.
@@ -584,11 +543,9 @@ void IMEHandler::InitInputContext(nsWindow* aWindow,
 #ifdef DEBUG
 // static
 bool IMEHandler::CurrentKeyboardLayoutHasIME() {
-#  ifdef NS_ENABLE_TSF
   if (sIsInTSFMode) {
     return TSFTextStore::CurrentKeyboardLayoutHasIME();
   }
-#  endif  // #ifdef NS_ENABLE_TSF
 
   return IMMHandler::IsIMEAvailable();
 }

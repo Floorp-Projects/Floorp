@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RTCDtlsTransport.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/RTCDtlsTransportBinding.h"
 
 namespace mozilla {

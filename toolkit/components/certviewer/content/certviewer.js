@@ -80,7 +80,7 @@ export const adjustCertInformation = cert => {
   let tabName = cert?.subject?.cn || "";
   if (cert && !tabName) {
     // No common name, use the value of the last item in the cert's entries.
-    tabName = cert.subject.entries?.slice(-1)[1] || "";
+    tabName = cert.subject?.entries?.slice(-1)[0]?.[1] || "";
   }
 
   if (!cert) {

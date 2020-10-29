@@ -5,6 +5,7 @@
 // Original author: nohlmeier@mozilla.com
 
 #include "RtpLogger.h"
+#include "mozilla/Logging.h"
 
 #include <ctime>
 #include <iomanip>
