@@ -41,10 +41,7 @@ class LayoutView {
       return;
     }
 
-    const {
-      onShowBoxModelHighlighterForNode,
-      setSelectedNode,
-    } = this.inspector.getCommonComponentProps();
+    const { setSelectedNode } = this.inspector.getCommonComponentProps();
 
     const {
       onShowBoxModelEditor,
@@ -79,7 +76,6 @@ class LayoutView {
       onSetFlexboxOverlayColor,
       onSetGridOverlayColor,
       onShowBoxModelEditor,
-      onShowBoxModelHighlighterForNode,
       onShowRulePreviewTooltip,
       onShowGridOutlineHighlight,
       onToggleFlexboxHighlighter,
