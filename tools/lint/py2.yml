@@ -15,6 +15,7 @@ py2:
         - netwerk
         - nsprpub
         - other-licenses
+        - python/mozbuild/mozbuild/fork_interpose.py
         - security
         - servo
         - taskcluster/docker/funsize-update-generator
