@@ -61,6 +61,14 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       "Lockwise scanned wrapper is hidden"
     );
 
+    const lockwiseBodyContent = content.document.querySelector(
+      "#lockwise-body-content .no-logins"
+    );
+    ok(
+      ContentTaskUtils.is_visible(lockwiseBodyContent),
+      "Lockwise app content is visible"
+    );
+
     const managePasswordsButton = content.document.querySelector(
       "#manage-passwords-button"
     );
@@ -153,6 +161,14 @@ add_task(async function testLockwiseCardUIWithLogins() {
       lockwiseScannedText,
       "1 password stored securely.",
       "Correct lockwise scanned text is shown"
+    );
+
+    const lockwiseBodyContent = content.document.querySelector(
+      "#lockwise-body-content .no-logins"
+    );
+    ok(
+      ContentTaskUtils.is_hidden(lockwiseBodyContent),
+      "Lockwise app content is hidden"
     );
 
     const savePasswordsButton = content.document.querySelector(
