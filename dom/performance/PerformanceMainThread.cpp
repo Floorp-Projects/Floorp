@@ -7,6 +7,10 @@
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
 #include "PerformancePaintTiming.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/PerformanceNavigationTiming.h"
+#include "mozilla/dom/PerformanceResourceTiming.h"
+#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 
