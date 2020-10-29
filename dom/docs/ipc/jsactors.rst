@@ -201,19 +201,6 @@ If you register your Actor to listen for content events, implement a ``handleEve
 
 This method is called immediately *after* a child actor is created and initialized. Unlike the actor's constructor, it is possible to do things like access the actor's content window and send messages from this callback.
 
-``willDestroy``
-```````````````
-
-This method is called when we know that the `JSActor` pair is going to be destroyed because the associated BrowsingContext is going away. You should override this method if you have any cleanup you need to do before going away.
-
-You can also use ``willDestroy`` as a last opportunity to send messages to the other side, as the communications channel at this point is still running.
-
-.. note::
-    This method cannot be async.
-
-.. note::
-    As a `JSProcessActorChild` is destroyed when its process dies, a `JSProcessActorChild` will never receive this call.
-
 ``didDestroy``
 ``````````````
 

@@ -65,14 +65,6 @@ class TestWindowChild extends JSWindowActorChild {
     return "TestWindowChild";
   }
 
-  willDestroy() {
-    Services.obs.notifyObservers(
-      this,
-      "test-js-window-actor-willdestroy",
-      true
-    );
-  }
-
   didDestroy() {
     Services.obs.notifyObservers(this, "test-js-window-actor-diddestroy", true);
   }

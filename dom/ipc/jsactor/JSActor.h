@@ -85,8 +85,8 @@ class JSActor : public nsISupports, public nsWrapperCache {
   void StartDestroy();
   void AfterDestroy();
 
-  enum class CallbackFunction { WillDestroy, DidDestroy, ActorCreated };
-  void InvokeCallback(CallbackFunction willDestroy);
+  enum class CallbackFunction { DidDestroy, ActorCreated };
+  void InvokeCallback(CallbackFunction callback);
 
   virtual void ClearManager() = 0;
 
