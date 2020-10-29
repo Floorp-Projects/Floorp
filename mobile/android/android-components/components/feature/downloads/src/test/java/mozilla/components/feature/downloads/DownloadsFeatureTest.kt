@@ -444,6 +444,46 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `download dialog must NOT be shown WHEN the fragmentManager isDestroyed`() {
+        val fragmentManager = mockFragmentManager()
+        val dialog = mock<DownloadDialogFragment>()
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            useCases = mock(),
+            downloadManager = mock(),
+            fragmentManager = fragmentManager
+        ))
+
+        doReturn(false).`when`(feature).isAlreadyADownloadDialog()
+        doReturn(true).`when`(fragmentManager).isDestroyed
+
+        feature.showDownloadDialog(mock(), mock(), dialog)
+
+        verify(dialog, never()).showNow(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG)
+    }
+
+    @Test
+    fun `app downloader dialog must NOT be shown WHEN the fragmentManager isDestroyed`() {
+        val fragmentManager = mockFragmentManager()
+        val dialog = mock<DownloadAppChooserDialog>()
+        val feature = spy(DownloadsFeature(
+                testContext,
+                store,
+                useCases = mock(),
+                downloadManager = mock(),
+                fragmentManager = fragmentManager
+        ))
+
+        doReturn(false).`when`(feature).isAlreadyADownloadDialog()
+        doReturn(true).`when`(fragmentManager).isDestroyed
+
+        feature.showAppDownloaderDialog(mock(), mock(), emptyList(), dialog)
+
+        verify(dialog, never()).showNow(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG)
+    }
+
+    @Test
     fun `processDownload only forward downloads when shouldForwardToThirdParties is true`() {
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = "test-tab")

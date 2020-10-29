@@ -239,7 +239,7 @@ class DownloadsFeature(
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
-        if (!isAlreadyADownloadDialog() && fragmentManager != null) {
+        if (!isAlreadyADownloadDialog() && fragmentManager != null && !fragmentManager.isDestroyed) {
             dialog.showNow(fragmentManager, FRAGMENT_TAG)
         }
     }
@@ -279,7 +279,7 @@ class DownloadsFeature(
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
-        if (!isAlreadyAppDownloaderDialog() && fragmentManager != null) {
+        if (!isAlreadyAppDownloaderDialog() && fragmentManager != null && !fragmentManager.isDestroyed) {
             appChooserDialog.showNow(fragmentManager, DownloadAppChooserDialog.FRAGMENT_TAG)
         }
     }
