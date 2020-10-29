@@ -49,6 +49,7 @@ async function openRTAMOWelcomePage() {
   );
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(tab);
+    pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, ""]);
   });
   return tab.linkedBrowser;
 }
