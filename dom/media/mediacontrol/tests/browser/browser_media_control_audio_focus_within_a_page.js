@@ -1,8 +1,7 @@
-/* eslint-disable no-undef */
 const mainPageURL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_main_frame_with_multiple_child_session_frames.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_main_frame_with_multiple_child_session_frames.html";
 const frameURL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_iframe_media.html";
 
 const frame1 = "frame1";
 const frame2 = "frame2";
