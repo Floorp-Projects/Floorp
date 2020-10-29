@@ -62,5 +62,6 @@ dom/media/systemservices/
 dom/media/test/
 dom/media/tests/
 dom/media/wave/
+dom/media/webaudio/
 dom/quota/
 dom/simpledb/

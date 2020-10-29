@@ -91,7 +91,8 @@ already_AddRefed<AudioNodeTrack> AudioNodeTrack::Create(
   if (isRealtime && !aCtx->ShouldSuspendNewTrack()) {
     nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
     tracks.AppendElement(track);
-    aGraph->ApplyAudioContextOperation(aCtx->DestinationTrack(), move(tracks),
+    aGraph->ApplyAudioContextOperation(aCtx->DestinationTrack(),
+                                       std::move(tracks),
                                        AudioContextOperation::Resume);
   }
   return track.forget();
