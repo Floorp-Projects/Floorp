@@ -147,12 +147,14 @@ class AbortSignalProxy final : public AbortFollower {
                    nsIEventTarget* aMainThreadEventTarget)
       : mMainThreadEventTarget(aMainThreadEventTarget),
         mAborted(aSignalImpl->Aborted()) {
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mMainThreadEventTarget);
     Follow(aSignalImpl);
   }
 
   // AbortFollower
   void RunAbortAlgorithm() override {
+    MOZ_ASSERT(!NS_IsMainThread());
     RefPtr<AbortSignalProxyRunnable> runnable =
         new AbortSignalProxyRunnable(this);
     mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
@@ -171,7 +173,10 @@ class AbortSignalProxy final : public AbortFollower {
     return Signal();
   }
 
-  void Shutdown() { Unfollow(); }
+  void Shutdown() {
+    MOZ_ASSERT(!NS_IsMainThread());
+    Unfollow();
+  }
 
  private:
   ~AbortSignalProxy() {
