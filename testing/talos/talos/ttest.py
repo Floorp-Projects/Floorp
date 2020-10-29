@@ -17,6 +17,7 @@ import json
 import os
 import platform
 import shutil
+import six
 import subprocess
 import sys
 import time
@@ -139,7 +140,7 @@ class TTest(object):
             test_config, global_counters, browser_config.get("framework")
         )
 
-        for i in range(test_config["cycles"]):
+        for i in six.moves.range(test_config["cycles"]):
             time.sleep(0.25)
             LOG.info(
                 "Running cycle %d/%d for %s test..."

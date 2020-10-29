@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
+import six
 import sys
 import json
 import socket
@@ -98,7 +99,7 @@ class TalosRunner(MozbuildObject):
     def write_config(self):
         try:
             config_file = open(self.config_file_path, "wb")
-            config_file.write(json.dumps(self.config))
+            config_file.write(six.ensure_binary(json.dumps(self.config)))
         except IOError as e:
             err_str = "Error writing to Talos Mozharness config file {0}:{1}"
             print(err_str.format(self.config_file_path, str(e)))

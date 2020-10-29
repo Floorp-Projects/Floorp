@@ -376,6 +376,7 @@ WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
   event.mModifiers = modifiers;
   event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
+  event.mLayersId = mLayersId;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mOrigin,
@@ -436,6 +437,7 @@ WidgetWheelEvent PanGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
   wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
+  wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
@@ -551,6 +553,7 @@ WidgetWheelEvent PinchGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
   wheelEvent.mModifiers = this->modifiers | MODIFIER_CONTROL;
   wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
+  wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mFocusPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
@@ -771,6 +774,7 @@ WidgetWheelEvent ScrollWheelInput::ToWidgetEvent(nsIWidget* aWidget) const {
   wheelEvent.mModifiers = this->modifiers;
   wheelEvent.mTime = mTime;
   wheelEvent.mTimeStamp = mTimeStamp;
+  wheelEvent.mLayersId = mLayersId;
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));

@@ -14,9 +14,8 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import re
+import six
 import sys
-import urllib2
-import urlparse
 from optparse import OptionParser
 
 
@@ -100,7 +99,7 @@ def get_filename_from_url(url):
     """
     This returns the filename of the file we're trying to download
     """
-    parsed = urlparse.urlsplit(url.rstrip("/"))
+    parsed = six.moves.urllib.parse.urlsplit(url.rstrip("/"))
     if parsed.path != "":
         return parsed.path.rsplit("/", 1)[-1]
     else:
@@ -115,8 +114,8 @@ def download_file(url, path="", saveAs=None):
     """
     It downloads a file from URL to the indicated path
     """
-    req = urllib2.Request(url)
-    f = urllib2.urlopen(req)
+    req = six.moves.urllib.request.Request(url)
+    f = six.moves.urllib.request.urlopen(req)
     if path != "" and not os.path.isdir(path):
         try:
             os.makedirs(path)
