@@ -166,7 +166,10 @@ class AbortSignalProxy final : public AbortFollower {
     return mSignalImplMainThread;
   }
 
-  AbortSignalImpl* GetSignalImplForTargetThread() { return mFollowingSignal; }
+  AbortSignalImpl* GetSignalImplForTargetThread() {
+    MOZ_ASSERT(!NS_IsMainThread());
+    return Signal();
+  }
 
   void Shutdown() { Unfollow(); }
 
