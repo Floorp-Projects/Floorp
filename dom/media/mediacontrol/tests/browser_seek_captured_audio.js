@@ -1,5 +1,6 @@
+/* eslint-disable no-undef */
 const PAGE_NON_AUTOPLAY_MEDIA =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 
 const testVideoId = "video";
 
@@ -10,15 +11,18 @@ add_task(async function setupTestingPref() {
 });
 
 /**
- * When we capture audio from an media element to the web audio, if the media
- * is audible, it should be controlled by media keys as well.
+ * Seeking a captured audio media before it starts, and it should still be able
+ * to be controlled via media key after it starts playing.
  */
-add_task(async function testAudibleCapturedMedia() {
+add_task(async function testSeekAudibleCapturedMedia() {
   info(`open new non autoplay media page`);
   const tab = await createTabAndLoad(PAGE_NON_AUTOPLAY_MEDIA);
 
-  info(`capture audio and start playing`);
+  info(`perform seek on the captured media before it starts`);
   await captureAudio(tab, testVideoId);
+  await seekAudio(tab, testVideoId);
+
+  info(`start captured media`);
   await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key, captured media should be paused`);
@@ -41,5 +45,16 @@ function captureAudio(tab, elementId) {
     const context = new content.AudioContext();
     // Capture audio from the media element to a MediaElementAudioSourceNode.
     context.createMediaElementSource(video);
+  });
+}
+
+function seekAudio(tab, elementId) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [elementId], async Id => {
+    const video = content.document.getElementById(Id);
+    if (!video) {
+      ok(false, `can't get the media element!`);
+    }
+    video.currentTime = 0.0;
+    await new Promise(r => (video.onseeked = r));
   });
 }

@@ -1,13 +1,14 @@
+/* eslint-disable no-undef */
 const PAGE_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 const PAGE2_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_main_frame_with_multiple_child_session_frames.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_main_frame_with_multiple_child_session_frames.html";
 const IFRAME_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_iframe_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
 const CORS_IFRAME_URL =
-  "https://example.org/browser/dom/media/mediacontrol/tests/browser/file_iframe_media.html";
+  "https://example.org/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
 const CORS_IFRAME2_URL =
-  "https://test1.example.org/browser/dom/media/mediacontrol/tests/browser/file_iframe_media.html";
+  "https://test1.example.org/browser/dom/media/mediacontrol/tests/file_iframe_media.html";
 const videoId = "video";
 
 /**

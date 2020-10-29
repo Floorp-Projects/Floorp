@@ -1,5 +1,6 @@
+/* eslint-disable no-undef */
 const PAGE_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_looping_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_looping_media.html";
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({

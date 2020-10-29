@@ -1,7 +1,8 @@
+/* eslint-disable no-undef */
 const PAGE_NON_AUTOPLAY =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_non_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_non_autoplay.html";
 const PAGE_EMPTY_TITLE_URL =
-  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_empty_title.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/file_empty_title.html";
 
 const testVideoId = "video";
 const defaultFaviconName = "defaultFavicon.svg";
