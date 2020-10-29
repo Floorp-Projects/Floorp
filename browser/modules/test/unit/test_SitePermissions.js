@@ -13,6 +13,10 @@ const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref(
 );
 const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
+const EXT_PROTOCOL_ENABLED = Services.prefs.getBoolPref(
+  "security.external_protocol_requires_permission"
+);
+
 add_task(async function testPermissionsListing() {
   let expectedPermissions = [
     "autoplay-media",
@@ -39,6 +43,9 @@ add_task(async function testPermissionsListing() {
     // Should remove this checking and add it as default after it is fully pref'd-on.
     expectedPermissions.push("midi");
     expectedPermissions.push("midi-sysex");
+  }
+  if (EXT_PROTOCOL_ENABLED) {
+    expectedPermissions.push("open-protocol-handler");
   }
   Assert.deepEqual(
     SitePermissions.listPermissions().sort(),
@@ -198,6 +205,9 @@ add_task(async function testExactHostMatch() {
     // Should remove this checking and add it as default after it is fully pref-on.
     exactHostMatched.push("midi");
     exactHostMatched.push("midi-sysex");
+  }
+  if (EXT_PROTOCOL_ENABLED) {
+    exactHostMatched.push("open-protocol-handler");
   }
   let nonExactHostMatched = [
     "cookie",
