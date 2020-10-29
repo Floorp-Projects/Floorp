@@ -46,7 +46,7 @@ void LoggingHelper(bool aUseProfiler, const char* aFmt, va_list args) {
   ) {
     nsAutoCString message;
 
-    message.AppendPrintf(aFmt, args);
+    message.AppendVprintf(aFmt, args);
 
     MOZ_LOG(logModule, logLevel, ("%s", message.get()));
 

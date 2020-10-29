@@ -1212,7 +1212,7 @@ void nsTSubstring<T>::AppendPrintf(const char* aFormat, ...) {
 }
 
 template <typename T>
-void nsTSubstring<T>::AppendPrintf(const char* aFormat, va_list aAp) {
+void nsTSubstring<T>::AppendVprintf(const char* aFormat, va_list aAp) {
   PrintfAppend<T> appender(this);
   bool r = appender.vprint(aFormat, aAp);
   if (!r) {
