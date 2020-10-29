@@ -174,12 +174,6 @@
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
 }
 
-#menu_unsortedBookmarks,
-#BMB_unsortedBookmarks,
-#panelMenu_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg");
-}
-
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
