@@ -31,6 +31,8 @@ class AbortFollower {
 
   bool IsFollowing() const;
 
+  AbortSignalImpl* Signal() const { return mFollowingSignal; }
+
  protected:
   virtual ~AbortFollower();
 
