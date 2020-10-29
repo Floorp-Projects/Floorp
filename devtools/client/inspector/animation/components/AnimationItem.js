@@ -23,10 +23,11 @@ class AnimationItem extends Component {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
-      dispatch: PropTypes.func.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
       selectedAnimation: PropTypes.object.isRequired,
       setHighlightedNode: PropTypes.func.isRequired,
@@ -68,10 +69,11 @@ class AnimationItem extends Component {
   render() {
     const {
       animation,
-      dispatch,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
       selectAnimation,
       setHighlightedNode,
       setSelectedNode,
@@ -88,9 +90,10 @@ class AnimationItem extends Component {
       },
       AnimationTarget({
         animation,
-        dispatch,
         emitEventForTest,
         getNodeFromActor,
+        onHideBoxModelHighlighter,
+        onShowBoxModelHighlighterForNode,
         setHighlightedNode,
         setSelectedNode,
       }),

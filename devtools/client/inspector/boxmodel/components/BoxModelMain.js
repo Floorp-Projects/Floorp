@@ -19,11 +19,6 @@ const BoxModelEditable = createFactory(
 
 const Types = require("devtools/client/inspector/boxmodel/types");
 
-const {
-  highlightSelectedNode,
-  unhighlightNode,
-} = require("devtools/client/inspector/boxmodel/actions/box-model-highlighter");
-
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);
 
@@ -32,8 +27,9 @@ class BoxModelMain extends PureComponent {
     return {
       boxModel: PropTypes.shape(Types.boxModel).isRequired,
       boxModelContainer: PropTypes.object,
-      dispatch: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelEditor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighter: PropTypes.func.isRequired,
       onShowRulePreviewTooltip: PropTypes.func.isRequired,
     };
   }
@@ -289,16 +285,14 @@ class BoxModelMain extends PureComponent {
         }
       } while (el.parentNode);
 
-      this.props.dispatch(unhighlightNode());
+      this.props.onHideBoxModelHighlighter();
     }
 
-    this.props.dispatch(
-      highlightSelectedNode({
-        region,
-        showOnly: region,
-        onlyRegionArea: true,
-      })
-    );
+    this.props.onShowBoxModelHighlighter({
+      region,
+      showOnly: region,
+      onlyRegionArea: true,
+    });
 
     event.preventDefault();
   }
@@ -407,7 +401,6 @@ class BoxModelMain extends PureComponent {
   render() {
     const {
       boxModel,
-      dispatch,
       onShowBoxModelEditor,
       onShowRulePreviewTooltip,
     } = this.props;
@@ -487,7 +480,7 @@ class BoxModelMain extends PureComponent {
         onClick: this.onLevelClick,
         onKeyDown: this.onKeyDown,
         onMouseOver: this.onHighlightMouseOver,
-        onMouseOut: () => dispatch(unhighlightNode()),
+        onMouseOut: this.props.onHideBoxModelHighlighter,
       },
       displayPosition
         ? dom.span(

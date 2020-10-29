@@ -12,6 +12,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 const FlexContainer = createFactory(
@@ -26,12 +27,12 @@ const Types = require("devtools/client/inspector/flexbox/types");
 class Header extends PureComponent {
   static get propTypes() {
     return {
-      color: PropTypes.string.isRequired,
-      dispatch: PropTypes.func.isRequired,
       flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       highlighted: PropTypes.bool.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
@@ -74,19 +75,19 @@ class Header extends PureComponent {
     }
 
     const {
-      color,
-      dispatch,
       flexContainer,
       getSwatchColorPickerTooltip,
+      onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
+      onShowBoxModelHighlighterForNode,
     } = this.props;
 
     return FlexContainer({
-      color,
-      dispatch,
       flexContainer,
       getSwatchColorPickerTooltip,
+      onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
+      onShowBoxModelHighlighterForNode,
     });
   }
 
@@ -141,4 +142,10 @@ class Header extends PureComponent {
   }
 }
 
-module.exports = Header;
+const mapStateToProps = state => {
+  return {
+    highlighted: state.flexbox.highlighted,
+  };
+};
+
+module.exports = connect(mapStateToProps)(Header);
