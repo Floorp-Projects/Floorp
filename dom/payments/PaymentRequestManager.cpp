@@ -10,6 +10,7 @@
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsIPrincipal.h"
+#include "nsIPaymentActionResponse.h"
 #include "PaymentRequestManager.h"
 #include "PaymentRequestUtils.h"
 #include "PaymentResponse.h"
