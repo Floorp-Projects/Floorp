@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PerformanceStorageWorker_h
 #define mozilla_dom_PerformanceStorageWorker_h
 
+#include "mozilla/Mutex.h"
 #include "PerformanceStorage.h"
 
 namespace mozilla {
