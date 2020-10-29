@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
+import six
 import struct
 from ctypes import byref, create_string_buffer, memmove, Union, c_double, c_longlong
 from ctypes import windll
@@ -69,7 +70,7 @@ def _getExpandedCounterPaths(processName, counterName):
     paths = []
     i = 0
     path = ""
-    for j in range(0, pcchPathListLength.value):
+    for j in six.moves.range(0, pcchPathListLength.value):
         c = struct.unpack_from("c", buffer, offset=j)[0]
         if c == "\0":
             if j == i:

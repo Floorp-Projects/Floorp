@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import pprint
 import signal
+import six
 import sys
 import time
 import traceback
@@ -82,6 +83,7 @@ class Reader(object):
         self.proc = None
 
     def __call__(self, line):
+        line = six.ensure_str(line)
         if line.find("__endTimestamp") != -1:
             self.got_end_timestamp = True
             self.event.set()
@@ -170,7 +172,7 @@ def run_browser(
             kill_and_get_minidump(context, minidump_dir)
             raise TalosError("timeout")
         if reader.got_end_timestamp:
-            for i in range(1, wait_for_quit_timeout):
+            for i in six.moves.range(1, wait_for_quit_timeout):
                 if proc.wait(1) is not None:
                     break
             if proc.poll() is None:

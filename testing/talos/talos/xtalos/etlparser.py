@@ -14,6 +14,7 @@ import subprocess
 import sys
 
 from talos.xtalos import xtalos
+import six
 
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2
@@ -72,7 +73,7 @@ def filterOutHeader(data):
     done = False
     while not done:
         try:
-            row = data.next()
+            row = next(data)
         except StopIteration:
             done = True
             break
@@ -380,7 +381,7 @@ def etlparser(
         uploadFile(csvname)
 
     output = "thread, stage, counter, value\n"
-    for cntr in sorted(io.iterkeys()):
+    for cntr in sorted(six.iterkeys(io)):
         output += "%s, %s\n" % (", ".join(cntr), str(io[cntr]))
     if outputFile:
         fname = "%s_thread_stats%s" % os.path.splitext(outputFile)
@@ -399,24 +400,26 @@ def etlparser(
 
     # Filter out stages, threads, and whitelisted files that we're not
     # interested in
-    filekeys = filter(
-        lambda x: (all_stages or x[2] == stages[0])
+    filekeys = [
+        x
+        for x in six.iterkeys(files)
+        if (all_stages or x[2] == stages[0])
         and (all_threads or x[1].endswith("(main)"))
-        and (all_stages and x[2] != stages[0] or not checkWhitelist(x[0], whitelist)),
-        files.iterkeys(),
-    )
+        and (all_stages and x[2] != stages[0] or not checkWhitelist(x[0], whitelist))
+    ]
     if debug:
         # in debug, we want stages = [startup+normal] and all threads, not just (main)
         # we will use this data to upload fileIO info to blobber only for debug mode
-        outputData = filter(
-            lambda x: (all_stages or x[2] in [stages[0], stages[1]])
+        outputData = [
+            x
+            for x in six.iterkeys(files)
+            if (all_stages or x[2] in [stages[0], stages[1]])
             and (
                 all_stages
                 and x[2] not in [stages[0], stages[1]]
                 or not checkWhitelist(x[0], whitelist)
-            ),
-            files.iterkeys(),
-        )
+            )
+        ]
     else:
         outputData = filekeys
 
