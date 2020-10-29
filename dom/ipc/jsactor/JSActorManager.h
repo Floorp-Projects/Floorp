@@ -42,10 +42,15 @@ class JSActorManager : public nsISupports {
 
  protected:
   /**
-   * Lifecycle methods which will fire the `willDestroy` and `didDestroy`
-   * methods on relevant actors.
+   * The actor is about to be destroyed so prevent it from sending any
+   * more messages.
    */
   void JSActorWillDestroy();
+
+  /**
+   * Lifecycle method which will fire the `didDestroy` methods on relevant
+   * actors.
+   */
   void JSActorDidDestroy();
 
   /**

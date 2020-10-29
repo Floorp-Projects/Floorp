@@ -16,7 +16,7 @@ class ContentEventListenerChild extends JSWindowActorChild {
     Services.cpmm.sharedData.addEventListener("change", this);
   }
 
-  willDestroy() {
+  didDestroy() {
     this._shutdown = true;
     Services.cpmm.sharedData.removeEventListener("change", this);
     this._updateContentEventListeners(/* clearListeners = */ true);
