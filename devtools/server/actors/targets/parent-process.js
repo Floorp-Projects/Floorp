@@ -24,10 +24,11 @@ const {
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
 const { extend } = require("devtools/shared/extend");
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   parentProcessTargetSpec,
 } = require("devtools/shared/specs/targets/parent-process");
+const Targets = require("devtools/server/actors/targets/index");
+const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
@@ -157,7 +158,8 @@ parentProcessTargetPrototype._detach = function() {
 };
 
 exports.parentProcessTargetPrototype = parentProcessTargetPrototype;
-exports.ParentProcessTargetActor = ActorClassWithSpec(
+exports.ParentProcessTargetActor = TargetActorMixin(
+  Targets.TYPES.FRAME,
   parentProcessTargetSpec,
   parentProcessTargetPrototype
 );
