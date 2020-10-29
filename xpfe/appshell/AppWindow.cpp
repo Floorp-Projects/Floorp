@@ -1835,9 +1835,10 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     urlbarWidth -= (double)(2 * (urlbarBreakoutExtend + urlbarMarginInline));
   }
 
-  PersistPreXULSkeletonUIValues(aRect.X(), aRect.Y(), aRect.Width(),
-                                aRect.Height(), urlbarX, urlbarWidth,
-                                mWindow->GetDefaultScale().scale);
+  PersistPreXULSkeletonUIValues(
+      aRect.X(), aRect.Y(), aRect.Width(), aRect.Height(),
+      mWindow->SizeMode() == nsSizeMode_Maximized, urlbarX, urlbarWidth,
+      mWindow->GetDefaultScale().scale);
 #endif
 
   return NS_OK;
