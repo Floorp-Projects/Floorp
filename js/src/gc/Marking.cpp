@@ -3000,7 +3000,7 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
     uint32_t start = std::min(start_, obj->slotSpan());
     uint32_t end = std::min(start_ + count_, obj->slotSpan());
     MOZ_ASSERT(start <= end);
-    mover.traceObjectSlots(obj, start, end - start);
+    mover.traceObjectSlots(obj, start, end);
   }
 }
 
@@ -3214,12 +3214,12 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
 }
 
 void js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start,
-                                          uint32_t length) {
+                                          uint32_t end) {
   HeapSlot* fixedStart;
   HeapSlot* fixedEnd;
   HeapSlot* dynStart;
   HeapSlot* dynEnd;
-  nobj->getSlotRange(start, length, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
+  nobj->getSlotRange(start, end, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
   if (fixedStart) {
     traceSlots(fixedStart->unbarrieredAddress(),
                fixedEnd->unbarrieredAddress());
