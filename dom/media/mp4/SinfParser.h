@@ -8,6 +8,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "Atom.h"
 #include "AtomType.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
