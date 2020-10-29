@@ -289,6 +289,16 @@ public class Utils {
     }
 
     /**
+     * Determine if a member is declared public.
+     *
+     * @param member The Member to check.
+     * @return true if the member is declared public, false otherwise.
+     */
+    public static boolean isPublic(final Member member) {
+        return Modifier.isPublic(member.getModifiers());
+    }
+
+    /**
      * Return an enum value with the given name.
      *
      * @param type Enum class type.
