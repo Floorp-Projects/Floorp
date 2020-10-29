@@ -13,10 +13,10 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.android.test.rules.WebserverRule
@@ -37,7 +37,7 @@ private const val WAIT_FOR_WEB_CONTENT_SECONDS = 15L
 @LargeTest
 class SmokeTests {
     @get:Rule
-    val activityRule: ActivityTestRule<BrowserActivity> = ActivityTestRule(BrowserActivity::class.java)
+    val activityRule: ActivityScenarioRule<BrowserActivity> = ActivityScenarioRule(BrowserActivity::class.java)
 
     @get:Rule
     val webserverRule: WebserverRule = WebserverRule()

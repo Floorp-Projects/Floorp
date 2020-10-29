@@ -32,6 +32,7 @@ dependencies {
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_cardview
     implementation Dependencies.androidx_constraintlayout
+    implementation Dependencies.androidx_coordinatorlayout
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
@@ -43,7 +44,6 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_coroutines
-
 }
 
 apply from: '../../../publish.gradle'

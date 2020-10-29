@@ -136,11 +136,15 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     }
 
     private fun findPreviousPermissionDialogFragment(): PermissionsDialogFragment? {
-        return fragmentManager?.findFragmentByTag(PERMISSIONS_DIALOG_FRAGMENT_TAG) as? PermissionsDialogFragment
+        return parentFragmentManager.findFragmentByTag(
+            PERMISSIONS_DIALOG_FRAGMENT_TAG
+        ) as? PermissionsDialogFragment
     }
 
     private fun findPreviousInstallationDialogFragment(): AddonInstallationDialogFragment? {
-        return fragmentManager?.findFragmentByTag(INSTALLATION_DIALOG_FRAGMENT_TAG) as? AddonInstallationDialogFragment
+        return parentFragmentManager.findFragmentByTag(
+            INSTALLATION_DIALOG_FRAGMENT_TAG
+        ) as? AddonInstallationDialogFragment
     }
 
     private fun showPermissionDialog(addon: Addon) {
@@ -153,8 +157,8 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
             onPositiveButtonClicked = onConfirmPermissionButtonClicked
         )
 
-        if (!isAlreadyADialogCreated() && fragmentManager != null) {
-            dialog.show(requireFragmentManager(), PERMISSIONS_DIALOG_FRAGMENT_TAG)
+        if (!isAlreadyADialogCreated() && isAdded) {
+            dialog.show(parentFragmentManager, PERMISSIONS_DIALOG_FRAGMENT_TAG)
         }
     }
 
@@ -169,8 +173,8 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
             onConfirmButtonClicked = onConfirmInstallationButtonClicked
         )
 
-        if (!isAlreadyADialogCreated() && fragmentManager != null) {
-            dialog.show(requireFragmentManager(), INSTALLATION_DIALOG_FRAGMENT_TAG)
+        if (!isAlreadyADialogCreated() && isAdded) {
+            dialog.show(parentFragmentManager, INSTALLATION_DIALOG_FRAGMENT_TAG)
         }
     }
 
