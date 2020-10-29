@@ -10,6 +10,8 @@
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
 #include "BasicCardPayment.h"
 #include "PaymentAddress.h"
+#include "PaymentRequest.h"
+#include "PaymentRequestManager.h"
 #include "PaymentRequestUtils.h"
 #include "mozilla/EventStateManager.h"
 
