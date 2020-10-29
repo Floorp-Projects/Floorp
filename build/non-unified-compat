@@ -66,5 +66,6 @@ dom/media/webaudio/
 dom/media/webm/
 dom/media/webrtc/
 dom/media/webspeech/
+dom/media/webvtt/
 dom/quota/
 dom/simpledb/
