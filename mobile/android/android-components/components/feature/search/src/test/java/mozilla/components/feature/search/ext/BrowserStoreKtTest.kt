@@ -73,7 +73,9 @@ class BrowserStoreKtTest {
             userSelectedSearchEngineId = null,
             regionDefaultSearchEngineId = "google",
             customSearchEngines = emptyList(),
-            hiddenSearchEngines = emptyList()
+            hiddenSearchEngines = emptyList(),
+            additionalAvailableSearchEngines = emptyList(),
+            additionalSearchEngines = emptyList()
         ))
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))
@@ -95,7 +97,9 @@ class BrowserStoreKtTest {
             userSelectedSearchEngineId = null,
             regionDefaultSearchEngineId = "default",
             customSearchEngines = emptyList(),
-            hiddenSearchEngines = emptyList()
+            hiddenSearchEngines = emptyList(),
+            additionalAvailableSearchEngines = emptyList(),
+            additionalSearchEngines = emptyList()
         ))
 
         assertTrue(latch.await(10, TimeUnit.SECONDS))

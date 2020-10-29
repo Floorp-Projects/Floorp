@@ -21,6 +21,8 @@ internal object SearchReducer {
             is SearchAction.SelectSearchEngineAction -> state.selectSearchEngine(action)
             is SearchAction.ShowSearchEngineAction -> state.showSearchEngine(action)
             is SearchAction.HideSearchEngineAction -> state.hideSearchEngine(action)
+            is SearchAction.AddAdditionalSearchEngineAction -> state.addAdditionalSearchEngine(action)
+            is SearchAction.RemoveAdditionalSearchEngineAction -> state.removeAdditionalSearchEngine(action)
         }
     }
 }
@@ -34,6 +36,8 @@ private fun BrowserState.setSearchEngines(
         userSelectedSearchEngineId = action.userSelectedSearchEngineId,
         regionDefaultSearchEngineId = action.regionDefaultSearchEngineId,
         hiddenSearchEngines = action.hiddenSearchEngines,
+        additionalSearchEngines = action.additionalSearchEngines,
+        additionalAvailableSearchEngines = action.additionalAvailableSearchEngines,
         complete = true
     ))
 }
@@ -105,6 +109,40 @@ private fun BrowserState.hideSearchEngine(
         copy(search = search.copy(
             regionSearchEngines = search.regionSearchEngines - searchEngine,
             hiddenSearchEngines = search.hiddenSearchEngines + searchEngine
+        ))
+    } else {
+        this
+    }
+}
+
+private fun BrowserState.addAdditionalSearchEngine(
+    action: SearchAction.AddAdditionalSearchEngineAction
+): BrowserState {
+    val searchEngine = search.additionalAvailableSearchEngines.find { searchEngine ->
+        searchEngine.id == action.searchEngineId
+    }
+
+    return if (searchEngine != null) {
+        copy(search = search.copy(
+            additionalSearchEngines = search.additionalSearchEngines + searchEngine,
+            additionalAvailableSearchEngines = search.additionalAvailableSearchEngines - searchEngine
+        ))
+    } else {
+        this
+    }
+}
+
+private fun BrowserState.removeAdditionalSearchEngine(
+    action: SearchAction.RemoveAdditionalSearchEngineAction
+): BrowserState {
+    val searchEngine = search.additionalSearchEngines.find { searchEngine ->
+        searchEngine.id == action.searchEngineId
+    }
+
+    return if (searchEngine != null) {
+        copy(search = search.copy(
+            additionalAvailableSearchEngines = search.additionalAvailableSearchEngines + searchEngine,
+            additionalSearchEngines = search.additionalSearchEngines - searchEngine
         ))
     } else {
         this

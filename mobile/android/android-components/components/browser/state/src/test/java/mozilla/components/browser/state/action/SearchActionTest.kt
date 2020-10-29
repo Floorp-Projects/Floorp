@@ -43,7 +43,9 @@ class SearchActionTest {
             regionDefaultSearchEngineId = "id2",
             customSearchEngines = emptyList(),
             userSelectedSearchEngineId = null,
-            hiddenSearchEngines = emptyList()
+            hiddenSearchEngines = emptyList(),
+            additionalSearchEngines = emptyList(),
+            additionalAvailableSearchEngines = emptyList()
         )).joinBlocking()
 
         val searchEngines = store.state.search.regionSearchEngines
@@ -77,7 +79,9 @@ class SearchActionTest {
             regionSearchEngines = emptyList(),
             regionDefaultSearchEngineId = "default",
             userSelectedSearchEngineId = null,
-            hiddenSearchEngines = emptyList()
+            hiddenSearchEngines = emptyList(),
+            additionalSearchEngines = emptyList(),
+            additionalAvailableSearchEngines = emptyList()
         )).joinBlocking()
 
         val searchEngines = store.state.search.customSearchEngines

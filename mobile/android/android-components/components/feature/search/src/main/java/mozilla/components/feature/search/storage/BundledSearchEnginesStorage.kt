@@ -13,13 +13,17 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.search.middleware.SearchMiddleware
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
+
+private val logger = Logger("BundledSearchEnginesStorage")
 
 /**
  * A storage implementation for reading bundled [SearchEngine]s from the app's assets.
@@ -41,6 +45,7 @@ internal class BundledSearchEnginesStorage(
         val searchEngines = loadSearchEnginesFromList(
             context,
             searchEngineIdentifiers.distinct(),
+            SearchEngine.Type.BUNDLED,
             coroutineContext
         )
 
@@ -67,6 +72,22 @@ internal class BundledSearchEnginesStorage(
             list = orderedList + unorderedRest,
             defaultSearchEngineId = defaultEngine.id
         )
+    }
+
+    override suspend fun load(
+        ids: List<String>,
+        coroutineContext: CoroutineContext
+    ): List<SearchEngine> = withContext(coroutineContext) {
+        if (ids.isEmpty()) {
+            emptyList()
+        } else {
+            loadSearchEnginesFromList(
+                context,
+                ids.distinct(),
+                SearchEngine.Type.BUNDLED_ADDITIONAL,
+                coroutineContext
+            )
+        }
     }
 }
 
@@ -201,12 +222,13 @@ private fun applyOverridesIfNeeded(
 private suspend fun loadSearchEnginesFromList(
     context: Context,
     searchEngineIdentifiers: List<String>,
+    type: SearchEngine.Type,
     coroutineContext: CoroutineContext
 ): List<SearchEngine> {
     val assets = context.assets
-    val reader = SearchEngineReader(type = SearchEngine.Type.BUNDLED)
+    val reader = SearchEngineReader(type)
 
-    val deferredSearchEngines = mutableListOf<Deferred<SearchEngine>>()
+    val deferredSearchEngines = mutableListOf<Deferred<SearchEngine?>>()
 
     searchEngineIdentifiers.forEach { identifier ->
         deferredSearchEngines.add(GlobalScope.async(coroutineContext) {
@@ -214,15 +236,20 @@ private suspend fun loadSearchEnginesFromList(
         })
     }
 
-    return deferredSearchEngines.map { it.await() }
+    return deferredSearchEngines.mapNotNull { it.await() }
 }
 
 private fun loadSearchEngine(
     assets: AssetManager,
     reader: SearchEngineReader,
     identifier: String
-): SearchEngine = assets.open("searchplugins/$identifier.xml").use { stream ->
-    reader.loadStream(identifier, stream)
+): SearchEngine? = try {
+    assets.open("searchplugins/$identifier.xml").use { stream ->
+        reader.loadStream(identifier, stream)
+    }
+} catch (e: IOException) {
+    logger.error("Could not load additional search engine with ID $identifier", e)
+    null
 }
 
 private val Locale.languageTag: String

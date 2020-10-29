@@ -13,6 +13,10 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property region The region of the user.
  * @property regionSearchEngines The list of bundled [SearchEngine]s for the "home" region of the user.
  * @property customSearchEngines The list of custom [SearchEngine]s, added by the user.
+ * @property additionalSearchEngines Additional [SearchEngine]s that the application decided to load
+ * and that the user explicitly added to their list of search engines.
+ * @property additionalAvailableSearchEngines Additional [SearchEngine]s that the application decided
+ * to load and that are available for the user to be added to their list of search engines.
  * @property hiddenSearchEngines The list of bundled [SearchEngine]s the user has explicitly hidden.
  * @property userSelectedSearchEngineId The ID of the default [SearchEngine] selected by the user. Or
  * `null` if the user hasn't made an explicit choice.
@@ -25,6 +29,8 @@ data class SearchState(
     val region: RegionState? = null,
     val regionSearchEngines: List<SearchEngine> = emptyList(),
     val customSearchEngines: List<SearchEngine> = emptyList(),
+    val additionalSearchEngines: List<SearchEngine> = emptyList(),
+    val additionalAvailableSearchEngines: List<SearchEngine> = emptyList(),
     val hiddenSearchEngines: List<SearchEngine> = emptyList(),
     val userSelectedSearchEngineId: String? = null,
     val regionDefaultSearchEngineId: String? = null,
@@ -32,10 +38,17 @@ data class SearchState(
 )
 
 /**
- * The list of search engines, bundled and custom.
+ * The list of search engines to be used for searches (bundled and custom search engines).
  */
 val SearchState.searchEngines: List<SearchEngine>
-    get() = (regionSearchEngines + customSearchEngines)
+    get() = (regionSearchEngines + additionalSearchEngines + customSearchEngines)
+
+/**
+ * The list of search engines that are available for the user to be added to their list of search
+ * engines.
+ */
+val SearchState.availableSearchEngines: List<SearchEngine>
+    get() = (hiddenSearchEngines + additionalAvailableSearchEngines)
 
 /**
  * The primary search engine to be used by default for searches. This will either be the user

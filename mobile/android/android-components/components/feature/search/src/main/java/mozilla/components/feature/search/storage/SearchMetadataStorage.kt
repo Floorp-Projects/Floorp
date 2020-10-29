@@ -13,6 +13,7 @@ private const val PREFERENCE_FILE = "mozac_feature_search_metadata"
 
 private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID = "user_selected_search_engine"
 private const val PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES = "hidden_search_engines"
+private const val PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES = "additional_search_engines"
 
 /**
  * Storage for saving additional search related metadata.
@@ -57,7 +58,25 @@ internal class SearchMetadataStorage(
      */
     override suspend fun getHiddenSearchEngines(): List<String> {
         return preferences.value
-            .getStringSet(PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES, emptySet())!!
-            .toList()
+            .getStringSet(PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES, emptySet())
+            ?.toList() ?: emptyList()
+    }
+
+    /**
+     * Gets the list of IDs of additional search engines that the user explicitly added.
+     */
+    override suspend fun getAdditionalSearchEngines(): List<String> {
+        return preferences.value
+            .getStringSet(PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES, emptySet())
+            ?.toList() ?: emptyList()
+    }
+
+    /**
+     * Sets the list of IDs of additional search engines that the user explicitly added.
+     */
+    override suspend fun setAdditionalSearchEngines(ids: List<String>) {
+        preferences.value.edit()
+            .putStringSet(PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES, ids.toSet())
+            .apply()
     }
 }

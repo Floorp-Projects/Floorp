@@ -28,7 +28,19 @@ data class SearchEngine(
      * A enum class representing a search engine type.
      */
     enum class Type {
+        /**
+         * A bundled search engine.
+         */
         BUNDLED,
-        CUSTOM
+
+        /**
+         * A bundled search engine that was loaded additionally, requested by the application.
+         */
+        BUNDLED_ADDITIONAL,
+
+        /**
+         * A custom search engine added by the user.
+         */
+        CUSTOM,
     }
 }
