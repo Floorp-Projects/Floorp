@@ -778,16 +778,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
-  onDetach: function(request) {
-    this.destroy();
-    this._state = "detached";
-    this._debuggerSourcesSeen = null;
-
-    dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
-    this.emit("detached");
-    return {};
-  },
-
   onReconfigure: function(request) {
     if (this.state == "exited") {
       return { error: "wrongState" };
@@ -2213,7 +2203,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
 Object.assign(ThreadActor.prototype.requestTypes, {
   attach: ThreadActor.prototype.onAttach,
-  detach: ThreadActor.prototype.onDetach,
   reconfigure: ThreadActor.prototype.onReconfigure,
   resume: ThreadActor.prototype.onResume,
   interrupt: ThreadActor.prototype.onInterrupt,

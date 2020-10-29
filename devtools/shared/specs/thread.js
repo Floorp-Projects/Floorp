@@ -59,7 +59,6 @@ const threadSpec = generateActorSpec({
       error: Option(0, "nullable:json"),
     },
     resumed: {},
-    detached: {},
     willInterrupt: {},
     newSource: {
       source: Option(0, "json"),
@@ -71,10 +70,6 @@ const threadSpec = generateActorSpec({
       request: {
         options: Arg(0, "json"),
       },
-      response: {},
-    },
-    detach: {
-      request: {},
       response: {},
     },
     reconfigure: {
