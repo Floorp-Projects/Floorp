@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
 import android.os.StrictMode
 import androidx.core.content.ContextCompat
 import io.sentry.Sentry
@@ -93,7 +94,8 @@ class Core(
     val engine: Engine by lazy {
         val defaultSettings = DefaultSettings(
             requestInterceptor = AppRequestInterceptor(context),
-            remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled,
+            remoteDebuggingEnabled = context.settings().isRemoteDebuggingEnabled &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.M,
             testingModeEnabled = false,
             trackingProtectionPolicy = trackingProtectionPolicyFactory.createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage),

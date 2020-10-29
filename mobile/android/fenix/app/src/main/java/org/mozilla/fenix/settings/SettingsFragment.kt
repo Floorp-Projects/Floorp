@@ -378,6 +378,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         preferenceExternalDownloadManager.isVisible = FeatureFlags.externalDownloadManager
+        preferenceRemoteDebugging?.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
         preferenceRemoteDebugging?.setOnPreferenceChangeListener<Boolean> { preference, newValue ->
             preference.context.settings().preferences.edit()
                 .putBoolean(preference.key, newValue).apply()
