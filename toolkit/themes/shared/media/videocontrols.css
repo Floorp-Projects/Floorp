@@ -614,6 +614,7 @@
   --pip-icon-size: 24px;
   --pip-icon-width-with-margins: calc(2 * var(--pip-toggle-margin) + var(--pip-icon-size));
   --pip-highlight-width: 2px;
+  --pip-toggle-margin: 8px;
   --pip-highlight-style: solid rgba(0, 254, 255, 1);
 }
 
