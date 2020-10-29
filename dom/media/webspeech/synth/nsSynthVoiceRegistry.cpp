@@ -10,6 +10,7 @@
 
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
+#include "nsContentUtils.h"
 #include "nsSynthVoiceRegistry.h"
 #include "nsSpeechTask.h"
 #include "AudioChannelService.h"
