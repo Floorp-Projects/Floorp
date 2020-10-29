@@ -70,8 +70,14 @@ class ParagraphBoundaryRule : public PivotRule {
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override {
     MOZ_ASSERT(aAccOrProxy.IsAccessible());
     Accessible* acc = aAccOrProxy.AsAccessible();
-    uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
+    if (acc->IsOuterDoc()) {
+      // The child document might be remote and we can't (and don't want to)
+      // handle remote documents. Also, iframes are inline anyway and thus
+      // can't be paragraph boundaries. Therefore, skip this unconditionally.
+      return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+    }
 
+    uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
     if (mSkipAnchorSubtree && acc == mAnchor) {
       result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
     }

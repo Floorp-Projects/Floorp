@@ -53,10 +53,8 @@
 #include "nsWindowsHelpers.h"
 #include "WinContentSystemParameters.h"
 
-#ifdef NS_ENABLE_TSF
-#  include <textstor.h>
-#  include "TSFTextStore.h"
-#endif  // #ifdef NS_ENABLE_TSF
+#include <textstor.h>
+#include "TSFTextStore.h"
 
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -722,7 +720,6 @@ a11y::Accessible* WinUtils::GetRootAccessibleForHWND(HWND aHwnd) {
 /* static */
 bool WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                            UINT aLastMessage, UINT aOption) {
-#ifdef NS_ENABLE_TSF
   RefPtr<ITfMessagePump> msgPump = TSFTextStore::GetMessagePump();
   if (msgPump) {
     BOOL ret = FALSE;
@@ -731,14 +728,12 @@ bool WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
     NS_ENSURE_TRUE(SUCCEEDED(hr), false);
     return ret;
   }
-#endif  // #ifdef NS_ENABLE_TSF
   return ::PeekMessageW(aMsg, aWnd, aFirstMessage, aLastMessage, aOption);
 }
 
 /* static */
 bool WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                           UINT aLastMessage) {
-#ifdef NS_ENABLE_TSF
   RefPtr<ITfMessagePump> msgPump = TSFTextStore::GetMessagePump();
   if (msgPump) {
     BOOL ret = FALSE;
@@ -747,7 +742,6 @@ bool WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
     NS_ENSURE_TRUE(SUCCEEDED(hr), false);
     return ret;
   }
-#endif  // #ifdef NS_ENABLE_TSF
   return ::GetMessageW(aMsg, aWnd, aFirstMessage, aLastMessage);
 }
 

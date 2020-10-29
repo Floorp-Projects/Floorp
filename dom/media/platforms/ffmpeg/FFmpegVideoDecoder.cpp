@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
+#include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #ifdef MOZ_WAYLAND_USE_VAAPI

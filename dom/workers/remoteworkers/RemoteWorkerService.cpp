@@ -131,11 +131,13 @@ void RemoteWorkerService::InitializeOnTargetThread() {
 void RemoteWorkerService::ShutdownOnTargetThread() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
-  MOZ_ASSERT(mActor);
 
-  // Here we need to shutdown the IPC protocol.
-  mActor->Send__delete__(mActor);
-  mActor = nullptr;
+  // If mActor is nullptr it means that initialization failed.
+  if (mActor) {
+    // Here we need to shutdown the IPC protocol.
+    mActor->Send__delete__(mActor);
+    mActor = nullptr;
+  }
 
   // Then we can terminate the thread on the main-thread.
   RefPtr<RemoteWorkerService> self = this;

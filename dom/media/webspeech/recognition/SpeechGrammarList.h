@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 
 struct JSContext;

@@ -3460,10 +3460,22 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
           // 'vert' feature is going to handle this character, and if the
           // presentation form is available then it will be used as
           // fallback if needed, so it's OK if the feature is missing.
+          //
+          // Because "common" CJK punctuation characters in isolation will be
+          // resolved to Bopomofo script (as the first script listed in their
+          // ScriptExtensions property), but this is not always well supported
+          // by fonts' OpenType tables, we also try Han script; harfbuzz will
+          // apply a 'vert' feature from any available script (see
+          // https://github.com/harfbuzz/harfbuzz/issues/63) when shaping,
+          // so this is OK. It's not quite as general as what harfbuzz does
+          // (it will find the feature in *any* script), but should be enough
+          // for likely real-world examples.
           uint32_t v = gfxHarfBuzzShaper::GetVerticalPresentationForm(ch);
+          const uint32_t kVert = HB_TAG('v', 'e', 'r', 't');
           orient = (!font || (v && font->HasCharacter(v)) ||
-                    font->FeatureWillHandleChar(aRunScript,
-                                                HB_TAG('v', 'e', 'r', 't'), ch))
+                    font->FeatureWillHandleChar(aRunScript, kVert, ch) ||
+                    (aRunScript == Script::BOPOMOFO &&
+                     font->FeatureWillHandleChar(Script::HAN, kVert, ch)))
                        ? ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT
                        : ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
           break;

@@ -6,6 +6,7 @@
 
 #include "SpeechGrammarList.h"
 
+#include "mozilla/dom/SpeechGrammar.h"
 #include "mozilla/dom/SpeechGrammarListBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"

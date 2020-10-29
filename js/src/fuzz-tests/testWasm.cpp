@@ -405,7 +405,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
         if (propObj->is<WasmMemoryObject>()) {
           Rooted<WasmMemoryObject*> memory(gCx,
                                            &propObj->as<WasmMemoryObject>());
-          size_t byteLen = memory->volatileMemoryLength();
+          size_t byteLen = memory->volatileMemoryLength32();
           if (byteLen) {
             // Read the bounds of the buffer to ensure it is valid.
             // AddressSanitizer would detect any out-of-bounds here.

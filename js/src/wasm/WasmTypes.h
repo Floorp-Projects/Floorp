@@ -2862,8 +2862,9 @@ struct TlsData {
   // Pointer to the base of the default memory (or null if there is none).
   uint8_t* memoryBase;
 
-  // Bounds check limit of memory, in bytes (or zero if there is no memory).
-  uint32_t boundsCheckLimit;
+  // Bounds check limit of 32-bit memory, in bytes (or zero if there is no
+  // memory).
+  uint32_t boundsCheckLimit32;
 
   // Pointer to the Instance that contains this TLS data.
   Instance* instance;
@@ -3100,6 +3101,11 @@ class CalleeDesc {
     return u.builtin_;
   }
 };
+
+// Memories can be 32-bit (indices are 32 bits and the max is 4GB) or 64-bit
+// (indices are 64 bits and the max is XXX).
+
+enum class MemoryKind { Memory32, Memory64 };
 
 // Because ARM has a fixed-width instruction encoding, ARM can only express a
 // limited subset of immediates (in a single instruction).

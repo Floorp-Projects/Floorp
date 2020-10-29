@@ -14653,7 +14653,7 @@ void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
   Register ptr = ToRegister(ins->ptr());
   Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
   Label ok;
-  masm.wasmBoundsCheck(Assembler::Below, ptr, boundsCheckLimit, &ok);
+  masm.wasmBoundsCheck32(Assembler::Below, ptr, boundsCheckLimit, &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
   masm.bind(&ok);
 }

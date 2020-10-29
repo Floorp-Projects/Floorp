@@ -1849,7 +1849,7 @@ assertSame(get(mem8, 0, 16), iota(32).map((x) => ((x & 1) ? ys : xs)[x >>> 1]).s
 
 // Vector swizzle (variable permute).
 //
-// Operands and results are all in memory
+// Case 1: Operands and results are all in memory
 
 var ins = wasmEvalText(`
   (module
@@ -1870,6 +1870,28 @@ assertSame(get(mem8, 0, 16), [101,100,103,102,105,104,107,106,109,108,111,110,11
 set(mem8, 32, [9,8,11,10,13,12,16,14,1,0,3,2,5,192,7,6]);
 ins.exports.swizzle();
 assertSame(get(mem8, 0, 16), [109,108,111,110,113,112,0,114,101,100,103,102,105,0,107,106]);
+
+// Case 2: The mask operand is a constant; the swizzle gets optimized into a
+// shuffle (also see ion-analysis.js).
+
+for ( let [mask, expected] of [[[1,0,3,2,5,4,7,6,9,8,11,10,13,12,15,14],
+                                [101,100,103,102,105,104,107,106,109,108,111,110,113,112,115,114]],
+                               [[9,8,11,10,13,12,16,14,1,0,3,2,5,192,7,6],
+                                [109,108,111,110,113,112,0,114,101,100,103,102,105,0,107,106]]] ) {
+
+    let ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "swizzle")
+      (v128.store (i32.const 0)
+        (i8x16.swizzle (v128.load (i32.const 16)) (v128.const i8x16 ${mask.join(' ')})))))
+`);
+
+    let mem8 = new Uint8Array(ins.exports.mem.buffer);
+    set(mem8, 16, [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]);
+    ins.exports.swizzle();
+    assertSame(get(mem8, 0, 16), expected);
+}
 
 // Convert integer to floating point
 

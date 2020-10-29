@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     "mozStorageStatementJSHelper.cpp",
     "mozStorageStatementParams.cpp",
     "mozStorageStatementRow.cpp",
+    "ObfuscatingVFS.cpp",
     "SQLCollations.cpp",
     "StorageBaseStatementInternal.cpp",
     "TelemetryVFS.cpp",

@@ -4682,8 +4682,9 @@ CodeOffset MacroAssembler::wasmTrapInstruction() {
   return CodeOffset(as_illegal_trap().getOffset());
 }
 
-void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
-                                     Register boundsCheckLimit, Label* label) {
+void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
+                                       Register boundsCheckLimit,
+                                       Label* label) {
   as_cmp(index, O2Reg(boundsCheckLimit));
   as_b(label, cond);
   if (JitOptions.spectreIndexMasking) {
@@ -4691,11 +4692,11 @@ void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
   }
 }
 
-void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
-                                     Address boundsCheckLimit, Label* label) {
+void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
+                                       Address boundsCheckLimit, Label* label) {
   ScratchRegisterScope scratch(*this);
   MOZ_ASSERT(boundsCheckLimit.offset ==
-             offsetof(wasm::TlsData, boundsCheckLimit));
+             offsetof(wasm::TlsData, boundsCheckLimit32));
   ma_ldr(DTRAddr(boundsCheckLimit.base, DtrOffImm(boundsCheckLimit.offset)),
          scratch);
   as_cmp(index, O2Reg(scratch));

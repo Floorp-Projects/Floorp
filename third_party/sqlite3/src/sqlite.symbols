@@ -48,6 +48,7 @@ sqlite3_create_function16
 sqlite3_create_function_v2
 sqlite3_create_module
 sqlite3_data_count
+sqlite3_database_file_object
 sqlite3_db_config
 sqlite3_db_filename
 sqlite3_db_handle
@@ -77,7 +78,9 @@ sqlite3_libversion
 sqlite3_libversion_number
 sqlite3_limit
 sqlite3_load_extension
+sqlite3_log
 sqlite3_malloc
+sqlite3_malloc64
 sqlite3_memory_highwater
 sqlite3_memory_used
 sqlite3_mutex_alloc
@@ -96,6 +99,7 @@ sqlite3_prepare16
 sqlite3_prepare16_v2
 sqlite3_prepare_v2
 sqlite3_progress_handler
+sqlite3_randomness
 sqlite3_realloc
 sqlite3_release_memory
 sqlite3_reset
@@ -128,6 +132,7 @@ sqlite3_step
 sqlite3_stmt_busy
 sqlite3_stmt_readonly
 sqlite3_stmt_status
+sqlite3_stricmp
 #ifdef XP_UNIX
 sqlite3_temp_directory
 #endif

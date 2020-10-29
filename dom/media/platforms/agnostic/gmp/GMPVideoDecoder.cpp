@@ -13,6 +13,7 @@
 #include "MP4Decoder.h"
 #include "prsystem.h"
 #include "VPXDecoder.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 

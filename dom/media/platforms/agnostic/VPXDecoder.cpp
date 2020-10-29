@@ -19,6 +19,7 @@
 #include "mozilla/Unused.h"
 #include "nsError.h"
 #include "prsystem.h"
+#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \

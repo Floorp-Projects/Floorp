@@ -12,6 +12,7 @@
 namespace mozilla {
 
 class MediaContainerType;
+class MediaResult;
 class TrackInfo;
 
 class WebMDecoder {

@@ -44,6 +44,9 @@
 #include "nsProxyRelease.h"
 #include <algorithm>
 
+// XXX Remove the dependency on dom/url after Bug 1673682
+#include "mozilla/dom/URLSearchParams.h"
+
 #define MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH 524288000  // 500 MiB
 
 // Maximum size of the pages cache per connection.
@@ -76,7 +79,8 @@ using mozilla::Telemetry::AccumulateCategoricalKeyed;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_OPEN;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_QUERY;
 
-const char* GetVFSName(bool);
+const char* GetTelemetryVFSName(bool);
+const char* GetObfuscatingVFSName();
 
 namespace {
 
@@ -665,7 +669,8 @@ nsresult Connection::initialize() {
   mTelemetryFilename.AssignLiteral(":memory:");
 
   // in memory database requested, sqlite uses a magic file name
-  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags, GetVFSName(true));
+  int srv = ::sqlite3_open_v2(":memory:", &mDBConn, mFlags,
+                              GetTelemetryVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     nsresult rv = convertResultCode(srv);
@@ -719,12 +724,12 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
                             sIgnoreLockingVFS);
   } else {
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetVFSName(exclusive));
+                            GetTelemetryVFSName(exclusive));
     if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
       // Retry without trying to get an exclusive lock.
       exclusive = false;
       srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, GetVFSName(false));
+                              mFlags, GetTelemetryVFSName(false));
     }
   }
   if (srv != SQLITE_OK) {
@@ -742,7 +747,7 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
     // first query execution. When initializeInternal fails it closes the
     // connection, so we can try to restart it in non-exclusive mode.
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetVFSName(false));
+                            GetTelemetryVFSName(false));
     if (srv == SQLITE_OK) {
       rv = initializeInternal();
     }
@@ -752,6 +757,19 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+static bool HasKeyParam(const nsACString& aQuery) {
+  class MOZ_STACK_CLASS ParamsIterator final
+      : public dom::URLParams::ForEachIterator {
+   public:
+    bool URLParamsIterator(const nsAString& aName,
+                           const nsAString& aValue) override {
+      return aName.EqualsLiteral("key");
+    }
+  } paramsIterator;
+
+  return dom::URLParams::Parse(aQuery, paramsIterator);
 }
 
 nsresult Connection::initialize(nsIFileURL* aFileURL,
@@ -780,8 +798,14 @@ nsresult Connection::initialize(nsIFileURL* aFileURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
-  int srv =
-      ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, GetVFSName(exclusive));
+
+  // If there is a key specified, we need to use the obfuscating VFS.
+  nsAutoCString query;
+  rv = aFileURL->GetQuery(query);
+  NS_ENSURE_SUCCESS(rv, rv);
+  const char* const vfs = HasKeyParam(query) ? GetObfuscatingVFSName()
+                                             : GetTelemetryVFSName(exclusive);
+  int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     rv = convertResultCode(srv);

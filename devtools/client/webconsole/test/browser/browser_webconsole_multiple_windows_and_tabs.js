@@ -45,6 +45,8 @@ add_task(async function() {
       content.console.log(msg);
     });
     await onMessage;
+
+    await hud.toolbox.sourceMapURLService.waitForSourcesLoading();
   }
 
   const onConsolesDestroyed = waitForNEvents("web-console-destroyed", 4);

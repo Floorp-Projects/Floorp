@@ -15,6 +15,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TaskQueue.h"
 #include "nsError.h"
+#include "VideoUtils.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                 \

@@ -13,6 +13,7 @@
 namespace mozilla {
 
 class MediaContainerType;
+class MediaResult;
 class DecoderDoctorDiagnostics;
 class TrackInfo;
 

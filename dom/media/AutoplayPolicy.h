@@ -9,12 +9,15 @@
 
 #  include "mozilla/NotNull.h"
 
+class nsIPrincipal;
+
 namespace mozilla {
 namespace dom {
 
 class HTMLMediaElement;
 class AudioContext;
 class Document;
+enum class DocumentAutoplayPolicy : uint8_t;
 
 /**
  * AutoplayPolicy is used to manage autoplay logic for all kinds of media,

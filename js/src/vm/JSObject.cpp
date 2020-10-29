@@ -1506,7 +1506,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     obj->setDictionaryModeSlotSpan(oldDictionarySlotSpan);
   }
 
-  obj->initSlotRange(0, values.begin(), values.length());
+  obj->initSlots(values.begin(), values.length());
 
   return true;
 }
