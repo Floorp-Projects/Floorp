@@ -28,8 +28,10 @@ add_task(async function testRangeResetAfterScale() {
     let percentScale = helper.get("percent-scale");
     await helper.waitForPreview(() => helper.text(percentScale, "200"));
 
-    await helper.text(helper.get("custom-range-start"), "3");
-    await helper.text(helper.get("custom-range-end"), "3");
+    await helper.waitForPreview(() => {
+      helper.text(helper.get("custom-range-start"), "3");
+      helper.text(helper.get("custom-range-end"), "3");
+    });
 
     await helper.withClosingFn(async () => {
       await helper.text(percentScale, "10");
