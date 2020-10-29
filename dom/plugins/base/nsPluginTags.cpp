@@ -748,7 +748,8 @@ nsresult nsFakePluginTag::Create(const FakePluginTagInit& aInitDictionary,
   CopyUTF16toUTF8(aInitDictionary.mVersion, tag->mVersion);
   tag->mSandboxScript = aInitDictionary.mSandboxScript;
 
-  for (const FakePluginMimeEntry& mimeEntry : aInitDictionary.mMimeEntries) {
+  for (const mozilla::dom::FakePluginMimeEntry& mimeEntry :
+       aInitDictionary.mMimeEntries) {
     CopyUTF16toUTF8(mimeEntry.mType, *tag->mMimeTypes.AppendElement());
     CopyUTF16toUTF8(mimeEntry.mDescription,
                     *tag->mMimeDescriptions.AppendElement());
