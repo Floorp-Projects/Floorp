@@ -996,7 +996,12 @@ InterceptedHttpChannel::OnRedirectVerifyCallback(nsresult rv) {
   MaybeCallBodyCallback();
 
   mIsPending = false;
-  ReleaseListeners();
+  // We can only release listeners after the redirected channel really owns
+  // mListener. Otherwise, the OnStart/OnStopRequest functions of mListener will
+  // not be called.
+  if (NS_SUCCEEDED(rv)) {
+    ReleaseListeners();
+  }
 
   return NS_OK;
 }
