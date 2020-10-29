@@ -622,10 +622,12 @@ static const char* obfsNextSystemCall(sqlite3_vfs* pVfs, const char* zName) {
 namespace mozilla {
 namespace storage {
 
+const char* GetObfuscatingVFSName() { return "obfsvfs"; }
+
 UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
   MOZ_ASSERT(aBaseVFSName);
 
-  if (sqlite3_vfs_find("obfs") != nullptr) {
+  if (sqlite3_vfs_find(GetObfuscatingVFSName()) != nullptr) {
     return nullptr;
   }
   sqlite3_vfs* const pOrig = sqlite3_vfs_find(aBaseVFSName);
@@ -646,7 +648,7 @@ UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName) {
       static_cast<int>(pOrig->szOsFile + sizeof(ObfsFile)), /* szOsFile */
       1024,                                                 /* mxPathname */
       nullptr,                                              /* pNext */
-      "obfsvfs",                                            /* zName */
+      GetObfuscatingVFSName(),                              /* zName */
       pOrig,                                                /* pAppData */
       obfsOpen,                                             /* xOpen */
       obfsDelete,                                           /* xDelete */
