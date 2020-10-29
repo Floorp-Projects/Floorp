@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    "box-model-highlighter.js",
     "box-model.js",
     "index.js",
 )

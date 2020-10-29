@@ -52,6 +52,7 @@ class LayoutApp extends PureComponent {
   static get propTypes() {
     return {
       boxModel: PropTypes.shape(BoxModelTypes.boxModel).isRequired,
+      dispatch: PropTypes.func.isRequired,
       flexbox: PropTypes.shape(FlexboxTypes.flexbox).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
