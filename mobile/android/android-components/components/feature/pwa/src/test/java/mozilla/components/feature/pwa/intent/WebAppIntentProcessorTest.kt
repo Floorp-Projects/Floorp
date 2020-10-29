@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa.intent
 
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
+import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,6 +69,7 @@ class WebAppIntentProcessorTest {
         val intent = Intent(ACTION_VIEW_PWA, "https://mozilla.com".toUri())
         assertTrue(processor.process(intent))
         assertNotNull(intent.getSessionId())
+        assertEquals(FLAG_ACTIVITY_CLEAR_TOP, intent.flags)
         assertEquals(manifest, intent.getWebAppManifest())
     }
 
