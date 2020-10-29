@@ -133,6 +133,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')
+    implementation project(':ui-tabcounter')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
     geckoBetaImplementation project(':browser-engine-gecko-beta')

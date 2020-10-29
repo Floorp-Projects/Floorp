@@ -4,4 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <color name="mozac_ui_tabcounter_default_tint">#FF272727</color>
+    <color name="mozac_ui_tabcounter_private_tint">#FFFFFF</color>
+    <color name="mozac_ui_tabcounter_default_text">#20123A</color>
 </resources>

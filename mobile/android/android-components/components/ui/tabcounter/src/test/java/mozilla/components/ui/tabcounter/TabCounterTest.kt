@@ -5,56 +5,39 @@
 package mozilla.components.ui.tabcounter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.ui.tabcounter.TabCounter.Companion.ONE_DIGIT_SIZE_RATIO
 import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
-import mozilla.components.ui.tabcounter.TabCounter.Companion.TWO_DIGITS_SIZE_RATIO
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TabCounterTest {
-
     @Test
-    fun `Default tab count is 0`() {
+    fun `Default tab count is set to zero`() {
         val tabCounter = TabCounter(testContext)
-
-        assertEquals("0", tabCounter.getText())
-
-        assertEquals(ONE_DIGIT_SIZE_RATIO, tabCounter.currentTextRatio)
+        assertEquals("0", tabCounter.counter_text.text)
     }
 
     @Test
-    fun `Set tab count as 1`() {
+    fun `Set tab count as single digit value shows count`() {
         val tabCounter = TabCounter(testContext)
-
         tabCounter.setCount(1)
-
-        assertEquals("1", tabCounter.getText())
-
-        assertEquals(ONE_DIGIT_SIZE_RATIO, tabCounter.currentTextRatio)
+        assertEquals("1", tabCounter.counter_text.text)
     }
 
     @Test
-    fun `Set tab count as 99`() {
+    fun `Set tab count as two digit number shows count`() {
         val tabCounter = TabCounter(testContext)
-
         tabCounter.setCount(99)
-
-        assertEquals("99", tabCounter.getText())
-
-        assertEquals(TWO_DIGITS_SIZE_RATIO, tabCounter.currentTextRatio)
+        assertEquals("99", tabCounter.counter_text.text)
     }
 
     @Test
-    fun `Set tab count as 100`() {
+    fun `Setting tab count as three digit value shows correct icon`() {
         val tabCounter = TabCounter(testContext)
-
         tabCounter.setCount(100)
-
-        assertEquals(SO_MANY_TABS_OPEN, tabCounter.getText())
-
-        assertEquals(ONE_DIGIT_SIZE_RATIO, tabCounter.currentTextRatio)
+        assertEquals(SO_MANY_TABS_OPEN, tabCounter.counter_text.text)
     }
 }

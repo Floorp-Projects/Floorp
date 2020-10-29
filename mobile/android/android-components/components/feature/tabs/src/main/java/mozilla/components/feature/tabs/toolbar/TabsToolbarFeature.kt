@@ -4,30 +4,43 @@
 
 package mozilla.components.feature.tabs.toolbar
 
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSession
+import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.ui.tabcounter.TabCounterMenu
 
 /**
  * Feature implementation for connecting a tabs tray implementation with a toolbar implementation.
+ *
+ * @param countBasedOnSelectedTabType if true the count is based on the selected tab i.e. if a
+ * private tab is selected private tabs will be counter, otherwise normal tabs. If false, all
+ * tabs will be counted.
  */
-
+// TODO Refactor or remove this feature: https://github.com/mozilla-mobile/android-components/issues/9129
+@ExperimentalCoroutinesApi
+@Suppress("LongParameterList")
 class TabsToolbarFeature(
     toolbar: Toolbar,
-    sessionManager: SessionManager,
+    store: BrowserStore,
     sessionId: String? = null,
-    showTabs: () -> Unit
+    lifecycleOwner: LifecycleOwner,
+    showTabs: () -> Unit,
+    tabCounterMenu: TabCounterMenu? = null,
+    countBasedOnSelectedTabType: Boolean = true
 ) {
     init {
         run {
-            sessionManager.runWithSession(sessionId) {
-                it.isCustomTabSession()
-            }.also { isCustomTab ->
-                if (isCustomTab) return@run
-            }
+            // this feature is not used for Custom Tabs
+            if (sessionId != null && store.state.findCustomTab(sessionId) != null) return@run
+
             val tabsAction = TabCounterToolbarButton(
-                sessionManager,
-                showTabs
+                lifecycleOwner = lifecycleOwner,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu,
+                countBasedOnSelectedTabType = countBasedOnSelectedTabType
             )
             toolbar.addBrowserAction(tabsAction)
         }

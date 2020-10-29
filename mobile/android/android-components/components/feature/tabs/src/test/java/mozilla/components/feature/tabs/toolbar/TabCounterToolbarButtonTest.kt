@@ -6,170 +6,217 @@ package mozilla.components.feature.tabs.toolbar
 
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.test.any
-import mozilla.components.support.test.eq
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.menu.MenuController
+import mozilla.components.feature.tabs.R
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.whenever
 import mozilla.components.ui.tabcounter.TabCounter
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.eq
 
 @RunWith(AndroidJUnit4::class)
 class TabCounterToolbarButtonTest {
+    private val showTabs: () -> Unit = mock()
+    private val tabCounterMenu: TabCounterMenu = mock()
+    private val menuController: MenuController = mock()
 
-    @Test
-    fun `TabCounter has initial count set`() {
-        val sessionManager = SessionManager(mock())
-        sessionManager.add(Session("about:blank"))
-        sessionManager.add(Session("about:blank"))
+    private lateinit var lifecycleOwner: MockedLifecycleOwner
 
-        val button = TabCounterToolbarButton(sessionManager) {}
+    private val testDispatcher = TestCoroutineDispatcher()
 
-        val view = button.createView(LinearLayout(testContext) as ViewGroup)
-            as TabCounter
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
-        assertEquals("2", view.getText())
-    }
-
-    @Test
-    fun `TabCounter registers on SessionManager with parent view lifetime`() {
-        val sessionManager = spy(SessionManager(mock()))
-        val button = TabCounterToolbarButton(sessionManager) {}
-
-        val parent = LinearLayout(testContext)
-        button.createView(parent)
-
-        verify(sessionManager).register(any(), eq(parent))
-    }
-
-    @Test
-    fun `TabCounter updates when sessions get added`() {
-        val sessionManager = SessionManager(mock())
-
-        val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(testContext))
-        doReturn(true).`when`(parent).isAttachedToWindow
-
-        val view = button.createView(parent)
-            as TabCounter
-
-        assertEquals("0", view.getText())
-
-        sessionManager.add(Session("about:blank"))
-
-        assertEquals("1", view.getText())
-
-        sessionManager.add(Session("about:blank"))
-        sessionManager.add(Session("about:blank"))
-        sessionManager.add(Session("about:blank"))
-
-        assertEquals("4", view.getText())
-    }
-
-    @Test
-    fun `TabCounter updates when sessions get removed`() {
-        val sessionManager = SessionManager(mock())
-
-        val session1 = Session("about:blank")
-        val session2 = Session("about:blank")
-        val session3 = Session("about:blank")
-
-        sessionManager.add(session1)
-        sessionManager.add(session2)
-        sessionManager.add(session3)
-
-        val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(testContext))
-        doReturn(true).`when`(parent).isAttachedToWindow
-
-        val view = button.createView(parent)
-            as TabCounter
-
-        assertEquals("3", view.getText())
-
-        sessionManager.remove(session1)
-
-        assertEquals("2", view.getText())
-
-        sessionManager.remove(session2)
-        sessionManager.remove(session3)
-
-        assertEquals("0", view.getText())
-    }
-
-    @Test
-    fun `TabCounter updates when all sessions get removed`() {
-        val sessionManager = SessionManager(mock())
-
-        val session1 = Session("about:blank")
-        val session2 = Session("about:blank")
-        val session3 = Session("about:blank")
-
-        sessionManager.add(session1)
-        sessionManager.add(session2)
-        sessionManager.add(session3)
-
-        val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(testContext))
-        doReturn(true).`when`(parent).isAttachedToWindow
-
-        val view = button.createView(parent)
-            as TabCounter
-
-        assertEquals("3", view.getText())
-
-        sessionManager.removeSessions()
-
-        assertEquals("0", view.getText())
-    }
-
-    @Test
-    fun `TabCounter updates when sessions get restored`() {
-        val sessionManager = SessionManager(mock())
-
-        val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(testContext))
-        doReturn(true).`when`(parent).isAttachedToWindow
-
-        val view = button.createView(parent)
-            as TabCounter
-
-        assertEquals("0", view.getText())
-
-        val snapshot = SessionManager.Snapshot(listOf(
-            SessionManager.Snapshot.Item(Session("about:blank")),
-            SessionManager.Snapshot.Item(Session("about:blank")),
-            SessionManager.Snapshot.Item(Session("about:blank"))
-        ), selectedSessionIndex = 0)
-        sessionManager.restore(snapshot)
-
-        assertEquals("3", view.getText())
-    }
-
-    @Test
-    fun `Clicking TabCounter invokes showTabs function`() {
-        val sessionManager = SessionManager(mock())
-
-        var callbackInvoked = false
-        val button = TabCounterToolbarButton(sessionManager) {
-            callbackInvoked = true
+    internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+        val lifecycleRegistry = LifecycleRegistry(this).apply {
+            currentState = initialState
         }
+
+        override fun getLifecycle(): Lifecycle = lifecycleRegistry
+    }
+
+    @Before
+    fun setUp() {
+        whenever(tabCounterMenu.menuController).thenReturn(menuController)
+        lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+    }
+
+    @Test
+    fun `WHEN tab counter is created THEN count is 0`() {
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = BrowserStore(),
+                menu = tabCounterMenu
+            )
+        )
+
+        val view = button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+        val counterText: TextView = view.findViewById(R.id.counter_text)
+        assertEquals("0", counterText.text)
+    }
+
+    @Test
+    fun `WHEN tab is added THEN tab count is updated`() {
+        val store = BrowserStore()
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
+        whenever(button.updateCount(anyInt())).then { }
+        button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+
+        store.dispatch(
+            TabListAction.AddTabAction(createTab("https://www.mozilla.org"))
+        ).joinBlocking()
+
+        verify(button).updateCount(eq(1))
+    }
+
+    @Test
+    fun `WHEN tab is restored THEN tab count is updated`() {
+        val store = BrowserStore()
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
+        whenever(button.updateCount(anyInt())).then { }
+        button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+
+        store.dispatch(
+            TabListAction.RestoreAction(listOf(createTab("https://www.mozilla.org")))
+        ).joinBlocking()
+
+        verify(button).updateCount(eq(1))
+    }
+
+    @Test
+    fun `WHEN tab is removed THEN tab count is updated`() {
+        val tab = createTab("https://www.mozilla.org")
+        val store = BrowserStore(BrowserState(tabs = listOf(tab)))
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
+        whenever(button.updateCount(anyInt())).then { }
+        button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+
+        store.dispatch(TabListAction.RemoveTabAction(tab.id)).joinBlocking()
+        verify(button).updateCount(eq(0))
+    }
+
+    @Test
+    fun `WHEN private tab is added THEN tab count is updated`() {
+        val store = BrowserStore()
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
+        whenever(button.updateCount(anyInt())).then { }
+        whenever(button.isPrivate(store)).then { true }
+
+        button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+
+        store.dispatch(
+            TabListAction.AddTabAction(createTab("https://www.mozilla.org", private = true))
+        ).joinBlocking()
+
+        verify(button).updateCount(eq(1))
+    }
+
+    @Test
+    fun `WHEN private tab is removed THEN tab count is updated`() {
+        val tab = createTab("https://www.mozilla.org", private = true)
+        val store = BrowserStore(BrowserState(tabs = listOf(tab)))
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
+        whenever(button.updateCount(anyInt())).then { }
+        whenever(button.isPrivate(store)).then { true }
+
+        button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+
+        store.dispatch(TabListAction.RemoveTabAction(tab.id)).joinBlocking()
+        verify(button).updateCount(eq(0))
+    }
+
+    @Test
+    fun `WHEN tab counter is clicked THEN showTabs function is invoked`() {
+        var callbackInvoked = false
+        val store = BrowserStore(BrowserState(tabs = listOf()))
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = {
+                    callbackInvoked = true
+                },
+                store = store,
+                menu = tabCounterMenu
+            )
+        )
+
         val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
-        val view = button.createView(parent)
-            as TabCounter
-
+        val view = button.createView(parent) as TabCounter
         view.performClick()
-
         assertTrue(callbackInvoked)
     }
 }

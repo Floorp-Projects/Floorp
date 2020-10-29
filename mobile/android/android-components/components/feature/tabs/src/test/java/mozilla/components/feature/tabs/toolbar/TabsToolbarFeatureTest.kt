@@ -4,50 +4,110 @@
 
 package mozilla.components.feature.tabs.toolbar
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.whenever
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.ui.tabcounter.TabCounterMenu
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi
 class TabsToolbarFeatureTest {
+    private val showTabs: () -> Unit = mock()
+    private val tabCounterMenu: TabCounterMenu = mock()
+    val toolbar: Toolbar = mock()
+
+    private lateinit var tabsToolbarFeature: TabsToolbarFeature
+    private lateinit var lifecycleOwner: MockedLifecycleOwner
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+
+    internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+        val lifecycleRegistry = LifecycleRegistry(this).apply {
+            currentState = initialState
+        }
+
+        override fun getLifecycle(): Lifecycle = lifecycleRegistry
+    }
+
+    @Before
+    fun setUp() {
+        lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+    }
 
     @Test
     fun `feature adds "tabs" button to toolbar`() {
-        val toolbar: Toolbar = mock()
-        val sessionManager: SessionManager = mock()
-        TabsToolbarFeature(toolbar, sessionManager) {}
+        val store = BrowserStore()
+        val sessionId: String? = null
+
+        tabsToolbarFeature = TabsToolbarFeature(
+            toolbar = toolbar,
+            store = store,
+            sessionId = sessionId,
+            lifecycleOwner = lifecycleOwner,
+            showTabs = showTabs,
+            tabCounterMenu = tabCounterMenu
+        )
 
         verify(toolbar).addBrowserAction(any())
     }
 
     @Test
     fun `feature does not add tabs button when session is a customtab`() {
-        val toolbar: Toolbar = mock()
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        whenever(sessionManager.findSessionById(anyString())).thenReturn(session)
-        whenever(session.isCustomTabSession()).thenReturn(true)
+        val customTabId = "custom-id"
+        val customTabSessionState =
+            CustomTabSessionState(
+                id = customTabId,
+                content = ContentState("https://mozilla.org"),
+                config = mock()
+            )
 
-        TabsToolbarFeature(toolbar, sessionManager, "123") {}
+        val browserState = BrowserState(customTabs = listOf(customTabSessionState))
+        val store = BrowserStore(initialState = browserState)
+
+        tabsToolbarFeature = TabsToolbarFeature(
+            toolbar = toolbar,
+            store = store,
+            sessionId = customTabId,
+            lifecycleOwner = lifecycleOwner,
+            showTabs = showTabs,
+            tabCounterMenu = tabCounterMenu
+        )
 
         verify(toolbar, never()).addBrowserAction(any())
     }
 
     @Test
     fun `feature adds tab button when session found but not a customtab`() {
-        val toolbar: Toolbar = mock()
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        whenever(sessionManager.findSessionById(anyString())).thenReturn(session)
-        whenever(session.isCustomTabSession()).thenReturn(false)
+        val tabId = "tab-id"
 
-        TabsToolbarFeature(toolbar, sessionManager, "123") {}
+        val browserState = BrowserState()
+        val store = BrowserStore(initialState = browserState)
+
+        tabsToolbarFeature = TabsToolbarFeature(
+            toolbar = toolbar,
+            store = store,
+            sessionId = tabId,
+            lifecycleOwner = lifecycleOwner,
+            showTabs = showTabs,
+            tabCounterMenu = tabCounterMenu
+        )
 
         verify(toolbar).addBrowserAction(any())
     }

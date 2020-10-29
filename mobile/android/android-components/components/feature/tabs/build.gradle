@@ -30,12 +30,14 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
+    implementation project(':browser-state')
     implementation project(':browser-session')
     implementation project(':browser-thumbnails')
     api project(':feature-session')
     implementation project(':concept-engine')
     implementation project(':concept-tabstray')
     implementation project(':concept-toolbar')
+    implementation project(':concept-menu')
     implementation project(':ui-icons')
     implementation project(':ui-tabcounter')
     implementation project(':support-ktx')

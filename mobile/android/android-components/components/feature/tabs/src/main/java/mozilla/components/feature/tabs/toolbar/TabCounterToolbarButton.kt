@@ -4,67 +4,112 @@
 
 package mozilla.components.feature.tabs.toolbar
 
-import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.feature.tabs.R
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounter
+import mozilla.components.ui.tabcounter.TabCounterMenu
 import java.lang.ref.WeakReference
 
 /**
  * A [Toolbar.Action] implementation that shows a [TabCounter].
  */
-class TabCounterToolbarButton(
-    private val sessionManager: SessionManager,
-    private val showTabs: () -> Unit
+@ExperimentalCoroutinesApi
+@Suppress("LongParameterList")
+open class TabCounterToolbarButton(
+    private val lifecycleOwner: LifecycleOwner,
+    private val countBasedOnSelectedTabType: Boolean = true,
+    private val showTabs: () -> Unit,
+    private val store: BrowserStore,
+    private val menu: TabCounterMenu? = null,
+    private val privateColor: Int? = null
 ) : Toolbar.Action {
-    private var reference: WeakReference<TabCounter> = WeakReference<TabCounter>(null)
+
+    private var reference = WeakReference<TabCounter>(null)
 
     override fun createView(parent: ViewGroup): View {
-        sessionManager.register(sessionManagerObserver, view = parent)
+        store.flowScoped(lifecycleOwner) { flow ->
+            flow.map { state -> getTabCount(state) }
+            .ifChanged()
+            .collect {
+                tabs -> updateCount(tabs)
+            }
+        }
 
-        val view = TabCounter(parent.context).apply {
+        val tabCounter = TabCounter(parent.context).apply {
             reference = WeakReference(this)
-            setCount(sessionManager.sessions.size)
             setOnClickListener {
-                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 showTabs.invoke()
             }
-            contentDescription = parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
+
+            menu?.let { menu ->
+                setOnLongClickListener {
+                    menu.menuController.show(anchor = it)
+                    true
+                }
+            }
+
+            privateColor?.let {
+                if (isPrivate(store)) {
+                    setColor(it)
+                }
+            }
+
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View?) {
+                    setCount(getTabCount(store.state))
+                }
+
+                override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
+            })
         }
 
         // Set selectableItemBackgroundBorderless
-        val selectableItemBackgroundBorderless =
-            parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
-        view.setBackgroundResource(selectableItemBackgroundBorderless)
-        return view
+        tabCounter.setBackgroundResource(parent.context.theme.resolveAttribute(
+            android.R.attr.selectableItemBackgroundBorderless
+        ))
+
+        return tabCounter
     }
 
     override fun bind(view: View) = Unit
 
-    private fun updateCount() {
-        reference.get()?.setCountWithAnimation(sessionManager.sessions.size)
+    private fun getTabCount(state: BrowserState): Int {
+        return if (countBasedOnSelectedTabType) {
+            state.getNormalOrPrivateTabs(isPrivate(store)).size
+        } else {
+            state.tabs.size
+        }
     }
 
-    private val sessionManagerObserver = object : SessionManager.Observer {
-        override fun onSessionAdded(session: Session) {
-            updateCount()
-        }
+    /**
+     * Update the tab counter button on the toolbar.
+     *
+     * @property count the updated tab count
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun updateCount(count: Int) {
+        reference.get()?.setCountWithAnimation(count)
+    }
 
-        override fun onSessionRemoved(session: Session) {
-            updateCount()
-        }
-
-        override fun onSessionsRestored() {
-            updateCount()
-        }
-
-        override fun onAllSessionsRemoved() {
-            updateCount()
-        }
+    /**
+     * Check if the selected tab is private.
+     *
+     * @property store the [BrowserStore] associated with this instance
+     */
+    fun isPrivate(store: BrowserStore): Boolean {
+        return store.state.selectedTab?.content?.private ?: false
     }
 }
