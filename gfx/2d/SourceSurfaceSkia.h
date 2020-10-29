@@ -40,7 +40,7 @@ class SourceSurfaceSkia : public DataSourceSurface {
     mDrawTarget = nullptr;
   }
 
-  sk_sp<SkImage> GetImage();
+  sk_sp<SkImage> GetImage(Maybe<MutexAutoLock>* aLock);
 
   bool InitFromData(unsigned char* aData, const IntSize& aSize, int32_t aStride,
                     SurfaceFormat aFormat);
