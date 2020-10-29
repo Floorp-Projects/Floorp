@@ -1,7 +1,7 @@
 // |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode() != "ion" || !this.wasmSimdAnalysis
 
 // White-box tests for SIMD optimizations.  These are sensitive to internal
-// details of the lowering logic, which is platform-dependent.
+// details of the front-end and lowering logic, which is partly platform-dependent.
 //
 // In DEBUG builds, the testing function wasmSimdAnalysis() returns a string
 // describing the last decision made by the SIMD lowering code: to perform an
@@ -777,6 +777,18 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
             assertEq(negative.exports.run(), ops[op](inp) ? 37 : 42);
         }
     }
+}
+
+// Constant folding
+
+{
+    // Swizzle-with-constant rewritten as shuffle, and then further optimized
+    // into a dword permute.  Correctness is tested in ad-hack.js.
+    wasmCompile(`
+(module (func (param v128) (result v128)
+  (i8x16.swizzle (local.get 0) (v128.const i8x16 4 5 6 7 0 1 2 3 12 13 14 15 8 9 10 11))))
+`);
+    assertEq(wasmSimdAnalysis(), "shuffle -> permute 32x4");
 }
 
 // Library
