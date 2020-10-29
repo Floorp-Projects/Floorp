@@ -44,5 +44,6 @@ dom/notification/
 dom/offline/
 dom/payments/
 dom/performance/
+dom/permission/
 dom/quota/
 dom/simpledb/
