@@ -42,14 +42,15 @@ fn sets_datetime_value() {
 }
 
 #[test]
-fn string_ipc() {
+fn datetime_ipc() {
     // DatetimeMetric doesn't support IPC.
     let _lock = lock_test();
+    let _t = setup_glean(None);
     let store_names: Vec<String> = vec!["store1".into()];
     let _raii = ipc::test_set_need_ipc(true);
     let child_metric = DatetimeMetric::new(
         CommonMetricData {
-            name: "datetime metric".into(),
+            name: "datetime_metric".into(),
             category: "ipc".into(),
             send_in_pings: store_names.clone(),
             disabled: false,
