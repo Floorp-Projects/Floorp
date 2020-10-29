@@ -5138,7 +5138,7 @@ class XDRBufferObject : public NativeObject {
   static const JSClass class_;
 
   inline static MOZ_MUST_USE XDRBufferObject* create(JSContext* cx,
-                                                     JS::TranscodeBuffer* buf);
+                                                     JS::TranscodeBuffer&& buf);
 
   JS::TranscodeBuffer* data() const {
     Value value = getReservedSlot(VECTOR_SLOT);
@@ -5176,19 +5176,15 @@ class XDRBufferObject : public NativeObject {
     &XDRBufferObject::classOps_};
 
 XDRBufferObject* XDRBufferObject::create(JSContext* cx,
-                                         JS::TranscodeBuffer* buf) {
+                                         JS::TranscodeBuffer&& buf) {
   XDRBufferObject* bufObj =
       NewObjectWithGivenProto<XDRBufferObject>(cx, nullptr);
   if (!bufObj) {
     return nullptr;
   }
 
-  auto heapBuf = cx->make_unique<JS::TranscodeBuffer>();
+  auto heapBuf = cx->make_unique<JS::TranscodeBuffer>(std::move(buf));
   if (!heapBuf) {
-    return nullptr;
-  }
-
-  if (!heapBuf->appendAll(*buf)) {
     return nullptr;
   }
 
@@ -5232,7 +5228,7 @@ static bool CodeModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  XDRBufferObject* xdrBuf = XDRBufferObject::create(cx, &buf);
+  XDRBufferObject* xdrBuf = XDRBufferObject::create(cx, std::move(buf));
   if (!xdrBuf) {
     return false;
   }

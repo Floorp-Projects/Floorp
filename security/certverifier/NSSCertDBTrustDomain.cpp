@@ -350,7 +350,7 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   }
 
   // Try all root certs first and then all (presumably) intermediates.
-  if (!geckoRootCandidates.appendAll(geckoIntermediateCandidates)) {
+  if (!geckoRootCandidates.appendAll(std::move(geckoIntermediateCandidates))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
 
@@ -390,7 +390,7 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
       }
     }
   }
-  if (!nssRootCandidates.appendAll(nssIntermediateCandidates)) {
+  if (!nssRootCandidates.appendAll(std::move(nssIntermediateCandidates))) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
 
