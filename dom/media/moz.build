@@ -83,7 +83,7 @@ MOCHITEST_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "mediacontrol/tests/browser.ini",
+    "mediacontrol/tests/browser/browser.inii",
     "mediasession/test/browser.ini",
 ]
 

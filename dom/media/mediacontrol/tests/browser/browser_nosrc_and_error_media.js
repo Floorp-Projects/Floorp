@@ -1,16 +1,14 @@
-/* eslint-disable no-undef */
-
 // Import this in order to use `triggerPictureInPicture()`.
-/* import-globals-from ../../../../toolkit/components/pictureinpicture/tests/head.js */
+/* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
   this
 );
 
 const PAGE_NOSRC_MEDIA =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_no_src_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_no_src_media.html";
 const PAGE_ERROR_MEDIA =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_error_media.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_error_media.html";
 const PAGES = [PAGE_NOSRC_MEDIA, PAGE_ERROR_MEDIA];
 const testVideoId = "video";
 

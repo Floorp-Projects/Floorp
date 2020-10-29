@@ -1,10 +1,7 @@
-/* eslint-disable no-undef */
-"use strict";
-
 const PAGE_AUDIBLE =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_autoplay.html";
 const PAGE_INAUDIBLE =
-  "https://example.com/browser/dom/media/mediacontrol/tests/file_muted_autoplay.html";
+  "https://example.com/browser/dom/media/mediacontrol/tests/browser/file_muted_autoplay.html";
 
 const testVideoId = "autoplay";
 
