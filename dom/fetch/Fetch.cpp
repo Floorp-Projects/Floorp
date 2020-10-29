@@ -133,14 +133,7 @@ class AbortSignalProxy final : public AbortFollower {
         : Runnable("dom::AbortSignalProxy::AbortSignalProxyRunnable"),
           mProxy(aProxy) {}
 
-    NS_IMETHOD
-    Run() override {
-      MOZ_ASSERT(NS_IsMainThread());
-      AbortSignalImpl* signalImpl =
-          mProxy->GetOrCreateSignalImplForMainThread();
-      signalImpl->SignalAbort();
-      return NS_OK;
-    }
+    NS_IMETHOD Run() override;
   };
 
  public:
@@ -156,12 +149,7 @@ class AbortSignalProxy final : public AbortFollower {
   }
 
   // AbortFollower
-  void RunAbortAlgorithm() override {
-    MOZ_ASSERT(!NS_IsMainThread());
-    RefPtr<AbortSignalProxyRunnable> runnable =
-        new AbortSignalProxyRunnable(this);
-    MainThreadEventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-  }
+  void RunAbortAlgorithm() override;
 
   AbortSignalImpl* GetOrCreateSignalImplForMainThread() {
     MOZ_ASSERT(NS_IsMainThread());
@@ -191,6 +179,20 @@ class AbortSignalProxy final : public AbortFollower {
 };
 
 NS_IMPL_ISUPPORTS0(AbortSignalProxy)
+
+NS_IMETHODIMP AbortSignalProxy::AbortSignalProxyRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+  AbortSignalImpl* signalImpl = mProxy->GetOrCreateSignalImplForMainThread();
+  signalImpl->SignalAbort();
+  return NS_OK;
+}
+
+void AbortSignalProxy::RunAbortAlgorithm() {
+  MOZ_ASSERT(!NS_IsMainThread());
+  RefPtr<AbortSignalProxyRunnable> runnable =
+      new AbortSignalProxyRunnable(this);
+  MainThreadEventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+}
 
 class WorkerFetchResolver final : public FetchDriverObserver {
   // Thread-safe:
