@@ -61,6 +61,7 @@
 #include "gc/Nursery-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/Realm-inl.h"  // js::AutoRealm
 #include "vm/Shape-inl.h"
 
 using JS::ToInt32;
@@ -1687,25 +1688,41 @@ JS_FRIEND_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
   return aobj->dataPointer();
 }
 
+static ArrayBufferObject* UnwrapArrayBuffer(
+    JSContext* cx, JS::Handle<JSObject*> maybeArrayBuffer) {
+  JSObject* obj = CheckedUnwrapStatic(maybeArrayBuffer);
+  if (!obj) {
+    ReportAccessDenied(cx);
+    return nullptr;
+  }
+
+  if (!obj->is<ArrayBufferObject>()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_REQUIRED);
+    return nullptr;
+  }
+
+  return &obj->as<ArrayBufferObject>();
+}
+
 JS_FRIEND_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  if (!obj->is<ArrayBufferObject>()) {
-    JS_ReportErrorASCII(cx, "ArrayBuffer object required");
+  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  if (!unwrappedBuffer) {
     return false;
   }
 
-  Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-
-  if (buffer->isWasm() || buffer->isPreparedForAsmJS()) {
+  if (unwrappedBuffer->isWasm() || unwrappedBuffer->isPreparedForAsmJS()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_NO_TRANSFER);
     return false;
   }
 
-  ArrayBufferObject::detach(cx, buffer);
+  AutoRealm ar(cx, unwrappedBuffer);
+  ArrayBufferObject::detach(cx, unwrappedBuffer);
   return true;
 }
 
@@ -1741,23 +1758,6 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
 
   BufferContents contents = BufferContents::createMalloced(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
-}
-
-static ArrayBufferObject* UnwrapArrayBuffer(
-    JSContext* cx, JS::Handle<JSObject*> maybeArrayBuffer) {
-  JSObject* obj = CheckedUnwrapStatic(maybeArrayBuffer);
-  if (!obj) {
-    ReportAccessDenied(cx);
-    return nullptr;
-  }
-
-  if (!obj->is<ArrayBufferObject>()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_BAD_ARGS);
-    return nullptr;
-  }
-
-  return &obj->as<ArrayBufferObject>();
 }
 
 JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
@@ -1823,38 +1823,30 @@ JS_FRIEND_API JSObject* JS::UnwrapSharedArrayBuffer(JSObject* obj) {
 }
 
 JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
-                                                 HandleObject objArg) {
+                                                 HandleObject obj) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(objArg);
+  cx->check(obj);
 
-  JSObject* obj = CheckedUnwrapStatic(objArg);
-  if (!obj) {
-    ReportAccessDenied(cx);
+  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  if (!unwrappedBuffer) {
     return nullptr;
   }
 
-  if (!obj->is<ArrayBufferObject>()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_BAD_ARGS);
-    return nullptr;
-  }
-
-  Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-  if (buffer->isDetached()) {
+  if (unwrappedBuffer->isDetached()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TYPED_ARRAY_DETACHED);
     return nullptr;
   }
 
-  if (buffer->isWasm() || buffer->isPreparedForAsmJS()) {
+  if (unwrappedBuffer->isWasm() || unwrappedBuffer->isPreparedForAsmJS()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_NO_TRANSFER);
     return nullptr;
   }
 
-  AutoRealm ar(cx, buffer);
-  return ArrayBufferObject::stealMallocedContents(cx, buffer);
+  AutoRealm ar(cx, unwrappedBuffer);
+  return ArrayBufferObject::stealMallocedContents(cx, unwrappedBuffer);
 }
 
 JS_PUBLIC_API JSObject* JS::NewMappedArrayBufferWithContents(JSContext* cx,
