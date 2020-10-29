@@ -119,8 +119,8 @@ class StrictModeManagerTest {
 
     @Test
     fun `GIVEN we're in debug mode WHEN we suppress StrictMode THEN the suppressed count increases`() {
-        assertEquals(0, debugManager.suppressionCount)
+        assertEquals(0, debugManager.suppressionCount.get())
         debugManager.resetAfter(StrictMode.allowThreadDiskReads()) { "" }
-        assertEquals(1, debugManager.suppressionCount)
+        assertEquals(1, debugManager.suppressionCount.get())
     }
 }
