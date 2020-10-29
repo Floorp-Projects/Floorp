@@ -44,9 +44,8 @@ class IssueItem extends PureComponent {
   static get propTypes() {
     return {
       ...Types.issue,
-      hideBoxModelHighlighter: PropTypes.func.isRequired,
+      dispatch: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
-      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -172,23 +171,16 @@ class IssueItem extends PureComponent {
   }
 
   _renderNodeList() {
-    const { nodes } = this.props;
+    const { dispatch, nodes, setSelectedNode } = this.props;
 
     if (!nodes) {
       return null;
     }
 
-    const {
-      hideBoxModelHighlighter,
-      setSelectedNode,
-      showBoxModelHighlighterForNode,
-    } = this.props;
-
     return NodePane({
+      dispatch,
       nodes,
-      hideBoxModelHighlighter,
       setSelectedNode,
-      showBoxModelHighlighterForNode,
     });
   }
 
