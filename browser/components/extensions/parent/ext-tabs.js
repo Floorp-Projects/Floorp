@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   );
 });
 
-var { ExtensionError } = ExtensionUtils;
+var { DefaultMap, ExtensionError } = ExtensionUtils;
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
 
@@ -803,8 +803,25 @@ this.tabs = class extends ExtensionAPI {
         },
 
         async remove(tabIds) {
-          for (let nativeTab of getNativeTabsFromIDArray(tabIds)) {
-            nativeTab.ownerGlobal.gBrowser.removeTab(nativeTab);
+          let nativeTabs = getNativeTabsFromIDArray(tabIds);
+
+          if (nativeTabs.length === 1) {
+            nativeTabs[0].ownerGlobal.gBrowser.removeTab(nativeTabs[0]);
+            return;
+          }
+
+          // Or for multiple tabs, first group them by window
+          let windowTabMap = new DefaultMap(() => []);
+          for (let nativeTab of nativeTabs) {
+            windowTabMap.get(nativeTab.ownerGlobal).push(nativeTab);
+          }
+
+          // Then make one call to removeTabs() for each window, to keep the
+          // count accurate for SessionStore.getLastClosedTabCount().
+          // Note: always passing {animate: false} so that way all tabs are
+          // actually closed when the browser.tabs.remove() promise resolves
+          for (let [eachWindow, tabsToClose] of windowTabMap.entries()) {
+            eachWindow.gBrowser.removeTabs(tabsToClose, { animate: false });
           }
         },
 
