@@ -58,5 +58,6 @@ dom/media/mp3/
 dom/media/mp4/
 dom/media/ogg/
 dom/media/platforms/
+dom/media/systemservices/
 dom/quota/
 dom/simpledb/
