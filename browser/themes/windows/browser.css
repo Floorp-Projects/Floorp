@@ -720,13 +720,6 @@ notification[value="translation"] {
   -moz-image-region: auto;
 }
 
-#menu_unsortedBookmarks,
-#BMB_unsortedBookmarks,
-#panelMenu_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg");
-  -moz-image-region: auto;
-}
-
 /* Status panel */
 
 #statuspanel-label {
