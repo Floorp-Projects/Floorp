@@ -608,7 +608,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
                         shouldShowRequestPermissionRationale(
                             it
                         )
-                    }),
+                    },
+                customTabId = customTabSessionId,
+                store = store),
                 owner = this,
                 view = view
             )
