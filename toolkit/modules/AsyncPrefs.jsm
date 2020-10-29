@@ -18,6 +18,7 @@ const kAllowedPrefs = new Set([
   "testing.allowed-prefs.some-char-pref",
   "testing.allowed-prefs.some-int-pref",
 
+  "browser.contentblocking.report.hide_lockwise_app",
   "browser.contentblocking.report.hide_vpn_banner",
   "browser.contentblocking.report.show_mobile_app",
 

@@ -36,9 +36,11 @@ add_task(async function doTest() {
       "browser.contentblocking.cfr-milestone.milestone-achieved",
       milestone
     );
+
     await TestUtils.waitForCondition(
       () => gProtectionsHandler._milestoneTextSet
     );
+
     // We set the shown-time pref to pretend that the CFR has been
     // shown, so that we can test the panel.
     // TODO: Full integration test for robustness.
@@ -46,6 +48,7 @@ add_task(async function doTest() {
       "browser.contentblocking.cfr-milestone.milestone-shown-time",
       Date.now().toString()
     );
+
     await openProtectionsPanel();
 
     ok(

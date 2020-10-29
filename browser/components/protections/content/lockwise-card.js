@@ -4,6 +4,12 @@
 
 /* eslint-env mozilla/frame-script */
 
+const LOCKWISE_URL_IOS = RPMGetStringPref(
+  "browser.contentblocking.report.lockwise.mobile-ios.url"
+);
+const LOCKWISE_URL_ANDROID = RPMGetStringPref(
+  "browser.contentblocking.report.lockwise.mobile-android.url"
+);
 const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
   "browser.contentblocking.report.lockwise.how_it_works.url"
 );
@@ -32,6 +38,23 @@ export default class LockwiseCard {
       "click",
       this.openAboutLogins.bind(this)
     );
+
+    const androidLockwiseAppLink = this.doc.getElementById(
+      "lockwise-android-inline-link"
+    );
+    androidLockwiseAppLink.href = LOCKWISE_URL_ANDROID;
+    androidLockwiseAppLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_sync_link", "android");
+    });
+
+    // Attach link to Firefox Lockwise ios mobile app.
+    const iosLockwiseAppLink = this.doc.getElementById(
+      "lockwise-ios-inline-link"
+    );
+    iosLockwiseAppLink.href = LOCKWISE_URL_IOS;
+    iosLockwiseAppLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_sync_link", "ios");
+    });
 
     // Attack link to Firefox Lockwise "How it works" page.
     const lockwiseReportLink = this.doc.getElementById("lockwise-how-it-works");
@@ -69,7 +92,19 @@ export default class LockwiseCard {
     const headerContent = this.doc.querySelector(
       "#lockwise-header-content span"
     );
+    const lockwiseBodyContent = this.doc.getElementById(
+      "lockwise-body-content"
+    );
+    const cardBody = this.doc.querySelector(".lockwise-card .card-body");
     const lockwiseCard = this.doc.querySelector(".card.lockwise-card");
+
+    const exitIcon = lockwiseBodyContent.querySelector(".exit-icon");
+    // User has closed the lockwise promotion, hide it and don't show again.
+    exitIcon.addEventListener("click", () => {
+      RPMSetBoolPref("browser.contentblocking.report.hide_lockwise_app", true);
+      lockwiseBodyContent.querySelector(".no-logins").classList.add("hidden");
+      cardBody.classList.add("hidden");
+    });
 
     if (hasLogins) {
       lockwiseCard.classList.remove("no-logins");
@@ -83,6 +118,17 @@ export default class LockwiseCard {
     } else {
       lockwiseCard.classList.remove("has-logins");
       lockwiseCard.classList.add("no-logins");
+      if (
+        !RPMGetBoolPref(
+          "browser.contentblocking.report.hide_lockwise_app",
+          false
+        )
+      ) {
+        lockwiseBodyContent
+          .querySelector(".no-logins")
+          .classList.remove("hidden");
+        cardBody.classList.remove("hidden");
+      }
       title.setAttribute("data-l10n-id", "lockwise-title");
       headerContent.setAttribute("data-l10n-id", "lockwise-header-content");
     }
