@@ -14304,6 +14304,9 @@ class MWasmBinarySimd128 : public MBinaryInstruction,
     return ins->toWasmBinarySimd128()->simdOp() == simdOp_ &&
            congruentIfOperandsEqual(ins);
   }
+#ifdef ENABLE_WASM_SIMD
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+#endif
 
   wasm::SimdOp simdOp() const { return simdOp_; }
 
