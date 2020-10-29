@@ -76,6 +76,7 @@
 
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
 #include "mozilla/ScopeExit.h"
+#include "nsPrintfCString.h"
 
 /*
 ** Forward declaration of objects used by this utility
@@ -197,7 +198,7 @@ static_assert(kReservedBytes % kBasicBlockSize == 0);
 **
 ** Return a pointer to the obfuscated content, which is held in the
 ** p->pTemp buffer.  Or return a NULL pointer if something goes wrong.
-** Errors are reported using sqlite3_log().
+** Errors are reported using NS_WARNING().
 */
 static void* obfsEncode(ObfsFile* p, /* File containing page to be obfuscated */
                         u8* a,       /* database page to be obfuscated */
@@ -214,10 +215,10 @@ static void* obfsEncode(ObfsFile* p, /* File containing page to be obfuscated */
   if (pOut == nullptr) {
     pOut = static_cast<u8*>(sqlite3_malloc64(nByte));
     if (pOut == nullptr) {
-      sqlite3_log(SQLITE_NOMEM,
-                  "unable to allocate a buffer in which to"
-                  " write obfuscated database content for %s",
-                  p->zFName);
+      NS_WARNING(nsPrintfCString("unable to allocate a buffer in which to"
+                                 " write obfuscated database content for %s",
+                                 p->zFName)
+                     .get());
       return nullptr;
     }
     p->pTemp = pOut;
@@ -225,10 +226,10 @@ static void* obfsEncode(ObfsFile* p, /* File containing page to be obfuscated */
   if (memcmp(a, "SQLite format 3", 16) == 0) {
     i = kClearTextPrefixBytesOnFirstPage;
     if (a[20] != kReservedBytes) {
-      sqlite3_log(SQLITE_IOERR,
-                  "obfuscated database must have reserved-bytes"
-                  " set to %d",
-                  kReservedBytes);
+      NS_WARNING(nsPrintfCString("obfuscated database must have reserved-bytes"
+                                 " set to %d",
+                                 kReservedBytes)
+                     .get());
       return nullptr;
     }
     memcpy(pOut, a, kClearTextPrefixBytesOnFirstPage);
@@ -496,7 +497,7 @@ static u8 obfsHexToInt(int h) {
 ** the lower-level VFS shim.
 **
 ** If the key=XXXX parameter exists but is not 64-bytes of hex key, then
-** put an error message in sqlite3_log() and return SQLITE_CANTOPEN.
+** put an error message in NS_WARNING() and return SQLITE_CANTOPEN.
 */
 static int obfsOpen(sqlite3_vfs* pVfs, const char* zName, sqlite3_file* pFile,
                     int flags, int* pOutFlags) {
@@ -522,8 +523,9 @@ static int obfsOpen(sqlite3_vfs* pVfs, const char* zName, sqlite3_file* pFile,
     aKey[i] = (obfsHexToInt(zKey[i * 2]) << 4) | obfsHexToInt(zKey[i * 2 + 1]);
   }
   if (i != kKeyBytes) {
-    sqlite3_log(SQLITE_CANTOPEN, "invalid query parameter on %s: key=%s", zName,
-                zKey);
+    NS_WARNING(
+        nsPrintfCString("invalid query parameter on %s: key=%s", zName, zKey)
+            .get());
     return SQLITE_CANTOPEN;
   }
   p = (ObfsFile*)pFile;
