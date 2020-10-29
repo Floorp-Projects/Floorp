@@ -67,9 +67,8 @@ async function resetDownloads() {
 
 async function shouldNotifyDownloadUI() {
   // Waits until a Blocked download was added to the Download List
-  // -> returns the blocked Download
   let list = await Downloads.getList(Downloads.ALL);
-  return new Promise(res => {
+  await new Promise(res => {
     const view = {
       onDownloadAdded: aDownload => {
         let { error } = aDownload;
@@ -77,7 +76,7 @@ async function shouldNotifyDownloadUI() {
           error.becauseBlockedByReputationCheck &&
           error.reputationCheckVerdict == Downloads.Error.BLOCK_VERDICT_INSECURE
         ) {
-          res(aDownload);
+          res(true);
           list.removeView(view);
         }
       },
@@ -113,7 +112,7 @@ async function runTest(url, link, checkFunction, decscription) {
 
   await SpecialPowers.popPrefEnv();
 }
-// Test Blocking
+
 add_task(async function() {
   await runTest(
     INSECURE_BASE_URL,
@@ -138,22 +137,5 @@ add_task(async function() {
     "secure",
     shouldPromptDownload,
     "Secure -> Secure should Download"
-  );
-});
-
-// Test Manual Unblocking
-add_task(async function() {
-  await runTest(
-    SECURE_BASE_URL,
-    "insecure",
-    async () => {
-      let download = await shouldNotifyDownloadUI();
-      await download.unblock();
-      ok(download.error == null, "There should be no error after unblocking");
-
-      await download._succeed();
-      ok(download.succeeded, "Download should succeed to download");
-    },
-    "A Blocked Download Should succeeded to Download after a Manual unblock"
   );
 });
