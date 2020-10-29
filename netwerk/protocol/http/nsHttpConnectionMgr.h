@@ -58,25 +58,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // NOTE: functions below may be called on any thread.
   //-------------------------------------------------------------------------
 
-  // Schedules next pruning of dead connection to happen after
-  // given time.
-  void PruneDeadConnectionsAfter(uint32_t time);
-
-  // Stops timer scheduled for next pruning of dead connections if
-  // there are no more idle connections or active spdy ones
-  void ConditionallyStopPruneDeadConnectionsTimer();
-
-  // Stops timer used for the read timeout tick if there are no currently
-  // active connections.
-  void ConditionallyStopTimeoutTick();
-
   [[nodiscard]] nsresult CancelTransactions(nsHttpConnectionInfo*,
                                             nsresult reason);
 
-  // called to close active connections with no registered "traffic"
-  [[nodiscard]] nsresult PruneNoTraffic();
-
-  void ReportFailedToProcess(nsIURI* uri);
 
   //-------------------------------------------------------------------------
   // NOTE: functions below may be called only on the socket thread.
@@ -93,8 +77,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // returns false.
   bool MoveTransToHTTPSSVCConnEntry(nsHttpTransaction* aTrans,
                                     nsHttpConnectionInfo* aNewCI);
-
-  [[nodiscard]] bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
 
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
@@ -114,9 +96,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void ResetIPFamilyPreference(nsHttpConnectionInfo*);
 
   uint16_t MaxRequestDelay() { return mMaxRequestDelay; }
-
-  // public, so that the SPDY/http2 seesions can activate
-  void ActivateTimeoutTick();
 
   // tracks and untracks active transactions according their throttle status
   void AddActiveTransaction(nsHttpTransaction* aTrans);
@@ -155,8 +134,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void IncreaseNumHalfOpenConns();
   void DecreaseNumHalfOpenConns();
 
-  already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
-      bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
 
   // Wen a new idle connection has been added, this function is called to
   // increment mNumIdleConns and update PruneDeadConnections timer.
@@ -165,6 +142,37 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
  private:
   virtual ~nsHttpConnectionMgr();
+
+  //-------------------------------------------------------------------------
+  // NOTE: functions below may be called on any thread.
+  //-------------------------------------------------------------------------
+
+  // Schedules next pruning of dead connection to happen after
+  // given time.
+  void PruneDeadConnectionsAfter(uint32_t time);
+
+  // Stops timer scheduled for next pruning of dead connections if
+  // there are no more idle connections or active spdy ones
+  void ConditionallyStopPruneDeadConnectionsTimer();
+
+  // Stops timer used for the read timeout tick if there are no currently
+  // active connections.
+  void ConditionallyStopTimeoutTick();
+
+  // called to close active connections with no registered "traffic"
+  [[nodiscard]] nsresult PruneNoTraffic();
+
+  //-------------------------------------------------------------------------
+  // NOTE: functions below may be called only on the socket thread.
+  //-------------------------------------------------------------------------
+
+  [[nodiscard]] bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
+
+  // public, so that the SPDY/http2 seesions can activate
+  void ActivateTimeoutTick();
+
+  already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
+      bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
 
  public:
   static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
