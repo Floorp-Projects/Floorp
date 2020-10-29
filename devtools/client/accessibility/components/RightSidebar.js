@@ -45,6 +45,7 @@ function RightSidebar({ highlightAccessible, unhighlightAccessible, toolbox }) {
           componentProps: {
             highlightAccessible,
             unhighlightAccessible,
+            toolboxHighlighter: toolbox.getHighlighter(),
             toolbox,
             labelledby: `${propertiesID}-header`,
           },
