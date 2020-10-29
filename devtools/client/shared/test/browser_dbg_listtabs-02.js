@@ -112,17 +112,16 @@ function testTabB() {
 }
 
 function removeTabA() {
-  const deferred = promise.defer();
+  return new Promise(resolve => {
+    once(gBrowser.tabContainer, "TabClose").then(event => {
+      ok(!event.detail.adoptedBy, "This was a normal tab close");
 
-  once(gBrowser.tabContainer, "TabClose").then(event => {
-    ok(!event.detail.adoptedBy, "This was a normal tab close");
+      // Let the actor's TabClose handler finish first.
+      executeSoon(resolve);
+    }, false);
 
-    // Let the actor's TabClose handler finish first.
-    executeSoon(deferred.resolve);
-  }, false);
-
-  removeTab(gTabA);
-  return deferred.promise;
+    removeTab(gTabA);
+  });
 }
 
 function testTabClosed() {
@@ -160,17 +159,16 @@ function testTabC() {
 }
 
 function removeTabC() {
-  const deferred = promise.defer();
+  return new Promise(resolve => {
+    once(gBrowser.tabContainer, "TabClose").then(event => {
+      ok(event.detail.adoptedBy, "This was a tab closed by moving");
 
-  once(gBrowser.tabContainer, "TabClose").then(event => {
-    ok(event.detail.adoptedBy, "This was a tab closed by moving");
+      // Let the actor's TabClose handler finish first.
+      executeSoon(resolve);
+    }, false);
 
-    // Let the actor's TabClose handler finish first.
-    executeSoon(deferred.resolve);
-  }, false);
-
-  gNewWindow = gBrowser.replaceTabWithWindow(gTabC);
-  return deferred.promise;
+    gNewWindow = gBrowser.replaceTabWithWindow(gTabC);
+  });
 }
 
 function testNewWindow() {
@@ -193,17 +191,16 @@ function testNewWindow() {
 }
 
 function removeNewWindow() {
-  const deferred = promise.defer();
+  return new Promise(resolve => {
+    once(gNewWindow, "unload").then(event => {
+      ok(!event.detail, "This was a normal window close");
 
-  once(gNewWindow, "unload").then(event => {
-    ok(!event.detail, "This was a normal window close");
+      // Let the actor's TabClose handler finish first.
+      executeSoon(resolve);
+    }, false);
 
-    // Let the actor's TabClose handler finish first.
-    executeSoon(deferred.resolve);
-  }, false);
-
-  gNewWindow.close();
-  return deferred.promise;
+    gNewWindow.close();
+  });
 }
 
 function testWindowClosed() {
@@ -229,17 +226,16 @@ function testWindowClosed() {
 }
 
 function removeTabB() {
-  const deferred = promise.defer();
+  return new Promise(resolve => {
+    once(gBrowser.tabContainer, "TabClose").then(event => {
+      ok(!event.detail.adoptedBy, "This was a normal tab close");
 
-  once(gBrowser.tabContainer, "TabClose").then(event => {
-    ok(!event.detail.adoptedBy, "This was a normal tab close");
+      // Let the actor's TabClose handler finish first.
+      executeSoon(resolve);
+    }, false);
 
-    // Let the actor's TabClose handler finish first.
-    executeSoon(deferred.resolve);
-  }, false);
-
-  removeTab(gTabB);
-  return deferred.promise;
+    removeTab(gTabB);
+  });
 }
 
 function finishUp() {
