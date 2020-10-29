@@ -6149,8 +6149,10 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   }
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
+  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
+                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
   // Compute inline-axis size
-  if (!inlineStyleCoord->IsAuto()) {
+  if (!isAutoISize) {
     result.ISize(aWM) = ComputeISizeValue(
         aRenderingContext, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
         boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
@@ -6363,7 +6365,8 @@ LogicalSize nsIFrame::ComputeAutoSize(
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
 
   // don't bother setting it if the result won't be used
-  if (StylePosition()->ISize(aWM).IsAuto()) {
+  if (StylePosition()->ISize(aWM).IsAuto() ||
+      aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
     nscoord availBased =
         aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
     result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased, aFlags);

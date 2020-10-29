@@ -991,6 +991,7 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
     // flex-basis:content.
     const nsStylePosition* pos = StylePosition();
     if (pos->ISize(aWM).IsAuto() ||
+        aFlags.contains(ComputeSizeFlag::UseAutoISize) ||
         (pos->mFlexBasis.IsContent() && IsFlexItem() &&
          nsFlexContainerFrame::IsItemInlineAxisMainAxis(this))) {
       result.ISize(aWM) =
@@ -2482,7 +2483,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  const bool isAutoISize = inlineStyleCoord->IsAuto();
+  const bool isAutoISize = inlineStyleCoord->IsAuto() ||
+                           aFlags.contains(ComputeSizeFlag::UseAutoISize);
   const bool isAutoBSize =
       nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM)) ||
       aFlags.contains(ComputeSizeFlag::UseAutoBSize);
