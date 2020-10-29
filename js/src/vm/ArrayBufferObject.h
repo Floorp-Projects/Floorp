@@ -486,7 +486,8 @@ using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
 using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
 using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
 
-bool CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
+bool CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
+                      const wasm::Limits& memory,
                       MutableHandleArrayBufferObjectMaybeShared buffer);
 
 /*

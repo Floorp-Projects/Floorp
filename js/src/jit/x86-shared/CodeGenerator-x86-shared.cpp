@@ -397,8 +397,8 @@ void CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins) {
     ool = new (alloc()) OutOfLineLoadTypedArrayOutOfBounds(out, accessType);
     addOutOfLineCode(ool, mir);
 
-    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ToRegister(ptr),
-                         ToRegister(boundsCheckLimit), ool->entry());
+    masm.wasmBoundsCheck32(Assembler::AboveOrEqual, ToRegister(ptr),
+                           ToRegister(boundsCheckLimit), ool->entry());
   }
 
 #ifdef JS_CODEGEN_X86
@@ -462,8 +462,8 @@ void CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) {
 
   Label rejoin;
   if (mir->needsBoundsCheck()) {
-    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ToRegister(ptr),
-                         ToRegister(boundsCheckLimit), &rejoin);
+    masm.wasmBoundsCheck32(Assembler::AboveOrEqual, ToRegister(ptr),
+                           ToRegister(boundsCheckLimit), &rejoin);
   }
 
 #ifdef JS_CODEGEN_X86
