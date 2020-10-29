@@ -17,6 +17,8 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "mozilla/CDMProxy.h"
+#include "GMPVideoDecoder.h"
+#include "MP4Decoder.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/UniquePtr.h"

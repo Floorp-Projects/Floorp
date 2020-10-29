@@ -13,6 +13,7 @@
 #include "FFmpegLog.h"
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
