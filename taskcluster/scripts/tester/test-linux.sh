@@ -122,7 +122,7 @@ download_mozharness() {
     while [[ $attempt < $max_attempts ]]; do
         if curl --fail -o mozharness.zip --retry 10 -L $MOZHARNESS_URL; then
             rm -rf mozharness
-            if unzip -q mozharness.zip -d mozharness; then
+            if unzip -q mozharness.zip; then
                 return 0
             fi
             echo "error unzipping mozharness.zip" >&2

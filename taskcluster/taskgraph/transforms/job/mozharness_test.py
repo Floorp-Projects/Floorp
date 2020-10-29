@@ -406,7 +406,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     worker["mounts"] = [
         {
-            "directory": "mozharness",
+            "directory": ".",
             "content": {
                 "artifact": get_artifact_path(taskdesc, "mozharness.zip"),
                 "task-id": {"task-reference": "<build>"},
