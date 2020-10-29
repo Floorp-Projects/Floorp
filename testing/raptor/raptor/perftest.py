@@ -99,6 +99,7 @@ class Perftest(object):
         conditioned_profile_scenario="settled",
         chimera=False,
         extra_prefs={},
+        environment={},
         project="mozilla-central",
         verbose=False,
         **kwargs
@@ -138,6 +139,7 @@ class Perftest(object):
             "conditioned_profile_scenario": conditioned_profile_scenario,
             "chimera": chimera,
             "extra_prefs": extra_prefs,
+            "environment": environment,
             "project": project,
             "verbose": verbose,
         }
