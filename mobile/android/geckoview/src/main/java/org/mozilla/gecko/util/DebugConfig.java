@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import android.util.Log;
@@ -15,7 +14,6 @@ import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.error.YAMLException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,18 +36,7 @@ public class DebugConfig {
     protected Map<String, String> env;
     protected List<String> args;
 
-    public static class ConfigException extends RuntimeException {
-        public ConfigException(final String message) {
-            super(message);
-        }
-    }
-
     public static @NonNull DebugConfig fromFile(final @NonNull File configFile) throws FileNotFoundException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            // There are a lot of problems with SnakeYaml on older version let's just bail.
-            throw new ConfigException("Config version is only supported for SDK_INT >= 21.");
-        }
-
         final Constructor constructor = new Constructor(DebugConfig.class);
         final TypeDescription description = new TypeDescription(DebugConfig.class);
         description.putMapPropertyType("prefs", String.class, Object.class);
@@ -62,8 +49,6 @@ public class DebugConfig {
         final FileInputStream fileInputStream = new FileInputStream(configFile);
         try {
             return yaml.load(fileInputStream);
-        } catch (YAMLException e) {
-            throw new ConfigException(e.getMessage());
         } finally {
             IOUtils.safeStreamClose(fileInputStream);
         }

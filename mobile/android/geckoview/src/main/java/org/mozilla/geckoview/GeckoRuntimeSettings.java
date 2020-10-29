@@ -77,10 +77,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * Path to configuration file from which GeckoView will read configuration options such as
          * Gecko process arguments, environment variables, and preferences.
          *
-         * Note: this feature is only available for
-         * <code>{@link Build.VERSION#SDK_INT} &gt; 21</code>, on older devices this will be
-         * silently ignored.
-         *
          * @param configFilePath Configuration file path to read from, or <code>null</code> to use
          *                       default location <code>/data/local/tmp/$PACKAGE-geckoview-config.yaml</code>.
          * @return This Builder instance.
@@ -584,8 +580,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /**
      * Path to configuration file from which GeckoView will read configuration options such as
      * Gecko process arguments, environment variables, and preferences.
-     *
-     * Note: this feature is only available for <code>{@link Build.VERSION#SDK_INT} &gt; 21</code>.
      *
      * @return Path to configuration file from which GeckoView will read configuration options,
      * or <code>null</code> for default location
