@@ -348,8 +348,9 @@ function getMarionetteFrameActorProxy(browsingContextFn) {
               }
 
               if (++attempts > MAX_ATTEMPTS) {
+                const browsingContextId = browsingContextFn()?.id;
                 logger.trace(
-                  `[${this.browsingContext.id}] Query "${methodName}" reached the limit of retry attempts (${MAX_ATTEMPTS})`
+                  `[${browsingContextId}] Query "${methodName}" reached the limit of retry attempts (${MAX_ATTEMPTS})`
                 );
                 throw e;
               }
