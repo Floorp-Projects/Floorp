@@ -27,7 +27,6 @@ py2commands="
     raptor
     raptor-test
     reftest
-    talos-test
     telemetry-tests-client
     test
     web-platform-tests

@@ -9,6 +9,7 @@ import json
 import os
 import re
 from talos import utils
+import six
 
 KEY_XRE = "{xre}"
 DEFAULT_DURATION = 100.0
@@ -57,7 +58,7 @@ class Whitelist:
         filename = filename.lower()
         filename.replace(" (x86)", "")
 
-        for path, subst in self.path_substitutions.iteritems():
+        for path, subst in six.iteritems(self.path_substitutions):
             parts = filename.split(path)
             if len(parts) >= 2:
                 if self.PRE_PROFILE == "" and subst == "{profile}":
@@ -80,7 +81,7 @@ class Whitelist:
 
                 filename = "%s%s" % (subst, path.join(parts[1:]))
 
-        for old_name, new_name in self.name_substitutions.iteritems():
+        for old_name, new_name in six.iteritems(self.name_substitutions):
             if isinstance(old_name, re._pattern_type):
                 filename = re.sub(old_name, new_name, filename)
             else:
@@ -92,7 +93,7 @@ class Whitelist:
 
     def check(self, test, file_name_index, event_source_index=None):
         errors = {}
-        for row_key in test.iterkeys():
+        for row_key in six.iterkeys(test):
             filename = self.sanitize_filename(row_key[file_name_index])
 
             if filename in self.listmap:
@@ -116,7 +117,7 @@ class Whitelist:
 
     def checkDuration(self, test, file_name_index, file_duration_index):
         errors = {}
-        for idx, (row_key, row_value) in utils.indexed_items(test.iteritems()):
+        for idx, (row_key, row_value) in utils.indexed_items(six.iteritems(test)):
             if row_value[file_duration_index] > DEFAULT_DURATION:
                 filename = self.sanitize_filename(row_key[file_name_index])
                 if (
@@ -156,7 +157,7 @@ class Whitelist:
     @staticmethod
     def get_error_strings(errors):
         error_strs = []
-        for filename, data in errors.iteritems():
+        for filename, data in six.iteritems(errors):
             for datum in data:
                 error_strs.append(
                     "File '%s' was accessed and we were not"

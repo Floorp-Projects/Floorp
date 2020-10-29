@@ -19,6 +19,7 @@ from talos.config import (
     DEFAULTS,
 )
 from talos.test import PageloaderTest
+import six
 
 ORIGINAL_DEFAULTS = copy.deepcopy(DEFAULTS)
 
@@ -308,7 +309,7 @@ class Test_get_config(object):
         assert bool(config) is True
 
         # no null values
-        null_keys = [key for key, val in config.iteritems() if val is None]
+        null_keys = [key for key, val in six.iteritems(config) if val is None]
         assert len(null_keys) == 0
 
         # expected keys are there

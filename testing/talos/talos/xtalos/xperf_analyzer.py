@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 from uuid import UUID
+import six
 
 # This constant must match the event declared in
 # toolkit/components/startup/mozprofilerprobe.mof
@@ -58,7 +59,7 @@ class XPerfSession(object):
             e.do_match(row)
 
 
-class XPerfAttribute(object):
+class XPerfAttribute(six.with_metaclass(ABCMeta, object)):
     """Base class for all attributes. Each attribute has one or more events
     that are associated with it. When those events fire, the attribute
     accumulates statistics for those events.
@@ -67,8 +68,6 @@ class XPerfAttribute(object):
     itself to have completed, at which point its results may be retrieved. Note
     that persistent attributes are an exception to this (see __init__).
     """
-
-    __metaclass__ = ABCMeta
 
     # Keys for the dict returned by get_results:
 
@@ -302,7 +301,7 @@ class XPerfCounter(XPerfAttribute):
     def accumulate(self, evt):
         data = evt.get_whiteboard()
 
-        for (key, comp) in self.filters.iteritems():
+        for (key, comp) in six.iteritems(self.filters):
             try:
                 testdata = data[key]
             except KeyError:
@@ -331,7 +330,7 @@ class XPerfCounter(XPerfAttribute):
         )
         if self.values:
             msg += " with accumulated"
-            for (k, v) in self.values.iteritems():
+            for (k, v) in six.iteritems(self.values):
                 msg += " [[{!s}] == {!s}]".format((k), (v))
         return msg
 
@@ -416,7 +415,7 @@ class XPerfEvent(object):
         return self.timestamp
 
 
-class EventExpression(object):
+class EventExpression(six.with_metaclass(ABCMeta, object)):
     """EventExpression is an optional layer that sits between attributes and
     events, and allow the user to compose multiple events into a more complex
     event. To achieve this, EventExpression implementations must implement both
@@ -424,8 +423,6 @@ class EventExpression(object):
     communicate with them), as well as the XPerfAttribute interface, so that
     they present themselves as attributes to the events that run above them.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, events):
         # Event expressions implement the attribute interface, so for each
@@ -1034,7 +1031,7 @@ class XPerfFile(object):
 
         while True:
             try:
-                row = csvdata.next()
+                row = next(csvdata)
             except StopIteration:
                 break
             except csv.Error:

@@ -7,10 +7,10 @@ from __future__ import absolute_import, print_function
 
 import copy
 import os
+import six
 import sys
 import time
 import traceback
-import urllib
 
 import mozinfo
 import mozversion
@@ -43,7 +43,7 @@ def useBaseTestDefaults(base, tests):
 def set_tp_preferences(test, browser_config):
     # sanity check pageloader values
     # mandatory options: tpmanifest, tpcycles
-    if test["tpcycles"] not in range(1, 1000):
+    if test["tpcycles"] not in six.moves.range(1, 1000):
         raise TalosError("pageloader cycles must be int 1 to 1,000")
     if "tpmanifest" not in test:
         raise TalosError("tpmanifest not found in test: %s" % test)
@@ -129,7 +129,8 @@ def run_tests(config, browser_config):
                     test[path] = utils.interpolate(test[path])
         if test.get("tpmanifest"):
             test["tpmanifest"] = os.path.normpath(
-                "file:/%s" % (urllib.quote(test["tpmanifest"], "/\\t:\\"))
+                "file:/%s"
+                % (six.moves.urllib.parse.quote(test["tpmanifest"], "/\\t:\\"))
             )
             test["preferences"]["talos.tpmanifest"] = test["tpmanifest"]
 

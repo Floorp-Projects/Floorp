@@ -367,7 +367,7 @@ def get_config(argv=None):
     for validate in CONF_VALIDATORS:
         validate(config)
     # remove None Values
-    for k, v in config.items():
+    for k, v in config.copy().items():
         if v is None:
             del config[k]
     return config
@@ -382,5 +382,5 @@ def get_configs(argv=None):
 if __name__ == "__main__":
     cfgs = get_configs()
     print(cfgs[0])
-    print
+    print()
     print(cfgs[1])
