@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import math
+import six
 
 """
 data filters:
@@ -114,10 +115,10 @@ def median(series):
     series = sorted(series)
     if len(series) % 2:
         # odd
-        return series[len(series) / 2]
+        return series[int(len(series) / 2)]
     else:
         # even
-        middle = len(series) / 2  # the higher of the middle 2, actually
+        middle = int(len(series) / 2)  # the higher of the middle 2, actually
         return 0.5 * (series[middle - 1] + series[middle])
 
 
@@ -162,7 +163,7 @@ def dromaeo(series):
 @register_filter
 @define_filter
 def dromaeo_chunks(series, size):
-    for i in range(0, len(series), size):
+    for i in six.moves.range(0, len(series), size):
         yield series[i : i + size]
 
 

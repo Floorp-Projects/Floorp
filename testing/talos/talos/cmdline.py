@@ -7,6 +7,7 @@ import argparse
 import os
 
 from mozlog.commandline import add_logging_group
+import six
 
 
 class _StopAction(argparse.Action):
@@ -34,14 +35,14 @@ class _ListTests(_StopAction):
         print("================\n")
         test_class_names = [
             (test_class.name(), test_class.description())
-            for test_class in test.test_dict().itervalues()
+            for test_class in six.itervalues(test.test_dict())
         ]
         test_class_names.sort()
         for name, description in test_class_names:
             print(name)
             print("-" * len(name))
             print(description)
-            print  # Appends a single blank line to the end
+            print()  # Appends a single blank line to the end
         parser.exit()
 
 
@@ -55,7 +56,7 @@ class _ListSuite(_StopAction):
         pattern = " %%-%ds (%%s)" % max_suite_name
         for name in conf:
             print(pattern % (name, ":".join(conf[name]["tests"])))
-        print
+        print()
         parser.exit()
 
 
