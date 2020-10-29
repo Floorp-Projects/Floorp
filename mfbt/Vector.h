@@ -423,6 +423,8 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
   }
 #endif
 
+  bool internalEnsureCapacity(size_t aNeeded);
+
   /* Append operations guaranteed to succeed due to pre-reserved space. */
   template <typename U>
   void internalAppend(U&& aU);
@@ -431,6 +433,8 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
   void internalAppendN(const T& aT, size_t aN);
   template <typename U>
   void internalAppend(const U* aBegin, size_t aLength);
+  template <typename U>
+  void internalMoveAppend(U* aBegin, size_t aLength);
 
  public:
   static const size_t sMaxInlineStorage = MinInlineCapacity;
@@ -667,11 +671,15 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
 
   template <typename U, size_t O, class BP>
   MOZ_MUST_USE bool appendAll(const Vector<U, O, BP>& aU);
+  template <typename U, size_t O, class BP>
+  MOZ_MUST_USE bool appendAll(Vector<U, O, BP>&& aU);
   MOZ_MUST_USE bool appendN(const T& aT, size_t aN);
   template <typename U>
   MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd);
   template <typename U>
   MOZ_MUST_USE bool append(const U* aBegin, size_t aLength);
+  template <typename U>
+  MOZ_MUST_USE bool moveAppend(U* aBegin, U* aEnd);
 
   /*
    * Guaranteed-infallible append operations for use upon vectors whose
@@ -1347,11 +1355,8 @@ void Vector<T, N, AP>::eraseIfEqual(const U& aU) {
 }
 
 template <typename T, size_t N, class AP>
-template <typename U>
-MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::append(const U* aInsBegin,
-                                                const U* aInsEnd) {
-  MOZ_REENTRANCY_GUARD_ET_AL;
-  size_t aNeeded = PointerRangeSize(aInsBegin, aInsEnd);
+MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::internalEnsureCapacity(
+    size_t aNeeded) {
   if (mLength + aNeeded > mTail.mCapacity) {
     if (MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
       return false;
@@ -1364,7 +1369,19 @@ MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::append(const U* aInsBegin,
     mTail.mReserved = mLength + aNeeded;
   }
 #endif
-  internalAppend(aInsBegin, aNeeded);
+  return true;
+}
+
+template <typename T, size_t N, class AP>
+template <typename U>
+MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::append(const U* aInsBegin,
+                                                const U* aInsEnd) {
+  MOZ_REENTRANCY_GUARD_ET_AL;
+  const size_t needed = PointerRangeSize(aInsBegin, aInsEnd);
+  if (!internalEnsureCapacity(needed)) {
+    return false;
+  }
+  internalAppend(aInsBegin, needed);
   return true;
 }
 
@@ -1375,6 +1392,28 @@ MOZ_ALWAYS_INLINE void Vector<T, N, AP>::internalAppend(const U* aInsBegin,
   MOZ_ASSERT(mLength + aInsLength <= mTail.mReserved);
   MOZ_ASSERT(mTail.mReserved <= mTail.mCapacity);
   Impl::copyConstruct(endNoCheck(), aInsBegin, aInsBegin + aInsLength);
+  mLength += aInsLength;
+}
+
+template <typename T, size_t N, class AP>
+template <typename U>
+MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::moveAppend(U* aInsBegin, U* aInsEnd) {
+  MOZ_REENTRANCY_GUARD_ET_AL;
+  const size_t needed = PointerRangeSize(aInsBegin, aInsEnd);
+  if (!internalEnsureCapacity(needed)) {
+    return false;
+  }
+  internalMoveAppend(aInsBegin, needed);
+  return true;
+}
+
+template <typename T, size_t N, class AP>
+template <typename U>
+MOZ_ALWAYS_INLINE void Vector<T, N, AP>::internalMoveAppend(U* aInsBegin,
+                                                            size_t aInsLength) {
+  MOZ_ASSERT(mLength + aInsLength <= mTail.mReserved);
+  MOZ_ASSERT(mTail.mReserved <= mTail.mCapacity);
+  Impl::moveConstruct(endNoCheck(), aInsBegin, aInsBegin + aInsLength);
   mLength += aInsLength;
 }
 
@@ -1403,6 +1442,22 @@ template <typename U, size_t O, class BP>
 MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::appendAll(
     const Vector<U, O, BP>& aOther) {
   return append(aOther.begin(), aOther.length());
+}
+
+template <typename T, size_t N, class AP>
+template <typename U, size_t O, class BP>
+MOZ_ALWAYS_INLINE bool Vector<T, N, AP>::appendAll(Vector<U, O, BP>&& aOther) {
+  if (empty() && capacity() < aOther.length()) {
+    *this = std::move(aOther);
+    return true;
+  }
+
+  if (moveAppend(aOther.begin(), aOther.end())) {
+    aOther.clearAndFree();
+    return true;
+  }
+
+  return false;
 }
 
 template <typename T, size_t N, class AP>
