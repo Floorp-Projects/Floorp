@@ -5,7 +5,6 @@
 "use strict";
 
 var { Ci, Cc } = require("chrome");
-var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.defineLazyGetter(this, "localCertService", () => {
   // Ensure PSM is initialized to support TLS sockets
@@ -29,17 +28,17 @@ exports.local = {
    * @return promise
    */
   getOrCreate() {
-    const deferred = defer();
-    localCertService.getOrCreateCert(localCertName, {
-      handleCert: function(cert, rv) {
-        if (rv) {
-          deferred.reject(rv);
-          return;
-        }
-        deferred.resolve(cert);
-      },
+    return new Promise((resolve, reject) => {
+      localCertService.getOrCreateCert(localCertName, {
+        handleCert: function(cert, rv) {
+          if (rv) {
+            reject(rv);
+            return;
+          }
+          resolve(cert);
+        },
+      });
     });
-    return deferred.promise;
   },
 
   /**
@@ -48,16 +47,16 @@ exports.local = {
    * @return promise
    */
   remove() {
-    const deferred = defer();
-    localCertService.removeCert(localCertName, {
-      handleCert: function(rv) {
-        if (rv) {
-          deferred.reject(rv);
-          return;
-        }
-        deferred.resolve();
-      },
+    return new Promise((resolve, reject) => {
+      localCertService.removeCert(localCertName, {
+        handleCert: function(rv) {
+          if (rv) {
+            reject(rv);
+            return;
+          }
+          resolve();
+        },
+      });
     });
-    return deferred.promise;
   },
 };
