@@ -870,7 +870,10 @@ var DownloadIntegration = {
 
     // If our previous attempts failed, try sending it through
     // the system's external "file:" URL handler.
-    gExternalProtocolService.loadURI(NetUtil.newURI(file));
+    gExternalProtocolService.loadURI(
+      NetUtil.newURI(file),
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
   },
 
   /**
@@ -938,7 +941,10 @@ var DownloadIntegration = {
 
     // If launch also fails (probably because it's not implemented), let
     // the OS handler try to open the parent.
-    gExternalProtocolService.loadURI(NetUtil.newURI(parent));
+    gExternalProtocolService.loadURI(
+      NetUtil.newURI(parent),
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
   },
 
   /**
