@@ -19,69 +19,68 @@ loader.lazyRequireGetter(
 );
 
 /**
- * Manages the sources for a thread. Handles URL contents, locations in
- * the sources, etc for ThreadActors.
- */
-function TabSources(threadActor, allowSourceFn = () => true) {
-  EventEmitter.decorate(this);
-
-  this._thread = threadActor;
-  this.allowSource = source => {
-    return !isHiddenSource(source) && allowSourceFn(source);
-  };
-
-  this.blackBoxedSources = new Map();
-
-  // Debugger.Source -> SourceActor
-  this._sourceActors = new Map();
-
-  // URL -> content
-  //
-  // Any possibly incomplete content that has been loaded for each URL.
-  this._urlContents = new Map();
-
-  // URL -> Promise[]
-  //
-  // Any promises waiting on a URL to be completely loaded.
-  this._urlWaiters = new Map();
-
-  // Debugger.Source.id -> Debugger.Source
-  //
-  // The IDs associated with ScriptSources and available via DebuggerSource.id
-  // are internal to this process and should not be exposed to the client. This
-  // map associates these IDs with the corresponding source, provided the source
-  // has not been GC'ed and the actor has been created. This is lazily populated
-  // the first time it is needed.
-  this._sourcesByInternalSourceId = null;
-
-  if (!isWorker) {
-    Services.obs.addObserver(this, "devtools-html-content");
-  }
-}
-
-/**
  * Matches strings of the form "foo.min.js" or "foo-min.js", etc. If the regular
  * expression matches, we can be fairly sure that the source is minified, and
  * treat it as such.
  */
 const MINIFIED_SOURCE_REGEXP = /\bmin\.js$/;
 
-TabSources.prototype = {
+/**
+ * Manages the sources for a thread. Handles URL contents, locations in
+ * the sources, etc for ThreadActors.
+ */
+class SourcesManager extends EventEmitter {
+  constructor(threadActor, allowSourceFn = () => true) {
+    super();
+    this._thread = threadActor;
+    this.allowSource = source => {
+      return !isHiddenSource(source) && allowSourceFn(source);
+    };
+
+    this.blackBoxedSources = new Map();
+
+    // Debugger.Source -> SourceActor
+    this._sourceActors = new Map();
+
+    // URL -> content
+    //
+    // Any possibly incomplete content that has been loaded for each URL.
+    this._urlContents = new Map();
+
+    // URL -> Promise[]
+    //
+    // Any promises waiting on a URL to be completely loaded.
+    this._urlWaiters = new Map();
+
+    // Debugger.Source.id -> Debugger.Source
+    //
+    // The IDs associated with ScriptSources and available via DebuggerSource.id
+    // are internal to this process and should not be exposed to the client. This
+    // map associates these IDs with the corresponding source, provided the source
+    // has not been GC'ed and the actor has been created. This is lazily populated
+    // the first time it is needed.
+    this._sourcesByInternalSourceId = null;
+
+    if (!isWorker) {
+      Services.obs.addObserver(this, "devtools-html-content");
+    }
+  }
+
   destroy() {
     if (!isWorker) {
       Services.obs.removeObserver(this, "devtools-html-content");
     }
-  },
+  }
 
   /**
    * Clear existing sources so they are recreated on the next access.
    */
-  reset: function() {
+  reset() {
     this._sourceActors = new Map();
     this._urlContents = new Map();
     this._urlWaiters = new Map();
     this._sourcesByInternalSourceId = null;
-  },
+  }
 
   /**
    * Create a source actor representing this source.
@@ -90,8 +89,8 @@ TabSources.prototype = {
    *        The source to make an actor for.
    * @returns a SourceActor representing the source or null.
    */
-  createSourceActor: function(source) {
-    assert(source, "TabSources.prototype.source needs a source");
+  createSourceActor(source) {
+    assert(source, "SourcesManager.prototype.source needs a source");
 
     if (!this.allowSource(source)) {
       return null;
@@ -115,21 +114,21 @@ TabSources.prototype = {
 
     this.emit("newSource", actor);
     return actor;
-  },
+  }
 
-  _getSourceActor: function(source) {
+  _getSourceActor(source) {
     if (this._sourceActors.has(source)) {
       return this._sourceActors.get(source);
     }
 
     return null;
-  },
+  }
 
-  hasSourceActor: function(source) {
+  hasSourceActor(source) {
     return !!this._getSourceActor(source);
-  },
+  }
 
-  getSourceActor: function(source) {
+  getSourceActor(source) {
     const sourceActor = this._getSourceActor(source);
 
     if (!sourceActor) {
@@ -139,7 +138,7 @@ TabSources.prototype = {
     }
 
     return sourceActor;
-  },
+  }
 
   getOrCreateSourceActor(source) {
     // Tolerate the source coming from a different Debugger than the one
@@ -159,9 +158,9 @@ TabSources.prototype = {
       return this.getSourceActor(source);
     }
     return this.createSourceActor(source);
-  },
+  }
 
-  getSourceActorByInternalSourceId: function(id) {
+  getSourceActorByInternalSourceId(id) {
     if (!this._sourcesByInternalSourceId) {
       this._sourcesByInternalSourceId = new Map();
       for (const source of this._thread.dbg.findSources()) {
@@ -175,9 +174,9 @@ TabSources.prototype = {
       return this.getOrCreateSourceActor(source);
     }
     return null;
-  },
+  }
 
-  getSourceActorsByURL: function(url) {
+  getSourceActorsByURL(url) {
     const rv = [];
     if (url) {
       for (const [, actor] of this._sourceActors) {
@@ -187,7 +186,7 @@ TabSources.prototype = {
       }
     }
     return rv;
-  },
+  }
 
   getSourceActorById(actorId) {
     for (const [, actor] of this._sourceActors) {
@@ -196,7 +195,7 @@ TabSources.prototype = {
       }
     }
     return null;
-  },
+  }
 
   /**
    * Returns true if the URL likely points to a minified resource, false
@@ -206,7 +205,7 @@ TabSources.prototype = {
    *        The url to test.
    * @returns Boolean
    */
-  _isMinifiedURL: function(uri) {
+  _isMinifiedURL(uri) {
     if (!uri) {
       return false;
     }
@@ -222,7 +221,7 @@ TabSources.prototype = {
       // whole thing with the minified source regexp.
       return MINIFIED_SOURCE_REGEXP.test(uri);
     }
-  },
+  }
 
   /**
    * Return the non-source-mapped location of an offset in a script.
@@ -234,14 +233,14 @@ TabSources.prototype = {
    * @returns Object
    *          Returns an object of the form { source, line, column }
    */
-  getScriptOffsetLocation: function(script, offset) {
+  getScriptOffsetLocation(script, offset) {
     const { lineNumber, columnNumber } = script.getOffsetMetadata(offset);
     return new SourceLocation(
       this.createSourceActor(script.source),
       lineNumber,
       columnNumber
     );
-  },
+  }
 
   /**
    * Return the non-source-mapped location of the given Debugger.Frame. If the
@@ -252,12 +251,12 @@ TabSources.prototype = {
    * @returns Object
    *          Returns an object of the form { source, line, column }
    */
-  getFrameLocation: function(frame) {
+  getFrameLocation(frame) {
     if (!frame || !frame.script) {
       return new SourceLocation();
     }
     return this.getScriptOffsetLocation(frame.script, frame.offset);
-  },
+  }
 
   /**
    * Returns true if URL for the given source is black boxed.
@@ -266,7 +265,7 @@ TabSources.prototype = {
    *        The URL of the source which we are checking whether it is black
    *        boxed or not.
    */
-  isBlackBoxed: function(url, line, column) {
+  isBlackBoxed(url, line, column) {
     const ranges = this.blackBoxedSources.get(url);
     if (!ranges) {
       return this.blackBoxedSources.has(url);
@@ -274,12 +273,12 @@ TabSources.prototype = {
 
     const range = ranges.find(r => isLocationInRange({ line, column }, r));
     return !!range;
-  },
+  }
 
-  isFrameBlackBoxed: function(frame) {
+  isFrameBlackBoxed(frame) {
     const { url, line, column } = this.getFrameLocation(frame);
     return this.isBlackBoxed(url, line, column);
-  },
+  }
 
   /**
    * Add the given source URL to the set of sources that are black boxed.
@@ -287,7 +286,7 @@ TabSources.prototype = {
    * @param url String
    *        The URL of the source which we are black boxing.
    */
-  blackBox: function(url, range) {
+  blackBox(url, range) {
     if (!range) {
       // blackbox the whole source
       return this.blackBoxedSources.set(url, null);
@@ -302,7 +301,7 @@ TabSources.prototype = {
     ranges.splice(index + 1, 0, range);
     this.blackBoxedSources.set(url, ranges);
     return true;
-  },
+  }
 
   /**
    * Remove the given source URL to the set of sources that are black boxed.
@@ -310,7 +309,7 @@ TabSources.prototype = {
    * @param url String
    *        The URL of the source which we are no longer black boxing.
    */
-  unblackBox: function(url, range) {
+  unblackBox(url, range) {
     if (!range) {
       return this.blackBoxedSources.delete(url);
     }
@@ -333,11 +332,11 @@ TabSources.prototype = {
     }
 
     return this.blackBoxedSources.set(url, ranges);
-  },
+  }
 
-  iter: function() {
+  iter() {
     return [...this._sourceActors.values()];
-  },
+  }
 
   /**
    * Listener for new HTML content.
@@ -374,7 +373,7 @@ TabSources.prototype = {
         });
       }
     }
-  },
+  }
 
   /**
    * Get the contents of a URL, fetching it if necessary. If partial is set and
@@ -405,9 +404,9 @@ TabSources.prototype = {
     }
 
     return this._fetchURLContents(url, partial, canUseCache);
-  },
+  }
 
-  _fetchURLContents: async function(url, partial, canUseCache) {
+  async _fetchURLContents(url, partial, canUseCache) {
     // Only try the cache if it is currently enabled for the document.
     // Without this check, the cache may return stale data that doesn't match
     // the document shown in the browser.
@@ -469,9 +468,9 @@ TabSources.prototype = {
     this._urlContents.set(url, { ...result, complete: true });
 
     return result;
-  },
+  }
 
-  _reportLoadSourceError: function(error) {
+  _reportLoadSourceError(error) {
     try {
       DevToolsUtils.reportException("SourceActor", error);
 
@@ -480,8 +479,8 @@ TabSources.prototype = {
     } catch (e) {
       // ignore
     }
-  },
-};
+  }
+}
 
 /*
  * Checks if a source should never be displayed to the user because
@@ -500,5 +499,5 @@ function isLocationInRange({ line, column }, range) {
   );
 }
 
-exports.TabSources = TabSources;
+exports.SourcesManager = SourcesManager;
 exports.isHiddenSource = isHiddenSource;

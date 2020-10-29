@@ -272,7 +272,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return createValueGrip(value, this.threadLifetimePool, this.objectGrip);
   },
 
-  get sources() {
+  get sourcesManager() {
     return this._parent.sources;
   },
 
@@ -326,7 +326,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (this._dbg) {
       this.dbg.removeAllDebuggees();
     }
-    this._sources = null;
     this._scripts = null;
   },
 
@@ -363,7 +362,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._parent.off("will-navigate", this._onWillNavigate);
     this._parent.off("navigate", this._onNavigate);
 
-    this.sources.off("newSource", this.onNewSourceEvent);
+    this.sourcesManager.off("newSource", this.onNewSourceEvent);
     this.clearDebuggees();
     this._threadLifetimePool.destroy();
     this._threadLifetimePool = null;
@@ -397,7 +396,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._debuggerSourcesSeen = new WeakSet();
 
     this._options = { ...this._options, ...options };
-    this.sources.on("newSource", this.onNewSourceEvent);
+    this.sourcesManager.on("newSource", this.onNewSourceEvent);
 
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
@@ -548,14 +547,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (location.sourceUrl) {
       // There can be multiple source actors for a URL if there are multiple
       // inline sources on an HTML page.
-      const sourceActors = this.sources.getSourceActorsByURL(
+      const sourceActors = this.sourcesManager.getSourceActorsByURL(
         location.sourceUrl
       );
       for (const sourceActor of sourceActors) {
         await sourceActor.applyBreakpoint(actor);
       }
     } else {
-      const sourceActor = this.sources.getSourceActorById(location.sourceId);
+      const sourceActor = this.sourcesManager.getSourceActorById(
+        location.sourceId
+      );
       if (sourceActor) {
         await sourceActor.applyBreakpoint(actor);
       }
@@ -809,7 +810,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     } else if (!notification.phase && !this._activeEventPause) {
       const frame = this.dbg.getNewestFrame();
       if (frame) {
-        if (this.sources.isFrameBlackBoxed(frame)) {
+        if (this.sourcesManager.isFrameBlackBoxed(frame)) {
           return;
         }
 
@@ -820,7 +821,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeEventBreakpointEnterFrame(eventBreakpoint) {
     return frame => {
-      if (this.sources.isFrameBlackBoxed(frame)) {
+      if (this.sourcesManager.isFrameBlackBoxed(frame)) {
         return undefined;
       }
 
@@ -886,9 +887,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return undefined;
       }
 
-      const { sourceActor, line, column } = this.sources.getFrameLocation(
-        frame
-      );
+      const {
+        sourceActor,
+        line,
+        column,
+      } = this.sourcesManager.getFrameLocation(frame);
 
       packet.why = reason;
 
@@ -944,7 +947,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         steppingType: "next",
       });
 
-      if (this.sources.isFrameBlackBoxed(frame)) {
+      if (this.sourcesManager.isFrameBlackBoxed(frame)) {
         return undefined;
       }
 
@@ -976,7 +979,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // on the next pause.
       thread.suspendedFrame = this;
 
-      if (steppingType != "finish" && !thread.sources.isFrameBlackBoxed(this)) {
+      if (
+        steppingType != "finish" &&
+        !thread.sourcesManager.isFrameBlackBoxed(this)
+      ) {
         const pauseAndRespValue = pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)
         );
@@ -1014,7 +1020,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   hasMoved: function(frame, newType) {
-    const newLocation = this.sources.getFrameLocation(frame);
+    const newLocation = this.sourcesManager.getFrameLocation(frame);
 
     if (!this._priorPause) {
       return true;
@@ -1061,7 +1067,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // 3. we have not moved since the last pause
     if (
       !meta.isBreakpoint ||
-      this.sources.isFrameBlackBoxed(frame) ||
+      this.sourcesManager.isFrameBlackBoxed(frame) ||
       !this.hasMoved(frame)
     ) {
       return false;
@@ -1074,7 +1080,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   atBreakpointLocation(frame) {
-    const location = this.sources.getFrameLocation(frame);
+    const location = this.sourcesManager.getFrameLocation(frame);
     return !!this.breakpointActorMap.get(location);
   },
 
@@ -1194,7 +1200,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         case "break":
         case "next":
           if (stepFrame.script) {
-            if (!this.sources.isFrameBlackBoxed(stepFrame)) {
+            if (!this.sourcesManager.isFrameBlackBoxed(stepFrame)) {
               stepFrame.onStep = onStep;
             }
           }
@@ -1428,7 +1434,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // there is an active Debugger.Source that represents the SaveFrame's
       // source, it will have already been created in the server.
       if (frame instanceof Debugger.Frame) {
-        const sourceActor = this.sources.createSourceActor(frame.script.source);
+        const sourceActor = this.sourcesManager.createSourceActor(
+          frame.script.source
+        );
         if (!sourceActor) {
           continue;
         }
@@ -1485,7 +1493,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // timeout flush the buffered packets.
 
     return {
-      sources: this.sources.iter().map(s => s.form()),
+      sources: this.sourcesManager.iter().map(s => s.form()),
     };
   },
 
@@ -1738,7 +1746,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
           return createValueGrip(v, this.threadLifetimePool, this.objectGrip);
         },
-        sources: () => this.sources,
+        sources: () => this.sourcesManager,
         createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
         promote: () => this.threadObjectGrip(actor),
         isThreadLifetimePool: () =>
@@ -1778,7 +1786,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _onWindowReady: function({ isTopLevel, isBFCache, window }) {
     if (isTopLevel && this.state != "detached") {
-      this.sources.reset();
+      this.sourcesManager.reset();
       this.clearDebuggees();
       this.dbg.enable();
       this.maybePauseOnExceptions();
@@ -1843,7 +1851,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(frame)) {
+    if (this.skipBreakpoints || this.sourcesManager.isFrameBlackBoxed(frame)) {
       return undefined;
     }
 
@@ -1962,7 +1970,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    if (this.skipBreakpoints || this.sources.isFrameBlackBoxed(youngestFrame)) {
+    if (
+      this.skipBreakpoints ||
+      this.sourcesManager.isFrameBlackBoxed(youngestFrame)
+    ) {
       return undefined;
     }
 
@@ -2033,7 +2044,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns true, if the source was added; false otherwise.
    */
   _addSource: function(source) {
-    if (!this.sources.allowSource(source)) {
+    if (!this.sourcesManager.allowSource(source)) {
       return false;
     }
 
@@ -2044,12 +2055,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     let sourceActor;
     if (
       this._debuggerSourcesSeen.has(source) &&
-      this.sources.hasSourceActor(source)
+      this.sourcesManager.hasSourceActor(source)
     ) {
-      sourceActor = this.sources.getSourceActor(source);
+      sourceActor = this.sourcesManager.getSourceActor(source);
       sourceActor.resetDebuggeeScripts();
     } else {
-      sourceActor = this.sources.createSourceActor(source);
+      sourceActor = this.sourcesManager.createSourceActor(source);
     }
 
     const sourceUrl = sourceActor.url;
@@ -2079,7 +2090,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @param url The URL string to fetch.
    */
   _resurrectSource: async function(url) {
-    let { content, contentType, sourceMapURL } = await this.sources.urlContents(
+    let {
+      content,
+      contentType,
+      sourceMapURL,
+    } = await this.sourcesManager.urlContents(
       url,
       /* partial */ false,
       /* canUseCache */ true
@@ -2180,7 +2195,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   logLocation: function(prefix, frame) {
-    const loc = this.sources.getFrameLocation(frame);
+    const loc = this.sourcesManager.getFrameLocation(frame);
     dump(`${prefix} (${loc.line}, ${loc.column})\n`);
   },
 });
