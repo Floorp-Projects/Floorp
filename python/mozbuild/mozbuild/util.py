@@ -1426,7 +1426,6 @@ def patch_main():
     # not, but at least some basic mach commands appear to work without it. So
     # skip it in 3.4+ until we determine it's still needed.
     if sys.platform == "win32" and sys.version_info < (3, 4):
-        import inspect
         import os
         from multiprocessing import forking
 
@@ -1445,50 +1444,16 @@ def patch_main():
             # If main is a .py file, everything ought to work as expected.
             return
 
-        def fork_interpose():
-            import imp
-            import os
-            import sys
-
-            orig_find_module = imp.find_module
-
-            def my_find_module(name, dirs):
-                if name == main_module_name:
-                    path = os.path.join(dirs[0], main_file_name)
-                    f = open(path)
-                    return (f, path, ("", "r", imp.PY_SOURCE))
-                return orig_find_module(name, dirs)
-
-            # Don't allow writing bytecode file for the main module.
-            orig_load_module = imp.load_module
-
-            def my_load_module(name, file, path, description):
-                # multiprocess.forking invokes imp.load_module manually and
-                # hard-codes the name __parents_main__ as the module name.
-                if name == "__parents_main__":
-                    old_bytecode = sys.dont_write_bytecode
-                    sys.dont_write_bytecode = True
-                    try:
-                        return orig_load_module(name, file, path, description)
-                    finally:
-                        sys.dont_write_bytecode = old_bytecode
-
-                return orig_load_module(name, file, path, description)
-
-            imp.find_module = my_find_module
-            imp.load_module = my_load_module
-            from multiprocessing.forking import main
-
-            main()
-
         def my_get_command_line():
-            fork_code, lineno = inspect.getsourcelines(fork_interpose)
-            # Remove the first line (for 'def fork_interpose():') and the three
-            # levels of indentation (12 spaces), add our relevant globals.
+            with open(
+                os.path.join(os.path.dirname(__file__), "fork_interpose.py"), "rU"
+            ) as fork_file:
+                fork_code = fork_file.read()
+            # Add our relevant globals.
             fork_string = (
                 "main_file_name = '%s'\n" % main_file_name
                 + "main_module_name = '%s'\n" % main_module_name
-                + "".join(x[12:] for x in fork_code[1:])
+                + fork_code
             )
             cmdline = orig_command_line()
             # We don't catch errors if "-c" is not found because it's not clear
