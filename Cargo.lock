@@ -4429,7 +4429,6 @@ dependencies = [
  "precomputed-hash",
  "servo_arc",
  "smallvec",
- "thin-slice",
  "to_shmem",
  "to_shmem_derive",
 ]
