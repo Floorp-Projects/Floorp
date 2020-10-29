@@ -127,7 +127,7 @@ class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
     va_start(va, format);
 
     nsCString msg;
-    msg.AppendPrintf(format, va);
+    msg.AppendVprintf(format, va);
 
     va_end(va);
 

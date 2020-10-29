@@ -28,7 +28,7 @@ class nsPrintfCString : public nsAutoCStringN<16> {
       MOZ_FORMAT_PRINTF(2, 3) {
     va_list ap;
     va_start(ap, aFormat);
-    AppendPrintf(aFormat, ap);
+    AppendVprintf(aFormat, ap);
     va_end(ap);
   }
 };

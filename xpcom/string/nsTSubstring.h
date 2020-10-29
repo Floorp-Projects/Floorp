@@ -640,7 +640,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * this with floating-point values as a result.
    */
   void AppendPrintf(const char* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3);
-  void AppendPrintf(const char* aFormat, va_list aAp) MOZ_FORMAT_PRINTF(2, 0);
+  void AppendVprintf(const char* aFormat, va_list aAp) MOZ_FORMAT_PRINTF(2, 0);
   void AppendInt(int32_t aInteger) { AppendIntDec(aInteger); }
   void AppendInt(int32_t aInteger, int aRadix) {
     if (aRadix == 10) {
