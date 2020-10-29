@@ -2,20 +2,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use uuid::Uuid;
+
 mod common;
 use common::*;
 
 use fog::ipc;
-use fog::private::{CommonMetricData, Lifetime, StringMetric};
+use fog::private::{CommonMetricData, Lifetime, UuidMetric};
 
 #[test]
-fn sets_string_value() {
+fn sets_uuid_value() {
     let _lock = lock_test();
     let _t = setup_glean(None);
     let store_names: Vec<String> = vec!["store1".into()];
 
-    let metric = StringMetric::new(CommonMetricData {
-        name: "string_metric".into(),
+    let metric = UuidMetric::new(CommonMetricData {
+        name: "uuid_metric".into(),
         category: "telemetry".into(),
         send_in_pings: store_names.clone(),
         disabled: false,
@@ -23,23 +25,21 @@ fn sets_string_value() {
         ..Default::default()
     });
 
-    metric.set("test_string_value");
+    let expected = Uuid::new_v4();
+    metric.set(expected.clone());
 
-    assert_eq!(
-        "test_string_value",
-        metric.test_get_value("store1").unwrap()
-    );
+    assert_eq!(expected, metric.test_get_value("store1").unwrap());
 }
 
 #[test]
-fn string_ipc() {
-    // StringMetric doesn't support IPC.
+fn uuid_ipc() {
+    // UuidMetric doesn't support IPC.
     let _lock = lock_test();
     let _t = setup_glean(None);
     let store_names: Vec<String> = vec!["store1".into()];
     let _raii = ipc::test_set_need_ipc(true);
-    let child_metric = StringMetric::new(CommonMetricData {
-        name: "string_metric".into(),
+    let child_metric = UuidMetric::new(CommonMetricData {
+        name: "uuid_metric".into(),
         category: "ipc".into(),
         send_in_pings: store_names.clone(),
         disabled: false,
@@ -48,7 +48,7 @@ fn string_ipc() {
     });
 
     // Instrumentation calls do not panic.
-    child_metric.set("test_string_value");
+    child_metric.set(Uuid::new_v4());
 
     // (They also shouldn't do anything,
     // but that's not something we can inspect in this test)
