@@ -14,6 +14,7 @@ import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Mockable
 
@@ -25,7 +26,7 @@ class Services(
     private val context: Context,
     private val accountManager: FxaAccountManager
 ) {
-    val accountsAuthFeature by lazy {
+    val accountsAuthFeature by lazyMonitored {
         FirefoxAccountsAuthFeature(accountManager, FxaServer.REDIRECT_URL) { context, authUrl ->
             CoroutineScope(Dispatchers.Main).launch {
                 val intent = SupportUtils.createAuthCustomTabIntent(context, authUrl)
@@ -34,7 +35,7 @@ class Services(
         }
     }
 
-    val appLinksInterceptor by lazy {
+    val appLinksInterceptor by lazyMonitored {
         AppLinksInterceptor(
             context,
             interceptLinkClicks = true,

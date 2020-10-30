@@ -10,6 +10,7 @@ import mozilla.components.feature.push.PushConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.push.FirebasePushService
 
 /**
@@ -17,7 +18,7 @@ import org.mozilla.fenix.push.FirebasePushService
  * push messaging (e.g. WebPush, SendTab).
  */
 class Push(context: Context, crashReporter: CrashReporter) {
-    val feature by lazy {
+    val feature by lazyMonitored {
         pushConfig?.let { config ->
             AutoPushFeature(
                 context = context,
@@ -28,13 +29,13 @@ class Push(context: Context, crashReporter: CrashReporter) {
         }
     }
 
-    private val pushConfig: PushConfig? by lazy {
+    private val pushConfig: PushConfig? by lazyMonitored {
         val logger = Logger("PushConfig")
         val projectIdKey = context.getString(R.string.pref_key_push_project_id)
         val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
         if (resId == 0) {
             logger.warn("No firebase configuration found; cannot support push service.")
-            return@lazy null
+            return@lazyMonitored null
         }
 
         logger.debug("Creating push configuration for autopush.")
@@ -42,5 +43,5 @@ class Push(context: Context, crashReporter: CrashReporter) {
         PushConfig(projectId)
     }
 
-    private val pushService by lazy { FirebasePushService() }
+    private val pushService by lazyMonitored { FirebasePushService() }
 }

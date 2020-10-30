@@ -19,6 +19,7 @@ import mozilla.components.support.migration.MigrationIntentProcessor
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
 
 /**
@@ -39,26 +40,26 @@ class IntentProcessors(
     /**
      * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents.
      */
-    val intentProcessor by lazy {
+    val intentProcessor by lazyMonitored {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = false)
     }
 
     /**
      * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents in private tabs.
      */
-    val privateIntentProcessor by lazy {
+    val privateIntentProcessor by lazyMonitored {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = true)
     }
 
-    val customTabIntentProcessor by lazy {
+    val customTabIntentProcessor by lazyMonitored {
         CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources, isPrivate = false)
     }
 
-    val privateCustomTabIntentProcessor by lazy {
+    val privateCustomTabIntentProcessor by lazyMonitored {
         CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources, isPrivate = true)
     }
 
-    val externalAppIntentProcessors by lazy {
+    val externalAppIntentProcessors by lazyMonitored {
         listOf(
             TrustedWebActivityIntentProcessor(
                 sessionManager = sessionManager,
@@ -72,11 +73,11 @@ class IntentProcessors(
         )
     }
 
-    val fennecPageShortcutIntentProcessor by lazy {
+    val fennecPageShortcutIntentProcessor by lazyMonitored {
         FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl)
     }
 
-    val migrationIntentProcessor by lazy {
+    val migrationIntentProcessor by lazyMonitored {
         MigrationIntentProcessor(migrationStore)
     }
 }

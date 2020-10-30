@@ -41,6 +41,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.sync.SyncedTabsIntegration
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.Settings
@@ -109,9 +110,11 @@ class BackgroundServices(
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
 
-    val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig, crashReporter) }
+    val accountManager by lazyMonitored {
+        makeAccountManager(context, serverConfig, deviceConfig, syncConfig, crashReporter)
+    }
 
-    val syncedTabsStorage by lazy {
+    val syncedTabsStorage by lazyMonitored {
         SyncedTabsStorage(accountManager, context.components.core.store, remoteTabsStorage.value)
     }
 
@@ -174,7 +177,7 @@ class BackgroundServices(
     /**
      * Provides notification functionality, manages notification channels.
      */
-    private val notificationManager by lazy {
+    private val notificationManager by lazyMonitored {
         NotificationManager(context)
     }
 }

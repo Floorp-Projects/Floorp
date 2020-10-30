@@ -10,6 +10,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
 
 /**
@@ -22,7 +23,7 @@ class Search(private val context: Context) {
     /**
      * This component provides access to a centralized registry of search engines.
      */
-    val searchEngineManager by lazy {
+    val searchEngineManager by lazyMonitored {
         SearchEngineManager(
             coroutineContext = IO,
             providers = listOf(provider)

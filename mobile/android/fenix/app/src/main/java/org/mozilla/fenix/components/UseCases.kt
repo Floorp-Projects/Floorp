@@ -22,6 +22,7 @@ import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
 
 /**
@@ -42,17 +43,17 @@ class UseCases(
     /**
      * Use cases that provide engine interactions for a given browser session.
      */
-    val sessionUseCases by lazy { SessionUseCases(store, sessionManager) }
+    val sessionUseCases by lazyMonitored { SessionUseCases(store, sessionManager) }
 
     /**
      * Use cases that provide tab management.
      */
-    val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
+    val tabsUseCases: TabsUseCases by lazyMonitored { TabsUseCases(store, sessionManager) }
 
     /**
      * Use cases that provide search engine integration.
      */
-    val searchUseCases by lazy {
+    val searchUseCases by lazyMonitored {
         SearchUseCases(
             context,
             store,
@@ -64,22 +65,22 @@ class UseCases(
     /**
      * Use cases that provide settings management.
      */
-    val settingsUseCases by lazy { SettingsUseCases(engine, store) }
+    val settingsUseCases by lazyMonitored { SettingsUseCases(engine, store) }
 
-    val appLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
+    val appLinksUseCases by lazyMonitored { AppLinksUseCases(context.applicationContext) }
 
-    val webAppUseCases by lazy {
+    val webAppUseCases by lazyMonitored {
         WebAppUseCases(context, sessionManager, shortcutManager)
     }
 
-    val downloadUseCases by lazy { DownloadsUseCases(store) }
+    val downloadUseCases by lazyMonitored { DownloadsUseCases(store) }
 
-    val contextMenuUseCases by lazy { ContextMenuUseCases(store) }
+    val contextMenuUseCases by lazyMonitored { ContextMenuUseCases(store) }
 
-    val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }
+    val trackingProtectionUseCases by lazyMonitored { TrackingProtectionUseCases(store, engine) }
 
     /**
      * Use cases that provide top sites management.
      */
-    val topSitesUseCase by lazy { TopSitesUseCases(topSitesStorage) }
+    val topSitesUseCase by lazyMonitored { TopSitesUseCases(topSitesStorage) }
 }

@@ -6,10 +6,11 @@ package org.mozilla.fenix.components
 
 import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.perf.VisualCompletenessQueue
+import org.mozilla.fenix.perf.lazyMonitored
 
 /**
  * Component group for all functionality related to performance.
  */
 class PerformanceComponent {
-    val visualCompletenessQueue by lazy { VisualCompletenessQueue(RunWhenReadyQueue()) }
+    val visualCompletenessQueue by lazyMonitored { VisualCompletenessQueue(RunWhenReadyQueue()) }
 }

@@ -23,6 +23,7 @@ import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.LeanplumMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
@@ -36,7 +37,7 @@ import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
 class Analytics(
     private val context: Context
 ) {
-    val crashReporter: CrashReporter by lazy {
+    val crashReporter: CrashReporter by lazyMonitored {
         val services = mutableListOf<CrashReporterService>()
 
         if (isSentryEnabled()) {
@@ -84,9 +85,9 @@ class Analytics(
         )
     }
 
-    val leanplumMetricsService by lazy { LeanplumMetricsService(context as Application) }
+    val leanplumMetricsService by lazyMonitored { LeanplumMetricsService(context as Application) }
 
-    val metrics: MetricController by lazy {
+    val metrics: MetricController by lazyMonitored {
         MetricController.create(
             listOf(
                 GleanMetricsService(context),
