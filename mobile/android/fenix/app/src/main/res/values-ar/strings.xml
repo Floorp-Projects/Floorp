@@ -1279,6 +1279,8 @@
     <string name="etp_fingerprinters_title">مسجّلات البصمات</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">المحتوى الذي يتعقّبك</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">متى ما رأيت الدرع بنفسجيًا اعرف أنّ %s حجب المتعقّبات في أحد المواقع. اضغط لتفاصيل أكثر.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">فُعّلت الحماية في هذا الموقع</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1443,6 +1445,8 @@
     <string name="logins_biometric_prompt_message_pin">ألغِ قفل جهازك</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">استعمل التقريب على كل المواقع</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">فعّله للسماح بالتقريب والإبعاد حتّى على المواقع التي تمنع هذه الإيماءة.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">الاسم (ا-ي)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1470,6 +1474,8 @@
     <string name="search_add_custom_engine_name_hint">الاسم</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">نص البحث المستخدم</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">استبدِل الاستعلام بِ‍ ”%s“. مثال:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">اطّلع على المزيد</string>
 

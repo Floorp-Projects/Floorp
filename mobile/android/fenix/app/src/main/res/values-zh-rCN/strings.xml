@@ -1033,16 +1033,16 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">这是示例文本。您可以增大或减小字体大小设置，调整文字显示效果。</string>
+    <string name="accessibility_text_size_sample_text_1">这是示例文本。您可以增大或减小字号，调整文字显示效果。</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">使网站上的文字更大或更小</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">字体大小</string>
+    <string name="preference_accessibility_font_size_title">字号</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_2">自动调整字体大小</string>
+    <string name="preference_accessibility_auto_size_2">自动调整字号</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">字体大小将跟随您的 Android 设置。禁用此项后则可以手动调整。</string>
+    <string name="preference_accessibility_auto_size_summary">将与您的 Android 中的字号设置保持一致。禁用此项后则可以手动调整。</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">删除浏览数据</string>
