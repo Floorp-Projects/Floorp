@@ -40,5 +40,8 @@ with Files('rlbox/**'):
 with Files("libwebrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
+with Files("pipewire/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
 with Files('WinToast/**'):
     BUG_COMPONENT = ('Toolkit', 'General')
