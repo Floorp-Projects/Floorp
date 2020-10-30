@@ -2668,7 +2668,10 @@ bool CacheIRCompiler::emitInt32DivResult(Int32OperandId lhsId,
   masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
 
   // Prevent -2147483648 / -1.
-  masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+  Label notOverflow;
+  masm.branch32(Assembler::NotEqual, lhs, Imm32(INT32_MIN), &notOverflow);
+  masm.branch32(Assembler::Equal, rhs, Imm32(-1), failure->label());
+  masm.bind(&notOverflow);
 
   // Prevent negative 0.
   Label notZero;
@@ -2703,8 +2706,14 @@ bool CacheIRCompiler::emitInt32ModResult(Int32OperandId lhsId,
   // x % 0 results in NaN
   masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
 
-  // Prevent -2147483648 / -1.
-  masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+  // Prevent -2147483648 % -1.
+  //
+  // Traps on x86 and has undefined behavior on ARM32 (when __aeabi_idivmod is
+  // called).
+  Label notOverflow;
+  masm.branch32(Assembler::NotEqual, lhs, Imm32(INT32_MIN), &notOverflow);
+  masm.branch32(Assembler::Equal, rhs, Imm32(-1), failure->label());
+  masm.bind(&notOverflow);
 
   masm.mov(lhs, scratch);
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
