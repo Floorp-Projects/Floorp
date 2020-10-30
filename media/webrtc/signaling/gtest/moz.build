@@ -39,7 +39,7 @@ if (
     ]
 
     SOURCES += [
-        "audioconduit_unittests.cpp",
+#        "audioconduit_unittests.cpp",
         "jsep_session_unittest.cpp",
         "jsep_track_unittest.cpp",
         "mediapipeline_unittest.cpp",
