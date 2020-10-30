@@ -3228,28 +3228,11 @@ class Frame {
   // plus a tag otherwise.
   uint8_t* callerFP_;
 
-  // The saved value of WasmTlsReg on entry to the function. This is
-  // effectively the callee's instance.
-  TlsData* tls_;
-
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM64)
-  // Double word aligned frame ensures:
-  // - correct alignment for wasm locals on architectures that require the
-  //   stack alignment to be more than word size.
-  // - correct stack alignment on architectures that require the SP alignment
-  //   to be more than word size.
- protected:  // suppress -Wunused-private-field
-  uintptr_t padding_;
-
- private:
-#endif
-
   // The return address pushed by the call (in the case of ARM/MIPS the return
   // address is pushed by the first instruction of the prologue).
   void* returnAddress_;
 
  public:
-  static constexpr uint32_t tlsOffset() { return offsetof(Frame, tls_); }
   static constexpr uint32_t callerFPOffset() {
     return offsetof(Frame, callerFP_);
   }
@@ -3266,7 +3249,6 @@ class Frame {
   }
 
   uint8_t* rawCaller() const { return callerFP_; }
-  TlsData* tls() const { return tls_; }
 
   Frame* wasmCaller() const {
     MOZ_ASSERT(!callerIsExitOrJitEntryFP());
@@ -3302,6 +3284,8 @@ class Frame {
 };
 
 static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
+static_assert(sizeof(Frame) == 2 * sizeof(void*),
+              "Frame is a two pointer structure");
 
 class FrameWithTls : public Frame {
   TlsData* calleeTls_;
@@ -3408,8 +3392,9 @@ class DebugFrame {
 
   // Avoid -Wunused-private-field warnings.
  protected:
-#if defined(JS_CODEGEN_MIPS32)
-  // See alignmentStaticAsserts().  For MIPS32, sizeof(Frame) is only
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM) || \
+    defined(JS_CODEGEN_X86)
+  // See alignmentStaticAsserts().  For MIPS32, ARM32 and X86 DebugFrame is only
   // 4-byte aligned, so we add another word to get up to 8-byte
   // alignment.
   uint32_t padding_;
