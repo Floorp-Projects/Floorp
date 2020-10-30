@@ -4845,7 +4845,7 @@ nsresult nsContentUtils::ParseFragmentHTML(
 
   nsIContent* target = aTargetNode;
 
-  RefPtr<Document> inert;
+  RefPtr<Document> doc = aTargetNode->OwnerDoc();
   RefPtr<DocumentFragment> fragment;
   // We sanitize if the fragment occurs in a system privileged
   // context, an about: page, or if there are explicit sanitization flags.
@@ -4854,16 +4854,17 @@ nsresult nsContentUtils::ParseFragmentHTML(
   // an about: scheme principal.
   bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
-  if (shouldSanitize) {
-    if (!AllowsUnsanitizedContentForAboutNewTab(nodePrincipal)) {
-      inert = nsContentUtils::CreateInertHTMLDocument(aTargetNode->OwnerDoc());
-      if (!inert) {
+  if (shouldSanitize &&
+      !AllowsUnsanitizedContentForAboutNewTab(nodePrincipal)) {
+    if (!doc->IsLoadedAsData()) {
+      doc = nsContentUtils::CreateInertHTMLDocument(doc);
+      if (!doc) {
         return NS_ERROR_FAILURE;
       }
-      fragment = new (inert->NodeInfoManager())
-          DocumentFragment(inert->NodeInfoManager());
-      target = fragment;
     }
+    fragment =
+        new (doc->NodeInfoManager()) DocumentFragment(doc->NodeInfoManager());
+    target = fragment;
   }
 
   nsresult rv = sHTMLFragmentParser->ParseFragment(
@@ -4957,7 +4958,7 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   // an about: scheme principal.
   bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
-  if (shouldSanitize) {
+  if (shouldSanitize && !aDocument->IsLoadedAsData()) {
     doc = nsContentUtils::CreateInertXMLDocument(aDocument);
   } else {
     doc = aDocument;
