@@ -94,6 +94,7 @@ add_task(async function test() {
     set: [
       // By default, proxies don't apply to 127.0.0.1. We need them to for this test, though:
       ["network.proxy.allow_hijacking_localhost", true],
+      ["security.mixed_content.upgrade_display_content", false],
     ],
   });
 
