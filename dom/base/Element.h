@@ -1197,13 +1197,14 @@ class Element : public FragmentOrElement {
                           ErrorResult& aError);
 
   void SetPointerCapture(int32_t aPointerId, ErrorResult& aError) {
-    bool activeState = false;
     if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
         aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
       aError.ThrowNotFoundError("Invalid pointer id");
       return;
     }
-    if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
+    const PointerInfo* pointerInfo =
+        PointerEventHandler::GetPointerInfo(aPointerId);
+    if (!pointerInfo) {
       aError.ThrowNotFoundError("Invalid pointer id");
       return;
     }
@@ -1217,19 +1218,19 @@ class Element : public FragmentOrElement {
       aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
-    if (!activeState) {
+    if (!pointerInfo->mActiveState ||
+        pointerInfo->mActiveDocument != OwnerDoc()) {
       return;
     }
     PointerEventHandler::RequestPointerCaptureById(aPointerId, this);
   }
   void ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError) {
-    bool activeState = false;
     if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
         aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
       aError.ThrowNotFoundError("Invalid pointer id");
       return;
     }
-    if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
+    if (!PointerEventHandler::GetPointerInfo(aPointerId)) {
       aError.ThrowNotFoundError("Invalid pointer id");
       return;
     }
