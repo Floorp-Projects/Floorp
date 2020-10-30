@@ -155,6 +155,8 @@ typedef void* nsNativeWidget;
 #  define NS_PRESENTATION_SURFACE 102
 #endif
 
+#define MOZ_WIDGET_MAX_SIZE 16384
+
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_IWIDGET_IID                               \
   {                                                  \
@@ -275,11 +277,18 @@ namespace widget {
  * Values are in device pixels.
  */
 struct SizeConstraints {
-  SizeConstraints() : mMaxSize(NS_MAXSIZE, NS_MAXSIZE) {}
+  SizeConstraints() : mMaxSize(MOZ_WIDGET_MAX_SIZE, MOZ_WIDGET_MAX_SIZE) {}
 
   SizeConstraints(mozilla::LayoutDeviceIntSize aMinSize,
                   mozilla::LayoutDeviceIntSize aMaxSize)
-      : mMinSize(aMinSize), mMaxSize(aMaxSize) {}
+      : mMinSize(aMinSize), mMaxSize(aMaxSize) {
+    if (mMaxSize.width > MOZ_WIDGET_MAX_SIZE) {
+      mMaxSize.width = MOZ_WIDGET_MAX_SIZE;
+    }
+    if (mMaxSize.height > MOZ_WIDGET_MAX_SIZE) {
+      mMaxSize.height = MOZ_WIDGET_MAX_SIZE;
+    }
+  }
 
   mozilla::LayoutDeviceIntSize mMinSize;
   mozilla::LayoutDeviceIntSize mMaxSize;
