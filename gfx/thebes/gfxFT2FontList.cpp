@@ -419,28 +419,15 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   return rv;
 }
 
+bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
+  RefPtr<SharedFTFace> face = GetFTFace();
+  return gfxFT2FontEntryBase::HasFontTable(face, aTableTag);
+}
+
 nsresult FT2FontEntry::CopyFontTable(uint32_t aTableTag,
                                      nsTArray<uint8_t>& aBuffer) {
   RefPtr<SharedFTFace> face = GetFTFace();
-  if (!face) {
-    return NS_ERROR_FAILURE;
-  }
-
-  FT_Error status;
-  FT_ULong len = 0;
-  status = FT_Load_Sfnt_Table(face->GetFace(), aTableTag, 0, nullptr, &len);
-  if (status != FT_Err_Ok || len == 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!aBuffer.SetLength(len, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  uint8_t* buf = aBuffer.Elements();
-  status = FT_Load_Sfnt_Table(face->GetFace(), aTableTag, 0, buf, &len);
-  NS_ENSURE_TRUE(status == FT_Err_Ok, NS_ERROR_FAILURE);
-
-  return NS_OK;
+  return gfxFT2FontEntryBase::CopyFontTable(face, aTableTag, aBuffer);
 }
 
 hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
