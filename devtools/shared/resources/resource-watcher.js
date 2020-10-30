@@ -851,4 +851,6 @@ const ResourceTransformers = {
     .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
+  [ResourceWatcher.TYPES
+    .SESSION_STORAGE]: require("devtools/shared/resources/transformers/storage-session-storage.js"),
 };
