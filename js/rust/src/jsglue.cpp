@@ -19,6 +19,7 @@
 #include "js/Class.h"
 #include "js/experimental/JitInfo.h"
 #include "js/experimental/TypedData.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"
 #include "js/StructuredClone.h"
