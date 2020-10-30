@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 from optparse import OptionParser
 import os
-import plistlib
 import shutil
 import subprocess
 import sys
@@ -28,6 +27,9 @@ try:
     has_pefile = True
 except ImportError:
     has_pefile = False
+
+if mozinfo.isMac:
+    from plistlib import readPlist
 
 
 TIMEOUT_UNINSTALL = 60
@@ -71,10 +73,9 @@ def get_binary(path, app_name):
         if not os.path.isfile(plist):
             raise InvalidBinary("%s/Contents/Info.plist not found" % path)
 
-        with open(plist, "rb") as fp:
-            binary = os.path.join(
-                path, "Contents/MacOS/", plistlib.load(fp)["CFBundleExecutable"]
-            )
+        binary = os.path.join(
+            path, "Contents/MacOS/", readPlist(plist)["CFBundleExecutable"]
+        )
 
     else:
         app_name = app_name.lower()
