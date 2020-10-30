@@ -539,17 +539,30 @@ var View = {
 
     // Column: Resident size
     {
-      let { formatedDelta, formatedValue } = this._formatMemoryAndDelta(
-        data.totalRamSize,
-        data.deltaRamSize
-      );
-      let content = formatedDelta
-        ? `${formatedValue}${formatedDelta}`
-        : formatedValue;
-      this._addCell(row, {
-        content,
-        classes: ["totalRamSize"],
-      });
+      let formattedTotal = this._formatMemory(data.totalRamSize);
+      if (data.deltaRamSize) {
+        let formattedDelta = this._formatMemory(data.deltaRamSize);
+        this._addCell(row, {
+          fluentName: "about-processes-total-memory-size",
+          fluentArgs: {
+            total: formattedTotal.amount,
+            totalUnit: formattedTotal.unit,
+            delta: Math.abs(formattedDelta.amount),
+            deltaUnit: formattedDelta.unit,
+            deltaSign: data.deltaRamSize > 0 ? "+" : "-",
+          },
+          classes: ["totalMemorySize"],
+        });
+      } else {
+        this._addCell(row, {
+          fluentName: "about-processes-total-memory-size-no-change",
+          fluentArgs: {
+            total: formattedTotal.amount,
+            totalUnit: formattedTotal.unit,
+          },
+          classes: ["totalMemorySize"],
+        });
+      }
     }
 
     // Column: CPU: User and Kernel
@@ -870,69 +883,31 @@ var View = {
     if (value == null) {
       return { unit: "?", amount: 0 };
     }
-    if (value < 0 || typeof value != "number") {
+    if (typeof value != "number") {
       throw new Error(`Invalid memory value ${value}`);
     }
-    if (value >= ONE_GIGA) {
+    let abs = Math.abs(value);
+    if (abs >= ONE_GIGA) {
       return {
         unit: "GB",
-        amount: Math.ceil((value / ONE_GIGA) * 100) / 100,
+        amount: value / ONE_GIGA,
       };
     }
-    if (value >= ONE_MEGA) {
+    if (abs >= ONE_MEGA) {
       return {
         unit: "MB",
-        amount: Math.ceil((value / ONE_MEGA) * 100) / 100,
+        amount: value / ONE_MEGA,
       };
     }
-    if (value >= ONE_KILO) {
+    if (abs >= ONE_KILO) {
       return {
         unit: "KB",
-        amount: Math.ceil((value / ONE_KILO) * 100) / 100,
+        amount: value / ONE_KILO,
       };
     }
     return {
       unit: "B",
-      amount: Math.round(value),
-    };
-  },
-
-  /**
-   * Format a value representing an amount of memory and a delta.
-   *
-   * @param {Number?} value The value to format. Must be either `null` or a non-negative number.
-   * @param {Number?} value The delta to format. Must be either `null` or a non-negative number.
-   * @return {
-   *   {unitValue: "GB" | "MB" | "KB" | B" | "?"},
-   *    formatedValue: string,
-   *   {unitDelta: "GB" | "MB" | "KB" | B" | "?"},
-   *    formatedDelta: string
-   * }
-   */
-  _formatMemoryAndDelta(value, delta) {
-    let formatedDelta;
-    let unitDelta;
-    if (delta == null) {
-      formatedDelta == "";
-      unitDelta = null;
-    } else if (delta == 0) {
-      formatedDelta = null;
-      unitDelta = null;
-    } else if (delta >= 0) {
-      let { unit, amount } = this._formatMemory(delta);
-      formatedDelta = ` (+${amount}${unit})`;
-      unitDelta = unit;
-    } else {
-      let { unit, amount } = this._formatMemory(-delta);
-      formatedDelta = ` (-${amount}${unit})`;
-      unitDelta = unit;
-    }
-    let { unit: unitValue, amount } = this._formatMemory(value);
-    return {
-      unitValue,
-      unitDelta,
-      formatedDelta,
-      formatedValue: `${amount}${unitValue}`,
+      amount: value,
     };
   },
 };
