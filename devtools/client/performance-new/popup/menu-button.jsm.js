@@ -84,6 +84,7 @@ function openPopup(document) {
   // instead of opening the popup. Sending a command event on a view widget
   // will make CustomizableUI show the view.
   const cmdEvent = document.createEvent("xulcommandevent");
+  // @ts-ignore - Bug 1674368
   cmdEvent.initCommandEvent("command", true, true, button.ownerGlobal);
   button.dispatchEvent(cmdEvent);
 }
@@ -299,6 +300,7 @@ function initialize(toggleProfilerKeyShortcuts) {
       });
     },
 
+    // @ts-ignore - Bug 1674368
     handleEvent: event => {
       function startOrCapture() {
         if (Services.profiler.IsPaused()) {
