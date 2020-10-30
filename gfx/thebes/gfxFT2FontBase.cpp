@@ -84,12 +84,12 @@ static FT_ULong GetTableSizeFromFTFace(SharedFTFace* aFace,
   return len;
 }
 
-bool gfxFT2FontEntryBase::HasFontTable(SharedFTFace* aFace,
+bool gfxFT2FontEntryBase::FaceHasTable(SharedFTFace* aFace,
                                        uint32_t aTableTag) {
   return GetTableSizeFromFTFace(aFace, aTableTag) > 0;
 }
 
-nsresult gfxFT2FontEntryBase::CopyFontTable(SharedFTFace* aFace,
+nsresult gfxFT2FontEntryBase::CopyFaceTable(SharedFTFace* aFace,
                                             uint32_t aTableTag,
                                             nsTArray<uint8_t>& aBuffer) {
   FT_ULong length = GetTableSizeFromFTFace(aFace, aTableTag);

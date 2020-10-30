@@ -421,13 +421,13 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
 bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
   RefPtr<SharedFTFace> face = GetFTFace();
-  return gfxFT2FontEntryBase::HasFontTable(face, aTableTag);
+  return gfxFT2FontEntryBase::FaceHasTable(face, aTableTag);
 }
 
 nsresult FT2FontEntry::CopyFontTable(uint32_t aTableTag,
                                      nsTArray<uint8_t>& aBuffer) {
   RefPtr<SharedFTFace> face = GetFTFace();
-  return gfxFT2FontEntryBase::CopyFontTable(face, aTableTag, aBuffer);
+  return gfxFT2FontEntryBase::CopyFaceTable(face, aTableTag, aBuffer);
 }
 
 hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
