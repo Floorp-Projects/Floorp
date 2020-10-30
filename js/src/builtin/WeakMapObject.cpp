@@ -10,6 +10,7 @@
 
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"

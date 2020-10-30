@@ -6,6 +6,7 @@
 
 #include "WorkerError.h"
 
+#include "js/friend/ErrorMessages.h"  // JSMSG_OVER_RECURSED
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/ErrorEvent.h"

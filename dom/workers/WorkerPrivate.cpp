@@ -11,6 +11,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"
 #include "js/Exception.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_OUT_OF_MEMORY
 #include "js/LocaleSensitive.h"
 #include "js/MemoryMetrics.h"
 #include "js/SourceText.h"

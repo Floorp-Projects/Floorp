@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"  // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"

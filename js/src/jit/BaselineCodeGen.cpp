@@ -25,6 +25,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/UniquePtr.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

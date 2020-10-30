@@ -22,7 +22,6 @@
 #include <utility>   // for std::move
 
 #include "jsapi.h"        // for CallArgs, Handle
-#include "jsfriendapi.h"  // for GetErrorMessage
 #include "jsnum.h"        // for Int32ToString
 
 #include "builtin/Array.h"      // for NewDenseCopiedArray
@@ -44,6 +43,7 @@
 #include "gc/ZoneAllocator.h"          // for AddCellMemory
 #include "jit/JSJitFrameIter.h"        // for InlineFrameIterator
 #include "jit/RematerializedFrame.h"  // for RematerializedFrame
+#include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/Object.h"                // for SetReservedSlot
 #include "js/Proxy.h"                 // for PrivateValue
 #include "js/SourceText.h"            // for SourceText, SourceOwnership

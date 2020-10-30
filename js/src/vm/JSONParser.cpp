@@ -14,6 +14,7 @@
 #include "jsnum.h"
 
 #include "builtin/Array.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
 #include "vm/Realm.h"
 

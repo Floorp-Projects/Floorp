@@ -11,12 +11,13 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsfriendapi.h"  // JS_ReportErrorNumberASCII, js::GetErrorMessage
+#include "jsfriendapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/Stream.h"  // js::ReadableStreamController, js::ReadableStreamControllerPullSteps
 #include "builtin/streams/ReadableStream.h"            // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{Cancel,CreateReadResult}
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"                            // JS::Handle, JS::Rooted
 #include "js/Value.h"        // JS::Value, JS::UndefinedHandleValue
 #include "vm/Interpreter.h"  // js::GetAndClearException

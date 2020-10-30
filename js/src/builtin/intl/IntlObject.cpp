@@ -29,6 +29,7 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Result.h"
 #include "js/StableStringChars.h"

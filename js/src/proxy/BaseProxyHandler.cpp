@@ -6,6 +6,7 @@
 
 #include "NamespaceImports.h"
 
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ProxyObject.h"

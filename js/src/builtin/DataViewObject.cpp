@@ -23,6 +23,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewDataView
+#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"

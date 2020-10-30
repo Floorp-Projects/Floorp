@@ -35,6 +35,7 @@
 
 #include "js/Conversions.h"
 #include "js/Date.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/LocaleSensitive.h"
 #include "js/Object.h"  // JS::GetBuiltinClass
 #include "js/PropertySpec.h"

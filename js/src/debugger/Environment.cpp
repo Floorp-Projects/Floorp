@@ -14,7 +14,6 @@
 #include <utility>   // for move
 
 #include "jsapi.h"        // for Rooted, CallArgs, MutableHandle
-#include "jsfriendapi.h"  // for GetErrorMessage, GetPropertyKeys
 
 #include "debugger/Debugger.h"          // for Env, Debugger, ValueToIdentifier
 #include "debugger/Object.h"            // for DebuggerObject
@@ -22,6 +21,7 @@
 #include "frontend/BytecodeCompiler.h"  // for IsIdentifier
 #include "gc/Rooting.h"                 // for RootedDebuggerEnvironment
 #include "gc/Tracer.h"        // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/HeapAPI.h"       // for IsInsideNursery
 #include "vm/Compartment.h"   // for Compartment
 #include "vm/JSAtom.h"        // for Atomize, PinAtom

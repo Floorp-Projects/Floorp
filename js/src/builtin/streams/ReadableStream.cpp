@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 #include "jspubtd.h"      // JSProto_ReadableStream
 
 #include "builtin/Array.h"                   // js::NewDenseFullyAllocatedArray
@@ -26,6 +25,7 @@
 #include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/Conversions.h"  // JS::ToBoolean
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_FN, JS_PSG, JS_{FS,PS}_END
 #include "js/RootingAPI.h"        // JS::Handle, JS::Rooted, js::CanGC
 #include "js/Stream.h"            // JS::ReadableStream{Mode,UnderlyingSource}

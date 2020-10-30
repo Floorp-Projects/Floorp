@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 #include "jspubtd.h"      // JSProto_WritableStream
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
@@ -22,6 +21,7 @@
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,Close{,QueuedOrInFlight}}
 #include "js/CallArgs.h"                               // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RealmOptions.h"      // JS::RealmCreationOptions
 #include "js/RootingAPI.h"        // JS::Handle, JS::Rooted
 #include "js/Value.h"             // JS::{,Object}Value

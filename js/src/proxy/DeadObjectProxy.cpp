@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/JSFunction.h"  // XXXefaust Bug 1064662
 #include "vm/ProxyObject.h"
 

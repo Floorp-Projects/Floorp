@@ -11,6 +11,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "gc/Zone.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/GlobalObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 

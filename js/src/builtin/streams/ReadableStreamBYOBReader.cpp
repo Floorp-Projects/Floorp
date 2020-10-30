@@ -15,10 +15,10 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamBYOBReader, js::ForAuthorCodeBool
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 
 using JS::Handle;
 

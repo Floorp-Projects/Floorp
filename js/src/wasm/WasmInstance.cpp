@@ -32,6 +32,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "js/ForOfIterator.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"

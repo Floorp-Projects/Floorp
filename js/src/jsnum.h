@@ -14,7 +14,7 @@
 #include "NamespaceImports.h"
 
 #include "js/Conversions.h"
-#include "js/friend/ErrorMessages.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 
 #include "vm/StringType.h"
 

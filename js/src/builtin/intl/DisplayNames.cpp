@@ -31,6 +31,7 @@
 #include "js/CallArgs.h"
 #include "js/Class.h"
 #include "js/experimental/Intl.h"  // JS::AddMozDateTimeFormatConstructor, JS::AddDisplayNamesConstructor
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCVector.h"
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"

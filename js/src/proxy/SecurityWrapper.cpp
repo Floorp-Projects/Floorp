@@ -8,6 +8,7 @@
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Wrapper.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
