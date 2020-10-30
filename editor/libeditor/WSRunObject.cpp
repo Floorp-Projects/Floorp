@@ -1222,6 +1222,10 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
 
+  if (!TextFragmentDataAtStartRef().IsInitialized()) {
+    return WSScanResult(nullptr, WSType::UnexpectedError);
+  }
+
   // If the range has visible text and start of the visible text is before
   // aPoint, return previous character in the text.
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
@@ -1255,6 +1259,10 @@ template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
+
+  if (!TextFragmentDataAtStartRef().IsInitialized()) {
+    return WSScanResult(nullptr, WSType::UnexpectedError);
+  }
 
   // If the range has visible text and aPoint equals or is before the end of the
   // visible text, return inclusive next character in the text.

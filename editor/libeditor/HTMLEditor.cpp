@@ -600,6 +600,10 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     WSScanResult forwardScanFromPointToPutCaretResult =
         WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this,
                                                          pointToPutCaret);
+    if (forwardScanFromPointToPutCaretResult.Failed()) {
+      NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary failed");
+      return NS_ERROR_FAILURE;
+    }
     // If we meet a non-editable node first, we should move caret to start of
     // the editing host (perhaps, user may want to insert something before
     // the first non-editable node? Chromium behaves so).
