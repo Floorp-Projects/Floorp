@@ -134,9 +134,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
 #endif
 
   template <AllowGC allowGC>
-  bool getElement(JSContext* cx, uint32_t index,
+  bool getElement(JSContext* cx, size_t index,
                   typename MaybeRooted<Value, allowGC>::MutableHandleType val);
-  bool getElementPure(uint32_t index, Value* vp);
+  bool getElementPure(size_t index, Value* vp);
 
   /*
    * Copy all elements from this typed array to vp. vp must point to rooted
