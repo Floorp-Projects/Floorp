@@ -35,10 +35,10 @@ var constructorAccesses = [
     "localeMatcher", "calendar", "numberingSystem", "hour12", "hourCycle", "timeZone",
 
     // Table 5: Components of date and time formats
-    "weekday", "era", "year", "month", "day", ...dayPeriod, "hour", "minute", "second", "timeZoneName",
+    "weekday", "era", "year", "month", "day", ...dayPeriod, "hour", "minute", "second",
+    ...fractionalSecondDigits, "timeZoneName",
 
     // InitializeDateTimeFormat
-    ...fractionalSecondDigits,
     "formatMatcher",
     "dateStyle", "timeStyle",
 ];
