@@ -453,6 +453,13 @@ bool gfxFontconfigFontEntry::TestCharacterMap(uint32_t aCh) {
   return HasChar(mFontPattern, aCh);
 }
 
+bool gfxFontconfigFontEntry::HasFontTable(uint32_t aTableTag) {
+  if (FTUserFontData* ufd = GetUserFontData()) {
+    return !!gfxFontUtils::FindTableDirEntry(ufd->FontData(), aTableTag);
+  }
+  return gfxFT2FontEntryBase::HasFontTable(GetFTFace(), aTableTag);
+}
+
 hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
   // for data fonts, read directly from the font data
   if (FTUserFontData* ufd = GetUserFontData()) {
@@ -950,26 +957,7 @@ nsresult gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
                                                nsTArray<uint8_t>& aBuffer) {
   NS_ASSERTION(!mIsDataUserFont,
                "data fonts should be reading tables directly from memory");
-
-  if (!GetFTFace()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  FT_ULong length = 0;
-  if (FT_Load_Sfnt_Table(mFTFace->GetFace(), aTableTag, 0, nullptr, &length) !=
-      0) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  if (!aBuffer.SetLength(length, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (FT_Load_Sfnt_Table(mFTFace->GetFace(), aTableTag, 0, aBuffer.Elements(),
-                         &length) != 0) {
-    aBuffer.Clear();
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return gfxFT2FontEntryBase::CopyFontTable(GetFTFace(), aTableTag, aBuffer);
 }
 
 void gfxFontconfigFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
