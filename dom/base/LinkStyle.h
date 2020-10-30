@@ -220,9 +220,6 @@ class LinkStyle {
 
   StyleSheet* GetSheet() const { return mStyleSheet; }
 
-  /** JS can only observe the sheet once fully loaded */
-  StyleSheet* GetSheetForBindings() const;
-
  protected:
   LinkStyle();
   virtual ~LinkStyle();
