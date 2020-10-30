@@ -22,6 +22,7 @@ exports[`CompatibilityApp component renders with settings 1`] = `
           Object {
             "component": Array [
               <IssuePane
+                dispatch={[Function]}
                 issues={Array []}
               />,
               null,
@@ -63,6 +64,7 @@ exports[`CompatibilityApp component renders zero issues 1`] = `
           Object {
             "component": Array [
               <IssuePane
+                dispatch={[Function]}
                 issues={Array []}
               />,
               null,

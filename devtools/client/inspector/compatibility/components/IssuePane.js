@@ -23,10 +23,9 @@ const IssueList = createFactory(
 class IssuePane extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       issues: PropTypes.arrayOf(PropTypes.shape(Types.issue)).isRequired,
-      hideBoxModelHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
-      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
@@ -41,19 +40,13 @@ class IssuePane extends PureComponent {
   }
 
   render() {
-    const {
-      issues,
-      hideBoxModelHighlighter,
-      setSelectedNode,
-      showBoxModelHighlighterForNode,
-    } = this.props;
+    const { dispatch, issues, setSelectedNode } = this.props;
 
     return issues.length
       ? IssueList({
+          dispatch,
           issues,
-          hideBoxModelHighlighter,
           setSelectedNode,
-          showBoxModelHighlighterForNode,
         })
       : this._renderNoIssues();
   }
