@@ -714,6 +714,20 @@ void CodeGenerator::visitModI(LModI* ins) {
   // 0.
   masm.ma_mov(lhs, callTemp);
 
+  // Contrary to other architectures (notably x86) INT_MIN % -1 doesn't need to
+  // be handled separately. |ma_smod| computes the remainder using the |SDIV|
+  // and the |MLS| instructions. On overflow, |SDIV| truncates the result to
+  // 32-bit and returns INT_MIN, see ARM Architecture Reference Manual, SDIV
+  // instruction.
+  //
+  //   mls(INT_MIN, sdiv(INT_MIN, -1), -1)
+  // = INT_MIN - (sdiv(INT_MIN, -1) * -1)
+  // = INT_MIN - (INT_MIN * -1)
+  // = INT_MIN - INT_MIN
+  // = 0
+  //
+  // And a zero remainder with a negative dividend is already handled below.
+
   Label done;
   modICommon(mir, lhs, rhs, output, ins->snapshot(), done);
 
@@ -754,8 +768,13 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
   MOZ_ASSERT(callTemp != rhs);
   masm.ma_mov(lhs, callTemp);
 
-  // Prevent INT_MIN % -1;
-  // The integer division will give INT_MIN, but we want -(double)INT_MIN.
+  // Prevent INT_MIN % -1.
+  //
+  // |aeabi_idivmod| is allowed to return any arbitrary value when called with
+  // |(INT_MIN, -1)|, see "Run-time ABI for the ARM architecture manual". Most
+  // implementations perform a non-trapping signed integer division and
+  // return the expected result, i.e. INT_MIN. But since we can't rely on this
+  // behavior, handle this case separately here.
   if (mir->canBeNegativeDividend()) {
     {
       ScratchRegisterScope scratch(masm);
