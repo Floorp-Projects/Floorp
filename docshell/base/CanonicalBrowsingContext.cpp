@@ -369,6 +369,8 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       // Only top level pages care about Get/SetPersist.
       entry->SetPersist(
           nsDocShell::ShouldAddToSessionHistory(aLoadState->URI(), aChannel));
+    } else if (mActiveEntry || !mLoadingEntries.IsEmpty()) {
+      entry->SetIsSubFrame(true);
     }
     entry->SetDocshellID(GetHistoryID());
     entry->SetIsDynamicallyAdded(CreatedDynamically());
@@ -406,6 +408,8 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
     newEntry->SetPersist(nsDocShell::ShouldAddToSessionHistory(uri, aChannel));
+  } else {
+    newEntry->SetIsSubFrame(aInfo->mInfo.IsSubFrame());
   }
   newEntry->SetDocshellID(GetHistoryID());
   newEntry->SetIsDynamicallyAdded(CreatedDynamically());
