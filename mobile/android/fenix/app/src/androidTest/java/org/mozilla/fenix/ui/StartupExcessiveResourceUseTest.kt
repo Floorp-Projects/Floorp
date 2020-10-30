@@ -12,36 +12,27 @@ import org.junit.Test
 import org.mozilla.fenix.perf.RunBlockingCounter
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.perf.ComponentInitCount
 
-// PLEASE CONSULT WITH PERF TEAM BEFORE CHANGING THIS VALUE.
+// BEFORE INCREASING THESE VALUES, PLEASE CONSULT WITH THE PERF TEAM.
 private const val EXPECTED_SUPPRESSION_COUNT = 11
-
 private const val EXPECTED_RUNBLOCKING_COUNT = 2
-private const val STRICTMODE_FAILURE_MSG = """StrictMode startup suppression count does not match expected count.
-    
-    If this PR removed code that suppressed StrictMode, great! Please decrement the suppression count.
-    
-    Did this PR add or call code that suppresses a StrictMode violation?
-    Did you know that suppressing a StrictMode violation can introduce performance regressions?
+private const val EXPECTED_COMPONENT_INIT_COUNT = 42
 
-    If so, please do your best to implement a solution without suppressing StrictMode.
-    Please consult the perf team if you have questions or believe suppressing StrictMode
-    is the optimal solution.
+private val failureMsgStrictMode = getErrorMessage(
+    shortName = "StrictMode suppression",
+    implications = "suppressing a StrictMode violation can introduce performance regressions?"
+)
 
-"""
+private val failureMsgRunBlocking = getErrorMessage(
+    shortName = "runBlockingIncrement",
+    implications = "using runBlocking may block the main thread and have other negative performance implications?"
+)
 
-private const val RUNBLOCKING_FAILURE_MSG = """RunblockingCounter startup count does not match expected count.
-    
-    If this PR removed code that removed a RunBlocking call, great! Please decrement the suppression count.
-    
-    Did this PR add or call code that incremented the RunBlockingCounter?
-    Did you know that using runBlocking can have negative perfomance implications?
-
-    If so, please do your best to implement a solution without blocking the main thread.
-    Please consult the perf team if you have questions or believe that using runBlocking
-    is the optimal solution.
-
-"""
+private val failureMsgComponentInit = getErrorMessage(
+    shortName = "Component init",
+    implications = "initializing new components on start up may be an indication that we're doing more work than necessary on start up?"
+)
 
 /**
  * A performance test to limit the number of StrictMode suppressions and number of runBlocking used
@@ -75,8 +66,22 @@ class StartupExcessiveResourceUseTest {
         // causing this number to fluctuate depending on device speed. We'll deal with it if it occurs.
         val actualSuppresionCount = activityTestRule.activity.components.strictMode.suppressionCount.get().toInt()
         val actualRunBlocking = RunBlockingCounter.count.get()
+        val actualComponentInitCount = ComponentInitCount.count.get()
 
-        assertEquals(STRICTMODE_FAILURE_MSG, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
-        assertEquals(RUNBLOCKING_FAILURE_MSG, EXPECTED_RUNBLOCKING_COUNT, actualRunBlocking)
+        assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
+        assertEquals(failureMsgRunBlocking, EXPECTED_RUNBLOCKING_COUNT, actualRunBlocking)
+        assertEquals(failureMsgComponentInit, EXPECTED_COMPONENT_INIT_COUNT, actualComponentInitCount)
     }
 }
+
+private fun getErrorMessage(shortName: String, implications: String) = """$shortName count does not match expected count.
+
+    If this PR removed a $shortName call, great! Please decrease the count.
+
+    Did this PR add or call code that increases the $shortName count?
+    Did you know that $implications
+    Please do your best to implement a solution without adding $shortName calls.
+    Please consult the perf team if you have questions or believe that having this call
+    is the optimal solution.
+
+"""
