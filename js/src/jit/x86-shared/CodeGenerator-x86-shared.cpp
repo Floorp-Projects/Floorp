@@ -25,13 +25,9 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Abs;
-using mozilla::BitwiseCast;
 using mozilla::DebugOnly;
-using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
-using mozilla::Maybe;
 using mozilla::NegativeInfinity;
-using mozilla::SpecificNaN;
 
 using JS::GenericNaN;
 
@@ -2186,17 +2182,7 @@ void CodeGenerator::visitCopySignF(LCopySignF* lir) {
     return;
   }
 
-  ScratchFloat32Scope scratch(masm);
-
-  float clearSignMask = BitwiseCast<float>(INT32_MAX);
-  masm.loadConstantFloat32(clearSignMask, scratch);
-  masm.vandps(scratch, lhs, out);
-
-  float keepSignMask = BitwiseCast<float>(INT32_MIN);
-  masm.loadConstantFloat32(keepSignMask, scratch);
-  masm.vandps(rhs, scratch, scratch);
-
-  masm.vorps(scratch, out, out);
+  masm.copySignFloat32(lhs, rhs, out);
 }
 
 void CodeGenerator::visitCopySignD(LCopySignD* lir) {
@@ -2212,17 +2198,7 @@ void CodeGenerator::visitCopySignD(LCopySignD* lir) {
     return;
   }
 
-  ScratchDoubleScope scratch(masm);
-
-  double clearSignMask = BitwiseCast<double>(INT64_MAX);
-  masm.loadConstantDouble(clearSignMask, scratch);
-  masm.vandpd(scratch, lhs, out);
-
-  double keepSignMask = BitwiseCast<double>(INT64_MIN);
-  masm.loadConstantDouble(keepSignMask, scratch);
-  masm.vandpd(rhs, scratch, scratch);
-
-  masm.vorpd(scratch, out, out);
+  masm.copySignDouble(lhs, rhs, out);
 }
 
 void CodeGenerator::visitRotateI64(LRotateI64* lir) {
