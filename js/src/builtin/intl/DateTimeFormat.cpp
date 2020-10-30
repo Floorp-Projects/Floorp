@@ -1156,12 +1156,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
       return &JSAtomState::timeZoneName;
 
     case UDAT_FRACTIONAL_SECOND_FIELD:
-#ifdef NIGHTLY_BUILD
       return &JSAtomState::fractionalSecond;
-#else
-      // Currently restricted to Nightly.
-      return &JSAtomState::unknown;
-#endif
 
     case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
 #ifdef NIGHTLY_BUILD
