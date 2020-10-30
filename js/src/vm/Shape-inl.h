@@ -277,11 +277,11 @@ static inline uint8_t GetPropertyAttributes(JSObject* obj,
                                             PropertyResult prop) {
   MOZ_ASSERT(obj->isNative());
 
-  if (prop.isDenseOrTypedArrayElement()) {
-    if (obj->is<TypedArrayObject>()) {
-      return JSPROP_ENUMERATE | JSPROP_PERMANENT;
-    }
+  if (prop.isDenseElement()) {
     return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
+  }
+  if (prop.isTypedArrayElement()) {
+    return JSPROP_ENUMERATE | JSPROP_PERMANENT;
   }
 
   return prop.shape()->attributes();

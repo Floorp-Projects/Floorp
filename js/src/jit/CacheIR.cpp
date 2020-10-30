@@ -485,13 +485,12 @@ static bool IsCacheableProtoChain(JSObject* obj, JSObject* holder) {
 }
 
 static bool IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder,
-                                       PropertyResult prop) {
-  if (!prop || !IsCacheableProtoChain(obj, holder)) {
+                                       Shape* shape) {
+  if (!shape->isDataProperty()) {
     return false;
   }
 
-  Shape* shape = prop.shape();
-  if (!shape->isDataProperty()) {
+  if (!IsCacheableProtoChain(obj, holder)) {
     return false;
   }
 
@@ -508,7 +507,9 @@ enum NativeGetPropCacheability {
 static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
                                                         JSObject* holder,
                                                         Shape* shape) {
-  if (!shape || !IsCacheableProtoChain(obj, holder)) {
+  MOZ_ASSERT(shape);
+
+  if (!IsCacheableProtoChain(obj, holder)) {
     return CanAttachNone;
   }
 
@@ -606,10 +607,7 @@ static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
                                   JSObject* holder, Shape* shape, jsid id,
                                   jsbytecode* pc,
                                   GetPropertyResultFlags resultFlags) {
-  if (shape) {
-    return false;
-  }
-
+  MOZ_ASSERT(!shape);
   MOZ_ASSERT(!holder);
 
   // Idempotent ICs may only attach missing-property stubs if undefined
@@ -645,25 +643,28 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   }
 
   MOZ_ASSERT(!holder);
-  if (baseHolder) {
-    if (!baseHolder->isNative()) {
-      return CanAttachNone;
-    }
+
+  if (prop.isNativeProperty()) {
+    MOZ_ASSERT(baseHolder);
     holder.set(&baseHolder->as<NativeObject>());
-  }
-  shape.set(prop.maybeShape());
+    shape.set(prop.shape());
 
-  if (IsCacheableGetPropReadSlot(obj, holder, prop)) {
-    return CanAttachReadSlot;
+    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
+      return CanAttachReadSlot;
+    }
+
+    // Idempotent ICs cannot call getters, see tryAttachIdempotentStub.
+    if (pc && (resultFlags & GetPropertyResultFlags::Monitored)) {
+      return IsCacheableGetPropCall(obj, holder, shape);
+    }
+
+    return CanAttachNone;
   }
 
-  if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc, resultFlags)) {
-    return CanAttachReadSlot;
-  }
-
-  // Idempotent ICs cannot call getters, see tryAttachIdempotentStub.
-  if (pc && (resultFlags & GetPropertyResultFlags::Monitored)) {
-    return IsCacheableGetPropCall(obj, holder, shape);
+  if (!prop.isFound()) {
+    if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc, resultFlags)) {
+      return CanAttachReadSlot;
+    }
   }
 
   return CanAttachNone;
@@ -2749,8 +2750,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     // prototype. Ignore the global lexical scope as it doesn't figure
     // into the prototype chain. We guard on the global lexical
     // scope's shape independently.
-    if (!IsCacheableGetPropReadSlot(&globalLexical->global(), holder,
-                                    PropertyResult(shape))) {
+    if (!IsCacheableGetPropReadSlot(&globalLexical->global(), holder, shape)) {
       return AttachDecision::NoAction;
     }
 
@@ -2889,7 +2889,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   holder = &env->as<NativeObject>();
-  if (!IsCacheableGetPropReadSlot(holder, holder, PropertyResult(shape))) {
+  if (!IsCacheableGetPropReadSlot(holder, holder, shape)) {
     return AttachDecision::NoAction;
   }
   if (holder->getSlot(shape->slot()).isMagic()) {
@@ -3767,7 +3767,9 @@ void SetPropIRGenerator::trackAttached(const char* name) {
 
 static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
                                          Shape* shape) {
-  if (!shape || !IsCacheableProtoChain(obj, holder)) {
+  MOZ_ASSERT(shape);
+
+  if (!IsCacheableProtoChain(obj, holder)) {
     return false;
   }
 
@@ -3797,7 +3799,9 @@ static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
 
 static bool IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder,
                                            Shape* shape) {
-  if (!shape || !IsCacheableProtoChain(obj, holder)) {
+  MOZ_ASSERT(shape);
+
+  if (!IsCacheableProtoChain(obj, holder)) {
     return false;
   }
 
@@ -3833,11 +3837,11 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
     return false;
   }
 
-  if (prop.isNonNativeProperty()) {
+  if (!prop.isNativeProperty()) {
     return false;
   }
 
-  propShape.set(prop.maybeShape());
+  propShape.set(prop.shape());
   if (!IsCacheableSetPropCallScripted(obj, holder, propShape) &&
       !IsCacheableSetPropCallNative(obj, holder, propShape)) {
     return false;
@@ -4756,7 +4760,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   jsid hasInstanceID = SYMBOL_TO_JSID(cx_->wellKnownSymbols().hasInstance);
   if (!LookupPropertyPure(cx_, fun, hasInstanceID, &hasInstanceHolder,
                           &hasInstanceProp) ||
-      !hasInstanceProp.isFound() || hasInstanceProp.isNonNativeProperty()) {
+      !hasInstanceProp.isNativeProperty()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
