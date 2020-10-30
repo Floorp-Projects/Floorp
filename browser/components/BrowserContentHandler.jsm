@@ -301,9 +301,11 @@ function openBrowserWindow(
         ).usePrivateBrowsing = true;
       }
 
+      let openTime = win.openTime;
       win.location = chromeURL;
       win.arguments = args; // <-- needs to be a plain JS array here.
 
+      ChromeUtils.addProfilerMarker("earlyBlankWindowVisible", openTime);
       return win;
     }
   }
