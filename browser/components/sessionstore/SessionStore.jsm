@@ -1218,13 +1218,22 @@ var SessionStoreInternal = {
             : listener._lastKnownBody;
           let userContextId = aBrowser.contentPrincipal
             ? aBrowser.contentPrincipal.originAttributes.userContextId
-            : listener._lastKnownUserContextId;
+              : listener._lastKnownUserContextId;
+          // If aData.sHistoryNeeded we need to collect all session
+          // history entries, because with SHIP this indicates that we
+          // either saw 'DOMTitleChanged' in
+          // mozilla::dom::TabListener::HandleEvent or
+          // 'OnDocumentStart/OnDocumentEnd' was called on
+          // mozilla::dom::ContentSessionStore, and both needs a full
+          // collect.
           aData.data.historychange = SessionHistory.collectFromParent(
             uri,
             body,
             aBrowsingContext.sessionHistory,
             userContextId,
-            listener._sHistoryChanges ? listener._fromIdx : -1
+            listener._sHistoryChanges && !aData.sHistoryNeeded
+              ? listener._fromIdx
+              : -1
           );
           listener._sHistoryChanges = false;
           listener._fromIdx = kNoIndex;
