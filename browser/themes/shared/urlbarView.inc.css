@@ -463,20 +463,23 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* The slide-in effect is delayed ~100ms to reduce motion during result
+     composition. We set opacity: 0 at the 0% keyframe to ensure the text is not
+     seen by the user until after the delay. */
   @keyframes urlbarView-action-slide-in {
-    0% {
-      transform: translateX(var(--urlbarView-action-slide-in-distance));
+    0%, 28.6% {
+      translate: var(--urlbarView-action-slide-in-distance);
       opacity: 0;
     }
     100% {
-      transform: translateX(0);
+      translate: 0;
       opacity: 1;
     }
   }
 
   .urlbarView-results > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title:not(:empty) ~ .urlbarView-action[slide-in] {
     animation-name: urlbarView-action-slide-in;
-    animation-duration: 250ms;
+    animation-duration: 350ms;
     animation-timing-function: var(--animation-easing-function);
   }
 }
