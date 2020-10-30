@@ -108,6 +108,30 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortSignalMainThread)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortSignalMainThread)
 
+class WorkerSignalFollower final : public nsISupports {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(WorkerSignalFollower)
+
+ private:
+  ~WorkerSignalFollower() = default;
+};
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerSignalFollower)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WorkerSignalFollower)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkerSignalFollower)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WorkerSignalFollower)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkerSignalFollower)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerSignalFollower)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 // This class orchestrates the proxying of AbortSignal operations between the
 // main thread and a worker thread.
 class AbortSignalProxy final : public AbortFollower {
