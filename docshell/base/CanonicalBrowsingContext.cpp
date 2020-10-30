@@ -516,17 +516,18 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
               mActiveEntry = newActiveEntry;
             }
           } else {
-            SessionHistoryEntry* parentEntry = GetParent()->mActiveEntry;
+            SessionHistoryEntry* parentEntry =
+                static_cast<CanonicalBrowsingContext*>(GetParent())
+                    ->mActiveEntry;
             // XXX What should happen if parent doesn't have mActiveEntry?
             //     Or can that even happen ever?
             if (parentEntry) {
               mActiveEntry = newActiveEntry;
+              // FIXME The docshell code sometime uses -1 for aChildOffset!
               // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
               //       right, but aUseRemoteSubframes should be going away.
-              parentEntry->AddChild(
-                  mActiveEntry,
-                  CreatedDynamically() ? -1 : GetParent()->IndexOf(this),
-                  IsInProcess());
+              parentEntry->AddChild(mActiveEntry, Children().Length() - 1,
+                                    IsInProcess());
             }
           }
         }
@@ -612,7 +613,8 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
 
 void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, uint32_t aUpdatedCacheKey, const nsID& aChangeID) {
+    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey,
+    const nsID& aChangeID) {
   nsISHistory* shistory = GetSessionHistory();
   if (!shistory) {
     return;
@@ -642,9 +644,8 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
       shistory->AddChildSHEntryHelper(oldActiveEntry, mActiveEntry, Top(),
                                       true);
     } else if (GetParent() && GetParent()->mActiveEntry) {
-      GetParent()->mActiveEntry->AddChild(
-          mActiveEntry, CreatedDynamically() ? -1 : GetParent()->IndexOf(this),
-          UseRemoteSubframes());
+      GetParent()->mActiveEntry->AddChild(mActiveEntry, aChildOffset,
+                                          UseRemoteSubframes());
     }
   }
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
