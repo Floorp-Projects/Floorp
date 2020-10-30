@@ -303,9 +303,9 @@ class Core(
     val lazyRemoteTabsStorage = lazyMonitored { RemoteTabsStorage() }
 
     // For most other application code (non-startup), these wrappers are perfectly fine and more ergonomic.
-    val historyStorage by lazyMonitored { lazyHistoryStorage.value }
-    val bookmarksStorage by lazyMonitored { lazyBookmarksStorage.value }
-    val passwordsStorage by lazyMonitored { lazyPasswordsStorage.value }
+    val historyStorage: PlacesHistoryStorage get() = lazyHistoryStorage.value
+    val bookmarksStorage: PlacesBookmarksStorage get() = lazyBookmarksStorage.value
+    val passwordsStorage: SyncableLoginsStorage get() = lazyPasswordsStorage.value
 
     val tabCollectionStorage by lazyMonitored {
         TabCollectionStorage(
