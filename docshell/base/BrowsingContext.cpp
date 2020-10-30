@@ -153,6 +153,17 @@ BrowsingContext* BrowsingContext::Top() {
   return bc;
 }
 
+int32_t BrowsingContext::IndexOf(BrowsingContext* aChild) {
+  int32_t index = -1;
+  for (BrowsingContext* child : Children()) {
+    ++index;
+    if (child == aChild) {
+      break;
+    }
+  }
+  return index;
+}
+
 WindowContext* BrowsingContext::GetTopWindowContext() {
   if (mParentWindow) {
     return mParentWindow->TopWindowContext();
@@ -2744,7 +2755,7 @@ bool BrowsingContext::IsPopupAllowed() {
 
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey) {
+    uint32_t aLoadType, uint32_t aUpdatedCacheKey) {
   if (XRE_IsContentProcess()) {
     // XXX Why we update cache key only in content process case?
     if (aUpdatedCacheKey != 0) {
@@ -2757,12 +2768,11 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
       changeID = shistory->AddPendingHistoryChange();
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
-        this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset,
-        aUpdatedCacheKey, changeID);
+        this, aPreviousScrollPos, *aInfo, aLoadType, aUpdatedCacheKey,
+        changeID);
   } else {
-    Canonical()->SetActiveSessionHistoryEntry(aPreviousScrollPos, aInfo,
-                                              aLoadType, aChildOffset,
-                                              aUpdatedCacheKey, nsID());
+    Canonical()->SetActiveSessionHistoryEntry(
+        aPreviousScrollPos, aInfo, aLoadType, aUpdatedCacheKey, nsID());
   }
 }
 
