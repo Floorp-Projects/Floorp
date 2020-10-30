@@ -261,8 +261,12 @@ class gfxFontEntry {
   }
 
   bool HasColorBitmapTable() {
-    return HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
-           HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
+    if (!mCheckedForColorBitmapTables) {
+      mHasColorBitmapTable = HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
+                             HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
+      mCheckedForColorBitmapTables = true;
+    }
+    return mHasColorBitmapTable;
   }
 
   // Access to raw font table data (needed for Harfbuzz):
@@ -508,9 +512,6 @@ class gfxFontEntry {
   };
   RangeFlags mRangeFlags = RangeFlags::eNoFlags;
 
-  // NOTE that there are currently exactly 24 one-bit flags defined here,
-  // so together with the 8-bit RangeFlags above, this packs neatly to a
-  // 32-bit boundary. Worth considering if further flags are wanted.
   bool mFixedPitch : 1;
   bool mIsBadUnderlineFont : 1;
   bool mIsUserFontContainer : 1;  // userfont entry
@@ -535,13 +536,12 @@ class gfxFontEntry {
   bool mGrFaceInitialized : 1;
   bool mCheckedForColorGlyph : 1;
   bool mCheckedForVariationAxes : 1;
+  bool mHasColorBitmapTable : 1;
+  bool mCheckedForColorBitmapTables : 1;
 
  protected:
   friend class gfxPlatformFontList;
-  friend class gfxMacPlatformFontList;
-  friend class gfxUserFcFontEntry;
   friend class gfxFontFamily;
-  friend class gfxSingleFaceMacFontFamily;
   friend class gfxUserFontEntry;
 
   gfxFontEntry();
