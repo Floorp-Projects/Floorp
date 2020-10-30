@@ -919,14 +919,20 @@ class EditorBase : public nsIEditor,
     }
 
     /**
-     * NeedsToDispatchBeforeInputEvent() returns true if the edit action
-     * requires to handle "beforeinput" event but not yet dispatched it nor
-     * considered as not dispatched it.
+     * ShouldAlreadyHaveHandledBeforeInputEventDispatching() returns true if the
+     * edit action requires to handle "beforeinput" event but not yet dispatched
+     * it nor considered as not dispatched it and can dispatch it when this is
+     * called.
      */
-    bool NeedsToDispatchBeforeInputEvent() const {
+    bool ShouldAlreadyHaveHandledBeforeInputEventDispatching() const {
       return !HasTriedToDispatchBeforeInputEvent() &&
              NeedsBeforeInputEventHandling(mEditAction) &&
-             IsBeforeInputEventEnabled();
+             IsBeforeInputEventEnabled() /* &&
+              // If we still need to dispatch a clipboard event, we should
+              // dispatch it first, then, we need to dispatch beforeinput
+              // event later.
+              !NeedsToDispatchClipboardEvent()*/
+          ;
     }
 
     /**
@@ -1012,6 +1018,16 @@ class EditorBase : public nsIEditor,
      */
     void MakeBeforeInputEventNonCancelable() {
       mMakeBeforeInputEventNonCancelable = true;
+    }
+
+    /**
+     * NotifyOfDispatchingClipboardEvent() is called after dispatching
+     * a clipboard event.
+     */
+    void NotifyOfDispatchingClipboardEvent() {
+      MOZ_ASSERT(NeedsToDispatchClipboardEvent());
+      MOZ_ASSERT(!mHasTriedToDispatchClipboardEvent);
+      mHasTriedToDispatchClipboardEvent = true;
     }
 
     void Abort() { mAborted = true; }
@@ -1171,6 +1187,21 @@ class EditorBase : public nsIEditor,
       }
     }
 
+    bool NeedsToDispatchClipboardEvent() const {
+      if (mHasTriedToDispatchClipboardEvent) {
+        return false;
+      }
+      switch (mEditAction) {
+        case EditAction::ePaste:
+        case EditAction::ePasteAsQuotation:
+        case EditAction::eCut:
+        case EditAction::eCopy:
+          return true;
+        default:
+          return false;
+      }
+    }
+
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
     nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -1228,6 +1259,9 @@ class EditorBase : public nsIEditor,
     // Set to true if `beforeinput` event must not be cancelable even if
     // its inputType is defined as cancelable by the standards.
     bool mMakeBeforeInputEventNonCancelable;
+    // Set to true when the edit action handler tries to dispatch a clipboard
+    // event.
+    bool mHasTriedToDispatchClipboardEvent;
 
 #ifdef DEBUG
     mutable bool mHasCanHandleChecked = false;
@@ -1239,6 +1273,11 @@ class EditorBase : public nsIEditor,
 
   void UpdateEditActionData(const nsAString& aData) {
     mEditActionData->SetData(aData);
+  }
+
+  void NotifyOfDispatchingClipboardEvent() {
+    MOZ_ASSERT(mEditActionData);
+    mEditActionData->NotifyOfDispatchingClipboardEvent();
   }
 
  protected:  // May be called by friends.
@@ -1254,9 +1293,10 @@ class EditorBase : public nsIEditor,
     return mEditActionData->IsCanceled();
   }
 
-  bool NeedsToDispatchBeforeInputEvent() const {
+  bool ShouldAlreadyHaveHandledBeforeInputEventDispatching() const {
     MOZ_ASSERT(mEditActionData);
-    return mEditActionData->NeedsToDispatchBeforeInputEvent();
+    return mEditActionData
+        ->ShouldAlreadyHaveHandledBeforeInputEventDispatching();
   }
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MaybeDispatchBeforeInputEvent() {

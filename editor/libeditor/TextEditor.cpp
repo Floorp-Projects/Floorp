@@ -1167,14 +1167,13 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
     sel = nsCopySupport::GetSelectionForCopy(GetDocument());
   }
 
-  if (!nsCopySupport::FireClipboardEvent(aEventMessage, aSelectionType,
-                                         presShell, sel, aActionTaken)) {
-    return false;
-  }
+  const bool clipboardEventCanceled = !nsCopySupport::FireClipboardEvent(
+      aEventMessage, aSelectionType, presShell, sel, aActionTaken);
+  NotifyOfDispatchingClipboardEvent();
 
   // If the event handler caused the editor to be destroyed, return false.
-  // Otherwise return true to indicate that the event was not cancelled.
-  return !mDidPreDestroy;
+  // Otherwise return true if the event was not cancelled.
+  return !clipboardEventCanceled && !mDidPreDestroy;
 }
 
 nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
@@ -1464,6 +1463,8 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   if (!stuffToPaste.IsEmpty()) {
     nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
   }
+  // XXX Perhaps, we should dispatch "paste" event with the pasting text data.
+  editActionData.NotifyOfDispatchingClipboardEvent();
   rv = editActionData.MaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
