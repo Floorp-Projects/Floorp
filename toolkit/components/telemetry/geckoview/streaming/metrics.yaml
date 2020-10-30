@@ -506,7 +506,7 @@ gfx.webrender:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - jmuizelaar@mozilla.com
     expires: never
 
 gfx.display:
@@ -772,7 +772,7 @@ gfx.status:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - jmuizelaar@mozilla.com
     expires: never
 
   framebuild_time:
@@ -791,7 +791,7 @@ gfx.status:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - jmuizelaar@mozilla.com
     expires: never
 
 network:
