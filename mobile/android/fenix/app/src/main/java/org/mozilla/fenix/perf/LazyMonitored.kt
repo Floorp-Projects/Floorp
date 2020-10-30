@@ -27,7 +27,7 @@ fun <T> lazyMonitored(initializer: () -> T) = LazyMonitored(initializer)
  * For example, we can count the number of components initialized to see how the number of
  * components initialized on start up impacts start up time.
  */
-class LazyMonitored<T>(initializer: () -> T) {
+class LazyMonitored<T>(initializer: () -> T) : Lazy<T> {
     // Lazy is thread safe.
     private val lazyValue = lazy {
         // We're unlikely to have 4 billion components so we don't handle overflow.
@@ -40,5 +40,6 @@ class LazyMonitored<T>(initializer: () -> T) {
         }
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T = lazyValue.value
+    override val value: T get() = lazyValue.value
+    override fun isInitialized(): Boolean = lazyValue.isInitialized()
 }

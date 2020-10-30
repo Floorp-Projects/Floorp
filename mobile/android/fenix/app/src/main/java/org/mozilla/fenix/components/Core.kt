@@ -293,14 +293,14 @@ class Core(
     // Use these for startup-path code, where we don't want to do any work that's not strictly necessary.
     // For example, this is how the GeckoEngine delegates (history, logins) are configured.
     // We can fully initialize GeckoEngine without initialized our storage.
-    val lazyHistoryStorage = lazy { PlacesHistoryStorage(context, crashReporter) }
-    val lazyBookmarksStorage = lazy { PlacesBookmarksStorage(context) }
-    val lazyPasswordsStorage = lazy { SyncableLoginsStorage(context, passwordsEncryptionKey) }
+    val lazyHistoryStorage = lazyMonitored { PlacesHistoryStorage(context, crashReporter) }
+    val lazyBookmarksStorage = lazyMonitored { PlacesBookmarksStorage(context) }
+    val lazyPasswordsStorage = lazyMonitored { SyncableLoginsStorage(context, passwordsEncryptionKey) }
 
     /**
      * The storage component to sync and persist tabs in a Firefox Sync account.
      */
-    val lazyRemoteTabsStorage = lazy { RemoteTabsStorage() }
+    val lazyRemoteTabsStorage = lazyMonitored { RemoteTabsStorage() }
 
     // For most other application code (non-startup), these wrappers are perfectly fine and more ergonomic.
     val historyStorage by lazyMonitored { lazyHistoryStorage.value }
