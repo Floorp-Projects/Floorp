@@ -36,6 +36,8 @@ macro_rules! impl_hash {
                         let mut v_hash = a_hash.clone();
                         a.hash(&mut a_hash);
 
+                        // Integer within mantissa^1 range.
+                        #[allow(clippy::float_cmp)]
                         let v = $id::splat(42 as $elem_ty);
                         v.hash(&mut v_hash);
                         assert_eq!(a_hash.finish(), v_hash.finish());

@@ -58,6 +58,8 @@ macro_rules! impl_minimal_mask {
 
             /// Extracts the value at `index`.
             ///
+            /// # Safety
+            ///
             /// If `index >= Self::lanes()` the behavior is undefined.
             #[inline]
             pub unsafe fn extract_unchecked(self, index: usize) -> bool {
@@ -85,9 +87,9 @@ macro_rules! impl_minimal_mask {
             /// Returns a new vector where the value at `index` is replaced by
             /// `new_value`.
             ///
-            /// # Panics
+            /// # Safety
             ///
-            /// If `index >= Self::lanes()`.
+            /// If `index >= Self::lanes()` the behavior is undefined.
             #[inline]
             #[must_use = "replace_unchecked does not modify the original value - \
                           it returns a new vector with the value at `index` \

@@ -4,16 +4,14 @@
 
 [![Travis-CI Status]][travis] [![Appveyor Status]][appveyor] [![Latest Version]][crates.io] [![docs]][master_docs]
 
-> This aims to be a 100% conforming implementation of Rust RFC 2366 for stabilization.
-
-**WARNING**: this crate only supports the most recent nightly Rust toolchain.
+**WARNING**: this crate only supports the most recent nightly Rust toolchain
+and will be superceded by [stdsimd](https://github.com/rust-lang/stdsimd).
 
 ## Documentation
 
 * [API docs (`master` branch)][master_docs]
 * [Performance guide][perf_guide]
-* [API docs (`docs.rs`)][docs.rs]: **CURRENTLY DOWN** due to
-  https://github.com/rust-lang-nursery/packed_simd/issues/110
+* [API docs (`docs.rs`)][docs.rs]
 * [RFC2366 `std::simd`][rfc2366]: - contains motivation, design rationale,
   discussion, etc.
 
@@ -38,17 +36,6 @@ Most of the examples come with both a scalar and a vectorized implementation.
   implementations for the vector types. These allow reinterpreting the bits of a
   vector type as those of another vector type safely by just using the
   `.into_bits()` method.
-
-* `core_arch` (default: disabled): enable this feature to recompile `core::arch`
-  for the target-features enabled. `packed_simd` includes optimizations for some
-  target feature combinations that are enabled by this feature. Note, however,
-  that this is an unstable dependency, that rustc might break at any time.
-
-* `sleef-sys` (default: disabled - `x86_64` only): internally uses the [SLEEF]
-  short-vector math library when profitable via the [`sleef-sys`][sleef_sys]
-  crate. [SLEEF] is licensed under the [Boost Software License
-  v1.0][boost_license], an extremely permissive license, and can be statically
-  linked without issues.
 
 ## Performance
 
@@ -75,60 +62,40 @@ slowdown:
 
 ## Platform support
 
-The following table describes the supported platforms: `build` shows whether the
-library compiles without issues for a given target, while `run` shows whether
-the full testsuite passes on the target.
+The following table describes the supported platforms: `build` shows whether
+the library compiles without issues for a given target, while `run` shows
+whether the test suite passes for a given target.
 
-| Linux targets:                    | build     | run     |
-|-----------------------------------|-----------|---------|
-| `i586-unknown-linux-gnu`          | ✓         | ✓       |
-| `i686-unknown-linux-gnu`          | ✓         | ✓       |
-| `x86_64-unknown-linux-gnu`        | ✓         | ✓       |
-| `arm-unknown-linux-gnueabi`       | ✗         | ✗       |
-| `arm-unknown-linux-gnueabihf`     | ✓         | ✓       |
-| `armv7-unknown-linux-gnueabi`     | ✓         | ✓       |
-| `aarch64-unknown-linux-gnu`       | ✓         | ✓       |
-| `mips-unknown-linux-gnu`          | ✓         | ✓       |
-| `mipsel-unknown-linux-musl`       | ✓         | ✓       |
-| `mips64-unknown-linux-gnuabi64`   | ✓         | ✓       |
-| `mips64el-unknown-linux-gnuabi64` | ✓         | ✓       |
-| `powerpc-unknown-linux-gnu`       | ✗         | ✗       |
-| `powerpc64-unknown-linux-gnu`     | ✗         | ✗       |
-| `powerpc64le-unknown-linux-gnu`   | ✗         | ✗       |
-| `s390x-unknown-linux-gnu`         | ✓         | ✓*      |
-| `sparc64-unknown-linux-gnu`       | ✓         | ✓*      |
-| `thumbv7neon-unknown-linux-gnueabihf` | ✓         | ✓      |
-| **MacOSX targets:**               | **build** | **run** |
-| `x86_64-apple-darwin`             | ✓         | ✓       |
-| `i686-apple-darwin`               | ✓         | ✓       |
-| **Windows targets:**              | **build** | **run** |
-| `x86_64-pc-windows-msvc`          | ✓         | ✓       |
-| `i686-pc-windows-msvc`            | ✓         | ✓       |
-| `x86_64-pc-windows-gnu`           | ✗          | ✗        |
-| `i686-pc-windows-gnu`             | ✗          | ✗        |
-| **WebAssembly targets:**          | **build** | **run** |
-| `wasm32-unknown-unknown`          | ✓         | ✓      |
-| **Android targets:**              | **build** | **run** |
-| `x86_64-linux-android`            | ✓         | ✓       |
-| `arm-linux-androideabi`           | ✓         | ✓       |
-| `aarch64-linux-android`           | ✓         | ✗       |
-| `thumbv7neon-linux-androideabi`  | ✓         | ✓       |
-| **iOS targets:**                  | **build** | **run** |
-| `i386-apple-ios`                  | ✓         | ✗       |
-| `x86_64-apple-ios`                | ✓         | ✗       |
-| `armv7-apple-ios`                 | ✓         | ✗**     |
-| `aarch64-apple-ios`               | ✓         | ✗**     |
-| **xBSD targets:**                 | **build** | **run** |
-| `i686-unknown-freebsd`            | ✗         | ✗**     |
-| `x86_64-unknown-freebsd`          | ✗         | ✗**     |
-| `x86_64-unknown-netbsd`           | ✗         | ✗**     |
-| **Solaris targets:**              | **build** | **run** |
-| `x86_64-sun-solaris`              | ✗         | ✗**     |
+| **Linux**                             | **build** | **run** |
+|---------------------------------------|-----------|---------|
+| `i586-unknown-linux-gnu`              | ✓         | ✗       |
+| `i686-unknown-linux-gnu`              | ✓         | ✗       |
+| `x86_64-unknown-linux-gnu`            | ✓         | ✓       |
+| `arm-unknown-linux-gnueabi`           | ✗         | ✗       |
+| `arm-unknown-linux-gnueabihf`         | ✓         | ✓       |
+| `armv7-unknown-linux-gnueabi`         | ✓         | ✓       |
+| `aarch64-unknown-linux-gnu`           | ✓         | ✓       |
+| `mips-unknown-linux-gnu`              | ✓         | ✗       |
+| `mipsel-unknown-linux-musl`           | ✓         | ✗       |
+| `mips64-unknown-linux-gnuabi64`       | ✓         | ✗       |
+| `mips64el-unknown-linux-gnuabi64`     | ✓         | ✗       |
+| `powerpc-unknown-linux-gnu`           | ✗         | ✗       |
+| `powerpc64-unknown-linux-gnu`         | ✗         | ✗       |
+| `powerpc64le-unknown-linux-gnu`       | ✓         | ✓       |
+| `s390x-unknown-linux-gnu`             | ✗         | ✗       |
+| `sparc64-unknown-linux-gnu`           | ✓         | ✗       |
+| `thumbv7neon-unknown-linux-gnueabihf` | ✓         | ✓       |
+| **MacOSX**                            | **build** | **run** |
+| `x86_64-apple-darwin`                 | ✓         | ✓       |
+| **Android**                           | **build** | **run** |
+| `x86_64-linux-android`                | ✓         | ✓       |
+| `arm-linux-androideabi`               | ✓         | ✓       |
+| `aarch64-linux-android`               | ✓         | ✓       |
+| `thumbv7neon-linux-androideabi`       | ✗         | ✗       |
+| **iOS**                               | **build** | **run** |
+| `x86_64-apple-ios`                    | ✓         | ✗       |
+| `aarch64-apple-ios`                   | ✓         | ✗       |
 
-[*] most of the test suite passes correctly on these platform but
-there are correctness bugs open in the issue tracker.
-
-[**] it is currently not easily possible to run these platforms on CI.
 
 ## Machine code verification
 
@@ -162,8 +129,8 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in `packed_simd` by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
-[travis]: https://travis-ci.org/rust-lang-nursery/packed_simd
-[Travis-CI Status]: https://travis-ci.org/rust-lang-nursery/packed_simd.svg?branch=master
+[travis]: https://travis-ci.com/rust-lang-nursery/packed_simd
+[Travis-CI Status]: https://travis-ci.com/rust-lang-nursery/packed_simd.svg?branch=master
 [appveyor]: https://ci.appveyor.com/project/gnzlbg/packed-simd
 [Appveyor Status]: https://ci.appveyor.com/api/projects/status/hd7v9dvr442hgdix?svg=true
 [Latest Version]: https://img.shields.io/crates/v/packed_simd.svg

@@ -26,6 +26,11 @@ macro_rules! impl_ops_vector_float_min_max {
         test_if!{
             $test_tt:
             paste::item! {
+                #[cfg(not(any(
+                    // FIXME: https://github.com/rust-lang-nursery/packed_simd/issues/223
+                    all(target_arch = "mips", target_endian = "big"),
+                    target_arch = "mips64",
+                )))]
                 pub mod [<$id _ops_vector_min_max>] {
                     use super::*;
                     #[cfg_attr(not(target_arch = "wasm32"), test)] #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]

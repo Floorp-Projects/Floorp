@@ -1,6 +1,6 @@
 [package]
 name = "packed_simd"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Gonzalo Brito Gadeschi <gonzalobg88@gmail.com>"]
 description = "Portable Packed SIMD vectors"
 documentation = "https://docs.rs/crate/packed_simd/"
@@ -21,8 +21,8 @@ is-it-maintained-open-issues = { repository = "rust-lang-nursery/packed_simd" }
 maintenance = { status = "experimental" }
 
 [dependencies]
-cfg-if = "^0.1.6"
-core_arch = { version = "^0.1.3", optional = true }
+cfg-if = "0.1.10"
+core_arch = { version = "0.1.5", optional = true }
 
 [features]
 default = []
@@ -31,12 +31,12 @@ libcore_neon = []
 
 [dev-dependencies]
 paste = "^0.1.3"
-arrayvec = { version = "^0.4", default-features = false }
+arrayvec = { version = "^0.5", default-features = false }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies.sleef-sys]
-version = "^0.1.2"
+version = "0.1.2"
 optional = true
 
 [target.wasm32-unknown-unknown.dev-dependencies]
-wasm-bindgen = "=0.2.19"
-wasm-bindgen-test = "=0.2.19"
+wasm-bindgen = "=0.2.52"
+wasm-bindgen-test = "=0.3.2"

@@ -56,6 +56,8 @@ macro_rules! impl_from_array {
         test_if! {
             $test_tt:
             paste::item! {
+                // Comparisons use integer casts within mantissa^1 range.
+                #[allow(clippy::float_cmp)]
                 mod [<$id _from>] {
                     use super::*;
                     #[test]

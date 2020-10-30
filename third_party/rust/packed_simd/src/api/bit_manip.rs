@@ -37,6 +37,7 @@ macro_rules! impl_bit_manip {
             paste::item_with_macros! {
                 #[allow(overflowing_literals)]
                 pub mod [<$id _bit_manip>] {
+                    #![allow(const_item_mutation)]
                     use super::*;
 
                     const LANE_WIDTH: usize = mem::size_of::<$elem_ty>() * 8;
