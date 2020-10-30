@@ -35,6 +35,8 @@ class MOZ_STACK_CLASS WSScanResult final {
  private:
   enum class WSType : uint8_t {
     NotInitialized,
+    // Could be the DOM tree is broken as like crash tests.
+    UnexpectedError,
     // The run is maybe collapsible white-spaces at start of a hard line.
     LeadingWhiteSpaces,
     // The run is maybe collapsible white-spaces at end of a hard line.
@@ -72,10 +74,12 @@ class MOZ_STACK_CLASS WSScanResult final {
   MOZ_NEVER_INLINE_DEBUG void AssertIfInvalidData() const {
 #ifdef DEBUG
     MOZ_ASSERT(
-        mReason == WSType::NormalText || mReason == WSType::NormalWhiteSpaces ||
-        mReason == WSType::BRElement || mReason == WSType::SpecialContent ||
+        mReason == WSType::UnexpectedError || mReason == WSType::NormalText ||
+        mReason == WSType::NormalWhiteSpaces || mReason == WSType::BRElement ||
+        mReason == WSType::SpecialContent ||
         mReason == WSType::CurrentBlockBoundary ||
         mReason == WSType::OtherBlockBoundary);
+    MOZ_ASSERT_IF(mReason == WSType::UnexpectedError, !mContent);
     MOZ_ASSERT_IF(
         mReason == WSType::NormalText || mReason == WSType::NormalWhiteSpaces,
         mContent && mContent->IsText());
@@ -100,6 +104,11 @@ class MOZ_STACK_CLASS WSScanResult final {
             HTMLEditUtils::IsBlockElement(*mContent->GetParentElement()) ||
             !mContent->GetParentElement()->IsEditable());
 #endif  // #ifdef DEBUG
+  }
+
+  bool Failed() const {
+    return mReason == WSType::NotInitialized ||
+           mReason == WSType::UnexpectedError;
   }
 
   /**
@@ -848,6 +857,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
     template <typename EditorDOMPointType>
     TextFragmentData(const EditorDOMPointType& aPoint,
                      const Element* aEditingHost);
+
+    bool IsInitialized() const {
+      return mStart.Initialized() && mEnd.Initialized();
+    }
 
     nsIContent* GetStartReasonContent() const {
       return mStart.GetReasonContent();

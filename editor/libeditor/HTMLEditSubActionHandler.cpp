@@ -1463,12 +1463,22 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
     WSRunScanner wsRunScanner(*this, pointToBreak);
-    brElementIsAfterBlock =
-        wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToBreak)
-            .ReachedBlockBoundary();
-    brElementIsBeforeBlock =
-        wsRunScanner.ScanNextVisibleNodeOrBlockBoundaryFrom(pointToBreak)
-            .ReachedBlockBoundary();
+    WSScanResult backwardScanResult =
+        wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToBreak);
+    if (backwardScanResult.Failed()) {
+      NS_WARNING(
+          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
+      return NS_ERROR_FAILURE;
+    }
+    brElementIsAfterBlock = backwardScanResult.ReachedBlockBoundary();
+    WSScanResult forwardScanResult =
+        wsRunScanner.ScanNextVisibleNodeOrBlockBoundaryFrom(pointToBreak);
+    if (forwardScanResult.Failed()) {
+      NS_WARNING(
+          "WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+      return NS_ERROR_FAILURE;
+    }
+    brElementIsBeforeBlock = forwardScanResult.ReachedBlockBoundary();
     // If the container of the break is a link, we need to split it and
     // insert new <br> between the split links.
     RefPtr<Element> linkNode =
@@ -1527,6 +1537,10 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
                        "Failed to advance offset after the new <br> element");
   WSScanResult forwardScanFromAfterBRElementResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this, afterBRElement);
+  if (forwardScanFromAfterBRElementResult.Failed()) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
+    return NS_ERROR_FAILURE;
+  }
   if (forwardScanFromAfterBRElementResult.ReachedBRElement()) {
     // The next thing after the break we inserted is another break.  Move the
     // second break to be the first break's sibling.  This will prevent them
@@ -1595,6 +1609,9 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   // color, etc.
   WSScanResult forwardScanFromPointToSplitResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this, pointToSplit);
+  if (forwardScanFromPointToSplitResult.Failed()) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
   // If selection start point is before a break and it's inside the mailquote,
   // let's split it after the visible node.
   if (forwardScanFromPointToSplitResult.ReachedBRElement() &&
@@ -1693,6 +1710,11 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
     WSScanResult backwardScanFromPointToCreateNewBRElementResult =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
             *this, pointToCreateNewBRElement);
+    if (backwardScanFromPointToCreateNewBRElementResult.Failed()) {
+      NS_WARNING(
+          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
     if (backwardScanFromPointToCreateNewBRElementResult
             .InNormalWhiteSpacesOrText() ||
         backwardScanFromPointToCreateNewBRElementResult
@@ -1704,6 +1726,10 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
       WSScanResult forwardScanFromPointAfterNewBRElementResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
               *this, pointAfterNewBRElement);
+      if (forwardScanFromPointAfterNewBRElementResult.Failed()) {
+        NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
       if (forwardScanFromPointAfterNewBRElementResult
               .InNormalWhiteSpacesOrText() ||
           forwardScanFromPointAfterNewBRElementResult.ReachedSpecialContent() ||
@@ -5298,8 +5324,14 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   WSRunScanner wsScannerAtEnd(*this, endPoint);
-  if (wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint)
-          .ReachedSomething()) {
+  WSScanResult scanResultAtEnd =
+      wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint);
+  if (scanResultAtEnd.Failed()) {
+    NS_WARNING(
+        "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
+    return NS_ERROR_FAILURE;
+  }
+  if (scanResultAtEnd.ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
@@ -5327,8 +5359,13 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   WSRunScanner wsScannerAtStart(*this, startPoint);
-  if (wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint)
-          .ReachedSomething()) {
+  WSScanResult scanResultAtStart =
+      wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint);
+  if (scanResultAtStart.Failed()) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+    return NS_ERROR_FAILURE;
+  }
+  if (scanResultAtStart.ReachedSomething()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtStart.EndsByOtherBlockElement()) {
@@ -6947,6 +6984,11 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
         WSScanResult forwardScanFromStartOfListItemResult =
             WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
                 *this, EditorRawDOMPoint(&aListItem, 0));
+        if (forwardScanFromStartOfListItemResult.Failed()) {
+          NS_WARNING(
+              "WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
+          return NS_ERROR_FAILURE;
+        }
         if (forwardScanFromStartOfListItemResult.ReachedSpecialContent() ||
             forwardScanFromStartOfListItemResult.ReachedBRElement() ||
             forwardScanFromStartOfListItemResult.ReachedHRElement()) {
