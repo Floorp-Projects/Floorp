@@ -947,6 +947,10 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
     return NS_ERROR_FAILURE;
   }
 
+  if (aNativeMessage) {
+    CGEventSetIntegerValueField(cgEvent, kCGScrollWheelEventScrollPhase, aNativeMessage);
+  }
+
   // On macOS 10.14 and up CGEventPost won't work because of changes in macOS
   // to improve security. This code makes an NSEvent corresponding to the
   // wheel event and dispatches it directly to the scrollWheel handler. Some
