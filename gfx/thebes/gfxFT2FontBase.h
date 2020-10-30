@@ -27,8 +27,8 @@ class gfxFT2FontEntryBase : public gfxFontEntry {
 
   CmapCacheSlot* GetCmapCacheSlot(uint32_t aCharCode);
 
-  static bool HasFontTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag);
-  static nsresult CopyFontTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag,
+  static bool FaceHasTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag);
+  static nsresult CopyFaceTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag,
                                 nsTArray<uint8_t>&);
 
  private:

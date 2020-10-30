@@ -457,7 +457,7 @@ bool gfxFontconfigFontEntry::HasFontTable(uint32_t aTableTag) {
   if (FTUserFontData* ufd = GetUserFontData()) {
     return !!gfxFontUtils::FindTableDirEntry(ufd->FontData(), aTableTag);
   }
-  return gfxFT2FontEntryBase::HasFontTable(GetFTFace(), aTableTag);
+  return gfxFT2FontEntryBase::FaceHasTable(GetFTFace(), aTableTag);
 }
 
 hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
@@ -957,7 +957,7 @@ nsresult gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
                                                nsTArray<uint8_t>& aBuffer) {
   NS_ASSERTION(!mIsDataUserFont,
                "data fonts should be reading tables directly from memory");
-  return gfxFT2FontEntryBase::CopyFontTable(GetFTFace(), aTableTag, aBuffer);
+  return gfxFT2FontEntryBase::CopyFaceTable(GetFTFace(), aTableTag, aBuffer);
 }
 
 void gfxFontconfigFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
