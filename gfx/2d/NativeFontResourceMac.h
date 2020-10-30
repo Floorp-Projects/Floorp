@@ -30,6 +30,8 @@ class NativeFontResourceMac final : public NativeFontResource {
     CFRelease(mFontRef);
   }
 
+  static void RegisterMemoryReporter();
+
  private:
   explicit NativeFontResourceMac(CTFontDescriptorRef aFontDescRef,
                                  CGFontRef aFontRef, size_t aDataLength)
