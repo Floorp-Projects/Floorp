@@ -238,7 +238,11 @@ void Factory::Init(const Config& aConfig) {
   MOZ_ASSERT(!sConfig);
   sConfig = new Config(aConfig);
 
+#ifdef XP_DARWIN
+  NativeFontResourceMac::RegisterMemoryReporter();
+#else
   NativeFontResource::RegisterMemoryReporter();
+#endif
 }
 
 void Factory::ShutDown() {
