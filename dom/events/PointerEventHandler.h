@@ -10,6 +10,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/WeakPtr.h"
 
 class nsIFrame;
 class nsIContent;
@@ -20,6 +21,7 @@ class PresShell;
 
 namespace dom {
 class BrowserParent;
+class Document;
 class Element;
 };  // namespace dom
 
@@ -38,6 +40,22 @@ class PointerCaptureInfo final {
   bool Empty() { return !(mPendingElement || mOverrideElement); }
 };
 
+class PointerInfo final {
+ public:
+  uint16_t mPointerType;
+  bool mActiveState;
+  bool mPrimaryState;
+  bool mPreventMouseEventByContent;
+  WeakPtr<dom::Document> mActiveDocument;
+  explicit PointerInfo(bool aActiveState, uint16_t aPointerType,
+                       bool aPrimaryState, dom::Document* aActiveDocument)
+      : mPointerType(aPointerType),
+        mActiveState(aActiveState),
+        mPrimaryState(aPrimaryState),
+        mPreventMouseEventByContent(false),
+        mActiveDocument(aActiveDocument) {}
+};
+
 class PointerEventHandler final {
  public:
   // Called in nsLayoutStatics::Initialize/Shutdown to initialize pointer event
@@ -50,7 +68,8 @@ class PointerEventHandler final {
 
   // Called in ESM::PreHandleEvent to update current active pointers in a hash
   // table.
-  static void UpdateActivePointerState(WidgetMouseEvent* aEvent);
+  static void UpdateActivePointerState(WidgetMouseEvent* aEvent,
+                                       nsIContent* aTargetContent);
 
   // Request/release pointer capture of the specified pointer by the element.
   static void RequestPointerCaptureById(uint32_t aPointerId,
@@ -74,11 +93,9 @@ class PointerEventHandler final {
   // Get the pointer captured info of the specified pointer.
   static PointerCaptureInfo* GetPointerCaptureInfo(uint32_t aPointerId);
 
-  // GetPointerInfo returns true if pointer with aPointerId is situated in
-  // device, false otherwise.
-  // aActiveState is additional information, which shows state of pointer like
-  // button state for mouse.
-  static bool GetPointerInfo(uint32_t aPointerId, bool& aActiveState);
+  // Return the PointerInfo if the pointer with aPointerId is situated in device
+  // , nullptr otherwise.
+  static const PointerInfo* GetPointerInfo(uint32_t aPointerId);
 
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events
   // should be fired.
