@@ -790,7 +790,7 @@ NS_IMETHODIMP EditorBase::DoTransaction(nsITransaction* aTransaction) {
 
 nsresult EditorBase::DoTransactionInternal(nsITransaction* aTransaction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!NeedsToDispatchBeforeInputEvent(),
+  MOZ_ASSERT(!ShouldAlreadyHaveHandledBeforeInputEventDispatching(),
              "beforeinput event hasn't been dispatched yet");
 
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
@@ -1791,7 +1791,7 @@ void EditorBase::DispatchInputEvent() {
              "If preceding beforeinput event is canceled, we shouldn't "
              "dispatch input event");
   MOZ_ASSERT(
-      !NeedsToDispatchBeforeInputEvent(),
+      !ShouldAlreadyHaveHandledBeforeInputEventDispatching(),
       "We've not handled beforeinput event but trying to dispatch input event");
 
   // We don't need to dispatch multiple input events if there is a pending
@@ -5130,7 +5130,8 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mAborted(false),
       mHasTriedToDispatchBeforeInputEvent(false),
       mBeforeInputEventCanceled(false),
-      mMakeBeforeInputEventNonCancelable(false) {
+      mMakeBeforeInputEventNonCancelable(false),
+      mHasTriedToDispatchClipboardEvent(false) {
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
     mSelection = mParentData->mSelection;
@@ -5142,6 +5143,17 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     // just returns something.
     if (aEditAction != EditAction::eNotEditing) {
       mEditAction = aEditAction;
+    } else {
+      mEditAction = mParentData->mEditAction;
+      // If we inherit an edit action whose handler needs to dispatch a
+      // clipboard event, we should inherit the clipboard dispatching state
+      // too because this nest occurs by a clipboard event listener or
+      // a beforeinput/mutation event listener is important for checking
+      // whether we've already called `MaybeDispatchBeforeInputEvent()`
+      // property in some points.  If the former case, not yet dispatching
+      // beforeinput event is okay (not fine).
+      mHasTriedToDispatchClipboardEvent =
+          mParentData->mHasTriedToDispatchClipboardEvent;
     }
     mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
 
@@ -5319,7 +5331,8 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
   MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "We've already handled beforeinput event");
   MOZ_ASSERT(CanHandle());
-  MOZ_ASSERT(!IsBeforeInputEventEnabled() || NeedsToDispatchBeforeInputEvent());
+  MOZ_ASSERT(!IsBeforeInputEventEnabled() ||
+             ShouldAlreadyHaveHandledBeforeInputEventDispatching());
   MOZ_ASSERT_IF(!MayEditActionDeleteAroundCollapsedSelection(mEditAction),
                 aDeleteDirectionAndAmount == nsIEditor::eNone);
 
