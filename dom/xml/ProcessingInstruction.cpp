@@ -58,9 +58,9 @@ ProcessingInstruction::ProcessingInstruction(
 
 ProcessingInstruction::~ProcessingInstruction() = default;
 
-StyleSheet* ProcessingInstruction::GetSheet() const {
+StyleSheet* ProcessingInstruction::GetSheetForBindings() const {
   if (const auto* linkStyle = LinkStyle::FromNode(*this)) {
-    return linkStyle->GetSheet();
+    return linkStyle->GetSheetForBindings();
   }
   return nullptr;
 }
