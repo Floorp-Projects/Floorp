@@ -19,6 +19,7 @@
 #include "gc/MaybeRooted.h"
 #include "jit/BaselineIC.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit{,DontReport}
 #include "js/Result.h"
 #include "js/Value.h"

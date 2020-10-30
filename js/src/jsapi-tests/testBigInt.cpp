@@ -8,13 +8,13 @@
 #include <stdint.h>
 
 #include "jsapi.h"        // JS_IsExceptionPending, JS_StringEqualsLiteral
-#include "jsfriendapi.h"  // JSMSG_BIGINT_INVALID_SYNTAX
 
 #include "js/BigInt.h"  // JS::{,Number,String,SimpleString}ToBigInt, JS::ToBig{I,Ui}nt64
 #include "js/CharacterEncoding.h"  // JS::Const{Latin1,TwoByte}Chars
 #include "js/Conversions.h"        // JS::ToString
 #include "js/ErrorReport.h"        // JS::ErrorReportBuilder, JSEXN_SYNTAXERR
 #include "js/Exception.h"          // JS::StealPendingExceptionStack
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/RootingAPI.h"         // JS::Rooted
 #include "js/Value.h"              // JS::FalseValue, JS::Value
 

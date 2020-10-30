@@ -35,6 +35,7 @@
 #include "jit/JitRuntime.h"
 #include "js/CharacterEncoding.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
 #include "js/friend/WindowProxy.h"    // js::IsWindowProxy
 #include "util/CheckedArithmetic.h"

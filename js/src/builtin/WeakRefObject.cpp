@@ -9,6 +9,8 @@
 #include "mozilla/Maybe.h"
 
 #include "jsapi.h"
+
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 

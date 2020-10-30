@@ -30,13 +30,14 @@
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "jit/Simulator.h"
-#include "js/Printf.h"
-#include "js/PropertySpec.h"  // JS_{PS,FN}{,_END}
 #if defined(JS_CODEGEN_X64)   // Assembler::HasSSE41
 #  include "jit/x64/Assembler-x64.h"
 #  include "jit/x86-shared/Architecture-x86-shared.h"
 #  include "jit/x86-shared/Assembler-x86-shared.h"
 #endif
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Printf.h"
+#include "js/PropertySpec.h"  // JS_{PS,FN}{,_END}
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ErrorObject.h"

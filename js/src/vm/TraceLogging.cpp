@@ -17,6 +17,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
 #include "jit/JitSpewer.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"
 #include "js/TraceLoggerAPI.h"
 #include "threading/LockGuard.h"

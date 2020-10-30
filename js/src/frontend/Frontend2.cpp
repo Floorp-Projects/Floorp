@@ -28,6 +28,7 @@
 #include "frontend/TokenStream.h"  // TokenStreamAnyChars
 #include "irregexp/RegExpAPI.h"    // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"              // JS::AutoCheckCannotGC
 #include "js/HeapAPI.h"            // JS::GCCellPtr
 #include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags

@@ -13,6 +13,7 @@
 
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
 #include "js/Wrapper.h"

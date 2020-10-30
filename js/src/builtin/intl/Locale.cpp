@@ -29,6 +29,7 @@
 #include "builtin/String.h"
 #include "gc/Rooting.h"
 #include "js/Conversions.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"

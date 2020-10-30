@@ -36,6 +36,7 @@
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CompileOptions.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"

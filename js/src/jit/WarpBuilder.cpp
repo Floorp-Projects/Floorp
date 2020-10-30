@@ -17,6 +17,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/WarpCacheIRTranspiler.h"
 #include "jit/WarpSnapshot.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_BAD_CONST_ASSIGN
 #include "vm/Opcodes.h"
 
 #include "jit/JitScript-inl.h"

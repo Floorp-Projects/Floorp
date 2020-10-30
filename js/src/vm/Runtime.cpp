@@ -32,6 +32,7 @@
 #include "jit/Simulator.h"
 #include "js/AllocationLogging.h"  // JS_COUNT_CTOR, JS_COUNT_DTOR
 #include "js/Date.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"

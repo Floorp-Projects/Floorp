@@ -13,9 +13,9 @@
 #include "mozilla/FloatingPoint.h"  // mozilla::IsNaN
 
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jsfriendapi.h"  // js::GetErrorMessage
 
 #include "js/Conversions.h"       // JS::ToNumber
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"        // JS::{,Mutable}Handle, JS::Rooted
 #include "vm/Interpreter.h"       // js::{Call,GetAndClearException}
 #include "vm/JSContext.h"         // JSContext

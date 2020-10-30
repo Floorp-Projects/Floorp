@@ -9,6 +9,7 @@
 #include "builtin/Array.h"
 
 #include "jit/InlinableNatives.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_NOT_EXPECTED_TYPE
 #include "js/PropertySpec.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSContext.h"

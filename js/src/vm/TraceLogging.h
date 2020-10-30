@@ -18,6 +18,7 @@
 #include "jsfriendapi.h"
 
 #include "js/AllocPolicy.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/TraceLoggerAPI.h"
 #include "js/TypeDecls.h"

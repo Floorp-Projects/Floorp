@@ -30,6 +30,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #if !JS_HAS_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif

@@ -25,6 +25,7 @@ typedef uint32_t HashNumber;
 #include "js/experimental/JitInfo.h"
 #include "js/experimental/TypedData.h"
 #include "js/ForOfIterator.h"
+#include "js/friend/ErrorMessages.h"  // JSErrNum
 #include "js/friend/WindowProxy.h"
 #include "js/Initialization.h"
 #include "js/MemoryMetrics.h"

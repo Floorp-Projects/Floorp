@@ -15,6 +15,7 @@
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GeneratorObject.h"  // js::AbstractGeneratorObject::FixedSlotLimit
 

@@ -40,6 +40,7 @@
 #include "frontend/SharedContext.h"  // TopLevelFunction
 #include "gc/Policy.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/ScalarType.h"  // js::Scalar::Type

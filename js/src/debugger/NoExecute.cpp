@@ -11,10 +11,10 @@
 #include <stdio.h>  // for fprintf, stdout
 
 #include "jsapi.h"        // for Handle
-#include "jsfriendapi.h"  // for DumpBacktrace, GetErrorMessage
 
 #include "debugger/Debugger.h"        // for Debugger
 #include "js/friend/DumpFunctions.h"  // for DumpBacktrace
+#include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_DEBUGGEE_WOULD_RUN
 #include "js/Promise.h"               // for AutoDebuggerJobQueueInterruption
 #include "vm/JSContext.h"             // for ProtectedDataContextArg, JSContext
 #include "vm/JSScript.h"              // for JSScript

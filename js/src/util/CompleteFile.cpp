@@ -11,7 +11,8 @@
 #include <sys/stat.h>  // stat, fstat
 
 #include "jsapi.h"        // JS_ReportErrorNumberLatin1
-#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_CANT_OPEN
+
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_CANT_OPEN
 
 bool js::ReadCompleteFile(JSContext* cx, FILE* fp, FileContents& buffer) {
   /* Get the complete length of the file, if possible. */

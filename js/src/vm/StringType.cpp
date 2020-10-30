@@ -32,6 +32,7 @@
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/StableStringChars.h"
 #include "js/Symbol.h"
 #include "js/UbiNode.h"

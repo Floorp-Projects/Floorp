@@ -11,6 +11,7 @@
 
 #include "gc/Barrier.h"
 #include "js/Conversions.h"
+#include "js/friend/ErrorMessages.h"  // JSErrNum
 #include "js/GCVector.h"
 #include "js/HeapAPI.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone

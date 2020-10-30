@@ -22,6 +22,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
 #include "js/experimental/Intl.h"  // JS::Add{,Moz}DisplayNamesConstructor, JS::AddMozDateTimeFormatConstructor
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"  // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/Object.h"              // JS::GetClass

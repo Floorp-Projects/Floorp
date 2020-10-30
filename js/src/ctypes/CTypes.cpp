@@ -43,6 +43,7 @@
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferData,GetArrayBuffer{ByteLength,Data}}
 #include "js/CharacterEncoding.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Type,Data}, JS_GetTypedArrayByteLength, JS_IsArrayBufferViewObject, JS_IsTypedArrayObject
+#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/Object.h"  // JS::GetPrivate, JS::GetReservedSlot, JS::SetPrivate
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"  // JS::{GetSharedArrayBuffer{ByteLength,Data},IsSharedArrayBufferObject}

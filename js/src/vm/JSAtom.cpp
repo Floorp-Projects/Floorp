@@ -23,6 +23,7 @@
 #include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "js/CharacterEncoding.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Symbol.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
