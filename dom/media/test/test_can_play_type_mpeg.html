@@ -122,15 +122,8 @@ function check_mp3(v, enabled) {
   check("audio/mp3; codecs=mp3", "probably");
 }
 
-function IsMacOSSnowLeopardOrLater() {
-  var re = /Mac OS X (\d+)\.(\d+)/;
-  var ver = navigator.userAgent.match(re);
-  if (!ver || ver.length != 3) {
-    return false;
-  }
-  var major = ver[1] | 0;
-  var minor = ver[2] | 0;
-  return major == 10 && minor >= 6;
+function IsMacOS() {
+  return navigator.userAgent.includes("Mac OS");
 }
 
 function IsLinux() {
@@ -149,20 +142,23 @@ function IsJellyBeanOrLater() {
   return getAndroidVersion() >= 16;
 }
 
-var haveMp4 = getPref("media.wmf.enabled") ||
-              IsMacOSSnowLeopardOrLater() ||
-              (IsSupportedAndroid() &&
-               (IsJellyBeanOrLater() || getPref("media.plugins.enabled"))) ||
-              (IsLinux() && getPref("media.ffmpeg.enabled"));
+var haveMp4 =
+  getPref("media.wmf.enabled") ||
+  IsMacOS() ||
+  (IsSupportedAndroid() &&
+    (IsJellyBeanOrLater() || getPref("media.plugins.enabled"))) ||
+  (IsLinux() && getPref("media.ffmpeg.enabled"));
 
 check_mp4(document.getElementById('v'), haveMp4);
 
-var haveMp3 = getPref("media.wmf.enabled") ||
-              (IsLinux() && getPref("media.ffmpeg.enabled")) ||
-              (IsSupportedAndroid() &&
-               ((IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
-                getPref("media.plugins.enabled"))) ||
-              IsMacOSSnowLeopardOrLater();
+var haveMp3 =
+  getPref("media.wmf.enabled") ||
+  (IsLinux() && getPref("media.ffmpeg.enabled")) ||
+  (IsSupportedAndroid() &&
+    ((IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
+      getPref("media.plugins.enabled"))) ||
+  IsMacOS();
+
 check_mp3(document.getElementById('v'), haveMp3);
 
 mediaTestCleanup();
