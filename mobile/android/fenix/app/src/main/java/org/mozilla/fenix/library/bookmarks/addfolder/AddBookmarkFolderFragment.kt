@@ -12,7 +12,6 @@ import android.view.View
 import android.view.View.GONE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
@@ -36,9 +35,7 @@ import org.mozilla.fenix.library.bookmarks.friendlyRootTitle
  */
 class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
-    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
-        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-    }
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

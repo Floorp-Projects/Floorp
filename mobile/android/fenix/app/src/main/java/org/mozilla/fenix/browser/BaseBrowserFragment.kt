@@ -20,7 +20,6 @@ import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
@@ -39,8 +38,8 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
@@ -236,9 +235,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
     }
 
-    private val homeViewModel: HomeScreenViewModel by activityViewModels {
-        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-    }
+    private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
     @Suppress("ComplexMethod", "LongMethod")
     @CallSuper

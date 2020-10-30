@@ -33,7 +33,6 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -113,9 +112,7 @@ class HomeFragment : Fragment() {
     private val args by navArgs<HomeFragmentArgs>()
     private lateinit var bundleArgs: Bundle
 
-    private val homeViewModel: HomeScreenViewModel by activityViewModels {
-        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-    }
+    private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
     private val snackbarAnchorView: View?
         get() = when (requireContext().settings().toolbarPosition) {
@@ -331,9 +328,6 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         FragmentPreDrawManager(this).execute {
-            val homeViewModel: HomeScreenViewModel by activityViewModels {
-                ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-            }
             homeViewModel.layoutManagerState?.also { parcelable ->
                 sessionControlView!!.view.layoutManager?.onRestoreInstanceState(parcelable)
             }
@@ -622,9 +616,6 @@ class HomeFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        val homeViewModel: HomeScreenViewModel by activityViewModels {
-            ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-        }
         homeViewModel.layoutManagerState =
             sessionControlView!!.view.layoutManager?.onSaveInstanceState()
     }

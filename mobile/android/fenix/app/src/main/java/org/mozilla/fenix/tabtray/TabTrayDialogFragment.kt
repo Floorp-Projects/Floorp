@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -295,9 +294,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         )
     }
 
-    private val homeViewModel: HomeScreenViewModel by activityViewModels {
-        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-    }
+    private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
     private fun dismissTabTrayAndNavigateHome(sessionId: String) {
         homeViewModel.sessionToDelete = sessionId
