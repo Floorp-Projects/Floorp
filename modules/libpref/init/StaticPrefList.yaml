@@ -2088,16 +2088,6 @@
   value: true
   mirror: always
 
-# Whether the LinkStyle.sheet and DocumentOrShadowRoot.styleSheets accessor
-# exposes in-progress-loading stylesheets.
-#
-# Historical behavior is `true`, but other browsers (and also a bit of common
-# sense) match `false`.
-- name: dom.expose-incomplete-stylesheets
-  type: bool
-  value: false
-  mirror: always
-
 # Whether the Large-Allocation header is enabled.
 - name: dom.largeAllocationHeader.enabled
   type: bool
