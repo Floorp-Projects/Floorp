@@ -86,7 +86,9 @@ gfxFontEntry::gfxFontEntry()
       mHasCmapTable(false),
       mGrFaceInitialized(false),
       mCheckedForColorGlyph(false),
-      mCheckedForVariationAxes(false) {
+      mCheckedForVariationAxes(false),
+      mHasColorBitmapTable(false),
+      mCheckedForColorBitmapTables(false) {
   memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
   memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
@@ -116,7 +118,9 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
       mHasCmapTable(false),
       mGrFaceInitialized(false),
       mCheckedForColorGlyph(false),
-      mCheckedForVariationAxes(false) {
+      mCheckedForVariationAxes(false),
+      mHasColorBitmapTable(false),
+      mCheckedForColorBitmapTables(false) {
   memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
   memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
