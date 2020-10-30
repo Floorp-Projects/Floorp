@@ -5,8 +5,10 @@
 "use strict";
 
 /* import-globals-from ../../mochitest/role.js */
-
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
+
+/* import-globals-from ../../mochitest/attributes.js */
+loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 
 /**
  * Test table, columns, rows
@@ -206,6 +208,36 @@ addAccessibleTask(
       colHeaders.map(c => c.getAttributeValue("AXDOMIdentifier")),
       ["header1", "header1", "header2"],
       "Correct column headers"
+    );
+  }
+);
+
+addAccessibleTask(
+  `<table id="table">
+    <tr>
+      <td>Foo</td>
+    </tr>
+  </table>`,
+  (browser, accDoc) => {
+    // Make sure we guess this table to be a layout table.
+    testAttrs(
+      findAccessibleChildByID(accDoc, "table"),
+      { "layout-guess": "true" },
+      true
+    );
+
+    let table = getNativeInterface(accDoc, "table");
+    is(
+      table.getAttributeValue("AXRole"),
+      "AXGroup",
+      "Correct role (AXGroup) for layout table"
+    );
+
+    let children = table.getAttributeValue("AXChildren");
+    is(
+      children.length,
+      1,
+      "Layout table has single child (no additional columns)"
     );
   }
 );

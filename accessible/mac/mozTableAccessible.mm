@@ -220,8 +220,12 @@ using namespace mozilla::a11y;
 }
 
 - (NSArray*)moxUnignoredChildren {
-  return [[super moxUnignoredChildren]
-      arrayByAddingObjectsFromArray:[self moxColumns]];
+  if (![self isLayoutTablePart]) {
+    return [[super moxUnignoredChildren]
+        arrayByAddingObjectsFromArray:[self moxColumns]];
+  }
+
+  return [super moxUnignoredChildren];
 }
 
 - (NSArray*)moxColumnHeaderUIElements {
