@@ -45,7 +45,7 @@ tag = "v0.4.2"
 [source."https://github.com/hsivonen/packed_simd"]
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
-rev = "3541e3818fdc7c2a24f87e3459151a4ce955a67a"
+rev = "0917fe780032a6bbb23d71be545f9c1834128d75"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"

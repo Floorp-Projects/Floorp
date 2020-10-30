@@ -1,5 +1,5 @@
 //! `FromCast` and `IntoCast` implementations for portable 64-bit wide vectors
-#![rustfmt::skip]
+#[rustfmt::skip]
 
 use crate::*;
 

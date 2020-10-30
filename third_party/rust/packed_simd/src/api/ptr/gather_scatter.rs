@@ -49,9 +49,9 @@ macro_rules! impl_ptr_read {
                         let mut ptr = $id::<i32>::null();
 
                         for i in 0..$elem_count {
-                            ptr = ptr.replace(i, unsafe {
-                                crate::mem::transmute(&v[i] as *const i32)
-                            });
+                            ptr = ptr.replace(i,
+                                &v[i] as *const i32 as *mut i32
+                            );
                         }
 
                         // all mask elements are true:
@@ -135,32 +135,8 @@ macro_rules! impl_ptr_write {
                 M: sealed::Mask,
                 [M; $elem_count]: sealed::SimdArray,
             {
-                // FIXME:
-                // https://github.com/rust-lang-nursery/packed_simd/issues/85
-                #[cfg(not(target_arch = "mips"))]
-                {
-                    use crate::llvm::simd_scatter;
-                    simd_scatter(value.0, self.0, mask.0)
-                }
-                #[cfg(target_arch = "mips")]
-                {
-                    let m_ptr =
-                        &mask as *const Simd<[M; $elem_count]> as *const M;
-                    for i in 0..$elem_count {
-                        let m = ptr::read(m_ptr.add(i));
-                        if m.test() {
-                            let t_ptr = &self
-                                as *const Simd<[*mut T; $elem_count]>
-                                as *mut *mut T;
-                            let v_ptr = &value as *const Simd<[T; $elem_count]>
-                                as *const T;
-                            ptr::write(
-                                ptr::read(t_ptr.add(i)),
-                                ptr::read(v_ptr.add(i)),
-                            );
-                        }
-                    }
-                }
+                use crate::llvm::simd_scatter;
+                simd_scatter(value.0, self.0, mask.0)
             }
         }
 
@@ -185,7 +161,7 @@ macro_rules! impl_ptr_write {
                         let mut ptr = $id::<i32>::null();
                         for i in 0..$elem_count {
                             ptr = ptr.replace(i, unsafe {
-                                crate::mem::transmute(arr.as_ptr().add(i))
+                                arr.as_ptr().add(i) as *mut i32
                             });
                         }
                         // ptr = [&arr[0], &arr[1], ...]

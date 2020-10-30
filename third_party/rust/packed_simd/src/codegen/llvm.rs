@@ -10,31 +10,37 @@ extern "platform-intrinsic" {
     // FIXME: Passing this intrinsics an `idx` array with an index that is
     // out-of-bounds will produce a monomorphization-time error.
     // https://github.com/rust-lang-nursery/packed_simd/issues/21
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle2<T, U>(x: T, y: T, idx: [u32; 2]) -> U
     where
         T: Simd,
         <T as Simd>::Element: Shuffle<[u32; 2], Output = U>;
 
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle4<T, U>(x: T, y: T, idx: [u32; 4]) -> U
     where
         T: Simd,
         <T as Simd>::Element: Shuffle<[u32; 4], Output = U>;
 
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle8<T, U>(x: T, y: T, idx: [u32; 8]) -> U
     where
         T: Simd,
         <T as Simd>::Element: Shuffle<[u32; 8], Output = U>;
 
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle16<T, U>(x: T, y: T, idx: [u32; 16]) -> U
     where
         T: Simd,
         <T as Simd>::Element: Shuffle<[u32; 16], Output = U>;
 
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle32<T, U>(x: T, y: T, idx: [u32; 32]) -> U
     where
         T: Simd,
         <T as Simd>::Element: Shuffle<[u32; 32], Output = U>;
 
+    #[rustc_args_required_const(2)]
     pub fn simd_shuffle64<T, U>(x: T, y: T, idx: [u32; 64]) -> U
     where
         T: Simd,
@@ -96,4 +102,6 @@ extern "platform-intrinsic" {
 
     crate fn simd_gather<T, P, M>(value: T, pointers: P, mask: M) -> T;
     crate fn simd_scatter<T, P, M>(value: T, pointers: P, mask: M);
+
+    crate fn simd_bitmask<T, U>(value: T) -> U;
 }

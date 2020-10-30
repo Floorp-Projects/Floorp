@@ -1,5 +1,5 @@
 //! Vectors of pointers
-#![rustfmt::skip]
+#[rustfmt::skip]
 
 use crate::*;
 

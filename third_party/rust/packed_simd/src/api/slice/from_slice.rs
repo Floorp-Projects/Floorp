@@ -38,7 +38,7 @@ macro_rules! impl_slice_from_slice {
 
             /// Instantiates a new vector with the values of the `slice`.
             ///
-            /// # Precondition
+            /// # Safety
             ///
             /// If `slice.len() < Self::lanes()` or `&slice[0]` is not aligned
             /// to an `align_of::<Self>()` boundary, the behavior is undefined.
@@ -59,7 +59,7 @@ macro_rules! impl_slice_from_slice {
 
             /// Instantiates a new vector with the values of the `slice`.
             ///
-            /// # Precondition
+            /// # Safety
             ///
             /// If `slice.len() < Self::lanes()` the behavior is undefined.
             #[inline]
@@ -84,6 +84,8 @@ macro_rules! impl_slice_from_slice {
         test_if! {
             $test_tt:
             paste::item! {
+                // Comparisons use integer casts within mantissa^1 range.
+                #[allow(clippy::float_cmp)]
                 pub mod [<$id _slice_from_slice>] {
                     use super::*;
                     use crate::iter::Iterator;

@@ -1,5 +1,5 @@
 //! LLVM bit manipulation intrinsics.
-#![rustfmt::skip]
+#[rustfmt::skip]
 
 use crate::*;
 
