@@ -26,14 +26,14 @@ use crate::render_task_cache::{RenderTaskCacheKey, RenderTaskCacheKeyKind};
 use crate::visibility::PrimitiveVisibilityMask;
 use smallvec::SmallVec;
 
-const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
+pub const MAX_RENDER_TASK_SIZE: i32 = 16384;
 pub const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
 pub const MIN_DOWNSCALING_RT_SIZE: i32 = 8;
 
 fn render_task_sanity_check(size: &DeviceIntSize) {
-    if size.width > RENDER_TASK_SIZE_SANITY_CHECK ||
-        size.height > RENDER_TASK_SIZE_SANITY_CHECK {
+    if size.width > MAX_RENDER_TASK_SIZE ||
+        size.height > MAX_RENDER_TASK_SIZE {
         error!("Attempting to create a render task of size {}x{}", size.width, size.height);
         panic!();
     }
