@@ -688,12 +688,7 @@ void CodeGenerator::visitModI(LModI* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register output = ToRegister(ins->output());
-  Register callTemp = ToRegister(ins->callTemp());
   MMod* mir = ins->mir();
-
-  // Save the lhs in case we end up with a 0 that should be a -0.0 because lhs <
-  // 0.
-  masm.ma_mov(lhs, callTemp);
 
   // Contrary to other architectures (notably x86) INT_MIN % -1 doesn't need to
   // be handled separately. |ma_smod| computes the remainder using the |SDIV|
@@ -726,7 +721,7 @@ void CodeGenerator::visitModI(LModI* ins) {
       // See if X < 0
       masm.as_cmp(output, Imm8(0));
       masm.ma_b(&done, Assembler::NotEqual);
-      masm.as_cmp(callTemp, Imm8(0));
+      masm.as_cmp(lhs, Imm8(0));
       bailoutIf(Assembler::Signed, ins->snapshot());
     }
   }
