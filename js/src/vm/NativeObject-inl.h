@@ -512,17 +512,6 @@ inline DenseElementResult NativeObject::setOrExtendDenseElements(
   return DenseElementResult::Success;
 }
 
-template <AllowGC allowGC>
-inline bool NativeObject::getDenseOrTypedArrayElement(
-    JSContext* cx, uint32_t idx,
-    typename MaybeRooted<Value, allowGC>::MutableHandleType val) {
-  if (is<TypedArrayObject>()) {
-    return as<TypedArrayObject>().getElement<allowGC>(cx, idx, val);
-  }
-  val.set(getDenseElement(idx));
-  return true;
-}
-
 MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
                                                      Shape* shape,
                                                      const Value& value,
@@ -741,9 +730,12 @@ static MOZ_ALWAYS_INLINE bool CallResolveOp(JSContext* cx,
   MOZ_ASSERT_IF(obj->getClass()->getMayResolve(),
                 obj->getClass()->getMayResolve()(cx->names(), id, obj));
 
-  if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
-    propp.setDenseOrTypedArrayElement();
-    return true;
+  if (JSID_IS_INT(id)) {
+    uint32_t index = JSID_TO_INT(id);
+    if (obj->containsDenseElement(index)) {
+      propp.setDenseElement(index);
+      return true;
+    }
   }
 
   MOZ_ASSERT(!obj->is<TypedArrayObject>());
@@ -765,10 +757,13 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
     typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp,
     bool* donep) {
   // Check for a native dense element.
-  if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
-    propp.setDenseOrTypedArrayElement();
-    *donep = true;
-    return true;
+  if (JSID_IS_INT(id)) {
+    uint32_t index = JSID_TO_INT(id);
+    if (obj->containsDenseElement(index)) {
+      propp.setDenseElement(index);
+      *donep = true;
+      return true;
+    }
   }
 
   // Check for a typed array element. Integer lookups always finish here
@@ -784,9 +779,9 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
     }
 
     if (index.inspect()) {
-      if (index.inspect().value() <
-          obj->template as<TypedArrayObject>().length()) {
-        propp.setDenseOrTypedArrayElement();
+      uint64_t idx = index.inspect().value();
+      if (idx < obj->template as<TypedArrayObject>().length()) {
+        propp.setTypedArrayElement(idx);
       } else {
         propp.setNotFound();
       }
@@ -840,9 +835,12 @@ static inline MOZ_MUST_USE bool NativeLookupOwnPropertyNoResolve(
     JSContext* cx, HandleNativeObject obj, HandleId id,
     MutableHandle<PropertyResult> result) {
   // Check for a native dense element.
-  if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
-    result.setDenseOrTypedArrayElement();
-    return true;
+  if (JSID_IS_INT(id)) {
+    uint32_t index = JSID_TO_INT(id);
+    if (obj->containsDenseElement(index)) {
+      result.setDenseElement(index);
+      return true;
+    }
   }
 
   // Check for a typed array element.
@@ -852,7 +850,7 @@ static inline MOZ_MUST_USE bool NativeLookupOwnPropertyNoResolve(
 
     if (index) {
       if (index.value() < obj->as<TypedArrayObject>().length()) {
-        result.setDenseOrTypedArrayElement();
+        result.setTypedArrayElement(index.value());
       } else {
         result.setNotFound();
       }

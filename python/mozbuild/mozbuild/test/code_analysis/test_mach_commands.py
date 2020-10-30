@@ -38,8 +38,8 @@ class TestStaticAnalysis(unittest.TestCase):
         context.cwd = config.topsrcdir
 
         cmd = StaticAnalysis(context)
-        cmd.topsrcdir = "/root/dir"
-        path = "/root/dir/path1"
+        cmd.topsrcdir = os.path.join("/root", "dir")
+        path = os.path.join("/root", "dir", "path1")
 
         ignored_dirs_re = r"path1|path2/here|path3\there"
         self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, path) is not None)

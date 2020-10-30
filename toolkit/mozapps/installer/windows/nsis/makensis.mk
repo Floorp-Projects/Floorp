@@ -64,7 +64,7 @@ ifdef ZIP_IN
 installer:: $(CONFIG_DIR)/setup.exe $(ZIP_IN)
 	@echo 'Packaging $(WIN32_INSTALLER_OUT).'
 	$(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'
-	$(MOZILLA_DIR)/mach repackage installer \
+	$(PYTHON3) $(MOZILLA_DIR)/mach repackage installer \
 	  -o '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe' \
 	  --package-name '$(MOZ_PKG_DIR)' \
 	  --package '$(ZIP_IN)' \
@@ -73,7 +73,7 @@ installer:: $(CONFIG_DIR)/setup.exe $(ZIP_IN)
 	  --sfx-stub $(SFX_MODULE) \
 	  $(USE_UPX)
 ifdef MOZ_STUB_INSTALLER
-	$(MOZILLA_DIR)/mach repackage installer \
+	$(PYTHON3) $(MOZILLA_DIR)/mach repackage installer \
 	  -o '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe' \
 	  --tag $(topsrcdir)/browser/installer/windows/stub.tag \
 	  --setupexe $(CONFIG_DIR)/setup-stub.exe \

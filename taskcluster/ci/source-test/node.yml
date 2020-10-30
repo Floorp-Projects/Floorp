@@ -85,6 +85,8 @@ devtools-tests:
             node devtools-node-test-runner.js --suite=compatibility &&
             node devtools-node-test-runner.js --suite=framework &&
             node devtools-node-test-runner.js --suite=netmonitor &&
+            node devtools-node-test-runner.js --suite=performance &&
+            node devtools-node-test-runner.js --suite=shared_components &&
             node devtools-node-test-runner.js --suite=webconsole
     when:
         files-changed:

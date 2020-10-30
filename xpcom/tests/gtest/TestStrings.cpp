@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsASCIIMask.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
@@ -1969,19 +1970,29 @@ TEST_F(Strings, ConvertToSpan) {
 }
 
 // Macros for reducing verbosity of printf tests.
-#define create_printf_strings(format, ...)              \
-  nsCString appendPrintfString;                         \
-  appendPrintfString.AppendPrintf(format, __VA_ARGS__); \
-  const nsCString appendVprintfString(                  \
-      getAppendVprintfString(format, __VA_ARGS__));
+#define create_printf_strings(format, ...)                 \
+  nsCString appendPrintfString;                            \
+  appendPrintfString.AppendPrintf(format, __VA_ARGS__);    \
+  const nsCString appendVprintfString(                     \
+      getAppendVprintfString(format, __VA_ARGS__));        \
+  const nsPrintfCString printfString(format, __VA_ARGS__); \
+  const nsVprintfCString vprintfString{getVprintfCString(format, __VA_ARGS__)};
 
-#define verify_printf_strings(expected)                                \
-  EXPECT_TRUE(appendPrintfString.EqualsASCII(expected))                \
-      << "appendPrintfString != expected:" << appendPrintfString.get() \
-      << " != " << (expected);                                         \
-  EXPECT_TRUE(appendPrintfString.Equals(appendVprintfString))          \
-      << "appendPrintfString != appendVprintfString:"                  \
-      << appendPrintfString.get() << " != " << appendVprintfString;
+// We don't check every possible combination as we assume equality is
+// transitive.
+#define verify_printf_strings(expected)                                     \
+  EXPECT_TRUE(appendPrintfString.EqualsASCII(expected))                     \
+      << "appendPrintfString != expected:" << appendPrintfString.get()      \
+      << " != " << (expected);                                              \
+  EXPECT_TRUE(appendPrintfString.Equals(appendVprintfString))               \
+      << "appendPrintfString != appendVprintfString:"                       \
+      << appendPrintfString.get() << " != " << appendVprintfString;         \
+  EXPECT_TRUE(appendPrintfString.Equals(printfString))                      \
+      << "appendPrintfString != printfString:" << appendPrintfString.get()  \
+      << " != " << printfString;                                            \
+  EXPECT_TRUE(appendPrintfString.Equals(vprintfString))                     \
+      << "appendPrintfString != vprintfString:" << appendPrintfString.get() \
+      << " != " << vprintfString;
 
 TEST_F(Strings, printf) {
   auto getAppendVprintfString = [](const char* aFormat, ...) {
@@ -1992,6 +2003,15 @@ TEST_F(Strings, printf) {
     cString.AppendVprintf(aFormat, ap);
     va_end(ap);
     return cString;
+  };
+
+  auto getVprintfCString = [](const char* aFormat, ...) {
+    // Helper to get a nsVprintfCString.
+    va_list ap;
+    va_start(ap, aFormat);
+    const nsVprintfCString vprintfString(aFormat, ap);
+    va_end(ap);
+    return vprintfString;
   };
 
   {

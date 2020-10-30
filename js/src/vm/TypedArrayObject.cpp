@@ -984,23 +984,21 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                       HandleObject proto,
                                       HandleObjectGroup group);
 
-  static const NativeType getIndex(TypedArrayObject* tarray, uint32_t index) {
+  static const NativeType getIndex(TypedArrayObject* tarray, size_t index) {
     MOZ_ASSERT(index < tarray->length());
     return jit::AtomicOperations::loadSafeWhenRacy(
         tarray->dataPointerEither().cast<NativeType*>() + index);
   }
 
-  static void setIndex(TypedArrayObject& tarray, uint32_t index,
-                       NativeType val) {
+  static void setIndex(TypedArrayObject& tarray, size_t index, NativeType val) {
     MOZ_ASSERT(index < tarray.length());
     jit::AtomicOperations::storeSafeWhenRacy(
         tarray.dataPointerEither().cast<NativeType*>() + index, val);
   }
 
-  static bool getElement(JSContext* cx, TypedArrayObject* tarray,
-                         uint32_t index, MutableHandleValue val);
-  static bool getElementPure(TypedArrayObject* tarray, uint32_t index,
-                             Value* vp);
+  static bool getElement(JSContext* cx, TypedArrayObject* tarray, size_t index,
+                         MutableHandleValue val);
+  static bool getElementPure(TypedArrayObject* tarray, size_t index, Value* vp);
 
   static bool setElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                          uint64_t index, HandleValue v, ObjectOpResult& result);
@@ -1983,7 +1981,7 @@ namespace {
 // than 32-bits in size.
 template <typename NativeType>
 bool TypedArrayObjectTemplate<NativeType>::getElementPure(
-    TypedArrayObject* tarray, uint32_t index, Value* vp) {
+    TypedArrayObject* tarray, size_t index, Value* vp) {
   static_assert(sizeof(NativeType) < 4,
                 "this method must only handle NativeType values that are "
                 "always exact int32_t values");
@@ -1995,7 +1993,7 @@ bool TypedArrayObjectTemplate<NativeType>::getElementPure(
 // We need to specialize for floats and other integer types.
 template <>
 bool TypedArrayObjectTemplate<int32_t>::getElementPure(TypedArrayObject* tarray,
-                                                       uint32_t index,
+                                                       size_t index,
                                                        Value* vp) {
   *vp = Int32Value(getIndex(tarray, index));
   return true;
@@ -2003,7 +2001,7 @@ bool TypedArrayObjectTemplate<int32_t>::getElementPure(TypedArrayObject* tarray,
 
 template <>
 bool TypedArrayObjectTemplate<uint32_t>::getElementPure(
-    TypedArrayObject* tarray, uint32_t index, Value* vp) {
+    TypedArrayObject* tarray, size_t index, Value* vp) {
   uint32_t val = getIndex(tarray, index);
   *vp = NumberValue(val);
   return true;
@@ -2011,8 +2009,7 @@ bool TypedArrayObjectTemplate<uint32_t>::getElementPure(
 
 template <>
 bool TypedArrayObjectTemplate<float>::getElementPure(TypedArrayObject* tarray,
-                                                     uint32_t index,
-                                                     Value* vp) {
+                                                     size_t index, Value* vp) {
   float val = getIndex(tarray, index);
   double dval = val;
 
@@ -2032,8 +2029,7 @@ bool TypedArrayObjectTemplate<float>::getElementPure(TypedArrayObject* tarray,
 
 template <>
 bool TypedArrayObjectTemplate<double>::getElementPure(TypedArrayObject* tarray,
-                                                      uint32_t index,
-                                                      Value* vp) {
+                                                      size_t index, Value* vp) {
   double val = getIndex(tarray, index);
 
   /*
@@ -2049,14 +2045,14 @@ bool TypedArrayObjectTemplate<double>::getElementPure(TypedArrayObject* tarray,
 
 template <>
 bool TypedArrayObjectTemplate<int64_t>::getElementPure(TypedArrayObject* tarray,
-                                                       uint32_t index,
+                                                       size_t index,
                                                        Value* vp) {
   return false;
 }
 
 template <>
 bool TypedArrayObjectTemplate<uint64_t>::getElementPure(
-    TypedArrayObject* tarray, uint32_t index, Value* vp) {
+    TypedArrayObject* tarray, size_t index, Value* vp) {
   return false;
 }
 } /* anonymous namespace */
@@ -2066,7 +2062,7 @@ namespace {
 template <typename NativeType>
 bool TypedArrayObjectTemplate<NativeType>::getElement(JSContext* cx,
                                                       TypedArrayObject* tarray,
-                                                      uint32_t index,
+                                                      size_t index,
                                                       MutableHandleValue val) {
   MOZ_ALWAYS_TRUE(getElementPure(tarray, index, val.address()));
   return true;
@@ -2075,7 +2071,7 @@ bool TypedArrayObjectTemplate<NativeType>::getElement(JSContext* cx,
 template <>
 bool TypedArrayObjectTemplate<int64_t>::getElement(JSContext* cx,
                                                    TypedArrayObject* tarray,
-                                                   uint32_t index,
+                                                   size_t index,
                                                    MutableHandleValue val) {
   int64_t n = getIndex(tarray, index);
   BigInt* res = BigInt::createFromInt64(cx, n);
@@ -2089,7 +2085,7 @@ bool TypedArrayObjectTemplate<int64_t>::getElement(JSContext* cx,
 template <>
 bool TypedArrayObjectTemplate<uint64_t>::getElement(JSContext* cx,
                                                     TypedArrayObject* tarray,
-                                                    uint32_t index,
+                                                    size_t index,
                                                     MutableHandleValue val) {
   uint64_t n = getIndex(tarray, index);
   BigInt* res = BigInt::createFromUint64(cx, n);
@@ -2104,7 +2100,7 @@ bool TypedArrayObjectTemplate<uint64_t>::getElement(JSContext* cx,
 namespace js {
 
 template <>
-bool TypedArrayObject::getElement<CanGC>(JSContext* cx, uint32_t index,
+bool TypedArrayObject::getElement<CanGC>(JSContext* cx, size_t index,
                                          MutableHandleValue val) {
   switch (type()) {
 #define GET_ELEMENT(T, N) \
@@ -2123,14 +2119,14 @@ bool TypedArrayObject::getElement<CanGC>(JSContext* cx, uint32_t index,
 
 template <>
 bool TypedArrayObject::getElement<NoGC>(
-    JSContext* cx, uint32_t index,
+    JSContext* cx, size_t index,
     typename MaybeRooted<Value, NoGC>::MutableHandleType vp) {
   return getElementPure(index, vp.address());
 }
 
 }  // namespace js
 
-bool TypedArrayObject::getElementPure(uint32_t index, Value* vp) {
+bool TypedArrayObject::getElementPure(size_t index, Value* vp) {
   switch (type()) {
 #define GET_ELEMENT_PURE(T, N) \
   case Scalar::N:              \

@@ -49,6 +49,7 @@ function selectElementsInPanelview(panelview) {
    */
   function getElementById(id) {
     /** @type {HTMLElement | null} */
+    // @ts-ignore - Bug 1674368
     const { PanelMultiView } = lazy.PanelMultiView();
     const element = PanelMultiView.getViewNode(document, id);
     if (!element) {
@@ -100,12 +101,14 @@ function createViewControllers(state, elements) {
         "isinfocollapsed",
         state.isInfoCollapsed ? "true" : "false"
       );
+      // @ts-ignore - Bug 1674368
       panelview
         .closest("panel")
         .setAttribute(
           "isinfoexpanded",
           state.isInfoCollapsed ? "false" : "true"
         );
+      // @ts-ignore - Bug 1674368
       infoButton.checked = !state.isInfoCollapsed;
 
       if (state.isInfoCollapsed) {

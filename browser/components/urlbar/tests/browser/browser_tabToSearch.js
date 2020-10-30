@@ -135,6 +135,11 @@ add_task(async function activedescendant_tab() {
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
   });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "There should be two results."
+  );
   let tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(
     window,
     1
@@ -153,6 +158,49 @@ add_task(async function activedescendant_tab() {
     isPreview: true,
   });
   let aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.ok(!aadID, "aria-activedescendant was not set.");
+
+  // Cycle through all the results then return to the tab-to-search result. It
+  // should be announced.
+  EventUtils.synthesizeKey("KEY_Tab");
+  aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  let firstRow = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.equal(
+    aadID,
+    firstRow.id,
+    "aria-activedescendant was set to the row after the tab-to-search result."
+  );
+  EventUtils.synthesizeKey("KEY_Tab");
+  aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.equal(
+    aadID,
+    tabToSearchRow.id,
+    "aria-activedescendant was set to the tab-to-search result."
+  );
+
+  // Now close and reopen the view, then do another search that yields a
+  // tab-to-search result. aria-activedescendant should not be set when it is
+  // selected.
+  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: TEST_ENGINE_DOMAIN.slice(0, 4),
+  });
+  tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  Assert.equal(
+    tabToSearchRow.result.providerName,
+    "TabToSearch",
+    "The second result is a tab-to-search result."
+  );
+
+  EventUtils.synthesizeKey("KEY_Tab");
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: TEST_ENGINE_NAME,
+    entry: "tabtosearch",
+    isPreview: true,
+  });
+  aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
   Assert.ok(!aadID, "aria-activedescendant was not set.");
 
   await UrlbarTestUtils.exitSearchMode(window);
@@ -185,6 +233,24 @@ add_task(async function activedescendant_arrow() {
     isPreview: true,
   });
   let aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.equal(
+    aadID,
+    tabToSearchRow.id,
+    "aria-activedescendant was set to the tab-to-search result."
+  );
+
+  // Move selection away from the tab-to-search result then return. It should
+  // be announced.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
+  Assert.equal(
+    aadID,
+    UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton.id,
+    tabToSearchRow.id,
+    "aria-activedescendant was moved to the first one-off."
+  );
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  aadID = gURLBar.inputField.getAttribute("aria-activedescendant");
   Assert.equal(
     aadID,
     tabToSearchRow.id,

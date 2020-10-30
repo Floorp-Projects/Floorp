@@ -72,11 +72,12 @@ struct LangGroupFontPrefs {
         return &mDefaultCursiveFont;
       case StyleGenericFontFamily::Fantasy:
         return &mDefaultFantasyFont;
+      case StyleGenericFontFamily::MozEmoji:
+        // This shouldn't appear in font family names.
         break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("invalid font id");
-        return nullptr;
     }
+    MOZ_ASSERT_UNREACHABLE("invalid font id");
+    return nullptr;
   }
 
   nsStaticAtom* mLangGroup;

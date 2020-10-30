@@ -1786,10 +1786,16 @@ void CycleCollectedJSRuntime::ErrorInterceptor::interceptError(
   switch (*type) {
     case JSExnType::JSEXN_REFERENCEERR:
     case JSExnType::JSEXN_SYNTAXERR:
-    case JSExnType::JSEXN_TYPEERR:
       break;
     default:
       // Not one of the errors we are interested in.
+      // Note that we are not interested in instances of `TypeError`
+      // for the time being, as DOM (ab)uses this constructor to represent
+      // all sorts of errors that are not even remotely related to type
+      // errors (e.g. some network errors).
+      // If we ever have a mechanism to differentiate between DOM-thrown
+      // and SpiderMonkey-thrown instances of `TypeError`, we should
+      // consider watching for `TypeError` here.
       return;
   }
 
