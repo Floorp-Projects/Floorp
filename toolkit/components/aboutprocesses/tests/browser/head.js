@@ -373,16 +373,12 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
   // Setup tabs asynchronously.
 
   // The about:processes tab.
-  let promiseTabAboutProcesses = (async function() {
-    info("Setting up about:processes");
-    let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
-      gBrowser,
-      "about:processes",
-      { skipAnimation: true }
-    ));
-    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    return tab;
-  })();
+  info("Setting up about:processes");
+  let promiseTabAboutProcesses = BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "about:processes",
+    waitForLoad: true,
+  });
 
   info("Setting up example.com");
   // Another tab that we'll pretend is hung.
