@@ -3551,8 +3551,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void guardStringToInt32(Register str, Register output, Register scratch,
                           LiveRegisterSet volatileRegs, Label* fail);
 
-  void loadWasmTlsRegFromFrame(Register dest = WasmTlsReg);
-
   template <typename T>
   void loadTypedOrValue(const T& src, TypedOrValueRegister dest) {
     if (dest.hasValue()) {
