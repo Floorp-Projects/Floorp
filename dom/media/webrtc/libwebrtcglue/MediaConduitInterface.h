@@ -285,15 +285,18 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   webrtc::Call* Call() const { return mCall.get(); }
 
   virtual ~WebRtcCallWrapper() {
-    if (mCall->voice_engine()) {
-      webrtc::VoiceEngine* voice_engine = mCall->voice_engine();
-      mCall.reset(nullptr);  // Force it to release the voice engine reference
-      // Delete() must be after all refs are released
-      webrtc::VoiceEngine::Delete(voice_engine);
-    } else {
-      // Must ensure it's destroyed *before* the EventLog!
-      mCall.reset(nullptr);
-    }
+    /*
+        if (mCall->voice_engine()) {
+          webrtc::VoiceEngine* voice_engine = mCall->voice_engine();
+          mCall.reset(nullptr);  // Force it to release the voice engine
+       reference
+          // Delete() must be after all refs are released
+          webrtc::VoiceEngine::Delete(voice_engine);
+        } else {
+          // Must ensure it's destroyed *before* the EventLog!
+          mCall.reset(nullptr);
+        }
+    */
   }
 
   bool UnsetRemoteSSRC(uint32_t ssrc) {
@@ -327,22 +330,23 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
  private:
   explicit WebRtcCallWrapper(const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : mTimestampMaker(aTimestampMaker) {
-    auto voice_engine = webrtc::VoiceEngine::Create();
-    mDecoderFactory = webrtc::CreateBuiltinAudioDecoderFactory();
+    /*
+        auto voice_engine = webrtc::VoiceEngine::Create();
+        mDecoderFactory = webrtc::CreateBuiltinAudioDecoderFactory();
 
-    webrtc::AudioState::Config audio_state_config;
-    audio_state_config.voice_engine = voice_engine;
-    audio_state_config.audio_mixer = webrtc::AudioMixerImpl::Create();
-    audio_state_config.audio_processing = webrtc::AudioProcessing::Create();
-    mFakeAudioDeviceModule.reset(new webrtc::FakeAudioDeviceModule());
-    auto voe_base = webrtc::VoEBase::GetInterface(voice_engine);
-    voe_base->Init(mFakeAudioDeviceModule.get(),
-                   audio_state_config.audio_processing.get(), mDecoderFactory);
-    voe_base->Release();
-    auto audio_state = webrtc::AudioState::Create(audio_state_config);
-    webrtc::Call::Config config(&mEventLog);
-    config.audio_state = audio_state;
-    mCall.reset(webrtc::Call::Create(config));
+        webrtc::AudioState::Config audio_state_config;
+        audio_state_config.voice_engine = voice_engine;
+        audio_state_config.audio_mixer = webrtc::AudioMixerImpl::Create();
+        audio_state_config.audio_processing = webrtc::AudioProcessing::Create();
+        mFakeAudioDeviceModule.reset(new webrtc::FakeAudioDeviceModule());
+        auto voe_base = webrtc::VoEBase::GetInterface(voice_engine);
+        voe_base->Init(mFakeAudioDeviceModule.get(),
+                       audio_state_config.audio_processing.get(),
+       mDecoderFactory); voe_base->Release(); auto audio_state =
+       webrtc::AudioState::Create(audio_state_config); webrtc::Call::Config
+       config(&mEventLog); config.audio_state = audio_state;
+        mCall.reset(webrtc::Call::Create(config));
+    */
   }
 
   explicit WebRtcCallWrapper(UniquePtr<webrtc::Call>&& aCall) {
@@ -352,7 +356,7 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 
   UniquePtr<webrtc::Call> mCall;
   UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDeviceModule;
-  webrtc::RtcEventLogNullImpl mEventLog;
+  webrtc::RtcEventLogNull mEventLog;
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
   std::set<MediaSessionConduit*> mConduits;
