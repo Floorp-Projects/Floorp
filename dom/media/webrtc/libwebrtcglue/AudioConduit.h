@@ -16,11 +16,7 @@
 #include "RtpPacketQueue.h"
 
 // Audio Engine Includes
-#include "webrtc/common_types.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_packet_observer.h"
-#include "webrtc/modules/audio_device/include/fake_audio_device.h"
-#include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/voice_engine/channel_proxy.h"
+#include "modules/audio_device/include/fake_audio_device.h"
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
@@ -35,9 +31,8 @@ DOMHighResTimeStamp NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
  *  - media-source and target to external transport
  */
 class WebrtcAudioConduit : public AudioSessionConduit,
-                           public webrtc::Transport,
-                           public webrtc::RtcpEventObserver,
-                           public webrtc::RtpPacketObserver {
+                           public webrtc::Transport {
+  // public webrtc::RtpPacketObserver {
  public:
   // VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
@@ -206,9 +201,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   virtual MediaConduitErrorCode Init();
 
   int GetRecvChannel() { return mRecvChannel; }
-  webrtc::VoiceEngine* GetVoiceEngine() {
-    return mCall->Call()->voice_engine();
-  }
 
   /* Set Local SSRC list.
    * Note: Until the refactor of the VoE into the call API is complete
@@ -247,13 +239,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                       int attenuationDb) override;
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
-
-  void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
-                   const int64_t aTimestamp, const uint32_t aJitter) override;
-
-  void OnRtcpBye() override;
-  void OnRtcpTimeout() override;
-
+  /*
+    void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
+                     const int64_t aTimestamp, const uint32_t aJitter) override;
+  */
   void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
 
   // test-only: inserts fake CSRCs and audio level data
@@ -266,19 +255,19 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool IsSamplingFreqSupported(int freq) const override;
 
  protected:
-  // These are protected so they can be accessed by unit tests
+  /*
+    // These are protected so they can be accessed by unit tests
+    // Written only on main thread. Accessed from audio thread.
+    // Accessed from mStsThread during stats calls.
+    // This is safe, provided audio and stats calls stop before we
+    // destroy the AudioConduit.
+    std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy = nullptr;
 
-  // Written only on main thread. Accessed from audio thread.
-  // Accessed from mStsThread during stats calls.
-  // This is safe, provided audio and stats calls stop before we
-  // destroy the AudioConduit.
-  std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy = nullptr;
-
-  // Written only on main thread. Accessed from mStsThread during stats calls.
-  // This is safe, provided stats calls stop before we destroy the
-  // AudioConduit.
-  std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy = nullptr;
-
+    // Written only on main thread. Accessed from mStsThread during stats calls.
+    // This is safe, provided stats calls stop before we destroy the
+    // AudioConduit.
+    std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy = nullptr;
+  */
  private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
@@ -312,12 +301,12 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mReceiverTransport;
-
-  // Accessed from main thread and audio threads. Used to create and destroy
-  // channels and to send audio data. Access to channels is protected by
-  // locking in channel.cc.
-  ScopedCustomReleasePtr<webrtc::VoEBase> mPtrVoEBase;
-
+  /*
+    // Accessed from main thread and audio threads. Used to create and destroy
+    // channels and to send audio data. Access to channels is protected by
+    // locking in channel.cc.
+    ScopedCustomReleasePtr<webrtc::VoEBase> mPtrVoEBase;
+  */
   // Const so can be accessed on any thread. Most methods are called on
   // main thread.
   const RefPtr<WebRtcCallWrapper> mCall;
