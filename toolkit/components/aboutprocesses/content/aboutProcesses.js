@@ -271,12 +271,19 @@ var State = {
    */
   _getProcessDelta(cur, prev) {
     let windows = this._getDOMWindows(cur);
+    // Resident set size is the total memory used by the process, including shared memory.
+    // Resident unique size is the memory used by the process, without shared memory.
+    // Since all processes share memory with the parent process, we count the shared memory
+    // as part of the parent process (`"browser"`) rather than as part of the individual
+    // processes.
+    let totalRamSize =
+      cur.type == "browser" ? cur.residentSetSize : cur.residentUniqueSize;
     let result = {
       pid: cur.pid,
       childID: cur.childID,
       filename: cur.filename,
-      totalResidentUniqueSize: cur.residentUniqueSize,
-      deltaResidentUniqueSize: null,
+      totalRamSize,
+      deltaRamSize: null,
       totalCpuUser: cur.cpuUser,
       slopeCpuUser: null,
       totalCpuKernel: cur.cpuKernel,
@@ -328,8 +335,10 @@ var State = {
         return this._getThreadDelta(curThread, prevThread, deltaT);
       });
     }
-    result.deltaResidentUniqueSize =
-      cur.residentUniqueSize - prev.residentUniqueSize;
+    result.deltaRamSize =
+      cur.type == "browser"
+        ? cur.residentSetSize - prev.residentSetSize
+        : cur.residentUniqueSize - prev.residentUniqueSize;
     result.slopeCpuUser = (cur.cpuUser - prev.cpuUser) / deltaT;
     result.slopeCpuKernel = (cur.cpuKernel - prev.cpuKernel) / deltaT;
     result.slopeCpu = result.slopeCpuUser + result.slopeCpuKernel;
@@ -527,15 +536,15 @@ var View = {
     // Column: Resident size
     {
       let { formatedDelta, formatedValue } = this._formatMemoryAndDelta(
-        data.totalResidentUniqueSize,
-        data.deltaResidentUniqueSize
+        data.totalRamSize,
+        data.deltaRamSize
       );
       let content = formatedDelta
         ? `${formatedValue}${formatedDelta}`
         : formatedValue;
       this._addCell(row, {
         content,
-        classes: ["totalMemorySize"],
+        classes: ["totalRamSize"],
       });
     }
 
@@ -605,7 +614,7 @@ var View = {
     // Column: Resident size
     this._addCell(row, {
       content: "",
-      classes: ["totalMemorySize"],
+      classes: ["totalRamSize"],
     });
 
     // Column: CPU: User and Kernel
@@ -681,7 +690,7 @@ var View = {
     // Column: Resident size (empty)
     this._addCell(row, {
       content: "",
-      classes: ["totalResidentSize"],
+      classes: ["totalRamSize"],
     });
 
     // Column: CPU (empty)
@@ -745,7 +754,7 @@ var View = {
     // Column: Resident size (empty)
     this._addCell(row, {
       content: "",
-      classes: ["totalResidentSize"],
+      classes: ["totalRamSize"],
     });
 
     // Column: CPU: User and Kernel
@@ -1198,7 +1207,7 @@ var Control = {
           order = b.slopeCpu - a.slopeCpu;
           break;
         case "column-memory-resident":
-          order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
+          order = b.totalRamSize - a.totalRamSize;
           break;
         case null:
           // Default order: classify processes by group.
