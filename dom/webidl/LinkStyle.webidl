@@ -8,6 +8,6 @@
  */
 
 interface mixin LinkStyle {
-  [BinaryName="sheetForBindings"] readonly attribute StyleSheet? sheet;
+      readonly attribute StyleSheet? sheet;
 };
 

@@ -276,7 +276,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
       mPendingChildren(0),
       mSyncLoad(aSyncLoad),
       mIsNonDocumentSheet(false),
-      mIsChildSheet(aSheet->GetParentSheet()),
       mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
@@ -318,7 +317,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mPendingChildren(0),
       mSyncLoad(aParentData && aParentData->mSyncLoad),
       mIsNonDocumentSheet(aParentData && aParentData->mIsNonDocumentSheet),
-      mIsChildSheet(aSheet->GetParentSheet()),
       mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
@@ -343,7 +341,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
   MOZ_ASSERT(mTriggeringPrincipal);
   MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
              "Shouldn't use system principal for async loads");
-  MOZ_ASSERT_IF(aParentData, mIsChildSheet);
 }
 
 SheetLoadData::SheetLoadData(
@@ -361,7 +358,6 @@ SheetLoadData::SheetLoadData(
       mPendingChildren(0),
       mSyncLoad(aSyncLoad),
       mIsNonDocumentSheet(true),
-      mIsChildSheet(false),
       mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
@@ -386,7 +382,6 @@ SheetLoadData::SheetLoadData(
   MOZ_ASSERT(mLoader, "Must have a loader!");
   MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
              "Shouldn't use system principal for async loads");
-  MOZ_ASSERT(!aSheet->GetParentSheet(), "Shouldn't be used for child loads");
 }
 
 SheetLoadData::~SheetLoadData() {
@@ -443,11 +438,7 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
   RefPtr<SheetLoadData> kungFuDeathGrip(this);
   aThread->RemoveObserver(this);
 
-  // Now fire the event.
-  //
-  // NOTE(emilio): A bit weird that we fire the event even if the node is no
-  // longer in the tree, or the sheet that just loaded / errored is not the
-  // current node.sheet, but...
+  // Now fire the event
   nsCOMPtr<nsINode> node = mOwningNode;
   MOZ_ASSERT(node, "How did that happen???");
 
@@ -1043,14 +1034,20 @@ Loader::MediaMatched Loader::PrepareSheet(
  * 3) Sheets with linking elements are ordered based on document order
  *    as determined by CompareDocumentPosition.
  */
-void Loader::InsertSheetInTree(StyleSheet& aSheet, nsINode* aOwningNode) {
+void Loader::InsertSheetInTree(StyleSheet& aSheet,
+                               nsIContent* aLinkingContent) {
   LOG(("css::Loader::InsertSheetInTree"));
   MOZ_ASSERT(mDocument, "Must have a document to insert into");
-  MOZ_ASSERT(!aOwningNode || aOwningNode->IsInUncomposedDoc() ||
-                 aOwningNode->IsInShadowTree(),
+  MOZ_ASSERT(!aLinkingContent || aLinkingContent->IsInUncomposedDoc() ||
+                 aLinkingContent->IsInShadowTree(),
              "Why would we insert it anywhere?");
+
+  if (auto* linkStyle = LinkStyle::FromNodeOrNull(aLinkingContent)) {
+    linkStyle->SetStyleSheet(&aSheet);
+  }
+
   ShadowRoot* shadow =
-      aOwningNode ? aOwningNode->GetContainingShadow() : nullptr;
+      aLinkingContent ? aLinkingContent->GetContainingShadow() : nullptr;
 
   auto& target = shadow ? static_cast<DocumentOrShadowRoot&>(*shadow)
                         : static_cast<DocumentOrShadowRoot&>(*mDocument);
@@ -1070,7 +1067,7 @@ void Loader::InsertSheetInTree(StyleSheet& aSheet, nsINode* aOwningNode) {
   int32_t insertionPoint = sheetCount - 1;
   for (; insertionPoint >= 0; --insertionPoint) {
     nsINode* sheetOwner = target.SheetAt(insertionPoint)->GetOwnerNode();
-    if (sheetOwner && !aOwningNode) {
+    if (sheetOwner && !aLinkingContent) {
       // Keep moving; all sheets with a sheetOwner come after all
       // sheets without a linkingNode
       continue;
@@ -1082,11 +1079,11 @@ void Loader::InsertSheetInTree(StyleSheet& aSheet, nsINode* aOwningNode) {
       break;
     }
 
-    MOZ_ASSERT(aOwningNode != sheetOwner,
+    MOZ_ASSERT(aLinkingContent != sheetOwner,
                "Why do we still have our old sheet?");
 
     // Have to compare
-    if (nsContentUtils::PositionIsBefore(sheetOwner, aOwningNode)) {
+    if (nsContentUtils::PositionIsBefore(sheetOwner, aLinkingContent)) {
       // The current sheet comes before us, and it better be the first
       // such, because now we break
       break;
@@ -1698,12 +1695,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);
 
-  if (auto* linkStyle = LinkStyle::FromNodeOrNull(aInfo.mContent)) {
-    linkStyle->SetStyleSheet(sheet);
-  }
-  if (StaticPrefs::dom_expose_incomplete_stylesheets() || sheet->IsComplete()) {
-    InsertSheetInTree(*sheet, aInfo.mContent);
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   Completed completed;
   if (sheetFromCache) {
@@ -1801,12 +1793,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);
 
-  if (auto* linkStyle = LinkStyle::FromNodeOrNull(aInfo.mContent)) {
-    linkStyle->SetStyleSheet(sheet);
-  }
-  if (StaticPrefs::dom_expose_incomplete_stylesheets() || sheet->IsComplete()) {
-    InsertSheetInTree(*sheet, aInfo.mContent);
-  }
+  InsertSheetInTree(*sheet, aInfo.mContent);
 
   // We may get here with no content for Link: headers for example.
   MOZ_ASSERT(!aInfo.mContent || LinkStyle::FromNode(*aInfo.mContent),
