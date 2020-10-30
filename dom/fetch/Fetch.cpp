@@ -108,7 +108,23 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortSignalMainThread)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortSignalMainThread)
 
+class AbortSignalProxy;
+
 class WorkerSignalFollower final : public nsISupports {
+ public:
+  // This runnable propagates changes from the AbortSignalImpl on workers to the
+  // AbortSignalImpl on main-thread.
+  class AbortSignalProxyRunnable final : public Runnable {
+    RefPtr<AbortSignalProxy> mProxy;
+
+   public:
+    explicit AbortSignalProxyRunnable(AbortSignalProxy* aProxy)
+        : Runnable("dom::WorkerSignalFollower::AbortSignalProxyRunnable"),
+          mProxy(aProxy) {}
+
+    NS_IMETHOD Run() override;
+  };
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(WorkerSignalFollower)
@@ -146,19 +162,6 @@ class AbortSignalProxy final : public AbortFollower {
   // reflect the instantaneous is-aborted status of the worker thread's
   // AbortSignal.
   const bool mAborted;
-
-  // This runnable propagates changes from the AbortSignalImpl on workers to the
-  // AbortSignalImpl on main-thread.
-  class AbortSignalProxyRunnable final : public Runnable {
-    RefPtr<AbortSignalProxy> mProxy;
-
-   public:
-    explicit AbortSignalProxyRunnable(AbortSignalProxy* aProxy)
-        : Runnable("dom::AbortSignalProxy::AbortSignalProxyRunnable"),
-          mProxy(aProxy) {}
-
-    NS_IMETHOD Run() override;
-  };
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -204,7 +207,7 @@ class AbortSignalProxy final : public AbortFollower {
 
 NS_IMPL_ISUPPORTS0(AbortSignalProxy)
 
-NS_IMETHODIMP AbortSignalProxy::AbortSignalProxyRunnable::Run() {
+NS_IMETHODIMP WorkerSignalFollower::AbortSignalProxyRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
   AbortSignalImpl* signalImpl = mProxy->GetOrCreateSignalImplForMainThread();
   signalImpl->SignalAbort();
@@ -213,6 +216,8 @@ NS_IMETHODIMP AbortSignalProxy::AbortSignalProxyRunnable::Run() {
 
 void AbortSignalProxy::RunAbortAlgorithm() {
   MOZ_ASSERT(!NS_IsMainThread());
+  using AbortSignalProxyRunnable =
+      WorkerSignalFollower::AbortSignalProxyRunnable;
   RefPtr<AbortSignalProxyRunnable> runnable =
       new AbortSignalProxyRunnable(this);
   MainThreadEventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
