@@ -31,10 +31,15 @@ add_task(async function test() {
   );
   let startBookmarksLength = currentBookmarks.length;
 
-  let lastBookmark = currentBookmarks[currentBookmarks.length - 1];
+  // The destination element should be a non-folder bookmark
+  let destBookmarkItem = () =>
+    bookmarksToolbar.querySelector(
+      "#PlacesToolbarItems .bookmark-item:not([container])"
+    );
+
   await EventUtils.synthesizePlainDragAndDrop({
     srcElement: tab1,
-    destElement: lastBookmark,
+    destElement: destBookmarkItem(),
   });
   await TestUtils.waitForCondition(
     () => currentBookmarks.length == startBookmarksLength + 2,
@@ -50,7 +55,7 @@ add_task(async function test() {
   startBookmarksLength = currentBookmarks.length;
   await EventUtils.synthesizePlainDragAndDrop({
     srcElement: tab3,
-    destElement: lastBookmark,
+    destElement: destBookmarkItem(),
   });
   await TestUtils.waitForCondition(
     () => currentBookmarks.length == startBookmarksLength + 1,
