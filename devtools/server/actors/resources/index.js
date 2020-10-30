@@ -15,6 +15,7 @@ const TYPES = {
   LOCAL_STORAGE: "local-storage",
   PLATFORM_MESSAGE: "platform-message",
   NETWORK_EVENT: "network-event",
+  SESSION_STORAGE: "session-storage",
   STYLESHEET: "stylesheet",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
 };
@@ -46,10 +47,13 @@ const FrameTargetResources = augmentResourceDictionary({
     path: "devtools/server/actors/resources/error-messages",
   },
   [TYPES.LOCAL_STORAGE]: {
-    path: "devtools/server/actors/resources/local-storage",
+    path: "devtools/server/actors/resources/storage-local-storage",
   },
   [TYPES.PLATFORM_MESSAGE]: {
     path: "devtools/server/actors/resources/platform-messages",
+  },
+  [TYPES.SESSION_STORAGE]: {
+    path: "devtools/server/actors/resources/storage-session-storage",
   },
   [TYPES.STYLESHEET]: {
     path: "devtools/server/actors/resources/stylesheets",
