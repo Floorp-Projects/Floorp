@@ -677,6 +677,14 @@ class BaseBootstrapper(object):
             )
             print(self.INSTALL_PYTHON_GUIDANCE)
 
+    def warn_if_pythonpath_is_set(self):
+        if "PYTHONPATH" in os.environ:
+            print(
+                "WARNING: Your PYTHONPATH environment variable is set. This can "
+                "cause flaky installations of the requirements, and other unexpected "
+                "issues with mach. It is recommended to unset this variable."
+            )
+
     def is_nasm_modern(self):
         nasm = which("nasm")
         if not nasm:

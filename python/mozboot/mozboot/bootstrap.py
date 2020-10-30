@@ -388,6 +388,8 @@ class Bootstrapper(object):
         self.instance.application = application
         self.instance.artifact_mode = "artifact_mode" in application
 
+        self.instance.warn_if_pythonpath_is_set()
+
         # This doesn't affect any system state and we'd like to bail out as soon
         # as possible if this check fails.
         self.instance.ensure_python_modern()
