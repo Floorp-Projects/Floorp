@@ -846,6 +846,8 @@ const ResourceTransformers = {
   [ResourceWatcher.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
   [ResourceWatcher.TYPES
+    .INDEXED_DB]: require("devtools/shared/resources/transformers/storage-indexed-db.js"),
+  [ResourceWatcher.TYPES
     .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
     .ROOT_NODE]: require("devtools/shared/resources/transformers/root-node"),
