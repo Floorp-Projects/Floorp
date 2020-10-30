@@ -941,7 +941,8 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
   CGScrollEventUnit units = (aAdditionalFlags & nsIDOMWindowUtils::MOUSESCROLL_SCROLL_LINES)
                                 ? kCGScrollEventUnitLine
                                 : kCGScrollEventUnitPixel;
-  CGEventRef cgEvent = CGEventCreateScrollWheelEvent(NULL, units, 3, aDeltaY, aDeltaX, aDeltaZ);
+  CGEventRef cgEvent = CGEventCreateScrollWheelEvent(NULL, units, 3, (int32_t)aDeltaY,
+                                                     (int32_t)aDeltaX, (int32_t)aDeltaZ);
   if (!cgEvent) {
     return NS_ERROR_FAILURE;
   }
