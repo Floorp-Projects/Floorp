@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/glue/Debug.h"
+#include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
@@ -721,6 +722,8 @@ bool LoadGdi32AndUser32Procedures() {
 }
 
 void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
+  const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
+
   HKEY regKey;
   if (!IsWin10OrLater() || !OpenPreXULSkeletonUIRegKey(regKey)) {
     return;
@@ -887,6 +890,10 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
     sPreXULSKeletonUIAnimationThread = ::CreateThread(
         nullptr, 256 * 1024, AnimateSkeletonUI, nullptr, 0, nullptr);
   }
+
+  BASE_PROFILER_MARKER_UNTYPED(
+      "CreatePreXULSkeletonUI", OTHER,
+      MarkerTiming::IntervalUntilNowFrom(skeletonStart));
 }
 
 bool WasPreXULSkeletonUIMaximized() { return sMaximized; }
