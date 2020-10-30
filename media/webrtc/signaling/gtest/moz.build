@@ -45,7 +45,7 @@ if (
         "mediapipeline_unittest.cpp",
         "rtpsources_unittests.cpp",
         "sdp_unittests.cpp",
-        "videoconduit_unittests.cpp",
+#        "videoconduit_unittests.cpp",
     ]
 
     FINAL_LIBRARY = "xul-gtest"
