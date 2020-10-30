@@ -110,19 +110,18 @@ class UrlbarInput {
     this._suppressPrimaryAdjustment = false;
     this._untrimmedValue = "";
 
-    // Search modes are per browser and are stored in this map.  For a given
-    // browser, search mode can be in preview mode, non-preview mode, or both.
+    // Search modes are per browser and are stored in this map.  For a
+    // browser, search mode can be in preview mode, confirmed, or both.
     // Typically, search mode is entered in preview mode with a particular
-    // source and is promoted to non-preview mode with the same source once a
-    // query starts.  It's also possible for a non-preview mode to be replaced
-    // with a preview mode with a different source, and in those cases, we need
-    // to be able to restore the non-preview mode when preview mode is exited.
-    // In addition, only non-preview mode should be restored across sessions.
-    // We therefore need to keep track of both the current non-preview and
-    // preview modes, per browser.
+    // source and is confirmed with the same source once a query starts.  It's
+    // also possible for a confirmed search mode to be replaced with a preview
+    // mode with a different source, and in those cases, we need to re-confirm
+    // search mode when preview mode is exited. In addition, only confirmed
+    // search modes should be restored across sessions. We therefore need to
+    // keep track of both the current confirmed and preview modes, per browser.
     //
     // For each browser with a search mode, this maps the browser to an object
-    // like this: { preview, nonPreview }.  Both `preview` and `nonPreview` are
+    // like this: { preview, confirmed }.  Both `preview` and `confirmed` are
     // search mode objects; see the setSearchMode documentation.  Either one may
     // be undefined if that particular mode is not active for the browser.
     this._searchModesByBrowser = new WeakMap();
@@ -678,17 +677,17 @@ class UrlbarInput {
 
     // When update2 is enabled and a one-off is selected, we restyle URL
     // heuristic results to look like search results. In the unlikely event that
-    // they are clicked, we promote search mode instead of navigating to the
+    // they are clicked, we confirm search mode instead of navigating to the
     // URL. This was agreed on as a compromise between consistent UX and
     // engineering effort. See review discussion at bug 1667766.
-    let urlResultWillPromoteSearchMode =
+    let urlResultWillConfirmSearchMode =
       this.searchMode &&
       result.heuristic &&
       result.type == UrlbarUtils.RESULT_TYPE.URL &&
       this.view.oneOffSearchButtons.selectedButton;
 
     let selIndex = result.rowIndex;
-    if (!result.payload.keywordOffer && !urlResultWillPromoteSearchMode) {
+    if (!result.payload.keywordOffer && !urlResultWillConfirmSearchMode) {
       this.view.close(/* elementPicked */ true);
     }
 
@@ -716,8 +715,8 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL: {
-        if (urlResultWillPromoteSearchMode) {
-          this.promoteSearchMode();
+        if (urlResultWillConfirmSearchMode) {
+          this.confirmSearchMode();
           this.search(this.value);
           return;
         }
@@ -1065,7 +1064,7 @@ class UrlbarInput {
       // Only preview search mode if the result is selected.
       if (this.view.resultIsSelected(result)) {
         // Not starting a query means we will only preview search mode.
-        enteredSearchMode = this.maybePromoteResultToSearchMode({
+        enteredSearchMode = this.maybeConfirmSearchModeFromResult({
           result,
           checkValue: false,
           startQuery: false,
@@ -1169,7 +1168,7 @@ class UrlbarInput {
       firstResult.heuristic &&
       firstResult.payload.keyword &&
       !firstResult.payload.keywordOffer &&
-      this.maybePromoteResultToSearchMode({
+      this.maybeConfirmSearchModeFromResult({
         result: firstResult,
         entry: "typed",
         checkValue: false,
@@ -1265,7 +1264,7 @@ class UrlbarInput {
     };
 
     if (this.searchMode) {
-      this.promoteSearchMode();
+      this.confirmSearchMode();
       options.searchMode = this.searchMode;
       if (this.searchMode.source) {
         options.sources = [this.searchMode.source];
@@ -1384,24 +1383,24 @@ class UrlbarInput {
    *
    * @param {Browser} browser
    *   The search mode for this browser will be returned.
-   * @param {boolean} [nonPreviewOnly]
-   *   Normally, if the browser has both preview and non-preview modes, preview
+   * @param {boolean} [confirmedOnly]
+   *   Normally, if the browser has both preview and confirmed modes, preview
    *   mode will be returned since it takes precedence.  If this argument is
-   *   true, then only non-preview mode will be returned, or null if non-preview
-   *   mode isn't active.
+   *   true, then only confirmed search mode will be returned, or null if
+   *   search mode hasn't been confirmed.
    * @returns {object}
    *   A search mode object.  See setSearchMode documentation.  If the browser
    *   is not in search mode, then null is returned.
    */
-  getSearchMode(browser, nonPreviewOnly = false) {
+  getSearchMode(browser, confirmedOnly = false) {
     let modes = this._searchModesByBrowser.get(browser);
 
     // Return copies so that callers don't modify the stored values.
-    if (!nonPreviewOnly && modes?.preview) {
+    if (!confirmedOnly && modes?.preview) {
       return { ...modes.preview };
     }
-    if (modes?.nonPreview) {
-      return { ...modes.nonPreview };
+    if (modes?.confirmed) {
+      return { ...modes.confirmed };
     }
     return null;
   }
@@ -1484,7 +1483,7 @@ class UrlbarInput {
       // Add the search mode to the map.
       if (!searchMode.isPreview) {
         this._searchModesByBrowser.set(browser, {
-          nonPreview: searchMode,
+          confirmed: searchMode,
         });
       } else {
         let modes = this._searchModesByBrowser.get(browser) || {};
@@ -1515,7 +1514,7 @@ class UrlbarInput {
     let modes = this._searchModesByBrowser.get(
       this.window.gBrowser.selectedBrowser
     );
-    this.searchMode = modes?.nonPreview;
+    this.searchMode = modes?.confirmed;
   }
 
   /**
@@ -1539,9 +1538,9 @@ class UrlbarInput {
   }
 
   /**
-   * Promotes the current search mode from preview mode to full search mode.
+   * Confirms the current search mode.
    */
-  promoteSearchMode() {
+  confirmSearchMode() {
     let searchMode = this.searchMode;
     if (searchMode?.isPreview) {
       searchMode.isPreview = false;
@@ -1721,13 +1720,13 @@ class UrlbarInput {
   }
 
   /**
-   * Enters search mode and starts a new search if appropriate for the given
+   * Confirms search mode and starts a new search if appropriate for the given
    * result.  See also _searchModeForResult.
    *
    * @param {string} entry
    *   The search mode entry point. See setSearchMode documentation for details.
    * @param {UrlbarResult} [result]
-   *   The result to promote. Defaults to the currently selected result.
+   *   The result to confirm. Defaults to the currently selected result.
    * @param {boolean} [checkValue]
    *   If true, the trimmed input value must equal the result's keyword in order
    *   to enter search mode.
@@ -1736,7 +1735,7 @@ class UrlbarInput {
    * @returns {boolean}
    *   True if we entered search mode and false if not.
    */
-  maybePromoteResultToSearchMode({
+  maybeConfirmSearchModeFromResult({
     entry,
     result = this._resultForCurrentValue,
     checkValue = true,
