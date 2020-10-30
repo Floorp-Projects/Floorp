@@ -27,8 +27,6 @@ loader.lazyGetter(
   () => Cu.getGlobalForObject(ExtensionProcessScript).WebExtensionPolicy
 );
 
-const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
-const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 const EXTENSION_STORAGE_ENABLED_PREF =
   "devtools.storage.extensionStorage.enabled";
 
@@ -2416,7 +2414,12 @@ StorageActors.createActor(
       // the this.hosts getter. Because this.hosts is a property on the default
       // storage actor and inherited by all storage actors we have to do it this
       // way.
-      this._internalHosts = await this.getInternalHosts();
+      // Only look up internal hosts if we are in the browser toolbox
+      const isBrowserToolbox = this.storageActor.parentActor.isRootActor;
+
+      this._internalHosts = isBrowserToolbox
+        ? await this.getInternalHosts()
+        : [];
 
       return this.hosts;
     },
@@ -2812,14 +2815,6 @@ var indexedDBHelpers = {
    * the browser.
    */
   async getInternalHosts() {
-    // Return an empty array if the browser toolbox is not enabled.
-    if (
-      !Services.prefs.getBoolPref(CHROME_ENABLED_PREF) ||
-      !Services.prefs.getBoolPref(REMOTE_ENABLED_PREF)
-    ) {
-      return this.backToChild("getInternalHosts", []);
-    }
-
     const profileDir = OS.Constants.Path.profileDir;
     const storagePath = OS.Path.join(profileDir, "storage", "permanent");
     const iterator = new OS.File.DirectoryIterator(storagePath);
