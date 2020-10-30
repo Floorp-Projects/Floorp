@@ -227,54 +227,67 @@ class ObjectOpResult {
 };
 
 class PropertyResult {
-  union {
-    js::Shape* shape_;
-    uintptr_t bits_;
+  enum class Kind : uint8_t {
+    NotFound,
+    NativeProperty,
+    NonNativeProperty,
+    DenseElement,
+    TypedArrayElement,
   };
-
-  static const uintptr_t NotFound = 0;
-  static const uintptr_t NonNativeProperty = 1;
-  static const uintptr_t DenseOrTypedArrayElement = 1;
+  union {
+    // Set if kind is NativeProperty.
+    js::Shape* shape_;
+    // Set if kind is DenseElement.
+    uint32_t denseIndex_;
+    // Set if kind is TypedArrayElement.
+    size_t typedArrayIndex_;
+  };
+  Kind kind_ = Kind::NotFound;
 
  public:
-  PropertyResult() : bits_(NotFound) {}
-
-  explicit PropertyResult(js::Shape* propertyShape) : shape_(propertyShape) {
-    MOZ_ASSERT(!isFound() || isNativeProperty());
-  }
+  PropertyResult() = default;
 
   explicit operator bool() const { return isFound(); }
 
-  bool isFound() const { return bits_ != NotFound; }
-
-  bool isNonNativeProperty() const { return bits_ == NonNativeProperty; }
-
-  bool isDenseOrTypedArrayElement() const {
-    return bits_ == DenseOrTypedArrayElement;
-  }
-
-  bool isNativeProperty() const { return isFound() && !isNonNativeProperty(); }
-
-  js::Shape* maybeShape() const {
-    MOZ_ASSERT(!isNonNativeProperty());
-    return isFound() ? shape_ : nullptr;
-  }
+  bool isFound() const { return kind_ != Kind::NotFound; }
+  bool isNonNativeProperty() const { return kind_ == Kind::NonNativeProperty; }
+  bool isDenseElement() const { return kind_ == Kind::DenseElement; }
+  bool isTypedArrayElement() const { return kind_ == Kind::TypedArrayElement; }
+  bool isNativeProperty() const { return kind_ == Kind::NativeProperty; }
 
   js::Shape* shape() const {
     MOZ_ASSERT(isNativeProperty());
     return shape_;
   }
 
-  void setNotFound() { bits_ = NotFound; }
-
-  void setNativeProperty(js::Shape* propertyShape) {
-    shape_ = propertyShape;
-    MOZ_ASSERT(isNativeProperty());
+  uint32_t denseElementIndex() const {
+    MOZ_ASSERT(isDenseElement());
+    return denseIndex_;
   }
 
-  void setNonNativeProperty() { bits_ = NonNativeProperty; }
+  size_t typedArrayElementIndex() const {
+    MOZ_ASSERT(isTypedArrayElement());
+    return typedArrayIndex_;
+  }
 
-  void setDenseOrTypedArrayElement() { bits_ = DenseOrTypedArrayElement; }
+  void setNotFound() { kind_ = Kind::NotFound; }
+
+  void setNativeProperty(js::Shape* propertyShape) {
+    kind_ = Kind::NativeProperty;
+    shape_ = propertyShape;
+  }
+
+  void setNonNativeProperty() { kind_ = Kind::NonNativeProperty; }
+
+  void setDenseElement(uint32_t index) {
+    kind_ = Kind::DenseElement;
+    denseIndex_ = index;
+  }
+
+  void setTypedArrayElement(size_t index) {
+    kind_ = Kind::TypedArrayElement;
+    typedArrayIndex_ = index;
+  }
 
   void trace(JSTracer* trc);
 };
@@ -292,14 +305,15 @@ class WrappedPtrOperations<JS::PropertyResult, Wrapper> {
  public:
   bool isFound() const { return value().isFound(); }
   explicit operator bool() const { return bool(value()); }
-  js::Shape* maybeShape() const { return value().maybeShape(); }
   js::Shape* shape() const { return value().shape(); }
+  uint32_t denseElementIndex() const { return value().denseElementIndex(); }
+  size_t typedArrayElementIndex() const {
+    return value().typedArrayElementIndex();
+  }
   bool isNativeProperty() const { return value().isNativeProperty(); }
   bool isNonNativeProperty() const { return value().isNonNativeProperty(); }
-  bool isDenseOrTypedArrayElement() const {
-    return value().isDenseOrTypedArrayElement();
-  }
-  js::Shape* asTaggedShape() const { return value().asTaggedShape(); }
+  bool isDenseElement() const { return value().isDenseElement(); }
+  bool isTypedArrayElement() const { return value().isTypedArrayElement(); }
 };
 
 template <class Wrapper>
@@ -311,7 +325,10 @@ class MutableWrappedPtrOperations<JS::PropertyResult, Wrapper>
   void setNotFound() { value().setNotFound(); }
   void setNativeProperty(js::Shape* shape) { value().setNativeProperty(shape); }
   void setNonNativeProperty() { value().setNonNativeProperty(); }
-  void setDenseOrTypedArrayElement() { value().setDenseOrTypedArrayElement(); }
+  void setDenseElement(uint32_t index) { value().setDenseElement(index); }
+  void setTypedArrayElement(size_t index) {
+    value().setTypedArrayElement(index);
+  }
 };
 
 }  // namespace js
