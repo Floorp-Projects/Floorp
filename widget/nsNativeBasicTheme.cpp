@@ -726,7 +726,7 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   const CSSCoord thumbBorderWidth = 2.0f;
   auto [thumbColor, thumbBorderColor] = ComputeRangeThumbColors(aState);
 
-  PaintStrokedEllipse(aDrawTarget, aRect, thumbColor, thumbBorderColor,
+  PaintStrokedEllipse(aDrawTarget, thumbRect, thumbColor, thumbBorderColor,
                       thumbBorderWidth, aDpiRatio);
 
   // TODO: Paint thumb shadow.
