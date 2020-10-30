@@ -1469,7 +1469,8 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       break;
     case eHyperTextType:
       if (!aContent->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd,
-                                         nsGkAtoms::div)) {
+                                         nsGkAtoms::div, nsGkAtoms::thead,
+                                         nsGkAtoms::tfoot, nsGkAtoms::tbody)) {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
       }
       break;
