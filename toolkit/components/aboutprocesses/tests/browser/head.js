@@ -277,10 +277,6 @@ function testMemory(string, total, delta, assumptions) {
     delta >= 0,
     `Delta has the right sign: ${computedDelta} vs ${delta}`
   );
-  Assert.ok(
-    isCloseEnough(Math.abs(computedDelta), Math.abs(delta)),
-    `The displayed approximation of the delta amount of memory is reasonable: ${computedDelta} vs ${delta}`
-  );
 }
 
 function extractProcessDetails(row) {
@@ -614,6 +610,11 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         threadRow && threadRow.classList.contains("thread");
         threadRow = threadRow.nextSibling
       ) {
+        await TestUtils.waitForCondition(
+          () =>
+            threadRow.children.length >= 3 && threadRow.children[2].textContent,
+          "The thread row should be populated"
+        );
         let children = threadRow.children;
         let cpuContent = children[2].textContent;
         let tidContent = document.l10n.getAttributes(children[0].children[0])
