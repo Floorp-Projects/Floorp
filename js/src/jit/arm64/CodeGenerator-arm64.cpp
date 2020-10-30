@@ -693,12 +693,6 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
   }
 }
 
-void CodeGeneratorARM64::modICommon(MMod* mir, Register lhs, Register rhs,
-                                    Register output, LSnapshot* snapshot,
-                                    Label& done) {
-  MOZ_CRASH("CodeGeneratorARM64::modICommon");
-}
-
 void CodeGenerator::visitModI(LModI* ins) {
   if (gen->compilingWasm()) {
     MOZ_CRASH("visitModI while compilingWasm");
@@ -1516,14 +1510,6 @@ void CodeGenerator::visitNotF(LNotF* ins) {
   // If the input was NaN, output must now be zero, so it can be incremented.
   // The instruction is read: "output = if NoOverflow then output else 0+1".
   masm.Csinc(output, output, ZeroRegister32, Assembler::NoOverflow);
-}
-
-void CodeGeneratorARM64::storeElementTyped(const LAllocation* value,
-                                           MIRType valueType,
-                                           MIRType elementType,
-                                           Register elements,
-                                           const LAllocation* index) {
-  MOZ_CRASH("CodeGeneratorARM64::storeElementTyped");
 }
 
 void CodeGeneratorARM64::generateInvalidateEpilogue() {
