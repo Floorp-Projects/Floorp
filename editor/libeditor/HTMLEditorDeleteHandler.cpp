@@ -1229,6 +1229,12 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
                     caretPoint)
               : wsRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                     caretPoint);
+      if (scanFromCaretPointResult.Failed()) {
+        NS_WARNING(
+            "WSRunScanner::Scan(Next|Previous)VisibleNodeOrBlockBoundaryFrom() "
+            "failed");
+        return NS_ERROR_FAILURE;
+      }
       if (!scanFromCaretPointResult.GetContent()) {
         return NS_SUCCESS_DOM_NO_OPERATION;
       }
@@ -1498,6 +1504,12 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                     caretPoint.ref())
               : wsRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                     caretPoint.ref());
+      if (scanFromCaretPointResult.Failed()) {
+        NS_WARNING(
+            "WSRunScanner::Scan(Next|Previous)VisibleNodeOrBlockBoundaryFrom() "
+            "failed");
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
       if (!scanFromCaretPointResult.GetContent()) {
         return EditActionCanceled();
       }
@@ -1557,6 +1569,12 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                     : wsRunScannerAtCaret
                           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                               caretPoint.ref());
+            if (scanFromCaretPointResult.Failed()) {
+              NS_WARNING(
+                  "WSRunScanner::Scan(Next|Previous)"
+                  "VisibleNodeOrBlockBoundaryFrom() failed");
+              return EditActionResult(NS_ERROR_FAILURE);
+            }
             if (scanFromCaretPointResult.ReachedBRElement() &&
                 !aHTMLEditor.IsVisibleBRElement(
                     scanFromCaretPointResult.BRElementPtr())) {
@@ -2139,6 +2157,10 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteHRElement(
 
   WSScanResult forwardScanFromCaretResult =
       aWSRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(aCaretPoint);
+  if (forwardScanFromCaretResult.Failed()) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+    return NS_ERROR_FAILURE;
+  }
   if (!forwardScanFromCaretResult.ReachedBRElement()) {
     // Restore original caret position if we won't delete anyting.
     nsresult rv = aRangesToDelete.Collapse(aCaretPoint);
@@ -2209,6 +2231,10 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
 
   WSScanResult forwardScanFromCaretResult =
       aWSRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(aCaretPoint);
+  if (forwardScanFromCaretResult.Failed()) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
   if (!forwardScanFromCaretResult.ReachedBRElement()) {
     return EditActionHandled();
   }
@@ -3578,6 +3604,10 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
   // Next, check there is visible contents after the point in current block.
   WSScanResult forwardScanFromPointResult =
       wsScannerForPoint.ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
+  if (forwardScanFromPointResult.Failed()) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+    return NS_ERROR_FAILURE;
+  }
   if (forwardScanFromPointResult.ReachedBRElement()) {
     // XXX In my understanding, this is odd.  The end reason may not be
     //     same as the reached <br> element because the equality is
@@ -3593,10 +3623,15 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
     if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
-      if (!WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-               aHTMLEditor, EditorRawDOMPoint::After(
-                                *wsScannerForPoint.GetEndReasonContent()))
-               .ReachedCurrentBlockBoundary()) {
+      WSScanResult scanResult =
+          WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+              aHTMLEditor, EditorRawDOMPoint::After(
+                               *wsScannerForPoint.GetEndReasonContent()));
+      if (scanResult.Failed()) {
+        NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
+        return NS_ERROR_FAILURE;
+      }
+      if (!scanResult.ReachedCurrentBlockBoundary()) {
         // If we couldn't reach the block's end after the invisible <br>,
         // that means that there is visible content.
         return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
