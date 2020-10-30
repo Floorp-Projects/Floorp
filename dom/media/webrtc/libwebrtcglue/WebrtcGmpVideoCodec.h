@@ -44,6 +44,7 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
+#include "api/video/video_frame_type.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 
 #include "gmp-video-host.h"
@@ -126,17 +127,12 @@ class GMPDecodeData {
         mRenderTimeMs(aRenderTimeMs) {
     // We want to use this for queuing, and the calling code recycles the
     // buffer on return from Decode()
-    MOZ_RELEASE_ASSERT(aInputImage._length <
+    MOZ_RELEASE_ASSERT(aInputImage.size() <
                        (std::numeric_limits<size_t>::max() >> 1));
-    mImage._length = aInputImage._length;
-    mImage._size =
-        aInputImage._length +
-        webrtc::EncodedImage::GetBufferPaddingBytes(webrtc::kVideoCodecH264);
-    mImage._buffer = new uint8_t[mImage._size];
-    memcpy(mImage._buffer, aInputImage._buffer, aInputImage._length);
+    mImage = aInputImage;
   }
 
-  ~GMPDecodeData() { delete[] mImage._buffer; }
+  ~GMPDecodeData() = default;
 
   webrtc::EncodedImage mImage;
   bool mMissingFrames;
@@ -155,9 +151,10 @@ class RefCountedWebrtcVideoEncoder {
                              int32_t aNumberOfCores,
                              size_t aMaxPayloadSize) = 0;
 
-  virtual int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                         const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::FrameType>* aFrameTypes) = 0;
+  virtual int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) = 0;
 
   virtual int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) = 0;
@@ -184,9 +181,10 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                      int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
 
-  int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override;
+  int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) override;
@@ -251,7 +249,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
 
   static void Encode_g(const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
                        webrtc::VideoFrame aInputImage,
-                       std::vector<webrtc::FrameType> aFrameTypes);
+                       std::vector<webrtc::VideoFrameType> aFrameTypes);
   void RegetEncoderForResolutionChange(
       uint32_t aWidth, uint32_t aHeight,
       const RefPtr<GmpInitDoneRunnable>& aInitDone);
@@ -325,15 +323,16 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
   uint64_t PluginID() const override { return mEncoderImpl->PluginID(); }
 
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores, size_t aMaxPayloadSize) override {
-    return mEncoderImpl->InitEncode(aCodecSettings, aNumberOfCores,
-                                    aMaxPayloadSize);
+                     const WebrtcVideoEncoder::Settings& aSettings) override {
+    // return mEncoderImpl->InitEncode(aCodecSettings, aSettings);
+    return 0;
   }
 
-  int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override {
-    return mEncoderImpl->Encode(aInputImage, aCodecSpecificInfo, aFrameTypes);
+  int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override {
+    // return mEncoderImpl->Encode(aInputImage, aFrameTypes);
+    return 0;
   }
 
   int32_t RegisterEncodeCompleteCallback(
@@ -343,12 +342,8 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 
   int32_t Release() override { return mEncoderImpl->Shutdown(); }
 
-  int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRTT) override {
-    return mEncoderImpl->SetChannelParameters(aPacketLoss, aRTT);
-  }
-
-  int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override {
-    return mEncoderImpl->SetRates(aNewBitRate, aFrameRate);
+  void SetRates(const RateControlParameters& aParameters) override {
+    // return mEncoderImpl->SetRates(aParameters);
   }
 
  private:
@@ -367,10 +362,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores);
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
-                         bool aMissingFrames,
-                         const webrtc::RTPFragmentationHeader* aFragmentation,
-                         const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         int64_t aRenderTimeMs);
+                         bool aMissingFrames, int64_t aRenderTimeMs);
   virtual int32_t RegisterDecodeCompleteCallback(
       webrtc::DecodedImageCallback* aCallback);
 
@@ -469,11 +461,12 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
   }
 
   int32_t Decode(const webrtc::EncodedImage& aInputImage, bool aMissingFrames,
-                 const webrtc::RTPFragmentationHeader* aFragmentation,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
                  int64_t aRenderTimeMs) override {
-    return mDecoderImpl->Decode(aInputImage, aMissingFrames, aFragmentation,
-                                aCodecSpecificInfo, aRenderTimeMs);
+    /*
+        return mDecoderImpl->Decode(aInputImage, aMissingFrames, aFragmentation,
+                                    aCodecSpecificInfo, aRenderTimeMs);
+    */
+    return 0;
   }
 
   int32_t RegisterDecodeCompleteCallback(
