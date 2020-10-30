@@ -134,8 +134,6 @@ class ContentChild final : public PContentChild,
 
   void GetProcessName(nsACString& aName) const;
 
-  void LaunchRDDProcess();
-
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   void GetProfileDir(nsIFile** aProfileDir) const {
     *aProfileDir = mProfileDir;
