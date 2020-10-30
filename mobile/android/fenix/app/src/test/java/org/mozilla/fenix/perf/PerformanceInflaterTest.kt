@@ -26,7 +26,8 @@ class PerformanceInflaterTest {
 
     private val layoutsNotToTest = setOf(
         "fragment_browser",
-        "fragment_add_on_internal_settings"
+        "fragment_add_on_internal_settings",
+        "activity_privacy_content_display"
     )
 
     @Before

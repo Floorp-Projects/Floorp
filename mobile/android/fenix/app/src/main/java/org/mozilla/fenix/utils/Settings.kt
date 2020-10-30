@@ -252,6 +252,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val shouldShowSecurityPinWarning: Boolean
         get() = loginsSecureWarningCount.underMaxCount()
 
+    var shouldShowPrivacyPopWindow by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_privacy_pop_window),
+        default = true
+    )
+
     var shouldUseLightTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_light_theme),
         default = false
