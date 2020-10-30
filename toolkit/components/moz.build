@@ -15,6 +15,7 @@ DIRS += [
     "aboutcheckerboard",
     "aboutmemory",
     "aboutperformance",
+    "aboutprocesses",
     "alerts",
     "antitracking",
     "apppicker",
@@ -129,7 +130,3 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
 # This is only packaged for browser since corrupt JAR and XPI files tend to be a desktop-OS problem.
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     DIRS += ["corroborator"]
-
-# about:processes is experimental
-if CONFIG["NIGHTLY_BUILD"]:
-    DIRS += ["aboutprocesses"]
