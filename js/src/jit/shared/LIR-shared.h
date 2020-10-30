@@ -2859,6 +2859,22 @@ class LModD : public LBinaryMath<1> {
   MMod* mir() const { return mir_->toMod(); }
 };
 
+class LModPowTwoD : public LInstructionHelper<1, 1, 0> {
+  const uint32_t divisor_;
+
+ public:
+  LIR_HEADER(ModPowTwoD)
+
+  LModPowTwoD(const LAllocation& lhs, uint32_t divisor)
+      : LInstructionHelper(classOpcode), divisor_(divisor) {
+    setOperand(0, lhs);
+  }
+
+  uint32_t divisor() const { return divisor_; }
+  const LAllocation* lhs() { return getOperand(0); }
+  MMod* mir() const { return mir_->toMod(); }
+};
+
 class LWasmBuiltinModD : public LInstructionHelper<1, 3, 0> {
   static const size_t LhsIndex = 0;
   static const size_t RhsIndex = 1;
