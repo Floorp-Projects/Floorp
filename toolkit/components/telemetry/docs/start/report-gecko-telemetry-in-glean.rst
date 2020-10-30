@@ -48,7 +48,7 @@ The first step is to add the relevant tag (i.e. ``geckoview_streaming``) to the 
     "CHECKERBOARD_DURATION": {
       "record_in_processes": ["main", "content", "gpu"],
       "products": ["firefox", "fennec", "geckoview", "geckoview_streaming"],
-      "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+      "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "somebody@mozilla.com"],
       "bug_numbers": [1238040, 1539309],
       "releaseChannelCollection": "opt-out",
       "expires_in_version": "73",
@@ -81,7 +81,7 @@ Since this is a timing distribution, with a milliseconds time unit, it can be ad
         - https://example.com/data-review-url-example
       notification_emails:
         - gfx-telemetry-alerts@mozilla.com
-        - kgupta@mozilla.com
+        - somebody@mozilla.com
       expires: 2019-12-09 # Gecko 73
 
 Please note that the ``gecko_datapoint`` property will need to point to the name of the histogram exactly as written in the ``Histograms.json`` file. It is also important to note that ``time_unit`` needs to match the unit of the values that are recorded.
