@@ -661,41 +661,22 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
 void CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs,
                                   Register output, LSnapshot* snapshot,
                                   Label& done) {
-  // 0/X (with X < 0) is bad because both of these values *should* be doubles,
-  // and the result should be -0.0, which cannot be represented in integers.
-  // X/0 is bad because it will give garbage (or abort), when it should give
-  // either \infty, -\infty or NaN.
+  // X % 0 is bad because it will give garbage (or abort), when it should give
+  // NaN.
 
-  // Prevent 0 / X (with X < 0) and X / 0
-  // testing X / Y. Compare Y with 0.
-  // There are three cases: (Y < 0), (Y == 0) and (Y > 0).
-  // If (Y < 0), then we compare X with 0, and bail if X == 0.
-  // If (Y == 0), then we simply want to bail. Since this does not set the
-  // flags necessary for LT to trigger, we don't test X, and take the bailout
-  // because the EQ flag is set.
-  // If (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take
-  // the bailout.
-  if (mir->canBeDivideByZero() || mir->canBeNegativeDividend()) {
-    if (mir->trapOnError()) {
-      // wasm allows negative lhs and return 0 in this case.
-      MOZ_ASSERT(mir->isTruncated());
-      masm.as_cmp(rhs, Imm8(0));
+  if (mir->canBeDivideByZero()) {
+    masm.as_cmp(rhs, Imm8(0));
+    if (mir->isTruncated()) {
       Label nonZero;
       masm.ma_b(&nonZero, Assembler::NotEqual);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+      if (mir->trapOnError()) {
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+      } else {
+        // NaN|0 == 0
+        masm.ma_mov(Imm32(0), output);
+        masm.ma_b(&done);
+      }
       masm.bind(&nonZero);
-      return;
-    }
-
-    masm.as_cmp(rhs, Imm8(0));
-    masm.as_cmp(lhs, Imm8(0), Assembler::LessThan);
-    if (mir->isTruncated()) {
-      // NaN|0 == 0 and (0 % -X)|0 == 0
-      Label skip;
-      masm.ma_b(&skip, Assembler::NotEqual);
-      masm.ma_mov(Imm32(0), output);
-      masm.ma_b(&done);
-      masm.bind(&skip);
     } else {
       MOZ_ASSERT(mir->fallible());
       bailoutIf(Assembler::Equal, snapshot);
