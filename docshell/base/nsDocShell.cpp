@@ -8950,8 +8950,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
         // FIXME We should probably just compute mChildOffset in the parent
         //       instead of passing it over IPC here.
         mBrowsingContext->SetActiveSessionHistoryEntry(
-            Some(scrollPos), mActiveEntry.get(), mLoadType, mChildOffset,
-            cacheKey);
+            Some(scrollPos), mActiveEntry.get(), mLoadType, cacheKey);
         // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
       }
     }
@@ -11623,7 +11622,7 @@ void nsDocShell::UpdateActiveEntry(
     // FIXME We should probably just compute mChildOffset in the parent
     //       instead of passing it over IPC here.
     mBrowsingContext->SetActiveSessionHistoryEntry(
-        aPreviousScrollPos, mActiveEntry.get(), mLoadType, mChildOffset,
+        aPreviousScrollPos, mActiveEntry.get(), mLoadType,
         /* aCacheKey = */ 0);
     // FIXME Do we need to update mPreviousEntryIndex and mLoadedEntryIndex?
   }
