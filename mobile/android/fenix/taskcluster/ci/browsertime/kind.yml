@@ -43,8 +43,8 @@ job-defaults:
         tier: 2
         platform:
             by-abi:
-                arm64-v8a: android-hw-p2-8-0-android-aarch64/opt
-                armeabi-v7a: android-hw-g5-7-0-arm7-api-16/opt
+                arm64-v8a: android-hw-p2-8-0-android-aarch64-shippable/opt
+                armeabi-v7a: android-hw-g5-7-0-arm7-api-16-shippable/opt
     worker-type:
         by-abi:
             armeabi-v7a: t-bitbar-gw-perf-g5
