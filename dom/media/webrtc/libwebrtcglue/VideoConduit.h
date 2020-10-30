@@ -22,18 +22,13 @@
 #undef FF
 // Video Engine Includes
 #include "api/video_codecs/video_encoder_factory.h"
-#include "webrtc/call/call.h"
-#include "webrtc/common_types.h"
-#ifdef FF
-#  undef FF  // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
-#endif
-#include "webrtc/api/video_codecs/video_decoder.h"
-#include "webrtc/api/video_codecs/video_encoder.h"
-#include "webrtc/api/video_codecs/sdp_video_format.h"
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/media/base/videosinkinterface.h"
-#include "webrtc/media/base/videoadapter.h"
-#include "webrtc/media/base/videobroadcaster.h"
+#include "api/video_codecs/video_decoder.h"
+#include "api/video_codecs/video_encoder.h"
+#include "api/video_codecs/sdp_video_format.h"
+#include "call/call.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "media/base/video_adapter.h"
+#include "media/base/video_broadcaster.h"
 #include <functional>
 #include <memory>
 /** This file hosts several structures identifying different aspects
@@ -69,7 +64,6 @@ class WebrtcVideoDecoder : public VideoDecoder, public webrtc::VideoDecoder {};
  */
 class WebrtcVideoConduit
     : public VideoSessionConduit,
-      public webrtc::RtcpEventObserver,
       public webrtc::RtpPacketSinkInterface,
       public webrtc::Transport,
       public webrtc::VideoEncoderFactory,
@@ -315,10 +309,6 @@ class WebrtcVideoConduit
     mSendStreamStats.RecordTelemetry();
     mRecvStreamStats.RecordTelemetry();
   }
-
-  void OnRtcpBye() override;
-
-  void OnRtcpTimeout() override;
 
   void SetRtcpEventObserver(mozilla::RtcpEventObserver* observer) override;
 
@@ -591,7 +581,7 @@ class WebrtcVideoConduit
   int mMinBitrate = 0;
   int mStartBitrate = 0;
   int mPrefMaxBitrate = 0;
-  int mNegotiatedMaxBitrate = 0;
+  // int mNegotiatedMaxBitrate = 0;
   int mMinBitrateEstimate = 0;
 
   // Set to true to force denoising on.
