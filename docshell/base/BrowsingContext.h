@@ -369,6 +369,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   BrowsingContext* GetParent() const;
   BrowsingContext* Top();
+  int32_t IndexOf(BrowsingContext* aChild);
 
   // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindowContext` does not
   // cross toplevel content browser boundaries.
@@ -702,7 +703,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // aUpdatedCacheKey is 0 then it will be ignored.
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
-                                    uint32_t aLoadType, int32_t aChildOffset,
+                                    uint32_t aLoadType,
                                     uint32_t aUpdatedCacheKey);
 
   // Replace the active entry for this browsing context. This is used for
