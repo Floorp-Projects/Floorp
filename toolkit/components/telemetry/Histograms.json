@@ -15122,7 +15122,7 @@
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
     "bug_numbers": [1470901, 1584109],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -15133,7 +15133,7 @@
   "WR_SCENESWAP_TIME": {
     "record_in_processes": ["main", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
     "bug_numbers": [1470901, 1584109],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -15144,7 +15144,7 @@
   "WR_FRAMEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com"],
     "bug_numbers": [1470901, 1584109],
     "expires_in_version": "never",
     "kind": "exponential",
