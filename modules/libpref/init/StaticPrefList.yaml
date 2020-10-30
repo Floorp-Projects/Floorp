@@ -8400,6 +8400,14 @@
   value: 2000
   mirror: always
 
+# When true on Windows DNS resolutions for single label domains
+# (domains that don't contain a dot) will be resolved using the DnsQuery
+# API instead of PR_GetAddrInfoByName
+- name: network.dns.dns_query_single_label
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
