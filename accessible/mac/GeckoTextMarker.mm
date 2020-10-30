@@ -121,6 +121,10 @@ GeckoTextMarker GeckoTextMarker::MarkerFromIndex(const AccessibleOrProxy& aRoot,
 }
 
 id GeckoTextMarker::CreateAXTextMarker() {
+  if (!IsValid()) {
+    return nil;
+  }
+
   AccessibleOrProxy doc;
   if (mContainer.IsProxy()) {
     doc = mContainer.AsProxy()->Document();
@@ -362,6 +366,10 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
 }
 
 id GeckoTextMarkerRange::CreateAXTextMarkerRange() {
+  if (!IsValid()) {
+    return nil;
+  }
+
   AXTextMarkerRangeRef cf_text_marker_range =
       AXTextMarkerRangeCreate(kCFAllocatorDefault, mStart.CreateAXTextMarker(),
                               mEnd.CreateAXTextMarker());
