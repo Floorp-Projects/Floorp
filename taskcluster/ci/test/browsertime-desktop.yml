@@ -100,12 +100,14 @@ browsertime-tp6:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
                     linux.*shippable.*: ["autoland", "mozilla-central"]
+                    macos.*shippable.*: ["autoland", "mozilla-central"]
                     default: []
             default: []
     limit-platforms:
         by-app:
             chrome:
                 - linux.*shippable[^-qr].*
+                - mac.*shippable[^-qr].*
             chromium:
                 - .*shippable[^-qr].*
             default: []
