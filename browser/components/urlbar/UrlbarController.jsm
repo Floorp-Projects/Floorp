@@ -386,7 +386,7 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_RIGHT:
       case KeyEvent.DOM_VK_END:
-        this.input.maybePromoteResultToSearchMode({
+        this.input.maybeConfirmSearchModeFromResult({
           entry: "typed",
         });
       // Fall through.
