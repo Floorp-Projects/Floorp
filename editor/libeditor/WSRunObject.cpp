@@ -1157,6 +1157,10 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     NS_WARNING("Deleting content node was an orphan node");
     return NS_ERROR_FAILURE;
   }
+  if (!HTMLEditUtils::IsRemovableNode(aContentToDelete)) {
+    NS_WARNING("Deleting content node wasn't removable");
+    return NS_ERROR_FAILURE;
+  }
   nsresult rv = WhiteSpaceVisibilityKeeper::
       MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
           aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()));
