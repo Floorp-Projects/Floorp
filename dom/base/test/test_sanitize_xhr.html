@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1673164
+-->
+<html>
+<head>
+  <title>Test for sanitizing with XHR-loaded owner doc</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var url = "http://mochi.test:8888/chrome/dom/base/test/file_empty.html"
+var req = new XMLHttpRequest();
+req.open("GET", url, false);
+req.overrideMimeType("text/xml");
+req.send(null);
+var doc = req.responseXML;
+var pu = Cc["@mozilla.org/parserutils;1"].createInstance(Ci.nsIParserUtils);
+var flags = pu.SanitizerDropForms | pu.SanitizerDropMedia;
+var uri = SpecialPowers.Services.io.newURI(url);
+var context = doc.createElement("div");
+var fragment = pu.parseFragment("<form><img onerror=alert(1)><p></p></form>", flags, false, uri, context);
+
+is(fragment.firstChild.localName, "p", "Should have only p.");
+
+</script>
+</pre>
+</body>
+</html>
