@@ -110,7 +110,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortSignalMainThread)
 
 class AbortSignalProxy;
 
-class WorkerSignalFollower final : public nsISupports {
+class WorkerSignalFollower final : public AbortFollower {
  public:
   // This runnable propagates changes from the AbortSignalImpl on workers to the
   // AbortSignalImpl on main-thread.
@@ -129,6 +129,8 @@ class WorkerSignalFollower final : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(WorkerSignalFollower)
 
+  void RunAbortAlgorithm() override {}
+
  private:
   ~WorkerSignalFollower() = default;
 };
@@ -139,9 +141,11 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(WorkerSignalFollower)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkerSignalFollower)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WorkerSignalFollower)
+  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkerSignalFollower)
+  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerSignalFollower)
