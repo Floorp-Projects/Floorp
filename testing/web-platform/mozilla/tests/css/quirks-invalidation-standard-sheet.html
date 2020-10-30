@@ -1,0 +1,14 @@
+<!-- quirks, intentionally -->
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div class="mixedCase"></div>
+<script>
+  test(function() {
+    const kLime = "rgb(0, 255, 0)";
+
+    let div = document.querySelector("div");
+    assert_not_equals(getComputedStyle(div).color, kLime);
+    SpecialPowers.DOMWindowUtils.loadSheetUsingURIString('data:text/css,.mixedCase{color:lime}', 1)
+    assert_equals(getComputedStyle(div).color, kLime);
+  }, "Invalidation of quirks documents when standard sheets are inserted works properly")
+</script>
