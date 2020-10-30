@@ -345,12 +345,12 @@ class VideoFrameConverter {
       if (utils.GetFormat() == dom::ImageBitmapFormat::YUV420P &&
           image->GetData()) {
         const layers::PlanarYCbCrData* data = image->GetData();
-        rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-            new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+        rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
+            webrtc::WrapI420Buffer(
                 aFrame.mImage->GetSize().width, aFrame.mImage->GetSize().height,
                 data->mYChannel, data->mYStride, data->mCbChannel,
                 data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
-                rtc::KeepRefUntilDone(image)));
+                rtc::KeepRefUntilDone(image));
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0,  // not setting rtp timestamp

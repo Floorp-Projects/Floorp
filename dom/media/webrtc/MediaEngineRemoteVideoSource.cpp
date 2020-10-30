@@ -523,7 +523,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
 
   rtc::Callback0<void> callback_unused;
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
-      new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+      webrtc::WrapI420Buffer(
           aProps.width(), aProps.height(), aBuffer, aProps.yStride(),
           aBuffer + aProps.yAllocatedSize(), aProps.uStride(),
           aBuffer + aProps.yAllocatedSize() + aProps.uAllocatedSize(),
