@@ -2658,6 +2658,21 @@ void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
   MOZ_CRASH("unexpected mode");
 }
 
+void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister output) {
+  ScratchDoubleScope scratch(*this);
+
+  // Double with only the sign bit set (= negative zero).
+  loadConstantDouble(0, scratch);
+  negateDouble(scratch);
+
+  moveDouble(lhs, output);
+
+  bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
+      ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),
+      ARMFPRegister(scratch.encoding(), vixl::VectorFormat::kFormat8B));
+}
+
 //}}} check_macroassembler_style
 
 }  // namespace jit
