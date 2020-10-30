@@ -23,10 +23,9 @@ const NodeList = createFactory(
 class NodePane extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       nodes: PropTypes.arrayOf(Types.node).isRequired,
-      hideBoxModelHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
-      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 

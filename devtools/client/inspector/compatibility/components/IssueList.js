@@ -20,29 +20,22 @@ const IssueItem = createFactory(
 class IssueList extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       issues: PropTypes.arrayOf(PropTypes.shape(Types.issue)).isRequired,
-      hideBoxModelHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
-      showBoxModelHighlighterForNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const {
-      issues,
-      hideBoxModelHighlighter,
-      setSelectedNode,
-      showBoxModelHighlighterForNode,
-    } = this.props;
+    const { dispatch, issues, setSelectedNode } = this.props;
 
     return dom.ul(
       { className: "compatibility-issue-list" },
       issues.map(issue =>
         IssueItem({
           ...issue,
-          hideBoxModelHighlighter,
+          dispatch,
           setSelectedNode,
-          showBoxModelHighlighterForNode,
         })
       )
     );
