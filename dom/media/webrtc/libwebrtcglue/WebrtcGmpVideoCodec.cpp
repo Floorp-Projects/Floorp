@@ -971,13 +971,13 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
     MutexAutoLock lock(mCallbackMutex);
     if (mCallback) {
-      rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-          new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-              aDecodedFrame->Width(), aDecodedFrame->Height(), buffer_y,
-              aDecodedFrame->Stride(kGMPYPlane), buffer_u,
-              aDecodedFrame->Stride(kGMPUPlane), buffer_v,
-              aDecodedFrame->Stride(kGMPVPlane),
-              rtc::Bind(&DeleteBuffer, buffer.release())));
+      rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
+          webrtc::WrappedI420Buffer(aDecodedFrame->Width(),
+                                    aDecodedFrame->Height(), buffer_y,
+                                    aDecodedFrame->Stride(kGMPYPlane), buffer_u,
+                                    aDecodedFrame->Stride(kGMPUPlane), buffer_v,
+                                    aDecodedFrame->Stride(kGMPVPlane),
+                                    rtc::Bind(&DeleteBuffer, buffer.release()));
 
       webrtc::VideoFrame image(video_frame_buffer, 0, 0,
                                webrtc::kVideoRotation_0);
