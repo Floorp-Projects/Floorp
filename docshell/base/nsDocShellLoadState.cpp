@@ -118,7 +118,12 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mOriginalURIString(aOther.mOriginalURIString),
       mCancelContentJSEpoch(aOther.mCancelContentJSEpoch),
       mLoadIdentifier(aOther.mLoadIdentifier),
-      mChannelInitialized(aOther.mChannelInitialized) {}
+      mChannelInitialized(aOther.mChannelInitialized) {
+  if (aOther.mLoadingSessionHistoryInfo) {
+    mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
+        *aOther.mLoadingSessionHistoryInfo);
+  }
+}
 
 nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
     : mURI(aURI),

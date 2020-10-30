@@ -431,6 +431,9 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                                                     const nsID& aChangeID,
                                                     uint32_t aLoadType) {
+  MOZ_LOG(gSHLog, LogLevel::Verbose,
+          ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
+           aLoadId));
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aLoadId) {
       nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
