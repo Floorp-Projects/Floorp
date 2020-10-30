@@ -25,6 +25,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Object.h"                // JS::GetReservedSlot
 #include "js/ScalarType.h"            // js::Scalar::Type
 #include "util/CheckedArithmetic.h"

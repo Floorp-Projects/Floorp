@@ -102,6 +102,7 @@
 #include "gc/Allocator.h"
 #include "js/BigInt.h"
 #include "js/Conversions.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Initialization.h"
 #include "js/StableStringChars.h"
 #include "js/Utility.h"

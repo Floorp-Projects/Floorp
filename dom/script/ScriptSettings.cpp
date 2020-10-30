@@ -14,6 +14,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_OUT_OF_MEMORY
 #include "js/Warnings.h"  // JS::{Get,}WarningReporter
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"

@@ -45,6 +45,7 @@
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "js/CompileOptions.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/SourceText.h"

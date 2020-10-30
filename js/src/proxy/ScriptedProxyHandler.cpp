@@ -9,6 +9,7 @@
 #include "jsapi.h"
 
 #include "js/CharacterEncoding.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/JSFunction.h"

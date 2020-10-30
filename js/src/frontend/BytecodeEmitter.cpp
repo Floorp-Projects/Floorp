@@ -58,6 +58,7 @@
 #include "frontend/TryEmitter.h"     // TryEmitter
 #include "frontend/WhileEmitter.h"   // WhileEmitter
 #include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/friend/StackLimits.h"   // CheckRecursionLimit
 #include "util/StringBuffer.h"       // StringBuffer
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind

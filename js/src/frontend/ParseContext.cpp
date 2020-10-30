@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "frontend/ParseContext-inl.h"
+
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
+
 #include "vm/EnvironmentObject-inl.h"
 
 using mozilla::Maybe;

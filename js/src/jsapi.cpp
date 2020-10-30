@@ -55,6 +55,7 @@
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Conversions.h"
 #include "js/Date.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"  // js::CheckSystemRecursionLimit
 #include "js/Initialization.h"
 #include "js/JSON.h"

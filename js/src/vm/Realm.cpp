@@ -21,6 +21,7 @@
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "js/Date.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
 #include "js/Wrapper.h"

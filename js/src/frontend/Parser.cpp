@@ -47,6 +47,7 @@
 #include "frontend/ParseNodeVerify.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RegExpFlags.h"     // JS::RegExpFlags
 #include "util/StringBuffer.h"  // StringBuffer
 #include "vm/BigIntType.h"

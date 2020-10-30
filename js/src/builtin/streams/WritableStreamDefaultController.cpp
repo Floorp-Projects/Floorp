@@ -13,6 +13,7 @@
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamDefaultControllerError
 #include "js/CallArgs.h"      // JS::CallArgs{,FromVp}
 #include "js/Class.h"         // js::ClassSpec, JS_NULL_CLASS_OPS
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END
 #include "js/Value.h"         // JS::Value
 

@@ -28,6 +28,7 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "ds/Sort.h"
 #include "gc/Tracer.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Result.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"

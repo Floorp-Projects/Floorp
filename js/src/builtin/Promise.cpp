@@ -17,6 +17,7 @@
 #include "js/Debug.h"
 #include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
 #include "js/ForOfIterator.h"         // JS::ForOfIterator
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/ArrayObject.h"
 #include "vm/AsyncFunction.h"

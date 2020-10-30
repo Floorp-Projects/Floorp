@@ -17,7 +17,6 @@
 #include <utility>      // for move
 
 #include "jsapi.h"        // for CallArgs, RootedObject, Rooted
-#include "jsfriendapi.h"  // for GetErrorMessage
 
 #include "builtin/Array.h"       // for NewDenseCopiedArray
 #include "builtin/Promise.h"     // for PromiseReactionRecordBuilder
@@ -31,6 +30,7 @@
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject
+#include "js/friend/ErrorMessages.h"      // for GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"  // for IsWindow, IsWindowProxy, ToWindowIfWindowProxy
 #include "js/HeapAPI.h"             // for IsInsideNursery
 #include "js/Promise.h"             // for PromiseState

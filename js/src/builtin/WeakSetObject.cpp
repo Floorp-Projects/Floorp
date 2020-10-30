@@ -9,6 +9,7 @@
 #include "jsapi.h"
 
 #include "builtin/MapObject.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"

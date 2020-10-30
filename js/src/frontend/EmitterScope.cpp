@@ -10,6 +10,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/TDZCheckCache.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "vm/GlobalObject.h"
 
 using namespace js;

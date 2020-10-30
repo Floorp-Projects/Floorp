@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*, js::AssertSameCompartment
+#include "jsfriendapi.h"  // js::AssertSameCompartment
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::IsMaybeWrapped
@@ -26,6 +26,7 @@
 #include "builtin/streams/TeeState.h"          // js::TeeState
 #include "js/ArrayBuffer.h"                    // JS::NewArrayBuffer
 #include "js/Class.h"                          // js::ClassSpec
+#include "js/friend/ErrorMessages.h"           // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"

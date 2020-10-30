@@ -53,6 +53,7 @@
 #include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
+#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/Modules.h"                 // JS::GetModulePrivate
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type

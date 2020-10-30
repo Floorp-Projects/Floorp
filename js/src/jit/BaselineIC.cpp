@@ -37,6 +37,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/GCVector.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"

@@ -8,6 +8,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
 #include "vm/ArgumentsObject.h"

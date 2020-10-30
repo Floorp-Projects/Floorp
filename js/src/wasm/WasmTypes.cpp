@@ -18,6 +18,7 @@
 
 #include "wasm/WasmTypes.h"
 
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Printf.h"
 #include "util/Memory.h"
 #include "vm/ArrayBufferObject.h"
