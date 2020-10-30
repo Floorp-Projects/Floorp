@@ -17,7 +17,7 @@ fn endian_indexing() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn endian_bitcasts() {
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -34,13 +34,13 @@ fn endian_bitcasts() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn endian_casts() {
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
     );
     let t: i16x16 = x.into(); // simd_cast
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let e = i16x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -51,7 +51,7 @@ fn endian_casts() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn endian_load_and_stores() {
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -82,10 +82,15 @@ fn endian_array_union() {
         vec: f32x4,
     }
     let x: [f32; 4] = unsafe { A { vec: f32x4::new(0., 1., 2., 3.) }.data };
-    assert_eq!(x[0], 0_f32);
-    assert_eq!(x[1], 1_f32);
-    assert_eq!(x[2], 2_f32);
-    assert_eq!(x[3], 3_f32);
+    // As all of these are integer values within the mantissa^1 range, it
+    // would be very unusual for them to actually fail to compare.
+    #[allow(clippy::float_cmp)]
+    {
+        assert_eq!(x[0], 0_f32);
+        assert_eq!(x[1], 1_f32);
+        assert_eq!(x[2], 2_f32);
+        assert_eq!(x[3], 3_f32);
+    }
     let y: f32x4 = unsafe { A { data: [3., 2., 1., 0.] }.vec };
     assert_eq!(y, f32x4::new(3., 2., 1., 0.));
 
@@ -93,23 +98,23 @@ fn endian_array_union() {
         data: [i8; 16],
         vec: i8x16,
     }
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
     );
     let x: [i8; 16] = unsafe { B { vec: x }.data };
 
-    for i in 0..16 {
-        assert_eq!(x[i], i as i8);
+    for (i, v) in x.iter().enumerate() {
+        assert_eq!(i as i8, *v);
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let y = [
         15, 14, 13, 12, 11, 19, 9, 8,
         7, 6, 5, 4, 3, 2, 1, 0
     ];
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let e = i8x16::new(
         15, 14, 13, 12, 11, 19, 9, 8,
         7, 6, 5, 4, 3, 2, 1, 0
@@ -121,7 +126,7 @@ fn endian_array_union() {
         data: [i16; 8],
         vec: i8x16,
     }
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -145,21 +150,26 @@ fn endian_tuple_access() {
         vec: f32x4,
     }
     let x: F32x4T = unsafe { A { vec: f32x4::new(0., 1., 2., 3.) }.data };
-    assert_eq!(x.0, 0_f32);
-    assert_eq!(x.1, 1_f32);
-    assert_eq!(x.2, 2_f32);
-    assert_eq!(x.3, 3_f32);
+    // As all of these are integer values within the mantissa^1 range, it
+    // would be very unusual for them to actually fail to compare.
+    #[allow(clippy::float_cmp)]
+    {
+        assert_eq!(x.0, 0_f32);
+        assert_eq!(x.1, 1_f32);
+        assert_eq!(x.2, 2_f32);
+        assert_eq!(x.3, 3_f32);
+    }
     let y: f32x4 = unsafe { A { data: (3., 2., 1., 0.) }.vec };
     assert_eq!(y, f32x4::new(3., 2., 1., 0.));
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     type I8x16T = (i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8);
     union B {
         data: I8x16T,
         vec: i8x16,
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -183,27 +193,27 @@ fn endian_tuple_access() {
     assert_eq!(x.14, 14);
     assert_eq!(x.15, 15);
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let y = (
         15, 14, 13, 12, 11, 10, 9, 8,
         7, 6, 5, 4, 3, 2, 1, 0
     );
     let z: i8x16 = unsafe { B { data: y }.vec };
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let e = i8x16::new(
         15, 14, 13, 12, 11, 10, 9, 8,
         7, 6, 5, 4, 3, 2, 1, 0
     );
     assert_eq!(e, z);
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     type I16x8T = (i16, i16, i16, i16, i16, i16, i16, i16);
     union C {
         data: I16x8T,
         vec: i8x16,
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -224,7 +234,7 @@ fn endian_tuple_access() {
     assert_eq!(x.6, e[6]);
     assert_eq!(x.7, e[7]);
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     #[repr(C)]
     #[derive(Copy ,Clone)]
     pub struct Tup(pub i8, pub i8, pub i16, pub i8, pub i8, pub i16,
@@ -235,7 +245,7 @@ fn endian_tuple_access() {
         vec: i8x16,
     }
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let x = i8x16::new(
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,

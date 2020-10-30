@@ -1,6 +1,6 @@
 //! `FromBits` and `IntoBits` between portable vector types and the
 //! architecture-specific vector types.
-#![rustfmt::skip]
+#[rustfmt::skip]
 
 // FIXME: MIPS FromBits/IntoBits
 
@@ -84,7 +84,6 @@ macro_rules! impl_arch {
 // FIXME: 64-bit single element types
 // FIXME: arm/aarch float16x4_t missing
 impl_arch!(
-    [x86["x86"]: __m64], [x86_64["x86_64"]: __m64],
     [arm["arm"]: int8x8_t, uint8x8_t, poly8x8_t, int16x4_t, uint16x4_t,
      poly16x4_t, int32x2_t, uint32x2_t, float32x2_t, int64x1_t,
      uint64x1_t],

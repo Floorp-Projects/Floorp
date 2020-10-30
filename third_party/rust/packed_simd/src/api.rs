@@ -1,5 +1,7 @@
 //! Implements the Simd<[T; N]> APIs
 
+#[macro_use]
+mod bitmask;
 crate mod cast;
 #[macro_use]
 mod cmp;
@@ -39,7 +41,7 @@ crate mod into_bits;
 
 macro_rules! impl_i {
     ([$elem_ty:ident; $elem_n:expr]: $tuple_id:ident, $mask_ty:ident
-     | $ielem_ty:ident | $test_tt:tt | $($elem_ids:ident),*
+     | $ielem_ty:ident, $ibitmask_ty:ident | $test_tt:tt | $($elem_ids:ident),*
      | From: $($from_vec_ty:ident),* | $(#[$doc:meta])*) => {
         impl_minimal_iuf!([$elem_ty; $elem_n]: $tuple_id | $ielem_ty | $test_tt
                           | $($elem_ids),* | $(#[$doc])*);
@@ -93,6 +95,7 @@ macro_rules! impl_i {
         );
         impl_cmp_partial_ord!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         impl_cmp_ord!([$elem_ty; $elem_n]: $tuple_id | $test_tt | (0, 1));
+        impl_bitmask!($tuple_id | $ibitmask_ty | (-1, 0) | $test_tt);
 
         test_select!($elem_ty, $mask_ty, $tuple_id, (1, 2) | $test_tt);
         test_cmp_partial_ord_int!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
@@ -102,7 +105,7 @@ macro_rules! impl_i {
 
 macro_rules! impl_u {
     ([$elem_ty:ident; $elem_n:expr]: $tuple_id:ident, $mask_ty:ident
-     | $ielem_ty:ident | $test_tt:tt | $($elem_ids:ident),*
+     | $ielem_ty:ident, $ibitmask_ty:ident | $test_tt:tt | $($elem_ids:ident),*
      | From: $($from_vec_ty:ident),* | $(#[$doc:meta])*) => {
         impl_minimal_iuf!([$elem_ty; $elem_n]: $tuple_id | $ielem_ty | $test_tt
                           | $($elem_ids),* | $(#[$doc])*);
@@ -155,6 +158,8 @@ macro_rules! impl_u {
         );
         impl_cmp_partial_ord!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         impl_cmp_ord!([$elem_ty; $elem_n]: $tuple_id | $test_tt | (0, 1));
+        impl_bitmask!($tuple_id | $ibitmask_ty | ($ielem_ty::max_value(), 0) |
+                      $test_tt);
 
         test_select!($elem_ty, $mask_ty, $tuple_id, (1, 2) | $test_tt);
         test_cmp_partial_ord_int!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
@@ -222,7 +227,8 @@ macro_rules! impl_f {
 }
 
 macro_rules! impl_m {
-    ([$elem_ty:ident; $elem_n:expr]: $tuple_id:ident | $ielem_ty:ident
+    ([$elem_ty:ident; $elem_n:expr]: $tuple_id:ident
+     | $ielem_ty:ident, $ibitmask_ty:ident
      | $test_tt:tt | $($elem_ids:ident),* | From: $($from_vec_ty:ident),*
      | $(#[$doc:meta])*) => {
         impl_minimal_mask!(
@@ -265,6 +271,7 @@ macro_rules! impl_m {
             [$elem_ty; $elem_n]: $tuple_id | $test_tt | (false, true)
         );
         impl_shuffle1_dyn!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
+        impl_bitmask!($tuple_id | $ibitmask_ty | (true, false) | $test_tt);
 
         test_cmp_partial_ord_mask!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         test_shuffle1_dyn_mask!([$elem_ty; $elem_n]: $tuple_id | $test_tt);

@@ -76,6 +76,8 @@ macro_rules! impl_reduction_min_max {
         }
         test_if! {$test_tt:
         paste::item! {
+            // Comparisons use integer casts within mantissa^1 range.
+            #[allow(clippy::float_cmp)]
             pub mod [<$id _reduction_min_max>] {
                 use super::*;
                 #[cfg_attr(not(target_arch = "wasm32"), test)]
@@ -124,6 +126,8 @@ macro_rules! test_reduction_float_min_max {
         test_if!{
             $test_tt:
             paste::item! {
+                // Comparisons use integer casts within mantissa^1 range.
+                #[allow(clippy::float_cmp)]
                 pub mod [<$id _reduction_min_max_nan>] {
                     use super::*;
                     #[cfg_attr(not(target_arch = "wasm32"), test)]

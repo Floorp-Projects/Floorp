@@ -28,31 +28,10 @@ macro_rules! impl_fallback {
 macro_rules! impl_shuffle1_dyn {
     (u8x8) => {
         cfg_if! {
-            if #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"),
-                         target_feature = "ssse3"))] {
-                impl Shuffle1Dyn for u8x8 {
-                    type Indices = Self;
-                    #[inline]
-                    fn shuffle1_dyn(self, indices: Self::Indices) -> Self {
-                        #[cfg(target_arch = "x86")]
-                        use crate::arch::x86::_mm_shuffle_pi8;
-                        #[cfg(target_arch = "x86_64")]
-                        use crate::arch::x86_64::_mm_shuffle_pi8;
-
-                        unsafe {
-                            crate::mem::transmute(
-                                _mm_shuffle_pi8(
-                                    crate::mem::transmute(self.0),
-                                    crate::mem::transmute(indices.0)
-                                )
-                            )
-                        }
-                    }
-                }
-            } else if #[cfg(all(
+            if #[cfg(all(
                 any(
-                    all(target_aarch = "aarch64", target_feature = "neon"),
-                    all(target_aarch = "arm", target_feature = "v7",
+                    all(target_arch = "aarch64", target_feature = "neon"),
+                    all(target_arch = "doesnotexist", target_feature = "v7",
                         target_feature = "neon")
                 ),
                 any(feature = "core_arch", libcore_neon)
@@ -62,9 +41,9 @@ macro_rules! impl_shuffle1_dyn {
                     type Indices = Self;
                     #[inline]
                     fn shuffle1_dyn(self, indices: Self::Indices) -> Self {
-                        #[cfg(targt_arch = "aarch64")]
+                        #[cfg(target_arch = "aarch64")]
                         use crate::arch::aarch64::vtbl1_u8;
-                        #[cfg(targt_arch = "arm")]
+                        #[cfg(target_arch = "doesnotexist")]
                         use crate::arch::arm::vtbl1_u8;
 
                         // This is safe because the binary is compiled with
@@ -106,7 +85,7 @@ macro_rules! impl_shuffle1_dyn {
                         }
                     }
                 }
-            } else if #[cfg(all(target_aarch = "aarch64", target_feature = "neon",
+            } else if #[cfg(all(target_arch = "aarch64", target_feature = "neon",
                                 any(feature = "core_arch", libcore_neon)))] {
                 impl Shuffle1Dyn for u8x16 {
                     type Indices = Self;
@@ -125,7 +104,7 @@ macro_rules! impl_shuffle1_dyn {
                         }
                     }
                 }
-            } else if #[cfg(all(target_aarch = "arm", target_feature = "v7",
+            } else if #[cfg(all(target_arch = "doesnotexist", target_feature = "v7",
                                 target_feature = "neon",
                                 any(feature = "core_arch", libcore_neon)))] {
                 impl Shuffle1Dyn for u8x16 {

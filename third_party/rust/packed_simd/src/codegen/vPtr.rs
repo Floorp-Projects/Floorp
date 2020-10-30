@@ -8,6 +8,7 @@ macro_rules! impl_simd_ptr {
         pub struct $tuple_id<$ty>($(crate $tys),*);
         //^^^^^^^ leaked through SimdArray
 
+        impl<$ty> crate::sealed::Seal for [$ptr_ty; $elem_count] {}
         impl<$ty> crate::sealed::SimdArray for [$ptr_ty; $elem_count] {
             type Tuple = $tuple_id<$ptr_ty>;
             type T = $ptr_ty;
@@ -15,6 +16,7 @@ macro_rules! impl_simd_ptr {
             type NT = [u32; $elem_count];
         }
 
+        impl<$ty> crate::sealed::Seal for $tuple_id<$ptr_ty> {}
         impl<$ty> crate::sealed::Simd for $tuple_id<$ptr_ty> {
             type Element = $ptr_ty;
             const LANES: usize = $elem_count;

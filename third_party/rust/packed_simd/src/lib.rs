@@ -201,6 +201,7 @@
 
 #![feature(
     repr_simd,
+    rustc_attrs,
     const_fn,
     platform_intrinsics,
     stdsimd,
@@ -209,22 +210,26 @@
     link_llvm_intrinsics,
     core_intrinsics,
     stmt_expr_attributes,
-    align_offset,
-    mmx_target_feature,
     crate_visibility_modifier,
     custom_inner_attributes
 )]
 #![allow(non_camel_case_types, non_snake_case,
-         clippy::cast_possible_truncation,
-         clippy::cast_lossless,
-         clippy::cast_possible_wrap,
-         clippy::cast_precision_loss,
-         // This lint is currently broken for generic code
-         // See https://github.com/rust-lang/rust-clippy/issues/3410
-         clippy::use_self
+        // FIXME: these types are unsound in C FFI already
+        // See https://github.com/rust-lang/rust/issues/53346
+        improper_ctypes_definitions,
+        clippy::cast_possible_truncation,
+        clippy::cast_lossless,
+        clippy::cast_possible_wrap,
+        clippy::cast_precision_loss,
+        // TODO: manually add the `#[must_use]` attribute where appropriate
+        clippy::must_use_candidate,
+        // This lint is currently broken for generic code
+        // See https://github.com/rust-lang/rust-clippy/issues/3410
+        clippy::use_self,
+        clippy::wrong_self_convention,
 )]
 #![cfg_attr(test, feature(hashmap_internals))]
-#![deny(warnings, rust_2018_idioms, clippy::missing_inline_in_public_items)]
+#![deny(rust_2018_idioms, clippy::missing_inline_in_public_items)]
 #![no_std]
 
 use cfg_if::cfg_if;
@@ -256,6 +261,8 @@ mod api;
 mod codegen;
 mod sealed;
 
+pub use crate::sealed::{Simd as SimdVector, Shuffle, SimdArray, Mask};
+
 /// Packed SIMD vector type.
 ///
 /// # Examples
@@ -275,6 +282,8 @@ pub struct Simd<A: sealed::SimdArray>(
     // to call the shuffle intrinsics.
     #[doc(hidden)] pub <A as sealed::SimdArray>::Tuple,
 );
+
+impl<A: sealed::SimdArray> sealed::Seal for Simd<A> {}
 
 /// Wrapper over `T` implementing a lexicoraphical order via the `PartialOrd`
 /// and/or `Ord` traits.

@@ -39,7 +39,7 @@ macro_rules! impl_slice_write_to_slice {
 
             /// Writes the values of the vector to the `slice`.
             ///
-            /// # Precondition
+            /// # Safety
             ///
             /// If `slice.len() < Self::lanes()` or `&slice[0]` is not
             /// aligned to an `align_of::<Self>()` boundary, the behavior is
@@ -64,7 +64,7 @@ macro_rules! impl_slice_write_to_slice {
 
             /// Writes the values of the vector to the `slice`.
             ///
-            /// # Precondition
+            /// # Safety
             ///
             /// If `slice.len() < Self::lanes()` the behavior is undefined.
             #[inline]
@@ -86,6 +86,8 @@ macro_rules! impl_slice_write_to_slice {
         test_if! {
             $test_tt:
             paste::item! {
+                // Comparisons use integer casts within mantissa^1 range.
+                #[allow(clippy::float_cmp)]
                 pub mod [<$id _slice_write_to_slice>] {
                     use super::*;
                     use crate::iter::Iterator;
