@@ -566,7 +566,7 @@ impl CompositeState {
             let tile = CompositeTile {
                 surface,
                 rect: device_rect,
-                valid_rect: tile.current_descriptor.device_valid_rect.translate(-device_rect.origin.to_vector()),
+                valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
                 dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
                 clip_rect: device_clip_rect,
                 z_id: tile.z_id,
