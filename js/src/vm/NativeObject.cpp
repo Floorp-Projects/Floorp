@@ -1672,9 +1672,15 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
 static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
                                      HandleId id, Handle<PropertyResult> prop,
                                      MutableHandleValue vp) {
-  if (prop.isDenseOrTypedArrayElement()) {
-    return obj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id), vp);
+  if (prop.isDenseElement()) {
+    vp.set(obj->getDenseElement(prop.denseElementIndex()));
+    return true;
   }
+  if (prop.isTypedArrayElement()) {
+    size_t idx = prop.typedArrayElementIndex();
+    return obj->as<TypedArrayObject>().getElement<CanGC>(cx, idx, vp);
+  }
+
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   MOZ_ASSERT(prop.shape()->propid() == id);
@@ -1713,8 +1719,7 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
     if (desc.hasValue()) {
       // Get the current value of the existing property.
       RootedValue currentValue(cx);
-      if (!prop.isDenseOrTypedArrayElement() &&
-          prop.shape()->isDataProperty()) {
+      if (prop.isNativeProperty() && prop.shape()->isDataProperty()) {
         // Inline GetExistingPropertyValue in order to omit a type
         // correctness assertion that's too strict for this particular
         // call site. For details, see bug 1125624 comments 13-16.
@@ -1733,13 +1738,13 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
     }
 
     GetterOp existingGetterOp =
-        prop.isDenseOrTypedArrayElement() ? nullptr : prop.shape()->getter();
+        prop.isNativeProperty() ? prop.shape()->getter() : nullptr;
     if (desc.getter() != existingGetterOp) {
       return true;
     }
 
     SetterOp existingSetterOp =
-        prop.isDenseOrTypedArrayElement() ? nullptr : prop.shape()->setter();
+        prop.isNativeProperty() ? prop.shape()->setter() : nullptr;
     if (desc.setter() != existingSetterOp) {
       return true;
     }
@@ -1887,7 +1892,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     // type for this property that doesn't match the value in the slot.
     // Update the type here, even though this DefineProperty call is
     // otherwise a no-op. (See bug 1125624 comment 13.)
-    if (!prop.isDenseOrTypedArrayElement() && desc.hasValue()) {
+    if (prop.isNativeProperty() && desc.hasValue()) {
       UpdateShapeTypeAndValue(cx, obj, prop.shape(), id, desc.value());
     }
     return result.succeed();
@@ -2344,9 +2349,12 @@ bool js::NativeGetOwnPropertyDescriptor(
     desc.setGetter(nullptr);
     desc.setSetter(nullptr);
 
-    if (prop.isDenseOrTypedArrayElement()) {
-      if (!obj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id),
-                                                   desc.value())) {
+    if (prop.isDenseElement()) {
+      desc.value().set(obj->getDenseElement(prop.denseElementIndex()));
+    } else if (prop.isTypedArrayElement()) {
+      size_t idx = prop.typedArrayElementIndex();
+      if (!obj->as<TypedArrayObject>().getElement<CanGC>(cx, idx,
+                                                         desc.value())) {
         return false;
       }
     } else {
@@ -2557,9 +2565,14 @@ static MOZ_ALWAYS_INLINE bool NativeGetPropertyInline(
     if (prop) {
       // Steps 5-8. Special case for dense elements because
       // GetExistingProperty doesn't support those.
-      if (prop.isDenseOrTypedArrayElement()) {
-        return pobj->template getDenseOrTypedArrayElement<allowGC>(
-            cx, JSID_TO_INT(id), vp);
+      if (prop.isDenseElement()) {
+        vp.set(pobj->getDenseElement(prop.denseElementIndex()));
+        return true;
+      }
+      if (prop.isTypedArrayElement()) {
+        size_t idx = prop.typedArrayElementIndex();
+        auto* tarr = &pobj->template as<TypedArrayObject>();
+        return tarr->template getElement<allowGC>(cx, idx, vp);
       }
 
       typename MaybeRooted<Shape*, allowGC>::RootType shape(cx, prop.shape());
@@ -2866,7 +2879,7 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
                                 Handle<PropertyResult> prop,
                                 ObjectOpResult& result) {
   // Step 5 for dense elements.
-  if (prop.isDenseOrTypedArrayElement()) {
+  if (prop.isDenseElement() || prop.isTypedArrayElement()) {
     // Step 5.a.
     if (pobj->denseElementsAreFrozen()) {
       return result.fail(JSMSG_READ_ONLY);
@@ -2874,14 +2887,13 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
 
     // Pure optimization for the common case:
     if (receiver.isObject() && pobj == &receiver.toObject()) {
-      uint32_t index = JSID_TO_INT(id);
-
-      if (pobj->is<TypedArrayObject>()) {
+      if (prop.isTypedArrayElement()) {
         Rooted<TypedArrayObject*> tobj(cx, &pobj->as<TypedArrayObject>());
-        return SetTypedArrayElement(cx, tobj, index, v, result);
+        size_t idx = prop.typedArrayElementIndex();
+        return SetTypedArrayElement(cx, tobj, idx, v, result);
       }
 
-      return SetDenseElement(cx, pobj, index, v, result);
+      return SetDenseElement(cx, pobj, prop.denseElementIndex(), v, result);
     }
 
     // Steps 5.b-f.
@@ -3047,16 +3059,16 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
     return true;
   }
 
-  // Step 5.
-  if (prop.isDenseOrTypedArrayElement()) {
-    // Typed array elements are non-configurable.
-    MOZ_ASSERT(!obj->is<TypedArrayObject>());
+  // Typed array elements are non-configurable.
+  MOZ_ASSERT(!prop.isTypedArrayElement());
 
+  // Step 5.
+  if (prop.isDenseElement()) {
     if (!obj->maybeCopyElementsForWrite(cx)) {
       return false;
     }
 
-    obj->setDenseElementHole(cx, JSID_TO_INT(id));
+    obj->setDenseElementHole(cx, prop.denseElementIndex());
   } else {
     if (!NativeObject::removeProperty(cx, obj, id)) {
       return false;

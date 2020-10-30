@@ -27,10 +27,8 @@ class BoxModel extends PureComponent {
   static get propTypes() {
     return {
       boxModel: PropTypes.shape(Types.boxModel).isRequired,
-      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      dispatch: PropTypes.func.isRequired,
       onShowBoxModelEditor: PropTypes.func.isRequired,
-      onShowBoxModelHighlighter: PropTypes.func.isRequired,
-      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onShowRulePreviewTooltip: PropTypes.func.isRequired,
       onToggleGeometryEditor: PropTypes.func.isRequired,
       showBoxModelProperties: PropTypes.bool.isRequired,
@@ -54,10 +52,8 @@ class BoxModel extends PureComponent {
   render() {
     const {
       boxModel,
-      onHideBoxModelHighlighter,
+      dispatch,
       onShowBoxModelEditor,
-      onShowBoxModelHighlighter,
-      onShowBoxModelHighlighterForNode,
       onShowRulePreviewTooltip,
       onToggleGeometryEditor,
       setSelectedNode,
@@ -76,13 +72,12 @@ class BoxModel extends PureComponent {
       BoxModelMain({
         boxModel,
         boxModelContainer: this.boxModelContainer,
+        dispatch,
+        onShowBoxModelEditor,
+        onShowRulePreviewTooltip,
         ref: boxModelMain => {
           this.boxModelMain = boxModelMain;
         },
-        onHideBoxModelHighlighter,
-        onShowBoxModelEditor,
-        onShowBoxModelHighlighter,
-        onShowRulePreviewTooltip,
       }),
       BoxModelInfo({
         boxModel,
@@ -91,9 +86,8 @@ class BoxModel extends PureComponent {
       showBoxModelProperties
         ? BoxModelProperties({
             boxModel,
+            dispatch,
             setSelectedNode,
-            onHideBoxModelHighlighter,
-            onShowBoxModelHighlighterForNode,
           })
         : null
     );

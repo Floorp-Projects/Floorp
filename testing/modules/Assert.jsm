@@ -434,6 +434,20 @@ function expectedException(actual, expected) {
 proto.throws = function(block, expected, message) {
   checkExpectedArgument(this, "throws", expected);
 
+  // `true` if we realize that we have added an
+  // error to `ChromeUtils.recentJSDevError` and
+  // that we probably need to clean it up.
+  let cleanupRecentJSDevError = false;
+  if ("recentJSDevError" in ChromeUtils) {
+    // Check that we're in a build of Firefox that supports
+    // the `recentJSDevError` mechanism (i.e. Nightly build).
+    if (ChromeUtils.recentJSDevError === undefined) {
+      // There was no previous error, so if we throw
+      // an error here, we may need to clean it up.
+      cleanupRecentJSDevError = true;
+    }
+  }
+
   let actual;
 
   try {
@@ -455,6 +469,18 @@ proto.throws = function(block, expected, message) {
   }
 
   this.report(false, expected, expected, message);
+
+  // Make sure that we don't cause failures for JS Dev Errors that
+  // were expected, typically for tests that attempt to check
+  // that we react properly to TypeError, ReferenceError, SyntaxError.
+  if (cleanupRecentJSDevError) {
+    let recentJSDevError = ChromeUtils.recentJSDevError;
+    if (recentJSDevError) {
+      if (expectedException(recentJSDevError)) {
+        ChromeUtils.clearRecentJSDevError();
+      }
+    }
+  }
 };
 
 /**

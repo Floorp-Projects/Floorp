@@ -46,13 +46,14 @@ To run the other (non-debugger) DevTools tests, the easiest is to rely on the sa
 > node devtools/client/bin/devtools-node-test-runner.js --suite={suitename}
 ```
 
-At the moment of writing, the supported suites for this script are: 
+At the moment of writing, the supported suites for this script are:
 - `aboutdebugging`
 - `accessibility`
 - `application`
 - `compatibility`
 - `framework`
 - `netmonitor`
+- `performance`
 - `shared_components`
 - `webconsole`
 
@@ -75,3 +76,7 @@ Inspect your code changes or run `yarn run test-ci -u` to update them.
 ```
 
 For example, if you need to update snapshots in a specific panel, first locate the package.json corresponding to the node test folder of the panel. In theory it should be under `devtools/client/{panelname}/test/node/` but it might be slightly different depending on each panel. Then run `yarn run test-ci -u` in this folder and add the snapshot changes to your commit.
+
+## TypeScript
+
+The "performance" suite performs TypeScript checks. The TypeScript usage in the performance panel is documented at [devtools/client/performance-new/typescript.md](https://searchfox.org/mozilla-central/source/devtools/client/performance-new/typescript.md) ([see rendered version on GitHub](https://github.com/mozilla/gecko-dev/blob/master/devtools/client/performance-new/typescript.md)).

@@ -10,6 +10,7 @@ function errors() {
     // The following two errors MUST NOT be captured.
     new Error("This is an error: " + Math.random()),
     new RangeError("This is a RangeError: " + Math.random()),
+    new TypeError("This is a TypeError: " + Math.random()),
     "This is a string: " + Math.random(),
     null,
     undefined,
@@ -17,7 +18,6 @@ function errors() {
     {},
 
     // The following errors MUST be captured.
-    new TypeError("This is a TypeError: " + Math.random()),
     new SyntaxError("This is a SyntaxError: " + Math.random()),
     new ReferenceError("This is a ReferenceError: " + Math.random()),
   ];
@@ -28,11 +28,7 @@ function isDeveloperError(e) {
     return false;
   }
 
-  return (
-    e.constructor == TypeError ||
-    e.constructor == SyntaxError ||
-    e.constructor == ReferenceError
-  );
+  return e.constructor == SyntaxError || e.constructor == ReferenceError;
 }
 
 function run_test() {

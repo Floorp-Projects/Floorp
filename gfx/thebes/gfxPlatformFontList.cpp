@@ -2076,29 +2076,26 @@ nsAtom* gfxPlatformFontList::GetLangGroup(nsAtom* aLanguage) {
 
 /* static */ const char* gfxPlatformFontList::GetGenericName(
     StyleGenericFontFamily aGenericType) {
-  static const char kGeneric_serif[] = "serif";
-  static const char kGeneric_sans_serif[] = "sans-serif";
-  static const char kGeneric_monospace[] = "monospace";
-  static const char kGeneric_cursive[] = "cursive";
-  static const char kGeneric_fantasy[] = "fantasy";
-
   // type should be standard generic type at this point
   // map generic type to string
   switch (aGenericType) {
     case StyleGenericFontFamily::Serif:
-      return kGeneric_serif;
+      return "serif";
     case StyleGenericFontFamily::SansSerif:
-      return kGeneric_sans_serif;
+      return "sans-serif";
     case StyleGenericFontFamily::Monospace:
-      return kGeneric_monospace;
+      return "monospace";
     case StyleGenericFontFamily::Cursive:
-      return kGeneric_cursive;
+      return "cursive";
     case StyleGenericFontFamily::Fantasy:
-      return kGeneric_fantasy;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown generic");
-      return nullptr;
+      return "fantasy";
+    case StyleGenericFontFamily::MozEmoji:
+      return "-moz-emoji";
+    case StyleGenericFontFamily::None:
+      break;
   }
+  MOZ_ASSERT_UNREACHABLE("Unknown generic");
+  return nullptr;
 }
 
 void gfxPlatformFontList::InitLoader() {

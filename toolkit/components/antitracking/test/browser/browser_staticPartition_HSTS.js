@@ -72,6 +72,7 @@ add_task(async function() {
         set: [
           ["privacy.partition.network_state", networkIsolation],
           ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+          ["security.mixed_content.upgrade_display_content", false],
         ],
       });
 
@@ -117,6 +118,7 @@ add_task(async function test_subresource() {
         set: [
           ["privacy.partition.network_state", networkIsolation],
           ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+          ["security.mixed_content.upgrade_display_content", false],
         ],
       });
 

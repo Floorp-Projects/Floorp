@@ -90,6 +90,23 @@ var PromiseTestUtils = {
   },
 
   /**
+   * Called only by the test infrastructure, collect all the
+   * JavaScript Developer Errors that have been thrown and
+   * treat them as uncaught promise rejections.
+   */
+  collectJSDevErrors() {
+    let recentJSDevError = ChromeUtils.recentJSDevError;
+    if (!recentJSDevError) {
+      // Either `recentJSDevError` is not implemented in this version or there is no recent JS dev error.
+      return;
+    }
+    ChromeUtils.clearRecentJSDevError();
+    Promise.reject(
+      `${recentJSDevError.message}\n${recentJSDevError.stack}\ndetected at\n`
+    );
+  },
+
+  /**
    * Called only by the test infrastructure, spins the event loop until the
    * messages for pending DOM Promise rejections have been processed.
    */

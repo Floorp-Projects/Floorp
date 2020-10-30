@@ -208,7 +208,7 @@ ifdef NIGHTLY_BUILD
 	fi
 endif
 	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
-	-$(MOZILLA_DIR)/mach compare-locales --merge $(BASE_MERGE) $(srcdir)/l10n.toml $(L10NBASEDIR) $*
+	-$(PYTHON3) $(MOZILLA_DIR)/mach compare-locales --merge $(BASE_MERGE) $(srcdir)/l10n.toml $(L10NBASEDIR) $*
 # Hunspell dictionaries are interesting, as we don't ship the en-US
 # dictionary in repacks. Thus we can't use the merge logic from
 # compare-locales above, which would add en-US.dic and en-US.aff to

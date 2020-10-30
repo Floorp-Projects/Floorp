@@ -1466,8 +1466,8 @@ impl Drop for RenderApi {
 fn window_size_sanity_check(size: DeviceIntSize) {
     // Anything bigger than this will crash later when attempting to create
     // a render task.
-    const MAX_SIZE: i32 = 16000;
-    if size.width > MAX_SIZE || size.height > MAX_SIZE {
+    use crate::render_task::MAX_RENDER_TASK_SIZE;
+    if size.width > MAX_RENDER_TASK_SIZE || size.height > MAX_RENDER_TASK_SIZE {
         panic!("Attempting to create a {}x{} window/document", size.width, size.height);
     }
 }

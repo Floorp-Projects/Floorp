@@ -8,4 +8,5 @@ DevToolsModules(
     "root-node.js",
     "storage-indexed-db.js",
     "storage-local-storage.js",
+    "storage-session-storage.js",
 )
