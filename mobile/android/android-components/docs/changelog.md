@@ -56,6 +56,7 @@ permalink: /changelog/
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8784) create download directory when it doesn't exists for more information see [mozilla-mobile/fenix#15527](https://github.com/mozilla-mobile/fenix/issues/5829).
   * 🚒 Bug fixed [issue #8847](https://github.com/mozilla-mobile/android-components/issues/8847) crash when trying to download a file and switching from a normal to a private mode.
+  * 🚒 Bug fixed [issue #8857](https://github.com/mozilla-mobile/android-components/issues/8857)  Sometimes it is not possible to dismiss download notifications see [Fenix#15527](https://github.com/mozilla-mobile/fenix/issues/15527) for more information.
 
 * **feature-top-sites**
   * Added `RenameTopSiteUseCase` to rename pinned site entries. [#8751](https://github.com/mozilla-mobile/android-components/issues/8751)

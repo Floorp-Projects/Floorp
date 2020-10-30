@@ -31,6 +31,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -771,6 +772,58 @@ class AbstractFetchDownloadServiceTest {
         assertEquals(1, service.downloadJobs.size)
         verify(service).updateForegroundNotificationIfNeeded(downloadState)
         verify(service).removeNotification(testContext, downloadState)
+    }
+
+    @Test
+    fun `WHEN all downloads are completed stopForeground must be called`() {
+        val download1 = DownloadState(id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
+                status = COMPLETED)
+        val download2 = DownloadState(id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
+                status = COMPLETED)
+        val downloadState1 = DownloadJobState(
+            state = download1,
+            status = COMPLETED,
+            foregroundServiceId = Random.nextInt()
+        )
+
+        val downloadState2 = DownloadJobState(
+            state = download2,
+            status = COMPLETED,
+            foregroundServiceId = Random.nextInt()
+        )
+
+        service.downloadJobs["1"] = downloadState1
+        service.downloadJobs["2"] = downloadState2
+
+        service.updateForegroundNotificationIfNeeded(downloadState1)
+
+        verify(service).stopForeground(false)
+    }
+
+    @Test
+    fun `Until all downloads are NOT completed stopForeground must NOT be called`() {
+        val download1 = DownloadState(id = "1", url = "https://example.com/file1.txt", fileName = "file1.txt",
+                status = COMPLETED)
+        val download2 = DownloadState(id = "2", url = "https://example.com/file2.txt", fileName = "file2.txt",
+                status = DOWNLOADING)
+        val downloadState1 = DownloadJobState(
+            state = download1,
+            status = COMPLETED,
+            foregroundServiceId = Random.nextInt()
+        )
+
+        val downloadState2 = DownloadJobState(
+            state = download2,
+            status = DOWNLOADING,
+            foregroundServiceId = Random.nextInt()
+        )
+
+        service.downloadJobs["1"] = downloadState1
+        service.downloadJobs["2"] = downloadState2
+
+        service.updateForegroundNotificationIfNeeded(downloadState1)
+
+        verify(service, never()).stopForeground(false)
     }
 
     @Test

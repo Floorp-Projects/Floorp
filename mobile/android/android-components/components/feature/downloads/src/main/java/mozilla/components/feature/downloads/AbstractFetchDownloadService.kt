@@ -588,6 +588,13 @@ abstract class AbstractFetchDownloadService : Service() {
             // This device supports notification groups, we just need to update the summary notification
             updateNotificationGroup()
         }
+        // If all downloads have been completed we don't need the status of
+        // foreground service anymore, we can call stopForeground and let the user
+        // swipe the foreground notification.
+        val finishedDownloading = downloadJobs.values.toList().all { it.status == COMPLETED }
+        if (finishedDownloading) {
+            stopForeground(false)
+        }
     }
 
     @Suppress("ComplexCondition")
