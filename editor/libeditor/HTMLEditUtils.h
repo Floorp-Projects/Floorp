@@ -43,6 +43,14 @@ class HTMLEditUtils final {
     return aNode.IsEditable();
   }
 
+  /*
+   * IsRemovalNode() returns true when parent of aContent is editable even
+   * if aContent isn't editable.
+   */
+  static bool IsRemovableNode(const nsIContent& aContent) {
+    return aContent.GetParentNode() && aContent.GetParentNode()->IsEditable();
+  }
+
   /**
    * IsRemovableFromParentNode() returns true when aContent is editable, has a
    * parent node and the parent node is also editable.
