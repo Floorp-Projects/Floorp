@@ -387,13 +387,12 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     formatOpt.hour = GetOption(options, "hour", "string", ["2-digit", "numeric"], undefined);
     formatOpt.minute = GetOption(options, "minute", "string", ["2-digit", "numeric"], undefined);
     formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
-    formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
-                                       undefined);
-
 #ifdef NIGHTLY_BUILD
     formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 1, 3,
                                                        undefined);
 #endif
+    formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
+                                       undefined);
 
     // Steps 23-24 provided by ICU - see comment after this function.
 
@@ -420,10 +419,11 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
     if (dateStyle !== undefined || timeStyle !== undefined) {
       var optionsList = [
-          "weekday", "era", "year", "month", "day", "hour", "minute", "second", "timeZoneName",
+          "weekday", "era", "year", "month", "day", "hour", "minute", "second",
 #ifdef NIGHTLY_BUILD
           "fractionalSecondDigits",
 #endif
+          "timeZoneName",
       ];
 
       for (var i = 0; i < optionsList.length; i++) {
