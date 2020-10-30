@@ -429,7 +429,8 @@ jobs:
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
-                - 'mozharness.zip'
+                - artifact: 'mozharness.zip'
+                  dest: 'mozharness'
         run:
             using: run-task
             checkout: false
@@ -472,7 +473,8 @@ jobs:
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
             android-build:
-                - 'mozharness.zip'
+                - artifact: 'mozharness.zip'
+                  dest: 'mozharness'
         run:
             using: run-task
             checkout: false
