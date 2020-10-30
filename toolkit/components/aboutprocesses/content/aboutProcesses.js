@@ -68,6 +68,18 @@ function wait(ms = 0) {
   }
 }
 
+/**
+ * For the time being, Fluent doesn't support duration or memory formats, so we need
+ * to fetch units from Fluent. To avoid re-fetching at each update, we prefetch these
+ * units during initialization, asynchronously.
+ *
+ * @type Promise<{
+ *   durationUnits: { ns: String, us: String, ms: String, s: String, min: String, h: String, d: String },
+ *   memoryUnits: { B: String, KB: String, MB: String, GB: String, TB: String, PB: String, EB: String }
+ * }.
+ */
+let gPromisePrefetchedUnits;
+
 let tabFinder = {
   update() {
     this._map = new Map();
@@ -406,7 +418,7 @@ var View = {
    * @param {ProcessDelta} data The data to display.
    * @return {DOMElement} The row displaying the process.
    */
-  appendProcessRow(data) {
+  appendProcessRow(data, units) {
     let row = document.createElement("tr");
     row.classList.add("process");
 
@@ -537,9 +549,9 @@ var View = {
           fluentName: "about-processes-total-memory-size",
           fluentArgs: {
             total: formattedTotal.amount,
-            totalUnit: formattedTotal.unit,
+            totalUnit: units.memory[formattedTotal.unit],
             delta: Math.abs(formattedDelta.amount),
-            deltaUnit: formattedDelta.unit,
+            deltaUnit: units.memory[formattedDelta.unit],
             deltaSign: data.deltaResidentUniqueSize > 0 ? "+" : "-",
           },
           classes: ["totalMemorySize"],
@@ -549,7 +561,7 @@ var View = {
           fluentName: "about-processes-total-memory-size-no-change",
           fluentArgs: {
             total: formattedTotal.amount,
-            totalUnit: formattedTotal.unit,
+            totalUnit: units.memory[formattedTotal.unit],
           },
           classes: ["totalMemorySize"],
         });
@@ -557,19 +569,20 @@ var View = {
     }
 
     // Column: CPU: User and Kernel
-    {
+    if (data.slopeCpu == null) {
+      this._addCell(row, {
+        fluentName: "about-processes-cpu-user-and-kernel-not-ready",
+        classes: ["cpu"],
+      });
+    } else {
       let { duration, unit } = this._getDuration(data.totalCpu);
-      if (data.slopeCpu == null) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-not-ready",
-          classes: ["cpu"],
-        });
-      } else if (data.slopeCpu == 0) {
+      let localizedUnit = units.duration[unit];
+      if (data.slopeCpu == 0) {
         this._addCell(row, {
           fluentName: "about-processes-cpu-user-and-kernel-idle",
           fluentArgs: {
             total: duration,
-            unit,
+            unit: localizedUnit,
           },
           classes: ["cpu"],
         });
@@ -579,7 +592,7 @@ var View = {
           fluentArgs: {
             percent: data.slopeCpu,
             total: duration,
-            unit,
+            unit: localizedUnit,
           },
           classes: ["cpu"],
         });
@@ -763,7 +776,7 @@ var View = {
    * @param {ThreadDelta} data The data to display.
    * @return {DOMElement} The row displaying the thread.
    */
-  appendThreadRow(data) {
+  appendThreadRow(data, units) {
     let row = document.createElement("tr");
     row.classList.add("thread");
 
@@ -784,19 +797,20 @@ var View = {
     });
 
     // Column: CPU: User and Kernel
-    {
+    if (data.slopeCpu == null) {
+      this._addCell(row, {
+        fluentName: "about-processes-cpu-user-and-kernel-not-ready",
+        classes: ["cpu"],
+      });
+    } else {
       let { duration, unit } = this._getDuration(data.totalCpu);
-      if (data.slopeCpu == null) {
-        this._addCell(row, {
-          fluentName: "about-processes-cpu-user-and-kernel-not-ready",
-          classes: ["cpu"],
-        });
-      } else if (data.slopeCpu == 0) {
+      let localizedUnit = units.duration[unit];
+      if (data.slopeCpu == 0) {
         this._addCell(row, {
           fluentName: "about-processes-cpu-user-and-kernel-idle",
           fluentArgs: {
             total: duration,
-            unit,
+            unit: localizedUnit,
           },
           classes: ["cpu"],
         });
@@ -806,7 +820,7 @@ var View = {
           fluentArgs: {
             percent: data.slopeCpu,
             total: duration,
-            unit,
+            unit: localizedUnit,
           },
           classes: ["cpu"],
         });
@@ -843,7 +857,7 @@ var View = {
       return { duration: rawDurationNS, unit: "ns" };
     }
     if (rawDurationNS <= NS_PER_MS) {
-      return { duration: rawDurationNS / NS_PER_US, unit: "µs" };
+      return { duration: rawDurationNS / NS_PER_US, unit: "us" };
     }
     if (rawDurationNS <= NS_PER_S) {
       return { duration: rawDurationNS / NS_PER_MS, unit: "ms" };
@@ -923,6 +937,45 @@ var Control = {
   },
   init() {
     this._initHangReports();
+
+    // Start prefetching units.
+    gPromisePrefetchedUnits = (async function() {
+      let [
+        ns,
+        us,
+        ms,
+        s,
+        min,
+        h,
+        d,
+        B,
+        KB,
+        MB,
+        GB,
+        TB,
+        PB,
+        EB,
+      ] = await document.l10n.formatValues([
+        { id: "duration-unit-ns" },
+        { id: "duration-unit-us" },
+        { id: "duration-unit-ms" },
+        { id: "duration-unit-s" },
+        { id: "duration-unit-m" },
+        { id: "duration-unit-h" },
+        { id: "duration-unit-d" },
+        { id: "memory-unit-B" },
+        { id: "memory-unit-KB" },
+        { id: "memory-unit-MB" },
+        { id: "memory-unit-GB" },
+        { id: "memory-unit-TB" },
+        { id: "memory-unit-PB" },
+        { id: "memory-unit-EB" },
+      ]);
+      return {
+        duration: { ns, us, ms, s, min, h, d },
+        memory: { B, KB, MB, GB, TB, PB, EB },
+      };
+    })();
 
     let tbody = document.getElementById("process-tbody");
 
@@ -1083,6 +1136,7 @@ var Control = {
     }
 
     let counters = State.getCounters();
+    let units = await gPromisePrefetchedUnits;
 
     // Reset the selectedRow field and the _openItems set each time we redraw
     // to avoid keeping forever references to dead processes.
@@ -1107,7 +1161,7 @@ var Control = {
       let isHung = process.childID && hungItems.has(process.childID);
       process.isHung = isHung;
 
-      let processRow = View.appendProcessRow(process, isOpen);
+      let processRow = View.appendProcessRow(process, units);
       processRow.process = process;
 
       if (process.type != "extension") {
@@ -1127,7 +1181,7 @@ var Control = {
 
         if (isOpen) {
           this._openItems.add(process.pid);
-          this._showThreads(processRow);
+          this._showThreads(processRow, units);
         }
       }
       if (
@@ -1143,13 +1197,13 @@ var Control = {
 
     await View.commit();
   },
-  _showThreads(row) {
+  _showThreads(row, units) {
     let process = row.process;
     this._sortThreads(process.threads);
     let elt = row;
     for (let thread of process.threads) {
       // Enrich `elt` with a property `thread`, used for testing.
-      elt = View.appendThreadRow(thread);
+      elt = View.appendThreadRow(thread, units);
       elt.thread = thread;
     }
     return elt;
@@ -1280,12 +1334,15 @@ var Control = {
   },
 
   // Open/close list of threads.
-  _handleTwisty(target) {
+  async _handleTwisty(target) {
+    // We await immediately, to ensure that all DOM changes are made in the same tick.
+    // Otherwise, it's both wasteful and harder to test.
+    let units = await gPromisePrefetchedUnits;
     let row = target.parentNode.parentNode;
     let id = row.process.pid;
     if (target.classList.toggle("open")) {
       this._openItems.add(id);
-      this._showThreads(row);
+      this._showThreads(row, units);
       View.insertAfterRow(row);
     } else {
       this._openItems.delete(id);
