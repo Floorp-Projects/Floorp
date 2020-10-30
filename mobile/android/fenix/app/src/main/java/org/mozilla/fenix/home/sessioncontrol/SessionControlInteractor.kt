@@ -157,6 +157,13 @@ interface TopSiteInteractor {
     fun onOpenInPrivateTabClicked(topSite: TopSite)
 
     /**
+     * Opens a dialog to rename the given top site. Called when an user clicks on the "Rename" top site menu item.
+     *
+     * @param topSite The top site that will be renamed.
+     */
+    fun onRenameTopSiteClicked(topSite: TopSite)
+
+    /**
      * Removes the given top site. Called when an user clicks on the "Remove" top site menu item.
      *
      * @param topSite The top site that will be removed.
@@ -208,6 +215,10 @@ class SessionControlInteractor(
 
     override fun onOpenInPrivateTabClicked(topSite: TopSite) {
         controller.handleOpenInPrivateTabClicked(topSite)
+    }
+
+    override fun onRenameTopSiteClicked(topSite: TopSite) {
+        controller.handleRenameTopSiteClicked(topSite)
     }
 
     override fun onRemoveTopSiteClicked(topSite: TopSite) {

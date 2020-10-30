@@ -611,8 +611,10 @@
     <string name="collection_open_tabs">Open tabs</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Collection name</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Remove</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Rename</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Remove</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Delete from history</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
@@ -1575,6 +1577,14 @@
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Show most visited sites</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Name</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Top site name</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Cancel</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Remove</string>

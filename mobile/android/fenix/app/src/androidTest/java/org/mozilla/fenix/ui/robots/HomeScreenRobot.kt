@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import android.graphics.Bitmap
+import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
@@ -38,7 +39,9 @@ import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.CoreMatchers.not
+import org.hamcrest.Matchers
 import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Search
@@ -443,6 +446,18 @@ class HomeScreenRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun renameTopSite(title: String, interact: HomeScreenRobot.() -> Unit): Transition {
+            onView(withText("Rename"))
+                .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+                .perform(click())
+            onView(Matchers.allOf(withId(R.id.top_site_title), instanceOf(EditText::class.java)))
+                .perform(ViewActions.replaceText(title))
+            onView(withId(android.R.id.button1)).perform((click()))
+
+            HomeScreenRobot().interact()
+            return Transition()
         }
 
         fun removeTopSite(interact: HomeScreenRobot.() -> Unit): Transition {

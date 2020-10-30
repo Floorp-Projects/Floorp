@@ -120,6 +120,31 @@ class TopSitesTest {
     }
 
     @Test
+    fun verifyRenameTopSite() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val defaultWebPageTitle = "Test_Page_1"
+        val defaultWebPageTitleNew = "Test_Page_2"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+            verifyAddFirefoxHome()
+        }.addToFirefoxHome {
+            verifySnackBarText("Added to top sites!")
+        }.openTabDrawer {
+        }.openNewTab {
+        }.dismiss {
+            verifyExistingTopSitesList()
+            verifyExistingTopSitesTabs(defaultWebPageTitle)
+        }.openContextMenuOnTopSitesWithTitle(defaultWebPageTitle) {
+            verifyTopSiteContextMenuItems()
+        }.renameTopSite(defaultWebPageTitleNew) {
+            verifyExistingTopSitesList()
+            verifyExistingTopSitesTabs(defaultWebPageTitleNew)
+        }
+    }
+
+    @Test
     fun verifyRemoveTopSite() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
