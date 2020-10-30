@@ -52,7 +52,7 @@
 #include "js/MemoryFunctions.h"
 #include "js/MemoryMetrics.h"
 #include "js/Object.h"  // JS::GetClass
-#include "js/Stream.h"  // JS::AbortSignalIsAborted, JS::InitAbortSignalHandling
+#include "js/Stream.h"  // JS::AbortSignalIsAborted, JS::InitPipeToHandling
 #include "js/UbiNode.h"
 #include "js/UbiNodeUtils.h"
 #include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*, JS_SetAccumulateTelemetryCallback
@@ -3005,8 +3005,8 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
       return domObj->Aborted();
     };
 
-    JS::InitAbortSignalHandling(dom::AbortSignal_Binding::GetJSClass(),
-                                isAborted, cx);
+    JS::InitPipeToHandling(dom::AbortSignal_Binding::GetJSClass(), isAborted,
+                           cx);
   }
 
   JS::SetXrayJitInfo(&gXrayJitInfo);
