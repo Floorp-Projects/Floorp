@@ -2170,6 +2170,10 @@ var BookmarkingUI = {
           }
           break;
       }
+
+      if (ev.parentGuid === PlacesUtils.bookmarks.unfiledGuid) {
+        this.maybeShowOtherBookmarksFolder();
+      }
     }
   },
 
@@ -2207,7 +2211,25 @@ var BookmarkingUI = {
   onEndUpdateBatch() {},
   onBeforeItemRemoved() {},
   onItemVisited() {},
-  onItemMoved() {},
+  onItemMoved(
+    aItemId,
+    aProperty,
+    aIsAnnotationProperty,
+    aNewValue,
+    aLastModified,
+    aItemType,
+    aGuid,
+    oldParentGuid,
+    newParentGuid
+  ) {
+    let hasMovedToOrOutOfOtherBookmarks =
+      newParentGuid === PlacesUtils.bookmarks.unfiledGuid ||
+      oldParentGuid === PlacesUtils.bookmarks.unfiledGuid;
+
+    if (hasMovedToOrOutOfOtherBookmarks) {
+      this.maybeShowOtherBookmarksFolder();
+    }
+  },
 
   onWidgetUnderflow(aNode, aContainer) {
     let win = aNode.ownerGlobal;
@@ -2218,6 +2240,33 @@ var BookmarkingUI = {
     // The view gets broken by being removed and reinserted. Uninit
     // here so popupshowing will generate a new one:
     this._uninitView();
+  },
+
+  async maybeShowOtherBookmarksFolder() {
+    // Only show the "Other Bookmarks" folder in the toolbar if pref is enabled.
+    let featureEnabled = Services.prefs.getBoolPref(
+      "browser.toolbars.bookmarks.2h2020",
+      false
+    );
+
+    if (!featureEnabled) {
+      return;
+    }
+
+    let unfiledGuid = PlacesUtils.bookmarks.unfiledGuid;
+    let numberOfBookmarks = PlacesUtils.getChildCountForFolder(unfiledGuid);
+    let otherBookmarks = document.getElementById("OtherBookmarks");
+
+    if (numberOfBookmarks > 0) {
+      let otherBookmarksPopup = document.getElementById("OtherBookmarksPopup");
+      let result = PlacesUtils.getFolderContents(unfiledGuid);
+      let node = result.root;
+      otherBookmarksPopup._placesNode = PlacesUtils.asContainer(node);
+
+      otherBookmarks.hidden = false;
+    } else {
+      otherBookmarks.hidden = true;
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),

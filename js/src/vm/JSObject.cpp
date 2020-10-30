@@ -2369,10 +2369,12 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
   if (obj->isNative()) {
     // Search for a native dense element, typed array element, or property.
 
-    if (JSID_IS_INT(id) &&
-        obj->as<NativeObject>().containsDenseElement(JSID_TO_INT(id))) {
-      propp->setDenseOrTypedArrayElement();
-      return true;
+    if (JSID_IS_INT(id)) {
+      uint32_t index = JSID_TO_INT(id);
+      if (obj->as<NativeObject>().containsDenseElement(index)) {
+        propp->setDenseElement(index);
+        return true;
+      }
     }
 
     if (obj->is<TypedArrayObject>()) {
@@ -2384,7 +2386,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
 
       if (index.inspect()) {
         if (index.inspect().value() < obj->as<TypedArrayObject>().length()) {
-          propp->setDenseOrTypedArrayElement();
+          propp->setTypedArrayElement(index.inspect().value());
         } else {
           propp->setNotFound();
           if (isTypedArrayOutOfRange) {
@@ -2421,13 +2423,13 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
 static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
                                        PropertyResult prop, Value* vp,
                                        JSContext* cx) {
-  if (prop.isDenseOrTypedArrayElement()) {
-    // For simplicity we ignore the TypedArray with string index case.
-    if (!JSID_IS_INT(id)) {
-      return false;
-    }
-
-    return pobj->getDenseOrTypedArrayElement<NoGC>(cx, JSID_TO_INT(id), vp);
+  if (prop.isDenseElement()) {
+    *vp = pobj->getDenseElement(prop.denseElementIndex());
+    return true;
+  }
+  if (prop.isTypedArrayElement()) {
+    size_t idx = prop.typedArrayElementIndex();
+    return pobj->as<TypedArrayObject>().getElement<NoGC>(cx, idx, vp);
   }
 
   // Fail if we have a custom getter.
@@ -2477,7 +2479,9 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
 
 static inline bool NativeGetGetterPureInline(PropertyResult prop,
                                              JSFunction** fp) {
-  if (!prop.isDenseOrTypedArrayElement() && prop.shape()->hasGetterObject()) {
+  MOZ_ASSERT(prop.isNativeProperty());
+
+  if (prop.shape()->hasGetterObject()) {
     Shape* shape = prop.shape();
     if (shape->getterObject()->is<JSFunction>()) {
       *fp = &shape->getterObject()->as<JSFunction>();
@@ -2531,8 +2535,7 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  if (!prop || prop.isDenseOrTypedArrayElement() ||
-      !prop.shape()->hasGetterObject()) {
+  if (!prop || !prop.isNativeProperty() || !prop.shape()->hasGetterObject()) {
     return true;
   }
 
@@ -2557,8 +2560,7 @@ bool js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  *result = prop && !prop.isDenseOrTypedArrayElement() &&
-            prop.shape()->isDataProperty();
+  *result = prop && prop.isNativeProperty() && prop.shape()->isDataProperty();
   return true;
 }
 

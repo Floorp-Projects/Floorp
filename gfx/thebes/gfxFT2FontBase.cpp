@@ -72,6 +72,41 @@ gfxFT2FontEntryBase::CmapCacheSlot* gfxFT2FontEntryBase::GetCmapCacheSlot(
   return &mCmapCache[aCharCode % kNumCmapCacheSlots];
 }
 
+static FT_ULong GetTableSizeFromFTFace(SharedFTFace* aFace,
+                                       uint32_t aTableTag) {
+  if (!aFace) {
+    return 0;
+  }
+  FT_ULong len = 0;
+  if (FT_Load_Sfnt_Table(aFace->GetFace(), aTableTag, 0, nullptr, &len) != 0) {
+    return 0;
+  }
+  return len;
+}
+
+bool gfxFT2FontEntryBase::FaceHasTable(SharedFTFace* aFace,
+                                       uint32_t aTableTag) {
+  return GetTableSizeFromFTFace(aFace, aTableTag) > 0;
+}
+
+nsresult gfxFT2FontEntryBase::CopyFaceTable(SharedFTFace* aFace,
+                                            uint32_t aTableTag,
+                                            nsTArray<uint8_t>& aBuffer) {
+  FT_ULong length = GetTableSizeFromFTFace(aFace, aTableTag);
+  if (!length) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (!aBuffer.SetLength(length, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (FT_Load_Sfnt_Table(aFace->GetFace(), aTableTag, 0, aBuffer.Elements(),
+                         &length) != 0) {
+    aBuffer.Clear();
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 uint32_t gfxFT2FontBase::GetGlyph(uint32_t aCharCode) {
   // FcFreeTypeCharIndex needs to lock the FT_Face and can end up searching
   // through all the postscript glyph names in the font.  Therefore use a

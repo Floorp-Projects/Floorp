@@ -1407,11 +1407,11 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
   if (mozilla::SessionHistoryInParent()) {
     if (mLoadingEntry) {
       isSubFrame = mLoadingEntry->mInfo.IsSubFrame();
-      MOZ_LOG(gSHLog, LogLevel::Debug,
-              ("nsDocShell %p SetCurrentURI, isSubFrame=%d", this, isSubFrame));
+    } else {
+      isSubFrame = !mBrowsingContext->IsTop() && mActiveEntry;
     }
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("nsDocShell %p SetCurrentURI, no mLoadingEntry", this));
+            ("nsDocShell %p SetCurrentURI, isSubFrame=%d", this, isSubFrame));
   } else {
     if (mLSHE) {
       isSubFrame = mLSHE->GetIsSubFrame();

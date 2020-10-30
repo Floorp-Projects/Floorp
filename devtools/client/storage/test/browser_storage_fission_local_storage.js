@@ -47,19 +47,3 @@ add_task(async function() {
 function buildURLWithContent(domain, html) {
   return `http://${domain}/document-builder.sjs?html=${encodeURI(html)}`;
 }
-
-function checkTree(doc, storage, host) {
-  const treeId = JSON.stringify([storage, host]);
-  ok(
-    doc.querySelector(`[data-id='${treeId}']`),
-    `${storage} > ${host} is in the tree`
-  );
-}
-
-function checkStorageData(name, value) {
-  is(
-    gUI.table.items.get(name)?.value,
-    value,
-    `Table row has an entry for: ${name} with value: ${value}`
-  );
-}
