@@ -2,6 +2,7 @@ apply plugin: 'kotlin'
 
 dependencies {
   compileOnly Deps.detektApi
+  implementation Deps.androidx_annotation
 
   // I didn't look thoroughly enough to really know what's going on here but I think
   // the detekt API uses jdk8 so if we provide jdk7, the dependency collision system

@@ -120,6 +120,8 @@ mozilla-detekt-rules:
   MozillaRunBlockingCheck:
     active: true
     excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
+  MozillaUseLazyMonitored:
+    active: true
 
 empty-blocks:
   active: true
