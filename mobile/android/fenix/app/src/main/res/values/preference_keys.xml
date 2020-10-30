@@ -47,6 +47,8 @@
     <string name="pref_key_account" translatable="false">pref_key_account</string>
     <string name="pref_key_sign_in" translatable="false">pref_key_sign_in</string>
     <string name="pref_key_account_auth_error" translatable="false">pref_key_account_auth_error</string>
+    <string name="pref_key_allow_domestic_china_fxa_server" translatable="false">pref_key_allow_domestic_china_fxa_server</string>
+    <string name="pref_key_have_read_fxa_account_json" translatable="false">pref_key_have_read_fxa_account_json</string>
     <string name="pref_key_override_fxa_server" translatable="false">pref_key_override_fxa_server</string>
     <string name="pref_key_override_sync_tokenserver" translatable="false">pref_key_override_sync_tokenserver</string>
     <string name="pref_key_private_mode" translatable="false">pref_key_private_mode</string>

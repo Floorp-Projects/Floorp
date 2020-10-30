@@ -887,6 +887,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    var allowDomesticChinaFxaServer by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_allow_domestic_china_fxa_server),
+        default = true
+    )
+
     var overrideFxAServer by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_override_fxa_server),
         default = ""

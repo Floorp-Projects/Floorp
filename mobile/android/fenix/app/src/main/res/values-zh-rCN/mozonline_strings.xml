@@ -27,4 +27,13 @@
     <string name="default_top_site_jd">京东</string>
     <!-- Default title for pinned JD top site that links to PDD home page  -->
     <string name="default_top_site_pdd">拼多多</string>
+
+    <!-- FxA server switch-->
+    <!-- Switch Preference for domestic China/global fxa server -->
+    <string name="preferences_allow_domestic_china_fxa_server">使用本地服务</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2_cn"><![CDATA[打开 <b>firefox.com.cn/pair</b> 并扫描网站上的二维码]]></string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions_cn"><![CDATA[在计算机上使用 Firefox 打开 <b>https://firefox.com.cn/pair</b>]]></string>
 </resources>
+
