@@ -567,7 +567,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
   }
 
-  PointerEventHandler::UpdateActivePointerState(mouseEvent);
+  PointerEventHandler::UpdateActivePointerState(mouseEvent, aTargetContent);
 
   switch (aEvent->mMessage) {
     case eContextMenu:

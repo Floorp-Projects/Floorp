@@ -25,8 +25,6 @@
       topLevelDocumentEventHandling,
       topLevelDocumentEventHandlingWithTouch,
       iframeEventHandling,
-      iframeEventHandlingWithCapturingInParent,
-      iframeEventHandlingwithHiddenCapturingInParent
     ];
 
     function next() {
@@ -227,79 +225,6 @@
         }
       }
       next();
-    }
-
-    function iframeEventHandlingWithCapturingInParent(
-      name = "iframeEventHandlingWithCapturingInParent") {
-      var pid;
-      var iframe = document.getElementById("iframe");
-      var doc = iframe.contentDocument;
-      doc.body.innerHTML = "";
-      doc.head.innerHTML =
-        "<style>" + document.getElementsByTagName("style")[0].textContent + "</style>";
-      var area = doc.createElement("div");
-      area.id = "area";
-      var target = doc.createElement("div");
-      target.id = "target";
-      area.appendChild(target);
-      doc.body.appendChild(area);
-      var body = doc.body;
-      var html = doc.documentElement;
-      var win = doc.defaultView;
-      var targetOutsideIframe = document.getElementById("targetOutsideIframe");
-      var eventLog = [];
-      function captureEvent(e) {
-        eventLog.push([e.type, e.composedPath()]);
-      }
-      var expectedEvents = [
-        ["pointerdown", [ target, area, body, html, doc, win ]],
-        ["mousedown", [ target, area, body, html, doc, win ]],
-        ["pointerup", [ targetOutsideIframe, document.body, document.documentElement, document, window ]],
-        ["mouseup", [ targetOutsideIframe, document.body, document.documentElement, document, window ]],
-        ["click", [ target, area, body, html, doc, win ]],
-        ];
-
-      win.addEventListener("pointerdown",
-        function(e) {
-          captureEvent(e);
-          pid = e.pointerId;
-          targetOutsideIframe.setPointerCapture(pid);
-        }, { once: true});
-      win.addEventListener("mousedown",
-        function(e) {
-          captureEvent(e);
-        }, { once: true});
-      window.addEventListener("pointerup",
-        function(e) {
-          captureEvent(e);
-          targetOutsideIframe.releasePointerCapture(pid);
-        }, { once: true});
-      window.addEventListener("mouseup", function(e) {
-          captureEvent(e);
-        }, { once: true});
-      win.addEventListener("click", function(e) {
-          captureEvent(e);
-        }, { once: true});
-
-      synthesizeMouseAtCenter(target, {}, win);
-
-      opener.is(eventLog.length, expectedEvents.length,
-                `[${name}] Same number events expected.`);
-      for (var i = 0; i < eventLog.length; ++i) {
-        opener.is(eventLog[i][0], expectedEvents[i][0],
-                  `${name} ${i}`);
-        for (var j = 0; j < eventLog[i][1].length; ++j) {
-          opener.is(eventLog[i][1][j], expectedEvents[i][1][j],
-                    `${name} ${i} ${j}`);
-        }
-      }
-      next();
-    }
-
-    function iframeEventHandlingwithHiddenCapturingInParent() {
-      document.getElementById("targetOutsideIframe").style.display = "none";
-      document.getElementById("targetOutsideIframe").offsetLeft;
-      iframeEventHandlingWithCapturingInParent("iframeEventHandlingwithHiddenCapturingInParent");
     }
 
     </script>
