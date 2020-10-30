@@ -537,8 +537,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     info("Sanity checks: memory resident");
     testMemory(
       memoryResidentContent,
-      row.process.totalResidentUniqueSize,
-      row.process.deltaResidentUniqueSize,
+      row.process.totalRamSize,
+      row.process.deltaRamSize,
       HARDCODED_ASSUMPTIONS_PROCESS
     );
 
