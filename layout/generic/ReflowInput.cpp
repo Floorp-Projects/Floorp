@@ -310,7 +310,8 @@ void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
 
 void ReflowInput::Init(nsPresContext* aPresContext,
                        const Maybe<LogicalSize>& aContainingBlockSize,
-                       const nsMargin* aBorder, const nsMargin* aPadding) {
+                       const Maybe<LogicalMargin>& aBorder,
+                       const Maybe<LogicalMargin>& aPadding) {
   if (AvailableISize() == NS_UNCONSTRAINEDSIZE) {
     // Look up the parent chain for an orthogonal inline limit,
     // and reset AvailableISize() if found.
@@ -2065,7 +2066,7 @@ static inline bool IsSideCaption(nsIFrame* aFrame,
 
 void ReflowInput::InitConstraints(
     nsPresContext* aPresContext, const Maybe<LogicalSize>& aContainingBlockSize,
-    const nsMargin* aBorder, const nsMargin* aPadding,
+    const Maybe<LogicalMargin>& aBorder, const Maybe<LogicalMargin>& aPadding,
     LayoutFrameType aFrameType) {
   MOZ_ASSERT(
       !IsFloating() || (mStyleDisplay->mDisplay != StyleDisplay::MozBox &&
@@ -2384,8 +2385,8 @@ static void UpdateProp(nsIFrame* aFrame,
 void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
                                        LayoutFrameType aFrameType,
                                        ComputeSizeFlags aFlags,
-                                       const nsMargin* aBorder,
-                                       const nsMargin* aPadding,
+                                       const Maybe<LogicalMargin>& aBorder,
+                                       const Maybe<LogicalMargin>& aPadding,
                                        const nsStyleDisplay* aDisplay) {
   DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aCBWM, aBorder, aPadding);
 
@@ -2422,7 +2423,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
     SetComputedLogicalPadding(wm, LogicalMargin(wm));
     needPaddingProp = false;
   } else if (aPadding) {  // padding is an input arg
-    SetComputedLogicalPadding(wm, LogicalMargin(wm, *aPadding));
+    SetComputedLogicalPadding(wm, *aPadding);
     needPaddingProp = mFrame->StylePadding()->IsWidthDependent() ||
                       mFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
                                               NS_FRAME_DYNAMIC_REFLOW_ROOT);
@@ -2472,7 +2473,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
   } else if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
     // Do nothing since the border local variable is initialized all zero.
   } else if (aBorder) {  // border is an input arg
-    border = LogicalMargin(wm, *aBorder);
+    border = *aBorder;
   } else {
     border = LogicalMargin(wm, mFrame->StyleBorder()->GetComputedBorder());
   }
