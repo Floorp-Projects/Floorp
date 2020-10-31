@@ -22,11 +22,11 @@ for ( let [op, expected] of [
 000000..  41 0f 5f c7               maxps %xmm15, %xmm0
 `],
     ['f32x4.convert_i32x4_u', `
-00000023  48 8b ec                  mov %rsp, %rbp
-00000026  66 45 0f ef ff            pxor %xmm15, %xmm15
-0000002B  66 44 0f 3a 0e f8 55      pblendw \\$0x55, %xmm0, %xmm15
-00000032  66 41 0f fa c7            psubd %xmm15, %xmm0
-00000037  45 0f 5b ff               cvtdq2ps %xmm15, %xmm15
+000000..  48 8b ec                  mov %rsp, %rbp
+000000..  66 45 0f ef ff            pxor %xmm15, %xmm15
+000000..  66 44 0f 3a 0e f8 55      pblendw \\$0x55, %xmm0, %xmm15
+000000..  66 41 0f fa c7            psubd %xmm15, %xmm0
+000000..  45 0f 5b ff               cvtdq2ps %xmm15, %xmm15
 `],
 ] ) {
     let ins = wasmEvalText(`
