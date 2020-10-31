@@ -2381,13 +2381,13 @@ static void UpdateProp(nsIFrame* aFrame,
   }
 }
 
-void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
+void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
                                        LayoutFrameType aFrameType,
                                        ComputeSizeFlags aFlags,
                                        const nsMargin* aBorder,
                                        const nsMargin* aPadding,
                                        const nsStyleDisplay* aDisplay) {
-  DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aWM, aBorder, aPadding);
+  DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aCBWM, aBorder, aPadding);
 
   // Since we are in reflow, we don't need to store these properties anymore
   // unless they are dependent on width, in which case we store the new value.
@@ -2398,7 +2398,7 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
   // become the default computed values, and may be adjusted below
   // XXX fix to provide 0,0 for the top&bottom margins for
   // inline-non-replaced elements
-  bool needMarginProp = ComputeMargin(aWM, aPercentBasis);
+  bool needMarginProp = ComputeMargin(aCBWM, aPercentBasis);
   // Note that ComputeMargin() simplistically resolves 'auto' margins to 0.
   // In formatting contexts where this isn't correct, some later code will
   // need to update the UsedMargin() property with the actual resolved value.
@@ -2425,7 +2425,7 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
                       mFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
                                               NS_FRAME_DYNAMIC_REFLOW_ROOT);
   } else {
-    needPaddingProp = ComputePadding(aWM, aPercentBasis, aFrameType);
+    needPaddingProp = ComputePadding(aCBWM, aPercentBasis, aFrameType);
   }
 
   // Add [align|justify]-content:baseline padding contribution.
@@ -2739,7 +2739,7 @@ nscoord ReflowInput::CalcLineHeight(nsIContent* aContent,
   return lineHeight;
 }
 
-bool SizeComputationInput::ComputeMargin(WritingMode aWM,
+bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
                                          nscoord aPercentBasis) {
   // SVG text frames have no margin.
   if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
@@ -2757,18 +2757,18 @@ bool SizeComputationInput::ComputeMargin(WritingMode aWM,
     if (aPercentBasis == NS_UNCONSTRAINEDSIZE) {
       aPercentBasis = 0;
     }
-    LogicalMargin m(aWM);
-    m.IStart(aWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetIStart(aWM));
-    m.IEnd(aWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetIEnd(aWM));
+    LogicalMargin m(aCBWM);
+    m.IStart(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
+        aPercentBasis, styleMargin->mMargin.GetIStart(aCBWM));
+    m.IEnd(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
+        aPercentBasis, styleMargin->mMargin.GetIEnd(aCBWM));
 
-    m.BStart(aWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetBStart(aWM));
-    m.BEnd(aWM) = nsLayoutUtils::ComputeCBDependentValue(
-        aPercentBasis, styleMargin->mMargin.GetBEnd(aWM));
+    m.BStart(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
+        aPercentBasis, styleMargin->mMargin.GetBStart(aCBWM));
+    m.BEnd(aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
+        aPercentBasis, styleMargin->mMargin.GetBEnd(aCBWM));
 
-    SetComputedLogicalMargin(aWM, m);
+    SetComputedLogicalMargin(aCBWM, m);
   }
 
   // ... but font-size-inflation-based margin adjustment uses the
@@ -2784,7 +2784,7 @@ bool SizeComputationInput::ComputeMargin(WritingMode aWM,
   return isCBDependent;
 }
 
-bool SizeComputationInput::ComputePadding(WritingMode aWM,
+bool SizeComputationInput::ComputePadding(WritingMode aCBWM,
                                           nscoord aPercentBasis,
                                           LayoutFrameType aFrameType) {
   // If style can provide us the padding directly, then use it.
@@ -2805,22 +2805,22 @@ bool SizeComputationInput::ComputePadding(WritingMode aWM,
     if (aPercentBasis == NS_UNCONSTRAINEDSIZE) {
       aPercentBasis = 0;
     }
-    LogicalMargin p(aWM);
-    p.IStart(aWM) =
+    LogicalMargin p(aCBWM);
+    p.IStart(aCBWM) = std::max(
+        0, nsLayoutUtils::ComputeCBDependentValue(
+               aPercentBasis, stylePadding->mPadding.GetIStart(aCBWM)));
+    p.IEnd(aCBWM) =
         std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetIStart(aWM)));
-    p.IEnd(aWM) =
-        std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetIEnd(aWM)));
+                        aPercentBasis, stylePadding->mPadding.GetIEnd(aCBWM)));
 
-    p.BStart(aWM) =
+    p.BStart(aCBWM) = std::max(
+        0, nsLayoutUtils::ComputeCBDependentValue(
+               aPercentBasis, stylePadding->mPadding.GetBStart(aCBWM)));
+    p.BEnd(aCBWM) =
         std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetBStart(aWM)));
-    p.BEnd(aWM) =
-        std::max(0, nsLayoutUtils::ComputeCBDependentValue(
-                        aPercentBasis, stylePadding->mPadding.GetBEnd(aWM)));
+                        aPercentBasis, stylePadding->mPadding.GetBEnd(aCBWM)));
 
-    SetComputedLogicalPadding(aWM, p);
+    SetComputedLogicalPadding(aCBWM, p);
   }
   return isCBDependent;
 }

@@ -208,29 +208,29 @@ struct SizeComputationInput {
    * Computes margin values from the specified margin style information, and
    * fills in the mComputedMargin member.
    *
-   * @param aWM Writing mode of the containing block
+   * @param aCBWM Writing mode of the containing block
    * @param aPercentBasis
    *    Inline size of the containing block (in its own writing mode), to use
    *    for resolving percentage margin values in the inline and block axes.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(mozilla::WritingMode aWM, nscoord aPercentBasis);
+  bool ComputeMargin(mozilla::WritingMode aCBWM, nscoord aPercentBasis);
 
   /**
    * Computes padding values from the specified padding style information, and
    * fills in the mComputedPadding member.
    *
-   * @param aWM Writing mode of the containing block
+   * @param aCBWM Writing mode of the containing block
    * @param aPercentBasis
    *    Inline size of the containing block (in its own writing mode), to use
    *    for resolving percentage padding values in the inline and block axes.
    * @return true if the padding is dependent on the containing block size.
    */
-  bool ComputePadding(mozilla::WritingMode aWM, nscoord aPercentBasis,
+  bool ComputePadding(mozilla::WritingMode aCBWM, nscoord aPercentBasis,
                       mozilla::LayoutFrameType aFrameType);
 
  protected:
-  void InitOffsets(mozilla::WritingMode aWM, nscoord aPercentBasis,
+  void InitOffsets(mozilla::WritingMode aCBWM, nscoord aPercentBasis,
                    mozilla::LayoutFrameType aFrameType,
                    mozilla::ComputeSizeFlags aFlags = {},
                    const nsMargin* aBorder = nullptr,
