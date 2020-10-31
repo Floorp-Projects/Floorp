@@ -367,8 +367,9 @@ nsresult ConnectionEntry::RemoveIdleConnection(nsHttpConnection* conn) {
   return NS_OK;
 }
 
-bool ConnectionEntry::IsInIdleConnections(nsHttpConnection* conn) {
-  return mIdleConns.Contains(conn);
+bool ConnectionEntry::IsInIdleConnections(HttpConnectionBase* conn) {
+  RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+  return connTCP && mIdleConns.Contains(connTCP);
 }
 
 already_AddRefed<nsHttpConnection> ConnectionEntry::GetIdleConnection(
@@ -487,7 +488,8 @@ void ConnectionEntry::VerifyTraffic() {
   }
 }
 
-void ConnectionEntry::InsertIntoIdleConnections_internal(nsHttpConnection* conn) {
+void ConnectionEntry::InsertIntoIdleConnections_internal(
+    nsHttpConnection* conn) {
   uint32_t idx;
   for (idx = 0; idx < mIdleConns.Length(); idx++) {
     nsHttpConnection* idleConn = mIdleConns[idx];
@@ -553,12 +555,13 @@ void ConnectionEntry::MakeAllDontReuseExcept(HttpConnectionBase* conn) {
 
 bool ConnectionEntry::FindConnToClaim(
     PendingTransactionInfo* pendingTransInfo) {
-  nsHttpTransaction* trans = pendingTransInfo->mTransaction;
+  nsHttpTransaction* trans = pendingTransInfo->Transaction();
 
   uint32_t halfOpenLength = HalfOpensLength();
   for (uint32_t i = 0; i < halfOpenLength; i++) {
     auto halfOpen = mHalfOpens[i];
-    if (halfOpen->AcceptsTransaction(trans) && halfOpen->Claim()) {
+    if (halfOpen->AcceptsTransaction(trans) &&
+        pendingTransInfo->TryClaimingHalfOpen(halfOpen)) {
       // We've found a speculative connection or a connection that
       // is free to be used in the half open list.
       // A free to be used connection is a connection that was
@@ -568,8 +571,7 @@ bool ConnectionEntry::FindConnToClaim(
           ("ConnectionEntry::FindConnToClaim [ci = %s]\n"
            "Found a speculative or a free-to-use half open connection\n",
            mConnInfo->HashKey().get()));
-      pendingTransInfo->mHalfOpen = do_GetWeakReference(
-          static_cast<nsISupportsWeakReference*>(mHalfOpens[i]));
+
       // return OK because we have essentially opened a new connection
       // by converting a speculative half-open to general use
       return true;
@@ -582,16 +584,11 @@ bool ConnectionEntry::FindConnToClaim(
   if (trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) {
     uint32_t activeLength = mActiveConns.Length();
     for (uint32_t i = 0; i < activeLength; i++) {
-      nsAHttpTransaction* activeTrans = mActiveConns[i]->Transaction();
-      NullHttpTransaction* nullTrans =
-          activeTrans ? activeTrans->QueryNullTransaction() : nullptr;
-      if (nullTrans && nullTrans->Claim()) {
+      if (pendingTransInfo->TryClaimingActiveConn(mActiveConns[i])) {
         LOG(
             ("ConnectionEntry::FindConnectingSocket [ci = %s] "
              "Claiming a null transaction for later use\n",
              mConnInfo->HashKey().get()));
-        pendingTransInfo->mActiveConn = do_GetWeakReference(
-            static_cast<nsISupportsWeakReference*>(mActiveConns[i]));
         return true;
       }
     }

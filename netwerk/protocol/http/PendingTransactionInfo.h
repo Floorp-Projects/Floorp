@@ -6,6 +6,8 @@
 #ifndef PendingTransactionInfo_h__
 #define PendingTransactionInfo_h__
 
+#include "HalfOpenSocket.h"
+
 namespace mozilla {
 namespace net {
 
@@ -18,13 +20,30 @@ class PendingTransactionInfo final : public ARefBase {
 
   void PrintDiagnostics(nsCString& log);
 
- public:  // meant to be public.
+  // Return true if the transaction has claimed a HalfOpen socket or
+  // a connection in TLS handshake phase.
+  bool IsAlreadyClaimedInitializingConn();
+
+  void AbandonHalfOpenAndForgetActiveConn();
+
+  // Try to claim a halfOpen socket. We can only claim it if it is not
+  // claimed yet.
+  bool TryClaimingHalfOpen(HalfOpenSocket* sock);
+  // Similar as above, but for a ActiveConn that is performing a TLS handshake
+  // and has only a NullTransaction associated.
+  bool TryClaimingActiveConn(HttpConnectionBase* conn);
+  // It is similar as above, but in tihs case the halfOpen is made for this
+  // PendingTransactionInfo and it is already claimed.
+  void AddHalfOpen(HalfOpenSocket* sock);
+
+  nsHttpTransaction* Transaction() const { return mTransaction; }
+
+ private:
   RefPtr<nsHttpTransaction> mTransaction;
   nsWeakPtr mHalfOpen;
   nsWeakPtr mActiveConn;
 
- private:
-  virtual ~PendingTransactionInfo() = default;
+  ~PendingTransactionInfo();
 };
 
 }  // namespace net
