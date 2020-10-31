@@ -10424,7 +10424,10 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     parentReflowInput.SetComputedLogicalMargin(parentWM,
                                                LogicalMargin(parentWM));
     // XXX use box methods
-    parentFrame->GetXULPadding(parentReflowInput.ComputedPhysicalPadding());
+    nsMargin padding;
+    parentFrame->GetXULPadding(padding);
+    parentReflowInput.SetComputedLogicalPadding(
+        parentWM, LogicalMargin(parentWM, padding));
     parentFrame->GetXULBorder(
         parentReflowInput.ComputedPhysicalBorderPadding());
     parentReflowInput.ComputedPhysicalBorderPadding() +=
