@@ -70,10 +70,12 @@ uint32_t ConnectionEntry::UnconnectedHalfOpens() const {
   return unconnectedHalfOpens;
 }
 
-void ConnectionEntry::RemoveHalfOpen(HalfOpenSocket* halfOpen) {
+bool ConnectionEntry::RemoveHalfOpen(HalfOpenSocket* halfOpen) {
+  bool isPrimary = false;
   // A failure to create the transport object at all
   // will result in it not being present in the halfopen table. That's expected.
   if (mHalfOpens.RemoveElement(halfOpen)) {
+    isPrimary = true;
     if (halfOpen->IsSpeculative()) {
       Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_UNUSED_SPECULATIVE_CONN>
           unusedSpeculativeConn;
@@ -103,6 +105,8 @@ void ConnectionEntry::RemoveHalfOpen(HalfOpenSocket* halfOpen) {
            "    failed to process pending queue\n"));
     }
   }
+
+  return isPrimary;
 }
 
 void ConnectionEntry::DisallowHttp2() {
@@ -515,30 +519,81 @@ void ConnectionEntry::MakeAllDontReuseExcept(HttpConnectionBase* conn) {
     HttpConnectionBase* otherConn = mActiveConns[index];
     if (otherConn != conn) {
       LOG(
-          ("UpdateCoalescingForNewConn() shutting down old connection (%p) "
+          ("ConnectionEntry::MakeAllDontReuseExcept shutting down old "
+           "connection (%p) "
            "because new "
            "spdy connection (%p) takes precedence\n",
            otherConn, conn));
       otherConn->DontReuse();
     }
   }
+
+  // Cancel any other pending connections - their associated transactions
+  // are in the pending queue and will be dispatched onto this new connection
+  for (int32_t index = HalfOpensLength() - 1; index >= 0; --index) {
+    RefPtr<HalfOpenSocket> half = mHalfOpens[index];
+    LOG((
+        "ConnectionEntry::MakeAllDontReuseExcept forcing halfopen abandon %p\n",
+        half.get()));
+    mHalfOpens[index]->Abandon();
+  }
+
+  for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
+       --index) {
+    LOG(
+        ("ConnectionEntry::MakeAllDontReuseExcept shutting down connection in "
+         "fast "
+         "open state (%p) because new spdy connection (%p) takes "
+         "precedence\n",
+         mHalfOpenFastOpenBackups[index].get(), conn));
+    RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
+    half->CancelFastOpenConnection();
+  }
 }
 
 bool ConnectionEntry::FindConnToClaim(
     PendingTransactionInfo* pendingTransInfo) {
-  uint32_t activeLength = mActiveConns.Length();
-  for (uint32_t i = 0; i < activeLength; i++) {
-    nsAHttpTransaction* activeTrans = mActiveConns[i]->Transaction();
-    NullHttpTransaction* nullTrans =
-        activeTrans ? activeTrans->QueryNullTransaction() : nullptr;
-    if (nullTrans && nullTrans->Claim()) {
+  nsHttpTransaction* trans = pendingTransInfo->mTransaction;
+
+  uint32_t halfOpenLength = HalfOpensLength();
+  for (uint32_t i = 0; i < halfOpenLength; i++) {
+    auto halfOpen = mHalfOpens[i];
+    if (halfOpen->AcceptsTransaction(trans) && halfOpen->Claim()) {
+      // We've found a speculative connection or a connection that
+      // is free to be used in the half open list.
+      // A free to be used connection is a connection that was
+      // open for a concrete transaction, but that trunsaction
+      // ended up using another connection.
       LOG(
-          ("ConnectionEntry::MakeNewConnection [ci = %s] "
-           "Claiming a null transaction for later use\n",
+          ("ConnectionEntry::FindConnToClaim [ci = %s]\n"
+           "Found a speculative or a free-to-use half open connection\n",
            mConnInfo->HashKey().get()));
-      pendingTransInfo->mActiveConn = do_GetWeakReference(
-          static_cast<nsISupportsWeakReference*>(mActiveConns[i]));
+      pendingTransInfo->mHalfOpen = do_GetWeakReference(
+          static_cast<nsISupportsWeakReference*>(mHalfOpens[i]));
+      // return OK because we have essentially opened a new connection
+      // by converting a speculative half-open to general use
       return true;
+    }
+  }
+
+  // consider null transactions that are being used to drive the ssl handshake
+  // if the transaction creating this connection can re-use persistent
+  // connections
+  if (trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) {
+    uint32_t activeLength = mActiveConns.Length();
+    for (uint32_t i = 0; i < activeLength; i++) {
+      nsAHttpTransaction* activeTrans = mActiveConns[i]->Transaction();
+      NullHttpTransaction* nullTrans =
+          activeTrans ? activeTrans->QueryNullTransaction() : nullptr;
+      if (nullTrans && nullTrans->Claim()) {
+        LOG(
+            ("ConnectionEntry::FindConnectingSocket [ci = %s] "
+             "Claiming a null transaction for later use\n",
+             mConnInfo->HashKey().get()));
+        pendingTransInfo->mActiveConn = do_GetWeakReference(
+            static_cast<nsISupportsWeakReference*>(mActiveConns[i]));
+        return true;
+      }
     }
   }
   return false;
@@ -754,6 +809,29 @@ void ConnectionEntry::MoveConnection(HttpConnectionBase* proxyConn,
       return;
     }
   }
+}
+
+void ConnectionEntry::InsertIntoHalfOpens(HalfOpenSocket* sock) {
+  mHalfOpens.AppendElement(sock);
+  gHttpHandler->ConnMgr()->IncreaseNumHalfOpenConns();
+}
+
+void ConnectionEntry::InsertIntoHalfOpenFastOpenBackups(HalfOpenSocket* sock) {
+  mHalfOpenFastOpenBackups.AppendElement(sock);
+}
+
+void ConnectionEntry::CloseAllHalfOpens() {
+  for (int32_t i = int32_t(HalfOpensLength()) - 1; i >= 0; i--) {
+    mHalfOpens[i]->Abandon();
+  }
+}
+
+void ConnectionEntry::RemoveHalfOpenFastOpenBackups(HalfOpenSocket* sock) {
+  mHalfOpenFastOpenBackups.RemoveElement(sock);
+}
+
+bool ConnectionEntry::IsInHalfOpens(HalfOpenSocket* sock) {
+  return mHalfOpens.Contains(sock);
 }
 
 HttpRetParams ConnectionEntry::GetConnectionData() {

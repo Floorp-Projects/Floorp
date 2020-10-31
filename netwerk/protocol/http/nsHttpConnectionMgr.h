@@ -152,6 +152,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   HttpConnectionBase* GetH2orH3ActiveConn(ConnectionEntry* ent, bool aNoHttp3);
 
+  void IncreaseNumHalfOpenConns();
   void DecreaseNumHalfOpenConns();
 
   already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
