@@ -157,6 +157,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
       bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
 
+  void IncrementNumIdleConns();
+  void DecrementNumIdleConns();
+
  private:
   virtual ~nsHttpConnectionMgr();
 
