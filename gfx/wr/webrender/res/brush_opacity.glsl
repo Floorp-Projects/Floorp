@@ -76,4 +76,45 @@ Fragment brush_fs() {
     // Pre-multiply the contribution of the opacity factor.
     return Fragment(alpha * color);
 }
+
+#if defined(SWGL) && !defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
+void swgl_drawSpanRGBA8() {
+    if (!swgl_isTextureRGBA8(sColor0)) {
+        return;
+    }
+
+    int layer = swgl_textureLayerOffset(sColor0, v_layer_and_perspective.x);
+
+    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_layer_and_perspective.y);
+
+    vec2 uv = swgl_linearQuantize(sColor0, v_uv * perspective_divisor);
+    vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
+    vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
+    vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
+
+    if (needs_clip()) {
+        while (swgl_SpanLength > 0) {
+            float alpha = v_opacity * do_clip();
+            #ifdef WR_FEATURE_ANTIALIASING
+                alpha *= init_transform_fs(v_local_pos);
+                v_local_pos += swgl_interpStep(v_local_pos);
+            #endif
+            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, layer);
+            uv += step_uv;
+            vClipMaskUv += swgl_interpStep(vClipMaskUv);
+        }
+    } else {
+        while (swgl_SpanLength > 0) {
+            float alpha = v_opacity;
+            #ifdef WR_FEATURE_ANTIALIASING
+                alpha *= init_transform_fs(v_local_pos);
+                v_local_pos += swgl_interpStep(v_local_pos);
+            #endif
+            swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, layer);
+            uv += step_uv;
+        }
+    }
+}
+#endif
+
 #endif

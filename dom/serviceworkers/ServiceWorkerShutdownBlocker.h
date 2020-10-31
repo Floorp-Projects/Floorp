@@ -13,11 +13,15 @@
 #include "nsITimer.h"
 
 #include "ServiceWorkerShutdownState.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/HashTable.h"
 
 namespace mozilla {
 namespace dom {
+
+class ServiceWorkerManager;
 
 /**
  * Main thread only.
@@ -52,7 +56,8 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
    * nullptr otherwise.
    */
   static already_AddRefed<ServiceWorkerShutdownBlocker> CreateAndRegisterOn(
-      nsIAsyncShutdownClient* aShutdownBarrier);
+      nsIAsyncShutdownClient& aShutdownBarrier,
+      ServiceWorkerManager& aServiceWorkerManager);
 
   /**
    * Blocks shutdown until `aPromise` settles.
@@ -86,7 +91,8 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
   void ReportShutdownProgress(uint32_t aShutdownStateId, Progress aProgress);
 
  private:
-  ServiceWorkerShutdownBlocker();
+  explicit ServiceWorkerShutdownBlocker(
+      ServiceWorkerManager& aServiceWorkerManager);
 
   ~ServiceWorkerShutdownBlocker();
 
@@ -140,6 +146,9 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
   HashMap<uint32_t, ServiceWorkerShutdownState> mShutdownStates;
 
   nsCOMPtr<nsITimer> mTimer;
+  LazyInitializedOnceEarlyDestructible<
+      const NotNull<RefPtr<ServiceWorkerManager>>>
+      mServiceWorkerManager;
 };
 
 }  // namespace dom

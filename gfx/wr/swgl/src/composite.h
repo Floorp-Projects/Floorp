@@ -129,13 +129,13 @@ static void linear_row_blit(uint8_t* dest, int span, const vec2_scalar& srcUV,
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
     auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
-    unaligned_store(dest, pack(srcpx));
+    unaligned_store(dest, srcpx);
     dest += 4;
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
     auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
-    partial_store_span(dest, pack(srcpx), span);
+    partial_store_span(dest, srcpx, span);
   }
 }
 
@@ -446,7 +446,9 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
   IntRect dstReq = {dstX, dstY, dstX + dstWidth, dstY + dstHeight};
 
   if (opaque) {
-    if (!srcReq.same_size(dstReq) && filter == GL_LINEAR) {
+    // Ensure we have rows of at least 2 pixels when using the linear filter
+    // to avoid overreading the row.
+    if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR) {
       linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, bandOffset,
                   bandHeight);
     } else {
@@ -454,7 +456,7 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
                  bandHeight);
     }
   } else {
-    if (!srcReq.same_size(dstReq)) {
+    if (!srcReq.same_size(dstReq) && srctex.width >= 2) {
       linear_composite(srctex, srcReq, dsttex, dstReq, flip, bandOffset,
                        bandHeight);
     } else {

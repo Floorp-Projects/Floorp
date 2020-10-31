@@ -118,6 +118,7 @@ load 1547897.html
 load 1547898.html
 load 1556799.html
 load 1574544.html
+load 1581246.html
 load 1596516.html
 load 1613521.html
 load 1618906.html
@@ -131,3 +132,4 @@ load 1645983-2.html
 load 1648564.html
 load 1659717.html
 load 1663725.html # throws
+pref(dom.document.exec_command.nested_calls_allowed,true) load 1666556.html

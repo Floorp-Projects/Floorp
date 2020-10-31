@@ -361,7 +361,7 @@ void SessionHistoryEntry::SetByLoadId(uint64_t aLoadId,
 
   MOZ_LOG(
       gSHLog, LogLevel::Verbose,
-      ("SessionHistoryEntry::SetByLoadId(%" PRIu64 " - %p", aLoadId, aEntry));
+      ("SessionHistoryEntry::SetByLoadId(%" PRIu64 " - %p)", aLoadId, aEntry));
   sLoadIdToEntry->Put(aLoadId, aEntry);
 }
 

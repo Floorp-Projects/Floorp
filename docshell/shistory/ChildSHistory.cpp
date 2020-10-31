@@ -137,8 +137,9 @@ bool ChildSHistory::CanGo(int32_t aOffset) {
 void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
                        ErrorResult& aRv) {
   CheckedInt<int32_t> index = Index();
-  MOZ_LOG(gSHLog, LogLevel::Debug,
-          ("nsHistory::Go(%d), current index = %d", aOffset, index.value()));
+  MOZ_LOG(
+      gSHLog, LogLevel::Debug,
+      ("ChildSHistory::Go(%d), current index = %d", aOffset, index.value()));
   if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
     NS_ERROR(
         "aRequireUserInteraction may only be used with an offset of -1 or 1");
@@ -182,9 +183,9 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
 void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
                             CallerType aCallerType, ErrorResult& aRv) {
   CheckedInt<int32_t> index = Index();
-  MOZ_LOG(
-      gSHLog, LogLevel::Debug,
-      ("nsHistory::AsyncGo(%d), current index = %d", aOffset, index.value()));
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("ChildSHistory::AsyncGo(%d), current index = %d", aOffset,
+           index.value()));
   nsresult rv = mBrowsingContext->CheckLocationChangeRateLimit(aCallerType);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("Rejected"));
@@ -201,7 +202,7 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
 void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
                               ErrorResult& aRv) {
   MOZ_LOG(gSHLog, LogLevel::Debug,
-          ("nsHistory::GotoIndex(%d, %d), epoch %" PRIu64, aIndex, aOffset,
+          ("ChildSHistory::GotoIndex(%d, %d), epoch %" PRIu64, aIndex, aOffset,
            mHistoryEpoch));
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
@@ -223,9 +224,9 @@ void ChildSHistory::RemovePendingHistoryNavigations() {
   // that.  Also with SessionHistoryInParent, this can only abort AsyncGo's
   // that have not yet been sent to the parent - see discussion of point
   // 2.2 in comments in nsDocShell::UpdateURLAndHistory()
-  MOZ_LOG(
-      gSHLog, LogLevel::Debug,
-      ("RemovePendingHistoryNavigations: %zu", mPendingNavigations.length()));
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("ChildSHistory::RemovePendingHistoryNavigations: %zu",
+           mPendingNavigations.length()));
   mPendingNavigations.clear();
 }
 

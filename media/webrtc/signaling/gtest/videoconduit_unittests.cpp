@@ -444,7 +444,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecDefaults) {
   SendVideoFrame(1280, 720, 1);
   videoStreams = mCall->CreateEncoderStreams(1280, 720);
   EXPECT_EQ(videoStreams.size(), 1U);
-  EXPECT_EQ(videoStreams[0].min_bitrate_bps, 600000);
+  EXPECT_EQ(videoStreams[0].min_bitrate_bps, 200000);
   EXPECT_EQ(videoStreams[0].target_bitrate_bps, 800000);
   EXPECT_EQ(videoStreams[0].max_bitrate_bps, 2500000);
   mVideoConduit->StopTransmitting();
@@ -467,7 +467,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecTias) {
   SendVideoFrame(1280, 720, 1);
   videoStreams = mCall->CreateEncoderStreams(1280, 720);
   ASSERT_EQ(videoStreams.size(), 1U);
-  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 600000);
+  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 200000);
   ASSERT_EQ(videoStreams[0].target_bitrate_bps, 800000);
   ASSERT_EQ(videoStreams[0].max_bitrate_bps, 1000000);
   mVideoConduit->StopTransmitting();
@@ -1131,7 +1131,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec) {
 
   videoStreams = mCall->CreateEncoderStreams(1280, 720);
   ASSERT_EQ(videoStreams.size(), 1U);
-  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 600000);
+  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 200000);
   ASSERT_EQ(videoStreams[0].target_bitrate_bps, 800000);
   ASSERT_EQ(videoStreams[0].max_bitrate_bps, 1000000);
   mVideoConduit->StopTransmitting();
@@ -1231,7 +1231,7 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting) {
 
   videoStreams = mCall->CreateEncoderStreams(1280, 720);
   ASSERT_EQ(videoStreams.size(), 1U);
-  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 600000);
+  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 200000);
   ASSERT_EQ(videoStreams[0].target_bitrate_bps, 800000);
   ASSERT_EQ(videoStreams[0].max_bitrate_bps, 1000000);
 

@@ -639,8 +639,12 @@ bool WebRenderBridgeParent::UpdateResources(
   }
 
   if (scheduleRelease) {
-    aUpdates.Notify(wr::Checkpoint::FrameTexturesUpdated,
-                    std::move(scheduleRelease));
+    // When software WR is enabled, shared surfaces are read during rendering
+    // rather than copied to the texture cache.
+    wr::Checkpoint when = gfx::gfxVars::UseSoftwareWebRender()
+                              ? wr::Checkpoint::FrameRendered
+                              : wr::Checkpoint::FrameTexturesUpdated;
+    aUpdates.Notify(when, std::move(scheduleRelease));
   }
   return true;
 }
@@ -810,14 +814,10 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     // We already have a mapping for this image key, so ensure we release the
     // previous external image ID. This can happen when an image is animated,
     // and it is changing the external image that the animation points to.
-    if (gfx::gfxVars::UseSoftwareWebRender()) {
-      mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
-    } else {
-      if (!aScheduleRelease) {
-        aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
-      }
-      aScheduleRelease->Add(aKey, it->second);
+    if (!aScheduleRelease) {
+      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
     }
+    aScheduleRelease->Add(aKey, it->second);
     it->second = aExtId;
   }
 
@@ -856,10 +856,28 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
+  Unused << GetNextWrEpoch();
+
   bool success =
       UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn);
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
+
+  // Even when txn.IsResourceUpdatesEmpty() is true, there could be resource
+  // updates. It is handled by WebRenderTextureHostWrapper. In this case
+  // txn.IsRenderedFrameInvalidated() becomes true.
+  if (!txn.IsResourceUpdatesEmpty() || txn.IsRenderedFrameInvalidated()) {
+    // There are resource updates, then we update Epoch of transaction.
+    txn.UpdateEpoch(mPipelineId, mWrEpoch);
+    mAsyncImageManager->SetWillGenerateFrame();
+    ScheduleGenerateFrame();
+  } else {
+    // If TransactionBuilder does not have resource updates nor display list,
+    // ScheduleGenerateFrame is not triggered via SceneBuilder and there is no
+    // need to update WrEpoch.
+    // Then we want to rollback WrEpoch. See Bug 1490117.
+    RollbackWrEpoch();
+  }
 
   if (!success) {
     return IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
