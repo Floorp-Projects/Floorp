@@ -168,6 +168,10 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void RegisterOriginCoalescingKey(HttpConnectionBase*, const nsACString& host,
                                    int32_t port);
 
+ protected:
+  friend class ConnectionEntry;
+  void IncrementActiveConnCount();
+  void DecrementActiveConnCount(HttpConnectionBase*);
  private:
   friend class HalfOpenSocket;
   friend class PendingTransactionInfo;
@@ -246,13 +250,10 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                                      int32_t);
   [[nodiscard]] nsresult ProcessNewTransaction(nsHttpTransaction*);
   [[nodiscard]] nsresult EnsureSocketThreadTarget();
-  void ClosePersistentConnections(ConnectionEntry* ent);
   void ReportProxyTelemetry(ConnectionEntry* ent);
   [[nodiscard]] nsresult CreateTransport(
       ConnectionEntry*, nsAHttpTransaction*, uint32_t, bool, bool, bool, bool,
       PendingTransactionInfo* pendingTransInfo);
-  void AddActiveConn(HttpConnectionBase*, ConnectionEntry*);
-  void DecrementActiveConnCount(HttpConnectionBase*);
   void StartedConnect();
   void RecvdConnect();
 
