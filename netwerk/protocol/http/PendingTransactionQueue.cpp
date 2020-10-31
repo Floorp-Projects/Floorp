@@ -13,6 +13,8 @@
 #define LOG_ENABLED() LOG5_ENABLED()
 
 #include "PendingTransactionQueue.h"
+#include "nsHttpHandler.h"
+#include "mozilla/ChaosMode.h"
 
 namespace mozilla {
 namespace net {
@@ -27,7 +29,7 @@ class PendingComparator {
  public:
   bool Equals(const PendingTransactionInfo* aPendingTrans,
               const nsAHttpTransaction* aTrans) const {
-    return aPendingTrans->mTransaction.get() == aTrans;
+    return aPendingTrans->Transaction() == aTrans;
   }
 };
 
@@ -58,10 +60,10 @@ void PendingTransactionQueue::InsertTransactionNormal(
   LOG(
       ("PendingTransactionQueue::InsertTransactionNormal"
        " trans=%p, windowId=%" PRIu64 "\n",
-       info->mTransaction.get(),
-       info->mTransaction->TopLevelOuterContentWindowId()));
+       info->Transaction(),
+       info->Transaction()->TopLevelOuterContentWindowId()));
 
-  uint64_t windowId = TabIdForQueuing(info->mTransaction);
+  uint64_t windowId = TabIdForQueuing(info->Transaction());
   nsTArray<RefPtr<PendingTransactionInfo>>* infoArray;
   if (!mPendingTransactionTable.Get(windowId, &infoArray)) {
     infoArray = new nsTArray<RefPtr<PendingTransactionInfo>>();
@@ -83,17 +85,17 @@ void PendingTransactionQueue::InsertTransactionSorted(
   // search in reverse order under the assumption that many of the
   // existing transactions will have the same priority (usually 0).
 
-  nsHttpTransaction* trans = pendingTransInfo->mTransaction;
+  nsHttpTransaction* trans = pendingTransInfo->Transaction();
 
   for (int32_t i = pendingQ.Length() - 1; i >= 0; --i) {
-    nsHttpTransaction* t = pendingQ[i]->mTransaction;
+    nsHttpTransaction* t = pendingQ[i]->Transaction();
     if (TransactionComparator(trans, t)) {
       if (ChaosMode::isActive(ChaosFeature::NetworkScheduling) ||
           aInsertAsFirstForTheSamePriority) {
         int32_t samePriorityCount;
         for (samePriorityCount = 0; i - samePriorityCount >= 0;
              ++samePriorityCount) {
-          if (pendingQ[i - samePriorityCount]->mTransaction->Priority() !=
+          if (pendingQ[i - samePriorityCount]->Transaction()->Priority() !=
               trans->Priority()) {
             break;
           }
@@ -115,18 +117,18 @@ void PendingTransactionQueue::InsertTransactionSorted(
 void PendingTransactionQueue::InsertTransaction(
     PendingTransactionInfo* pendingTransInfo,
     bool aInsertAsFirstForTheSamePriority /* = false */) {
-  if (pendingTransInfo->mTransaction->Caps() & NS_HTTP_URGENT_START) {
+  if (pendingTransInfo->Transaction()->Caps() & NS_HTTP_URGENT_START) {
     LOG(
         ("  adding transaction to pending queue "
          "[trans=%p urgent-start-count=%zu]\n",
-         pendingTransInfo->mTransaction.get(), mUrgentStartQ.Length() + 1));
+         pendingTransInfo->Transaction(), mUrgentStartQ.Length() + 1));
     // put this transaction on the urgent-start queue...
     InsertTransactionSorted(mUrgentStartQ, pendingTransInfo);
   } else {
     LOG(
         ("  adding transaction to pending queue "
          "[trans=%p pending-count=%zu]\n",
-         pendingTransInfo->mTransaction.get(), PendingQueueLength() + 1));
+         pendingTransInfo->Transaction(), PendingQueueLength() + 1));
     // put this transaction on the pending queue...
     InsertTransactionNormal(pendingTransInfo);
   }
@@ -243,7 +245,7 @@ size_t PendingTransactionQueue::PendingQueueLength() const {
 
 size_t PendingTransactionQueue::PendingQueueLengthForWindow(
     uint64_t windowId) const {
-  auto *pendingQ = mPendingTransactionTable.Get(windowId);
+  auto* pendingQ = mPendingTransactionTable.Get(windowId);
   return (pendingQ) ? pendingQ->Length() : 0;
 }
 
@@ -254,12 +256,12 @@ size_t PendingTransactionQueue::UrgentStartQueueLength() {
 void PendingTransactionQueue::PrintPendingQ() {
   LOG(("urgent queue ["));
   for (const auto& info : mUrgentStartQ) {
-    LOG(("  %p", info->mTransaction.get()));
+    LOG(("  %p", info->Transaction()));
   }
   for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
     LOG(("] window id = %" PRIx64 " queue [", it.Key()));
     for (const auto& info : *it.UserData()) {
-      LOG(("  %p", info->mTransaction.get()));
+      LOG(("  %p", info->Transaction()));
     }
   }
   LOG(("]"));
@@ -270,22 +272,21 @@ void PendingTransactionQueue::Compact() {
   for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
     it.UserData()->Compact();
   }
-
 }
 
 void PendingTransactionQueue::CancelAllTransactions(nsresult reason) {
   for (const auto& pendingTransInfo : mUrgentStartQ) {
     LOG(("PendingTransactionQueue::CancelAllTransactions %p\n",
-         pendingTransInfo->mTransaction.get()));
-    pendingTransInfo->mTransaction->Close(reason);
+         pendingTransInfo->Transaction()));
+    pendingTransInfo->Transaction()->Close(reason);
   }
   mUrgentStartQ.Clear();
 
   for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
     for (const auto& pendingTransInfo : *it.UserData()) {
       LOG(("PendingTransactionQueue::CancelAllTransactions %p\n",
-           pendingTransInfo->mTransaction.get()));
-      pendingTransInfo->mTransaction->Close(reason);
+           pendingTransInfo->Transaction()));
+      pendingTransInfo->Transaction()->Close(reason);
     }
     it.UserData()->Clear();
   }
