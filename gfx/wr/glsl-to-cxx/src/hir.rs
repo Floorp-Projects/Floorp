@@ -862,7 +862,7 @@ impl RunClass {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SymDecl {
-    NativeFunction(FunctionType, Option<&'static str>, RunClass),
+    NativeFunction(FunctionType, Option<&'static str>),
     UserFunction(Rc<FunctionDefinition>, RunClass),
     Local(StorageClass, Type, RunClass),
     Global(
@@ -1993,7 +1993,7 @@ pub fn is_output(expr: &Expr, state: &State) -> Option<SymRef> {
     match &expr.kind {
         ExprKind::Variable(i) => match state.sym(*i).decl {
             SymDecl::Global(storage, ..) => match storage {
-                StorageClass::In | StorageClass::Out => return Some(*i),
+                StorageClass::Out => return Some(*i),
                 _ => {}
             },
             SymDecl::Local(..) => {}
@@ -2146,23 +2146,28 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
         syntax::Expr::Binary(op, lhs, rhs) => {
             let lhs = Box::new(translate_expression(state, lhs));
             let rhs = Box::new(translate_expression(state, rhs));
+            let ty = if op == &BinaryOp::Mult {
+                if lhs.ty.kind == TypeKind::Mat3 && rhs.ty.kind == TypeKind::Vec3 {
+                    rhs.ty.clone()
+                } else if lhs.ty.kind == TypeKind::Mat4 && rhs.ty.kind == TypeKind::Vec4 {
+                    rhs.ty.clone()
+                } else if lhs.ty.kind == TypeKind::Mat2 && rhs.ty.kind == TypeKind::Vec2 {
+                    rhs.ty.clone()
+                } else if lhs.ty.kind == TypeKind::Mat2 && rhs.ty.kind == TypeKind::Float {
+                    lhs.ty.clone()
+                } else {
+                    promoted_type(&lhs.ty, &rhs.ty)
+                }
+            } else {
+                promoted_type(&lhs.ty, &rhs.ty)
+            };
+
+            // comparison operators have a bool result
             let ty = match op {
-                BinaryOp::Equal | BinaryOp::NonEqual | BinaryOp::GT | BinaryOp::GTE | BinaryOp::LT | BinaryOp::LTE => {
-                    // comparison operators have a bool result
+                BinaryOp::Equal | BinaryOp::GT | BinaryOp::GTE | BinaryOp::LT | BinaryOp::LTE => {
                     Type::new(TypeKind::Bool)
                 }
-                BinaryOp::Mult => {
-                    match (lhs.ty.kind, rhs.ty.kind) {
-                        (TypeKind::Mat2, TypeKind::Vec2) |
-                        (TypeKind::Mat3, TypeKind::Vec3) |
-                        (TypeKind::Mat4, TypeKind::Vec4) => rhs.ty.clone(),
-                        (TypeKind::Mat2, TypeKind::Float) |
-                        (TypeKind::Mat3, TypeKind::Float) |
-                        (TypeKind::Mat4, TypeKind::Float) => lhs.ty.clone(),
-                        _ => promoted_type(&lhs.ty, &rhs.ty),
-                    }
-                }
-                _ => promoted_type(&lhs.ty, &rhs.ty),
+                _ => ty,
             };
 
             Expr {
@@ -2240,7 +2245,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                 }
                             }
                             match &state.sym(sym).decl {
-                                SymDecl::NativeFunction(fn_ty, _, _) => {
+                                SymDecl::NativeFunction(fn_ty, _) => {
                                     let mut ret = None;
                                     for sig in &fn_ty.signatures {
                                         let mut matching = true;
@@ -2764,13 +2769,12 @@ fn translate_external_declaration(
     }
 }
 
-fn declare_function_ext(
+fn declare_function(
     state: &mut State,
     name: &str,
     cxx_name: Option<&'static str>,
     ret: Type,
     params: Vec<Type>,
-    run_class: RunClass,
 ) {
     let sig = FunctionSignature { ret, params };
     match state.lookup_sym_mut(name) {
@@ -2786,23 +2790,12 @@ fn declare_function_ext(
                         signatures: NonEmpty::new(sig),
                     },
                     cxx_name,
-                    run_class,
                 ),
             );
         }
         _ => panic!("overloaded function name {}", name),
     }
     //state.declare(name, Type::Function(FunctionType{ v}))
-}
-
-fn declare_function(
-    state: &mut State,
-    name: &str,
-    cxx_name: Option<&'static str>,
-    ret: Type,
-    params: Vec<Type>,
-) {
-    declare_function_ext(state, name, cxx_name, ret, params, RunClass::Unknown)
 }
 
 pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> TranslationUnit {
@@ -2815,13 +2808,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Some("make_vec2"),
         Type::new(Vec2),
         vec![Type::new(Float)],
-    );
-    declare_function(
-        state,
-        "vec2",
-        Some("make_vec2"),
-        Type::new(Vec2),
-        vec![Type::new(Float), Type::new(Float)],
     );
     declare_function(
         state,
@@ -2857,13 +2843,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Some("make_vec3"),
         Type::new(Vec3),
         vec![Type::new(Vec2), Type::new(Float)],
-    );
-    declare_function(
-        state,
-        "vec4",
-        Some("make_vec4"),
-        Type::new(Vec4),
-        vec![Type::new(Float)],
     );
     declare_function(
         state,
@@ -3574,154 +3553,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         SymDecl::Global(StorageClass::Out, None, Type::new(Vec4), RunClass::Vector),
     );
 
-    state.declare(
-        "swgl_SpanLength",
-        SymDecl::Global(StorageClass::In, None, Type::new(Int), RunClass::Scalar),
-    );
-    state.declare(
-        "swgl_StepSize",
-        SymDecl::Global(StorageClass::Const, None, Type::new(Int), RunClass::Scalar),
-    );
-
-    for t in &[Float, Vec2, Vec3, Vec4, Int, IVec2, IVec3, IVec4, Mat3, Mat4] {
-        declare_function_ext(
-            state,
-            "swgl_forceScalar",
-            None,
-            Type::new(*t),
-            vec![Type::new(*t)],
-            RunClass::Scalar,
-        );
-    }
-
-    declare_function(
-        state,
-        "swgl_stepInterp",
-        None,
-        Type::new(Void),
-        vec![],
-    );
-
-    for t in &[Float, Vec2, Vec3, Vec4] {
-        declare_function_ext(
-            state,
-            "swgl_interpStep",
-            None,
-            Type::new(*t),
-            vec![Type::new(*t)],
-            RunClass::Scalar,
-        );
-    }
-
-    declare_function(
-        state,
-        "swgl_commitSolidRGBA8",
-        None,
-        Type::new(Void),
-        vec![Type::new(Vec4)],
-    );
-    declare_function(
-        state,
-        "swgl_commitSolidR8",
-        None,
-        Type::new(Void),
-        vec![Type::new(Float)],
-    );
-    declare_function(
-        state,
-        "swgl_commitColorRGBA8",
-        None,
-        Type::new(Void),
-        vec![Type::new(Vec4), Type::new(Float)],
-    );
-    declare_function(
-        state,
-        "swgl_commitColorR8",
-        None,
-        Type::new(Void),
-        vec![Type::new(Float), Type::new(Float)],
-    );
-
-    for s in &[Sampler2D, Sampler2DRect, Sampler2DArray] {
-        declare_function(
-            state,
-            "swgl_isTextureLinear",
-            None,
-            Type::new(Bool),
-            vec![Type::new(*s)],
-        );
-        declare_function(
-            state,
-            "swgl_isTextureRGBA8",
-            None,
-            Type::new(Bool),
-            vec![Type::new(*s)],
-        );
-        declare_function(
-            state,
-            "swgl_isTextureR8",
-            None,
-            Type::new(Bool),
-            vec![Type::new(*s)],
-        );
-        declare_function(
-            state,
-            "swgl_textureLayerOffset",
-            None,
-            Type::new(Int),
-            vec![Type::new(*s), Type::new(Float)],
-        );
-        declare_function(
-            state,
-            "swgl_linearQuantize",
-            None,
-            Type::new(Vec2),
-            vec![Type::new(*s), Type::new(Vec2)],
-        );
-        declare_function(
-            state,
-            "swgl_linearQuantizeStep",
-            None,
-            Type::new(Vec2),
-            vec![Type::new(*s), Type::new(Vec2)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Int)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearR8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Int)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Int)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Float), Type::new(Int)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorR8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Float), Type::new(Int)],
-        );
-    }
-
     TranslationUnit(tu.0.map(state, translate_external_declaration))
 }
 
@@ -3772,13 +3603,7 @@ fn infer_expr_inner(state: &mut State, expr: &Expr, assign: &mut SymRef) -> RunC
             };
             match fun {
                 FunIdentifier::Identifier(ref sym) => match &state.sym(*sym).decl {
-                    SymDecl::NativeFunction(_, _, ref ret_class) => {
-                        if *ret_class != RunClass::Unknown {
-                            *ret_class
-                        } else {
-                            run_class
-                        }
-                    }
+                    SymDecl::NativeFunction(..) => run_class,
                     SymDecl::UserFunction(ref fd, ref run_class) => {
                         for (&(mut arg_class, assign), param) in
                             arg_classes.iter().zip(fd.prototype.parameters.iter())
