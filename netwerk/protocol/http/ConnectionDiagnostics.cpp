@@ -48,7 +48,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
   for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<nsConnectionEntry> ent = iter.Data();
+    RefPtr<ConnectionEntry> ent = iter.Data();
 
     mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
                           ent->mConnInfo->Origin(),
@@ -104,7 +104,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.Truncate();
 }
 
-void nsHttpConnectionMgr::nsHalfOpenSocket::PrintDiagnostics(nsCString& log) {
+void HalfOpenSocket::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     has connected = %d, isSpeculative = %d\n",
                    HasConnected(), IsSpeculative());
 
@@ -218,11 +218,10 @@ void nsHttpTransaction::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("       restart count = %u\n", mRestartCount);
 }
 
-void nsHttpConnectionMgr::PendingTransactionInfo::PrintDiagnostics(
-    nsCString& log) {
+void PendingTransactionInfo::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     ::: Pending transaction\n");
   mTransaction->PrintDiagnostics(log);
-  RefPtr<nsHalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
+  RefPtr<HalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
   log.AppendPrintf("     Waiting for half open sock: %p or connection: %p\n",
                    halfOpen.get(), mActiveConn.get());
 }
