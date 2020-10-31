@@ -47,31 +47,6 @@ enum eNormalLineHeightControl {
 
 static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 
-// Initialize a <b>root</b> reflow input with a rendering context to
-// use for measuring things.
-ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
-                         gfxContext* aRenderingContext,
-                         const LogicalSize& aAvailableSpace, InitFlags aFlags)
-    : SizeComputationInput(aFrame, aRenderingContext) {
-  MOZ_ASSERT(aRenderingContext, "no rendering context");
-  MOZ_ASSERT(aPresContext, "no pres context");
-  MOZ_ASSERT(aFrame, "no frame");
-  MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  AvailableISize() = aAvailableSpace.ISize(mWritingMode);
-  AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
-
-  if (aFlags.contains(InitFlag::DummyParentReflowInput)) {
-    mFlags.mDummyParentReflowInput = true;
-  }
-  if (aFlags.contains(InitFlag::StaticPosIsCBOrigin)) {
-    mFlags.mStaticPosIsCBOrigin = true;
-  }
-
-  if (!aFlags.contains(InitFlag::CallerWillInit)) {
-    Init(aPresContext);
-  }
-}
-
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
@@ -144,6 +119,31 @@ SizeComputationInput::SizeComputationInput(
     : SizeComputationInput(aFrame, aRenderingContext) {
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
               mFrame->Type());
+}
+
+// Initialize a <b>root</b> reflow input with a rendering context to
+// use for measuring things.
+ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
+                         gfxContext* aRenderingContext,
+                         const LogicalSize& aAvailableSpace, InitFlags aFlags)
+    : SizeComputationInput(aFrame, aRenderingContext) {
+  MOZ_ASSERT(aRenderingContext, "no rendering context");
+  MOZ_ASSERT(aPresContext, "no pres context");
+  MOZ_ASSERT(aFrame, "no frame");
+  MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
+  AvailableISize() = aAvailableSpace.ISize(mWritingMode);
+  AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
+
+  if (aFlags.contains(InitFlag::DummyParentReflowInput)) {
+    mFlags.mDummyParentReflowInput = true;
+  }
+  if (aFlags.contains(InitFlag::StaticPosIsCBOrigin)) {
+    mFlags.mStaticPosIsCBOrigin = true;
+  }
+
+  if (!aFlags.contains(InitFlag::CallerWillInit)) {
+    Init(aPresContext);
+  }
 }
 
 // Initialize a reflow input for a child frame's reflow. Some state
