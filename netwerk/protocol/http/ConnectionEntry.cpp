@@ -401,6 +401,34 @@ already_AddRefed<nsHttpConnection> ConnectionEntry::GetIdleConnection(
   return conn.forget();
 }
 
+nsresult ConnectionEntry::RemoveActiveConnection(HttpConnectionBase* conn) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!mActiveConns.RemoveElement(conn)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  gHttpHandler->ConnMgr()->DecrementActiveConnCount(conn);
+
+  return NS_OK;
+}
+
+void ConnectionEntry::ClosePersistentConnections() {
+  LOG(("ConnectionEntry::ClosePersistentConnections [ci=%s]\n",
+       mConnInfo->HashKey().get()));
+  CloseIdleConnections();
+
+  int32_t activeCount = mActiveConns.Length();
+  for (int32_t i = 0; i < activeCount; i++) {
+    mActiveConns[i]->DontReuse();
+  }
+
+  for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
+       --index) {
+    RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
+    half->CancelFastOpenConnection();
+  }
+}
+
 uint32_t ConnectionEntry::PruneDeadConnections() {
   uint32_t timeToNextExpire = UINT32_MAX;
 
@@ -467,6 +495,242 @@ void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
   mIdleConns.InsertElementAt(idx, conn);
   gHttpHandler->ConnMgr()->IncrementNumIdleConns();
   conn->BeginIdleMonitoring();
+}
+
+bool ConnectionEntry::IsInActiveConns(HttpConnectionBase* conn) {
+  return mActiveConns.Contains(conn);
+}
+
+void ConnectionEntry::InsertIntoActiveConns(HttpConnectionBase* conn) {
+  mActiveConns.AppendElement(conn);
+  gHttpHandler->ConnMgr()->IncrementActiveConnCount();
+}
+
+void ConnectionEntry::MakeAllDontReuseExcept(HttpConnectionBase* conn) {
+  for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+    HttpConnectionBase* otherConn = mActiveConns[index];
+    if (otherConn != conn) {
+      LOG(
+          ("UpdateCoalescingForNewConn() shutting down old connection (%p) "
+           "because new "
+           "spdy connection (%p) takes precedence\n",
+           otherConn, conn));
+      otherConn->DontReuse();
+    }
+  }
+}
+
+bool ConnectionEntry::FindConnToClaim(
+    PendingTransactionInfo* pendingTransInfo) {
+  uint32_t activeLength = mActiveConns.Length();
+  for (uint32_t i = 0; i < activeLength; i++) {
+    nsAHttpTransaction* activeTrans = mActiveConns[i]->Transaction();
+    NullHttpTransaction* nullTrans =
+        activeTrans ? activeTrans->QueryNullTransaction() : nullptr;
+    if (nullTrans && nullTrans->Claim()) {
+      LOG(
+          ("ConnectionEntry::MakeNewConnection [ci = %s] "
+           "Claiming a null transaction for later use\n",
+           mConnInfo->HashKey().get()));
+      pendingTransInfo->mActiveConn = do_GetWeakReference(
+          static_cast<nsISupportsWeakReference*>(mActiveConns[i]));
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ConnectionEntry::MakeFirstActiveSpdyConnDontReuse() {
+  if (!mUsingSpdy) {
+    return false;
+  }
+
+  for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+    HttpConnectionBase* conn = mActiveConns[index];
+    if (conn->UsingSpdy() && conn->CanReuse()) {
+      conn->DontReuse();
+      return true;
+    }
+  }
+  return false;
+}
+
+// Return an active h2 or h3 connection
+// that can be directly activated or null.
+HttpConnectionBase* ConnectionEntry::GetH2orH3ActiveConn(bool aNoHttp3) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  HttpConnectionBase* experienced = nullptr;
+  HttpConnectionBase* noExperience = nullptr;
+  uint32_t activeLen = mActiveConns.Length();
+
+  // activeLen should generally be 1.. this is a setup race being resolved
+  // take a conn who can activate and is experienced
+  for (uint32_t index = 0; index < activeLen; ++index) {
+    HttpConnectionBase* tmp = mActiveConns[index];
+    if (tmp->CanDirectlyActivate()) {
+      if (tmp->IsExperienced()) {
+        experienced = tmp;
+        break;
+      }
+      noExperience = tmp;  // keep looking for a better option
+    }
+  }
+
+  // if that worked, cleanup anything else and exit
+  if (experienced) {
+    for (uint32_t index = 0; index < activeLen; ++index) {
+      HttpConnectionBase* tmp = mActiveConns[index];
+      // in the case where there is a functional h2 session, drop the others
+      if (tmp != experienced) {
+        tmp->DontReuse();
+      }
+    }
+    for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
+         --index) {
+      LOG(
+          ("GetH2orH3ActiveConn() shutting down connection in fast "
+           "open state (%p) because we have an experienced spdy "
+           "connection (%p).\n",
+           mHalfOpenFastOpenBackups[index].get(), experienced));
+      RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
+      half->CancelFastOpenConnection();
+    }
+
+    LOG(
+        ("GetH2orH3ActiveConn() request for ent %p %s "
+         "found an active experienced connection %p in native connection "
+         "entry\n",
+         this, mConnInfo->HashKey().get(), experienced));
+    return experienced;
+  }
+
+  if (noExperience) {
+    LOG(
+        ("GetH2orH3ActiveConn() request for ent %p %s "
+         "found an active but inexperienced connection %p in native connection "
+         "entry\n",
+         this, mConnInfo->HashKey().get(), noExperience));
+    return noExperience;
+  }
+
+  return nullptr;
+}
+
+void ConnectionEntry::CloseActiveConnections() {
+  while (mActiveConns.Length()) {
+    RefPtr<HttpConnectionBase> conn(mActiveConns[0]);
+    mActiveConns.RemoveElementAt(0);
+    gHttpHandler->ConnMgr()->DecrementActiveConnCount(conn);
+
+    // Since HttpConnectionBase::Close doesn't break the bond with
+    // the connection's transaction, we must explicitely tell it
+    // to close its transaction and not just self.
+    conn->CloseTransaction(conn->Transaction(), NS_ERROR_ABORT, true);
+  }
+}
+
+void ConnectionEntry::CloseAllActiveConnsWithNullTransactcion(
+    nsresult aCloseCode) {
+  for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+    RefPtr<HttpConnectionBase> activeConn = mActiveConns[index];
+    nsAHttpTransaction* liveTransaction = activeConn->Transaction();
+    if (liveTransaction && liveTransaction->IsNullTransaction()) {
+      LOG(
+          ("ConnectionEntry::CloseAllActiveConnsWithNullTransactcion "
+           "also canceling Null Transaction %p on conn %p\n",
+           liveTransaction, activeConn.get()));
+      activeConn->CloseTransaction(liveTransaction, aCloseCode);
+    }
+  }
+}
+
+void ConnectionEntry::PruneNoTraffic() {
+  LOG(("  pruning no traffic [ci=%s]\n", mConnInfo->HashKey().get()));
+  if (mConnInfo->IsHttp3()) {
+    return;
+  }
+
+  uint32_t numConns = mActiveConns.Length();
+  if (numConns) {
+    // Walk the list backwards to allow us to remove entries easily.
+    for (int index = numConns - 1; index >= 0; index--) {
+      RefPtr<nsHttpConnection> conn = do_QueryObject(mActiveConns[index]);
+      if (conn && conn->NoTraffic()) {
+        mActiveConns.RemoveElementAt(index);
+        gHttpHandler->ConnMgr()->DecrementActiveConnCount(conn);
+        conn->Close(NS_ERROR_ABORT);
+        LOG(
+            ("  closed active connection due to no traffic "
+             "[conn=%p]\n",
+             conn.get()));
+      }
+    }
+  }
+}
+
+uint32_t ConnectionEntry::TimeoutTick() {
+  uint32_t timeoutTickNext = 3600;  // 1hr
+
+  if (mConnInfo->IsHttp3()) {
+    return timeoutTickNext;
+  }
+
+  LOG(
+      ("ConnectionEntry::TimeoutTick() this=%p host=%s "
+       "idle=%zu active=%zu"
+       " half-len=%zu pending=%zu"
+       " urgentStart pending=%zu\n",
+       this, mConnInfo->Origin(), IdleConnectionsLength(), ActiveConnsLength(),
+       mHalfOpens.Length(), PendingQueueLength(), UrgentStartQueueLength()));
+
+  // First call the tick handler for each active connection.
+  PRIntervalTime tickTime = PR_IntervalNow();
+  for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+    RefPtr<nsHttpConnection> conn = do_QueryObject(mActiveConns[index]);
+    if (conn) {
+      uint32_t connNextTimeout = conn->ReadTimeoutTick(tickTime);
+      timeoutTickNext = std::min(timeoutTickNext, connNextTimeout);
+    }
+  }
+
+  // Now check for any stalled half open sockets.
+  if (mHalfOpens.Length()) {
+    TimeStamp currentTime = TimeStamp::Now();
+    double maxConnectTime_ms = gHttpHandler->ConnectTimeout();
+
+    for (uint32_t index = mHalfOpens.Length(); index > 0;) {
+      index--;
+
+      HalfOpenSocket* half = mHalfOpens[index];
+      double delta = half->Duration(currentTime);
+      // If the socket has timed out, close it so the waiting
+      // transaction will get the proper signal.
+      if (delta > maxConnectTime_ms) {
+        LOG(("Force timeout of half open to %s after %.2fms.\n",
+             mConnInfo->HashKey().get(), delta));
+        if (half->SocketTransport()) {
+          half->SocketTransport()->Close(NS_ERROR_NET_TIMEOUT);
+        }
+        if (half->BackupTransport()) {
+          half->BackupTransport()->Close(NS_ERROR_NET_TIMEOUT);
+        }
+      }
+
+      // If this half open hangs around for 5 seconds after we've
+      // closed() it then just abandon the socket.
+      if (delta > maxConnectTime_ms + 5000) {
+        LOG(("Abandon half open to %s after %.2fms.\n",
+             mConnInfo->HashKey().get(), delta));
+        half->Abandon();
+      }
+    }
+  }
+  if (mHalfOpens.Length()) {
+    timeoutTickNext = 1;
+  }
+
+  return timeoutTickNext;
 }
 
 HttpRetParams ConnectionEntry::GetConnectionData() {

@@ -987,7 +987,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
   if (pendingTransInfo) {
     MOZ_ASSERT(!mSpeculative, "Speculative Half Open found mTransaction");
 
-    gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
+    mEnt->InsertIntoActiveConns(conn);
     if (mIsHttp3) {
       // Each connection must have a ConnectionHandle wrapper.
       // In case of Http < 2 the a ConnectionHandle is created for each
@@ -1043,7 +1043,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
         trans = new NullHttpTransaction(mEnt->mConnInfo, callbacks, mCaps);
       }
 
-      gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
+      mEnt->InsertIntoActiveConns(conn);
       rv = gHttpHandler->ConnMgr()->DispatchAbstractTransaction(mEnt, trans,
                                                                 mCaps, conn, 0);
     } else {
@@ -1076,7 +1076,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
           } else {
             trans = new NullHttpTransaction(mEnt->mConnInfo, callbacks, mCaps);
           }
-          gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
+          mEnt->InsertIntoActiveConns(conn);
           rv = gHttpHandler->ConnMgr()->DispatchAbstractTransaction(
               mEnt, trans, mCaps, conn, 0);
         }
@@ -1091,8 +1091,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
     if (aFastOpen) {
       MOZ_ASSERT(mEnt);
       MOZ_ASSERT(!mEnt->IsInIdleConnections(connTCP));
-      int32_t idx = mEnt->mActiveConns.IndexOf(conn);
-      if (NS_SUCCEEDED(rv) && (idx != -1)) {
+      if (NS_SUCCEEDED(rv) && mEnt->IsInActiveConns(conn)) {
         mConnectionNegotiatingFastOpen = connTCP;
       } else {
         connTCP->SetFastOpen(false);
