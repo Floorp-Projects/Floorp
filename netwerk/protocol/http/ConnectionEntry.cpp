@@ -301,8 +301,252 @@ void ConnectionEntry::Compact() {
   mPendingQ.Compact();
 }
 
+void ConnectionEntry::RemoveFromIdleConnectionsIndex(size_t inx) {
+  mIdleConns.RemoveElementAt(inx);
+  gHttpHandler->ConnMgr()->DecrementNumIdleConns();
+}
+
+bool ConnectionEntry::RemoveFromIdleConnections(nsHttpConnection* conn) {
+  if (!mIdleConns.RemoveElement(conn)) {
+    return false;
+  }
+
+  gHttpHandler->ConnMgr()->DecrementNumIdleConns();
+  return true;
+}
+
 void ConnectionEntry::CancelAllTransactions(nsresult reason) {
   mPendingQ.CancelAllTransactions(reason);
+}
+
+nsresult ConnectionEntry::CloseIdleConnection(nsHttpConnection* conn) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  RefPtr<nsHttpConnection> deleteProtector(conn);
+  if (!RemoveFromIdleConnections(conn)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // The connection is closed immediately no need to call EndIdleMonitoring.
+  conn->Close(NS_ERROR_ABORT);
+  return NS_OK;
+}
+
+void ConnectionEntry::CloseIdleConnections() {
+  while (mIdleConns.Length()) {
+    RefPtr<nsHttpConnection> conn(mIdleConns[0]);
+    RemoveFromIdleConnectionsIndex(0);
+    // The connection is closed immediately no need to call EndIdleMonitoring.
+    conn->Close(NS_ERROR_ABORT);
+  }
+}
+
+void ConnectionEntry::CloseIdleConnections(uint32_t maxToClose) {
+  uint32_t closed = 0;
+  while (mIdleConns.Length() && (closed < maxToClose)) {
+    RefPtr<nsHttpConnection> conn(mIdleConns[0]);
+    RemoveFromIdleConnectionsIndex(0);
+    // The connection is closed immediately no need to call EndIdleMonitoring.
+    conn->Close(NS_ERROR_ABORT);
+    closed++;
+  }
+}
+
+nsresult ConnectionEntry::RemoveIdleConnection(nsHttpConnection* conn) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!RemoveFromIdleConnections(conn)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  conn->EndIdleMonitoring();
+  return NS_OK;
+}
+
+bool ConnectionEntry::IsInIdleConnections(nsHttpConnection* conn) {
+  return mIdleConns.Contains(conn);
+}
+
+already_AddRefed<nsHttpConnection> ConnectionEntry::GetIdleConnection(
+    bool respectUrgency, bool urgentTrans, bool* onlyUrgent) {
+  RefPtr<nsHttpConnection> conn;
+  size_t index = 0;
+  while (!conn && (mIdleConns.Length() > index)) {
+    conn = mIdleConns[index];
+
+    if (!conn->CanReuse()) {
+      RemoveFromIdleConnectionsIndex(index);
+      LOG(("   dropping stale connection: [conn=%p]\n", conn.get()));
+      conn->Close(NS_ERROR_ABORT);
+      conn = nullptr;
+      continue;
+    }
+
+    // non-urgent transactions can only be dispatched on non-urgent
+    // started or used connections.
+    if (respectUrgency && conn->IsUrgentStartPreferred() && !urgentTrans) {
+      LOG(("  skipping urgent: [conn=%p]", conn.get()));
+      conn = nullptr;
+      ++index;
+      continue;
+    }
+
+    *onlyUrgent = false;
+
+    RemoveFromIdleConnectionsIndex(index);
+    conn->EndIdleMonitoring();
+    LOG(("   reusing connection: [conn=%p]\n", conn.get()));
+  }
+
+  return conn.forget();
+}
+
+uint32_t ConnectionEntry::PruneDeadConnections() {
+  uint32_t timeToNextExpire = UINT32_MAX;
+
+  for (int32_t len = mIdleConns.Length(); len > 0; --len) {
+    int32_t idx = len - 1;
+    RefPtr<nsHttpConnection> conn(mIdleConns[idx]);
+    if (!conn->CanReuse()) {
+      RemoveFromIdleConnectionsIndex(idx);
+      // The connection is closed immediately no need to call
+      // EndIdleMonitoring.
+      conn->Close(NS_ERROR_ABORT);
+    } else {
+      timeToNextExpire = std::min(timeToNextExpire, conn->TimeToLive());
+    }
+  }
+
+  if (mUsingSpdy) {
+    for (uint32_t i = 0; i < mActiveConns.Length(); ++i) {
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(mActiveConns[i]);
+      // Http3 has its own timers, it is not using this one.
+      if (connTCP && connTCP->UsingSpdy()) {
+        if (!connTCP->CanReuse()) {
+          // Marking it don't-reuse will create an active
+          // tear down if the spdy session is idle.
+          connTCP->DontReuse();
+        } else {
+          timeToNextExpire = std::min(timeToNextExpire, connTCP->TimeToLive());
+        }
+      }
+    }
+  }
+
+  return timeToNextExpire;
+}
+
+void ConnectionEntry::VerifyTraffic() {
+  if (!mConnInfo->IsHttp3()) {
+    // Iterate over all active connections and check them.
+    for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+      RefPtr<nsHttpConnection> conn = do_QueryObject(mActiveConns[index]);
+      if (conn) {
+        conn->CheckForTraffic(true);
+      }
+    }
+    // Iterate the idle connections and unmark them for traffic checks.
+    for (uint32_t index = 0; index < mIdleConns.Length(); ++index) {
+      RefPtr<nsHttpConnection> conn = do_QueryObject(mIdleConns[index]);
+      if (conn) {
+        conn->CheckForTraffic(false);
+      }
+    }
+  }
+}
+
+void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
+  uint32_t idx;
+  for (idx = 0; idx < mIdleConns.Length(); idx++) {
+    nsHttpConnection* idleConn = mIdleConns[idx];
+    if (idleConn->MaxBytesRead() < conn->MaxBytesRead()) {
+      break;
+    }
+  }
+
+  mIdleConns.InsertElementAt(idx, conn);
+  gHttpHandler->ConnMgr()->IncrementNumIdleConns();
+  conn->BeginIdleMonitoring();
+}
+
+HttpRetParams ConnectionEntry::GetConnectionData() {
+  HttpRetParams data;
+  data.host = mConnInfo->Origin();
+  data.port = mConnInfo->OriginPort();
+  for (uint32_t i = 0; i < mActiveConns.Length(); i++) {
+    HttpConnInfo info;
+    RefPtr<nsHttpConnection> connTCP = do_QueryObject(mActiveConns[i]);
+    if (connTCP) {
+      info.ttl = connTCP->TimeToLive();
+    } else {
+      info.ttl = 0;
+    }
+    info.rtt = mActiveConns[i]->Rtt();
+    info.SetHTTPProtocolVersion(mActiveConns[i]->Version());
+    data.active.AppendElement(info);
+  }
+  for (uint32_t i = 0; i < mIdleConns.Length(); i++) {
+    HttpConnInfo info;
+    info.ttl = mIdleConns[i]->TimeToLive();
+    info.rtt = mIdleConns[i]->Rtt();
+    info.SetHTTPProtocolVersion(mIdleConns[i]->Version());
+    data.idle.AppendElement(info);
+  }
+  for (uint32_t i = 0; i < mHalfOpens.Length(); i++) {
+    HalfOpenSockets hSocket;
+    hSocket.speculative = mHalfOpens[i]->IsSpeculative();
+    data.halfOpens.AppendElement(hSocket);
+  }
+  if (mConnInfo->IsHttp3()) {
+    data.httpVersion = "HTTP/3"_ns;
+  } else if (mUsingSpdy) {
+    data.httpVersion = "HTTP/2"_ns;
+  } else {
+    data.httpVersion = "HTTP <= 1.1"_ns;
+  }
+  data.ssl = mConnInfo->EndToEndSSL();
+  return data;
+}
+
+void ConnectionEntry::LogConnections() {
+  if (!mConnInfo->IsHttp3()) {
+    LOG(("active urgent conns ["));
+    for (HttpConnectionBase* conn : mActiveConns) {
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+      MOZ_ASSERT(connTCP);
+      if (connTCP->IsUrgentStartPreferred()) {
+        LOG(("  %p", conn));
+      }
+    }
+    LOG(("] active regular conns ["));
+    for (HttpConnectionBase* conn : mActiveConns) {
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+      MOZ_ASSERT(connTCP);
+      if (!connTCP->IsUrgentStartPreferred()) {
+        LOG(("  %p", conn));
+      }
+    }
+
+    LOG(("] idle urgent conns ["));
+    for (nsHttpConnection* conn : mIdleConns) {
+      if (conn->IsUrgentStartPreferred()) {
+        LOG(("  %p", conn));
+      }
+    }
+    LOG(("] idle regular conns ["));
+    for (nsHttpConnection* conn : mIdleConns) {
+      if (!conn->IsUrgentStartPreferred()) {
+        LOG(("  %p", conn));
+      }
+    }
+  } else {
+    LOG(("active conns ["));
+    for (HttpConnectionBase* conn : mActiveConns) {
+      LOG(("  %p", conn));
+    }
+    MOZ_ASSERT(mIdleConns.Length() == 0);
+  }
+  LOG(("]"));
 }
 
 }  // namespace net
