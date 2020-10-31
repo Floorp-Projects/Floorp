@@ -129,13 +129,13 @@ static void linear_row_blit(uint8_t* dest, int span, const vec2_scalar& srcUV,
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
     auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
-    unaligned_store(dest, pack(srcpx));
+    unaligned_store(dest, srcpx);
     dest += 4;
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
     auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
-    partial_store_span(dest, pack(srcpx), span);
+    partial_store_span(dest, srcpx, span);
   }
 }
 
