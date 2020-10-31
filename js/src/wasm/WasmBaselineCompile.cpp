@@ -5235,9 +5235,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Labels
 
   void insertBreakablePoint(CallSiteDesc::Kind kind) {
-    // The debug trap exit requires WasmTlsReg be loaded. However, since we
-    // are emitting millions of these breakable points inline, we push this
-    // loading of TLS into the FarJumpIsland created by linkCallSites.
+    fr.loadTlsPtr(WasmTlsReg);
     masm.nopPatchableToCall(CallSiteDesc(iter_.lastOpcodeOffset(), kind));
   }
 
@@ -5576,6 +5574,9 @@ class BaseCompiler final : public BaseCompilerInterface {
       restoreRegisterReturnValues(resultType);
     }
 
+    // To satisy Tls extent invariant we need to reload WasmTlsReg because
+    // baseline can clobber it.
+    fr.loadTlsPtr(WasmTlsReg);
     GenerateFunctionEpilogue(masm, fr.fixedAllocSize(), &offsets_);
 
 #if defined(JS_ION_PERF)
