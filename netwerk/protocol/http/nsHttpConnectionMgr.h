@@ -158,8 +158,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
       bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
 
-  // Wen a new idle connection has been added, this function is called to increment
-  // mNumIdleConns and update PruneDeadConnections timer.
+  // Wen a new idle connection has been added, this function is called to
+  // increment mNumIdleConns and update PruneDeadConnections timer.
   void NewIdleConnectionAdded(uint32_t timeToLive);
   void DecrementNumIdleConns();
 
@@ -184,7 +184,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
    public:
     bool Equals(const PendingTransactionInfo* aPendingTrans,
                 const nsAHttpTransaction* aTrans) const {
-      return aPendingTrans->mTransaction.get() == aTrans;
+      return aPendingTrans->Transaction() == aTrans;
     }
   };
 
@@ -260,12 +260,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
       PendingTransactionInfo* pendingTransInfo);
   void StartedConnect();
   void RecvdConnect();
-
-  // This function will unclaim the claimed connection or set a halfOpen
-  // socket to the speculative state if the transaction claiming them ends up
-  // using another connection.
-  void ReleaseClaimedSockets(ConnectionEntry* ent,
-                             PendingTransactionInfo* pendingTransInfo);
 
   ConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
                                               bool allowWildCard,
