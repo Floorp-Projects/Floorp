@@ -15,6 +15,7 @@
 #include "nsEscape.h"
 #include "nsHttpTransaction.h"
 #include "nsICancelable.h"
+#include "nsICachingChannel.h"
 #include "nsIHttpPushListener.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsIOService.h"
