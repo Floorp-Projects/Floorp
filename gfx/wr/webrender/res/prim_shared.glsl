@@ -248,9 +248,6 @@ struct Fragment {
 #endif
 };
 
-bool needs_clip() {
-    return vClipMaskUvBounds.xy != vClipMaskUvBounds.zw;
-}
 
 float do_clip() {
     // check for the dummy bounds, which are given to the opaque objects
