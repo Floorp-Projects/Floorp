@@ -807,7 +807,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
     cbReflowInput.emplace(cbFrame->PresContext(), cbFrame, rc, cbSize);
     cbReflowInput->SetComputedLogicalMargin(
         cbWM, cbFrame->GetLogicalUsedMargin(cbWM));
-    cbReflowInput->ComputedPhysicalPadding() = cbFrame->GetUsedPadding();
+    cbReflowInput->SetComputedLogicalPadding(
+        cbWM, cbFrame->GetLogicalUsedPadding(cbWM));
     cbReflowInput->ComputedPhysicalBorderPadding() =
         cbFrame->GetUsedBorderAndPadding();
     parentReflowInput.mCBReflowInput = cbReflowInput.ptr();
@@ -820,7 +821,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   parentReflowInput.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
   parentReflowInput.SetComputedLogicalMargin(parentWM, LogicalMargin(parentWM));
 
-  parentReflowInput.ComputedPhysicalPadding() = parentFrame->GetUsedPadding();
+  parentReflowInput.SetComputedLogicalPadding(
+      parentWM, parentFrame->GetLogicalUsedPadding(parentWM));
   parentReflowInput.ComputedPhysicalBorderPadding() =
       parentFrame->GetUsedBorderAndPadding();
   LogicalSize availSize = parentSize.ConvertTo(frameWM, parentWM);

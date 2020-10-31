@@ -2414,14 +2414,15 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
   if (isThemed && presContext->Theme()->GetWidgetPadding(
                       presContext->DeviceContext(), mFrame,
                       disp->EffectiveAppearance(), &widgetPadding)) {
-    ComputedPhysicalPadding() = LayoutDevicePixel::ToAppUnits(
+    const nsMargin padding = LayoutDevicePixel::ToAppUnits(
         widgetPadding, presContext->AppUnitsPerDevPixel());
+    SetComputedLogicalPadding(wm, LogicalMargin(wm, padding));
     needPaddingProp = false;
   } else if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
-    ComputedPhysicalPadding().SizeTo(0, 0, 0, 0);
+    SetComputedLogicalPadding(wm, LogicalMargin(wm));
     needPaddingProp = false;
   } else if (aPadding) {  // padding is an input arg
-    ComputedPhysicalPadding() = *aPadding;
+    SetComputedLogicalPadding(wm, LogicalMargin(wm, *aPadding));
     needPaddingProp = mFrame->StylePadding()->IsWidthDependent() ||
                       mFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
                                               NS_FRAME_DYNAMIC_REFLOW_ROOT);
@@ -2483,7 +2484,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       // only part of their border.  We need to do this here before we
       // try to do anything like handling 'auto' widths,
       // 'box-sizing', or 'auto' margins.
-      ComputedPhysicalPadding().SizeTo(0, 0, 0, 0);
+      SetComputedLogicalPadding(wm, LogicalMargin(wm));
       SetComputedLogicalBorderPadding(
           tableFrame->GetIncludedOuterBCBorder(mWritingMode));
     }
@@ -2497,7 +2498,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
     // any padding or border.
     nsSize size(mFrame->GetSize());
     if (size.width == 0 || size.height == 0) {
-      ComputedPhysicalPadding().SizeTo(0, 0, 0, 0);
+      SetComputedLogicalPadding(wm, LogicalMargin(wm));
       ComputedPhysicalBorderPadding().SizeTo(0, 0, 0, 0);
     }
   }
@@ -2792,14 +2793,15 @@ bool SizeComputationInput::ComputePadding(WritingMode aCBWM,
                                           LayoutFrameType aFrameType) {
   // If style can provide us the padding directly, then use it.
   const nsStylePadding* stylePadding = mFrame->StylePadding();
-  bool isCBDependent = !stylePadding->GetPadding(ComputedPhysicalPadding());
+  nsMargin padding;
+  bool isCBDependent = !stylePadding->GetPadding(padding);
   // a table row/col group, row/col doesn't have padding
   // XXXldb Neither do border-collapse tables.
   if (LayoutFrameType::TableRowGroup == aFrameType ||
       LayoutFrameType::TableColGroup == aFrameType ||
       LayoutFrameType::TableRow == aFrameType ||
       LayoutFrameType::TableCol == aFrameType) {
-    ComputedPhysicalPadding().SizeTo(0, 0, 0, 0);
+    SetComputedLogicalPadding(mWritingMode, LogicalMargin(mWritingMode));
   } else if (isCBDependent) {
     // We have to compute the value. This calculation is performed
     // according to the writing mode of the containing block
@@ -2824,6 +2826,9 @@ bool SizeComputationInput::ComputePadding(WritingMode aCBWM,
                         aPercentBasis, stylePadding->mPadding.GetBEnd(aCBWM)));
 
     SetComputedLogicalPadding(aCBWM, p);
+  } else {
+    SetComputedLogicalPadding(mWritingMode,
+                              LogicalMargin(mWritingMode, padding));
   }
   return isCBDependent;
 }
