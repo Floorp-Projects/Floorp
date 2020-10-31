@@ -129,7 +129,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // See BrowsingContext::SetActiveSessionHistoryEntry.
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
-                                    uint32_t aLoadType, int32_t aChildOffset,
+                                    uint32_t aLoadType,
                                     uint32_t aUpdatedCacheKey,
                                     const nsID& aChangeID);
 

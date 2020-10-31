@@ -1690,7 +1690,6 @@ parent:
     async SetActiveSessionHistoryEntry(MaybeDiscardedBrowsingContext context,
                                        nsPoint? previousScrollPosition,
                                        SessionHistoryInfo info, uint32_t loadType,
-                                       int32_t childOffset,
                                        uint32_t updatedCacheKey, nsID changeID);
     async ReplaceActiveSessionHistoryEntry(
         MaybeDiscardedBrowsingContext context, SessionHistoryInfo info);

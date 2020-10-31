@@ -28,7 +28,7 @@ class nsContentDispatchChooser {
    * dialogs and directly open the handler.
    * @param {nsIHandlerInfo} aHandler - Info about protocol and handlers.
    * @param {nsIURI} aURI - URI to be handled.
-   * @param {nsIPrincipal} aPrincipal - Principal which triggered the load.
+   * @param {nsIPrincipal} [aPrincipal] - Principal which triggered the load.
    * @param {BrowsingContext} [aBrowsingContext] - Context of the load.
    */
   async handleURI(aHandler, aURI, aPrincipal, aBrowsingContext) {
@@ -148,7 +148,7 @@ class nsContentDispatchChooser {
       resetHandlerChoice = outArgs.getProperty("resetHandlerChoice");
 
       // If the user wants to select a new app we don't persist the permission.
-      if (!resetHandlerChoice) {
+      if (!resetHandlerChoice && aPrincipal) {
         let remember = outArgs.getProperty("remember");
         this._updatePermission(aPrincipal, aHandler.type, remember);
       }

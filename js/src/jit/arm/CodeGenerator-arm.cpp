@@ -661,41 +661,22 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
 void CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs,
                                   Register output, LSnapshot* snapshot,
                                   Label& done) {
-  // 0/X (with X < 0) is bad because both of these values *should* be doubles,
-  // and the result should be -0.0, which cannot be represented in integers.
-  // X/0 is bad because it will give garbage (or abort), when it should give
-  // either \infty, -\infty or NaN.
+  // X % 0 is bad because it will give garbage (or abort), when it should give
+  // NaN.
 
-  // Prevent 0 / X (with X < 0) and X / 0
-  // testing X / Y. Compare Y with 0.
-  // There are three cases: (Y < 0), (Y == 0) and (Y > 0).
-  // If (Y < 0), then we compare X with 0, and bail if X == 0.
-  // If (Y == 0), then we simply want to bail. Since this does not set the
-  // flags necessary for LT to trigger, we don't test X, and take the bailout
-  // because the EQ flag is set.
-  // If (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take
-  // the bailout.
-  if (mir->canBeDivideByZero() || mir->canBeNegativeDividend()) {
-    if (mir->trapOnError()) {
-      // wasm allows negative lhs and return 0 in this case.
-      MOZ_ASSERT(mir->isTruncated());
-      masm.as_cmp(rhs, Imm8(0));
+  if (mir->canBeDivideByZero()) {
+    masm.as_cmp(rhs, Imm8(0));
+    if (mir->isTruncated()) {
       Label nonZero;
       masm.ma_b(&nonZero, Assembler::NotEqual);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+      if (mir->trapOnError()) {
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+      } else {
+        // NaN|0 == 0
+        masm.ma_mov(Imm32(0), output);
+        masm.ma_b(&done);
+      }
       masm.bind(&nonZero);
-      return;
-    }
-
-    masm.as_cmp(rhs, Imm8(0));
-    masm.as_cmp(lhs, Imm8(0), Assembler::LessThan);
-    if (mir->isTruncated()) {
-      // NaN|0 == 0 and (0 % -X)|0 == 0
-      Label skip;
-      masm.ma_b(&skip, Assembler::NotEqual);
-      masm.ma_mov(Imm32(0), output);
-      masm.ma_b(&done);
-      masm.bind(&skip);
     } else {
       MOZ_ASSERT(mir->fallible());
       bailoutIf(Assembler::Equal, snapshot);
@@ -707,12 +688,21 @@ void CodeGenerator::visitModI(LModI* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register output = ToRegister(ins->output());
-  Register callTemp = ToRegister(ins->callTemp());
   MMod* mir = ins->mir();
 
-  // Save the lhs in case we end up with a 0 that should be a -0.0 because lhs <
-  // 0.
-  masm.ma_mov(lhs, callTemp);
+  // Contrary to other architectures (notably x86) INT_MIN % -1 doesn't need to
+  // be handled separately. |ma_smod| computes the remainder using the |SDIV|
+  // and the |MLS| instructions. On overflow, |SDIV| truncates the result to
+  // 32-bit and returns INT_MIN, see ARM Architecture Reference Manual, SDIV
+  // instruction.
+  //
+  //   mls(INT_MIN, sdiv(INT_MIN, -1), -1)
+  // = INT_MIN - (sdiv(INT_MIN, -1) * -1)
+  // = INT_MIN - (INT_MIN * -1)
+  // = INT_MIN - INT_MIN
+  // = 0
+  //
+  // And a zero remainder with a negative dividend is already handled below.
 
   Label done;
   modICommon(mir, lhs, rhs, output, ins->snapshot(), done);
@@ -731,7 +721,7 @@ void CodeGenerator::visitModI(LModI* ins) {
       // See if X < 0
       masm.as_cmp(output, Imm8(0));
       masm.ma_b(&done, Assembler::NotEqual);
-      masm.as_cmp(callTemp, Imm8(0));
+      masm.as_cmp(lhs, Imm8(0));
       bailoutIf(Assembler::Signed, ins->snapshot());
     }
   }
@@ -754,8 +744,13 @@ void CodeGenerator::visitSoftModI(LSoftModI* ins) {
   MOZ_ASSERT(callTemp != rhs);
   masm.ma_mov(lhs, callTemp);
 
-  // Prevent INT_MIN % -1;
-  // The integer division will give INT_MIN, but we want -(double)INT_MIN.
+  // Prevent INT_MIN % -1.
+  //
+  // |aeabi_idivmod| is allowed to return any arbitrary value when called with
+  // |(INT_MIN, -1)|, see "Run-time ABI for the ARM architecture manual". Most
+  // implementations perform a non-trapping signed integer division and
+  // return the expected result, i.e. INT_MIN. But since we can't rely on this
+  // behavior, handle this case separately here.
   if (mir->canBeNegativeDividend()) {
     {
       ScratchRegisterScope scratch(masm);

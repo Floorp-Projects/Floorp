@@ -220,8 +220,8 @@ add_task(async function() {
     entry: "oneoff",
   });
 
-  // When starting typing, as the search mode is promoted from preview,
-  // the one-off selection is removed.
+  // When starting typing, as the search mode is confirmed, the one-off
+  // selection is removed.
   ok(!oneOffs.selectedButton, "There is no any selected one-off button");
 
   // Clean up

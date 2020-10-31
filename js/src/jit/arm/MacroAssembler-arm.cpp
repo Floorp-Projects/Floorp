@@ -5846,6 +5846,11 @@ void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
   MOZ_CRASH("not supported on this platform");
 }
 
+void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister output) {
+  MOZ_CRASH("not supported on this platform");
+}
+
 //}}} check_macroassembler_style
 
 void MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input,

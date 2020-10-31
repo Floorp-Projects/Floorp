@@ -582,6 +582,8 @@ pref("apz.overscroll.stretch_factor", "0.35");
 
 pref("apz.zoom-to-focused-input.enabled", true);
 
+pref("formhelper.autozoom.force-disable.test-only", false);
+
 #ifdef XP_MACOSX
   // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI
   // display.

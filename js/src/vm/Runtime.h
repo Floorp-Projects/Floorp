@@ -428,14 +428,14 @@ struct JSRuntime {
   js::WriteOnceData<JS::AbortSignalIsAborted> abortSignalIsAborted_;
 
  public:
-  void initAbortSignalHandling(const JSClass* clasp,
-                               JS::AbortSignalIsAborted isAborted) {
-    MOZ_ASSERT(clasp != nullptr,
+  void initPipeToHandling(const JSClass* abortSignalClass,
+                          JS::AbortSignalIsAborted isAborted) {
+    MOZ_ASSERT(abortSignalClass != nullptr,
                "doesn't make sense for an embedder to provide a null class "
-               "when specifying AbortSignal handling");
+               "when specifying pipeTo handling");
     MOZ_ASSERT(isAborted != nullptr, "must pass a valid function pointer");
 
-    abortSignalClass_ = clasp;
+    abortSignalClass_ = abortSignalClass;
     abortSignalIsAborted_ = isAborted;
   }
 
@@ -443,7 +443,7 @@ struct JSRuntime {
 
   bool abortSignalIsAborted(JSObject* obj) {
     MOZ_ASSERT(abortSignalIsAborted_ != nullptr,
-               "must call initAbortSignalHandling first");
+               "must call initPipeToHandling first");
     return abortSignalIsAborted_(obj);
   }
 

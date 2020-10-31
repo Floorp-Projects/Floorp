@@ -33,7 +33,14 @@ function nativeVerticalWheelEventMsg() {
     case "windows":
       return 0x020a; // WM_MOUSEWHEEL
     case "mac":
-      return 0; // value is unused, can be anything
+      var useWheelCodepath = SpecialPowers.getBoolPref(
+        "apz.test.mac.synth_wheel_input",
+        false
+      );
+      // Default to 1 (kCGScrollPhaseBegan) to trigger PanGestureInput events
+      // from widget code. Allow setting a pref to override this behaviour and
+      // trigger ScrollWheelInput events instead.
+      return useWheelCodepath ? 0 : 1;
     case "linux":
       return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
