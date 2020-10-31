@@ -112,8 +112,7 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     return nullptr;
   }
 
-  bool useStencilXDR = !options.useOffThreadParseGlobal;
-  if (useStencilXDR) {
+  if (options.useStencilXDR) {
     UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
 
     if (!compilationInfo.get().input.source()->xdrEncodeInitialStencil(
