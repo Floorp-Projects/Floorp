@@ -222,7 +222,7 @@ add_task(async function basic() {
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
   await assertState(0, 0, typedValue);
 
-  info("Click the heuristic result and observe it promotes search mode.");
+  info("Click the heuristic result and observe it confirms search mode.");
   let selectedButton = oneOffSearchButtons.selectedButton;
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: selectedButton.engine.name,

@@ -141,19 +141,15 @@ class LUDivConstantI : public LInstructionHelper<1, 1, 1> {
   MDiv* mir() const { return mir_->toDiv(); }
 };
 
-class LModI : public LBinaryMath<1> {
+class LModI : public LBinaryMath<0> {
  public:
   LIR_HEADER(ModI);
 
-  LModI(const LAllocation& lhs, const LAllocation& rhs,
-        const LDefinition& callTemp)
+  LModI(const LAllocation& lhs, const LAllocation& rhs)
       : LBinaryMath(classOpcode) {
     setOperand(0, lhs);
     setOperand(1, rhs);
-    setTemp(0, callTemp);
   }
-
-  const LDefinition* callTemp() { return getTemp(0); }
 
   MMod* mir() const { return mir_->toMod(); }
 };

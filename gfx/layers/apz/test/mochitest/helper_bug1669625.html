@@ -11,7 +11,8 @@
   <script type="application/javascript">
 
 function startTest() {
-  if (SpecialPowers.getBoolPref("apz.force_disable_desktop_zooming_scrollbars")) {
+  if (SpecialPowers.getBoolPref("apz.force_disable_desktop_zooming_scrollbars") ||
+      getPlatform() == "android") {
     setTimeout(subtestDone,0);
     return;
   }

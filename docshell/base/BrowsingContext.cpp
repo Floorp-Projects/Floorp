@@ -153,6 +153,17 @@ BrowsingContext* BrowsingContext::Top() {
   return bc;
 }
 
+int32_t BrowsingContext::IndexOf(BrowsingContext* aChild) {
+  int32_t index = -1;
+  for (BrowsingContext* child : Children()) {
+    ++index;
+    if (child == aChild) {
+      break;
+    }
+  }
+  return index;
+}
+
 WindowContext* BrowsingContext::GetTopWindowContext() {
   if (mParentWindow) {
     return mParentWindow->TopWindowContext();
@@ -2744,7 +2755,7 @@ bool BrowsingContext::IsPopupAllowed() {
 
 void BrowsingContext::SetActiveSessionHistoryEntry(
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo* aInfo,
-    uint32_t aLoadType, int32_t aChildOffset, uint32_t aUpdatedCacheKey) {
+    uint32_t aLoadType, uint32_t aUpdatedCacheKey) {
   if (XRE_IsContentProcess()) {
     // XXX Why we update cache key only in content process case?
     if (aUpdatedCacheKey != 0) {
@@ -2757,12 +2768,11 @@ void BrowsingContext::SetActiveSessionHistoryEntry(
       changeID = shistory->AddPendingHistoryChange();
     }
     ContentChild::GetSingleton()->SendSetActiveSessionHistoryEntry(
-        this, aPreviousScrollPos, *aInfo, aLoadType, aChildOffset,
-        aUpdatedCacheKey, changeID);
+        this, aPreviousScrollPos, *aInfo, aLoadType, aUpdatedCacheKey,
+        changeID);
   } else {
-    Canonical()->SetActiveSessionHistoryEntry(aPreviousScrollPos, aInfo,
-                                              aLoadType, aChildOffset,
-                                              aUpdatedCacheKey, nsID());
+    Canonical()->SetActiveSessionHistoryEntry(
+        aPreviousScrollPos, aInfo, aLoadType, aUpdatedCacheKey, nsID());
   }
 }
 
@@ -2914,6 +2924,7 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mWindowless);
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteTabs);
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteSubframes);
+  WriteIPDLParam(aMessage, aActor, aInit.mCreatedDynamically);
   WriteIPDLParam(aMessage, aActor, aInit.mOriginAttributes);
   WriteIPDLParam(aMessage, aActor, aInit.mRequestContextId);
   WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryIndex);
@@ -2931,6 +2942,8 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mUseRemoteTabs) ||
       !ReadIPDLParam(aMessage, aIterator, aActor,
                      &aInit->mUseRemoteSubframes) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor,
+                     &aInit->mCreatedDynamically) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOriginAttributes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mRequestContextId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor,

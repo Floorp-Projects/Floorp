@@ -282,9 +282,6 @@ skip script test262/language/expressions/compound-assignment/compound-assignment
 skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v-.js
 skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--20.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1670496
-skip script test262/intl402/DateTimeFormat/constructor-options-order-fractionalSecondDigits.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1662977
 skip script test262/intl402/NumberFormat/dft-currency-mnfd-range-check-mxfd.js
 

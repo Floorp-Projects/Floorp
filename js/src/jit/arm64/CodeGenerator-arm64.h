@@ -95,15 +95,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
   ValueOperand ToValue(LInstruction* ins, size_t pos);
   ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-  void storeElementTyped(const LAllocation* value, MIRType valueType,
-                         MIRType elementType, Register elements,
-                         const LAllocation* index);
-
-  void divICommon(MDiv* mir, Register lhs, Register rhs, Register output,
-                  LSnapshot* snapshot, Label& done);
-  void modICommon(MMod* mir, Register lhs, Register rhs, Register output,
-                  LSnapshot* snapshot, Label& done);
-
   void generateInvalidateEpilogue();
 
  public:

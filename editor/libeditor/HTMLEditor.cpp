@@ -568,6 +568,16 @@ void HTMLEditor::InitializeSelectionAncestorLimit(
         "HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(true) failed, "
         "but ignored");
   }
+
+  // If the target is a text control element, we won't handle user input
+  // for the `TextEditor` in it.  However, we need to be open for `execCommand`.
+  // Therefore, we shouldn't set ancestor limit in this case.
+  // Note that we should do this once setting ancestor limiter for backward
+  // compatiblity of select events, etc.  (Selection should be collapsed into
+  // the text control element.)
+  if (aAncestorLimit.HasIndependentSelection()) {
+    SelectionRefPtr()->SetAncestorLimiter(nullptr);
+  }
 }
 
 nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(

@@ -15,15 +15,15 @@ fuzzy(0-1,0-800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-repeat-1e.html linear-repeat-1-ref.html
 == linear-repeat-1f.html linear-repeat-1-ref.html
 fails-if(d2d&&!webrender) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
-fuzzy-if(skiaContent,0-1,0-500) fuzzy-if(webrender&&winWidget,0-2,0-100) fuzzy-if(webrender&&gtkWidget&&swgl,1-1,7600-7600) == linear-rotated-1.html linear-rotated-1-ref.html
+fuzzy-if(skiaContent,0-1,0-500) fuzzy-if(webrender&&winWidget,0-2,0-100) == linear-rotated-1.html linear-rotated-1-ref.html
 fuzzy-if(winWidget,0-1,0-37800) fuzzy-if(skiaContent,0-1,0-45000) == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
 == linear-stops-1b.html linear-stops-1-ref.html
 == linear-stops-1c.html linear-stops-1-ref.html
 # these gradients will be cached (in WebRender) and thus exhibit off-by-1 texture interpolation differences:
-fuzzy(0-1,0-35100) == linear-stops-1d.html linear-stops-1-ref.html
-fuzzy(0-1,0-35100) == linear-stops-1e.html linear-stops-1-ref.html
-fuzzy(0-1,0-35100) == linear-stops-1f.html linear-stops-1-ref.html
+fuzzy(0-1,0-35400) == linear-stops-1d.html linear-stops-1-ref.html
+fuzzy(0-1,0-35400) == linear-stops-1e.html linear-stops-1-ref.html
+fuzzy(0-1,0-35400) == linear-stops-1f.html linear-stops-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1a.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1b.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1c.html linear-vertical-1-ref.html

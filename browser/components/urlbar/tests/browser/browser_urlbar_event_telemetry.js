@@ -55,7 +55,7 @@ const tests = [
         numChars: "1",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -82,7 +82,7 @@ const tests = [
         numChars: "17",
         numWords: "3",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -110,7 +110,7 @@ const tests = [
         numChars: "4",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -191,7 +191,7 @@ const tests = [
         numChars: "4",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -273,7 +273,7 @@ const tests = [
         numChars: "4",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -298,7 +298,7 @@ const tests = [
         numChars: "1",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -648,7 +648,7 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -700,7 +700,7 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -999,7 +999,7 @@ const tests = [
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
           numWords: "1",
-          selType: "search",
+          selType: "searchengine",
           selIndex: "0",
           provider: "HeuristicFallback",
         },
@@ -1045,7 +1045,7 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -1112,7 +1112,7 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -1139,7 +1139,7 @@ const tests = [
         numChars: "1",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };
@@ -1186,7 +1186,7 @@ const tests = [
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
           numWords: "1",
-          selType: "search",
+          selType: "searchengine",
           selIndex: "0",
           provider: "HeuristicFallback",
         },
@@ -1233,7 +1233,7 @@ const tests = [
           elapsed: val => parseInt(val) > 0,
           numChars: "1",
           numWords: "1",
-          selType: "search",
+          selType: "searchengine",
           selIndex: "0",
           provider: "HeuristicFallback",
         },
@@ -1262,7 +1262,7 @@ const tests = [
         numChars: "1",
         numWords: "1",
         selIndex: "0",
-        selType: "search",
+        selType: "searchengine",
         provider: "HeuristicFallback",
       },
     };

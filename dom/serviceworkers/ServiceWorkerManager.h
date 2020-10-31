@@ -104,6 +104,7 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   friend class GetRegistrationRunnable;
   friend class ServiceWorkerJob;
   friend class ServiceWorkerRegistrationInfo;
+  friend class ServiceWorkerShutdownBlocker;
   friend class ServiceWorkerUnregisterJob;
   friend class ServiceWorkerUpdateJob;
   friend class UpdateTimerCallback;

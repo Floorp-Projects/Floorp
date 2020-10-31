@@ -82,9 +82,8 @@ struct FragmentShaderImpl {
                                 const void* step);
   typedef void (*RunWFunc)(FragmentShaderImpl*);
   typedef void (*SkipWFunc)(FragmentShaderImpl*, int steps);
-  typedef void (*DrawSpanRGBA8Func)(FragmentShaderImpl*, uint32_t* buf,
-                                    int len);
-  typedef void (*DrawSpanR8Func)(FragmentShaderImpl*, uint8_t* buf, int len);
+  typedef void (*DrawSpanRGBA8Func)(FragmentShaderImpl*);
+  typedef void (*DrawSpanR8Func)(FragmentShaderImpl*);
 
   InitSpanFunc init_span_func = nullptr;
   RunFunc run_func = nullptr;
@@ -108,16 +107,24 @@ struct FragmentShaderImpl {
   }
 
   vec4 gl_FragCoord;
-  vec2_scalar stepZW;
-  Bool isPixelDiscarded = false;
   vec4 gl_FragColor;
   vec4 gl_SecondaryFragColor;
+
+  vec2_scalar swgl_StepZW;
+  Bool swgl_IsPixelDiscarded = false;
+  // The current buffer position for committing span output.
+  uint32_t* swgl_OutRGBA8 = nullptr;
+  uint8_t* swgl_OutR8 = nullptr;
+  // The remaining number of pixels in the span.
+  int32_t swgl_SpanLength = 0;
+  // The number of pixels in a step.
+  enum : int32_t { swgl_StepSize = 4 };
 
   ALWAYS_INLINE void step_fragcoord(int steps = 4) { gl_FragCoord.x += steps; }
 
   ALWAYS_INLINE void step_perspective(int steps = 4) {
-    gl_FragCoord.z += stepZW.x * steps;
-    gl_FragCoord.w += stepZW.y * steps;
+    gl_FragCoord.z += swgl_StepZW.x * steps;
+    gl_FragCoord.w += swgl_StepZW.y * steps;
   }
 
   template <bool W = false>
@@ -136,7 +143,9 @@ struct FragmentShaderImpl {
   }
 
   ALWAYS_INLINE void draw_span(uint32_t* buf, int len) {
-    (*draw_span_RGBA8_func)(this, buf, len);
+    swgl_OutRGBA8 = buf;
+    swgl_SpanLength = len;
+    (*draw_span_RGBA8_func)(this);
   }
 
   ALWAYS_INLINE bool has_draw_span(uint32_t*) {
@@ -144,7 +153,9 @@ struct FragmentShaderImpl {
   }
 
   ALWAYS_INLINE void draw_span(uint8_t* buf, int len) {
-    (*draw_span_R8_func)(this, buf, len);
+    swgl_OutR8 = buf;
+    swgl_SpanLength = len;
+    (*draw_span_R8_func)(this);
   }
 
   ALWAYS_INLINE bool has_draw_span(uint8_t*) {

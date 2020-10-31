@@ -1,0 +1,11 @@
+<script id="a">
+function go() {
+  a.appendChild(b)
+  document.execCommand("indent", false)
+  document.execCommand("delete", false)
+}
+</script>
+<body onload=go()>
+<ul contenteditable="true">
+<li id="b" contenteditable="false">
+<textarea autofocus>

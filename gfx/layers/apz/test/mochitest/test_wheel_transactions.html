@@ -125,7 +125,11 @@ SimpleTest.waitForExplicitFinish();
 
 // Disable smooth scrolling because it makes the test flaky (we don't have a good
 // way of detecting when the scrolling is finished).
-pushPrefs([["general.smoothScroll", false]])
+// Also, on macOS, force the native events to be wheel inputs rather than pan
+// inputs since this test is specifically testing things related to wheel
+// transactions.
+pushPrefs([["general.smoothScroll", false],
+           ["apz.test.mac.synth_wheel_input", true]])
 .then(waitUntilApzStable)
 .then(runContinuation(test))
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
