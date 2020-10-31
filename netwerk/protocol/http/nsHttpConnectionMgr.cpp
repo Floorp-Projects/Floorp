@@ -2458,13 +2458,6 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
     // in a single entry is generally limited to a small number (i.e. 6)
 
     ent->InsertIntoIdleConnections(connTCP);
-
-    // If the added connection was first idle connection or has shortest
-    // time to live among the watched connections, pruning dead
-    // connections needs to be done when it can't be reused anymore.
-    uint32_t timeToLive = connTCP->TimeToLive();
-    if (!mTimer || NowInSeconds() + timeToLive < mTimeOfNextWakeUp)
-      PruneDeadConnectionsAfter(timeToLive);
   } else {
     LOG(("  connection cannot be reused; closing connection\n"));
     conn->Close(NS_ERROR_ABORT);
@@ -3655,7 +3648,15 @@ HttpConnectionMgrParent* nsHttpConnectionMgr::AsHttpConnectionMgrParent() {
   return nullptr;
 }
 
-void nsHttpConnectionMgr::IncrementNumIdleConns() { mNumIdleConns++; }
+void nsHttpConnectionMgr::NewIdleConnectionAdded(uint32_t timeToLive) {
+  mNumIdleConns++;
+
+  // If the added connection was first idle connection or has shortest
+  // time to live among the watched connections, pruning dead
+  // connections needs to be done when it can't be reused anymore.
+  if (!mTimer || NowInSeconds() + timeToLive < mTimeOfNextWakeUp)
+    PruneDeadConnectionsAfter(timeToLive);
+}
 
 void nsHttpConnectionMgr::DecrementNumIdleConns() {
   MOZ_ASSERT(mNumIdleConns);
