@@ -69,14 +69,6 @@ LinkStyle::LinkStyle()
 
 LinkStyle::~LinkStyle() { LinkStyle::SetStyleSheet(nullptr); }
 
-StyleSheet* LinkStyle::GetSheetForBindings() const {
-  if (!StaticPrefs::dom_expose_incomplete_stylesheets() && mStyleSheet &&
-      !mStyleSheet->IsComplete()) {
-    return nullptr;
-  }
-  return mStyleSheet;
-}
-
 void LinkStyle::GetTitleAndMediaForElement(const Element& aSelf,
                                            nsString& aTitle, nsString& aMedia) {
   // Only honor title as stylesheet name for elements in the document (that is,
@@ -210,18 +202,14 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
                "there should not be a old document and old "
                "ShadowRoot simultaneously.");
 
-    // We're removing the link element from the document or shadow tree, unload
-    // the stylesheet.
-    //
-    // We want to do this even if updates are disabled, since otherwise a sheet
-    // with a stale linking element pointer will be hanging around -- not good!
-    if (mStyleSheet->IsComplete() ||
-        StaticPrefs::dom_expose_incomplete_stylesheets()) {
-      if (aOldShadowRoot) {
-        aOldShadowRoot->RemoveStyleSheet(*mStyleSheet);
-      } else {
-        aOldDocument->RemoveStyleSheet(*mStyleSheet);
-      }
+    // We're removing the link element from the document or shadow tree,
+    // unload the stylesheet.  We want to do this even if updates are
+    // disabled, since otherwise a sheet with a stale linking element pointer
+    // will be hanging around -- not good!
+    if (aOldShadowRoot) {
+      aOldShadowRoot->RemoveStyleSheet(*mStyleSheet);
+    } else {
+      aOldDocument->RemoveStyleSheet(*mStyleSheet);
     }
 
     SetStyleSheet(nullptr);
@@ -252,20 +240,17 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
   }
 
   if (mStyleSheet) {
-    if (mStyleSheet->IsComplete() ||
-        StaticPrefs::dom_expose_incomplete_stylesheets()) {
-      if (thisContent.IsInShadowTree()) {
-        ShadowRoot* containingShadow = thisContent.GetContainingShadow();
-        // Could be null only during unlink.
-        if (MOZ_LIKELY(containingShadow)) {
-          containingShadow->RemoveStyleSheet(*mStyleSheet);
-        }
-      } else {
-        doc->RemoveStyleSheet(*mStyleSheet);
+    if (thisContent.IsInShadowTree()) {
+      ShadowRoot* containingShadow = thisContent.GetContainingShadow();
+      // Could be null only during unlink.
+      if (MOZ_LIKELY(containingShadow)) {
+        containingShadow->RemoveStyleSheet(*mStyleSheet);
       }
+    } else {
+      doc->RemoveStyleSheet(*mStyleSheet);
     }
 
-    SetStyleSheet(nullptr);
+    LinkStyle::SetStyleSheet(nullptr);
   }
 
   if (!info) {

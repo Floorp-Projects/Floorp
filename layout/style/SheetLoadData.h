@@ -137,10 +137,6 @@ class SheetLoadData final : public PreloaderBase,
   // proceed even if we have no document.
   const bool mIsNonDocumentSheet : 1;
 
-  // Whether this stylesheet is for a child sheet load. This is necessary
-  // because the sheet could be detached mid-load by CSSOM.
-  const bool mIsChildSheet : 1;
-
   // mIsLoading is true from the moment we are placed in the loader's
   // "loading datas" table (right after the async channel is opened)
   // to the moment we are removed from said table (due to the load
