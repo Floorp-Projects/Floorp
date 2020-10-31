@@ -2461,20 +2461,22 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
     ApplyBaselinePadding(eLogicalAxisInline, nsIFrame::IBaselinePadProperty());
   }
 
+  LogicalMargin border(wm);
   if (isThemed) {
-    LayoutDeviceIntMargin border = presContext->Theme()->GetWidgetBorder(
-        presContext->DeviceContext(), mFrame, disp->EffectiveAppearance());
-    ComputedPhysicalBorderPadding() = LayoutDevicePixel::ToAppUnits(
-        border, presContext->AppUnitsPerDevPixel());
+    const LayoutDeviceIntMargin widgetBorder =
+        presContext->Theme()->GetWidgetBorder(
+            presContext->DeviceContext(), mFrame, disp->EffectiveAppearance());
+    border = LogicalMargin(
+        wm, LayoutDevicePixel::ToAppUnits(widgetBorder,
+                                          presContext->AppUnitsPerDevPixel()));
   } else if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
-    ComputedPhysicalBorderPadding().SizeTo(0, 0, 0, 0);
+    // Do nothing since the border local variable is initialized all zero.
   } else if (aBorder) {  // border is an input arg
-    ComputedPhysicalBorderPadding() = *aBorder;
+    border = LogicalMargin(wm, *aBorder);
   } else {
-    ComputedPhysicalBorderPadding() =
-        mFrame->StyleBorder()->GetComputedBorder();
+    border = LogicalMargin(wm, mFrame->StyleBorder()->GetComputedBorder());
   }
-  ComputedPhysicalBorderPadding() += ComputedPhysicalPadding();
+  SetComputedLogicalBorderPadding(wm, border + ComputedLogicalPadding());
 
   if (aFrameType == LayoutFrameType::Table) {
     nsTableFrame* tableFrame = static_cast<nsTableFrame*>(mFrame);
@@ -2499,7 +2501,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
     nsSize size(mFrame->GetSize());
     if (size.width == 0 || size.height == 0) {
       SetComputedLogicalPadding(wm, LogicalMargin(wm));
-      ComputedPhysicalBorderPadding().SizeTo(0, 0, 0, 0);
+      SetComputedLogicalBorderPadding(wm, LogicalMargin(wm));
     }
   }
   ::UpdateProp(mFrame, nsIFrame::UsedPaddingProperty(), needPaddingProp,
