@@ -809,8 +809,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         cbWM, cbFrame->GetLogicalUsedMargin(cbWM));
     cbReflowInput->SetComputedLogicalPadding(
         cbWM, cbFrame->GetLogicalUsedPadding(cbWM));
-    cbReflowInput->ComputedPhysicalBorderPadding() =
-        cbFrame->GetUsedBorderAndPadding();
+    cbReflowInput->SetComputedLogicalBorderPadding(
+        cbWM, cbFrame->GetLogicalUsedBorderAndPadding(cbWM));
     parentReflowInput.mCBReflowInput = cbReflowInput.ptr();
   }
 
@@ -823,8 +823,8 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
   parentReflowInput.SetComputedLogicalPadding(
       parentWM, parentFrame->GetLogicalUsedPadding(parentWM));
-  parentReflowInput.ComputedPhysicalBorderPadding() =
-      parentFrame->GetUsedBorderAndPadding();
+  parentReflowInput.SetComputedLogicalBorderPadding(
+      parentWM, parentFrame->GetLogicalUsedBorderAndPadding(parentWM));
   LogicalSize availSize = parentSize.ConvertTo(frameWM, parentWM);
   availSize.BSize(frameWM) = NS_UNCONSTRAINEDSIZE;
 

@@ -123,10 +123,6 @@ struct SizeComputationInput {
   }
   const nsMargin& ComputedPhysicalPadding() const { return mComputedPadding; }
 
-  // We may need to eliminate the (few) users of these writable-reference
-  // accessors as part of migrating to logical coordinates.
-  nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
-
   LogicalMargin ComputedLogicalMargin() const {
     return LogicalMargin(mWritingMode, mComputedMargin);
   }
