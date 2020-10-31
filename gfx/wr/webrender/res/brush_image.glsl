@@ -333,4 +333,88 @@ Fragment brush_fs() {
 
     return frag;
 }
+
+#if defined(SWGL) && (!defined(WR_FEATURE_ALPHA_PASS) || !defined(WR_FEATURE_DUAL_SOURCE_BLENDING))
+void swgl_drawSpanRGBA8() {
+    if (!swgl_isTextureRGBA8(sColor0) || !swgl_isTextureLinear(sColor0)) {
+        return;
+    }
+
+    #ifdef WR_FEATURE_ALPHA_PASS
+        if (v_mask_swizzle != vec2(1.0, 0.0)) {
+            return;
+        }
+    #endif
+
+    int layer = swgl_textureLayerOffset(sColor0, v_layer_and_perspective.x);
+
+    float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_layer_and_perspective.y);
+
+    #ifndef WR_FEATURE_REPETITION
+        vec2 uv = swgl_linearQuantize(sColor0, v_uv * perspective_divisor + v_uv_bounds.xy);
+        vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
+        vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
+        vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
+    #endif
+
+    #ifdef WR_FEATURE_ALPHA_PASS
+        if (needs_clip()) {
+            while (swgl_SpanLength > 0) {
+                vec4 color = v_color * do_clip();
+                #ifdef WR_FEATURE_ANTIALIASING
+                    color *= init_transform_fs(v_local_pos);
+                    v_local_pos += swgl_interpStep(v_local_pos);
+                #endif
+                #ifdef WR_FEATURE_REPETITION
+                    vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
+                    vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
+                    swgl_commitTextureLinearColorRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), color, layer);
+                    v_uv += swgl_interpStep(v_uv);
+                #else
+                    swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), color, layer);
+                    uv += step_uv;
+                #endif
+                vClipMaskUv += swgl_interpStep(vClipMaskUv);
+            }
+            return;
+        #ifdef WR_FEATURE_ANTIALIASING
+        } else {
+        #else
+        } else if (v_color != vec4(1.0)) {
+        #endif
+            while (swgl_SpanLength > 0) {
+                vec4 color = v_color;
+                #ifdef WR_FEATURE_ANTIALIASING
+                    color *= init_transform_fs(v_local_pos);
+                    v_local_pos += swgl_interpStep(v_local_pos);
+                #endif
+                #ifdef WR_FEATURE_REPETITION
+                    vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
+                    vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
+                    swgl_commitTextureLinearColorRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), color, layer);
+                    v_uv += swgl_interpStep(v_uv);
+                #else
+                    swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), color, layer);
+                    uv += step_uv;
+                #endif
+            }
+            return;
+        }
+        // No clip or color scaling required, so just fall through to a normal textured span...
+    #endif
+
+    while (swgl_SpanLength > 0) {
+        #ifdef WR_FEATURE_REPETITION
+            vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
+            vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
+            swgl_commitTextureLinearRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), layer);
+            v_uv += swgl_interpStep(v_uv);
+        #else
+            swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), layer);
+            uv += step_uv;
+        #endif
+    }
+}
+#endif
+
 #endif
