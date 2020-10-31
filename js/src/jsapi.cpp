@@ -3461,6 +3461,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
+  useStencilXDR = rhs.useStencilXDR;
   useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
 };
 
@@ -3555,6 +3556,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       cx->options().throwOnAsmJSValidationFailure();
   privateClassFields = cx->options().privateClassFields();
   privateClassMethods = cx->options().privateClassMethods();
+
+  useStencilXDR = !UseOffThreadParseGlobal();
   useOffThreadParseGlobal = UseOffThreadParseGlobal();
 
   sourcePragmas_ = cx->options().sourcePragmas();
@@ -5752,8 +5755,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  bool useStencilXDR = !options.useOffThreadParseGlobal;
-  if (!useStencilXDR) {
+  if (!options.useStencilXDR) {
     // The buffer contains JSScript.
     return JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
   }
@@ -5802,8 +5804,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  bool useStencilXDR = !options.useOffThreadParseGlobal;
-  if (!useStencilXDR) {
+  if (!options.useStencilXDR) {
     JS::TranscodeResult res =
         JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
     if (res != JS::TranscodeResult_Ok) {
