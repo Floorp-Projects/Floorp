@@ -1176,48 +1176,57 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
     StretchRange stretch(FontStretchFromDWriteStretch(dwFont->GetStretch()));
     // Try to read PSName as a unique face identifier; we leave the name blank
     // if this fails, though the face may still be used.
-    nsAutoCString name;
-    RefPtr<gfxCharacterMap> charmap;
-    if (FAILED(GetDirectWriteFaceName(dwFont, PSNAME_ID, name)) || aLoadCmaps) {
-      RefPtr<IDWriteFontFace> dwFontFace;
-      if (SUCCEEDED(dwFont->CreateFontFace(getter_AddRefs(dwFontFace)))) {
-        const auto kNAME =
-            NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e'));
-        const auto kCMAP =
-            NativeEndian::swapToBigEndian(TRUETYPE_TAG('c', 'm', 'a', 'p'));
-        const char* data;
-        UINT32 size;
-        void* context;
-        BOOL exists;
-        if (name.IsEmpty()) {
-          if (SUCCEEDED(dwFontFace->TryGetFontTable(
-                  kNAME, (const void**)&data, &size, &context, &exists)) &&
-              exists) {
-            gfxFontUtils::ReadCanonicalName(
-                data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, name);
-            dwFontFace->ReleaseFontTable(context);
+    MOZ_SEH_TRY {
+      nsAutoCString name;
+      RefPtr<gfxCharacterMap> charmap;
+      if (FAILED(GetDirectWriteFaceName(dwFont, PSNAME_ID, name)) ||
+          aLoadCmaps) {
+        RefPtr<IDWriteFontFace> dwFontFace;
+        if (SUCCEEDED(dwFont->CreateFontFace(getter_AddRefs(dwFontFace)))) {
+          const auto kNAME =
+              NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e'));
+          const auto kCMAP =
+              NativeEndian::swapToBigEndian(TRUETYPE_TAG('c', 'm', 'a', 'p'));
+          const char* data;
+          UINT32 size;
+          void* context;
+          BOOL exists;
+          if (name.IsEmpty()) {
+            if (SUCCEEDED(dwFontFace->TryGetFontTable(
+                    kNAME, (const void**)&data, &size, &context, &exists)) &&
+                exists) {
+              gfxFontUtils::ReadCanonicalName(
+                  data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, name);
+              dwFontFace->ReleaseFontTable(context);
+            }
           }
-        }
-        if (aLoadCmaps) {
-          if (SUCCEEDED(dwFontFace->TryGetFontTable(
-                  kCMAP, (const void**)&data, &size, &context, &exists)) &&
-              exists) {
-            charmap = new gfxCharacterMap();
-            uint32_t offset;
-            gfxFontUtils::ReadCMAP((const uint8_t*)data, size, *charmap,
-                                   offset);
-            dwFontFace->ReleaseFontTable(context);
+          if (aLoadCmaps) {
+            if (SUCCEEDED(dwFontFace->TryGetFontTable(
+                    kCMAP, (const void**)&data, &size, &context, &exists)) &&
+                exists) {
+              charmap = new gfxCharacterMap();
+              uint32_t offset;
+              gfxFontUtils::ReadCMAP((const uint8_t*)data, size, *charmap,
+                                     offset);
+              dwFontFace->ReleaseFontTable(context);
+            }
           }
         }
       }
+      SlantStyleRange slant(dwstyle == DWRITE_FONT_STYLE_NORMAL
+                                ? FontSlantStyle::Normal()
+                                : dwstyle == DWRITE_FONT_STYLE_ITALIC
+                                      ? FontSlantStyle::Italic()
+                                      : FontSlantStyle::Oblique());
+      aFaces.AppendElement(fontlist::Face::InitData{
+          name, uint16_t(i), false, weight, stretch, slant, charmap});
     }
-    SlantStyleRange slant(dwstyle == DWRITE_FONT_STYLE_NORMAL
-                              ? FontSlantStyle::Normal()
-                              : dwstyle == DWRITE_FONT_STYLE_ITALIC
-                                    ? FontSlantStyle::Italic()
-                                    : FontSlantStyle::Oblique());
-    aFaces.AppendElement(fontlist::Face::InitData{
-        name, uint16_t(i), false, weight, stretch, slant, charmap});
+    MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      // Exception (e.g. disk i/o error) occurred when DirectWrite tried to use
+      // the font resource. We'll just skip the bad face.
+      gfxCriticalNote << "Exception occurred reading faces for "
+                      << aFamily->Key().AsString(SharedFontList()).get();
+    }
   }
 }
 
@@ -1257,9 +1266,9 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
       NS_WARNING("failed to create font face");
       return result;
     }
+    void* context;
     const char* data;
     UINT32 size;
-    void* context;
     BOOL exists;
     if (FAILED(dwFontFace->TryGetFontTable(
             NativeEndian::swapToBigEndian(TRUETYPE_TAG('n', 'a', 'm', 'e')),
@@ -1268,25 +1277,33 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
       NS_WARNING("failed to get name table");
       return result;
     }
-    // Try to read the name table entries, and ensure result is true if either
-    // one succeeds.
-    if (FAILED(ps) || aPSName.IsEmpty()) {
-      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
-              data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, aPSName))) {
-        result = true;
-      } else {
-        NS_WARNING("failed to read psname");
+    MOZ_SEH_TRY {
+      // Try to read the name table entries, and ensure result is true if either
+      // one succeeds.
+      if (FAILED(ps) || aPSName.IsEmpty()) {
+        if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
+                data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, aPSName))) {
+          result = true;
+        } else {
+          NS_WARNING("failed to read psname");
+        }
+      }
+      if (FAILED(full) || aFullName.IsEmpty()) {
+        if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
+                data, size, gfxFontUtils::NAME_ID_FULL, aFullName))) {
+          result = true;
+        } else {
+          NS_WARNING("failed to read fullname");
+        }
       }
     }
-    if (FAILED(full) || aFullName.IsEmpty()) {
-      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
-              data, size, gfxFontUtils::NAME_ID_FULL, aFullName))) {
-        result = true;
-      } else {
-        NS_WARNING("failed to read fullname");
-      }
+    MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      gfxCriticalNote << "Exception occurred reading face names for "
+                      << aFamily->Key().AsString(SharedFontList()).get();
     }
-    dwFontFace->ReleaseFontTable(context);
+    if (dwFontFace && context) {
+      dwFontFace->ReleaseFontTable(context);
+    }
     return result;
   }
   return true;
@@ -1342,29 +1359,36 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
       continue;
     }
 
-    AutoTArray<nsCString, 4> otherFamilyNames;
-    gfxFontUtils::ReadOtherFamilyNamesForFace(familyName, data, size,
-                                              otherFamilyNames, false);
-    for (const auto& alias : otherFamilyNames) {
-      nsAutoCString key(alias);
-      ToLowerCase(key);
-      auto aliasData = mAliasTable.LookupOrAdd(key);
-      aliasData->InitFromFamily(aFamily, familyName);
-      aliasData->mFaces.AppendElement(facePtrs[i]);
-    }
-
-    nsAutoCString psname, fullname;
-    if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
-            data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, psname))) {
-      ToLowerCase(psname);
-      mLocalNameTable.Put(psname, fontlist::LocalFaceRec::InitData(key, i));
-    }
-    if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
-            data, size, gfxFontUtils::NAME_ID_FULL, fullname))) {
-      ToLowerCase(fullname);
-      if (fullname != psname) {
-        mLocalNameTable.Put(fullname, fontlist::LocalFaceRec::InitData(key, i));
+    MOZ_SEH_TRY {
+      AutoTArray<nsCString, 4> otherFamilyNames;
+      gfxFontUtils::ReadOtherFamilyNamesForFace(familyName, data, size,
+                                                otherFamilyNames, false);
+      for (const auto& alias : otherFamilyNames) {
+        nsAutoCString key(alias);
+        ToLowerCase(key);
+        auto aliasData = mAliasTable.LookupOrAdd(key);
+        aliasData->InitFromFamily(aFamily, familyName);
+        aliasData->mFaces.AppendElement(facePtrs[i]);
       }
+
+      nsAutoCString psname, fullname;
+      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
+              data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, psname))) {
+        ToLowerCase(psname);
+        mLocalNameTable.Put(psname, fontlist::LocalFaceRec::InitData(key, i));
+      }
+      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
+              data, size, gfxFontUtils::NAME_ID_FULL, fullname))) {
+        ToLowerCase(fullname);
+        if (fullname != psname) {
+          mLocalNameTable.Put(fullname,
+                              fontlist::LocalFaceRec::InitData(key, i));
+        }
+      }
+    }
+    MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      gfxCriticalNote << "Exception occurred reading names for "
+                      << familyName.get();
     }
 
     dwFontFace->ReleaseFontTable(context);
@@ -2162,14 +2186,19 @@ void DirectWriteFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
 
           hr = dwFontFace->TryGetFontTable(kNAME, (const void**)&nameData,
                                            &nameSize, &ctx, &exists);
-
           if (SUCCEEDED(hr) && nameData && nameSize > 0) {
-            gfxFontUtils::ReadCanonicalName(nameData, nameSize,
-                                            gfxFontUtils::NAME_ID_FULL,
-                                            fontData.mFullName);
-            gfxFontUtils::ReadCanonicalName(nameData, nameSize,
-                                            gfxFontUtils::NAME_ID_POSTSCRIPT,
-                                            fontData.mPostscriptName);
+            MOZ_SEH_TRY {
+              gfxFontUtils::ReadCanonicalName(nameData, nameSize,
+                                              gfxFontUtils::NAME_ID_FULL,
+                                              fontData.mFullName);
+              gfxFontUtils::ReadCanonicalName(nameData, nameSize,
+                                              gfxFontUtils::NAME_ID_POSTSCRIPT,
+                                              fontData.mPostscriptName);
+            }
+            MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+              gfxCriticalNote << "Exception occurred reading names for "
+                              << PromiseFlatCString(aFamilyName).get();
+            }
             dwFontFace->ReleaseFontTable(ctx);
           }
         }
@@ -2205,14 +2234,19 @@ void DirectWriteFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
         bool cmapLoaded = false;
         RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
         uint32_t offset;
-
-        if (cmapData && cmapSize > 0 &&
-            NS_SUCCEEDED(
-                gfxFontUtils::ReadCMAP(cmapData, cmapSize, *charmap, offset))) {
-          fontData.mCharacterMap = charmap;
-          fontData.mUVSOffset = offset;
-          cmapLoaded = true;
-          mLoadStats.cmaps++;
+        MOZ_SEH_TRY {
+          if (cmapData && cmapSize > 0 &&
+              NS_SUCCEEDED(gfxFontUtils::ReadCMAP(cmapData, cmapSize, *charmap,
+                                                  offset))) {
+            fontData.mCharacterMap = charmap;
+            fontData.mUVSOffset = offset;
+            cmapLoaded = true;
+            mLoadStats.cmaps++;
+          }
+        }
+        MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+          gfxCriticalNote << "Exception occurred reading cmaps for "
+                          << PromiseFlatCString(aFamilyName).get();
         }
         dwFontFace->ReleaseFontTable(ctx);
         haveData = haveData || cmapLoaded;
