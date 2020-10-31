@@ -954,12 +954,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // 22.2.4.1, step 2 and 22.2.4.2, step 4 (implicit).
     // 22.2.4.1, step 3 and 22.2.4.2, step 5 (call AllocateTypedArray).
 
-    if (nelements > UINT32_MAX) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_ARRAY_LENGTH);
-      return nullptr;
-    }
-
     Rooted<ArrayBufferObject*> buffer(cx);
     if (!maybeCreateArrayBuffer(cx, nelements, nullptr, &buffer)) {
       return nullptr;
