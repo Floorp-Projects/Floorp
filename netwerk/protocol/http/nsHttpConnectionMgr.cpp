@@ -3563,20 +3563,7 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
        wcEnt, wcEnt->IdleConnectionsLength(), wcEnt->ActiveConnsLength(),
        wcEnt->mHalfOpens.Length(), wcEnt->PendingQueueLength()));
 
-
-  RefPtr<HttpConnectionBase> deleteProtector(proxyConn);
-  if (NS_SUCCEEDED(ent->RemoveActiveConnection(proxyConn))) {
-    wcEnt->InsertIntoActiveConns(proxyConn);
-    return;
-  }
-
-  RefPtr<nsHttpConnection> proxyConnTCP = do_QueryObject(proxyConn);
-  if (proxyConnTCP) {
-    if (NS_SUCCEEDED(ent->RemoveIdleConnection(proxyConnTCP))) {
-      wcEnt->InsertIntoIdleConnections(proxyConnTCP);
-      return;
-    }
-  }
+  ent->MoveConnection(proxyConn, wcEnt);
 }
 
 bool nsHttpConnectionMgr::MoveTransToHTTPSSVCConnEntry(
