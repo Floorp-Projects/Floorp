@@ -571,8 +571,9 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
                                innerAvailSize, Nothing(),
                                ReflowInput::InitFlag::CallerWillInit);
     // Override computed padding, in case it's percentage padding
-    kidReflowInput.Init(aPresContext, Nothing(), nullptr,
-                        &aReflowInput.ComputedPhysicalPadding());
+    kidReflowInput.Init(aPresContext, Nothing(), Nothing(),
+                        Some(aReflowInput.ComputedLogicalPadding().ConvertTo(
+                            inner->GetWritingMode(), wm)));
     if (kidReflowInput.mFlags.mIsTopOfPage) {
       // Prevent break-before from |inner| if we have a legend.
       kidReflowInput.mFlags.mIsTopOfPage = !legend;

@@ -229,18 +229,14 @@ ComputedStyle* nsTableWrapperFrame::GetParentComputedStyle(
 void nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
                                                const ReflowInput& aOuterRI,
                                                ReflowInput& aReflowInput) {
-  nsMargin collapseBorder;
-  nsMargin collapsePadding(0, 0, 0, 0);
-  nsMargin* pCollapseBorder = nullptr;
-  nsMargin* pCollapsePadding = nullptr;
+  Maybe<LogicalMargin> collapseBorder;
+  Maybe<LogicalMargin> collapsePadding;
   Maybe<LogicalSize> cbSize;
   if (aReflowInput.mFrame == InnerTableFrame()) {
     WritingMode wm = aReflowInput.GetWritingMode();
     if (InnerTableFrame()->IsBorderCollapse()) {
-      LogicalMargin border = InnerTableFrame()->GetIncludedOuterBCBorder(wm);
-      collapseBorder = border.GetPhysicalMargin(wm);
-      pCollapseBorder = &collapseBorder;
-      pCollapsePadding = &collapsePadding;
+      collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
+      collapsePadding.emplace(wm);
     }
     // Propagate our stored CB size if present, minus any margins.
     //
@@ -258,7 +254,7 @@ void nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
       cbSize.emplace(aOuterRI.mContainingBlockSize);
     }
   }
-  aReflowInput.Init(&aPresContext, cbSize, pCollapseBorder, pCollapsePadding);
+  aReflowInput.Init(&aPresContext, cbSize, collapseBorder, collapsePadding);
 }
 
 // get the margin and padding data. ReflowInput doesn't handle the

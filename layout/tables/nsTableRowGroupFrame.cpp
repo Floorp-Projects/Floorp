@@ -306,15 +306,15 @@ void nsTableRowGroupFrame::PlaceChild(
 void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext& aPresContext,
                                                 bool aBorderCollapse,
                                                 ReflowInput& aReflowInput) {
-  nsMargin border;
+  const auto childWM = aReflowInput.GetWritingMode();
+  LogicalMargin border(childWM);
   if (nsTableRowFrame* rowFrame = do_QueryFrame(aReflowInput.mFrame)) {
     if (aBorderCollapse) {
-      WritingMode wm = GetWritingMode();
-      border = rowFrame->GetBCBorderWidth(wm).GetPhysicalMargin(wm);
+      border = rowFrame->GetBCBorderWidth(childWM);
     }
   }
-  const nsMargin padding;
-  aReflowInput.Init(&aPresContext, Nothing(), &border, &padding);
+  const LogicalMargin zeroPadding(childWM);
+  aReflowInput.Init(&aPresContext, Nothing(), Some(border), Some(zeroPadding));
 }
 
 static void CacheRowBSizesForPrinting(nsPresContext* aPresContext,
