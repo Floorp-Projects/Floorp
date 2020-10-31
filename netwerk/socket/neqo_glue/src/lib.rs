@@ -455,6 +455,7 @@ pub enum Http3Event {
     Reset {
         stream_id: u64,
         error: u64,
+        local: bool,
     },
     /// A PushPromise
     PushPromise {
@@ -473,6 +474,10 @@ pub enum Http3Event {
     /// A push has been canceled.
     PushCanceled {
         push_id: u64,
+    },
+    PushReset {
+        push_id: u64,
+        error: u64,
     },
     RequestsCreatable,
     AuthenticationNeeded,
@@ -534,17 +539,22 @@ pub extern "C" fn neqo_http3conn_event(
                 stream_id,
                 headers,
                 fin,
+                interim,
             } => {
-                if let Some(headers) = headers {
+                if interim {
+                    // This are 1xx responses and they are ignored.
+                    Http3Event::NoEvent
+                } else {
                     let res = convert_h3_to_h1_headers(headers, data);
                     if res != NS_OK {
                         return res;
                     }
+                    Http3Event::HeaderReady { stream_id, fin }
                 }
-                Http3Event::HeaderReady { stream_id, fin }
             }
             Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
-            Http3ClientEvent::Reset { stream_id, error } => Http3Event::Reset { stream_id, error },
+            Http3ClientEvent::Reset { stream_id, error, local } =>
+                Http3Event::Reset { stream_id, error, local },
             Http3ClientEvent::PushPromise {
                 push_id,
                 request_stream_id,
@@ -563,19 +573,23 @@ pub extern "C" fn neqo_http3conn_event(
                 push_id,
                 headers,
                 fin,
+                interim,
             } => {
-                if let Some(headers) = headers {
+                if interim {
+                    Http3Event::NoEvent
+                } else {
                     let res = convert_h3_to_h1_headers(headers, data);
                     if res != NS_OK {
                         return res;
                     }
+                    Http3Event::PushHeaderReady { push_id, fin }
                 }
-                Http3Event::PushHeaderReady { push_id, fin }
             }
             Http3ClientEvent::PushDataReadable { push_id } => {
                 Http3Event::PushDataReadable { push_id }
             }
             Http3ClientEvent::PushCanceled { push_id } => Http3Event::PushCanceled { push_id },
+            Http3ClientEvent::PushReset { push_id, error } => Http3Event::PushReset { push_id, error },
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
             Http3ClientEvent::ZeroRttRejected => Http3Event::ZeroRttRejected,

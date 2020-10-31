@@ -50,8 +50,8 @@ fn process_events(server: &mut Http3Server) {
                 ];
 
                 let path_hdr = headers
-                    .as_ref()
-                    .and_then(|h| h.iter().find(|(k, _)| k == ":path"));
+                    .iter()
+                    .find(|(k, _)| k == ":path");
                 match path_hdr {
                     Some((_, path)) if !path.is_empty() => {
                         qtrace!("Serve request {}", path);
@@ -86,8 +86,8 @@ fn process_events(server: &mut Http3Server) {
                                 .unwrap();
                         } else if path == "/.well-known/http-opportunistic" {
                             let host_hdr = headers
-                                .as_ref()
-                                .and_then(|h| h.iter().find(|(k, _)| k == ":authority"));
+                                .iter()
+                                .find(|(k, _)| k == ":authority");
                             match host_hdr {
                                 Some((_, host)) if !host.is_empty() => {
                                     let mut content = b"[\"http://".to_vec();
