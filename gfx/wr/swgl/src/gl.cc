@@ -907,7 +907,11 @@ static inline void init_depth(S* s, Texture& t) {
 
 template <typename S>
 static inline void init_filter(S* s, Texture& t) {
-  s->filter = gl_filter_to_texture_filter(t.mag_filter);
+  // If the width is not at least 2 pixels, then we can't safely sample the end
+  // of the row with a linear filter. In that case, just punt to using nearest
+  // filtering instead.
+  s->filter = t.width >= 2 ? gl_filter_to_texture_filter(t.mag_filter)
+                           : TextureFilter::NEAREST;
 }
 
 template <typename S>
