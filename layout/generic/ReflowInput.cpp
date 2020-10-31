@@ -1832,8 +1832,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
 
-  LogicalMargin marginInOurWM = margin.ConvertTo(wm, cbwm);
-  SetComputedLogicalMargin(marginInOurWM);
+  SetComputedLogicalMargin(cbwm, margin);
 
   // If we have auto margins, update our UsedMarginProperty. The property
   // will have already been created by InitOffsets if it is needed.
@@ -1843,7 +1842,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     MOZ_ASSERT(propValue,
                "UsedMarginProperty should have been created "
                "by InitOffsets.");
-    *propValue = marginInOurWM.GetPhysicalMargin(wm);
+    *propValue = margin.GetPhysicalMargin(cbwm);
   }
 }
 
@@ -2491,8 +2490,8 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       // try to do anything like handling 'auto' widths,
       // 'box-sizing', or 'auto' margins.
       SetComputedLogicalPadding(wm, LogicalMargin(wm));
-      SetComputedLogicalBorderPadding(
-          tableFrame->GetIncludedOuterBCBorder(mWritingMode));
+      SetComputedLogicalBorderPadding(wm,
+                                      tableFrame->GetIncludedOuterBCBorder(wm));
     }
 
     // The margin is inherited to the table wrapper frame via
@@ -2566,7 +2565,7 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
   // usual overconstraint rules.
   if (availMarginSpace < 0) {
     margin.IEnd(cbWM) += availMarginSpace;
-    SetComputedLogicalMargin(margin.ConvertTo(mWritingMode, cbWM));
+    SetComputedLogicalMargin(cbWM, margin);
     return;
   }
 
@@ -2626,14 +2625,13 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
   } else if (isAutoEndMargin) {
     margin.IEnd(cbWM) += availMarginSpace;
   }
-  LogicalMargin marginInOurWM = margin.ConvertTo(mWritingMode, cbWM);
-  SetComputedLogicalMargin(marginInOurWM);
+  SetComputedLogicalMargin(cbWM, margin);
 
   if (isAutoStartMargin || isAutoEndMargin) {
     // Update the UsedMargin property if we were tracking it already.
     nsMargin* propValue = mFrame->GetProperty(nsIFrame::UsedMarginProperty());
     if (propValue) {
-      *propValue = marginInOurWM.GetPhysicalMargin(mWritingMode);
+      *propValue = margin.GetPhysicalMargin(cbWM);
     }
   }
 }
@@ -2788,7 +2786,7 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
   if (marginAdjustment > 0) {
     LogicalMargin m = ComputedLogicalMargin();
     m.IStart(mWritingMode) += marginAdjustment;
-    SetComputedLogicalMargin(m);
+    SetComputedLogicalMargin(mWritingMode, m);
   }
 
   return isCBDependent;
