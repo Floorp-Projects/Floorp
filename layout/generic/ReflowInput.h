@@ -137,24 +137,13 @@ struct SizeComputationInput {
                                 const LogicalMargin& aMargin) {
     mComputedMargin = aMargin.ConvertTo(mWritingMode, aWM);
   }
-  void SetComputedLogicalMargin(const LogicalMargin& aMargin) {
-    SetComputedLogicalMargin(mWritingMode, aMargin);
-  }
-
   void SetComputedLogicalBorderPadding(mozilla::WritingMode aWM,
                                        const LogicalMargin& aBorderPadding) {
     mComputedBorderPadding = aBorderPadding.ConvertTo(mWritingMode, aWM);
   }
-  void SetComputedLogicalBorderPadding(const LogicalMargin& aMargin) {
-    SetComputedLogicalBorderPadding(mWritingMode, aMargin);
-  }
-
   void SetComputedLogicalPadding(mozilla::WritingMode aWM,
                                  const LogicalMargin& aPadding) {
     mComputedPadding = aPadding.ConvertTo(mWritingMode, aWM);
-  }
-  void SetComputedLogicalPadding(const LogicalMargin& aMargin) {
-    SetComputedLogicalPadding(mWritingMode, aMargin);
   }
 
   WritingMode GetWritingMode() const { return mWritingMode; }
