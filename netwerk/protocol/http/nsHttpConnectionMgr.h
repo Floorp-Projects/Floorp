@@ -157,7 +157,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   already_AddRefed<PendingTransactionInfo> FindTransactionHelper(
       bool removeWhenFound, ConnectionEntry* aEnt, nsAHttpTransaction* aTrans);
 
-  void IncrementNumIdleConns();
+  // Wen a new idle connection has been added, this function is called to increment
+  // mNumIdleConns and update PruneDeadConnections timer.
+  void NewIdleConnectionAdded(uint32_t timeToLive);
   void DecrementNumIdleConns();
 
  private:
@@ -172,6 +174,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   friend class ConnectionEntry;
   void IncrementActiveConnCount();
   void DecrementActiveConnCount(HttpConnectionBase*);
+
  private:
   friend class HalfOpenSocket;
   friend class PendingTransactionInfo;
