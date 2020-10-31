@@ -2,7 +2,7 @@
 platform(linux,mac) == draw_calls(7) color_targets(7) alpha_targets(0) filter-blur.yaml filter-blur.png
 == isolated.yaml isolated-ref.yaml
 == invisible.yaml invisible-ref.yaml
-fuzzy-if(platform(swgl),1,10000) == opacity.yaml opacity-ref.yaml
+== opacity.yaml opacity-ref.yaml
 fuzzy-range(<=1,*10000) == opacity-combined.yaml opacity-combined-ref.yaml
 == opacity-overlap.yaml opacity-overlap-ref.yaml
 == filter-brightness.yaml filter-brightness-ref.yaml
@@ -30,7 +30,7 @@ skip_on(android,device) fuzzy(1,12) == draw_calls(6) color_targets(6) alpha_targ
 == filter-saturate-blue-alpha-1.yaml filter-saturate-blue-alpha-1-ref.yaml
 fuzzy(1,14) == filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
 skip_on(android,device) == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml  # Fails on Pixel2
-skip_on(android,device) fuzzy(2,9072) fuzzy-if(platform(swgl),5,71071) == filter-long-chain.yaml filter-long-chain.png  # fails on Pixel2
+skip_on(android,device) fuzzy(2,9072) fuzzy-if(platform(swgl),2,35827) == filter-long-chain.yaml filter-long-chain.png  # fails on Pixel2
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
