@@ -77,6 +77,8 @@ class ConnectionEntry {
   void PruneNoTraffic();
   uint32_t TimeoutTick();
 
+  void MoveConnection(HttpConnectionBase* proxyConn, ConnectionEntry* otherEnt);
+
   HttpRetParams GetConnectionData();
   void LogConnections();
 
@@ -176,6 +178,7 @@ class ConnectionEntry {
   uint32_t TotalActiveConnections() const;
 
  private:
+  void InsertIntoIdleConnections_internal(nsHttpConnection* conn);
   void RemoveFromIdleConnectionsIndex(size_t inx);
   bool RemoveFromIdleConnections(nsHttpConnection* conn);
 
