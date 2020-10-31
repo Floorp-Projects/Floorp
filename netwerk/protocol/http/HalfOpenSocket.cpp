@@ -1065,16 +1065,10 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
       // !!! It can be that mEnt is null after OnMsgReclaimConnection.!!!
       if (mEnt && mEnt->mConnInfo->FirstHopSSL() &&
           !mEnt->mConnInfo->UsingConnect()) {
-        int32_t idx = mEnt->mIdleConns.IndexOf(conn);
-        if (idx != -1) {
-          RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
-          MOZ_ASSERT(connTCP);
-          if (connTCP) {
-            DebugOnly<nsresult> rvDeb =
-                gHttpHandler->ConnMgr()->RemoveIdleConnection(connTCP);
-            MOZ_ASSERT(NS_SUCCEEDED(rvDeb));
-            connTCP->EndIdleMonitoring();
-          }
+        RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+        // If RemoveIdleConnection succeeds that means that conn is in the
+        // idle queue.
+        if (connTCP && NS_SUCCEEDED(mEnt->RemoveIdleConnection(connTCP))) {
           RefPtr<nsAHttpTransaction> trans;
           if (mTransaction->IsNullTransaction() && !mDispatchedMTransaction) {
             mDispatchedMTransaction = true;
@@ -1096,7 +1090,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
   if (connTCP) {
     if (aFastOpen) {
       MOZ_ASSERT(mEnt);
-      MOZ_ASSERT(static_cast<int32_t>(mEnt->mIdleConns.IndexOf(connTCP)) == -1);
+      MOZ_ASSERT(!mEnt->IsInIdleConnections(connTCP));
       int32_t idx = mEnt->mActiveConns.IndexOf(conn);
       if (NS_SUCCEEDED(rv) && (idx != -1)) {
         mConnectionNegotiatingFastOpen = connTCP;
