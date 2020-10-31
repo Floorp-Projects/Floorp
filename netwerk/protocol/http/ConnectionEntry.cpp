@@ -497,7 +497,7 @@ void ConnectionEntry::InsertIntoIdleConnections_internal(nsHttpConnection* conn)
 
 void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
   InsertIntoIdleConnections_internal(conn);
-  gHttpHandler->ConnMgr()->IncrementNumIdleConns();
+  gHttpHandler->ConnMgr()->NewIdleConnectionAdded(conn->TimeToLive());
   conn->BeginIdleMonitoring();
 }
 
