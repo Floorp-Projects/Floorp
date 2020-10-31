@@ -1532,14 +1532,6 @@ struct vec4_scalar {
     w /= a.w;
     return *this;
   }
-
-  friend bool operator==(const vec4_scalar& l, const vec4_scalar& r) {
-    return l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w;
-  }
-
-  friend bool operator!=(const vec4_scalar& l, const vec4_scalar& r) {
-    return l.x != r.x || l.y != r.y || l.z != r.z || l.w != r.w;
-  }
 };
 
 vec4_scalar vec2_scalar::sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4) {
