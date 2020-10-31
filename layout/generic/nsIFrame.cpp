@@ -12353,9 +12353,12 @@ void SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     printf("InitOffsets=");
-    DR_state->PrintMargin("m", &aState->ComputedPhysicalMargin());
-    DR_state->PrintMargin("p", &aState->ComputedPhysicalPadding());
-    DR_state->PrintMargin("p+b", &aState->ComputedPhysicalBorderPadding());
+    const auto m = aState->ComputedPhysicalMargin();
+    DR_state->PrintMargin("m", &m);
+    const auto p = aState->ComputedPhysicalPadding();
+    DR_state->PrintMargin("p", &p);
+    const auto bp = aState->ComputedPhysicalBorderPadding();
+    DR_state->PrintMargin("b+p", &bp);
     putchar('\n');
   }
   DR_state->DeleteTreeNode(*treeNode);
