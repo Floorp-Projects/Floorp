@@ -7,6 +7,7 @@
 #define ConnectionEntry_h__
 
 #include "PendingTransactionInfo.h"
+#include "PendingTransactionQueue.h"
 #include "HalfOpenSocket.h"
 
 namespace mozilla {
@@ -22,18 +23,29 @@ class ConnectionEntry {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ConnectionEntry)
   explicit ConnectionEntry(nsHttpConnectionInfo* ci);
 
-  RefPtr<nsHttpConnectionInfo> mConnInfo;
-  nsTArray<RefPtr<PendingTransactionInfo>>
-      mUrgentStartQ;  // the urgent start transaction queue
+  void ReschedTransaction(nsHttpTransaction* aTrans);
 
-  // This table provides a mapping from top level outer content window id
-  // to a queue of pending transaction information.
-  // The transaction's order in pending queue is decided by whether it's a
-  // blocking transaction and its priority.
-  // Note that the window id could be 0 if the http request
-  // is initialized without a window.
-  nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<PendingTransactionInfo>>>
-      mPendingTransactionTable;
+  nsTArray<RefPtr<PendingTransactionInfo>>* GetTransactionPendingQHelper(
+      nsAHttpTransaction* trans);
+
+  void InsertTransactionSorted(
+      nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+      PendingTransactionInfo* pendingTransInfo,
+      bool aInsertAsFirstForTheSamePriority = false);
+
+  void InsertTransaction(PendingTransactionInfo* aPendingTransInfo,
+                         bool aInsertAsFirstForTheSamePriority = false);
+
+  size_t UrgentStartQueueLength();
+
+  void PrintPendingQ();
+
+  void Compact();
+
+  void CancelAllTransactions(nsresult reason);
+
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
+
   nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
   nsTArray<RefPtr<nsHttpConnection>> mIdleConns;  // idle persistent connections
   nsTArray<HalfOpenSocket*> mHalfOpens;           // half open connections
@@ -45,7 +57,7 @@ class ConnectionEntry {
 
   // calculate the number of half open sockets that have not had at least 1
   // connection complete
-  uint32_t UnconnectedHalfOpens();
+  uint32_t UnconnectedHalfOpens() const;
 
   // Remove a particular half open socket from the mHalfOpens array
   void RemoveHalfOpen(HalfOpenSocket*);
@@ -98,13 +110,11 @@ class ConnectionEntry {
   bool PreferenceKnown() const;
 
   // Return the count of pending transactions for all window ids.
-  size_t PendingQLength() const;
+  size_t PendingQueueLength() const;
+  size_t PendingQueueLengthForWindow(uint64_t windowId) const;
 
-  // Add a transaction information into the pending queue in
-  // |mPendingTransactionTable| according to the transaction's
-  // top level outer content window id.
-  void InsertTransaction(PendingTransactionInfo* info,
-                         bool aInsertAsFirstForTheSamePriority = false);
+  void AppendPendingUrgentStartQ(
+      nsTArray<RefPtr<PendingTransactionInfo>>& result);
 
   // Append transactions to the |result| whose window id
   // is equal to |windowId|.
@@ -123,7 +133,16 @@ class ConnectionEntry {
   // Remove the empty pendingQ in |mPendingTransactionTable|.
   void RemoveEmptyPendingQ();
 
+  void PrintDiagnostics(nsCString& log, uint32_t aMaxPersistConns);
+
+  bool RestrictConnections();
+
+  // Return total active connection count, which is the sum of
+  // active connections and unconnected half open connections.
+  uint32_t TotalActiveConnections() const;
+
  private:
+  PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();
 };
 

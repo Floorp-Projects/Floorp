@@ -13,15 +13,11 @@
 #define LOG_ENABLED() LOG5_ENABLED()
 
 #include "ConnectionEntry.h"
+#include "nsQueryObject.h"
+#include "mozilla/ChaosMode.h"
 
 namespace mozilla {
 namespace net {
-
-static uint64_t TabIdForQueuing(nsAHttpTransaction* transaction) {
-  return gHttpHandler->ActiveTabPriority()
-             ? transaction->TopLevelOuterContentWindowId()
-             : 0;
-}
 
 // ConnectionEntry
 ConnectionEntry::~ConnectionEntry() {
@@ -30,8 +26,8 @@ ConnectionEntry::~ConnectionEntry() {
   MOZ_ASSERT(!mIdleConns.Length());
   MOZ_ASSERT(!mActiveConns.Length());
   MOZ_ASSERT(!mHalfOpens.Length());
-  MOZ_ASSERT(!mUrgentStartQ.Length());
-  MOZ_ASSERT(!PendingQLength());
+  MOZ_ASSERT(!PendingQueueLength());
+  MOZ_ASSERT(!UrgentStartQueueLength());
   MOZ_ASSERT(!mHalfOpenFastOpenBackups.Length());
   MOZ_ASSERT(!mDoNotDestroy);
 }
@@ -64,7 +60,7 @@ bool ConnectionEntry::AvailableForDispatchNow() {
                                                                    : false;
 }
 
-uint32_t ConnectionEntry::UnconnectedHalfOpens() {
+uint32_t ConnectionEntry::UnconnectedHalfOpens() const {
   uint32_t unconnectedHalfOpens = 0;
   for (uint32_t i = 0; i < mHalfOpens.Length(); ++i) {
     if (!mHalfOpens[i]->HasConnected()) {
@@ -168,108 +164,145 @@ bool net::ConnectionEntry::PreferenceKnown() const {
   return (bool)mPreferIPv4 || (bool)mPreferIPv6;
 }
 
-size_t ConnectionEntry::PendingQLength() const {
-  size_t length = 0;
-  for (auto it = mPendingTransactionTable.ConstIter(); !it.Done(); it.Next()) {
-    length += it.UserData()->Length();
-  }
-
-  return length;
+size_t ConnectionEntry::PendingQueueLength() const {
+  return mPendingQ.PendingQueueLength();
 }
 
-void ConnectionEntry::InsertTransaction(
-    PendingTransactionInfo* info,
-    bool aInsertAsFirstForTheSamePriority /*= false*/) {
-  LOG(
-      ("ConnectionEntry::InsertTransaction"
-       " trans=%p, windowId=%" PRIu64 "\n",
-       info->mTransaction.get(),
-       info->mTransaction->TopLevelOuterContentWindowId()));
+size_t ConnectionEntry::PendingQueueLengthForWindow(uint64_t windowId) const {
+  return mPendingQ.PendingQueueLengthForWindow(windowId);
+}
 
-  uint64_t windowId = TabIdForQueuing(info->mTransaction);
-  nsTArray<RefPtr<PendingTransactionInfo>>* infoArray;
-  if (!mPendingTransactionTable.Get(windowId, &infoArray)) {
-    infoArray = new nsTArray<RefPtr<PendingTransactionInfo>>();
-    mPendingTransactionTable.Put(windowId, infoArray);
-  }
-
-  gHttpHandler->ConnMgr()->InsertTransactionSorted(
-      *infoArray, info, aInsertAsFirstForTheSamePriority);
+void ConnectionEntry::AppendPendingUrgentStartQ(
+    nsTArray<RefPtr<PendingTransactionInfo>>& result) {
+  mPendingQ.AppendPendingUrgentStartQ(result);
 }
 
 void ConnectionEntry::AppendPendingQForFocusedWindow(
     uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>>& result,
     uint32_t maxCount) {
-  nsTArray<RefPtr<PendingTransactionInfo>>* infoArray = nullptr;
-  if (!mPendingTransactionTable.Get(windowId, &infoArray)) {
-    result.Clear();
-    return;
-  }
-
-  uint32_t countToAppend = maxCount;
-  countToAppend = countToAppend > infoArray->Length() || countToAppend == 0
-                      ? infoArray->Length()
-                      : countToAppend;
-
-  result.InsertElementsAt(result.Length(), infoArray->Elements(),
-                          countToAppend);
-  infoArray->RemoveElementsAt(0, countToAppend);
-
+  mPendingQ.AppendPendingQForFocusedWindow(windowId, result, maxCount);
   LOG(
       ("ConnectionEntry::AppendPendingQForFocusedWindow [ci=%s], "
-       "pendingQ count=%zu window.count=%zu for focused window (id=%" PRIu64
-       ")\n",
-       mConnInfo->HashKey().get(), result.Length(), infoArray->Length(),
-       windowId));
+       "pendingQ count=%zu for focused window (id=%" PRIu64 ")\n",
+       mConnInfo->HashKey().get(), result.Length(), windowId));
 }
 
 void ConnectionEntry::AppendPendingQForNonFocusedWindows(
     uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>>& result,
     uint32_t maxCount) {
-  // XXX Adjust the order of transactions in a smarter manner.
-  uint32_t totalCount = 0;
-  for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
-    if (windowId && it.Key() == windowId) {
-      continue;
-    }
-
-    uint32_t count = 0;
-    for (; count < it.UserData()->Length(); ++count) {
-      if (maxCount && totalCount == maxCount) {
-        break;
-      }
-
-      // Because elements in |result| could come from multiple penndingQ,
-      // call |InsertTransactionSorted| to make sure the order is correct.
-      gHttpHandler->ConnMgr()->InsertTransactionSorted(
-          result, it.UserData()->ElementAt(count));
-      ++totalCount;
-    }
-    it.UserData()->RemoveElementsAt(0, count);
-
-    if (maxCount && totalCount == maxCount) {
-      if (it.UserData()->Length()) {
-        // There are still some pending transactions for background
-        // tabs but we limit their dispatch.  This is considered as
-        // an active tab optimization.
-        nsHttp::NotifyActiveTabLoadOptimization();
-      }
-      break;
-    }
-  }
-
+  mPendingQ.AppendPendingQForNonFocusedWindows(windowId, result, maxCount);
   LOG(
       ("ConnectionEntry::AppendPendingQForNonFocusedWindows [ci=%s], "
        "pendingQ count=%zu for non focused window\n",
        mConnInfo->HashKey().get(), result.Length()));
 }
 
-void ConnectionEntry::RemoveEmptyPendingQ() {
-  for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
-    if (it.UserData()->IsEmpty()) {
-      it.Remove();
+void ConnectionEntry::RemoveEmptyPendingQ() { mPendingQ.RemoveEmptyPendingQ(); }
+
+void ConnectionEntry::InsertTransactionSorted(
+    nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+    PendingTransactionInfo* pendingTransInfo,
+    bool aInsertAsFirstForTheSamePriority /*= false*/) {
+  mPendingQ.InsertTransactionSorted(pendingQ, pendingTransInfo,
+                                    aInsertAsFirstForTheSamePriority);
+}
+
+void ConnectionEntry::ReschedTransaction(nsHttpTransaction* aTrans) {
+  mPendingQ.ReschedTransaction(aTrans);
+}
+
+void ConnectionEntry::InsertTransaction(
+    PendingTransactionInfo* pendingTransInfo,
+    bool aInsertAsFirstForTheSamePriority /* = false */) {
+  mPendingQ.InsertTransaction(pendingTransInfo,
+                              aInsertAsFirstForTheSamePriority);
+}
+
+nsTArray<RefPtr<PendingTransactionInfo>>*
+ConnectionEntry::GetTransactionPendingQHelper(nsAHttpTransaction* trans) {
+  return mPendingQ.GetTransactionPendingQHelper(trans);
+}
+
+bool ConnectionEntry::RestrictConnections() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (AvailableForDispatchNow()) {
+    // this might be a h2/spdy connection in this connection entry that
+    // is able to be immediately muxxed, or it might be one that
+    // was found in the same state through a coalescing hash
+    LOG(
+        ("ConnectionEntry::RestrictConnections %p %s restricted due to "
+         "active >=h2\n",
+         this, mConnInfo->HashKey().get()));
+    return true;
+  }
+
+  // If this host is trying to negotiate a SPDY session right now,
+  // don't create any new ssl connections until the result of the
+  // negotiation is known.
+
+  bool doRestrict = mConnInfo->FirstHopSSL() && gHttpHandler->IsSpdyEnabled() &&
+                    mUsingSpdy &&
+                    (mHalfOpens.Length() || mActiveConns.Length());
+
+  // If there are no restrictions, we are done
+  if (!doRestrict) {
+    return false;
+  }
+
+  // If the restriction is based on a tcp handshake in progress
+  // let that connect and then see if it was SPDY or not
+  if (UnconnectedHalfOpens()) {
+    return true;
+  }
+
+  // There is a concern that a host is using a mix of HTTP/1 and SPDY.
+  // In that case we don't want to restrict connections just because
+  // there is a single active HTTP/1 session in use.
+  if (mUsingSpdy && mActiveConns.Length()) {
+    bool confirmedRestrict = false;
+    for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
+      HttpConnectionBase* conn = mActiveConns[index];
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+      if ((connTCP && !connTCP->ReportedNPN()) || conn->CanDirectlyActivate()) {
+        confirmedRestrict = true;
+        break;
+      }
+    }
+    doRestrict = confirmedRestrict;
+    if (!confirmedRestrict) {
+      LOG(
+          ("nsHttpConnectionMgr spdy connection restriction to "
+           "%s bypassed.\n",
+           mConnInfo->Origin()));
     }
   }
+  return doRestrict;
+}
+
+uint32_t ConnectionEntry::TotalActiveConnections() const {
+  // Add in the in-progress tcp connections, we will assume they are
+  // keepalive enabled.
+  // Exclude half-open's that has already created a usable connection.
+  // This prevents the limit being stuck on ipv6 connections that
+  // eventually time out after typical 21 seconds of no ACK+SYN reply.
+  return mActiveConns.Length() + UnconnectedHalfOpens();
+}
+
+size_t ConnectionEntry::UrgentStartQueueLength() {
+  return mPendingQ.UrgentStartQueueLength();
+}
+
+void ConnectionEntry::PrintPendingQ() { mPendingQ.PrintPendingQ(); }
+
+void ConnectionEntry::Compact() {
+  mIdleConns.Compact();
+  mActiveConns.Compact();
+  mPendingQ.Compact();
+}
+
+void ConnectionEntry::CancelAllTransactions(nsresult reason) {
+  mPendingQ.CancelAllTransactions(reason);
 }
 
 }  // namespace net
