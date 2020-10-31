@@ -90,16 +90,11 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     std::fs::write(&vs_name, vs).unwrap();
     std::fs::write(&fs_name, fs).unwrap();
 
-    let mut args = vec![
+    let args = vec![
         "glsl_to_cxx".to_string(),
         vs_name,
         fs_name,
     ];
-    let frag_include = format!("{}/{}.frag.h", shader_dir, shader);
-    if std::path::Path::new(&frag_include).exists() {
-        println!("cargo:rerun-if-changed={}/{}.frag.h", shader_dir, shader);
-        args.push(frag_include);
-    }
     let result = glsl_to_cxx::translate(&mut args.into_iter());
     std::fs::write(format!("{}/{}.h", out_dir, shader), result).unwrap();
 }
@@ -133,6 +128,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/gl_defs.h");
     println!("cargo:rerun-if-changed=src/glsl.h");
     println!("cargo:rerun-if-changed=src/program.h");
+    println!("cargo:rerun-if-changed=src/swgl_ext.h");
     println!("cargo:rerun-if-changed=src/texture.h");
     println!("cargo:rerun-if-changed=src/vector_type.h");
     println!("cargo:rerun-if-changed=src/gl.cc");
