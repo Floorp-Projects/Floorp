@@ -8,6 +8,8 @@
 
 #include "SpeculativeTransaction.h"
 #include "HTTPSRecordResolver.h"
+#include "nsICachingChannel.h"
+#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {
