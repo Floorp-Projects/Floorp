@@ -160,6 +160,8 @@
     <string name="mozac_add_on_install_progress_caption">Загрузка и проверка дополнения…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">Не удалось загрузить список дополнений!</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">Перевод не был найден ни для языка %1$s, ни для языка по умолчанию (%2$s)</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s успешно установлено</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
