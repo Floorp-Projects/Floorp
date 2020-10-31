@@ -67,7 +67,7 @@ class FunctionCompiler;
 
 class CallCompileState {
   // A generator object that is passed each argument as it is compiled.
-  WasmABIArgGenerator abi_;
+  ABIArgGenerator abi_;
 
   // Accumulates the register arguments while compiling arguments.
   MWasmCall::Args regArgs_;
@@ -167,7 +167,7 @@ class FunctionCompiler {
       return false;
     }
 
-    for (WasmABIArgIter i(args); !i.done(); i++) {
+    for (ABIArgIter i(args); !i.done(); i++) {
       MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
       curBlock_->add(ins);
       if (args.isSyntheticStackResultPointerArg(i.index())) {
