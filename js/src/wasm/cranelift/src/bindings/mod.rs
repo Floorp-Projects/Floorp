@@ -461,9 +461,9 @@ impl StaticEnvironment {
     /// Returns the default calling convention on this machine.
     pub fn call_conv(&self) -> isa::CallConv {
         if self.platform_is_windows {
-            unimplemented!("No FastCall variant of Baldrdash2020")
+            isa::CallConv::BaldrdashWindows
         } else {
-            isa::CallConv::Baldrdash2020
+            isa::CallConv::BaldrdashSystemV
         }
     }
 }
