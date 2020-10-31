@@ -111,7 +111,10 @@ SizeComputationInput::SizeComputationInput(nsIFrame* aFrame,
                                            gfxContext* aRenderingContext)
     : mFrame(aFrame),
       mRenderingContext(aRenderingContext),
-      mWritingMode(aFrame->GetWritingMode()) {}
+      mWritingMode(aFrame->GetWritingMode()),
+      mComputedMargin(mWritingMode),
+      mComputedBorderPadding(mWritingMode),
+      mComputedPadding(mWritingMode) {}
 
 SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
@@ -2446,7 +2449,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
         side = MakeLogicalSide(aAxis, eLogicalEdgeEnd);
         val = -val;
       }
-      mComputedPadding.Side(wm.PhysicalSide(side)) += val;
+      mComputedPadding.Side(side, wm) += val;
       needPaddingProp = true;
       if (aAxis == eLogicalAxisBlock && val > 0) {
         // We have a baseline-adjusted block-axis start padding, so

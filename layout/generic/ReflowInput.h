@@ -117,41 +117,41 @@ struct SizeComputationInput {
   // Rendering context to use for measurement.
   gfxContext* mRenderingContext;
 
-  const nsMargin& ComputedPhysicalMargin() const { return mComputedMargin; }
-  const nsMargin& ComputedPhysicalBorderPadding() const {
+  nsMargin ComputedPhysicalMargin() const {
+    return mComputedMargin.GetPhysicalMargin(mWritingMode);
+  }
+  nsMargin ComputedPhysicalBorderPadding() const {
+    return mComputedBorderPadding.GetPhysicalMargin(mWritingMode);
+  }
+  nsMargin ComputedPhysicalPadding() const {
+    return mComputedPadding.GetPhysicalMargin(mWritingMode);
+  }
+
+  LogicalMargin ComputedLogicalMargin() const { return mComputedMargin; }
+  LogicalMargin ComputedLogicalBorderPadding() const {
     return mComputedBorderPadding;
   }
-  const nsMargin& ComputedPhysicalPadding() const { return mComputedPadding; }
-
-  LogicalMargin ComputedLogicalMargin() const {
-    return LogicalMargin(mWritingMode, mComputedMargin);
-  }
-  LogicalMargin ComputedLogicalBorderPadding() const {
-    return LogicalMargin(mWritingMode, mComputedBorderPadding);
-  }
-  LogicalMargin ComputedLogicalPadding() const {
-    return LogicalMargin(mWritingMode, mComputedPadding);
-  }
+  LogicalMargin ComputedLogicalPadding() const { return mComputedPadding; }
 
   void SetComputedLogicalMargin(mozilla::WritingMode aWM,
                                 const LogicalMargin& aMargin) {
-    mComputedMargin = aMargin.GetPhysicalMargin(aWM);
+    mComputedMargin = aMargin.ConvertTo(mWritingMode, aWM);
   }
   void SetComputedLogicalMargin(const LogicalMargin& aMargin) {
     SetComputedLogicalMargin(mWritingMode, aMargin);
   }
 
   void SetComputedLogicalBorderPadding(mozilla::WritingMode aWM,
-                                       const LogicalMargin& aMargin) {
-    mComputedBorderPadding = aMargin.GetPhysicalMargin(aWM);
+                                       const LogicalMargin& aBorderPadding) {
+    mComputedBorderPadding = aBorderPadding.ConvertTo(mWritingMode, aWM);
   }
   void SetComputedLogicalBorderPadding(const LogicalMargin& aMargin) {
     SetComputedLogicalBorderPadding(mWritingMode, aMargin);
   }
 
   void SetComputedLogicalPadding(mozilla::WritingMode aWM,
-                                 const LogicalMargin& aMargin) {
-    mComputedPadding = aMargin.GetPhysicalMargin(aWM);
+                                 const LogicalMargin& aPadding) {
+    mComputedPadding = aPadding.ConvertTo(mWritingMode, aWM);
   }
   void SetComputedLogicalPadding(const LogicalMargin& aMargin) {
     SetComputedLogicalPadding(mWritingMode, aMargin);
@@ -163,17 +163,14 @@ struct SizeComputationInput {
   // cached copy of the frame's writing-mode, for logical coordinates
   WritingMode mWritingMode;
 
-  // These are PHYSICAL coordinates (for now).
-  // Will probably become logical in due course.
-
   // Computed margin values
-  nsMargin mComputedMargin;
+  LogicalMargin mComputedMargin;
 
   // Cached copy of the border + padding values
-  nsMargin mComputedBorderPadding;
+  LogicalMargin mComputedBorderPadding;
 
   // Computed padding values
-  nsMargin mComputedPadding;
+  LogicalMargin mComputedPadding;
 
  public:
   // Callers using this constructor must call InitOffsets on their own.
