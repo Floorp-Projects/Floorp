@@ -11,9 +11,9 @@
 
 #include <stdint.h>  // uint32_t, uintptr_t
 
-#include "jsapi.h"  // js::AssertHeapIsIdle, JS_ReportErrorNumberASCII
+#include "jsapi.h"        // js::AssertHeapIsIdle, JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::IsObjectInContextCompartment
-#include "jstypes.h"  // JS_{FRIEND,PUBLIC}_API
+#include "jstypes.h"      // JS_{FRIEND,PUBLIC}_API
 
 #include "builtin/Stream.h"  // js::ReadableByteStreamController{,Close}, js::ReadableStreamDefaultController{,Close}, js::StreamController
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
@@ -25,7 +25,7 @@
 #include "builtin/streams/StreamController.h"  // js::StreamController
 #include "gc/Zone.h"                           // JS::Zone
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewData, JS_NewUint8Array
-#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC, JS::AutoSuppressGCAnalysis
 #include "js/Object.h"      // JS::SetPrivate
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle, JS::Rooted
