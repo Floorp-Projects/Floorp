@@ -1600,14 +1600,6 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
       return false;
     }
 
-    if (!js::UseOffThreadParseGlobal()) {
-      if (ss->hasEncoder()) {
-        if (!ss->xdrEncodeFunctionStencil(cx, compilationInfo.get().stencil)) {
-          return false;
-        }
-      }
-    }
-
     if (!frontend::InstantiateStencilsForDelazify(cx, compilationInfo.get())) {
       // The frontend shouldn't fail after linking the function and the
       // non-lazy script together.
@@ -1615,15 +1607,20 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
       MOZ_ASSERT(lazy->isReadyForDelazification());
       return false;
     }
-  }
 
-  if (js::UseOffThreadParseGlobal()) {
-    // XDR the newly delazified function.
     if (ss->hasEncoder()) {
-      RootedScriptSourceObject sourceObject(
-          cx, fun->nonLazyScript()->sourceObject());
-      if (!ss->xdrEncodeFunction(cx, fun, sourceObject)) {
-        return false;
+      bool useStencilXDR = !js::UseOffThreadParseGlobal();
+      if (useStencilXDR) {
+        if (!ss->xdrEncodeFunctionStencil(cx, compilationInfo.get().stencil)) {
+          return false;
+        }
+      } else {
+        // XDR the newly delazified function.
+        RootedScriptSourceObject sourceObject(
+            cx, fun->nonLazyScript()->sourceObject());
+        if (!ss->xdrEncodeFunction(cx, fun, sourceObject)) {
+          return false;
+        }
       }
     }
   }

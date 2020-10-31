@@ -5752,8 +5752,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
-  if (js::UseOffThreadParseGlobal()) {
+  bool useStencilXDR = !options.useOffThreadParseGlobal;
+  if (!useStencilXDR) {
     // The buffer contains JSScript.
     return JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
   }
@@ -5802,8 +5802,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
-  if (js::UseOffThreadParseGlobal()) {
+  bool useStencilXDR = !options.useOffThreadParseGlobal;
+  if (!useStencilXDR) {
     JS::TranscodeResult res =
         JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
     if (res != JS::TranscodeResult_Ok) {

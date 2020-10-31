@@ -2328,7 +2328,19 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (loadBytecode) {
         JS::TranscodeResult rv;
         if (saveIncrementalBytecode) {
-          if (js::UseOffThreadParseGlobal()) {
+          bool useStencilXDR = !options.useOffThreadParseGlobal;
+          if (useStencilXDR) {
+            if (CacheEntry_getKind(cx, cacheEntry) !=
+                BytecodeCacheKind::Stencil) {
+              // This can happen.
+              JS_ReportErrorASCII(
+                  cx,
+                  "if both loadBytecode and saveIncrementalBytecode are set "
+                  "and --no-off-thread-parse-global is used, bytecode should "
+                  "have been saved with saveIncrementalBytecode");
+              return false;
+            }
+          } else {
             if (CacheEntry_getKind(cx, cacheEntry) !=
                 BytecodeCacheKind::Script) {
               // NOTE: This shouldn't happen unless the cache is used across
@@ -2337,18 +2349,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
                   cx,
                   "if both loadBytecode and saveIncrementalBytecode are set "
                   "and --no-off-thread-parse-global isn't used, bytecode "
-                  "should be saved with saveBytecode");
-              return false;
-            }
-          } else {
-            if (CacheEntry_getKind(cx, cacheEntry) !=
-                BytecodeCacheKind::Stencil) {
-              // This can happen.
-              JS_ReportErrorASCII(
-                  cx,
-                  "if both loadBytecode and saveIncrementalBytecode are set "
-                  "and --no-off-thread-parse-global is used, bytecode should "
-                  "be saved with saveIncrementalBytecode");
+                  "should have been saved with saveBytecode");
               return false;
             }
           }
@@ -2365,7 +2366,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           }
         } else {
           MOZ_ASSERT(loadCacheKind == BytecodeCacheKind::Stencil);
-          MOZ_ASSERT(!js::UseOffThreadParseGlobal());
           rv = JS::DecodeScriptMaybeStencil(cx, options, loadBuffer, &script);
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
             return false;
