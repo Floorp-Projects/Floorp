@@ -24,15 +24,20 @@ pub enum Http3ClientEvent {
     /// Response headers are received.
     HeaderReady {
         stream_id: u64,
-        headers: Option<Vec<Header>>,
+        headers: Vec<Header>,
+        interim: bool,
         fin: bool,
     },
     /// A stream can accept new data.
     DataWritable { stream_id: u64 },
     /// New bytes available for reading.
     DataReadable { stream_id: u64 },
-    /// Peer reset the stream.
-    Reset { stream_id: u64, error: AppError },
+    /// Peer reset the stream or there was an parsing error.
+    Reset {
+        stream_id: u64,
+        error: AppError,
+        local: bool,
+    },
     /// Peer has sent a STOP_SENDING.
     StopSending { stream_id: u64, error: AppError },
     /// A new push promise.
@@ -44,13 +49,17 @@ pub enum Http3ClientEvent {
     /// A push response headers are ready.
     PushHeaderReady {
         push_id: u64,
-        headers: Option<Vec<Header>>,
+        headers: Vec<Header>,
+        interim: bool,
         fin: bool,
     },
     /// New bytes are available on a push stream for reading.
     PushDataReadable { push_id: u64 },
     /// A push has been canceled.
     PushCanceled { push_id: u64 },
+    /// A push stream was been reset due to a HttpGeneralProtocol error.
+    /// Most common dase are malformed response headers.
+    PushReset { push_id: u64, error: AppError },
     /// New stream can be created
     RequestsCreatable,
     /// Cert authentication needed
@@ -72,10 +81,11 @@ pub struct Http3ClientEvents {
 
 impl RecvMessageEvents for Http3ClientEvents {
     /// Add a new `HeaderReady` event.
-    fn header_ready(&self, stream_id: u64, headers: Option<Vec<Header>>, fin: bool) {
+    fn header_ready(&self, stream_id: u64, headers: Vec<Header>, interim: bool, fin: bool) {
         self.insert(Http3ClientEvent::HeaderReady {
             stream_id,
             headers,
+            interim,
             fin,
         });
     }
@@ -86,7 +96,7 @@ impl RecvMessageEvents for Http3ClientEvents {
     }
 
     /// Add a new `Reset` event.
-    fn reset(&self, stream_id: u64, error: AppError) {
+    fn reset(&self, stream_id: u64, error: AppError, local: bool) {
         self.remove(|evt| {
             matches!(evt,
                 Http3ClientEvent::HeaderReady { stream_id: x, .. }
@@ -94,7 +104,11 @@ impl RecvMessageEvents for Http3ClientEvents {
                 | Http3ClientEvent::PushPromise { request_stream_id: x, .. }
                 | Http3ClientEvent::Reset { stream_id: x, .. } if *x == stream_id)
         });
-        self.insert(Http3ClientEvent::Reset { stream_id, error });
+        self.insert(Http3ClientEvent::Reset {
+            stream_id,
+            error,
+            local,
+        });
     }
 }
 
@@ -132,6 +146,11 @@ impl Http3ClientEvents {
     pub fn push_canceled(&self, push_id: u64) {
         self.remove_events_for_push_id(push_id);
         self.insert(Http3ClientEvent::PushCanceled { push_id });
+    }
+
+    pub fn push_reset(&self, push_id: u64, error: AppError) {
+        self.remove_events_for_push_id(push_id);
+        self.insert(Http3ClientEvent::PushReset { push_id, error });
     }
 
     /// Add a new `RequestCreatable` event

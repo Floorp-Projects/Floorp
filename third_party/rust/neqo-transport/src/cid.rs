@@ -106,7 +106,7 @@ impl<'a> ::std::fmt::Debug for ConnectionIdRef<'a> {
 
 impl<'a> ::std::fmt::Display for ConnectionIdRef<'a> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "{}", hex_with_len(&self.cid))
+        write!(f, "{}", hex(&self.cid))
     }
 }
 

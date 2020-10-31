@@ -4,16 +4,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Output, State};
+use super::super::{Connection, Output, State};
 use super::{connect, connect_force_idle, default_client, default_server, send_something};
-use crate::frame::{CloseError, Frame};
 use crate::tparams::{self, TransportParameter};
-use crate::tracking::PNSpace;
-use crate::{AppError, ConnectionError, Error};
+use crate::{AppError, ConnectionError, Error, ERROR_APPLICATION_CLOSE};
 
 use neqo_common::Datagram;
 use std::time::Duration;
 use test_fixture::{self, loopback, now};
+
+fn assert_draining(c: &Connection, expected: &Error) {
+    assert!(c.state().closed());
+    if let State::Draining {
+        error: ConnectionError::Transport(error),
+        ..
+    } = c.state()
+    {
+        assert_eq!(error, expected);
+    } else {
+        panic!();
+    }
+}
 
 #[test]
 fn connection_close() {
@@ -27,18 +38,8 @@ fn connection_close() {
 
     let out = client.process(None, now);
 
-    let frames = server.test_process_input(out.dgram().unwrap(), now);
-    assert_eq!(frames.len(), 1);
-    assert!(matches!(
-        frames[0],
-        (
-            Frame::ConnectionClose {
-                error_code: CloseError::Application(42),
-                ..
-            },
-            PNSpace::ApplicationData,
-        )
-    ));
+    server.process_input(out.dgram().unwrap(), now);
+    assert_draining(&server, &Error::PeerApplicationError(42));
 }
 
 // During the handshake, an application close should be sanitized.
@@ -58,18 +59,8 @@ fn early_application_close() {
     let dgram = server.process(None, now()).dgram();
     assert!(dgram.is_some());
 
-    let frames = client.test_process_input(dgram.unwrap(), now());
-    assert!(matches!(
-        frames[0],
-        (
-            Frame::ConnectionClose {
-                error_code: CloseError::Transport(code),
-                ..
-            },
-            PNSpace::Initial,
-        ) if code == Error::ApplicationError.code()
-    ));
-    assert!(client.state().closed());
+    client.process_input(dgram.unwrap(), now());
+    assert_draining(&client, &Error::PeerError(ERROR_APPLICATION_CLOSE));
 }
 
 #[test]
@@ -82,6 +73,7 @@ fn bad_tls_version() {
         .set_option(neqo_crypto::Opt::Tls13CompatMode, true)
         .unwrap();
     let mut server = default_server();
+
     let dgram = client.process(None, now()).dgram();
     assert!(dgram.is_some());
     let dgram = server.process(dgram, now()).dgram();
@@ -90,17 +82,8 @@ fn bad_tls_version() {
         State::Closed(ConnectionError::Transport(Error::ProtocolViolation))
     );
     assert!(dgram.is_some());
-    let frames = client.test_process_input(dgram.unwrap(), now());
-    assert!(matches!(
-        frames[0],
-        (
-            Frame::ConnectionClose {
-                error_code: CloseError::Transport(_),
-                ..
-            },
-            PNSpace::Initial,
-        )
-    ));
+    client.process_input(dgram.unwrap(), now());
+    assert_draining(&client, &Error::PeerError(Error::ProtocolViolation.code()));
 }
 
 /// Test the interaction between the loss recovery timer
@@ -202,5 +185,5 @@ fn stateless_reset_client() {
     connect_force_idle(&mut client, &mut server);
 
     client.process_input(Datagram::new(loopback(), loopback(), vec![77; 21]), now());
-    assert!(matches!(client.state(), State::Draining { .. }));
+    assert_draining(&client, &Error::StatelessReset);
 }

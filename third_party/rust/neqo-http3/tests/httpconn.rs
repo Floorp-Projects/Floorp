@@ -24,12 +24,12 @@ fn process_server_events(server: &mut Http3Server) {
         {
             assert_eq!(
                 headers,
-                Some(vec![
+                vec![
                     (String::from(":method"), String::from("GET")),
                     (String::from(":scheme"), String::from("https")),
                     (String::from(":authority"), String::from("something.com")),
                     (String::from(":path"), String::from("/"))
-                ])
+                ]
             );
             assert_eq!(fin, true);
             request
@@ -55,10 +55,10 @@ fn process_client_events(conn: &mut Http3Client) {
             Http3ClientEvent::HeaderReady { headers, fin, .. } => {
                 assert_eq!(
                     headers,
-                    Some(vec![
+                    vec![
                         (String::from(":status"), String::from("200")),
                         (String::from("content-length"), String::from("3")),
-                    ])
+                    ]
                 );
                 assert_eq!(fin, false);
                 response_header_found = true;

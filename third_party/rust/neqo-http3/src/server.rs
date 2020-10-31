@@ -739,7 +739,7 @@ mod tests {
         while let Some(event) = hconn.next_event() {
             match event {
                 Http3ServerEvent::Headers { headers, fin, .. } => {
-                    check_request_header(&headers.unwrap());
+                    check_request_header(&headers);
                     assert_eq!(fin, false);
                     headers_frames += 1;
                 }
@@ -790,7 +790,7 @@ mod tests {
                     headers,
                     fin,
                 } => {
-                    check_request_header(&headers.unwrap());
+                    check_request_header(&headers);
                     assert_eq!(fin, false);
                     headers_frames += 1;
                     request
@@ -860,7 +860,7 @@ mod tests {
                     headers,
                     fin,
                 } => {
-                    check_request_header(&headers.unwrap());
+                    check_request_header(&headers);
                     assert_eq!(fin, false);
                     headers_frames += 1;
                     request

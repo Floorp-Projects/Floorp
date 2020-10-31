@@ -9,11 +9,10 @@ use crate::connection::{HandleReadableOutput, Http3Connection, Http3State};
 use crate::hframe::HFrame;
 use crate::push_controller::PushController;
 use crate::push_stream::PushStream;
-use crate::recv_message::RecvMessage;
+use crate::recv_message::{MessageType, RecvMessage};
 use crate::send_message::{SendMessage, SendMessageEvents};
 use crate::settings::HSettings;
-use crate::Header;
-use crate::RecvMessageEvents;
+use crate::{Header, RecvMessageEvents, ResetType};
 use neqo_common::{
     event::Provider as EventProvider, hex, hex_with_len, qdebug, qinfo, qlog::NeqoQlog, qtrace,
     Datagram, Decoder, Encoder, Role,
@@ -289,6 +288,7 @@ impl Http3Client {
             id,
             SendMessage::new_with_headers(id, final_headers, Box::new(self.events.clone())),
             Box::new(RecvMessage::new(
+                MessageType::Response,
                 id,
                 Box::new(self.events.clone()),
                 Some(self.push_handler.clone()),
@@ -373,7 +373,8 @@ impl Http3Client {
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?;
 
-        match recv_stream.read_data(&mut self.conn, &mut self.base_handler.qpack_decoder, buf) {
+        let res = recv_stream.read_data(&mut self.conn, &mut self.base_handler.qpack_decoder, buf);
+        match res {
             Ok((amount, fin)) => {
                 if recv_stream.done() {
                     self.base_handler.recv_streams.remove(&stream_id);
@@ -381,10 +382,15 @@ impl Http3Client {
                 Ok((amount, fin))
             }
             Err(e) => {
-                if e.connection_error() {
+                if e.stream_reset_error() {
+                    self.reset_stream_on_error(stream_id, e.code());
+                    Ok((0, false))
+                } else if e.connection_error() {
                     self.close(now, e.code(), "");
+                    Err(e)
+                } else {
+                    Err(e)
                 }
-                Err(e)
             }
         }
     }
@@ -525,7 +531,13 @@ impl Http3Client {
                     }
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
-                    self.handle_stream_readable(stream_id)?
+                    if let Err(e) = self.handle_stream_readable(stream_id) {
+                        if e.stream_reset_error() {
+                            self.reset_stream_on_error(stream_id, e.code());
+                        } else {
+                            return Err(e);
+                        }
+                    }
                 }
                 ConnectionEvent::RecvStreamReset {
                     stream_id,
@@ -646,7 +658,8 @@ impl Http3Client {
             .iter()
             .filter_map(id_gte(goaway_stream_id))
         {
-            self.events.reset(id, Error::HttpRequestRejected.code());
+            self.events
+                .reset(id, Error::HttpRequestRejected.code(), false);
         }
 
         for id in self
@@ -681,6 +694,17 @@ impl Http3Client {
     #[must_use]
     pub fn qpack_encoder_stats(&self) -> &Stats {
         self.base_handler.qpack_encoder.stats()
+    }
+
+    fn reset_stream_on_error(&mut self, stream_id: u64, app_error: AppError) {
+        let _ = self.conn.stream_stop_sending(stream_id, app_error);
+        if let Some(rs) = self.base_handler.recv_streams.remove(&stream_id) {
+            rs.stream_reset(
+                app_error,
+                &mut self.base_handler.qpack_decoder,
+                ResetType::Local,
+            );
+        }
     }
 }
 
@@ -995,6 +1019,22 @@ mod tests {
             assert_eq!(fin, expected_fin);
             assert_eq!(amount, expected_data.len());
             assert_eq!(&buf[..amount], expected_data);
+        }
+
+        pub fn encode_headers(
+            &mut self,
+            stream_id: u64,
+            headers: &[Header],
+            encoder: &mut Encoder,
+        ) {
+            let header_block = self
+                .encoder
+                .encode_header_block(&mut self.conn, &headers, stream_id)
+                .unwrap();
+            let hframe = HFrame::Headers {
+                header_block: header_block.to_vec(),
+            };
+            hframe.encode(encoder);
         }
     }
 
@@ -1312,16 +1352,46 @@ mod tests {
     //  2) push_id
     //  3) PUSH_DATA that contains encoded headers and a data frame.
     // This function can only handle small push_id numbers that fit in a varint of length 1 byte.
-    fn send_push_data(conn: &mut Connection, push_id: u8, close_push_stream: bool) -> u64 {
-        // create a push stream.
-        let push_stream_id = conn.stream_create(StreamType::UniDi).unwrap();
+    fn send_data_on_push(
+        conn: &mut Connection,
+        push_stream_id: u64,
+        push_id: u8,
+        data: &[u8],
+        close_push_stream: bool,
+    ) {
         // send data
         let _ = conn.stream_send(push_stream_id, PUSH_STREAM_TYPE).unwrap();
         let _ = conn.stream_send(push_stream_id, &[push_id]).unwrap();
-        let _ = conn.stream_send(push_stream_id, PUSH_DATA).unwrap();
+        let _ = conn.stream_send(push_stream_id, data).unwrap();
         if close_push_stream {
             conn.stream_close_send(push_stream_id).unwrap();
         }
+    }
+
+    // Send push data on a push stream:
+    //  1) push_stream_type PUSH_STREAM_TYPE
+    //  2) push_id
+    //  3) PUSH_DATA that contains encoded headers and a data frame.
+    // This function can only handle small push_id numbers that fit in a varint of length 1 byte.
+    fn send_push_data(conn: &mut Connection, push_id: u8, close_push_stream: bool) -> u64 {
+        send_push_with_data(conn, push_id, PUSH_DATA, close_push_stream)
+    }
+
+    // Send push data on a push stream:
+    //  1) push_stream_type PUSH_STREAM_TYPE
+    //  2) push_id
+    //  3) and supplied push data.
+    // This function can only handle small push_id numbers that fit in a varint of length 1 byte.
+    fn send_push_with_data(
+        conn: &mut Connection,
+        push_id: u8,
+        data: &[u8],
+        close_push_stream: bool,
+    ) -> u64 {
+        // create a push stream
+        let push_stream_id = conn.stream_create(StreamType::UniDi).unwrap();
+        // send data
+        send_data_on_push(conn, push_stream_id, push_id, data, close_push_stream);
         push_stream_id
     }
 
@@ -1361,12 +1431,14 @@ mod tests {
                 Http3ClientEvent::PushHeaderReady {
                     push_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert!(push_streams.contains(&push_id));
-                    check_push_response_header(&headers.unwrap());
+                    check_push_response_header(&headers);
                     num_push_stream_headers += 1;
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::PushDataReadable { push_id } => {
                     assert!(push_streams.contains(&push_id));
@@ -1380,11 +1452,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, response_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
                     assert_eq!(stream_id, response_stream_id);
@@ -1801,11 +1875,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_1(&headers.unwrap());
+                    check_response_header_1(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -1840,11 +1916,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2190,11 +2268,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                     response_headers = true;
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
@@ -2258,9 +2338,14 @@ mod tests {
                     assert_eq!(error, Error::HttpRequestRejected.code());
                     stop_sending = true;
                 }
-                Http3ClientEvent::Reset { stream_id, error } => {
+                Http3ClientEvent::Reset {
+                    stream_id,
+                    error,
+                    local,
+                } => {
                     assert_eq!(stream_id, request_stream_id);
                     assert_eq!(error, Error::HttpRequestRejected.code());
+                    assert_eq!(local, false);
                     reset = true;
                 }
                 Http3ClientEvent::HeaderReady { .. } | Http3ClientEvent::DataReadable { .. } => {
@@ -2372,9 +2457,14 @@ mod tests {
                     assert_eq!(stream_id, request_stream_id);
                     assert_eq!(error, Error::HttpRequestCancelled.code());
                 }
-                Http3ClientEvent::Reset { stream_id, error } => {
+                Http3ClientEvent::Reset {
+                    stream_id,
+                    error,
+                    local,
+                } => {
                     assert_eq!(stream_id, request_stream_id);
                     assert_eq!(error, Error::HttpRequestCancelled.code());
+                    assert_eq!(local, false);
                     reset = true;
                 }
                 Http3ClientEvent::HeaderReady { .. } | Http3ClientEvent::DataReadable { .. } => {
@@ -2485,9 +2575,14 @@ mod tests {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
                 }
-                Http3ClientEvent::Reset { stream_id, error } => {
+                Http3ClientEvent::Reset {
+                    stream_id,
+                    error,
+                    local,
+                } => {
                     assert_eq!(stream_id, request_stream_id);
                     assert_eq!(error, Error::HttpRequestCancelled.code());
+                    assert_eq!(local, false);
                     reset = true;
                 }
                 Http3ClientEvent::HeaderReady { .. } | Http3ClientEvent::DataReadable { .. } => {
@@ -2588,7 +2683,7 @@ mod tests {
         while let Some(e) = client.next_event() {
             match e {
                 Http3ClientEvent::HeaderReady { headers, fin, .. } => {
-                    check_response_header_1(&headers.unwrap());
+                    check_response_header_1(&headers);
                     assert_eq!(fin, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
@@ -2603,9 +2698,14 @@ mod tests {
                             .unwrap()
                     );
                 }
-                Http3ClientEvent::Reset { stream_id, error } => {
+                Http3ClientEvent::Reset {
+                    stream_id,
+                    error,
+                    local,
+                } => {
                     assert_eq!(stream_id, request_stream_id_3);
                     assert_eq!(error, Error::HttpRequestRejected.code());
+                    assert_eq!(local, false);
                     stream_reset = true;
                 }
                 _ => {}
@@ -2648,9 +2748,15 @@ mod tests {
         // Check that there is one reset for stream_id 8
         let mut stream_reset_1 = 0;
         while let Some(e) = client.next_event() {
-            if let Http3ClientEvent::Reset { stream_id, error } = e {
+            if let Http3ClientEvent::Reset {
+                stream_id,
+                error,
+                local,
+            } = e
+            {
                 assert_eq!(stream_id, request_stream_id_3);
                 assert_eq!(error, Error::HttpRequestRejected.code());
+                assert_eq!(local, false);
                 stream_reset_1 += 1;
             }
         }
@@ -2676,7 +2782,7 @@ mod tests {
         while let Some(e) = client.next_event() {
             match e {
                 Http3ClientEvent::HeaderReady { headers, fin, .. } => {
-                    check_response_header_1(&headers.unwrap());
+                    check_response_header_1(&headers);
                     assert_eq!(fin, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
@@ -2689,9 +2795,14 @@ mod tests {
                             .unwrap()
                     );
                 }
-                Http3ClientEvent::Reset { stream_id, error } => {
+                Http3ClientEvent::Reset {
+                    stream_id,
+                    error,
+                    local,
+                } => {
                     assert_eq!(stream_id, request_stream_id_2);
                     assert_eq!(error, Error::HttpRequestRejected.code());
+                    assert_eq!(local, false);
                     stream_reset_2 += 1;
                 }
                 _ => {}
@@ -2759,18 +2870,14 @@ mod tests {
 
         // Recv HeaderReady wo headers with fin.
         let e = client.events().next().unwrap();
-        if let Http3ClientEvent::HeaderReady {
-            stream_id,
-            headers,
-            fin,
-        } = e
-        {
-            assert_eq!(stream_id, request_stream_id);
-            assert_eq!(headers, None);
-            assert_eq!(fin, true);
-        } else {
-            panic!("wrong event type");
-        }
+        assert_eq!(
+            e,
+            Http3ClientEvent::Reset {
+                stream_id: request_stream_id,
+                error: Error::HttpGeneralProtocolStream.code(),
+                local: true,
+            }
+        );
 
         // Stream should now be closed and gone
         let mut buf = [0_u8; 100];
@@ -2798,12 +2905,14 @@ mod tests {
         if let Http3ClientEvent::HeaderReady {
             stream_id,
             headers,
+            interim,
             fin,
         } = e
         {
             assert_eq!(stream_id, request_stream_id);
-            check_response_header_2(&headers.unwrap());
+            check_response_header_2(&headers);
             assert_eq!(fin, true);
+            assert_eq!(interim, false);
         } else {
             panic!("wrong event type");
         }
@@ -2836,11 +2945,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { .. } => {
                     panic!("We should not receive a DataGeadable event!");
@@ -2904,11 +3015,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2952,11 +3065,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { .. } => {
                     panic!("We should not receive a DataGeadable event!");
@@ -3015,11 +3130,13 @@ mod tests {
                 Http3ClientEvent::HeaderReady {
                     stream_id,
                     headers,
+                    interim,
                     fin,
                 } => {
                     assert_eq!(stream_id, request_stream_id);
-                    check_response_header_2(&headers.unwrap());
+                    check_response_header_2(&headers);
                     assert_eq!(fin, false);
+                    assert_eq!(interim, false);
                 }
                 Http3ClientEvent::DataReadable { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -3260,12 +3377,14 @@ mod tests {
             if let Http3ClientEvent::HeaderReady {
                 stream_id,
                 headers,
+                interim,
                 fin,
             } = e
             {
                 assert_eq!(stream_id, request_stream_id);
-                assert_eq!(headers.unwrap(), sent_headers);
+                assert_eq!(headers, sent_headers);
                 assert_eq!(fin, true);
+                assert_eq!(interim, false);
                 recv_header = true;
             } else {
                 panic!("event {:?}", e);
@@ -3792,12 +3911,14 @@ mod tests {
             if let Http3ClientEvent::HeaderReady {
                 stream_id,
                 headers,
+                interim,
                 fin,
             } = e
             {
                 assert_eq!(stream_id, request_stream_id);
-                check_response_header_0(&headers.unwrap());
+                check_response_header_0(&headers);
                 assert_eq!(fin, false);
+                assert_eq!(interim, false);
                 response_headers = true;
             }
         }
@@ -3851,12 +3972,14 @@ mod tests {
             if let Http3ClientEvent::HeaderReady {
                 stream_id,
                 headers,
+                interim,
                 fin,
             } = e
             {
                 assert_eq!(stream_id, request_stream_id);
-                check_response_header_0(&headers.unwrap());
+                check_response_header_0(&headers);
                 assert_eq!(fin, false);
+                assert_eq!(interim, false);
                 response_headers = true;
             }
         }
@@ -3919,12 +4042,14 @@ mod tests {
             if let Http3ClientEvent::HeaderReady {
                 stream_id,
                 headers,
+                interim,
                 fin,
             } = e
             {
                 assert_eq!(stream_id, request_stream_id);
-                check_response_header_0(&headers.unwrap());
+                check_response_header_0(&headers);
                 assert_eq!(fin, false);
+                assert_eq!(interim, false);
                 response_headers = true;
             }
         }
@@ -5561,5 +5686,246 @@ mod tests {
             client.process(out.dgram(), now());
             assert_closed(&client, &Error::HttpSettings);
         }
+    }
+
+    #[test]
+    fn response_w_1xx() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        setup_server_side_encoder(&mut client, &mut server);
+
+        let mut d = Encoder::default();
+        let headers1xx = vec![(String::from(":status"), String::from("103"))];
+        server.encode_headers(request_stream_id, &headers1xx, &mut d);
+
+        let headers200 = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("3")),
+        ];
+        server.encode_headers(request_stream_id, &headers200, &mut d);
+
+        // Send 1xx and 200 headers response.
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            &d,
+            false,
+        );
+
+        // Sending response data.
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            HTTP_RESPONSE_DATA_FRAME_ONLY_2,
+            true,
+        );
+
+        let mut events = client.events().filter_map(|e| {
+            if let Http3ClientEvent::HeaderReady {
+                stream_id,
+                interim,
+                headers,
+                ..
+            } = e
+            {
+                Some((stream_id, interim, headers))
+            } else {
+                None
+            }
+        });
+        let (stream_id_1xx_rec, interim1xx_rec, headers1xx_rec) = events.next().unwrap();
+        assert_eq!(
+            (stream_id_1xx_rec, interim1xx_rec, headers1xx_rec),
+            (request_stream_id, true, headers1xx)
+        );
+
+        let (stream_id_200_rec, interim200_rec, headers200_rec) = events.next().unwrap();
+        assert_eq!(
+            (stream_id_200_rec, interim200_rec, headers200_rec),
+            (request_stream_id, false, headers200)
+        );
+        assert!(events.next().is_none());
+    }
+
+    #[test]
+    fn response_wo_status() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        setup_server_side_encoder(&mut client, &mut server);
+
+        let mut d = Encoder::default();
+        let headers = vec![
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("3")),
+        ];
+        server.encode_headers(request_stream_id, &headers, &mut d);
+
+        // Send response
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            &d,
+            false,
+        );
+
+        // Stream has been reset because of the malformed headers.
+        let e = client.events().next().unwrap();
+        assert_eq!(
+            e,
+            Http3ClientEvent::Reset {
+                stream_id: request_stream_id,
+                error: Error::HttpGeneralProtocolStream.code(),
+                local: true,
+            }
+        );
+
+        let out = client.process(None, now()).dgram();
+        let _ = server.conn.process(out, now());
+
+        // Check that server has received a reset.
+        let stop_sending_event = |e| {
+            matches!(e, ConnectionEvent::SendStreamStopSending {
+            stream_id,
+            app_error
+        } if stream_id == request_stream_id && app_error == Error::HttpGeneralProtocolStream.code())
+        };
+        assert!(server.conn.events().any(stop_sending_event));
+
+        // Stream should now be closed and gone
+        let mut buf = [0_u8; 100];
+        assert_eq!(
+            client.read_response_data(now(), 0, &mut buf),
+            Err(Error::InvalidStreamId)
+        );
+    }
+
+    // Client: receive a push stream
+    #[test]
+    fn push_single_with_1xx() {
+        const FIRST_PUSH_ID: u64 = 0;
+        // Connect and send a request
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // Send a push promise.
+        send_push_promise(&mut server.conn, request_stream_id, FIRST_PUSH_ID);
+        // Create a push stream
+        let push_stream_id = server.conn.stream_create(StreamType::UniDi).unwrap();
+
+        let mut d = Encoder::default();
+        let headers1xx = vec![(String::from(":status"), String::from("101"))];
+        server.encode_headers(push_stream_id, &headers1xx, &mut d);
+
+        let headers200 = vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("3")),
+        ];
+        server.encode_headers(push_stream_id, &headers200, &mut d);
+
+        // create a push stream.
+        send_data_on_push(
+            &mut server.conn,
+            push_stream_id,
+            u8::try_from(FIRST_PUSH_ID).unwrap(),
+            &d,
+            true,
+        );
+
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            HTTP_RESPONSE_2,
+            true,
+        );
+
+        let mut events = client.events().filter_map(|e| {
+            if let Http3ClientEvent::PushHeaderReady {
+                push_id,
+                interim,
+                headers,
+                ..
+            } = e
+            {
+                Some((push_id, interim, headers))
+            } else {
+                None
+            }
+        });
+
+        let (push_id_1xx_rec, interim1xx_rec, headers1xx_rec) = events.next().unwrap();
+        assert_eq!(
+            (push_id_1xx_rec, interim1xx_rec, headers1xx_rec),
+            (FIRST_PUSH_ID, true, headers1xx)
+        );
+
+        let (push_id_200_rec, interim200_rec, headers200_rec) = events.next().unwrap();
+        assert_eq!(
+            (push_id_200_rec, interim200_rec, headers200_rec),
+            (FIRST_PUSH_ID, false, headers200)
+        );
+        assert!(events.next().is_none());
+    }
+
+    // Client: receive a push stream
+    #[test]
+    fn push_single_wo_status() {
+        const FIRST_PUSH_ID: u64 = 0;
+        // Connect and send a request
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        // Send a push promise.
+        send_push_promise(&mut server.conn, request_stream_id, FIRST_PUSH_ID);
+        // Create a push stream
+        let push_stream_id = server.conn.stream_create(StreamType::UniDi).unwrap();
+
+        let mut d = Encoder::default();
+        let headers = vec![
+            (String::from("my-header"), String::from("my-header")),
+            (String::from("content-length"), String::from("3")),
+        ];
+        server.encode_headers(request_stream_id, &headers, &mut d);
+
+        send_data_on_push(
+            &mut server.conn,
+            push_stream_id,
+            u8::try_from(FIRST_PUSH_ID).unwrap(),
+            &d,
+            false,
+        );
+
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            HTTP_RESPONSE_2,
+            true,
+        );
+
+        // Stream has been reset because of thei malformed headers.
+        let push_reset_event = |e| {
+            matches!(e, Http3ClientEvent::PushReset {
+            push_id,
+            error,
+        } if push_id == FIRST_PUSH_ID && error == Error::HttpGeneralProtocol.code())
+        };
+
+        assert!(client.events().any(push_reset_event));
+
+        let out = client.process(None, now()).dgram();
+        let _ = server.conn.process(out, now());
+
+        // Check that server has received a reset.
+        let stop_sending_event = |e| {
+            matches!(e, ConnectionEvent::SendStreamStopSending {
+            stream_id,
+            app_error
+        } if stream_id == push_stream_id && app_error == Error::HttpGeneralProtocolStream.code())
+        };
+        assert!(server.conn.events().any(stop_sending_event));
     }
 }

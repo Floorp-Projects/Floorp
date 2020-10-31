@@ -7,8 +7,7 @@
 use super::super::{Connection, FixedConnectionIdManager, Output, State, LOCAL_IDLE_TIMEOUT};
 use super::{
     assert_error, connect_force_idle, connect_with_rtt, default_client, default_server, get_tokens,
-    handshake, maybe_authenticate, send_something, split_datagram, AT_LEAST_PTO, DEFAULT_RTT,
-    DEFAULT_STREAM_DATA,
+    handshake, maybe_authenticate, send_something, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
 };
 use crate::connection::AddressValidation;
 use crate::events::ConnectionEvent;
@@ -22,7 +21,7 @@ use neqo_crypto::{constants::TLS_CHACHA20_POLY1305_SHA256, AuthenticationStatus}
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
-use test_fixture::{self, assertions, fixture_init, loopback, now};
+use test_fixture::{self, assertions, fixture_init, loopback, now, split_datagram};
 
 #[test]
 fn full_handshake() {
@@ -31,18 +30,16 @@ fn full_handshake() {
     let out = client.process(None, now());
     assert!(out.as_dgram_ref().is_some());
     assert_eq!(out.as_dgram_ref().unwrap().len(), PATH_MTU_V6);
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     qdebug!("---- server: CH -> SH, EE, CERT, CV, FIN");
     let mut server = default_server();
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
+    assert_eq!(out.as_dgram_ref().unwrap().len(), PATH_MTU_V6);
 
     qdebug!("---- client: cert verification");
     let out = client.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_none());
@@ -52,19 +49,16 @@ fn full_handshake() {
     qdebug!("---- client: SH..FIN -> FIN");
     let out = client.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
     assert_eq!(*client.state(), State::Connected);
 
     qdebug!("---- server: FIN -> ACKS");
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
     assert_eq!(*server.state(), State::Confirmed);
 
     qdebug!("---- client: ACKS -> 0");
     let out = client.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_none());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
     assert_eq!(*client.state(), State::Confirmed);
 }
 
@@ -74,22 +68,18 @@ fn handshake_failed_authentication() {
     let mut client = default_client();
     let out = client.process(None, now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     qdebug!("---- server: CH -> SH, EE, CERT, CV, FIN");
     let mut server = default_server();
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     qdebug!("---- client: cert verification");
     let out = client.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_none());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     let authentication_needed = |e| matches!(e, ConnectionEvent::AuthenticationNeeded);
     assert!(client.events().any(authentication_needed));
@@ -99,12 +89,10 @@ fn handshake_failed_authentication() {
     qdebug!("---- client: -> Alert(certificate_revoked)");
     let out = client.process(None, now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     qdebug!("---- server: Alert(certificate_revoked)");
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
-    qdebug!("Output={:0x?}", out.as_dgram_ref());
     assert_error(&client, &ConnectionError::Transport(Error::CryptoAlert(44)));
     assert_error(&server, &ConnectionError::Transport(Error::PeerError(300)));
 }
@@ -164,8 +152,9 @@ fn dup_server_flight1() {
     assert!(out.as_dgram_ref().is_some());
     qdebug!("Output={:0x?}", out.as_dgram_ref());
 
-    assert_eq!(2, client.stats().packets_rx);
+    assert_eq!(3, client.stats().packets_rx);
     assert_eq!(0, client.stats().dups_rx);
+    assert_eq!(1, client.stats().dropped_rx);
 
     qdebug!("---- Dup, ignored");
     let out = client.process(out_to_rep.dgram(), now());
@@ -173,10 +162,10 @@ fn dup_server_flight1() {
     qdebug!("Output={:0x?}", out.as_dgram_ref());
 
     // Four packets total received, 1 of them is a dup and one has been dropped because Initial keys
-    // are dropped.
-    assert_eq!(4, client.stats().packets_rx);
+    // are dropped.  Add 2 counts of the padding that the server adds to Initial packets.
+    assert_eq!(6, client.stats().packets_rx);
     assert_eq!(1, client.stats().dups_rx);
-    assert_eq!(1, client.stats().dropped_rx);
+    assert_eq!(3, client.stats().dropped_rx);
 }
 
 // Test that we split crypto data if they cannot fit into one packet.
@@ -445,7 +434,7 @@ fn coalesce_05rtt() {
     maybe_authenticate(&mut client);
     let c3 = client.process(None, now).dgram();
     assert!(c3.is_some());
-    assert_eq!(client.stats().dropped_rx, 0);
+    assert_eq!(client.stats().dropped_rx, 1); // Just Initial padding.
     assert_eq!(client.stats().packets_rx, 4);
     assert_eq!(client.stats().saved_datagrams, 1);
 
@@ -458,7 +447,7 @@ fn coalesce_05rtt() {
     let _ = client.process(s3, now).dgram();
     assert_eq!(*client.state(), State::Confirmed);
 
-    assert_eq!(client.stats().dropped_rx, 0);
+    assert_eq!(client.stats().dropped_rx, 1); // Just Initial padding.
 }
 
 #[test]
@@ -507,7 +496,7 @@ fn reorder_handshake() {
 
     client.process_input(s_init, now);
     // Each saved packet should now be "received" again.
-    assert_eq!(client.stats().packets_rx, 5);
+    assert_eq!(client.stats().packets_rx, 7);
     maybe_authenticate(&mut client);
     let c3 = client.process(None, now).dgram();
     assert!(c3.is_some());
@@ -611,8 +600,8 @@ fn corrupted_initial() {
     // The server should have received two packets,
     // the first should be dropped, the second saved.
     assert_eq!(server.stats().packets_rx, 2);
-    assert_eq!(server.stats().dropped_rx, 1);
-    assert_eq!(server.stats().saved_datagrams, 1);
+    assert_eq!(server.stats().dropped_rx, 2);
+    assert_eq!(server.stats().saved_datagrams, 0);
 }
 
 #[test]

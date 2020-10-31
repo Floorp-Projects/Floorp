@@ -6,8 +6,8 @@
 use crate::client_events::{Http3ClientEvent, Http3ClientEvents};
 use crate::connection::Http3Connection;
 use crate::hframe::HFrame;
-use crate::RecvMessageEvents;
 use crate::{Error, Header, Res};
+use crate::{RecvMessageEvents, ResetType};
 use neqo_common::{qerror, qinfo, qtrace};
 use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;
@@ -369,7 +369,7 @@ impl PushController {
         }
     }
 
-    pub fn push_stream_reset(&mut self, push_id: u64) {
+    pub fn push_stream_reset(&mut self, push_id: u64, app_error: AppError, reset_type: ResetType) {
         qtrace!("Push stream has been reset, push_id={}", push_id);
 
         if let Some(push_state) = self.push_streams.get(push_id) {
@@ -380,7 +380,11 @@ impl PushController {
                 PushState::Active { .. } => {
                     self.push_streams.close(push_id);
                     self.conn_events.remove_events_for_push_id(push_id);
-                    self.conn_events.push_canceled(push_id);
+                    if reset_type == ResetType::Local {
+                        self.conn_events.push_reset(push_id, app_error);
+                    } else {
+                        self.conn_events.push_canceled(push_id);
+                    }
                 }
                 _ => {
                     debug_assert!(
@@ -457,12 +461,13 @@ impl RecvPushEvents {
 }
 
 impl RecvMessageEvents for RecvPushEvents {
-    fn header_ready(&self, _stream_id: u64, headers: Option<Vec<Header>>, fin: bool) {
+    fn header_ready(&self, _stream_id: u64, headers: Vec<Header>, interim: bool, fin: bool) {
         self.push_handler.borrow_mut().new_stream_event(
             self.push_id,
             Http3ClientEvent::PushHeaderReady {
                 push_id: self.push_id,
                 headers,
+                interim,
                 fin,
             },
         );
@@ -477,5 +482,5 @@ impl RecvMessageEvents for RecvPushEvents {
         );
     }
 
-    fn reset(&self, _stream_id: u64, _error: AppError) {}
+    fn reset(&self, _stream_id: u64, _error: AppError, _local: bool) {}
 }

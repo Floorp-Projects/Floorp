@@ -7,20 +7,20 @@
 use super::super::{Output, State, LOCAL_IDLE_TIMEOUT};
 use super::{
     assert_full_cwnd, connect, connect_force_idle, connect_with_rtt, default_client,
-    default_server, fill_cwnd, maybe_authenticate, send_and_receive, send_something,
-    split_datagram, AT_LEAST_PTO, POST_HANDSHAKE_CWND,
+    default_server, fill_cwnd, maybe_authenticate, send_and_receive, send_something, AT_LEAST_PTO,
+    POST_HANDSHAKE_CWND,
 };
-use crate::frame::{Frame, StreamType};
+use crate::frame::StreamType;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::PTO_PACKET_COUNT;
 use crate::stats::MAX_PTO_COUNTS;
 use crate::tparams::TransportParameter;
-use crate::tracking::{PNSpace, ACK_DELAY};
+use crate::tracking::ACK_DELAY;
 
 use neqo_common::qdebug;
 use neqo_crypto::AuthenticationStatus;
 use std::time::Duration;
-use test_fixture::{self, now};
+use test_fixture::{self, now, split_datagram};
 
 #[test]
 fn pto_works_basic() {
@@ -54,16 +54,9 @@ fn pto_works_basic() {
     now += AT_LEAST_PTO;
     let out = client.process(None, now);
 
-    let frames = server.test_process_input(out.dgram().unwrap(), now);
-
-    assert!(frames.iter().all(|(_, sp)| *sp == PNSpace::ApplicationData));
-    assert!(frames.iter().any(|(f, _)| *f == Frame::Ping));
-    assert!(frames
-        .iter()
-        .any(|(f, _)| matches!(f, Frame::Stream { stream_id, .. } if stream_id.as_u64() == 2)));
-    assert!(frames
-        .iter()
-        .any(|(f, _)| matches!(f, Frame::Stream { stream_id, .. } if stream_id.as_u64() == 6)));
+    let stream_before = server.stats().frame_rx.stream;
+    server.process_input(out.dgram().unwrap(), now);
+    assert_eq!(server.stats().frame_rx.stream, stream_before + 2);
 }
 
 #[test]
@@ -80,28 +73,19 @@ fn pto_works_full_cwnd() {
     let (dgrams, now) = fill_cwnd(&mut client, 2, now());
     assert_full_cwnd(&dgrams, POST_HANDSHAKE_CWND);
 
+    neqo_common::qwarn!("waiting over");
     // Fill the CWND after waiting for a PTO.
     let (dgrams, now) = fill_cwnd(&mut client, 2, now + AT_LEAST_PTO);
-    assert_eq!(dgrams.len(), 2); // Two packets in the PTO.
+    // Two packets in the PTO.
+    // The first should be full sized; the second might be small.
+    assert_eq!(dgrams.len(), 2);
+    assert_eq!(dgrams[0].len(), PATH_MTU_V6);
 
-    // All (2) datagrams contain one PING frame and at least one STREAM frame.
+    // Both datagrams contain a STREAM frame.
     for d in dgrams {
-        assert_eq!(d.len(), PATH_MTU_V6);
-        let frames = server.test_process_input(d, now);
-        assert_eq!(
-            frames
-                .iter()
-                .filter(|i| matches!(i, (Frame::Ping, PNSpace::ApplicationData)))
-                .count(),
-            1
-        );
-        assert!(
-            frames
-                .iter()
-                .filter(|i| matches!(i, (Frame::Stream { .. }, PNSpace::ApplicationData)))
-                .count()
-                >= 1
-        );
+        let stream_before = server.stats().frame_rx.stream;
+        server.process_input(d, now);
+        assert_eq!(server.stats().frame_rx.stream, stream_before + 1);
     }
 }
 
@@ -188,12 +172,12 @@ fn pto_works_ping() {
         now + Duration::from_secs(10) + Duration::from_millis(110),
     );
 
-    let frames = server.test_process_input(
+    let ping_before = server.stats().frame_rx.ping;
+    server.process_input(
         pkt6.dgram().unwrap(),
         now + Duration::from_secs(10) + Duration::from_millis(110),
     );
-
-    assert_eq!(frames[0], (Frame::Ping, PNSpace::ApplicationData));
+    assert_eq!(server.stats().frame_rx.ping, ping_before + 1);
 }
 
 #[test]
@@ -313,14 +297,15 @@ fn pto_handshake_complete() {
     // Check that the PTO packets (pkt2, pkt3) are Handshake packets.
     // The server discarded the Handshake keys already, therefore they are dropped.
     let dropped_before1 = server.stats().dropped_rx;
-    let frames = server.test_process_input(pkt2.unwrap(), now);
+    let frames_before = server.stats().frame_rx.all;
+    server.process_input(pkt2.unwrap(), now);
     assert_eq!(1, server.stats().dropped_rx - dropped_before1);
-    assert!(frames.is_empty());
+    assert_eq!(server.stats().frame_rx.all, frames_before);
 
     let dropped_before2 = server.stats().dropped_rx;
-    let frames = server.test_process_input(pkt3.unwrap(), now);
+    server.process_input(pkt3.unwrap(), now);
     assert_eq!(1, server.stats().dropped_rx - dropped_before2);
-    assert!(frames.is_empty());
+    assert_eq!(server.stats().frame_rx.all, frames_before);
 
     now += Duration::from_millis(10);
     // Client receive ack for the first packet
@@ -381,14 +366,9 @@ fn pto_handshake_frames() {
     assert!(pkt2.is_some());
 
     now += Duration::from_millis(10);
-    let frames = server.test_process_input(pkt2.unwrap(), now);
-
-    assert_eq!(frames.len(), 2);
-    assert_eq!(frames[0], (Frame::Ping, PNSpace::Handshake));
-    assert!(matches!(
-        frames[1],
-        (Frame::Crypto { .. }, PNSpace::Handshake)
-    ));
+    let crypto_before = server.stats().frame_rx.crypto;
+    server.process_input(pkt2.unwrap(), now);
+    assert_eq!(server.stats().frame_rx.crypto, crypto_before + 1)
 }
 
 /// In the case that the Handshake takes too many packets, the server might
@@ -432,8 +412,9 @@ fn handshake_ack_pto() {
     assert!(c3.is_some());
 
     now += RTT / 2;
-    let frames = server.test_process_input(c3.unwrap(), now);
-    assert_eq!(frames, vec![(Frame::Ping, PNSpace::Handshake)]);
+    let ping_before = server.stats().frame_rx.ping;
+    server.process_input(c3.unwrap(), now);
+    assert_eq!(server.stats().frame_rx.ping, ping_before + 1);
 
     pto_counts[0] = 1;
     assert_eq!(client.stats.borrow().pto_counts, pto_counts);
@@ -514,13 +495,12 @@ fn ack_after_pto() {
     let ack = client.process(Some(dgram), now).dgram();
     assert!(ack.is_some());
 
-    // Make sure that the packet only contained ACK frames.
-    let frames = server.test_process_input(ack.unwrap(), now);
-    assert_eq!(frames.len(), 1);
-    for (frame, space) in frames {
-        assert_eq!(space, PNSpace::ApplicationData);
-        assert!(matches!(frame, Frame::Ack { .. }));
-    }
+    // Make sure that the packet only contained an ACK frame.
+    let all_frames_before = server.stats().frame_rx.all;
+    let ack_before = server.stats().frame_rx.ack;
+    server.process_input(ack.unwrap(), now);
+    assert_eq!(server.stats().frame_rx.all, all_frames_before + 1);
+    assert_eq!(server.stats().frame_rx.ack, ack_before + 1);
 }
 
 /// When we declare a packet as lost, we keep it around for a while for another loss period.

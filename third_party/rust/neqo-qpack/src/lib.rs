@@ -27,6 +27,9 @@ mod static_table;
 pub mod stats;
 mod table;
 
+pub use decoder::QPackDecoder;
+pub use encoder::QPackEncoder;
+
 pub type Header = (String, String);
 type Res<T> = Result<T, Error>;
 

@@ -20,7 +20,7 @@ use neqo_transport::{
     Connection, ConnectionError, ConnectionEvent, Error, FixedConnectionIdManager, Output,
     QuicVersion, State, StreamType,
 };
-use test_fixture::{self, assertions, default_client, loopback, now};
+use test_fixture::{self, assertions, default_client, loopback, now, split_datagram};
 
 use std::cell::RefCell;
 use std::convert::TryFrom;
@@ -472,11 +472,8 @@ fn retry_after_initial() {
     assert!(server_flight.is_some());
 
     // We need to have the client just process the Initial.
-    // Rather than try to find the Initial, we can just truncate the Handshake that follows.
-    let si = server_flight.as_ref().unwrap();
-    let truncated = &si[..(si.len() - 1)];
-    let just_initial = Datagram::new(si.source(), si.destination(), truncated);
-    let dgram = client.process(Some(just_initial), now()).dgram();
+    let (server_initial, _other) = split_datagram(server_flight.as_ref().unwrap());
+    let dgram = client.process(Some(server_initial), now()).dgram();
     assert!(dgram.is_some());
     assert!(*client.state() != State::Connected);
 

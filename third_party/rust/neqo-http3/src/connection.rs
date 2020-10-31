@@ -12,7 +12,7 @@ use crate::hframe::HFrame;
 use crate::send_message::SendMessage;
 use crate::settings::{HSetting, HSettingType, HSettings, HttpZeroRttChecker};
 use crate::stream_type_reader::NewStreamTypeReader;
-use crate::RecvStream;
+use crate::{RecvStream, ResetType};
 use neqo_common::{qdebug, qerror, qinfo, qtrace, qwarn};
 use neqo_qpack::decoder::{QPackDecoder, QPACK_UNI_STREAM_TYPE_DECODER};
 use neqo_qpack::encoder::{QPackEncoder, QPACK_UNI_STREAM_TYPE_ENCODER};
@@ -354,7 +354,7 @@ impl Http3Connection {
         );
 
         if let Some(s) = self.recv_streams.remove(&stream_id) {
-            s.stream_reset_recv(app_error, &mut self.qpack_decoder);
+            s.stream_reset(app_error, &mut self.qpack_decoder, ResetType::Remote);
             Ok(())
         } else if self.is_critical_stream(stream_id) {
             Err(Error::HttpClosedCriticalStream)
@@ -530,7 +530,7 @@ impl Http3Connection {
 
         let mut found = self.send_streams.remove(&stream_id).is_some();
         if let Some(s) = self.recv_streams.remove(&stream_id) {
-            s.stream_reset(&mut self.qpack_decoder);
+            s.stream_reset(error, &mut self.qpack_decoder, ResetType::App);
             found = true;
         }
 
