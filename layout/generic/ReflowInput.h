@@ -125,7 +125,6 @@ struct SizeComputationInput {
 
   // We may need to eliminate the (few) users of these writable-reference
   // accessors as part of migrating to logical coordinates.
-  nsMargin& ComputedPhysicalMargin() { return mComputedMargin; }
   nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
   nsMargin& ComputedPhysicalPadding() { return mComputedPadding; }
 

@@ -802,9 +802,11 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   nsIFrame* cbFrame = parentFrame->GetContainingBlock();
   if (cbFrame && (aFrame->GetContainingBlock() != parentFrame ||
                   parentFrame->IsTableFrame())) {
+    const auto cbWM = cbFrame->GetWritingMode();
     LogicalSize cbSize = cbFrame->GetLogicalSize();
     cbReflowInput.emplace(cbFrame->PresContext(), cbFrame, rc, cbSize);
-    cbReflowInput->ComputedPhysicalMargin() = cbFrame->GetUsedMargin();
+    cbReflowInput->SetComputedLogicalMargin(
+        cbWM, cbFrame->GetLogicalUsedMargin(cbWM));
     cbReflowInput->ComputedPhysicalPadding() = cbFrame->GetUsedPadding();
     cbReflowInput->ComputedPhysicalBorderPadding() =
         cbFrame->GetUsedBorderAndPadding();
@@ -816,7 +818,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
                        "parentSize should be valid");
   parentReflowInput.SetComputedISize(std::max(parentSize.ISize(parentWM), 0));
   parentReflowInput.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
-  parentReflowInput.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
+  parentReflowInput.SetComputedLogicalMargin(parentWM, LogicalMargin(parentWM));
 
   parentReflowInput.ComputedPhysicalPadding() = parentFrame->GetUsedPadding();
   parentReflowInput.ComputedPhysicalBorderPadding() =
