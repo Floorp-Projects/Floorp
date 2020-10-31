@@ -778,7 +778,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   RootedScript resultScript(cx);
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
-  if (!options.useOffThreadParseGlobal) {
+  bool useStencilXDR = !options.useOffThreadParseGlobal;
+  if (useStencilXDR) {
     // The buffer contains stencil.
     Rooted<UniquePtr<frontend::CompilationInfoVector>> compilationInfos(
         cx, js_new<frontend::CompilationInfoVector>(cx, options));
@@ -805,6 +806,10 @@ void ScriptDecodeTask::parse(JSContext* cx) {
       if (!frontend::PrepareForInstantiate(cx, *compilationInfos_, gcOutput_)) {
         compilationInfos_ = nullptr;
       }
+    }
+
+    if (options.useOffThreadParseGlobal) {
+      Unused << instantiateStencils(cx);
     }
 
     return;
@@ -2067,55 +2072,8 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   JS::RootedScript script(cx);
 
-  if (parseTask->compilationInfo_.get() &&
-      !parseTask->options.useOffThreadParseGlobal) {
-    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
-
-    if (startEncoding == StartEncoding::Yes) {
-      auto compilationInfo = parseTask->compilationInfo_.get();
-      if (!compilationInfo->input.source()->xdrEncodeInitialStencil(
-              cx, *compilationInfo, xdrEncoder)) {
-        return nullptr;
-      }
-    }
-
-    if (!parseTask->instantiateStencils(cx)) {
-      return nullptr;
-    }
-
-    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
-
-    script = parseTask->scripts[0];
-
-    if (startEncoding == StartEncoding::Yes) {
-      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
-    }
-  } else if (parseTask->compilationInfos_.get() &&
-             !parseTask->options.useOffThreadParseGlobal) {
-    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
-
-    if (startEncoding == StartEncoding::Yes) {
-      auto compilationInfos = parseTask->compilationInfos_.get();
-      if (!compilationInfos->initial.input.source()->xdrEncodeStencils(
-              cx, *compilationInfos, xdrEncoder)) {
-        return nullptr;
-      }
-    }
-
-    if (!parseTask->instantiateStencils(cx)) {
-      return nullptr;
-    }
-
-    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
-
-    script = parseTask->scripts[0];
-
-    if (startEncoding == StartEncoding::Yes) {
-      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
-    }
-  } else {
-    MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
-
+  // Finish main-thread initialization of scripts.
+  if (parseTask->options.useOffThreadParseGlobal) {
     if (parseTask->scripts.length() > 0) {
       script = parseTask->scripts[0];
     }
@@ -2142,10 +2100,40 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     if (!parseTask->options.hideScriptFromDebugger) {
       DebugAPI::onNewScript(cx, script);
     }
+  } else {
+    MOZ_ASSERT(parseTask->compilationInfo_.get() ||
+               parseTask->compilationInfos_.get());
+
+    if (!parseTask->instantiateStencils(cx)) {
+      return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
+    script = parseTask->scripts[0];
   }
 
-  if (parseTask->options.useOffThreadParseGlobal) {
-    if (startEncoding == StartEncoding::Yes) {
+  // Start the incremental-XDR encoder.
+  if (startEncoding == StartEncoding::Yes) {
+    bool useStencilXDR = !parseTask->options.useOffThreadParseGlobal;
+    if (useStencilXDR) {
+      UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+
+      if (parseTask->compilationInfo_.get()) {
+        auto compilationInfo = parseTask->compilationInfo_.get();
+        if (!compilationInfo->input.source()->xdrEncodeInitialStencil(
+                cx, *compilationInfo, xdrEncoder)) {
+          return nullptr;
+        }
+      } else {
+        auto compilationInfos = parseTask->compilationInfos_.get();
+        if (!compilationInfos->initial.input.source()->xdrEncodeStencils(
+                cx, *compilationInfos, xdrEncoder)) {
+          return nullptr;
+        }
+      }
+
+      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+    } else {
       if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
         return nullptr;
       }

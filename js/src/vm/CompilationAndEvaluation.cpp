@@ -101,33 +101,28 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     return nullptr;
   }
 
-  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
-  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
-  if (!js::UseOffThreadParseGlobal()) {
-    if (!compilationInfo.get().input.source()->xdrEncodeInitialStencil(
-            cx, compilationInfo.get(), xdrEncoder)) {
-      return nullptr;
-    }
-  }
-
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   if (!frontend::InstantiateStencils(cx, compilationInfo.get(),
                                      gcOutput.get())) {
     return nullptr;
   }
 
-  MOZ_ASSERT(gcOutput.get().script);
-  if (!js::UseOffThreadParseGlobal()) {
-    gcOutput.get().script->scriptSource()->setIncrementalEncoder(
-        xdrEncoder.release());
-  }
-
-  Rooted<JSScript*> script(cx, gcOutput.get().script);
+  RootedScript script(cx, gcOutput.get().script);
   if (!script) {
     return nullptr;
   }
 
-  if (js::UseOffThreadParseGlobal()) {
+  bool useStencilXDR = !options.useOffThreadParseGlobal;
+  if (useStencilXDR) {
+    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+
+    if (!compilationInfo.get().input.source()->xdrEncodeInitialStencil(
+            cx, compilationInfo.get(), xdrEncoder)) {
+      return nullptr;
+    }
+
+    script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+  } else {
     if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
       return nullptr;
     }
