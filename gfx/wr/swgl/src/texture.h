@@ -4,6 +4,62 @@
 
 namespace glsl {
 
+using PackedRGBA8 = V16<uint8_t>;
+using WideRGBA8 = V16<uint16_t>;
+using HalfRGBA8 = V8<uint16_t>;
+
+SI WideRGBA8 unpack(PackedRGBA8 p) { return CONVERT(p, WideRGBA8); }
+
+template <int N>
+UNUSED SI VectorType<uint8_t, N> genericPackWide(VectorType<uint16_t, N> p) {
+  typedef VectorType<uint8_t, N> packed_type;
+  // Generic conversions only mask off the low byte without actually clamping
+  // like a real pack. First force the word to all 1s if it overflows, and then
+  // add on the sign bit to cause it to roll over to 0 if it was negative.
+  p = (p | (p > 255)) + (p >> 15);
+  return CONVERT(p, packed_type);
+}
+
+SI PackedRGBA8 pack(WideRGBA8 p) {
+#if USE_SSE2
+  return _mm_packus_epi16(lowHalf(p), highHalf(p));
+#elif USE_NEON
+  return vcombine_u8(vqmovn_u16(lowHalf(p)), vqmovn_u16(highHalf(p)));
+#else
+  return genericPackWide(p);
+#endif
+}
+
+using PackedR8 = V4<uint8_t>;
+using WideR8 = V4<uint16_t>;
+
+SI WideR8 unpack(PackedR8 p) { return CONVERT(p, WideR8); }
+
+SI PackedR8 pack(WideR8 p) {
+#if USE_SSE2
+  auto m = expand(p);
+  auto r = bit_cast<V16<uint8_t>>(_mm_packus_epi16(m, m));
+  return SHUFFLE(r, r, 0, 1, 2, 3);
+#elif USE_NEON
+  return lowHalf(bit_cast<V8<uint8_t>>(vqmovn_u16(expand(p))));
+#else
+  return genericPackWide(p);
+#endif
+}
+
+using PackedRG8 = V8<uint8_t>;
+using WideRG8 = V8<uint16_t>;
+
+SI PackedRG8 pack(WideRG8 p) {
+#if USE_SSE2
+  return lowHalf(bit_cast<V16<uint8_t>>(_mm_packus_epi16(p, p)));
+#elif USE_NEON
+  return bit_cast<V8<uint8_t>>(vqmovn_u16(p));
+#else
+  return genericPackWide(p);
+#endif
+}
+
 SI I32 clampCoord(I32 coord, int limit, int base = 0) {
 #if USE_SSE2
   return _mm_min_epi16(_mm_max_epi16(coord, _mm_set1_epi32(base)),
@@ -407,15 +463,20 @@ SI T linearQuantize(T P, float scale) {
 
 // Helper version that also scales normalized texture coords for sampler
 template <typename T, typename S>
-SI T linearQuantize(T P, float scale, S sampler) {
+SI T samplerScale(S sampler, T P) {
   P.x *= sampler->width;
   P.y *= sampler->height;
-  return linearQuantize(P, scale);
+  return P;
 }
 
 template <typename T>
-SI T linearQuantize(T P, float scale, sampler2DRect sampler) {
-  return linearQuantize(P, scale);
+SI T samplerScale(sampler2DRect sampler, T P) {
+  return P;
+}
+
+template <typename T, typename S>
+SI T linearQuantize(T P, float scale, S sampler) {
+  return linearQuantize(samplerScale(sampler, P), scale);
 }
 
 template <typename S>
@@ -581,7 +642,8 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
 }
 
 template <typename S>
-static inline U16 textureLinearPackedR8(S sampler, ivec2 i, int32_t zoffset) {
+static inline U16 textureLinearUnpackedR8(S sampler, ivec2 i,
+                                          int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::R8);
   ivec2 frac = i & (I32)0x7F;
   i >>= 7;
@@ -693,7 +755,7 @@ vec4 textureLinearR8(S sampler, vec2 P, int32_t zoffset = 0) {
   return vec4((Float)r * (1.0f / 0xFF00), 0.0f, 0.0f, 1.0f);
 #else
   ivec2 i(linearQuantize(P, 128, sampler));
-  Float r = CONVERT(textureLinearPackedR8(sampler, i, zoffset), Float);
+  Float r = CONVERT(textureLinearUnpackedR8(sampler, i, zoffset), Float);
   return vec4(r * (1.0f / 255.0f), 0.0f, 0.0f, 1.0f);
 #endif
 }
@@ -844,8 +906,7 @@ vec4 textureLinearR16(S sampler, vec2 P, int32_t zoffset = 0) {
 template <typename S>
 vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA32F);
-  P.x *= sampler->width;
-  P.y *= sampler->height;
+  P = samplerScale(sampler, P);
   P -= 0.5f;
   vec2 f = floor(P);
   vec2 r = P - f;
@@ -1063,7 +1124,8 @@ ivec2_scalar textureSize(sampler2DRect sampler) {
 }
 
 template <typename S>
-static WideRGBA8 textureLinearUnpackedRGBA8(S sampler, ivec2 i, int zoffset) {
+static WideRGBA8 textureLinearUnpackedRGBA8(S sampler, ivec2 i,
+                                            int zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
   ivec2 frac = i & 0x7F;
   i >>= 7;
@@ -1112,87 +1174,18 @@ static WideRGBA8 textureLinearUnpackedRGBA8(S sampler, ivec2 i, int zoffset) {
 }
 
 template <typename S>
-static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i, int zoffset) {
+static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i,
+                                            int zoffset = 0) {
   return pack(textureLinearUnpackedRGBA8(sampler, i, zoffset));
 }
 
 template <typename S>
-static inline void textureLinearCommit4(S sampler, ivec2 i, int zoffset,
-                                        uint32_t* buf) {
-  commit_span(buf, textureLinearPackedRGBA8(sampler, i, zoffset));
+static PackedR8 textureLinearPackedR8(S sampler, ivec2 i, int zoffset = 0) {
+  return pack(textureLinearUnpackedR8(sampler, i, zoffset));
 }
 
 template <typename S>
-static void textureLinearCommit8(S sampler, ivec2_scalar i, int zoffset,
-                                 uint32_t* buf) {
-  assert(sampler->format == TextureFormat::RGBA8);
-  ivec2_scalar frac = i & 0x7F;
-  i >>= 7;
-
-  uint32_t* row0 =
-      &sampler
-           ->buf[clampCoord(i.x, sampler->width) +
-                 clampCoord(i.y, sampler->height) * sampler->stride + zoffset];
-  uint32_t* row1 =
-      row0 +
-      ((i.y >= 0 && i.y < int32_t(sampler->height) - 1) ? sampler->stride : 0);
-  int16_t fracx = i.x >= 0 && i.x < int32_t(sampler->width) - 1 ? frac.x : 0;
-  int16_t fracy = frac.y;
-
-  U32 pix0 = unaligned_load<U32>(row0);
-  U32 pix0n = unaligned_load<U32>(row0 + 4);
-  uint32_t pix0x = row0[8];
-  U32 pix1 = unaligned_load<U32>(row1);
-  U32 pix1n = unaligned_load<U32>(row1 + 4);
-  uint32_t pix1x = row1[8];
-
-  {
-    auto ab0 = CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix0, pix0, 0, 1, 1, 2)),
-                       V16<int16_t>);
-    auto ab1 = CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix1, pix1, 0, 1, 1, 2)),
-                       V16<int16_t>);
-    ab0 += ((ab1 - ab0) * fracy) >> 7;
-
-    auto cd0 = CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix0, pix0n, 2, 3, 3, 4)),
-                       V16<int16_t>);
-    auto cd1 = CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix1, pix1n, 2, 3, 3, 4)),
-                       V16<int16_t>);
-    cd0 += ((cd1 - cd0) * fracy) >> 7;
-
-    auto abcdl = combine(lowHalf(ab0), lowHalf(cd0));
-    auto abcdh = combine(highHalf(ab0), highHalf(cd0));
-    abcdl += ((abcdh - abcdl) * fracx) >> 7;
-
-    commit_span(buf, pack(WideRGBA8(abcdl)));
-  }
-
-  {
-    auto ab0 =
-        CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix0n, pix0n, 0, 1, 1, 2)),
-                V16<int16_t>);
-    auto ab1 =
-        CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix1n, pix1n, 0, 1, 1, 2)),
-                V16<int16_t>);
-    ab0 += ((ab1 - ab0) * fracy) >> 7;
-
-    auto cd0 =
-        CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix0n, U32(pix0x), 2, 3, 3, 4)),
-                V16<int16_t>);
-    auto cd1 =
-        CONVERT(bit_cast<V16<uint8_t>>(SHUFFLE(pix1n, U32(pix1x), 2, 3, 3, 4)),
-                V16<int16_t>);
-    cd0 += ((cd1 - cd0) * fracy) >> 7;
-
-    auto abcdl = combine(lowHalf(ab0), lowHalf(cd0));
-    auto abcdh = combine(highHalf(ab0), highHalf(cd0));
-    abcdl += ((abcdh - abcdl) * fracx) >> 7;
-
-    commit_span(buf + 4, pack(WideRGBA8(abcdl)));
-  }
-}
-
-template <typename S>
-static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset) {
+static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset = 0) {
   assert(sampler->format == TextureFormat::RG8);
   ivec2 frac = i & 0x7F;
   i >>= 7;
