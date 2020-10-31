@@ -49,7 +49,7 @@ class ConnectionEntry {
   void CloseIdleConnections();
   void CloseIdleConnections(uint32_t maxToClose);
   nsresult RemoveIdleConnection(nsHttpConnection* conn);
-  bool IsInIdleConnections(nsHttpConnection* conn);
+  bool IsInIdleConnections(HttpConnectionBase* conn);
   size_t IdleConnectionsLength() const { return mIdleConns.Length(); }
   void InsertIntoIdleConnections(nsHttpConnection* conn);
   already_AddRefed<nsHttpConnection> GetIdleConnection(bool respectUrgency,
