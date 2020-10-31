@@ -79,15 +79,20 @@ class ConnectionEntry {
 
   void MoveConnection(HttpConnectionBase* proxyConn, ConnectionEntry* otherEnt);
 
+  size_t HalfOpensLength() const { return mHalfOpens.Length(); }
+  size_t HalfOpenFastOpenBackupsLength() const {
+    return mHalfOpenFastOpenBackups.Length();
+  }
+  void InsertIntoHalfOpens(HalfOpenSocket* sock);
+  void InsertIntoHalfOpenFastOpenBackups(HalfOpenSocket* sock);
+  void CloseAllHalfOpens();
+  void RemoveHalfOpenFastOpenBackups(HalfOpenSocket* sock);
+  bool IsInHalfOpens(HalfOpenSocket* sock);
+
   HttpRetParams GetConnectionData();
   void LogConnections();
 
   RefPtr<nsHttpConnectionInfo> mConnInfo;
-
-  nsTArray<HalfOpenSocket*> mHalfOpens;  // half open connections
-  nsTArray<RefPtr<HalfOpenSocket>>
-      mHalfOpenFastOpenBackups;  // backup half open connections for
-                                 // connection in fast open phase
 
   bool AvailableForDispatchNow();
 
@@ -96,7 +101,7 @@ class ConnectionEntry {
   uint32_t UnconnectedHalfOpens() const;
 
   // Remove a particular half open socket from the mHalfOpens array
-  void RemoveHalfOpen(HalfOpenSocket*);
+  bool RemoveHalfOpen(HalfOpenSocket*);
 
   // Spdy sometimes resolves the address in the socket manager in order
   // to re-coalesce sharded HTTP hosts. The dotted decimal address is
@@ -184,6 +189,11 @@ class ConnectionEntry {
 
   nsTArray<RefPtr<nsHttpConnection>> mIdleConns;  // idle persistent connections
   nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
+
+  nsTArray<HalfOpenSocket*> mHalfOpens;  // half open connections
+  nsTArray<RefPtr<HalfOpenSocket>>
+      mHalfOpenFastOpenBackups;  // backup half open connections for
+                                 // connection in fast open phase
 
   PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();
