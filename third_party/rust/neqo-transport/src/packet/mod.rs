@@ -315,7 +315,7 @@ impl PacketBuilder {
 
     /// Work out if nothing was added after the header.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub fn packet_empty(&self) -> bool {
         self.encoder.len() == self.header.end
     }
 

@@ -36,6 +36,7 @@ pub use client_events::Http3ClientEvent;
 pub use connection::Http3State;
 pub use connection_client::Http3Client;
 pub use connection_client::Http3Parameters;
+pub use hframe::HFrameReader;
 pub use neqo_qpack::Header;
 pub use server::Http3Server;
 pub use server_events::Http3ServerEvent;
@@ -46,6 +47,7 @@ type Res<T> = Result<T, Error>;
 pub enum Error {
     HttpNoError,
     HttpGeneralProtocol,
+    HttpGeneralProtocolStream, //this is the same as the above but it should only close a stream not a connection.
     HttpInternal,
     HttpStreamCreation,
     HttpClosedCriticalStream,
@@ -87,7 +89,7 @@ impl Error {
     pub fn code(&self) -> AppError {
         match self {
             Self::HttpNoError => 0x100,
-            Self::HttpGeneralProtocol => 0x101,
+            Self::HttpGeneralProtocol | Self::HttpGeneralProtocolStream => 0x101,
             Self::HttpInternal => 0x102,
             Self::HttpStreamCreation => 0x103,
             Self::HttpClosedCriticalStream => 0x104,
@@ -125,6 +127,11 @@ impl Error {
             | Self::QpackError(QpackError::DecoderStream) => true,
             _ => false,
         }
+    }
+
+    #[must_use]
+    pub fn stream_reset_error(&self) -> bool {
+        matches!(self, Self::HttpGeneralProtocolStream)
     }
 
     #[must_use]
@@ -244,8 +251,7 @@ impl ::std::fmt::Display for Error {
 }
 
 pub trait RecvStream: Debug {
-    fn stream_reset_recv(&self, app_error: AppError, decoder: &mut QPackDecoder);
-    fn stream_reset(&self, decoder: &mut QPackDecoder);
+    fn stream_reset(&self, error: AppError, decoder: &mut QPackDecoder, reset_type: ResetType);
     /// # Errors
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
     fn receive(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()>;
@@ -264,7 +270,14 @@ pub trait RecvStream: Debug {
 }
 
 pub(crate) trait RecvMessageEvents: Debug {
-    fn header_ready(&self, stream_id: u64, headers: Option<Vec<Header>>, fin: bool);
+    fn header_ready(&self, stream_id: u64, headers: Vec<Header>, interim: bool, fin: bool);
     fn data_readable(&self, stream_id: u64);
-    fn reset(&self, stream_id: u64, error: AppError);
+    fn reset(&self, stream_id: u64, error: AppError, local: bool);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResetType {
+    App,
+    Remote,
+    Local,
 }

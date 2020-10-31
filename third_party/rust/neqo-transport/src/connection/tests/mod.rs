@@ -22,7 +22,7 @@ use std::mem;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder};
+use neqo_common::{event::Provider, qdebug, qtrace, Datagram};
 use neqo_crypto::{AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{self, fixture_init, loopback, now};
 
@@ -295,40 +295,6 @@ fn send_and_receive(
 ) -> Option<Datagram> {
     let dgram = send_something(sender, now);
     receiver.process(Some(dgram), now).dgram()
-}
-
-/// Split the first packet off a coalesced packet.
-fn split_packet(buf: &[u8]) -> (&[u8], Option<&[u8]>) {
-    if buf[0] & 0x80 == 0 {
-        // Short header: easy.
-        return (buf, None);
-    }
-    let mut dec = Decoder::from(buf);
-    let first = dec.decode_byte().unwrap();
-    assert_ne!(first & 0b0011_0000, 0b0011_0000, "retry not supported");
-    dec.skip(4); // Version.
-    dec.skip_vec(1); // DCID
-    dec.skip_vec(1); // SCID
-    if first & 0b0011_0000 == 0 {
-        dec.skip_vvec(); // Initial token
-    }
-    dec.skip_vvec(); // The rest of the packet.
-    let p1 = &buf[..dec.offset()];
-    let p2 = if dec.remaining() > 0 {
-        Some(dec.decode_remainder())
-    } else {
-        None
-    };
-    (p1, p2)
-}
-
-/// Split the first datagram off a coalesced datagram.
-fn split_datagram(d: &Datagram) -> (Datagram, Option<Datagram>) {
-    let (a, b) = split_packet(&d[..]);
-    (
-        Datagram::new(d.source(), d.destination(), a),
-        b.map(|b| Datagram::new(d.source(), d.destination(), b)),
-    )
 }
 
 fn get_tokens(client: &mut Connection) -> Vec<ResumptionToken> {

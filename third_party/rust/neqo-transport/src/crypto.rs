@@ -5,7 +5,8 @@
 // except according to those terms.
 
 use std::cell::RefCell;
-use std::cmp::max;
+use std::cmp::{max, min};
+use std::convert::TryFrom;
 use std::mem;
 use std::ops::{Index, IndexMut, Range};
 use std::rc::Rc;
@@ -20,8 +21,7 @@ use neqo_crypto::{
     TLS_VERSION_1_3,
 };
 
-use crate::frame::Frame;
-use crate::packet::{PacketNumber, QuicVersion};
+use crate::packet::{PacketBuilder, PacketNumber, QuicVersion};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
@@ -1149,8 +1149,8 @@ impl CryptoStreams {
         self.get_mut(space).unwrap().tx.send(data);
     }
 
-    pub fn inbound_frame(&mut self, space: PNSpace, offset: u64, data: Vec<u8>) -> Res<()> {
-        self.get_mut(space).unwrap().rx.inbound_frame(offset, data)
+    pub fn inbound_frame(&mut self, space: PNSpace, offset: u64, data: &[u8]) {
+        self.get_mut(space).unwrap().rx.inbound_frame(offset, data);
     }
 
     pub fn data_ready(&self, space: PNSpace) -> bool {
@@ -1225,30 +1225,38 @@ impl CryptoStreams {
         }
     }
 
-    pub fn get_frame(
+    pub fn write_frame(
         &mut self,
         space: PNSpace,
-        remaining: usize,
-    ) -> Option<(Frame, Option<RecoveryToken>)> {
+        builder: &mut PacketBuilder,
+    ) -> Option<RecoveryToken> {
         let cs = self.get_mut(space).unwrap();
         if let Some((offset, data)) = cs.tx.next_bytes() {
-            let (frame, length) = Frame::new_crypto(offset, data, remaining);
+            let mut header_len = 1 + Encoder::varint_len(offset) + 1;
+
+            // Don't bother if there isn't room for the header and some data.
+            if builder.remaining() < header_len + 1 {
+                return None;
+            }
+            // Calculate length of data based on the minimum of:
+            // - available data
+            // - remaining space, less the header, which counts only one byte
+            //   for the length at first to avoid underestimating length
+            let length = min(data.len(), builder.remaining() - header_len);
+            header_len += Encoder::varint_len(u64::try_from(length).unwrap()) - 1;
+            let length = min(data.len(), builder.remaining() - header_len);
+
+            builder.encode_varint(crate::frame::FRAME_TYPE_CRYPTO);
+            builder.encode_varint(offset);
+            builder.encode_vvec(&data[..length]);
             cs.tx.mark_as_sent(offset, length);
 
-            qdebug!(
-                "Emitting crypto frame space={}, offset={}, len={}",
+            qdebug!("CRYPTO for {} offset={}, len={}", space, offset, length);
+            Some(RecoveryToken::Crypto(CryptoRecoveryToken {
                 space,
                 offset,
-                length
-            );
-            Some((
-                frame,
-                Some(RecoveryToken::Crypto(CryptoRecoveryToken {
-                    space,
-                    offset,
-                    length,
-                })),
-            ))
+                length,
+            }))
         } else {
             None
         }

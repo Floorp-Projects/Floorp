@@ -7,6 +7,7 @@
 // Tracking of some useful statistics.
 #![deny(clippy::pedantic)]
 
+use crate::packet::PacketNumber;
 use neqo_common::qinfo;
 use std::cell::RefCell;
 use std::fmt::{self, Debug};
@@ -14,6 +15,39 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 pub(crate) const MAX_PTO_COUNTS: usize = 16;
+
+#[derive(Default, Clone)]
+#[allow(clippy::module_name_repetitions)]
+pub struct FrameStats {
+    pub all: usize,
+    pub ack: usize,
+    pub largest_acknowledged: PacketNumber,
+
+    pub crypto: usize,
+    pub stream: usize,
+    pub reset_stream: usize,
+    pub stop_sending: usize,
+
+    pub ping: usize,
+    pub padding: usize,
+
+    pub max_streams: usize,
+    pub streams_blocked: usize,
+    pub max_data: usize,
+    pub data_blocked: usize,
+    pub max_stream_data: usize,
+    pub stream_data_blocked: usize,
+
+    pub new_connection_id: usize,
+    pub retire_connection_id: usize,
+
+    pub path_challenge: usize,
+    pub path_response: usize,
+
+    pub connection_close: usize,
+    pub handshake_done: usize,
+    pub new_token: usize,
+}
 
 /// Connection statistics
 #[derive(Default, Clone)]
@@ -46,6 +80,11 @@ pub struct Stats {
     /// Count PTOs. Single PTOs, 2 PTOs in a row, 3 PTOs in row, etc. are counted
     /// separately.
     pub pto_counts: [usize; MAX_PTO_COUNTS],
+
+    /// Count frames received.
+    pub frame_rx: FrameStats,
+    /// Count frames sent.
+    pub frame_tx: FrameStats,
 }
 
 impl Stats {

@@ -7,14 +7,16 @@
 use super::super::{IdleTimeout, Output, State, LOCAL_IDLE_TIMEOUT};
 use super::{
     connect, connect_force_idle, connect_with_rtt, default_client, default_server,
-    maybe_authenticate, send_something, split_datagram, AT_LEAST_PTO,
+    maybe_authenticate, send_something, AT_LEAST_PTO,
 };
-use crate::frame::{Frame, StreamType};
+use crate::frame::StreamType;
+use crate::packet::PacketBuilder;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::PNSpace;
 
+use neqo_common::Encoder;
 use std::time::Duration;
-use test_fixture::{self, now};
+use test_fixture::{self, now, split_datagram};
 
 #[test]
 fn idle_timeout() {
@@ -215,6 +217,7 @@ fn idle_caching() {
     let mut client = default_client();
     let mut server = default_server();
     let start = now();
+    let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
 
     // Perform the first round trip, but drop the Initial from the server.
     // The client then caches the Handshake packet.
@@ -233,21 +236,29 @@ fn idle_caching() {
     let _ = server.process_output(middle).dgram();
     // Now let the server process the client PING.  This causes the server
     // to send CRYPTO frames again, so manually extract and discard those.
-    let frames = server.test_process_input(dgram.unwrap(), middle);
-    assert_eq!(frames, vec![(Frame::Ping, PNSpace::Initial)]);
-    let crypto = server.crypto.streams.get_frame(PNSpace::Initial, 1000);
+    let ping_before_s = server.stats().frame_rx.ping;
+    server.process_input(dgram.unwrap(), middle);
+    assert_eq!(server.stats().frame_rx.ping, ping_before_s + 1);
+    let crypto = server
+        .crypto
+        .streams
+        .write_frame(PNSpace::Initial, &mut builder);
     assert!(crypto.is_some());
-    let crypto = server.crypto.streams.get_frame(PNSpace::Initial, 1000);
+    let crypto = server
+        .crypto
+        .streams
+        .write_frame(PNSpace::Initial, &mut builder);
     assert!(crypto.is_none());
     let dgram = server.process_output(middle).dgram();
 
     // Now only allow the Initial packet from the server through;
     // it shouldn't contain a CRYPTO frame.
     let (initial, _) = split_datagram(&dgram.unwrap());
-    let frames = client.test_process_input(initial, middle);
-    assert_eq!(frames.len(), 2);
-    assert_eq!(frames[0], (Frame::Ping, PNSpace::Initial));
-    assert!(matches!(frames[1], (Frame::Ack { .. }, PNSpace::Initial)));
+    let ping_before_c = client.stats().frame_rx.ping;
+    let ack_before = client.stats().frame_rx.ack;
+    client.process_input(initial, middle);
+    assert_eq!(client.stats().frame_rx.ping, ping_before_c + 1);
+    assert_eq!(client.stats().frame_rx.ack, ack_before + 1);
 
     let end = start + LOCAL_IDLE_TIMEOUT + (AT_LEAST_PTO / 2);
     // Now let the server Initial through, with the CRYPTO frame.

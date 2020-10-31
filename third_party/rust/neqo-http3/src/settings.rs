@@ -4,6 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(clippy::module_name_repetitions)]
+
 use crate::{Error, Res};
 use neqo_common::{Decoder, Encoder};
 use neqo_crypto::{ZeroRttCheckResult, ZeroRttChecker};
@@ -23,7 +25,7 @@ const SETTINGS_QPACK_BLOCKED_STREAMS: SettingsType = 0x7;
 pub const H3_RESERVED_SETTINGS: &[SettingsType] = &[0x2, 0x3, 0x4, 0x5];
 
 #[derive(Clone, PartialEq, Debug, Copy)]
-pub(crate) enum HSettingType {
+pub enum HSettingType {
     MaxHeaderListSize,
     MaxTableCapacity,
     BlockedStreams,
@@ -37,7 +39,7 @@ fn hsetting_default(setting_type: HSettingType) -> u64 {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct HSetting {
+pub struct HSetting {
     pub setting_type: HSettingType,
     pub value: u64,
 }
@@ -52,7 +54,7 @@ impl HSetting {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct HSettings {
+pub struct HSettings {
     settings: Vec<HSetting>,
 }
 

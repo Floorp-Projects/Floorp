@@ -5,14 +5,17 @@
 // except according to those terms.
 
 use super::super::State;
-use super::{connect, default_client, default_server, maybe_authenticate, send_something};
+use super::{
+    connect, default_client, default_server, maybe_authenticate, send_something,
+    DEFAULT_STREAM_DATA,
+};
 use crate::events::ConnectionEvent;
-use crate::frame::{Frame, StreamType};
+use crate::frame::StreamType;
 use crate::recv_stream::RECV_BUFFER_SIZE;
 use crate::send_stream::SEND_BUFFER_SIZE;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::MAX_UNACKED_PKTS;
-use crate::Error;
+use crate::{Error, StreamId};
 
 use neqo_common::{event::Provider, qdebug};
 use std::convert::TryFrom;
@@ -423,30 +426,46 @@ fn stream_data_blocked_generates_max_stream_data() {
 
     let now = now();
 
-    // Try to say we're blocked beyond the initial data window
-    server
-        .flow_mgr
-        .borrow_mut()
-        .stream_data_blocked(3.into(), RECV_BUFFER_SIZE as u64 * 4);
+    // Send some data and include STREAM_DATA_BLOCKED with any value.
+    let stream_id = server.stream_create(StreamType::UniDi).unwrap();
+    let _ = server.stream_send(stream_id, DEFAULT_STREAM_DATA).unwrap();
+    server.flow_mgr.borrow_mut().stream_data_blocked(
+        StreamId::from(stream_id),
+        u64::try_from(DEFAULT_STREAM_DATA.len()).unwrap(),
+    );
 
-    let out = server.process(None, now);
-    assert!(out.as_dgram_ref().is_some());
+    let dgram = server.process(None, now).dgram();
+    assert!(dgram.is_some());
 
-    let frames = client.test_process_input(out.dgram().unwrap(), now);
-    assert!(frames
-        .iter()
-        .any(|(f, _)| matches!(f, Frame::StreamDataBlocked { .. })));
+    let sdb_before = client.stats().frame_rx.stream_data_blocked;
+    client.process_input(dgram.unwrap(), now);
+    assert_eq!(client.stats().frame_rx.stream_data_blocked, sdb_before + 1);
 
-    let out = client.process_output(now);
-    assert!(out.as_dgram_ref().is_some());
+    // Consume the data.
+    let mut buf = [0; 10];
+    let (count, end) = client.stream_recv(stream_id, &mut buf[..]).unwrap();
+    assert_eq!(count, DEFAULT_STREAM_DATA.len());
+    assert!(!end);
 
-    let frames = server.test_process_input(out.dgram().unwrap(), now);
-    // Client should have sent a MaxStreamData frame with just the initial
-    // window value.
-    assert!(frames.iter().any(
-        |(f, _)| matches!(f, Frame::MaxStreamData { maximum_stream_data, .. }
-				   if *maximum_stream_data == RECV_BUFFER_SIZE as u64)
-    ));
+    let dgram = client.process_output(now).dgram();
+
+    // Client should have sent a MAX_STREAM_DATA frame with just a small increase
+    // on the default window size.
+    let msd_before = server.stats().frame_rx.max_stream_data;
+    server.process_input(dgram.unwrap(), now);
+    assert_eq!(server.stats().frame_rx.max_stream_data, msd_before + 1);
+
+    // Test that more space is available, but that it is small.
+    let mut written = 0;
+    loop {
+        const LARGE_BUFFER: &[u8] = &[0; 1024];
+        let amount = server.stream_send(stream_id, LARGE_BUFFER).unwrap();
+        if amount == 0 {
+            break;
+        }
+        written += amount;
+    }
+    assert_eq!(written, RECV_BUFFER_SIZE - DEFAULT_STREAM_DATA.len());
 }
 
 /// See <https://github.com/mozilla/neqo/issues/871>
