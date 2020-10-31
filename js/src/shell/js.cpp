@@ -2440,10 +2440,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (!FinishIncrementalEncoding(cx, script, saveBuffer)) {
         return false;
       }
-      if (js::UseOffThreadParseGlobal()) {
-        saveCacheKind = BytecodeCacheKind::Script;
-      } else {
+      if (options.useStencilXDR) {
         saveCacheKind = BytecodeCacheKind::Stencil;
+      } else {
+        saveCacheKind = BytecodeCacheKind::Script;
       }
     }
   }
@@ -5917,6 +5917,8 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   // for saveBytecode, or stencil for saveIncrementalBytecode.
   options.useOffThreadParseGlobal =
       CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Script;
+  options.useStencilXDR =
+      CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Stencil;
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {

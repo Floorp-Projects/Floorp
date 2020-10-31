@@ -133,6 +133,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool privateClassFields = false;
   bool privateClassMethods = false;
 
+  // True if transcoding to XDR should use Stencil instead of JSScripts.
+  bool useStencilXDR = false;
+
   // True if off-thread parsing should use a parse GlobalObject in order to
   // directly allocate to the GC from a helper thread. If false, transfer the
   // CompilationStencil back to main thread before allocating GC objects.

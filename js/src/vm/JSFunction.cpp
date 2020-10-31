@@ -1609,6 +1609,8 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
     }
 
     if (ss->hasEncoder()) {
+      // NOTE: Currently we rely on the UseOffThreadParseGlobal to decide which
+      //       format to use for incremental encoding.
       bool useStencilXDR = !js::UseOffThreadParseGlobal();
       if (useStencilXDR) {
         if (!ss->xdrEncodeFunctionStencil(cx, compilationInfo.get().stencil)) {
