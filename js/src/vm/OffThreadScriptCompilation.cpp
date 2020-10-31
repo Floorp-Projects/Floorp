@@ -51,8 +51,9 @@ static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
     //
     // NOTE: JS::DecodeMultiOffThreadScript does not use this API so we don't
     // have to worry about it still using off-thread parse global.
-    bool needsParseGlobal = options.useOffThreadParseGlobal;
-    if (needsParseGlobal && OffThreadParsingMustWaitForGC(cx->runtime())) {
+    bool mustWait = options.useOffThreadParseGlobal &&
+                    OffThreadParsingMustWaitForGC(cx->runtime());
+    if (mustWait) {
       if (what == OffThread::Compile && length < HUGE_SRC_LENGTH) {
         return false;
       }
