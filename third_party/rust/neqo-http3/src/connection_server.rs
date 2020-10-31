@@ -6,7 +6,7 @@
 
 use crate::connection::{HandleReadableOutput, Http3Connection, Http3State};
 use crate::hframe::HFrame;
-use crate::recv_message::RecvMessage;
+use crate::recv_message::{MessageType, RecvMessage};
 use crate::send_message::SendMessage;
 use crate::server_connection_events::{Http3ServerConnEvent, Http3ServerConnEvents};
 use crate::{Error, Header, Res};
@@ -126,6 +126,7 @@ impl Http3ServerHandler {
                         stream_id.as_u64(),
                         SendMessage::new(stream_id.as_u64(), Box::new(self.events.clone())),
                         Box::new(RecvMessage::new(
+                            MessageType::Request,
                             stream_id.as_u64(),
                             Box::new(self.events.clone()),
                             None,

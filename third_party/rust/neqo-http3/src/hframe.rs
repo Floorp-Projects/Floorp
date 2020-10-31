@@ -31,7 +31,7 @@ pub const H3_RESERVED_FRAME_TYPES: &[HFrameType] = &[0x2, 0x6, 0x8, 0x9];
 const MAX_READ_SIZE: usize = 4096;
 // data for DATA frame is not read into HFrame::Data.
 #[derive(PartialEq, Debug)]
-pub(crate) enum HFrame {
+pub enum HFrame {
     Data {
         len: u64, // length of the data
     },
@@ -129,7 +129,7 @@ enum HFrameReaderState {
 }
 
 #[derive(Debug)]
-pub(crate) struct HFrameReader {
+pub struct HFrameReader {
     state: HFrameReaderState,
     hframe_type: u64,
     hframe_len: u64,

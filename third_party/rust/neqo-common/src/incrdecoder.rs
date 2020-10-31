@@ -18,11 +18,7 @@ pub struct IncrementalDecoderUint {
 impl IncrementalDecoderUint {
     #[must_use]
     pub fn min_remaining(&self) -> usize {
-        if let Some(r) = self.remaining {
-            r
-        } else {
-            1
-        }
+        self.remaining.unwrap_or(1)
     }
 
     pub fn consume(&mut self, dv: &mut Decoder) -> Option<u64> {

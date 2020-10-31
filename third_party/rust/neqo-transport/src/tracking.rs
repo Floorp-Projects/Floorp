@@ -20,6 +20,7 @@ use neqo_crypto::{Epoch, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL};
 
 use crate::packet::{PacketBuilder, PacketNumber, PacketType};
 use crate::recovery::RecoveryToken;
+use crate::stats::FrameStats;
 
 use smallvec::{smallvec, SmallVec};
 
@@ -495,7 +496,12 @@ impl RecvdPackets {
     ///
     /// We don't send ranges that have been acknowledged, but they still need
     /// to be tracked so that duplicates can be detected.
-    fn write_frame(&mut self, now: Instant, builder: &mut PacketBuilder) -> Option<RecoveryToken> {
+    fn write_frame(
+        &mut self,
+        now: Instant,
+        builder: &mut PacketBuilder,
+        stats: &mut FrameStats,
+    ) -> Option<RecoveryToken> {
         // The worst possible ACK frame, assuming only one range.
         // Note that this assumes one byte for the type and count of extra ranges.
         const LONGEST_ACK_HEADER: usize = 1 + 8 + 8 + 1 + 8;
@@ -533,6 +539,8 @@ impl RecvdPackets {
             None => return None, // Nothing to send.
         };
         builder.encode_varint(first.largest);
+        stats.largest_acknowledged = first.largest;
+        stats.ack += 1;
 
         let elapsed = now.duration_since(self.largest_pn_time.unwrap());
         // We use the default exponent, so delay is in multiples of 8 microseconds.
@@ -626,9 +634,10 @@ impl AckTracker {
         pn_space: PNSpace,
         now: Instant,
         builder: &mut PacketBuilder,
+        stats: &mut FrameStats,
     ) -> Option<RecoveryToken> {
         self.get_mut(pn_space)
-            .and_then(|space| space.write_frame(now, builder))
+            .and_then(|space| space.write_frame(now, builder, stats))
     }
 }
 
@@ -652,6 +661,7 @@ mod tests {
     };
     use crate::frame::Frame;
     use crate::packet::PacketBuilder;
+    use crate::stats::FrameStats;
     use lazy_static::lazy_static;
     use neqo_common::Encoder;
     use std::collections::HashSet;
@@ -837,7 +847,12 @@ mod tests {
             .set_received(*NOW, 0, true);
         // The reference time for `ack_time` has to be in the past or we filter out the timer.
         assert!(tracker.ack_time(*NOW - Duration::from_millis(1)).is_some());
-        let token = tracker.write_frame(PNSpace::Initial, *NOW, &mut builder);
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_some());
 
         // Mark another packet as received so we have cause to send another ACK in that space.
@@ -853,7 +868,12 @@ mod tests {
         assert!(tracker.get_mut(PNSpace::Initial).is_none());
         assert!(tracker.ack_time(*NOW - Duration::from_millis(1)).is_none());
         assert!(tracker
-            .write_frame(PNSpace::Initial, *NOW, &mut builder)
+            .write_frame(
+                PNSpace::Initial,
+                *NOW,
+                &mut builder,
+                &mut FrameStats::default()
+            )
             .is_none());
         if let RecoveryToken::Ack(tok) = token.unwrap() {
             tracker.acked(&tok); // Should be a noop.
@@ -874,7 +894,12 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(10);
 
-        let token = tracker.write_frame(PNSpace::Initial, *NOW, &mut builder);
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_none());
         assert_eq!(builder.len(), 1); // Only the short packet header has been added.
     }
@@ -895,7 +920,12 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(32);
 
-        let token = tracker.write_frame(PNSpace::Initial, *NOW, &mut builder);
+        let token = tracker.write_frame(
+            PNSpace::Initial,
+            *NOW,
+            &mut builder,
+            &mut FrameStats::default(),
+        );
         assert!(token.is_some());
 
         let mut dec = builder.as_decoder();

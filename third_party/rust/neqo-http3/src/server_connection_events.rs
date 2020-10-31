@@ -20,7 +20,7 @@ pub(crate) enum Http3ServerConnEvent {
     /// Headers are ready.
     Headers {
         stream_id: u64,
-        headers: Option<Vec<Header>>,
+        headers: Vec<Header>,
         fin: bool,
     },
     /// Request data is ready.
@@ -39,7 +39,7 @@ pub(crate) struct Http3ServerConnEvents {
 
 impl RecvMessageEvents for Http3ServerConnEvents {
     /// Add a new `HeaderReady` event.
-    fn header_ready(&self, stream_id: u64, headers: Option<Vec<Header>>, fin: bool) {
+    fn header_ready(&self, stream_id: u64, headers: Vec<Header>, _interim: bool, fin: bool) {
         self.insert(Http3ServerConnEvent::Headers {
             stream_id,
             headers,
@@ -52,7 +52,7 @@ impl RecvMessageEvents for Http3ServerConnEvents {
         self.insert(Http3ServerConnEvent::DataReadable { stream_id });
     }
 
-    fn reset(&self, _stream_id: u64, _error: AppError) {}
+    fn reset(&self, _stream_id: u64, _error: AppError, _local: bool) {}
 }
 
 impl SendMessageEvents for Http3ServerConnEvents {

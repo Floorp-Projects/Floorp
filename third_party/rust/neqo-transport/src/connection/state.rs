@@ -9,6 +9,7 @@ use std::mem;
 use std::time::Instant;
 
 use crate::frame::{Frame, FrameType};
+use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::{CloseError, ConnectionError};
 
@@ -70,6 +71,8 @@ impl PartialOrd for State {
     }
 }
 
+type ClosingFrame = Frame<'static>;
+
 /// `StateSignaling` manages whether we need to send HANDSHAKE_DONE and CONNECTION_CLOSE.
 /// Valid state transitions are:
 /// * Idle -> HandshakeDone: at the server when the handshake completes
@@ -83,11 +86,11 @@ pub enum StateSignaling {
     Idle,
     HandshakeDone,
     /// These states save the frame that needs to be sent.
-    Closing(Frame),
-    Draining(Frame),
+    Closing(ClosingFrame),
+    Draining(ClosingFrame),
     /// This state saves the frame that might need to be sent again.
     /// If it is `None`, then we are draining and don't send.
-    CloseSent(Option<Frame>),
+    CloseSent(Option<ClosingFrame>),
     Reset,
 }
 
@@ -100,10 +103,11 @@ impl StateSignaling {
         *self = Self::HandshakeDone
     }
 
-    pub fn send_done(&mut self) -> Option<(Frame, Option<RecoveryToken>)> {
-        if *self == Self::HandshakeDone {
+    pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Option<RecoveryToken> {
+        if *self == Self::HandshakeDone && builder.remaining() >= 1 {
             *self = Self::Idle;
-            Some((Frame::HandshakeDone, Some(RecoveryToken::HandshakeDone)))
+            builder.encode_varint(Frame::HandshakeDone.get_type());
+            Some(RecoveryToken::HandshakeDone)
         } else {
             None
         }
@@ -113,7 +117,7 @@ impl StateSignaling {
         error: ConnectionError,
         frame_type: FrameType,
         message: impl AsRef<str>,
-    ) -> Frame {
+    ) -> ClosingFrame {
         let reason_phrase = message.as_ref().as_bytes().to_owned();
         Frame::ConnectionClose {
             error_code: CloseError::from(error),
@@ -145,7 +149,7 @@ impl StateSignaling {
     }
 
     /// If a close is pending, take a frame.
-    pub fn close_frame(&mut self) -> Option<Frame> {
+    pub fn close_frame(&mut self) -> Option<ClosingFrame> {
         match self {
             Self::Closing(frame) => {
                 // When we are closing, we might need to send the close frame again.

@@ -6,9 +6,9 @@
 
 use crate::client_events::Http3ClientEvents;
 use crate::push_controller::{PushController, RecvPushEvents};
-use crate::recv_message::RecvMessage;
+use crate::recv_message::{MessageType, RecvMessage};
 use crate::stream_type_reader::NewStreamTypeReader;
-use crate::{Error, RecvStream, Res};
+use crate::{Error, RecvStream, Res, ResetType};
 use neqo_qpack::decoder::QPackDecoder;
 use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;
@@ -104,6 +104,7 @@ impl RecvStream for PushStream {
                             self.state = PushStreamState::ReadResponse {
                                 push_id: p,
                                 response: RecvMessage::new(
+                                    MessageType::Response,
                                     self.stream_id,
                                     Box::new(RecvPushEvents::new(p, self.push_handler.clone())),
                                     None,
@@ -139,18 +140,19 @@ impl RecvStream for PushStream {
         matches!(self.state, PushStreamState::Closed)
     }
 
-    fn stream_reset_recv(&self, _app_error: AppError, decoder: &mut QPackDecoder) {
+    fn stream_reset(&self, app_error: AppError, decoder: &mut QPackDecoder, reset_type: ResetType) {
         if !self.done() {
             decoder.cancel_stream(self.stream_id);
         }
-        if let Some(push_id) = self.state.push_id() {
-            self.push_handler.borrow_mut().push_stream_reset(push_id);
-        }
-    }
-
-    fn stream_reset(&self, decoder: &mut QPackDecoder) {
-        if !self.done() {
-            decoder.cancel_stream(self.stream_id);
+        match reset_type {
+            ResetType::App => {}
+            t => {
+                if let Some(push_id) = self.state.push_id() {
+                    self.push_handler
+                        .borrow_mut()
+                        .push_stream_reset(push_id, app_error, t);
+                }
+            }
         }
     }
 
