@@ -619,6 +619,7 @@ class ABIArgGenerator {
   ABIArg next(MIRType) { MOZ_CRASH(); }
   ABIArg& current() { MOZ_CRASH(); }
   uint32_t stackBytesConsumedSoFar() const { MOZ_CRASH(); }
+  void increaseStackOffset(uint32_t) { MOZ_CRASH(); }
 };
 
 static inline bool GetTempRegForIntArg(uint32_t, uint32_t, Register*) {
