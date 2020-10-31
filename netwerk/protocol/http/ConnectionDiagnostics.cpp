@@ -48,69 +48,63 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
   for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ConnectionEntry> ent = iter.Data();
+    RefPtr<nsConnectionEntry> ent = iter.Data();
 
+    mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
+                          ent->mConnInfo->Origin(),
+                          ent->mConnInfo->HashKey().get());
     mLogData.AppendPrintf(
         "   AtActiveConnectionLimit = %d\n",
         AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
+    mLogData.AppendPrintf("   RestrictConnections = %d\n",
+                          RestrictConnections(ent));
+    mLogData.AppendPrintf("   Pending Q Length = %zu\n", ent->PendingQLength());
+    mLogData.AppendPrintf("   Active Conns Length = %zu\n",
+                          ent->mActiveConns.Length());
+    mLogData.AppendPrintf("   Idle Conns Length = %zu\n",
+                          ent->mIdleConns.Length());
+    mLogData.AppendPrintf("   Half Opens Length = %zu\n",
+                          ent->mHalfOpens.Length());
+    mLogData.AppendPrintf("   Coalescing Keys Length = %zu\n",
+                          ent->mCoalescingKeys.Length());
+    mLogData.AppendPrintf("   Spdy using = %d\n", ent->mUsingSpdy);
 
-    ent->PrintDiagnostics(mLogData, MaxPersistConnections(ent));
+    uint32_t i;
+    for (i = 0; i < ent->mActiveConns.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Active Connection #%u\n", i);
+      ent->mActiveConns[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mIdleConns.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Idle Connection #%u\n", i);
+      ent->mIdleConns[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mHalfOpens.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Half Open #%u\n", i);
+      ent->mHalfOpens[i]->PrintDiagnostics(mLogData);
+    }
+    i = 0;
+    for (auto it = ent->mPendingTransactionTable.Iter(); !it.Done();
+         it.Next()) {
+      mLogData.AppendPrintf(
+          "   :: Pending Transactions with Window ID = %" PRIu64 "\n",
+          it.Key());
+      for (uint32_t j = 0; j < it.UserData()->Length(); ++j) {
+        mLogData.AppendPrintf("     ::: Pending Transaction #%u\n", i);
+        it.UserData()->ElementAt(j)->PrintDiagnostics(mLogData);
+        ++i;
+      }
+    }
+    for (i = 0; i < ent->mCoalescingKeys.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Coalescing Key #%u %s\n", i,
+                            ent->mCoalescingKeys[i].get());
+    }
   }
 
   consoleService->LogStringMessage(NS_ConvertUTF8toUTF16(mLogData).Data());
   mLogData.Truncate();
 }
 
-void ConnectionEntry::PrintDiagnostics(nsCString& log,
-                                       uint32_t aMaxPersistConns) {
-  log.AppendPrintf(" ent host = %s hashkey = %s\n", mConnInfo->Origin(),
-                   mConnInfo->HashKey().get());
-
-  log.AppendPrintf("   RestrictConnections = %d\n", RestrictConnections());
-  log.AppendPrintf("   Pending Q Length = %zu\n", PendingQueueLength());
-  log.AppendPrintf("   Active Conns Length = %zu\n", mActiveConns.Length());
-  log.AppendPrintf("   Idle Conns Length = %zu\n", mIdleConns.Length());
-  log.AppendPrintf("   Half Opens Length = %zu\n", mHalfOpens.Length());
-  log.AppendPrintf("   Coalescing Keys Length = %zu\n",
-                   mCoalescingKeys.Length());
-  log.AppendPrintf("   Spdy using = %d\n", mUsingSpdy);
-
-  uint32_t i;
-  for (i = 0; i < mActiveConns.Length(); ++i) {
-    log.AppendPrintf("   :: Active Connection #%u\n", i);
-    mActiveConns[i]->PrintDiagnostics(log);
-  }
-  for (i = 0; i < mIdleConns.Length(); ++i) {
-    log.AppendPrintf("   :: Idle Connection #%u\n", i);
-    mIdleConns[i]->PrintDiagnostics(log);
-  }
-  for (i = 0; i < mHalfOpens.Length(); ++i) {
-    log.AppendPrintf("   :: Half Open #%u\n", i);
-    mHalfOpens[i]->PrintDiagnostics(log);
-  }
-
-  mPendingQ.PrintDiagnostics(log);
-
-  for (i = 0; i < mCoalescingKeys.Length(); ++i) {
-    log.AppendPrintf("   :: Coalescing Key #%u %s\n", i,
-                     mCoalescingKeys[i].get());
-  }
-}
-
-void PendingTransactionQueue::PrintDiagnostics(nsCString& log) {
-  uint32_t i = 0;
-  for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
-    log.AppendPrintf(
-        "   :: Pending Transactions with Window ID = %" PRIu64 "\n", it.Key());
-    for (uint32_t j = 0; j < it.UserData()->Length(); ++j) {
-      log.AppendPrintf("     ::: Pending Transaction #%u\n", i);
-      it.UserData()->ElementAt(j)->PrintDiagnostics(log);
-      ++i;
-    }
-  }
-}
-
-void HalfOpenSocket::PrintDiagnostics(nsCString& log) {
+void nsHttpConnectionMgr::nsHalfOpenSocket::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     has connected = %d, isSpeculative = %d\n",
                    HasConnected(), IsSpeculative());
 
@@ -224,10 +218,11 @@ void nsHttpTransaction::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("       restart count = %u\n", mRestartCount);
 }
 
-void PendingTransactionInfo::PrintDiagnostics(nsCString& log) {
+void nsHttpConnectionMgr::PendingTransactionInfo::PrintDiagnostics(
+    nsCString& log) {
   log.AppendPrintf("     ::: Pending transaction\n");
   mTransaction->PrintDiagnostics(log);
-  RefPtr<HalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
+  RefPtr<nsHalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
   log.AppendPrintf("     Waiting for half open sock: %p or connection: %p\n",
                    halfOpen.get(), mActiveConn.get());
 }

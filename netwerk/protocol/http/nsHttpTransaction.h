@@ -15,7 +15,6 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsThreadUtils.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
