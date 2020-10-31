@@ -483,7 +483,7 @@ void ConnectionEntry::VerifyTraffic() {
   }
 }
 
-void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
+void ConnectionEntry::InsertIntoIdleConnections_internal(nsHttpConnection* conn) {
   uint32_t idx;
   for (idx = 0; idx < mIdleConns.Length(); idx++) {
     nsHttpConnection* idleConn = mIdleConns[idx];
@@ -493,6 +493,10 @@ void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
   }
 
   mIdleConns.InsertElementAt(idx, conn);
+}
+
+void ConnectionEntry::InsertIntoIdleConnections(nsHttpConnection* conn) {
+  InsertIntoIdleConnections_internal(conn);
   gHttpHandler->ConnMgr()->IncrementNumIdleConns();
   conn->BeginIdleMonitoring();
 }
@@ -731,6 +735,25 @@ uint32_t ConnectionEntry::TimeoutTick() {
   }
 
   return timeoutTickNext;
+}
+
+void ConnectionEntry::MoveConnection(HttpConnectionBase* proxyConn,
+                                     ConnectionEntry* otherEnt) {
+  // To avoid changing mNumActiveConns/mNumIdleConns counter use internal
+  // functions.
+  RefPtr<HttpConnectionBase> deleteProtector(proxyConn);
+  if (mActiveConns.RemoveElement(proxyConn)) {
+    otherEnt->mActiveConns.AppendElement(proxyConn);
+    return;
+  }
+
+  RefPtr<nsHttpConnection> proxyConnTCP = do_QueryObject(proxyConn);
+  if (proxyConnTCP) {
+    if (mIdleConns.RemoveElement(proxyConnTCP)) {
+      otherEnt->InsertIntoIdleConnections_internal(proxyConnTCP);
+      return;
+    }
+  }
 }
 
 HttpRetParams ConnectionEntry::GetConnectionData() {
