@@ -5,7 +5,7 @@
 platform(linux,mac) == inset-alpha.yaml inset-alpha.png
 platform(linux,mac) == boxshadow-spread-only.yaml boxshadow-spread-only-ref.png
 == box-shadow-clip.yaml box-shadow-clip-ref.yaml
-fuzzy(1,396) == inset-large-offset.yaml inset-large-offset-ref.png
+fuzzy(1,402) == inset-large-offset.yaml inset-large-offset-ref.png
 platform(linux,mac) == inset-border-radius.yaml inset-border-radius.png
 platform(linux,mac) == inset-offset.yaml inset-offset.png
 platform(linux,mac) == inset-neg-offset.yaml inset-neg-offset.png
