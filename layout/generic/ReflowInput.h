@@ -227,8 +227,10 @@ struct SizeComputationInput {
   void InitOffsets(mozilla::WritingMode aCBWM, nscoord aPercentBasis,
                    mozilla::LayoutFrameType aFrameType,
                    mozilla::ComputeSizeFlags aFlags = {},
-                   const nsMargin* aBorder = nullptr,
-                   const nsMargin* aPadding = nullptr,
+                   const mozilla::Maybe<mozilla::LogicalMargin>& aBorder =
+                       mozilla::Nothing(),
+                   const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
+                       mozilla::Nothing(),
                    const nsStyleDisplay* aDisplay = nullptr);
 
   /*
@@ -794,9 +796,11 @@ struct ReflowInput : public SizeComputationInput {
    * @param aAvailableSpace The available space to reflow aFrame (in aFrame's
    *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
    *        members for more information.
-   * @param aContainingBlockSize An optional size, in app units, specifying
-   *        the containing block size to use instead of the default which is
-   *        computed by ComputeContainingBlockRectangle().
+   * @param aContainingBlockSize An optional size (in aFrame's writing mode),
+   *        specifying the containing block size to use instead of the default
+   *        size computed by ComputeContainingBlockRectangle(). If
+   *        InitFlag::CallerWillInit is used, this is ignored. Pass it via
+   *        Init() instead.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        InitFlags above).
    * @param aComputeSizeFlags A set of flags used when we call
@@ -810,13 +814,25 @@ struct ReflowInput : public SizeComputationInput {
               InitFlags aFlags = {},
               mozilla::ComputeSizeFlags aComputeSizeFlags = {});
 
-  // This method initializes various data members. It is automatically
-  // called by the various constructors
+  /**
+   * This method initializes various data members. It is automatically called by
+   * the constructors if InitFlags::CallerWillInit is *not* used.
+   *
+   * @param aContainingBlockSize An optional size (in mFrame's writing mode),
+   *        specifying the containing block size to use instead of the default
+   *        size computed by ComputeContainingBlockRectangle().
+   * @param aBorder An optional border (in mFrame's writing mode). If given, use
+   *        it instead of the border computed from mFrame's StyleBorder.
+   * @param aPadding An optional padding (in mFrame's writing mode). If given,
+   *        use it instead of the padding computing from mFrame's StylePadding.
+   */
   void Init(nsPresContext* aPresContext,
             const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
                 mozilla::Nothing(),
-            const nsMargin* aBorder = nullptr,
-            const nsMargin* aPadding = nullptr);
+            const mozilla::Maybe<mozilla::LogicalMargin>& aBorder =
+                mozilla::Nothing(),
+            const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
+                mozilla::Nothing());
 
   /**
    * Find the content isize of our containing block for the given writing mode,
@@ -1008,7 +1024,8 @@ struct ReflowInput : public SizeComputationInput {
   void InitConstraints(
       nsPresContext* aPresContext,
       const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize,
-      const nsMargin* aBorder, const nsMargin* aPadding,
+      const mozilla::Maybe<mozilla::LogicalMargin>& aBorder,
+      const mozilla::Maybe<mozilla::LogicalMargin>& aPadding,
       mozilla::LayoutFrameType aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not

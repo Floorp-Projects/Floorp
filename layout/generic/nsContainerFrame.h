@@ -1110,9 +1110,10 @@ struct DR_intrinsic_size_cookie {
 };
 
 struct DR_init_constraints_cookie {
-  DR_init_constraints_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState,
-                             nscoord aCBWidth, nscoord aCBHeight,
-                             const nsMargin* aMargin, const nsMargin* aPadding);
+  DR_init_constraints_cookie(
+      nsIFrame* aFrame, mozilla::ReflowInput* aState, nscoord aCBWidth,
+      nscoord aCBHeight, const mozilla::Maybe<mozilla::LogicalMargin> aBorder,
+      const mozilla::Maybe<mozilla::LogicalMargin> aPadding);
   ~DR_init_constraints_cookie();
 
   nsIFrame* mFrame;
@@ -1125,7 +1126,8 @@ struct DR_init_offsets_cookie {
                          mozilla::SizeComputationInput* aState,
                          nscoord aPercentBasis,
                          mozilla::WritingMode aCBWritingMode,
-                         const nsMargin* aMargin, const nsMargin* aPadding);
+                         const mozilla::Maybe<mozilla::LogicalMargin> aBorder,
+                         const mozilla::Maybe<mozilla::LogicalMargin> aPadding);
   ~DR_init_offsets_cookie();
 
   nsIFrame* mFrame;

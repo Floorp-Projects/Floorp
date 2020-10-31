@@ -2665,15 +2665,15 @@ LogicalMargin nsTableFrame::GetChildAreaOffset(
 }
 
 void nsTableFrame::InitChildReflowInput(ReflowInput& aReflowInput) {
-  nsMargin border;
+  const auto childWM = aReflowInput.GetWritingMode();
+  LogicalMargin border(childWM);
   if (IsBorderCollapse()) {
     nsTableRowGroupFrame* rgFrame =
         static_cast<nsTableRowGroupFrame*>(aReflowInput.mFrame);
-    WritingMode wm = GetWritingMode();
-    border = rgFrame->GetBCBorderWidth(wm).GetPhysicalMargin(wm);
+    border = rgFrame->GetBCBorderWidth(childWM);
   }
-  const nsMargin padding;
-  aReflowInput.Init(PresContext(), Nothing(), &border, &padding);
+  const LogicalMargin zeroPadding(childWM);
+  aReflowInput.Init(PresContext(), Nothing(), Some(border), Some(zeroPadding));
 
   NS_ASSERTION(!mBits.mResizedColumns ||
                    !aReflowInput.mParentReflowInput->mFlags.mSpecialBSizeReflow,
