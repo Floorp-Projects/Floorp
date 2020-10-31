@@ -516,12 +516,7 @@ HalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
           new PendingTransactionInfo(trans->QueryHttpTransaction());
       pendingTransInfo->mHalfOpen =
           do_GetWeakReference(static_cast<nsISupportsWeakReference*>(this));
-      if (trans->Caps() & NS_HTTP_URGENT_START) {
-        gHttpHandler->ConnMgr()->InsertTransactionSorted(
-            mEnt->mUrgentStartQ, pendingTransInfo, true);
-      } else {
-        mEnt->InsertTransaction(pendingTransInfo, true);
-      }
+      mEnt->InsertTransaction(pendingTransInfo, true);
     }
     if (mEnt->mUseFastOpen) {
       gHttpHandler->IncrementFastOpenConsecutiveFailureCounter();
@@ -753,12 +748,7 @@ void HalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry) {
           new PendingTransactionInfo(trans->QueryHttpTransaction());
       pendingTransInfo->mHalfOpen =
           do_GetWeakReference(static_cast<nsISupportsWeakReference*>(this));
-      if (trans->Caps() & NS_HTTP_URGENT_START) {
-        gHttpHandler->ConnMgr()->InsertTransactionSorted(
-            mEnt->mUrgentStartQ, pendingTransInfo, true);
-      } else {
-        mEnt->InsertTransaction(pendingTransInfo, true);
-      }
+      mEnt->InsertTransaction(pendingTransInfo, true);
     }
     // We are doing a restart without fast open, so the easiest way is to
     // return mSocketTransport to the halfOpenSock and destroy connection.
@@ -851,12 +841,7 @@ void HalfOpenSocket::CancelFastOpenConnection() {
     RefPtr<PendingTransactionInfo> pendingTransInfo =
         new PendingTransactionInfo(trans->QueryHttpTransaction());
 
-    if (trans->Caps() & NS_HTTP_URGENT_START) {
-      gHttpHandler->ConnMgr()->InsertTransactionSorted(mEnt->mUrgentStartQ,
-                                                       pendingTransInfo, true);
-    } else {
-      mEnt->InsertTransaction(pendingTransInfo, true);
-    }
+    mEnt->InsertTransaction(pendingTransInfo, true);
   }
 
   mFastOpenInProgress = false;
@@ -1042,8 +1027,8 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out, bool aFastOpen) {
     // Http3 cannot be dispatched using OnMsgReclaimConnection (see below),
     // therefore we need to use a Nulltransaction.
     if (!connTCP ||
-        (mEnt->mConnInfo->FirstHopSSL() && !mEnt->mUrgentStartQ.Length() &&
-         !mEnt->PendingQLength() && !mEnt->mConnInfo->UsingConnect())) {
+        (mEnt->mConnInfo->FirstHopSSL() && !mEnt->UrgentStartQueueLength() &&
+         !mEnt->PendingQueueLength() && !mEnt->mConnInfo->UsingConnect())) {
       LOG(
           ("HalfOpenSocket::SetupConn null transaction will "
            "be used to finish SSL handshake on conn %p\n",

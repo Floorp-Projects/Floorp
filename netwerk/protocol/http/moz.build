@@ -141,6 +141,7 @@ UNIFIED_SOURCES += [
     "NullHttpChannel.cpp",
     "NullHttpTransaction.cpp",
     "ParentChannelListener.cpp",
+    "PendingTransactionQueue.cpp",
     "QuicSocketControl.cpp",
     "SpeculativeTransaction.cpp",
     "TRRServiceChannel.cpp",
