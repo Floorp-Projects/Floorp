@@ -103,6 +103,11 @@ function PromiseSet() {
    *   - resolve: a function used to resolve the indirection.
    */
   this._indirections = new Map();
+  // Once all the tracked promises have been resolved we are done. Once Wait()
+  // resolves, it should not be possible anymore to add further promises.
+  // This covers for a possibly rare case, where something may try to add a
+  // blocker after wait() is done, that would never be awaited for.
+  this._done = false;
 }
 PromiseSet.prototype = {
   /**
@@ -119,6 +124,7 @@ PromiseSet.prototype = {
     let entry = this._indirections.entries().next();
     if (entry.done) {
       // No indirections left, we are done.
+      this._done = true;
       return Promise.resolve();
     }
 
@@ -138,21 +144,34 @@ PromiseSet.prototype = {
    * `key` has either resolved or been removed.
    */
   add(key) {
+    if (this._done) {
+      throw new Error("Wait is complete, cannot add further promises.");
+    }
     this._ensurePromise(key);
     let indirection = PromiseUtils.defer();
-    key.then(
-      x => {
-        // Clean up immediately.
-        // This needs to be done before the call to `resolve`, otherwise
-        // `wait()` may loop forever.
+    key
+      .then(
+        x => {
+          // Clean up immediately.
+          // This needs to be done before the call to `resolve`, otherwise
+          // `wait()` may loop forever.
+          this._indirections.delete(key);
+          indirection.resolve(x);
+        },
+        err => {
+          this._indirections.delete(key);
+          indirection.reject(err);
+        }
+      )
+      .finally(() => {
         this._indirections.delete(key);
-        indirection.resolve(x);
-      },
-      err => {
-        this._indirections.delete(key);
-        indirection.reject(err);
-      }
-    );
+        // Normally the promise is resolved or rejected, but if its global
+        // goes away, only finally may be invoked. In all the other cases this
+        // is a no-op since the promise has been fulfilled already.
+        indirection.reject(
+          new Error("Promise not fulfilled, did it lost its global?")
+        );
+      });
     this._indirections.set(key, indirection);
   },
 
