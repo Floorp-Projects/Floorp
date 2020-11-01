@@ -89,20 +89,16 @@ pub unsafe extern "C" fn lut_interp_linear(
 }
 /* same as above but takes and returns a uint16_t value representing a range from 0..1 */
 #[no_mangle]
-pub unsafe extern "C" fn lut_interp_linear16(
-    mut input_value: u16,
-    mut table: *const u16,
-    mut length: i32,
-) -> u16 {
+pub fn lut_interp_linear16(mut input_value: u16, mut table: &[u16]) -> u16 {
     /* Start scaling input_value to the length of the array: 65535*(length-1).
      * We'll divide out the 65535 next */
-    let mut value: u32 = (input_value as i32 * (length - 1)) as u32; /* equivalent to ceil(value/65535) */
+    let mut value: u32 = (input_value as i32 * (table.len() as i32 - 1)) as u32; /* equivalent to ceil(value/65535) */
     let mut upper: u32 = (value + 65534) / 65535; /* equivalent to floor(value/65535) */
     let mut lower: u32 = value / 65535;
     /* interp is the distance from upper to value scaled to 0..65535 */
     let mut interp: u32 = value % 65535; // 0..65535*65535
-    value = (*table.offset(upper as isize) as libc::c_uint * interp
-        + *table.offset(lower as isize) as libc::c_uint * (65535 - interp))
+    value = (table[upper as usize] as u32 * interp
+        + table[lower as usize] as u32 * (65535 - interp))
         / 65535;
     return value as u16;
 }
@@ -300,18 +296,15 @@ pub unsafe extern "C" fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
  * icmTable_lookup_bwd and icmTable_setup_bwd. However, for now this is a quick way
  * to a working solution and allows for easy comparing with lcms. */
 #[no_mangle]
-pub unsafe extern "C" fn lut_inverse_interp16(
-    mut Value: u16,
-    mut LutTable: *const u16,
-    mut length: i32,
-) -> uint16_fract_t {
+pub fn lut_inverse_interp16(mut Value: u16, mut LutTable: &[u16]) -> uint16_fract_t {
     let mut l: i32 = 1; // 'int' Give spacing for negative values
     let mut r: i32 = 0x10000;
     let mut x: i32 = 0;
     let mut res: i32;
+    let length = LutTable.len() as i32;
 
     let mut NumZeroes: i32 = 0;
-    while *LutTable.offset(NumZeroes as isize) as i32 == 0 && NumZeroes < length - 1 {
+    while LutTable[NumZeroes as usize] as i32 == 0 && NumZeroes < length - 1 {
         NumZeroes += 1
     }
     // There are no zeros at the beginning and we are trying to find a zero, so
@@ -321,9 +314,7 @@ pub unsafe extern "C" fn lut_inverse_interp16(
         return 0u16;
     }
     let mut NumPoles: i32 = 0;
-    while *LutTable.offset((length - 1 - NumPoles) as isize) as i32 == 0xffff
-        && NumPoles < length - 1
-    {
+    while LutTable[(length - 1 - NumPoles) as usize] as i32 == 0xffff && NumPoles < length - 1 {
         NumPoles += 1
     }
     // Does the curve belong to this case?
@@ -352,7 +343,7 @@ pub unsafe extern "C" fn lut_inverse_interp16(
     // Seems not a degenerated case... apply binary search
     while r > l {
         x = (l + r) / 2;
-        res = lut_interp_linear16((x - 1) as uint16_fract_t, LutTable, length) as i32;
+        res = lut_interp_linear16((x - 1) as uint16_fract_t, LutTable) as i32;
         if res == Value as i32 {
             // Found exact match.
             return (x - 1) as uint16_fract_t;
@@ -376,9 +367,9 @@ pub unsafe extern "C" fn lut_inverse_interp16(
         return x as uint16_fract_t;
     }
 
-    let mut y0: f64 = *LutTable.offset(cell0 as isize) as f64;
+    let mut y0: f64 = LutTable[cell0 as usize] as f64;
     let mut x0: f64 = 65535.0f64 * cell0 as f64 / (length - 1) as f64;
-    let mut y1: f64 = *LutTable.offset(cell1 as isize) as f64;
+    let mut y1: f64 = LutTable[cell1 as usize] as f64;
     let mut x1: f64 = 65535.0f64 * cell1 as f64 / (length - 1) as f64;
     let mut a: f64 = (y1 - y0) / (x1 - x0);
     let mut b: f64 = y0 - a * x0;
@@ -407,11 +398,7 @@ invert_lut will produce an inverse of:
 which has an maximum error of about 9855 (pixel difference of ~38.346)
 
 For now, we punt the decision of output size to the caller. */
-unsafe extern "C" fn invert_lut(
-    mut table: *const u16,
-    mut length: i32,
-    mut out_length: i32,
-) -> *mut u16 {
+unsafe fn invert_lut(mut table: &[u16], mut out_length: i32) -> *mut u16 {
     /* for now we invert the lut by creating a lut of size out_length
      * and attempting to lookup a value for each entry using lut_inverse_interp16 */
     let mut output: *mut u16 =
@@ -423,7 +410,7 @@ unsafe extern "C" fn invert_lut(
     while i < out_length {
         let mut x: f64 = i as f64 * 65535.0f64 / (out_length - 1) as f64;
         let mut input: uint16_fract_t = (x + 0.5f64).floor() as uint16_fract_t;
-        *output.offset(i as isize) = lut_inverse_interp16(input, table, length);
+        *output.offset(i as isize) = lut_inverse_interp16(input, table);
         i += 1
     }
     return output;
@@ -479,8 +466,7 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
             if inverted_size < 256 {
                 inverted_size = 256
             }
-            let mut inverted: *mut u16 =
-                invert_lut(gamma_table_uint.as_mut_ptr(), 256, inverted_size);
+            let mut inverted: *mut u16 = invert_lut(&gamma_table_uint, inverted_size);
             if inverted.is_null() {
                 return false;
             }
@@ -504,8 +490,7 @@ pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut 
                 if inverted_size_0 < 256 {
                     inverted_size_0 = 256
                 } //XXX turn this conversion into a function
-                let mut inverted_0: *mut u16 =
-                    invert_lut(data.as_ptr(), data.len() as i32, inverted_size_0);
+                let mut inverted_0: *mut u16 = invert_lut(data, inverted_size_0);
                 if inverted_0.is_null() {
                     return false;
                 }
@@ -585,11 +570,7 @@ pub unsafe extern "C" fn build_output_lut(
                 if *output_gamma_lut_length < 256 {
                     *output_gamma_lut_length = 256
                 }
-                *output_gamma_lut = invert_lut(
-                    data.as_ptr(),
-                    data.len() as i32,
-                    *output_gamma_lut_length as i32,
-                )
+                *output_gamma_lut = invert_lut(data, *output_gamma_lut_length as i32)
             }
         }
     }
