@@ -54,8 +54,8 @@ use crate::{
 };
 
 use ::libc::{self, free, malloc};
-use std::{ptr::null_mut, sync::atomic::Ordering};
 use std::sync::Arc;
+use std::{ptr::null_mut, sync::atomic::Ordering};
 
 const PRECACHE_OUTPUT_SIZE: usize = 8192;
 const PRECACHE_OUTPUT_MAX: usize = PRECACHE_OUTPUT_SIZE - 1;
@@ -159,7 +159,7 @@ impl Default for qcms_transform {
             output_table_g: Default::default(),
             output_table_b: Default::default(),
             transform_fn: Default::default(),
-         }
+        }
     }
 }
 
