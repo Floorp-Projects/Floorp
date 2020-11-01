@@ -36,7 +36,7 @@ extern crate libc;
    }
  
    let transform =
-     qcms_transform_create(src_profile, src_type, dst_profile, dst_type, intent);
+     qcms_transform_create(&*src_profile, src_type, &*dst_profile, dst_type, intent);
    if transform == std::ptr::null_mut() {
      return;
    }

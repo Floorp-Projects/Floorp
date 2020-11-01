@@ -94,26 +94,23 @@ unsafe extern "C" fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
     }
     return result;
 }
-unsafe extern "C" fn build_mAB_matrix(mut lut: *mut lutmABType) -> matrix {
+unsafe extern "C" fn build_mAB_matrix(lut: &lutmABType) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    if !lut.is_null() {
-        result.m[0][0] = s15Fixed16Number_to_float((*lut).e00);
-        result.m[0][1] = s15Fixed16Number_to_float((*lut).e01);
-        result.m[0][2] = s15Fixed16Number_to_float((*lut).e02);
-        result.m[1][0] = s15Fixed16Number_to_float((*lut).e10);
-        result.m[1][1] = s15Fixed16Number_to_float((*lut).e11);
-        result.m[1][2] = s15Fixed16Number_to_float((*lut).e12);
-        result.m[2][0] = s15Fixed16Number_to_float((*lut).e20);
-        result.m[2][1] = s15Fixed16Number_to_float((*lut).e21);
-        result.m[2][2] = s15Fixed16Number_to_float((*lut).e22);
-        result.invalid = false
-    } else {
-        result = std::mem::zeroed();
-        result.invalid = true
-    }
+
+    result.m[0][0] = s15Fixed16Number_to_float((*lut).e00);
+    result.m[0][1] = s15Fixed16Number_to_float((*lut).e01);
+    result.m[0][2] = s15Fixed16Number_to_float((*lut).e02);
+    result.m[1][0] = s15Fixed16Number_to_float((*lut).e10);
+    result.m[1][1] = s15Fixed16Number_to_float((*lut).e11);
+    result.m[1][2] = s15Fixed16Number_to_float((*lut).e12);
+    result.m[2][0] = s15Fixed16Number_to_float((*lut).e20);
+    result.m[2][1] = s15Fixed16Number_to_float((*lut).e21);
+    result.m[2][2] = s15Fixed16Number_to_float((*lut).e22);
+    result.invalid = false;
+
     return result;
 }
 //Based on lcms cmsLab2XYZ
@@ -813,7 +810,7 @@ unsafe extern "C" fn reverse_transform(
     return prev_transform;
 }
 unsafe extern "C" fn qcms_modular_transform_create_mAB(
-    mut lut: &mut lutmABType,
+    mut lut: &lutmABType,
 ) -> *mut qcms_modular_transform {
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
@@ -1092,7 +1089,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_modular_transform_create_input(
-    mut in_0: *mut qcms_profile,
+    mut in_0: &qcms_profile,
 ) -> *mut qcms_modular_transform {
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
@@ -1111,7 +1108,7 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
         && (*(*in_0).mAB.as_deref().unwrap()).num_out_channels as i32 == 3
     {
         let mut mAB_transform: *mut qcms_modular_transform =
-            qcms_modular_transform_create_mAB((*in_0).mAB.as_deref_mut().unwrap());
+            qcms_modular_transform_create_mAB((*in_0).mAB.as_deref().unwrap());
         if mAB_transform.is_null() {
             current_block = 8903102000210989603;
         } else {
@@ -1196,7 +1193,7 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
     };
 }
 unsafe extern "C" fn qcms_modular_transform_create_output(
-    mut out: *mut qcms_profile,
+    mut out: &qcms_profile,
 ) -> *mut qcms_modular_transform {
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
@@ -1215,7 +1212,7 @@ unsafe extern "C" fn qcms_modular_transform_create_output(
         && (*(*out).mBA.as_deref().unwrap()).num_out_channels as i32 == 3
     {
         let mut lut_transform_0: *mut qcms_modular_transform =
-            qcms_modular_transform_create_mAB((*out).mBA.as_deref_mut().unwrap());
+            qcms_modular_transform_create_mAB((*out).mBA.as_deref().unwrap());
         if lut_transform_0.is_null() {
             current_block = 15713701561912628542;
         } else {
@@ -1366,8 +1363,8 @@ remove_next:
 }
 */
 unsafe extern "C" fn qcms_modular_transform_create(
-    mut in_0: *mut qcms_profile,
-    mut out: *mut qcms_profile,
+    mut in_0: &qcms_profile,
+    mut out: &qcms_profile,
 ) -> *mut qcms_modular_transform {
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
@@ -1483,8 +1480,8 @@ unsafe extern "C" fn qcms_modular_transform_data(
 }
 #[no_mangle]
 pub unsafe extern "C" fn qcms_chain_transform(
-    mut in_0: *mut qcms_profile,
-    mut out: *mut qcms_profile,
+    mut in_0: &qcms_profile,
+    mut out: &qcms_profile,
     mut src: *mut f32,
     mut dest: *mut f32,
     mut lutSize: usize,

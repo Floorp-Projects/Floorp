@@ -278,7 +278,7 @@ pub unsafe extern "C" fn build_input_gamma_table(mut TRC: Option<&curveType>) ->
     return gamma_table;
 }
 #[no_mangle]
-pub unsafe extern "C" fn build_colorant_matrix(mut p: *mut qcms_profile) -> matrix {
+pub unsafe extern "C" fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
