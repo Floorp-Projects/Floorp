@@ -284,7 +284,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
       rv = mSession->ReadResponseData(mStreamId, buf, count, countWritten,
                                       &mFin);
       if (NS_FAILED(rv)) {
-        return rv;
+        break;
       }
       if (*countWritten == 0) {
         if (mFin) {
@@ -310,6 +310,11 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
     case RECV_DONE:
       rv = NS_ERROR_UNEXPECTED;
   }
+
+  // Remember the error received from lower layers. A stream pipe may overwrite
+  // it.
+  // If rv == NS_OK this will reset mSocketInCondition.
+  mSocketInCondition = rv;
 
   return rv;
 }
@@ -380,12 +385,17 @@ nsresult Http3Stream::WriteSegments(nsAHttpSegmentWriter* writer,
   LOG(("Http3Stream::WriteSegments [this=%p]", this));
   nsresult rv = NS_OK;
   uint32_t countWrittenSingle = 0;
+  bool again = true;
+
   do {
-    rv = mTransaction->WriteSegments(this, count, &countWrittenSingle);
+    mSocketInCondition = NS_OK;
+    rv = mTransaction->WriteSegmentsAgain(this, count, &countWrittenSingle,
+                                          &again);
     *countWritten += countWrittenSingle;
     LOG(("Http3Stream::WriteSegments rv=0x%" PRIx32
-         " countWrittenSingle=%" PRIu32 " [this=%p]",
-         static_cast<uint32_t>(rv), countWrittenSingle, this));
+         " countWrittenSingle=%" PRIu32 " socketin=%" PRIx32 " [this=%p]",
+         static_cast<uint32_t>(rv), countWrittenSingle,
+         static_cast<uint32_t>(mSocketInCondition), this));
     if (mTransaction->IsDone()) {
       // If a transaction has read the amount of data specified in
       // Content-Length it is marked as done.The Http3Stream should be
@@ -394,16 +404,22 @@ nsresult Http3Stream::WriteSegments(nsAHttpSegmentWriter* writer,
       mRecvState = RECV_DONE;
     }
 
-    // Repeat until the neqo stream buffer is empty, consumer is blocked
-    // or stream is done. In such a case countWrittenSingle will be 0.
-    // There is one exception to this: if a transaction only has read headers
-    // countWrittenSingle will be 0 (bug 1646701) a WriteSegments will not be
-    // triggered again and the transaction will not pickup the FIN bit. For this
-    // case (mRecvState == RECV_FIN) repeat the WriteSegments call one more
-    // time.
-  } while (NS_SUCCEEDED(rv) &&
-           ((countWrittenSingle > 0) || (mRecvState == RECEIVED_FIN)) &&
-           !Done());
+    if (NS_FAILED(rv)) {
+      // if the transaction didn't want to take any more data, then
+      // wait for the transaction to call ResumeRecv.
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        rv = NS_OK;
+      }
+      again = false;
+    } else if (NS_FAILED(mSocketInCondition)) {
+      if (mSocketInCondition != NS_BASE_STREAM_WOULD_BLOCK) {
+        rv = mSocketInCondition;
+      }
+      again = false;
+    }
+    // read more from the socket until error...
+  } while (again && gHttpHandler->Active());
+
   return rv;
 }
 
