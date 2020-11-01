@@ -57,10 +57,9 @@ mod test {
         ];
 
         // Crash/Assert test
-        unsafe {
-            lut_inverse_interp16(5, lutTable1.as_mut_ptr(), lutTable1.len() as i32);
-            lut_inverse_interp16(5, lutTable2.as_mut_ptr(), lutTable2.len() as i32);
-        }
+
+        lut_inverse_interp16(5, &lutTable1);
+        lut_inverse_interp16(5, &lutTable2);
     }
 
     #[test]
@@ -87,19 +86,18 @@ mod test {
         }
 
         for i in 0..65535 {
-            unsafe { lut_inverse_interp16(i, lutTable.as_mut_ptr(), lutTable.len() as i32) };
+            lut_inverse_interp16(i, &lutTable);
         }
 
         // Lookup the interesting points
 
-        value = unsafe { lut_inverse_interp16(0, lutTable.as_mut_ptr(), lutTable.len() as i32) };
+        value = lut_inverse_interp16(0, &lutTable);
         assert!(value <= 20 * 256);
 
-        value = unsafe { lut_inverse_interp16(1, lutTable.as_mut_ptr(), lutTable.len() as i32) };
+        value = lut_inverse_interp16(1, &lutTable);
         assert!(value > 20 * 256);
 
-        value =
-            unsafe { lut_inverse_interp16(65535, lutTable.as_mut_ptr(), lutTable.len() as i32) };
+        value = lut_inverse_interp16(65535, &lutTable);
         assert!(value < 201 * 256);
     }
 
@@ -126,9 +124,7 @@ mod test {
         }
 
         for i in 0..65535 {
-            unsafe {
-                lut_inverse_interp16(i, lutTable.as_mut_ptr(), lutTable.len() as i32);
-            }
+            lut_inverse_interp16(i, &lutTable);
         }
 
         // Make sure we don't crash, hang or let sanitizers do their magic
