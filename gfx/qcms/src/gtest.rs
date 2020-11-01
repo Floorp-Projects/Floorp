@@ -189,9 +189,9 @@ mod test {
 
         let transform = unsafe {
             qcms_transform_create(
-                sRGB_profile,
+                &mut *sRGB_profile,
                 QCMS_DATA_RGB_8,
-                other,
+                &mut *other,
                 QCMS_DATA_RGB_8,
                 QCMS_INTENT_PERCEPTUAL,
             )
@@ -222,9 +222,9 @@ mod test {
 
         let transform = unsafe {
             qcms_transform_create(
-                other,
+                &mut *other,
                 QCMS_DATA_GRAYA_8,
-                sRGB_profile,
+                &mut *sRGB_profile,
                 QCMS_DATA_RGBA_8,
                 QCMS_INTENT_PERCEPTUAL,
             )
@@ -311,9 +311,9 @@ mod test {
         let intent = unsafe { qcms_profile_get_rendering_intent(profile) };
         let transform = unsafe {
             qcms_transform_create(
-                profile,
+                &*profile,
                 QCMS_DATA_RGB_8,
-                srgb_profile,
+                &*srgb_profile,
                 QCMS_DATA_RGB_8,
                 intent,
             )
@@ -600,9 +600,9 @@ mod test {
 
         unsafe fn SetTransformForType(&mut self, ty: qcms_data_type) -> bool {
             self.SetTransform(qcms_transform_create(
-                self.in_profile,
+                &*self.in_profile,
                 ty,
-                self.out_profile,
+                &*self.out_profile,
                 ty,
                 QCMS_INTENT_DEFAULT,
             ))
