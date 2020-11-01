@@ -12,7 +12,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavOptions
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.R
@@ -38,11 +37,8 @@ class BrowserAnimator(
         get() = swipeRefresh.get()
 
     fun beginAnimateInIfNecessary() {
-        viewLifecycleScope.get()?.launch {
-            delay(ANIMATION_DELAY)
-            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            unwrappedSwipeRefresh?.background = null
-        }
+        unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+        unwrappedSwipeRefresh?.background = null
     }
 
     /**
@@ -81,8 +77,6 @@ class BrowserAnimator(
     }
 
     companion object {
-        private const val ANIMATION_DELAY = 100L
-
         fun getToolbarNavOptions(context: Context): NavOptions {
             val navOptions = NavOptions.Builder()
 
