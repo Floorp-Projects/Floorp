@@ -1190,6 +1190,7 @@ function cloneStorageConnection(options) {
       if (!connection) {
         log.warn("Could not clone connection: " + status);
         reject(new Error("Could not clone connection: " + status));
+        return;
       }
       log.info("Connection cloned");
       try {
