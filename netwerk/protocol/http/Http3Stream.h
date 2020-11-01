@@ -103,6 +103,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   /**
    * RecvStreamState:
+   *  - BEFORE_HEADERS:
+   *      The stream has not received headers yet.
    *  - READING_HEADERS:
    *      In this state Http3Session::ReadResponseHeaders will be called to read
    *      the response headers. All headers will be read at once into
@@ -119,6 +121,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
    *      The transaction is done.
    **/
   enum RecvStreamState {
+    BEFORE_HEADERS,
     READING_HEADERS,
     READING_DATA,
     RECEIVED_FIN,

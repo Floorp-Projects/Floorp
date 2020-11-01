@@ -654,8 +654,7 @@ pub extern "C" fn neqo_http3conn_read_response_data(
         }
         Err(Http3Error::InvalidStreamId)
         | Err(Http3Error::TransportError(TransportError::NoMoreData)) => NS_ERROR_INVALID_ARG,
-        Err(Http3Error::HttpFrame) => NS_ERROR_NET_HTTP3_PROTOCOL_ERROR,
-        Err(_) => NS_ERROR_UNEXPECTED,
+        Err(_) => NS_ERROR_NET_HTTP3_PROTOCOL_ERROR,
     }
 }
 

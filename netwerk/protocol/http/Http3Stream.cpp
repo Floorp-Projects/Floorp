@@ -20,7 +20,7 @@ namespace net {
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session)
     : mSendState(PREPARING_HEADERS),
-      mRecvState(READING_HEADERS),
+      mRecvState(BEFORE_HEADERS),
       mStreamId(UINT64_MAX),
       mSession(session),
       mTransaction(httpTransaction),
@@ -239,9 +239,12 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
 
 void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
                                      bool aFin) {
+  MOZ_ASSERT(mRecvState == BEFORE_HEADERS);
   MOZ_ASSERT(mFlatResponseHeaders.IsEmpty(),
              "Cannot set response headers more than once");
   mFlatResponseHeaders = std::move(aResponseHeaders);
+  mRecvState = READING_HEADERS;
+  mDataReceived = true;
   mFin = aFin;
 }
 
@@ -259,6 +262,10 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
   LOG(("Http3Stream::OnWriteSegment [this=%p, state=%d", this, mRecvState));
   nsresult rv = NS_OK;
   switch (mRecvState) {
+    case BEFORE_HEADERS: {
+      *countWritten = 0;
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    } break;
     case READING_HEADERS: {
       // SetResponseHeaders should have been previously called.
       MOZ_ASSERT(!mFlatResponseHeaders.IsEmpty(), "Headers empty!");
@@ -441,7 +448,7 @@ nsresult Http3Stream::Finish0RTT(bool aRestart) {
 
     // Reset Http3Sream states as well.
     mSendState = PREPARING_HEADERS;
-    mRecvState = READING_HEADERS;
+    mRecvState = BEFORE_HEADERS;
     mStreamId = UINT64_MAX;
     mQueued = false;
     mRequestBlockedOnRead = false;
