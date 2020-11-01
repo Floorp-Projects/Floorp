@@ -1263,7 +1263,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "8b731ad47a0c931cb5773c65d4562e0ad3ebdf73"
+        "revision": "5b5efd2399ac834f4c22abb8e26ee154a71ccddd"
     },
     "pt-BR": {
         "pin": false,
