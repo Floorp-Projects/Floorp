@@ -515,7 +515,7 @@ class Loader final {
                             IsAlternate, IsExplicitlyEnabled);
 
   // Inserts a style sheet in a document or a ShadowRoot.
-  void InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent);
+  void InsertSheetInTree(StyleSheet& aSheet, nsINode* aOwningNode);
   // Inserts a style sheet into a parent style sheet.
   void InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet);
 
