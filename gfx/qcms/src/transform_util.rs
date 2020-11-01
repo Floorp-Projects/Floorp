@@ -110,7 +110,7 @@ pub unsafe extern "C" fn lut_interp_linear16(
  * and returns a uint8_t value representing a range from 0..1 */
 unsafe extern "C" fn lut_interp_linear_precache_output(
     mut input_value: u32,
-    mut table: *mut u16,
+    mut table: *const u16,
     mut length: i32,
 ) -> u8 {
     /* Start scaling input_value to the length of the array: PRECACHE_OUTPUT_MAX*(length-1).
@@ -135,7 +135,7 @@ unsafe extern "C" fn lut_interp_linear_precache_output(
 #[no_mangle]
 pub unsafe extern "C" fn lut_interp_linear_float(
     mut value: f32,
-    mut table: *mut f32,
+    mut table: *const f32,
     mut length: i32,
 ) -> f32 {
     value = value * (length - 1) as f32;
