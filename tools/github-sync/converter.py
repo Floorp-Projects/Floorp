@@ -310,8 +310,7 @@ def real_commit(hg_rev, parent1, parent2):
     commit_oid = downstream_git_repo.create_commit(
         None,
         author_to_signature(commit_author),
-        # TODO(kats): use a more appropriate email
-        pygit2.Signature("github-sync", "graphics-team@mozilla.staktrace.com"),
+        author_to_signature(commit_author),
         commit_message,
         tree_oid,
         parents,
