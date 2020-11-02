@@ -934,10 +934,13 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarColor(
   return gfx::sRGBColor::FromABGR(color);
 }
 
-void nsNativeBasicTheme::PaintScrollbarThumb(
-    DrawTarget* aDrawTarget, const Rect& aRect, bool aHorizontal,
-    const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, uint32_t aDpiRatio) {
+void nsNativeBasicTheme::PaintScrollbarThumb(DrawTarget* aDrawTarget,
+                                             const Rect& aRect,
+                                             bool aHorizontal, nsIFrame* aFrame,
+                                             const ComputedStyle& aStyle,
+                                             const EventStates& aElementState,
+                                             const EventStates& aDocumentState,
+                                             uint32_t aDpiRatio) {
   sRGBColor thumbColor =
       ComputeScrollbarthumbColor(aStyle, aElementState, aDocumentState);
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
@@ -945,6 +948,7 @@ void nsNativeBasicTheme::PaintScrollbarThumb(
 
 void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
                                         const Rect& aRect, bool aHorizontal,
+                                        nsIFrame* aFrame,
                                         const ComputedStyle& aStyle,
                                         const EventStates& aDocumentState,
                                         uint32_t aDpiRatio, bool aIsRoot) {
@@ -969,7 +973,7 @@ void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
 }
 
 void nsNativeBasicTheme::PaintScrollCorner(DrawTarget* aDrawTarget,
-                                           const Rect& aRect,
+                                           const Rect& aRect, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
                                            uint32_t aDpiRatio, bool aIsRoot) {
@@ -1172,7 +1176,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::ScrollbarthumbVertical: {
       bool isHorizontal =
           aAppearance == StyleAppearance::ScrollbarthumbHorizontal;
-      PaintScrollbarThumb(dt, devPxRect, isHorizontal,
+      PaintScrollbarThumb(dt, devPxRect, isHorizontal, aFrame,
                           *nsLayoutUtils::StyleForScrollbar(aFrame), eventState,
                           docState, dpiRatio);
       break;
@@ -1180,13 +1184,13 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical: {
       bool isHorizontal = aAppearance == StyleAppearance::ScrollbarHorizontal;
-      PaintScrollbar(dt, devPxRect, isHorizontal,
+      PaintScrollbar(dt, devPxRect, isHorizontal, aFrame,
                      *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
                      dpiRatio, IsRootScrollbar(aFrame));
       break;
     }
     case StyleAppearance::Scrollcorner:
-      PaintScrollCorner(dt, devPxRect,
+      PaintScrollCorner(dt, devPxRect, aFrame,
                         *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
                         dpiRatio, IsRootScrollbar(aFrame));
       break;
