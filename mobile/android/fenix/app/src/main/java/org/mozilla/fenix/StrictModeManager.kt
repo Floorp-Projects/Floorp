@@ -51,7 +51,7 @@ class StrictModeManager(
      * - code owners: to prevent modifications to these above items without perf knowing
      * to make suppressions a more deliberate act.
      *
-     * This is an Atomic* so it can be incremented from any thread.
+     * This is an Atomic* so it can be safely incremented from any thread.
      */
     @VisibleForTesting(otherwise = PRIVATE)
     val suppressionCount = AtomicLong(0)
