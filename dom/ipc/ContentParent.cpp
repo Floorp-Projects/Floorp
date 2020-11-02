@@ -1500,13 +1500,6 @@ void ContentParent::Init() {
 
   AddShutdownBlockers();
 
-  // Flush any pref updates that happened during launch and weren't
-  // included in the blobs set up in BeginSubprocessLaunch.
-  for (const Pref& pref : mQueuedPrefs) {
-    Unused << NS_WARN_IF(!SendPreferenceUpdate(pref));
-  }
-  mQueuedPrefs.Clear();
-
   if (obs) {
     nsAutoString cpId;
     cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
@@ -1542,6 +1535,13 @@ void ContentParent::Init() {
   RefPtr<GeckoMediaPluginServiceParent> gmps(
       GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
+
+  // Flush any pref updates that happened during launch and weren't
+  // included in the blobs set up in BeginSubprocessLaunch.
+  for (const Pref& pref : mQueuedPrefs) {
+    Unused << NS_WARN_IF(!SendPreferenceUpdate(pref));
+  }
+  mQueuedPrefs.Clear();
 }
 
 void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
@@ -1776,7 +1776,7 @@ void ContentParent::MarkAsDead() {
   PreallocatedProcessManager::Erase(this);
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (mLifecycleState == LifecycleState::ALIVE) {
+  if (IsAlive()) {
     // We're intentionally killing the content process at this point to ensure
     // that we never have a "dead" content process sitting around and occupying
     // an Android Service.
@@ -2463,6 +2463,8 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
 
   Init();
 
+  mLifecycleState = LifecycleState::INITIALIZED;
+
   if (aIsSync) {
     Telemetry::AccumulateTimeDelta(Telemetry::CONTENT_PROCESS_SYNC_LAUNCH_MS,
                                    mLaunchTS);
@@ -3004,7 +3006,12 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 }
 
 bool ContentParent::IsAlive() const {
-  return mLifecycleState == LifecycleState::ALIVE;
+  return mLifecycleState == LifecycleState::ALIVE ||
+         mLifecycleState == LifecycleState::INITIALIZED;
+}
+
+bool ContentParent::IsInitialized() const {
+  return mLifecycleState == LifecycleState::INITIALIZED;
 }
 
 int32_t ContentParent::Pid() const {
@@ -3346,13 +3353,13 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
     Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
     Preferences::GetPreference(&pref);
-    if (IsAlive()) {
+    if (IsInitialized()) {
       MOZ_ASSERT(mQueuedPrefs.IsEmpty());
       if (!SendPreferenceUpdate(pref)) {
         return NS_ERROR_NOT_AVAILABLE;
       }
     } else {
-      MOZ_ASSERT(IsLaunching());
+      MOZ_ASSERT(!IsDead());
       mQueuedPrefs.AppendElement(pref);
     }
   }
