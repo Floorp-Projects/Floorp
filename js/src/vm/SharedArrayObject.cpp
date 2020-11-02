@@ -213,8 +213,8 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   }
 
   // 24.2.1.1, step 3 (Inlined 6.2.7.2 CreateSharedByteDataBlock, step 2).
-  // Refuse to allocate too large buffers, currently limited to ~2 GiB.
-  if (byteLength > INT32_MAX) {
+  // Refuse to allocate too large buffers.
+  if (byteLength > ArrayBufferObject::MaxBufferByteLength) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SHARED_ARRAY_BAD_LENGTH);
     return false;
