@@ -17,9 +17,3 @@ define_metric_ffi!(TIMESPAN_MAP {
     start -> fog_timespan_start(),
     stop -> fog_timespan_stop(),
 });
-
-define_metric_ffi!(BOOLEAN_MAP {
-    test_has -> fog_boolean_test_has_value,
-    test_get -> fog_boolean_test_get_value: bool,
-    set -> fog_boolean_set(value: bool),
-});
