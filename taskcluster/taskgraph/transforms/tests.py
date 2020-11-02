@@ -190,6 +190,20 @@ TEST_VARIANTS = {
             },
         },
     },
+    "geckoview-fission": {
+        "description": "{description} with fission enabled",
+        "filterfn": gv_e10s_multi_filter,
+        "suffix": "fis",
+        "merge": {
+            # Ensures the default state is to not run anywhere.
+            "fission-run-on-projects": [],
+            "mozharness": {
+                "extra-options": [
+                    "--enable-fission",
+                ],
+            },
+        },
+    },
     "fission": {
         "description": "{description} with fission enabled",
         "filterfn": fission_filter,
@@ -1374,8 +1388,8 @@ def handle_fission_attributes(config, tasks):
             fission_attr = task.pop("fission-{}".format(attr), None)
 
             if (
-                task["attributes"].get("unittest_variant") != "fission-xorigin"
-                and task["attributes"].get("unittest_variant") != "fission"
+                task["attributes"].get("unittest_variant")
+                not in ("fission", "geckoview-fission", "fission-xorigin")
             ) or fission_attr is None:
                 continue
 
