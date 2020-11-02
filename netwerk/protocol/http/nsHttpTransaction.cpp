@@ -1168,11 +1168,22 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
     return;
   }
 
+  Telemetry::HistogramID id = Telemetry::TRANSACTION_ECH_RETRY_OTHERS_COUNT;
+  auto updateCount = MakeScopeExit([&] {
+    uint32_t count = 0;
+    bool existed = mEchRetryCounterMap.Get(id, &count);
+    MOZ_ASSERT(existed, "table not initialized");
+    if (existed) {
+      mEchRetryCounterMap.Put(id, ++count);
+    }
+  });
+
   if (aReason ==
       psm::GetXPCOMFromNSSError(MOCK_SSL_ERROR_ECH_RETRY_WITHOUT_ECH)) {
     LOG((" Got SSL_ERROR_ECH_RETRY_WITHOUT_ECH, use empty echConfig to retry"));
     failedConnInfo->SetEchConfig(EmptyCString());
     failedConnInfo.swap(mConnInfo);
+    id = Telemetry::TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT;
     return;
   }
 
@@ -1196,6 +1207,7 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
       failedConnInfo->SetEchConfig(retryEchConfig);
       failedConnInfo.swap(mConnInfo);
     }
+    id = Telemetry::TRANSACTION_ECH_RETRY_WITH_ECH_COUNT;
     return;
   }
 
@@ -1204,7 +1216,9 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
   if (aReason == psm::GetXPCOMFromNSSError(MOCK_SSL_ERROR_ECH_FAILED) ||
       NS_FAILED(aReason)) {
     LOG((" Got SSL_ERROR_ECH_FAILED, try other records"));
-
+    if (aReason == psm::GetXPCOMFromNSSError(MOCK_SSL_ERROR_ECH_FAILED)) {
+      id = Telemetry::TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT;
+    }
     if (mRecordsForRetry.IsEmpty()) {
       if (mHTTPSSVCRecord) {
         bool allRecordsHaveEchConfig = true;
@@ -1593,6 +1607,11 @@ void nsHttpTransaction::Close(nsresult reason) {
   if (mChunkedDecoder) {
     delete mChunkedDecoder;
     mChunkedDecoder = nullptr;
+  }
+
+  for (auto iter = mEchRetryCounterMap.ConstIter(); !iter.Done(); iter.Next()) {
+    Telemetry::Accumulate(static_cast<Telemetry::HistogramID>(iter.Key()),
+                          iter.UserData());
   }
 
   // closing this pipe triggers the channel's OnStopRequest method.
@@ -3027,6 +3046,16 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   Unused << svcbRecord->GetName(targetName);
   if (mResolver) {
     mResolver->PrefetchAddrRecord(targetName, mCaps & NS_HTTP_REFRESH_DNS);
+  }
+
+  // echConfig is used, so initialize the retry counters to 0.
+  if (!mConnInfo->GetEchConfig().IsEmpty()) {
+    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_WITH_ECH_COUNT, 0);
+    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT,
+                            0);
+    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT,
+                            0);
+    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_OTHERS_COUNT, 0);
   }
 
   return NS_OK;
