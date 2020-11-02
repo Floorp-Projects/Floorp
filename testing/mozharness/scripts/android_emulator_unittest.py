@@ -103,6 +103,15 @@ class AndroidEmulatorTest(
                 },
             ],
             [
+                ["--enable-fission"],
+                {
+                    "action": "store_true",
+                    "dest": "enable_fission",
+                    "default": False,
+                    "help": "Run with Fission enabled.",
+                },
+            ],
+            [
                 ["--repeat"],
                 {
                     "action": "store",
@@ -169,6 +178,7 @@ class AndroidEmulatorTest(
             # AndroidMixin uses this when launching the emulator. We only want
             # GLES3 if we're running WebRender
             self.use_gles3 = True
+        self.enable_fission = c.get("enable_fission")
         self.extra_prefs = c.get("extra_prefs")
 
     def query_abs_dirs(self):
@@ -314,6 +324,8 @@ class AndroidEmulatorTest(
         # set.
         if self.enable_webrender:
             cmd.extend(["--enable-webrender"])
+        if self.enable_fission:
+            cmd.extend(["--enable-fission"])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)

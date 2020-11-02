@@ -218,6 +218,8 @@ class JUnitTestRunner(MochitestDesktop):
             env["MOZ_WEBRENDER"] = "1"
         else:
             env["MOZ_WEBRENDER"] = "0"
+        if self.options.enable_fission:
+            env["MOZ_FORCE_ENABLE_FISSION"] = "1"
         # Add additional env variables
         for [key, value] in [p.split("=", 1) for p in self.options.add_env]:
             env[key] = value
@@ -520,6 +522,13 @@ class JunitArgumentParser(argparse.ArgumentParser):
             dest="enable_webrender",
             default=False,
             help="Enable the WebRender compositor in Gecko.",
+        )
+        self.add_argument(
+            "--enable-fission",
+            action="store_true",
+            dest="enable_fission",
+            default=False,
+            help="Run the tests with Fission (site isolation) enabled.",
         )
         self.add_argument(
             "--repeat",
