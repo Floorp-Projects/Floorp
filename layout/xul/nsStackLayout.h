@@ -40,12 +40,6 @@ class nsStackLayout : public nsBoxLayout {
   virtual nscoord GetAscent(nsIFrame* aBox,
                             nsBoxLayoutState& aBoxLayoutState) override;
 
-  // get the child offsets for aChild and set them in aMargin. Returns a
-  // bitfield mask of the SPECIFIED_LEFT, SPECIFIED_RIGHT, SPECIFIED_TOP and
-  // SPECIFIED_BOTTOM offsets indicating which sides have been specified by
-  // attributes.
-  static uint8_t GetOffset(nsIFrame* aChild, nsMargin& aMargin);
-
  private:
   static nsBoxLayout* gInstance;
 
