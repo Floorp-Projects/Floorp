@@ -219,8 +219,10 @@ JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   if (!obj) {
     return 0;
   }
-  return obj->is<DataViewObject>() ? obj->as<DataViewObject>().byteOffset()
-                                   : obj->as<TypedArrayObject>().byteOffset();
+  BufferSize offset = obj->is<DataViewObject>()
+                          ? obj->as<DataViewObject>().byteOffset()
+                          : obj->as<TypedArrayObject>().byteOffset();
+  return offset.deprecatedGetUint32();
 }
 
 JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,

@@ -8991,7 +8991,8 @@ MInstruction* IonBuilder::addTypedArrayByteOffset(MDefinition* obj) {
   if (TypedArrayObject* tarr = tryTypedArrayEmbedConstantElements(obj)) {
     obj->setImplicitlyUsedUnchecked();
 
-    int32_t offset = AssertedCast<int32_t>(tarr->byteOffset());
+    int32_t offset =
+        AssertedCast<int32_t>(tarr->byteOffset().deprecatedGetUint32());
     byteOffset = MConstant::New(alloc(), Int32Value(offset));
   } else {
     byteOffset = MArrayBufferViewByteOffset::New(alloc(), obj);
