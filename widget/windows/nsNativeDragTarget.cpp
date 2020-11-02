@@ -143,7 +143,6 @@ inline bool IsKeyDown(char key) { return GetKeyState(key) < 0; }
 
 void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
                                                const POINTL& aPT) {
-  nsEventStatus status;
   WidgetDragEvent event(true, aEventMessage, mWidget);
 
   nsWindow* win = static_cast<nsWindow*>(mWidget);
@@ -166,7 +165,7 @@ void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
   event.mInputSource =
       static_cast<nsBaseDragService*>(mDragService)->GetInputSource();
 
-  mWidget->DispatchEvent(&event, status);
+  mWidget->DispatchInputEvent(&event);
 }
 
 void nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
