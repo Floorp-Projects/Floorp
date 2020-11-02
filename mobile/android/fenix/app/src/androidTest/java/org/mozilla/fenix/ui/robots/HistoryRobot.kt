@@ -39,6 +39,8 @@ class HistoryRobot {
         assertEmptyHistoryView()
     }
 
+    fun verifyHistoryListExists() = assertHistoryListExists()
+
     fun verifyVisitedTimeTitle() {
         mDevice.waitNotNull(
             Until.findObject(
@@ -130,6 +132,9 @@ private fun assertEmptyHistoryView() =
         )
     )
         .check(matches(withText("No history here")))
+
+private fun assertHistoryListExists() =
+    mDevice.findObject(UiSelector().resourceId("R.id.history_list")).waitForExists(waitingTime)
 
 private fun assertVisitedTimeTitle() =
     onView(withId(R.id.header_title)).check(matches(withText("Today")))
