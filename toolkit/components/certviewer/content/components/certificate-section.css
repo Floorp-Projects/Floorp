@@ -31,7 +31,9 @@ h1 {
   margin: 0;
   border-radius: 0;
   padding: 18px;
+  padding-bottom: 15px; /* compensate for border-bottom below */
   border: none;
+  border-bottom: 3px solid transparent;
   background-color: var(--in-content-box-background);
   color: var(--in-content-text-color);
   flex: 1 1 auto;
@@ -53,17 +55,11 @@ h1 {
 }
 
 .tab:hover {
-  border-bottom: 3px solid var(--in-content-border-active-shadow);
-  /* The bottom border is 3px more than before, so we need to
-   * compensate the padding to prevent the text from jumping */
-  padding-bottom: 15px;
+  border-bottom-color: var(--in-content-border-active-shadow);
 }
 
 .tab.selected {
-  border-bottom: 3px solid var(--in-content-border-active);
-  /* The bottom border is 3px more than before, so we need to
-   * compensate the padding to prevent the text from jumping */
-  padding-bottom: 15px;
+  border-bottom-color: var(--in-content-border-active);
   color: var(--in-content-link-color);
   text-overflow: unset;
   overflow: visible;
