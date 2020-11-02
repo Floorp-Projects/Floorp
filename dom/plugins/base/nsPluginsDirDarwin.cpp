@@ -412,23 +412,20 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info,
   // (Facebook plugins) if we're running on OS X 10.10 (Yosemite) or later.
   // A "fbplugin" file crashes on load, in the call to LoadPlugin() below.
   // See bug 1086977.
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    if (fileName.EqualsLiteral("fbplugin") ||
-        StringBeginsWith(fileName, "fbplugin_"_ns)) {
-      nsAutoCString msg;
-      msg.AppendPrintf("Preventing load of %s (see bug 1086977)",
-                       fileName.get());
-      NS_WARNING(msg.get());
-      return NS_ERROR_FAILURE;
-    }
-
-    // The block above assumes that "fbplugin" is the filename of the plugin
-    // to be blocked, or that the filename starts with "fbplugin_".  But we
-    // don't yet know for sure if this is always true.  So for the time being
-    // record extra information in our crash logs.
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Bug_1086977,
-                                       fileName);
+  if (fileName.EqualsLiteral("fbplugin") ||
+      StringBeginsWith(fileName, "fbplugin_"_ns)) {
+    nsAutoCString msg;
+    msg.AppendPrintf("Preventing load of %s (see bug 1086977)", fileName.get());
+    NS_WARNING(msg.get());
+    return NS_ERROR_FAILURE;
   }
+
+  // The block above assumes that "fbplugin" is the filename of the plugin
+  // to be blocked, or that the filename starts with "fbplugin_".  But we
+  // don't yet know for sure if this is always true.  So for the time being
+  // record extra information in our crash logs.
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Bug_1086977,
+                                     fileName);
 
   // It's possible that our plugin has 2 entry points that'll give us mime type
   // info. Quicktime does this to get around the need of having admin rights to
@@ -438,12 +435,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info,
   // Sadly we have to load the library for this to work.
   rv = LoadPlugin(outLibrary);
 
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    // If we didn't crash in LoadPlugin(), remove the annotation so we don't
-    // sow confusion.
-    CrashReporter::RemoveCrashReportAnnotation(
-        CrashReporter::Annotation::Bug_1086977);
-  }
+  // If we didn't crash in LoadPlugin(), remove the annotation so we don't
+  // sow confusion.
+  CrashReporter::RemoveCrashReportAnnotation(
+      CrashReporter::Annotation::Bug_1086977);
 
   if (NS_FAILED(rv)) return rv;
 

@@ -1143,10 +1143,7 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
 const CGFloat kTextDisplayCrossover = 20.0;  // use text family below this size
 
 void gfxMacPlatformFontList::InitSystemFontNames() {
-  // system font under 10.11 are two distinct families for text/display sizes
-  if (nsCocoaFeatures::OnElCapitanOrLater()) {
-    mUseSizeSensitiveSystemFont = true;
-  }
+  mUseSizeSensitiveSystemFont = true;
 
   // text font family
   NSFont* sys = [NSFont systemFontOfSize:0.0];

@@ -32,8 +32,7 @@ static const int sYosemiteThemeColors[][2] = {
 };
 
 inline int NativeGreyColorAsInt(ColorName name, BOOL isMain) {
-  if (nsCocoaFeatures::OnYosemiteOrLater()) return sYosemiteThemeColors[name][isMain ? 0 : 1];
-  return sLionThemeColors[name][isMain ? 0 : 1];
+  return sYosemiteThemeColors[name][isMain ? 0 : 1];
 }
 
 inline float NativeGreyColorAsFloat(ColorName name, BOOL isMain) {

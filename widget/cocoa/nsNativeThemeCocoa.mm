@@ -153,13 +153,6 @@ static bool FocusIsDrawnByDrawWithFrame(NSCell* aCell) {
   // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
   return false;
 #else
-  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
-    // When building with the 10.7 SDK or lower, focus rings always draw as
-    // part of -[NSCell drawWithFrame:inView:] if the build is run on 10.9 or
-    // lower.
-    return true;
-  }
-
   // On 10.10, whether the focus ring is drawn as part of
   // -[NSCell drawWithFrame:inView:] depends on the cell type.
   // Radio buttons and checkboxes draw their own focus rings, other cell
@@ -360,7 +353,7 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize,
                                const float marginSet[][3][4]) {
   if (!marginSet) return;
 
-  static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ? yosemiteOSorlater : leopardOSorlater;
+  static int osIndex = yosemiteOSorlater;
   size_t controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
   rect->origin.x -= buttonMargins[leftMargin];
@@ -438,7 +431,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 nsNativeThemeCocoa::nsNativeThemeCocoa() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  kMaxFocusRingWidth = nsCocoaFeatures::OnYosemiteOrLater() ? 7 : 4;
+  kMaxFocusRingWidth = 7;
 
   // provide a local autorelease pool, as this is called during startup
   // before the main event-loop pool is in place
@@ -807,13 +800,10 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
 @end
 
 static id GetAquaAppearance() {
-  // We only need NSAppearance on 10.10 and up.
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    Class NSAppearanceClass = NSClassFromString(@"NSAppearance");
-    if (NSAppearanceClass && [NSAppearanceClass respondsToSelector:@selector(appearanceNamed:)]) {
-      return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
-                                     withObject:@"NSAppearanceNameAqua"];
-    }
+  Class NSAppearanceClass = NSClassFromString(@"NSAppearance");
+  if (NSAppearanceClass && [NSAppearanceClass respondsToSelector:@selector(appearanceNamed:)]) {
+    return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
+                                   withObject:@"NSAppearanceNameAqua"];
   }
   return nil;
 }
@@ -1104,10 +1094,6 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
       aParams.disabled ? @"disabled" : (aParams.insideActiveMenuItem ? @"pressed" : @"normal");
 
   NSString* imageName = GetMenuIconName(aParams);
-  if (!nsCocoaFeatures::OnElCapitanOrLater()) {
-    // Pre-10.11, image names are prefixed with "image."
-    imageName = [@"image." stringByAppendingString:imageName];
-  }
 
   RenderWithCoreUI(
       drawRect, cgContext,
@@ -2403,19 +2389,6 @@ void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CG
 
 void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect,
                                                  bool aWindowIsActive, bool aSelectionIsActive) {
-  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
-    // Render with the 10.9 gradient style.
-    RenderWithCoreUI(
-        aRect, aContext,
-        [NSDictionary
-            dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:aSelectionIsActive], @"focus",
-                                         [NSNumber numberWithBool:YES], @"is.flipped",
-                                         @"kCUIVariantGradientSideBarSelection", @"kCUIVariantKey",
-                                         (aWindowIsActive ? @"normal" : @"inactive"), @"state",
-                                         @"gradient", @"widget", nil]);
-    return;
-  }
-
   NSColor* fillColor;
   if (aSelectionIsActive) {
     // Active selection, blue or graphite.
@@ -3291,18 +3264,6 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
     case StyleAppearance::ScrollbartrackVertical: {
       bool isHorizontal = (aAppearance == StyleAppearance::ScrollbartrackHorizontal);
       if (nsLookAndFeel::UseOverlayScrollbars()) {
-        if (!nsCocoaFeatures::OnYosemiteOrLater()) {
-          // Pre-10.10, we have to center the thumb rect in the middle of the
-          // scrollbar. Starting with 10.10, the expected rect for thumb
-          // rendering is the full width of the scrollbar.
-          if (isHorizontal) {
-            result.top = 2;
-            result.bottom = 1;
-          } else {
-            result.left = 2;
-            result.right = 1;
-          }
-        }
         // Leave a bit of space at the start and the end on all OS X versions.
         if (isHorizontal) {
           result.left = 1;
@@ -3512,12 +3473,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     }
 
     case StyleAppearance::MozMacFullscreenButton: {
-      if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)] &&
-          !nsCocoaFeatures::OnYosemiteOrLater()) {
-        // This value is hardcoded because it's needed before we can measure the
-        // position and size of the fullscreen button.
-        aResult->SizeTo(16, 17);
-      }
       *aIsOverridable = false;
       break;
     }

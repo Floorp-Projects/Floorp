@@ -144,14 +144,6 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor, int32_t aBug
   return ExtractBugFixVersion(macOSVersion());
 }
 
-/* static */ bool nsCocoaFeatures::OnYosemiteOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_10_HEX);
-}
-
-/* static */ bool nsCocoaFeatures::OnElCapitanOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_11_HEX);
-}
-
 /* static */ bool nsCocoaFeatures::OnSierraExactly() {
   return (macOSVersion() >= MACOS_VERSION_10_12_HEX) && (macOSVersion() < MACOS_VERSION_10_13_HEX);
 }
@@ -159,15 +151,9 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor, int32_t aBug
 /* Version of OnSierraExactly as global function callable from cairo & skia */
 bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
 
-/* static */ bool nsCocoaFeatures::OnSierraOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_12_HEX);
-}
-
 /* static */ bool nsCocoaFeatures::OnHighSierraOrLater() {
   return (macOSVersion() >= MACOS_VERSION_10_13_HEX);
 }
-
-bool Gecko_OnSierraOrLater() { return nsCocoaFeatures::OnSierraOrLater(); }
 
 /* static */ bool nsCocoaFeatures::OnMojaveOrLater() {
   return (macOSVersion() >= MACOS_VERSION_10_14_HEX);
