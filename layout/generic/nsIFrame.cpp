@@ -5997,9 +5997,6 @@ AspectRatio nsIFrame::GetIntrinsicRatio() const { return AspectRatio(); }
 static nscoord ComputeInlineSizeFromAspectRatio(
     WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aBlockSize,
     const LogicalSize& aBoxSizingAdjustment) {
-  MOZ_ASSERT(aAspectRatio.ratio.IsRatio());
-  // FIXME: We have to handle zero and infinity for aspect-ratio later.
-  // https://github.com/w3c/csswg-drafts/issues/4572
   MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
              "Infinite or zero ratio may have undefined behavior when "
              "computing the size");
@@ -6013,9 +6010,6 @@ static nscoord ComputeInlineSizeFromAspectRatio(
 static nscoord ComputeBlockSizeFromAspectRatio(
     WritingMode aWM, const StyleAspectRatio& aAspectRatio, nscoord aInlineSize,
     const LogicalSize& aBoxSizingAdjustment) {
-  MOZ_ASSERT(aAspectRatio.ratio.IsRatio());
-  // FIXME: We have to handle zero and infinity for aspect-ratio later.
-  // https://github.com/w3c/csswg-drafts/issues/4572
   MOZ_ASSERT(aAspectRatio.HasFiniteRatio(),
              "Infinite or zero ratio may have undefined behavior when "
              "computing the size");
