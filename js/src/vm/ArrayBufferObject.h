@@ -182,9 +182,19 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                 "self-hosted code with burned-in constants must get the "
                 "right flags slot");
 
+  static bool supportLargeBuffers;
+
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most
-  // INT32_MAX, and much code must change if this changes.
-  static size_t maxBufferByteLength() { return INT32_MAX; }
+  // INT32_MAX. Allow a larger limit on 64-bit platforms if the experimental
+  // large-buffers flag is used.
+  static size_t maxBufferByteLength() {
+#ifdef JS_64BIT
+    if (supportLargeBuffers) {
+      return size_t(8) * 1024 * 1024 * 1024;  // 8 GB.
+    }
+#endif
+    return INT32_MAX;
+  }
 
   /** The largest number of bytes that can be stored inline. */
   static constexpr size_t MaxInlineBytes =

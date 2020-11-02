@@ -10792,6 +10792,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
+  if (op.getBoolOption("enable-large-buffers")) {
+    ArrayBufferObject::supportLargeBuffers = true;
+  }
+
 #if defined(JS_CODEGEN_ARM)
   if (const char* str = op.getStringOption("arm-hwcap")) {
     jit::ParseARMHwCapFlags(str);
@@ -11360,6 +11364,9 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "no-off-thread-parse-global",
                         "Do not use parseGlobal in off-thread compilation and "
                         "instead instantiate stencil in main-thread") ||
+      !op.addBoolOption('\0', "enable-large-buffers",
+                        "Allow creating ArrayBuffers larger than 2 GB on "
+                        "64-bit platforms (experimental!)") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
