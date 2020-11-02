@@ -2244,6 +2244,8 @@ NSS_GetAlgorithmPolicy(SECOidTag tag, PRUint32 *pValue)
     return SECSuccess;
 }
 
+static PRBool nss_policy_locked = PR_FALSE;
+
 /* The Set function modifies the stored value according to the following
  * algorithm:
  *   policy[tag] = (policy[tag] & ~clearBits) | setBits;
@@ -2255,6 +2257,11 @@ NSS_SetAlgorithmPolicy(SECOidTag tag, PRUint32 setBits, PRUint32 clearBits)
     PRUint32 policyFlags;
     if (!pxo)
         return SECFailure;
+
+    if (nss_policy_locked) {
+        PORT_SetError(SEC_ERROR_POLICY_LOCKED);
+        return SECFailure;
+    }
     /* The stored policy flags are the ones complement of the flags as
      * seen by the user.  This is not atomic, but these changes should
      * be done rarely, e.g. at initialization time.
@@ -2263,6 +2270,20 @@ NSS_SetAlgorithmPolicy(SECOidTag tag, PRUint32 setBits, PRUint32 clearBits)
     policyFlags = (policyFlags & ~clearBits) | setBits;
     pxo->notPolicyFlags = ~policyFlags;
     return SECSuccess;
+}
+
+/* Get the state of nss_policy_locked */
+PRBool
+NSS_IsPolicyLocked(void)
+{
+    return nss_policy_locked;
+}
+
+/* Once the policy is locked, it can't be unlocked */
+void
+NSS_LockPolicy(void)
+{
+    nss_policy_locked = PR_TRUE;
 }
 
 /* --------- END OF opaque extended OID table accessor functions ---------*/
@@ -2326,6 +2347,9 @@ SECOID_Shutdown(void)
         dynOidEntriesAllocated = 0;
         dynOidEntriesUsed = 0;
     }
+    /* we are trashing the old policy state now, also reenable changing
+     * the policy as well */
+    nss_policy_locked = PR_FALSE;
     memset(xOids, 0, sizeof xOids);
     return SECSuccess;
 }

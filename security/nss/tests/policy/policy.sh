@@ -12,6 +12,28 @@
 #
 ########################################################################
 
+policy_init()
+{
+  SCRIPTNAME=policy.sh      # sourced - $0 would point to all.sh
+
+  if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
+      CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
+  fi
+
+  if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
+      cd ../common
+      . ./init.sh
+  fi
+  SCRIPTNAME=policy.sh
+
+}
+
+policy_cleanup()
+{
+  cd ${QADIR}
+  . common/cleanup.sh
+}
+
 ignore_blank_lines()
 {
   LC_ALL=C egrep -v '^[[:space:]]*(#|$)' "$1"
@@ -53,6 +75,9 @@ NSS=flags=policyOnly,moduleDB
     html_msg $ret 0 "\"${testname}\" output is expected to match \"${match}\""
 
   done
+  html "</TABLE><BR>"
 }
 
+policy_init
 policy_run_tests
+policy_cleanup

@@ -6645,11 +6645,7 @@ ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
 
     /* TLS 1.3: We sent a session ID.  The server's should match. */
     if (!IS_DTLS(ss) && (sentRealSid || sentFakeSid)) {
-        if (sidMatch) {
-            ss->ssl3.hs.allowCcs = PR_TRUE;
-            return PR_TRUE;
-        }
-        return PR_FALSE;
+        return sidMatch;
     }
 
     /* TLS 1.3 (no SID)/DTLS 1.3: The server shouldn't send a session ID. */
@@ -8696,7 +8692,6 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
                 errCode = PORT_GetError();
                 goto alert_loser;
             }
-            ss->ssl3.hs.allowCcs = PR_TRUE;
         }
 
         /* TLS 1.3 requires that compression include only null. */
@@ -13066,15 +13061,14 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
             ss->ssl3.hs.ws != idle_handshake &&
             cText->buf->len == 1 &&
             cText->buf->buf[0] == change_cipher_spec_choice) {
-            if (ss->ssl3.hs.allowCcs) {
-                /* Ignore the first CCS. */
-                ss->ssl3.hs.allowCcs = PR_FALSE;
+            if (!ss->ssl3.hs.rejectCcs) {
+                /* Allow only the first CCS. */
+                ss->ssl3.hs.rejectCcs = PR_TRUE;
                 return SECSuccess;
+            } else {
+                alert = unexpected_message;
+                PORT_SetError(SSL_ERROR_RX_MALFORMED_CHANGE_CIPHER);
             }
-
-            /* Compatibility mode is not negotiated. */
-            alert = unexpected_message;
-            PORT_SetError(SSL_ERROR_RX_MALFORMED_CHANGE_CIPHER);
         }
 
         if ((IS_DTLS(ss) && !dtls13_AeadLimitReached(spec)) ||
@@ -13596,6 +13590,61 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     tls13_DestroyPskList(&ss->ssl3.hs.psks);
 }
 
+/*
+ * parse the policy value for a single algorithm in a cipher_suite,
+ *   return TRUE if we disallow by the cipher suite by policy
+ *   (we don't have to parse any more algorithm policies on this cipher suite),
+ *  otherwise return FALSE.
+ *   1. If we don't have the required policy, disable by default, disallow by
+ *      policy and return TRUE (no more processing needed).
+ *   2. If we have the required policy, and we are disabled, return FALSE,
+ *      (if we are disabled, we only need to parse policy, not default).
+ *   3. If we have the required policy, and we aren't adjusting the defaults
+ *      return FALSE. (only parsing the policy, not default).
+ *   4. We have the required policy and we are adjusting the defaults.
+ *      If we are setting default = FALSE, set isDisabled to true so that
+ *      we don't try to re-enable the cipher suite based on a different
+ *      algorithm.
+ */
+PRBool
+ssl_HandlePolicy(int cipher_suite, SECOidTag policyOid,
+                 PRUint32 requiredPolicy, PRBool *isDisabled)
+{
+    PRUint32 policy;
+    SECStatus rv;
+
+    /* first fetch the policy for this algorithm */
+    rv = NSS_GetAlgorithmPolicy(policyOid, &policy);
+    if (rv != SECSuccess) {
+        return PR_FALSE; /* no policy value, continue to the next algorithm */
+    }
+    /* first, are we allowed by policy, if not turn off allow and disable */
+    if (!(policy & requiredPolicy)) {
+        ssl_CipherPrefSetDefault(cipher_suite, PR_FALSE);
+        ssl_CipherPolicySet(cipher_suite, SSL_NOT_ALLOWED);
+        return PR_TRUE;
+    }
+    /* If we are already disabled, or the policy isn't setting a default
+     * we are done processing this algorithm */
+    if (*isDisabled || (policy & NSS_USE_DEFAULT_NOT_VALID)) {
+        return PR_FALSE;
+    }
+    /* set the default value for the cipher suite. If we disable the cipher
+     * suite, remember that so we don't process the next default. This has
+     * the effect of disabling the whole cipher suite if any of the
+     * algorithms it uses are disabled by default. We still have to
+     * process the upper level because the cipher suite is still allowed
+     * by policy, and we may still have to disallow it based on other
+     * algorithms in the cipher suite. */
+    if (policy & NSS_USE_DEFAULT_SSL_ENABLE) {
+        ssl_CipherPrefSetDefault(cipher_suite, PR_TRUE);
+    } else {
+        *isDisabled = PR_TRUE;
+        ssl_CipherPrefSetDefault(cipher_suite, PR_FALSE);
+    }
+    return PR_FALSE;
+}
+
 #define MAP_NULL(x) (((x) != 0) ? (x) : SEC_OID_NULL_CIPHER)
 
 SECStatus
@@ -13614,30 +13663,30 @@ ssl3_ApplyNSSPolicy(void)
     for (i = 1; i < PR_ARRAY_SIZE(cipher_suite_defs); ++i) {
         const ssl3CipherSuiteDef *suite = &cipher_suite_defs[i];
         SECOidTag policyOid;
+        PRBool isDisabled = PR_FALSE;
 
+        /* if we haven't explicitly disabled it below enable by policy */
+        ssl_CipherPolicySet(suite->cipher_suite, SSL_ALLOWED);
+
+        /* now check the various key exchange, ciphers and macs and
+         * if we ever disallow by policy, we are done, go to the next cipher
+         */
         policyOid = MAP_NULL(kea_defs[suite->key_exchange_alg].oid);
-        rv = NSS_GetAlgorithmPolicy(policyOid, &policy);
-        if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL_KX)) {
-            ssl_CipherPrefSetDefault(suite->cipher_suite, PR_FALSE);
-            ssl_CipherPolicySet(suite->cipher_suite, SSL_NOT_ALLOWED);
+        if (ssl_HandlePolicy(suite->cipher_suite, policyOid,
+                             NSS_USE_ALG_IN_SSL_KX, &isDisabled)) {
             continue;
         }
 
         policyOid = MAP_NULL(ssl_GetBulkCipherDef(suite)->oid);
-        rv = NSS_GetAlgorithmPolicy(policyOid, &policy);
-        if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL)) {
-            ssl_CipherPrefSetDefault(suite->cipher_suite, PR_FALSE);
-            ssl_CipherPolicySet(suite->cipher_suite, SSL_NOT_ALLOWED);
+        if (ssl_HandlePolicy(suite->cipher_suite, policyOid,
+                             NSS_USE_ALG_IN_SSL, &isDisabled)) {
             continue;
         }
 
         if (ssl_GetBulkCipherDef(suite)->type != type_aead) {
             policyOid = MAP_NULL(ssl_GetMacDefByAlg(suite->mac_alg)->oid);
-            rv = NSS_GetAlgorithmPolicy(policyOid, &policy);
-            if (rv == SECSuccess && !(policy & NSS_USE_ALG_IN_SSL)) {
-                ssl_CipherPrefSetDefault(suite->cipher_suite, PR_FALSE);
-                ssl_CipherPolicySet(suite->cipher_suite,
-                                    SSL_NOT_ALLOWED);
+            if (ssl_HandlePolicy(suite->cipher_suite, policyOid,
+                                 NSS_USE_ALG_IN_SSL, &isDisabled)) {
                 continue;
             }
         }

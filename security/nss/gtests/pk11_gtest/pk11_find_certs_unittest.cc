@@ -159,6 +159,41 @@ class PK11FindCertsTestBase : public ::testing::Test {
 
 class PK11FindRawCertsBySubjectTest : public PK11FindCertsTestBase {};
 
+TEST_F(PK11FindCertsTestBase, CertAddListWithData) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  SECItem cert1_item = {siBuffer, const_cast<uint8_t*>(kTestCert1DER.data()),
+                        (unsigned int)kTestCert1DER.size()};
+  SECItem cert2_item = {siBuffer, const_cast<uint8_t*>(kTestCert2DER.data()),
+                        (unsigned int)kTestCert2DER.size()};
+
+  // Make certificates. ScopedCERTCertList will own.
+  ScopedCERTCertList list(CERT_NewCertList());
+  ASSERT_TRUE(list);
+  CERTCertificate* cert1 = CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &cert1_item, nullptr, false, false);
+  CERTCertificate* cert2 = CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &cert2_item, nullptr, false, false);
+  ASSERT_NE(nullptr, cert1);
+  ASSERT_NE(nullptr, cert2);
+  ASSERT_NE(cert1, cert2);
+
+  SECStatus rv = CERT_AddCertToListHeadWithData(list.get(), cert1, cert1);
+  EXPECT_EQ(SECSuccess, rv);
+  rv = CERT_AddCertToListTailWithData(list.get(), cert2, cert2);
+  EXPECT_EQ(SECSuccess, rv);
+
+  CERTCertListNode* node = CERT_LIST_HEAD(list.get());
+  ASSERT_NE(nullptr, node);
+  EXPECT_EQ(node->cert, cert1);
+  EXPECT_EQ(node->appData, cert1);
+
+  node = CERT_LIST_TAIL(list.get());
+  ASSERT_NE(nullptr, node);
+  EXPECT_EQ(node->cert, cert2);
+  EXPECT_EQ(node->appData, cert2);
+}
+
 // If we don't have any certificates, we shouldn't get any when we search for
 // them.
 TEST_F(PK11FindRawCertsBySubjectTest, TestNoCertsImportedNoCertsFound) {

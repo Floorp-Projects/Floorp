@@ -886,6 +886,7 @@ ssl_policy_listsuites()
   cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
 
   # Disallow all explicitly
+  testname="listsuites with all cipher disallowed by policy"
   setup_policy "disallow=all" ${P_R_CLIENTDIR}
   RET_EXP=1
   list_enabled_suites | grep '^TLS_'
@@ -894,6 +895,7 @@ ssl_policy_listsuites()
            "produced a returncode of $RET, expected is $RET_EXP"
 
   # Disallow RSA in key exchange explicitly
+  testname="listsuites with rsa cipher disallowed by policy"
   setup_policy "disallow=rsa/ssl-key-exchange" ${P_R_CLIENTDIR}
   RET_EXP=1
   list_enabled_suites | grep '^TLS_RSA_'
@@ -901,9 +903,81 @@ ssl_policy_listsuites()
   html_msg $RET $RET_EXP "${testname}" \
            "produced a returncode of $RET, expected is $RET_EXP"
 
+  # allow by policy, but disable by default
+  testname="listsuites with all ciphers enabled by policy but disabled by default"
+  setup_policy "allow=all disable=all" ${P_R_CLIENTDIR}
+  RET_EXP=1
+  list_enabled_suites | grep '^TLS_'
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
+  # allow by policy, but disable by default just rsa-kea
+  testname="listsuites with all ciphers enabled by policy but rsa disabled by default"
+  setup_policy "allow=all disable=rsa/ssl-key-exchange" ${P_R_CLIENTDIR}
+  RET_EXP=1
+  list_enabled_suites | grep '^TLS_RSA_'
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
+  # list_enabled_suites tries to set a policy value explicitly, This will
+  # cause list_enabled_suites to fail if we lock the policy
+  testname="listsuites with policy locked"
+  setup_policy "allow=all flags=policy-lock" ${P_R_CLIENTDIR}
+  RET_EXP=1
+  SSL_DIR="${P_R_CLIENTDIR}" ${BINDIR}/listsuites
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
   cp ${P_R_CLIENTDIR}/pkcs11.txt.sav ${P_R_CLIENTDIR}/pkcs11.txt
 
   html "</TABLE><BR>"
+}
+
+ssl_policy_pkix_ocsp()
+{
+  #verbose="-v"
+  html_head "Check that OCSP doesn't break if we disable sha1 $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+  PKIX_SAVE=${NSS_ENABLE_PKIX_VERIFY-"unset"}
+  NSS_ENABLE_PKIX_VERIFY="1"
+  export NSS_ENABLE_PKIX_VERIFY
+
+  testname=""
+
+  if [ ! -f "${P_R_SERVERDIR}/pkcs11.txt" ] ; then
+      html_failed "${SCRIPTNAME}: ${P_R_SERVERDIR} is not initialized"
+      return 1;
+  fi
+
+  echo "Saving pkcs11.txt"
+  cp ${P_R_SERVERDIR}/pkcs11.txt ${P_R_SERVERDIR}/pkcs11.txt.sav
+
+  # Disallow sha1 explicitly. This will test if we are trying to verify the sha1 signature
+  # on the GlobalSign root during OCSP processing
+  setup_policy "disallow=sha1" ${P_R_SERVERDIR}
+  RET_EXP=0
+  echo " vfyserv -o wrong.host.badssl.com -d ${P_R_SERVERDIR} 2>&1 | tee ${P_R_SERVERDIR}/vfy.out"
+  vfyserv -o wrong.host.badssl.com -d ${P_R_SERVERDIR} 2>&1 | tee ${P_R_SERVERDIR}/vfy.out
+  # make sure we have the domain mismatch, not bad signature error
+  echo "grep 12276 ${P_R_SERVERDIR}/vfy.out"
+  grep 12276 ${P_R_SERVERDIR}/vfy.out
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
+  if [ "${PKIX_SAVE}" = "unset" ]; then
+      unset NSS_ENABLE_PKIX_VERIFY
+  else
+      NSS_ENABLE_PKIX_VERIFY=${PKIX_SAVE}
+      export NSS_ENABLE_PKIX_VERIFY
+  fi
+  cp ${P_R_SERVERDIR}/pkcs11.txt.sav ${P_R_SERVERDIR}/pkcs11.txt
+
+  html "</TABLE><BR>"
+
 }
 
 ############################## ssl_policy_selfserv #####################
@@ -925,6 +999,7 @@ ssl_policy_selfserv()
   cp ${P_R_SERVERDIR}/pkcs11.txt ${P_R_SERVERDIR}/pkcs11.txt.sav
 
   # Disallow RSA in key exchange explicitly
+  testname="Disallow RSA key exchange explicitly"
   setup_policy "disallow=rsa/ssl-key-exchange" ${P_R_SERVERDIR}
 
   SAVE_SERVER_OPTIONS=${SERVER_OPTIONS}
@@ -1522,6 +1597,7 @@ ssl_run_tests()
             if [ "${TEST_MODE}" = "SHARED_DB" ] ; then
                 ssl_policy_listsuites
                 ssl_policy_selfserv
+                ssl_policy_pkix_ocsp
                 ssl_policy
             fi
             ;;

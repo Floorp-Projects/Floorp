@@ -741,7 +741,9 @@ pkix_pl_OcspResponse_VerifyResponse(
             PKIX_CERTVERIFYKEYUSAGEFAILED);
         rv = SECSuccess;
     } else {
-        rv = CERT_VerifyCert(response->handle, response->signerCert, PKIX_TRUE,
+        /* checkSig is !isRoot */
+        PRBool checkSig = response->signerCert->isRoot ? PR_FALSE : PR_TRUE;
+        rv = CERT_VerifyCert(response->handle, response->signerCert, checkSig,
                              certUsage, response->producedAt, NULL, NULL);
         if (rv != SECSuccess) {
             PKIX_ERROR(PKIX_CERTVERIFYKEYUSAGEFAILED);

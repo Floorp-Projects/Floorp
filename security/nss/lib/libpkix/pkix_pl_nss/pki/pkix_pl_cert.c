@@ -2811,13 +2811,22 @@ PKIX_PL_Cert_VerifySignature(
         PKIX_PL_Cert *cachedCert = NULL;
         PKIX_Error *verifySig = NULL;
         PKIX_Error *cachedSig = NULL;
+        PKIX_Error *checkSig = NULL;
         SECStatus status;
         PKIX_Boolean certEqual = PKIX_FALSE;
         PKIX_Boolean certInHash = PKIX_FALSE;
+        PKIX_Boolean checkCertSig = PKIX_TRUE;
         void* wincx = NULL;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_VerifySignature");
         PKIX_NULLCHECK_THREE(cert, cert->nssCert, pubKey);
+
+        /* if the cert check flag is off, skip the check */
+        checkSig = pkix_pl_NssContext_GetCertSignatureCheck(
+                   (PKIX_PL_NssContext *)plContext, &checkCertSig);
+        if ((checkCertSig == PKIX_FALSE) && (checkSig == NULL)) {
+            goto cleanup;
+        }
 
         verifySig = PKIX_PL_HashTable_Lookup
                         (cachedCertSigTable,
@@ -2879,6 +2888,7 @@ cleanup:
         }
 
         PKIX_DECREF(cachedCert);
+        PKIX_DECREF(checkSig);
         PKIX_DECREF(verifySig);
         PKIX_DECREF(cachedSig);
 
