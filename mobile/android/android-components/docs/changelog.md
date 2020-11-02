@@ -58,6 +58,9 @@ permalink: /changelog/
 * **feature-accounts-push**
   * Made `FxaPushSupportFeature` aware of the `PushConfig.disableRateLimit` flag.
 
+* **support-base**
+  * Add `LazyComponent`, a wrapper around `lazy` that avoids initializing recursive dependencies until component use.
+
 # 64.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v63.0.0...v64.0.0)
