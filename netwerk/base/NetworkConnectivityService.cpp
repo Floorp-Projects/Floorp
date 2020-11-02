@@ -125,6 +125,30 @@ already_AddRefed<AddrInfo> NetworkConnectivityService::MapNAT64IPs(
   return builder.Finish();
 }
 
+// Returns true if a prefix was read and saved to the argument
+static inline bool NAT64PrefixFromPref(NetAddr* prefix) {
+  nsAutoCString nat64PrefixPref;
+  PRNetAddr prAddr{};
+
+  nsresult rv = Preferences::GetCString(
+      "network.connectivity-service.nat64-prefix", nat64PrefixPref);
+  if (NS_FAILED(rv) || nat64PrefixPref.IsEmpty() ||
+      PR_StringToNetAddr(nat64PrefixPref.get(), &prAddr) != PR_SUCCESS ||
+      prAddr.raw.family != PR_AF_INET6) {
+    return false;
+  }
+
+  PRNetAddrToNetAddr(&prAddr, prefix);
+  return true;
+}
+
+static inline bool NAT64PrefixCompare(const NetAddr& prefix1,
+                                      const NetAddr& prefix2) {
+  // Compare the first 96 bits as 64 + 32
+  return prefix1.inet6.ip.u64[0] == prefix2.inet6.ip.u64[0] &&
+         prefix1.inet6.ip.u32[2] == prefix2.inet6.ip.u32[2];
+}
+
 void NetworkConnectivityService::PerformChecks() {
   mDNSv4 = UNKNOWN;
   mDNSv6 = UNKNOWN;
@@ -137,6 +161,17 @@ void NetworkConnectivityService::PerformChecks() {
   {
     MutexAutoLock lock(mLock);
     mNAT64Prefixes.Clear();
+
+    // NAT64 checks might be disabled.
+    // Since We can't guarantee a DNS response, we should set up
+    // NAT64 manually now if needed.
+
+    NetAddr priorityPrefix{};
+    bool havePrefix = NAT64PrefixFromPref(&priorityPrefix);
+    if (havePrefix) {
+      mNAT64Prefixes.AppendElement(priorityPrefix);
+      mNAT64 = OK;
+    }
   }
 
   RecheckDNS();
@@ -153,8 +188,17 @@ void NetworkConnectivityService::SaveNAT64Prefixes(nsIDNSRecord* aRecord) {
   MutexAutoLock lock(mLock);
   mNAT64Prefixes.Clear();
 
+  NetAddr priorityPrefix{};
+  bool havePrefix = NAT64PrefixFromPref(&priorityPrefix);
+  if (havePrefix) {
+    mNAT64 = OK;
+    mNAT64Prefixes.AppendElement(priorityPrefix);
+  }
+
   if (!rec) {
-    mNAT64 = NOT_AVAILABLE;
+    if (!havePrefix) {
+      mNAT64 = NOT_AVAILABLE;
+    }
     return;
   }
 
@@ -199,12 +243,24 @@ void NetworkConnectivityService::SaveNAT64Prefixes(nsIDNSRecord* aRecord) {
   NetAddr prev = mNAT64Prefixes[0];
 
   for (size_t i = 1; i < length; i++) {
-    if (mNAT64Prefixes[i] == prev) {
+    if (NAT64PrefixCompare(prev, mNAT64Prefixes[i])) {
       mNAT64Prefixes.RemoveElementAt(i);
       i--;
       length--;
     } else {
       prev = mNAT64Prefixes[i];
+    }
+  }
+
+  // The prioritized address might also appear in the record we received.
+
+  if (havePrefix) {
+    for (size_t i = 1; i < length; i++) {
+      if (NAT64PrefixCompare(priorityPrefix, mNAT64Prefixes[i])) {
+        mNAT64Prefixes.RemoveElementAt(i);
+        // It wouldn't appear more than once.
+        break;
+      }
     }
   }
 
@@ -261,6 +317,7 @@ NetworkConnectivityService::RecheckDNS() {
       nsIDNSService::RESOLVE_DISABLE_IPV4 | nsIDNSService::RESOLVE_DISABLE_TRR,
       nullptr, this, NS_GetCurrentThread(), attrs,
       getter_AddRefs(mDNSv6Request));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (StaticPrefs::network_connectivity_service_nat64_check()) {
     rv = dns->AsyncResolveNative("ipv4only.arpa"_ns,
@@ -269,6 +326,7 @@ NetworkConnectivityService::RecheckDNS() {
                                      nsIDNSService::RESOLVE_DISABLE_TRR,
                                  nullptr, this, NS_GetCurrentThread(), attrs,
                                  getter_AddRefs(mNAT64Request));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return rv;
 }
