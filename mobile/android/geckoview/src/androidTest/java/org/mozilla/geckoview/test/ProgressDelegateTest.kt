@@ -324,6 +324,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreStateNewSession() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val helloUri = createTestUrl(HELLO_HTML_PATH)
         val startUri = createTestUrl(SAVE_STATE_PATH)
 
@@ -363,6 +365,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreState() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val startUri = createTestUrl(SAVE_STATE_PATH)
         val savedState = collectState(startUri);
 
@@ -392,6 +396,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @WithDisplay(width = 400, height = 400)
     @Test fun flushSessionState() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val startUri = createTestUrl(SAVE_STATE_PATH)
         mainSession.loadUri(startUri)
         sessionRule.waitForPageStop()
@@ -419,6 +425,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @NullDelegate(GeckoSession.HistoryDelegate::class)
     @Test fun noHistoryDelegateOnSessionStateChange() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 

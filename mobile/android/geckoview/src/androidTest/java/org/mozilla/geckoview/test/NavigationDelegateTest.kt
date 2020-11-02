@@ -133,6 +133,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadFileNotFound() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         testLoadExpectError("file:///test.mozilla",
                 WebRequestError.ERROR_CATEGORY_URI,
                 WebRequestError.ERROR_FILE_NOT_FOUND)
@@ -149,6 +151,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUnknownHost() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         testLoadExpectError(UNKNOWN_HOST_URI,
                 WebRequestError.ERROR_CATEGORY_URI,
                 WebRequestError.ERROR_UNKNOWN_HOST)
@@ -167,6 +171,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUntrusted() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val host = if (sessionRule.env.isAutomation) {
             "expired.example.com"
         } else {
@@ -196,6 +202,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadDeprecatedTls() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         // Load an initial generic error page in order to ensure 'allowDeprecatedTls' is false
         testLoadExpectError(UNKNOWN_HOST_URI,
                 WebRequestError.ERROR_CATEGORY_URI,
@@ -384,6 +392,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun redirectDenyLoad() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val redirectUri = if (sessionRule.env.isAutomation) {
             "http://example.org/tests/junit/hello.html"
         } else {
@@ -435,6 +445,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun redirectIntentLoad() {
         assumeThat(sessionRule.env.isAutomation, equalTo(true))
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val redirectUri = "intent://test"
         val uri = "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
@@ -478,6 +490,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingPhishing() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
         val category = ContentBlocking.SafeBrowsing.PHISHING
 
@@ -504,6 +518,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingMalware() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
         val category = ContentBlocking.SafeBrowsing.MALWARE
 
@@ -529,6 +545,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingUnwanted() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
         val category = ContentBlocking.SafeBrowsing.UNWANTED
 
@@ -554,6 +572,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingHarmful() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
         val category = ContentBlocking.SafeBrowsing.HARMFUL
 
@@ -1782,6 +1802,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun purgeHistory() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
@@ -1852,6 +1874,8 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadAfterLoad() {
+        // TODO: Bug 1657028
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
