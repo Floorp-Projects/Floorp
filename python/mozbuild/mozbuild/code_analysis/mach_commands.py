@@ -324,7 +324,7 @@ class StaticAnalysis(MachCommandBase):
         if outgoing:
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = [os.path.abspath(f) for f in files]
+            source = self.get_abspath_files(files)
 
         # Split in several chunks to avoid hitting Python's limit of 100 groups in re
         compile_db = json.loads(open(self._compile_db, "r").read())
@@ -485,7 +485,7 @@ class StaticAnalysis(MachCommandBase):
         if outgoing:
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = [os.path.abspath(f) for f in files]
+            source = self.get_abspath_files(files)
 
         # Verify that we have source files or we are dealing with a full-build
         if len(source) == 0 and not full_build:
@@ -646,6 +646,9 @@ class StaticAnalysis(MachCommandBase):
 
         if output is not None:
             self.dump_cov_artifact(cov_result, source, output)
+
+    def get_abspath_files(self, files):
+        return [mozpath.join(self.topsrcdir, f) for f in files]
 
     def run_cov_command(self, cmd, path=None):
         if path is None:

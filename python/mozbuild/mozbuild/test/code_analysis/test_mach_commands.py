@@ -9,6 +9,7 @@ import mock
 from mozunit import main
 from mach.registrar import Registrar
 from mozbuild.base import MozbuildObject
+import mozpack.path as mozpath
 
 
 class TestStaticAnalysis(unittest.TestCase):
@@ -57,6 +58,25 @@ class TestStaticAnalysis(unittest.TestCase):
             os.sep = old_sep
 
         self.assertTrue(cmd._is_ignored_path(ignored_dirs_re, "path2") is None)
+
+    def test_get_files(self):
+        from mozbuild.code_analysis.mach_commands import StaticAnalysis
+
+        config = MozbuildObject.from_environment()
+        context = mock.MagicMock()
+        context.cwd = config.topsrcdir
+
+        cmd = StaticAnalysis(context)
+        cmd.topsrcdir = mozpath.join("/root", "dir")
+        source = cmd.get_abspath_files(["file1", mozpath.join("directory", "file2")])
+
+        self.assertTrue(
+            source
+            == [
+                mozpath.join(cmd.topsrcdir, "file1"),
+                mozpath.join(cmd.topsrcdir, "directory", "file2"),
+            ]
+        )
 
 
 if __name__ == "__main__":
