@@ -10,7 +10,7 @@
 option(
     "--with-java-bin-path",
     nargs=1,
-    help="Location of Java binaries (java, jarsigner, keytool)",
+    help="Location of Java binaries",
 )
 
 
@@ -62,8 +62,6 @@ def check_java_tool(tool):
 
 
 check_java_tool("java")
-check_java_tool("jarsigner")
-check_java_tool("keytool")
 
 
 # Java Code Coverage
