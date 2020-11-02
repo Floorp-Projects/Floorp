@@ -8,8 +8,10 @@ const promise = require("promise");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const { l10n } = require("devtools/shared/inspector/css-logic");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 const OutputParser = require("devtools/client/shared/output-parser");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");

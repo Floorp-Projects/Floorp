@@ -12,7 +12,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { debounce } = require("devtools/shared/debounce");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 
 const FontsApp = createFactory(
   require("devtools/client/inspector/fonts/components/FontsApp")
