@@ -900,6 +900,7 @@ static const unsigned MaxMemory32Pages = INT32_MAX / PageSize;
 #else
 static const unsigned MaxMemory32Pages = INT32_MAX / PageSize;
 #endif
+static const size_t MaxMemory32Bytes = size_t(MaxMemory32Pages) * PageSize;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
