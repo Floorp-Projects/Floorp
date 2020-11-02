@@ -57,8 +57,6 @@ add_task(async function setup() {
       ["browser.contentblocking.report.tracker.url", ""],
       ["browser.contentblocking.report.fingerprinter.url", ""],
       ["browser.contentblocking.report.cryptominer.url", ""],
-      ["browser.contentblocking.report.lockwise.mobile-android.url", ""],
-      ["browser.contentblocking.report.lockwise.mobile-ios.url", ""],
       ["browser.contentblocking.report.mobile-ios.url", ""],
       ["browser.contentblocking.report.mobile-android.url", ""],
       ["browser.contentblocking.report.monitor.home_page_url", ""],
@@ -304,28 +302,6 @@ add_task(async function checkTelemetryClickEvents() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const lockwiseAndroidAppLink = await ContentTaskUtils.waitForCondition(
-      () => {
-        return content.document.getElementById("lockwise-android-inline-link");
-      },
-      "lockwiseAndroidAppLink exists"
-    );
-
-    lockwiseAndroidAppLink.click();
-  });
-
-  events = await waitForTelemetryEventCount(11);
-
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "lw_sync_link" &&
-      e[4] == "android"
-  );
-  is(events.length, 1, `recorded telemetry for lw_sync_link, android`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseAboutLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("lockwise-how-it-works");
     }, "lockwiseReportLink exists");
@@ -333,7 +309,7 @@ add_task(async function checkTelemetryClickEvents() {
     lockwiseAboutLink.click();
   });
 
-  events = await waitForTelemetryEventCount(12);
+  events = await waitForTelemetryEventCount(11);
 
   events = events.filter(
     e =>
@@ -351,7 +327,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorAboutLink.click();
   });
 
-  events = await waitForTelemetryEventCount(13);
+  events = await waitForTelemetryEventCount(12);
 
   events = events.filter(
     e =>
@@ -369,7 +345,7 @@ add_task(async function checkTelemetryClickEvents() {
     signUpForMonitorLink.click();
   });
 
-  events = await waitForTelemetryEventCount(14);
+  events = await waitForTelemetryEventCount(13);
 
   events = events.filter(
     e =>
@@ -387,7 +363,7 @@ add_task(async function checkTelemetryClickEvents() {
     socialLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(15);
+  events = await waitForTelemetryEventCount(14);
 
   events = events.filter(
     e =>
@@ -406,7 +382,7 @@ add_task(async function checkTelemetryClickEvents() {
     cookieLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(16);
+  events = await waitForTelemetryEventCount(15);
 
   events = events.filter(
     e =>
@@ -425,7 +401,7 @@ add_task(async function checkTelemetryClickEvents() {
     trackerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(17);
+  events = await waitForTelemetryEventCount(16);
 
   events = events.filter(
     e =>
@@ -451,7 +427,7 @@ add_task(async function checkTelemetryClickEvents() {
     fingerprinterLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(18);
+  events = await waitForTelemetryEventCount(17);
 
   events = events.filter(
     e =>
@@ -477,7 +453,7 @@ add_task(async function checkTelemetryClickEvents() {
     cryptominerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(19);
+  events = await waitForTelemetryEventCount(18);
 
   events = events.filter(
     e =>
@@ -493,42 +469,6 @@ add_task(async function checkTelemetryClickEvents() {
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const lockwiseIOSAppLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("lockwise-ios-inline-link");
-    }, "lockwiseIOSAppLink exists");
-
-    lockwiseIOSAppLink.click();
-  });
-
-  events = await waitForTelemetryEventCount(20);
-
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "lw_sync_link" &&
-      e[4] == "ios"
-  );
-  is(events.length, 1, `recorded telemetry for lw_sync_link`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const mobileAppLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("android-mobile-inline-link");
-    }, "android-mobile-inline-link exists");
-
-    mobileAppLink.click();
-  });
-
-  events = await waitForTelemetryEventCount(21);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "mobile_app_link"
-  );
-  is(events.length, 1, `recorded telemetry for mobile_app_link`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const protectionSettings = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("protection-settings");
     }, "protection-settings link exists");
@@ -536,7 +476,7 @@ add_task(async function checkTelemetryClickEvents() {
     protectionSettings.click();
   });
 
-  events = await waitForTelemetryEventCount(22);
+  events = await waitForTelemetryEventCount(19);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -560,7 +500,7 @@ add_task(async function checkTelemetryClickEvents() {
     customProtectionSettings.click();
   });
 
-  events = await waitForTelemetryEventCount(23);
+  events = await waitForTelemetryEventCount(20);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -600,7 +540,7 @@ add_task(async function checkTelemetryClickEvents() {
     resolveBreachesButton.click();
   });
 
-  events = await waitForTelemetryEventCount(26);
+  events = await waitForTelemetryEventCount(23);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -621,7 +561,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorKnownBreachesBlock.click();
   });
 
-  events = await waitForTelemetryEventCount(27);
+  events = await waitForTelemetryEventCount(24);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -644,7 +584,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorExposedPasswordsBlock.click();
   });
 
-  events = await waitForTelemetryEventCount(28);
+  events = await waitForTelemetryEventCount(25);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -680,7 +620,7 @@ add_task(async function checkTelemetryClickEvents() {
     manageBreachesButton.click();
   });
 
-  events = await waitForTelemetryEventCount(31);
+  events = await waitForTelemetryEventCount(28);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -711,7 +651,7 @@ add_task(async function checkTelemetryClickEvents() {
     viewReportButton.click();
   });
 
-  events = await waitForTelemetryEventCount(34);
+  events = await waitForTelemetryEventCount(31);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -742,7 +682,7 @@ add_task(async function checkTelemetryClickEvents() {
     viewReportButton.click();
   });
 
-  events = await waitForTelemetryEventCount(37);
+  events = await waitForTelemetryEventCount(34);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -760,7 +700,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorEmailBlock.click();
   });
 
-  events = await waitForTelemetryEventCount(38);
+  events = await waitForTelemetryEventCount(35);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -781,7 +721,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorKnownBreachesBlock.click();
   });
 
-  events = await waitForTelemetryEventCount(39);
+  events = await waitForTelemetryEventCount(36);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -804,7 +744,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorExposedPasswordsBlock.click();
   });
 
-  events = await waitForTelemetryEventCount(40);
+  events = await waitForTelemetryEventCount(37);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
