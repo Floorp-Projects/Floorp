@@ -10,7 +10,8 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
@@ -95,7 +96,7 @@ class DefaultShareController(
             putExtra(EXTRA_TEXT, getShareText())
             putExtra(EXTRA_SUBJECT, getShareSubject())
             type = "text/plain"
-            flags = FLAG_ACTIVITY_NEW_TASK
+            flags = FLAG_ACTIVITY_NEW_DOCUMENT + FLAG_ACTIVITY_MULTIPLE_TASK
             setClassName(app.packageName, app.activityName)
         }
 

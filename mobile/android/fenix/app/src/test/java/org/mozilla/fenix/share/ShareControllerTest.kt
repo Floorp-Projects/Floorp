@@ -115,7 +115,7 @@ class ShareControllerTest {
         assertEquals(shareSubject, shareIntent.captured.extras!![Intent.EXTRA_SUBJECT])
         assertEquals(textToShare, shareIntent.captured.extras!![Intent.EXTRA_TEXT])
         assertEquals("text/plain", shareIntent.captured.type)
-        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, shareIntent.captured.flags)
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_DOCUMENT + Intent.FLAG_ACTIVITY_MULTIPLE_TASK, shareIntent.captured.flags)
         assertEquals(appPackageName, shareIntent.captured.component!!.packageName)
         assertEquals(appClassName, shareIntent.captured.component!!.className)
 
