@@ -80,30 +80,6 @@ class ProfileBufferEntry {
 // Packed layout: 1 byte for the tag + 8 bytes for the value.
 static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
 
-class UniqueJSONStrings {
- public:
-  UniqueJSONStrings();
-  explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
-
-  void SpliceStringTableElements(SpliceableJSONWriter& aWriter) {
-    aWriter.TakeAndSplice(mStringTableWriter.TakeChunkedWriteFunc());
-  }
-
-  void WriteProperty(JSONWriter& aWriter, const char* aName, const char* aStr) {
-    aWriter.IntProperty(MakeStringSpan(aName), GetOrAddIndex(aStr));
-  }
-
-  void WriteElement(JSONWriter& aWriter, const char* aStr) {
-    aWriter.IntElement(GetOrAddIndex(aStr));
-  }
-
-  uint32_t GetOrAddIndex(const char* aStr);
-
- private:
-  SpliceableChunkedJSONWriter mStringTableWriter;
-  HashMap<HashNumber, uint32_t> mStringHashToIndexMap;
-};
-
 class UniqueStacks {
  public:
   struct FrameKey {

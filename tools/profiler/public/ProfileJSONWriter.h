@@ -14,5 +14,6 @@ using OStreamJSONWriteFunc = mozilla::baseprofiler::OStreamJSONWriteFunc;
 using SpliceableChunkedJSONWriter =
     mozilla::baseprofiler::SpliceableChunkedJSONWriter;
 using SpliceableJSONWriter = mozilla::baseprofiler::SpliceableJSONWriter;
+using UniqueJSONStrings = mozilla::baseprofiler::UniqueJSONStrings;
 
 #endif  // PROFILEJSONWRITER_H
