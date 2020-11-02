@@ -1495,9 +1495,11 @@ var Policies = {
         "layout.",
         "media.",
         "network.",
+        "pdfjs.",
         "places.",
         "print.",
         "signon.",
+        "spellchecker.",
         "ui.",
         "widget.",
       ];
