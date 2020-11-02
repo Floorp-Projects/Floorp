@@ -54,6 +54,9 @@ import java.lang.SafeVarargs;
 import java.lang.String;
 import java.lang.Throwable;
 import java.lang.Void;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.cert.X509Certificate;
@@ -68,6 +71,7 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
+import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -427,7 +431,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public GeckoResult<List<ContentBlockingController.LogEntry>> getLog(@NonNull GeckoSession);
     method @UiThread public void removeException(@NonNull GeckoSession);
     method @AnyThread public void removeException(@NonNull ContentBlockingController.ContentBlockingException);
-    method @Deprecated @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
+    method @Deprecated @DeprecationSchedule(version=85,id="exception-list") @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
     method @AnyThread public void restoreExceptionList(@NonNull List<ContentBlockingController.ContentBlockingException>);
     method @NonNull @UiThread public GeckoResult<List<ContentBlockingController.ContentBlockingException>> saveExceptionList();
   }
@@ -460,10 +464,10 @@ package org.mozilla.geckoview {
     field public static final int LOADED_LEVEL_2_TRACKING_CONTENT = 1048576;
     field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
     field public static final int REPLACED_TRACKING_CONTENT = 16;
-    field @Deprecated public static final int REPLACED_UNSAFE_CONTENT = 16;
+    field @Deprecated @DeprecationSchedule(version=86,id="unsafe-content") public static final int REPLACED_UNSAFE_CONTENT = 16;
   }
 
-  @Deprecated @AnyThread public class ContentBlockingController.ExceptionList {
+  @Deprecated @DeprecationSchedule(version=85,id="exception-list") @AnyThread public class ContentBlockingController.ExceptionList {
     ctor public ExceptionList(@NonNull String);
     ctor public ExceptionList(@NonNull JSONObject);
     method @NonNull public String[] getUris();
@@ -489,6 +493,11 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull Bundle, @NonNull String);
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull File, @NonNull File, @NonNull String);
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull String, @NonNull File, @NonNull JSONObject);
+  }
+
+  @Documented @Retention(value=java.lang.annotation.RetentionPolicy.RUNTIME) @Target(value={java.lang.annotation.ElementType.CONSTRUCTOR, java.lang.annotation.ElementType.FIELD, java.lang.annotation.ElementType.LOCAL_VARIABLE, java.lang.annotation.ElementType.METHOD, java.lang.annotation.ElementType.PACKAGE, java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.TYPE}) public interface DeprecationSchedule {
+    element public String id();
+    element public int version();
   }
 
   public class GeckoDisplay {
@@ -696,8 +705,8 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public GeckoDisplay acquireDisplay();
     method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread public void close();
-    method @AnyThread @Deprecated @NonNull public static String createDataUri(@NonNull byte[], @Nullable String);
-    method @AnyThread @Deprecated @NonNull public static String createDataUri(@NonNull String, @Nullable String);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") @NonNull public static String createDataUri(@NonNull byte[], @Nullable String);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") @NonNull public static String createDataUri(@NonNull String, @Nullable String);
     method @AnyThread public void exitFullScreen();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
     method @Nullable @UiThread public Autofill.Delegate getAutofillDelegate();
@@ -733,20 +742,20 @@ package org.mozilla.geckoview {
     method @AnyThread public void gotoHistoryIndex(int);
     method @AnyThread public boolean isOpen();
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
-    method @AnyThread @Deprecated public void loadData(@NonNull byte[], @Nullable String);
-    method @AnyThread @Deprecated public void loadString(@NonNull String, @Nullable String);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadData(@NonNull byte[], @Nullable String);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadString(@NonNull String, @Nullable String);
     method @AnyThread public void loadUri(@NonNull String);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable String, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable String, int, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable GeckoSession, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull String, @Nullable GeckoSession, int, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Map<String,String>);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Uri, int);
-    method @AnyThread @Deprecated public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, @Nullable Map<String,String>);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, int);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, @Nullable String, int);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, @Nullable String, int, @Nullable Map<String,String>);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, @Nullable GeckoSession, int);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull String, @Nullable GeckoSession, int, @Nullable Map<String,String>);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull Uri);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull Uri, @Nullable Map<String,String>);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull Uri, int);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull Uri, @Nullable Uri, int);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=86,id="load-uri-builder") public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
     method @UiThread public void open(@NonNull GeckoRuntime);
     method @AnyThread public void purgeHistory();
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
@@ -793,7 +802,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onCloseRequest(@NonNull GeckoSession);
     method @UiThread default public void onContextMenu(@NonNull GeckoSession, int, int, @NonNull GeckoSession.ContentDelegate.ContextElement);
     method @UiThread default public void onCrash(@NonNull GeckoSession);
-    method @Deprecated @UiThread default public void onExternalResponse(@NonNull GeckoSession, @NonNull GeckoSession.WebResponseInfo);
+    method @Deprecated @DeprecationSchedule(version=85,id="on-external-response") @UiThread default public void onExternalResponse(@NonNull GeckoSession, @NonNull GeckoSession.WebResponseInfo);
     method @UiThread default public void onExternalResponse(@NonNull GeckoSession, @NonNull WebResponse);
     method @UiThread default public void onFirstComposite(@NonNull GeckoSession);
     method @UiThread default public void onFirstContentfulPaint(@NonNull GeckoSession);

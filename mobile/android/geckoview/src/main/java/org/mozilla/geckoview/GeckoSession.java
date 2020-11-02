@@ -1803,6 +1803,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @Nullable Map<String, String> additionalHeaders) {
         final Loader loader = new Loader()
                 .uri(uri)
@@ -1824,6 +1825,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
@@ -1841,6 +1843,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @Nullable String referrer,
                         final @LoadFlags int flags) {
         load(new Loader()
@@ -1861,6 +1864,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @Nullable String referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         final Loader loader = new Loader()
@@ -1888,6 +1892,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
                         final @LoadFlags int flags) {
         load(new Loader()
@@ -1910,6 +1915,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         final Loader loader = new Loader()
@@ -1957,6 +1963,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull Uri uri) {
         load(new Loader()
                 .headerFilter(HEADER_FILTER_UNRESTRICTED_UNSAFE)
@@ -1971,6 +1978,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull Uri uri, final @Nullable Map<String, String> additionalHeaders) {
         final Loader loader = new Loader()
                 .uri(uri)
@@ -1991,6 +1999,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull Uri uri, final @LoadFlags int flags) {
         load(new Loader()
                 .uri(uri)
@@ -2007,6 +2016,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
                         final @LoadFlags int flags) {
         load(new Loader()
@@ -2026,6 +2036,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadUri(final @NonNull Uri uri, final @Nullable Uri referrer,
                         final @LoadFlags int flags, final @Nullable Map<String, String> additionalHeaders) {
         final Loader loader = new Loader()
@@ -2051,6 +2062,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadString(@NonNull final String data, @Nullable final String mimeType) {
         load(new Loader().data(data, mimeType));
     }
@@ -2065,6 +2077,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public void loadData(@NonNull final byte[] bytes, @Nullable final String mimeType) {
         load(new Loader().data(bytes, mimeType));
     }
@@ -2077,6 +2090,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public static @NonNull String createDataUri(@NonNull final byte[] bytes,
                                                 @Nullable final String mimeType) {
         return Loader.createDataUri(bytes, mimeType);
@@ -2090,6 +2104,7 @@ public class GeckoSession {
      */
     @AnyThread
     @Deprecated
+    @DeprecationSchedule(version = 86, id = "load-uri-builder")
     public static @NonNull String createDataUri(@NonNull final String data,
                                                 @Nullable final String mimeType) {
         return Loader.createDataUri(data, mimeType);
@@ -3470,6 +3485,7 @@ public class GeckoSession {
          * instead. This method will be removed in GeckoView 85.
          */
         @Deprecated // Bug 1530022
+        @DeprecationSchedule(version = 85, id = "on-external-response")
         @SuppressWarnings("checkstyle:javadocmethod")
         @UiThread
         default void onExternalResponse(@NonNull GeckoSession session,

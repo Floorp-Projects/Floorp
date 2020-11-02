@@ -84,6 +84,7 @@ public class ContentBlockingController {
      * present in the list.
      */
     @Deprecated
+    @DeprecationSchedule(version = 85, id = "exception-list")
     @AnyThread
     public class ExceptionList {
         private final @NonNull GeckoBundle mBundle;
@@ -266,6 +267,7 @@ public class ContentBlockingController {
      * @param list An {@link ExceptionList} originally created by {@link #saveExceptionList}.
      */
     @Deprecated
+    @DeprecationSchedule(version = 85, id = "exception-list")
     @UiThread
     public void restoreExceptionList(final @NonNull ExceptionList list) {
         EventDispatcher.getInstance().dispatch("ContentBlocking:RestoreList", list.getBundle());
@@ -416,6 +418,7 @@ public class ContentBlockingController {
          * @deprecated use {@link #REPLACED_TRACKING_CONTENT} instead.
          */
         @Deprecated
+        @DeprecationSchedule(version = 86, id = "unsafe-content")
         public static final int REPLACED_UNSAFE_CONTENT        = 0x00000010;
 
         /**
