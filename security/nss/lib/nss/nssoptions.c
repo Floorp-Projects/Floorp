@@ -14,6 +14,7 @@
 #include "secoid.h"
 #include "nss.h"
 #include "nssoptions.h"
+#include "secerr.h"
 
 struct nssOps {
     PRInt32 rsaMinKeySize;
@@ -24,6 +25,7 @@ struct nssOps {
     PRInt32 dtlsVersionMinPolicy;
     PRInt32 dtlsVersionMaxPolicy;
     PRInt32 pkcs12DecodeForceUnicode;
+    PRInt32 defaultLocks;
 };
 
 static struct nssOps nss_ops = {
@@ -34,13 +36,19 @@ static struct nssOps nss_ops = {
     0xffff, /* set TLS max to more than the largest legal SSL value */
     1,
     0xffff,
-    PR_FALSE
+    PR_FALSE,
+    0
 };
 
 SECStatus
 NSS_OptionSet(PRInt32 which, PRInt32 value)
 {
     SECStatus rv = SECSuccess;
+
+    if (NSS_IsPolicyLocked()) {
+        PORT_SetError(SEC_ERROR_POLICY_LOCKED);
+        return SECFailure;
+    }
 
     switch (which) {
         case NSS_RSA_MIN_KEY_SIZE:
@@ -67,7 +75,11 @@ NSS_OptionSet(PRInt32 which, PRInt32 value)
         case __NSS_PKCS12_DECODE_FORCE_UNICODE:
             nss_ops.pkcs12DecodeForceUnicode = value;
             break;
+        case NSS_DEFAULT_LOCKS:
+            nss_ops.defaultLocks = value;
+            break;
         default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
     }
 
@@ -103,6 +115,9 @@ NSS_OptionGet(PRInt32 which, PRInt32 *value)
             break;
         case __NSS_PKCS12_DECODE_FORCE_UNICODE:
             *value = nss_ops.pkcs12DecodeForceUnicode;
+            break;
+        case NSS_DEFAULT_LOCKS:
+            *value = nss_ops.defaultLocks;
             break;
         default:
             rv = SECFailure;

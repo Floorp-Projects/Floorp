@@ -135,6 +135,15 @@ extern SECStatus NSS_GetAlgorithmPolicy(SECOidTag tag, PRUint32 *pValue);
 extern SECStatus
 NSS_SetAlgorithmPolicy(SECOidTag tag, PRUint32 setBits, PRUint32 clearBits);
 
+/* Lock the policy so NSS_SetAlgorithmPolicy (and other policy functions)
+ * No longer function */
+void
+NSS_LockPolicy(void);
+
+/* return true if policy changes are now locked out */
+PRBool
+NSS_IsPolicyLocked(void);
+
 SEC_END_PROTOS
 
 #endif /* _SECOID_H_ */

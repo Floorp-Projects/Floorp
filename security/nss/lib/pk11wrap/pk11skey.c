@@ -1275,13 +1275,23 @@ PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk, void *wincx)
                                  symk->type, newKeyID, PR_FALSE /*owner*/, NULL /*wincx*/);
 }
 
-/*
- * This function does a straight public key wrap (which only RSA can do).
- * Use PK11_PubGenKey and PK11_WrapSymKey to implement the FORTEZZA and
- * Diffie-Hellman Ciphers. */
+/* This function does a straight public key wrap with the CKM_RSA_PKCS
+ * mechanism. */
 SECStatus
 PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
                    PK11SymKey *symKey, SECItem *wrappedKey)
+{
+    CK_MECHANISM_TYPE inferred = pk11_mapWrapKeyType(pubKey->keyType);
+    return PK11_PubWrapSymKeyWithMechanism(pubKey, inferred, NULL, symKey,
+                                           wrappedKey);
+}
+
+/* This function wraps a symmetric key with a public key, such as with the
+ * CKM_RSA_PKCS and CKM_RSA_PKCS_OAEP mechanisms. */
+SECStatus
+PK11_PubWrapSymKeyWithMechanism(SECKEYPublicKey *pubKey,
+                                CK_MECHANISM_TYPE mechType, SECItem *param,
+                                PK11SymKey *symKey, SECItem *wrappedKey)
 {
     PK11SlotInfo *slot;
     CK_ULONG len = wrappedKey->len;
@@ -1298,7 +1308,7 @@ PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
     }
 
     /* if this slot doesn't support the mechanism, go to a slot that does */
-    newKey = pk11_ForceSlot(symKey, type, CKA_ENCRYPT);
+    newKey = pk11_ForceSlot(symKey, mechType, CKA_ENCRYPT);
     if (newKey != NULL) {
         symKey = newKey;
     }
@@ -1309,9 +1319,15 @@ PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
     }
 
     slot = symKey->slot;
-    mechanism.mechanism = pk11_mapWrapKeyType(pubKey->keyType);
-    mechanism.pParameter = NULL;
-    mechanism.ulParameterLen = 0;
+
+    mechanism.mechanism = mechType;
+    if (param == NULL) {
+        mechanism.pParameter = NULL;
+        mechanism.ulParameterLen = 0;
+    } else {
+        mechanism.pParameter = param->data;
+        mechanism.ulParameterLen = param->len;
+    }
 
     id = PK11_ImportPublicKey(slot, pubKey, PR_FALSE);
     if (id == CK_INVALID_HANDLE) {
@@ -2883,20 +2899,33 @@ PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey,
                              wrappingKey->cx, keyTemplate, templateCount, isPerm);
 }
 
-/* unwrap a symetric key with a private key. */
+/* unwrap a symmetric key with a private key. Only supports CKM_RSA_PKCS. */
 PK11SymKey *
 PK11_PubUnwrapSymKey(SECKEYPrivateKey *wrappingKey, SECItem *wrappedKey,
                      CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize)
 {
     CK_MECHANISM_TYPE wrapType = pk11_mapWrapKeyType(wrappingKey->keyType);
+
+    return PK11_PubUnwrapSymKeyWithMechanism(wrappingKey, wrapType, NULL,
+                                             wrappedKey, target, operation,
+                                             keySize);
+}
+
+/* unwrap a symmetric key with a private key with the given parameters. */
+PK11SymKey *
+PK11_PubUnwrapSymKeyWithMechanism(SECKEYPrivateKey *wrappingKey,
+                                  CK_MECHANISM_TYPE mechType, SECItem *param,
+                                  SECItem *wrappedKey, CK_MECHANISM_TYPE target,
+                                  CK_ATTRIBUTE_TYPE operation, int keySize)
+{
     PK11SlotInfo *slot = wrappingKey->pkcs11Slot;
 
     if (SECKEY_HAS_ATTRIBUTE_SET(wrappingKey, CKA_PRIVATE)) {
         PK11_HandlePasswordCheck(slot, wrappingKey->wincx);
     }
 
-    return pk11_AnyUnwrapKey(slot, wrappingKey->pkcs11ID,
-                             wrapType, NULL, wrappedKey, target, operation, keySize,
+    return pk11_AnyUnwrapKey(slot, wrappingKey->pkcs11ID, mechType, param,
+                             wrappedKey, target, operation, keySize,
                              wrappingKey->wincx, NULL, 0, PR_FALSE);
 }
 

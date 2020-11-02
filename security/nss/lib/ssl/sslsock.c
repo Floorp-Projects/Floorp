@@ -1460,6 +1460,10 @@ SSL_CipherPolicySet(PRInt32 which, PRInt32 policy)
     if (rv != SECSuccess) {
         return rv;
     }
+    if (NSS_IsPolicyLocked()) {
+        PORT_SetError(SEC_ERROR_POLICY_LOCKED);
+        return SECFailure;
+    }
     return ssl_CipherPolicySet(which, policy);
 }
 
@@ -1506,9 +1510,14 @@ SECStatus
 SSL_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
     SECStatus rv = ssl_Init();
+    PRInt32 locks;
 
     if (rv != SECSuccess) {
         return rv;
+    }
+    rv = NSS_OptionGet(NSS_DEFAULT_LOCKS, &locks);
+    if ((rv == SECSuccess) && (locks & NSS_DEFAULT_SSL_LOCK)) {
+        return SECSuccess;
     }
     return ssl_CipherPrefSetDefault(which, enabled);
 }
@@ -1535,10 +1544,16 @@ SECStatus
 SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
 {
     sslSocket *ss = ssl_FindSocket(fd);
+    PRInt32 locks;
+    SECStatus rv;
 
     if (!ss) {
         SSL_DBG(("%d: SSL[%d]: bad socket in CipherPrefSet", SSL_GETPID(), fd));
         return SECFailure;
+    }
+    rv = NSS_OptionGet(NSS_DEFAULT_LOCKS, &locks);
+    if ((rv == SECSuccess) && (locks & NSS_DEFAULT_SSL_LOCK)) {
+        return SECSuccess;
     }
     if (ssl_IsRemovedCipherSuite(which))
         return SECSuccess;

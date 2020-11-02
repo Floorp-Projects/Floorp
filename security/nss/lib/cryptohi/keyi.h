@@ -17,6 +17,9 @@ KeyType seckey_GetKeyType(SECOidTag pubKeyOid);
 SECStatus sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
                            const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg);
 
+/* just get the 'encryption' oid from the combined signature oid */
+SECOidTag sec_GetEncAlgFromSigAlg(SECOidTag sigAlg);
+
 /* extract the RSA-PSS hash algorithms and salt length from
  * parameters, taking into account of the default implications.
  *

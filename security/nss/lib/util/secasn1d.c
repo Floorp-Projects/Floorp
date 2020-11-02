@@ -1982,8 +1982,15 @@ sec_asn1d_next_in_group(sec_asn1d_state *state)
          * compensating for "offset", as is done a little farther below
          * in the more normal case.
          */
-        PORT_Assert(state->indefinite);
-        PORT_Assert(state->pending == 0);
+        /*
+         * XXX We used to assert our overall state was that we were decoding
+         * an indefinite-length object here (state->indefinite == TRUE and no
+         * pending bytes in the decoder), but those assertions aren't correct
+         * as it's legitimate to wrap indefinite sequences inside definite ones
+         * and this code handles that case. Additionally, when compiled in
+         * release mode these assertions aren't checked anyway, yet function
+         * safely.
+         */
         if (child->dest && !state->subitems_head) {
             sec_asn1d_add_to_subitems(state, child->dest, 0, PR_FALSE);
             child->dest = NULL;
