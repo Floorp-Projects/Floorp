@@ -52,6 +52,13 @@ enum class ReleaseChannel {
      */
     val isFenix: Boolean
         get() = !isFennec
+
+    /**
+     * Is this a "Mozilla Online" build of Fenix? "Mozilla Online" is the Chinese branch of Mozilla
+     * and this flag will be `true` for builds shipping to Chinese app stores.
+     */
+    val isMozillaOnline: Boolean
+        get() = BuildConfig.MOZILLA_ONLINE
 }
 
 object Config {

@@ -36,6 +36,13 @@ android {
         manifestPlaceholders = [
                 "deepLinkScheme": deepLinkSchemeValue
         ]
+
+        // Build flag for "Mozilla Online" variants. See `Config.isMozillaOnline`.
+        if (project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")) {
+            buildConfigField "boolean", "MOZILLA_ONLINE", "true"
+        } else {
+            buildConfigField "boolean", "MOZILLA_ONLINE", "false"
+        }
     }
 
     def releaseTemplate = {
