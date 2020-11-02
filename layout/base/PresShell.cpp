@@ -1195,11 +1195,10 @@ void PresShell::Destroy() {
   // whether or not it's in responsive design mode. We omit unpainted presShells
   // because we get a handful of transient presShells that always report no
   // zoom, and those skew the numbers.
-  if (!mIsFirstPaint && mPresContext->IsRootContentDocumentCrossProcess()) {
-    Telemetry::HistogramID histogram = InRDMPane()
-                                           ? Telemetry::APZ_ZOOM_ACTIVITY_RDM
-                                           : Telemetry::APZ_ZOOM_ACTIVITY;
-    Telemetry::Accumulate(histogram, IsResolutionUpdatedByApz());
+  if (!mIsFirstPaint && mPresContext->IsRootContentDocumentCrossProcess() &&
+      !InRDMPane()) {
+    Telemetry::Accumulate(Telemetry::APZ_ZOOM_ACTIVITY,
+                          IsResolutionUpdatedByApz());
   }
 
   // dump out cumulative text perf metrics
