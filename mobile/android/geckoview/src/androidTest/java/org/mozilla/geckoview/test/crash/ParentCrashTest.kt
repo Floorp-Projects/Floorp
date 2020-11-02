@@ -10,22 +10,16 @@ import androidx.test.rule.ServiceTestRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
-import org.junit.After
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
-import org.junit.Assume
+import org.junit.Assume.assumeThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.BuildConfig
-import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.util.Environment
 import org.mozilla.geckoview.test.util.RuntimeCreator
-import java.io.File
-import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -51,6 +45,8 @@ class ParentCrashTest {
     @Test
     @UiThreadTest
     fun crashParent() {
+        // TODO: Bug 1673956
+        assumeThat(env.isFission, equalTo(false))
         val client = TestCrashHandler.Client(InstrumentationRegistry.getInstrumentation().targetContext)
 
         assertTrue(client.connect(env.defaultTimeoutMillis))
