@@ -17,15 +17,6 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#  define MEDIA_CHANGE_MONITOR_STATUS_MARKER(tag, text, markerTime)          \
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(tag, MEDIA_PLAYBACK, TextMarkerPayload, \
-                                     (text, markerTime))
-#else
-#  define MEDIA_CHANGE_MONITOR_STATUS_MARKER(tag, text, markerTime)
-#endif
-
 namespace mozilla {
 
 // H264ChangeMonitor is used to ensure that only AVCC or AnnexB is fed to the
@@ -99,11 +90,6 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
-    MEDIA_CHANGE_MONITOR_STATUS_MARKER(
-        "H264 Stream Change",
-        "H264ChangeMonitor::CheckForChange has detected a change in the "
-        "stream and will request a new decoder"_ns,
-        TimeStamp::NowUnfuzzed());
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
@@ -204,12 +190,6 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.mDisplay = info.mDisplay;
       mCurrentConfig.SetImageRect(
           gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
-
-      MEDIA_CHANGE_MONITOR_STATUS_MARKER(
-          "VPX Stream Change",
-          "VPXChangeMonitor::CheckForChange has detected a change in the "
-          "stream and will request a new decoder"_ns,
-          TimeStamp::NowUnfuzzed());
       rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     }
     mInfo = Some(info);
