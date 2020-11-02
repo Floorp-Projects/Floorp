@@ -569,7 +569,7 @@ async function setup(cachedAddons) {
     });
 
   const onAddonEvent = async addon => {
-    for (const cachedAddon in cachedAddons) {
+    for (const cachedAddon of cachedAddons) {
       if (cachedAddon.addon_id == addon.id) {
         await updateStudy(addon.id);
       }
