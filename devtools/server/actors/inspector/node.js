@@ -56,7 +56,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "getFontPreviewData",
-  "devtools/server/actors/styles",
+  "devtools/server/actors/utils/style-utils",
   true
 );
 loader.lazyRequireGetter(
