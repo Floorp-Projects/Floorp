@@ -207,13 +207,6 @@ const PerformanceController = {
     if (!hasActor) {
       return true;
     }
-    const actorCanCheck = await this.target.actorHasMethod(
-      "performance",
-      "canCurrentlyRecord"
-    );
-    if (!actorCanCheck) {
-      return true;
-    }
     return (await this.front.canCurrentlyRecord()).success;
   },
 
