@@ -110,9 +110,9 @@ PurgeTrackerService.prototype = {
     return this._trackingState.get(host);
   },
 
-  isAllowedThirdParty(firstPartyOrigin, thirdPartyHost) {
+  isAllowedThirdParty(firstPartyOriginNoSuffix, thirdPartyHost) {
     let uri = Services.io.newURI(
-      `${firstPartyOrigin}/?resource=${thirdPartyHost}`
+      `${firstPartyOriginNoSuffix}/?resource=${thirdPartyHost}`
     );
     logger.debug(`Checking entity list state for`, uri.spec);
     return new Promise(resolve => {
@@ -181,7 +181,7 @@ PurgeTrackerService.prototype = {
       for (let firstPartyPrincipal of this._principalsWithInteraction) {
         if (
           await this.isAllowedThirdParty(
-            firstPartyPrincipal.origin,
+            firstPartyPrincipal.originNoSuffix,
             principal.asciiHost
           )
         ) {
