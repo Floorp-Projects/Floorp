@@ -1284,7 +1284,8 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
   Rooted<DataViewObject*> view(context(), obj->maybeUnwrapAs<DataViewObject>());
   JSAutoRealm ar(context(), view);
 
-  if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, view->byteLength())) {
+  if (!out.writePair(SCTAG_DATA_VIEW_OBJECT,
+                     view->byteLength().deprecatedGetUint32())) {
     return false;
   }
 

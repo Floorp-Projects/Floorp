@@ -8,6 +8,7 @@
 #define vm_DataViewObject_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 
 #include "gc/Barrier.h"
 #include "js/Class.h"
@@ -62,16 +63,13 @@ class DataViewObject : public ArrayBufferViewObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  size_t byteLength() const {
-    size_t len = size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
-    MOZ_ASSERT(len <= INT32_MAX);
-    return len;
+  BufferSize byteLength() const {
+    return BufferSize(size_t(getFixedSlot(LENGTH_SLOT).toPrivate()));
   }
 
   Value byteLengthValue() const {
-    size_t len = byteLength();
-    MOZ_ASSERT(len <= INT32_MAX);
-    return Int32Value(len);
+    size_t len = byteLength().get();
+    return NumberValue(len);
   }
 
   template <typename NativeType>
@@ -80,7 +78,9 @@ class DataViewObject : public ArrayBufferViewObject {
   }
   bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
     MOZ_ASSERT(byteSize <= 8);
-    return offset <= UINT32_MAX - byteSize && offset + byteSize <= byteLength();
+    mozilla::CheckedInt<uint64_t> endOffset(offset);
+    endOffset += byteSize;
+    return endOffset.isValid() && endOffset.value() <= byteLength().get();
   }
 
   static bool isOriginalByteOffsetGetter(Native native) {
