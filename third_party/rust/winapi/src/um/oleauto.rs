@@ -10,7 +10,9 @@ use shared::minwindef::{BYTE, DWORD, FLOAT, UINT, ULONG, USHORT, WORD};
 use shared::wtypes::{BSTR, DATE, DECIMAL, LPBSTR, LPDECIMAL, VARTYPE};
 use shared::wtypesbase::{DOUBLE, LPCOLESTR, LPOLESTR, OLECHAR};
 use um::minwinbase::LPSYSTEMTIME;
-use um::oaidl::{DISPID_UNKNOWN, ITypeLib, SAFEARRAY, VARIANT, VARIANTARG};
+use um::oaidl::{
+    DISPID_UNKNOWN, ICreateErrorInfo, IErrorInfo, ITypeLib, SAFEARRAY, VARIANT, VARIANTARG
+};
 use um::winnt::{CHAR, HRESULT, INT, LCID, LONG, LPCSTR, SHORT};
 extern "system" {
     pub fn SysAllocString(
@@ -831,6 +833,17 @@ extern "system" {
         dwRegister: DWORD,
         pvReserved: *mut c_void,
     );
+    pub fn SetErrorInfo(
+        dwReserved: ULONG,
+        perrinfo: *mut IErrorInfo,
+    ) -> HRESULT;
+    pub fn GetErrorInfo(
+        dwReserved: ULONG,
+        pperrinfo: *mut *mut IErrorInfo,
+    ) -> HRESULT;
+    pub fn CreateErrorInfo(
+        pperrinfo: *mut *mut ICreateErrorInfo,
+    ) -> HRESULT;
     pub fn OaBuildVersion() -> ULONG;
     pub fn OaEnablePerUserTLibRegistration();
 }

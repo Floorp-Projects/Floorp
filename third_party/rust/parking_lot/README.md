@@ -1,7 +1,8 @@
 parking_lot
 ============
 
-[![Build Status](https://travis-ci.org/Amanieu/parking_lot.svg?branch=master)](https://travis-ci.org/Amanieu/parking_lot) [![Build status](https://ci.appveyor.com/api/projects/status/wppcc32ttpud0a30/branch/master?svg=true)](https://ci.appveyor.com/project/Amanieu/parking-lot/branch/master) [![Crates.io](https://img.shields.io/crates/v/parking_lot.svg)](https://crates.io/crates/parking_lot)
+![Rust](https://github.com/Amanieu/parking_lot/workflows/Rust/badge.svg)
+[![Crates.io](https://img.shields.io/crates/v/parking_lot.svg)](https://crates.io/crates/parking_lot)
 
 [Documentation (synchronization primitives)](https://docs.rs/parking_lot/)
 
@@ -71,6 +72,8 @@ in the Rust standard library:
 18. Optional support for [serde](https://docs.serde.rs/serde/).  Enable via the
     feature `serde`.  **NOTE!** this support is for `Mutex`, `ReentrantMutex`,
     and `RwLock` only; `Condvar` and `Once` are not currently supported.
+19. Lock guards can be sent to other threads when the `send_guard` feature is
+    enabled.
 
 ## The parking lot
 
@@ -92,6 +95,8 @@ There are a few restrictions when using this library on stable Rust:
   does not work on stable Rust yet.
 - `RwLock` will not be able to take advantage of hardware lock elision for
   readers, which improves performance when there are multiple readers.
+- The `wasm32-unknown-unknown` target is only supported on nightly and requires
+  `-C target-feature=+atomics` in `RUSTFLAGS`.
 
 To enable nightly-only functionality, you need to enable the `nightly` feature
 in Cargo (see below).
@@ -102,18 +107,24 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.10"
+parking_lot = "0.11"
 ```
 
 To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = { version = "0.10", features = ["nightly"] }
+parking_lot = { version = "0.11", features = ["nightly"] }
 ```
 
 The experimental deadlock detector can be enabled with the
 `deadlock_detection` Cargo feature.
+
+To allow sending `MutexGuard`s and `RwLock*Guard`s to other threads, enable the
+`send_guard` option.
+
+Note that the `deadlock_detection` and `send_guard` features are incompatible
+and cannot be used together.
 
 The core parking lot API is provided by the `parking_lot_core` crate. It is
 separate from the synchronization primitives in the `parking_lot` crate so that

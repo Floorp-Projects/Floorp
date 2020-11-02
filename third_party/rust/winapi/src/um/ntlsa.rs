@@ -155,7 +155,7 @@ pub const SE_ADT_PARAMETERS_SEND_TO_LSA: ULONG = 0x00000002;
 pub const SE_ADT_PARAMETER_EXTENSIBLE_AUDIT: ULONG = 0x00000004;
 pub const SE_ADT_PARAMETER_GENERIC_AUDIT: ULONG = 0x00000008;
 pub const SE_ADT_PARAMETER_WRITE_SYNCHRONOUS: ULONG = 0x00000010;
-#[cfg(target_arch = "x86")]
+#[cfg(target_pointer_width = "32")]
 #[inline]
 pub fn LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(
     AuditParameters: SE_ADT_PARAMETER_ARRAY,
@@ -164,7 +164,7 @@ pub fn LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(
         - (20 // FIXME: sizeof::<SE_ADT_PARAMETER_ARRAY_ENTRY>()
         * (SE_MAX_AUDIT_PARAMETERS - AuditParameters.ParameterCount as SIZE_T))
 }
-#[cfg(target_arch = "x86_64")]
+#[cfg(target_pointer_width = "64")]
 #[inline]
 pub fn LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(
     AuditParameters: SE_ADT_PARAMETER_ARRAY,

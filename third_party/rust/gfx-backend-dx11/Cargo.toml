@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-dx11"
-version = "0.5.1"
+version = "0.5.3"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-11 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -40,13 +40,13 @@ version = "0.5"
 package = "gfx-hal"
 
 [dependencies.libloading]
-version = "0.5"
+version = "0.6"
 
 [dependencies.log]
 version = "0.4"
 
 [dependencies.parking_lot]
-version = "0.10"
+version = "0.11"
 
 [dependencies.range-alloc]
 version = "0.1"

@@ -5,7 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use std::time::{Duration, Instant};
+use instant::Instant;
+use std::time::Duration;
 
 // Option::unchecked_unwrap
 pub trait UncheckedOptionExt<T> {

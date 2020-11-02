@@ -1852,6 +1852,7 @@ interface ID3D11DeviceContext(ID3D11DeviceContextVtbl): ID3D11DeviceChild(ID3D11
         ppRenderTargetViews: *mut *mut ID3D11RenderTargetView,
         ppDepthStencilView: *mut *mut ID3D11DepthStencilView,
         UAVStartSlot: UINT,
+        NumUAVs: UINT,
         ppUnorderedAccessViews: *mut *mut ID3D11UnorderedAccessView,
     ) -> (),
     fn OMGetBlendState(
@@ -2481,9 +2482,9 @@ STRUCT!{struct D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_INPU
     ProcessIndex: UINT,
 }}
 ENUM!{enum D3D11_AUTHENTICATED_PROCESS_IDENTIFIER_TYPE {
-    DD3D11_PROCESSIDTYPE_UNKNOWN = 0,
-    DD3D11_PROCESSIDTYPE_DWM = 1,
-    DD3D11_PROCESSIDTYPE_HANDLE = 2,
+    D3D11_PROCESSIDTYPE_UNKNOWN = 0,
+    D3D11_PROCESSIDTYPE_DWM = 1,
+    D3D11_PROCESSIDTYPE_HANDLE = 2,
 }}
 STRUCT!{struct D3D11_AUTHENTICATED_QUERY_RESTRICTED_SHARED_RESOURCE_PROCESS_OUTPUT {
     Output: D3D11_AUTHENTICATED_QUERY_OUTPUT,

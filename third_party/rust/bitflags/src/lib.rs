@@ -251,7 +251,7 @@
 //! ```
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/bitflags/1.2.0")]
+#![doc(html_root_url = "https://docs.rs/bitflags/1.2.1")]
 
 #[cfg(test)]
 #[macro_use]
@@ -590,7 +590,6 @@ macro_rules! __impl_bitflags {
                     #[allow(non_snake_case)]
                     trait __BitFlags {
                         $(
-                            #[inline]
                             const $Flag: $T = 0;
                         )+
                     }
@@ -598,7 +597,6 @@ macro_rules! __impl_bitflags {
                         $(
                             __impl_bitflags! {
                                 #[allow(deprecated)]
-                                #[inline]
                                 $(? #[$attr $($args)*])*
                                 const $Flag: $T = Self::$Flag.bits;
                             }

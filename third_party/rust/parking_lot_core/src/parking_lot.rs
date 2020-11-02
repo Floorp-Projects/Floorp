@@ -4,17 +4,58 @@
 // http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
-
 use crate::thread_parker::{ThreadParker, ThreadParkerT, UnparkHandleT};
 use crate::util::UncheckedOptionExt;
 use crate::word_lock::WordLock;
+use cfg_if::cfg_if;
 use core::{
     cell::{Cell, UnsafeCell},
     ptr,
     sync::atomic::{AtomicPtr, AtomicUsize, Ordering},
 };
+use instant::Instant;
 use smallvec::SmallVec;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+cfg_if! {
+    if #[cfg(all(
+        target_arch = "wasm32",
+        target_os = "unknown",
+        target_vendor = "unknown"
+    ))] {
+        use core::ops::Add;
+
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+        struct DummyInstant(Duration);
+
+        impl DummyInstant {
+            pub fn now() -> DummyInstant {
+                DummyInstant::zero()
+            }
+
+            const fn zero() -> DummyInstant {
+                DummyInstant(Duration::from_secs(0))
+            }
+        }
+
+        impl Add<Duration> for DummyInstant {
+            type Output = DummyInstant;
+
+            fn add(self, _rhs: Duration) -> DummyInstant {
+                DummyInstant::zero()
+            }
+        }
+
+        // Use dummy implementation for `Instant` on `wasm32`. The reason for this is
+        // that `Instant::now()` will always panic because time is currently not implemented
+        // on wasm32-unknown-unknown.
+        // See https://github.com/rust-lang/rust/blob/master/src/libstd/sys/wasm/time.rs
+        type InstantType = DummyInstant;
+    } else {
+        // Otherwise use `instant::Instant`
+        type InstantType = Instant;
+    }
+}
 
 static NUM_THREADS: AtomicUsize = AtomicUsize::new(0);
 
@@ -47,7 +88,7 @@ impl HashTable {
         let new_size = (num_threads * LOAD_FACTOR).next_power_of_two();
         let hash_bits = 0usize.leading_zeros() - new_size.leading_zeros() - 1;
 
-        let now = Instant::now();
+        let now = InstantType::now();
         let mut entries = Vec::with_capacity(new_size);
         for i in 0..new_size {
             // We must ensure the seed is not zero
@@ -77,7 +118,7 @@ struct Bucket {
 
 impl Bucket {
     #[inline]
-    pub fn new(timeout: Instant, seed: u32) -> Self {
+    pub fn new(timeout: InstantType, seed: u32) -> Self {
         Self {
             mutex: WordLock::new(),
             queue_head: Cell::new(ptr::null()),
@@ -89,7 +130,7 @@ impl Bucket {
 
 struct FairTimeout {
     // Next time at which point be_fair should be set
-    timeout: Instant,
+    timeout: InstantType,
 
     // the PRNG state for calculating the next timeout
     seed: u32,
@@ -97,14 +138,14 @@ struct FairTimeout {
 
 impl FairTimeout {
     #[inline]
-    fn new(timeout: Instant, seed: u32) -> FairTimeout {
+    fn new(timeout: InstantType, seed: u32) -> FairTimeout {
         FairTimeout { timeout, seed }
     }
 
     // Determine whether we should force a fair unlock, and update the timeout
     #[inline]
     fn should_timeout(&mut self) -> bool {
-        let now = Instant::now();
+        let now = InstantType::now();
         if now > self.timeout {
             // Time between 0 and 1ms.
             let nanos = self.gen_u32() % 1_000_000;

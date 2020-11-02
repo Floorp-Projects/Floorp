@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "cfg-if"
-version = "0.1.10"
+version = "1.0.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n"
 homepage = "https://github.com/alexcrichton/cfg-if"

@@ -144,6 +144,7 @@ pub struct RootDescriptor {
 #[derive(Debug)]
 pub struct RootElement {
     pub table: RootTable,
+    //TODO: remove this or find a better way to use it
     pub descriptors: Vec<RootDescriptor>,
     pub mutable_bindings: auxil::FastHashSet<pso::DescriptorBinding>,
 }

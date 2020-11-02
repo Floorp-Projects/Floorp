@@ -3,7 +3,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
-use shared::minwindef::{BOOL, PBOOL, UINT};
+use shared::minwindef::{BOOL, PBOOL, PUSHORT, UINT};
 use um::winnt::{HANDLE, LPSTR, LPWSTR, PVOID};
 extern "system" {
     pub fn Wow64DisableWow64FsRedirection(
@@ -24,4 +24,9 @@ extern "system" {
         lpBuffer: LPWSTR,
         uSize: UINT,
     ) -> UINT;
+    pub fn IsWow64Process2(
+        hProcess: HANDLE,
+        pProcessMachine: PUSHORT,
+        pNativeMachine: PUSHORT,
+    ) -> BOOL;
 }

@@ -1,5 +1,5 @@
 use cfg_if::cfg_if;
-use std::time::Instant;
+use instant::Instant;
 
 /// Trait for the platform thread parker implementation.
 ///

@@ -65,7 +65,7 @@ ENUM!{enum SF_TYPE {
     SF_RECORD = VT_RECORD,
     SF_HAVEIID = VT_UNKNOWN | VT_RESERVED,
 }}
-#[cfg(target_arch = "x86")]
+#[cfg(target_pointer_width = "32")]
 UNION!{union __MIDL_IOleAutomationTypes_0001 {
     [u32; 6],
     BstrStr BstrStr_mut: SAFEARR_BSTR,
@@ -868,6 +868,42 @@ interface ITypeInfo(ITypeInfoVtbl): IUnknown(IUnknownVtbl) {
     fn ReleaseVarDesc(
         pVarDesc: *mut VARDESC,
     ) -> (),
+}}
+RIDL!{#[uuid(0x1cf2b120, 0x547d, 0x101b, 0x8e, 0x65, 0x08, 0x00, 0x2b, 0x2b, 0xd1, 0x19)]
+interface IErrorInfo(IErrorInfoVtbl): IUnknown(IUnknownVtbl) {
+    fn GetGUID(
+        pGUID: *mut GUID,
+    ) -> HRESULT,
+    fn GetSource(
+        pBstrSource: *mut BSTR,
+    ) -> HRESULT,
+    fn GetDescription(
+        pBstrDescription: *mut BSTR,
+    ) -> HRESULT,
+    fn GetHelpFile(
+        pBstrHelpFile: *mut BSTR,
+    ) -> HRESULT,
+    fn GetHelpContext(
+        pdwHelpContext: *mut DWORD,
+    ) -> HRESULT,
+}}
+RIDL!{#[uuid(0x22f03340, 0x547d, 0x101b, 0x8e, 0x65, 0x08, 0x00, 0x2b, 0x2b, 0xd1, 0x19)]
+interface ICreateErrorInfo(ICreateErrorInfoVtbl): IUnknown(IUnknownVtbl) {
+    fn SetGUID(
+        rguid: REFGUID,
+    ) -> HRESULT,
+    fn SetSource(
+        szSource: LPOLESTR,
+    ) -> HRESULT,
+    fn SetDescription(
+        szDescription: LPOLESTR,
+    ) -> HRESULT,
+    fn SetHelpFile(
+        szHelpFile: LPOLESTR,
+    ) -> HRESULT,
+    fn SetHelpContext(
+        dwHelpContext: DWORD,
+    ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x3127ca40, 0x446e, 0x11ce, 0x81, 0x35, 0x00, 0xaa, 0x00, 0x4b, 0xb8, 0x51)]
 interface IErrorLog(IErrorLogVtbl): IUnknown(IUnknownVtbl) {

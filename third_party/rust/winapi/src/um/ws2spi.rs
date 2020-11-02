@@ -754,7 +754,7 @@ extern "system" {
         lpdwCatalogEntryId: LPDWORD,
         lpErrno: LPINT,
     ) -> c_int;
-    #[cfg(any(target_arch = "x86", target_arch = "arm"))]
+    #[cfg(target_pointer_width = "32")]
     pub fn WSCInstallProviderAndChains(
         lpProviderId: LPGUID,
         lpszProviderDllPath: LPWSTR,

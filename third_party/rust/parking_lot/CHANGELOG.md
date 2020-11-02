@@ -1,3 +1,17 @@
+## parking_lot 0.11.0, parking_lot_core 0.8.0, lock_api 0.4.0 (2020-06-23)
+
+- Add `is_locked` method to mutex types. (#235)
+- Make `RawReentrantMutex` public. (#233)
+- Allow lock guard to be sent to another thread with the `send_guard` feature. (#240)
+- Use `Instant` type from the `instant` crate on wasm32-unknown-unknown. (#231)
+- Remove deprecated and unsound `MappedRwLockWriteGuard::downgrade`. (#244)
+- Most methods on the `Raw*` traits have been made unsafe since they assume
+  the current thread holds the lock. (#243)
+
+## parking_lot_core 0.7.2 (2020-04-21)
+
+- Add support for `wasm32-unknown-unknown` under the "nightly" feature. (#226)
+
 ## parking_lot 0.10.2 (2020-04-10)
 
 - Update minimum version of `lock_api`.

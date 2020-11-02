@@ -9,10 +9,8 @@ use core::{
     mem::{self, MaybeUninit},
     ptr,
 };
-use std::{
-    sync::atomic::{AtomicUsize, Ordering},
-    time::Instant,
-};
+use instant::Instant;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use winapi::{
     shared::{
         minwindef::{TRUE, ULONG},

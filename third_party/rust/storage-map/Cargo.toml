@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "storage-map"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Dzmitry Malyshau <kvarkus@gmail.com>"]
 description = "Concurrent append-only map storage"
 homepage = "https://github.com/kvark/storage-map"
@@ -22,6 +22,6 @@ keywords = ["hashmap", "map", "concurrent", "lock"]
 license = "Apache-2.0"
 repository = "https://github.com/kvark/storage-map"
 [dependencies.lock_api]
-version = "0.3.1"
+version = "0.4"
 [dev-dependencies.parking_lot]
-version = "0.9.0"
+version = "0.11"

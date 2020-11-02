@@ -267,49 +267,47 @@ impl PipelineCache {
         for (set, element) in sets.zip(layout.elements[first_set ..].iter()) {
             let set = set.borrow();
 
-            let mut num_tables = 0;
+            let mut num_words = 0;
+            let table = &element.table;
 
             // Bind CBV/SRC/UAV descriptor tables
             set.first_gpu_view.map(|gpu| {
-                let table = &element.table;
                 assert!(table.ty.contains(r::SRV_CBV_UAV));
 
                 // Cast is safe as offset **must** be in u32 range. Unable to
                 // create heaps with more descriptors.
                 let table_gpu_offset = (gpu.ptr - srv_cbv_uav_start) as u32;
-                let table_offset = table.offset + num_tables;
+                let table_offset = table.offset + num_words;
                 self.user_data
                     .set_srv_cbv_uav_table(table_offset, table_gpu_offset);
-                num_tables += 1;
+                num_words += 1;
             });
 
             // Bind Sampler descriptor tables.
             set.first_gpu_sampler.map(|gpu| {
-                let table = &element.table;
                 assert!(table.ty.contains(r::SAMPLERS));
-
                 // Cast is safe as offset **must** be in u32 range. Unable to
                 // create heaps with more descriptors.
                 let table_gpu_offset = (gpu.ptr - sampler_start) as u32;
-                let table_offset = table.offset + num_tables;
+                let table_offset = table.offset + num_words;
                 self.user_data
                     .set_sampler_table(table_offset, table_gpu_offset);
+                num_words += 1;
             });
 
             // Bind root descriptors
-            // TODO: slow, can we move the dynamic descriptors into toplevel somehow during initializtion?
+            // TODO: slow, can we move the dynamic descriptors into toplevel somehow during initialization?
             //       Requires changes then in the descriptor update process.
-            let mut descriptor_id = 0;
             for binding in &set.binding_infos {
                 // It's not valid to modify the descriptor sets during recording -> access if safe.
                 let dynamic_descriptors = unsafe { &*binding.dynamic_descriptors.get() };
                 for descriptor in dynamic_descriptors {
-                    let root_offset = element.descriptors[descriptor_id].offset;
+                    let root_offset = table.offset + num_words;
                     self.user_data.set_descriptor_cbv(
                         root_offset,
                         descriptor.gpu_buffer_location + offsets.next().unwrap(),
                     );
-                    descriptor_id += 1;
+                    num_words += 2;
                 }
             }
         }
@@ -834,45 +832,47 @@ impl CommandBuffer {
 
         // Flush descriptor tables & root descriptors
         // Index in the user data array where tables are starting
-        let table_start = pipeline
+        let mut root_index = pipeline
             .root_constants
             .iter()
             .fold(0, |sum, c| sum + c.range.end - c.range.start) as usize;
 
         for i in num_root_constant .. pipeline.num_parameter_slots {
-            let table_index = i - num_root_constant + table_start;
-            if user_data.is_index_dirty(table_index) {
-                match user_data.data[table_index] {
+            if user_data.is_index_dirty(root_index) {
+                match user_data.data[root_index] {
                     RootElement::TableSrvCbvUav(offset) => {
                         let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE {
                             ptr: pipeline.srv_cbv_uav_start + offset as u64,
                         };
                         table_update(i as _, gpu);
-                        user_data.clear_dirty(table_index);
+                        user_data.clear_dirty(root_index);
+                        root_index += 1;
                     }
                     RootElement::TableSampler(offset) => {
                         let gpu = d3d12::D3D12_GPU_DESCRIPTOR_HANDLE {
                             ptr: pipeline.sampler_start + offset as u64,
                         };
                         table_update(i as _, gpu);
-                        user_data.clear_dirty(table_index);
+                        user_data.clear_dirty(root_index);
+                        root_index += 1;
                     }
                     RootElement::DescriptorCbv { buffer } => {
-                        debug_assert!(user_data.is_index_dirty(table_index + 1));
+                        debug_assert!(user_data.is_index_dirty(root_index + 1));
                         debug_assert_eq!(
-                            user_data.data[table_index + 1],
+                            user_data.data[root_index + 1],
                             RootElement::DescriptorPlaceholder
                         );
 
                         descriptor_cbv_update(i as _, buffer);
 
-                        user_data.clear_dirty(table_index);
-                        user_data.clear_dirty(table_index + 1); // skip placeholder
+                        user_data.clear_dirty(root_index);
+                        user_data.clear_dirty(root_index + 1); // skip placeholder
+                        root_index += 2;
                     }
                     other => {
                         error!(
                             "Unexpected user data element in the root signature ({:?})",
-                            (table_index, other)
+                            (root_index, other)
                         );
                         continue;
                     }

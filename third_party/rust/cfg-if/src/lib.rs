@@ -34,30 +34,30 @@
 macro_rules! cfg_if {
     // match if/else chains with a final `else`
     ($(
-        if #[cfg($($meta:meta),*)] { $($tokens:tt)* }
+        if #[cfg($meta:meta)] { $($tokens:tt)* }
     ) else * else {
         $($tokens2:tt)*
     }) => {
         $crate::cfg_if! {
             @__items
             () ;
-            $( ( ($($meta),*) ($($tokens)*) ), )*
+            $( ( ($meta) ($($tokens)*) ), )*
             ( () ($($tokens2)*) ),
         }
     };
 
     // match if/else chains lacking a final `else`
     (
-        if #[cfg($($i_met:meta),*)] { $($i_tokens:tt)* }
+        if #[cfg($i_met:meta)] { $($i_tokens:tt)* }
         $(
-            else if #[cfg($($e_met:meta),*)] { $($e_tokens:tt)* }
+            else if #[cfg($e_met:meta)] { $($e_tokens:tt)* }
         )*
     ) => {
         $crate::cfg_if! {
             @__items
             () ;
-            ( ($($i_met),*) ($($i_tokens)*) ),
-            $( ( ($($e_met),*) ($($e_tokens)*) ), )*
+            ( ($i_met) ($($i_tokens)*) ),
+            $( ( ($e_met) ($($e_tokens)*) ), )*
             ( () () ),
         }
     };
