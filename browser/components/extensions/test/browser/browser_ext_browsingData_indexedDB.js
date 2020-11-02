@@ -4,21 +4,15 @@
 "use strict";
 
 add_task(async function testIndexedDB() {
-  function background() {
-    const PAGE =
-      "/browser/browser/components/extensions/test/browser/file_indexedDB.html";
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
 
+  function background() {
     browser.test.onMessage.addListener(async msg => {
-      await browser.browsingData.remove(
-        { hostnames: msg.hostnames },
-        { indexedDB: true }
-      );
+      await browser.browsingData.remove(msg, { indexedDB: true });
       browser.test.sendMessage("indexedDBRemoved");
     });
-
-    // Create two tabs.
-    browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
-    browser.tabs.create({ url: `http://example.com${PAGE}` });
   }
 
   function contentScript() {
@@ -41,6 +35,7 @@ add_task(async function testIndexedDB() {
           matches: [
             "http://mochi.test/*/file_indexedDB.html",
             "http://example.com/*/file_indexedDB.html",
+            "http://example.net/*/file_indexedDB.html",
           ],
           js: ["script.js"],
           run_at: "document_start",
@@ -56,6 +51,19 @@ add_task(async function testIndexedDB() {
   await focusWindow(win);
 
   await extension.startup();
+
+  const PAGE =
+    "/browser/browser/components/extensions/test/browser/file_indexedDB.html";
+
+  // Create two tabs.
+  BrowserTestUtils.addTab(win.gBrowser, `http://mochi.test:8888${PAGE}`);
+  BrowserTestUtils.addTab(win.gBrowser, `http://example.com${PAGE}`);
+  // Create tab with cookieStoreId "firefox-container-1"
+  BrowserTestUtils.addTab(win.gBrowser, `http://example.net${PAGE}`, {
+    userContextId: 1,
+  });
+
+  await extension.awaitMessage("indexedDBCreated");
   await extension.awaitMessage("indexedDBCreated");
   await extension.awaitMessage("indexedDBCreated");
 
@@ -69,29 +77,45 @@ add_task(async function testIndexedDB() {
           }
           if (
             request.result[i].origin.startsWith("http://mochi.test") ||
-            request.result[i].origin.startsWith("http://example.com")
+            request.result[i].origin.startsWith("http://example.com") ||
+            request.result[i].origin.startsWith("http://example.net")
           ) {
             origins.push(request.result[i].origin);
           }
         }
-        resolve(origins);
+        resolve(origins.sort());
       });
     });
   }
 
   let origins = await getOrigins();
-  is(origins.length, 2, "IndexedDB databases have been populated.");
+  is(origins.length, 3, "IndexedDB databases have been populated.");
 
+  // Deleting private browsing mode data is silently ignored.
+  extension.sendMessage({ cookieStoreId: "firefox-private" });
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 3, "All indexedDB remains after clearing firefox-private");
+
+  // Delete by hostname
   extension.sendMessage({ hostnames: ["example.com"] });
   await extension.awaitMessage("indexedDBRemoved");
 
   origins = await getOrigins();
-  is(origins.length, 1, "IndexedDB data only for only one domain left");
-  ok(
-    origins[0].startsWith("http://mochi.test"),
-    "IndexedDB data for 'example.com' has been removed."
-  );
+  is(origins.length, 2, "IndexedDB data only for only two domains left");
+  ok(origins[0].startsWith("http://example.net"), "example.net not deleted");
+  ok(origins[1].startsWith("http://mochi.test"), "mochi.test not deleted");
 
+  // Delete by cookieStoreId
+  extension.sendMessage({ cookieStoreId: "firefox-container-1" });
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 1, "IndexedDB data only for only one domain");
+  ok(origins[0].startsWith("http://mochi.test"), "mochi.test not deleted");
+
+  // Delete all
   extension.sendMessage({});
   await extension.awaitMessage("indexedDBRemoved");
 

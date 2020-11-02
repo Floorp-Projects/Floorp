@@ -34,30 +34,37 @@ add_task(async function test_cookie_containers() {
     }
 
     const TEST_URL = "http://example.org/";
-    const THE_FUTURE = Date.now() + 5 * 60;
 
-    let expected = {
-      name: "name1",
-      value: "value1",
-      domain: "example.org",
-      hostOnly: true,
-      path: "/",
-      secure: false,
-      httpOnly: false,
-      sameSite: "no_restriction",
-      session: false,
-      expirationDate: THE_FUTURE,
-      storeId: "firefox-container-1",
-      firstPartyDomain: "",
-    };
+    async function setCookie(storeId) {
+      const THE_FUTURE = Date.now() + 5 * 60;
 
-    let cookie = await browser.cookies.set({
-      url: TEST_URL, name: "name1", value: "value1",
-      expirationDate: THE_FUTURE, storeId: "firefox-container-1",
-    });
-    browser.test.assertEq("firefox-container-1", cookie.storeId, "the cookie has the correct storeId");
+      let expected = {
+        name: "name1",
+        value: "value1",
+        domain: "example.org",
+        hostOnly: true,
+        path: "/",
+        secure: false,
+        httpOnly: false,
+        sameSite: "no_restriction",
+        session: false,
+        expirationDate: THE_FUTURE,
+        storeId,
+        firstPartyDomain: "",
+      };
 
-    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+      let cookie = await browser.cookies.set({
+        url: TEST_URL, name: "name1", value: "value1",
+        expirationDate: THE_FUTURE, storeId
+      });
+      browser.test.assertEq(storeId, cookie.storeId, "the cookie has the correct storeId");
+
+      return expected;
+    }
+
+    let expected = await setCookie("firefox-container-1");
+
+    let cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
     browser.test.assertEq(null, cookie, "get() without storeId returns null");
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
@@ -76,13 +83,45 @@ add_task(async function test_cookie_containers() {
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");
 
+    // Remove container cookie with browsingData
+    let expectedContainer = await setCookie("firefox-container-1");
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
+    assertExpected(expectedContainer, cookie);
+
+    await browser.browsingData.remove({ cookieStoreId: "firefox-container-1" }, { cookies: true});
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    // Remove default cookie with browsingData
+    expectedContainer = await setCookie("firefox-container-1");
+    let expectedDefault = await setCookie("firefox-default");
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
+    assertExpected(expectedContainer, cookie);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-default"});
+    assertExpected(expectedDefault, cookie);
+
+    await browser.browsingData.remove({ cookieStoreId: "firefox-default", hostnames: ["example.org"] }, { cookies: true});
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
+    assertExpected(expectedContainer, cookie);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-default"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    // Cleanup
+    await browser.browsingData.remove({ cookieStoreId: "firefox-container-1" }, { cookies: true});
+
     browser.test.notifyPass("cookies");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      permissions: ["cookies", "*://example.org/"],
+      permissions: ["cookies", "browsingData", "*://example.org/"],
     },
   });
 
