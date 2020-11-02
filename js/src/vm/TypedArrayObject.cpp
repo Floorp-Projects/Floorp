@@ -2691,7 +2691,7 @@ JS_FRIEND_API uint32_t JS_GetTypedArrayByteOffset(JSObject* obj) {
   if (!tarr) {
     return 0;
   }
-  return tarr->byteOffset();
+  return tarr->byteOffset().deprecatedGetUint32();
 }
 
 JS_FRIEND_API uint32_t JS_GetTypedArrayByteLength(JSObject* obj) {
