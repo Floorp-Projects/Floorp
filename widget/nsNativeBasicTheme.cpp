@@ -5,6 +5,10 @@
 
 #include "nsNativeBasicTheme.h"
 
+#include "gfxBlur.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/gfx/Filters.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
@@ -287,6 +291,47 @@ void nsNativeBasicTheme::PaintStrokedEllipse(DrawTarget* aDrawTarget,
   aDrawTarget->Fill(ellipse, ColorPattern(ToDeviceColor(aBackgroundColor)));
   aDrawTarget->Stroke(ellipse, ColorPattern(ToDeviceColor(aBorderColor)),
                       StrokeOptions(borderWidth));
+}
+
+/* static */
+void nsNativeBasicTheme::PaintEllipseShadow(
+    DrawTarget* aDrawTarget, const Rect& aRect, float aShadowAlpha,
+    const Point& aShadowOffset, float aShadowBlurStdDev, uint32_t aDpiRatio) {
+  Float stdDev = aShadowBlurStdDev * aDpiRatio;
+  Point offset = aShadowOffset * aDpiRatio;
+
+  RefPtr<FilterNode> blurFilter =
+      aDrawTarget->CreateFilter(FilterType::GAUSSIAN_BLUR);
+  if (!blurFilter) {
+    return;
+  }
+
+  blurFilter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdDev);
+
+  IntSize inflation =
+      gfxAlphaBoxBlur::CalculateBlurRadius(gfxPoint(stdDev, stdDev));
+  Rect inflatedRect(aRect);
+  inflatedRect.Inflate(inflation.width, inflation.height);
+  Rect sourceRectInFilterSpace = inflatedRect - aRect.TopLeft();
+  Point destinationPointOfSourceRect = inflatedRect.TopLeft() + offset;
+
+  IntSize dtSize = RoundedToInt(aRect.Size().ToUnknownSize());
+  RefPtr<DrawTarget> ellipseDT = aDrawTarget->CreateSimilarDrawTargetForFilter(
+      dtSize, SurfaceFormat::A8, blurFilter, blurFilter,
+      sourceRectInFilterSpace, destinationPointOfSourceRect);
+  if (!ellipseDT) {
+    return;
+  }
+
+  RefPtr<Path> ellipse = MakePathForEllipse(
+      *ellipseDT, (aRect - aRect.TopLeft()).Center(), aRect.Size());
+  ellipseDT->Fill(ellipse,
+                  ColorPattern(DeviceColor(0.0f, 0.0f, 0.0f, aShadowAlpha)));
+  RefPtr<SourceSurface> ellipseSurface = ellipseDT->Snapshot();
+
+  blurFilter->SetInput(IN_GAUSSIAN_BLUR_IN, ellipseSurface);
+  aDrawTarget->DrawFilter(blurFilter, sourceRectInFilterSpace,
+                          destinationPointOfSourceRect);
 }
 
 /* static */
@@ -658,34 +703,37 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   Rect rect(aRect);
   Rect thumbRect(0, 0, kMinimumRangeThumbSize.value * aDpiRatio,
                  kMinimumRangeThumbSize.value * aDpiRatio);
-  Rect progressClipRect(aRect);
-  Rect trackClipRect(aRect);
+  Rect overflowRect(aRect);
+  overflowRect.Inflate(6 * aDpiRatio);  // See GetWidgetOverflow
+  Rect progressClipRect(overflowRect);
+  Rect trackClipRect(overflowRect);
   const CSSCoord verticalSize = kRangeHeight * aDpiRatio;
   if (aHorizontal) {
     rect.height = verticalSize;
     rect.y = aRect.y + (aRect.height - rect.height) / 2;
     thumbRect.y = aRect.y + (aRect.height - thumbRect.height) / 2;
 
-    progressClipRect.width = aRect.width * progress;
-    trackClipRect.width -= progressClipRect.width;
-
     if (IsFrameRTL(aFrame)) {
-      progressClipRect.x = trackClipRect.XMost();
       thumbRect.x =
           aRect.x + (aRect.width - thumbRect.width) * (1.0 - progress);
+      float midPoint = thumbRect.Center().X();
+      trackClipRect.SetBoxX(overflowRect.X(), midPoint);
+      progressClipRect.SetBoxX(midPoint, overflowRect.XMost());
     } else {
-      trackClipRect.x = progressClipRect.XMost();
       thumbRect.x = aRect.x + (aRect.width - thumbRect.width) * progress;
+      float midPoint = thumbRect.Center().X();
+      progressClipRect.SetBoxX(overflowRect.X(), midPoint);
+      trackClipRect.SetBoxX(midPoint, overflowRect.XMost());
     }
   } else {
     rect.width = verticalSize;
     rect.x = aRect.x + (aRect.width - rect.width) / 2;
     thumbRect.x = aRect.x + (aRect.width - thumbRect.width) / 2;
 
-    progressClipRect.height = aRect.height * progress;
-    trackClipRect.height -= progressClipRect.height;
-    progressClipRect.y = trackClipRect.YMost();
     thumbRect.y = aRect.y + (aRect.height - thumbRect.height) * progress;
+    float midPoint = thumbRect.Center().Y();
+    trackClipRect.SetBoxY(overflowRect.Y(), midPoint);
+    progressClipRect.SetBoxY(midPoint, overflowRect.YMost());
   }
 
   const CSSCoord borderWidth = 1.0f;
@@ -700,7 +748,7 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   // Make a path that clips out the range thumb.
   RefPtr<PathBuilder> builder =
       aDrawTarget->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
-  AppendRectToPath(builder, aRect);
+  AppendRectToPath(builder, overflowRect);
   AppendEllipseToPath(builder, thumbRect.Center(), thumbRect.Size());
   RefPtr<Path> path = builder->Finish();
 
@@ -719,6 +767,12 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
     PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
                                borderWidth, radius, aDpiRatio);
     aDrawTarget->PopClip();
+
+    if (!aState.HasState(NS_EVENT_STATE_DISABLED)) {
+      // Thumb shadow
+      PaintEllipseShadow(aDrawTarget, thumbRect, 0.3f, Point(0.0f, 2.0f), 2.0f,
+                         aDpiRatio);
+    }
   }
   aDrawTarget->PopClip();
 
@@ -728,8 +782,6 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
   PaintStrokedEllipse(aDrawTarget, thumbRect, thumbColor, thumbBorderColor,
                       thumbBorderWidth, aDpiRatio);
-
-  // TODO: Paint thumb shadow.
 
   if (aState.HasState(NS_EVENT_STATE_FOCUS)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 3.0f);
@@ -1356,6 +1408,10 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
       return false;
   }
 
+  // TODO: This should convert from device pixels to app units, not from CSS
+  // pixels. And it should take the dpi ratio into account.
+  // Using CSS pixels can cause the overflow to be too small if the page is
+  // zoomed out.
   aOverflowRect->Inflate(nsMargin(CSSPixel::ToAppUnits(overflow.top),
                                   CSSPixel::ToAppUnits(overflow.right),
                                   CSSPixel::ToAppUnits(overflow.bottom),
