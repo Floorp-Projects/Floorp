@@ -561,14 +561,8 @@ class TestChecksConfigure(unittest.TestCase):
     def test_java_tool_checks(self):
         # A valid set of tools in a standard location.
         java = mozpath.abspath("/usr/bin/java")
-        jarsigner = mozpath.abspath("/usr/bin/jarsigner")
-        keytool = mozpath.abspath("/usr/bin/keytool")
 
-        paths = {
-            java: None,
-            jarsigner: None,
-            keytool: None,
-        }
+        paths = {java: None}
 
         script = textwrap.dedent(
             """\
@@ -586,8 +580,6 @@ class TestChecksConfigure(unittest.TestCase):
             config,
             {
                 "JAVA": java,
-                "JARSIGNER": jarsigner,
-                "KEYTOOL": keytool,
                 "MOZ_JAVA_CODE_COVERAGE": False,
             },
         )
@@ -596,26 +588,16 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
              checking for java... %s
-             checking for jarsigner... %s
-             checking for keytool... %s
         """
-                % (java, jarsigner, keytool)
+                % java
             ),
         )
 
         # An alternative valid set of tools referred to by JAVA_HOME.
         alt_java = mozpath.abspath("/usr/local/bin/java")
-        alt_jarsigner = mozpath.abspath("/usr/local/bin/jarsigner")
-        alt_keytool = mozpath.abspath("/usr/local/bin/keytool")
         alt_java_home = mozpath.dirname(mozpath.dirname(alt_java))
 
-        paths.update(
-            {
-                alt_java: None,
-                alt_jarsigner: None,
-                alt_keytool: None,
-            }
-        )
+        paths.update({alt_java: None})
 
         config, out, status = self.get_result(
             command=script,
@@ -627,8 +609,6 @@ class TestChecksConfigure(unittest.TestCase):
             config,
             {
                 "JAVA": alt_java,
-                "JARSIGNER": alt_jarsigner,
-                "KEYTOOL": alt_keytool,
                 "MOZ_JAVA_CODE_COVERAGE": False,
             },
         )
@@ -637,10 +617,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
              checking for java... %s
-             checking for jarsigner... %s
-             checking for keytool... %s
         """
-                % (alt_java, alt_jarsigner, alt_keytool)
+                % alt_java
             ),
         )
 
@@ -657,8 +635,6 @@ class TestChecksConfigure(unittest.TestCase):
             config,
             {
                 "JAVA": alt_java,
-                "JARSIGNER": alt_jarsigner,
-                "KEYTOOL": alt_keytool,
                 "MOZ_JAVA_CODE_COVERAGE": False,
             },
         )
@@ -667,10 +643,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
              checking for java... %s
-             checking for jarsigner... %s
-             checking for keytool... %s
         """
-                % (alt_java, alt_jarsigner, alt_keytool)
+                % alt_java
             ),
         )
 
@@ -690,8 +664,6 @@ class TestChecksConfigure(unittest.TestCase):
             config,
             {
                 "JAVA": alt_java,
-                "JARSIGNER": alt_jarsigner,
-                "KEYTOOL": alt_keytool,
                 "MOZ_JAVA_CODE_COVERAGE": False,
             },
         )
@@ -700,10 +672,8 @@ class TestChecksConfigure(unittest.TestCase):
             textwrap.dedent(
                 """\
              checking for java... %s
-             checking for jarsigner... %s
-             checking for keytool... %s
         """
-                % (alt_java, alt_jarsigner, alt_keytool)
+                % alt_java
             ),
         )
 
@@ -722,34 +692,25 @@ class TestChecksConfigure(unittest.TestCase):
             config,
             {
                 "JAVA": java,
-                "JARSIGNER": jarsigner,
-                "KEYTOOL": keytool,
                 "MOZ_JAVA_CODE_COVERAGE": True,
             },
         )
 
         # Any missing tool is fatal when these checks run.
-        del paths[jarsigner]
+        del paths[java]
         config, out, status = self.get_result(
             command=script, extra_paths=paths, environ={"PATH": mozpath.dirname(java)}
         )
         self.assertEqual(status, 1)
-        self.assertEqual(
-            config,
-            {
-                "JAVA": java,
-            },
-        )
+        self.assertEqual(config, {})
         self.assertEqual(
             out,
             textwrap.dedent(
                 """\
-             checking for java... %s
-             checking for jarsigner... not found
-             ERROR: The program jarsigner was not found.  Set $JAVA_HOME to your \
+             checking for java... not found
+             ERROR: The program java was not found.  Set $JAVA_HOME to your \
 Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
         """
-                % (java)
             ),
         )
 

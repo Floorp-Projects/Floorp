@@ -21,7 +21,7 @@ warning; etc.) or platform or language or whatever.
 
 import re
 
-from mozharness.base.log import CRITICAL, DEBUG, ERROR, FATAL, WARNING
+from mozharness.base.log import CRITICAL, DEBUG, ERROR, WARNING
 
 
 # Exceptions
@@ -124,34 +124,6 @@ TarErrorList = BaseErrorList + [
     {"substr": r"""stdin: not in gzip format""", "level": ERROR},
     {"substr": r"""Cannot exec: No such file or directory""", "level": ERROR},
     {"substr": r""": Error is not recoverable: exiting now""", "level": ERROR},
-]
-
-JarsignerErrorList = [
-    {"substr": r"""command not found""", "level": FATAL},
-    {
-        "substr": r"""jarsigner error: java.lang.RuntimeException: keystore load: """
-        r"""Keystore was tampered with, or password was incorrect""",
-        "level": FATAL,
-        "explanation": r"""The store passphrase is probably incorrect!""",
-    },
-    {
-        "regex": re.compile(r"""jarsigner: key associated with .* not a private key"""),
-        "level": FATAL,
-        "explanation": r"""The key passphrase is probably incorrect!""",
-    },
-    {
-        "regex": re.compile(
-            r"""jarsigner error: java.lang.RuntimeException: """
-            r"""keystore load: .* .No such file or directory"""
-        ),
-        "level": FATAL,
-        "explanation": r"""The keystore doesn't exist!""",
-    },
-    {
-        "substr": r"""jarsigner: unable to open jar file:""",
-        "level": FATAL,
-        "explanation": r"""The apk is missing!""",
-    },
 ]
 
 ZipErrorList = BaseErrorList + [
