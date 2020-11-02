@@ -30,10 +30,6 @@ class URLSearchParamsObserver : public nsISupports {
   virtual void URLSearchParamsUpdated(URLSearchParams* aFromThis) = 0;
 };
 
-// This class is used in BasePrincipal and it's _extremely_ important that the
-// attributes are kept in the correct order. If this changes, please, update
-// BasePrincipal code.
-
 class URLParams final {
  public:
   URLParams() = default;
