@@ -242,6 +242,9 @@ class Browsertime(Perftest):
             self.results_handler.result_dir_for_test(test),
         ]
 
+        for var, val in self.config.get("environment", {}).items():
+            browsertime_options.extend(["--firefox.env", "{}={}".format(var, val)])
+
         if self.verbose:
             browsertime_options.append("-vvv")
 
