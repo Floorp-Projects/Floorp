@@ -8,7 +8,9 @@ const promise = require("promise");
 const flags = require("devtools/shared/flags");
 const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 const OutputParser = require("devtools/client/shared/output-parser");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const { createChild } = require("devtools/client/inspector/shared/utils");

@@ -5,8 +5,10 @@
 "use strict";
 
 const promise = require("promise");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 const CssLogic = require("devtools/shared/inspector/css-logic");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 const TextProperty = require("devtools/client/inspector/rules/models/text-property");
 const Services = require("Services");
 

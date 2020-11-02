@@ -14,10 +14,10 @@ const {
   getTextAtLineColumn,
 } = require("devtools/server/actors/utils/style-utils");
 
+const { styleRuleSpec } = require("devtools/shared/specs/style-rule");
 const {
-  styleRuleSpec,
-  ELEMENT_STYLE,
-} = require("devtools/shared/specs/style-rule");
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 
 loader.lazyRequireGetter(
   this,
