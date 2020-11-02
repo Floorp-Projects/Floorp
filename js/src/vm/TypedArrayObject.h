@@ -93,10 +93,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
-  size_t byteLength() const {
-    size_t len = length() * bytesPerElement();
-    MOZ_ASSERT(len <= INT32_MAX);
-    return len;
+  BufferSize byteLength() const {
+    return BufferSize(length() * bytesPerElement());
   }
 
   size_t length() const {
@@ -106,9 +104,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   }
 
   Value byteLengthValue() const {
-    size_t len = byteLength();
-    MOZ_ASSERT(len <= INT32_MAX);
-    return Int32Value(len);
+    size_t len = byteLength().get();
+    return NumberValue(len);
   }
 
   Value lengthValue() const {

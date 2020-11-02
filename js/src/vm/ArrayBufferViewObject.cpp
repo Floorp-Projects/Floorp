@@ -210,8 +210,10 @@ JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   if (!obj) {
     return 0;
   }
-  return obj->is<DataViewObject>() ? obj->as<DataViewObject>().byteLength()
-                                   : obj->as<TypedArrayObject>().byteLength();
+  BufferSize length = obj->is<DataViewObject>()
+                          ? obj->as<DataViewObject>().byteLength()
+                          : obj->as<TypedArrayObject>().byteLength();
+  return length.deprecatedGetUint32();
 }
 
 JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
@@ -244,9 +246,10 @@ JS_FRIEND_API void js::GetArrayBufferViewLengthAndData(JSObject* obj,
                                                        uint8_t** data) {
   MOZ_ASSERT(obj->is<ArrayBufferViewObject>());
 
-  *length = obj->is<DataViewObject>()
-                ? obj->as<DataViewObject>().byteLength()
-                : obj->as<TypedArrayObject>().byteLength();
+  BufferSize byteLength = obj->is<DataViewObject>()
+                              ? obj->as<DataViewObject>().byteLength()
+                              : obj->as<TypedArrayObject>().byteLength();
+  *length = byteLength.deprecatedGetUint32();
 
   ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
   *isSharedMemory = view.isSharedMemory();
