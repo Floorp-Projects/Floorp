@@ -11,7 +11,7 @@ add_task(async function() {
     const win = await promiseSubDialogLoaded;
     win.Preferences.forceEnableInstantApply();
     dialogOverlay = content.gSubDialog._topDialog._overlay;
-    is(dialogOverlay.style.visibility, "visible", "The dialog is visible.");
+    is(dialogOverlay.style.visibility, "inherit", "The dialog is visible.");
     return win;
   }
 
