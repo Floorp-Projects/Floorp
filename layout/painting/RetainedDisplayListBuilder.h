@@ -12,9 +12,6 @@
 #include "mozilla/TypedEnumBits.h"
 
 class nsWindowSizes;
-namespace mozilla {
-class DisplayListChecker;
-}  // namespace mozilla
 
 /**
  * RetainedDisplayListData contains frame invalidation information. It is stored
@@ -179,8 +176,7 @@ struct RetainedDisplayListBuilder {
 
   RetainedDisplayListMetrics* Metrics() { return &mMetrics; }
 
-  PartialUpdateResult AttemptPartialUpdate(
-      nscolor aBackstop, mozilla::DisplayListChecker* aChecker);
+  PartialUpdateResult AttemptPartialUpdate(nscolor aBackstop);
 
   /**
    * Iterates through the display list builder reference frame document and
