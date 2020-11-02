@@ -946,6 +946,15 @@ void nsNativeBasicTheme::PaintScrollbarThumb(DrawTarget* aDrawTarget,
   aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
 }
 
+void nsNativeBasicTheme::PaintScrollbarTrack(DrawTarget* aDrawTarget,
+                                             const Rect& aRect,
+                                             bool aHorizontal, nsIFrame* aFrame,
+                                             const ComputedStyle& aStyle,
+                                             const EventStates& aDocumentState,
+                                             uint32_t aDpiRatio, bool aIsRoot) {
+  // Draw nothing by default. Subclasses can override this.
+}
+
 void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
                                         const Rect& aRect, bool aHorizontal,
                                         nsIFrame* aFrame,
@@ -1179,6 +1188,15 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       PaintScrollbarThumb(dt, devPxRect, isHorizontal, aFrame,
                           *nsLayoutUtils::StyleForScrollbar(aFrame), eventState,
                           docState, dpiRatio);
+      break;
+    }
+    case StyleAppearance::ScrollbartrackHorizontal:
+    case StyleAppearance::ScrollbartrackVertical: {
+      bool isHorizontal =
+          aAppearance == StyleAppearance::ScrollbartrackHorizontal;
+      PaintScrollbarTrack(dt, devPxRect, isHorizontal, aFrame,
+                          *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
+                          dpiRatio, IsRootScrollbar(aFrame));
       break;
     }
     case StyleAppearance::ScrollbarHorizontal:
@@ -1474,6 +1492,8 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarbuttonRight:
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbartrackHorizontal:
+    case StyleAppearance::ScrollbartrackVertical:
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:
