@@ -33,11 +33,6 @@ static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame) {
   return scrollbarFrame;
 }
 
-static bool IsSmallScrollbar(nsIFrame* aFrame) {
-  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  return style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
-}
-
 static bool IsParentScrollbarRolledOver(nsIFrame* aFrame) {
   nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
   return nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0
@@ -59,14 +54,17 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
       case StyleAppearance::ScrollbarHorizontal:
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
+        ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+        bool isSmall =
+            style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
         if (nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) !=
             0) {
-          if (IsSmallScrollbar(aFrame)) {
+          if (isSmall) {
             return IntSize{14, 14};
           }
           return IntSize{16, 16};
         }
-        if (IsSmallScrollbar(aFrame)) {
+        if (isSmall) {
           return IntSize{11, 11};
         }
         return IntSize{15, 15};
@@ -94,18 +92,19 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
 
 ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(
     nsIFrame* aFrame, bool aIsHorizontal) {
+  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
   ScrollbarParams params;
   params.overlay =
       nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
   params.rolledOver = IsParentScrollbarRolledOver(aFrame);
-  params.small = IsSmallScrollbar(aFrame);
+  params.small =
+      style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
   params.rtl = nsNativeTheme::IsFrameRTL(aFrame);
   params.horizontal = aIsHorizontal;
   params.onDarkBackground = nsNativeTheme::IsDarkBackground(aFrame);
   // Don't use custom scrollbars for overlay scrollbars since they are
   // generally good enough for use cases of custom scrollbars.
   if (!params.overlay) {
-    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
     const nsStyleUI* ui = style->StyleUI();
     if (ui->HasCustomScrollbars()) {
       const auto& colors = ui->mScrollbarColor.AsColors();
