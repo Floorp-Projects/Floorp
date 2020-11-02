@@ -412,13 +412,7 @@ class GridInspector {
         writingMode: grid.writingMode,
       };
 
-      if (
-        isSubgrid &&
-        (await this.inspector.currentTarget.actorHasMethod(
-          "domwalker",
-          "getParentGridNode"
-        ))
-      ) {
+      if (isSubgrid) {
         let parentGridNodeFront;
 
         try {
