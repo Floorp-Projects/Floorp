@@ -221,7 +221,7 @@
   "CHECKERBOARD_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
@@ -233,7 +233,7 @@
   "CHECKERBOARD_PEAK": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
@@ -245,7 +245,7 @@
   "CHECKERBOARD_POTENTIAL_DURATION": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
@@ -257,7 +257,7 @@
   "CHECKERBOARD_SEVERITY": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "botond@mozilla.com"],
     "bug_numbers": [1238040, 1539309, 1584109],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
@@ -13241,7 +13241,7 @@
   "SCROLL_INPUT_METHODS": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["botond@mozilla.com"],
     "bug_numbers": [1670003],
     "expires_in_version": "85",
     "kind": "enumerated",
@@ -15833,7 +15833,7 @@
   "APZ_ZOOM_ACTIVITY" : {
     "products": ["firefox"],
     "record_in_processes": ["content"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["botond@mozilla.com"],
     "expires_in_version": "85",
     "kind" : "boolean",
     "bug_numbers": [1627708],
@@ -15843,7 +15843,7 @@
   "APZ_ZOOM_ACTIVITY_RDM" : {
     "products": ["firefox"],
     "record_in_processes": ["content"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["botond@mozilla.com"],
     "expires_in_version": "85",
     "kind" : "boolean",
     "bug_numbers": [1627708],
@@ -15853,7 +15853,7 @@
   "APZ_ZOOM_PINCHSOURCE" : {
     "products": ["firefox"],
     "record_in_processes": ["main", "gpu"],
-    "alert_emails": ["kgupta@mozilla.com"],
+    "alert_emails": ["botond@mozilla.com"],
     "expires_in_version": "85",
     "kind" : "enumerated",
     "n_values": 5,
