@@ -476,7 +476,17 @@ MARKUPMAP(
 MARKUPMAP(time, New_HyperText, 0, Attr(xmlroles, time),
           AttrFromDOM(datetime, datetime))
 
-MARKUPMAP(tbody, nullptr, roles::GROUPING)
+MARKUPMAP(
+    tbody,
+    [](Element* aElement, Accessible* aContext) -> Accessible* {
+      // Expose this as a grouping if its frame type is non-standard.
+      if (aElement->GetPrimaryFrame() &&
+          aElement->GetPrimaryFrame()->IsTableRowGroupFrame()) {
+        return nullptr;
+      }
+      return new HyperTextAccessibleWrap(aElement, aContext->Document());
+    },
+    roles::GROUPING)
 
 MARKUPMAP(
     td,
@@ -503,7 +513,17 @@ MARKUPMAP(
     },
     0)
 
-MARKUPMAP(tfoot, nullptr, roles::GROUPING)
+MARKUPMAP(
+    tfoot,
+    [](Element* aElement, Accessible* aContext) -> Accessible* {
+      // Expose this as a grouping if its frame type is non-standard.
+      if (aElement->GetPrimaryFrame() &&
+          aElement->GetPrimaryFrame()->IsTableRowGroupFrame()) {
+        return nullptr;
+      }
+      return new HyperTextAccessibleWrap(aElement, aContext->Document());
+    },
+    roles::GROUPING)
 
 MARKUPMAP(
     th,
@@ -520,7 +540,17 @@ MARKUPMAP(
     },
     0)
 
-MARKUPMAP(thead, nullptr, roles::GROUPING)
+MARKUPMAP(
+    thead,
+    [](Element* aElement, Accessible* aContext) -> Accessible* {
+      // Expose this as a grouping if its frame type is non-standard.
+      if (aElement->GetPrimaryFrame() &&
+          aElement->GetPrimaryFrame()->IsTableRowGroupFrame()) {
+        return nullptr;
+      }
+      return new HyperTextAccessibleWrap(aElement, aContext->Document());
+    },
+    roles::GROUPING)
 
 MARKUPMAP(
     tr,
