@@ -40,35 +40,31 @@ impl App {
         let init_data = vec![
             (
                 PipelineId(1, 0),
-                -2,
                 ColorF::new(0.0, 1.0, 0.0, 1.0),
                 DeviceIntPoint::new(0, 0),
             ),
             (
                 PipelineId(2, 0),
-                -1,
                 ColorF::new(1.0, 1.0, 0.0, 1.0),
                 DeviceIntPoint::new(200, 0),
             ),
             (
                 PipelineId(3, 0),
-                0,
                 ColorF::new(1.0, 0.0, 0.0, 1.0),
                 DeviceIntPoint::new(200, 200),
             ),
             (
                 PipelineId(4, 0),
-                1,
                 ColorF::new(1.0, 0.0, 1.0, 1.0),
                 DeviceIntPoint::new(0, 200),
             ),
         ];
 
-        for (pipeline_id, layer, color, offset) in init_data {
+        for (pipeline_id, color, offset) in init_data {
             let size = DeviceIntSize::new(250, 250);
             let bounds = DeviceIntRect::new(offset, size);
 
-            let document_id = api.add_document(size, layer);
+            let document_id = api.add_document(size);
             let mut txn = Transaction::new();
             txn.set_document_view(bounds, device_pixel_ratio);
             txn.set_root_pipeline(pipeline_id);

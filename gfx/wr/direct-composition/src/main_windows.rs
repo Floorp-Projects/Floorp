@@ -122,7 +122,7 @@ impl Rectangle {
        Rectangle {
             visual,
             renderer: Some(renderer),
-            document_id: api.add_document(size, 0),
+            document_id: api.add_document(size),
             api,
             size,
             color: api::ColorF { r, g, b, a },

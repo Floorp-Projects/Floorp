@@ -107,7 +107,7 @@ impl Window {
         let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
         let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None).unwrap();
         let mut api = sender.create_api();
-        let document_id = api.add_document(device_size, 0);
+        let document_id = api.add_document(device_size);
 
         let epoch = Epoch(0);
         let pipeline_id = PipelineId(0, 0);

@@ -17,7 +17,7 @@ use crate::api::{ColorF, BuiltDisplayList, IdNamespace, ExternalScrollId};
 use crate::api::{SharedFontInstanceMap, FontKey, FontInstanceKey, NativeFontHandle, ZoomFactor};
 use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey, Epoch, QualitySettings};
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
-use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent, DocumentLayer};
+use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent};
 use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
 use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags, ScrollNodeState};
 use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
@@ -919,7 +919,7 @@ pub enum ApiMsg {
     /// Adds a new document namespace.
     CloneApiByClient(IdNamespace),
     /// Adds a new document with given initial size.
-    AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
+    AddDocument(DocumentId, DeviceIntSize),
     /// A message targeted at a particular document.
     UpdateDocuments(Vec<Box<TransactionMsg>>),
     /// Flush from the caches anything that isn't necessary, to free some memory.
@@ -1065,15 +1065,14 @@ impl RenderApi {
     /// Instances can manage one or several documents (using the same render backend thread).
     /// Each document will internally correspond to a single scene, and scenes are made of
     /// one or several pipelines.
-    pub fn add_document(&self, initial_size: DeviceIntSize, layer: DocumentLayer) -> DocumentId {
+    pub fn add_document(&self, initial_size: DeviceIntSize) -> DocumentId {
         let new_id = self.next_unique_id();
-        self.add_document_with_id(initial_size, layer, new_id)
+        self.add_document_with_id(initial_size, new_id)
     }
 
     /// See `add_document`
     pub fn add_document_with_id(&self,
                                 initial_size: DeviceIntSize,
-                                layer: DocumentLayer,
                                 id: u32) -> DocumentId {
         window_size_sanity_check(initial_size);
 
@@ -1085,10 +1084,10 @@ impl RenderApi {
         // the render backend knows about the existence of the corresponding document id.
         // It may not be necessary, though.
         self.api_sender.send(
-            ApiMsg::AddDocument(document_id, initial_size, layer)
+            ApiMsg::AddDocument(document_id, initial_size)
         ).unwrap();
         self.scene_sender.send(
-            SceneBuilderRequest::AddDocument(document_id, initial_size, layer)
+            SceneBuilderRequest::AddDocument(document_id, initial_size)
         ).unwrap();
 
         document_id

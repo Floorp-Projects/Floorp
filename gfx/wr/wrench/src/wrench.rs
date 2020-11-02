@@ -294,7 +294,7 @@ impl Wrench {
         ).unwrap();
 
         let api = sender.create_api();
-        let document_id = api.add_document(size, 0);
+        let document_id = api.add_document(size);
 
         let graphics_api = renderer.get_graphics_api_info();
         let zoom_factor = ZoomFactor::new(zoom_factor);

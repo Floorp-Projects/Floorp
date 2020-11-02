@@ -2242,7 +2242,7 @@ pub struct Renderer {
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
     pending_gpu_cache_clear: bool,
     pending_shader_updates: Vec<PathBuf>,
-    active_documents: Vec<(DocumentId, RenderedDocument)>,
+    active_documents: FastHashMap<DocumentId, RenderedDocument>,
 
     shaders: Rc<RefCell<Shaders>>,
 
@@ -2849,7 +2849,7 @@ impl Renderer {
             result_rx,
             debug_server,
             device,
-            active_documents: Vec::new(),
+            active_documents: FastHashMap::default(),
             pending_texture_updates: Vec::new(),
             pending_texture_cache_updates: false,
             pending_native_surface_updates: Vec::new(),
@@ -3001,26 +3001,27 @@ impl Renderer {
                     mut doc,
                     resource_update_list,
                 ) => {
+                    // Add a new document to the active set
 
-                    // Add a new document to the active set, expressed as a `Vec` in order
-                    // to re-order based on `DocumentLayer` during rendering.
-                    match self.active_documents.iter().position(|&(id, _)| id == document_id) {
-                        Some(pos) => {
-                            // If the document we are replacing must be drawn (in order to
-                            // update the texture cache), issue a render just to
-                            // off-screen targets, ie pass None to render_impl. We do this
-                            // because a) we don't need to render to the main framebuffer
-                            // so it is cheaper not to, and b) doing so without a
-                            // subsequent present would break partial present.
-                            if self.active_documents[pos].1.frame.must_be_drawn() {
-                                self.render_impl(None).ok();
-                            }
+                    // If the document we are replacing must be drawn (in order to
+                    // update the texture cache), issue a render just to
+                    // off-screen targets, ie pass None to render_impl. We do this
+                    // because a) we don't need to render to the main framebuffer
+                    // so it is cheaper not to, and b) doing so without a
+                    // subsequent present would break partial present.
+                    if let Some(mut prev_doc) = self.active_documents.remove(&document_id) {
+                        doc.profile.merge(&mut prev_doc.profile);
 
-                            doc.profile.merge(&mut self.active_documents[pos].1.profile);
-                            self.active_documents[pos].1 = doc;
+                        if prev_doc.frame.must_be_drawn() {
+                            self.render_impl(
+                                document_id,
+                                &mut prev_doc,
+                                None,
+                            ).ok();
                         }
-                        None => self.active_documents.push((document_id, doc)),
                     }
+
+                    self.active_documents.insert(document_id, doc);
 
                     // IMPORTANT: The pending texture cache updates must be applied
                     //            *after* the previous frame has been rendered above
@@ -3078,17 +3079,21 @@ impl Renderer {
                         // if any of the existing documents have not rendered yet, and
                         // have picture/texture cache targets, force a render so that
                         // those targets are updated.
-                        let must_be_drawn = self.active_documents
-                            .iter()
-                            .any(|(_, doc)| {
-                                doc.frame.must_be_drawn()
-                            });
-
-                        if must_be_drawn {
-                            // As this render will not be presented, we must pass None to
-                            // render_impl. This avoids interfering with partial present
-                            // logic, as well as being more efficient.
-                            self.render_impl(None).ok();
+                        let active_documents = mem::replace(
+                            &mut self.active_documents,
+                            FastHashMap::default(),
+                        );
+                        for (doc_id, mut doc) in active_documents {
+                            if doc.frame.must_be_drawn() {
+                                // As this render will not be presented, we must pass None to
+                                // render_impl. This avoids interfering with partial present
+                                // logic, as well as being more efficient.
+                                self.render_impl(
+                                    doc_id,
+                                    &mut doc,
+                                    None,
+                                ).ok();
+                            }
                         }
                     }
 
@@ -3112,13 +3117,6 @@ impl Renderer {
                     }
 
                     self.device.end_frame();
-                    // If we receive a `PublishDocument` message followed by this one
-                    // within the same update we need to cancel the frame because we
-                    // might have deleted the resources in use in the frame due to a
-                    // memory pressure event.
-                    if memory_pressure {
-                        self.active_documents.clear();
-                    }
                 }
                 ResultMsg::AppendNotificationRequests(mut notifications) => {
                     // We need to know specifically if there are any pending
@@ -3320,7 +3318,7 @@ impl Renderer {
     fn get_passes_for_debugger(&self) -> String {
         let mut debug_passes = debug_server::PassList::new();
 
-        for &(_, ref render_doc) in &self.active_documents {
+        for (_, render_doc) in &self.active_documents {
             for pass in &render_doc.frame.passes {
                 let mut debug_targets = Vec::new();
                 match pass.kind {
@@ -3350,7 +3348,7 @@ impl Renderer {
     fn get_render_tasks_for_debugger(&self) -> String {
         let mut debug_root = debug_server::RenderTaskList::new();
 
-        for &(_, ref render_doc) in &self.active_documents {
+        for (_, render_doc) in &self.active_documents {
             let debug_node = debug_server::TreeNode::new("document render tasks");
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
 
@@ -3444,7 +3442,36 @@ impl Renderer {
     ) -> Result<RenderResults, Vec<RendererError>> {
         self.device_size = Some(device_size);
 
-        let result = self.render_impl(Some(device_size));
+        // TODO(gw): We want to make the active document that is
+        //           being rendered configurable via the public
+        //           API in future. For now, just select the last
+        //           added document as the active one to render
+        //           (Gecko only ever creates a single document
+        //           per renderer right now).
+        let doc_id = self.active_documents.keys().last().cloned();
+
+        let result = match doc_id {
+            Some(doc_id) => {
+                // Remove the doc from the map to appease the borrow checker
+                let mut doc = self.active_documents
+                    .remove(&doc_id)
+                    .unwrap();
+
+                let result = self.render_impl(
+                    doc_id,
+                    &mut doc,
+                    Some(device_size),
+                );
+
+                self.active_documents.insert(doc_id, doc);
+
+                result
+            }
+            None => {
+                self.last_time = precise_time_ns();
+                Ok(RenderResults::default())
+            }
+        };
 
         drain_filter(
             &mut self.notifications,
@@ -3573,18 +3600,15 @@ impl Renderer {
     // composite without a present will confuse partial present.
     fn render_impl(
         &mut self,
+        doc_id: DocumentId,
+        active_doc: &mut RenderedDocument,
         device_size: Option<DeviceIntSize>,
     ) -> Result<RenderResults, Vec<RendererError>> {
         profile_scope!("render");
         let mut results = RenderResults::default();
-        if self.active_documents.is_empty() {
-            self.last_time = precise_time_ns();
-            return Ok(results);
-        }
-
         self.profile.start_time(profiler::RENDERER_TIME);
 
-        let compositor_kind = self.active_documents[0].1.frame.composite_state.compositor_kind;
+        let compositor_kind = active_doc.frame.composite_state.compositor_kind;
         // CompositorKind is updated
         if self.current_compositor_kind != compositor_kind {
             let enable = match (self.current_compositor_kind, compositor_kind) {
@@ -3655,72 +3679,59 @@ impl Renderer {
             self.update_debug_overlay(device_size);
         }
 
-        //Note: another borrowck dance
-        let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
-        // sort by the document layer id
-        active_documents.sort_by_key(|&(_, ref render_doc)| render_doc.frame.layer);
-
         #[cfg(feature = "replay")]
         self.texture_resolver.external_images.extend(
             self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
         );
 
-        let last_document_index = active_documents.len() - 1;
-        for (doc_index, (document_id, RenderedDocument { ref mut frame, ref mut profile, .. })) in active_documents.iter_mut().enumerate() {
-            assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
+        let frame = &mut active_doc.frame;
+        let profile = &mut active_doc.profile;
+        assert!(self.current_compositor_kind == frame.composite_state.compositor_kind);
 
-            if self.shared_texture_cache_cleared {
-                assert!(self.documents_seen.contains(&document_id),
-                        "Cleared texture cache without sending new document frame.");
-            }
+        if self.shared_texture_cache_cleared {
+            assert!(self.documents_seen.contains(&doc_id),
+                    "Cleared texture cache without sending new document frame.");
+        }
 
-            if let Err(e) = self.prepare_gpu_cache(frame) {
-                self.renderer_errors.push(e);
-                continue;
-            }
-            assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
-                "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
-                frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
+        match self.prepare_gpu_cache(frame) {
+            Ok(..) => {
+                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
+                    "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
+                    frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
-            {
-                profile_scope!("gl.flush");
-                self.device.gl().flush();  // early start on gpu cache updates
-            }
-
-            self.draw_frame(
-                frame,
-                device_size,
-                &mut results,
-                doc_index == 0,
-            );
-
-            // TODO(nical): do this automatically by selecting counters in the wr profiler 
-            // Profile marker for the number of invalidated picture cache
-            if thread_is_being_profiled() {
-                let duration = Duration::new(0,0);
-                if let Some(n) = self.profiler.get(profiler::RENDERED_PICTURE_TILES) {
-                    let message = (n as usize).to_string();
-                    add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
+                {
+                    profile_scope!("gl.flush");
+                    self.device.gl().flush();  // early start on gpu cache updates
                 }
-            }
 
-            if device_size.is_some() {
-                self.draw_frame_debug_items(&frame.debug_items);
-            }
+                self.draw_frame(
+                    frame,
+                    device_size,
+                    &mut results,
+                );
 
-            // If we're the last document, don't call end_pass here, because we'll
-            // be moving on to drawing the debug overlays. See the comment above
-            // the end_pass call in draw_frame about debug draw overlays
-            // for a bit more context.
-            if doc_index != last_document_index {
-                self.texture_resolver.end_pass(&mut self.device, None, None);
-            }
+                // TODO(nical): do this automatically by selecting counters in the wr profiler
+                // Profile marker for the number of invalidated picture cache
+                if thread_is_being_profiled() {
+                    let duration = Duration::new(0,0);
+                    if let Some(n) = self.profiler.get(profiler::RENDERED_PICTURE_TILES) {
+                        let message = (n as usize).to_string();
+                        add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
+                    }
+                }
 
-            self.profile.merge(profile);
+                if device_size.is_some() {
+                    self.draw_frame_debug_items(&frame.debug_items);
+                }
+
+                self.profile.merge(profile);
+            }
+            Err(e) => {
+                self.renderer_errors.push(e);
+            }
         }
 
         self.unlock_external_images();
-        self.active_documents = active_documents;
 
         let _gm = self.gpu_profiler.start_marker("end frame");
         self.gpu_profiler.end_frame();
@@ -4306,7 +4317,6 @@ impl Renderer {
         blits: &[BlitJob],
         render_tasks: &RenderTaskGraph,
         draw_target: DrawTarget,
-        content_origin: &DeviceIntPoint,
     ) {
         if blits.is_empty() {
             return;
@@ -4351,7 +4361,7 @@ impl Renderer {
                 read_target.into(),
                 read_target.to_framebuffer_rect(source_rect),
                 draw_target,
-                draw_target.to_framebuffer_rect(blit.target_rect.translate(-content_origin.to_vector())),
+                draw_target.to_framebuffer_rect(blit.target_rect),
                 TextureFilter::Linear,
             );
         }
@@ -4436,7 +4446,6 @@ impl Renderer {
         &mut self,
         target: &PictureCacheTarget,
         draw_target: DrawTarget,
-        content_origin: DeviceIntPoint,
         projection: &default::Transform3D<f32>,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
@@ -4495,10 +4504,7 @@ impl Renderer {
                 }
                 other => {
                     let scissor_rect = other.map(|rect| {
-                        draw_target.build_scissor_rect(
-                            Some(rect),
-                            content_origin,
-                        )
+                        draw_target.build_scissor_rect(Some(rect))
                     });
                     self.device.clear_target(clear_color, Some(1.0), scissor_rect);
                 }
@@ -4509,7 +4515,6 @@ impl Renderer {
         self.draw_alpha_batch_container(
             &target.alpha_batch_container,
             draw_target,
-            content_origin,
             framebuffer_kind,
             projection,
             render_tasks,
@@ -4525,7 +4530,6 @@ impl Renderer {
         &mut self,
         alpha_batch_container: &AlphaBatchContainer,
         draw_target: DrawTarget,
-        content_origin: DeviceIntPoint,
         framebuffer_kind: FramebufferKind,
         projection: &default::Transform3D<f32>,
         render_tasks: &RenderTaskGraph,
@@ -4537,7 +4541,6 @@ impl Renderer {
             self.device.enable_scissor();
             let scissor_rect = draw_target.build_scissor_rect(
                 alpha_batch_container.task_scissor_rect,
-                content_origin,
             );
             self.device.set_scissor_rect(scissor_rect)
         }
@@ -5130,7 +5133,6 @@ impl Renderer {
     fn composite_simple(
         &mut self,
         composite_state: &CompositeState,
-        clear_framebuffer: bool,
         draw_target: DrawTarget,
         projection: &default::Transform3D<f32>,
         results: &mut RenderResults,
@@ -5221,23 +5223,21 @@ impl Renderer {
             self.force_redraw = false;
         }
 
-        // Clear the framebuffer, if required
-        if clear_framebuffer {
-            let clear_color = self.clear_color.map(|color| color.to_array());
+        // Clear the framebuffer
+        let clear_color = self.clear_color.map(|color| color.to_array());
 
-            match partial_present_mode {
-                Some(PartialPresentMode::Single { dirty_rect }) => {
-                    // We have a single dirty rect, so clear only that
-                    self.device.clear_target(clear_color,
-                                             Some(1.0),
-                                             Some(draw_target.to_framebuffer_rect(dirty_rect.to_i32())));
-                }
-                None => {
-                    // Partial present is disabled, so clear the entire framebuffer
-                    self.device.clear_target(clear_color,
-                                             Some(1.0),
-                                             None);
-                }
+        match partial_present_mode {
+            Some(PartialPresentMode::Single { dirty_rect }) => {
+                // We have a single dirty rect, so clear only that
+                self.device.clear_target(clear_color,
+                                         Some(1.0),
+                                         Some(draw_target.to_framebuffer_rect(dirty_rect.to_i32())));
+            }
+            None => {
+                // Partial present is disabled, so clear the entire framebuffer
+                self.device.clear_target(clear_color,
+                                         Some(1.0),
+                                         None);
             }
         }
 
@@ -5299,7 +5299,6 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         target: &ColorRenderTarget,
-        content_origin: DeviceIntPoint,
         clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskGraph,
@@ -5374,7 +5373,9 @@ impl Renderer {
 
         // Handle any blits from the texture cache to this target.
         self.handle_blits(
-            &target.blits, render_tasks, draw_target, &content_origin,
+            &target.blits,
+            render_tasks,
+            draw_target,
         );
 
         // Draw any blurs for this target.
@@ -5428,7 +5429,6 @@ impl Renderer {
             self.draw_alpha_batch_container(
                 alpha_batch_container,
                 draw_target,
-                content_origin,
                 framebuffer_kind,
                 projection,
                 render_tasks,
@@ -5722,7 +5722,9 @@ impl Renderer {
 
             // Handle any blits to this texture from child tasks.
             self.handle_blits(
-                &target.blits, render_tasks, draw_target, &DeviceIntPoint::zero(),
+                &target.blits,
+                render_tasks,
+                draw_target,
             );
         }
 
@@ -6080,7 +6082,6 @@ impl Renderer {
         frame: &mut Frame,
         device_size: Option<DeviceIntSize>,
         results: &mut RenderResults,
-        clear_framebuffer: bool,
     ) {
         profile_scope!("draw_frame");
 
@@ -6162,18 +6163,17 @@ impl Renderer {
                             PictureCacheDebugInfo::new(),
                         );
 
-                        let offset = frame.content_origin.to_f32();
                         let size = frame.device_rect.size.to_f32();
                         let surface_origin_is_top_left = self.device.surface_origin_is_top_left();
                         let (bottom, top) = if surface_origin_is_top_left {
-                          (offset.y, offset.y + size.height)
+                          (0.0, size.height)
                         } else {
-                          (offset.y + size.height, offset.y)
+                          (size.height, 0.0)
                         };
 
                         let projection = Transform3D::ortho(
-                            offset.x,
-                            offset.x + size.width,
+                            0.0,
+                            size.width,
                             bottom,
                             top,
                             self.device.ortho_near_plane(),
@@ -6208,7 +6208,6 @@ impl Renderer {
                             CompositorKind::Draw { max_partial_present_rects, draw_previous_partial_present_regions, .. } => {
                                 self.composite_simple(
                                     &frame.composite_state,
-                                    clear_framebuffer,
                                     draw_target,
                                     &projection,
                                     results,
@@ -6303,7 +6302,6 @@ impl Renderer {
                             self.draw_picture_cache_target(
                                 picture_target,
                                 draw_target,
-                                frame.content_origin,
                                 &projection,
                                 &frame.render_tasks,
                                 &mut results.stats,
@@ -6376,7 +6374,6 @@ impl Renderer {
                         self.draw_color_target(
                             draw_target,
                             target,
-                            frame.content_origin,
                             Some([0.0, 0.0, 0.0, 0.0]),
                             clear_depth,
                             &frame.render_tasks,

@@ -67,9 +67,6 @@ use peek_poke::PeekPoke;
 /// Width and height in device pixels of image tiles.
 pub type TileSize = u16;
 
-/// Documents are rendered in the ascending order of their associated layer values.
-pub type DocumentLayer = i8;
-
 /// Various settings that the caller can select based on desired tradeoffs
 /// between rendering quality and performance / power usage.
 #[derive(Copy, Clone, Deserialize, Serialize)]

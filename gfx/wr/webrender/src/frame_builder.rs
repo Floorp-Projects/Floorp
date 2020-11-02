@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
+use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
@@ -483,7 +483,6 @@ impl FrameBuilder {
         gpu_cache: &mut GpuCache,
         stamp: FrameStamp,
         global_device_pixel_scale: DevicePixelScale,
-        layer: DocumentLayer,
         device_origin: DeviceIntPoint,
         pan: WorldPoint,
         scene_properties: &SceneProperties,
@@ -629,12 +628,10 @@ impl FrameBuilder {
         self.composite_state_prealloc.record(&composite_state);
 
         Frame {
-            content_origin: scene.output_rect.origin,
             device_rect: DeviceIntRect::new(
                 device_origin,
                 scene.output_rect.size,
             ),
-            layer,
             passes,
             transform_palette: transform_palette.finish(),
             render_tasks,
@@ -988,11 +985,8 @@ pub fn build_render_pass(
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct Frame {
-    /// The origin on content produced by the render tasks.
-    pub content_origin: DeviceIntPoint,
     /// The rectangle to show the frame in, on screen.
     pub device_rect: DeviceIntRect,
-    pub layer: DocumentLayer,
     pub passes: Vec<RenderPass>,
 
     pub transform_palette: Vec<TransformData>,
