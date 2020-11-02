@@ -23,6 +23,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "core/ProfileBuffer.cpp",
         "core/ProfileBufferEntry.cpp",
         "core/ProfiledThreadData.cpp",
+        "core/ProfileJSONWriter.cpp",
         "core/ProfilerBacktrace.cpp",
         "core/ProfilerMarkers.cpp",
         "core/ProfilingCategory.cpp",
