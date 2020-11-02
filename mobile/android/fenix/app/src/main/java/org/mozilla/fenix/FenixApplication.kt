@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
@@ -44,6 +43,7 @@ import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.StartupTimeline
+import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
@@ -137,7 +137,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // to invoke parts of itself that require complete megazord initialization
             // before that process completes, we wait here, if necessary.
             if (!megazordSetup.isCompleted) {
-                runBlocking { megazordSetup.await(); }
+                runBlockingIncrement { megazordSetup.await() }
             }
         }
 

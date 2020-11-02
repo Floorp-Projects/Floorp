@@ -5,10 +5,10 @@
 package org.mozilla.fenix
 
 import android.content.Context
-import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.migration.MigrationTelemetryListener
+import org.mozilla.fenix.perf.runBlockingIncrement
 
 /**
  * An application class which knows how to migrate Fennec data.
@@ -81,7 +81,7 @@ class MigratingFenixApplication : FenixApplication() {
             .migrateSettings()
             .build()
 
-        runBlocking {
+        runBlockingIncrement {
             migrator.migrateAsync(components.migrationStore).await()
         }
     }

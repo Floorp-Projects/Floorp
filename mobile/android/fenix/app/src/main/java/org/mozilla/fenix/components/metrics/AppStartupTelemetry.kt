@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
-import kotlinx.coroutines.runBlocking
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Source
@@ -25,6 +24,7 @@ import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.ERROR
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.HOT
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.COLD
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.WARM
+import org.mozilla.fenix.perf.runBlockingIncrement
 import java.lang.reflect.Modifier.PRIVATE
 
 /**
@@ -186,7 +186,7 @@ class AppStartupTelemetry(
      * the application potentially closes.
      */
     fun onStop() {
-        runBlocking {
+        runBlockingIncrement {
             recordMetric()
         }
     }

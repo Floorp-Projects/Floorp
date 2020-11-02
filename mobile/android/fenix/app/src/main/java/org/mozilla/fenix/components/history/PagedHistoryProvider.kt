@@ -4,10 +4,10 @@
 
 package org.mozilla.fenix.components.history
 
-import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
+import org.mozilla.fenix.perf.runBlockingIncrement
 
 /**
  * An Interface for providing a paginated list of [VisitInfo]
@@ -32,7 +32,7 @@ fun HistoryStorage.createSynchronousPagedHistoryProvider(): PagedHistoryProvider
             numberOfItems: Long,
             onComplete: (List<VisitInfo>) -> Unit
         ) {
-            runBlocking {
+            runBlockingIncrement {
                 val history = getVisitsPaginated(
                     offset,
                     numberOfItems,

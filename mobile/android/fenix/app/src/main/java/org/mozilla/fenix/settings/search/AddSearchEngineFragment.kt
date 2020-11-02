@@ -25,7 +25,6 @@ import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.BrowserDirection
@@ -37,6 +36,7 @@ import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.settings.SupportUtils
 import java.util.Locale
 
@@ -51,7 +51,7 @@ class AddSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine),
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        availableEngines = runBlocking {
+        availableEngines = runBlockingIncrement {
             requireContext()
                 .components
                 .search
