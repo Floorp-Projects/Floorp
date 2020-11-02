@@ -197,9 +197,10 @@ class ProgressTracker extends Tracker {
   start(aUri) {
     debug`ProgressTracker start ${aUri}`;
 
-    if (this._data?.uri == aUri) {
+    if (this._data?.uri == aUri && this._eventReceived) {
       // TODO: Bug 1672430. When switching process we get two START events,
       // let's ignore the second one.
+      debug`ProgressTracker Ignoring duplicate load`;
       return;
     }
 
@@ -422,6 +423,7 @@ class StateTracker extends Tracker {
     if (this._inProgress && this._uri == aUri) {
       // TODO: Bug 1672430. When switching process we get two START events,
       // let's ignore the second one.
+      debug`StateTracker Ignoring duplicate load`;
       return;
     }
 
