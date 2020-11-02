@@ -66,6 +66,9 @@ def merge_bugbug_replies(data, new_data):
     args=(CT_MEDIUM, False, True, None, 1, True),
 )
 @register_strategy(
+    "bugbug-reduced-manifests-fallback-low", args=(CT_LOW, False, True, FALLBACK)
+)
+@register_strategy(
     "bugbug-reduced-manifests-fallback", args=(CT_MEDIUM, False, True, FALLBACK)
 )
 @register_strategy(
