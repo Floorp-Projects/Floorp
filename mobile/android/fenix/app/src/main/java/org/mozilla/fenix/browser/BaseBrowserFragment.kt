@@ -21,6 +21,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
@@ -88,7 +89,6 @@ import org.mozilla.fenix.OnBackLongPressedListener
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
-import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
@@ -134,7 +134,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
 
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
-    private lateinit var components: Components
 
     private var _browserInteractor: BrowserToolbarViewInteractor? = null
     protected val browserInteractor: BrowserToolbarViewInteractor
@@ -196,28 +195,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         val activity = activity as HomeActivity
-        components = requireComponents
-
-        if (customTabSessionId == null) {
-            // Once tab restoration is complete, if there are no tabs to show in the browser, go home
-            components.core.store.flowScoped(viewLifecycleOwner) { flow ->
-                flow.map { state -> state.restoreComplete }
-                    .ifChanged()
-                    .collect { restored ->
-                        if (restored) {
-                            val tabs =
-                                components.core.store.state.getNormalOrPrivateTabs(
-                                    activity.browsingModeManager.mode.isPrivate
-                                )
-                            if (tabs.isEmpty()) findNavController().popBackStack(
-                                R.id.homeFragment,
-                                false
-                            )
-                        }
-                    }
-            }
-        }
-
         activity.themeManager.applyStatusBarTheme(activity)
 
         browserFragmentStore = StoreProvider.get(this) {
@@ -231,6 +208,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         browserInitialized = initializeUI(view) != null
+
+        if (customTabSessionId == null) {
+            // We currently only need this observer to navigate to home
+            // in case all tabs have been removed on startup. No need to
+            // this if we have a known session to display.
+            observeRestoreComplete(requireComponents.core.store, findNavController())
+        }
+
         observeTabSelection(requireComponents.core.store)
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
     }
@@ -822,6 +807,27 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     }
 
     @VisibleForTesting
+    internal fun observeRestoreComplete(store: BrowserStore, navController: NavController) {
+        val activity = activity as HomeActivity
+        consumeFlow(store) { flow ->
+            flow.map { state -> state.restoreComplete }
+                .ifChanged()
+                .collect { restored ->
+                    if (restored) {
+                        // Once tab restoration is complete, if there are no tabs to show in the browser, go home
+                        val tabs =
+                            store.state.getNormalOrPrivateTabs(
+                                activity.browsingModeManager.mode.isPrivate
+                            )
+                        if (tabs.isEmpty() || store.state.selectedTabId == null) {
+                            navController.popBackStack(R.id.homeFragment, false)
+                        }
+                    }
+                }
+        }
+    }
+
+    @VisibleForTesting
     internal fun observeTabSelection(store: BrowserStore) {
         consumeFlow(store) { flow ->
             flow.ifChanged {
@@ -995,13 +1001,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
      * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
      */
     protected fun getAppropriateLayoutGravity(): Int =
-        components.settings.toolbarPosition.androidGravity
+        requireComponents.settings.toolbarPosition.androidGravity
 
     /**
      * Updates the site permissions rules based on user settings.
      */
     private fun assignSitePermissionsRules() {
-        val rules = components.settings.getSitePermissionsCustomSettingsRules()
+        val rules = requireComponents.settings.getSitePermissionsCustomSettingsRules()
 
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules
@@ -1046,7 +1052,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
      * Returns the current session.
      */
     protected fun getSessionById(): Session? {
-        val sessionManager = components.core.sessionManager
+        val sessionManager = requireComponents.core.sessionManager
         val localCustomTabId = customTabSessionId
         return if (localCustomTabId != null) {
             sessionManager.findSessionById(localCustomTabId)

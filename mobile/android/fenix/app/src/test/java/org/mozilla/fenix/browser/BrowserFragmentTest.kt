@@ -9,6 +9,7 @@ import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -16,7 +17,9 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -30,6 +33,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -47,6 +51,7 @@ class BrowserFragmentTest {
     private lateinit var fenixApplication: FenixApplication
     private lateinit var context: Context
     private lateinit var lifecycleOwner: MockedLifecycleOwner
+    private lateinit var navController: NavController
 
     private val testDispatcher = TestCoroutineDispatcher()
 
@@ -62,6 +67,7 @@ class BrowserFragmentTest {
         homeActivity = mockk(relaxed = true)
         view = mockk(relaxed = true)
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+        navController = mockk(relaxed = true)
 
         browserFragment = spyk(BrowserFragment())
         every { browserFragment.view } returns view
@@ -171,6 +177,32 @@ class BrowserFragmentTest {
             LoadRequestState("https://firefox.com", false, true))
         ).joinBlocking()
         verify(exactly = 1) { toolbar.expand() }
+    }
+
+    @Test
+    fun `GIVEN tabs are restored WHEN there are no tabs THEN navigate to home`() {
+        browserFragment.observeRestoreComplete(store, navController)
+        store.dispatch(RestoreCompleteAction).joinBlocking()
+
+        verify(exactly = 1) { navController.popBackStack(R.id.homeFragment, false) }
+    }
+
+    @Test
+    fun `GIVEN tabs are restored WHEN there are tabs THEN do not navigate`() {
+        addAndSelectTab(testTab)
+        browserFragment.observeRestoreComplete(store, navController)
+        store.dispatch(RestoreCompleteAction).joinBlocking()
+
+        verify(exactly = 0) { navController.popBackStack(R.id.homeFragment, false) }
+    }
+
+    @Test
+    fun `GIVEN tabs are restored WHEN there is no selected tab THEN navigate to home`() {
+        val store = BrowserStore(initialState = BrowserState(tabs = listOf(testTab)))
+        browserFragment.observeRestoreComplete(store, navController)
+        store.dispatch(RestoreCompleteAction).joinBlocking()
+
+        verify(exactly = 1) { navController.popBackStack(R.id.homeFragment, false) }
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {
