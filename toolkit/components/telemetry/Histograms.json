@@ -1151,8 +1151,8 @@
   },
   "MEMORY_RESIDENT_PEAK": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "products": ["firefox"],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "amccreight@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 32768,
@@ -1164,7 +1164,7 @@
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "erahm@mozilla.com"],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "amccreight@mozilla.com"],
     "bug_numbers": [1198209, 1511918],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1201,7 +1201,7 @@
   "MEMORY_UNIQUE_CONTENT_STARTUP": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["erahm@mozilla.com", "memshrink-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["amccreight@mozilla.com", "memshrink-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1494827],
     "expires_in_version": "never",
     "kind": "exponential",
