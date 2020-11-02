@@ -45,3 +45,43 @@ add_task(async function testRangeResetAfterScale() {
     });
   });
 });
+
+add_task(async function testInvalidRangeResetAfterDestinationChange() {
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await helper.startPrint();
+
+    let destinationPicker = helper.get("printer-picker");
+    let startPageRange = helper.get("custom-range-start");
+
+    await helper.assertSettingsChanged(
+      { printRange: 0 },
+      { printRange: 1 },
+      async () => {
+        await helper.waitForPreview(() => changeAllToCustom(helper));
+      }
+    );
+
+    let rangeError = helper.get("error-invalid-start-range-overflow");
+
+    await helper.assertSettingsNotChanged({ startPageRange: 1 }, async () => {
+      ok(rangeError.hidden, "Range error is hidden");
+      await helper.text(startPageRange, "9");
+      await BrowserTestUtils.waitForAttributeRemoval("hidden", rangeError);
+      ok(!rangeError.hidden, "Range error is showing");
+    });
+
+    is(destinationPicker.disabled, false, "Destination picker is enabled");
+
+    // Select a new printer
+    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+    await BrowserTestUtils.waitForCondition(
+      () => rangeError.hidden,
+      "Wait for range error to be hidden"
+    );
+    is(startPageRange.value, "1", "Start page range has reset to 1");
+
+    await helper.closeDialog();
+  });
+});
