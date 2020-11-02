@@ -100,6 +100,11 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">提案されたログイン情報</string>
 
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">このサイトにデータを再送信しますか?</string>
+    <string name="mozac_feature_prompt_repost_message">このページを更新すると、支払いの送信やコメントの投稿が 2 回行われるなど、直前の操作が重複する可能性があります。</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">データを再送信</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">キャンセル</string>
 </resources>
