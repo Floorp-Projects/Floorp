@@ -618,3 +618,57 @@ add_task(async function testRevalidateSwitchToNone() {
     );
   });
 });
+
+add_task(async function testInvalidMarginResetAfterDestinationChange() {
+  const mockPrinterName = "Fake Printer";
+  await PrintHelper.withTestPage(async helper => {
+    helper.addMockPrinter(mockPrinterName);
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["print.printer_Fake_Printer.print_paper_id", "na_letter"],
+        ["print.printer_Fake_Printer.print_paper_size_unit", 0],
+        ["print.printer_Fake_Printer.print_paper_width", "8.5"],
+        ["print.printer_Fake_Printer.print_paper_height", "11"],
+      ],
+    });
+    await helper.startPrint();
+
+    let destinationPicker = helper.get("printer-picker");
+
+    await helper.openMoreSettings();
+    changeDefaultToCustom(helper);
+    await helper.awaitAnimationFrame();
+
+    let marginError = helper.get("error-invalid-margin");
+
+    await helper.assertSettingsNotChanged(
+      { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
+      async () => {
+        ok(marginError.hidden, "Margin error is hidden");
+
+        await helper.text(helper.get("custom-margin-top"), "20");
+        await BrowserTestUtils.waitForAttributeRemoval("hidden", marginError);
+
+        ok(!marginError.hidden, "Margin error is showing");
+        assertNoPendingMarginsUpdate(helper);
+      }
+    );
+
+    is(destinationPicker.disabled, false, "Destination picker is enabled");
+
+    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+    await BrowserTestUtils.waitForCondition(
+      () => marginError.hidden,
+      "Wait for margin error to be hidden"
+    );
+
+    helper.assertSettingsMatch({
+      marginTop: 0.5,
+      marginRight: 0.5,
+      marginBottom: 0.5,
+      marginLeft: 0.5,
+    });
+
+    await helper.closeDialog();
+  });
+});

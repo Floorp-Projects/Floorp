@@ -1526,6 +1526,8 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     this.addEventListener("input", this);
     this.addEventListener("revalidate", this);
 
+    this._printerDestination = this.querySelector("#destination");
+
     this.printButton = this.querySelector("#print-button");
     if (AppConstants.platform != "win") {
       // Move the Print button to the end if this isn't Windows.
@@ -1607,6 +1609,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
           (!isValid &&
             element.validity.valid &&
             element.name != "cancel" &&
+            element.closest(".section-block") != this._printerDestination &&
             element.closest(".section-block") != section);
       }
     }
@@ -1645,20 +1648,30 @@ class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   update(settings) {
-    let { scaling, shrinkToFit } = settings;
+    let { scaling, shrinkToFit, printerName } = settings;
     this._shrinkToFitChoice.checked = shrinkToFit;
     this._scaleChoice.checked = !shrinkToFit;
     this._percentScale.disabled = shrinkToFit;
     this._percentScale.toggleAttribute("disallowed", shrinkToFit);
+    if (!this.printerName) {
+      this.printerName = printerName;
+    }
 
     // If the user had an invalid input and switches back to "fit to page",
     // we repopulate the scale field with the stored, valid scaling value.
+    let isValid = this._percentScale.checkValidity();
     if (
       !this._percentScale.value ||
-      (this._shrinkToFitChoice.checked && !this._percentScale.checkValidity())
+      (this._shrinkToFitChoice.checked && !isValid) ||
+      (this.printerName != printerName && !isValid)
     ) {
       // Only allow whole numbers. 0.14 * 100 would have decimal places, etc.
       this._percentScale.value = parseInt(scaling * 100, 10);
+      this.printerName = printerName;
+      if (!isValid) {
+        this.dispatchEvent(new Event("revalidate", { bubbles: true }));
+        this._scaleError.hidden = true;
+      }
     }
   }
 
@@ -1976,6 +1989,9 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       // The values in custom fields should be initialized to custom margin values
       // and must be overriden if they are no longer valid.
       this.setAllMarginValues(settings);
+
+      this.dispatchEvent(new Event("revalidate", { bubbles: true }));
+      this._marginError.hidden = true;
     }
 
     // We need to ensure we don't override the value if the value should be custom.
