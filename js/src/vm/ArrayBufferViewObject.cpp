@@ -35,16 +35,15 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg) {
     if (gc::MaybeForwardedObjectIs<ArrayBufferObject>(&bufSlot.toObject())) {
       ArrayBufferObject& buf =
           gc::MaybeForwardedObjectAs<ArrayBufferObject>(&bufSlot.toObject());
-      size_t offset = size_t(obj->getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
-      MOZ_ASSERT(offset <= INT32_MAX);
+      BufferSize offset = obj->byteOffset();
 
-      MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
+      MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset.get() == 0);
 
       // The data may or may not be inline with the buffer. The buffer
       // can only move during a compacting GC, in which case its
       // objectMoved hook has already updated the buffer's data pointer.
       size_t nfixed = obj->numFixedSlotsMaybeForwarded();
-      obj->setPrivateUnbarriered(nfixed, buf.dataPointer() + offset);
+      obj->setPrivateUnbarriered(nfixed, buf.dataPointer() + offset.get());
     }
   }
 }
@@ -79,16 +78,19 @@ ArrayBufferObjectMaybeShared* ArrayBufferViewObject::bufferObject(
 
 bool ArrayBufferViewObject::init(JSContext* cx,
                                  ArrayBufferObjectMaybeShared* buffer,
-                                 uint32_t byteOffset, uint32_t length,
+                                 BufferSize byteOffset, BufferSize length,
                                  uint32_t bytesPerElement) {
-  MOZ_ASSERT_IF(!buffer, byteOffset == 0);
+  MOZ_ASSERT_IF(!buffer, byteOffset.get() == 0);
   MOZ_ASSERT_IF(buffer, !buffer->isDetached());
 
-  MOZ_ASSERT(byteOffset <= INT32_MAX);
-  MOZ_ASSERT(length <= INT32_MAX);
-  MOZ_ASSERT(byteOffset + length < UINT32_MAX);
+  MOZ_ASSERT(byteOffset.get() <= ArrayBufferObject::MaxBufferByteLength);
+  MOZ_ASSERT(length.get() <= ArrayBufferObject::MaxBufferByteLength);
+  MOZ_ASSERT(byteOffset.get() + length.get() <=
+             ArrayBufferObject::MaxBufferByteLength);
 
-  MOZ_ASSERT_IF(is<TypedArrayObject>(), length < INT32_MAX / bytesPerElement);
+  MOZ_ASSERT_IF(
+      is<TypedArrayObject>(),
+      length.get() < TypedArrayObject::MAX_BYTE_LENGTH / bytesPerElement);
 
   // The isSharedMemory property is invariant.  Self-hosting code that
   // sets BUFFER_SLOT or the private slot (if it does) must maintain it by
@@ -97,26 +99,26 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     setIsSharedMemory();
   }
 
-  initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(byteOffset));
-  initFixedSlot(LENGTH_SLOT, PrivateValue(length));
+  initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(byteOffset.get()));
+  initFixedSlot(LENGTH_SLOT, PrivateValue(length.get()));
   initFixedSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
 
   if (buffer) {
     SharedMem<uint8_t*> ptr = buffer->dataPointerEither();
-    initDataPointer(ptr + byteOffset);
+    initDataPointer(ptr + byteOffset.get());
 
     // Only ArrayBuffers used for inline typed objects can have
     // nursery-allocated data and we shouldn't see such buffers here.
     MOZ_ASSERT_IF(buffer->byteLength().get() > 0, !cx->nursery().isInside(ptr));
   } else {
     MOZ_ASSERT(is<TypedArrayObject>());
-    MOZ_ASSERT(length * bytesPerElement <=
+    MOZ_ASSERT(length.get() * bytesPerElement <=
                TypedArrayObject::INLINE_BUFFER_LIMIT);
     void* data = fixedData(TypedArrayObject::FIXED_DATA_START);
     initPrivate(data);
-    memset(data, 0, length * bytesPerElement);
+    memset(data, 0, length.get() * bytesPerElement);
 #ifdef DEBUG
-    if (length == 0) {
+    if (length.get() == 0) {
       uint8_t* elements = static_cast<uint8_t*>(data);
       elements[0] = ZeroLengthArrayData;
     }
@@ -125,9 +127,9 @@ bool ArrayBufferViewObject::init(JSContext* cx,
 
 #ifdef DEBUG
   if (buffer) {
-    uint32_t viewByteLength = length * bytesPerElement;
-    uint32_t viewByteOffset = byteOffset;
-    uint32_t bufferByteLength = buffer->byteLength().deprecatedGetUint32();
+    size_t viewByteLength = length.get() * bytesPerElement;
+    size_t viewByteOffset = byteOffset.get();
+    size_t bufferByteLength = buffer->byteLength().get();
     // Unwraps are safe: both are for the pointer value.
     MOZ_ASSERT_IF(IsArrayBuffer(buffer),
                   buffer->dataPointerEither().unwrap(/*safe*/) <=
