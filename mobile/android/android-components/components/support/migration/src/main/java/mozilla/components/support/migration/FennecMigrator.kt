@@ -229,6 +229,7 @@ class FennecMigrator private constructor(
     private val sessionManager: SessionManager?,
     private val searchEngineManager: SearchEngineManager?,
     private val accountManager: Lazy<FxaAccountManager>?,
+    private val fxaExpectChinaServers: Boolean,
     private val engine: Engine?,
     private val addonCollectionProvider: AddonCollectionProvider?,
     private val addonUpdater: AddonUpdater?,
@@ -252,6 +253,7 @@ class FennecMigrator private constructor(
         private var sessionManager: SessionManager? = null
         private var searchEngineManager: SearchEngineManager? = null
         private var accountManager: Lazy<FxaAccountManager>? = null
+        private var fxaExpectChinaServers: Boolean = false
         private var engine: Engine? = null
         private var addonCollectionProvider: AddonCollectionProvider? = null
         private var addonUpdater: AddonUpdater? = null
@@ -380,10 +382,18 @@ class FennecMigrator private constructor(
          * Enable FxA state migration.
          *
          * @param accountManager An instance of [FxaAccountManager] used for authenticating using a migrated account.
+         * @param fxaExpectChinaServers If 'true', Chinese FxA servers will be expected, and anything else will
+         * be treated as a custom server (including our global servers).
+         * It is important that the [accountManager] is configured with the same servers.
          * @param version Version of the migration; defaults to the current version.
          */
-        fun migrateFxa(accountManager: Lazy<FxaAccountManager>, version: Int = Migration.FxA.currentVersion): Builder {
+        fun migrateFxa(
+            accountManager: Lazy<FxaAccountManager>,
+            fxaExpectChinaServers: Boolean = false,
+            version: Int = Migration.FxA.currentVersion
+        ): Builder {
             this.accountManager = accountManager
+            this.fxaExpectChinaServers = fxaExpectChinaServers
             migrations.add(VersionedMigration(Migration.FxA, version))
             return this
         }
@@ -440,6 +450,7 @@ class FennecMigrator private constructor(
                 sessionManager,
                 searchEngineManager,
                 accountManager,
+                fxaExpectChinaServers,
                 engine,
                 addonCollectionProvider,
                 addonUpdater,
@@ -888,7 +899,12 @@ class FennecMigrator private constructor(
     @Suppress("ComplexMethod", "LongMethod", "TooGenericExceptionCaught", "NestedBlockDepth")
     private suspend fun migrateFxA(): Result<FxaMigrationResult> {
         return try {
-            val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!.value)
+            val result = FennecFxaMigration.migrate(
+                fxaState!!,
+                context,
+                accountManager!!.value,
+                fxaExpectChinaServers
+            )
 
             if (result is Result.Failure<FxaMigrationResult>) {
                 val migrationFailureWrapper = result.throwables.first()

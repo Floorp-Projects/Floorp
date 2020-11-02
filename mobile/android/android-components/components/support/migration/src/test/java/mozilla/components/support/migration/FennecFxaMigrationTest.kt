@@ -209,6 +209,56 @@ class FennecFxaMigrationTest {
     }
 
     @Test
+    fun `china idp and token servers`() = runBlocking {
+        customServerAssertAllowed("china-sync-config-idp-token.json")
+    }
+
+    private suspend fun customServerAssertAllowed(testFile: String) {
+        val fxaPath = File(getTestPath("fxa"), testFile)
+        val accountManager: FxaAccountManager = mock()
+
+        `when`(accountManager.migrateFromAccount(any(), eq(true))).thenReturn(MigrationResult.Success)
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager, true) as Result.Success) {
+            assertEquals(FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount::class, this.value::class)
+            assertEquals("test@example.com", (this.value as FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount).email)
+            assertEquals("Married", (this.value as FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount).stateLabel)
+
+            val captor = argumentCaptor<ShareableAccount>()
+            verify(accountManager).migrateFromAccount(captor.capture(), eq(true))
+
+            assertEquals("test@example.com", captor.value.email)
+            assertEquals("252fsvj8932vj32movj97325hjfksdhfjstrg23yurt267r23", captor.value.authInfo.kSync)
+            assertEquals("0b3ba79bfxdf32f3of32jowef7987f", captor.value.authInfo.kXCS)
+            assertEquals("fjsdkfksf3e8f32f23f832fwf32jf89o327u2843gj23", captor.value.authInfo.sessionToken)
+        }
+    }
+
+    @Test
+    fun `custom idp and token servers - allowed, but failed sign-in`() = runBlocking {
+        val fxaPath = File(getTestPath("fxa"), "china-sync-config-idp-token.json")
+        val accountManager: FxaAccountManager = mock()
+
+        `when`(accountManager.migrateFromAccount(any(), eq(true))).thenReturn(MigrationResult.Failure)
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager, true) as Result.Failure) {
+            val unwrapped = this.throwables.first() as FxaMigrationException
+            assertEquals(FxaMigrationResult.Failure.FailedToSignIntoAuthenticatedAccount::class, unwrapped.failure::class)
+            val unwrappedFailure = unwrapped.failure as FxaMigrationResult.Failure.FailedToSignIntoAuthenticatedAccount
+            assertEquals("test@example.com", unwrappedFailure.email)
+            assertEquals("Married", unwrappedFailure.stateLabel)
+
+            val captor = argumentCaptor<ShareableAccount>()
+            verify(accountManager).migrateFromAccount(captor.capture(), eq(true))
+
+            assertEquals("test@example.com", captor.value.email)
+            assertEquals("252fsvj8932vj32movj97325hjfksdhfjstrg23yurt267r23", captor.value.authInfo.kSync)
+            assertEquals("0b3ba79bfxdf32f3of32jowef7987f", captor.value.authInfo.kXCS)
+            assertEquals("fjsdkfksf3e8f32f23f832fwf32jf89o327u2843gj23", captor.value.authInfo.sessionToken)
+        }
+    }
+
+    @Test
     fun `cohabiting fxa state v4 failed sign-in`() = runBlocking {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()

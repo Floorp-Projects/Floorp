@@ -191,8 +191,13 @@ private object AuthenticatedAccountProcessor {
 internal object FennecFxaMigration {
     private val logger = Logger("FennecFxaMigration")
 
-    private const val DEFAULT_TOKEN_SERVER_URL = "https://token.services.mozilla.com/1.0/sync/1.5"
-    private const val DEFAULT_IDP_SERVER_URL = "https://api.accounts.firefox.com/v1"
+    // From https://accounts.firefox.com/.well-known/fxa-client-configuration
+    private const val GLOBAL_TOKEN_SERVER_URL = "https://token.services.mozilla.com/1.0/sync/1.5"
+    private const val GLOBAL_IDP_SERVER_URL = "https://api.accounts.firefox.com/v1"
+
+    // From https://accounts.firefox.com.cn/.well-known/fxa-client-configuration
+    private const val CHINA_TOKEN_SERVER_URL = "https://sync.firefox.com.cn/token/1.0/sync/1.5"
+    private const val CHINA_IDP_SERVER_URL = "https://api-accounts.firefox.com.cn/v1"
 
     /**
      * Performs a migration of Fennec's FxA state located in [fxaStateFile].
@@ -200,7 +205,8 @@ internal object FennecFxaMigration {
     suspend fun migrate(
         fxaStateFile: File,
         context: Context,
-        accountManager: FxaAccountManager
+        accountManager: FxaAccountManager,
+        expectChinaServers: Boolean = false
     ): Result<FxaMigrationResult> {
         logger.debug("Migrating Fennec account at ${fxaStateFile.absolutePath}")
 
@@ -209,7 +215,7 @@ internal object FennecFxaMigration {
         }
 
         return try {
-            val fennecAccount = parseJSON(fxaStateFile.readText())
+            val fennecAccount = parseJSON(fxaStateFile.readText(), expectChinaServers)
 
             when (fennecAccount.authInfo) {
                 // Found an account, but it wasn't authenticated.
@@ -226,7 +232,7 @@ internal object FennecFxaMigration {
 
     @Suppress("MagicNumber", "ReturnCount", "ComplexMethod", "ThrowsCount")
     @Throws(FxaMigrationException::class)
-    private fun parseJSON(rawJSON: String): FennecAccount {
+    private fun parseJSON(rawJSON: String, expectChinaServers: Boolean): FennecAccount {
         val json = try {
             JSONObject(rawJSON)
         } catch (e: JSONException) {
@@ -269,8 +275,18 @@ internal object FennecFxaMigration {
             throw FxaMigrationException(Failure.CorruptAccountState(e))
         }
 
-        val customTokenServer = tokenServerUri != DEFAULT_TOKEN_SERVER_URL
-        val customIdpServer = idpServerUri != DEFAULT_IDP_SERVER_URL
+        // Check if we should expect Chinese servers to be set (for Fennec/Fenix China builds).
+        val customTokenServer = if (!expectChinaServers) {
+            tokenServerUri != GLOBAL_TOKEN_SERVER_URL
+        } else {
+            tokenServerUri != CHINA_TOKEN_SERVER_URL
+        }
+        val customIdpServer = if (!expectChinaServers) {
+            idpServerUri != GLOBAL_IDP_SERVER_URL
+        } else {
+            idpServerUri != CHINA_IDP_SERVER_URL
+        }
+
         if (customTokenServer || customIdpServer) {
             throw FxaMigrationException(Failure.CustomServerConfigPresent(
                 customTokenServer = customTokenServer,
