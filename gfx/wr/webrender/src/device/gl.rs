@@ -1235,14 +1235,13 @@ impl DrawTarget {
     pub fn build_scissor_rect(
         &self,
         scissor_rect: Option<DeviceIntRect>,
-        content_origin: DeviceIntPoint,
     ) -> FramebufferIntRect {
         let dimensions = self.dimensions();
 
         match scissor_rect {
             Some(scissor_rect) => match *self {
                 DrawTarget::Default { ref rect, .. } => {
-                    self.to_framebuffer_rect(scissor_rect.translate(-content_origin.to_vector()))
+                    self.to_framebuffer_rect(scissor_rect)
                         .intersection(rect)
                         .unwrap_or_else(FramebufferIntRect::zero)
                 }

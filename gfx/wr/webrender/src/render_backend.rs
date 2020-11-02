@@ -9,7 +9,7 @@
 //! how these two pieces interact.
 
 use api::{DebugFlags, BlobImageHandler};
-use api::{DocumentId, DocumentLayer, ExternalScrollId, HitTestResult};
+use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{PrimitiveKeyKind};
@@ -81,7 +81,6 @@ pub struct DocumentView {
 #[derive(Copy, Clone)]
 pub struct SceneView {
     pub device_rect: DeviceIntRect,
-    pub layer: DocumentLayer,
     pub device_pixel_ratio: f32,
     pub page_zoom_factor: f32,
     pub quality_settings: QualitySettings,
@@ -478,7 +477,6 @@ impl Document {
     pub fn new(
         id: DocumentId,
         size: DeviceIntSize,
-        layer: DocumentLayer,
         default_device_pixel_ratio: f32,
     ) -> Self {
         Document {
@@ -487,7 +485,6 @@ impl Document {
             view: DocumentView {
                 scene: SceneView {
                     device_rect: size.into(),
-                    layer,
                     page_zoom_factor: 1.0,
                     device_pixel_ratio: default_device_pixel_ratio,
                     quality_settings: QualitySettings::default(),
@@ -628,7 +625,6 @@ impl Document {
                 gpu_cache,
                 self.stamp,
                 accumulated_scale_factor,
-                self.view.scene.layer,
                 self.view.scene.device_rect.origin,
                 pan,
                 &self.dynamic_properties,
@@ -1038,11 +1034,10 @@ impl RenderBackend {
                 assert!(self.namespace_alloc_by_client);
                 debug_assert!(!self.documents.iter().any(|(did, _doc)| did.namespace_id == namespace_id));
             }
-            ApiMsg::AddDocument(document_id, initial_size, layer) => {
+            ApiMsg::AddDocument(document_id, initial_size) => {
                 let document = Document::new(
                     document_id,
                     initial_size,
-                    layer,
                     self.default_device_pixel_ratio,
                 );
                 let old = self.documents.insert(document_id, document);

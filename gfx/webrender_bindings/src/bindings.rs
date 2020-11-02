@@ -202,10 +202,9 @@ impl DocumentHandle {
         api: RenderApi,
         hit_tester: Option<Arc<dyn ApiHitTester>>,
         size: DeviceIntSize,
-        layer: i8,
         id: u32,
     ) -> DocumentHandle {
-        let doc = api.add_document_with_id(size, layer, id);
+        let doc = api.add_document_with_id(size, id);
         let hit_tester_request = if hit_tester.is_none() {
             // Request the hit tester early to reduce the likelihood of blocking on the
             // first hit testing query.
@@ -1634,12 +1633,10 @@ pub extern "C" fn wr_window_new(
     unsafe {
         *out_max_texture_size = renderer.get_max_texture_size();
     }
-    let layer = 0;
     *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
         sender.create_api_by_client(next_namespace_id()),
         None,
         window_size,
-        layer,
         document_id,
     )));
     *out_renderer = Box::into_raw(Box::new(renderer));

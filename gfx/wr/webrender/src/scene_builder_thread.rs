@@ -6,7 +6,7 @@ use api::{AsyncBlobImageRasterizer, BlobImageResult};
 use api::{DocumentId, PipelineId, ExternalEvent, BlobImageRequest};
 use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
 use api::{PrimitiveKeyKind, SharedFontInstanceMap};
-use api::{DocumentLayer, GlyphDimensionRequest, GlyphIndexRequest};
+use api::{GlyphDimensionRequest, GlyphIndexRequest};
 use api::channel::{unbounded_channel, single_msg_channel, Receiver, Sender};
 use api::units::*;
 use crate::render_api::{ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, TransactionMsg, MemoryReport};
@@ -89,7 +89,7 @@ pub struct LoadScene {
 /// Message to the scene builder thread.
 pub enum SceneBuilderRequest {
     Transactions(Vec<Box<TransactionMsg>>),
-    AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
+    AddDocument(DocumentId, DeviceIntSize),
     DeleteDocument(DocumentId),
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
@@ -204,14 +204,13 @@ struct Document {
 }
 
 impl Document {
-    fn new(device_rect: DeviceIntRect, layer: DocumentLayer, device_pixel_ratio: f32) -> Self {
+    fn new(device_rect: DeviceIntRect, device_pixel_ratio: f32) -> Self {
         Document {
             scene: Scene::new(),
             interners: Interners::default(),
             stats: SceneStats::empty(),
             view: SceneView {
                 device_rect,
-                layer,
                 device_pixel_ratio,
                 page_zoom_factor: 1.0,
                 quality_settings: QualitySettings::default(),
@@ -315,10 +314,9 @@ impl SceneBuilderThread {
                     }
                     self.forward_built_transactions(built_txns);
                 }
-                Ok(SceneBuilderRequest::AddDocument(document_id, initial_size, layer)) => {
+                Ok(SceneBuilderRequest::AddDocument(document_id, initial_size)) => {
                     let old = self.documents.insert(document_id, Document::new(
                         initial_size.into(),
-                        layer,
                         self.default_device_pixel_ratio,
                     ));
                     debug_assert!(old.is_none());

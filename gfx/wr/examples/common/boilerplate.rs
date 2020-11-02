@@ -185,7 +185,7 @@ pub fn main_wrapper<E: Example>(
         None,
     ).unwrap();
     let mut api = sender.create_api();
-    let document_id = api.add_document(device_size, 0);
+    let document_id = api.add_document(device_size);
 
     let external = example.get_image_handler(&*gl);
 
