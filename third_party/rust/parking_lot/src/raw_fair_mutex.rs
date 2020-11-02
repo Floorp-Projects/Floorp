@@ -27,19 +27,24 @@ unsafe impl lock_api::RawMutex for RawFairMutex {
     }
 
     #[inline]
-    fn unlock(&self) {
+    unsafe fn unlock(&self) {
         self.unlock_fair()
+    }
+
+    #[inline]
+    fn is_locked(&self) -> bool {
+        self.0.is_locked()
     }
 }
 
 unsafe impl lock_api::RawMutexFair for RawFairMutex {
     #[inline]
-    fn unlock_fair(&self) {
+    unsafe fn unlock_fair(&self) {
         self.0.unlock_fair()
     }
 
     #[inline]
-    fn bump(&self) {
+    unsafe fn bump(&self) {
         self.0.bump()
     }
 }

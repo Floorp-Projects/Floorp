@@ -1,12 +1,5 @@
 use lock_api::RawRwLock;
-use std::{
-    cell::UnsafeCell,
-    collections::hash_map::HashMap,
-    fmt,
-    hash,
-    ops,
-};
-
+use std::{cell::UnsafeCell, collections::hash_map::HashMap, fmt, hash, ops};
 
 /// `StorageMap` is a wrapper around `HashMap` that allows efficient concurrent
 /// access for the use case when only rarely the missing elements need to be created.
@@ -33,7 +26,6 @@ impl<L, M: fmt::Debug> fmt::Debug for StorageMap<L, M> {
     }
 }
 
-
 /// An element guard that releases the lock when dropped.
 pub struct StorageMapGuard<'a, L: 'a + RawRwLock, V: 'a> {
     lock: &'a L,
@@ -50,10 +42,12 @@ impl<'a, L: RawRwLock, V> ops::Deref for StorageMapGuard<'a, L, V> {
 
 impl<'a, L: RawRwLock, V> Drop for StorageMapGuard<'a, L, V> {
     fn drop(&mut self) {
-        if self.exclusive {
-            self.lock.unlock_exclusive();
-        } else {
-            self.lock.unlock_shared();
+        unsafe {
+            if self.exclusive {
+                self.lock.unlock_exclusive();
+            } else {
+                self.lock.unlock_shared();
+            }
         }
     }
 }
@@ -78,10 +72,11 @@ impl<'a, L: RawRwLock, M> ops::DerefMut for WholeMapWriteGuard<'a, L, M> {
 
 impl<'a, L: RawRwLock, V> Drop for WholeMapWriteGuard<'a, L, V> {
     fn drop(&mut self) {
-        self.lock.unlock_exclusive();
+        unsafe {
+            self.lock.unlock_exclusive();
+        }
     }
 }
-
 
 /// Result of preparing a particular key.
 pub enum PrepareResult {
@@ -111,7 +106,9 @@ where
     /// the value is already there. If it's not - the closure will be called to create one.
     /// This closure is expected to always produce the same value given the same key.
     pub fn get_or_create_with<'a, F: FnOnce() -> V>(
-        &'a self, key: &K, create_fn: F
+        &'a self,
+        key: &K,
+        create_fn: F,
     ) -> StorageMapGuard<'a, L, V> {
         self.lock.lock_shared();
         // try mapping for reading first
@@ -123,7 +120,9 @@ where
                 exclusive: false,
             };
         }
-        self.lock.unlock_shared();
+        unsafe {
+            self.lock.unlock_shared();
+        }
         // now actually lock for writes
         let value = create_fn();
         self.lock.lock_exclusive();
@@ -137,14 +136,14 @@ where
 
     /// Make sure the given key is in the map, as a way to warm up
     /// future run-time access to the map at the initialization stage.
-    pub fn prepare_maybe<F: FnOnce() -> Option<V>>(
-        &self, key: &K, create_fn: F
-    ) -> PrepareResult {
+    pub fn prepare_maybe<F: FnOnce() -> Option<V>>(&self, key: &K, create_fn: F) -> PrepareResult {
         self.lock.lock_shared();
         // try mapping for reading first
         let map = unsafe { &*self.map.get() };
         let has = map.contains_key(key);
-        self.lock.unlock_shared();
+        unsafe {
+            self.lock.unlock_shared();
+        }
         if has {
             return PrepareResult::AlreadyExists;
         }
@@ -157,7 +156,9 @@ where
         self.lock.lock_exclusive();
         let map = unsafe { &mut *self.map.get() };
         map.insert(key.clone(), value);
-        self.lock.unlock_exclusive();
+        unsafe {
+            self.lock.unlock_exclusive();
+        }
         PrepareResult::Created
     }
 

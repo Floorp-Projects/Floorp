@@ -6,6 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use core::sync::atomic::{AtomicBool, Ordering};
+use instant::Instant;
 use std::{
     io,
     os::fortanix_sgx::{
@@ -16,7 +17,6 @@ use std::{
         },
     },
     thread,
-    time::Instant,
 };
 
 // Helper type for putting a thread to sleep until some other thread wakes it up

@@ -1,3 +1,9 @@
+# 1.2.1
+
+- Remove extraneous `#[inline]` attributes ([#194])
+
+[#194]: https://github.com/bitflags/bitflags/pull/194
+
 # 1.2.0
 
 - Fix typo: {Lower, Upper}Exp - {Lower, Upper}Hex ([#183])

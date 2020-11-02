@@ -1,10 +1,12 @@
-use std::thread::Thread;
 use thiserror::Error;
+
+#[derive(Debug)]
+struct NoDisplay;
 
 #[derive(Error, Debug)]
 #[error("thread: {thread}")]
 pub struct Error {
-    thread: Thread,
+    thread: NoDisplay,
 }
 
 fn main() {}

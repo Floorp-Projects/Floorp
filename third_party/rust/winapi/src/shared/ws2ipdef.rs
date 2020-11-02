@@ -8,7 +8,7 @@ use ctypes::c_int;
 use shared::in6addr::IN6_ADDR;
 use shared::inaddr::IN_ADDR;
 use shared::minwindef::{ULONG, USHORT};
-use shared::ws2def::{ADDRESS_FAMILY, SCOPE_ID};
+use shared::ws2def::{ADDRESS_FAMILY, SCOPE_ID, SOCKADDR_IN};
 pub const IFF_UP: ULONG = 0x00000001;
 pub const IFF_BROADCAST: ULONG = 0x00000002;
 pub const IFF_LOOPBACK: ULONG = 0x00000004;
@@ -44,11 +44,31 @@ STRUCT!{struct SOCKADDR_IN6_LH {
     u: SOCKADDR_IN6_LH_u,
 }}
 pub type PSOCKADDR_IN6_LH = *mut SOCKADDR_IN6_LH;
+pub type SOCKADDR_IN6 = SOCKADDR_IN6_LH;
+pub type PSOCKADDR_IN6 = *mut SOCKADDR_IN6;
+STRUCT!{struct SOCKADDR_IN6_PAIR {
+    SourceAddress: PSOCKADDR_IN6,
+    DestinationAddress: PSOCKADDR_IN6,
+}}
+pub type PSOCKADDR_IN6_PAIR = *mut SOCKADDR_IN6_PAIR;
+UNION!{union SOCKADDR_INET {
+    [u32; 7],
+    Ipv4 Ipv4_mut: SOCKADDR_IN,
+    Ipv6 Ipv6_mut: SOCKADDR_IN6,
+    si_family si_family_mut: ADDRESS_FAMILY,
+}}
+pub type PSOCKADDR_INET = *mut SOCKADDR_INET;
 STRUCT!{struct IP_MREQ {
     imr_multiaddr: IN_ADDR,
     imr_interface: IN_ADDR,
 }}
 pub type PIP_MREQ = *mut IP_MREQ;
+STRUCT!{struct IP_MREQ_SOURCE {
+    imr_multiaddr: IN_ADDR,
+    imr_sourceaddr: IN_ADDR,
+    imr_interface: IN_ADDR,
+}}
+pub type PIP_MREQ_SOURCE = *mut IP_MREQ_SOURCE;
 pub const IPV6_HOPOPTS: c_int = 1;
 pub const IPV6_HDRINCL: c_int = 2;
 pub const IPV6_UNICAST_HOPS: c_int = 4;

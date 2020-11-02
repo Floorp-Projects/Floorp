@@ -1,16 +1,13 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
-#[error("...")]
-pub struct ErrorStruct {
-    source: String,
-}
+#[derive(Debug)]
+pub struct NotError;
 
 #[derive(Error, Debug)]
 #[error("...")]
 pub enum ErrorEnum {
     Broken {
-        source: String,
+        source: NotError,
     },
 }
 

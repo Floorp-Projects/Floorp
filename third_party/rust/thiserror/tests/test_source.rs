@@ -1,3 +1,5 @@
+#![deny(clippy::all, clippy::pedantic)]
+
 use std::error::Error as StdError;
 use std::io;
 use thiserror::Error;

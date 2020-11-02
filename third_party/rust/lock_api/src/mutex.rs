@@ -45,7 +45,30 @@ pub unsafe trait RawMutex {
     fn try_lock(&self) -> bool;
 
     /// Unlocks this mutex.
-    fn unlock(&self);
+    ///
+    /// # Safety
+    ///
+    /// This method may only be called if the mutex is held in the current context, i.e. it must
+    /// be paired with a successful call to [`lock`], [`try_lock`], [`try_lock_for`] or [`try_lock_until`].
+    ///
+    /// [`lock`]: #tymethod.lock
+    /// [`try_lock`]: #tymethod.try_lock
+    /// [`try_lock_for`]: trait.RawMutexTimed.html#tymethod.try_lock_for
+    /// [`try_lock_until`]: trait.RawMutexTimed.html#tymethod.try_lock_until
+    unsafe fn unlock(&self);
+
+    /// Checks whether the mutex is currently locked.
+    #[inline]
+    fn is_locked(&self) -> bool {
+        let acquired_lock = self.try_lock();
+        if acquired_lock {
+            // Safety: The lock has been successfully acquired above.
+            unsafe {
+                self.unlock();
+            }
+        }
+        !acquired_lock
+    }
 }
 
 /// Additional methods for mutexes which support fair unlocking.
@@ -56,14 +79,28 @@ pub unsafe trait RawMutex {
 /// unlocking, but may be necessary in certain circumstances.
 pub unsafe trait RawMutexFair: RawMutex {
     /// Unlocks this mutex using a fair unlock protocol.
-    fn unlock_fair(&self);
+    ///
+    /// # Safety
+    ///
+    /// This method may only be called if the mutex is held in the current context, see
+    /// the documentation of [`unlock`].
+    ///
+    /// [`unlock`]: trait.RawMutex.html#tymethod.unlock
+    unsafe fn unlock_fair(&self);
 
     /// Temporarily yields the mutex to a waiting thread if there is one.
     ///
     /// This method is functionally equivalent to calling `unlock_fair` followed
     /// by `lock`, however it can be much more efficient in the case where there
     /// are no waiting threads.
-    fn bump(&self) {
+    ///
+    /// # Safety
+    ///
+    /// This method may only be called if the mutex is held in the current context, see
+    /// the documentation of [`unlock`].
+    ///
+    /// [`unlock`]: trait.RawMutex.html#tymethod.unlock
+    unsafe fn bump(&self) {
         self.unlock_fair();
         self.lock();
     }
@@ -198,6 +235,12 @@ impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
         unsafe { &mut *self.data.get() }
     }
 
+    /// Checks whether the mutex is currently locked.
+    #[inline]
+    pub fn is_locked(&self) -> bool {
+        self.raw.is_locked()
+    }
+
     /// Forcibly unlocks the mutex.
     ///
     /// This is useful when combined with `mem::forget` to hold a lock without
@@ -226,6 +269,22 @@ impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
     #[inline]
     pub unsafe fn raw(&self) -> &R {
         &self.raw
+    }
+
+    /// Returns a raw pointer to the underlying data.
+    ///
+    /// This is useful when combined with `mem::forget` to hold a lock without
+    /// the need to maintain a `MutexGuard` object alive, for example when
+    /// dealing with FFI.
+    ///
+    /// # Safety
+    ///
+    /// You must ensure that there are no data races when dereferencing the
+    /// returned pointer, for example if the current thread logically owns
+    /// a `MutexGuard` but that guard has been discarded using `mem::forget`.
+    #[inline]
+    pub fn data_ptr(&self) -> *mut T {
+        self.data.get()
     }
 }
 
@@ -420,7 +479,10 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
     where
         F: FnOnce() -> U,
     {
-        s.mutex.raw.unlock();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            s.mutex.raw.unlock();
+        }
         defer!(s.mutex.raw.lock());
         f()
     }
@@ -441,7 +503,10 @@ impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
     /// using this method instead of dropping the `MutexGuard` normally.
     #[inline]
     pub fn unlock_fair(s: Self) {
-        s.mutex.raw.unlock_fair();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            s.mutex.raw.unlock_fair();
+        }
         mem::forget(s);
     }
 
@@ -456,7 +521,10 @@ impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
     where
         F: FnOnce() -> U,
     {
-        s.mutex.raw.unlock_fair();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            s.mutex.raw.unlock_fair();
+        }
         defer!(s.mutex.raw.lock());
         f()
     }
@@ -468,7 +536,10 @@ impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
     /// are no waiting threads.
     #[inline]
     pub fn bump(s: &mut Self) {
-        s.mutex.raw.bump();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            s.mutex.raw.bump();
+        }
     }
 }
 
@@ -490,7 +561,10 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> DerefMut for MutexGuard<'a, R, T> {
 impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> Drop for MutexGuard<'a, R, T> {
     #[inline]
     fn drop(&mut self) {
-        self.mutex.raw.unlock();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            self.mutex.raw.unlock();
+        }
     }
 }
 
@@ -599,7 +673,10 @@ impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MappedMutexGuard<'a, R, T> {
     /// using this method instead of dropping the `MutexGuard` normally.
     #[inline]
     pub fn unlock_fair(s: Self) {
-        s.raw.unlock_fair();
+        // Safety: A MutexGuard always holds the lock.
+        unsafe {
+            s.raw.unlock_fair();
+        }
         mem::forget(s);
     }
 }
@@ -622,7 +699,10 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> DerefMut for MappedMutexGuard<'a, R, 
 impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> Drop for MappedMutexGuard<'a, R, T> {
     #[inline]
     fn drop(&mut self) {
-        self.raw.unlock();
+        // Safety: A MappedMutexGuard always holds the lock.
+        unsafe {
+            self.raw.unlock();
+        }
     }
 }
 

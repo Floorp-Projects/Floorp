@@ -1,3 +1,5 @@
+#![deny(clippy::all, clippy::pedantic)]
+
 use ref_cast::RefCast;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};

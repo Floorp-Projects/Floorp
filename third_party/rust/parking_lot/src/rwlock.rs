@@ -31,18 +31,18 @@ use lock_api;
 ///
 /// A typical unfair lock can often end up in a situation where a single thread
 /// quickly acquires and releases the same lock in succession, which can starve
-/// other threads waiting to acquire the rwlock. While this improves performance
+/// other threads waiting to acquire the rwlock. While this improves throughput
 /// because it doesn't force a context switch when a thread tries to re-acquire
 /// a rwlock it has just released, this can starve other threads.
 ///
 /// This rwlock uses [eventual fairness](https://trac.webkit.org/changeset/203350)
 /// to ensure that the lock will be fair on average without sacrificing
-/// performance. This is done by forcing a fair unlock on average every 0.5ms,
+/// throughput. This is done by forcing a fair unlock on average every 0.5ms,
 /// which will force the lock to go to the next thread waiting for the rwlock.
 ///
 /// Additionally, any critical section longer than 1ms will always use a fair
-/// unlock, which has a negligible performance impact compared to the length of
-/// the critical section.
+/// unlock, which has a negligible impact on throughput considering the length
+/// of the critical section.
 ///
 /// You can also force a fair unlock by calling `RwLockReadGuard::unlock_fair`
 /// or `RwLockWriteGuard::unlock_fair` when unlocking a mutex instead of simply

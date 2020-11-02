@@ -8,7 +8,16 @@ use shared::minwindef::{
     BOOL, BYTE, DWORD, HKEY, LPBYTE, LPCVOID, LPDWORD, PFILETIME, PHKEY, ULONG
 };
 use um::minwinbase::LPSECURITY_ATTRIBUTES;
-use um::winnt::{ACCESS_MASK, HANDLE, LONG, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PVOID};
+use um::reason::{
+    SHTDN_REASON_FLAG_PLANNED, SHTDN_REASON_LEGACY_API, SHTDN_REASON_MAJOR_HARDWARE,
+    SHTDN_REASON_MAJOR_OTHER, SHTDN_REASON_MAJOR_SOFTWARE, SHTDN_REASON_MAJOR_SYSTEM,
+    SHTDN_REASON_MINOR_HUNG, SHTDN_REASON_MINOR_INSTALLATION, SHTDN_REASON_MINOR_OTHER,
+    SHTDN_REASON_MINOR_RECONFIG, SHTDN_REASON_MINOR_UNSTABLE, SHTDN_REASON_UNKNOWN,
+};
+use um::winnt::{
+    ACCESS_MASK, BOOLEAN, HANDLE, LONG, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PBOOLEAN, PLONG,
+    PSECURITY_DESCRIPTOR, PVOID, SECURITY_INFORMATION,
+};
 pub type LSTATUS = LONG;
 pub const RRF_RT_REG_NONE: DWORD = 0x00000001;
 pub const RRF_RT_REG_SZ: DWORD = 0x00000002;
@@ -27,16 +36,16 @@ pub const RRF_NOEXPAND: DWORD = 0x10000000;
 pub const RRF_ZEROONFAILURE: DWORD = 0x20000000;
 pub const REG_PROCESS_APPKEY: DWORD = 0x00000001;
 pub type REGSAM = ACCESS_MASK;
-pub const HKEY_CLASSES_ROOT: HKEY = 0x80000000i32 as isize as HKEY;
-pub const HKEY_CURRENT_USER: HKEY = 0x80000001i32 as isize as HKEY;
-pub const HKEY_LOCAL_MACHINE: HKEY = 0x80000002i32 as isize as HKEY;
-pub const HKEY_USERS: HKEY = 0x80000003i32 as isize as HKEY;
-pub const HKEY_PERFORMANCE_DATA: HKEY = 0x80000004i32 as isize as HKEY;
-pub const HKEY_PERFORMANCE_TEXT: HKEY = 0x80000050i32 as isize as HKEY;
-pub const HKEY_PERFORMANCE_NLSTEXT: HKEY = 0x80000060i32 as isize as HKEY;
-pub const HKEY_CURRENT_CONFIG: HKEY = 0x80000005i32 as isize as HKEY;
-pub const HKEY_DYN_DATA: HKEY = 0x80000006i32 as isize as HKEY;
-pub const HKEY_CURRENT_USER_LOCAL_SETTINGS: HKEY = 0x80000007i32 as isize as HKEY;
+pub const HKEY_CLASSES_ROOT: HKEY = 0x80000000i32 as usize as HKEY;
+pub const HKEY_CURRENT_USER: HKEY = 0x80000001i32 as usize as HKEY;
+pub const HKEY_LOCAL_MACHINE: HKEY = 0x80000002i32 as usize as HKEY;
+pub const HKEY_USERS: HKEY = 0x80000003i32 as usize as HKEY;
+pub const HKEY_PERFORMANCE_DATA: HKEY = 0x80000004i32 as usize as HKEY;
+pub const HKEY_PERFORMANCE_TEXT: HKEY = 0x80000050i32 as usize as HKEY;
+pub const HKEY_PERFORMANCE_NLSTEXT: HKEY = 0x80000060i32 as usize as HKEY;
+pub const HKEY_CURRENT_CONFIG: HKEY = 0x80000005i32 as usize as HKEY;
+pub const HKEY_DYN_DATA: HKEY = 0x80000006i32 as usize as HKEY;
+pub const HKEY_CURRENT_USER_LOCAL_SETTINGS: HKEY = 0x80000007i32 as usize as HKEY;
 // PROVIDER_KEEPS_VALUE_LENGTH
 // val_context
 // PVALUEA
@@ -214,8 +223,18 @@ extern "system" {
         hKey: HKEY,
         lpValueName: LPCWSTR,
     ) -> LSTATUS;
-    // pub fn RegEnumKeyA();
-    // pub fn RegEnumKeyW();
+    pub fn RegEnumKeyA(
+        hKey: HKEY,
+        dwIndex: DWORD,
+        lpName: LPSTR,
+        cchName: DWORD,
+    ) -> LSTATUS;
+    pub fn RegEnumKeyW(
+        hKey: HKEY,
+        dwIndex: DWORD,
+        lpName: LPWSTR,
+        cchName: DWORD,
+    ) -> LSTATUS;
     pub fn RegEnumKeyExA(
         hKey: HKEY,
         dwIndex: DWORD,
@@ -259,9 +278,22 @@ extern "system" {
     pub fn RegFlushKey(
         hKey: HKEY,
     ) -> LSTATUS;
-    // pub fn RegGetKeySecurity();
-    // pub fn RegLoadKeyA();
-    // pub fn RegLoadKeyW();
+    pub fn RegGetKeySecurity(
+        hKey: HKEY,
+        SecurityInformation: SECURITY_INFORMATION,
+        pSecurityDescriptor: PSECURITY_DESCRIPTOR,
+        lpcbSecurityDescriptor: LPDWORD,
+    ) -> LSTATUS;
+    pub fn RegLoadKeyA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+        lpFile: LPCSTR,
+    ) -> LSTATUS;
+    pub fn RegLoadKeyW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+        lpFile: LPCWSTR,
+    ) -> LSTATUS;
     pub fn RegNotifyChangeKeyValue(
         hKey: HKEY,
         bWatchSubtree: BOOL,
@@ -269,8 +301,16 @@ extern "system" {
         hEvent: HANDLE,
         fAsynchronous: BOOL,
     ) -> LSTATUS;
-    // pub fn RegOpenKeyA();
-    // pub fn RegOpenKeyW();
+    pub fn RegOpenKeyA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+        phkResult: PHKEY,
+    ) -> LSTATUS;
+    pub fn RegOpenKeyW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+        phkResult: PHKEY,
+    ) -> LSTATUS;
     pub fn RegOpenKeyExA(
         hKey: HKEY,
         lpSubKey: LPCSTR,
@@ -331,8 +371,18 @@ extern "system" {
         lpcbSecurityDescriptor: LPDWORD,
         lpftLastWriteTime: PFILETIME,
     ) -> LSTATUS;
-    // pub fn RegQueryValueA();
-    // pub fn RegQueryValueW();
+    pub fn RegQueryValueA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+        lpData: LPSTR,
+        lpcbData: PLONG,
+    ) -> LSTATUS;
+    pub fn RegQueryValueW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+        lpData: LPWSTR,
+        lpcbData: PLONG,
+    ) -> LSTATUS;
     pub fn RegQueryMultipleValuesA(
         hKey: HKEY,
         val_list: PVALENTA,
@@ -363,16 +413,62 @@ extern "system" {
         lpData: LPBYTE,
         lpcbData: LPDWORD,
     ) -> LSTATUS;
-    // pub fn RegReplaceKeyA();
-    // pub fn RegReplaceKeyW();
-    // pub fn RegRestoreKeyA();
-    // pub fn RegRestoreKeyW();
-    // pub fn RegRenameKey();
-    // pub fn RegSaveKeyA();
-    // pub fn RegSaveKeyW();
-    // pub fn RegSetKeySecurity();
-    // pub fn RegSetValueA();
-    // pub fn RegSetValueW();
+    pub fn RegReplaceKeyA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+        lpNewFile: LPCSTR,
+        lpOldFile: LPCSTR,
+    ) -> LSTATUS;
+    pub fn RegReplaceKeyW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+        lpNewFile: LPCWSTR,
+        lpOldFile: LPCWSTR,
+    ) -> LSTATUS;
+    pub fn RegRestoreKeyA(
+        hKey: HKEY,
+        lpFile: LPCSTR,
+        dwFlags: DWORD,
+    ) -> LSTATUS;
+    pub fn RegRestoreKeyW(
+        hKey: HKEY,
+        lpFile: LPCWSTR,
+        dwFlags: DWORD,
+    ) -> LSTATUS;
+    pub fn RegRenameKey(
+        hKey: HKEY,
+        lpSubKeyName: LPCWSTR,
+        lpNewKeyName: LPCWSTR,
+    ) -> LSTATUS;
+    pub fn RegSaveKeyA(
+        hKey: HKEY,
+        lpFile: LPCSTR,
+        lpSecurityAttributes: LPSECURITY_ATTRIBUTES,
+    ) -> LSTATUS;
+    pub fn RegSaveKeyW(
+        hKey: HKEY,
+        lpFile: LPCWSTR,
+        lpSecurityAttributes: LPSECURITY_ATTRIBUTES,
+    ) -> LSTATUS;
+    pub fn RegSetKeySecurity(
+        hKey: HKEY,
+        SecurityInformation: SECURITY_INFORMATION,
+        pSecurityDescriptor: PSECURITY_DESCRIPTOR,
+    ) -> LSTATUS;
+    pub fn RegSetValueA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+        dwType: DWORD,
+        lpData: LPCSTR,
+        cbData: DWORD,
+    ) -> LSTATUS;
+    pub fn RegSetValueW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+        dwType: DWORD,
+        lpData: LPCWSTR,
+        cbData: DWORD,
+    ) -> LSTATUS;
     pub fn RegSetValueExA(
         hKey: HKEY,
         lpValueName: LPCSTR,
@@ -389,8 +485,14 @@ extern "system" {
         lpData: *const BYTE,
         cbData: DWORD,
     ) -> LSTATUS;
-    // pub fn RegUnLoadKeyA();
-    // pub fn RegUnLoadKeyW();
+    pub fn RegUnLoadKeyA(
+        hKey: HKEY,
+        lpSubKey: LPCSTR,
+    ) -> LSTATUS;
+    pub fn RegUnLoadKeyW(
+        hKey: HKEY,
+        lpSubKey: LPCWSTR,
+    ) -> LSTATUS;
     pub fn RegDeleteKeyValueA(
         hKey: HKEY,
         lpSubKey: LPCSTR,
@@ -453,7 +555,15 @@ extern "system" {
         lpSubKey: LPCWSTR,
         hKeyDest: HKEY,
     ) -> LSTATUS;
-    // pub fn RegLoadMUIStringA();
+    pub fn RegLoadMUIStringA(
+        hKey: HKEY,
+        pszValue: LPCSTR,
+        pszOutBuf: LPSTR,
+        cbOutBuf: DWORD,
+        pcbData: LPDWORD,
+        Flags: DWORD,
+        pszDirectory: LPCSTR,
+    ) -> LSTATUS;
     pub fn RegLoadMUIStringW(
         hKey: HKEY,
         pszValue: LPCWSTR,
@@ -463,10 +573,34 @@ extern "system" {
         Flags: DWORD,
         pszDirectory: LPCWSTR,
     ) -> LSTATUS;
-    // pub fn RegLoadAppKeyA();
-    // pub fn RegLoadAppKeyW();
-    // pub fn InitiateSystemShutdownA();
-    // pub fn InitiateSystemShutdownW();
+    pub fn RegLoadAppKeyA(
+        lpFile: LPCSTR,
+        phkResult: PHKEY,
+        samDesired: REGSAM,
+        dwOptions: DWORD,
+        Reserved: DWORD,
+    ) -> LSTATUS;
+    pub fn RegLoadAppKeyW(
+        lpFile: LPCWSTR,
+        phkResult: PHKEY,
+        samDesired: REGSAM,
+        dwOptions: DWORD,
+        Reserved: DWORD,
+    ) -> LSTATUS;
+    pub fn InitiateSystemShutdownA(
+        lpMachineName: LPSTR,
+        lpMessage: LPSTR,
+        dwTimeout: DWORD,
+        bForceAppsClosed: BOOL,
+        bRebootAfterShutdown: BOOL,
+    ) -> BOOL;
+    pub fn InitiateSystemShutdownW(
+        lpMachineName: LPWSTR,
+        lpMessage: LPWSTR,
+        dwTimeout: DWORD,
+        bForceAppsClosed: BOOL,
+        bRebootAfterShutdown: BOOL,
+    ) -> BOOL;
     pub fn AbortSystemShutdownA(
         lpMachineName: LPSTR,
     ) -> BOOL;
@@ -474,17 +608,77 @@ extern "system" {
         lpMachineName: LPWSTR,
     ) -> BOOL;
 }
-// REASON_*
-// MAX_SHUTDOWN_TIMEOUT
+pub const REASON_SWINSTALL: DWORD = SHTDN_REASON_MAJOR_SOFTWARE | SHTDN_REASON_MINOR_INSTALLATION;
+pub const REASON_HWINSTALL: DWORD = SHTDN_REASON_MAJOR_HARDWARE | SHTDN_REASON_MINOR_INSTALLATION;
+pub const REASON_SERVICEHANG: DWORD = SHTDN_REASON_MAJOR_SOFTWARE | SHTDN_REASON_MINOR_HUNG;
+pub const REASON_UNSTABLE: DWORD = SHTDN_REASON_MAJOR_SYSTEM | SHTDN_REASON_MINOR_UNSTABLE;
+pub const REASON_SWHWRECONF: DWORD = SHTDN_REASON_MAJOR_SOFTWARE | SHTDN_REASON_MINOR_RECONFIG;
+pub const REASON_OTHER: DWORD = SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER;
+pub const REASON_UNKNOWN: DWORD = SHTDN_REASON_UNKNOWN;
+pub const REASON_LEGACY_API: DWORD = SHTDN_REASON_LEGACY_API;
+pub const REASON_PLANNED_FLAG: DWORD = SHTDN_REASON_FLAG_PLANNED;
+pub const MAX_SHUTDOWN_TIMEOUT: DWORD = 10 * 365 * 24 * 60 * 60;
 extern "system" {
-    // pub fn InitiateSystemShutdownExA();
-    // pub fn InitiateSystemShutdownExW();
+    pub fn InitiateSystemShutdownExA(
+        lpMachineName: LPSTR,
+        lpMessage: LPSTR,
+        dwTimeout: DWORD,
+        bForceAppsClosed: BOOL,
+        bRebootAfterShutdown: BOOL,
+        dwReason: DWORD,
+    ) -> BOOL;
+    pub fn InitiateSystemShutdownExW(
+        lpMachineName: LPWSTR,
+        lpMessage: LPWSTR,
+        dwTimeout: DWORD,
+        bForceAppsClosed: BOOL,
+        bRebootAfterShutdown: BOOL,
+        dwReason: DWORD,
+    ) -> BOOL;
 }
-// SHUTDOWN_*
+pub const SHUTDOWN_FORCE_OTHERS: DWORD = 0x00000001;
+pub const SHUTDOWN_FORCE_SELF: DWORD = 0x00000002;
+pub const SHUTDOWN_RESTART: DWORD = 0x00000004;
+pub const SHUTDOWN_POWEROFF: DWORD = 0x00000008;
+pub const SHUTDOWN_NOREBOOT: DWORD = 0x00000010;
+pub const SHUTDOWN_GRACE_OVERRIDE: DWORD = 0x00000020;
+pub const SHUTDOWN_INSTALL_UPDATES: DWORD = 0x00000040;
+pub const SHUTDOWN_RESTARTAPPS: DWORD = 0x00000080;
+pub const SHUTDOWN_SKIP_SVC_PRESHUTDOWN: DWORD = 0x00000100;
+pub const SHUTDOWN_HYBRID: DWORD = 0x00000200;
+pub const SHUTDOWN_RESTART_BOOTOPTIONS: DWORD = 0x00000400;
+pub const SHUTDOWN_SOFT_REBOOT: DWORD = 0x00000800;
+pub const SHUTDOWN_MOBILE_UI: DWORD = 0x00001000;
+pub const SHUTDOWN_ARSO: DWORD = 0x00002000;
 extern "system" {
-    // pub fn InitiateShutdownA();
-    // pub fn InitiateShutdownW();
-    // pub fn CheckForHiberboot();
-    // pub fn RegSaveKeyExA();
-    // pub fn RegSaveKeyExW();
+    pub fn InitiateShutdownA(
+        lpMachineName: LPSTR,
+        lpMessage: LPSTR,
+        dwGracePeriod: DWORD,
+        dwShutdownFlags: DWORD,
+        dwReason: DWORD,
+    ) -> DWORD;
+    pub fn InitiateShutdownW(
+        lpMachineName: LPWSTR,
+        lpMessage: LPWSTR,
+        dwGracePeriod: DWORD,
+        dwShutdownFlags: DWORD,
+        dwReason: DWORD,
+    ) -> DWORD;
+    pub fn CheckForHiberboot(
+        pHiberboot: PBOOLEAN,
+        bClearFlag: BOOLEAN,
+    ) -> DWORD;
+    pub fn RegSaveKeyExA(
+        hKey: HKEY,
+        lpFile: LPCSTR,
+        lpSecurityAttributes: LPSECURITY_ATTRIBUTES,
+        Flags: DWORD,
+    ) -> LSTATUS;
+    pub fn RegSaveKeyExW(
+        hKey: HKEY,
+        lpFile: LPCWSTR,
+        lpSecurityAttributes: LPSECURITY_ATTRIBUTES,
+        Flags: DWORD,
+    ) -> LSTATUS;
 }
