@@ -358,17 +358,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether a content process was launched synchronously (unnecessarily delaying UI response)."
   },
-  "CONTENT_RESPONSE_DURATION" : {
-    "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
-    "bug_numbers": [1261373],
-    "expires_in_version": "70",
-    "description": "Main thread response times for APZ notifications about input events (ms)",
-    "kind" : "exponential",
-    "high": 60000,
-    "n_buckets": 50
-  },
   "CYCLE_COLLECTOR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

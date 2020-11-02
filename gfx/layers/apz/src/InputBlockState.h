@@ -152,20 +152,6 @@ class CancelableBlockState : public InputBlockState {
   virtual bool SetContentResponse(bool aPreventDefault);
 
   /**
-   * This should be called when this block is starting to wait for the
-   * necessary content response notifications. It is used to gather data
-   * on how long the content response notifications take.
-   */
-  void StartContentResponseTimer();
-
-  /**
-   * This should be called when a content response notification has been
-   * delivered to this block. If all the notifications have arrived, this
-   * will report the total time take to telemetry.
-   */
-  void RecordContentResponseTime();
-
-  /**
    * Record that content didn't respond in time.
    * @return false if this block already timed out, true if not.
    */
@@ -201,7 +187,6 @@ class CancelableBlockState : public InputBlockState {
   bool ShouldDropEvents() const override;
 
  private:
-  TimeStamp mContentResponseTimer;
   bool mPreventDefault;
   bool mContentResponded;
   bool mContentResponseTimerExpired;

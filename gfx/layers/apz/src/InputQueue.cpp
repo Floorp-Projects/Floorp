@@ -641,7 +641,6 @@ void InputQueue::ScheduleMainThreadTimeout(
     const RefPtr<AsyncPanZoomController>& aTarget,
     CancelableBlockState* aBlock) {
   INPQ_LOG("scheduling main thread timeout for target %p\n", aTarget.get());
-  aBlock->StartContentResponseTimer();
   RefPtr<Runnable> timeoutTask = NewRunnableMethod<uint64_t>(
       "layers::InputQueue::MainThreadTimeout", this,
       &InputQueue::MainThreadTimeout, aBlock->GetBlockId());
@@ -776,7 +775,6 @@ void InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId,
   if (inputBlock && inputBlock->AsCancelableBlock()) {
     CancelableBlockState* block = inputBlock->AsCancelableBlock();
     success = block->SetContentResponse(aPreventDefault);
-    block->RecordContentResponseTime();
   } else if (inputBlock) {
     NS_WARNING("input block is not a cancelable block");
   }
@@ -804,7 +802,6 @@ void InputQueue::SetConfirmedTargetApzc(
         // SetConfirmedTargetApzc() will also be called by ConfirmDragBlock(),
         // and we pass aForScrollbarDrag=true there.
         false);
-    block->RecordContentResponseTime();
   } else if (inputBlock) {
     NS_WARNING("input block is not a cancelable block");
   }
@@ -833,7 +830,6 @@ void InputQueue::ConfirmDragBlock(
         aTargetApzc, InputBlockState::TargetConfirmationState::eConfirmed,
         firstInput,
         /* aForScrollbarDrag = */ true);
-    block->RecordContentResponseTime();
   }
   if (success) {
     ProcessQueue();
@@ -850,7 +846,6 @@ void InputQueue::SetAllowedTouchBehavior(
   if (inputBlock && inputBlock->AsTouchBlock()) {
     TouchBlockState* block = inputBlock->AsTouchBlock();
     success = block->SetAllowedTouchBehaviors(aBehaviors);
-    block->RecordContentResponseTime();
   } else if (inputBlock) {
     NS_WARNING("input block is not a touch block");
   }
