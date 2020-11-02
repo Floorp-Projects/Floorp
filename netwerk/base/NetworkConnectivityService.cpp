@@ -304,26 +304,26 @@ NetworkConnectivityService::RecheckDNS() {
   nsAutoCString host;
   Preferences::GetCString("network.connectivity-service.DNSv4.domain", host);
 
-  rv = dns->AsyncResolveNative(
-      host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      nsIDNSService::RESOLVE_DISABLE_IPV6 | nsIDNSService::RESOLVE_DISABLE_TRR,
-      nullptr, this, NS_GetCurrentThread(), attrs,
-      getter_AddRefs(mDNSv4Request));
+  rv = dns->AsyncResolveNative(host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+                               nsIDNSService::RESOLVE_DISABLE_IPV6 |
+                                   nsIDNSService::RESOLVE_TRR_DISABLED_MODE,
+                               nullptr, this, NS_GetCurrentThread(), attrs,
+                               getter_AddRefs(mDNSv4Request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   Preferences::GetCString("network.connectivity-service.DNSv6.domain", host);
-  rv = dns->AsyncResolveNative(
-      host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-      nsIDNSService::RESOLVE_DISABLE_IPV4 | nsIDNSService::RESOLVE_DISABLE_TRR,
-      nullptr, this, NS_GetCurrentThread(), attrs,
-      getter_AddRefs(mDNSv6Request));
+  rv = dns->AsyncResolveNative(host, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+                               nsIDNSService::RESOLVE_DISABLE_IPV4 |
+                                   nsIDNSService::RESOLVE_TRR_DISABLED_MODE,
+                               nullptr, this, NS_GetCurrentThread(), attrs,
+                               getter_AddRefs(mDNSv6Request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (StaticPrefs::network_connectivity_service_nat64_check()) {
     rv = dns->AsyncResolveNative("ipv4only.arpa"_ns,
                                  nsIDNSService::RESOLVE_TYPE_DEFAULT,
                                  nsIDNSService::RESOLVE_DISABLE_IPV4 |
-                                     nsIDNSService::RESOLVE_DISABLE_TRR,
+                                     nsIDNSService::RESOLVE_TRR_DISABLED_MODE,
                                  nullptr, this, NS_GetCurrentThread(), attrs,
                                  getter_AddRefs(mNAT64Request));
     NS_ENSURE_SUCCESS(rv, rv);

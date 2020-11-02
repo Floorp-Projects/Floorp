@@ -299,7 +299,7 @@ interface nsIDNSService : nsISupports
      * Use the static helper methods convert between the TRR mode and flags.
      */
     const unsigned long RESOLVE_TRR_MODE_MASK = (1 << 11) | (1 << 12);
-
+    const unsigned long RESOLVE_TRR_DISABLED_MODE = (1 << 11);
 %{C++
     static uint32_t GetFlagsFromTRRMode(nsIRequest::TRRMode aMode) {
         return static_cast<uint32_t>(aMode) << 11;
