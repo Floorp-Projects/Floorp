@@ -45,14 +45,6 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString maxHeight;
 
-  // Position properties for
-  // * popups - these are screen coordinates
-  // * other elements - these are client coordinates relative to parent stack.
-  [SetterThrows]
-  attribute DOMString left;
-  [SetterThrows]
-  attribute DOMString top;
-
   // Return the screen coordinates of the element.
   readonly attribute long screenX;
   readonly attribute long screenY;
