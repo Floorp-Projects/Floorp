@@ -24,6 +24,7 @@ let gMainRadiogroup;
 let gMainTextbox;
 let gMainButton2;
 let gMainButton3;
+let gCheckbox;
 let gMainTabOrder;
 let gMainArrowOrder;
 let gSubView;
@@ -129,6 +130,9 @@ add_task(async function setup() {
   gMainButton3 = document.createXULElement("button");
   gMainButton3.id = "gMainButton3";
   gMainView.appendChild(gMainButton3);
+  gCheckbox = document.createXULElement("checkbox");
+  gCheckbox.id = "gCheckbox";
+  gMainView.appendChild(gCheckbox);
   gMainTabOrder = [
     gMainButton1,
     gMainMenulist,
@@ -136,8 +140,9 @@ add_task(async function setup() {
     gMainTextbox,
     gMainButton2,
     gMainButton3,
+    gCheckbox,
   ];
-  gMainArrowOrder = [gMainButton1, gMainButton2, gMainButton3];
+  gMainArrowOrder = [gMainButton1, gMainButton2, gMainButton3, gCheckbox];
 
   gSubView = document.createXULElement("panelview");
   gSubView.id = "testSubView";
