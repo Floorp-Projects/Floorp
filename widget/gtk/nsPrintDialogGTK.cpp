@@ -433,7 +433,7 @@ nsresult nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings* aNSSettings) {
         printSelectionOnly = gtk_toggle_button_get_active(
             GTK_TOGGLE_BUTTON(selection_only_toggle));
       }
-      aNSSettingsGTK->SetForcePrintSelectionOnly(printSelectionOnly);
+      aNSSettingsGTK->SetPrintSelectionOnly(printSelectionOnly);
     }
   }
 
