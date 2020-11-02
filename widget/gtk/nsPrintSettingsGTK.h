@@ -46,14 +46,7 @@ class nsPrintSettingsGTK : public nsPrintSettings {
   GtkPrinter* GetGtkPrinter() { return mGTKPrinter; };
   void SetGtkPrinter(GtkPrinter* aPrinter);
 
-  bool GetForcePrintSelectionOnly() { return mPrintSelectionOnly; };
-  void SetForcePrintSelectionOnly(bool aPrintSelectionOnly) {
-    mPrintSelectionOnly = aPrintSelectionOnly;
-  };
-
   // If not printing the selection, this is stored in the GtkPrintSettings.
-  // Printing the selection is stored as a protected boolean
-  // (mPrintSelectionOnly).
   NS_IMETHOD GetPrintRange(int16_t* aPrintRange) override;
   NS_IMETHOD SetPrintRange(int16_t aPrintRange) override;
 
@@ -154,8 +147,6 @@ class nsPrintSettingsGTK : public nsPrintSettings {
   GtkPageSetup* mPageSetup;
   GtkPrintSettings* mPrintSettings;
   GtkPrinter* mGTKPrinter;
-
-  bool mPrintSelectionOnly;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintSettingsGTK, NS_PRINTSETTINGSGTK_IID)
