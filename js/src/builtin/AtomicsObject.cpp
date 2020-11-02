@@ -652,7 +652,7 @@ static bool DoAtomicsWait(JSContext* cx,
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 11.
-  uint32_t offset = unwrappedTypedArray->byteOffset();
+  uint32_t offset = unwrappedTypedArray->byteOffset().deprecatedGetUint32();
 
   // Steps 12-13.
   // The computation will not overflow because range checks have been
@@ -821,7 +821,7 @@ static bool atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 6.
-  uint32_t offset = unwrappedTypedArray->byteOffset();
+  uint32_t offset = unwrappedTypedArray->byteOffset().deprecatedGetUint32();
 
   // Steps 7-9.
   // The computation will not overflow because range checks have been

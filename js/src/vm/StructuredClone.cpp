@@ -1277,7 +1277,7 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  return out.write(tarr->byteOffset());
+  return out.write(tarr->byteOffset().deprecatedGetUint32());
 }
 
 bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
@@ -1294,7 +1294,7 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  return out.write(view->byteOffset());
+  return out.write(view->byteOffset().deprecatedGetUint32());
 }
 
 bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
