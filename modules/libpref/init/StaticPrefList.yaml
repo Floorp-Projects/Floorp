@@ -7241,17 +7241,23 @@
 #endif # MOZ_WAYLAND
 #endif  # MOZ_FFMPEG
 
-#ifdef MOZ_FFVPX
 -   name: media.ffvpx.enabled
     type: RelaxedAtomicBool
+#ifdef MOZ_FFVPX
     value: true
+#else
+    value: false
+#endif
     mirror: always
 
 -   name: media.ffvpx.mp3.enabled
     type: RelaxedAtomicBool
+#ifdef MOZ_FFVPX
     value: true
-    mirror: always
+#else
+    value: false
 #endif
+    mirror: always
 
 # Set to true in marionette tests to disable the sanity test
 # which would lead to unnecessary start of the RDD process.
