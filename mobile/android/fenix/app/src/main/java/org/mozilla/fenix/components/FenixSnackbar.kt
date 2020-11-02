@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components
 
+import android.graphics.Color
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -32,7 +33,7 @@ class FenixSnackbar private constructor(
 ) : BaseTransientBottomBar<FenixSnackbar>(parent, content, contentViewCallback) {
 
     init {
-        view.background = null
+        view.setBackgroundColor(Color.TRANSPARENT)
 
         setAppropriateBackground(isError)
 
@@ -111,11 +112,12 @@ class FenixSnackbar private constructor(
             val inflater = LayoutInflater.from(parent.context)
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
 
-            val durationOrAccessibleDuration = if (parent.context.settings().accessibilityServicesEnabled) {
-                LENGTH_ACCESSIBLE
-            } else {
-                duration
-            }
+            val durationOrAccessibleDuration =
+                if (parent.context.settings().accessibilityServicesEnabled) {
+                    LENGTH_ACCESSIBLE
+                } else {
+                    duration
+                }
 
             val callback = FenixSnackbarCallback(content)
             val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar

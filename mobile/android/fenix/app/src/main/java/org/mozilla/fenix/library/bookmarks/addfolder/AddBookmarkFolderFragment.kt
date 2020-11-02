@@ -48,6 +48,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         bookmarkUrlLabel.visibility = GONE
         bookmarkUrlEdit.visibility = GONE
+        inputLayoutBookmarkUrl.visibility = GONE
         bookmarkNameEdit.showKeyboard()
     }
 
@@ -62,7 +63,8 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     ?: requireComponents.core.bookmarksStorage.getBookmark(BookmarkRoot.Mobile.id)
             }
 
-            bookmarkParentFolderSelector.text = friendlyRootTitle(context, sharedViewModel.selectedFolder!!)
+            bookmarkParentFolderSelector.text =
+                friendlyRootTitle(context, sharedViewModel.selectedFolder!!)
             bookmarkParentFolderSelector.setOnClickListener {
                 nav(
                     R.id.bookmarkAddFolderFragment,
@@ -95,12 +97,16 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 this.view?.hideKeyboard()
                 viewLifecycleOwner.lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
-                        sharedViewModel.selectedFolder!!.guid, bookmarkNameEdit.text.toString(), null
+                        sharedViewModel.selectedFolder!!.guid,
+                        bookmarkNameEdit.text.toString(),
+                        null
                     )
-                    sharedViewModel.selectedFolder = requireComponents.core.bookmarksStorage.getTree(newGuid)
+                    sharedViewModel.selectedFolder =
+                        requireComponents.core.bookmarksStorage.getTree(newGuid)
                     requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)
                     withContext(Main) {
-                        Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
+                        Navigation.findNavController(requireActivity(), R.id.container)
+                            .popBackStack()
                     }
                 }
                 true

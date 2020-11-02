@@ -95,6 +95,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
             when (bookmarkNode?.type) {
                 BookmarkNodeType.FOLDER -> {
                     activity?.title = getString(R.string.edit_bookmark_folder_fragment_title)
+                    inputLayoutBookmarkUrl.visibility = View.GONE
                     bookmarkUrlEdit.visibility = View.GONE
                     bookmarkUrlLabel.visibility = View.GONE
                 }
