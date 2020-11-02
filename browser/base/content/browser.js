@@ -5373,6 +5373,8 @@ var XULBrowserWindow = {
     // Do not update urlbar if there was a subframe navigation
 
     if (aWebProgress.isTopLevel) {
+      let isSameDocument =
+        aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT;
       if (
         (location == "about:blank" &&
           BrowserUtils.checkEmptyPageOrigin(gBrowser.selectedBrowser)) ||
@@ -5392,7 +5394,8 @@ var XULBrowserWindow = {
       gURLBar.setURI(aLocationURI, aIsSimulated);
 
       BookmarkingUI.onLocationChange();
-      if (gBookmarksToolbar2h2020) {
+      // If we've actually changed document, update the toolbar visibility.
+      if (gBookmarksToolbar2h2020 && !isSameDocument) {
         let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");
         setToolbarVisibility(
           bookmarksToolbar,
