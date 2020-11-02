@@ -79,31 +79,6 @@ class ProfileBufferEntry {
 // Packed layout: 1 byte for the tag + 8 bytes for the value.
 static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
 
-class UniqueJSONStrings {
- public:
-  UniqueJSONStrings();
-  explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
-
-  void SpliceStringTableElements(SpliceableJSONWriter& aWriter) {
-    aWriter.TakeAndSplice(mStringTableWriter.TakeChunkedWriteFunc());
-  }
-
-  void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName,
-                     const char* aStr) {
-    aWriter.IntProperty(mozilla::MakeStringSpan(aName), GetOrAddIndex(aStr));
-  }
-
-  void WriteElement(mozilla::JSONWriter& aWriter, const char* aStr) {
-    aWriter.IntElement(GetOrAddIndex(aStr));
-  }
-
-  uint32_t GetOrAddIndex(const char* aStr);
-
- private:
-  SpliceableChunkedJSONWriter mStringTableWriter;
-  mozilla::HashMap<mozilla::HashNumber, uint32_t> mStringHashToIndexMap;
-};
-
 // Contains all the information about JIT frames that is needed to stream stack
 // frames for JitReturnAddr entries in the profiler buffer.
 // Every return address (void*) is mapped to one or more JITFrameKeys, and

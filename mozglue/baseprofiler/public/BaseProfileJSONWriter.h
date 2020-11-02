@@ -6,6 +6,8 @@
 #ifndef BASEPROFILEJSONWRITER_H
 #define BASEPROFILEJSONWRITER_H
 
+#include "mozilla/HashFunctions.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
 
@@ -273,6 +275,31 @@ class JSONSchemaWriter {
   }
 
   ~JSONSchemaWriter() { mWriter.EndObject(); }
+};
+
+class UniqueJSONStrings {
+ public:
+  MFBT_API UniqueJSONStrings();
+
+  MFBT_API explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
+
+  MFBT_API ~UniqueJSONStrings();
+
+  MFBT_API void SpliceStringTableElements(SpliceableJSONWriter& aWriter);
+
+  void WriteProperty(JSONWriter& aWriter, const char* aName, const char* aStr) {
+    aWriter.IntProperty(MakeStringSpan(aName), GetOrAddIndex(aStr));
+  }
+
+  void WriteElement(JSONWriter& aWriter, const char* aStr) {
+    aWriter.IntElement(GetOrAddIndex(aStr));
+  }
+
+  MFBT_API uint32_t GetOrAddIndex(const char* aStr);
+
+ private:
+  SpliceableChunkedJSONWriter mStringTableWriter;
+  HashMap<HashNumber, uint32_t> mStringHashToIndexMap;
 };
 
 }  // namespace baseprofiler
