@@ -922,10 +922,10 @@ fuzzy-if(Android,0-13,0-9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
 == 409089-1.html 409089-1-ref.html
 == 409089-2.html 409089-2-ref.html
 == 409089-3.html 409089-3-ref.html
-fuzzy-if(winWidget,0-123,0-1600) fuzzy-if(webrender&&swgl,1-1,39-39) == 409659-1a.html 409659-1-ref.html  # Bug 1128229
+fuzzy-if(winWidget,0-123,0-1600) fuzzy-if(webrender&&swgl,0-1,0-39) == 409659-1a.html 409659-1-ref.html  # Bug 1128229
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
-fuzzy-if(winWidget,0-123,0-1900) fuzzy-if(webrender&&swgl,1-1,39-39) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
+fuzzy-if(winWidget,0-123,0-1900) fuzzy-if(webrender&&swgl,0-1,0-39) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
 == 410621-1.html 410621-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 411059-1.html 411059-1-ref.html # Bug 1392106
 fuzzy-if(webrender&&winWidget,127-129,652-770) == 411334-1.xml 411334-1-ref.xml
