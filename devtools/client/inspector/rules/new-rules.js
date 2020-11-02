@@ -187,10 +187,9 @@ class RulesView {
    * if they are supported in the current target.
    */
   async initSimulationFeatures() {
-    // In order to query if the content-viewer actor's print and color simulation methods are
-    // supported, we have to call the content-viewer front so that the actor is lazily loaded.
-    // This allows us to use `actorHasMethod`. Please see `getActorDescription` for more
-    // information.
+    // XXX: We used to initialize the front early in order to call
+    // actorHasMethod to check against backward compatibility. This is no longer
+    // necessary and the call to getFront could be done later if needed.
     this.contentViewerFront = await this.currentTarget.getFront(
       "contentViewer"
     );
@@ -201,19 +200,12 @@ class RulesView {
       this.store.dispatch(updatePrintSimulationHidden(true));
     }
 
-    // Show the color scheme simulation toggle button if:
-    // - The feature pref is enabled.
-    // - Color scheme simulation is supported for the current target.
-    const isEmulateColorSchemeSupported = await this.currentTarget.actorHasMethod(
-      "contentViewer",
-      "getEmulatedColorScheme"
-    );
-
+    // Show the color scheme simulation toggle button if the feature pref is
+    // enabled.
     if (
       Services.prefs.getBoolPref(
         "devtools.inspector.color-scheme-simulation.enabled"
-      ) &&
-      isEmulateColorSchemeSupported
+      )
     ) {
       this.store.dispatch(updateColorSchemeSimulationHidden(false));
     } else {
