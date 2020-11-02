@@ -357,8 +357,8 @@ function testPopupMovement()
   is(screenX, expectedx, gTests[gTestIndex] + " (6000, 100) x");
   is(screenY, 100, gTests[gTestIndex] + " (6000, 100) y");
 
-  is(popup.left, "", gTests[gTestIndex] + " left is empty after moving");
-  is(popup.top, "", gTests[gTestIndex] + " top is empty after moving");
+  is(popup.getAttribute("left"), "", gTests[gTestIndex] + " left is empty after moving");
+  is(popup.getAttribute("top"), "", gTests[gTestIndex] + " top is empty after moving");
   popup.setAttribute("left", "80");
   popup.setAttribute("top", "82");
   [screenX, screenY] = getScreenXY(popup);
@@ -368,8 +368,8 @@ function testPopupMovement()
   [screenX, screenY] = getScreenXY(popup);
   is(screenX, 95, gTests[gTestIndex] + " move after set left and top x");
   is(screenY, 98, gTests[gTestIndex] + " move after set left and top y");
-  is(popup.left, "95", gTests[gTestIndex] + " left is set after moving");
-  is(popup.top, "98", gTests[gTestIndex] + " top is set after moving");
+  is(popup.getAttribute("left"), "95", gTests[gTestIndex] + " left is set after moving");
+  is(popup.getAttribute("top"), "98", gTests[gTestIndex] + " top is set after moving");
   popup.removeAttribute("left");
   popup.removeAttribute("top");
 
@@ -381,8 +381,8 @@ function testPopupMovement()
 
   is(screenX, expectedx, gTests[gTestIndex] + " move after set left and top x to -1");
   is(screenY, expectedy, gTests[gTestIndex] + " move after set left and top y to -1");
-  is(popup.left, "", gTests[gTestIndex] + " left is not set after moving to -1");
-  is(popup.top, "", gTests[gTestIndex] + " top is not set after moving to -1");
+  is(popup.getAttribute("left"), "", gTests[gTestIndex] + " left is not set after moving to -1");
+  is(popup.getAttribute("top"), "", gTests[gTestIndex] + " top is not set after moving to -1");
 
   popup.hidePopup();
 }

@@ -750,7 +750,6 @@ nscoord nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
     if (box) {
       size = box->GetXULPrefSize(aState);
       nsIFrame::AddXULMargin(box, size);
-      nsGridLayout2::AddOffset(box, size);
     }
 
     row->mPref = GET_HEIGHT(size, aIsHorizontal);
@@ -818,7 +817,6 @@ nscoord nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
     if (box) {
       size = box->GetXULPrefSize(aState);
       nsIFrame::AddXULMargin(box, size);
-      nsGridLayout2::AddOffset(box, size);
     }
 
     row->mMin = GET_HEIGHT(size, aIsHorizontal) + top + bottom;
@@ -886,7 +884,6 @@ nscoord nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
     if (box) {
       size = box->GetXULPrefSize(aState);
       nsIFrame::AddXULMargin(box, size);
-      nsGridLayout2::AddOffset(box, size);
     }
 
     row->mMax = GET_HEIGHT(size, aIsHorizontal);
