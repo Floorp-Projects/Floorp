@@ -71,7 +71,7 @@ class SearchMiddleware(
         region: RegionState
     ) = scope.launch {
         val regionBundle = async(ioDispatcher) { bundleStorage.load(region, coroutineContext = ioDispatcher) }
-        val userSelectedSearchEngineId = async(ioDispatcher) { metadataStorage.getUserSelectedSearchEngineId() }
+        val userChoice = async(ioDispatcher) { metadataStorage.getUserSelectedSearchEngine() }
         val customSearchEngines = async(ioDispatcher) { customStorage.loadSearchEngineList() }
         val hiddenSearchEngineIds = async(ioDispatcher) { metadataStorage.getHiddenSearchEngines() }
         val additionalSearchEngineIds = async(ioDispatcher) { metadataStorage.getAdditionalSearchEngines() }
@@ -94,7 +94,8 @@ class SearchMiddleware(
         val action = SearchAction.SetSearchEnginesAction(
             regionSearchEngines = filteredRegionSearchEngines,
             regionDefaultSearchEngineId = regionBundle.await().defaultSearchEngineId,
-            userSelectedSearchEngineId = userSelectedSearchEngineId.await(),
+            userSelectedSearchEngineId = userChoice.await()?.searchEngineId,
+            userSelectedSearchEngineName = userChoice.await()?.searchEngineName,
             customSearchEngines = customSearchEngines.await(),
             hiddenSearchEngines = hiddenSearchEngines,
             additionalSearchEngines = allAdditionalSearchEngines.await().filter { searchEngine ->
@@ -113,7 +114,10 @@ class SearchMiddleware(
     private fun updateSearchEngineSelection(
         action: SearchAction.SelectSearchEngineAction
     ) = scope.launch {
-        metadataStorage.setUserSelectedSearchEngineId(action.searchEngineId)
+        metadataStorage.setUserSelectedSearchEngine(
+            action.searchEngineId,
+            action.searchEngineName
+        )
     }
 
     private fun removeCustomSearchEngine(
@@ -201,15 +205,15 @@ class SearchMiddleware(
      */
     interface MetadataStorage {
         /**
-         * Gets the ID of the default search engine the user has picked. Returns `null` if the user
-         * has not made a choice.
+         * Gets the ID (and optinally name) of the default search engine the user has picked. Returns
+         * `null` if the user has not made a choice.
          */
-        suspend fun getUserSelectedSearchEngineId(): String?
+        suspend fun getUserSelectedSearchEngine(): UserChoice?
 
         /**
-         * Sets the ID of the default search engine the user has picked.
+         * Sets the ID (and optionally name) of the default search engine the user has picked.
          */
-        suspend fun setUserSelectedSearchEngineId(id: String)
+        suspend fun setUserSelectedSearchEngine(id: String, name: String?)
 
         /**
          * Sets the list of IDs of hidden search engines.
@@ -230,5 +234,13 @@ class SearchMiddleware(
          * Sets the list of IDs of additional search engines that the user explicitly added.
          */
         suspend fun setAdditionalSearchEngines(ids: List<String>)
+
+        /**
+         * Data class holding the ID and name of the selected search engine of the user.
+         */
+        data class UserChoice(
+            val searchEngineId: String,
+            val searchEngineName: String?
+        )
     }
 }

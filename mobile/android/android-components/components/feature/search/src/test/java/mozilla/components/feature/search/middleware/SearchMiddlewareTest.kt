@@ -14,6 +14,7 @@ import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.availableSearchEngines
 import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.storage.CustomSearchEngineStorage
 import mozilla.components.feature.search.storage.SearchMetadataStorage
@@ -210,7 +211,7 @@ class SearchMiddlewareTest {
     @Test
     fun `Loads default search engine ID`() {
         val storage = SearchMetadataStorage(testContext)
-        runBlocking { storage.setUserSelectedSearchEngineId("test-id") }
+        runBlocking { storage.setUserSelectedSearchEngine("test-id", null) }
 
         val middleware = SearchMiddleware(
             testContext,
@@ -253,7 +254,7 @@ class SearchMiddlewareTest {
 
             assertNull(store.state.search.userSelectedSearchEngineId)
 
-            store.dispatch(SearchAction.SelectSearchEngineAction(id)).joinBlocking()
+            store.dispatch(SearchAction.SelectSearchEngineAction(id, null)).joinBlocking()
 
             wait(store, dispatcher)
 
@@ -594,6 +595,63 @@ class SearchMiddlewareTest {
 
             assertNotNull(store.state.search.regionSearchEngines.find { it.id == google.id })
             assertEquals(0, store.state.search.hiddenSearchEngines.size)
+        }
+    }
+
+    @Test
+    fun `Keeps user choice based on search engine name even if search engine id changes`() {
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher),
+            metadataStorage = SearchMetadataStorage(testContext)
+        )
+
+        run {
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US"))
+            ).joinBlocking()
+
+            wait(store, dispatcher)
+
+            val google = store.state.search.searchEngines.find { it.name == "Google" }
+            assertNotNull(google!!)
+            assertEquals("google-b-1-m", google.id)
+
+            store.dispatch(SearchAction.SelectSearchEngineAction(
+                searchEngineId = "google-b-1-m",
+                searchEngineName = "Google"
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals("google-b-1-m", store.state.search.userSelectedSearchEngineId)
+            assertEquals("Google", store.state.search.userSelectedSearchEngineName)
+
+            val searchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(searchEngine!!)
+            assertEquals("google-b-1-m", searchEngine.id)
+            assertEquals("Google", searchEngine.name)
+        }
+
+        run {
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("DE", "DE"))
+            ).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals("google-b-1-m", store.state.search.userSelectedSearchEngineId)
+            assertEquals("Google", store.state.search.userSelectedSearchEngineName)
+
+            val searchEngine = store.state.search.selectedOrDefaultSearchEngine
+            assertNotNull(searchEngine!!)
+            assertEquals("google-b-m", searchEngine.id)
+            assertEquals("Google", searchEngine.name)
         }
     }
 }

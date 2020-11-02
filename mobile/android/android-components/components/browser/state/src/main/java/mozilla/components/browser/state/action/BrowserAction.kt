@@ -1032,6 +1032,7 @@ sealed class SearchAction : BrowserAction() {
         val additionalSearchEngines: List<SearchEngine>,
         val additionalAvailableSearchEngines: List<SearchEngine>,
         val userSelectedSearchEngineId: String?,
+        val userSelectedSearchEngineName: String?,
         val regionDefaultSearchEngineId: String
     ) : SearchAction()
 
@@ -1046,9 +1047,13 @@ sealed class SearchAction : BrowserAction() {
     data class RemoveCustomSearchEngineAction(val searchEngineId: String) : SearchAction()
 
     /**
-     * Updates [BrowserState.search] to update [SearchState.userSelectedSearchEngineId].
+     * Updates [BrowserState.search] to update [SearchState.userSelectedSearchEngineId] and
+     * [SearchState.userSelectedSearchEngineName].
      */
-    data class SelectSearchEngineAction(val searchEngineId: String) : SearchAction()
+    data class SelectSearchEngineAction(
+        val searchEngineId: String,
+        val searchEngineName: String?
+    ) : SearchAction()
 
     /**
      * Shows a previously hidden, bundled search engine in [SearchState.regionSearchEngines] again

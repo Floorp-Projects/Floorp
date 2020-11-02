@@ -11,7 +11,8 @@ import mozilla.components.feature.search.middleware.SearchMiddleware
 
 private const val PREFERENCE_FILE = "mozac_feature_search_metadata"
 
-private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID = "user_selected_search_engine"
+private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID = "user_selected_search_engine_id"
+private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME = "user_selected_search_engine_name"
 private const val PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES = "hidden_search_engines"
 private const val PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES = "additional_search_engines"
 
@@ -28,19 +29,26 @@ internal class SearchMetadataStorage(
     }
 ) : SearchMiddleware.MetadataStorage {
     /**
-     * Gets the ID of the default search engine the user has picked. Returns `null` if the user
-     * has not made a choice.
+     * Gets the ID (and optinally name) of the default search engine the user has picked. Returns
+     * `null` if the user has not made a choice.
      */
-    override suspend fun getUserSelectedSearchEngineId(): String? {
-        return preferences.value.getString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID, null)
+    override suspend fun getUserSelectedSearchEngine(): SearchMiddleware.MetadataStorage.UserChoice? {
+        val id = preferences.value.getString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID, null)
+            ?: return null
+
+        return SearchMiddleware.MetadataStorage.UserChoice(
+            id,
+            preferences.value.getString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME, null)
+        )
     }
 
     /**
-     * Sets the ID of the default search engine the user has picked.
+     * Sets the ID (and optionally name) of the default search engine the user has picked.
      */
-    override suspend fun setUserSelectedSearchEngineId(id: String) {
+    override suspend fun setUserSelectedSearchEngine(id: String, name: String?) {
         preferences.value.edit()
             .putString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID, id)
+            .putString(PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME, name)
             .apply()
     }
 

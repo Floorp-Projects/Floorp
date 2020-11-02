@@ -20,6 +20,8 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property hiddenSearchEngines The list of bundled [SearchEngine]s the user has explicitly hidden.
  * @property userSelectedSearchEngineId The ID of the default [SearchEngine] selected by the user. Or
  * `null` if the user hasn't made an explicit choice.
+ * @property userSelectedSearchEngineName The name of the default [SearchEngine] selected by the user.
+ * Or `null` if the user hasn't made an explicit choice.
  * @property regionDefaultSearchEngineId The ID of the default [SearchEngine] of the "home" region
  * of the user.
  * @property complete Flag that indicates whether loading the list of search engines has completed.
@@ -33,6 +35,7 @@ data class SearchState(
     val additionalAvailableSearchEngines: List<SearchEngine> = emptyList(),
     val hiddenSearchEngines: List<SearchEngine> = emptyList(),
     val userSelectedSearchEngineId: String? = null,
+    val userSelectedSearchEngineName: String? = null,
     val regionDefaultSearchEngineId: String? = null,
     val complete: Boolean = false
 )
@@ -57,9 +60,15 @@ val SearchState.availableSearchEngines: List<SearchEngine>
  */
 val SearchState.selectedOrDefaultSearchEngine: SearchEngine?
     get() {
-        // Does the user have a default search engine set and is it in the list of available search engines?
+        // Does the user have a default search engine id set and is it in the list of available search engines?
         if (userSelectedSearchEngineId != null) {
             searchEngines.find { engine -> userSelectedSearchEngineId == engine.id }?.let { return it }
+        }
+
+        // Did we save a default search engine name for this user and can we find it in the list of
+        // available search engines?
+        if (userSelectedSearchEngineName != null) {
+            searchEngines.find { engine -> userSelectedSearchEngineName == engine.name }?.let { return it }
         }
 
         // Do we have a default search engine for the region of the user and is it available?

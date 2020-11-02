@@ -34,6 +34,7 @@ private fun BrowserState.setSearchEngines(
         regionSearchEngines = action.regionSearchEngines,
         customSearchEngines = action.customSearchEngines,
         userSelectedSearchEngineId = action.userSelectedSearchEngineId,
+        userSelectedSearchEngineName = action.userSelectedSearchEngineName,
         regionDefaultSearchEngineId = action.regionDefaultSearchEngineId,
         hiddenSearchEngines = action.hiddenSearchEngines,
         additionalSearchEngines = action.additionalSearchEngines,
@@ -81,7 +82,8 @@ private fun BrowserState.selectSearchEngine(
     // We allow setting an ID of a search engine that is not in the state since loading the search
     // engines may happen asynchronously and the search engine may not be loaded yet at this point.
     return copy(search = search.copy(
-        userSelectedSearchEngineId = action.searchEngineId
+        userSelectedSearchEngineId = action.searchEngineId,
+        userSelectedSearchEngineName = action.searchEngineName
     ))
 }
 

@@ -71,6 +71,7 @@ class BrowserStoreKtTest {
                 )
             ),
             userSelectedSearchEngineId = null,
+            userSelectedSearchEngineName = null,
             regionDefaultSearchEngineId = "google",
             customSearchEngines = emptyList(),
             hiddenSearchEngines = emptyList(),
@@ -95,6 +96,7 @@ class BrowserStoreKtTest {
         store.dispatch(SearchAction.SetSearchEnginesAction(
             regionSearchEngines = listOf(),
             userSelectedSearchEngineId = null,
+            userSelectedSearchEngineName = null,
             regionDefaultSearchEngineId = "default",
             customSearchEngines = emptyList(),
             hiddenSearchEngines = emptyList(),
