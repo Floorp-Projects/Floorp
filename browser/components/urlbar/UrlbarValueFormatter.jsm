@@ -46,7 +46,7 @@ class UrlbarValueFormatter {
     return this.urlbarInput.querySelector("#urlbar-scheme");
   }
 
-  async update() {
+  async update(forceURLFormat = false) {
     // _getUrlMetaData does URI fixup, which depends on the search service, so
     // make sure it's initialized.  It can be uninitialized here on session
     // restore.  Skip this if the service is already initialized in order to
@@ -81,7 +81,14 @@ class UrlbarValueFormatter {
     // Apply new formatting.  Formatter methods should return true if they
     // successfully formatted the value and false if not.  We apply only
     // one formatter at a time, so we stop at the first successful one.
-    this._formattingApplied = this._formatURL() || this._formatSearchAlias();
+    if (
+      forceURLFormat ||
+      this.urlbarInput.getAttribute("pageproxystate") === "valid"
+    ) {
+      this._formattingApplied = this._formatURL(forceURLFormat);
+    } else {
+      this._formattingApplied = this._formatSearchAlias();
+    }
   }
 
   _ensureFormattedHostVisible(urlMetaData) {
@@ -122,8 +129,8 @@ class UrlbarValueFormatter {
     });
   }
 
-  _getUrlMetaData() {
-    if (this.urlbarInput.focused) {
+  _getUrlMetaData(forceURLFormat = false) {
+    if (!forceURLFormat && this.urlbarInput.focused) {
       return null;
     }
 
@@ -238,11 +245,15 @@ class UrlbarValueFormatter {
    * it crosses out the https scheme.  It also ensures that the host is
    * visible (not scrolled out of sight).
    *
+   * @param {boolean} [forceURLFormat]
+   *        Whether to format URLs even when conditions forbid it,
+   *        for example when the urlbar has focus.
+   *
    * @returns {boolean}
    *   True if formatting was applied and false if not.
    */
-  _formatURL() {
-    let urlMetaData = this._getUrlMetaData();
+  _formatURL(forceURLFormat = false) {
+    let urlMetaData = this._getUrlMetaData(forceURLFormat);
     if (!urlMetaData) {
       return false;
     }

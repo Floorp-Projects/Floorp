@@ -13,60 +13,41 @@
  *        the formatter may decide to replace the url with a fixed one, because
  *        it can't properly guess a host. In that case aClobbered is the
  *        expected de-emphasized value.
- * @param {boolean} synthesizeInput [optional] Whether to synthesize an input
- *        event to test.
  */
-function testVal(aExpected, aClobbered = null, synthesizeInput = false) {
-  let str = aExpected.replace(/[<>]/g, "");
-  if (synthesizeInput) {
-    gURLBar.focus();
-    gURLBar.select();
-    EventUtils.sendString(str);
-    Assert.equal(
-      gURLBar.editor.rootElement.textContent,
-      str,
-      "Url is not highlighted"
-    );
-    gBrowser.selectedBrowser.focus();
-  } else {
-    gURLBar.value = str;
-  }
+function testVal(aExpected, aClobbered = null) {
+  const inputValue = aExpected.replace(/[<>]/g, "");
+  gURLBar.blur();
+  gURLBar.setPageProxyState("valid");
+  gURLBar.value = inputValue;
 
-  let selectionController = gURLBar.editor.selectionController;
-  let selection = selectionController.getSelection(
+  const selectionController = gURLBar.editor.selectionController;
+  const selection = selectionController.getSelection(
     selectionController.SELECTION_URLSECONDARY
   );
   let value = gURLBar.editor.rootElement.textContent;
   let result = "";
   for (let i = 0; i < selection.rangeCount; i++) {
-    let range = selection.getRangeAt(i).toString();
-    let pos = value.indexOf(range);
+    const range = selection.getRangeAt(i).toString();
+    const pos = value.indexOf(range);
     result += value.substring(0, pos) + "<" + range + ">";
     value = value.substring(pos + range.length);
   }
   result += value;
+
   Assert.equal(
     result,
     aClobbered || aExpected,
-    "Correct part of the url is de-emphasized" +
-      (synthesizeInput ? " (with input simulation)" : "")
+    "Correct part of the url is de-emphasized"
   );
-
-  // Now re-test synthesizing input.
-  if (!synthesizeInput) {
-    testVal(aExpected, aClobbered, true);
-  }
 }
 
-function test() {
+add_task(function() {
   const prefname = "browser.urlbar.formatting.enabled";
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(prefname);
     gURLBar.setURI();
   });
-
-  gBrowser.selectedBrowser.focus();
 
   testVal("<https://>mozilla.org");
   testVal("<https://>mözilla.org");
@@ -123,7 +104,7 @@ function test() {
   testVal("<sub.>mozilla.org<:666/file.ext>");
   testVal("localhost<:666/file.ext>");
 
-  let IPs = [
+  const IPs = [
     "192.168.1.1",
     "[::]",
     "[::1]",
@@ -171,4 +152,4 @@ function test() {
   Services.prefs.setBoolPref(prefname, false);
 
   testVal("https://mozilla.org");
-}
+});
