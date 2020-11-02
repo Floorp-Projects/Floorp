@@ -34,12 +34,13 @@ class CustomizationFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.customization_preferences, rootKey)
+
+        setupPreferences()
     }
 
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_customize))
-        setupPreferences()
     }
 
     private fun setupPreferences() {
