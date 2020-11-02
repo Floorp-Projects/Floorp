@@ -68,6 +68,9 @@ add_task(async function setup() {
       ["browser.urlbar.update2", true],
       ["browser.urlbar.update2.localOneOffs", true],
       ["browser.urlbar.update2.oneOffsRefresh", true],
+      // Disable tab-to-search onboarding results for general tests. They are
+      // enabled in tests that specifically address onboarding.
+      ["browser.urlbar.tabToSearch.onboard.maxShown", 0],
     ],
   });
 
@@ -491,8 +494,12 @@ add_task(async function test_tabtosearch() {
 // Enters search mode by selecting a tab-to-search onboarding result.
 add_task(async function test_tabtosearch_onboard() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2.tabToComplete", true]],
+    set: [
+      ["browser.urlbar.update2.tabToComplete", true],
+      ["browser.urlbar.tabToSearch.onboard.maxShown", 10],
+    ],
   });
+  UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
   UrlbarProviderTabToSearch.onboardingResultsThisSession = 0;
 
   await PlacesTestUtils.addVisits([`https://${ENGINE_DOMAIN}/`]);
@@ -540,7 +547,8 @@ add_task(async function test_tabtosearch_onboard() {
 
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-
+  UrlbarProviderTabToSearch.onboardingResultCountThisSession = 0;
+  UrlbarPrefs.set("tipShownCount.tabToSearch", 0);
   await PlacesUtils.history.clear();
   await SpecialPowers.popPrefEnv();
 });
