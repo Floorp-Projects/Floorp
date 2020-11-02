@@ -705,8 +705,8 @@ void ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                       const TimeStamp& aProcessStartTime,
                                       UniqueStacks& aUniqueStacks) const {
   StreamType("CompositorScreenshot", aWriter);
-  aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url",
-                                              mScreenshotDataURL.get());
+  aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, MakeStringSpan("url"),
+                                              mScreenshotDataURL);
 
   char hexWindowID[32];
   const int written =

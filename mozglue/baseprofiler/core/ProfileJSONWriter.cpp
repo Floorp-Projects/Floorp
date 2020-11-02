@@ -32,9 +32,9 @@ void UniqueJSONStrings::SpliceStringTableElements(
   aWriter.TakeAndSplice(mStringTableWriter.TakeChunkedWriteFunc());
 }
 
-uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr) {
+uint32_t UniqueJSONStrings::GetOrAddIndex(const Span<const char>& aStr) {
   uint32_t count = mStringHashToIndexMap.count();
-  HashNumber hash = HashString(aStr);
+  HashNumber hash = HashString(aStr.data(), aStr.size());
   auto entry = mStringHashToIndexMap.lookupForAdd(hash);
   if (entry) {
     MOZ_ASSERT(entry->value() < count);
@@ -42,7 +42,7 @@ uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr) {
   }
 
   MOZ_RELEASE_ASSERT(mStringHashToIndexMap.add(entry, hash, count));
-  mStringTableWriter.StringElement(MakeStringSpan(aStr));
+  mStringTableWriter.StringElement(aStr);
   return count;
 }
 
