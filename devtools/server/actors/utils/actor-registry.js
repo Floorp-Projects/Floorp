@@ -179,7 +179,7 @@ const ActorRegistry = {
       constructor: "InspectorActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/stylesheets", {
+    this.registerModule("devtools/server/actors/style-sheets", {
       prefix: "styleSheets",
       constructor: "StyleSheetsActor",
       type: { target: true },
