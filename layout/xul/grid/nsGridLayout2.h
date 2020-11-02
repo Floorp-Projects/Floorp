@@ -70,6 +70,8 @@ class nsGridLayout2 final : public nsStackLayout, public nsIGridPart {
 
   virtual nsIGridPart* AsGridPart() override { return this; }
 
+  static void AddOffset(nsIFrame* aChild, nsSize& aSize);
+
  protected:
   explicit nsGridLayout2() = default;
   virtual ~nsGridLayout2() = default;
