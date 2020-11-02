@@ -1962,7 +1962,7 @@ class ConstraintDataFreezeObjectForTypedArrayData {
   explicit ConstraintDataFreezeObjectForTypedArrayData(TypedArrayObject& tarray)
       : obj(&tarray),
         viewData(tarray.dataPointerUnshared()),
-        length(tarray.length()) {
+        length(tarray.length().deprecatedGetUint32()) {
     MOZ_ASSERT(tarray.isSingleton());
     MOZ_ASSERT(!tarray.isSharedMemory());
   }
@@ -1975,7 +1975,8 @@ class ConstraintDataFreezeObjectForTypedArrayData {
                                   ObjectGroup* group) {
     MOZ_ASSERT(obj->group() == group);
     TypedArrayObject& tarr = obj->as<TypedArrayObject>();
-    return tarr.dataPointerUnshared() != viewData || tarr.length() != length;
+    return tarr.dataPointerUnshared() != viewData ||
+           tarr.length().deprecatedGetUint32() != length;
   }
 
   bool constraintHolds(const AutoSweepObjectGroup& sweep, JSContext* cx,

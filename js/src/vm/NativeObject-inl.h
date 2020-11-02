@@ -780,7 +780,7 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
 
     if (index.inspect()) {
       uint64_t idx = index.inspect().value();
-      if (idx < obj->template as<TypedArrayObject>().length()) {
+      if (idx < obj->template as<TypedArrayObject>().length().get()) {
         propp.setTypedArrayElement(idx);
       } else {
         propp.setNotFound();
@@ -849,7 +849,7 @@ static inline MOZ_MUST_USE bool NativeLookupOwnPropertyNoResolve(
     JS_TRY_VAR_OR_RETURN_FALSE(cx, index, IsTypedArrayIndex(cx, id));
 
     if (index) {
-      if (index.value() < obj->as<TypedArrayObject>().length()) {
+      if (index.value() < obj->as<TypedArrayObject>().length().get()) {
         result.setTypedArrayElement(index.value());
       } else {
         result.setNotFound();

@@ -1263,7 +1263,8 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, tarr->length())) {
+  if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT,
+                     tarr->length().deprecatedGetUint32())) {
     return false;
   }
   uint64_t type = tarr->type();

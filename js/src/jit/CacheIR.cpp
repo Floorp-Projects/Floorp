@@ -2471,9 +2471,11 @@ static bool AllowDoubleForUint32Array(TypedArrayObject* tarr, uint32_t index) {
     return false;
   }
 
-  if (index >= tarr->length()) {
+  // TODO: audit callers to check they do the right thing if index > INT32_MAX.
+  if (index >= tarr->length().deprecatedGetUint32()) {
     return false;
   }
+  MOZ_ASSERT(index <= INT32_MAX);
 
   Value res;
   MOZ_ALWAYS_TRUE(tarr->getElementPure(index, &res));
@@ -2490,7 +2492,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
   TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
 
   // Ensure the index is in-bounds so the element type gets monitored.
-  if (index >= tarr->length()) {
+  if (index >= tarr->length().get()) {
     return AttachDecision::NoAction;
   }
 
@@ -4197,7 +4199,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
   }
   TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
 
-  bool handleOutOfBounds = (index >= tarr->length());
+  bool handleOutOfBounds = (index >= tarr->length().get());
   Scalar::Type elementType = tarr->type();
 
   // Don't attach if the input type doesn't match the guard added below.
@@ -7308,7 +7310,8 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
   if (!mozilla::NumberEqualsInt32(index, &indexInt32)) {
     return false;
   }
-  if (indexInt32 < 0 || uint32_t(indexInt32) >= typedArray->length()) {
+  if (indexInt32 < 0 ||
+      uint32_t(indexInt32) >= typedArray->length().deprecatedGetUint32()) {
     return false;
   }
 

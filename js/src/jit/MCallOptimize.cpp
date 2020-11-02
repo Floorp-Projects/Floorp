@@ -2824,7 +2824,7 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArray(CallInfo& callInfo,
       }
 
       uint32_t len = AssertedCast<uint32_t>(providedLen);
-      if (obj->length() != len) {
+      if (obj->length().get() != len) {
         return InliningStatus_NotInlined;
       }
 
