@@ -1065,7 +1065,8 @@ static bool intrinsic_ArrayBufferByteLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[0].toObject().is<T>());
 
-  size_t byteLength = args[0].toObject().as<T>().byteLength();
+  size_t byteLength =
+      args[0].toObject().as<T>().byteLength().deprecatedGetUint32();
   args.rval().setInt32(mozilla::AssertedCast<int32_t>(byteLength));
   return true;
 }
@@ -1083,7 +1084,7 @@ static bool intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx,
     return false;
   }
 
-  uint32_t length = obj->byteLength();
+  uint32_t length = obj->byteLength().deprecatedGetUint32();
   args.rval().setInt32(mozilla::AssertedCast<int32_t>(length));
   return true;
 }

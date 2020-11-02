@@ -31,7 +31,7 @@ using mozilla::Nothing;
 
 using namespace js;
 
-static uint32_t SharedArrayAccessibleSize(uint32_t length) {
+static size_t SharedArrayAccessibleSize(size_t length) {
   return AlignBytes(length, gc::SystemPageSize());
 }
 
@@ -39,7 +39,7 @@ static uint32_t SharedArrayAccessibleSize(uint32_t length) {
 // memory usage. This is incorrect for some WASM cases, and for hypothetical
 // callers of js::SharedArrayBufferObject::createFromNewRawBuffer that do not
 // currently exist, but it's fine as a signal of GC pressure.
-static size_t SharedArrayMappedSize(uint32_t length) {
+static size_t SharedArrayMappedSize(size_t length) {
   return SharedArrayAccessibleSize(length) + gc::SystemPageSize();
 }
 
@@ -175,8 +175,8 @@ void SharedArrayRawBuffer::dropReference() {
 MOZ_ALWAYS_INLINE bool SharedArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsSharedArrayBuffer(args.thisv()));
-  args.rval().setInt32(
-      args.thisv().toObject().as<SharedArrayBufferObject>().byteLength());
+  auto* buffer = &args.thisv().toObject().as<SharedArrayBufferObject>();
+  args.rval().setInt32(buffer->byteLength().deprecatedGetUint32());
   return true;
 }
 
@@ -285,7 +285,7 @@ bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
 }
 
 void SharedArrayBufferObject::dropRawBuffer() {
-  size_t size = SharedArrayMappedSize(byteLength());
+  size_t size = SharedArrayMappedSize(byteLength().get());
   zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), size,
                                           MemoryUse::SharedArrayRawBuffer);
   setReservedSlot(RAWBUF_SLOT, UndefinedValue());
@@ -324,7 +324,7 @@ void SharedArrayBufferObject::addSizeOfExcludingThis(
   // just live with the risk.
   const SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
   info->objectsNonHeapElementsShared +=
-      buf.byteLength() / buf.rawBufferObject()->refcount();
+      buf.byteLength().get() / buf.rawBufferObject()->refcount();
 }
 
 /* static */
@@ -332,10 +332,10 @@ void SharedArrayBufferObject::copyData(
     Handle<SharedArrayBufferObject*> toBuffer, uint32_t toIndex,
     Handle<SharedArrayBufferObject*> fromBuffer, uint32_t fromIndex,
     uint32_t count) {
-  MOZ_ASSERT(toBuffer->byteLength() >= count);
-  MOZ_ASSERT(toBuffer->byteLength() >= toIndex + count);
-  MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
-  MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
+  MOZ_ASSERT(toBuffer->byteLength().get() >= count);
+  MOZ_ASSERT(toBuffer->byteLength().get() >= toIndex + count);
+  MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex);
+  MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex + count);
 
   jit::AtomicOperations::memcpySafeWhenRacy(
       toBuffer->dataPointerShared() + toIndex,
@@ -433,7 +433,7 @@ SharedArrayBufferObject& js::AsSharedArrayBuffer(HandleObject obj) {
 
 JS_FRIEND_API uint32_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();
-  return aobj ? aobj->byteLength() : 0;
+  return aobj ? aobj->byteLength().deprecatedGetUint32() : 0;
 }
 
 JS_FRIEND_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
@@ -441,7 +441,8 @@ JS_FRIEND_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
                                                          bool* isSharedMemory,
                                                          uint8_t** data) {
   MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
-  *length = obj->as<SharedArrayBufferObject>().byteLength();
+  *length =
+      obj->as<SharedArrayBufferObject>().byteLength().deprecatedGetUint32();
   *data = obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(
       /*safe - caller knows*/);
   *isSharedMemory = true;

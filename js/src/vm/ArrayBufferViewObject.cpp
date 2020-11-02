@@ -107,7 +107,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
 
     // Only ArrayBuffers used for inline typed objects can have
     // nursery-allocated data and we shouldn't see such buffers here.
-    MOZ_ASSERT_IF(buffer->byteLength() > 0, !cx->nursery().isInside(ptr));
+    MOZ_ASSERT_IF(buffer->byteLength().get() > 0, !cx->nursery().isInside(ptr));
   } else {
     MOZ_ASSERT(is<TypedArrayObject>());
     MOZ_ASSERT(length * bytesPerElement <=
@@ -127,7 +127,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   if (buffer) {
     uint32_t viewByteLength = length * bytesPerElement;
     uint32_t viewByteOffset = byteOffset;
-    uint32_t bufferByteLength = buffer->byteLength();
+    uint32_t bufferByteLength = buffer->byteLength().deprecatedGetUint32();
     // Unwraps are safe: both are for the pointer value.
     MOZ_ASSERT_IF(IsArrayBuffer(buffer),
                   buffer->dataPointerEither().unwrap(/*safe*/) <=

@@ -453,13 +453,13 @@ bool wasm::CodeCachingAvailable(JSContext* cx) {
 // before long, they are captured as size_t here.
 
 uint32_t wasm::ByteLength32(Handle<ArrayBufferObjectMaybeShared*> buffer) {
-  size_t len = buffer->byteLength();
+  size_t len = buffer->byteLength().get();
   MOZ_ASSERT(len <= size_t(MaxMemory32Pages) * PageSize);
   return uint32_t(len);
 }
 
 uint32_t wasm::ByteLength32(const ArrayBufferObjectMaybeShared& buffer) {
-  size_t len = buffer.byteLength();
+  size_t len = buffer.byteLength().get();
   MOZ_ASSERT(len <= size_t(MaxMemory32Pages) * PageSize);
   return uint32_t(len);
 }
@@ -471,7 +471,7 @@ uint32_t wasm::ByteLength32(const WasmArrayRawBuffer* buffer) {
 }
 
 uint32_t wasm::ByteLength32(const ArrayBufferObject& buffer) {
-  size_t len = buffer.byteLength();
+  size_t len = buffer.byteLength().get();
   MOZ_ASSERT(len <= size_t(MaxMemory32Pages) * PageSize);
   return uint32_t(len);
 }
