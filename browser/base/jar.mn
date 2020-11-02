@@ -14,7 +14,6 @@ browser.jar:
         content/browser/aboutRobots.js                (content/aboutRobots.js)
         content/browser/aboutRobots.css               (content/aboutRobots.css)
         content/browser/logos/etp-mobile.svg          (content/logos/etp-mobile.svg)
-        content/browser/logos/lockwise-mobile.svg     (content/logos/lockwise-mobile.svg)
         content/browser/logos/lockwise.svg            (content/logos/lockwise.svg)
         content/browser/logos/monitor.svg             (content/logos/monitor.svg)
         content/browser/logos/proxy-light.svg         (content/logos/proxy-light.svg)
