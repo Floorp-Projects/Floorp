@@ -111,6 +111,7 @@ def api_lint(config, **lintargs):
                     "lineno": int(r["line"]),
                     "column": int(r.get("column") or 0),
                     "message": r["msg"],
+                    "level": "error" if r["error"] else "warning",
                 }
                 results.append(result.from_config(config, **err))
 
