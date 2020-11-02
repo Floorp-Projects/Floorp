@@ -1,6 +1,9 @@
 Tests
 =====
 
+A high-level test strategy for Firefox Telemetry is defined in the
+`Test Strategy document <https://docs.google.com/document/d/1Mi6va3gE4HSv5LjXNREvMa2V4q-LKIFDTwA2o4yeo_c/edit>`_.
+
 Firefox Telemetry is a complicated and old component.
 So too are the organization and expanse of its tests.
 Let’s break them down by harness.
