@@ -216,8 +216,17 @@ class ReaderViewFeature(
 
     private fun ensureExtensionInstalled() {
         val feature = WeakReference(this)
+        val store = WeakReference(store)
         extensionController.install(engine, onSuccess = {
+            // In case the extension was installed while an extension page was
+            // displayed (if on startup we opened directly into a
+            // restored reader view page), we have to reload the extension page,
+            // as we may have missed to connect the port.
             feature.get()?.connectReaderViewContentScript()
+            val selectedTab = store.get()?.state?.selectedTab
+            if (selectedTab?.readerState?.active == true) {
+                selectedTab.engineState.engineSession?.reload()
+            }
         })
     }
 

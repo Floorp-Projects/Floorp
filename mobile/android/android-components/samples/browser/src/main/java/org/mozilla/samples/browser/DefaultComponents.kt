@@ -34,6 +34,7 @@ import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
@@ -103,6 +104,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             requestInterceptor = SampleRequestInterceptor(applicationContext)
             remoteDebuggingEnabled = true
             supportMultipleWindows = true
+            preferredColorScheme = PreferredColorScheme.Dark
         }
     }
 

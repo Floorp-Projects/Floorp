@@ -539,6 +539,38 @@ class ReaderViewFeatureTest {
         assertEquals(ReaderViewFeature.ACTION_SHOW, message.allValues[1][ReaderViewFeature.ACTION_MESSAGE_KEY])
     }
 
+    @Test
+    fun `extension page is reloaded if install finishes after initial load`() {
+        val engine: Engine = mock()
+        val engineSession: EngineSession = mock()
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            id = "test-tab",
+            readerState = ReaderState(active = true),
+            engineSession = engineSession
+        )
+        val store = spy(BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id)
+            )
+        )
+        val readerViewFeature = ReaderViewFeature(testContext, engine, store, mock())
+        readerViewFeature.start()
+
+        val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
+        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
+        verify(engine, times(1)).installWebExtension(
+            eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
+            eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
+            onSuccess.capture(),
+            onError.capture()
+        )
+
+        onSuccess.value.invoke(mock())
+        verify(engineSession).reload()
+    }
+
     private fun prepareFeatureForTest(
         contentPort: Port? = null,
         readerActivePort: Port? = null,

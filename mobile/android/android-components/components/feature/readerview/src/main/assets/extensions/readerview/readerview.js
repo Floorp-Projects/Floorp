@@ -91,11 +91,11 @@ class ReaderView {
     let bodyClasses = document.body.classList;
 
     if (this.fontType) {
-      bodyClasses.remove(this.fontType)
+      bodyClasses.remove(this.fontType);
     }
 
-    this.fontType = fontType
-    bodyClasses.add(this.fontType)
+    this.fontType = fontType;
+    bodyClasses.add(this.fontType);
   }
 
   /**
@@ -113,11 +113,11 @@ class ReaderView {
     let bodyClasses = document.body.classList;
 
     if (this.colorScheme) {
-      bodyClasses.remove(this.colorScheme)
+      bodyClasses.remove(this.colorScheme);
     }
 
-    this.colorScheme = colorScheme
-    bodyClasses.add(this.colorScheme)
+    this.colorScheme = colorScheme;
+    bodyClasses.add(this.colorScheme);
   }
 
   /**
@@ -338,6 +338,7 @@ function getPreparedDocument(id, url) {
 
 let readerView = new ReaderView();
 connectNativePort();
+prepareBody();
 
 function connectNativePort() {
   let url = new URL(window.location.href);
@@ -390,4 +391,17 @@ function connectNativePort() {
         console.error(`Received invalid action ${message.action}`);
     }
   });
+}
+
+/**
+ * Applies the configured color scheme to the HTML body while reader view is loading. This is to
+ * prevent "flashes" caused by having to change the color later.
+ */
+function prepareBody() {
+  let url = new URL(window.location.href);
+  let colorScheme = decodeURIComponent(url.searchParams.get("colorScheme"));
+  let body = document.createElement("body");
+  body.classList.add("mozac-readerview-body");
+  body.classList.add(colorScheme);
+  document.body = body;
 }

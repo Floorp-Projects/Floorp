@@ -10,8 +10,11 @@ let serializedDocs = new Map();
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
      case 'show':
-       browser.tabs.update({url: `/readerview.html?url=${encodeURIComponent(message.url)}&id=${sender.contextId}`}).catch((e) => {
-         console.error("Failed to open reader view", e, e.stack);
+       let id = sender.contextId;
+       let url = encodeURIComponent(message.url);
+       let colorScheme = message.options.colorScheme;
+       browser.tabs.update({url: `/readerview.html?url=${url}&colorScheme=${colorScheme}&id=${id}`}).catch((e) => {
+           console.error("Failed to open reader view", e, e.stack);
        });
        break;
      case 'addSerializedDoc':
