@@ -167,7 +167,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["pagestyle"],
     spec: "devtools/shared/specs/page-style",
-    front: "devtools/client/fronts/styles",
+    front: "devtools/client/fronts/page-style",
   },
   {
     types: ["perf"],
@@ -250,7 +250,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["domstylerule"],
     spec: "devtools/shared/specs/style-rule",
-    front: "devtools/client/fronts/styles",
+    front: "devtools/client/fronts/style-rule",
   },
   {
     types: ["mediarule", "stylesheet", "stylesheets"],
