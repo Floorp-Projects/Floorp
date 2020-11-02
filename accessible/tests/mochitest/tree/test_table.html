@@ -166,15 +166,17 @@
       testAccessibleTree("table4", accTree);
 
       // ///////////////////////////////////////////////////////////////////////
-      // table5 (tbody with display: block should not get accessible)
+      // table5 (intermediate accessible for tbody)
       accTree =
         { TABLE: [
-          { ROW: [
-            { CELL: [
-              { TEXT_LEAF: [ ] },
+          { GROUPING: [
+            { ROW: [
+              { CELL: [
+                { TEXT_LEAF: [ ] },
+              ] },
             ] },
-          ] },
-        ] };
+          ] } ],
+        };
       testAccessibleTree("table5", accTree);
 
       // ///////////////////////////////////////////////////////////////////////
@@ -255,34 +257,6 @@
       // Crazy example from Gmail.
       accTree =
         { TABLE: [
-          { ROW: [
-            { CELL: [
-              { TEXT_LEAF: [ ] },
-            ] },
-          ] },
-        ] };
-        testAccessibleTree("table_all_display_block", accTree);
-
-      // ///////////////////////////////////////////////////////////////////////
-      // A table with a display:block tbody that has an aria role
-      // The tbody should get an accessible with the desired role.
-      accTree =
-        { TABLE: [
-          { DIALOG: [
-            { TEXT_CONTAINER: [
-              { TEXT_CONTAINER: [
-                { TEXT_LEAF: [ ] },
-              ] },
-            ] },
-          ] },
-        ] };
-        testAccessibleTree("table_with_block_tbody_and_role", accTree);
-
-      // ///////////////////////////////////////////////////////////////////////
-      // A table with a display:block tbody that is focusable
-      // The tbody should get a grouping accessible.
-      accTree =
-        { TABLE: [
           { GROUPING: [
             { ROW: [
               { CELL: [
@@ -291,7 +265,7 @@
             ] },
           ] },
         ] };
-        testAccessibleTree("table_with_focusable_block_tbody", accTree);
+        testAccessibleTree("table_all_display_block", accTree);
 
       SimpleTest.finish();
     }
@@ -435,22 +409,6 @@
     <tbody style="display:block;">
       <tr style="display:block;">
         <td style="display:block;">text</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <table id="table_with_block_tbody_and_role">
-    <tbody style="display:block;" role="dialog">
-      <tr>
-        <td>text</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <table id="table_with_focusable_block_tbody">
-    <tbody style="display:block;" tabindex="0">
-      <tr>
-        <td>text</td>
       </tr>
     </tbody>
   </table>
