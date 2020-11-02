@@ -76,7 +76,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "PageStyleActor",
-  "devtools/server/actors/styles",
+  "devtools/server/actors/page-style",
   true
 );
 loader.lazyRequireGetter(

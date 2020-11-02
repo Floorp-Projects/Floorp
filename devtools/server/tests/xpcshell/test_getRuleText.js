@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { getRuleText } = require("devtools/server/actors/styles");
+const { getRuleText } = require("devtools/server/actors/utils/style-utils");
 
 const TEST_DATA = [
   {
