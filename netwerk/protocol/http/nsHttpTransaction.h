@@ -506,6 +506,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA = 4,
     TRANSACTION_RESTART_OTHERS = 5,
   };
+
+  nsDataHashtable<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
 };
 
 }  // namespace net

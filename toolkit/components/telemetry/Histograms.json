@@ -15946,5 +15946,49 @@
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "kind": "enumerated",
     "description": "The reason why a HTTP transaction is restarted."
+  },
+  "TRANSACTION_ECH_RETRY_WITH_ECH_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1671886],
+    "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_RETRY_WITH_ECH"
+  },
+  "TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1671886],
+    "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_RETRY_WITHOUT_ECH"
+  },
+  "TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1671886],
+    "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_FAILED"
+  },
+  "TRANSACTION_ECH_RETRY_OTHERS_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1671886],
+    "description": "When echConfig is enabled, number of times a transaction is retried because of other error"
   }
 }
