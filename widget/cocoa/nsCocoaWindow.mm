@@ -1026,9 +1026,7 @@ void nsCocoaWindow::AdjustWindowShadow() {
       [mWindow windowNumber] == -1)
     return;
 
-  const ShadowParams& params = nsCocoaFeatures::OnYosemiteOrLater()
-                                   ? kWindowShadowParametersPostYosemite[uint8_t(mShadowStyle)]
-                                   : kWindowShadowParametersPreYosemite[uint8_t(mShadowStyle)];
+  const ShadowParams& params = kWindowShadowParametersPostYosemite[uint8_t(mShadowStyle)];
   CGSConnection cid = _CGSDefaultConnection();
   CGSSetWindowShadowAndRimParameters(cid, [mWindow windowNumber], params.standardDeviation,
                                      params.density, params.offsetX, params.offsetY, params.flags);
@@ -1316,10 +1314,6 @@ int32_t nsCocoaWindow::GetWorkspaceID() {
   // effectively.
   CGSSpaceID sid = 0;
 
-  if (!nsCocoaFeatures::OnElCapitanOrLater()) {
-    return sid;
-  }
-
   CGSCopySpacesForWindowsFunc CopySpacesForWindows = GetCGSCopySpacesForWindowsFunc();
   if (!CopySpacesForWindows) {
     return sid;
@@ -1349,10 +1343,6 @@ int32_t nsCocoaWindow::GetWorkspaceID() {
 
 void nsCocoaWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!nsCocoaFeatures::OnElCapitanOrLater()) {
-    return;
-  }
 
   if ([NSScreen screensHaveSeparateSpaces] && [[NSScreen screens] count] > 1) {
     // We don't support moving to a workspace when the user has this option
@@ -3567,15 +3557,12 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // rect.
   NSRect frameRect = [NSWindow frameRectForContentRect:aChildViewRect styleMask:aStyle];
 
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    // Always size the content view to the full frame size of the window.
-    // We cannot use this window mask on 10.9, because it was added in 10.10.
-    // We also cannot use it when our CoreAnimation pref is disabled: This flag forces CoreAnimation
-    // on for the entire window, which causes glitches in combination with our non-CoreAnimation
-    // drawing. (Specifically, on macOS versions up until at least 10.14.0, layer-backed
-    // NSOpenGLViews have extremely glitchy resizing behavior.)
-    aStyle |= NSFullSizeContentViewWindowMask;
-  }
+  // Always size the content view to the full frame size of the window.
+  // We cannot use this window mask when our CoreAnimation pref is disabled: This flag forces
+  // CoreAnimation on for the entire window, which causes glitches in combination with our
+  // non-CoreAnimation drawing. (Specifically, on macOS versions up until at least 10.14.0,
+  // layer-backed NSOpenGLViews have extremely glitchy resizing behavior.)
+  aStyle |= NSFullSizeContentViewWindowMask;
 
   // -[NSWindow initWithContentRect:styleMask:backing:defer:] calls
   // [self frameRectForContentRect:styleMask:] to convert the supplied content

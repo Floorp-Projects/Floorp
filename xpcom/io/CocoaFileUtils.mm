@@ -192,12 +192,7 @@ void AddOriginMetadataToFile(const CFStringRef filePath, const CFURLRef sourceUR
 }
 
 // Can be called off of the main thread.
-static CFStringRef GetQuarantinePropKey() {
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    return kCFURLQuarantinePropertiesKey;
-  }
-  return kLSItemQuarantineProperties;
-}
+static CFStringRef GetQuarantinePropKey() { return kCFURLQuarantinePropertiesKey; }
 
 // Can be called off of the main thread.
 static CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,

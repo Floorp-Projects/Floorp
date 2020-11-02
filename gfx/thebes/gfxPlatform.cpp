@@ -2920,13 +2920,6 @@ void gfxPlatform::InitOMTPConfig() {
                       "FEATURE_FAILURE_COMP_PREF"_ns);
   }
 
-#ifdef XP_MACOSX
-  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
-    omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked before OSX 10.10",
-                      "FEATURE_FAILURE_OMTP_OSX_MAVERICKS"_ns);
-  }
-#endif
-
   if (InSafeMode()) {
     omtp.ForceDisable(FeatureStatus::Blocked, "OMTP blocked by safe-mode",
                       "FEATURE_FAILURE_COMP_SAFEMODE"_ns);
