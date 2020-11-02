@@ -79,12 +79,12 @@ void WebrtcTCPSocket::SetTabId(dom::TabId aTabId) {
 nsresult WebrtcTCPSocket::Write(nsTArray<uint8_t>&& aWriteData) {
   LOG(("WebrtcTCPSocket::Write %p\n", this));
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ALWAYS_SUCCEEDS(
-      mSocketThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
-          "WebrtcTCPSocket::Write", this, &WebrtcTCPSocket::EnqueueWrite_s,
-          std::move(aWriteData))));
+  nsresult rv = mSocketThread->Dispatch(NewRunnableMethod<nsTArray<uint8_t>&&>(
+      "WebrtcTCPSocket::Write", this, &WebrtcTCPSocket::EnqueueWrite_s,
+      std::move(aWriteData)));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch to STS");
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult WebrtcTCPSocket::Close() {
@@ -110,11 +110,11 @@ void WebrtcTCPSocket::CloseWithReason(nsresult aReason) {
             "WebrtcTCPSocket::CloseWithReason", this,
             &WebrtcTCPSocket::CloseWithReason, aReason));
 
-    // This was MOZ_ALWAYS_SUCCEEDS, but that now uses MOZ_DIAGNOSTIC_ASSERT.
+    // This was MOZ_ALWAYS_SUCCEEDS, but that now uses NS_WARNING_ASSERTION.
     // In order to convert this back to MOZ_ALWAYS_SUCCEEDS we would need
     // OnSocketThread to return true if we're shutting down and doing the
     // "running all of STS's queued events on main" thing.
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch to STS");
 
     return;
   }
@@ -260,10 +260,11 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
 
 void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
   if (!OnSocketThread()) {
-    MOZ_ALWAYS_SUCCEEDS(
+    DebugOnly<nsresult> rv =
         mSocketThread->Dispatch(NewRunnableMethod<nsCOMPtr<nsIProxyInfo>>(
             "WebrtcTCPSocket::OpenWithoutHttpProxy", this,
-            &WebrtcTCPSocket::OpenWithoutHttpProxy, aSocksProxyInfo)));
+            &WebrtcTCPSocket::OpenWithoutHttpProxy, aSocksProxyInfo));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch to STS");
     return;
   }
 
