@@ -111,7 +111,7 @@ add_task(async function() {
   );
   showBtn.doCommand();
   await promiseSubDialogLoaded;
-  is(dialogOverlay.style.visibility, "inherit", "The dialog should be visible");
+  is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
 
   let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
