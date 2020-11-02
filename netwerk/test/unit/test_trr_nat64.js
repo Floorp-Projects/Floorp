@@ -63,12 +63,17 @@ add_task(async function test_add_nat64_prefix_to_trr() {
   let [req, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
   dns.clearCache(true);
-  override.addIPOverride("ipv4only.arpa", "fe80::6a99:9b2b:c000:00aa");
+  override.addIPOverride("ipv4only.arpa", "fe80::9b2b:c000:00aa");
+  Services.prefs.setCharPref(
+    "network.connectivity-service.nat64-prefix",
+    "ae80::3b1b:c343:1133"
+  );
 
-  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
-  await promiseObserverNotification(
+  let notification = promiseObserverNotification(
     "network:connectivity-service:dns-checks-complete"
   );
+  Services.obs.notifyObservers(null, "network:captive-portal-connectivity");
+  await notification;
 
   Services.prefs.setIntPref("network.trr.mode", 2);
   Services.prefs.setCharPref(
@@ -90,10 +95,21 @@ add_task(async function test_add_nat64_prefix_to_trr() {
   });
 
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
-  inRecord.getNextAddrAsString();
   Assert.equal(
     inRecord.getNextAddrAsString(),
-    "fe80::6a99:9b2b:102:304",
+    "1.2.3.4",
+    `Checking that native IPv4 addresses have higher priority.`
+  );
+
+  Assert.equal(
+    inRecord.getNextAddrAsString(),
+    "ae80::3b1b:102:304",
+    `Checking the manually entered NAT64-prefixed address is in the middle.`
+  );
+
+  Assert.equal(
+    inRecord.getNextAddrAsString(),
+    "fe80::9b2b:102:304",
     `Checking that the NAT64-prefixed address is appended at the back.`
   );
 
