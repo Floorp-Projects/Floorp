@@ -88,6 +88,15 @@ class AndroidHardwareTest(
             },
         ],
         [
+            ["--enable-fission"],
+            {
+                "action": "store_true",
+                "dest": "enable_fission",
+                "default": False,
+                "help": "Run with Fission enabled.",
+            },
+        ],
+        [
             ["--repeat"],
             {
                 "action": "store",
@@ -147,6 +156,7 @@ class AndroidHardwareTest(
         self.log_raw_level = c.get("log_raw_level")
         self.log_tbpl_level = c.get("log_tbpl_level")
         self.enable_webrender = c.get("enable_webrender")
+        self.enable_fission = c.get("enable_fission")
         self.extra_prefs = c.get("extra_prefs")
 
     def query_abs_dirs(self):
@@ -273,6 +283,8 @@ class AndroidHardwareTest(
         # set.
         if self.enable_webrender:
             cmd.extend(["--enable-webrender"])
+        if self.enable_fission:
+            cmd.extend(["--enable-fission"])
 
         cmd.extend(["--setpref={}".format(p) for p in self.extra_prefs])
 
