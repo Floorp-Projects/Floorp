@@ -130,6 +130,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using DrawTarget = mozilla::gfx::DrawTarget;
   using Path = mozilla::gfx::Path;
   using Rect = mozilla::gfx::Rect;
+  using Point = mozilla::gfx::Point;
   using RectCornerRadii = mozilla::gfx::RectCornerRadii;
 
  public:
@@ -240,6 +241,9 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                   const sRGBColor& aBorderColor,
                                   const CSSCoord aBorderWidth,
                                   uint32_t aDpiRatio);
+  static void PaintEllipseShadow(DrawTarget* aDrawTarget, const Rect& aRect,
+                                 float aShadowAlpha, const Point& aShadowOffset,
+                                 float aShadowBlurStdDev, uint32_t aDpiRatio);
   static void PaintRadioControl(DrawTarget* aDrawTarget, const Rect& aRect,
                                 const EventStates& aState, uint32_t aDpiRatio);
   static void PaintRadioCheckMark(DrawTarget* aDrawTarget, const Rect& aRect,
