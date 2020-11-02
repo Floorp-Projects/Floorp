@@ -5975,7 +5975,9 @@ AspectRatio nsIFrame::GetAspectRatio() const {
   // return here.
 
   const StyleAspectRatio& aspectRatio = StylePosition()->mAspectRatio;
-  if (!aspectRatio.auto_) {
+  // If aspect-ratio is infinite, it behaves as auto.
+  // https://github.com/w3c/csswg-drafts/issues/4572
+  if (!aspectRatio.BehavesAsAuto()) {
     // Non-auto. Return the preferred aspect ratio from the aspect-ratio style.
     return aspectRatio.ratio.AsRatio().ToLayoutRatio();
   }
@@ -5984,7 +5986,10 @@ AspectRatio nsIFrame::GetAspectRatio() const {
   if (auto intrinsicRatio = GetIntrinsicRatio()) {
     return intrinsicRatio;
   }
+
   if (aspectRatio.HasRatio()) {
+    // If there is no finite ratio, this returns 0. Just the same as the auto
+    // case.
     return aspectRatio.ratio.AsRatio().ToLayoutRatio();
   }
 
