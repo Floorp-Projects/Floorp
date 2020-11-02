@@ -303,3 +303,33 @@ add_task(async function test_with_newtabpage_disabled() {
   await BrowserTestUtils.removeTab(blank);
   await BrowserTestUtils.removeTab(example);
 });
+
+add_task(async function test_history_pushstate() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.2h2020", true]],
+  });
+  await BrowserTestUtils.withNewTab("https://example.com/", async browser => {
+    await waitForBookmarksToolbarVisibility({ visible: false });
+    ok(!isBookmarksToolbarVisible(), "Toolbar should be hidden");
+
+    // Temporarily show the toolbar:
+    setToolbarVisibility(
+      document.querySelector("#PersonalToolbar"),
+      true,
+      false,
+      false
+    );
+    ok(isBookmarksToolbarVisible(), "Toolbar should now be visible");
+
+    // Now "navigate"
+    await SpecialPowers.spawn(browser, [], () => {
+      content.location.href += "#foo";
+    });
+
+    await TestUtils.waitForCondition(
+      () => gURLBar.value.endsWith("#foo"),
+      "URL bar should update"
+    );
+    ok(isBookmarksToolbarVisible(), "Toolbar should still be visible");
+  });
+});
