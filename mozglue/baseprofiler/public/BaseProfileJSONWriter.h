@@ -277,27 +277,54 @@ class JSONSchemaWriter {
   ~JSONSchemaWriter() { mWriter.EndObject(); }
 };
 
+// This class helps create an indexed list of unique strings, and inserts the
+// index as a JSON value. The collected list of unique strings can later be
+// inserted as a JSON array.
+// This can be useful for elements/properties with many repeated strings.
+//
+// With only JSONWriter w,
+// `w.WriteElement("a"); w.WriteElement("b"); w.WriteElement("a");`
+// when done inside a JSON array, will generate:
+// `["a", "b", "c"]`
+//
+// With UniqueStrings u,
+// `u.WriteElement(w, "a"); u.WriteElement(w, "b"); u.WriteElement(w, "a");`
+// when done inside a JSON array, will generate:
+// `[0, 1, 0]`
+// and later, `u.SpliceStringTableElements(w)` (inside a JSON array), will
+// output the corresponding indexed list of unique strings:
+// `["a", "b"]`
 class UniqueJSONStrings {
  public:
+  // Start an empty list of unique strings.
   MFBT_API UniqueJSONStrings();
 
+  // Start with a copy of the strings from another list.
   MFBT_API explicit UniqueJSONStrings(const UniqueJSONStrings& aOther);
 
   MFBT_API ~UniqueJSONStrings();
 
-  MFBT_API void SpliceStringTableElements(SpliceableJSONWriter& aWriter);
-
+  // Add `aStr` to the list (if not already there), and write its index as a
+  // named object property.
   void WriteProperty(JSONWriter& aWriter, const char* aName, const char* aStr) {
     aWriter.IntProperty(MakeStringSpan(aName), GetOrAddIndex(aStr));
   }
 
+  // Add `aStr` to the list (if not already there), and write its index as an
+  // array element.
   void WriteElement(JSONWriter& aWriter, const char* aStr) {
     aWriter.IntElement(GetOrAddIndex(aStr));
   }
 
-  MFBT_API uint32_t GetOrAddIndex(const char* aStr);
+  // Splice all collected unique strings into an array. This should only be done
+  // once, and then this UniqueStrings shouldn't be used anymore.
+  MFBT_API void SpliceStringTableElements(SpliceableJSONWriter& aWriter);
 
  private:
+  // If `aStr` is already listed, return its index.
+  // Otherwise add it to the list and return the new index.
+  MFBT_API uint32_t GetOrAddIndex(const char* aStr);
+
   SpliceableChunkedJSONWriter mStringTableWriter;
   HashMap<HashNumber, uint32_t> mStringHashToIndexMap;
 };
