@@ -280,6 +280,40 @@ PurgeTrackerService.prototype = {
       false
     );
 
+    let sanitizeOnShutdownEnabled = Services.prefs.getBoolPref(
+      "privacy.sanitize.sanitizeOnShutdown",
+      false
+    );
+
+    let clearHistoryOnShutdown = Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown.history",
+      false
+    );
+
+    let clearSiteSettingsOnShutdown = Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown.siteSettings",
+      false
+    );
+
+    // This is a hotfix for bug 1672394. It avoids purging if the user has enabled mechanisms
+    // that regularly clear the storageAccessAPI permission, such as clearing history or
+    // "site settings" (permissions) on shutdown.
+    if (
+      sanitizeOnShutdownEnabled &&
+      (clearHistoryOnShutdown || clearSiteSettingsOnShutdown)
+    ) {
+      logger.log(
+        `
+        Purging canceled because interaction permissions are cleared on shutdown.
+        sanitizeOnShutdownEnabled: ${sanitizeOnShutdownEnabled},
+        clearHistoryOnShutdown: ${clearHistoryOnShutdown},
+        clearSiteSettingsOnShutdown: ${clearSiteSettingsOnShutdown},
+        `
+      );
+      this.resetPurgeList();
+      return;
+    }
+
     // Purge cookie jars for following cookie behaviors.
     //   * BEHAVIOR_REJECT_FOREIGN
     //   * BEHAVIOR_LIMIT_FOREIGN
