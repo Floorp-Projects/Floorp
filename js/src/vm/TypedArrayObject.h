@@ -94,13 +94,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray);
 
   BufferSize byteLength() const {
-    return BufferSize(length() * bytesPerElement());
+    return BufferSize(length().get() * bytesPerElement());
   }
 
-  size_t length() const {
-    size_t len = size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
-    MOZ_ASSERT(len <= INT32_MAX);
-    return len;
+  BufferSize length() const {
+    return BufferSize(size_t(getFixedSlot(LENGTH_SLOT).toPrivate()));
   }
 
   Value byteLengthValue() const {
@@ -109,9 +107,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   }
 
   Value lengthValue() const {
-    size_t len = length();
-    MOZ_ASSERT(len <= INT32_MAX);
-    return Int32Value(len);
+    size_t len = length().get();
+    return NumberValue(len);
   }
 
   bool hasInlineElements() const;

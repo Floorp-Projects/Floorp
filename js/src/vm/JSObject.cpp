@@ -684,7 +684,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
     // Typed array elements are non-configurable, writable properties, so
     // if any elements are present, the typed array cannot be frozen.
     if (nobj->is<TypedArrayObject>() &&
-        nobj->as<TypedArrayObject>().length() > 0 &&
+        nobj->as<TypedArrayObject>().length().get() > 0 &&
         level == IntegrityLevel::Frozen) {
       *result = false;
       return true;
@@ -2385,7 +2385,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
       }
 
       if (index.inspect()) {
-        if (index.inspect().value() < obj->as<TypedArrayObject>().length()) {
+        if (index.inspect().value() < obj->as<TypedArrayObject>().length().get()) {
           propp->setTypedArrayElement(index.inspect().value());
         } else {
           propp->setNotFound();

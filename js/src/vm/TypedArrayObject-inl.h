@@ -302,8 +302,9 @@ class ElementSpecific {
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(!source->hasDetachedBuffer(), "source isn't detached");
 
-    MOZ_ASSERT(offset <= target->length());
-    MOZ_ASSERT(source->length() <= target->length() - offset);
+    MOZ_ASSERT(offset <= target->length().deprecatedGetUint32());
+    MOZ_ASSERT(source->length().deprecatedGetUint32() <=
+               target->length().deprecatedGetUint32() - offset);
 
     if (TypedArrayObject::sameBuffer(target, source)) {
       return setFromOverlappingTypedArray(target, source, offset);
@@ -311,7 +312,7 @@ class ElementSpecific {
 
     SharedMem<T*> dest =
         target->dataPointerEither().template cast<T*>() + offset;
-    uint32_t count = source->length();
+    uint32_t count = source->length().deprecatedGetUint32();
 
     if (source->type() == target->type()) {
       Ops::podCopy(dest, source->dataPointerEither().template cast<T*>(),
@@ -451,7 +452,7 @@ class ElementSpecific {
         return false;
       }
 
-      len = std::min<size_t>(len, target->length());
+      len = std::min<size_t>(len, target->length().deprecatedGetUint32());
       if (i >= len) {
         break;
       }
@@ -476,7 +477,7 @@ class ElementSpecific {
                "target type and NativeType must match");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");
     MOZ_ASSERT(IsPackedArray(source), "source array must be packed");
-    MOZ_ASSERT(source->getDenseInitializedLength() <= target->length());
+    MOZ_ASSERT(source->getDenseInitializedLength() <= target->length().get());
 
     uint32_t len = source->getDenseInitializedLength();
     uint32_t i = 0;
@@ -516,7 +517,7 @@ class ElementSpecific {
       // |target| is a newly allocated typed array and not yet visible to
       // content script, so valueToNative can't detach the underlying
       // buffer.
-      MOZ_ASSERT(i < target->length());
+      MOZ_ASSERT(i < target->length().get());
 
       // Compute every iteration in case GC moves the data.
       SharedMem<T*> newDest = target->dataPointerEither().template cast<T*>();
@@ -541,12 +542,13 @@ class ElementSpecific {
                "the provided arrays don't actually overlap, so it's "
                "undesirable to use this method");
 
-    MOZ_ASSERT(offset <= target->length());
-    MOZ_ASSERT(source->length() <= target->length() - offset);
+    MOZ_ASSERT(offset <= target->length().deprecatedGetUint32());
+    MOZ_ASSERT(source->length().deprecatedGetUint32() <=
+               target->length().deprecatedGetUint32() - offset);
 
     SharedMem<T*> dest =
         target->dataPointerEither().template cast<T*>() + offset;
-    uint32_t len = source->length();
+    uint32_t len = source->length().deprecatedGetUint32();
 
     if (source->type() == target->type()) {
       SharedMem<T*> src = source->dataPointerEither().template cast<T*>();

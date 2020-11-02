@@ -213,7 +213,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     // Collect any typed array or shared typed array elements from this
     // object.
     if (pobj->is<TypedArrayObject>()) {
-      size_t len = pobj->as<TypedArrayObject>().length();
+      size_t len = pobj->as<TypedArrayObject>().length().deprecatedGetUint32();
       for (size_t i = 0; i < len; i++) {
         if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
                                            /* enumerable = */ true, flags,
