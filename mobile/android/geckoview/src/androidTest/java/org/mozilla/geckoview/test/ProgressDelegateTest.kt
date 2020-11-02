@@ -22,27 +22,49 @@ import org.mozilla.geckoview.test.util.UiThreadUtils
 @MediumTest
 class ProgressDelegateTest : BaseSessionTest() {
 
-    @Test fun loadProgress() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+    fun testProgress(path: String) {
+        sessionRule.session.loadTestPath(path)
         sessionRule.waitForPageStop()
 
         var counter = 0
         var lastProgress = -1
 
-        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate,
+                Callbacks.NavigationDelegate {
+            @AssertCalled
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("LocationChange is called", url, endsWith(path))
+            }
             @AssertCalled
             override fun onProgressChange(session: GeckoSession, progress: Int) {
                 assertThat("Progress must be strictly increasing", progress,
-                           greaterThan(lastProgress))
+                        greaterThan(lastProgress))
                 lastProgress = progress
                 counter++
+            }
+            @AssertCalled
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("PageStart is called", url, endsWith(path))
+            }
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("PageStop is called", success, equalTo(true))
             }
         })
 
         assertThat("Callback should be called at least twice", counter,
-                   greaterThanOrEqualTo(2))
+                greaterThanOrEqualTo(2))
         assertThat("Last progress value should be 100", lastProgress,
-                   equalTo(100))
+                equalTo(100))
+    }
+
+    @Test fun loadProgress() {
+        testProgress(HELLO_HTML_PATH)
+        // Test that loading the same path again still
+        // results in the right progress events
+        testProgress(HELLO_HTML_PATH)
+        // Test that calling a different path works too
+        testProgress(HELLO2_HTML_PATH)
     }
 
 
