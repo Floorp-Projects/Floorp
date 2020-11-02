@@ -146,7 +146,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
   /*
    * Maximum allowed byte length for any typed array.
    */
-  static constexpr size_t MAX_BYTE_LENGTH = INT32_MAX;
+  static size_t maxByteLength() {
+    return ArrayBufferObject::maxBufferByteLength();
+  }
 
   /*
    * Byte length above which created typed arrays will have singleton types.

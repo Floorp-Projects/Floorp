@@ -8766,8 +8766,8 @@ void CodeGenerator::visitTypedArrayIndexToInt32(LTypedArrayIndexToInt32* lir) {
   auto* ool = new (alloc()) OutOfLineTypedArrayIndexToInt32(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  static_assert(TypedArrayObject::MAX_BYTE_LENGTH <= INT32_MAX,
-                "Double exceeding Int32 range can't be in-bounds array access");
+  MOZ_ASSERT(TypedArrayObject::maxByteLength() <= INT32_MAX,
+             "Double exceeding Int32 range can't be in-bounds array access");
 
   masm.convertDoubleToInt32(index, output, ool->entry(), false);
   masm.bind(ool->rejoin());
