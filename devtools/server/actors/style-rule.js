@@ -17,7 +17,7 @@ const {
 const {
   styleRuleSpec,
   ELEMENT_STYLE,
-} = require("devtools/shared/specs/styles");
+} = require("devtools/shared/specs/style-rule");
 
 loader.lazyRequireGetter(
   this,

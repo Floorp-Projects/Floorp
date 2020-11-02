@@ -11,10 +11,8 @@ const { LongStringActor } = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
 const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
 
-const {
-  pageStyleSpec,
-  ELEMENT_STYLE,
-} = require("devtools/shared/specs/styles");
+const { pageStyleSpec } = require("devtools/shared/specs/page-style");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 
 const {
   TYPES,
