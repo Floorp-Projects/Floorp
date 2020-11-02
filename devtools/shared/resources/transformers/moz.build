@@ -6,7 +6,6 @@ DevToolsModules(
     "console-messages.js",
     "error-messages.js",
     "root-node.js",
-    "storage-indexed-db.js",
     "storage-local-storage.js",
     "storage-session-storage.js",
 )
