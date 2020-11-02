@@ -1107,25 +1107,14 @@ bool nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick() {
   if ([NSWindow respondsToSelector:@selector(_shouldZoomOnDoubleClick)]) {
     return [NSWindow _shouldZoomOnDoubleClick];
   }
-  if (nsCocoaFeatures::OnElCapitanOrLater()) {
-    return [ActionOnDoubleClickSystemPref() isEqualToString:@"Maximize"];
-  }
-  return false;
+  return [ActionOnDoubleClickSystemPref() isEqualToString:@"Maximize"];
 }
 
 bool nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick() {
   // Check the system preferences.
   // We could also check -[NSWindow _shouldMiniaturizeOnDoubleClick]. It's not clear to me which
   // approach would be preferable; neither is public API.
-  if (nsCocoaFeatures::OnElCapitanOrLater()) {
-    return [ActionOnDoubleClickSystemPref() isEqualToString:@"Minimize"];
-  }
-
-  // Pre-10.11:
-  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-  NSString* kAppleMiniaturizeOnDoubleClickKey = @"AppleMiniaturizeOnDoubleClick";
-  id value1 = [userDefaults objectForKey:kAppleMiniaturizeOnDoubleClickKey];
-  return [value1 isKindOfClass:[NSValue class]] && [value1 boolValue];
+  return [ActionOnDoubleClickSystemPref() isEqualToString:@"Minimize"];
 }
 
 // AVAuthorizationStatus is not needed unless we are running on 10.14.

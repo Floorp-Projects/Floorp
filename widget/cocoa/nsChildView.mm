@@ -2379,8 +2379,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
            selector:@selector(systemMetricsChanged)
                name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
              object:nil];
-  } else if (nsCocoaFeatures::OnYosemiteOrLater() &&
-             NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
+  } else if (NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(systemMetricsChanged)
@@ -2908,7 +2907,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   usingElCapitanOrLaterSDK = false;
 #endif
 
-  if (nsCocoaFeatures::OnElCapitanOrLater() && usingElCapitanOrLaterSDK) {
+  if (usingElCapitanOrLaterSDK) {
     if (aEvent.phase == NSEventPhaseBegan) {
       [self beginGestureWithEvent:aEvent];
       return true;
@@ -3375,7 +3374,7 @@ static int32_t RoundUp(double aDouble) {
 }
 
 static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
-  if (nsCocoaFeatures::OnSierraOrLater() && [aEvent hasPreciseScrollingDeltas]) {
+  if ([aEvent hasPreciseScrollingDeltas]) {
     // Pixel scroll events (events with hasPreciseScrollingDeltas == YES)
     // carry pixel deltas in the scrollingDeltaX/Y fields and line scroll
     // information in the deltaX/Y fields.

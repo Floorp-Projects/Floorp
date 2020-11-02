@@ -996,9 +996,6 @@ private:
 
 // CTFontCreateCopyWithAttributes or CTFontCreateCopyWithSymbolicTraits cannot be used on 10.10
 // and later, as they will return different underlying fonts depending on the size requested.
-#ifdef MOZ_SKIA
-extern "C" bool Gecko_OnSierraOrLater();
-#endif
 static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFloat textSize,
                                                          const CGAffineTransform* transform)
 {
@@ -1057,13 +1054,11 @@ static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGF
         //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
         //    ctfont_create_exact_copy in SkFontHost_mac.cpp
 
-        if (Gecko_OnSierraOrLater())
-        {
-          // Not UniqueCFRef<> because CGFontCopyVariations can return null!
-          CFDictionaryRef variations = CGFontCopyVariations(baseCGFont.get());
-          if (variations) {
+        // Not UniqueCFRef<> because CGFontCopyVariations can return null!
+        CFDictionaryRef variations = CGFontCopyVariations(baseCGFont.get());
+        if (variations) {
             SkUniqueCFRef<CFDictionaryRef>
-              varAttr(CFDictionaryCreate(nullptr,
+            varAttr(CFDictionaryCreate(nullptr,
                                          (const void**)&kCTFontVariationAttribute,
                                          (const void**)&variations,
                                          1,
@@ -1076,9 +1071,8 @@ static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGF
 
             return SkUniqueCFRef<CTFontRef>(
                                             CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, varDesc.get()));
-          }
-      }
-      return SkUniqueCFRef<CTFontRef>(
+        }
+        return SkUniqueCFRef<CTFontRef>(
                                       CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, transform, nullptr));
     } else {
         return SkUniqueCFRef<CTFontRef>(CTFontCreateCopyWithAttributes(baseFont, textSize, transform, nullptr));

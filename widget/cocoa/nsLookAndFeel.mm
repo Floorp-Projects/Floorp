@@ -515,7 +515,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
     case IntID::MacYosemiteTheme:
-      aResult = nsCocoaFeatures::OnYosemiteOrLater();
+      aResult = 1;
       break;
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
@@ -719,10 +719,8 @@ void nsLookAndFeel::EnsureInit() {
 
   mColorMenuHoverText = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
 
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    mColorButtonText = NS_RGB(0xFF, 0xFF, 0xFF);
-    mHasColorButtonText = true;
-  }
+  mColorButtonText = NS_RGB(0xFF, 0xFF, 0xFF);
+  mHasColorButtonText = true;
 
   mColorButtonHoverText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorText = GetColorFromNSColor([NSColor textColor]);
