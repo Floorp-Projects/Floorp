@@ -2315,7 +2315,8 @@ bool JSStructuredCloneReader::readDataView(uint32_t byteLength,
 
 bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
                                               MutableHandleValue vp) {
-  JSObject* obj = ArrayBufferObject::createZeroed(context(), nbytes);
+  JSObject* obj =
+      ArrayBufferObject::createZeroed(context(), BufferSize(nbytes));
   if (!obj) {
     return false;
   }
@@ -2370,8 +2371,8 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
     return false;
   }
 
-  RootedObject obj(context(),
-                   SharedArrayBufferObject::New(context(), rawbuf, byteLength));
+  RootedObject obj(context(), SharedArrayBufferObject::New(
+                                  context(), rawbuf, BufferSize(byteLength)));
   if (!obj) {
     rawbuf->dropReference();
     return false;
@@ -2459,7 +2460,8 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
     return false;
   }
 
-  JSObject* obj = ArrayBufferObject::createZeroed(context(), nbytes.value());
+  JSObject* obj =
+      ArrayBufferObject::createZeroed(context(), BufferSize(nbytes.value()));
   if (!obj) {
     return false;
   }

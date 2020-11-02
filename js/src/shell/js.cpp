@@ -2063,7 +2063,8 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
 
   BufferContents contents = BufferContents::createMalloced(buffer);
   Rooted<ArrayBufferObject*> arrayBuffer(
-      cx, ArrayBufferObject::createForContents(cx, length, contents));
+      cx,
+      ArrayBufferObject::createForContents(cx, BufferSize(length), contents));
   if (!arrayBuffer) {
     return false;
   }
@@ -7218,7 +7219,7 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         // returning.
 
         Rooted<ArrayBufferObjectMaybeShared*> maybesab(
-            cx, SharedArrayBufferObject::New(cx, buf, length));
+            cx, SharedArrayBufferObject::New(cx, buf, BufferSize(length)));
         if (!maybesab) {
           buf->dropReference();
           return false;
@@ -7444,7 +7445,7 @@ class StreamCacheEntryObject : public NativeObject {
     auto& bytes =
         args.thisv().toObject().as<StreamCacheEntryObject>().cache().bytes();
     RootedArrayBufferObject buffer(
-        cx, ArrayBufferObject::createZeroed(cx, bytes.length()));
+        cx, ArrayBufferObject::createZeroed(cx, BufferSize(bytes.length())));
     if (!buffer) {
       return false;
     }
