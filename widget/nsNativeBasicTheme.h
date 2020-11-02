@@ -301,17 +301,18 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                           uint32_t aDpiRatio);
 
   virtual void PaintScrollbarThumb(DrawTarget* aDrawTarget, const Rect& aRect,
-                                   bool aHorizontal,
+                                   bool aHorizontal, nsIFrame* aFrame,
                                    const ComputedStyle& aStyle,
                                    const EventStates& aElementState,
                                    const EventStates& aDocumentState,
                                    uint32_t aDpiRatio);
   virtual void PaintScrollbar(DrawTarget* aDrawTarget, const Rect& aRect,
-                              bool aHorizontal, const ComputedStyle& aStyle,
+                              bool aHorizontal, nsIFrame* aFrame,
+                              const ComputedStyle& aStyle,
                               const EventStates& aDocumentState,
                               uint32_t aDpiRatio, bool aIsRoot);
   virtual void PaintScrollCorner(DrawTarget* aDrawTarget, const Rect& aRect,
-                                 const ComputedStyle& aStyle,
+                                 nsIFrame* aFrame, const ComputedStyle& aStyle,
                                  const EventStates& aDocumentState,
                                  uint32_t aDpiRatio, bool aIsRoot);
   virtual void PaintScrollbarbutton(

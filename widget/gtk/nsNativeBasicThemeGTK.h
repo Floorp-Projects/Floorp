@@ -21,16 +21,18 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
   nsITheme::Transparency GetWidgetTransparency(
       nsIFrame* aFrame, StyleAppearance aAppearance) override;
   void PaintScrollbarThumb(DrawTarget* aDrawTarget, const Rect& aRect,
-                           bool aHorizontal, const ComputedStyle& aStyle,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState,
                            uint32_t aDpiRatio) override;
   void PaintScrollbar(DrawTarget* aDrawTarget, const Rect& aRect,
-                      bool aHorizontal, const ComputedStyle& aStyle,
+                      bool aHorizontal, nsIFrame* aFrame,
+                      const ComputedStyle& aStyle,
                       const EventStates& aDocumentState, uint32_t aDpiRatio,
                       bool aIsRoot) override;
   void PaintScrollCorner(DrawTarget* aDrawTarget, const Rect& aRect,
-                         const ComputedStyle& aStyle,
+                         nsIFrame* aFrame, const ComputedStyle& aStyle,
                          const EventStates& aDocumentState, uint32_t aDpiRatio,
                          bool aIsRoot) override;
 
