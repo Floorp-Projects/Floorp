@@ -218,9 +218,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // The rest of these suppressions are miscellaneous issues in gecko
          // that should be investigated and ideally fixed.
 
-         // Bug 1506812
-         "race:BeginBackgroundRead\n"
-
          // Bug 1619162
          "race:currentNameHasEscapes\n"
 

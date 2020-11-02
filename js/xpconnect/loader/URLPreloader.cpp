@@ -324,9 +324,12 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
 
 void URLPreloader::BackgroundReadFiles() {
   auto cleanup = MakeScopeExit([&]() {
+    auto lock = mReaderThread.Lock();
+    auto& readerThread = lock.ref();
     NS_DispatchToMainThread(NewRunnableMethod(
-        "nsIThread::AsyncShutdown", mReaderThread, &nsIThread::AsyncShutdown));
-    mReaderThread = nullptr;
+        "nsIThread::AsyncShutdown", readerThread, &nsIThread::AsyncShutdown));
+
+    readerThread = nullptr;
   });
 
   Vector<nsZipCursor> cursors;
@@ -426,13 +429,24 @@ void URLPreloader::BackgroundReadFiles() {
 }
 
 void URLPreloader::BeginBackgroundRead() {
-  if (!mReaderThread && !mReaderInitialized && sInitialized) {
+  auto lock = mReaderThread.Lock();
+  auto& readerThread = lock.ref();
+  if (!readerThread && !mReaderInitialized && sInitialized) {
+    nsresult rv;
+    rv = NS_NewNamedThread("BGReadURLs", getter_AddRefs(readerThread));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
     nsCOMPtr<nsIRunnable> runnable =
         NewRunnableMethod("URLPreloader::BackgroundReadFiles", this,
                           &URLPreloader::BackgroundReadFiles);
-
-    Unused << NS_NewNamedThread("BGReadURLs", getter_AddRefs(mReaderThread),
-                                runnable);
+    rv = readerThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // If we can't launch the task, just destroy the thread
+      readerThread = nullptr;
+      return;
+    }
   }
 }
 
