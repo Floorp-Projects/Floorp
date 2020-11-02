@@ -186,10 +186,6 @@ class MOZ_STACK_CLASS ProfilerStringView {
     return Span<const char>(Data(), Length());
   }
 
-  [[nodiscard]] std::basic_string<CHAR> String() const {
-    return std::basic_string<CHAR>(mStringView);
-  }
-
  private:
   enum class Ownership { Literal, Reference, OwnedThroughStringView };
 
