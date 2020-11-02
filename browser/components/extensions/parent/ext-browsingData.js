@@ -83,14 +83,17 @@ const clearCookies = async function(options) {
   // This code has been borrowed from Sanitizer.jsm.
   let yieldCounter = 0;
 
-  if (options.since || options.hostnames) {
+  if (options.since || options.hostnames || options.cookieStoreId) {
     // Iterate through the cookies and delete any created after our cutoff.
     for (const cookie of cookieMgr.cookies) {
       if (
         (!options.since ||
           cookie.creationTime >= PlacesUtils.toPRTime(options.since)) &&
         (!options.hostnames ||
-          options.hostnames.includes(cookie.host.replace(/^\./, "")))
+          options.hostnames.includes(cookie.host.replace(/^\./, ""))) &&
+        (!options.cookieStoreId ||
+          getCookieStoreIdForOriginAttributes(cookie.originAttributes) ===
+            options.cookieStoreId)
       ) {
         // This cookie was created after our cutoff, clear it.
         cookieMgr.remove(
@@ -291,6 +294,28 @@ const doRemoval = (options, dataToRemove, extension) => {
       message:
         "Firefox does not support protectedWeb or extension as originTypes.",
     });
+  }
+
+  if (options.cookieStoreId) {
+    const SUPPORTED_TYPES = ["cookies"];
+
+    for (let dataType in dataToRemove) {
+      if (dataToRemove[dataType] && !SUPPORTED_TYPES.includes(dataType)) {
+        return Promise.reject({
+          message: `Firefox does not support clearing ${dataType} with 'cookieStoreId'.`,
+        });
+      }
+    }
+
+    if (
+      !isPrivateCookieStoreId(options.cookieStoreId) &&
+      !isDefaultCookieStoreId(options.cookieStoreId) &&
+      !getContainerForCookieStoreId(options.cookieStoreId)
+    ) {
+      return Promise.reject({
+        message: `Invalid cookieStoreId: ${options.cookieStoreId}`,
+      });
+    }
   }
 
   let removalPromises = [];
