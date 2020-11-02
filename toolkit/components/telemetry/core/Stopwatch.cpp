@@ -219,7 +219,10 @@ Timers::Timers() : mTimers(dom::RootingCx()) {
   BackgroundHangMonitor::RegisterAnnotator(*this);
 }
 
-Timers::~Timers() { BackgroundHangMonitor::UnregisterAnnotator(*this); }
+Timers::~Timers() {
+  mBHRAnnotationTimers.clear();
+  BackgroundHangMonitor::UnregisterAnnotator(*this);
+}
 
 JSObject* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
                       bool aCreate) {
