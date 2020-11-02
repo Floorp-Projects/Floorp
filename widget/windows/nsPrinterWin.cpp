@@ -140,8 +140,9 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
 
 template <class T>
 static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
-                                            WORD aCapabilityID,
-                                            size_t aCount = 0) {
+                                            WORD aCapabilityID, int& aCount) {
+  MOZ_ASSERT(aCount >= 0, "Possibly passed aCount from previous error case.");
+
   nsTArray<T> caps;
 
   // We only want to access printer drivers in the parent process.
@@ -154,32 +155,34 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
   // retrieve depend on each other we allow a count to be passed in to save the
   // first call. As we allocate double the count anyway this should allay any
   // safety worries.
-  int count;
-  if (aCount) {
-    count = aCount;
-  } else {
+  if (!aCount) {
     // Passing nullptr as the port here seems to work. Given that we would have
     // to OpenPrinter with just the name anyway to get the port that makes
     // sense. Also, the printer set-up seems to stop you from having two
     // printers with the same name. Note: this (and the call below) are blocking
     // calls, which could be slow.
-    count = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID, nullptr,
-                                  nullptr);
-    if (count <= 0) {
+    aCount = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
+                                   nullptr, nullptr);
+    if (aCount <= 0) {
       return caps;
     }
   }
 
   // As DeviceCapabilitiesW doesn't take a size, there is a greater risk of the
   // buffer being overflowed, so we over-allocate for safety.
-  caps.SetLength(count * 2);
-  count =
+  caps.SetLength(aCount * 2);
+  int count =
       ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
                             reinterpret_cast<LPWSTR>(caps.Elements()), nullptr);
   if (count <= 0) {
     caps.Clear();
     return caps;
   }
+
+  // We know from bug 1673708 that sometimes the final array returned is smaller
+  // than the required array count. Assert here to see if this is reproduced on
+  // test servers.
+  MOZ_ASSERT(count == aCount, "Different array count returned than expected.");
 
   // Note that TruncateLength will crash if count > caps.Length().
   caps.TruncateLength(count);
@@ -248,20 +251,27 @@ bool nsPrinterWin::SupportsCollation() const {
 
 nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
   // Paper IDs are returned as WORDs.
-  auto paperIds = GetDeviceCapabilityArray<WORD>(mName.get(), DC_PAPERS);
+  int requiredArrayCount = 0;
+  auto paperIds = GetDeviceCapabilityArray<WORD>(mName.get(), DC_PAPERS,
+                                                 requiredArrayCount);
+  if (!paperIds.Length()) {
+    return {};
+  }
 
   // Paper names are returned in 64 long character buffers.
   auto paperNames = GetDeviceCapabilityArray<Array<wchar_t, 64>>(
-      mName.get(), DC_PAPERNAMES, paperIds.Length());
+      mName.get(), DC_PAPERNAMES, requiredArrayCount);
+  // Check that we have the same number of names as IDs.
+  if (paperNames.Length() != paperIds.Length()) {
+    return {};
+  }
 
   // Paper sizes are returned as POINT structs with a tenth of a millimeter as
   // the unit.
   auto paperSizes = GetDeviceCapabilityArray<POINT>(mName.get(), DC_PAPERSIZE,
-                                                    paperIds.Length());
-
-  // Check that we have papers and that the array lengths match.
-  if (!paperNames.Length() || paperNames.Length() != paperIds.Length() ||
-      paperNames.Length() != paperSizes.Length()) {
+                                                    requiredArrayCount);
+  // Check that we have the same number of sizes as IDs.
+  if (paperSizes.Length() != paperIds.Length()) {
     return {};
   }
 
