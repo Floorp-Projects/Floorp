@@ -3640,9 +3640,10 @@ apz:
   scrollwheel_overshoot:
     bug_numbers:
       - 1670003
+      - 1672576
     description: >
       Count of overshoot events, where the user reverses scrollwheel direction soon after the last scrollwheel input.
-    expires: "85"
+    expires: "89"
     kind: uint
     notification_emails:
       - botond@mozilla.com
