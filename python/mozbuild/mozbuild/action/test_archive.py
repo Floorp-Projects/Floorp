@@ -773,9 +773,8 @@ if buildconfig.substs.get("commtopsrcdir"):
     commtopsrcdir = buildconfig.substs.get("commtopsrcdir")
     mozharness_comm = {
         "source": commtopsrcdir,
-        "base": "mozharness",
-        "pattern": "**",
-        "dest": "configs",
+        "base": "testing",
+        "pattern": "mozharness/**",
     }
     ARCHIVE_FILES["mozharness"].append(mozharness_comm)
     marionette_comm = {
