@@ -135,7 +135,7 @@ async function dnsLookup(hostname, resolveCanonicalName = false) {
       },
     };
     let dnsFlags =
-      Ci.nsIDNSService.RESOLVE_DISABLE_TRR |
+      Ci.nsIDNSService.RESOLVE_TRR_DISABLED_MODE |
       Ci.nsIDNSService.RESOLVE_DISABLE_IPV6 |
       Ci.nsIDNSService.RESOLVE_BYPASS_CACHE |
       Ci.nsIDNSService.RESOLVE_CANONICAL_NAME;
