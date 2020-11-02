@@ -366,8 +366,8 @@ ArrayBufferObjectMaybeShared& js::AsArrayBufferMaybeShared(JSObject* obj) {
 MOZ_ALWAYS_INLINE bool ArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsArrayBuffer(args.thisv()));
-  args.rval().setInt32(
-      args.thisv().toObject().as<ArrayBufferObject>().byteLength());
+  auto* buffer = &args.thisv().toObject().as<ArrayBufferObject>();
+  args.rval().setInt32(buffer->byteLength().deprecatedGetUint32());
   return true;
 }
 
@@ -428,15 +428,15 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
 using ArrayBufferContents = UniquePtr<uint8_t[], JS::FreePolicy>;
 
 static ArrayBufferContents AllocateUninitializedArrayBufferContents(
-    JSContext* cx, uint32_t nbytes) {
+    JSContext* cx, BufferSize nbytes) {
   // First attempt a normal allocation.
-  uint8_t* p =
-      cx->maybe_pod_arena_malloc<uint8_t>(js::ArrayBufferContentsArena, nbytes);
+  uint8_t* p = cx->maybe_pod_arena_malloc<uint8_t>(js::ArrayBufferContentsArena,
+                                                   nbytes.get());
   if (MOZ_UNLIKELY(!p)) {
     // Otherwise attempt a large allocation, calling the
     // large-allocation-failure callback if necessary.
     p = static_cast<uint8_t*>(cx->runtime()->onOutOfMemoryCanGC(
-        js::AllocFunction::Malloc, js::ArrayBufferContentsArena, nbytes));
+        js::AllocFunction::Malloc, js::ArrayBufferContentsArena, nbytes.get()));
     if (!p) {
       ReportOutOfMemory(cx);
     }
@@ -468,7 +468,7 @@ static ArrayBufferContents NewCopiedBufferContents(
   ArrayBufferContents dataCopy =
       AllocateUninitializedArrayBufferContents(cx, buffer->byteLength());
   if (dataCopy) {
-    if (auto count = buffer->byteLength()) {
+    if (auto count = buffer->byteLength().get()) {
       memcpy(dataCopy.get(), buffer->dataPointer(), count);
     }
   }
@@ -842,9 +842,9 @@ bool js::CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
 }
 
 bool ArrayBufferObject::prepareForAsmJS() {
-  MOZ_ASSERT(byteLength() % wasm::PageSize == 0,
+  MOZ_ASSERT(byteLength().get() % wasm::PageSize == 0,
              "prior size checking should have guaranteed page-size multiple");
-  MOZ_ASSERT(byteLength() > 0,
+  MOZ_ASSERT(byteLength().get() > 0,
              "prior size checking should have excluded empty buffers");
 
   switch (bufferKind()) {
@@ -917,7 +917,7 @@ void ArrayBufferObject::releaseData(JSFreeOp* fop) {
       // Inline data doesn't require releasing.
       break;
     case MALLOCED:
-      fop->free_(this, dataPointer(), byteLength(),
+      fop->free_(this, dataPointer(), byteLength().get(),
                  MemoryUse::ArrayBufferContents);
       break;
     case NO_DATA:
@@ -928,13 +928,14 @@ void ArrayBufferObject::releaseData(JSFreeOp* fop) {
       // User-owned data is released by, well, the user.
       break;
     case MAPPED:
-      gc::DeallocateMappedContent(dataPointer(), byteLength());
+      gc::DeallocateMappedContent(dataPointer(), byteLength().get());
       fop->removeCellMemory(this, associatedBytes(),
                             MemoryUse::ArrayBufferContents);
       break;
     case WASM:
       WasmArrayRawBuffer::Release(dataPointer());
-      fop->removeCellMemory(this, byteLength(), MemoryUse::ArrayBufferContents);
+      fop->removeCellMemory(this, byteLength().get(),
+                            MemoryUse::ArrayBufferContents);
       break;
     case EXTERNAL:
       if (freeInfo()->freeFunc) {
@@ -963,20 +964,18 @@ void ArrayBufferObject::setDataPointer(BufferContents contents) {
   }
 }
 
-uint32_t ArrayBufferObject::byteLength() const {
-  size_t len = size_t(getFixedSlot(BYTE_LENGTH_SLOT).toPrivate());
-  MOZ_ASSERT(len <= INT32_MAX);
-  return len;
+BufferSize ArrayBufferObject::byteLength() const {
+  return BufferSize(size_t(getFixedSlot(BYTE_LENGTH_SLOT).toPrivate()));
 }
 
 inline size_t ArrayBufferObject::associatedBytes() const {
   if (bufferKind() == MALLOCED) {
-    return byteLength();
-  } else if (bufferKind() == MAPPED) {
-    return RoundUp(byteLength(), js::gc::SystemPageSize());
-  } else {
-    MOZ_CRASH("Unexpected buffer kind");
+    return byteLength().get();
   }
+  if (bufferKind() == MAPPED) {
+    return RoundUp(byteLength().get(), js::gc::SystemPageSize());
+  }
+  MOZ_CRASH("Unexpected buffer kind");
 }
 
 void ArrayBufferObject::setByteLength(uint32_t length) {
@@ -988,7 +987,7 @@ size_t ArrayBufferObject::wasmMappedSize() const {
   if (isWasm()) {
     return contents().wasmBuffer()->mappedSize();
   }
-  return byteLength();
+  return byteLength().deprecatedGetUint32();
 }
 
 size_t js::WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf) {
@@ -1001,9 +1000,8 @@ size_t js::WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf) {
 Maybe<uint64_t> ArrayBufferObject::wasmMaxSize() const {
   if (isWasm()) {
     return contents().wasmBuffer()->maxSize();
-  } else {
-    return Some<uint64_t>(byteLength());
   }
+  return Some<uint64_t>(byteLength().deprecatedGetUint32());
 }
 
 Maybe<uint64_t> js::WasmArrayBufferMaxSize(
@@ -1051,8 +1049,8 @@ bool ArrayBufferObject::wasmGrowToSizeInPlace(
 
   MOZ_ASSERT(newBuf->isNoData());
 
-  if (!oldBuf->contents().wasmBuffer()->growToSizeInPlace(oldBuf->byteLength(),
-                                                          newSize)) {
+  if (!oldBuf->contents().wasmBuffer()->growToSizeInPlace(
+          oldBuf->byteLength().deprecatedGetUint32(), newSize)) {
     return false;
   }
 
@@ -1063,7 +1061,7 @@ bool ArrayBufferObject::wasmGrowToSizeInPlace(
   oldBuf->setDataPointer(BufferContents::createNoData());
 
   // Detach |oldBuf| now that doing so won't release |oldContents|.
-  RemoveCellMemory(oldBuf, oldBuf->byteLength(),
+  RemoveCellMemory(oldBuf, oldBuf->byteLength().get(),
                    MemoryUse::ArrayBufferContents);
   ArrayBufferObject::detach(cx, oldBuf);
 
@@ -1109,7 +1107,8 @@ bool ArrayBufferObject::wasmMovingGrowToSize(
       BufferContents::createWasm(newRawBuf->dataPointer());
   newBuf->initialize(newSize, contents);
 
-  memcpy(newBuf->dataPointer(), oldBuf->dataPointer(), oldBuf->byteLength());
+  memcpy(newBuf->dataPointer(), oldBuf->dataPointer(),
+         oldBuf->byteLength().get());
   ArrayBufferObject::detach(cx, oldBuf);
   return true;
 }
@@ -1217,9 +1216,10 @@ ArrayBufferObject::createBufferAndData(
 
     nslots += newSlots;
   } else {
-    data = (FillType == FillContents::Uninitialized
-                ? AllocateUninitializedArrayBufferContents
-                : AllocateArrayBufferContents)(cx, nbytes);
+    data =
+        FillType == FillContents::Uninitialized
+            ? AllocateUninitializedArrayBufferContents(cx, BufferSize(nbytes))
+            : AllocateArrayBufferContents(cx, nbytes);
     if (!data) {
       return {nullptr, nullptr};
     }
@@ -1261,7 +1261,7 @@ ArrayBufferObject::createBufferAndData(
     return nullptr;
   }
 
-  uint32_t nbytes = unwrappedArrayBuffer->byteLength();
+  uint32_t nbytes = unwrappedArrayBuffer->byteLength().deprecatedGetUint32();
 
   AutoSetNewObjectMetadata metadata(cx);
   auto [buffer, toFill] = createBufferAndData<FillContents::Uninitialized>(
@@ -1341,7 +1341,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
       uint8_t* stolenData = buffer->dataPointer();
       MOZ_ASSERT(stolenData);
 
-      RemoveCellMemory(buffer, buffer->byteLength(),
+      RemoveCellMemory(buffer, buffer->byteLength().get(),
                        MemoryUse::ArrayBufferContents);
 
       // Overwrite the old data pointer *without* releasing the contents
@@ -1467,12 +1467,13 @@ void ArrayBufferObject::addSizeOfExcludingThis(
       // User-owned data should be accounted for by the user.
       break;
     case MAPPED:
-      info->objectsNonHeapElementsNormal += buffer.byteLength();
+      info->objectsNonHeapElementsNormal += buffer.byteLength().get();
       break;
     case WASM:
-      info->objectsNonHeapElementsWasm += buffer.byteLength();
-      MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength());
-      info->wasmGuardPages += buffer.wasmMappedSize() - buffer.byteLength();
+      info->objectsNonHeapElementsWasm += buffer.byteLength().get();
+      MOZ_ASSERT(buffer.wasmMappedSize() >= buffer.byteLength().get());
+      info->wasmGuardPages +=
+          buffer.wasmMappedSize() - buffer.byteLength().get();
       break;
     case EXTERNAL:
       MOZ_CRASH("external buffers not currently supported");
@@ -1492,10 +1493,10 @@ void ArrayBufferObject::copyData(Handle<ArrayBufferObject*> toBuffer,
                                  uint32_t toIndex,
                                  Handle<ArrayBufferObject*> fromBuffer,
                                  uint32_t fromIndex, uint32_t count) {
-  MOZ_ASSERT(toBuffer->byteLength() >= count);
-  MOZ_ASSERT(toBuffer->byteLength() >= toIndex + count);
-  MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
-  MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
+  MOZ_ASSERT(toBuffer->byteLength().get() >= count);
+  MOZ_ASSERT(toBuffer->byteLength().get() >= toIndex + count);
+  MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex);
+  MOZ_ASSERT(fromBuffer->byteLength().get() >= fromIndex + count);
 
   memcpy(toBuffer->dataPointer() + toIndex,
          fromBuffer->dataPointer() + fromIndex, count);
@@ -1672,7 +1673,7 @@ bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const {
 
 JS_FRIEND_API uint32_t JS::GetArrayBufferByteLength(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapAs<ArrayBufferObject>();
-  return aobj ? aobj->byteLength() : 0;
+  return aobj ? aobj->byteLength().deprecatedGetUint32() : 0;
 }
 
 JS_FRIEND_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
@@ -1888,7 +1889,7 @@ JS_FRIEND_API JSObject* JS::GetObjectAsArrayBuffer(JSObject* obj,
     return nullptr;
   }
 
-  *length = aobj->byteLength();
+  *length = aobj->byteLength().deprecatedGetUint32();
   *data = aobj->dataPointer();
 
   return aobj;
@@ -1899,7 +1900,7 @@ JS_FRIEND_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
                                                    bool* isSharedMemory,
                                                    uint8_t** data) {
   MOZ_ASSERT(IsArrayBuffer(obj));
-  *length = AsArrayBuffer(obj).byteLength();
+  *length = AsArrayBuffer(obj).byteLength().deprecatedGetUint32();
   *data = AsArrayBuffer(obj).dataPointer();
   *isSharedMemory = false;
 }

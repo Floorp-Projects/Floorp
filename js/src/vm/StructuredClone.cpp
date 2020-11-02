@@ -1302,8 +1302,9 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
                                     obj->maybeUnwrapAs<ArrayBufferObject>());
   JSAutoRealm ar(context(), buffer);
 
-  return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer->byteLength()) &&
-         out.writeBytes(buffer->dataPointer(), buffer->byteLength());
+  size_t byteLength = buffer->byteLength().deprecatedGetUint32();
+  return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, byteLength) &&
+         out.writeBytes(buffer->dataPointer(), byteLength);
 }
 
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
@@ -1342,7 +1343,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   // rawbuf - that length can be different, and it can change at any time.
 
   intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
-  uint32_t byteLength = sharedArrayBuffer->byteLength();
+  uint32_t byteLength = sharedArrayBuffer->byteLength().deprecatedGetUint32();
   if (!(out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
                       static_cast<uint32_t>(sizeof(p))) &&
         out.writeBytes(&byteLength, sizeof(byteLength)) &&
@@ -1991,7 +1992,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        size_t nbytes = arrayBuffer->byteLength();
+        size_t nbytes = arrayBuffer->byteLength().deprecatedGetUint32();
 
         using BufferContents = ArrayBufferObject::BufferContents;
 
@@ -2318,7 +2319,7 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength() == nbytes);
+  MOZ_ASSERT(buffer.byteLength().deprecatedGetUint32() == nbytes);
   return in.readArray(buffer.dataPointer(), nbytes);
 }
 
@@ -2462,7 +2463,7 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength() == nbytes);
+  MOZ_ASSERT(buffer.byteLength().deprecatedGetUint32() == nbytes);
 
   switch (arrayType) {
     case Scalar::Int8:
