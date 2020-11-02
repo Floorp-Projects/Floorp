@@ -91,14 +91,18 @@ class _ToolbarPanelHub {
   }
 
   toggleWhatsNewPref(event) {
-    Preferences.set(WHATSNEW_ENABLED_PREF, event.target.checked);
+    // Checkbox onclick handler gets called before the checkbox state gets toggled,
+    // so we have to call it with the opposite value.
+    let newValue = !event.target.checked;
+    Preferences.set(WHATSNEW_ENABLED_PREF, newValue);
+
     this.sendUserEventTelemetry(
       event.target.ownerGlobal,
       "WNP_PREF_TOGGLE",
       // Message id is not applicable in this case, the notification state
       // is not related to a particular message
       { id: "n/a" },
-      { value: { prefValue: event.target.checked } }
+      { value: { prefValue: newValue } }
     );
   }
 

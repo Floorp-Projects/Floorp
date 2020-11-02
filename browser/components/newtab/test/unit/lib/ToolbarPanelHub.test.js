@@ -197,35 +197,39 @@ describe("ToolbarPanelHub", () => {
     });
   });
   describe("#toggleWhatsNewPref", () => {
-    it("should call Preferences.set() with the checkbox value", () => {
+    it("should call Preferences.set() with the opposite value", () => {
       let checkbox = {};
       let event = { target: checkbox };
       // checkbox starts false
       checkbox.checked = false;
 
-      // toggling the checkbox to set the value to true
+      // toggling the checkbox to set the value to true;
+      // Preferences.set() gets called before the checkbox changes,
+      // so we have to call it with the opposite value.
       instance.toggleWhatsNewPref(event);
 
       assert.calledOnce(preferencesStub.set);
       assert.calledWith(
         preferencesStub.set,
         "browser.messaging-system.whatsNewPanel.enabled",
-        checkbox.checked
+        !checkbox.checked
       );
     });
-    it("should report telemetry with the checkbox value", () => {
+    it("should report telemetry with the opposite value", () => {
       let sendUserEventTelemetryStub = sandbox.stub(
         instance,
         "sendUserEventTelemetry"
       );
-      let event = { target: { checked: true, ownerGlobal: fakeWindow } };
+      let event = {
+        target: { checked: true, ownerGlobal: fakeWindow },
+      };
 
       instance.toggleWhatsNewPref(event);
 
       assert.calledOnce(sendUserEventTelemetryStub);
       const { args } = sendUserEventTelemetryStub.firstCall;
       assert.equal(args[1], "WNP_PREF_TOGGLE");
-      assert.propertyVal(args[3].value, "prefValue", true);
+      assert.propertyVal(args[3].value, "prefValue", false);
     });
   });
   describe("#enableAppmenuButton", () => {
