@@ -69,6 +69,13 @@ class MediaMiddleware(
                     listOf(action.tabId)
                 ))
 
+            is TabListAction.RemoveTabsAction ->
+                store.dispatch(
+                    MediaAction.RemoveTabMediaAction(
+                        action.tabIds
+                    )
+                )
+
             is CustomTabListAction.RemoveAllCustomTabsAction ->
                 store.dispatch(MediaAction.RemoveTabMediaAction(
                     store.state.customTabs.map { it.id }

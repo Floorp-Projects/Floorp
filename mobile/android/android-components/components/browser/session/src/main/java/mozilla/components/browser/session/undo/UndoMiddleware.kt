@@ -61,6 +61,11 @@ class UndoMiddleware(
             is TabListAction.RemoveTabAction -> state.findTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it), state.selectedTabId)
             }
+            is TabListAction.RemoveTabsAction -> {
+                action.tabIds.mapNotNull { state.findTab(it) }.let {
+                    onTabsRemoved(context, it, state.selectedTabId)
+                }
+            }
 
             // Restore
             is UndoAction.RestoreRecoverableTabs -> restore(context.state)

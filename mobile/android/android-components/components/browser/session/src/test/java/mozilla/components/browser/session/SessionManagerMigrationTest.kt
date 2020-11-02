@@ -943,4 +943,136 @@ class SessionManagerMigrationTest {
         assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
+
+    @Test
+    fun `State in sync after removingListOfSessions`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session("https://www.mozilla.org", id = "1"))
+        manager.add(Session("https://getpocket.com", private = true, id = "2"))
+        manager.add(Session("https://www.theverge.com", private = true, id = "3"))
+        manager.add(Session("https://www.reddit.com/r/firefox/", id = "4"))
+        manager.add(Session("https://github.com", id = "5"))
+        manager.add(Session("https://twitch.tv", private = true, id = "6"))
+
+        assertEquals(6, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(3, manager.sessions.filter { it.private }.size)
+
+        assertEquals(6, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(3, store.state.privateTabs.size)
+
+        manager.removeListOfSessions(listOf("1", "3", "5"))
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(1, manager.sessions.filter { !it.private }.size)
+        assertEquals(2, manager.sessions.filter { it.private }.size)
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals(1, store.state.normalTabs.size)
+        assertEquals(2, store.state.privateTabs.size)
+
+        manager.sessions.filter { !it.private }.let { tabs ->
+            assertEquals("https://www.reddit.com/r/firefox/", tabs[0].url)
+        }
+
+        manager.sessions.filter { it.private }.let { tabs ->
+            assertEquals("https://getpocket.com", tabs[0].url)
+            assertEquals("https://twitch.tv", tabs[1].url)
+        }
+
+        assertEquals("https://www.reddit.com/r/firefox/", store.state.normalTabs[0].content.url)
+        assertEquals("https://getpocket.com", store.state.privateTabs[0].content.url)
+        assertEquals("https://twitch.tv", store.state.privateTabs[1].content.url)
+
+        assertEquals("https://www.reddit.com/r/firefox/", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.reddit.com/r/firefox/", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `State in sync after removingListOfSessions and all parent tabs`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session("https://www.mozilla.org", id = "1"))
+        manager.add(Session("https://www.reddit.com/r/firefox/", id = "2").apply { parentId = "1" })
+        manager.add(Session("https://github.com", id = "3").apply { parentId = "2" })
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(0, manager.sessions.filter { it.private }.size)
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(0, store.state.privateTabs.size)
+
+        manager.removeListOfSessions(listOf("1", "2"))
+
+        assertEquals(1, manager.sessions.size)
+        assertEquals(1, manager.sessions.filter { !it.private }.size)
+        assertEquals(0, manager.sessions.filter { it.private }.size)
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(1, store.state.normalTabs.size)
+        assertEquals(0, store.state.privateTabs.size)
+
+        manager.sessions.filter { !it.private }.let { tabs ->
+            assertEquals("https://github.com", tabs[0].url)
+        }
+
+        assertEquals("https://github.com", store.state.normalTabs[0].content.url)
+
+        assertEquals("https://github.com", manager.selectedSessionOrThrow.url)
+        assertEquals("https://github.com", store.state.selectedTab!!.content.url)
+
+        assertNull(manager.selectedSessionOrThrow.parentId)
+        assertNull(store.state.selectedTab!!.parentId)
+    }
+
+    @Test
+    fun `State in sync after removingListOfSessions and middle parent tab`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session("https://www.mozilla.org", id = "1"))
+        manager.add(Session("https://www.reddit.com/r/firefox/", id = "2").apply { parentId = "1" })
+        manager.add(Session("https://github.com", id = "3").apply { parentId = "2" })
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(0, manager.sessions.filter { it.private }.size)
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(0, store.state.privateTabs.size)
+
+        manager.removeListOfSessions(listOf("2"))
+
+        assertEquals(2, manager.sessions.size)
+        assertEquals(2, manager.sessions.filter { !it.private }.size)
+        assertEquals(0, manager.sessions.filter { it.private }.size)
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(2, store.state.normalTabs.size)
+        assertEquals(0, store.state.privateTabs.size)
+
+        manager.sessions.filter { !it.private }.let { tabs ->
+            assertEquals("https://www.mozilla.org", tabs[0].url)
+            assertEquals("https://github.com", tabs[1].url)
+        }
+
+        assertEquals("https://www.mozilla.org", store.state.normalTabs[0].content.url)
+        assertEquals("https://github.com", store.state.normalTabs[1].content.url)
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
+
+        assertNull(manager.selectedSessionOrThrow.parentId)
+        assertNull(store.state.selectedTab!!.parentId)
+
+        assertEquals("1", store.state.normalTabs[1].parentId)
+        assertEquals("1", manager.sessions.filter { !it.private }[1].parentId)
+    }
 }

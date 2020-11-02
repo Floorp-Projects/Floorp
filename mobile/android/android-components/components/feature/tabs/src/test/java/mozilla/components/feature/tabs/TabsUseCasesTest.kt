@@ -61,6 +61,25 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `RemoveTabsUseCase - list of sessions can be removed`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val useCases = TabsUseCases(BrowserStore(), sessionManager)
+
+        val session = Session(id = "test", initialUrl = "http://mozilla.org")
+        val session2 = Session(id = "test2", initialUrl = "http://pocket.com")
+        val session3 = Session(id = "test3", initialUrl = "http://firefox.com")
+
+        sessionManager.add(listOf(session, session2, session3))
+        assertEquals(3, sessionManager.size)
+
+        useCases.removeTabs.invoke(listOf(session.id, session2.id))
+
+        verify(sessionManager).removeListOfSessions(listOf(session.id, session2.id))
+
+        assertEquals(1, sessionManager.size)
+    }
+
+    @Test
     fun `AddNewTabUseCase - session will be added to session manager`() {
         val sessionManager = spy(SessionManager(mock()))
         val store: BrowserStore = mock()

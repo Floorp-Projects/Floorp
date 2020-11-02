@@ -84,6 +84,52 @@ class UndoMiddlewareTest {
     }
 
     @Test
+    fun `Undo scenario - Removing list of tabs`() {
+        val lookup = SessionManagerLookup()
+        val store = BrowserStore(middleware = listOf(
+            UndoMiddleware(lookup, clearAfterMillis = 60000)
+        ))
+        val manager = SessionManager(engine = mock(), store = store).apply {
+            lookup.sessionManager = this
+        }
+
+        val mozilla = Session("https://www.mozilla.org")
+        val pocket = Session("https://getpocket.com")
+        val firefox = Session("https://firefox.com")
+
+        manager.add(mozilla)
+        manager.add(pocket)
+        manager.add(firefox)
+
+        assertEquals(3, manager.size)
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
+
+        manager.removeListOfSessions(listOf(mozilla.id, pocket.id))
+
+        assertEquals(1, manager.size)
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://firefox.com", manager.selectedSessionOrThrow.url)
+        assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
+
+        testDispatcher.withDispatchingPaused {
+            // We need to pause the test dispatcher here to avoid it dispatching immediately.
+            // Otherwise we deadlock the test here when we wait for the store to complete and
+            // at the same time the middleware dispatches a coroutine on the dispatcher which will
+            // also block on the store in SessionManager.restore().
+            store.dispatch(UndoAction.RestoreRecoverableTabs).joinBlocking()
+        }
+
+        store.waitUntilIdle()
+
+        assertEquals(3, manager.size)
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
     fun `Undo scenario - Removing all normal tabs`() {
         val lookup = SessionManagerLookup()
         val store = BrowserStore(middleware = listOf(

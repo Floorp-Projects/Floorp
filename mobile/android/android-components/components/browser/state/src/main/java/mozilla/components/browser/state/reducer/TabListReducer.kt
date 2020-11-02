@@ -95,6 +95,42 @@ internal object TabListReducer {
                 }
             }
 
+            is TabListAction.RemoveTabsAction -> {
+                val tabsToRemove = action.tabIds.mapNotNull { state.findTab(it) }
+
+                if (tabsToRemove.isNullOrEmpty()) {
+                    state
+                } else {
+                    // Remove tabs and update child tabs' parentId if their parent is in removed list
+                    val updatedTabList = (state.tabs - tabsToRemove).map { tabState ->
+                        tabsToRemove.firstOrNull { removedTab -> tabState.parentId == removedTab.id }
+                            ?.let { tabState.copy(parentId = findNewParentId(it, tabsToRemove)) }
+                            ?: tabState
+                    }
+
+                    val updatedSelection =
+                        if (action.tabIds.contains(state.selectedTabId)) {
+                            val removedSelectedTab =
+                                tabsToRemove.first { it.id == state.selectedTabId }
+                            // The selected tab was removed and we need to find a new one
+                            val previousIndex = state.tabs.indexOf(removedSelectedTab)
+                            findNewSelectedTabId(
+                                updatedTabList,
+                                removedSelectedTab.content.private,
+                                previousIndex
+                            )
+                        } else {
+                            // The selected tab is not affected and can stay the same
+                            state.selectedTabId
+                        }
+
+                    state.copy(
+                        tabs = updatedTabList,
+                        selectedTabId = updatedSelection
+                    )
+                }
+            }
+
             is TabListAction.RestoreAction -> {
                 // Verify that none of the tabs to restore already exist
                 action.tabs.forEach { requireUniqueTab(state, it) }
@@ -151,6 +187,25 @@ internal object TabListReducer {
                 )
             }
         }
+    }
+}
+
+/**
+ * Looks for an appropriate new parentId for a tab by checking if the parent is being removed,
+ * and if so, will recursively check the parent's parent and so on.
+ */
+private fun findNewParentId(
+    tabToFindNewParent: TabSessionState,
+    tabsToBeRemoved: List<TabSessionState>
+): String? {
+    return if (tabsToBeRemoved.map { it.id }.contains(tabToFindNewParent.parentId)) {
+        // The parent tab is being removed, let's check the parent's parent
+        findNewParentId(
+            tabsToBeRemoved.first { tabToFindNewParent.parentId == it.id },
+            tabsToBeRemoved
+        )
+    } else {
+        tabToFindNewParent.parentId
     }
 }
 

@@ -71,6 +71,15 @@ class RecentlyClosedMiddleware(
                     )
                 }
             }
+            is TabListAction.RemoveTabsAction -> {
+                val tabs = action.tabIds.mapNotNull { context.state.findTab(it) }
+                    .filterNot { it.content.private }
+                context.store.dispatch(
+                    RecentlyClosedAction.AddClosedTabsAction(
+                        tabs.toClosedTab()
+                    )
+                )
+            }
             is RecentlyClosedAction.AddClosedTabsAction -> {
                 addTabsToStorage(
                     action.tabs

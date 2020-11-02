@@ -184,6 +184,49 @@ class MediaMiddlewareTest {
     }
 
     @Test
+    fun `State is updated after sessions are removed`() {
+        val middleware = MediaMiddleware(testContext, AbstractMediaService::class.java)
+
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab"),
+                    createTab("https://www.firefox.com", id = "test-tab-2")
+                )
+            ),
+            middleware = listOf(middleware)
+        )
+
+        val media = createMockMediaElement(
+            id = "test-media",
+            state = Media.State.PLAYING
+        )
+
+        store.dispatch(
+            MediaAction.AddMediaAction("test-tab", media)
+        ).joinBlocking()
+
+        middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
+
+        assertEquals(MediaState.State.PLAYING, store.state.media.aggregate.state)
+        assertEquals("test-tab", store.state.media.aggregate.activeTabId)
+        assertEquals(1, store.state.media.aggregate.activeMedia.size)
+        assertEquals("test-media", store.state.media.aggregate.activeMedia[0])
+
+        store.dispatch(
+            TabListAction.RemoveTabsAction(listOf("test-tab", "test-tab-2"))
+        ).joinBlocking()
+
+        middleware.mediaAggregateUpdate.updateAggregateJob!!.joinBlocking()
+        store.waitUntilIdle()
+
+        assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
+        assertEquals(null, store.state.media.aggregate.activeTabId)
+        assertEquals(0, store.state.media.aggregate.activeMedia.size)
+    }
+
+    @Test
     fun `Multiple media of session start playing and stop`() {
         val middleware = MediaMiddleware(testContext, AbstractMediaService::class.java)
 

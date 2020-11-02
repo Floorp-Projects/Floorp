@@ -173,6 +173,24 @@ class TabListActionTest {
     }
 
     @Test
+    fun `RemoveTabsAction - Removes SessionState`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com"),
+                createTab(id = "c", url = "https://www.getpocket.com")
+            )
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("a", "b")))
+            .joinBlocking()
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://www.getpocket.com", store.state.tabs[0].content.url)
+    }
+
+    @Test
     fun `RemoveTabAction - Noop for unknown id`() {
         val state = BrowserState(
             tabs = listOf(

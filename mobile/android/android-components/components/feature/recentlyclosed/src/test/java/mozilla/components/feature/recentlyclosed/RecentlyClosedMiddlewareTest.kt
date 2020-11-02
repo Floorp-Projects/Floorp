@@ -84,6 +84,49 @@ class RecentlyClosedMiddlewareTest {
         }
 
     @Test
+    fun `closed tab storage adds normal tabs removed with TabListAction`() =
+        runBlockingTest {
+            val storage: RecentlyClosedTabsStorage = mock()
+            val middleware = spy(RecentlyClosedMiddleware(testContext, 5, engine, scope))
+            whenever(middleware.recentlyClosedTabsStorage).thenReturn(storage)
+
+            val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
+            val tab2 = createTab("https://www.firefox.com", private = false, id = "5678")
+
+            val store = spy(
+                BrowserStore(
+                    initialState = BrowserState(
+                        tabs = listOf(tab, tab2)
+                    ),
+                    middleware = listOf(middleware)
+                )
+            )
+
+            store.dispatch(TabListAction.RemoveTabsAction(listOf("1234", "5678"))).joinBlocking()
+            dispatcher.advanceUntilIdle()
+            store.waitUntilIdle()
+
+            val closedTabCaptor = argumentCaptor<List<ClosedTab>>()
+            verify(storage).addTabsToCollectionWithMax(
+                closedTabCaptor.capture(),
+                eq(5)
+            )
+            assertEquals(2, closedTabCaptor.value.size)
+            assertEquals(tab.content.title, closedTabCaptor.value[0].title)
+            assertEquals(tab.content.url, closedTabCaptor.value[0].url)
+            assertEquals(tab2.content.title, closedTabCaptor.value[1].title)
+            assertEquals(tab2.content.url, closedTabCaptor.value[1].url)
+            assertEquals(
+                tab.engineState.engineSessionState,
+                closedTabCaptor.value[0].engineSessionState
+            )
+            assertEquals(
+                tab2.engineState.engineSessionState,
+                closedTabCaptor.value[1].engineSessionState
+            )
+        }
+
+    @Test
     fun `closed tab storage adds a normal tab removed with TabListAction`() =
         runBlockingTest {
             val storage: RecentlyClosedTabsStorage = mock()

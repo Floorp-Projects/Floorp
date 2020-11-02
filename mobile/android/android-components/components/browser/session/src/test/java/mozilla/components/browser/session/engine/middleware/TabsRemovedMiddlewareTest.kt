@@ -64,6 +64,35 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
+    fun `closes and unlinks engine session when list of tabs are removed`() = runBlocking {
+        val middleware = TabsRemovedMiddleware(scope)
+
+        val tab1 = createTab("https://www.mozilla.org", id = "1", private = false)
+        val tab2 = createTab("https://www.firefox.com", id = "2", private = false)
+        val tab3 = createTab("https://www.getpocket.com", id = "3", private = false)
+
+        val store = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
+            middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
+        )
+
+        val engineSession1 = linkEngineSession(store, tab1.id)
+        val engineSession2 = linkEngineSession(store, tab2.id)
+        val engineSession3 = linkEngineSession(store, tab3.id)
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf(tab1.id, tab2.id))).joinBlocking()
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
+        assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
+        assertNotNull(store.state.findTab(tab3.id)?.engineState?.engineSession)
+        verify(engineSession1).close()
+        verify(engineSession2).close()
+        verify(engineSession3, never()).close()
+    }
+
+    @Test
     fun `closes and unlinks engine session when all normal tabs are removed`() = runBlocking {
         val middleware = TabsRemovedMiddleware(scope)
 

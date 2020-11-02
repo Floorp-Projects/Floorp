@@ -27,6 +27,7 @@ import mozilla.components.lib.state.MiddlewareContext
 internal class TabsRemovedMiddleware(
     private val scope: CoroutineScope
 ) : Middleware<BrowserState, BrowserAction> {
+    @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -38,6 +39,9 @@ internal class TabsRemovedMiddleware(
             is TabListAction.RemoveAllTabsAction -> onTabsRemoved(context, context.state.tabs)
             is TabListAction.RemoveTabAction -> context.state.findTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it))
+            }
+            is TabListAction.RemoveTabsAction -> action.tabIds.mapNotNull { context.state.findTab(it) }.let {
+                onTabsRemoved(context, it)
             }
             is CustomTabListAction.RemoveAllCustomTabsAction -> onTabsRemoved(context, context.state.customTabs)
             is CustomTabListAction.RemoveCustomTabAction -> context.state.findCustomTab(action.tabId)?.let {

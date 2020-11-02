@@ -19,6 +19,7 @@ import mozilla.components.lib.state.MiddlewareContext
 class ThumbnailsMiddleware(
     private val thumbnailStorage: ThumbnailStorage
 ) : Middleware<BrowserState, BrowserAction> {
+    @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -46,6 +47,9 @@ class ThumbnailsMiddleware(
             is TabListAction.RemoveTabAction -> {
                 // Delete the tab screenshot from the storage when the tab is removed.
                 thumbnailStorage.deleteThumbnail(action.tabId)
+            }
+            is TabListAction.RemoveTabsAction -> {
+                action.tabIds.forEach { thumbnailStorage.deleteThumbnail(it) }
             }
         }
 

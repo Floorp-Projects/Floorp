@@ -154,6 +154,13 @@ sealed class TabListAction : BrowserAction() {
         TabListAction()
 
     /**
+     * Removes the [TabSessionState]s with the given [tabId]s from the list of sessions.
+     *
+     * @property tabIds the IDs of the tabs to remove.
+     */
+    data class RemoveTabsAction(val tabIds: List<String>) : TabListAction()
+
+    /**
      * Restores state from a (partial) previous state.
      *
      * @property tabs the [TabSessionState]s to restore.

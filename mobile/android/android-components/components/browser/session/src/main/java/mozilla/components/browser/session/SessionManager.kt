@@ -261,6 +261,19 @@ class SessionManager(
     }
 
     /**
+     * Removes a list of sessions by id.
+     */
+    fun removeListOfSessions(ids: List<String>) {
+        for (id in ids) {
+            sessions.firstOrNull { it.id == id }?.let { delegate.remove(it) }
+        }
+
+        store?.syncDispatch(
+            TabListAction.RemoveTabsAction(ids)
+        )
+    }
+
+    /**
      * Removes all sessions but CustomTab sessions.
      */
     fun removeSessions() {
