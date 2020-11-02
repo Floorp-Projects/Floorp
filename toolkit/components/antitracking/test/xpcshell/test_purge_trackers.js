@@ -187,7 +187,7 @@ async function testBaseDomain() {
  * Test that trackers are not cleared if they are associated
  * with an entry on the entity list that has user interaction.
  */
-async function testUserInteraction() {
+async function testUserInteraction(ownerPage) {
   Services.prefs.setBoolPref(
     "privacy.purge_trackers.consider_entity_list",
     true
@@ -201,12 +201,11 @@ async function testUserInteraction() {
   );
   await UrlClassifierTestUtils.addTestTrackers();
 
-  // These are hard coded test values on the entity list.
-  const OWNER_PAGE = "https://itisatrap.org";
+  // example.org and itisatrap.org are hard coded test values on the entity list.
   const RESOURCE_PAGE = "https://example.org";
 
   PermissionTestUtils.add(
-    OWNER_PAGE,
+    ownerPage,
     "storageAccessAPI",
     Services.perms.ALLOW_ACTION
   );
@@ -220,7 +219,7 @@ async function testUserInteraction() {
 
   ok(
     SiteDataTestUtils.hasCookies(RESOURCE_PAGE),
-    `${RESOURCE_PAGE} should have retained its cookies when permission is set for ${OWNER_PAGE}.`
+    `${RESOURCE_PAGE} should have retained its cookies when permission is set for ${ownerPage}.`
   );
 
   ok(
@@ -237,10 +236,10 @@ async function testUserInteraction() {
 
   ok(
     !SiteDataTestUtils.hasCookies(RESOURCE_PAGE),
-    `${RESOURCE_PAGE} should not have retained its cookies when permission is set for ${OWNER_PAGE} and the entity list pref is off.`
+    `${RESOURCE_PAGE} should not have retained its cookies when permission is set for ${ownerPage} and the entity list pref is off.`
   );
 
-  PermissionTestUtils.remove(OWNER_PAGE, "storageAccessAPI");
+  PermissionTestUtils.remove(ownerPage, "storageAccessAPI");
   await SiteDataTestUtils.clear();
 
   Services.prefs.clearUserPref("privacy.purge_trackers.consider_entity_list");
@@ -472,7 +471,11 @@ add_task(async function() {
     await setupTest(cookieBehavior);
     await testIndexedDBAndLocalStorage();
     await testBaseDomain();
-    await testUserInteraction();
+    // example.org and itisatrap.org are hard coded test values on the entity list.
+    await testUserInteraction("https://itisatrap.org");
+    await testUserInteraction(
+      "https://itisatrap.org^firstPartyDomain=example.net"
+    );
     await testQuotaStorage();
     await testExpiredInteractionPermission();
   }
