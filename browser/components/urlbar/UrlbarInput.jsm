@@ -265,11 +265,20 @@ class UrlbarInput {
 
   /**
    * Applies styling to the text in the urlbar input, depending on the text.
+   *
+   * @param {boolean} [forceURLFormat]
+   *        Whether to format URLs even when conditions forbid it,
+   *        for example when pageproxystate is not valid.
    */
-  formatValue() {
+  formatValue(forceURLFormat = false) {
+    // If the selected browser is now loading, avoid reformatting.
+    if (!forceURLFormat && this.window.gBrowser.selectedBrowser._isURLLoading) {
+      return;
+    }
+
     // The editor may not exist if the toolbar is not visible.
     if (this.editor) {
-      this.valueFormatter.update();
+      this.valueFormatter.update(forceURLFormat);
     }
   }
 
@@ -313,6 +322,8 @@ class UrlbarInput {
    *        otherwise.
    */
   setURI(uri = null, dueToTabSwitch = false) {
+    this.window.gBrowser.selectedBrowser._isURLLoading = false;
+
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
@@ -355,6 +366,10 @@ class UrlbarInput {
       valid = true;
     }
 
+    // The proxystate must be set before setting search mode and setting value
+    // below because search mode and formatting value depend on it.
+    this.setPageProxyState(valid ? "valid" : "invalid", dueToTabSwitch);
+
     let isDifferentValidValue = valid && value != this.untrimmedValue;
     this.value = value;
     this.valueIsTyped = !valid;
@@ -364,10 +379,6 @@ class UrlbarInput {
       // cursor position when the user switches windows while typing.
       this.selectionStart = this.selectionEnd = 0;
     }
-
-    // The proxystate must be set before setting search mode below because
-    // search mode depends on it.
-    this.setPageProxyState(valid ? "valid" : "invalid", dueToTabSwitch);
 
     // If we're switching tabs, restore the tab's search mode.  Otherwise, if
     // the URI is valid, exit search mode.  This must happen after setting
@@ -1881,7 +1892,7 @@ class UrlbarInput {
     });
   }
 
-  _setValue(val, allowTrim) {
+  _setValue(val, allowTrim, forceURLFormat = false) {
     // Don't expose internal about:reader URLs to the user.
     let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(val);
     if (originalUrl) {
@@ -1896,7 +1907,7 @@ class UrlbarInput {
     this.valueIsTyped = false;
     this._resultForCurrentValue = null;
     this.inputField.value = val;
-    this.formatValue();
+    this.formatValue(forceURLFormat);
     this.removeAttribute("actiontype");
 
     // Dispatch ValueChange event for accessibility.
@@ -2322,7 +2333,8 @@ class UrlbarInput {
   ) {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
-      this.value = url;
+      browser._isURLLoading = true;
+      this._setValue(url, true, true);
       browser.userTypedValue = url;
     }
 
