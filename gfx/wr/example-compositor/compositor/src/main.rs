@@ -384,7 +384,7 @@ fn main() {
         None,
     ).unwrap();
     let api = sender.create_api();
-    let document_id = api.add_document(device_size, 0);
+    let document_id = api.add_document(device_size);
     let device_pixel_ratio = 1.0;
     let mut current_epoch = Epoch(0);
     let root_pipeline_id = PipelineId(0, 0);

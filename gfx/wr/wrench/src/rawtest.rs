@@ -1285,7 +1285,7 @@ impl<'a> RawtestHarness<'a> {
 
         let layout_size = LayoutSize::new(120.0, 0.0);
         let window_size = DeviceIntSize::new(layout_size.width as i32, layout_size.height as i32);
-        let doc_id = self.wrench.api.add_document(window_size, 1);
+        let doc_id = self.wrench.api.add_document(window_size);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         let info = self.make_common_properties(LayoutRect::new(LayoutPoint::zero(),
