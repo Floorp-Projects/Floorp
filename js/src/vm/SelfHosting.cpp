@@ -1317,7 +1317,7 @@ static bool intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc,
 
 #ifdef DEBUG
   {
-    uint32_t viewByteLength = tarray->byteLength();
+    uint32_t viewByteLength = tarray->byteLength().deprecatedGetUint32();
     MOZ_ASSERT(byteSize <= viewByteLength);
     MOZ_ASSERT(byteDest < viewByteLength);
     MOZ_ASSERT(byteSrc < viewByteLength);

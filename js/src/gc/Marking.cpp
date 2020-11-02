@@ -1963,11 +1963,11 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
    * stack.
    */
 
-  JSObject* obj;   // The object being scanned.
+  JSObject* obj;             // The object being scanned.
   SlotsOrElementsKind kind;  // The kind of slot range being scanned, if any.
-  HeapSlot* base;  // Slot range base pointer.
-  size_t index;    // Index of the next slot to mark.
-  size_t end;      // End of slot range to mark.
+  HeapSlot* base;            // Slot range base pointer.
+  size_t index;              // Index of the next slot to mark.
+  size_t end;                // End of slot range to mark.
 
   gc::MarkStack& stack = currentStack();
 
@@ -3310,7 +3310,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
     if (tarray->hasInlineElements()) {
       AllocKind srcKind = GetGCObjectKind(TypedArrayObject::FIXED_DATA_START);
       size_t headerSize = Arena::thingSize(srcKind);
-      srcSize = headerSize + tarray->byteLength();
+      srcSize = headerSize + tarray->byteLength().get();
     }
   }
 

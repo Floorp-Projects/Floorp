@@ -114,9 +114,11 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
     return true;
   }
 
+  size_t byteLength = tarray->byteLength().deprecatedGetUint32();
+
   AutoRealm ar(cx, tarray);
   Rooted<ArrayBufferObject*> buffer(
-      cx, ArrayBufferObject::createZeroed(cx, tarray->byteLength()));
+      cx, ArrayBufferObject::createZeroed(cx, byteLength));
   if (!buffer) {
     return false;
   }
@@ -125,12 +127,11 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
   MOZ_ALWAYS_TRUE(buffer->addView(cx, tarray));
 
   // tarray is not shared, because if it were it would have a buffer.
-  memcpy(buffer->dataPointer(), tarray->dataPointerUnshared(),
-         tarray->byteLength());
+  memcpy(buffer->dataPointer(), tarray->dataPointerUnshared(), byteLength);
 
   // If the object is in the nursery, the buffer will be freed by the next
   // nursery GC. Free the data slot pointer if the object has no inline data.
-  size_t nbytes = RoundUp(tarray->byteLength(), sizeof(Value));
+  size_t nbytes = RoundUp(byteLength, sizeof(Value));
   Nursery& nursery = cx->nursery();
   if (tarray->isTenured() && !tarray->hasInlineElements() &&
       !nursery.isInside(tarray->elements())) {
@@ -176,7 +177,7 @@ void TypedArrayObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   // Free the data slot pointer if it does not point into the old JSObject.
   if (!curObj->hasInlineElements()) {
-    size_t nbytes = RoundUp(curObj->byteLength(), sizeof(Value));
+    size_t nbytes = RoundUp(curObj->byteLength().get(), sizeof(Value));
     fop->free_(obj, curObj->elements(), nbytes, MemoryUse::TypedArrayElements);
   }
 }
@@ -213,7 +214,7 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(buf)) {
     nursery.removeMallocedBufferDuringMinorGC(buf);
-    size_t nbytes = RoundUp(newObj->byteLength(), sizeof(Value));
+    size_t nbytes = RoundUp(newObj->byteLength().get(), sizeof(Value));
     AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
     return 0;
   }
@@ -221,7 +222,7 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   // Determine if we can use inline data for the target array. If this is
   // possible, the nursery will have picked an allocation size that is large
   // enough.
-  size_t nbytes = oldObj->byteLength();
+  size_t nbytes = oldObj->byteLength().deprecatedGetUint32();
 
   constexpr size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
@@ -269,7 +270,7 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
 
 bool TypedArrayObject::hasInlineElements() const {
   return elements() == this->fixedData(TypedArrayObject::FIXED_DATA_START) &&
-         byteLength() <= TypedArrayObject::INLINE_BUFFER_LIMIT;
+         byteLength().get() <= TypedArrayObject::INLINE_BUFFER_LIMIT;
 }
 
 void TypedArrayObject::setInlineElements() {
@@ -2300,14 +2301,14 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
   if (object->is<TypedArrayObject>()) {
     TypedArrayObject& view = object->as<TypedArrayObject>();
     *dataPointer = view.dataPointerEither().cast<uint8_t*>();
-    *byteLength = view.byteLength();
+    *byteLength = view.byteLength().deprecatedGetUint32();
     return true;
   }
 
   if (object->is<DataViewObject>()) {
     DataViewObject& view = object->as<DataViewObject>();
     *dataPointer = view.dataPointerEither().cast<uint8_t*>();
-    *byteLength = view.byteLength();
+    *byteLength = view.byteLength().deprecatedGetUint32();
     return true;
   }
 
@@ -2699,7 +2700,7 @@ JS_FRIEND_API uint32_t JS_GetTypedArrayByteLength(JSObject* obj) {
   if (!tarr) {
     return 0;
   }
-  return tarr->byteLength();
+  return tarr->byteLength().deprecatedGetUint32();
 }
 
 JS_FRIEND_API bool JS_GetTypedArraySharedness(JSObject* obj) {

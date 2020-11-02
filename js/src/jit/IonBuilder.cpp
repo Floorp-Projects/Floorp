@@ -8890,7 +8890,8 @@ TypedArrayObject* IonBuilder::tryTypedArrayEmbedConstantElements(
   // TypedArrays are only singletons when created with a (Shared)ArrayBuffer
   // and a length greater or equal to |SINGLETON_BYTE_LENGTH|.
   MOZ_ASSERT(tarr->hasBuffer());
-  MOZ_ASSERT(tarr->byteLength() >= TypedArrayObject::SINGLETON_BYTE_LENGTH ||
+  MOZ_ASSERT(tarr->byteLength().get() >=
+                 TypedArrayObject::SINGLETON_BYTE_LENGTH ||
              tarr->hasDetachedBuffer());
 
   // TypedArrays using an ArrayBuffer don't have nursery-allocated data, see
