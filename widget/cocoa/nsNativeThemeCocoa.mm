@@ -2706,26 +2706,35 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
-      break;
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      return Some(WidgetInfo::ScrollbarThumb(ScrollbarDrawingMac::ComputeScrollbarParams(
-          aFrame, aAppearance == StyleAppearance::ScrollbarthumbHorizontal)));
-
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonRight:
       break;
 
+    case StyleAppearance::ScrollbarthumbVertical:
+    case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbartrackHorizontal:
     case StyleAppearance::ScrollbartrackVertical:
-      return Some(WidgetInfo::ScrollbarTrack(ScrollbarDrawingMac::ComputeScrollbarParams(
-          aFrame, aAppearance == StyleAppearance::ScrollbartrackHorizontal)));
-
-    case StyleAppearance::Scrollcorner:
-      return Some(
-          WidgetInfo::ScrollCorner(ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, false)));
+    case StyleAppearance::Scrollcorner: {
+      bool isHorizontal = aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
+                          aAppearance == StyleAppearance::ScrollbartrackHorizontal;
+      ScrollbarParams params = ScrollbarDrawingMac::ComputeScrollbarParams(
+          aFrame, *nsLayoutUtils::StyleForScrollbar(aFrame), isHorizontal);
+      switch (aAppearance) {
+        case StyleAppearance::ScrollbarthumbVertical:
+        case StyleAppearance::ScrollbarthumbHorizontal:
+          return Some(WidgetInfo::ScrollbarThumb(params));
+        case StyleAppearance::ScrollbartrackHorizontal:
+        case StyleAppearance::ScrollbartrackVertical:
+          return Some(WidgetInfo::ScrollbarTrack(params));
+        case StyleAppearance::Scrollcorner:
+          return Some(WidgetInfo::ScrollCorner(params));
+        default:
+          MOZ_CRASH("unexpected aAppearance");
+      }
+      break;
+    }
 
     case StyleAppearance::Textarea:
       return Some(WidgetInfo::MultilineTextField(eventState.HasState(NS_EVENT_STATE_FOCUS)));
@@ -3092,8 +3101,9 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Scrollcorner:
     case StyleAppearance::ScrollbartrackHorizontal:
     case StyleAppearance::ScrollbartrackVertical: {
+      const ComputedStyle& style = *nsLayoutUtils::StyleForScrollbar(aFrame);
       ScrollbarParams params = ScrollbarDrawingMac::ComputeScrollbarParams(
-          aFrame, aAppearance == StyleAppearance::ScrollbartrackHorizontal);
+          aFrame, style, aAppearance == StyleAppearance::ScrollbartrackHorizontal);
       if (params.overlay && !params.rolledOver) {
         // There is no scrollbar track, draw nothing and return true.
         return true;

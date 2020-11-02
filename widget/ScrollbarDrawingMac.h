@@ -33,6 +33,7 @@ class ScrollbarDrawingMac final {
                                                   nsIFrame* aFrame,
                                                   float aDpiRatio);
   static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
+                                                const ComputedStyle& aStyle,
                                                 bool aIsHorizontal);
   static void DrawScrollbarThumb(gfx::DrawTarget& aDT, const gfx::Rect& aRect,
                                  const ScrollbarParams& aParams);

@@ -91,26 +91,25 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
 }
 
 ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(
-    nsIFrame* aFrame, bool aIsHorizontal) {
-  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+    nsIFrame* aFrame, const ComputedStyle& aStyle, bool aIsHorizontal) {
   ScrollbarParams params;
   params.overlay =
       nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
   params.rolledOver = IsParentScrollbarRolledOver(aFrame);
   params.small =
-      style->StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
+      aStyle.StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
   params.rtl = nsNativeTheme::IsFrameRTL(aFrame);
   params.horizontal = aIsHorizontal;
   params.onDarkBackground = nsNativeTheme::IsDarkBackground(aFrame);
   // Don't use custom scrollbars for overlay scrollbars since they are
   // generally good enough for use cases of custom scrollbars.
   if (!params.overlay) {
-    const nsStyleUI* ui = style->StyleUI();
+    const nsStyleUI* ui = aStyle.StyleUI();
     if (ui->HasCustomScrollbars()) {
       const auto& colors = ui->mScrollbarColor.AsColors();
       params.custom = true;
-      params.trackColor = colors.track.CalcColor(*style);
-      params.faceColor = colors.thumb.CalcColor(*style);
+      params.trackColor = colors.track.CalcColor(aStyle);
+      params.faceColor = colors.thumb.CalcColor(aStyle);
     }
   }
 
