@@ -6,6 +6,7 @@
 #ifndef URLPreloader_h
 #define URLPreloader_h
 
+#include "mozilla/DataMutex.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/LinkedList.h"
@@ -299,8 +300,9 @@ class URLPreloader final : public nsIObserver, public nsIMemoryReporter {
 
   // Note: We use a RefPtr rather than an nsCOMPtr here because the
   // AssertNoQueryNeeded checks done by getter_AddRefs happen at a time that
-  // violate data access invariants.
-  RefPtr<nsIThread> mReaderThread;
+  // violate data access invariants. It's wrapped in a mutex because
+  // the reader thread needs to be able to null this out to terminate itself.
+  DataMutex<RefPtr<nsIThread>> mReaderThread{"ReaderThread"};
 
   // A map of URL entries which have were either read this session, or read
   // from the last session's cache file.
