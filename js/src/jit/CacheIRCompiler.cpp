@@ -1747,8 +1747,8 @@ bool CacheIRCompiler::emitGuardToTypedArrayIndex(ValOperandId inputId,
         // No-op if the value is already an int32.
       },
       [&](FloatRegister floatReg) {
-        static_assert(
-            TypedArrayObject::MAX_BYTE_LENGTH <= INT32_MAX,
+        MOZ_ASSERT(
+            TypedArrayObject::maxByteLength() <= INT32_MAX,
             "Double exceeding Int32 range can't be in-bounds array access");
 
         // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.

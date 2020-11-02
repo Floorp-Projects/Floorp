@@ -447,7 +447,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
       CreateSingleton createSingleton, BufferSize byteOffset, BufferSize len,
       HandleObject proto, HandleObjectGroup group = nullptr) {
-    MOZ_ASSERT(len.get() < MAX_BYTE_LENGTH / BYTES_PER_ELEMENT);
+    MOZ_ASSERT(len.get() < maxByteLength() / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
         buffer ? gc::GetGCObjectKind(instanceClass())
@@ -555,7 +555,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeTypedArrayWithTemplate(
       JSContext* cx, TypedArrayObject* templateObj, int32_t len) {
-    if (len < 0 || uint32_t(len) >= MAX_BYTE_LENGTH / BYTES_PER_ELEMENT) {
+    if (len < 0 || uint32_t(len) >= maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return nullptr;
@@ -792,7 +792,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     // buffers in TypedArrays must have less than or equal to
     // MAX_BYTE_LENGTH - BYTES_PER_ELEMENT - MAX_BYTE_LENGTH % BYTES_PER_ELEMENT
     // bytes.
-    if (len >= MAX_BYTE_LENGTH / BYTES_PER_ELEMENT) {
+    if (len >= maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
       return false;
@@ -920,14 +920,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static bool maybeCreateArrayBuffer(JSContext* cx, uint64_t count,
                                      HandleObject nonDefaultProto,
                                      MutableHandle<ArrayBufferObject*> buffer) {
-    if (count >= MAX_BYTE_LENGTH / BYTES_PER_ELEMENT) {
+    if (count >= maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
     BufferSize byteLength = BufferSize(count * BYTES_PER_ELEMENT);
 
-    MOZ_ASSERT(byteLength.get() < MAX_BYTE_LENGTH);
+    MOZ_ASSERT(byteLength.get() < maxByteLength());
     static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
                   "ArrayBuffer inline storage shouldn't waste any space");
 
