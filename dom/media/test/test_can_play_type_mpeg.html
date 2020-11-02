@@ -84,8 +84,9 @@ function check_mp4(v, enabled) {
   check("audio/mp4; codecs=opus", "probably");
 
   // Flac.
-  check("audio/mp4; codecs=\"flac\"", "probably");
-  check("audio/mp4; codecs=flac", "probably");
+  var haveFlac = getPref("media.flac.enabled");
+  check("audio/mp4; codecs=\"flac\"", haveFlac ? "probably" : "");
+  check("audio/mp4; codecs=flac", haveFlac ? "probably" : "");
 
   // VP9.
   [ "video/mp4; codecs=vp9",
@@ -100,7 +101,9 @@ function check_mp4(v, enabled) {
       ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
     }
   });
-  check("video/mp4; codecs=\"av1\"", "probably");
+
+  var haveAV1 = getPref("media.av1.enabled");
+  check("video/mp4; codecs=\"av1\"", haveAV1 ? "probably" : "");
 }
 
 function check_mp3(v, enabled) {
