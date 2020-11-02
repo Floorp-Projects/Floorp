@@ -253,3 +253,23 @@ function isBookmarksToolbarVisible(win = window) {
   let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
   return !toolbar.collapsed;
 }
+
+async function waitForBookmarksToolbarVisibilityWithExitConditions({
+  win = window,
+  exitConditions,
+  message,
+}) {
+  let result = await TestUtils.waitForCondition(() => {
+    if (exitConditions.earlyExit) {
+      return exitConditions.earlyExit;
+    }
+    let toolbar = win.gNavToolbox.querySelector("#PersonalToolbar");
+    return exitConditions.visible ? !toolbar.collapsed : toolbar.collapsed;
+  }, message || "waiting for toolbar to become " + (exitConditions.visible ? "visible" : "hidden"));
+  if (exitConditions.earlyExit) {
+    ok(true, "Early exit condition met");
+  } else {
+    ok(false, message);
+  }
+  return exitConditions.earlyExit || result;
+}

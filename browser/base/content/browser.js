@@ -1674,6 +1674,7 @@ var gBrowserInit = {
   delayedStartupFinished: false,
   idleTasksFinishedPromise: null,
   idleTaskPromiseResolve: null,
+  domContentLoaded: false,
 
   _tabToAdopt: undefined,
 
@@ -1830,6 +1831,8 @@ var gBrowserInit = {
     this._setInitialFocus();
 
     updateFxaToolbarMenu(gFxaToolbarEnabled, true);
+
+    this.domContentLoaded = true;
   },
 
   onLoad() {
@@ -6620,8 +6623,21 @@ function setToolbarVisibility(
         isVisible = false;
         break;
       case "newtab":
+        let { currentURI } = gBrowser;
+        if (!gBrowserInit.domContentLoaded) {
+          let uriToLoad = gBrowserInit.uriToLoadPromise;
+          if (uriToLoad) {
+            if (Array.isArray(uriToLoad)) {
+              // We only care about the first tab being loaded
+              uriToLoad = uriToLoad[0];
+            }
+            try {
+              currentURI = Services.io.newURI(uriToLoad);
+            } catch (ex) {}
+          }
+        }
         isVisible = BookmarkingUI.isOnNewTabPage({
-          currentURI: gBrowser.currentURI,
+          currentURI,
           isNullPrincipal: gBrowser.contentPrincipal.isNullPrincipal,
         });
         // If there is nothing visible in the toolbar, then don't show
