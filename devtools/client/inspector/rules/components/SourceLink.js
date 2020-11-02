@@ -8,7 +8,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { ELEMENT_STYLE } = require("devtools/client/inspector/rules/constants");
+const {
+  style: { ELEMENT_STYLE },
+} = require("devtools/shared/constants");
 
 const Types = require("devtools/client/inspector/rules/types");
 
