@@ -3645,7 +3645,7 @@ apz:
     expires: "85"
     kind: uint
     notification_emails:
-      - kgupta@mozilla.com
+      - botond@mozilla.com
     products:
       - 'firefox'
     record_in_processes:

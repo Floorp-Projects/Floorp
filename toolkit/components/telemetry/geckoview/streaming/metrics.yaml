@@ -239,7 +239,7 @@ gfx.checkerboard:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - botond@mozilla.com
     expires: never
 
   peak_pixel_count:
@@ -261,7 +261,7 @@ gfx.checkerboard:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - botond@mozilla.com
     expires: never
 
   potential_duration:
@@ -286,7 +286,7 @@ gfx.checkerboard:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - botond@mozilla.com
     expires: never
 
   severity:
@@ -310,7 +310,7 @@ gfx.checkerboard:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - kgupta@mozilla.com
+      - botond@mozilla.com
     expires: never
 
 gfx.content:
