@@ -57,7 +57,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   ["UPDATE_PRESERVING_RULES", "UPDATE_GENERAL"],
-  "devtools/server/actors/stylesheets",
+  "devtools/server/actors/style-sheet",
   true
 );
 

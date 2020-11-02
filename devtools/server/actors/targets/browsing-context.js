@@ -70,7 +70,7 @@ loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
 loader.lazyRequireGetter(
   this,
   ["StyleSheetActor", "getSheetText"],
-  "devtools/server/actors/stylesheets",
+  "devtools/server/actors/style-sheet",
   true
 );
 
