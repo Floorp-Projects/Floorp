@@ -366,6 +366,17 @@ bool OSPreferences::GetPatternForSkeleton(const nsACString& aSkeleton,
 bool OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
                                                 nsACString& aRetVal) {
   bool result = false;
+
+  // Check for a valid override pref and use that if present.
+  nsAutoCString value;
+  nsresult nr = Preferences::GetCString(
+      "intl.date_time.pattern_override.date_time_short", value);
+  if (NS_SUCCEEDED(nr) && value.Find("{0}") != kNotFound &&
+      value.Find("{1}") != kNotFound) {
+    aRetVal = std::move(value);
+    return true;
+  }
+
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg =
       udatpg_open(PromiseFlatCString(aLocale).get(), &status);
