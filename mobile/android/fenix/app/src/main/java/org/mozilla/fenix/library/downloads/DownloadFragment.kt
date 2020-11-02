@@ -8,8 +8,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import kotlinx.android.synthetic.main.fragment_downloads.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.lib.state.ext.consumeFrom
@@ -37,18 +39,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     ): View? {
         val view = inflater.inflate(R.layout.fragment_downloads, container, false)
 
-        val items = requireComponents.core.store.state.downloads.map {
-            DownloadItem(
-                it.value.id.toString(),
-                it.value.fileName,
-                it.value.filePath,
-                it.value.contentLength.toString(),
-                it.value.contentType,
-                it.value.status
-            )
-        }.filter {
-            it.status == DownloadState.Status.COMPLETED
-        }.filterNotExistsOnDisk()
+        val items = provideDownloads(requireComponents.core.store.state)
 
         downloadStore = StoreProvider.get(this) {
             DownloadFragmentStore(
@@ -69,6 +60,24 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         downloadView = DownloadView(view.downloadsLayout, downloadInteractor)
 
         return view
+    }
+
+    @VisibleForTesting
+    internal fun provideDownloads(state: BrowserState): List<DownloadItem> {
+        return state.downloads.values
+            .sortedByDescending { it.createdTime } // sort from newest to oldest
+            .map {
+                DownloadItem(
+                    it.id,
+                    it.fileName,
+                    it.filePath,
+                    it.contentLength.toString(),
+                    it.contentType,
+                    it.status
+                )
+            }.filter {
+                it.status == DownloadState.Status.COMPLETED
+            }.filterNotExistsOnDisk()
     }
 
     override val selectedItems get() = downloadStore.state.mode.selectedItems
