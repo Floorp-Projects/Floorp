@@ -17,7 +17,6 @@
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
-#include "prthread.h"
 
 namespace mozilla {
 
