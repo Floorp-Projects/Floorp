@@ -6,7 +6,7 @@
 
 const promise = require("promise");
 const CssLogic = require("devtools/shared/inspector/css-logic");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 const TextProperty = require("devtools/client/inspector/rules/models/text-property");
 const Services = require("Services");
 

@@ -8,7 +8,7 @@ const Services = require("Services");
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 
 loader.lazyRequireGetter(
   this,

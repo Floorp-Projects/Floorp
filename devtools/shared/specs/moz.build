@@ -7,6 +7,7 @@
 DIRS += [
     "addon",
     "descriptors",
+    "style",
     "targets",
     "worker",
 ]
@@ -36,6 +37,7 @@ DevToolsModules(
     "network.js",
     "node.js",
     "object.js",
+    "page-style.js",
     "perf.js",
     "performance-recording.js",
     "performance.js",
@@ -49,7 +51,7 @@ DevToolsModules(
     "stacktraces.js",
     "storage.js",
     "string.js",
-    "styles.js",
+    "style-rule.js",
     "stylesheets.js",
     "symbol-iterator.js",
     "symbol.js",

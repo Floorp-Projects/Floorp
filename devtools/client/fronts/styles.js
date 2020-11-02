@@ -8,10 +8,8 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const {
-  pageStyleSpec,
-  styleRuleSpec,
-} = require("devtools/shared/specs/styles");
+const { pageStyleSpec } = require("devtools/shared/specs/page-style");
+const { styleRuleSpec } = require("devtools/shared/specs/style-rule");
 const promise = require("promise");
 
 loader.lazyRequireGetter(

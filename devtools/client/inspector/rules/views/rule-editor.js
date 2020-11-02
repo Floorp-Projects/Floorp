@@ -6,7 +6,7 @@
 
 const { l10n } = require("devtools/shared/inspector/css-logic");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
-const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/style-rule");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const {
   InplaceEditor,
