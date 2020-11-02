@@ -311,6 +311,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                               const ComputedStyle& aStyle,
                               const EventStates& aDocumentState,
                               uint32_t aDpiRatio, bool aIsRoot);
+  virtual void PaintScrollbarTrack(DrawTarget* aDrawTarget, const Rect& aRect,
+                                   bool aHorizontal, nsIFrame* aFrame,
+                                   const ComputedStyle& aStyle,
+                                   const EventStates& aDocumentState,
+                                   uint32_t aDpiRatio, bool aIsRoot);
   virtual void PaintScrollCorner(DrawTarget* aDrawTarget, const Rect& aRect,
                                  nsIFrame* aFrame, const ComputedStyle& aStyle,
                                  const EventStates& aDocumentState,
