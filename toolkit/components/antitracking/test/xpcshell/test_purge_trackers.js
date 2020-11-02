@@ -41,6 +41,43 @@ async function setupTest(aCookieBehavior) {
 }
 
 /**
+ * Test that purging doesn't happen when it shouldn't happen.
+ */
+add_task(async function testNotPurging() {
+  await UrlClassifierTestUtils.addTestTrackers();
+  setupTest(Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN);
+  SiteDataTestUtils.addToCookies(TRACKING_PAGE);
+
+  Services.prefs.setIntPref(
+    "network.cookie.cookieBehavior",
+    Ci.nsICookieService.BEHAVIOR_ACCEPT
+  );
+  await PurgeTrackerService.purgeTrackingCookieJars();
+  ok(SiteDataTestUtils.hasCookies(TRACKING_PAGE), "cookie remains.");
+  Services.prefs.setIntPref(
+    "network.cookie.cookieBehavior",
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN
+  );
+
+  Services.prefs.setBoolPref("privacy.purge_trackers.enabled", false);
+  await PurgeTrackerService.purgeTrackingCookieJars();
+  ok(SiteDataTestUtils.hasCookies(TRACKING_PAGE), "cookie remains.");
+  Services.prefs.setBoolPref("privacy.purge_trackers.enabled", true);
+
+  Services.prefs.setBoolPref("privacy.sanitize.sanitizeOnShutdown", true);
+  Services.prefs.setBoolPref("privacy.clearOnShutdown.history", true);
+  await PurgeTrackerService.purgeTrackingCookieJars();
+  ok(SiteDataTestUtils.hasCookies(TRACKING_PAGE), "cookie remains.");
+  Services.prefs.clearUserPref("privacy.sanitize.sanitizeOnShutdown");
+  Services.prefs.clearUserPref("privacy.clearOnShutdown.history");
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+  ok(!SiteDataTestUtils.hasCookies(TRACKING_PAGE), "cookie cleared.");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+
+/**
  * Test that cookies indexedDB and localStorage are purged if the cookie is found
  * on the tracking list and does not have an Interaction Permission.
  */
