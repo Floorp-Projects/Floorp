@@ -118,7 +118,7 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
 
   AutoRealm ar(cx, tarray);
   Rooted<ArrayBufferObject*> buffer(
-      cx, ArrayBufferObject::createZeroed(cx, byteLength));
+      cx, ArrayBufferObject::createZeroed(cx, tarray->byteLength()));
   if (!buffer) {
     return false;
   }
@@ -937,8 +937,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return true;
     }
 
-    ArrayBufferObject* buf =
-        ArrayBufferObject::createZeroed(cx, byteLength, nonDefaultProto);
+    ArrayBufferObject* buf = ArrayBufferObject::createZeroed(
+        cx, BufferSize(byteLength), nonDefaultProto);
     if (!buf) {
       return false;
     }

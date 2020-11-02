@@ -36,7 +36,7 @@ void* MapBufferMemory(size_t mappedSize, size_t initialCommittedSize);
 // correct value for the end of the existing committed area, and `delta` must be
 // a byte amount to grow the mapping by, and must be a multiple of the page
 // size.  Returns false on failure.
-bool CommitBufferMemory(void* dataEnd, uint32_t delta);
+bool CommitBufferMemory(void* dataEnd, size_t delta);
 
 // Extend an existing mapping by adding uncommited pages to it.  `dataStart`
 // must be the pointer to the start of the existing mapping, `mappedSize` the
@@ -255,7 +255,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   template <FillContents FillType>
   static std::tuple<ArrayBufferObject*, uint8_t*> createBufferAndData(
-      JSContext* cx, uint32_t nbytes, AutoSetNewObjectMetadata&,
+      JSContext* cx, BufferSize nbytes, AutoSetNewObjectMetadata&,
       JS::Handle<JSObject*> proto = nullptr);
 
  public:
@@ -342,17 +342,17 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
-  static ArrayBufferObject* createForContents(JSContext* cx, uint32_t nbytes,
+  static ArrayBufferObject* createForContents(JSContext* cx, BufferSize nbytes,
                                               BufferContents contents);
 
   static ArrayBufferObject* copy(
       JSContext* cx, JS::Handle<ArrayBufferObject*> unwrappedArrayBuffer);
 
-  static ArrayBufferObject* createZeroed(JSContext* cx, uint32_t nbytes,
+  static ArrayBufferObject* createZeroed(JSContext* cx, BufferSize nbytes,
                                          HandleObject proto = nullptr);
 
   static ArrayBufferObject* createForTypedObject(JSContext* cx,
-                                                 uint32_t nbytes);
+                                                 BufferSize nbytes);
 
   // Create an ArrayBufferObject that is safely finalizable and can later be
   // initialize()d to become a real, content-visible ArrayBufferObject.
@@ -363,7 +363,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   // is deallocated.
   static ArrayBufferObject* createFromNewRawBuffer(JSContext* cx,
                                                    WasmArrayRawBuffer* buffer,
-                                                   uint32_t initialSize);
+                                                   BufferSize initialSize);
 
   static void copyData(Handle<ArrayBufferObject*> toBuffer, uint32_t toIndex,
                        Handle<ArrayBufferObject*> fromBuffer,
@@ -452,10 +452,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   size_t wasmMappedSize() const;
   mozilla::Maybe<uint64_t> wasmMaxSize() const;
   static MOZ_MUST_USE bool wasmGrowToSizeInPlace(
-      uint32_t newSize, Handle<ArrayBufferObject*> oldBuf,
+      BufferSize newSize, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
   static MOZ_MUST_USE bool wasmMovingGrowToSize(
-      uint32_t newSize, Handle<ArrayBufferObject*> oldBuf,
+      BufferSize newSize, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -467,7 +467,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
  protected:
   void setDataPointer(BufferContents contents);
-  void setByteLength(uint32_t length);
+  void setByteLength(BufferSize length);
 
   size_t associatedBytes() const;
 
@@ -485,7 +485,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     setFlags(flags() | FOR_ASMJS);
   }
 
-  void initialize(size_t byteLength, BufferContents contents) {
+  void initialize(BufferSize byteLength, BufferContents contents) {
     setByteLength(byteLength);
     setFlags(0);
     setFirstView(nullptr);
@@ -494,7 +494,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   void* initializeToInlineData(size_t byteLength) {
     void* data = inlineDataPointer();
-    initialize(byteLength, BufferContents::createInlineData(data));
+    initialize(BufferSize(byteLength), BufferContents::createInlineData(data));
     return data;
   }
 };
@@ -599,17 +599,17 @@ class MutableWrappedPtrOperations<InnerViewTable, Wrapper>
 class WasmArrayRawBuffer {
   mozilla::Maybe<uint64_t> maxSize_;
   size_t mappedSize_;  // Not including the header page
-  uint32_t length_;
+  BufferSize length_;
 
  protected:
   WasmArrayRawBuffer(uint8_t* buffer, const mozilla::Maybe<uint64_t>& maxSize,
-                     size_t mappedSize, uint32_t length)
+                     size_t mappedSize, BufferSize length)
       : maxSize_(maxSize), mappedSize_(mappedSize), length_(length) {
     MOZ_ASSERT(buffer == dataPointer());
   }
 
  public:
-  static WasmArrayRawBuffer* Allocate(uint32_t numBytes,
+  static WasmArrayRawBuffer* Allocate(BufferSize numBytes,
                                       const mozilla::Maybe<uint64_t>& maxSize,
                                       const mozilla::Maybe<size_t>& mappedSize);
   static void Release(void* mem);
@@ -630,9 +630,9 @@ class WasmArrayRawBuffer {
 
   mozilla::Maybe<uint64_t> maxSize() const { return maxSize_; }
 
-  uint32_t byteLength() const { return length_; }
+  BufferSize byteLength() const { return length_; }
 
-  MOZ_MUST_USE bool growToSizeInPlace(uint32_t oldSize, uint32_t newSize);
+  MOZ_MUST_USE bool growToSizeInPlace(BufferSize oldSize, BufferSize newSize);
 
   MOZ_MUST_USE bool extendMappedSize(uint64_t maxSize);
 
