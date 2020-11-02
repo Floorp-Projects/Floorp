@@ -7,7 +7,6 @@
 
 #include "RetainedDisplayListBuilder.h"
 
-#include "DisplayListChecker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
@@ -1402,7 +1401,7 @@ void RetainedDisplayListBuilder::ClearFramesWithProps() {
 }
 
 PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
-    nscolor aBackstop, mozilla::DisplayListChecker* aChecker) {
+    nscolor aBackstop) {
   mBuilder.RemoveModifiedWindowRegions();
 
   if (mBuilder.ShouldSyncDecodeImages()) {
@@ -1476,10 +1475,6 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     modifiedDL.DeleteAll(&mBuilder);
     Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Content;
     return PartialUpdateResult::Failed;
-  }
-
-  if (aChecker) {
-    aChecker->Set(&modifiedDL, "TM");
   }
 
   // printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",

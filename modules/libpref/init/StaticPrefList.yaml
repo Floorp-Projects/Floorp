@@ -6369,16 +6369,6 @@
   value: true
   mirror: always
 
-- name: layout.display-list.retain.verify
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: layout.display-list.retain.verify.order
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Set the maximum number of modified frames allowed before doing a full
 # display list rebuild.
 - name: layout.display-list.rebuild-frame-limit
