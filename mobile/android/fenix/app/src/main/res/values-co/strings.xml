@@ -352,6 +352,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Nutificazioni</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Cullezzione persunalizata di moduli addiziunale</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Vai</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -360,6 +363,9 @@
     <string name="customize_addon_collection_hint">Nome di a cullezzione</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Prupietariu di a cullezzione (Id. d’utilizatore)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Cullezzione di moduli addiziunale mudificata. Chjusura di l’appiecazione per piglialla in contu…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -547,6 +553,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Unghjette</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Vista di l’unghjetta</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Lista</string>
     <!-- Option for a grid tab view -->

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Máis opcións</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Activar a navegación privada</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Desactivar a navegación privada</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Buscar ou introducir enderezo</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">As súas lapelas abertas aparecen aquí.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">As súas lapelas privadas aparecen aquí.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 lapela aberta. Toque para cambiar de lapela.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s lapelas abertas. Toque para cambiar de lapela.</string>
+
+    </resources>
