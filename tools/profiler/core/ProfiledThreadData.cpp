@@ -95,7 +95,10 @@ void ProfiledThreadData::StreamJSON(
     aWriter.EndObject();
 
     aWriter.StartArrayProperty("stringTable");
-    { uniqueStacks.mUniqueStrings->SpliceStringTableElements(aWriter); }
+    {
+      std::move(*uniqueStacks.mUniqueStrings)
+          .SpliceStringTableElements(aWriter);
+    }
     aWriter.EndArray();
   }
 
