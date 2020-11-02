@@ -3268,7 +3268,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 99;
+    const UI_VERSION = 102;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3902,6 +3902,17 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 99) {
       Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+    }
+
+    // For beta we have to move to 102 because 100 and 101 are used on nightly.
+    if (currentUIVersion < 102) {
+      // In Firefox 83, we moved to a dynamic button, so it needs to be removed
+      // from uiCustomization. This is done early enough that it doesn't
+      // impact adding new managed bookmarks.
+      const { CustomizableUI } = ChromeUtils.import(
+        "resource:///modules/CustomizableUI.jsm"
+      );
+      CustomizableUI.removeWidgetFromArea("managed-bookmarks");
     }
 
     // Update the migration version.
