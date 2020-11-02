@@ -36,15 +36,15 @@ use crate::{
 use ::libc::{self, calloc, free, malloc, memcpy};
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct qcms_modular_transform {
     pub matrix: matrix,
     pub tx: f32,
     pub ty: f32,
     pub tz: f32,
-    pub input_clut_table_r: *mut f32,
-    pub input_clut_table_g: *mut f32,
-    pub input_clut_table_b: *mut f32,
+    pub input_clut_table_r: Option<Vec<f32>>,
+    pub input_clut_table_g: Option<Vec<f32>>,
+    pub input_clut_table_b: Option<Vec<f32>>,
     pub input_clut_table_length: u16,
     pub r_clut: *mut f32,
     pub g_clut: *mut f32,
@@ -309,6 +309,9 @@ unsafe extern "C" fn qcms_transform_module_clut(
         |table: *mut f32, x, y, z| *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
 
     let mut i: usize = 0;
+    let input_clut_table_r = (*transform).input_clut_table_r.as_ref().unwrap();
+    let input_clut_table_g = (*transform).input_clut_table_g.as_ref().unwrap();
+    let input_clut_table_b = (*transform).input_clut_table_b.as_ref().unwrap();
     while i < length {
         debug_assert!((*transform).grid_size as i32 >= 1);
         let fresh18 = src;
@@ -322,17 +325,17 @@ unsafe extern "C" fn qcms_transform_module_clut(
         let mut device_b: f32 = *fresh20;
         let mut linear_r: f32 = lut_interp_linear_float(
             device_r,
-            (*transform).input_clut_table_r,
+            input_clut_table_r.as_ptr(),
             (*transform).input_clut_table_length as i32,
         );
         let mut linear_g: f32 = lut_interp_linear_float(
             device_g,
-            (*transform).input_clut_table_g,
+            input_clut_table_g.as_ptr(),
             (*transform).input_clut_table_length as i32,
         );
         let mut linear_b: f32 = lut_interp_linear_float(
             device_b,
-            (*transform).input_clut_table_b,
+            input_clut_table_b.as_ptr(),
             (*transform).input_clut_table_length as i32,
         );
         let mut x: i32 = (linear_r * ((*transform).grid_size as i32 - 1) as f32).floor() as i32;
@@ -530,6 +533,10 @@ unsafe extern "C" fn qcms_transform_module_gamma_table(
     let mut out_g: f32;
     let mut out_b: f32;
     let mut i: usize = 0;
+    let input_clut_table_r = (*transform).input_clut_table_r.as_ref().unwrap();
+    let input_clut_table_g = (*transform).input_clut_table_g.as_ref().unwrap();
+    let input_clut_table_b = (*transform).input_clut_table_b.as_ref().unwrap();
+
     while i < length {
         let fresh24 = src;
         src = src.offset(1);
@@ -540,9 +547,9 @@ unsafe extern "C" fn qcms_transform_module_gamma_table(
         let fresh26 = src;
         src = src.offset(1);
         let mut in_b: f32 = *fresh26;
-        out_r = lut_interp_linear_float(in_r, (*transform).input_clut_table_r, 256);
-        out_g = lut_interp_linear_float(in_g, (*transform).input_clut_table_g, 256);
-        out_b = lut_interp_linear_float(in_b, (*transform).input_clut_table_b, 256);
+        out_r = lut_interp_linear_float(in_r, input_clut_table_r.as_ptr(), 256);
+        out_g = lut_interp_linear_float(in_g, input_clut_table_g.as_ptr(), 256);
+        out_b = lut_interp_linear_float(in_b, input_clut_table_b.as_ptr(), 256);
         let fresh27 = dest;
         dest = dest.offset(1);
         *fresh27 = clamp_float(out_r);
@@ -707,31 +714,11 @@ unsafe extern "C" fn qcms_modular_transform_release(mut transform: *mut qcms_mod
     let mut next_transform: *mut qcms_modular_transform;
     while !transform.is_null() {
         next_transform = (*transform).next_transform;
-        // clut may use a single block of memory.
-        // Perhaps we should remove this to simply the code.
-        if (*transform)
-            .input_clut_table_r
-            .offset((*transform).input_clut_table_length as i32 as isize)
-            == (*transform).input_clut_table_g
-            && (*transform)
-                .input_clut_table_g
-                .offset((*transform).input_clut_table_length as i32 as isize)
-                == (*transform).input_clut_table_b
-        {
-            if !(*transform).input_clut_table_r.is_null() {
-                free((*transform).input_clut_table_r as *mut libc::c_void);
-            }
-        } else {
-            if !(*transform).input_clut_table_r.is_null() {
-                free((*transform).input_clut_table_r as *mut libc::c_void);
-            }
-            if !(*transform).input_clut_table_g.is_null() {
-                free((*transform).input_clut_table_g as *mut libc::c_void);
-            }
-            if !(*transform).input_clut_table_b.is_null() {
-                free((*transform).input_clut_table_b as *mut libc::c_void);
-            }
-        }
+
+        (*transform).input_clut_table_r = None;
+        (*transform).input_clut_table_g = None;
+        (*transform).input_clut_table_b = None;
+
         if (*transform).r_clut.offset(1isize) == (*transform).g_clut
             && (*transform).g_clut.offset(1isize) == (*transform).b_clut
         {
@@ -1027,12 +1014,21 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
                         (*lut).input_table.as_ptr() as *mut libc::c_void,
                         in_curve_len,
                     );
-                    (*transform).input_clut_table_r =
-                        in_curves.offset(((*lut).num_input_table_entries as i32 * 0) as isize);
-                    (*transform).input_clut_table_g =
-                        in_curves.offset(((*lut).num_input_table_entries as i32 * 1) as isize);
-                    (*transform).input_clut_table_b =
-                        in_curves.offset(((*lut).num_input_table_entries as i32 * 2) as isize);
+                    // XXX: in_curves is unused
+                    free(in_curves as *mut libc::c_void);
+                    (*transform).input_clut_table_r = Some(
+                        (*lut).input_table[0..(*lut).num_input_table_entries as usize].to_vec(),
+                    );
+                    (*transform).input_clut_table_g = Some(
+                        (*lut).input_table[(*lut).num_input_table_entries as usize
+                            ..(*lut).num_input_table_entries as usize * 2]
+                            .to_vec(),
+                    );
+                    (*transform).input_clut_table_b = Some(
+                        (*lut).input_table[(*lut).num_input_table_entries as usize * 2
+                            ..(*lut).num_input_table_entries as usize * 3]
+                            .to_vec(),
+                    );
                     (*transform).input_clut_table_length = (*lut).num_input_table_entries;
                     // Prepare table
                     clut_length = (::std::mem::size_of::<f32>() as f64
@@ -1133,9 +1129,9 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
                         _: usize,
                     ) -> (),
             );
-            if (*transform).input_clut_table_r.is_null()
-                || (*transform).input_clut_table_g.is_null()
-                || (*transform).input_clut_table_b.is_null()
+            if (*transform).input_clut_table_r.is_none()
+                || (*transform).input_clut_table_g.is_none()
+                || (*transform).input_clut_table_b.is_none()
             {
                 current_block = 8903102000210989603;
             } else {

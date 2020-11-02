@@ -144,31 +144,26 @@ pub unsafe extern "C" fn lut_interp_linear_float(
     /* scale the value */
     return value;
 }
-#[no_mangle]
-pub unsafe extern "C" fn compute_curve_gamma_table_type1(
-    mut gamma_table: *mut f32,
-    mut gamma: u16,
-) {
+fn compute_curve_gamma_table_type1(mut gamma_table: &mut Vec<f32>, mut gamma: u16) {
     let mut gamma_float: f32 = u8Fixed8Number_to_float(gamma);
-    let mut i: libc::c_uint = 0;
-    while i < 256 {
+    for i in 0..256 {
         // 0..1^(0..255 + 255/256) will always be between 0 and 1
-        *gamma_table.offset(i as isize) = (i as f64 / 255.0f64).powf(gamma_float as f64) as f32;
-        i = i + 1
+        gamma_table.push((i as f64 / 255.0f64).powf(gamma_float as f64) as f32);
     }
 }
 #[no_mangle]
-pub unsafe fn compute_curve_gamma_table_type2(mut gamma_table: *mut f32, mut table: &[u16]) {
-    let mut i: libc::c_uint = 0;
-    while i < 256 {
-        *gamma_table.offset(i as isize) =
-            lut_interp_linear(i as f64 / 255.0f64, table.as_ptr(), table.len() as i32);
-        i = i + 1
+pub unsafe fn compute_curve_gamma_table_type2(mut gamma_table: &mut Vec<f32>, mut table: &[u16]) {
+    for i in 0..256 {
+        gamma_table.push(lut_interp_linear(
+            i as f64 / 255.0f64,
+            table.as_ptr(),
+            table.len() as i32,
+        ));
     }
 }
 #[no_mangle]
 pub unsafe fn compute_curve_gamma_table_type_parametric(
-    mut gamma_table: *mut f32,
+    mut gamma_table: &mut Vec<f32>,
     mut params: &[f32],
 ) {
     let mut interval: f32;
@@ -223,55 +218,51 @@ pub unsafe fn compute_curve_gamma_table_type_parametric(
         f = 0.;
         interval = -1.
     }
-    let mut X: usize = 0;
-    while X < 256 {
+    for X in 0..256 {
         if X as f32 >= interval {
             // XXX The equations are not exactly as defined in the spec but are
             //     algebraically equivalent.
             // TODO Should division by 255 be for the whole expression.
-            *gamma_table.offset(X as isize) = clamp_float(
+            gamma_table.push(clamp_float(
                 (((a * X as f32) as f64 / 255.0f64 + b as f64).powf(y as f64) + c as f64 + e as f64)
                     as f32,
-            )
+            ));
         } else {
-            *gamma_table.offset(X as isize) =
-                clamp_float(((c * X as f32) as f64 / 255.0f64 + f as f64) as f32)
+            gamma_table.push(clamp_float(
+                ((c * X as f32) as f64 / 255.0f64 + f as f64) as f32,
+            ));
         }
-        X = X + 1
+    }
+}
+
+fn compute_curve_gamma_table_type0(mut gamma_table: &mut Vec<f32>) {
+    for i in 0..256 {
+        gamma_table.push((i as f64 / 255.0f64) as f32);
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_curve_gamma_table_type0(mut gamma_table: *mut f32) {
-    let mut i: libc::c_uint = 0;
-    while i < 256 {
-        *gamma_table.offset(i as isize) = (i as f64 / 255.0f64) as f32;
-        i = i + 1
-    }
-}
-#[no_mangle]
-pub unsafe extern "C" fn build_input_gamma_table(mut TRC: Option<&curveType>) -> *mut f32 {
+pub unsafe fn build_input_gamma_table(mut TRC: Option<&curveType>) -> Option<Vec<f32>> {
     let TRC = match TRC {
         Some(TRC) => TRC,
-        None => return 0 as *mut f32,
+        None => return None,
     };
-    let mut gamma_table: *mut f32 = malloc(::std::mem::size_of::<f32>() * 256) as *mut f32;
-    if !gamma_table.is_null() {
-        match TRC {
-            curveType::Parametric(params) => {
-                compute_curve_gamma_table_type_parametric(gamma_table, params)
-            }
-            curveType::Curve(data) => {
-                if data.len() == 0 {
-                    compute_curve_gamma_table_type0(gamma_table);
-                } else if data.len() == 1 {
-                    compute_curve_gamma_table_type1(gamma_table, data[0]);
-                } else {
-                    compute_curve_gamma_table_type2(gamma_table, data);
-                }
+    let mut gamma_table = Vec::with_capacity(256);
+    match TRC {
+        curveType::Parametric(params) => {
+            compute_curve_gamma_table_type_parametric(&mut gamma_table, params)
+        }
+        curveType::Curve(data) => {
+            if data.len() == 0 {
+                compute_curve_gamma_table_type0(&mut gamma_table);
+            } else if data.len() == 1 {
+                compute_curve_gamma_table_type1(&mut gamma_table, data[0]);
+            } else {
+                compute_curve_gamma_table_type2(&mut gamma_table, data);
             }
         }
     }
-    return gamma_table;
+
+    return Some(gamma_table);
 }
 #[no_mangle]
 pub unsafe extern "C" fn build_colorant_matrix(mut p: &qcms_profile) -> matrix {
@@ -449,11 +440,11 @@ pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
 pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut u8) -> bool {
     match trc {
         curveType::Parametric(params) => {
-            let mut gamma_table: [f32; 256] = [0.; 256];
+            let mut gamma_table = Vec::with_capacity(256);
             let mut gamma_table_uint: [u16; 256] = [0; 256];
 
             let mut inverted_size: i32 = 256;
-            compute_curve_gamma_table_type_parametric(gamma_table.as_mut_ptr(), params);
+            compute_curve_gamma_table_type_parametric(&mut gamma_table, params);
             let mut i: u16 = 0u16;
             while (i as i32) < 256 {
                 gamma_table_uint[i as usize] = (gamma_table[i as usize] * 65535f32) as u16;
@@ -539,14 +530,14 @@ pub unsafe extern "C" fn build_output_lut(
 ) {
     match trc {
         curveType::Parametric(params) => {
-            let mut gamma_table: [f32; 256] = [0.; 256];
+            let mut gamma_table = Vec::with_capacity(256);
 
             let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * 256) as *mut u16;
             if output.is_null() {
                 *output_gamma_lut = 0 as *mut u16;
                 return;
             }
-            compute_curve_gamma_table_type_parametric(gamma_table.as_mut_ptr(), params);
+            compute_curve_gamma_table_type_parametric(&mut gamma_table, params);
             *output_gamma_lut_length = 256;
             let mut i: u16 = 0u16;
             while (i as i32) < 256 {
