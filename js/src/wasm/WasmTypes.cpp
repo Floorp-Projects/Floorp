@@ -55,7 +55,7 @@ static_assert((MaxMemoryAccessSize & (MaxMemoryAccessSize - 1)) == 0,
               "MaxMemoryAccessSize is not a power of two");
 
 #if defined(WASM_SUPPORTS_HUGE_MEMORY)
-static_assert(HugeMappedSize > ArrayBufferObject::MaxBufferByteLength,
+static_assert(HugeMappedSize > MaxMemory32Bytes,
               "Normal array buffer could be confused with huge memory");
 #endif
 

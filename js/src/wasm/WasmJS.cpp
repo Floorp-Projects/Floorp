@@ -30,7 +30,7 @@
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "jit/Simulator.h"
-#if defined(JS_CODEGEN_X64)   // Assembler::HasSSE41
+#if defined(JS_CODEGEN_X64)  // Assembler::HasSSE41
 #  include "jit/x64/Assembler-x64.h"
 #  include "jit/x86-shared/Architecture-x86-shared.h"
 #  include "jit/x86-shared/Assembler-x86-shared.h"
@@ -2455,7 +2455,7 @@ WasmMemoryObject::InstanceSet* WasmMemoryObject::getOrCreateObservers(
 
 bool WasmMemoryObject::isHuge() const {
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
-  static_assert(ArrayBufferObject::MaxBufferByteLength < HugeMappedSize,
+  static_assert(MaxMemory32Bytes < HugeMappedSize,
                 "Non-huge buffer may be confused as huge");
   return buffer().wasmMappedSize() >= HugeMappedSize;
 #else
