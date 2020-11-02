@@ -1068,7 +1068,7 @@ OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
   // Allocate and initialize the memory for this instance.
   size_t totalSize = descr->size();
   Rooted<ArrayBufferObject*> buffer(cx);
-  buffer = ArrayBufferObject::createForTypedObject(cx, totalSize);
+  buffer = ArrayBufferObject::createForTypedObject(cx, BufferSize(totalSize));
   if (!buffer) {
     return nullptr;
   }
