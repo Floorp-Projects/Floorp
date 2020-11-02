@@ -754,7 +754,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     // Step 10.
-    uint32_t bufferByteLength = bufferMaybeUnwrapped->byteLength();
+    uint32_t bufferByteLength =
+        bufferMaybeUnwrapped->byteLength().deprecatedGetUint32();
 
     uint32_t len;
     if (lengthIndex == UINT64_MAX) {
@@ -2313,14 +2314,14 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
   if (object->is<ArrayBufferObject>()) {
     ArrayBufferObject& buffer = object->as<ArrayBufferObject>();
     *dataPointer = buffer.dataPointerShared();
-    *byteLength = buffer.byteLength();
+    *byteLength = buffer.byteLength().deprecatedGetUint32();
     return true;
   }
 
   if (object->is<SharedArrayBufferObject>()) {
     SharedArrayBufferObject& buffer = object->as<SharedArrayBufferObject>();
     *dataPointer = buffer.dataPointerShared();
-    *byteLength = buffer.byteLength();
+    *byteLength = buffer.byteLength().deprecatedGetUint32();
     return true;
   }
 

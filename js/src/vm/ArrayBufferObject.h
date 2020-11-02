@@ -109,9 +109,26 @@ mozilla::Maybe<uint64_t> WasmArrayBufferMaxSize(
     const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 
+// Class wrapping an ArrayBuffer or ArrayBufferView byte offset or length.
+class BufferSize {
+  size_t size_ = 0;
+
+ public:
+  explicit BufferSize(size_t size) : size_(size) {}
+
+  size_t get() const { return size_; }
+
+  // For consumers that still need to be audited or changed to support large
+  // buffers.
+  uint32_t deprecatedGetUint32() const {
+    MOZ_ASSERT(size_ <= INT32_MAX);
+    return size_;
+  }
+};
+
 class ArrayBufferObjectMaybeShared : public NativeObject {
  public:
-  inline uint32_t byteLength() const;
+  inline BufferSize byteLength() const;
   inline bool isDetached() const;
   inline SharedMem<uint8_t*> dataPointerEither();
 
@@ -395,7 +412,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
  public:
   uint8_t* dataPointer() const;
   SharedMem<uint8_t*> dataPointerShared() const;
-  uint32_t byteLength() const;
+  BufferSize byteLength() const;
 
   BufferContents contents() const {
     if (isExternal()) {
