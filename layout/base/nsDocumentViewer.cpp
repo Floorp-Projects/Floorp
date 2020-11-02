@@ -3089,12 +3089,12 @@ nsresult nsDocViewerFocusListener::HandleEvent(Event* aEvent) {
 NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
                         nsIWebProgressListener* aWebProgressListener) {
-  if (!mContainer) {
+  if (NS_WARN_IF(!mContainer)) {
     PR_PL(("Container was destroyed yet we are still trying to use it!"));
     return NS_ERROR_FAILURE;
   }
 
-  if (!mDocument || !mDeviceContext) {
+  if (NS_WARN_IF(!mDocument) || NS_WARN_IF(!mDeviceContext)) {
     PR_PL(("Can't Print without a document and a device context"));
     return NS_ERROR_FAILURE;
   }
@@ -3105,7 +3105,7 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
     return pDoc->Print();
   }
 
-  if (mPrintJob && mPrintJob->GetIsPrinting()) {
+  if (NS_WARN_IF(mPrintJob && mPrintJob->GetIsPrinting())) {
     // If we are printing another URL, then exit.
     // The reason we check here is because this method can be called while
     // another is still in here (the printing dialog is a good example).  the
@@ -3122,14 +3122,14 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
       printJob->Initialize(this, mContainer, mDocument,
                            float(AppUnitsPerCSSInch()) /
                                float(mDeviceContext->AppUnitsPerDevPixel()));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     printJob->Destroy();
     return rv;
   }
 
   mPrintJob = printJob;
   rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     OnDonePrinting();
   }
   return rv;
@@ -3143,13 +3143,13 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   RefPtr<Document> doc = mDocument.get();
   NS_ENSURE_STATE(doc);
 
-  if (GetIsPrinting()) {
+  if (NS_WARN_IF(GetIsPrinting())) {
     nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (!docShell || !mDeviceContext) {
+  if (NS_WARN_IF(!docShell) || NS_WARN_IF(!mDeviceContext)) {
     PR_PL(("Can't Print Preview without device context and docshell"));
     return NS_ERROR_FAILURE;
   }
@@ -3171,7 +3171,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
       printJob->Initialize(this, mContainer, doc,
                            float(AppUnitsPerCSSInch()) /
                                float(mDeviceContext->AppUnitsPerDevPixel()));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     printJob->Destroy();
     return rv;
   }
@@ -3182,7 +3182,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
                               std::move(aCallback));
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     OnDonePrinting();
   }
   return rv;
