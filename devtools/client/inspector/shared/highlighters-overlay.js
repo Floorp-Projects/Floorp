@@ -454,17 +454,6 @@ class HighlightersOverlay {
     this.emit("highlighter-hidden", { type, ...data });
   }
 
-  async canGetParentGridNode() {
-    if (this._canGetParentGridNode === undefined) {
-      this._canGetParentGridNode = await this.target.actorHasMethod(
-        "domwalker",
-        "getParentGridNode"
-      );
-    }
-
-    return this._canGetParentGridNode;
-  }
-
   /**
    * Returns true if the grid highlighter can be toggled on/off for the given node, and
    * false otherwise. A grid container can be toggled on if the max grid highlighters
@@ -863,7 +852,7 @@ class HighlightersOverlay {
       await this.hideGridHighlighter(node);
     }
 
-    if (node.displayType === "subgrid" && (await this.canGetParentGridNode())) {
+    if (node.displayType === "subgrid") {
       // Show a translucent highlight of the parent grid container if the given node is
       // a subgrid and the parent grid container is not highlighted.
       const parentGridNode = await this.walker.getParentGridNode(node);
@@ -1800,7 +1789,6 @@ class HighlightersOverlay {
 
     this.subgridToParentMap.clear();
 
-    this._canGetParentGridNode = null;
     this._lastHovered = null;
 
     this.inspector = null;
