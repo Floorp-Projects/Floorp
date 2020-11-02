@@ -38,11 +38,6 @@
             "optional": true,
             "description": "Only remove data associated with these hostnames (only applies to cookies and localStorage)."
           },
-          "cookieStoreId": {
-            "type": "string",
-            "description": "Only remove data associated with this specific cookieStoreId.",
-            "optional": true
-          },
           "originTypes": {
             "type": "object",
             "optional": true,
