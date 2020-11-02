@@ -312,5 +312,3 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 void WMFAudioMFTManager::Shutdown() { mDecoder = nullptr; }
 
 }  // namespace mozilla
-
-#undef LOG
