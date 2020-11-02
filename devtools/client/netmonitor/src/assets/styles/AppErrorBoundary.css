@@ -4,7 +4,7 @@
 
 /* Container */
 .network-monitor .app-error-panel {
-  color: var(--grey-90);
+  color: var(--theme-text-color-strong);
   display: flex;
   flex-direction: column;
   font-family: inherit;
@@ -24,7 +24,7 @@
 .network-monitor .app-error-panel .error-panel-file-button {
   align-self: center;
   background-color: var(--blue-60);
-  border: none;
+  outline: none;
   color: white;
   font-size: 15px;
   font-weight: 400;
@@ -32,12 +32,21 @@
   padding: 0.75rem;
   text-align: center;
   inline-size: 200px;
+  text-decoration: none;
+}
+
+.network-monitor .app-error-panel .error-panel-file-button:hover {
+  background-color: var(--blue-70);
+}
+
+.network-monitor .app-error-panel .error-panel-file-button:hover:active {
+  background-color: var(--blue-80);
 }
 
 /* Text of the error itself, not the stack trace */
 .network-monitor .app-error-panel .error-panel-error {
-  background-color: var(--grey-10);
-  border: 1px solid rgba(12,12,13,0.1);
+  background-color: var(--theme-body-emphasized-background);
+  border: 1px solid var(--theme-toolbar-separator);
   border-block-end: 0;
   font-size: 17px;
   font-weight: 500;
@@ -47,13 +56,13 @@
 
 /* Stack trace; composed of <p> elements */
 .network-monitor .app-error-panel .stack-trace-section {
-  background-color: var(--grey-10);
-  border: 1px solid rgba(12,12,13,0.1);
+  background-color: var(--theme-body-emphasized-background);
+  border: 1px solid var(--theme-toolbar-separator);
   padding: 2rem;
 }
 
 .network-monitor .app-error-panel .stack-trace-section p {
-  color: var(--red-70);
+  color: var(--theme-stack-trace-text);
   margin: 0;
   margin-inline-start: 1rem;
 }
@@ -67,17 +76,4 @@
   font-size: 15px;
   font-weight: 400;
   margin: 2rem 0 1rem;
-}
-
-.network-monitor .app-error-panel .error-panel-file-button:is(:active, :link, :hover, :visited) {
-  text-decoration: none;
-}
-
-.network-monitor .app-error-panel .error-panel-file-button:hover {
-  background-color: var(--blue-70);
-  cursor: pointer;
-}
-
-.network-monitor .app-error-panel .error-panel-file-button:hover:active {
-  background-color: var(--blue-80);
 }
