@@ -975,6 +975,14 @@ nsChangeHint nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
     return nsChangeHint_ReconstructFrame;
   }
 
+  // if left or top changes we reflow. This will happen in xul
+  // containers that manage positioned children such as a stack.
+  if (nsGkAtoms::left == aAttribute || nsGkAtoms::top == aAttribute ||
+      nsGkAtoms::right == aAttribute || nsGkAtoms::bottom == aAttribute ||
+      nsGkAtoms::start == aAttribute || nsGkAtoms::end == aAttribute) {
+    return NS_STYLE_HINT_REFLOW;
+  }
+
   return nsChangeHint(0);
 }
 

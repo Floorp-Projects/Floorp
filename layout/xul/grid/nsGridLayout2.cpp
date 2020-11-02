@@ -25,6 +25,14 @@ nsresult NS_NewGridLayout2(nsBoxLayout** aNewLayout) {
   return NS_OK;
 }
 
+// static
+void nsGridLayout2::AddOffset(nsIFrame* aChild, nsSize& aSize) {
+  nsMargin offset;
+  GetOffset(aChild, offset);
+  aSize.width += offset.left;
+  aSize.height += offset.top;
+}
+
 NS_IMETHODIMP
 nsGridLayout2::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) {
   // XXX This should be set a better way!
@@ -95,6 +103,7 @@ nsSize nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
     }
 
     AddXULMargin(aBox, total);
+    AddOffset(aBox, total);
     AddLargestSize(minSize, total);
   }
 
@@ -129,6 +138,7 @@ nsSize nsGridLayout2::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
     }
 
     AddXULMargin(aBox, total);
+    AddOffset(aBox, total);
     AddLargestSize(pref, total);
   }
 
@@ -165,6 +175,7 @@ nsSize nsGridLayout2::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState) {
     }
 
     AddXULMargin(aBox, total);
+    AddOffset(aBox, total);
     AddSmallestSize(maxSize, total);
   }
 
