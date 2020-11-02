@@ -8924,7 +8924,7 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
 
     obj->setImplicitlyUsedUnchecked();
 
-    int32_t len = AssertedCast<int32_t>(tarr->length());
+    int32_t len = AssertedCast<int32_t>(tarr->length().deprecatedGetUint32());
     *length = MConstant::New(alloc(), Int32Value(len));
     current->add(*length);
 

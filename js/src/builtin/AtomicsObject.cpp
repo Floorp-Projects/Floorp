@@ -116,7 +116,7 @@ static bool ValidateAtomicAccess(JSContext* cx,
   // Step 1 (implicit).
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  uint32_t length = typedArray->length();
+  uint32_t length = typedArray->length().deprecatedGetUint32();
 
   // Step 2.
   uint64_t accessIndex;
