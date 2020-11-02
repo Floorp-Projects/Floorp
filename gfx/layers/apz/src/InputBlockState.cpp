@@ -199,11 +199,6 @@ bool CancelableBlockState::SetContentResponse(bool aPreventDefault) {
   return true;
 }
 
-void CancelableBlockState::StartContentResponseTimer() {
-  MOZ_ASSERT(mContentResponseTimer.IsNull());
-  mContentResponseTimer = TimeStamp::Now();
-}
-
 bool CancelableBlockState::TimeoutContentResponse() {
   if (mContentResponseTimerExpired) {
     return false;
@@ -239,25 +234,6 @@ bool CancelableBlockState::IsReadyForHandling() const {
 
 bool CancelableBlockState::ShouldDropEvents() const {
   return InputBlockState::ShouldDropEvents() || IsDefaultPrevented();
-}
-
-void CancelableBlockState::RecordContentResponseTime() {
-  if (!mContentResponseTimer) {
-    // We might get responses from content even though we didn't wait for them.
-    // In that case, ignore the time on them, because they're not relevant for
-    // tuning our timeout value. Also this function might get called multiple
-    // times on the same input block, so we should only record the time from the
-    // first successful call.
-    return;
-  }
-  if (!HasReceivedAllContentNotifications()) {
-    // Not done yet, we'll get called again
-    return;
-  }
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::CONTENT_RESPONSE_DURATION,
-      (uint32_t)(TimeStamp::Now() - mContentResponseTimer).ToMilliseconds());
-  mContentResponseTimer = TimeStamp();
 }
 
 DragBlockState::DragBlockState(
