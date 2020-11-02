@@ -558,6 +558,8 @@ apiLint {
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
     skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
+    deprecationAnnotation = 'org.mozilla.geckoview.DeprecationSchedule'
+    libraryVersion = mozconfig.substs.MOZILLA_VERSION.split('\\.')[0] as Integer
     allowedPackages = [
         'java',
         'android',

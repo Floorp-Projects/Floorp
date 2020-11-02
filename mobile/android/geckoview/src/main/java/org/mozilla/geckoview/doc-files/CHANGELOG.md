@@ -17,6 +17,12 @@ exclude: true
 - ⚠️  Removed deprecated [`GeckoRuntimeSettings.Builder.useMultiprocess`] and
   [`GeckoRuntimeSettings.getUseMultiprocess`]. Single-process GeckoView is no
   longer supported. ([bug 1650118]({{bugzilla}}1650118))
+- Deprecated members now have an additional [`@DeprecationSchedule`][84.1] annotation which
+  includes the `version` that we expect to remove the member and an `id` that
+  can be used to group annotation notices in tooling.
+  ([bug 1671460]({{bugzilla}}1671460))
+
+[84.1]: {{javadoc_uri}}/DeprecationSchedule.html
 
 ## v83
 - Added [`WebExtension.MetaData.temporary`][83.1] which exposes whether an extension
@@ -841,4 +847,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6ccf9d43ee099b02dc6c1455fe7e428bd3330f5f
+[api-version]: 642c42359bac29b766e9788dd78e90244290f953
