@@ -61,6 +61,10 @@ public class Environment {
         return abi.startsWith("x86");
     }
 
+    public boolean isFission() {
+        return getEnvVar("MOZ_FORCE_ENABLE_FISSION").equals("1");
+    }
+
     public boolean isWebrender() {
         return getEnvVar("MOZ_WEBRENDER").equals("1");
     }

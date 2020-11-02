@@ -27,6 +27,7 @@ import kotlin.math.max
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assume.assumeThat
 import java.lang.IllegalStateException
 import java.lang.NullPointerException
 
@@ -157,6 +158,8 @@ class ScreenshotTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun capturePixelsWhileSessionDeactivated() {
+        // TODO: Bug 1673955
+        assumeThat(sessionRule.env.isFission, equalTo(false))
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)

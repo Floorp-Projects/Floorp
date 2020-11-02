@@ -119,6 +119,9 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
 
     @IgnoreCrash
     @Test fun crashContentMultipleSessions() {
+        // TODO: Bug 1673952
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
         val newSession = getSecondGeckoSession()
 
         // We can inadvertently catch the `onCrash` call for the cached session if we don't specify

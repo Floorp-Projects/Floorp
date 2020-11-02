@@ -12,6 +12,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.util.Callbacks
@@ -182,6 +183,9 @@ class HistoryDelegateTest : BaseSessionTest() {
     }
 
     @Test fun onHistoryStateChangeSavingState() {
+        // TODO: Bug 1648158
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
         // This is a smaller version of the above test, in the hopes to minimize race conditions
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
