@@ -41,6 +41,8 @@ class AbortFollower : public nsISupports {
 
   virtual ~AbortFollower();
 
+  friend class AbortSignalImpl;
+
   RefPtr<AbortSignalImpl> mFollowingSignal;
 };
 
@@ -51,10 +53,6 @@ class AbortSignalImpl : public nsISupports {
   bool Aborted() const;
 
   virtual void SignalAbort();
-
-  void AddFollower(AbortFollower* aFollower);
-
-  void RemoveFollower(AbortFollower* aFollower);
 
  protected:
   // Subclasses of this class must call these Traverse and Unlink functions
@@ -69,7 +67,12 @@ class AbortSignalImpl : public nsISupports {
   virtual ~AbortSignalImpl() = default;
 
  private:
-  // Raw pointers. AbortFollower unregisters itself in the DTOR.
+  friend class AbortFollower;
+
+  // Raw pointers.  |AbortFollower::Follow| adds to this array, and
+  // |AbortFollower::Unfollow| (also callbed by the destructor) will remove
+  // from this array.  Finally, calling |SignalAbort()| will (after running all
+  // abort algorithms) empty this and make all contained followers |Unfollow()|.
   nsTObserverArray<AbortFollower*> mFollowers;
 
   bool mAborted;
