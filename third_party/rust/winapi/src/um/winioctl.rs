@@ -1074,3 +1074,18 @@ pub const IOCTL_VOLUME_IS_CLUSTERED: DWORD = CTL_CODE!(IOCTL_VOLUME_BASE, 12, ME
     FILE_ANY_ACCESS);
 pub const IOCTL_VOLUME_GET_GPT_ATTRIBUTES: DWORD = CTL_CODE!(IOCTL_VOLUME_BASE, 14,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
+STRUCT!{struct DISK_PERFORMANCE {
+    BytesRead: LARGE_INTEGER,
+    BytesWritten: LARGE_INTEGER,
+    ReadTime: LARGE_INTEGER,
+    WriteTime: LARGE_INTEGER,
+    IdleTime: LARGE_INTEGER,
+    ReadCount: DWORD,
+    WriteCount: DWORD,
+    QueueDepth: DWORD,
+    SplitCount: DWORD,
+    QueryTime: LARGE_INTEGER,
+    StorageDeviceNumber: DWORD,
+    StorageManagerName: [WCHAR; 8],
+}}
+pub type PDISK_PERFORMANCE = *mut DISK_PERFORMANCE;

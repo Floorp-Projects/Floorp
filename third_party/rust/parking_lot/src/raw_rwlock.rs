@@ -12,11 +12,12 @@ use core::{
     cell::Cell,
     sync::atomic::{AtomicUsize, Ordering},
 };
-use lock_api::{GuardNoSend, RawRwLock as RawRwLock_, RawRwLockUpgrade};
+use instant::Instant;
+use lock_api::{RawRwLock as RawRwLock_, RawRwLockUpgrade};
 use parking_lot_core::{
     self, deadlock, FilterOp, ParkResult, ParkToken, SpinWait, UnparkResult, UnparkToken,
 };
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 // This reader-writer lock implementation is based on Boost's upgrade_mutex:
 // https://github.com/boostorg/thread/blob/fc08c1fe2840baeeee143440fba31ef9e9a813c8/include/boost/thread/v2/shared_mutex.hpp#L432
@@ -61,7 +62,7 @@ unsafe impl lock_api::RawRwLock for RawRwLock {
         state: AtomicUsize::new(0),
     };
 
-    type GuardMarker = GuardNoSend;
+    type GuardMarker = crate::GuardMarker;
 
     #[inline]
     fn lock_exclusive(&self) {
@@ -91,7 +92,7 @@ unsafe impl lock_api::RawRwLock for RawRwLock {
     }
 
     #[inline]
-    fn unlock_exclusive(&self) {
+    unsafe fn unlock_exclusive(&self) {
         self.deadlock_release();
         if self
             .state
@@ -126,7 +127,7 @@ unsafe impl lock_api::RawRwLock for RawRwLock {
     }
 
     #[inline]
-    fn unlock_shared(&self) {
+    unsafe fn unlock_shared(&self) {
         self.deadlock_release();
         let state = if have_elision() {
             self.state.elision_fetch_sub_release(ONE_READER)
@@ -137,17 +138,23 @@ unsafe impl lock_api::RawRwLock for RawRwLock {
             self.unlock_shared_slow();
         }
     }
+
+    #[inline]
+    fn is_locked(&self) -> bool {
+        let state = self.state.load(Ordering::Relaxed);
+        state & (WRITER_BIT | READERS_MASK) != 0
+    }
 }
 
 unsafe impl lock_api::RawRwLockFair for RawRwLock {
     #[inline]
-    fn unlock_shared_fair(&self) {
+    unsafe fn unlock_shared_fair(&self) {
         // Shared unlocking is always fair in this implementation.
         self.unlock_shared();
     }
 
     #[inline]
-    fn unlock_exclusive_fair(&self) {
+    unsafe fn unlock_exclusive_fair(&self) {
         self.deadlock_release();
         if self
             .state
@@ -160,7 +167,7 @@ unsafe impl lock_api::RawRwLockFair for RawRwLock {
     }
 
     #[inline]
-    fn bump_shared(&self) {
+    unsafe fn bump_shared(&self) {
         if self.state.load(Ordering::Relaxed) & (READERS_MASK | WRITER_BIT)
             == ONE_READER | WRITER_BIT
         {
@@ -169,7 +176,7 @@ unsafe impl lock_api::RawRwLockFair for RawRwLock {
     }
 
     #[inline]
-    fn bump_exclusive(&self) {
+    unsafe fn bump_exclusive(&self) {
         if self.state.load(Ordering::Relaxed) & PARKED_BIT != 0 {
             self.bump_exclusive_slow();
         }
@@ -178,7 +185,7 @@ unsafe impl lock_api::RawRwLockFair for RawRwLock {
 
 unsafe impl lock_api::RawRwLockDowngrade for RawRwLock {
     #[inline]
-    fn downgrade(&self) {
+    unsafe fn downgrade(&self) {
         let state = self
             .state
             .fetch_add(ONE_READER - WRITER_BIT, Ordering::Release);
@@ -331,7 +338,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
     }
 
     #[inline]
-    fn unlock_upgradable(&self) {
+    unsafe fn unlock_upgradable(&self) {
         self.deadlock_release();
         let state = self.state.load(Ordering::Relaxed);
         if state & PARKED_BIT == 0 {
@@ -352,7 +359,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
     }
 
     #[inline]
-    fn upgrade(&self) {
+    unsafe fn upgrade(&self) {
         let state = self.state.fetch_sub(
             (ONE_READER | UPGRADABLE_BIT) - WRITER_BIT,
             Ordering::Relaxed,
@@ -364,7 +371,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
     }
 
     #[inline]
-    fn try_upgrade(&self) -> bool {
+    unsafe fn try_upgrade(&self) -> bool {
         if self
             .state
             .compare_exchange_weak(
@@ -384,7 +391,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
 
 unsafe impl lock_api::RawRwLockUpgradeFair for RawRwLock {
     #[inline]
-    fn unlock_upgradable_fair(&self) {
+    unsafe fn unlock_upgradable_fair(&self) {
         self.deadlock_release();
         let state = self.state.load(Ordering::Relaxed);
         if state & PARKED_BIT == 0 {
@@ -405,7 +412,7 @@ unsafe impl lock_api::RawRwLockUpgradeFair for RawRwLock {
     }
 
     #[inline]
-    fn bump_upgradable(&self) {
+    unsafe fn bump_upgradable(&self) {
         if self.state.load(Ordering::Relaxed) == ONE_READER | UPGRADABLE_BIT | PARKED_BIT {
             self.bump_upgradable_slow();
         }
@@ -414,7 +421,7 @@ unsafe impl lock_api::RawRwLockUpgradeFair for RawRwLock {
 
 unsafe impl lock_api::RawRwLockUpgradeDowngrade for RawRwLock {
     #[inline]
-    fn downgrade_upgradable(&self) {
+    unsafe fn downgrade_upgradable(&self) {
         let state = self.state.fetch_sub(UPGRADABLE_BIT, Ordering::Relaxed);
 
         // Wake up parked upgradable threads if there are any
@@ -424,7 +431,7 @@ unsafe impl lock_api::RawRwLockUpgradeDowngrade for RawRwLock {
     }
 
     #[inline]
-    fn downgrade_to_upgradable(&self) {
+    unsafe fn downgrade_to_upgradable(&self) {
         let state = self.state.fetch_add(
             (ONE_READER | UPGRADABLE_BIT) - WRITER_BIT,
             Ordering::Release,
@@ -465,7 +472,7 @@ unsafe impl lock_api::RawRwLockUpgradeTimed for RawRwLock {
     }
 
     #[inline]
-    fn try_upgrade_until(&self, timeout: Instant) -> bool {
+    unsafe fn try_upgrade_until(&self, timeout: Instant) -> bool {
         let state = self.state.fetch_sub(
             (ONE_READER | UPGRADABLE_BIT) - WRITER_BIT,
             Ordering::Relaxed,
@@ -478,7 +485,7 @@ unsafe impl lock_api::RawRwLockUpgradeTimed for RawRwLock {
     }
 
     #[inline]
-    fn try_upgrade_for(&self, timeout: Duration) -> bool {
+    unsafe fn try_upgrade_for(&self, timeout: Duration) -> bool {
         let state = self.state.fetch_sub(
             (ONE_READER | UPGRADABLE_BIT) - WRITER_BIT,
             Ordering::Relaxed,
@@ -892,7 +899,7 @@ impl RawRwLock {
     }
 
     #[cold]
-    fn bump_shared_slow(&self) {
+    unsafe fn bump_shared_slow(&self) {
         self.unlock_shared();
         self.lock_shared();
     }

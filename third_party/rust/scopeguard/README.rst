@@ -53,6 +53,11 @@ How to use
 Recent Changes
 --------------
 
+- 1.1.0
+
+  - Change macros (``defer!``, ``defer_on_success!`` and ``defer_on_unwind!``)
+    to accept statements. (by @konsumlamm)
+
 - 1.0.0
 
   - Change the closure type from ``FnMut(&mut T)`` to ``FnOnce(T)``:

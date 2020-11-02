@@ -1,4 +1,4 @@
-#![allow(clippy::block_in_if_condition_stmt)]
+#![allow(clippy::blocks_in_if_conditions, clippy::range_plus_one)]
 
 extern crate proc_macro;
 

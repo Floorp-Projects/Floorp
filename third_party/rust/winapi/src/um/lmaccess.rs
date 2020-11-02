@@ -61,6 +61,7 @@ extern "system" {
     ) -> NET_API_STATUS;
     pub fn NetUserGetLocalGroups(
         servername: LPCWSTR,
+        username: LPCWSTR,
         level: DWORD,
         flags: DWORD,
         bufptr: *mut LPBYTE,

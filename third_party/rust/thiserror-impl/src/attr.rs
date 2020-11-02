@@ -1,6 +1,6 @@
-use proc_macro2::{Delimiter, Group, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
-use std::iter::once;
+use std::iter::FromIterator;
 use syn::parse::{Nothing, ParseStream};
 use syn::{
     braced, bracketed, parenthesized, token, Attribute, Error, Ident, Index, LitInt, LitStr,
@@ -12,6 +12,7 @@ pub struct Attrs<'a> {
     pub source: Option<&'a Attribute>,
     pub backtrace: Option<&'a Attribute>,
     pub from: Option<&'a Attribute>,
+    pub transparent: Option<Transparent<'a>>,
 }
 
 #[derive(Clone)]
@@ -19,8 +20,13 @@ pub struct Display<'a> {
     pub original: &'a Attribute,
     pub fmt: LitStr,
     pub args: TokenStream,
-    pub was_shorthand: bool,
     pub has_bonus_display: bool,
+}
+
+#[derive(Copy, Clone)]
+pub struct Transparent<'a> {
+    pub original: &'a Attribute,
+    pub span: Span,
 }
 
 pub fn get(input: &[Attribute]) -> Result<Attrs> {
@@ -29,18 +35,12 @@ pub fn get(input: &[Attribute]) -> Result<Attrs> {
         source: None,
         backtrace: None,
         from: None,
+        transparent: None,
     };
 
     for attr in input {
         if attr.path.is_ident("error") {
-            let display = parse_display(attr)?;
-            if attrs.display.is_some() {
-                return Err(Error::new_spanned(
-                    attr,
-                    "only one #[error(...)] attribute is allowed",
-                ));
-            }
-            attrs.display = Some(display);
+            parse_error_attribute(&mut attrs, attr)?;
         } else if attr.path.is_ident("source") {
             require_empty_attribute(attr)?;
             if attrs.source.is_some() {
@@ -68,39 +68,83 @@ pub fn get(input: &[Attribute]) -> Result<Attrs> {
     Ok(attrs)
 }
 
-fn parse_display(attr: &Attribute) -> Result<Display> {
+fn parse_error_attribute<'a>(attrs: &mut Attrs<'a>, attr: &'a Attribute) -> Result<()> {
+    syn::custom_keyword!(transparent);
+
     attr.parse_args_with(|input: ParseStream| {
-        let mut display = Display {
+        if let Some(kw) = input.parse::<Option<transparent>>()? {
+            if attrs.transparent.is_some() {
+                return Err(Error::new_spanned(
+                    attr,
+                    "duplicate #[error(transparent)] attribute",
+                ));
+            }
+            attrs.transparent = Some(Transparent {
+                original: attr,
+                span: kw.span,
+            });
+            return Ok(());
+        }
+
+        let display = Display {
             original: attr,
             fmt: input.parse()?,
             args: parse_token_expr(input, false)?,
-            was_shorthand: false,
             has_bonus_display: false,
         };
-        display.expand_shorthand();
-        Ok(display)
+        if attrs.display.is_some() {
+            return Err(Error::new_spanned(
+                attr,
+                "only one #[error(...)] attribute is allowed",
+            ));
+        }
+        attrs.display = Some(display);
+        Ok(())
     })
 }
 
-fn parse_token_expr(input: ParseStream, mut last_is_comma: bool) -> Result<TokenStream> {
-    let mut tokens = TokenStream::new();
+fn parse_token_expr(input: ParseStream, mut begin_expr: bool) -> Result<TokenStream> {
+    let mut tokens = Vec::new();
     while !input.is_empty() {
-        if last_is_comma && input.peek(Token![.]) {
+        if begin_expr && input.peek(Token![.]) {
             if input.peek2(Ident) {
                 input.parse::<Token![.]>()?;
-                last_is_comma = false;
+                begin_expr = false;
                 continue;
             }
             if input.peek2(LitInt) {
                 input.parse::<Token![.]>()?;
                 let int: Index = input.parse()?;
                 let ident = format_ident!("_{}", int.index, span = int.span);
-                tokens.extend(once(TokenTree::Ident(ident)));
-                last_is_comma = false;
+                tokens.push(TokenTree::Ident(ident));
+                begin_expr = false;
                 continue;
             }
         }
-        last_is_comma = input.peek(Token![,]);
+
+        begin_expr = input.peek(Token![break])
+            || input.peek(Token![continue])
+            || input.peek(Token![if])
+            || input.peek(Token![in])
+            || input.peek(Token![match])
+            || input.peek(Token![mut])
+            || input.peek(Token![return])
+            || input.peek(Token![while])
+            || input.peek(Token![+])
+            || input.peek(Token![&])
+            || input.peek(Token![!])
+            || input.peek(Token![^])
+            || input.peek(Token![,])
+            || input.peek(Token![/])
+            || input.peek(Token![=])
+            || input.peek(Token![>])
+            || input.peek(Token![<])
+            || input.peek(Token![|])
+            || input.peek(Token![%])
+            || input.peek(Token![;])
+            || input.peek(Token![*])
+            || input.peek(Token![-]);
+
         let token: TokenTree = if input.peek(token::Paren) {
             let content;
             let delimiter = parenthesized!(content in input);
@@ -125,9 +169,9 @@ fn parse_token_expr(input: ParseStream, mut last_is_comma: bool) -> Result<Token
         } else {
             input.parse()?
         };
-        tokens.extend(once(token));
+        tokens.push(token);
     }
-    Ok(tokens)
+    Ok(TokenStream::from_iter(tokens))
 }
 
 fn require_empty_attribute(attr: &Attribute) -> Result<()> {
@@ -139,20 +183,8 @@ impl ToTokens for Display<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let fmt = &self.fmt;
         let args = &self.args;
-        if self.was_shorthand && fmt.value() == "{}" {
-            let arg = args.clone().into_iter().nth(1).unwrap();
-            tokens.extend(quote! {
-                std::fmt::Display::fmt(#arg, __formatter)
-            });
-        } else if self.was_shorthand && fmt.value() == "{:?}" {
-            let arg = args.clone().into_iter().nth(1).unwrap();
-            tokens.extend(quote! {
-                std::fmt::Debug::fmt(#arg, __formatter)
-            });
-        } else {
-            tokens.extend(quote! {
-                write!(__formatter, #fmt #args)
-            });
-        }
+        tokens.extend(quote! {
+            write!(__formatter, #fmt #args)
+        });
     }
 }

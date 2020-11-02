@@ -82,7 +82,7 @@ STRUCT!{struct netent {
     n_addrtype: c_short,
     n_net: u_long,
 }}
-#[cfg(target_arch = "x86")]
+#[cfg(target_pointer_width = "32")]
 STRUCT!{struct servent {
     s_name: *mut c_char,
     s_aliases: *mut *mut c_char,
@@ -132,7 +132,7 @@ pub const IMPLINK_HIGHEXPER: c_short = 158;
 pub const ADDR_ANY: ULONG = INADDR_ANY;
 pub const WSADESCRIPTION_LEN: usize = 256;
 pub const WSASYS_STATUS_LEN: usize = 128;
-#[cfg(target_arch = "x86")]
+#[cfg(target_pointer_width = "32")]
 STRUCT!{struct WSADATA {
     wVersion: WORD,
     wHighVersion: WORD,

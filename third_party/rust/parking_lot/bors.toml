@@ -1,3 +1,4 @@
 status = [
-  "continuous-integration/travis-ci/push",
+  "build_tier_one", 
+  "build_other_platforms",
 ]

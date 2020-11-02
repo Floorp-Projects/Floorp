@@ -3,60 +3,16 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
-use ctypes::c_void;
-use shared::guiddef::{REFGUID, REFIID};
+use shared::guiddef::REFGUID;
 use shared::minwindef::{BOOL, DWORD, UINT};
 use shared::windef::HWND;
-use um::objidl::IBindCtx;
-use um::propkeydef::REFPROPERTYKEY;
-use um::propsys::{GETPROPERTYSTOREFLAGS, IPropertyDescriptionList, IPropertyStore};
-use um::shobjidl_core::{IModalWindow, IModalWindowVtbl, IShellItem, IShellItemFilter, SFGAOF};
+use um::propsys::{IPropertyDescriptionList, IPropertyStore};
+use um::shobjidl_core::{IModalWindow, IModalWindowVtbl, IShellItem, IShellItemFilter};
 use um::shtypes::COMDLG_FILTERSPEC;
 use um::unknwnbase::{IUnknown, IUnknownVtbl};
 use um::winnt::{HRESULT, LPCWSTR, LPWSTR, WCHAR};
 pub type IFileOperationProgressSink = IUnknown; // TODO
-ENUM!{enum SIATTRIBFLAGS {
-    SIATTRIBFLAGS_AND = 0x1,
-    SIATTRIBFLAGS_OR = 0x2,
-    SIATTRIBFLAGS_APPCOMPAT = 0x3,
-    SIATTRIBFLAGS_MASK = 0x3,
-    SIATTRIBFLAGS_ALLITEMS = 0x4000,
-}}
-RIDL!{#[uuid(0xb63ea76d, 0x1f85, 0x456f, 0xa1, 0x9c, 0x48, 0x15, 0x9e, 0xfa, 0x85, 0x8b)]
-interface IShellItemArray(IShellItemArrayVtbl): IUnknown(IUnknownVtbl) {
-    fn BindToHandler(
-        pbc: *mut IBindCtx,
-        bhid: REFGUID,
-        riid: REFIID,
-        ppvOut: *mut *mut c_void,
-    ) -> HRESULT,
-    fn GetPropertyStore(
-        flags: GETPROPERTYSTOREFLAGS,
-        riid: REFIID,
-        ppv: *mut *mut c_void,
-    ) -> HRESULT,
-    fn GetPropertyDescriptionList(
-        keyType: REFPROPERTYKEY,
-        riid: REFIID,
-        ppv: *mut *mut c_void,
-    ) -> HRESULT,
-    fn GetAttributes(
-        AttribFlags: SIATTRIBFLAGS,
-        sfgaoMask: SFGAOF,
-        psfgaoAttribs: *mut SFGAOF,
-    ) -> HRESULT,
-    fn GetCount(
-        pdwNumItems: *mut DWORD,
-    ) -> HRESULT,
-    fn GetItemAt(
-        dwIndex: DWORD,
-        ppsi: *mut *mut IShellItem,
-    ) -> HRESULT,
-    // TODO: Add IEnumShellItems
-    //fn EnumItems(
-    //    ppenumShellItems: *mut *mut IEnumShellItems,
-    //) -> HRESULT,
-}}
+pub use um::shobjidl_core::{IShellItemArray, SIATTRIBFLAGS}; // FIXME: Remove these in the next major release
 ENUM!{enum FDE_OVERWRITE_RESPONSE {
     FDEOR_DEFAULT = 0,
     FDEOR_ACCEPT = 1,

@@ -2,9 +2,7 @@ use crate::ast::{Enum, Field, Input, Struct, Variant};
 use crate::attr::Attrs;
 use quote::ToTokens;
 use std::collections::BTreeSet as Set;
-use syn::{Error, Member, Result};
-
-pub(crate) const CHECKED: &str = "checked in validation";
+use syn::{Error, GenericArgument, Member, PathArguments, Result, Type};
 
 impl Input<'_> {
     pub(crate) fn validate(&self) -> Result<()> {
@@ -18,6 +16,20 @@ impl Input<'_> {
 impl Struct<'_> {
     fn validate(&self) -> Result<()> {
         check_non_field_attrs(&self.attrs)?;
+        if let Some(transparent) = self.attrs.transparent {
+            if self.fields.len() != 1 {
+                return Err(Error::new_spanned(
+                    transparent.original,
+                    "#[error(transparent)] requires exactly one field",
+                ));
+            }
+            if let Some(source) = self.fields.iter().filter_map(|f| f.attrs.source).next() {
+                return Err(Error::new_spanned(
+                    source,
+                    "transparent error struct can't contain #[source]",
+                ));
+            }
+        }
         check_field_attrs(&self.fields)?;
         for field in &self.fields {
             field.validate()?;
@@ -32,7 +44,8 @@ impl Enum<'_> {
         let has_display = self.has_display();
         for variant in &self.variants {
             variant.validate()?;
-            if has_display && variant.attrs.display.is_none() {
+            if has_display && variant.attrs.display.is_none() && variant.attrs.transparent.is_none()
+            {
                 return Err(Error::new_spanned(
                     variant.original,
                     "missing #[error(\"...\")] display attribute",
@@ -58,6 +71,20 @@ impl Enum<'_> {
 impl Variant<'_> {
     fn validate(&self) -> Result<()> {
         check_non_field_attrs(&self.attrs)?;
+        if self.attrs.transparent.is_some() {
+            if self.fields.len() != 1 {
+                return Err(Error::new_spanned(
+                    self.original,
+                    "#[error(transparent)] requires exactly one field",
+                ));
+            }
+            if let Some(source) = self.fields.iter().filter_map(|f| f.attrs.source).next() {
+                return Err(Error::new_spanned(
+                    source,
+                    "transparent variant can't contain #[source]",
+                ));
+            }
+        }
         check_field_attrs(&self.fields)?;
         for field in &self.fields {
             field.validate()?;
@@ -97,6 +124,14 @@ fn check_non_field_attrs(attrs: &Attrs) -> Result<()> {
             "not expected here; the #[backtrace] attribute belongs on a specific field",
         ));
     }
+    if let Some(display) = &attrs.display {
+        if attrs.transparent.is_some() {
+            return Err(Error::new_spanned(
+                display.original,
+                "cannot have both #[error(transparent)] and a display attribute",
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -128,6 +163,12 @@ fn check_field_attrs(fields: &[Field]) -> Result<()> {
             backtrace_field = Some(field);
             has_backtrace = true;
         }
+        if let Some(transparent) = field.attrs.transparent {
+            return Err(Error::new_spanned(
+                transparent.original,
+                "#[error(transparent)] needs to go outside the enum or struct, not on an individual field",
+            ));
+        }
         has_backtrace |= field.is_backtrace();
     }
     if let (Some(from_field), Some(source_field)) = (from_field, source_field) {
@@ -146,6 +187,14 @@ fn check_field_attrs(fields: &[Field]) -> Result<()> {
             ));
         }
     }
+    if let Some(source_field) = source_field.or(from_field) {
+        if contains_non_static_lifetime(source_field) {
+            return Err(Error::new_spanned(
+                source_field.original,
+                "non-static lifetimes are not allowed in the source of an error",
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -155,4 +204,23 @@ fn same_member(one: &Field, two: &Field) -> bool {
         (Member::Unnamed(one), Member::Unnamed(two)) => one.index == two.index,
         _ => unreachable!(),
     }
+}
+
+fn contains_non_static_lifetime(field: &Field) -> bool {
+    let ty = match field.ty {
+        Type::Path(ty) => ty,
+        _ => return false, // maybe implement later if there are common other cases
+    };
+    let bracketed = match &ty.path.segments.last().unwrap().arguments {
+        PathArguments::AngleBracketed(bracketed) => bracketed,
+        _ => return false,
+    };
+    for arg in &bracketed.args {
+        if let GenericArgument::Lifetime(lifetime) = arg {
+            if lifetime.ident != "static" {
+                return true;
+            }
+        }
+    }
+    false
 }

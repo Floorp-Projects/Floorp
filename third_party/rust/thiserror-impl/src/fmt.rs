@@ -1,24 +1,35 @@
+use crate::ast::Field;
 use crate::attr::Display;
-use proc_macro2::TokenStream;
-use quote::quote_spanned;
-use syn::{Ident, LitStr};
+use proc_macro2::TokenTree;
+use quote::{format_ident, quote_spanned};
+use std::collections::HashSet as Set;
+use syn::ext::IdentExt;
+use syn::parse::{ParseStream, Parser};
+use syn::{Ident, Index, LitStr, Member, Result, Token};
 
 impl Display<'_> {
     // Transform `"error {var}"` to `"error {}", var`.
-    pub fn expand_shorthand(&mut self) {
-        if !self.args.is_empty() {
-            return;
-        }
+    pub fn expand_shorthand(&mut self, fields: &[Field]) {
+        let raw_args = self.args.clone();
+        let mut named_args = explicit_named_args.parse2(raw_args).unwrap();
+        let fields: Set<Member> = fields.iter().map(|f| f.member.clone()).collect();
 
         let span = self.fmt.span();
         let fmt = self.fmt.value();
         let mut read = fmt.as_str();
         let mut out = String::new();
-        let mut args = TokenStream::new();
+        let mut args = self.args.clone();
         let mut has_bonus_display = false;
 
+        let mut has_trailing_comma = false;
+        if let Some(TokenTree::Punct(punct)) = args.clone().into_iter().last() {
+            if punct.as_char() == ',' {
+                has_trailing_comma = true;
+            }
+        }
+
         while let Some(brace) = read.find('{') {
-            out += &read[..=brace];
+            out += &read[..brace + 1];
             read = &read[brace + 1..];
             if read.starts_with('{') {
                 out.push('{');
@@ -29,30 +40,77 @@ impl Display<'_> {
                 Some(next) => next,
                 None => return,
             };
-            let var = match next {
-                '0'..='9' => take_int(&mut read),
-                'a'..='z' | 'A'..='Z' | '_' => take_ident(&mut read),
-                _ => return,
+            let member = match next {
+                '0'..='9' => {
+                    let int = take_int(&mut read);
+                    let member = match int.parse::<u32>() {
+                        Ok(index) => Member::Unnamed(Index { index, span }),
+                        Err(_) => return,
+                    };
+                    if !fields.contains(&member) {
+                        out += &int;
+                        continue;
+                    }
+                    member
+                }
+                'a'..='z' | 'A'..='Z' | '_' => {
+                    let ident = take_ident(&mut read);
+                    Member::Named(Ident::new(&ident, span))
+                }
+                _ => continue,
             };
-            let ident = Ident::new(&var, span);
-            args.extend(quote_spanned!(span=> , #ident));
-            if read.starts_with('}') {
+            let local = match &member {
+                Member::Unnamed(index) => format_ident!("_{}", index),
+                Member::Named(ident) => ident.clone(),
+            };
+            let mut formatvar = local.clone();
+            if formatvar.to_string().starts_with('_') {
+                // Work around leading underscore being rejected by 1.40 and
+                // older compilers. https://github.com/rust-lang/rust/pull/66847
+                formatvar = format_ident!("field_{}", formatvar);
+            }
+            out += &formatvar.to_string();
+            if !named_args.insert(formatvar.clone()) {
+                // Already specified in the format argument list.
+                continue;
+            }
+            if !has_trailing_comma {
+                args.extend(quote_spanned!(span=> ,));
+            }
+            args.extend(quote_spanned!(span=> #formatvar = #local));
+            if read.starts_with('}') && fields.contains(&member) {
                 has_bonus_display = true;
                 args.extend(quote_spanned!(span=> .as_display()));
             }
+            has_trailing_comma = false;
         }
 
         out += read;
         self.fmt = LitStr::new(&out, self.fmt.span());
         self.args = args;
-        self.was_shorthand = true;
         self.has_bonus_display = has_bonus_display;
     }
 }
 
+fn explicit_named_args(input: ParseStream) -> Result<Set<Ident>> {
+    let mut named_args = Set::new();
+
+    while !input.is_empty() {
+        if input.peek(Token![,]) && input.peek2(Ident::peek_any) && input.peek3(Token![=]) {
+            input.parse::<Token![,]>()?;
+            let ident: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            named_args.insert(ident);
+        } else {
+            input.parse::<TokenTree>()?;
+        }
+    }
+
+    Ok(named_args)
+}
+
 fn take_int(read: &mut &str) -> String {
     let mut int = String::new();
-    int.push('_');
     for (i, ch) in read.char_indices() {
         match ch {
             '0'..='9' => int.push(ch),
@@ -77,35 +135,4 @@ fn take_ident(read: &mut &str) -> String {
         }
     }
     ident
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use proc_macro2::Span;
-    use syn::parse_quote;
-
-    fn assert(input: &str, fmt: &str, args: &str) {
-        let mut display = Display {
-            original: &parse_quote!(#[error]),
-            fmt: LitStr::new(input, Span::call_site()),
-            args: TokenStream::new(),
-            was_shorthand: false,
-            has_bonus_display: false,
-        };
-        display.expand_shorthand();
-        assert_eq!(fmt, display.fmt.value());
-        assert_eq!(args, display.args.to_string());
-    }
-
-    #[test]
-    fn test_expand() {
-        assert("error {var}", "error {}", ", var . as_display ( )");
-        assert("fn main() {{ }}", "fn main() {{ }}", "");
-        assert(
-            "{v} {v:?} {0} {0:?}",
-            "{} {:?} {} {:?}",
-            ", v . as_display ( ) , v , _0 . as_display ( ) , _0",
-        );
-    }
 }

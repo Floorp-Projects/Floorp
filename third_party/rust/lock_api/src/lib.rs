@@ -52,7 +52,7 @@
 //!             .is_ok()
 //!     }
 //!
-//!     fn unlock(&self) {
+//!     unsafe fn unlock(&self) {
 //!         self.0.store(false, Ordering::Release);
 //!     }
 //! }

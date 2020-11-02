@@ -7,7 +7,7 @@
 use ctypes::c_char;
 use um::winnt::PVOID;
 DECLARE_HANDLE!{HSTRING, HSTRING__}
-#[cfg(target_arch = "x86")]
+#[cfg(target_pointer_width = "32")]
 UNION!{union HSTRING_HEADER_Reserved {
     [u32; 5],
     Reserved1 Reserved1_mut: PVOID,

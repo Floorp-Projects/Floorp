@@ -9,8 +9,9 @@ use core::{
     ptr,
     sync::atomic::{AtomicI32, Ordering},
 };
+use instant::Instant;
 use libc;
-use std::{thread, time::Instant};
+use std::thread;
 
 // x32 Linux uses a non-standard type for tv_nsec in timespec.
 // See https://sourceware.org/bugzilla/show_bug.cgi?id=16437

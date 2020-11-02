@@ -11,7 +11,8 @@ use core::{
     mem::{self, MaybeUninit},
     sync::atomic::{AtomicU32, Ordering},
 };
-use std::{convert::TryFrom, thread, time::Instant};
+use instant::Instant;
+use std::{convert::TryFrom, thread};
 
 extern "C" {
     #[thread_local]
@@ -61,7 +62,7 @@ impl Lock {
         self.try_lock().unwrap_or_else(|| {
             // Call into the kernel to acquire a write lock.
             let subscription = abi::subscription {
-                type_: abi::eventtype::LOCK_WRLOCK,
+                r#type: abi::eventtype::LOCK_WRLOCK,
                 union: abi::subscription_union {
                     lock: abi::subscription_lock {
                         lock: self.ptr(),
@@ -135,7 +136,7 @@ impl Condvar {
     pub fn wait(&self, lock: &LockGuard) {
         unsafe {
             let subscription = abi::subscription {
-                type_: abi::eventtype::CONDVAR,
+                r#type: abi::eventtype::CONDVAR,
                 union: abi::subscription_union {
                     condvar: abi::subscription_condvar {
                         condvar: self.ptr(),
@@ -161,7 +162,7 @@ impl Condvar {
         unsafe {
             let subscriptions = [
                 abi::subscription {
-                    type_: abi::eventtype::CONDVAR,
+                    r#type: abi::eventtype::CONDVAR,
                     union: abi::subscription_union {
                         condvar: abi::subscription_condvar {
                             condvar: self.ptr(),
@@ -173,7 +174,7 @@ impl Condvar {
                     ..mem::zeroed()
                 },
                 abi::subscription {
-                    type_: abi::eventtype::CLOCK,
+                    r#type: abi::eventtype::CLOCK,
                     union: abi::subscription_union {
                         clock: abi::subscription_clock {
                             clock_id: abi::clockid::MONOTONIC,
@@ -197,7 +198,7 @@ impl Condvar {
             let events = events.assume_init();
             for i in 0..nevents {
                 debug_assert_eq!(events[i].error, abi::errno::SUCCESS);
-                if events[i].type_ == abi::eventtype::CONDVAR {
+                if events[i].r#type == abi::eventtype::CONDVAR {
                     return true;
                 }
             }

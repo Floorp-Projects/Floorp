@@ -30,6 +30,15 @@ pub mod deadlock;
 #[cfg(not(feature = "deadlock_detection"))]
 mod deadlock;
 
+// If deadlock detection is enabled, we cannot allow lock guards to be sent to
+// other threads.
+#[cfg(all(feature = "send_guard", feature = "deadlock_detection"))]
+compile_error!("the `send_guard` and `deadlock_detection` features cannot be used together");
+#[cfg(feature = "send_guard")]
+type GuardMarker = lock_api::GuardSend;
+#[cfg(not(feature = "send_guard"))]
+type GuardMarker = lock_api::GuardNoSend;
+
 pub use self::condvar::{Condvar, WaitTimeoutResult};
 pub use self::fair_mutex::{const_fair_mutex, FairMutex, FairMutexGuard, MappedFairMutexGuard};
 pub use self::mutex::{const_mutex, MappedMutexGuard, Mutex, MutexGuard};
