@@ -538,7 +538,24 @@ struct SECOidDataStr {
 #define NSS_USE_ALG_IN_SSL_KX 0x00000004         /* used in SSL key exchange */
 #define NSS_USE_ALG_IN_SSL 0x00000008            /* used in SSL record protocol */
 #define NSS_USE_POLICY_IN_SSL 0x00000010         /* enable policy in SSL protocol */
-#define NSS_USE_ALG_RESERVED 0xfffffffc          /* may be used in future */
+#define NSS_USE_ALG_IN_ANY_SIGNATURE 0x00000020  /* used in S/MIME */
+#define NSS_USE_DEFAULT_NOT_VALID 0x80000000     /* clear to make the default flag valid */
+#define NSS_USE_DEFAULT_SSL_ENABLE 0x40000000    /* default cipher suite setting 1=enable */
+
+/* Combo policy bites */
+#define NSS_USE_ALG_RESERVED 0x3fffffc0 /* may be used in future */
+/* Alias of all the signature values. */
+#define NSS_USE_ALG_IN_SIGNATURE (NSS_USE_ALG_IN_CERT_SIGNATURE | \
+                                  NSS_USE_ALG_IN_CMS_SIGNATURE |  \
+                                  NSS_USE_ALG_IN_ANY_SIGNATURE)
+/* all the bits needed for a certificate signature
+ * and only the bits needed for a certificate signature */
+#define NSS_USE_CERT_SIGNATURE_OK (NSS_USE_ALG_IN_CERT_SIGNATURE | \
+                                   NSS_USE_ALG_IN_ANY_SIGNATURE)
+/* all the bits needed for an SMIME signature
+ * and only the bits needed for an SMIME signature */
+#define NSS_USE_CMS_SIGNATURE_OK (NSS_USE_ALG_IN_CMS_SIGNATURE | \
+                                  NSS_USE_ALG_IN_ANY_SIGNATURE)
 
 /* Code MUST NOT SET or CLEAR reserved bits, and must NOT depend on them
  * being all zeros or having any other known value.  The reserved bits

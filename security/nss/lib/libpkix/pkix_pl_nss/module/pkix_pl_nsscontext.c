@@ -54,6 +54,7 @@ PKIX_PL_NssContext_Create(
         context->crlReloadDelay = PKIX_DEFAULT_CRL_RELOAD_DELAY_SECONDS;
         context->badDerCrlReloadDelay =
                              PKIX_DEFAULT_BAD_CRL_RELOAD_DELAY_SECONDS;
+        context->certSignatureCheck = PKIX_TRUE;
         context->chainVerifyCallback.isChainValid = NULL;
         context->chainVerifyCallback.isChainValidArg = NULL;
         *pNssContext = context;
@@ -156,6 +157,75 @@ pkix_pl_NssContext_SetCertUsage(
         PKIX_NULLCHECK_ONE(nssContext);
 
         nssContext->certificateUsage = certUsage;
+
+        PKIX_RETURN(CONTEXT);
+}
+
+/*
+ * FUNCTION: pkix_pl_NssContext_GetCertSignatureCheck
+ * DESCRIPTION:
+ *
+ *  This function obtains the platform-dependent flag to turn on or off
+ *  signature checks.
+ *
+ * PARAMETERS:
+ *  "nssContext"
+ *      The address of the context object whose wincx parameter is to be
+ *      obtained. Must be non-NULL.
+ *  "pCheckSig"
+ *      The address where the result is stored. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+pkix_pl_NssContext_GetCertSignatureCheck(
+        PKIX_PL_NssContext *nssContext,
+        PKIX_Boolean *pCheckSig)
+{
+        void *plContext = NULL;
+
+        PKIX_ENTER(CONTEXT, "pkix_pl_NssContext_GetCertUsage");
+        PKIX_NULLCHECK_TWO(nssContext, pCheckSig);
+
+        *pCheckSig = nssContext->certSignatureCheck;
+
+        PKIX_RETURN(CONTEXT);
+}
+
+/*
+ * FUNCTION: pkix_pl_NssContext_SetCertSignatureCheck
+ * DESCRIPTION:
+ *
+ *  This function sets the check signature flag in
+ *  the context object pointed to by "nssContext" to the value provided in
+ *  "checkSig".
+ *
+ * PARAMETERS:
+ *  "checkSig"
+ *      Boolean that tells whether or not to check the signatues on certs.
+ *  "nssContext"
+ *      The address of the context object whose wincx parameter is to be
+ *      obtained. Must be non-NULL.
+ * THREAD SAFETY:
+ *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+pkix_pl_NssContext_SetCertSignatureCheck(
+        PKIX_Boolean checkSig,
+        PKIX_PL_NssContext *nssContext)
+{
+        void *plContext = NULL;
+
+        PKIX_ENTER(CONTEXT, "pkix_pl_NssContext_SetCertUsage");
+        PKIX_NULLCHECK_ONE(nssContext);
+
+        nssContext->certSignatureCheck =  checkSig;
 
         PKIX_RETURN(CONTEXT);
 }

@@ -710,10 +710,7 @@ typedef struct SSL3HandshakeStateStr {
                                            * or received. */
     PRBool receivedCcs;                   /* A server received ChangeCipherSpec
                                            * before the handshake started. */
-    PRBool allowCcs;                      /* A server allows ChangeCipherSpec
-                                           * as the middlebox compatibility mode
-                                           * is explicitly indicarted by
-                                           * legacy_session_id in TLS 1.3 ClientHello. */
+    PRBool rejectCcs;                     /* Excessive ChangeCipherSpecs are rejected. */
     PRBool clientCertRequested;           /* True if CertificateRequest received. */
     PRBool endOfFlight;                   /* Processed a full flight (DTLS 1.3). */
     ssl3KEADef kea_def_mutable;           /* Used to hold the writable kea_def

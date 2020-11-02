@@ -212,6 +212,9 @@ typedef enum {
 
     SEC_ERROR_INVALID_STATE = (SEC_ERROR_BASE + 179),
 
+    SEC_ERROR_POLICY_LOCKED = (SEC_ERROR_BASE + 180),
+    SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED = (SEC_ERROR_BASE + 181),
+
     /* Add new error codes above here. */
     SEC_ERROR_END_OF_LIST
 } SECErrorCodes;

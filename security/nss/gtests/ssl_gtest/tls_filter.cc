@@ -1147,13 +1147,13 @@ PacketFilter::Action SelectedCipherSuiteReplacer::FilterHandshake(
   *output = input;
   uint32_t temp = 0;
   EXPECT_TRUE(input.Read(0, 2, &temp));
-  // Cipher suite is after version(2) and random(32).
+  EXPECT_EQ(header.version(), NormalizeTlsVersion(temp));
+  // Cipher suite is after version(2), random(32)
+  // and [legacy_]session_id(<0..32>).
   size_t pos = 34;
-  if (temp < SSL_LIBRARY_VERSION_TLS_1_3) {
-    // In old versions, we have to skip a session_id too.
-    EXPECT_TRUE(input.Read(pos, 1, &temp));
-    pos += 1 + temp;
-  }
+  EXPECT_TRUE(input.Read(pos, 1, &temp));
+  pos += 1 + temp;
+
   output->Write(pos, static_cast<uint32_t>(cipher_suite_), 2);
   return CHANGE;
 }

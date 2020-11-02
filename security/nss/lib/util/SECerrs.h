@@ -552,3 +552,9 @@ ER3(SEC_ERROR_APPLICATION_CALLBACK_ERROR, (SEC_ERROR_BASE + 178),
 
 ER3(SEC_ERROR_INVALID_STATE, (SEC_ERROR_BASE + 179),
     "The attempted operation is invalid for the current state.")
+
+ER3(SEC_ERROR_POLICY_LOCKED, (SEC_ERROR_BASE + 180),
+    "Could not change the policy because the policy is now locked.")
+
+ER3(SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED, (SEC_ERROR_BASE + 181),
+    "Could not create or verify a signature using a signature algorithm that is disabled because it is not secure.")

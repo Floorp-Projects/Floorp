@@ -357,6 +357,11 @@ void *PK11_GetSymKeyUserData(PK11SymKey *symKey);
 
 SECStatus PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
                              PK11SymKey *symKey, SECItem *wrappedKey);
+SECStatus PK11_PubWrapSymKeyWithMechanism(SECKEYPublicKey *pubKey,
+                                          CK_MECHANISM_TYPE mechType,
+                                          SECItem *param,
+                                          PK11SymKey *symKey,
+                                          SECItem *wrappedKey);
 SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,
                           PK11SymKey *wrappingKey, PK11SymKey *symKey, SECItem *wrappedKey);
 /* move a key to 'slot' optionally set the key attributes according to either
@@ -451,6 +456,13 @@ PK11SymKey *PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey,
  */
 PK11SymKey *PK11_PubUnwrapSymKey(SECKEYPrivateKey *key, SECItem *wrapppedKey,
                                  CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
+PK11SymKey *PK11_PubUnwrapSymKeyWithMechanism(SECKEYPrivateKey *key,
+                                              CK_MECHANISM_TYPE mechType,
+                                              SECItem *param,
+                                              SECItem *wrapppedKey,
+                                              CK_MECHANISM_TYPE target,
+                                              CK_ATTRIBUTE_TYPE operation,
+                                              int keySize);
 PK11SymKey *PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey,
                                               SECItem *wrappedKey, CK_MECHANISM_TYPE target,
                                               CK_ATTRIBUTE_TYPE operation, int keySize,

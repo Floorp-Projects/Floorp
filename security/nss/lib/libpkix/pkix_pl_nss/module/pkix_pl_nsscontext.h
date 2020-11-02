@@ -27,6 +27,7 @@ struct PKIX_PL_NssContextStruct {
         PRTime crlReloadDelay;
         PRTime badDerCrlReloadDelay;
         CERTChainVerifyCallback chainVerifyCallback;
+        PKIX_Boolean certSignatureCheck;
 };
 
 PKIX_Error *
@@ -37,6 +38,14 @@ pkix_pl_NssContext_GetCertUsage
 PKIX_Error *
 pkix_pl_NssContext_SetCertUsage
         (SECCertificateUsage certUsage, PKIX_PL_NssContext *nssContext);
+
+PKIX_Error *
+pkix_pl_NssContext_GetCertSignatureCheck
+        (PKIX_PL_NssContext *nssContext, PKIX_Boolean *pCheckSig);
+
+PKIX_Error *
+pkix_pl_NssContext_SetCertSignatureCheck
+        (PKIX_Boolean checkSig, PKIX_PL_NssContext *nssContext);
 
 PKIX_Error *
 pkix_pl_NssContext_GetWincx(PKIX_PL_NssContext *nssContext, void **pWincx);

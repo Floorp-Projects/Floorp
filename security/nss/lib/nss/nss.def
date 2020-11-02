@@ -1204,3 +1204,12 @@ PK11_ImportDataKey;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.59 { 	# NSS 3.59 release
+;+    global:
+CERT_AddCertToListHeadWithData;
+CERT_AddCertToListTailWithData;
+PK11_PubWrapSymKeyWithMechanism;
+PK11_PubUnwrapSymKeyWithMechanism;
+;+    local:
+;+       *;
+;+};
