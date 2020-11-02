@@ -67,7 +67,7 @@ class ArrayBufferViewObject : public NativeObject {
 
  public:
   MOZ_MUST_USE bool init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
-                         uint32_t byteOffset, uint32_t length,
+                         BufferSize byteOffset, BufferSize length,
                          uint32_t bytesPerElement);
 
   static ArrayBufferObjectMaybeShared* bufferObject(

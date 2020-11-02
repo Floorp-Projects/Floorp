@@ -445,13 +445,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
-      CreateSingleton createSingleton, uint32_t byteOffset, uint32_t len,
+      CreateSingleton createSingleton, BufferSize byteOffset, BufferSize len,
       HandleObject proto, HandleObjectGroup group = nullptr) {
-    MOZ_ASSERT(len < MAX_BYTE_LENGTH / BYTES_PER_ELEMENT);
+    MOZ_ASSERT(len.get() < MAX_BYTE_LENGTH / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
         buffer ? gc::GetGCObjectKind(instanceClass())
-               : AllocKindForLazyBuffer(len * BYTES_PER_ELEMENT);
+               : AllocKindForLazyBuffer(len.get() * BYTES_PER_ELEMENT);
 
     // Subclassing mandates that we hand in the proto every time. Most of
     // the time, though, that [[Prototype]] will not be interesting. If
@@ -561,7 +561,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return nullptr;
     }
 
-    size_t nbytes = len * BYTES_PER_ELEMENT;
+    size_t nbytes = size_t(len) * BYTES_PER_ELEMENT;
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
 
     AutoSetNewObjectMetadata metadata(cx);
@@ -741,7 +741,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   // Steps 9-12.
   static bool computeAndCheckLength(
       JSContext* cx, HandleArrayBufferObjectMaybeShared bufferMaybeUnwrapped,
-      uint64_t byteOffset, uint64_t lengthIndex, uint32_t* length) {
+      uint64_t byteOffset, uint64_t lengthIndex, BufferSize* length) {
     MOZ_ASSERT(byteOffset % BYTES_PER_ELEMENT == 0);
     MOZ_ASSERT(byteOffset < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
     MOZ_ASSERT_IF(lengthIndex != UINT64_MAX,
@@ -755,10 +755,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     // Step 10.
-    uint32_t bufferByteLength =
-        bufferMaybeUnwrapped->byteLength().deprecatedGetUint32();
+    size_t bufferByteLength = bufferMaybeUnwrapped->byteLength().get();
 
-    uint32_t len;
+    size_t len;
     if (lengthIndex == UINT64_MAX) {
       // Steps 11.a, 11.c.
       if (bufferByteLength % BYTES_PER_ELEMENT != 0 ||
@@ -771,7 +770,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       }
 
       // Step 11.b.
-      uint32_t newByteLength = bufferByteLength - uint32_t(byteOffset);
+      size_t newByteLength = bufferByteLength - size_t(byteOffset);
       len = newByteLength / BYTES_PER_ELEMENT;
     } else {
       // Step 12.a.
@@ -785,7 +784,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
         return false;
       }
 
-      len = uint32_t(lengthIndex);
+      len = size_t(lengthIndex);
     }
 
     // ArrayBuffer is too large for TypedArrays:
@@ -798,9 +797,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                 JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
       return false;
     }
-    MOZ_ASSERT(byteOffset <= UINT32_MAX);
 
-    *length = len;
+    MOZ_ASSERT(len < SIZE_MAX);
+    *length = BufferSize(len);
     return true;
   }
 
@@ -812,19 +811,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       uint64_t byteOffset, uint64_t lengthIndex, HandleObject proto,
       HandleObjectGroup group = nullptr) {
     // Steps 9-12.
-    uint32_t length;
+    BufferSize length(0);
     if (!computeAndCheckLength(cx, buffer, byteOffset, lengthIndex, &length)) {
       return nullptr;
     }
 
     CreateSingleton createSingleton = CreateSingleton::No;
-    if (!group &&
-        length * BYTES_PER_ELEMENT >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
+    if (!group && length.get() * BYTES_PER_ELEMENT >=
+                      TypedArrayObject::SINGLETON_BYTE_LENGTH) {
       createSingleton = CreateSingleton::Yes;
     }
 
     // Steps 13-17.
-    return makeInstance(cx, buffer, createSingleton, uint32_t(byteOffset),
+    return makeInstance(cx, buffer, createSingleton, BufferSize(byteOffset),
                         length, proto, group);
   }
 
@@ -860,7 +859,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     RootedArrayBufferObjectMaybeShared unwrappedBuffer(cx);
     unwrappedBuffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
 
-    uint32_t length;
+    BufferSize length(0);
     if (!computeAndCheckLength(cx, unwrappedBuffer, byteOffset, lengthIndex,
                                &length)) {
       return nullptr;
@@ -886,7 +885,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       }
 
       typedArray = makeInstance(cx, unwrappedBuffer, CreateSingleton::No,
-                                uint32_t(byteOffset), length, wrappedProto);
+                                BufferSize(byteOffset), length, wrappedProto);
       if (!typedArray) {
         return nullptr;
       }
@@ -918,7 +917,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     return fromBufferWrapped(cx, bufobj, byteOffset, lengthIndex, nullptr);
   }
 
-  static bool maybeCreateArrayBuffer(JSContext* cx, uint32_t count,
+  static bool maybeCreateArrayBuffer(JSContext* cx, uint64_t count,
                                      HandleObject nonDefaultProto,
                                      MutableHandle<ArrayBufferObject*> buffer) {
     if (count >= MAX_BYTE_LENGTH / BYTES_PER_ELEMENT) {
@@ -926,19 +925,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
-    uint32_t byteLength = count * BYTES_PER_ELEMENT;
+    BufferSize byteLength = BufferSize(count * BYTES_PER_ELEMENT);
 
-    MOZ_ASSERT(byteLength < MAX_BYTE_LENGTH);
+    MOZ_ASSERT(byteLength.get() < MAX_BYTE_LENGTH);
     static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
                   "ArrayBuffer inline storage shouldn't waste any space");
 
-    if (!nonDefaultProto && byteLength <= INLINE_BUFFER_LIMIT) {
+    if (!nonDefaultProto && byteLength.get() <= INLINE_BUFFER_LIMIT) {
       // The array's data can be inline, and the buffer created lazily.
       return true;
     }
 
-    ArrayBufferObject* buf = ArrayBufferObject::createZeroed(
-        cx, BufferSize(byteLength), nonDefaultProto);
+    ArrayBufferObject* buf =
+        ArrayBufferObject::createZeroed(cx, byteLength, nonDefaultProto);
     if (!buf) {
       return false;
     }
@@ -962,16 +961,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     }
 
     Rooted<ArrayBufferObject*> buffer(cx);
-    if (!maybeCreateArrayBuffer(cx, uint32_t(nelements), nullptr, &buffer)) {
+    if (!maybeCreateArrayBuffer(cx, nelements, nullptr, &buffer)) {
       return nullptr;
     }
 
-    return makeInstance(cx, buffer, CreateSingleton::No, 0, uint32_t(nelements),
-                        proto);
+    return makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
+                        BufferSize(nelements), proto);
   }
 
   static bool AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
-                                  uint32_t count,
+                                  BufferSize count,
                                   MutableHandle<ArrayBufferObject*> buffer);
 
   static TypedArrayObject* fromArray(JSContext* cx, HandleObject other,
@@ -1186,7 +1185,7 @@ TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
 // byteLength = count * BYTES_PER_ELEMENT
 template <typename T>
 /* static */ bool TypedArrayObjectTemplate<T>::AllocateArrayBuffer(
-    JSContext* cx, HandleObject ctor, uint32_t count,
+    JSContext* cx, HandleObject ctor, BufferSize count,
     MutableHandle<ArrayBufferObject*> buffer) {
   // 24.1.1.1 step 1 (partially).
   RootedObject proto(cx);
@@ -1206,7 +1205,7 @@ template <typename T>
   }
 
   // 24.1.1.1 steps 1 (remaining part), 2-6.
-  if (!maybeCreateArrayBuffer(cx, count, proto, buffer)) {
+  if (!maybeCreateArrayBuffer(cx, count.get(), proto, buffer)) {
     return false;
   }
 
@@ -1340,7 +1339,7 @@ template <typename T>
   // Step 8 (skipped).
 
   // Step 9.
-  uint32_t elementLength = srcArray->length().deprecatedGetUint32();
+  BufferSize elementLength = srcArray->length();
 
   // Steps 10-15 (skipped).
 
@@ -1383,8 +1382,8 @@ template <typename T>
 
   // Steps 3-4 (remaining part), 20-23.
   Rooted<TypedArrayObject*> obj(
-      cx, makeInstance(cx, buffer, CreateSingleton::No, 0, elementLength, proto,
-                       group));
+      cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
+                       elementLength, proto, group));
   if (!obj) {
     return nullptr;
   }
@@ -1443,7 +1442,7 @@ template <typename T>
     HandleArrayObject array = other.as<ArrayObject>();
 
     // Step 6.b.
-    uint32_t len = array->getDenseInitializedLength();
+    size_t len = array->getDenseInitializedLength();
 
     // Step 6.c.
     Rooted<ArrayBufferObject*> buffer(cx);
@@ -1452,8 +1451,8 @@ template <typename T>
     }
 
     Rooted<TypedArrayObject*> obj(
-        cx,
-        makeInstance(cx, buffer, CreateSingleton::No, 0, len, proto, group));
+        cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
+                         BufferSize(len), proto, group));
     if (!obj) {
       return nullptr;
     }
@@ -1528,7 +1527,8 @@ template <typename T>
   }
 
   Rooted<TypedArrayObject*> obj(
-      cx, makeInstance(cx, buffer, CreateSingleton::No, 0, len, proto, group));
+      cx, makeInstance(cx, buffer, CreateSingleton::No, BufferSize(0),
+                       BufferSize(len), proto, group));
   if (!obj) {
     return nullptr;
   }

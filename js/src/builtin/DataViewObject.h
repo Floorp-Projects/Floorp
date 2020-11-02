@@ -48,15 +48,15 @@ class DataViewObject : public ArrayBufferViewObject {
 
   static bool getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj,
                                          const CallArgs& args,
-                                         uint32_t* byteOffset,
-                                         uint32_t* byteLength);
+                                         BufferSize* byteOffset,
+                                         BufferSize* byteLength);
   static bool constructSameCompartment(JSContext* cx, HandleObject bufobj,
                                        const CallArgs& args);
   static bool constructWrapped(JSContext* cx, HandleObject bufobj,
                                const CallArgs& args);
 
   static DataViewObject* create(
-      JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
+      JSContext* cx, BufferSize byteOffset, BufferSize byteLength,
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
  public:
