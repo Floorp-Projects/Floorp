@@ -478,11 +478,8 @@ class OutlineTypedObject : public TypedObject {
                                           gc::InitialHeap heap);
 
  private:
-  // Use this method when `buffer` is the owner of the memory.
-  void attach(ArrayBufferObject& buffer, uint32_t offset);
-
-  // Otherwise, use this to attach to memory referenced by another typedObj.
-  void attach(JSContext* cx, TypedObject& typedObj, uint32_t offset);
+  // This method should only be used when `buffer` is the owner of the memory.
+  void attach(ArrayBufferObject& buffer);
 
  public:
   static void obj_trace(JSTracer* trace, JSObject* object);
