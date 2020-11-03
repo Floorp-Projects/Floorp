@@ -39,3 +39,34 @@ add_task(async function test_process_crash() {
     );
   });
 });
+
+/**
+ * Tests that if the "privileged about content process" crashes while
+ * a cache request is still underway, that the cache request resolves with
+ * null input streams.
+ */
+add_task(async function test_process_crash_while_requesting_streams() {
+  await BrowserTestUtils.withNewTab("about:home", async browser => {
+    await simulateRestart(browser);
+    let cacheStreamsPromise = AboutHomeStartupCache.requestCache();
+    await BrowserTestUtils.crashFrame(browser);
+    let cacheStreams = await cacheStreamsPromise;
+
+    if (!cacheStreams.pageInputStream && !cacheStreams.scriptInputStream) {
+      Assert.ok(true, "Page and script input streams are null.");
+    } else {
+      // It's possible (but probably rare) the parent was able to receive the
+      // streams before the crash occurred. In that case, we'll make sure that
+      // we can still read the streams.
+      info("Received the streams. Checking that they're readable.");
+      Assert.ok(
+        cacheStreams.pageInputStream.available(),
+        "Bytes available for page stream"
+      );
+      Assert.ok(
+        cacheStreams.scriptInputStream.available(),
+        "Bytes available for script stream"
+      );
+    }
+  });
+});
