@@ -55,6 +55,7 @@ def get_running_env(**kwargs):
     mach_cmd.run_process.return_value = 0
     mach_cmd.virtualenv_manager = MagicMock()
     mach_cmd.virtualenv_manager.python_path = sys.executable
+    mach_cmd.virtualenv_manager.bin_path = Path(sys.executable).parent
 
     mach_args = {
         "flavor": "desktop-browser",
