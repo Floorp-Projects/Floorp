@@ -11,7 +11,7 @@ add_task(async function() {
     const win = await promiseSubDialogLoaded;
     win.Preferences.forceEnableInstantApply();
     dialogOverlay = content.gSubDialog._topDialog._overlay;
-    ok(!BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is visible.");
+    is(dialogOverlay.style.visibility, "visible", "The dialog is visible.");
     return win;
   }
 
@@ -20,14 +20,14 @@ add_task(async function() {
     closeBtn.doCommand();
   }
 
-  ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
+  is(dialogOverlay.style.visibility, "", "The dialog is invisible.");
   let win = await languagesSubdialogOpened();
   ok(
     win.document.getElementById("spoofEnglish").hidden,
     "The 'Request English' checkbox is hidden."
   );
   closeLanguagesSubdialog();
-  ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
+  is(dialogOverlay.style.visibility, "", "The dialog is invisible.");
 
   await SpecialPowers.pushPrefEnv({
     set: [
