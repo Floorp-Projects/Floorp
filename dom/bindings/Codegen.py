@@ -3108,7 +3108,7 @@ class AttrDefiner(PropertyDefiner):
                     raise TypeError(
                         "Don't know how to handle "
                         "static Promise-returning "
-                        "attribute %s.%s" % (self.descriptor.name, attr.identifier.name)
+                        "attribute %s.%s" % (descriptor.name, attr.identifier.name)
                     )
                 accessor = "get_" + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
