@@ -69,8 +69,12 @@ Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
 
   auto start = mHistory[mHistory.Length() - 2];
   auto end = mHistory[mHistory.Length() - 1];
-  return Some((end.second - start.second) /
-              (end.first - start.first).ToMilliseconds());
+  auto velocity =
+      (end.second - start.second) / (end.first - start.first).ToMilliseconds();
+  // The velocity needs to be negated because the positions represent
+  // touch positions, and the direction of scrolling is opposite to the
+  // direction of the finger's movement.
+  return Some(-velocity);
 }
 
 static float VectorDot(const float* a, const float* b, uint32_t m) {
