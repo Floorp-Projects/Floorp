@@ -12,6 +12,7 @@ const {
   UPDATE_CAN_BE_ENABLED,
   UPDATE_PREF,
   PREF_KEYS,
+  UPDATE_DISPLAY_TABBING_ORDER,
 } = require("devtools/client/accessibility/constants");
 
 /**
@@ -52,5 +53,17 @@ exports.enable = enableAccessibility => async ({ dispatch }) => {
     dispatch({ type: ENABLE });
   } catch (error) {
     dispatch({ error, type: ENABLE });
+  }
+};
+
+exports.updateDisplayTabbingOrder = tabbingOrderDisplayed => async ({
+  dispatch,
+  options: { toggleDisplayTabbingOrder },
+}) => {
+  try {
+    await toggleDisplayTabbingOrder(tabbingOrderDisplayed);
+    dispatch({ tabbingOrderDisplayed, type: UPDATE_DISPLAY_TABBING_ORDER });
+  } catch (error) {
+    dispatch({ error, type: UPDATE_DISPLAY_TABBING_ORDER });
   }
 };

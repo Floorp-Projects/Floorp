@@ -236,12 +236,12 @@ body {
   width: 100%;
 }
 
-/* @remove after release 68 (See Bug 1551574) */
 .devtools-toolbar .beta {
   color: var(--theme-highlight-blue);
   font-size: 80%;
   font-weight: 500;
   margin-inline-end: 3px;
+  margin-inline-start: 4px;
 }
 
 #audit-progress-container {

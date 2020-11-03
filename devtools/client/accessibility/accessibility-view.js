@@ -25,7 +25,12 @@ const createStore = require("devtools/client/shared/redux/create-store");
 
 // Reducers
 const { reducers } = require("devtools/client/accessibility/reducers/index");
-const store = createStore(reducers);
+const thunkOptions = { options: {} };
+const store = createStore(reducers, {
+  // Thunk options will be updated, when we [re]initialize the accessibility
+  // view.
+  thunkOptions,
+});
 
 // Actions
 const { reset } = require("devtools/client/accessibility/actions/ui");
@@ -79,6 +84,10 @@ AccessibilityView.prototype = {
    *                                          Apply simulation of a given type
    *                                          (by setting color matrices in
    *                                          docShell).
+   * - toggleDisplayTabbingOrder              {Function}
+   *                                          Toggle the highlight of focusable
+   *                                          elements along with their tabbing
+   *                                          index.
    * - enableAccessibility                    {Function}
    *                                          Enable accessibility services.
    * - resetAccessiblity                      {Function}
@@ -112,6 +121,7 @@ AccessibilityView.prototype = {
     stopListeningForAccessibilityEvents,
     audit,
     simulate,
+    toggleDisplayTabbingOrder,
     enableAccessibility,
     resetAccessiblity,
     startListeningForLifecycleEvents,
@@ -141,6 +151,7 @@ AccessibilityView.prototype = {
       highlightAccessible,
       unhighlightAccessible,
     });
+    thunkOptions.options.toggleDisplayTabbingOrder = toggleDisplayTabbingOrder;
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
     window.once(EVENTS.PROPERTIES_UPDATED).then(() => {

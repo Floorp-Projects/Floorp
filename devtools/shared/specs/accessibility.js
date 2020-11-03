@@ -235,6 +235,10 @@ const accessibilitySpec = generateActorSpec({
   },
 
   methods: {
+    getTraits: {
+      request: {},
+      response: { traits: RetVal("json") },
+    },
     bootstrap: {
       request: {},
       response: {
