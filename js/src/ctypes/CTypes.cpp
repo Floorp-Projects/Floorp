@@ -8038,7 +8038,7 @@ static bool ReadTypedArrayCommon(JSContext* cx, unsigned argc, Value* vp,
   CheckedInt<size_t> size = *length;
   size *= CType::GetSize(baseType);
   if (!size.isValid() ||
-      size.value() > ArrayBufferObject::MaxBufferByteLength) {
+      size.value() > ArrayBufferObject::maxBufferByteLength()) {
     return SizeOverflow(cx, "data", "typed array");
   }
 

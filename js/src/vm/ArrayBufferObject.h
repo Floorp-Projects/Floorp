@@ -184,7 +184,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most
   // INT32_MAX, and much code must change if this changes.
-  static constexpr size_t MaxBufferByteLength = INT32_MAX;
+  static size_t maxBufferByteLength() { return INT32_MAX; }
 
   /** The largest number of bytes that can be stored inline. */
   static constexpr size_t MaxInlineBytes =
