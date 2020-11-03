@@ -79,10 +79,10 @@ RefPtr<TextureClient> CanvasClient::CreateTextureClientForCanvas(
     if (GetForwarder() && GetForwarder()->GetCompositorBackendType() ==
                               LayersBackend::LAYERS_WR) {
       return GetTextureClientRecycler()->CreateOrRecycle(
-          aFormat, aSize, BackendSelector::Canvas, aFlags);
+          aFormat, aSize, BackendSelector::Canvas, mTextureFlags | aFlags);
     }
-    return CreateTextureClientForDrawing(aFormat, aSize,
-                                         BackendSelector::Canvas, aFlags);
+    return CreateTextureClientForDrawing(
+        aFormat, aSize, BackendSelector::Canvas, mTextureFlags | aFlags);
   }
 
   // XXX - We should use CreateTextureClientForDrawing, but we first need
