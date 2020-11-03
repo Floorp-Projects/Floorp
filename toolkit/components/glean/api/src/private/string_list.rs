@@ -4,17 +4,23 @@
 
 use std::sync::Arc;
 
-use super::CommonMetricData;
+use super::{CommonMetricData, MetricId};
 
 use crate::dispatcher;
-use crate::ipc::{need_ipc, with_ipc_payload, MetricId};
+use crate::ipc::{need_ipc, with_ipc_payload};
 
 /// A string list metric.
 ///
 /// This allows appending a string value with arbitrary content to a list.
 #[derive(Debug)]
 pub enum StringListMetric {
-    Parent(Arc<StringListMetricImpl>),
+    Parent {
+        /// The metric's ID.
+        ///
+        /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
+        id: MetricId,
+        inner: Arc<StringListMetricImpl>,
+    },
     Child(StringListMetricIpc),
 }
 #[derive(Clone, Debug)]
@@ -24,11 +30,22 @@ pub struct StringListMetricIpc(MetricId);
 
 impl StringListMetric {
     /// Create a new string list metric.
-    pub fn new(meta: CommonMetricData) -> Self {
+    pub fn new(id: MetricId, meta: CommonMetricData) -> Self {
         if need_ipc() {
-            StringListMetric::Child(StringListMetricIpc(MetricId::new(meta)))
+            StringListMetric::Child(StringListMetricIpc(id))
         } else {
-            StringListMetric::Parent(Arc::new(StringListMetricImpl::new(meta)))
+            let inner = Arc::new(StringListMetricImpl::new(meta));
+            StringListMetric::Parent { id, inner }
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_metric(&self) -> Self {
+        match self {
+            StringListMetric::Parent { id, .. } => {
+                StringListMetric::Child(StringListMetricIpc(*id))
+            }
+            StringListMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
 
@@ -44,8 +61,8 @@ impl StringListMetric {
     /// See [String list metric limits](https://mozilla.github.io/glean/book/user/metrics/string_list.html#limits).
     pub fn add<S: Into<String>>(&self, value: S) {
         match self {
-            StringListMetric::Parent(p) => {
-                let metric = Arc::clone(&p);
+            StringListMetric::Parent { inner, .. } => {
+                let metric = Arc::clone(&inner);
                 let value = value.into();
                 dispatcher::launch(move || metric.add(value));
             }
@@ -76,8 +93,8 @@ impl StringListMetric {
     /// Truncates any value in the list if it is longer than `MAX_STRING_LENGTH` and logs an error.
     pub fn set(&self, value: Vec<String>) {
         match self {
-            StringListMetric::Parent(p) => {
-                let metric = Arc::clone(&p);
+            StringListMetric::Parent { inner, .. } => {
+                let metric = Arc::clone(&inner);
                 dispatcher::launch(move || metric.set(value));
             }
             StringListMetric::Child(_c) => {
@@ -104,9 +121,9 @@ impl StringListMetric {
     /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<Vec<String>> {
         match self {
-            StringListMetric::Parent(p) => {
+            StringListMetric::Parent { inner, .. } => {
                 dispatcher::block_on_queue();
-                p.test_get_value(storage_name)
+                inner.test_get_value(storage_name)
             }
             StringListMetric::Child(_c) => panic!(
                 "Cannot get test value for {:?} in non-parent process!",
@@ -131,5 +148,63 @@ impl StringListMetricImpl {
 
     pub fn test_get_value(&self, storage_name: &str) -> Option<Vec<String>> {
         crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn sets_string_list_value() {
+        let _lock = lock_test();
+
+        let metric = &metrics::test_only_ipc::a_string_list;
+
+        metric.set(vec!["test_string_value".to_string()]);
+        metric.add("another test value");
+
+        assert_eq!(
+            vec!["test_string_value", "another test value"],
+            metric.test_get_value("store1").unwrap()
+        );
+    }
+
+    #[test]
+    fn string_list_ipc() {
+        // StringListMetric supports IPC only for `add`, not `set`.
+        let _lock = lock_test();
+
+        let parent_metric = &metrics::test_only_ipc::a_string_list;
+
+        parent_metric.set(vec!["test_string_value".to_string()]);
+        parent_metric.add("another test value");
+
+        {
+            let child_metric = parent_metric.child_metric();
+
+            // scope for need_ipc RAII
+            let _raii = ipc::test_set_need_ipc(true);
+
+            // Recording APIs do not panic, even when they don't work.
+            child_metric.set(vec!["not gonna be set".to_string()]);
+
+            child_metric.add("child_value");
+            assert!(ipc::take_buf().unwrap().len() > 0);
+
+            // Test APIs are allowed to panic, though.
+            let result = std::panic::catch_unwind(move || {
+                child_metric.test_get_value("store1");
+            });
+            assert!(result.is_err());
+        }
+
+        // TODO: implement replay. See bug 1646165.
+        // Then perform the replay and assert we have the values from both "processes".
+        assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
+        assert_eq!(
+            vec!["test_string_value", "another test value"],
+            parent_metric.test_get_value("store1").unwrap()
+        );
     }
 }
