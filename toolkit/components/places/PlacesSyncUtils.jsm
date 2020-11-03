@@ -58,6 +58,25 @@ XPCOMUtils.defineLazyGetter(this, "ROOTS", () =>
   Object.keys(ROOT_RECORD_ID_TO_GUID)
 );
 
+// Gets the history transition values we ignore and do not sync, as a
+// string, which is a comma-separated set of values - ie, something which can
+// be used with sqlite's IN operator. Does *not* includes the parens.
+XPCOMUtils.defineLazyGetter(this, "IGNORED_TRANSITIONS_AS_SQL_LIST", () =>
+  // * We don't sync `TRANSITION_FRAMED_LINK` visits - these are excluded when
+  //   rendering the history menu, so we use the same constraints for Sync.
+  // * We don't sync `TRANSITION_DOWNLOAD` because it makes no sense to see
+  //   these on other devices - the downloaded file can not exist.
+  // * We don't want to sync TRANSITION_EMBED visits, but these aren't
+  //   stored in the DB, so no need to specify them.
+  // * 0 is invalid, and hopefully don't exist, but let's exclude it anyway.
+  // Array.toString() semantics are well defined and exactly what we need, so..
+  [
+    0,
+    PlacesUtils.history.TRANSITION_FRAMED_LINK,
+    PlacesUtils.history.TRANSITION_DOWNLOAD,
+  ].toString()
+);
+
 const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
   SYNC_ID_META_KEY: "sync/history/syncId",
   LAST_SYNC_META_KEY: "sync/history/lastSync",
@@ -231,10 +250,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
    * @returns {Array} new Array with the guids that aren't syncable
    */
   async determineNonSyncableGuids(guids) {
-    // Filter out hidden pages and `TRANSITION_FRAMED_LINK` visits. These are
-    // excluded when rendering the history menu, so we use the same constraints
-    // for Sync. We also don't want to sync `TRANSITION_EMBED` visits, but those
-    // aren't stored in the database.
+    // Filter out hidden pages and transitions that we don't sync.
     let db = await PlacesUtils.promiseDBConnection();
     let nonSyncableGuids = [];
     for (let chunk of PlacesUtils.chunkArray(guids, db.variableLimit)) {
@@ -243,8 +259,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
         SELECT DISTINCT p.guid FROM moz_places p
         JOIN moz_historyvisits v ON p.id = v.place_id
         WHERE p.guid IN (${new Array(chunk.length).fill("?").join(",")}) AND
-            (p.hidden = 1 OR v.visit_type IN (0,
-              ${PlacesUtils.history.TRANSITION_FRAMED_LINK}))
+            (p.hidden = 1 OR v.visit_type IN (${IGNORED_TRANSITIONS_AS_SQL_LIST}))
       `,
         chunk
       );
@@ -356,6 +371,9 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
    * @param options
    *        Options object with two members, since and limit. Both of them must be provided
    * @returns {Array} - Up to limit number of URLs starting from the date provided by since
+   *
+   * Note that some visit types are explicitly excluded - downloads and framed
+   * links.
    */
   async getAllURLs(options) {
     // Check that the limit property is finite number.
@@ -380,8 +398,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
       JOIN moz_historyvisits v ON p.id = v.place_id
       WHERE p.last_visit_date > :cutoff_date AND
             p.hidden = 0 AND
-            v.visit_type NOT IN (0,
-              ${PlacesUtils.history.TRANSITION_FRAMED_LINK})
+            v.visit_type NOT IN (${IGNORED_TRANSITIONS_AS_SQL_LIST})
       ORDER BY frecency DESC
       LIMIT :max_results`,
       { cutoff_date: sinceInMicroseconds, max_results: options.limit }
