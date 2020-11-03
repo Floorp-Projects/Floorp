@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(MOZILLA_INTERNAL_API)
+#  include "MainThreadUtils.h"
 #  include "mozilla/dom/ContentChild.h"
 #endif
 
@@ -73,6 +74,16 @@ bool IsCurrentThreadImplicitMTA() {
   return aptType == APTTYPE_MTA &&
          aptTypeQualifier == APTTYPEQUALIFIER_IMPLICIT_MTA;
 }
+
+#if defined(MOZILLA_INTERNAL_API)
+bool IsCurrentThreadNonMainMTA() {
+  if (NS_IsMainThread()) {
+    return false;
+  }
+
+  return IsCurrentThreadMTA();
+}
+#endif  // defined(MOZILLA_INTERNAL_API)
 
 bool IsProxy(IUnknown* aUnknown) {
   if (!aUnknown) {
