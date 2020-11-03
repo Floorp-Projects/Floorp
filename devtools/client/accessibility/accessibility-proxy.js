@@ -77,6 +77,7 @@ class AccessibilityProxy {
       this
     );
     this.unhighlightBeforeCalling = this.unhighlightBeforeCalling.bind(this);
+    this.toggleDisplayTabbingOrder = this.toggleDisplayTabbingOrder.bind(this);
   }
 
   get enabled() {
@@ -140,6 +141,24 @@ class AccessibilityProxy {
     return combinedAudit;
   }
 
+  async toggleDisplayTabbingOrder(displayTabbingOrder) {
+    if (displayTabbingOrder) {
+      const { walker: domWalkerFront } = await this.currentTarget.getFront(
+        "inspector"
+      );
+      await this.accessibilityFront.accessibleWalkerFront.showTabbingOrder(
+        await domWalkerFront.getRootNode(),
+        0
+      );
+    } else {
+      await this.withAllAccessibilityWalkerFronts(
+        async accessibleWalkerFront => {
+          await accessibleWalkerFront.hideTabbingOrder();
+        }
+      );
+    }
+  }
+
   startListeningForTargetUpdated(onTargetUpdated) {
     this._updateTargetListeners.on("target-updated", onTargetUpdated);
   }
@@ -196,13 +215,9 @@ class AccessibilityProxy {
    *        Function to execute with each accessiblity walker front.
    */
   withAllAccessibilityWalkerFronts(taskFn) {
-    return this.withAllAccessibilityFronts(async accessibilityFront => {
-      if (!accessibilityFront.accessibleWalkerFront) {
-        await accessibilityFront.bootstrap();
-      }
-
-      return taskFn(accessibilityFront.accessibleWalkerFront);
-    });
+    return this.withAllAccessibilityFronts(async accessibilityFront =>
+      taskFn(accessibilityFront.accessibleWalkerFront)
+    );
   }
 
   /**
@@ -509,13 +524,10 @@ class AccessibilityProxy {
     this.accessibilityFront = await this.currentTarget.getFront(
       "accessibility"
     );
-    // To add a check for backward compatibility add something similar to the
-    // example below:
-    //
-    // [this.supports.simulation] = await Promise.all([
-    //   // Please specify the version of Firefox when the feature was added.
-    //   this.currentTarget.actorHasMethod("accessibility", "getSimulator"),
-    // ]);
+    // Check for backward compatibility. New API's must be described in the
+    // "getTraits" method of the AccessibilityActor.
+    this.supports = { ...this.accessibilityFront.traits };
+
     this.simulatorFront = this.accessibilityFront.simulatorFront;
     if (this.simulatorFront) {
       this.simulate = types => this.simulatorFront.simulate({ types });

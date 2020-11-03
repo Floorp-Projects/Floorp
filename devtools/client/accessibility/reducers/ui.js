@@ -19,6 +19,7 @@ const {
   UPDATE_DETAILS,
   PREF_KEYS,
   PREFS,
+  UPDATE_DISPLAY_TABBING_ORDER,
 } = require("devtools/client/accessibility/constants");
 
 const TreeView = require("devtools/client/shared/components/tree/TreeView");
@@ -38,6 +39,7 @@ function getInitialState() {
       PREF_KEYS[PREFS.SCROLL_INTO_VIEW],
       false
     ),
+    tabbingOrderDisplayed: false,
     supports: {},
   };
 }
@@ -67,6 +69,8 @@ function ui(state = getInitialState(), action) {
       return onSelect(state, action);
     case RESET:
       return onReset(state, action);
+    case UPDATE_DISPLAY_TABBING_ORDER:
+      return onUpdateDisplayTabbingOrder(state, action);
     default:
       return state;
   }
@@ -201,6 +205,15 @@ function onToggle(state, { error }, enabled) {
   }
 
   return Object.assign({}, state, { enabled });
+}
+
+function onUpdateDisplayTabbingOrder(state, { error, tabbingOrderDisplayed }) {
+  if (error) {
+    console.warn("Error updating displaying tabbing order: ", error);
+    return state;
+  }
+
+  return Object.assign({}, state, { tabbingOrderDisplayed });
 }
 
 exports.ui = ui;

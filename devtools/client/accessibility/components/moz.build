@@ -20,6 +20,7 @@ DevToolsModules(
     "ColorContrastAccessibility.js",
     "ContrastBadge.js",
     "Description.js",
+    "DisplayTabbingOrder.js",
     "KeyboardBadge.js",
     "KeyboardCheck.js",
     "LearnMoreLink.js",
