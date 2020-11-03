@@ -8,6 +8,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 
+#include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -86,9 +87,22 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
             xmost + padding.right +
             kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideRight);
         float ratio = float(maxSize.width) / widthToFit;
-        NS_ASSERTION(ratio >= 0.0 && ratio < 1.0,
-                     "invalid shrink-to-fit ratio");
+        MOZ_ASSERT(ratio >= 0.0 && ratio < 1.0);
         mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
+      }
+      // In the case of pdf.js documents, we also want to consider the height,
+      // so that we don't clip the page in either axis if the aspect ratio of
+      // the PDF doesn't match the destination.
+      if (nsContentUtils::IsPDFJS(PresContext()->Document()->GetPrincipal())) {
+        nscoord ymost = aReflowOutput.ScrollableOverflow().YMost();
+        if (ymost > aReflowOutput.Height()) {
+          nscoord heightToFit =
+              ymost + padding.bottom +
+              kidReflowInput.mStyleBorder->GetComputedBorderWidth(eSideBottom);
+          float ratio = float(maxSize.height) / heightToFit;
+          MOZ_ASSERT(ratio >= 0.0 && ratio < 1.0);
+          mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
+        }
       }
     }
 
