@@ -512,6 +512,13 @@ const PREFS_CONFIG = new Map([
       getValue: ({ geo }) => {
         const preffedRegionsString =
           Services.prefs.getStringPref(REGION_BASIC_CONFIG) || "";
+        // If no regions are set to basic,
+        // we don't need to bother checking against the region.
+        // We are also not concerned if geo is not set,
+        // because stories are going to be empty until we have geo.
+        if (!preffedRegionsString) {
+          return false;
+        }
         const preffedRegions = preffedRegionsString
           .split(",")
           .map(s => s.trim());
@@ -592,6 +599,11 @@ const FEEDS_DATA = [
       "System pref that fetches content recommendations from a configurable content provider",
     // Dynamically determine if Pocket should be shown for a geo / locale
     getValue: ({ geo, locale }) => {
+      // If we don't have geo, we don't want to flash the screen with stories while geo loads.
+      // Best to display nothing until geo is ready.
+      if (!geo) {
+        return false;
+      }
       const preffedRegionsBlockString =
         Services.prefs.getStringPref(REGION_STORIES_BLOCK) || "";
       const preffedRegionsString =

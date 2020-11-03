@@ -207,6 +207,20 @@ describe("ActivityStream", () => {
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-CA");
     });
+    it("should enable 7 row layout pref if no basic config is set and no geo is set", () => {
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-basic-config"
+        )
+        .returns("");
+      sandbox.stub(global.Region, "home").get(() => "");
+
+      as._updateDynamicPrefs();
+
+      assert.isFalse(
+        PREFS_CONFIG.get("discoverystream.region-basic-layout").value
+      );
+    });
     it("should enable 1 row layout pref based on region layout pref", () => {
       getStringPrefStub
         .withArgs(
@@ -263,6 +277,25 @@ describe("ActivityStream", () => {
     it("should be false with no geo/locale", () => {
       appLocaleAsBCP47Stub.get(() => "");
       sandbox.stub(global.Region, "home").get(() => "");
+
+      as._updateDynamicPrefs();
+
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
+    });
+    it("should be false with no geo but an allowed locale", () => {
+      appLocaleAsBCP47Stub.get(() => "");
+      sandbox.stub(global.Region, "home").get(() => "");
+      appLocaleAsBCP47Stub.get(() => "en-US");
+      getStringPrefStub
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.locale-list-config"
+        )
+        .returns("en-US,en-CA,en-GB")
+        // We only have this pref set to trigger a close to real situation.
+        .withArgs(
+          "browser.newtabpage.activity-stream.discoverystream.region-stories-block"
+        )
+        .returns("FR");
 
       as._updateDynamicPrefs();
 
