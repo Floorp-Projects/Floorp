@@ -1640,6 +1640,26 @@
     "description": "Track how many image requests required event dispatching because we were unable to predict the correct scheduler group: true if the request required dispatching. See image/imgRequestProxy.cpp for details.",
     "bug_numbers": [1359833]
   },
+  "AVIF_DECODE_RESULT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "success",
+      "parse_error",
+      "no_primary_item",
+      "decode_error",
+      "size_overflow",
+      "out_of_memory",
+      "pipe_init_error",
+      "write_buffer_error"
+    ],
+    "description": "Decode result of AVIF image",
+    "bug_numbers": [1670827]
+  },
   "KEYPRESS_PRESENT_LATENCY": {
     "record_in_processes": [ "all" ],
     "products": ["firefox", "fennec", "geckoview_streaming"],

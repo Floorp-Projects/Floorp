@@ -14,6 +14,8 @@
 #include "aom/aom_decoder.h"
 #include "dav1d/dav1d.h"
 
+#include "mozilla/Telemetry.h"
+
 namespace mozilla {
 namespace image {
 class RasterImage;
@@ -43,6 +45,23 @@ class nsAVIFDecoder final : public Decoder {
                        layers::PlanarYCbCrData& aDecodedData);
   bool DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
                      layers::PlanarYCbCrData& aDecodedData);
+
+  enum class DecodeResult {
+    NeedMoreData,
+    MetadataOk,
+    Success,
+    ParseError,
+    NoPrimaryItem,
+    DecodeError,
+    SizeOverflow,
+    OutOfMemory,
+    PipeInitError,
+    WriteBufferError
+  };
+
+  DecodeResult Decode(SourceBufferIterator& aIterator, IResumable* aOnResume);
+
+  void RecordDecodeResultTelemetry(DecodeResult aResult);
 
   Mp4parseAvifParser* mParser;
   Maybe<Variant<aom_codec_ctx_t, Dav1dContext*>> mCodecContext;

@@ -794,6 +794,30 @@ gfx.status:
       - jmuizelaar@mozilla.com
     expires: never
 
+avif:
+  decode_result:
+    type: labeled_counter
+    labels:
+      - success
+      - parse_error
+      - no_primary_item
+      - decode_error
+      - size_overflow
+      - out_of_memory
+      - pipe_init_error
+      - write_buffer_error
+    gecko_datapoint: AVIF_DECODE_RESULT
+    description: >
+      Decode result of AVIF image.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
 network:
   cache_hit_time:
     type: timing_distribution
