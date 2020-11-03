@@ -7935,21 +7935,15 @@ nsresult DatabaseConnection::UpdateRefcountFunction::CreateJournals() {
   AUTO_PROFILER_LABEL(
       "DatabaseConnection::UpdateRefcountFunction::CreateJournals", DOM);
 
-  nsCOMPtr<nsIFile> journalDirectory = mFileManager.GetJournalDirectory();
-  if (NS_WARN_IF(!journalDirectory)) {
-    return NS_ERROR_FAILURE;
-  }
+  const nsCOMPtr<nsIFile> journalDirectory = mFileManager.GetJournalDirectory();
+  IDB_TRY(OkIf(journalDirectory), NS_ERROR_FAILURE);
 
   for (const int64_t id : mJournalsToCreateBeforeCommit) {
-    nsCOMPtr<nsIFile> file = FileManager::GetFileForId(journalDirectory, id);
-    if (NS_WARN_IF(!file)) {
-      return NS_ERROR_FAILURE;
-    }
+    const nsCOMPtr<nsIFile> file =
+        FileManager::GetFileForId(journalDirectory, id);
+    IDB_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-    nsresult rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(file->Create(nsIFile::NORMAL_FILE_TYPE, 0644));
 
     mJournalsToRemoveAfterAbort.AppendElement(id);
   }
@@ -7966,20 +7960,14 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
       "DatabaseConnection::UpdateRefcountFunction::RemoveJournals", DOM);
 
   nsCOMPtr<nsIFile> journalDirectory = mFileManager.GetJournalDirectory();
-  if (NS_WARN_IF(!journalDirectory)) {
-    return NS_ERROR_FAILURE;
-  }
+  IDB_TRY(OkIf(journalDirectory), NS_ERROR_FAILURE);
 
   for (const auto& journal : aJournals) {
     nsCOMPtr<nsIFile> file =
         FileManager::GetFileForId(journalDirectory, journal);
-    if (NS_WARN_IF(!file)) {
-      return NS_ERROR_FAILURE;
-    }
+    IDB_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-    if (NS_FAILED(file->Remove(false))) {
-      NS_WARNING("Failed to removed journal!");
-    }
+    [&file] { IDB_TRY(file->Remove(false), QM_VOID); }();
   }
 
   return NS_OK;
@@ -7997,36 +7985,30 @@ DatabaseConnection::UpdateRefcountFunction::OnFunctionCall(
   AUTO_PROFILER_LABEL(
       "DatabaseConnection::UpdateRefcountFunction::OnFunctionCall", DOM);
 
-  uint32_t numEntries;
-  nsresult rv = aValues->GetNumEntries(&numEntries);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(numEntries == 2);
-
 #ifdef DEBUG
   {
-    int32_t type1 = mozIStorageValueArray::VALUE_TYPE_NULL;
-    MOZ_ASSERT(NS_SUCCEEDED(aValues->GetTypeOfIndex(0, &type1)));
+    IDB_TRY_INSPECT(const uint32_t& numEntries,
+                    MOZ_TO_RESULT_INVOKE(aValues, GetNumEntries),
+                    QM_ASSERT_UNREACHABLE);
 
-    int32_t type2 = mozIStorageValueArray::VALUE_TYPE_NULL;
-    MOZ_ASSERT(NS_SUCCEEDED(aValues->GetTypeOfIndex(1, &type2)));
+    MOZ_ASSERT(numEntries == 2);
+
+    IDB_TRY_INSPECT(const int32_t& type1,
+                    MOZ_TO_RESULT_INVOKE(aValues, GetTypeOfIndex, 0),
+                    QM_ASSERT_UNREACHABLE);
+
+    IDB_TRY_INSPECT(const int32_t& type2,
+                    MOZ_TO_RESULT_INVOKE(aValues, GetTypeOfIndex, 1),
+                    QM_ASSERT_UNREACHABLE);
 
     MOZ_ASSERT(!(type1 == mozIStorageValueArray::VALUE_TYPE_NULL &&
                  type2 == mozIStorageValueArray::VALUE_TYPE_NULL));
   }
 #endif
 
-  rv = ProcessValue(aValues, 0, UpdateType::Decrement);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ProcessValue(aValues, 0, UpdateType::Decrement));
 
-  rv = ProcessValue(aValues, 1, UpdateType::Increment);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ProcessValue(aValues, 1, UpdateType::Increment));
 
   return NS_OK;
 }
