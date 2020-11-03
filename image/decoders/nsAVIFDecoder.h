@@ -41,27 +41,31 @@ class nsAVIFDecoder final : public Decoder {
 
   static void FreeDav1dData(const uint8_t* buf, void* cookie);
 
-  bool DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
-                       layers::PlanarYCbCrData& aDecodedData);
-  bool DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
-                     layers::PlanarYCbCrData& aDecodedData);
+  typedef int Dav1dResult;
+  Dav1dResult DecodeWithDav1d(const Mp4parseByteData& aPrimaryItem,
+                              layers::PlanarYCbCrData& aDecodedData);
 
-  enum class DecodeResult {
+  enum class NonAOMCodecError { NoFrame, SizeOverflow };
+  typedef Variant<aom_codec_err_t, NonAOMCodecError> AOMResult;
+  AOMResult DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
+                          layers::PlanarYCbCrData& aDecodedData);
+
+  enum class NonDecoderResult {
     NeedMoreData,
     MetadataOk,
-    Success,
     ParseError,
     NoPrimaryItem,
-    DecodeError,
     SizeOverflow,
     OutOfMemory,
     PipeInitError,
     WriteBufferError
   };
-
+  using DecodeResult = Variant<NonDecoderResult, Dav1dResult, AOMResult>;
   DecodeResult Decode(SourceBufferIterator& aIterator, IResumable* aOnResume);
 
-  void RecordDecodeResultTelemetry(DecodeResult aResult);
+  bool IsDecodeSuccess(const DecodeResult& aResult);
+
+  void RecordDecodeResultTelemetry(const DecodeResult& aResult);
 
   Mp4parseAvifParser* mParser;
   Maybe<Variant<aom_codec_ctx_t, Dav1dContext*>> mCodecContext;
