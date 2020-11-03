@@ -855,6 +855,26 @@ avif:
       - jbauman@mozilla.com
     expires: never
 
+  bit_depth:
+    type: labeled_counter
+    labels:
+      - color_8
+      - color_10
+      - color_12
+      - color_16
+      - unknown
+    gecko_datapoint: AVIF_BIT_DEPTH
+    description: >
+      Bits per pixel of AVIF image.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
 network:
   cache_hit_time:
     type: timing_distribution
