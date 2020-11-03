@@ -216,8 +216,6 @@ types.addDictType("manyChildrenDict", {
   more: "array:childActor",
 });
 
-types.addLifetime("temp", "_temporaryHolder");
-
 const rootSpec = protocol.generateActorSpec({
   typeName: "root",
 
@@ -237,10 +235,6 @@ const rootSpec = protocol.generateActorSpec({
     getManyChildren: {
       response: RetVal("manyChildrenDict"),
     },
-    getTemporaryChild: {
-      request: { id: Arg(0) },
-      response: { child: RetVal("temp:childActor") },
-    },
     getPolymorphism: {
       request: { id: Arg(0, "number") },
       response: { child: RetVal("polytype") },
@@ -252,7 +246,6 @@ const rootSpec = protocol.generateActorSpec({
       },
       response: { child: RetVal("polytype") },
     },
-    clearTemporaryChildren: {},
   },
 });
 
@@ -302,23 +295,6 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     };
   },
 
-  // This should remind you of a pause actor.
-  getTemporaryChild(id) {
-    if (!this._temporaryHolder) {
-      this._temporaryHolder = new protocol.Actor(this.conn);
-      this.manage(this._temporaryHolder);
-    }
-    return new ChildActor(this.conn, id);
-  },
-
-  clearTemporaryChildren(id) {
-    if (!this._temporaryHolder) {
-      return;
-    }
-    this._temporaryHolder.destroy();
-    delete this._temporaryHolder;
-  },
-
   getPolymorphism: function(id) {
     if (id == 0) {
       return new ChildActor(this.conn, id);
@@ -348,28 +324,6 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 
   toString() {
     return "[root front]";
-  }
-
-  getTemporaryChild(id) {
-    if (!this._temporaryHolder) {
-      this._temporaryHolder = new protocol.Front(
-        this.conn,
-        this.targetFront,
-        this
-      );
-      this._temporaryHolder.actorID = this.actorID + "_temp";
-      this.manage(this._temporaryHolder);
-    }
-    return super.getTemporaryChild(id);
-  }
-
-  clearTemporaryChildren() {
-    if (!this._temporaryHolder) {
-      return Promise.resolve(undefined);
-    }
-    this._temporaryHolder.destroy();
-    delete this._temporaryHolder;
-    return super.clearTemporaryChildren();
   }
 }
 
@@ -409,7 +363,6 @@ add_task(async function() {
   await testSimpleChildren(trace);
   await testDetail(trace);
   await testSibling(trace);
-  await testTemporary(trace);
   await testEvents(trace);
   await testManyChildren(trace);
   await testGenerator(trace);
@@ -476,61 +429,6 @@ async function testSibling(trace) {
   });
 
   expectRootChildren(2);
-}
-
-async function testTemporary(trace) {
-  await rootFront.getTemporaryChild("temp1");
-  trace.expectSend({
-    type: "getTemporaryChild",
-    id: "temp1",
-    to: "<actorid>",
-  });
-  trace.expectReceive({
-    child: { actor: "<actorid>", childID: "temp1" },
-    from: "<actorid>",
-  });
-
-  // At this point we expect two direct children, plus the temporary holder
-  // which should hold 1 itself.
-  Assert.equal(rootActor._temporaryHolder.__poolMap.size, 1);
-  Assert.equal(rootFront._temporaryHolder.__poolMap.size, 1);
-
-  expectRootChildren(3);
-
-  await rootFront.getTemporaryChild("temp2");
-  trace.expectSend({
-    type: "getTemporaryChild",
-    id: "temp2",
-    to: "<actorid>",
-  });
-  trace.expectReceive({
-    child: { actor: "<actorid>", childID: "temp2" },
-    from: "<actorid>",
-  });
-
-  // Same amount of direct children, and an extra in the temporary holder.
-  expectRootChildren(3);
-  Assert.equal(rootActor._temporaryHolder.__poolMap.size, 2);
-  Assert.equal(rootFront._temporaryHolder.__poolMap.size, 2);
-
-  // Get the children of the temporary holder...
-  const checkActors = rootActor._temporaryHolder.__poolMap.values();
-
-  // Now release the temporary holders and expect them to drop again.
-  await rootFront.clearTemporaryChildren();
-  trace.expectSend({
-    type: "clearTemporaryChildren",
-    to: "<actorid>",
-  });
-  trace.expectReceive({ from: "<actorid>" });
-
-  expectRootChildren(2);
-  Assert.ok(!rootActor._temporaryHolder);
-  Assert.ok(!rootFront._temporaryHolder);
-  for (const checkActor of checkActors) {
-    Assert.ok(checkActor.destroyed);
-    Assert.ok(checkActor.destroyed);
-  }
 }
 
 async function testEvents(trace) {
