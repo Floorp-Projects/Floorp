@@ -344,7 +344,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   }
 
   nsAutoCString targetOrigin;
-  if (NS_WARN_IF(NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin)))) {
+  if (NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin))) {
     return false;
   }
 
