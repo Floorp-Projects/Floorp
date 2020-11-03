@@ -90,78 +90,6 @@ nsPrinterCUPS::~nsPrinterCUPS() {
   }
 }
 
-PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
-  nsString printerName;
-  GetPrinterName(printerName);
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  TryEnsurePrinterInfo(*printerInfoLock);
-  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
-
-  cups_size_t media;
-
-// cupsGetDestMediaDefault appears to return more accurate defaults on macOS,
-// and the IPP attribute appears to return more accurate defaults on Linux.
-#ifdef XP_MACOSX
-  bool hasDefaultMedia =
-      mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
-                                    CUPS_MEDIA_FLAGS_DEFAULT, &media);
-#else
-  ipp_attribute_t* defaultMediaIPP = mShim.cupsFindDestDefault(
-      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, "media");
-
-  const char* defaultMediaName =
-      mShim.ippGetString(defaultMediaIPP, 0, nullptr);
-
-  bool hasDefaultMedia = mShim.cupsGetDestMediaByName(
-      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, defaultMediaName,
-      CUPS_MEDIA_FLAGS_DEFAULT, &media);
-#endif
-
-  if (!hasDefaultMedia) {
-    return PrintSettingsInitializer{
-        std::move(printerName),
-        PaperInfo(),
-        SupportsColor(),
-    };
-  }
-
-  // Check if this is a localized fallback paper size, in which case we can
-  // avoid using the CUPS localization methods.
-  const gfx::SizeDouble sizeDouble{
-      media.width * kPointsPerHundredthMillimeter,
-      media.length * kPointsPerHundredthMillimeter};
-  if (const PaperInfo* const paperInfo = FindCommonPaperSize(sizeDouble)) {
-    return PrintSettingsInitializer{
-        std::move(printerName),
-        MakePaperInfo(paperInfo->mName, media),
-        SupportsColor(),
-    };
-  }
-
-  // blocking call
-  http_t* connection = mShim.cupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
-                                             /* timeout(ms) */ 5000,
-                                             /* cancel */ nullptr,
-                                             /* resource */ nullptr,
-                                             /* resourcesize */ 0,
-                                             /* callback */ nullptr,
-                                             /* user_data */ nullptr);
-
-  // XXX Do we actually have the guarantee that this is utf-8?
-  NS_ConvertUTF8toUTF16 localizedName{
-      connection ? LocalizeMediaName(*connection, media) : ""};
-
-  if (connection) {
-    mShim.httpClose(connection);
-  }
-
-  return PrintSettingsInitializer{
-      std::move(printerName),
-      MakePaperInfo(localizedName, media),
-      SupportsColor(),
-  };
-}
-
 NS_IMETHODIMP
 nsPrinterCUPS::GetName(nsAString& aName) {
   GetPrinterName(aName);
@@ -230,6 +158,11 @@ bool nsPrinterCUPS::SupportsCollation() const {
   return type & CUPS_PRINTER_COLLATE;
 }
 
+nsPrinterBase::PrinterInfo nsPrinterCUPS::CreatePrinterInfo() const {
+  Connection connection{mShim};
+  return PrinterInfo{PaperList(connection), DefaultSettings(connection)};
+}
+
 bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
   auto printerInfoLock = mPrinterInfoMutex.Lock();
   TryEnsurePrinterInfo(*printerInfoLock);
@@ -263,28 +196,101 @@ bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
   return aCUPSPatch <= printerInfoLock->mCUPSPatch;
 }
 
-nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
-  // blocking call
-  http_t* connection = mShim.cupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
-                                             /* timeout(ms) */ 5000,
-                                             /* cancel */ nullptr,
-                                             /* resource */ nullptr,
-                                             /* resourcesize */ 0,
-                                             /* callback */ nullptr,
-                                             /* user_data */ nullptr);
+http_t* nsPrinterCUPS::Connection::GetConnection(cups_dest_t* aDest) {
+  if (mWasInited) {
+    return mConnection;
+  }
+  mWasInited = true;
 
-  if (!connection) {
-    connection = CUPS_HTTP_DEFAULT;
+  // blocking call
+  http_t* const connection = mShim.cupsConnectDest(aDest, CUPS_DEST_FLAGS_NONE,
+                                                   /* timeout(ms) */ 5000,
+                                                   /* cancel */ nullptr,
+                                                   /* resource */ nullptr,
+                                                   /* resourcesize */ 0,
+                                                   /* callback */ nullptr,
+                                                   /* user_data */ nullptr);
+  if (connection) {
+    mConnection = connection;
+  }
+  return mConnection;
+}
+
+nsPrinterCUPS::Connection::~Connection() {
+  if (mWasInited && mConnection) {
+    mShim.httpClose(mConnection);
+  }
+}
+
+PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
+    Connection& aConnection) const {
+  nsString printerName;
+  GetPrinterName(printerName);
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  TryEnsurePrinterInfo(*printerInfoLock);
+  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
+
+  cups_size_t media;
+
+// cupsGetDestMediaDefault appears to return more accurate defaults on macOS,
+// and the IPP attribute appears to return more accurate defaults on Linux.
+#ifdef XP_MACOSX
+  bool hasDefaultMedia =
+      mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
+                                    CUPS_MEDIA_FLAGS_DEFAULT, &media);
+#else
+  ipp_attribute_t* defaultMediaIPP = mShim.cupsFindDestDefault(
+      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, "media");
+
+  const char* defaultMediaName =
+      mShim.ippGetString(defaultMediaIPP, 0, nullptr);
+
+  bool hasDefaultMedia = mShim.cupsGetDestMediaByName(
+      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, defaultMediaName,
+      CUPS_MEDIA_FLAGS_DEFAULT, &media);
+#endif
+
+  if (!hasDefaultMedia) {
+    return PrintSettingsInitializer{
+        std::move(printerName),
+        PaperInfo(),
+        SupportsColor(),
+    };
   }
 
+  // Check if this is a localized fallback paper size, in which case we can
+  // avoid using the CUPS localization methods.
+  const gfx::SizeDouble sizeDouble{
+      media.width * kPointsPerHundredthMillimeter,
+      media.length * kPointsPerHundredthMillimeter};
+  if (const PaperInfo* const paperInfo = FindCommonPaperSize(sizeDouble)) {
+    return PrintSettingsInitializer{
+        std::move(printerName),
+        MakePaperInfo(paperInfo->mName, media),
+        SupportsColor(),
+    };
+  }
+
+  http_t* const connection = aConnection.GetConnection(mPrinter);
+  // XXX Do we actually have the guarantee that this is utf-8?
+  NS_ConvertUTF8toUTF16 localizedName{
+      connection ? LocalizeMediaName(*connection, media) : ""};
+
+  return PrintSettingsInitializer{
+      std::move(printerName),
+      MakePaperInfo(localizedName, media),
+      SupportsColor(),
+  };
+}
+
+nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList(
+    Connection& aConnection) const {
+  http_t* const connection = aConnection.GetConnection(mPrinter);
   auto printerInfoLock = mPrinterInfoMutex.Lock();
   TryEnsurePrinterInfo(*printerInfoLock, connection);
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
 
   if (!printerInfo) {
-    if (connection) {
-      mShim.httpClose(connection);
-    }
     return {};
   }
 
@@ -315,10 +321,6 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
       paperList.AppendElement(
           MakePaperInfo(NS_ConvertUTF8toUTF16(mediaName), media));
     }
-  }
-
-  if (connection) {
-    mShim.httpClose(connection);
   }
 
   return paperList;
