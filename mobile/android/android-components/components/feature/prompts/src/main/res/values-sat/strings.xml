@@ -88,4 +88,11 @@
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
 
-    </resources>
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱰᱟᱴᱟ ᱫᱩᱦᱲᱟᱹ ᱵᱷᱮᱡᱟᱭ ᱟᱢ‌ ᱥᱮ?</string>
+    <string name="mozac_feature_prompt_repost_message">ᱥᱟᱦᱴᱟ ᱨᱤᱯᱷᱨᱮᱥ ᱞᱮᱠᱷᱟᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤ ᱠᱚ ᱰᱩᱯᱞᱤᱠᱮᱴ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ, ᱡᱮᱢᱚᱱ ᱯᱩᱭᱥᱟᱹ ᱵᱷᱮᱡᱟ ᱠᱚ ᱟᱨ ᱵᱟᱝ ᱠᱚᱢᱮᱸᱴ ᱠᱚ ᱵᱟᱨ ᱡᱮᱠᱷᱟ ᱵᱷᱮᱡᱟ ᱠᱚ ᱾</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">ᱰᱟᱴᱟ ᱫᱩᱦᱲᱟ ᱵᱷᱮᱡᱟᱭᱢᱮ</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">ᱵᱟᱹᱰᱨᱟᱹ</string>
+</resources>
