@@ -178,4 +178,29 @@ void main(void) {
 
     oFragColor = vec4(avg_color);
 }
+
+#ifdef SWGL
+    #ifdef WR_FEATURE_COLOR_TARGET
+void swgl_drawSpanRGBA8() {
+    if (!swgl_isTextureRGBA8(sPrevPassColor)) {
+        return;
+    }
+
+    int layer = swgl_textureLayerOffset(sPrevPassColor, vUvLayer);
+    swgl_commitGaussianBlurRGBA8(sPrevPassColor, vUv, vUvRect, vOffsetScale.x != 0.0,
+                                 vSupport, vGaussCoefficients, layer);
+}
+    #else
+void swgl_drawSpanR8() {
+    if (!swgl_isTextureR8(sPrevPassAlpha)) {
+        return;
+    }
+
+    int layer = swgl_textureLayerOffset(sPrevPassAlpha, vUvLayer);
+    swgl_commitGaussianBlurR8(sPrevPassAlpha, vUv, vUvRect, vOffsetScale.x != 0.0,
+                              vSupport, vGaussCoefficients, layer);
+}
+    #endif
+#endif
+
 #endif

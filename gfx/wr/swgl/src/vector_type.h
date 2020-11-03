@@ -319,6 +319,8 @@ struct VectorType {
 #  define zwzw swizzle(2, 3, 2, 3)
 #  define zyxw swizzle(2, 1, 0, 3)
 #  define xyzz swizzle(0, 1, 2, 2)
+#  define yzwx swizzle(1, 2, 3, 0)
+#  define wxyz swizzle(3, 0, 1, 2)
 #  define xxxxyyyy XXXXYYYY()
   VectorType<T, 8> XXXXYYYY() const {
     return swizzle(0, 0, 0, 0).combine(swizzle(1, 1, 1, 1));
