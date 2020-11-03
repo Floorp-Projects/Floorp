@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::CommonMetricData;
+use super::{CommonMetricData, MetricId};
 
 use super::TimeUnit;
 use crate::dispatcher;
@@ -23,15 +23,23 @@ pub enum DatetimeMetric {
 #[derive(Debug)]
 pub struct DatetimeMetricImpl(glean_core::metrics::DatetimeMetric);
 #[derive(Debug)]
-pub struct DatetimeMetricIpc();
+pub struct DatetimeMetricIpc;
 
 impl DatetimeMetric {
     /// Create a new datetime metric.
-    pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
+    pub fn new(_id: MetricId, meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         if need_ipc() {
-            DatetimeMetric::Child(DatetimeMetricIpc {})
+            DatetimeMetric::Child(DatetimeMetricIpc)
         } else {
             DatetimeMetric::Parent(Arc::new(DatetimeMetricImpl::new(meta, time_unit)))
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_metric(&self) -> Self {
+        match self {
+            DatetimeMetric::Parent { .. } => DatetimeMetric::Child(DatetimeMetricIpc),
+            DatetimeMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
 
@@ -99,5 +107,68 @@ impl DatetimeMetricImpl {
 
     pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
         crate::with_glean(move |glean| self.0.test_get_value_as_string(glean, storage_name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use chrono::{FixedOffset, TimeZone};
+
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn sets_datetime_value() {
+        let _lock = lock_test();
+
+        let metric = &metrics::test_only_ipc::a_date;
+
+        let a_datetime = FixedOffset::east(5 * 3600)
+            .ymd(2020, 05, 07)
+            .and_hms(11, 58, 00);
+        metric.set(Some(a_datetime));
+
+        assert_eq!(
+            "2020-05-07T11:58:00+05:00",
+            metric.test_get_value("store1").unwrap()
+        );
+    }
+
+    #[test]
+    fn datetime_ipc() {
+        // DatetimeMetric doesn't support IPC.
+        let _lock = lock_test();
+
+        let parent_metric = &metrics::test_only_ipc::a_date;
+
+        // Instrumentation calls do not panic.
+        let a_datetime = FixedOffset::east(5 * 3600)
+            .ymd(2020, 10, 13)
+            .and_hms(16, 41, 00);
+        parent_metric.set(Some(a_datetime));
+
+        {
+            let child_metric = parent_metric.child_metric();
+
+            let _raii = ipc::test_set_need_ipc(true);
+
+            let a_datetime = FixedOffset::east(0).ymd(2018, 4, 7).and_hms(12, 01, 00);
+            child_metric.set(Some(a_datetime));
+
+            // (They also shouldn't do anything,
+            // but that's not something we can inspect in this test)
+
+            // Need to catch the panic so that our RAIIs drop nicely.
+            let result = std::panic::catch_unwind(move || {
+                child_metric.test_get_value("store1");
+            });
+            assert!(result.is_err());
+        }
+
+        assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
+
+        assert_eq!(
+            "2020-10-13T16:41:00+05:00",
+            parent_metric.test_get_value("store1").unwrap()
+        );
     }
 }
