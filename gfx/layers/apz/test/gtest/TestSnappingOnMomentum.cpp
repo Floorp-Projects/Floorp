@@ -53,11 +53,18 @@ TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
   apzc->AdvanceAnimations(mcc->GetSampleTime());
   PanGesture(PanGestureInput::PANGESTURE_PAN, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 25), mcc->Time());
+
+  // The velocity should be positive when panning with positive displacement.
+  EXPECT_GT(apzc->GetVelocityVector().y, 3.0);
+
   mcc->AdvanceByMillis(5);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
   PanGesture(PanGestureInput::PANGESTURE_END, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 0), mcc->Time());
-  EXPECT_GT(apzc->GetVelocityVector().y, 0.0);
+
+  // After lifting the fingers, the velocity should still be positive.
+  EXPECT_GT(apzc->GetVelocityVector().y, 3.0);
+
   mcc->AdvanceByMillis(5);
 
   apzc->AdvanceAnimations(mcc->GetSampleTime());
