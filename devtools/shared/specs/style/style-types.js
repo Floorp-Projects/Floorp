@@ -9,12 +9,6 @@ const { RetVal, types } = require("devtools/shared/protocol");
 types.addActorType("domstylerule");
 
 /**
- * DOM Nodes returned by the style actor will be owned by the DOM walker
- * for the connection.
- */
-types.addLifetime("walker", "walker");
-
-/**
  * When asking for the styles applied to a node, we return a list of
  * appliedstyle json objects that lists the rules that apply to the node
  * and which element they were inherited from (if any).
