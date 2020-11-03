@@ -38,6 +38,13 @@ async function initBrowserToolboxTask({
   enableBrowserToolboxFission,
   enableContentMessages,
 } = {}) {
+  if (AppConstants.ASAN) {
+    ok(
+      false,
+      "ToolboxTask cannot be used on ASAN builds. This test should be skipped (Bug 1591064)."
+    );
+  }
+
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
   await pushPref("devtools.browsertoolbox.enable-test-server", true);
