@@ -129,7 +129,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void DoSpeculativeConnection(SpeculativeTransaction* aTrans,
                                bool aFetchHTTPSRR);
 
-  HttpConnectionBase* GetH2orH3ActiveConn(ConnectionEntry* ent, bool aNoHttp3);
+  HttpConnectionBase* GetH2orH3ActiveConn(ConnectionEntry* ent, bool aNoHttp2,
+      bool aNoHttp3);
 
   void IncreaseNumHalfOpenConns();
   void DecreaseNumHalfOpenConns();
@@ -271,6 +272,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   ConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
                                               bool allowWildCard,
+                                              bool aNoHttp2,
                                               bool aNoHttp3);
 
   [[nodiscard]] nsresult MakeNewConnection(
@@ -282,17 +284,19 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   HttpConnectionBase* FindCoalescableConnection(ConnectionEntry* ent,
                                                 bool justKidding,
+                                                bool aNoHttp2,
                                                 bool aNoHttp3);
   HttpConnectionBase* FindCoalescableConnectionByHashKey(ConnectionEntry* ent,
                                                          const nsCString& key,
                                                          bool justKidding,
+                                                         bool aNoHttp2,
                                                          bool aNoHttp3);
   void UpdateCoalescingForNewConn(HttpConnectionBase* conn,
                                   ConnectionEntry* ent);
 
   void ProcessSpdyPendingQ(ConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
-                            ConnectionEntry* ent, HttpConnectionBase* conn);
+      ConnectionEntry* ent, HttpConnectionBase* connH2, HttpConnectionBase* connH3);
   // used to marshall events to the socket transport thread.
   [[nodiscard]] nsresult PostEvent(nsConnEventHandler handler,
                                    int32_t iparam = 0,
