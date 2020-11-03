@@ -184,18 +184,18 @@ class AutoPushFeature(
      *
      * @param scope The subscription identifier which usually represents the website's URI.
      * @param appServerKey An optional key provided by the application server.
-     * @param onSubscribeError The callback invoked if the call does not successfully complete.
+     * @param onSubscribeError The callback invoked with an [Exception] if the call does not successfully complete.
      * @param onSubscribe The callback invoked when a subscription for the [scope] is created.
      */
     fun subscribe(
         scope: String,
         appServerKey: String? = null,
-        onSubscribeError: () -> Unit = {},
+        onSubscribeError: (Exception) -> Unit = {},
         onSubscribe: ((AutoPushSubscription) -> Unit) = {}
     ) {
         connection.ifInitialized {
-            coroutineScope.launchAndTry(errorBlock = {
-                onSubscribeError()
+            coroutineScope.launchAndTry(errorBlock = { exception ->
+                onSubscribeError(exception)
             }, block = {
                 val sub = subscribe(scope, appServerKey)
                 onSubscribe(sub)
@@ -207,24 +207,24 @@ class AutoPushFeature(
      * Un-subscribes from a valid subscription and invokes the [onUnsubscribe] callback with the result.
      *
      * @param scope The subscription identifier which usually represents the website's URI.
-     * @param onUnsubscribeError The callback invoked if the call does not successfully complete.
+     * @param onUnsubscribeError The callback invoked with an [Exception] if the call does not successfully complete.
      * @param onUnsubscribe The callback invoked when a subscription for the [scope] is removed.
      */
     fun unsubscribe(
         scope: String,
-        onUnsubscribeError: () -> Unit = {},
+        onUnsubscribeError: (Exception) -> Unit = {},
         onUnsubscribe: (Boolean) -> Unit = {}
     ) {
         connection.ifInitialized {
-            coroutineScope.launchAndTry(errorBlock = {
-                onUnsubscribeError()
+            coroutineScope.launchAndTry(errorBlock = { exception ->
+                onUnsubscribeError(exception)
             }, block = {
                 val result = unsubscribe(scope)
 
                 if (result) {
                     onUnsubscribe(result)
                 } else {
-                    onUnsubscribeError()
+                    onUnsubscribeError(IllegalStateException("Un-subscribing with the native client failed."))
                 }
             })
         }
