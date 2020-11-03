@@ -536,6 +536,10 @@ vec2 step(vec2 edge, vec2 x) {
   return vec2(step(edge.x, x.x), step(edge.y, x.y));
 }
 
+vec2_scalar step(vec2_scalar edge, vec2_scalar x) {
+  return vec2_scalar(step(edge.x, x.x), step(edge.y, x.y));
+}
+
 vec2 max(vec2 a, vec2 b) { return vec2(max(a.x, b.x), max(a.y, b.y)); }
 vec2 max(vec2 a, Float b) { return vec2(max(a.x, b), max(a.y, b)); }
 
@@ -1751,6 +1755,10 @@ vec4_scalar make_vec4(float x, float y, const vec2_scalar& v) {
   return vec4_scalar{x, y, v.x, v.y};
 }
 
+ivec4_scalar make_ivec4(const vec4_scalar& v) {
+  return ivec4_scalar{int32_t(v.x), int32_t(v.y), int32_t(v.z), int32_t(v.w)};
+}
+
 template <typename N>
 vec4 make_vec4(const N& n) {
   return vec4(n);
@@ -1810,6 +1818,13 @@ SI vec4 clamp(vec4 a, vec4 minVal, vec4 maxVal) {
   return vec4(clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
               clamp(a.z, minVal.z, maxVal.z), clamp(a.w, minVal.w, maxVal.w));
 }
+
+SI vec4_scalar clamp(vec4_scalar a, vec4_scalar minVal, vec4_scalar maxVal) {
+  return vec4_scalar{
+      clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
+      clamp(a.z, minVal.z, maxVal.z), clamp(a.w, minVal.w, maxVal.w)};
+}
+
 template <typename T>
 auto lessThanEqual(T x, T y) -> decltype(x <= y) {
   return x <= y;

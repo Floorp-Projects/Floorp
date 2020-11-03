@@ -15,7 +15,7 @@ skip_on(android,device) == filter-color-matrix.yaml filter-color-matrix-ref.yaml
 == filter-invert.yaml filter-invert-ref.yaml
 == filter-invert-2.yaml filter-invert-2-ref.yaml
 platform(linux,mac) fuzzy(1,133) == filter-large-blur-radius.yaml filter-large-blur-radius.png
-skip_on(android,device) fuzzy(1,12) == draw_calls(6) color_targets(6) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Pixel2
+skip_on(android,device) fuzzy(1,12) fuzzy-if(platform(swgl),2,12276) == draw_calls(6) color_targets(6) alpha_targets(0) filter-small-blur-radius.yaml filter-small-blur-radius.png  # fails on Pixel2
 == filter-saturate-red-1.yaml filter-saturate-red-1-ref.yaml
 == filter-saturate-red-2.yaml filter-saturate-red-2-ref.yaml
 == filter-saturate-red-3.yaml filter-saturate-red-3-ref.yaml
@@ -30,7 +30,7 @@ skip_on(android,device) fuzzy(1,12) == draw_calls(6) color_targets(6) alpha_targ
 == filter-saturate-blue-alpha-1.yaml filter-saturate-blue-alpha-1-ref.yaml
 fuzzy(1,14) == filter-hue-rotate-1.yaml filter-hue-rotate-1-ref.yaml
 skip_on(android,device) == filter-hue-rotate-alpha-1.yaml filter-hue-rotate-alpha-1-ref.yaml  # Fails on Pixel2
-skip_on(android,device) fuzzy(2,9072) fuzzy-if(platform(swgl),5,71071) == filter-long-chain.yaml filter-long-chain.png  # fails on Pixel2
+skip_on(android,device) fuzzy(2,9072) fuzzy-if(platform(swgl),9,109897) == filter-long-chain.yaml filter-long-chain.png  # fails on Pixel2
 platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
@@ -49,7 +49,7 @@ skip_on(android,device) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.
 fuzzy(3,79400) == filter-drop-shadow-blur-clamping.yaml filter-drop-shadow-blur-clamping-ref.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
 == filter-blur-clamping.yaml filter-blur-clamping-ref.yaml
-skip_on(android,device) fuzzy(1,104) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on  Pixel2
+skip_on(android,device) fuzzy(1,104) fuzzy-if(platform(swgl),4,18484) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on  Pixel2
 == svg-filter-component-transfer.yaml filter-component-transfer-ref.yaml
 == svg-filter-flood.yaml svg-filter-flood-ref.yaml
 skip_on(android,device) == svg-filter-blend.yaml svg-filter-blend-ref.yaml
