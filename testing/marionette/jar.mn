@@ -6,8 +6,8 @@ marionette.jar:
 % content marionette %content/
   content/accessibility.js (accessibility.js)
   content/action.js (action.js)
-  content/actors/MarionetteFrameChild.jsm (actors/MarionetteFrameChild.jsm)
-  content/actors/MarionetteFrameParent.jsm (actors/MarionetteFrameParent.jsm)
+  content/actors/MarionetteCommandsChild.jsm (actors/MarionetteCommandsChild.jsm)
+  content/actors/MarionetteCommandsParent.jsm (actors/MarionetteCommandsParent.jsm)
   content/actors/MarionetteReftestFrameChild.jsm (actors/MarionetteReftestFrameChild.jsm)
   content/actors/MarionetteReftestFrameParent.jsm (actors/MarionetteReftestFrameParent.jsm)
   content/addon.js (addon.js)
