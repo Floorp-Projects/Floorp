@@ -40,6 +40,8 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
+const NEWTAB_RENDER_URL =
+  "resource://activity-stream/data/content/newtab-render.js";
 
 /**
  * In order to make this test less brittle, much of Activity Stream is
@@ -175,6 +177,11 @@ add_task(async function test_cache_worker() {
     },
   };
   Cu.evalInSandbox(script, sandbox);
+
+  // The NEWTAB_RENDER_URL script is what ultimately causes the state
+  // to be passed into the renderCache function.
+  Services.scriptloader.loadSubScript(NEWTAB_RENDER_URL, sandbox);
+
   equal(
     sandbox.window.__FROM_STARTUP_CACHE__,
     true,
