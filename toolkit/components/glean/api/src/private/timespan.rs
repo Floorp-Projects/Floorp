@@ -4,10 +4,10 @@
 
 use std::sync::{Arc, RwLock};
 
-use super::{CommonMetricData, Instant, TimeUnit};
+use super::{CommonMetricData, Instant, MetricId, TimeUnit};
 
 use crate::dispatcher;
-use crate::ipc::{need_ipc, MetricId};
+use crate::ipc::need_ipc;
 
 /// A timespan metric.
 ///
@@ -23,13 +23,13 @@ pub struct TimespanMetricImpl {
     inner: RwLock<glean_core::metrics::TimespanMetric>,
 }
 #[derive(Debug)]
-pub struct TimespanMetricIpc(MetricId);
+pub struct TimespanMetricIpc;
 
 impl TimespanMetric {
     /// Create a new timespan metric.
-    pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
+    pub fn new(_id: MetricId, meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         if need_ipc() {
-            TimespanMetric::Child(TimespanMetricIpc(MetricId::new(meta)))
+            TimespanMetric::Child(TimespanMetricIpc)
         } else {
             TimespanMetric::Parent(Arc::new(TimespanMetricImpl::new(meta, time_unit)))
         }
@@ -151,5 +151,60 @@ impl TimespanMetricImpl {
                 .expect("lock of wrapped metric was poisoned");
             inner.test_get_value(glean, storage_name)
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn smoke_test_timespan() {
+        let _lock = lock_test();
+
+        let metric = TimespanMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "timespan_metric".into(),
+                category: "telemetry".into(),
+                send_in_pings: vec!["store1".into()],
+                disabled: false,
+                ..Default::default()
+            },
+            TimeUnit::Nanosecond,
+        );
+
+        metric.start();
+        // Stopping right away might not give us data, if the underlying clock source is not precise
+        // enough.
+        // So let's cancel and make sure nothing blows up.
+        metric.cancel();
+
+        assert_eq!(None, metric.test_get_value("store1"));
+    }
+
+    #[test]
+    fn timespan_ipc() {
+        let _lock = lock_test();
+        let _raii = ipc::test_set_need_ipc(true);
+
+        let child_metric = &metrics::test_only::can_we_time_it;
+
+        // Instrumentation calls do not panic.
+        child_metric.start();
+        // Stopping right away might not give us data,
+        // if the underlying clock source is not precise enough.
+        // So let's cancel and make sure nothing blows up.
+        child_metric.cancel();
+
+        // (They also shouldn't do anything,
+        // but that's not something we can inspect in this test)
+
+        // Need to catch the panic so that our RAIIs drop nicely.
+        let result = std::panic::catch_unwind(move || {
+            child_metric.test_get_value("store1");
+        });
+        assert!(result.is_err());
     }
 }
