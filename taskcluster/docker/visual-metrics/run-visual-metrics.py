@@ -353,28 +353,11 @@ def main(log, args):
         "suites": suites,
     }
 
-    # Try to get the similarity for all possible tests, this means that we
-    # will also get a comparison of recorded vs. live sites to check
-    # the on-going quality of our recordings.
-    try:
-        from similarity import calculate_similarity
-
-        for name, value in calculate_similarity(
-            jobs_json, fetch_dir, OUTPUT_DIR
-        ).items():
-            if value is None:
-                continue
-            suites[0]["subtests"].append(
-                {
-                    "name": name,
-                    "value": value,
-                    "replicates": [value],
-                    "lowerIsBetter": False,
-                    "unit": "a.u.",
-                }
-            )
-    except Exception:
-        log.info("Failed to calculate similarity score", exc_info=True)
+    # TODO: Try to get the similarity for all possible tests, this means that we
+    # will also get a comparison of recorded vs. live sites to check the on-going
+    # quality of our recordings.
+    # Bug 1674927 - Similarity metric is disabled until we figure out
+    # why it had a huge increase in run time.
 
     # Validates the perf data complies with perfherder schema.
     # The perfherder schema uses jsonschema so we can't use voluptuous here.
