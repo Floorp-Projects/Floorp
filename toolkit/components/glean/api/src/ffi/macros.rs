@@ -37,7 +37,7 @@ macro_rules! define_metric_ffi {
         $(
         #[no_mangle]
         pub extern "C" fn $ffi_fn(id: u32, $($op_argname: $op_argtyp),*) {
-            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id) {
+            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id.into()) {
                 Some(metric) => metric.$op($($op_argname),*),
                 None => panic!("No metric for id {}", id),
             }
@@ -57,7 +57,7 @@ macro_rules! define_metric_ffi {
                 Ok(s) => s,
                 Err(e) => panic!("Invalid string for storage name, metric id {}, error: {:?}", id, e),
             };
-            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id) {
+            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id.into()) {
                 Some(metric) => metric.test_get_value(storage_name).is_some() as u8,
                 None => panic!("No metric for id {}", id)
             }
@@ -76,7 +76,7 @@ macro_rules! define_metric_ffi {
                 Ok(s) => s,
                 Err(e) => panic!("Invalid string for storage name, metric id {}, error: {:?}", id, e),
             };
-            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id) {
+            match $crate::metrics::__glean_metric_maps::$metric_map.get(&id.into()) {
                 Some(metric) => metric.test_get_value(storage_name).unwrap().into(),
                 None => panic!("No metric for id {}", id)
             }

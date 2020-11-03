@@ -4,7 +4,7 @@
 
 //! IPC Implementation, Rust part
 
-use crate::private::{CommonMetricData, Instant};
+use crate::private::{Instant, MetricId};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -26,22 +26,6 @@ pub struct IPCPayload {
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
     pub timing_samples: HashMap<MetricId, Vec<u128>>,
-}
-
-/// Uniquely identifies a single metric within its metric type.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize, Serialize)]
-pub struct MetricId {
-    category: String,
-    name: String,
-}
-
-impl MetricId {
-    pub fn new(meta: CommonMetricData) -> Self {
-        Self {
-            category: meta.category,
-            name: meta.name,
-        }
-    }
 }
 
 /// Global singleton: pending IPC payload.
