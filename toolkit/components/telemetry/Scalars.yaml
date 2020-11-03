@@ -2139,6 +2139,41 @@ media:
     record_in_processes:
       - main
 
+avif:
+  dav1d_decode_error:
+    bug_numbers:
+      - 1670827
+    description: >
+      Image-decode Error from dav1d decoder
+    kind: uint
+    expires: "never"
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    products:
+      - 'firefox'
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  aom_decode_error:
+    bug_numbers:
+      - 1670827
+    description: >
+      Image-decode Error from aom decoder
+    kind: uint
+    expires: "never"
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    products:
+      - 'firefox'
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
