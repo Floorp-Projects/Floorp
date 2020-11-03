@@ -120,8 +120,8 @@ void nsCheckboxRadioFrame::Reflow(nsPresContext* aPresContext,
     RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
 
-  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
-                       aReflowInput.ComputedSizeWithBorderPadding());
+  const auto wm = aReflowInput.GetWritingMode();
+  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);

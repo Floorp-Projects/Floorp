@@ -99,8 +99,8 @@ void nsMeterFrame::Reflow(nsPresContext* aPresContext,
 
   ReflowBarFrame(barFrame, aPresContext, aReflowInput, aStatus);
 
-  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
-                       aReflowInput.ComputedSizeWithBorderPadding());
+  const auto wm = aReflowInput.GetWritingMode();
+  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, barFrame);
