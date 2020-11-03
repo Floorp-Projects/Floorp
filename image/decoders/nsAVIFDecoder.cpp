@@ -15,10 +15,14 @@
 
 #include "SurfacePipeFactory.h"
 
+#include "mozilla/Telemetry.h"
+
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
+
+using Telemetry::LABELS_AVIF_DECODE_RESULT;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
 
@@ -395,6 +399,23 @@ bool nsAVIFDecoder::DecodeWithAOM(const Mp4parseByteData& aPrimaryItem,
 
 LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
                                     IResumable* aOnResume) {
+  DecodeResult r = Decode(aIterator, aOnResume);
+
+  RecordDecodeResultTelemetry(r);
+
+  if (r == DecodeResult::NeedMoreData) {
+    return LexerResult(Yield::NEED_MORE_DATA);
+  }
+
+  if (r == DecodeResult::Success || r == DecodeResult::MetadataOk) {
+    return LexerResult(TerminalState::SUCCESS);
+  }
+
+  return LexerResult(TerminalState::FAILURE);
+}
+
+nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
+    SourceBufferIterator& aIterator, IResumable* aOnResume) {
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
           ("[this=%p] nsAVIFDecoder::DoDecode", this));
 
@@ -412,7 +433,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
 
     switch (state) {
       case SourceBufferIterator::WAITING:
-        return LexerResult(Yield::NEED_MORE_DATA);
+        return DecodeResult::NeedMoreData;
 
       case SourceBufferIterator::COMPLETE:
         mReadCursor = mBufferedData.begin();
@@ -449,7 +470,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
   }
 
   if (!mParser) {
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::ParseError;
   }
 
   Mp4parseByteData primaryItem = {};
@@ -460,7 +481,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
            status, primaryItem.length));
 
   if (status != MP4PARSE_STATUS_OK) {
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::NoPrimaryItem;
   }
 
   layers::PlanarYCbCrData decodedData;
@@ -473,7 +494,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
            StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",
            decodeOK ? "OK" : "Fail"));
   if (!decodeOK) {
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::DecodeError;
   }
 
   PostSize(decodedData.mPicSize.width, decodedData.mPicSize.height);
@@ -485,7 +506,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
   }
 
   if (IsMetadataDecode()) {
-    return LexerResult(TerminalState::SUCCESS);
+    return DecodeResult::MetadataOk;
   }
 
   gfx::SurfaceFormat format =
@@ -505,7 +526,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
              "rgbSize.height: %d, "
              "bytesPerPixel: %u",
              this, rgbSize.width, rgbSize.height, bytesPerPixel));
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::SizeOverflow;
   }
 
   UniquePtr<uint8_t[]> rgbBuf = MakeUnique<uint8_t[]>(rgbBufLength.value());
@@ -515,7 +536,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] allocation of %u-byte rgbBuf failed", this,
              rgbBufLength.value()));
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::OutOfMemory;
   }
 
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
@@ -532,7 +553,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
   if (!pipe) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] could not initialize surface pipe", this));
-    return LexerResult(TerminalState::FAILURE);
+    return DecodeResult::PipeInitError;
   }
 
   MOZ_LOG(sAVIFLog, LogLevel::Debug, ("[this=%p] writing to surface", this));
@@ -563,10 +584,47 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
     PostFrameStop(hasAlpha ? Opacity::SOME_TRANSPARENCY
                            : Opacity::FULLY_OPAQUE);
     PostDecodeDone();
-    return LexerResult(TerminalState::SUCCESS);
+    return DecodeResult::Success;
   }
 
-  return LexerResult(TerminalState::FAILURE);
+  return DecodeResult::WriteBufferError;
+}
+
+void nsAVIFDecoder::RecordDecodeResultTelemetry(
+    nsAVIFDecoder::DecodeResult aResult) {
+  switch (aResult) {
+    case DecodeResult::NeedMoreData:
+      break;
+    case DecodeResult::MetadataOk:
+      break;
+    case DecodeResult::Success:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::success);
+      break;
+    case DecodeResult::ParseError:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::parse_error);
+      break;
+    case DecodeResult::NoPrimaryItem:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_primary_item);
+      break;
+    case DecodeResult::DecodeError:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::decode_error);
+      break;
+    case DecodeResult::SizeOverflow:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::size_overflow);
+      break;
+    case DecodeResult::OutOfMemory:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::out_of_memory);
+      break;
+    case DecodeResult::PipeInitError:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::pipe_init_error);
+      break;
+    case DecodeResult::WriteBufferError:
+      AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::write_buffer_error);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown result");
+      break;
+  }
 }
 
 }  // namespace image
