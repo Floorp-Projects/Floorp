@@ -397,6 +397,11 @@ windows-talos:
 # macOS
 
 macosx1014-64-tests:
+    - crashtest
+    - reftest
+    - web-platform-tests-reftest
+
+macosx1014-64-qr-tests:
     - cppunit
     - crashtest
     - firefox-ui-functional-local
@@ -425,11 +430,6 @@ macosx1014-64-tests:
     - test-verify-gpu
     - test-verify-wpt
     - xpcshell
-
-macosx1014-64-qr-tests:
-    - crashtest
-    - reftest
-    - web-platform-tests-reftest
 
 macosx64-talos:
     - talos-bcv
