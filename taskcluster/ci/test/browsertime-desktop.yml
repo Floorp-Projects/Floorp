@@ -109,12 +109,7 @@ browsertime-tp6:
                 - linux.*shippable[^-qr].*
                 - mac.*shippable[^-qr].*
             chromium:
-                # Run on non-QR shippable, but test-platforms.yml doesn't have
-                # any more non-QR macosx shippable things. So for macosx we want
-                # to run it on shippable-qr, otherwise there's nothing running
-                # this on macosx at all.
                 - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
             default: []
     treeherder-symbol: Btime(tp6)
     max-run-time: 4000

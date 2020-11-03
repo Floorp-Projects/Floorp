@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import os
 
 import manifestparser
-import mozinfo
 import mozunit
 import pytest
 
@@ -357,7 +356,9 @@ def get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, **kwargs):
     monkeypatch.setattr(
         "marionette_harness.runner.base.TestManifest", manifest.manifest_class
     )
-    monkeypatch.setitem(mozinfo.info, "mozinfo_key", "mozinfo_val")
+    monkeypatch.setattr(
+        "marionette_harness.runner.base.mozinfo.info", {"mozinfo_key": "mozinfo_val"}
+    )
     for attr in kwargs:
         setattr(mock_runner, attr, kwargs[attr])
     mock_runner.marionette = mock_runner.driverclass()
