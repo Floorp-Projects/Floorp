@@ -862,6 +862,21 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
   return candidate.forget();
 }
 
+static already_AddRefed<nsIPrincipal> CreateRemoteTypeIsolationPrincipal(
+    const nsACString& aRemoteType) {
+  if ((RemoteTypePrefix(aRemoteType) != FISSION_WEB_REMOTE_TYPE) &&
+      !StringBeginsWith(aRemoteType, WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
+    return nullptr;
+  }
+
+  int32_t offset = aRemoteType.FindChar('=') + 1;
+  MOZ_ASSERT(offset > 1, "can not extract origin from that remote type");
+  nsAutoCString origin(
+      Substring(aRemoteType, offset, aRemoteType.Length() - offset));
+
+  return BasePrincipal::CreateContentPrincipal(origin);
+}
+
 /*static*/
 already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     const nsACString& aRemoteType, nsTArray<ContentParent*>& aContentParents,
@@ -975,6 +990,8 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     preallocated->AddToPool(aContentParents);
 
     preallocated->mRemoteType.Assign(aRemoteType);
+    preallocated->mRemoteTypeIsolationPrincipal =
+        CreateRemoteTypeIsolationPrincipal(aRemoteType);
     Unused << preallocated->SendRemoteType(preallocated->mRemoteType);
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -2535,6 +2552,9 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mHangMonitorActor(nullptr) {
   MOZ_DIAGNOSTIC_ASSERT(!IsForJSPlugin(),
                         "XXX(nika): How are we creating a JSPlugin?");
+
+  mRemoteTypeIsolationPrincipal =
+      CreateRemoteTypeIsolationPrincipal(aRemoteType);
 
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
