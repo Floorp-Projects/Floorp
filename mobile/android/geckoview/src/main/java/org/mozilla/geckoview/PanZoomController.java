@@ -90,6 +90,89 @@ public class PanZoomController {
 
     private boolean mSynthesizedEvent = false;
 
+    @WrapForJNI
+    private static class MotionEventData {
+        public final int action;
+        public final int actionIndex;
+        public final long time;
+        public final int metaState;
+        public final int pointerId[];
+        public final int historySize;
+        public final long historicalTime[];
+        public final float historicalX[];
+        public final float historicalY[];
+        public final float historicalOrientation[];
+        public final float historicalPressure[];
+        public final float historicalToolMajor[];
+        public final float historicalToolMinor[];
+        public final float x[];
+        public final float y[];
+        public final float orientation[];
+        public final float pressure[];
+        public final float toolMajor[];
+        public final float toolMinor[];
+
+        public MotionEventData(final MotionEvent event) {
+            final int count = event.getPointerCount();
+            action = event.getActionMasked();
+            actionIndex = event.getActionIndex();
+            time = event.getEventTime();
+            metaState = event.getMetaState();
+            historySize = event.getHistorySize();
+            historicalTime = new long[historySize];
+            historicalX = new float[historySize * count];
+            historicalY = new float[historySize * count];
+            historicalOrientation = new float[historySize * count];
+            historicalPressure = new float[historySize * count];
+            historicalToolMajor = new float[historySize * count];
+            historicalToolMinor = new float[historySize * count];
+            pointerId = new int[count];
+            x = new float[count];
+            y = new float[count];
+            orientation = new float[count];
+            pressure = new float[count];
+            toolMajor = new float[count];
+            toolMinor = new float[count];
+
+
+            for (int historyIndex = 0; historyIndex < historySize; historyIndex++) {
+                historicalTime[historyIndex] = event.getHistoricalEventTime(historyIndex);
+            }
+
+            final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+            for (int i = 0; i < count; i++) {
+                pointerId[i] = event.getPointerId(i);
+
+                for (int historyIndex = 0; historyIndex < historySize; historyIndex++) {
+                    event.getHistoricalPointerCoords(i, historyIndex, coords);
+
+                    int historicalI = historyIndex * count + i;
+                    historicalX[historicalI] = coords.x;
+                    historicalY[historicalI] = coords.y;
+
+                    historicalOrientation[historicalI] = coords.orientation;
+                    historicalPressure[historicalI] = coords.pressure;
+
+                    // If we are converting to CSS pixels, we should adjust the radii as well.
+                    historicalToolMajor[historicalI] = coords.toolMajor;
+                    historicalToolMinor[historicalI] = coords.toolMinor;
+                }
+
+                event.getPointerCoords(i, coords);
+
+                x[i] = coords.x;
+                y[i] = coords.y;
+
+                orientation[i] = coords.orientation;
+                pressure[i] = coords.pressure;
+
+                // If we are converting to CSS pixels, we should adjust the radii as well.
+                toolMajor[i] = coords.toolMajor;
+                toolMinor[i] = coords.toolMinor;
+            }
+        }
+    }
+
     /* package */ final class NativeProvider extends JNIObject {
         @Override // JNIObject
         protected void disposeNative() {
@@ -99,9 +182,8 @@ public class PanZoomController {
 
         @WrapForJNI(calledFrom = "ui")
         private native void handleMotionEvent(
-               int action, int actionIndex, long time, int metaState,  float screenX, float screenY,
-               int pointerId[], float x[], float y[], float orientation[], float pressure[],
-               float toolMajor[], float toolMinor[], GeckoResult<Integer> result);
+               MotionEventData eventData, float screenX, float screenY,
+               GeckoResult<Integer> result);
 
         @WrapForJNI(calledFrom = "ui")
         private native @InputResult int handleScrollEvent(
@@ -164,7 +246,6 @@ public class PanZoomController {
         }
 
         final int action = event.getActionMasked();
-        final int count = event.getPointerCount();
 
         if (action == MotionEvent.ACTION_DOWN) {
             mLastDownTime = event.getDownTime();
@@ -173,31 +254,6 @@ public class PanZoomController {
                 result.complete(INPUT_RESULT_UNHANDLED);
             }
             return;
-        }
-
-        final int[] pointerId = new int[count];
-        final float[] x = new float[count];
-        final float[] y = new float[count];
-        final float[] orientation = new float[count];
-        final float[] pressure = new float[count];
-        final float[] toolMajor = new float[count];
-        final float[] toolMinor = new float[count];
-
-        final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
-
-        for (int i = 0; i < count; i++) {
-            pointerId[i] = event.getPointerId(i);
-            event.getPointerCoords(i, coords);
-
-            x[i] = coords.x;
-            y[i] = coords.y;
-
-            orientation[i] = coords.orientation;
-            pressure[i] = coords.pressure;
-
-            // If we are converting to CSS pixels, we should adjust the radii as well.
-            toolMajor[i] = coords.toolMajor;
-            toolMinor[i] = coords.toolMinor;
         }
 
         final float screenX = event.getRawX() - event.getX();
@@ -210,9 +266,8 @@ public class PanZoomController {
             mSession.onScreenOriginChanged((int)screenX, (int)screenY);
         }
 
-        mNative.handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
-                                  event.getMetaState(), screenX, screenY, pointerId, x, y,
-                                  orientation, pressure, toolMajor, toolMinor, result);
+        final MotionEventData data = new MotionEventData(event);
+        mNative.handleMotionEvent(data, screenX, screenY, result);
     }
 
     private @InputResult int handleScrollEvent(final MotionEvent event) {
