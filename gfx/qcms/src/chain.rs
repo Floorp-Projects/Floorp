@@ -584,18 +584,24 @@ unsafe extern "C" fn qcms_transform_module_gamma_lut(
         let mut in_b: f32 = *fresh32;
         out_r = lut_interp_linear(
             in_r as f64,
-            (*transform).output_gamma_lut_r,
-            (*transform).output_gamma_lut_r_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_r,
+                (*transform).output_gamma_lut_r_length,
+            ),
         );
         out_g = lut_interp_linear(
             in_g as f64,
-            (*transform).output_gamma_lut_g,
-            (*transform).output_gamma_lut_g_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_g,
+                (*transform).output_gamma_lut_g_length,
+            ),
         );
         out_b = lut_interp_linear(
             in_b as f64,
-            (*transform).output_gamma_lut_b,
-            (*transform).output_gamma_lut_b_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_b,
+                (*transform).output_gamma_lut_b_length,
+            ),
         );
         let fresh33 = dest;
         dest = dest.offset(1);
