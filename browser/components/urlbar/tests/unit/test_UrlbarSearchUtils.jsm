@@ -77,6 +77,14 @@ add_task(async function add_search_engine_match() {
   Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
   Assert.equal(matchedEngine.iconURI, null);
+  info("also type part of the public suffix");
+  matchedEngine = (
+    await UrlbarSearchUtils.enginesForDomainPrefix("bacon.m")
+  )[0];
+  Assert.ok(matchedEngine);
+  Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngine.name, "bacon");
+  Assert.equal(matchedEngine.iconURI, null);
 });
 
 add_task(async function match_multiple_search_engines() {

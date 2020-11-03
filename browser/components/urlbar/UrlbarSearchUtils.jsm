@@ -70,34 +70,47 @@ class SearchUtils {
   async enginesForDomainPrefix(prefix, { matchAllDomainLevels = false } = {}) {
     await this.init();
     prefix = prefix.toLowerCase();
-    let engines = [];
+
+    // Array of partially matched engines, added through matchPrefix().
     let partialMatchEngines = [];
+    function matchPrefix(engine, engineHost) {
+      let parts = engineHost.split(".");
+      for (let i = 1; i < parts.length - 1; ++i) {
+        if (
+          parts
+            .slice(i)
+            .join(".")
+            .startsWith(prefix)
+        ) {
+          partialMatchEngines.push(engine);
+        }
+      }
+    }
+
+    // Array of fully matched engines.
+    let engines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
       let domain = engine.getResultDomain();
       if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
         engines.push(engine);
       }
+
       if (matchAllDomainLevels) {
-        // Strip the public suffix, we don't want to match on it.
-        domain = domain.substr(
-          0,
-          domain.length - engine.searchUrlPublicSuffix.length
-        );
-        let parts = domain.split(".");
-        for (let i = 1; i < parts.length - 1; ++i) {
-          if (
-            parts
-              .slice(i)
-              .join(".")
-              .startsWith(prefix)
-          ) {
-            partialMatchEngines.push(engine);
-          }
+        // The prefix may or may not contain part of the public suffix. If
+        // it contains a dot, we must match with and without the public suffix,
+        // otherwise it's sufficient to just match without it.
+        if (prefix.includes(".")) {
+          matchPrefix(engine, domain);
         }
+        matchPrefix(
+          engine,
+          domain.substr(0, domain.length - engine.searchUrlPublicSuffix.length)
+        );
       }
     }
+
     // Partial matches come after perfect matches.
-    return engines.concat(partialMatchEngines);
+    return [...engines, ...partialMatchEngines];
   }
 
   /**

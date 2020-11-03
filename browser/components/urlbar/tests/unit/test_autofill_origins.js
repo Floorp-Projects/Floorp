@@ -254,10 +254,6 @@ add_task(async function multidotted() {
         title: "www.example.co.jp:8888",
         heuristic: true,
       }),
-      makeSearchResult(context, {
-        engineName: ENGINE_NAME,
-        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
-      }),
     ],
   });
   await cleanup();
