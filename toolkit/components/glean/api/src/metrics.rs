@@ -8,7 +8,43 @@
 //! `toolkit/components/glean/build_scripts/glean_parser_ext/run_glean_parser.py`, from
 //! 'toolkit/components/glean/metrics.yaml`.
 
+#[cfg(not(feature = "cargo-clippy"))]
 include!(concat!(
     env!("MOZ_TOPOBJDIR"),
     "/toolkit/components/glean/api/src/metrics.rs"
 ));
+
+// When running clippy the linter, `MOZ_TOPOBJDIR` is not set
+// (and the `metrics.rs` file might not even be generated yet),
+// so we need to manually define some things we expect from it so the rest of the build can assume
+// it's there.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1674726.
+#[cfg(feature = "cargo-clippy")]
+#[allow(dead_code)]
+pub(crate) mod __glean_metric_maps {
+    use std::collections::HashMap;
+
+    use crate::private::*;
+    use once_cell::sync::Lazy;
+
+    pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> =
+        Lazy::new(HashMap::new);
+
+    pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> =
+        Lazy::new(HashMap::new);
+}

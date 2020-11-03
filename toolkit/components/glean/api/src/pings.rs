@@ -8,6 +8,7 @@
 //! `toolkit/components/glean/build_scripts/glean_parser_ext/run_glean_parser.py`, from
 //! 'toolkit/components/glean/pings.yaml`.
 
+#[cfg(not(feature = "cargo-clippy"))]
 include!(concat!(
     env!("MOZ_TOPOBJDIR"),
     "/toolkit/components/glean/api/src/pings.rs"
