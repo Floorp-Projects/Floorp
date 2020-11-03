@@ -121,11 +121,11 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
     LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
-    ReflowInput childReflowOuput(aPresContext, aReflowInput, inputAreaFrame,
+    ReflowInput childReflowInput(aPresContext, aReflowInput, inputAreaFrame,
                                  availSize);
 
     // Convert input area margin into my own writing-mode (in case it differs):
-    LogicalMargin childMargin = childReflowOuput.ComputedLogicalMargin(myWM);
+    LogicalMargin childMargin = childReflowInput.ComputedLogicalMargin(myWM);
 
     // offsets of input area frame within this frame:
     LogicalPoint childOffset(
@@ -137,7 +137,7 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
     // will be fixed later.
     const nsSize dummyContainerSize;
     ReflowChild(inputAreaFrame, aPresContext, childDesiredSize,
-                childReflowOuput, myWM, childOffset, dummyContainerSize,
+                childReflowInput, myWM, childOffset, dummyContainerSize,
                 ReflowChildFlags::Default, childStatus);
     MOZ_ASSERT(childStatus.IsFullyComplete(),
                "We gave our child unconstrained available block-size, "
@@ -173,7 +173,7 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
     // Place the child
     FinishReflowChild(inputAreaFrame, aPresContext, childDesiredSize,
-                      &childReflowOuput, myWM, childOffset, borderBoxSize,
+                      &childReflowInput, myWM, childOffset, borderBoxSize,
                       ReflowChildFlags::Default);
 
     if (!aReflowInput.mStyleDisplay->IsContainLayout() &&
