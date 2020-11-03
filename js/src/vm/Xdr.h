@@ -278,6 +278,7 @@ class XDRState : public XDRCoderBase {
   virtual frontend::ParserAtomsTable& frontendAtoms() {
     MOZ_CRASH("does not have frontendAtoms");
   }
+  virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
   virtual XDRParserAtomTable& parserAtomTable() {
     // This accessor is only used when encoding stencils.
     MOZ_CRASH("does not have parserAtomTable");
@@ -521,20 +522,14 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
  public:
   XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                    JS::TranscodeBuffer& buffer, size_t cursor,
-                    frontend::ParserAtomsTable& parserAtoms)
-      : XDRDecoderBase(cx, buffer, cursor),
-        options_(options),
-        parserAtoms_(&parserAtoms) {
+                    JS::TranscodeBuffer& buffer, size_t cursor)
+      : XDRDecoderBase(cx, buffer, cursor), options_(options) {
     MOZ_ASSERT(options_);
   }
 
   XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                    const JS::TranscodeRange& range,
-                    frontend::ParserAtomsTable& parserAtoms)
-      : XDRDecoderBase(cx, range),
-        options_(options),
-        parserAtoms_(&parserAtoms) {
+                    const JS::TranscodeRange& range)
+      : XDRDecoderBase(cx, range), options_(options) {
     MOZ_ASSERT(options_);
   }
 
@@ -544,6 +539,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
   bool hasAtomTable() const override { return hasFinishedAtomTable_; }
   frontend::ParserAtomsTable& frontendAtoms() override { return *parserAtoms_; }
+  LifoAlloc& stencilAlloc() override { return *stencilAlloc_; }
   XDRParserAtomTable& parserAtomTable() override { return parserAtomTable_; }
   void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
@@ -556,7 +552,8 @@ class XDRStencilDecoder : public XDRDecoderBase {
   const JS::ReadOnlyCompileOptions* options_;
   XDRParserAtomTable parserAtomTable_;
   bool hasFinishedAtomTable_ = false;
-  frontend::ParserAtomsTable* parserAtoms_;
+  frontend::ParserAtomsTable* parserAtoms_ = nullptr;
+  LifoAlloc* stencilAlloc_ = nullptr;
 };
 
 class XDROffThreadDecoder : public XDRDecoder {

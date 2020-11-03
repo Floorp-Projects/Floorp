@@ -752,6 +752,9 @@ XDRResult XDRStencilDecoder::codeStencils(
     frontend::CompilationInfoVector& compilationInfos) {
   MOZ_ASSERT(compilationInfos.delazifications.length() == 0);
 
+  parserAtoms_ = &compilationInfos.initial.stencil.parserAtoms;
+  stencilAlloc_ = &compilationInfos.initial.stencil.alloc;
+
   MOZ_TRY(codeStencil(compilationInfos.initial));
 
   if (!compilationInfos.delazifications.reserve(nchunks_ - 1)) {
@@ -765,8 +768,10 @@ XDRResult XDRStencilDecoder::codeStencils(
     auto& funInfo = compilationInfos.delazifications[i - 1];
 
     parserAtomTable_.clear();
-    parserAtoms_ = &funInfo.stencil.parserAtoms;
     hasFinishedAtomTable_ = false;
+
+    parserAtoms_ = &funInfo.stencil.parserAtoms;
+    stencilAlloc_ = &funInfo.stencil.alloc;
 
     MOZ_TRY(codeFunctionStencil(funInfo.stencil));
   }

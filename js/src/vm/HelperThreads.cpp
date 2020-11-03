@@ -788,8 +788,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     }
 
     XDRStencilDecoder decoder(
-        cx, &compilationInfos.get()->initial.input.options, range,
-        compilationInfos.get()->initial.stencil.parserAtoms);
+        cx, &compilationInfos.get()->initial.input.options, range);
     if (!compilationInfos.get()->initial.input.initForGlobal(cx)) {
       return;
     }
