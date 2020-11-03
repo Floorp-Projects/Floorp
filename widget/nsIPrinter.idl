@@ -4,7 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIPaper.idl"
+#include "nsIPrintSettings.idl"
 #include "nsISupports.idl"
+
+[scriptable, uuid(855ae9dd-62a4-64aa-9c60-b1078ff028f1)]
+interface nsIPrinterInfo : nsISupports
+{
+  /**
+   * An array of nsIPaper instances that represents the available paper sizes.
+   */
+  readonly attribute Array<nsIPaper> paperList;
+  /**
+   * nsIPrintSettings object containing the default settings for a printer.
+   */
+  readonly attribute nsIPrintSettings defaultSettings;
+};
 
 [scriptable, uuid(d2dde9bb-df86-469c-bfcc-fd95a44b1db8)]
 interface nsIPrinter : nsISupports
@@ -23,20 +37,12 @@ interface nsIPrinter : nsISupports
   readonly attribute AString systemName;
 
   /**
-   * Creates a Promise that will resolve to an nsIPrintSettings object containing
-   * the default settings for this printer. For convenience, a new, mutable
-   * nsIPrintSettings object is created for each call.
+   * Returns a Promise that resolves to a nsIPrinterInfo.
+   * This will contain the default printer settings, and the list of paper
+   * sizes supported by the printer.
    */
   [implicit_jscontext]
-  Promise createDefaultSettings();
-
-  /**
-   * Returns a Promise that resolves to an array of
-   * nsIPaper instances with the list of available paper
-   * sizes.
-   */
-  [implicit_jscontext]
-  readonly attribute Promise paperList;
+  readonly attribute Promise printerInfo;
 
   /**
    * Returns a Promise that resolves to true or false to indicate whether this

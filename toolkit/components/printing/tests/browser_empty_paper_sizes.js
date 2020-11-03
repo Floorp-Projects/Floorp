@@ -6,8 +6,7 @@
 add_task(async function testSanityCheckPaperList() {
   const mockPrinterName = "Fake Printer";
   await PrintHelper.withTestPage(async helper => {
-    let printer = helper.addMockPrinter(mockPrinterName);
-    printer.paperList = Promise.resolve([
+    let paperList = [
       PrintHelper.createMockPaper({
         id: "regular",
         name: "Regular Paper",
@@ -18,7 +17,8 @@ add_task(async function testSanityCheckPaperList() {
         width: 720,
         height: 1224,
       }),
-    ]);
+    ];
+    helper.addMockPrinter(mockPrinterName, paperList);
     await helper.startPrint();
     await helper.dispatchSettingsChange({ printerName: mockPrinterName });
     await helper.awaitAnimationFrame();

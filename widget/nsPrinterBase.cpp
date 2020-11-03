@@ -23,12 +23,54 @@ using mozilla::gfx::MarginDouble;
 // correct size.
 static constexpr double kPaperSizePointsEpsilon = 4.0;
 
-void nsPrinterBase::CachePrintSettingsInitializer(
-    const PrintSettingsInitializer& aInitializer) {
-  if (mPrintSettingsInitializer.isNothing()) {
-    mPrintSettingsInitializer.emplace(aInitializer);
+// Basic implementation of nsIPrinterInfo
+class nsPrinterInfo : public nsIPrinterInfo {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPrinterInfo)
+  NS_DECL_NSIPRINTERINFO
+  nsPrinterInfo() = delete;
+  nsPrinterInfo(nsPrinterBase& aPrinter,
+                const nsPrinterBase::PrinterInfo& aPrinterInfo)
+      : mDefaultSettings(
+            CreatePlatformPrintSettings(aPrinterInfo.mDefaultSettings)) {
+    mPaperList.SetCapacity(aPrinterInfo.mPaperList.Length());
+    for (const PaperInfo& info : aPrinterInfo.mPaperList) {
+      mPaperList.AppendElement(MakeRefPtr<nsPaper>(aPrinter, info));
+    }
   }
+
+ private:
+  virtual ~nsPrinterInfo() = default;
+
+  nsTArray<RefPtr<nsIPaper>> mPaperList;
+  RefPtr<nsIPrintSettings> mDefaultSettings;
+};
+
+NS_IMETHODIMP
+nsPrinterInfo::GetPaperList(nsTArray<RefPtr<nsIPaper>>& aPaperList) {
+  aPaperList = mPaperList.Clone();
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrinterInfo::GetDefaultSettings(nsIPrintSettings** aDefaultSettings) {
+  NS_ENSURE_ARG_POINTER(aDefaultSettings);
+  MOZ_ASSERT(mDefaultSettings);
+  RefPtr<nsIPrintSettings> settings = mDefaultSettings;
+  settings.forget(aDefaultSettings);
+  return NS_OK;
+}
+
+NS_IMPL_CYCLE_COLLECTION(nsPrinterInfo, mPaperList, mDefaultSettings)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPrinterInfo)
+  NS_INTERFACE_MAP_ENTRY(nsIPrinterInfo)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrinterInfo)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPrinterInfo)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPrinterInfo)
 
 template <typename Index, Index Size, typename Value>
 inline void ImplCycleCollectionTraverse(
@@ -72,9 +114,14 @@ void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
 template <>
 void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
                      const PrintSettingsInitializer& aResult) {
-  aPrinter.CachePrintSettingsInitializer(aResult);
   aPromise.MaybeResolve(
       RefPtr<nsIPrintSettings>(CreatePlatformPrintSettings(aResult)));
+}
+
+template <>
+void ResolveOrReject(Promise& aPromise, nsPrinterBase& aPrinter,
+                     const nsPrinterBase::PrinterInfo& aResult) {
+  aPromise.MaybeResolve(MakeRefPtr<nsPrinterInfo>(aPrinter, aResult));
 }
 
 }  // namespace mozilla
@@ -89,38 +136,10 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
                                    nsLiteralCString>
       attributeKeys{"SupportsDuplex"_ns, "SupportsColor"_ns,
                     "SupportsMonochrome"_ns, "SupportsCollation"_ns,
-                    "PaperList"_ns};
+                    "PrinterInfo"_ns};
   return mozilla::AsyncPromiseAttributeGetter(
       *this, mAsyncAttributePromises[aAttribute], aCx, aResultPromise,
       attributeKeys[aAttribute], aBackgroundTask, std::forward<Args>(aArgs)...);
-}
-
-NS_IMETHODIMP nsPrinterBase::CreateDefaultSettings(JSContext* aCx,
-                                                   Promise** aResultPromise) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG_POINTER(aResultPromise);
-
-  if (mPrintSettingsInitializer.isSome()) {
-    ErrorResult rv;
-    RefPtr<dom::Promise> promise =
-        dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-
-    if (MOZ_UNLIKELY(rv.Failed())) {
-      *aResultPromise = nullptr;
-      return rv.StealNSResult();
-    }
-
-    RefPtr<nsIPrintSettings> settings(
-        CreatePlatformPrintSettings(mPrintSettingsInitializer.ref()));
-    promise->MaybeResolve(settings);
-
-    promise.forget(aResultPromise);
-    return NS_OK;
-  }
-
-  return PrintBackgroundTaskPromise(*this, aCx, aResultPromise,
-                                    "DefaultSettings"_ns,
-                                    &nsPrinterBase::DefaultSettings);
 }
 
 NS_IMETHODIMP nsPrinterBase::GetSupportsDuplex(JSContext* aCx,
@@ -151,11 +170,11 @@ NS_IMETHODIMP nsPrinterBase::GetSupportsCollation(JSContext* aCx,
                                      &nsPrinterBase::SupportsCollation);
 }
 
-NS_IMETHODIMP nsPrinterBase::GetPaperList(JSContext* aCx,
-                                          Promise** aResultPromise) {
+NS_IMETHODIMP nsPrinterBase::GetPrinterInfo(JSContext* aCx,
+                                            Promise** aResultPromise) {
   return AsyncPromiseAttributeGetter(aCx, aResultPromise,
-                                     AsyncAttribute::PaperList,
-                                     &nsPrinterBase::PaperList);
+                                     AsyncAttribute::PrinterInfo,
+                                     &nsPrinterBase::CreatePrinterInfo);
 }
 
 void nsPrinterBase::QueryMarginsForPaper(Promise& aPromise,
@@ -179,6 +198,10 @@ nsPrinterBase::nsPrinterBase(const CommonPaperInfoArray* aPaperInfoArray)
   MOZ_DIAGNOSTIC_ASSERT(aPaperInfoArray, "Localized paper info was null");
 }
 nsPrinterBase::~nsPrinterBase() = default;
+
+nsPrinterBase::PrinterInfo nsPrinterBase::CreatePrinterInfo() const {
+  return PrinterInfo{PaperList(), DefaultSettings()};
+}
 
 const PaperInfo* nsPrinterBase::FindCommonPaperSize(
     const gfx::SizeDouble& aSize) const {

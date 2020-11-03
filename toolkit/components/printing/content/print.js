@@ -981,24 +981,26 @@ var PrintSettingsViewProxy = {
 
     // Await the async printer data.
     if (printerInfo.printer) {
+      let basePrinterInfo;
       try {
         [
           printerInfo.supportsColor,
           printerInfo.supportsMonochrome,
-          printerInfo.paperList,
-          printerInfo.defaultSettings,
+          basePrinterInfo,
         ] = await Promise.all([
           printerInfo.printer.supportsColor,
           printerInfo.printer.supportsMonochrome,
-          printerInfo.printer.paperList,
-          // get a set of default settings for this printer
-          printerInfo.printer.createDefaultSettings(),
+          printerInfo.printer.printerInfo,
         ]);
       } catch (e) {
         this.reportPrintingError("PRINTER_SETTINGS");
         throw e;
       }
-      printerInfo.defaultSettings.QueryInterface(Ci.nsIPrintSettings);
+      basePrinterInfo.QueryInterface(Ci.nsIPrinterInfo);
+      basePrinterInfo.defaultSettings.QueryInterface(Ci.nsIPrintSettings);
+
+      printerInfo.paperList = basePrinterInfo.paperList;
+      printerInfo.defaultSettings = basePrinterInfo.defaultSettings;
     } else if (printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       // The Mozilla PDF pseudo-printer has no actual nsIPrinter implementation
       printerInfo.defaultSettings = PSSVC.newPrintSettings;
