@@ -819,7 +819,7 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
   LogicalSize availSize = aReflowInput.AvailableSize();
 
   LogicalMargin borderPadding =
-      aReflowInput.ComputedLogicalPadding() + GetBorderWidth(wm);
+      aReflowInput.ComputedLogicalPadding(wm) + GetBorderWidth(wm);
 
   ReflowOutput kidSize(wm);
   kidSize.ClearSize();

@@ -433,7 +433,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   // inner frame applies the padding (but not borders).
   const auto wm = GetWritingMode();
   LogicalMargin border = aReflowInput.ComputedLogicalBorderPadding(wm) -
-                         aReflowInput.ComputedLogicalPadding();
+                         aReflowInput.ComputedLogicalPadding(wm);
   auto skipSides = PreReflowBlockLevelLogicalSkipSides();
   border.ApplySkipSides(skipSides);
   LogicalSize availSize(wm, aReflowInput.ComputedSize().ISize(wm),
@@ -572,9 +572,9 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
                                innerAvailSize, Nothing(),
                                ReflowInput::InitFlag::CallerWillInit);
     // Override computed padding, in case it's percentage padding
-    kidReflowInput.Init(aPresContext, Nothing(), Nothing(),
-                        Some(aReflowInput.ComputedLogicalPadding().ConvertTo(
-                            inner->GetWritingMode(), wm)));
+    kidReflowInput.Init(
+        aPresContext, Nothing(), Nothing(),
+        Some(aReflowInput.ComputedLogicalPadding(inner->GetWritingMode())));
     if (kidReflowInput.mFlags.mIsTopOfPage) {
       // Prevent break-before from |inner| if we have a legend.
       kidReflowInput.mFlags.mIsTopOfPage = !legend;
@@ -668,7 +668,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     // The legend is positioned inline-wards within the inner's content rect
     // (so that padding on the fieldset affects the legend position).
     LogicalRect innerContentRect = contentRect;
-    innerContentRect.Deflate(wm, aReflowInput.ComputedLogicalPadding());
+    innerContentRect.Deflate(wm, aReflowInput.ComputedLogicalPadding(wm));
     // If the inner content rect is larger than the legend, we can align the
     // legend.
     if (innerContentRect.ISize(wm) > mLegendRect.ISize(wm)) {

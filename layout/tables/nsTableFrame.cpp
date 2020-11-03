@@ -2652,7 +2652,7 @@ static LogicalMargin GetSeparateModelBorderPadding(
   const nsStyleBorder* border = aComputedStyle->StyleBorder();
   LogicalMargin borderPadding(aWM, border->GetComputedBorder());
   if (aReflowInput) {
-    borderPadding += aReflowInput->ComputedLogicalPadding();
+    borderPadding += aReflowInput->ComputedLogicalPadding(aWM);
   }
   return borderPadding;
 }
