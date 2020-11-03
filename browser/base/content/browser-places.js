@@ -1688,24 +1688,6 @@ var BookmarkingUI = {
     if (aWindow == window) {
       this._uninitView();
       this._isCustomizing = true;
-
-      if (
-        !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020", false)
-      ) {
-        return;
-      }
-
-      let isVisible =
-        Services.prefs.getCharPref(
-          "browser.toolbars.bookmarks.visibility",
-          "newtab"
-        ) != "never";
-      // Temporarily show the bookmarks toolbar in Customize mode if
-      // the toolbar isn't set to Never. We don't have to worry about
-      // hiding when leaving customize mode since the toolbar will
-      // hide itself on location change.
-      let toolbar = document.getElementById("PersonalToolbar");
-      setToolbarVisibility(toolbar, isVisible, false);
     }
   },
 
