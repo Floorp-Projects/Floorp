@@ -400,6 +400,7 @@ cbjack_process(jack_nframes_t nframes, void * arg)
         }
       }
     } else {
+
       // try to lock stream mutex
       if (pthread_mutex_trylock(&stm->mutex) == 0) {
 
@@ -906,10 +907,12 @@ cbjack_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_
     }
   }
 
-  if (cbjack_connect_ports(stm) != CUBEB_OK) {
-    pthread_mutex_unlock(&stm->mutex);
-    cbjack_stream_destroy(stm);
-    return CUBEB_ERROR;
+  if (!input_stream_params->prefs & CUBEB_STREAM_PREF_JACK_NO_AUTO_CONNECT) {
+    if (cbjack_connect_ports(stm) != CUBEB_OK) {
+      pthread_mutex_unlock(&stm->mutex);
+      cbjack_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
   }
 
   *stream = stm;
