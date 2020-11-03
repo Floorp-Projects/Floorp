@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use super::CommonMetricData;
+use super::{CommonMetricData, MetricId};
 
-use crate::ipc::{need_ipc, MetricId};
+use crate::ipc::need_ipc;
 
 /// A string metric.
 ///
@@ -44,15 +44,23 @@ pub enum StringMetric {
 #[derive(Clone, Debug)]
 pub struct StringMetricImpl(pub(crate) glean_core::metrics::StringMetric);
 #[derive(Debug)]
-pub struct StringMetricIpc(MetricId);
+pub struct StringMetricIpc;
 
 impl StringMetric {
     /// Create a new string metric.
-    pub fn new(meta: CommonMetricData) -> Self {
+    pub fn new(_id: MetricId, meta: CommonMetricData) -> Self {
         if need_ipc() {
-            StringMetric::Child(StringMetricIpc(MetricId::new(meta)))
+            StringMetric::Child(StringMetricIpc)
         } else {
             StringMetric::Parent(StringMetricImpl::new(meta))
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_metric(&self) -> Self {
+        match self {
+            StringMetric::Parent(_) => StringMetric::Child(StringMetricIpc),
+            StringMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
 
@@ -70,7 +78,7 @@ impl StringMetric {
         match self {
             StringMetric::Parent(p) => p.set(value),
             // No truncation here. Hrm.
-            StringMetric::Child(_c) => {
+            StringMetric::Child(_) => {
                 log::error!(
                     "Unable to set string metric {:?} in non-main process. Ignoring.",
                     self
@@ -95,7 +103,7 @@ impl StringMetric {
     pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
         match self {
             StringMetric::Parent(p) => p.test_get_value(storage_name),
-            StringMetric::Child(_c) => panic!(
+            StringMetric::Child(_) => panic!(
                 "Cannot get test value for {:?} in non-parent process!",
                 self
             ),
@@ -114,5 +122,59 @@ impl StringMetricImpl {
 
     fn test_get_value(&self, storage_name: &str) -> Option<String> {
         crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn sets_string_value() {
+        let _lock = lock_test();
+
+        let metric = &metrics::test_only_ipc::a_string;
+
+        metric.set("test_string_value");
+
+        assert_eq!(
+            "test_string_value",
+            metric.test_get_value("store1").unwrap()
+        );
+    }
+
+    #[test]
+    fn string_ipc() {
+        // StringMetric doesn't support IPC.
+        let _lock = lock_test();
+
+        let parent_metric = &metrics::test_only_ipc::a_string;
+
+        parent_metric.set("test_parent_value");
+
+        {
+            let child_metric = parent_metric.child_metric();
+
+            let _raii = ipc::test_set_need_ipc(true);
+
+            // Instrumentation calls do not panic.
+            child_metric.set("test_string_value");
+
+            // (They also shouldn't do anything,
+            // but that's not something we can inspect in this test)
+
+            // Need to catch the panic so that our RAIIs drop nicely.
+            let result = std::panic::catch_unwind(move || {
+                child_metric.test_get_value("store1");
+            });
+            assert!(result.is_err());
+        }
+
+        assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
+
+        assert!(
+            "test_parent_value" == parent_metric.test_get_value("store1").unwrap(),
+            "String metrics should only work in the parent process"
+        );
     }
 }
