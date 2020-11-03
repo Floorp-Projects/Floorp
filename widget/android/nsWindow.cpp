@@ -510,17 +510,48 @@ class NPZCSupport final
     }
   }
 
+  // Convert MotionEvent touch radius and orientation into the format required
+  // by w3c touchevents.
+  // toolMajor and toolMinor span a rectangle that's oriented as per
+  // aOrientation, centered around the touch point.
+  static std::pair<float, ScreenSize> ConvertOrientationAndRadius(
+      float aOrientation, float aToolMajor, float aToolMinor) {
+    float angle = aOrientation * 180.0f / M_PI;
+    // w3c touchevents spec does not allow orientations == 90
+    // this shifts it to -90, which will be shifted to zero below
+    if (angle >= 90.0) {
+      angle -= 180.0f;
+    }
+
+    // w3c touchevent radii are given with an orientation between 0 and
+    // 90. The radii are found by removing the orientation and
+    // measuring the x and y radii of the resulting ellipse. For
+    // Android orientations >= 0 and < 90, use the y radius as the
+    // major radius, and x as the minor radius. However, for an
+    // orientation < 0, we have to shift the orientation by adding 90,
+    // and reverse which radius is major and minor.
+    ScreenSize radius;
+    if (angle < 0.0f) {
+      angle += 90.0f;
+      radius =
+          ScreenSize(int32_t(aToolMajor / 2.0f), int32_t(aToolMinor / 2.0f));
+    } else {
+      radius =
+          ScreenSize(int32_t(aToolMinor / 2.0f), int32_t(aToolMajor / 2.0f));
+    }
+
+    return std::make_pair(angle, radius);
+  }
+
   void HandleMotionEvent(
       const java::PanZoomController::NativeProvider::LocalRef& aInstance,
-      int32_t aAction, int32_t aActionIndex, int64_t aTime, int32_t aMetaState,
-      float aScreenX, float aScreenY, jni::IntArray::Param aPointerId,
-      jni::FloatArray::Param aX, jni::FloatArray::Param aY,
-      jni::FloatArray::Param aOrientation, jni::FloatArray::Param aPressure,
-      jni::FloatArray::Param aToolMajor, jni::FloatArray::Param aToolMinor,
+      jni::Object::Param aEventData, float aScreenX, float aScreenY,
       jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
     auto returnResult = java::GeckoResult::Ref::From(aResult);
+    auto eventData =
+        java::PanZoomController::MotionEventData::Ref::From(aEventData);
     RefPtr<IAPZCTreeManager> controller;
 
     if (auto window = mWindow.Access()) {
@@ -538,12 +569,13 @@ class NPZCSupport final
       return;
     }
 
-    nsTArray<int32_t> pointerId(aPointerId->GetElements());
+    nsTArray<int32_t> pointerId(eventData->PointerId()->GetElements());
+    size_t pointerCount = pointerId.Length();
     MultiTouchInput::MultiTouchType type;
     size_t startIndex = 0;
-    size_t endIndex = pointerId.Length();
+    size_t endIndex = pointerCount;
 
-    switch (aAction) {
+    switch (eventData->Action()) {
       case java::sdk::MotionEvent::ACTION_DOWN:
       case java::sdk::MotionEvent::ACTION_POINTER_DOWN:
         type = MultiTouchInput::MULTITOUCH_START;
@@ -556,8 +588,8 @@ class NPZCSupport final
         // for pointer-up events we only want the data from
         // the one pointer that went up
         type = MultiTouchInput::MULTITOUCH_END;
-        startIndex = aActionIndex;
-        endIndex = aActionIndex + 1;
+        startIndex = eventData->ActionIndex();
+        endIndex = startIndex + 1;
         break;
       case java::sdk::MotionEvent::ACTION_OUTSIDE:
       case java::sdk::MotionEvent::ACTION_CANCEL:
@@ -571,57 +603,86 @@ class NPZCSupport final
         return;
     }
 
-    MultiTouchInput input(type, aTime, nsWindow::GetEventTimeStamp(aTime), 0);
-    input.modifiers = nsWindow::GetModifiers(aMetaState);
+    MultiTouchInput input(type, eventData->Time(),
+                          nsWindow::GetEventTimeStamp(eventData->Time()), 0);
+    input.modifiers = nsWindow::GetModifiers(eventData->MetaState());
     input.mTouches.SetCapacity(endIndex - startIndex);
     input.mScreenOffset =
         ExternalIntPoint(int32_t(floorf(aScreenX)), int32_t(floorf(aScreenY)));
 
-    nsTArray<float> x(aX->GetElements());
-    nsTArray<float> y(aY->GetElements());
-    nsTArray<float> orientation(aOrientation->GetElements());
-    nsTArray<float> pressure(aPressure->GetElements());
-    nsTArray<float> toolMajor(aToolMajor->GetElements());
-    nsTArray<float> toolMinor(aToolMinor->GetElements());
+    size_t historySize = eventData->HistorySize();
+    nsTArray<int64_t> historicalTime(
+        eventData->HistoricalTime()->GetElements());
+    MOZ_RELEASE_ASSERT(historicalTime.Length() == historySize);
 
-    MOZ_ASSERT(pointerId.Length() == x.Length());
-    MOZ_ASSERT(pointerId.Length() == y.Length());
-    MOZ_ASSERT(pointerId.Length() == orientation.Length());
-    MOZ_ASSERT(pointerId.Length() == pressure.Length());
-    MOZ_ASSERT(pointerId.Length() == toolMajor.Length());
-    MOZ_ASSERT(pointerId.Length() == toolMinor.Length());
+    // Each of these is |historySize| sets of |pointerCount| values.
+    size_t historicalDataCount = historySize * pointerCount;
+    nsTArray<float> historicalX(eventData->HistoricalX()->GetElements());
+    nsTArray<float> historicalY(eventData->HistoricalY()->GetElements());
+    nsTArray<float> historicalOrientation(
+        eventData->HistoricalOrientation()->GetElements());
+    nsTArray<float> historicalPressure(
+        eventData->HistoricalPressure()->GetElements());
+    nsTArray<float> historicalToolMajor(
+        eventData->HistoricalToolMajor()->GetElements());
+    nsTArray<float> historicalToolMinor(
+        eventData->HistoricalToolMinor()->GetElements());
+
+    MOZ_RELEASE_ASSERT(historicalX.Length() == historicalDataCount);
+    MOZ_RELEASE_ASSERT(historicalY.Length() == historicalDataCount);
+    MOZ_RELEASE_ASSERT(historicalOrientation.Length() == historicalDataCount);
+    MOZ_RELEASE_ASSERT(historicalPressure.Length() == historicalDataCount);
+    MOZ_RELEASE_ASSERT(historicalToolMajor.Length() == historicalDataCount);
+    MOZ_RELEASE_ASSERT(historicalToolMinor.Length() == historicalDataCount);
+
+    // Each of these is |pointerCount| values.
+    nsTArray<float> x(eventData->X()->GetElements());
+    nsTArray<float> y(eventData->Y()->GetElements());
+    nsTArray<float> orientation(eventData->Orientation()->GetElements());
+    nsTArray<float> pressure(eventData->Pressure()->GetElements());
+    nsTArray<float> toolMajor(eventData->ToolMajor()->GetElements());
+    nsTArray<float> toolMinor(eventData->ToolMinor()->GetElements());
+
+    MOZ_ASSERT(x.Length() == pointerCount);
+    MOZ_ASSERT(y.Length() == pointerCount);
+    MOZ_ASSERT(orientation.Length() == pointerCount);
+    MOZ_ASSERT(pressure.Length() == pointerCount);
+    MOZ_ASSERT(toolMajor.Length() == pointerCount);
+    MOZ_ASSERT(toolMinor.Length() == pointerCount);
 
     for (size_t i = startIndex; i < endIndex; i++) {
-      float orien = orientation[i] * 180.0f / M_PI;
-      // w3c touchevents spec does not allow orientations == 90
-      // this shifts it to -90, which will be shifted to zero below
-      if (orien >= 90.0) {
-        orien -= 180.0f;
+      float orien;
+      ScreenSize radius;
+      std::tie(orien, radius) = ConvertOrientationAndRadius(
+          orientation[i], toolMajor[i], toolMinor[i]);
+
+      ScreenIntPoint point(int32_t(floorf(x[i])), int32_t(floorf(y[i])));
+      SingleTouchData singleTouchData(pointerId[i], point, radius, orien,
+                                      pressure[i]);
+
+      for (size_t historyIndex = 0; historyIndex < historySize;
+           historyIndex++) {
+        size_t historicalI = historyIndex * pointerCount + i;
+        float historicalAngle;
+        ScreenSize historicalRadius;
+        std::tie(historicalAngle, historicalRadius) =
+            ConvertOrientationAndRadius(historicalOrientation[historicalI],
+                                        historicalToolMajor[historicalI],
+                                        historicalToolMinor[historicalI]);
+        ScreenIntPoint historicalPoint(
+            int32_t(floorf(historicalX[historicalI])),
+            int32_t(floorf(historicalY[historicalI])));
+        singleTouchData.mHistoricalData.AppendElement(
+            SingleTouchData::HistoricalTouchData{
+                nsWindow::GetEventTimeStamp(historicalTime[historyIndex]),
+                historicalPoint,
+                {},  // mLocalScreenPoint will be computed later by APZ
+                historicalRadius,
+                historicalAngle,
+                historicalPressure[historicalI]});
       }
 
-      nsIntPoint point =
-          nsIntPoint(int32_t(floorf(x[i])), int32_t(floorf(y[i])));
-
-      // w3c touchevent radii are given with an orientation between 0 and
-      // 90. The radii are found by removing the orientation and
-      // measuring the x and y radii of the resulting ellipse. For
-      // Android orientations >= 0 and < 90, use the y radius as the
-      // major radius, and x as the minor radius. However, for an
-      // orientation < 0, we have to shift the orientation by adding 90,
-      // and reverse which radius is major and minor.
-      gfx::Size radius;
-      if (orien < 0.0f) {
-        orien += 90.0f;
-        radius = gfx::Size(int32_t(toolMajor[i] / 2.0f),
-                           int32_t(toolMinor[i] / 2.0f));
-      } else {
-        radius = gfx::Size(int32_t(toolMinor[i] / 2.0f),
-                           int32_t(toolMajor[i] / 2.0f));
-      }
-
-      input.mTouches.AppendElement(SingleTouchData(
-          pointerId[i], ScreenIntPoint::FromUnknownPoint(point),
-          ScreenSize::FromUnknownSize(radius), orien, pressure[i]));
+      input.mTouches.AppendElement(singleTouchData);
     }
 
     APZEventResult result = controller->InputBridge()->ReceiveInputEvent(input);
