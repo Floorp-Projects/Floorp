@@ -64,7 +64,7 @@ def input_for_support_action(revision, task, times=1):
         "properties": {
             "depth": {
                 "type": "integer",
-                "default": 9,
+                "default": 19,
                 "minimum": 1,
                 "maximum": 25,
                 "title": "Depth",
