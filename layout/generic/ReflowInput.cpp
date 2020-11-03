@@ -1397,9 +1397,8 @@ void ReflowInput::CalculateHypotheticalPosition(
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
   // translate.
-  LogicalMargin border = aCBReflowInput->ComputedLogicalBorderPadding(cbwm) -
-                         aCBReflowInput->ComputedLogicalPadding();
-  border = border.ConvertTo(wm, aCBReflowInput->GetWritingMode());
+  LogicalMargin border = aCBReflowInput->ComputedLogicalBorderPadding(wm) -
+                         aCBReflowInput->ComputedLogicalPadding(wm);
   aHypotheticalPos.mIStart -= border.IStart(wm);
   aHypotheticalPos.mBStart -= border.BStart(wm);
 
@@ -1992,6 +1991,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
        mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
        mFrame->GetParent()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
     // See if the ancestor is block-level or inline-level
+    const auto computedPadding = aContainingBlockRI->ComputedLogicalPadding(wm);
     if (NS_FRAME_GET_TYPE(aContainingBlockRI->mFrameType) ==
         NS_CSS_FRAME_TYPE_INLINE) {
       // Base our size on the actual size of the frame.  In cases when this is
@@ -2003,7 +2003,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
 
       LogicalMargin computedBorder =
           aContainingBlockRI->ComputedLogicalBorderPadding(wm) -
-          aContainingBlockRI->ComputedLogicalPadding();
+          computedPadding;
       cbSize.ISize(wm) =
           aContainingBlockRI->mFrame->ISize(wm) - computedBorder.IStartEnd(wm);
       NS_ASSERTION(cbSize.ISize(wm) >= 0, "Negative containing block isize!");
@@ -2013,10 +2013,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
     } else {
       // If the ancestor is block-level, the containing block is formed by the
       // padding edge of the ancestor
-      cbSize.ISize(wm) +=
-          aContainingBlockRI->ComputedLogicalPadding().IStartEnd(wm);
-      cbSize.BSize(wm) +=
-          aContainingBlockRI->ComputedLogicalPadding().BStartEnd(wm);
+      cbSize += computedPadding.Size(wm);
     }
   } else {
     auto IsQuirky = [](const StyleSize& aSize) -> bool {
@@ -2480,7 +2477,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
   } else {
     border = LogicalMargin(wm, mFrame->StyleBorder()->GetComputedBorder());
   }
-  SetComputedLogicalBorderPadding(wm, border + ComputedLogicalPadding());
+  SetComputedLogicalBorderPadding(wm, border + ComputedLogicalPadding(wm));
 
   if (aFrameType == LayoutFrameType::Table) {
     nsTableFrame* tableFrame = static_cast<nsTableFrame*>(mFrame);
