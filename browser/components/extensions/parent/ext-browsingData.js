@@ -143,8 +143,13 @@ const clearHistory = options => {
 // but this API exposes an ability to wipe data at a much finger granularity
 // than those APIs. (See also Bug 1531276)
 async function clearQuotaManager(options, dataType) {
-  let promises = [];
+  // Can not clear localStorage/indexedDB in private browsing mode,
+  // just ignore.
+  if (options.cookieStoreId == PRIVATE_STORE) {
+    return;
+  }
 
+  let promises = [];
   await new Promise((resolve, reject) => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
@@ -166,7 +171,12 @@ async function clearQuotaManager(options, dataType) {
         }
 
         let host = principal.hostPort;
-        if (!options.hostnames || options.hostnames.includes(host)) {
+        if (
+          (!options.hostnames || options.hostnames.includes(host)) &&
+          (!options.cookieStoreId ||
+            getCookieStoreIdForOriginAttributes(principal.originAttributes) ===
+              options.cookieStoreId)
+        ) {
           promises.push(
             new Promise((resolve, reject) => {
               let clearRequest;
@@ -276,7 +286,11 @@ const doRemoval = (options, dataToRemove, extension) => {
   }
 
   if (options.cookieStoreId) {
-    const SUPPORTED_TYPES = ["cookies"];
+    const SUPPORTED_TYPES = ["cookies", "indexedDB"];
+    if (Services.domStorageManager.nextGenLocalStorageEnabled) {
+      // Only the next-gen storage supports removal by cookieStoreId.
+      SUPPORTED_TYPES.push("localStorage");
+    }
 
     for (let dataType in dataToRemove) {
       if (dataToRemove[dataType] && !SUPPORTED_TYPES.includes(dataType)) {
