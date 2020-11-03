@@ -157,18 +157,37 @@ add_task(async function testSoundIndicatorWhenChangingMediaMuted() {
   BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function testSoundIndicatorWhenChangingMediaVolume() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab({ needObserver: true });
+  await initMediaPlaybackDocument(tab, "audio.ogg", { volume: 0.0 });
+
+  info(`no sound indicator should show for playing volume zero media`);
+  await playMedia(tab, { resolveOnTimeupdate: true });
+  ok(!tab.observer.hasEverUpdated(), "didn't ever update sound indicator");
+
+  info(`unmuted media by setting volume should make sound indicator appear`);
+  await Promise.all([
+    waitForTabSoundIndicatorAppears(tab),
+    updateMedia(tab, { volume: 1.0 }),
+  ]);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
 function initMediaPlaybackDocument(
   tab,
   fileName,
-  { preload, createVideo, muted = false } = {}
+  { preload, createVideo, muted = false, volume = 1.0 } = {}
 ) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
-    [fileName, preload, createVideo, muted],
-    async (fileName, preload, createVideo, muted) => {
+    [fileName, preload, createVideo, muted, volume],
+    async (fileName, preload, createVideo, muted, volume) => {
       if (createVideo) {
         content.media = content.document.createElement("video");
       } else {
@@ -178,6 +197,7 @@ function initMediaPlaybackDocument(
         content.media.preload = preload;
       }
       content.media.muted = muted;
+      content.media.volume = volume;
       content.media.src = fileName;
     }
   );
