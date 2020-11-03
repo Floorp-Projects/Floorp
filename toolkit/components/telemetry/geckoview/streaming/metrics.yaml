@@ -818,6 +818,23 @@ avif:
       - jbauman@mozilla.com
     expires: never
 
+  decoder:
+    type: labeled_counter
+    labels:
+      - dav1d
+      - aom
+    gecko_datapoint: AVIF_DECODER
+    description: >
+      Decoder of AVIF image.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
 network:
   cache_hit_time:
     type: timing_distribution
