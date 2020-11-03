@@ -8,9 +8,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { mediaRuleSpec } = require("devtools/shared/specs/media-rule");
 const { styleSheetSpec } = require("devtools/shared/specs/style-sheet");
-const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
 const promise = require("promise");
 
 loader.lazyRequireGetter(
@@ -19,49 +17,6 @@ loader.lazyRequireGetter(
   "devtools/shared/indentation",
   true
 );
-
-/**
- * Corresponding client-side front for a MediaRuleActor.
- */
-class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-
-    this._onMatchesChange = this._onMatchesChange.bind(this);
-    this.on("matches-change", this._onMatchesChange);
-  }
-
-  _onMatchesChange(matches) {
-    this._form.matches = matches;
-  }
-
-  form(form) {
-    this.actorID = form.actor;
-    this._form = form;
-  }
-
-  get mediaText() {
-    return this._form.mediaText;
-  }
-  get conditionText() {
-    return this._form.conditionText;
-  }
-  get matches() {
-    return this._form.matches;
-  }
-  get line() {
-    return this._form.line || -1;
-  }
-  get column() {
-    return this._form.column || -1;
-  }
-  get parentStyleSheet() {
-    return this.conn.getFrontByID(this._form.parentStyleSheet);
-  }
-}
-
-exports.MediaRuleFront = MediaRuleFront;
-registerFront(MediaRuleFront);
 
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
@@ -139,34 +94,3 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
 
 exports.StyleSheetFront = StyleSheetFront;
 registerFront(StyleSheetFront);
-
-/**
- * The corresponding Front object for the StyleSheetsActor.
- */
-class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-
-    // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "styleSheetsActor";
-  }
-
-  async getTraits() {
-    if (this._traits) {
-      return this._traits;
-    }
-
-    try {
-      // FF81+ getTraits() is supported.
-      const { traits } = await super.getTraits();
-      this._traits = traits;
-    } catch (e) {
-      this._traits = {};
-    }
-
-    return this._traits;
-  }
-}
-
-exports.StyleSheetsFront = StyleSheetsFront;
-registerFront(StyleSheetsFront);
