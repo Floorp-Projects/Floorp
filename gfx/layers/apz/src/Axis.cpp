@@ -71,7 +71,7 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos,
     DoSetVelocity(mAxisLocked ? 0 : *newVelocity);
     AXIS_LOG("%p|%s velocity from tracker is %f%s\n", mAsyncPanZoomController,
              Name(), *newVelocity,
-             mAxisLocked ? "" : ", but we are axis locked");
+             mAxisLocked ? ", but we are axis locked" : "");
   }
 }
 
