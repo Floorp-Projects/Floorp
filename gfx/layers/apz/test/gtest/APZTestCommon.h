@@ -771,7 +771,7 @@ void APZCTesterBase::PinchWithTouchInput(
   }
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
-      TimeDuration::FromMilliseconds(50);
+      TimeDuration::FromMilliseconds(20);
 
   MultiTouchInput mtiStart =
       MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
@@ -792,12 +792,15 @@ void APZCTesterBase::PinchWithTouchInput(
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId, 2);
   }
 
+  ScreenIntPoint pinchStartPoint1(aFocus.x - int32_t(pinchLength), aFocus.y);
+  ScreenIntPoint pinchStartPoint2(aFocus.x + int32_t(pinchLength), aFocus.y);
+
   MultiTouchInput mtiMove1 =
       MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mtiMove1.mTouches.AppendElement(
-      CreateSingleTouchData(inputId, aFocus.x - pinchLength, aFocus.y));
+      CreateSingleTouchData(inputId, pinchStartPoint1));
   mtiMove1.mTouches.AppendElement(
-      CreateSingleTouchData(inputId + 1, aFocus.x + pinchLength, aFocus.y));
+      CreateSingleTouchData(inputId + 1, pinchStartPoint2));
   status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
@@ -805,12 +808,37 @@ void APZCTesterBase::PinchWithTouchInput(
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
+  // Pinch instantly but move in steps.
+  const int numSteps = 3;
+  auto stepVector = (aSecondFocus - aFocus) / numSteps;
+  for (int k = 1; k < numSteps; k++) {
+    ScreenIntPoint stepFocus = aFocus + stepVector * k;
+    ScreenIntPoint stepPoint1(stepFocus.x - int32_t(pinchLengthScaled),
+                              stepFocus.y);
+    ScreenIntPoint stepPoint2(stepFocus.x + int32_t(pinchLengthScaled),
+                              stepFocus.y);
+    MultiTouchInput mtiMoveStep =
+        MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
+    mtiMoveStep.mTouches.AppendElement(
+        CreateSingleTouchData(inputId, stepPoint1));
+    mtiMoveStep.mTouches.AppendElement(
+        CreateSingleTouchData(inputId + 1, stepPoint2));
+    Unused << aTarget->ReceiveInputEvent(mtiMoveStep, nullptr);
+
+    mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+  }
+
+  ScreenIntPoint pinchEndPoint1(aSecondFocus.x - int32_t(pinchLengthScaled),
+                                aSecondFocus.y);
+  ScreenIntPoint pinchEndPoint2(aSecondFocus.x + int32_t(pinchLengthScaled),
+                                aSecondFocus.y);
+
   MultiTouchInput mtiMove2 =
       MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(
-      inputId, aSecondFocus.x - pinchLengthScaled, aSecondFocus.y));
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(
-      inputId + 1, aSecondFocus.x + pinchLengthScaled, aSecondFocus.y));
+  mtiMove2.mTouches.AppendElement(
+      CreateSingleTouchData(inputId, pinchEndPoint1));
+  mtiMove2.mTouches.AppendElement(
+      CreateSingleTouchData(inputId + 1, pinchEndPoint2));
   status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = status;
@@ -822,12 +850,12 @@ void APZCTesterBase::PinchWithTouchInput(
     MultiTouchInput mtiEnd =
         MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
     if (aOptions & PinchOptions::LiftFinger1) {
-      mtiEnd.mTouches.AppendElement(CreateSingleTouchData(
-          inputId, aSecondFocus.x - pinchLengthScaled, aSecondFocus.y));
+      mtiEnd.mTouches.AppendElement(
+          CreateSingleTouchData(inputId, pinchEndPoint1));
     }
     if (aOptions & PinchOptions::LiftFinger2) {
-      mtiEnd.mTouches.AppendElement(CreateSingleTouchData(
-          inputId + 1, aSecondFocus.x + pinchLengthScaled, aSecondFocus.y));
+      mtiEnd.mTouches.AppendElement(
+          CreateSingleTouchData(inputId + 1, pinchEndPoint2));
     }
     status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
     if (aOutEventStatuses) {
