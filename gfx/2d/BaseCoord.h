@@ -30,7 +30,7 @@ struct BaseCoord {
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
 
-  operator T() const { return value; }
+  constexpr operator T() const { return value; }
 
   friend bool operator==(Sub aA, Sub aB) { return aA.value == aB.value; }
   friend bool operator!=(Sub aA, Sub aB) { return aA.value != aB.value; }

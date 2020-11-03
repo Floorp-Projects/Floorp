@@ -11,6 +11,7 @@
 
 #include "mozilla/EnumSet.h"
 #include "nsSize.h"  // for NS_MAXSIZE
+#include "Units.h"
 
 /**
  * Constant used to indicate an unconstrained size.
@@ -28,12 +29,6 @@
 #define NS_AUTOMARGIN (NS_UNCONSTRAINEDSIZE + 1)
 
 #define NS_INTRINSIC_ISIZE_UNKNOWN nscoord_MIN
-
-// The fallback size of width is 300px and the aspect-ratio is 2:1, based on the
-// spec definition in CSS2 section 10.3.2:
-// https://drafts.csswg.org/css2/visudet.html#inline-replaced-width
-#define REPLACED_ELEM_FALLBACK_PX_WIDTH 300
-#define REPLACED_ELEM_FALLBACK_PX_HEIGHT 150
 
 namespace mozilla {
 
@@ -83,6 +78,17 @@ enum class ComputeSizeFlag : uint8_t {
   IApplyAutoMinSize,  // only has an effect when eShrinkWrap is false
 };
 using ComputeSizeFlags = mozilla::EnumSet<ComputeSizeFlag>;
+
+/**
+ * The fallback size of width is 300px and the aspect-ratio is 2:1, based on
+ * CSS2 section 10.3.2 and CSS Sizing Level 3 section 5.1:
+ * https://drafts.csswg.org/css2/visudet.html#inline-replaced-width
+ * https://drafts.csswg.org/css-sizing-3/#intrinsic-sizes
+ */
+inline constexpr CSSIntCoord kFallbackIntrinsicWidthInPixels(300);
+inline constexpr CSSIntCoord kFallbackIntrinsicHeightInPixels(150);
+inline constexpr CSSIntSize kFallbackIntrinsicSizeInPixels(
+    kFallbackIntrinsicWidthInPixels, kFallbackIntrinsicHeightInPixels);
 
 /**
  * This is used in some nsLayoutUtils functions.
