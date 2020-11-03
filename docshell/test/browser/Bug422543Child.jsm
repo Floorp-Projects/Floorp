@@ -55,6 +55,7 @@ class Bug422543Child extends JSWindowActorChild {
       this.shistory.legacySHistory.removeSHistoryListener(listener);
     }
     this.shistory = null;
+    listeners = null;
     return {};
   }
 
