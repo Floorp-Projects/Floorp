@@ -2847,6 +2847,12 @@ this.XPIDatabaseReconcile = {
         );
       } else if (unsigned && !isNewInstall) {
         logger.warn("Not uninstalling existing unsigned add-on");
+      } else if (aLocation.name == KEY_APP_BUILTINS) {
+        // If a builtin has been removed from the build, we need to remove it from our
+        // data sets.  We cannot use location.isBuiltin since the system addon locations
+        // mix it up.
+        XPIDatabase.removeAddonMetadata(aAddonState);
+        aLocation.removeAddon(aId);
       } else {
         aLocation.installer.uninstallAddon(aId);
       }
@@ -2859,7 +2865,8 @@ this.XPIDatabaseReconcile = {
 
     // Assume that add-ons in the system add-ons install location aren't
     // foreign and should default to enabled.
-    aNewAddon.foreignInstall = isDetectedInstall && !aLocation.isSystem;
+    aNewAddon.foreignInstall =
+      isDetectedInstall && !aLocation.isSystem && !aLocation.isBuiltin;
 
     // appDisabled depends on whether the add-on is a foreignInstall so update
     aNewAddon.appDisabled = !XPIDatabase.isUsableAddon(aNewAddon);
