@@ -825,8 +825,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
       reflowInput.AvailableISize() = availableSpaceOnLine;
     }
     WritingMode stateWM = reflowInput.GetWritingMode();
-    pfd->mMargin =
-        reflowInput.ComputedLogicalMargin().ConvertTo(lineWM, stateWM);
+    pfd->mMargin = reflowInput.ComputedLogicalMargin(lineWM);
     pfd->mBorderPadding =
         reflowInput.ComputedLogicalBorderPadding().ConvertTo(lineWM, stateWM);
     pfd->mRelativePos =

@@ -56,8 +56,8 @@ nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
   // methods? (bug 1209710)
 
   // Get the item's margin corresponding to the container's start/end side.
-  const LogicalMargin margin = aRI.ComputedLogicalMargin();
   WritingMode wm = aRI.GetWritingMode();
+  const LogicalMargin margin = aRI.ComputedLogicalMargin(wm);
   nscoord marginStart, marginEnd;
   if (aAxis == eLogicalAxisBlock) {
     if (MOZ_LIKELY(isSameSide)) {

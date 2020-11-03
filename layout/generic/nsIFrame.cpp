@@ -10489,7 +10489,7 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
         reflowInput.SetComputedHeight(
             ComputeSize(aRenderingContext, wm, logicalSize,
                         logicalSize.ISize(wm),
-                        reflowInput.ComputedLogicalMargin().Size(wm),
+                        reflowInput.ComputedLogicalMargin(wm).Size(wm),
                         reflowInput.ComputedLogicalBorderPadding().Size(wm), {})
                 .mLogicalSize.Height(wm));
       }

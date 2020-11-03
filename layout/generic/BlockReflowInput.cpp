@@ -155,8 +155,7 @@ void BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
     LogicalMargin frameMargin(wm);
     SizeComputationInput os(aFrame, mReflowInput.mRenderingContext, wm,
                             mContentArea.ISize(wm));
-    frameMargin =
-        os.ComputedLogicalMargin().ConvertTo(wm, aFrame->GetWritingMode());
+    frameMargin = os.ComputedLogicalMargin(wm);
 
     nscoord iStartFloatIOffset =
         aFloatAvailableSpace.IStart(wm) - mContentArea.IStart(wm);
@@ -615,7 +614,8 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
 
   auto floatSize = aFloat->ComputeSize(
       aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
-      aFloatAvailableISize, aFloatOffsetState.ComputedLogicalMargin().Size(wm),
+      aFloatAvailableISize,
+      aFloatOffsetState.ComputedLogicalMargin(wm).Size(wm),
       aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm),
       ComputeSizeFlag::ShrinkWrap);
 
@@ -626,10 +626,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
   }
 
   return floatISize +
-         aFloatOffsetState.ComputedLogicalMargin()
-             .Size(wm)
-             .ConvertTo(cbwm, wm)
-             .ISize(cbwm) +
+         aFloatOffsetState.ComputedLogicalMargin(cbwm).IStartEnd(cbwm) +
          aFloatOffsetState.ComputedLogicalBorderPadding()
              .Size(wm)
              .ConvertTo(cbwm, wm)
@@ -718,8 +715,8 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
   // Get the band of available space with respect to margin box.
   nsFlowAreaRect floatAvailableSpace =
       GetFloatAvailableSpaceForPlacingFloat(mBCoord);
-  LogicalRect adjustedAvailableSpace = mBlock->AdjustFloatAvailableSpace(
-      *this, floatAvailableSpace.mRect);
+  LogicalRect adjustedAvailableSpace =
+      mBlock->AdjustFloatAvailableSpace(*this, floatAvailableSpace.mRect);
 
   NS_ASSERTION(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 

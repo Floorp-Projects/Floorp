@@ -5244,7 +5244,7 @@ static nscoord ContentContribution(
 
       // XXXdholbert This won't have percentage margins resolved.
       // Hopefully we can just avoid those for XUL-content-in-css-grid?
-      size += childRI.ComputedLogicalMargin().BStartEnd(childWM);
+      size += childRI.ComputedLogicalMargin(childWM).BStartEnd(childWM);
     } else {
       size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
                                cbSize, iMinSizeClamp, bMinSizeClamp);
