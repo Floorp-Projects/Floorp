@@ -215,6 +215,13 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] attribute boolean allowSpdy;
 
     /**
+     * Enable/Disable HTTP3 negotiation on per channel basis.
+     * The network.http.http3.enabled preference is still a pre-requisite
+     * for starting HTTP3.
+     */
+    [must_use] attribute boolean allowHttp3;
+
+    /**
      * This attribute en/disables the timeout for the first byte of an HTTP
      * response. Enabled by default.
      */

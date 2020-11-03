@@ -2,23 +2,18 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var h2Port;
-var prefs;
-var spdypref;
-var http2pref;
-var altsvcpref1;
-var altsvcpref2;
+var h3Port;
 
-// https://foo.example.com:(h2Port)
-// https://bar.example.com:(h2Port) <- invalid for bar, but ok for foo
+// https://foo.example.com:(h3Port)
+// https://bar.example.com:(h3Port) <- invalid for bar, but ok for foo
 var h1Foo; // server http://foo.example.com:(h1Foo.identity.primaryPort)
 var h1Bar; // server http://bar.example.com:(h1bar.identity.primaryPort)
 
 var otherServer; // server socket listening for other connection.
 
-var h2FooRoute; // foo.example.com:H2PORT
-var h2BarRoute; // bar.example.com:H2PORT
-var h2Route; // :H2PORT
+var h3FooRoute; // foo.example.com:H3PORT
+var h3BarRoute; // bar.example.com:H3PORT
+var h3Route; // :H3PORT
 var httpFooOrigin; // http://foo.exmaple.com:PORT/
 var httpsFooOrigin; // https://foo.exmaple.com:PORT/
 var httpBarOrigin; // http://bar.example.com:PORT/
@@ -28,31 +23,24 @@ function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
-  h2Port = env.get("MOZHTTP2_PORT");
-  Assert.notEqual(h2Port, null);
-  Assert.notEqual(h2Port, "");
+  h3Port = env.get("MOZHTTP3_PORT");
+  Assert.notEqual(h3Port, null);
+  Assert.notEqual(h3Port, "");
 
-  // Set to allow the cert presented by our H2 server
+  // Set to allow the cert presented by our H3 server
   do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
-  altsvcpref1 = prefs.getBoolPref("network.http.altsvc.enabled");
-  altsvcpref2 = prefs.getBoolPref("network.http.altsvc.oe", true);
-
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
-  prefs.setBoolPref("network.http.altsvc.enabled", true);
-  prefs.setBoolPref("network.http.altsvc.oe", true);
-  prefs.setCharPref(
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.altsvc.enabled", true);
+  Services.prefs.setBoolPref("network.http.altsvc.oe", true);
+  Services.prefs.setCharPref(
     "network.dns.localDomains",
     "foo.example.com, bar.example.com"
   );
 
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert. The same cert is used
-  // for both h2FooRoute and h2BarRoute though it is only valid for
+  // for both h3FooRoute and h3BarRoute though it is only valid for
   // the foo.example.com domain name.
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
@@ -78,14 +66,14 @@ function run_test() {
     h1Bar.identity.primaryPort
   );
 
-  h2FooRoute = "foo.example.com:" + h2Port;
-  h2BarRoute = "bar.example.com:" + h2Port;
-  h2Route = ":" + h2Port;
+  h3FooRoute = "foo.example.com:" + h3Port;
+  h3BarRoute = "bar.example.com:" + h3Port;
+  h3Route = ":" + h3Port;
 
   httpFooOrigin = "http://foo.example.com:" + h1Foo.identity.primaryPort + "/";
-  httpsFooOrigin = "https://" + h2FooRoute + "/";
+  httpsFooOrigin = "https://" + h3FooRoute + "/";
   httpBarOrigin = "http://bar.example.com:" + h1Bar.identity.primaryPort + "/";
-  httpsBarOrigin = "https://" + h2BarRoute + "/";
+  httpsBarOrigin = "https://" + h3BarRoute + "/";
   dump(
     "http foo - " +
       httpFooOrigin +
@@ -114,7 +102,7 @@ function h1Server(metadata, response) {
   response.setHeader("Access-Control-Allow-Headers", "x-altsvc", false);
 
   try {
-    var hval = "h2=" + metadata.getHeader("x-altsvc");
+    var hval = "h3-27=" + metadata.getHeader("x-altsvc");
     response.setHeader("Alt-Svc", hval, false);
   } catch (e) {}
 
@@ -136,12 +124,12 @@ function h1ServerWK(metadata, response) {
 }
 
 function resetPrefs() {
-  prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
-  prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
-  prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
-  prefs.clearUserPref("network.dns.localDomains");
-  prefs.clearUserPref("network.security.ports.banned");
+  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.http.altsvc.enabled");
+  Services.prefs.clearUserPref("network.http.altsvc.oe");
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.security.ports.banned");
 }
 
 function makeChan(origin) {
@@ -259,37 +247,37 @@ function doTest() {
 // 1] it is sent in the x-altsvc request header, and the response uses the value in the Alt-Svc response header
 // 2] the test polls until necko sets Alt-Used to that value (i.e. it uses that route)
 //
-// When xaltsvc is set to h2Route (i.e. :port with the implied hostname) it doesn't match the alt-used,
+// When xaltsvc is set to h3Route (i.e. :port with the implied hostname) it doesn't match the alt-used,
 // which is always explicit, so it needs to be changed after the channel is created but before the
 // listener is invoked
 
-// http://foo served from h2=:port
+// http://foo served from h3-27=:port
 function doTest1() {
   dump("doTest1()\n");
   origin = httpFooOrigin;
-  xaltsvc = h2Route;
+  xaltsvc = h3Route;
   nextTest = doTest2;
   do_test_pending();
   doTest();
-  xaltsvc = h2FooRoute;
+  xaltsvc = h3FooRoute;
 }
 
-// http://foo served from h2=foo:port
+// http://foo served from h3-27=foo:port
 function doTest2() {
   dump("doTest2()\n");
   origin = httpFooOrigin;
-  xaltsvc = h2FooRoute;
+  xaltsvc = h3FooRoute;
   nextTest = doTest3;
   do_test_pending();
   doTest();
 }
 
-// http://foo served from h2=bar:port
+// http://foo served from h3-27=bar:port
 // requires cert for foo
 function doTest3() {
   dump("doTest3()\n");
   origin = httpFooOrigin;
-  xaltsvc = h2BarRoute;
+  xaltsvc = h3BarRoute;
   nextTest = doTest4;
   do_test_pending();
   doTest();
@@ -306,25 +294,32 @@ function doTest4() {
   doTest();
 }
 
-// https://foo no alt-svc (just check cert setup)
+// http://bar via h3 on bar
+// should not use TLS/h3 because h3BarRoute is not auth'd for bar
+// however the test ought to PASS (i.e. get a 200) because fallback
+// to plaintext happens.. thus the timeout
 function doTest5() {
   dump("doTest5()\n");
-  origin = httpsFooOrigin;
-  xaltsvc = "NA";
+  origin = httpBarOrigin;
+  xaltsvc = h3BarRoute;
   expectPass = true;
+  waitFor = 500;
   nextTest = doTest6;
   do_test_pending();
   doTest();
 }
 
-// https://foo via bar (bar has cert for foo)
+// http://bar served from h3-27=:port, which is like the bar route in 8
 function doTest6() {
   dump("doTest6()\n");
-  origin = httpsFooOrigin;
-  xaltsvc = h2BarRoute;
+  origin = httpBarOrigin;
+  xaltsvc = h3Route;
+  expectPass = true;
+  waitFor = 500;
   nextTest = doTest7;
   do_test_pending();
   doTest();
+  xaltsvc = h3BarRoute;
 }
 
 // check again https://bar should fail because host bar has cert for foo
@@ -338,14 +333,13 @@ function doTest7() {
   doTest();
 }
 
-// http://bar via h2 on bar
-// should not use TLS/h2 because h2BarRoute is not auth'd for bar
-// however the test ought to PASS (i.e. get a 200) because fallback
-// to plaintext happens.. thus the timeout
+// http://bar served from h3-27=foo, should fail because host foo only has
+// cert for foo. Fail in this case means alt-svc is not used, but content
+// is served
 function doTest8() {
   dump("doTest8()\n");
   origin = httpBarOrigin;
-  xaltsvc = h2BarRoute;
+  xaltsvc = h3FooRoute;
   expectPass = true;
   waitFor = 500;
   nextTest = doTest9;
@@ -353,67 +347,77 @@ function doTest8() {
   doTest();
 }
 
-// http://bar served from h2=:port, which is like the bar route in 8
+// Test 9-12:
+// Insert a cache of http://foo served from h3-27=:port with origin attributes.
 function doTest9() {
   dump("doTest9()\n");
-  origin = httpBarOrigin;
-  xaltsvc = h2Route;
-  expectPass = true;
-  waitFor = 500;
+  origin = httpFooOrigin;
+  xaltsvc = h3Route;
+  originAttributes = {
+    userContextId: 1,
+    firstPartyDomain: "a.com",
+  };
   nextTest = doTest10;
   do_test_pending();
   doTest();
-  xaltsvc = h2BarRoute;
+  xaltsvc = h3FooRoute;
 }
 
-// check again https://bar should fail because host bar has cert for foo
+// Make sure we get a cache miss with a different userContextId.
 function doTest10() {
   dump("doTest10()\n");
-  origin = httpsBarOrigin;
-  xaltsvc = "";
-  expectPass = false;
+  origin = httpFooOrigin;
+  xaltsvc = "NA";
+  originAttributes = {
+    userContextId: 2,
+    firstPartyDomain: "a.com",
+  };
+  loadWithoutClearingMappings = true;
   nextTest = doTest11;
   do_test_pending();
   doTest();
 }
 
-// http://bar served from h2=foo, should fail because host foo only has
-// cert for foo. Fail in this case means alt-svc is not used, but content
-// is served
+// Make sure we get a cache miss with a different firstPartyDomain.
 function doTest11() {
   dump("doTest11()\n");
-  origin = httpBarOrigin;
-  xaltsvc = h2FooRoute;
-  expectPass = true;
-  waitFor = 500;
+  origin = httpFooOrigin;
+  xaltsvc = "NA";
+  originAttributes = {
+    userContextId: 1,
+    firstPartyDomain: "b.com",
+  };
+  loadWithoutClearingMappings = true;
   nextTest = doTest12;
   do_test_pending();
   doTest();
 }
-
-// Test 12-15:
-// Insert a cache of http://foo served from h2=:port with origin attributes.
+//
+// Make sure we get a cache hit with the same origin attributes.
 function doTest12() {
   dump("doTest12()\n");
   origin = httpFooOrigin;
-  xaltsvc = h2Route;
+  xaltsvc = "NA";
   originAttributes = {
     userContextId: 1,
     firstPartyDomain: "a.com",
   };
+  loadWithoutClearingMappings = true;
   nextTest = doTest13;
   do_test_pending();
   doTest();
-  xaltsvc = h2FooRoute;
+  // This ensures a cache hit.
+  xaltsvc = h3FooRoute;
 }
 
-// Make sure we get a cache miss with a different userContextId.
+// Make sure we do not use H3 if it is disabled on a channel.
 function doTest13() {
   dump("doTest13()\n");
   origin = httpFooOrigin;
   xaltsvc = "NA";
+  disallowH3 = true;
   originAttributes = {
-    userContextId: 2,
+    userContextId: 1,
     firstPartyDomain: "a.com",
   };
   loadWithoutClearingMappings = true;
@@ -422,41 +426,9 @@ function doTest13() {
   doTest();
 }
 
-// Make sure we get a cache miss with a different firstPartyDomain.
+// Make sure we use H3 if only Http2 is disabled on a channel.
 function doTest14() {
   dump("doTest14()\n");
-  origin = httpFooOrigin;
-  xaltsvc = "NA";
-  originAttributes = {
-    userContextId: 1,
-    firstPartyDomain: "b.com",
-  };
-  loadWithoutClearingMappings = true;
-  nextTest = doTest15;
-  do_test_pending();
-  doTest();
-}
-//
-// Make sure we get a cache hit with the same origin attributes.
-function doTest15() {
-  dump("doTest15()\n");
-  origin = httpFooOrigin;
-  xaltsvc = "NA";
-  originAttributes = {
-    userContextId: 1,
-    firstPartyDomain: "a.com",
-  };
-  loadWithoutClearingMappings = true;
-  nextTest = doTest16;
-  do_test_pending();
-  doTest();
-  // This ensures a cache hit.
-  xaltsvc = h2FooRoute;
-}
-
-// Make sure we do not use H2 if it is disabled on a channel.
-function doTest16() {
-  dump("doTest16()\n");
   origin = httpFooOrigin;
   xaltsvc = "NA";
   disallowH2 = true;
@@ -465,32 +437,16 @@ function doTest16() {
     firstPartyDomain: "a.com",
   };
   loadWithoutClearingMappings = true;
-  nextTest = doTest17;
-  do_test_pending();
-  doTest();
-}
-
-// Make sure we use H2 if only Http3 is disabled on a channel.
-function doTest17() {
-  dump("doTest17()\n");
-  origin = httpFooOrigin;
-  xaltsvc = h2Route;
-  disallowH3 = true;
-  originAttributes = {
-    userContextId: 1,
-    firstPartyDomain: "a.com",
-  };
-  loadWithoutClearingMappings = true;
-  nextTest = doTest18;
+  nextTest = doTest15;
   do_test_pending();
   doTest();
   // This should ensures a cache hit.
-  xaltsvc = h2FooRoute;
+  xaltsvc = h3FooRoute;
 }
 
 // Check we don't connect to blocked ports
-function doTest18() {
-  dump("doTest18()\n");
+function doTest15() {
+  dump("doTest15()\n");
   origin = httpFooOrigin;
   nextTest = testsDone;
   otherServer = Cc["@mozilla.org/network/server-socket;1"].createInstance(

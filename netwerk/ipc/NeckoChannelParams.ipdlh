@@ -288,6 +288,7 @@ struct HttpChannelOpenArgs
   bool                        chooseApplicationCache;
   nsCString                   appCacheClientID;
   bool                        allowSpdy;
+  bool                        allowHttp3;
   bool                        allowAltSvc;
   bool                        beConservative;
   uint32_t                    tlsFlags;

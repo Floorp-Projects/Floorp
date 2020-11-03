@@ -206,6 +206,7 @@ HttpBaseChannel::HttpBaseChannel()
       mTimingEnabled(false),
       mReportTiming(true),
       mAllowSpdy(true),
+      mAllowHttp3(true),
       mAllowAltSvc(true),
       mBeConservative(false),
       mIsTRRServiceChannel(false),
@@ -3033,6 +3034,20 @@ HttpBaseChannel::SetAllowSpdy(bool aAllowSpdy) {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetAllowHttp3(bool* aAllowHttp3) {
+  NS_ENSURE_ARG_POINTER(aAllowHttp3);
+
+  *aAllowHttp3 = mAllowHttp3;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetAllowHttp3(bool aAllowHttp3) {
+  mAllowHttp3 = aAllowHttp3;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetAllowAltSvc(bool* aAllowAltSvc) {
   NS_ENSURE_ARG_POINTER(aAllowAltSvc);
 
@@ -4260,6 +4275,8 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     rv = httpInternal->SetThirdPartyFlags(mThirdPartyFlags);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpInternal->SetAllowSpdy(mAllowSpdy);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = httpInternal->SetAllowHttp3(mAllowHttp3);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpInternal->SetAllowAltSvc(mAllowAltSvc);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

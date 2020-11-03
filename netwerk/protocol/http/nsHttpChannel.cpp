@@ -1242,6 +1242,9 @@ nsresult nsHttpChannel::SetupTransaction() {
   if (!mAllowSpdy) {
     mCaps |= NS_HTTP_DISALLOW_SPDY;
   }
+  if (!mAllowHttp3) {
+    mCaps |= NS_HTTP_DISALLOW_HTTP3;
+  }
   if (mBeConservative) {
     mCaps |= NS_HTTP_BE_CONSERVATIVE;
   }
@@ -6656,9 +6659,12 @@ nsresult nsHttpChannel::BeginConnect() {
       host, port, ""_ns, mUsername, GetTopWindowOrigin(), proxyInfo,
       originAttributes, isHttps);
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
+  if (!mAllowHttp3) {
+    mCaps |= NS_HTTP_DISALLOW_HTTP3;
+  }
   bool http3Allowed = !mUpgradeProtocolCallback && !mProxyInfo &&
                       !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !mBeConservative &&
-                      !gHttpHandler->IsHttp3Excluded(connInfo);
+                      !gHttpHandler->IsHttp3Excluded(connInfo) && mAllowHttp3;
 
   // No need to lookup HTTPSSVC record if we already have one.
   mUseHTTPSSVC =
