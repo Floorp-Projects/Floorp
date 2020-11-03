@@ -48,6 +48,17 @@ class AboutNewTabChild extends JSWindowActorChild {
         return;
       }
 
+      // In the event that the document that was loaded here was the cached
+      // about:home document, then there's nothing further to do - the page
+      // will load its scripts itself.
+      //
+      // Note that it's okay to waive the xray wrappers here since this actor
+      // is registered to only run in the privileged about content process from
+      // about:home, about:newtab and about:welcome.
+      if (ChromeUtils.waiveXrays(this.contentWindow).__FROM_STARTUP_CACHE__) {
+        return;
+      }
+
       const debug = !AppConstants.RELEASE_OR_BETA && ACTIVITY_STREAM_DEBUG;
       const debugString = debug ? "-dev" : "";
 
