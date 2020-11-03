@@ -15,4 +15,5 @@
 #
 #endif
 window.__FROM_STARTUP_CACHE__ = true;
-window.NewtabRenderUtils.renderCache({{ STATE }});
+window.__STARTUP_STATE__ = {{ STATE }};
+
