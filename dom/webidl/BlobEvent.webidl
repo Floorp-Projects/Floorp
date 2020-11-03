@@ -10,11 +10,11 @@
 [Exposed=Window]
 interface BlobEvent : Event
 {
-  constructor(DOMString type, optional BlobEventInit eventInitDict = {});
-  readonly attribute Blob? data;
+  constructor(DOMString type, BlobEventInit eventInitDict);
+  readonly attribute Blob data;
 };
 
 dictionary BlobEventInit : EventInit
 {
-  Blob? data = null;
+  required Blob data;
 };
