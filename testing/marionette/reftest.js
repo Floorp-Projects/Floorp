@@ -108,15 +108,15 @@ reftest.Runner = class {
       this.loadPdfJs();
     }
 
-    ChromeUtils.registerWindowActor("MarionetteReftestFrame", {
+    ChromeUtils.registerWindowActor("MarionetteReftest", {
       kind: "JSWindowActor",
       parent: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestFrameParent.jsm",
+          "chrome://marionette/content/actors/MarionetteReftestParent.jsm",
       },
       child: {
         moduleURI:
-          "chrome://marionette/content/actors/MarionetteReftestFrameChild.jsm",
+          "chrome://marionette/content/actors/MarionetteReftestChild.jsm",
         events: {
           load: { mozSystemGroup: true, capture: true },
         },
@@ -133,7 +133,7 @@ reftest.Runner = class {
     this.abort();
 
     // Unregister the JSWindowActors.
-    ChromeUtils.unregisterWindowActor("MarionetteReftestFrame");
+    ChromeUtils.unregisterWindowActor("MarionetteReftest");
   }
 
   async ensureWindow(timeout, width, height) {
@@ -670,7 +670,7 @@ max-width: ${width}px; max-height: ${height}px`;
       // Note: We cannot compare the URL here. Before the navigation is complete
       // currentWindowGlobal.documentURI.spec will still point to the old URL.
       const actor = browsingContext.currentWindowGlobal.getActor(
-        "MarionetteReftestFrame"
+        "MarionetteReftest"
       );
       isReftestReady = await actor.reftestWait(url, this.useRemoteTabs);
     }
