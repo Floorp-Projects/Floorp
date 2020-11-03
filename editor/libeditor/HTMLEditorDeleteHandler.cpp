@@ -3861,7 +3861,6 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     }
     extendRangeToSelectCharacterForward(
         range, EditorRawDOMPointInText(editableContent->AsText(), 0));
-    continue;
   }
 
   return NS_OK;
