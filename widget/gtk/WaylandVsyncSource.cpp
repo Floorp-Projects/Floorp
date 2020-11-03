@@ -31,6 +31,7 @@ static const struct wl_callback_listener WaylandVsyncSourceCallbackListener = {
 
 WaylandVsyncSource::WaylandDisplay::WaylandDisplay(MozContainer* container)
     : mEnabledLock("WaylandVsyncEnabledLock"),
+      mIsShutdown(false),
       mVsyncEnabled(false),
       mMonitorEnabled(false),
       mCallback(nullptr),
@@ -139,7 +140,7 @@ void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
 void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mEnabledLock);
-  if (mVsyncEnabled) {
+  if (mVsyncEnabled || mIsShutdown) {
     return;
   }
   mVsyncEnabled = true;
@@ -159,7 +160,10 @@ bool WaylandVsyncSource::WaylandDisplay::IsVsyncEnabled() {
 
 void WaylandVsyncSource::WaylandDisplay::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  DisableVsync();
+  MutexAutoLock lock(mEnabledLock);
+  mIsShutdown = true;
+  mVsyncEnabled = false;
+  ClearFrameCallback();
   wl_display_roundtrip(mDisplay);
 }
 
