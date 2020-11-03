@@ -23,6 +23,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.controlvariant;
   this.pockethost = "getpocket.com";
   this.fxasignedin = false;
+  this.loggedOutVariant = "control";
   this.dictJSON = {};
   this.initCloseTabEvents = function() {
     $(".btn,.pkt_ext_learnmore,.alreadyhave > a").click(function(e) {
@@ -68,6 +69,12 @@ PKT_SIGNUP_OVERLAY.prototype = {
     var variant = window.location.href.match(/variant=([\w|\.]*)&?/);
     if (variant && variant.length > 1) {
       this.variant = variant[1];
+    }
+    var loggedOutVariant = window.location.href.match(
+      /loggedOutVariant=([\w|\.]*)&?/
+    );
+    if (loggedOutVariant && loggedOutVariant.length > 1) {
+      this.loggedOutVariant = loggedOutVariant[1];
     }
     var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
     if (fxasignedin && fxasignedin.length > 1) {
@@ -116,8 +123,24 @@ PKT_SIGNUP_OVERLAY.prototype = {
     if (this.variant == "overflow") {
       $("body").append(Handlebars.templates.signup_shell(this.dictJSON));
     } else {
+      // Logged Out Display Variants for MV Testing
+      let variants = {
+        control: "signupstoryboard_shell",
+        variant_a: "variant_a",
+        variant_b: "variant_b",
+        variant_c: "variant_c",
+      };
+
+      if (this.loggedOutVariant !== `control`) {
+        $("body").addClass(`
+          los_variant los_${variants[this.loggedOutVariant]}
+        `);
+      }
+
       $("body").append(
-        Handlebars.templates.signupstoryboard_shell(this.dictJSON)
+        Handlebars.templates[
+          variants[this.loggedOutVariant] || variants.control
+        ](this.dictJSON)
       );
     }
 
