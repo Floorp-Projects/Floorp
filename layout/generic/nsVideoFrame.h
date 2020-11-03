@@ -54,7 +54,8 @@ class nsVideoFrame final : public nsContainerFrame,
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   /* get the size of the video's display */
-  nsSize GetVideoIntrinsicSize(gfxContext* aRenderingContext);
+  nsSize GetVideoIntrinsicSize() const;
+  mozilla::IntrinsicSize GetIntrinsicSize() override;
   mozilla::AspectRatio GetIntrinsicRatio() const override;
   SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
                                     mozilla::WritingMode aWM,
