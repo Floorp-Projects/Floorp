@@ -73,7 +73,7 @@ bool nsBlockReflowContext::ComputeCollapsedBStartMargin(
   nsIFrame* frame = DescendIntoBlockLevelFrame(aRI.mFrame);
   nsPresContext* prescontext = frame->PresContext();
   nsBlockFrame* block = nullptr;
-  if (0 == aRI.ComputedLogicalBorderPadding().BStart(wm)) {
+  if (0 == aRI.ComputedLogicalBorderPadding(wm).BStart(wm)) {
     block = do_QueryFrame(frame);
     if (block) {
       bool bStartMarginRoot, unused;

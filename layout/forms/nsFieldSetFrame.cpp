@@ -432,7 +432,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   // @note |this| frame applies borders but not any padding.  Our anonymous
   // inner frame applies the padding (but not borders).
   const auto wm = GetWritingMode();
-  LogicalMargin border = aReflowInput.ComputedLogicalBorderPadding() -
+  LogicalMargin border = aReflowInput.ComputedLogicalBorderPadding(wm) -
                          aReflowInput.ComputedLogicalPadding();
   auto skipSides = PreReflowBlockLevelLogicalSkipSides();
   border.ApplySkipSides(skipSides);
@@ -561,7 +561,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
               StyleBoxDecorationBreak::Clone &&
           (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
            remainingComputedBSize +
-                   aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm) >=
+                   aReflowInput.ComputedLogicalBorderPadding(wm).BStartEnd(
+                       wm) >=
                availSize.BSize(wm))) {
         innerAvailSize.BSize(wm) -= border.BEnd(wm);
       }
@@ -741,7 +742,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
             : aReflowInput.ComputedBSize();
     finalSize.BSize(wm) =
         contentBoxBSize +
-        aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm);
+        aReflowInput.ComputedLogicalBorderPadding(wm).BStartEnd(wm);
   }
 
   if (aStatus.IsComplete() &&

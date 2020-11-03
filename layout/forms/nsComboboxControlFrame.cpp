@@ -422,8 +422,8 @@ void nsComboboxControlFrame::ReflowDropdown(nsPresContext* aPresContext,
   // both sets of mComputedBorderPadding.
   nscoord forcedISize =
       aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm) -
-      kidReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm);
+      aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm) -
+      kidReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
   kidReflowInput.SetComputedISize(
       std::max(kidReflowInput.ComputedISize(), forcedISize));
 
@@ -850,12 +850,11 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   // The button should occupy the same space as a scrollbar
   nsSize containerSize = aDesiredSize.PhysicalSize();
   LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerSize);
+  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
 
   buttonRect.IStart(wm) =
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm) +
-      mDisplayISize -
-      (aReflowInput.ComputedLogicalBorderPadding().IEnd(wm) -
-       aReflowInput.ComputedLogicalPadding().IEnd(wm));
+      borderPadding.IStartEnd(wm) + mDisplayISize -
+      (borderPadding.IEnd(wm) - aReflowInput.ComputedLogicalPadding().IEnd(wm));
   buttonRect.ISize(wm) = buttonISize;
 
   buttonRect.BStart(wm) = this->GetLogicalUsedBorder(wm).BStart(wm);
@@ -1260,7 +1259,7 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
 
   ReflowInput state(aReflowInput);
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalMargin bp = state.ComputedLogicalBorderPadding();
+  LogicalMargin bp = state.ComputedLogicalBorderPadding(wm);
   if (state.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(mComboBox);
     // We intentionally use the combobox frame's style here, which has

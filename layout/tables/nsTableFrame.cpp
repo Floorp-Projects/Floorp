@@ -1893,7 +1893,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.ISize(wm) =
       aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm);
+      aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
   if (!haveDesiredBSize) {
     CalcDesiredBSize(aReflowInput, aDesiredSize);
   }
@@ -2046,7 +2046,7 @@ void nsTableFrame::ReflowTable(ReflowOutput& aDesiredSize,
   WritingMode wm = aReflowInput.GetWritingMode();
   aDesiredSize.ISize(wm) =
       aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm);
+      aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
   TableReflowInput reflowInput(
       aReflowInput, LogicalSize(wm, aDesiredSize.ISize(wm), aAvailBSize));
   ReflowChildren(reflowInput, aStatus, aLastChildReflowed,

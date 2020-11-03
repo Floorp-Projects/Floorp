@@ -456,7 +456,8 @@ void nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   RestyleManager* restyleManager = aPresContext->RestyleManager();
   WritingMode frameWM = aReflowInput.GetWritingMode();
   WritingMode lineWM = aReflowInput.mLineLayout->mRootSpan->mWritingMode;
-  LogicalMargin framePadding = aReflowInput.ComputedLogicalBorderPadding();
+  LogicalMargin framePadding =
+      aReflowInput.ComputedLogicalBorderPadding(frameWM);
   nscoord startEdge = 0;
   const bool boxDecorationBreakClone = MOZ_UNLIKELY(
       StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone);

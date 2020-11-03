@@ -39,8 +39,10 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mContentArea(aReflowInput.GetWritingMode()),
       mPushedFloats(nullptr),
       mOverflowTracker(nullptr),
-      mBorderPadding(mReflowInput.ComputedLogicalBorderPadding().ApplySkipSides(
-          aFrame->GetLogicalSkipSides(&aReflowInput))),
+      mBorderPadding(
+          mReflowInput
+              .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
+              .ApplySkipSides(aFrame->GetLogicalSkipSides(&aReflowInput))),
       mPrevBEndMargin(),
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
@@ -616,7 +618,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
       aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
       aFloatAvailableISize,
       aFloatOffsetState.ComputedLogicalMargin(wm).Size(wm),
-      aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm),
+      aFloatOffsetState.ComputedLogicalBorderPadding(wm).Size(wm),
       ComputeSizeFlag::ShrinkWrap);
 
   WritingMode cbwm = aCBReflowInput.GetWritingMode();
@@ -627,10 +629,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
 
   return floatISize +
          aFloatOffsetState.ComputedLogicalMargin(cbwm).IStartEnd(cbwm) +
-         aFloatOffsetState.ComputedLogicalBorderPadding()
-             .Size(wm)
-             .ConvertTo(cbwm, wm)
-             .ISize(cbwm);
+         aFloatOffsetState.ComputedLogicalBorderPadding(cbwm).IStartEnd(cbwm);
 }
 
 // A frame property that stores the last shape source / margin / etc. if there's
