@@ -83,30 +83,14 @@ const clearCookies = async function(options) {
   // This code has been borrowed from Sanitizer.jsm.
   let yieldCounter = 0;
 
-  if (options.since || options.hostnames || options.cookieStoreId) {
+  if (options.since || options.hostnames) {
     // Iterate through the cookies and delete any created after our cutoff.
-    let cookies = cookieMgr.cookies;
-    if (
-      !options.cookieStoreId ||
-      isPrivateCookieStoreId(options.cookieStoreId)
-    ) {
-      // By default nsICookieManager.cookies doesn't contain private cookies.
-      const privateCookies = cookieMgr.getCookiesWithOriginAttributes(
-        JSON.stringify({
-          privateBrowsingId: 1,
-        })
-      );
-      cookies = cookies.concat(privateCookies);
-    }
-    for (const cookie of cookies) {
+    for (const cookie of cookieMgr.cookies) {
       if (
         (!options.since ||
           cookie.creationTime >= PlacesUtils.toPRTime(options.since)) &&
         (!options.hostnames ||
-          options.hostnames.includes(cookie.host.replace(/^\./, ""))) &&
-        (!options.cookieStoreId ||
-          getCookieStoreIdForOriginAttributes(cookie.originAttributes) ===
-            options.cookieStoreId)
+          options.hostnames.includes(cookie.host.replace(/^\./, "")))
       ) {
         // This cookie was created after our cutoff, clear it.
         cookieMgr.remove(
@@ -139,21 +123,13 @@ const clearHistory = options => {
   return Sanitizer.items.history.clear(makeRange(options));
 };
 
-// Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
-// but this API exposes an ability to wipe data at a much finger granularity
-// than those APIs. (See also Bug 1531276)
-async function clearQuotaManager(options, dataType) {
-  // Can not clear localStorage/indexedDB in private browsing mode,
-  // just ignore.
-  if (options.cookieStoreId == PRIVATE_STORE) {
-    return;
-  }
-
+const clearIndexedDB = async function(options) {
   let promises = [];
+
   await new Promise((resolve, reject) => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
-        reject({ message: `Clear ${dataType} failed` });
+        reject({ message: "Clear indexedDB failed" });
         return;
       }
 
@@ -161,48 +137,30 @@ async function clearQuotaManager(options, dataType) {
         let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           item.origin
         );
-
-        // Consistently to removeIndexedDB and the API documentation for
-        // removeLocalStorage, we should only clear the data stored by
-        // regular websites, on the contrary we shouldn't clear data stored
-        // by browser components (like about:newtab) or other extensions.
-        if (!["http", "https", "file"].includes(principal.scheme)) {
-          continue;
-        }
-
-        let host = principal.hostPort;
         if (
-          (!options.hostnames || options.hostnames.includes(host)) &&
-          (!options.cookieStoreId ||
-            getCookieStoreIdForOriginAttributes(principal.originAttributes) ===
-              options.cookieStoreId)
+          principal.schemeIs("http") ||
+          principal.schemeIs("https") ||
+          principal.schemeIs("file")
         ) {
-          promises.push(
-            new Promise((resolve, reject) => {
-              let clearRequest;
-              if (dataType === "indexedDB") {
-                clearRequest = quotaManagerService.clearStoragesForPrincipal(
+          let host = principal.hostPort;
+          if (!options.hostnames || options.hostnames.includes(host)) {
+            promises.push(
+              new Promise((resolve, reject) => {
+                let clearRequest = quotaManagerService.clearStoragesForPrincipal(
                   principal,
                   null,
                   "idb"
                 );
-              } else {
-                clearRequest = quotaManagerService.clearStoragesForPrincipal(
-                  principal,
-                  "default",
-                  "ls"
-                );
-              }
-
-              clearRequest.callback = () => {
-                if (clearRequest.resultCode == Cr.NS_OK) {
-                  resolve();
-                } else {
-                  reject({ message: `Clear ${dataType} failed` });
-                }
-              };
-            })
-          );
+                clearRequest.callback = () => {
+                  if (clearRequest.resultCode == Cr.NS_OK) {
+                    resolve();
+                  } else {
+                    reject({ message: "Clear indexedDB failed" });
+                  }
+                };
+              })
+            );
+          }
         }
       }
 
@@ -211,10 +169,6 @@ async function clearQuotaManager(options, dataType) {
   });
 
   return Promise.all(promises);
-}
-
-const clearIndexedDB = async function(options) {
-  return clearQuotaManager(options, "indexedDB");
 };
 
 const clearLocalStorage = async function(options) {
@@ -227,7 +181,6 @@ const clearLocalStorage = async function(options) {
   // The legacy LocalStorage implementation that will eventually be removed
   // depends on this observer notification.  Some other subsystems like
   // Reporting headers depend on this too.
-  // When NextGenLocalStorage is enabled these notifications are ignored.
   if (options.hostnames) {
     for (let hostname of options.hostnames) {
       Services.obs.notifyObservers(
@@ -240,7 +193,62 @@ const clearLocalStorage = async function(options) {
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
   }
 
-  return clearQuotaManager(options, "localStorage");
+  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
+    // Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
+    // but this API exposes an ability to wipe data at a much finger granularity
+    // than those APIs.  So custom logic is used here to wipe only the QM
+    // localStorage client (when in use).
+
+    let promises = [];
+
+    await new Promise((resolve, reject) => {
+      quotaManagerService.getUsage(request => {
+        if (request.resultCode != Cr.NS_OK) {
+          reject({ message: "Clear localStorage failed" });
+          return;
+        }
+
+        for (let item of request.result) {
+          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            item.origin
+          );
+          // Consistently to removeIndexedDB and the API documentation for
+          // removeLocalStorage, we should only clear the data stored by
+          // regular websites, on the contrary we shouldn't clear data stored
+          // by browser components (like about:newtab) or other extensions.
+          if (
+            principal.schemeIs("http") ||
+            principal.schemeIs("https") ||
+            principal.schemeIs("file")
+          ) {
+            let host = principal.hostPort;
+            if (!options.hostnames || options.hostnames.includes(host)) {
+              promises.push(
+                new Promise((resolve, reject) => {
+                  let clearRequest = quotaManagerService.clearStoragesForPrincipal(
+                    principal,
+                    "default",
+                    "ls"
+                  );
+                  clearRequest.callback = () => {
+                    if (clearRequest.resultCode == Cr.NS_OK) {
+                      resolve();
+                    } else {
+                      reject({ message: "Clear localStorage failed" });
+                    }
+                  };
+                })
+              );
+            }
+          }
+        }
+
+        resolve();
+      });
+    });
+
+    return Promise.all(promises);
+  }
 };
 
 const clearPasswords = async function(options) {
@@ -283,32 +291,6 @@ const doRemoval = (options, dataToRemove, extension) => {
       message:
         "Firefox does not support protectedWeb or extension as originTypes.",
     });
-  }
-
-  if (options.cookieStoreId) {
-    const SUPPORTED_TYPES = ["cookies", "indexedDB"];
-    if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-      // Only the next-gen storage supports removal by cookieStoreId.
-      SUPPORTED_TYPES.push("localStorage");
-    }
-
-    for (let dataType in dataToRemove) {
-      if (dataToRemove[dataType] && !SUPPORTED_TYPES.includes(dataType)) {
-        return Promise.reject({
-          message: `Firefox does not support clearing ${dataType} with 'cookieStoreId'.`,
-        });
-      }
-    }
-
-    if (
-      !isPrivateCookieStoreId(options.cookieStoreId) &&
-      !isDefaultCookieStoreId(options.cookieStoreId) &&
-      !getContainerForCookieStoreId(options.cookieStoreId)
-    ) {
-      return Promise.reject({
-        message: `Invalid cookieStoreId: ${options.cookieStoreId}`,
-      });
-    }
   }
 
   let removalPromises = [];
