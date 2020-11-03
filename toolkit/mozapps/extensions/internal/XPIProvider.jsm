@@ -967,12 +967,6 @@ var BuiltInLocation = new (class _BuiltInLocation extends XPIStateLocation {
   get enumerable() {
     return false;
   }
-
-  // Builtin addons are never linked, return false
-  // here for correct behavior elsewhere.
-  isLinkedAddon(/* aId */) {
-    return false;
-  }
 })();
 
 /**
@@ -1435,9 +1429,6 @@ var XPIStates = {
    */
   scanForChanges(ignoreSideloads = true) {
     let oldState = this.initialStateData || this.loadExtensionState();
-    // We're called twice, do not restore the second time as new data
-    // may have been inserted since the first call.
-    let shouldRestoreLocationData = !this.initialStateData;
     this.initialStateData = oldState;
 
     let changed = false;
@@ -1446,7 +1437,7 @@ var XPIStates = {
     for (let loc of XPIStates.locations()) {
       oldLocations.delete(loc.name);
 
-      if (shouldRestoreLocationData && oldState[loc.name]) {
+      if (oldState[loc.name]) {
         loc.restore(oldState[loc.name]);
       }
       changed = changed || loc.changed;
