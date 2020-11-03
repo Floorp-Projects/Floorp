@@ -57,6 +57,10 @@ class UrlbarValueFormatter {
     if (!this.window.gBrowserInit.delayedStartupFinished) {
       return;
     }
+    // If this window is being torn down, stop here
+    if (!this.window.docShell) {
+      return;
+    }
     if (!Services.search.isInitialized) {
       let instance = (this._updateInstance = {});
       await Services.search.init();
