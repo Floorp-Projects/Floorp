@@ -3015,6 +3015,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "ivec4",
         Some("make_ivec4"),
         Type::new(IVec4),
+        vec![Type::new(Vec4)],
+    );
+    declare_function(
+        state,
+        "ivec4",
+        Some("make_ivec4"),
+        Type::new(IVec4),
         vec![Type::new(IVec2), Type::new(Int), Type::new(Int)],
     );
 
@@ -3719,6 +3726,22 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Float), Type::new(Int)],
+        );
+        declare_function(
+            state,
+            "swgl_commitGaussianBlurRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Bool),
+                 Type::new(Int), Type::new(Vec2), Type::new(Int)],
+        );
+        declare_function(
+            state,
+            "swgl_commitGaussianBlurR8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Bool),
+                 Type::new(Int), Type::new(Vec2), Type::new(Int)],
         );
     }
 

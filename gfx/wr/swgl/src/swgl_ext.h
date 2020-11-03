@@ -182,6 +182,37 @@ static ALWAYS_INLINE T swgl_linearQuantizeStep(S s, T p) {
 #define swgl_commitTextureLinearColorR8(s, p, color, ...) \
   swgl_commitTextureLinearColor(R8, s, p, color, __VA_ARGS__)
 
+// Commit an entire span of a separable pass of a Gaussian blur that falls
+// within the given radius scaled by supplied coefficients, clamped to uv_rect
+// bounds.
+#define swgl_commitGaussianBlur(format, type, s, p, uv_rect, hori, radius, \
+                                coeffs, ...)                               \
+  do {                                                                     \
+    vec2_scalar size = {float(s->width), float(s->height)};                \
+    ivec2_scalar curUV = make_ivec2(force_scalar(p) * size);               \
+    ivec4_scalar bounds = make_ivec4(uv_rect * make_vec4(size, size));     \
+    int endX = min(bounds.z, curUV.x + swgl_SpanLength * swgl_StepSize);   \
+    if (hori) {                                                            \
+      for (; curUV.x + swgl_StepSize <= endX; curUV.x += swgl_StepSize) {  \
+        swgl_commitChunk(format, gaussianBlurHorizontal<type>(             \
+                                     s, curUV, bounds.x, bounds.z, radius, \
+                                     coeffs.x, coeffs.y, __VA_ARGS__));    \
+      }                                                                    \
+    } else {                                                               \
+      for (; curUV.x + swgl_StepSize <= endX; curUV.x += swgl_StepSize) {  \
+        swgl_commitChunk(format, gaussianBlurVertical<type>(               \
+                                     s, curUV, bounds.y, bounds.w, radius, \
+                                     coeffs.x, coeffs.y, __VA_ARGS__));    \
+      }                                                                    \
+    }                                                                      \
+  } while (0)
+#define swgl_commitGaussianBlurRGBA8(s, p, uv_rect, hori, radius, coeffs, ...) \
+  swgl_commitGaussianBlur(RGBA8, uint32_t, s, p, uv_rect, hori, radius,        \
+                          coeffs, __VA_ARGS__)
+#define swgl_commitGaussianBlurR8(s, p, uv_rect, hori, radius, coeffs, ...) \
+  swgl_commitGaussianBlur(R8, uint8_t, s, p, uv_rect, hori, radius, coeffs, \
+                          __VA_ARGS__)
+
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.
 // The number of pixels committed is tracked by checking for the difference in
 // swgl_SpanLength. Any varying interpolants used will be advanced past the

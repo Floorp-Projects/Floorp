@@ -480,8 +480,9 @@ SI T linearQuantize(T P, float scale, S sampler) {
 }
 
 // Compute clamped offset of first row for linear interpolation
-template <typename S>
-SI I32 computeRow(S sampler, ivec2 i, int32_t zoffset, size_t margin = 1) {
+template <typename S, typename I>
+SI auto computeRow(S sampler, I i, int32_t zoffset, size_t margin = 1)
+    -> decltype(i.x) {
   return clampCoord(i.x, sampler->width - margin) +
          clampCoord(i.y, sampler->height) * sampler->stride + zoffset;
 }
@@ -1067,6 +1068,154 @@ static PackedRG8 textureLinearPackedRG8(S sampler, ivec2 i, int zoffset = 0) {
   abcdl += ((abcdh - abcdl) * fracx.xxyyzzww) >> 7;
 
   return pack(WideRG8(abcdl));
+}
+
+template <int N>
+static ALWAYS_INLINE VectorType<uint16_t, N> addsat(VectorType<uint16_t, N> x,
+                                                    VectorType<uint16_t, N> y) {
+  auto r = x + y;
+  return r | (r < x);
+}
+
+template <typename P, typename S>
+static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurHorizontal(
+    S sampler, const ivec2_scalar& i, int minX, int maxX, int radius,
+    float coeff, float coeffStep, int zoffset = 0) {
+  // Packed and unpacked vectors for a chunk of the given pixel type.
+  typedef VectorType<uint8_t, 4 * sizeof(P)> packed_type;
+  typedef VectorType<uint16_t, 4 * sizeof(P)> unpacked_type;
+
+  // Pre-scale the coefficient by 8 bits of fractional precision, so that when
+  // the sample is multiplied by it, it will yield a 16 bit unsigned integer
+  // that will use all 16 bits of precision to accumulate the sum.
+  coeff *= 1 << 8;
+  float coeffStep2 = coeffStep * coeffStep;
+
+  int row = computeRow(sampler, i, zoffset);
+  P* buf = (P*)sampler->buf;
+  auto pixelsRight = unaligned_load<V4<P>>(&buf[row]);
+  auto pixelsLeft = pixelsRight;
+  auto sum = CONVERT(bit_cast<packed_type>(pixelsRight), unpacked_type) *
+             uint16_t(coeff + 0.5f);
+
+  // Here we use some trickery to reuse the pixels within a chunk, shifted over
+  // by one pixel, to get the next sample for the entire chunk. This allows us
+  // to sample only one pixel for each offset across the entire chunk in both
+  // the left and right directions. To avoid clamping within the loop to the
+  // texture bounds, we compute the valid radius that doesn't require clamping
+  // and fall back to a slower clamping loop outside of that valid radius.
+  int offset = 1;
+  int leftBound = i.x - max(minX, 0);
+  int rightBound = min(maxX, sampler->width) - (i.x + 4);
+  int validRadius = min(radius, min(leftBound, rightBound));
+  for (; offset <= validRadius; offset++) {
+    // Overwrite the pixel that needs to be shifted out with the new pixel, and
+    // shift it into the correct location.
+    pixelsRight.x = unaligned_load<P>(&buf[row + offset + 4 - 1]);
+    pixelsRight = pixelsRight.yzwx;
+    pixelsLeft = pixelsLeft.wxyz;
+    pixelsLeft.x = unaligned_load<P>(&buf[row - offset]);
+
+    // Accumulate the Gaussian coefficients step-wise.
+    coeff *= coeffStep;
+    coeffStep *= coeffStep2;
+
+    // Both left and right samples at this offset use the same coefficient.
+    sum = addsat(sum,
+                 (CONVERT(bit_cast<packed_type>(pixelsRight), unpacked_type) +
+                  CONVERT(bit_cast<packed_type>(pixelsLeft), unpacked_type)) *
+                     uint16_t(coeff + 0.5f));
+  }
+
+  for (; offset <= radius; offset++) {
+    pixelsRight.x =
+        unaligned_load<P>(&buf[row + min(offset + 4 - 1, rightBound)]);
+    pixelsRight = pixelsRight.yzwx;
+    pixelsLeft = pixelsLeft.wxyz;
+    pixelsLeft.x = unaligned_load<P>(&buf[row - min(offset, leftBound)]);
+
+    coeff *= coeffStep;
+    coeffStep *= coeffStep2;
+
+    sum = addsat(sum,
+                 (CONVERT(bit_cast<packed_type>(pixelsRight), unpacked_type) +
+                  CONVERT(bit_cast<packed_type>(pixelsLeft), unpacked_type)) *
+                     uint16_t(coeff + 0.5f));
+  }
+
+  // Shift away the intermediate precision.
+  return pack(sum >> 8);
+}
+
+template <typename P, typename S>
+static VectorType<uint8_t, 4 * sizeof(P)> gaussianBlurVertical(
+    S sampler, const ivec2_scalar& i, int minY, int maxY, int radius,
+    float coeff, float coeffStep, int zoffset = 0) {
+  // Packed and unpacked vectors for a chunk of the given pixel type.
+  typedef VectorType<uint8_t, 4 * sizeof(P)> packed_type;
+  typedef VectorType<uint16_t, 4 * sizeof(P)> unpacked_type;
+
+  // Pre-scale the coefficient by 8 bits of fractional precision, so that when
+  // the sample is multiplied by it, it will yield a 16 bit unsigned integer
+  // that will use all 16 bits of precision to accumulate the sum.
+  coeff *= 1 << 8;
+  float coeffStep2 = coeffStep * coeffStep;
+
+  int rowAbove = computeRow(sampler, i, zoffset);
+  int rowBelow = rowAbove;
+  P* buf = (P*)sampler->buf;
+  auto pixels = unaligned_load<V4<P>>(&buf[rowAbove]);
+  auto sum = CONVERT(bit_cast<packed_type>(pixels), unpacked_type) *
+             uint16_t(coeff + 0.5f);
+
+  // For the vertical loop we can't be quite as creative with reusing old values
+  // as we were in the horizontal loop. We just do the obvious implementation of
+  // loading a chunk from each row in turn and accumulating it into the sum. We
+  // compute a valid radius within which we don't need to clamp the sampled row
+  // and use that to avoid any clamping in the main inner loop. We fall back to
+  // a slower clamping loop outside of that valid radius.
+  int offset = 1;
+  int belowBound = i.y - max(minY, 0);
+  int aboveBound = min(maxY, sampler->height) - (i.y + 1);
+  int validRadius = min(radius, min(belowBound, aboveBound));
+  for (; offset <= validRadius; offset++) {
+    rowAbove += sampler->stride;
+    rowBelow -= sampler->stride;
+    auto pixelsAbove = unaligned_load<V4<P>>(&buf[rowAbove]);
+    auto pixelsBelow = unaligned_load<V4<P>>(&buf[rowBelow]);
+
+    // Accumulate the Gaussian coefficients step-wise.
+    coeff *= coeffStep;
+    coeffStep *= coeffStep2;
+
+    // Both above and below samples at this offset use the same coefficient.
+    sum = addsat(sum,
+                 (CONVERT(bit_cast<packed_type>(pixelsAbove), unpacked_type) +
+                  CONVERT(bit_cast<packed_type>(pixelsBelow), unpacked_type)) *
+                     uint16_t(coeff + 0.5f));
+  }
+
+  for (; offset <= radius; offset++) {
+    if (offset <= aboveBound) {
+      rowAbove += sampler->stride;
+    }
+    if (offset <= belowBound) {
+      rowBelow -= sampler->stride;
+    }
+    auto pixelsAbove = unaligned_load<V4<P>>(&buf[rowAbove]);
+    auto pixelsBelow = unaligned_load<V4<P>>(&buf[rowBelow]);
+
+    coeff *= coeffStep;
+    coeffStep *= coeffStep2;
+
+    sum = addsat(sum,
+                 (CONVERT(bit_cast<packed_type>(pixelsAbove), unpacked_type) +
+                  CONVERT(bit_cast<packed_type>(pixelsBelow), unpacked_type)) *
+                     uint16_t(coeff + 0.5f));
+  }
+
+  // Shift away the intermediate precision.
+  return pack(sum >> 8);
 }
 
 }  // namespace glsl
