@@ -575,7 +575,16 @@ class ProviderAutofill extends UrlbarProvider {
       return result;
     }
 
-    // Or it may look like a search engine domain.
+    // This searches whether the search string matches part of a search engine
+    // domain, in those cases where it wouldn't match the full domain. For
+    // example "wiki" would not match "en.wikipedia.org", but this allows to
+    // do it.
+    result = await this._matchSearchEnginePartialDomain(queryContext);
+    if (result) {
+      return result;
+    }
+
+    // Or we may want to fill a search engine domain regardless of the threshold.
     result = await this._matchSearchEngineDomain(queryContext);
     if (result) {
       return result;
@@ -710,6 +719,143 @@ class ProviderAutofill extends UrlbarProvider {
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
     };
+    return result;
+  }
+
+  async _matchSearchEnginePartialDomain(queryContext) {
+    // Differently from other autofill cases, here we don't strip the scheme
+    // or a trailing slash from the search string, because we want this to act
+    // as a shortcut to search engines. It's unlikely the user would type
+    // a url like string to search.
+    // We also don't strip www, since it may look strange that the user types
+    // "www.wiki" and we suggest "en.wikipedia.org".
+    // In practice, we only match when typing a partial top-level domain.
+    if (
+      !UrlbarTokenizer.looksLikeOrigin(queryContext.searchString, {
+        ignoreKnownDomains: true,
+      })
+    ) {
+      return null;
+    }
+
+    let trimmedString = queryContext.searchString.startsWith("www.")
+      ? queryContext.searchString.substring(4)
+      : queryContext.searchString;
+    if (trimmedString.includes(".")) {
+      trimmedString = UrlbarUtils.stripPublicSuffixFromHost(trimmedString);
+    }
+    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(
+      trimmedString,
+      {
+        matchAllDomainLevels: true,
+      }
+    );
+    let autofillByHost = new Map();
+    for (let engine of engines) {
+      let host = engine.getResultDomain();
+      if (host.startsWith(queryContext.searchString)) {
+        // This should have been handled by origin autofill already.
+        continue;
+      }
+      let indexOfString = host.indexOf(queryContext.searchString);
+      if (indexOfString == -1) {
+        // We only want perfect matches here, if the user types www.engine and
+        // the engine doesn't have www, we can't trust it.
+        continue;
+      }
+      autofillByHost.set(
+        host,
+        queryContext.searchString +
+          host.substring(indexOfString + queryContext.searchString.length) +
+          "/"
+      );
+    }
+    if (!autofillByHost.size) {
+      return null;
+    }
+
+    // Now we could have multiple matching engines, we must sort them by the
+    // frecency of their origin, then extract the one with the highest value
+    // that satisfies the autofill threshold.
+    let db = await PlacesUtils.promiseLargeCacheDBConnection();
+    let hosts = Array.from(autofillByHost.keys());
+
+    let conditions = [];
+    // Pay attention to the order of params, since they are not named.
+    let params = [UrlbarPrefs.get("autoFill.stddevMultiplier"), ...hosts];
+    let sources = queryContext.sources;
+    if (
+      sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
+      sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
+    ) {
+      conditions.push(`(bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`);
+    } else if (sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)) {
+      conditions.push(`visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`);
+    } else if (sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)) {
+      conditions.push("bookmarked");
+    }
+
+    let rows = await db.executeCached(
+      `
+        ${SQL_AUTOFILL_WITH},
+        origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, bookmarked, visited) AS (
+          SELECT
+          id,
+          prefix,
+          first_value(prefix) OVER (
+            PARTITION BY host ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+          ),
+          host,
+          fixup_url(host),
+          TOTAL(frecency) OVER (PARTITION BY fixup_url(host)),
+          frecency,
+          MAX(EXISTS(
+            SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
+          )) OVER (PARTITION BY fixup_url(host)),
+          MAX(EXISTS(
+            SELECT 1 FROM moz_places WHERE origin_id = o.id AND visit_count > 0
+          )) OVER (PARTITION BY fixup_url(host))
+          FROM moz_origins o
+          WHERE o.host IN (${new Array(hosts.length).fill("?").join(",")})
+        )
+        SELECT host_prefix, host
+        FROM origins
+        ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}
+        ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+        LIMIT 1
+      `,
+      params
+    );
+    if (!rows.length) {
+      return null;
+    }
+    let host = rows[0].getResultByName("host");
+    let host_prefix = rows[0].getResultByName("host_prefix");
+
+    // The value autofilled in the input field is the user typed string, plus
+    // the portion of the found engine domain and a trailing slash.
+    let autofill = autofillByHost.get(host);
+    let url = host_prefix + host + "/";
+    let [title] = UrlbarUtils.stripPrefixAndTrim(url, {
+      stripHttp: true,
+      trimEmptyQuery: true,
+      trimSlash: true,
+    });
+    let result = new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+        url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
+        icon: iconHelper(url),
+      })
+    );
+    result.autofill = {
+      value: autofill,
+      selectionStart: queryContext.searchString.length,
+      selectionEnd: autofill.length,
+    };
+
     return result;
   }
 }

@@ -159,6 +159,7 @@ add_task(async function localOneOff_withVisit() {
   await PlacesUtils.history.clear();
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits("https://mozilla.org/");
+    await PlacesTestUtils.addVisits("https://other.mozilla.org/");
   }
   const searchString = "mozilla.org";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -313,8 +314,8 @@ add_task(async function localOneOff_suggestion() {
     window,
     value: "query",
   });
-  Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
-  let count = await UrlbarTestUtils.getResultCount(window);
+  let count = UrlbarTestUtils.getResultCount(window);
+  Assert.ok(count > 1, "Sanity check results");
   let result = null;
   let suggestionIndex = -1;
   for (let i = 1; i < count; ++i) {
@@ -414,8 +415,8 @@ add_task(async function localOneOff_shortcut() {
     window,
     value: "",
   });
-  Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
-  let count = await UrlbarTestUtils.getResultCount(window);
+  let count = UrlbarTestUtils.getResultCount(window);
+  Assert.ok(count > 1, "Sanity check results");
   let result = null;
   let shortcutIndex = -1;
   for (let i = 0; i < count; ++i) {
