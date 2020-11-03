@@ -272,32 +272,34 @@ int64_t Simulator::call(uint8_t* entry, int argument_count, ...) {
   // number of called functions is miniscule, their types have been
   // divined from the number of arguments.
   if (argument_count == 8) {
-      // EnterJitData::jitcode.
-      set_xreg(0, va_arg(parameters, int64_t));
-      // EnterJitData::maxArgc.
-      set_xreg(1, va_arg(parameters, unsigned));
-      // EnterJitData::maxArgv.
-      set_xreg(2, va_arg(parameters, int64_t));
-      // EnterJitData::osrFrame.
-      set_xreg(3, va_arg(parameters, int64_t));
-      // EnterJitData::calleeToken.
-      set_xreg(4, va_arg(parameters, int64_t));
-      // EnterJitData::scopeChain.
-      set_xreg(5, va_arg(parameters, int64_t));
-      // EnterJitData::osrNumStackValues.
-      set_xreg(6, va_arg(parameters, unsigned));
-      // Address of EnterJitData::result.
-      set_xreg(7, va_arg(parameters, int64_t));
+    // EnterJitData::jitcode.
+    set_xreg(0, va_arg(parameters, int64_t));
+    // EnterJitData::maxArgc.
+    set_xreg(1, va_arg(parameters, unsigned));
+    // EnterJitData::maxArgv.
+    set_xreg(2, va_arg(parameters, int64_t));
+    // EnterJitData::osrFrame.
+    set_xreg(3, va_arg(parameters, int64_t));
+    // EnterJitData::calleeToken.
+    set_xreg(4, va_arg(parameters, int64_t));
+    // EnterJitData::scopeChain.
+    set_xreg(5, va_arg(parameters, int64_t));
+    // EnterJitData::osrNumStackValues.
+    set_xreg(6, va_arg(parameters, unsigned));
+    // Address of EnterJitData::result.
+    set_xreg(7, va_arg(parameters, int64_t));
   } else if (argument_count == 2) {
-      // EntryArg* args
-      set_xreg(0, va_arg(parameters, int64_t));
-      // uint8_t* GlobalData
-      set_xreg(1, va_arg(parameters, int64_t));
+    // EntryArg* args
+    set_xreg(0, va_arg(parameters, int64_t));
+    // uint8_t* GlobalData
+    set_xreg(1, va_arg(parameters, int64_t));
   } else if (argument_count == 1) { // irregexp
-      // InputOutputData& data
-      set_xreg(0, va_arg(parameters, int64_t));
+    // InputOutputData& data
+    set_xreg(0, va_arg(parameters, int64_t));
+  } else if (argument_count == 0) { // testsJit.cpp
+    // accept.
   } else {
-      MOZ_CRASH("Unknown number of arguments");
+    MOZ_CRASH("Unknown number of arguments");
   }
 
   va_end(parameters);
@@ -312,8 +314,9 @@ int64_t Simulator::call(uint8_t* entry, int argument_count, ...) {
   VIXL_ASSERT(entryStack == exitStack);
 
   int64_t result = xreg(0);
-  if (getenv("USE_DEBUGGER"))
-      printf("LEAVE\n");
+  if (getenv("USE_DEBUGGER")) {
+    printf("LEAVE\n");
+  }
   return result;
 }
 
