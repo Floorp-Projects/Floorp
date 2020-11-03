@@ -23,7 +23,7 @@ static void WaylandVsyncSourceCallbackHandler(void* data,
   WaylandVsyncSource::WaylandDisplay* context =
       (WaylandVsyncSource::WaylandDisplay*)data;
   wl_callback_destroy(callback);
-  context->FrameCallback();
+  context->FrameCallback(time);
 }
 
 static const struct wl_callback_listener WaylandVsyncSourceCallbackListener = {
@@ -35,12 +35,15 @@ WaylandVsyncSource::WaylandDisplay::WaylandDisplay(MozContainer* container)
       mVsyncEnabled(false),
       mMonitorEnabled(false),
       mCallback(nullptr),
-      mContainer(container) {
+      mContainer(container),
+      mLastVsyncTimeStamp(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We store the display here so all the frame callbacks won't have to look it
   // up all the time.
   mDisplay = WaylandDisplayGetWLDisplay();
+
+  mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
 }
 
 void WaylandVsyncSource::WaylandDisplay::ClearFrameCallback() {
@@ -51,41 +54,45 @@ void WaylandVsyncSource::WaylandDisplay::ClearFrameCallback() {
 }
 
 void WaylandVsyncSource::WaylandDisplay::Refresh() {
-  if (!mMonitorEnabled || !mVsyncEnabled || mCallback) {
-    // We don't need to do anything because:
-    // * We are unwanted by our widget or monitor, or
-    // * The last frame callback hasn't yet run to see that it had been shut
-    //   down, so we can reuse it after having set mVsyncEnabled to true.
-    return;
-  }
+  TimeStamp outputTimestamp;
+  {
+    MutexAutoLock lock(mEnabledLock);
+    if (!mMonitorEnabled || !mVsyncEnabled || mCallback) {
+      // We don't need to do anything because:
+      // * We are unwanted by our widget or monitor, or
+      // * The last frame callback hasn't yet run to see that it had been shut
+      //   down, so we can reuse it after having set mVsyncEnabled to true.
+      return;
+    }
 
-  struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
-  if (!surface) {
-    // The surface hasn't been created yet. Try again when the surface is ready.
-    RefPtr<WaylandVsyncSource::WaylandDisplay> self(this);
-    moz_container_wayland_add_initial_draw_callback(
-        mContainer, [self]() -> void {
-          MutexAutoLock lock(self->mEnabledLock);
-          self->Refresh();
-        });
-    return;
-  }
-  moz_container_wayland_surface_unlock(mContainer, &surface);
+    struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
+    if (!surface) {
+      // The surface hasn't been created yet. Try again when the surface is
+      // ready.
+      RefPtr<WaylandVsyncSource::WaylandDisplay> self(this);
+      moz_container_wayland_add_initial_draw_callback(
+          mContainer, [self]() -> void { self->Refresh(); });
+      return;
+    }
+    moz_container_wayland_surface_unlock(mContainer, &surface);
 
-  // Vsync is enabled, but we don't have a callback configured. Set one up so
-  // we can get to work.
-  SetupFrameCallback();
-  TimeStamp vsyncTimestamp = TimeStamp::Now();
-  TimeStamp outputTimestamp = vsyncTimestamp + GetVsyncRate();
-  NotifyVsync(vsyncTimestamp, outputTimestamp);
+    // Vsync is enabled, but we don't have a callback configured. Set one up so
+    // we can get to work.
+    SetupFrameCallback();
+    mLastVsyncTimeStamp = TimeStamp::Now();
+    outputTimestamp = mLastVsyncTimeStamp + GetVsyncRate();
+  }
+  NotifyVsync(mLastVsyncTimeStamp, outputTimestamp);
 }
 
 void WaylandVsyncSource::WaylandDisplay::EnableMonitor() {
-  MutexAutoLock lock(mEnabledLock);
-  if (mMonitorEnabled) {
-    return;
+  {
+    MutexAutoLock lock(mEnabledLock);
+    if (mMonitorEnabled) {
+      return;
+    }
+    mMonitorEnabled = true;
   }
-  mMonitorEnabled = true;
   Refresh();
 }
 
@@ -117,7 +124,8 @@ void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
   moz_container_wayland_surface_unlock(mContainer, &surface);
 }
 
-void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
+void WaylandVsyncSource::WaylandDisplay::FrameCallback(uint32_t timestampTime) {
+  TimeStamp outputTimestamp;
   {
     MutexAutoLock lock(mEnabledLock);
     mCallback = nullptr;
@@ -130,20 +138,54 @@ void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
 
     // Configure our next frame callback.
     SetupFrameCallback();
-  }
 
-  TimeStamp vsyncTimestamp = TimeStamp::Now();
-  TimeStamp outputTimestamp = vsyncTimestamp + GetVsyncRate();
-  NotifyVsync(vsyncTimestamp, outputTimestamp);
+    int64_t tick =
+        BaseTimeDurationPlatformUtils::TicksFromMilliseconds(timestampTime);
+    TimeStamp callbackTimeStamp = TimeStamp::FromSystemTime(tick);
+    double duration = (TimeStamp::Now() - callbackTimeStamp).ToMilliseconds();
+
+    TimeStamp vsyncTimestamp;
+    if (duration < 50 && duration > -50) {
+      vsyncTimestamp = callbackTimeStamp;
+    } else {
+      vsyncTimestamp = TimeStamp::Now();
+    }
+
+    CalculateVsyncRate(vsyncTimestamp);
+    mLastVsyncTimeStamp = vsyncTimestamp;
+    outputTimestamp = vsyncTimestamp + GetVsyncRate();
+  }
+  NotifyVsync(mLastVsyncTimeStamp, outputTimestamp);
+}
+
+TimeDuration WaylandVsyncSource::WaylandDisplay::GetVsyncRate() {
+  return mVsyncRate;
+}
+
+void WaylandVsyncSource::WaylandDisplay::CalculateVsyncRate(
+    TimeStamp vsyncTimestamp) {
+  double duration = (vsyncTimestamp - mLastVsyncTimeStamp).ToMilliseconds();
+  double curVsyncRate = mVsyncRate.ToMilliseconds();
+  double correction;
+
+  if (duration > curVsyncRate) {
+    correction = fmin(curVsyncRate, (duration - curVsyncRate) / 10);
+    mVsyncRate += TimeDuration::FromMilliseconds(correction);
+  } else {
+    correction = fmin(curVsyncRate / 2, (curVsyncRate - duration) / 10);
+    mVsyncRate -= TimeDuration::FromMilliseconds(correction);
+  }
 }
 
 void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
   MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mEnabledLock);
-  if (mVsyncEnabled || mIsShutdown) {
-    return;
+  {
+    MutexAutoLock lock(mEnabledLock);
+    if (mVsyncEnabled || mIsShutdown) {
+      return;
+    }
+    mVsyncEnabled = true;
   }
-  mVsyncEnabled = true;
   Refresh();
 }
 
