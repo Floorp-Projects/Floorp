@@ -287,7 +287,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // Pan the root layer upward by 50 pixels.
   // This causes layers[1] to scroll out of view, and an async transform
   // of -50 to be set on the root layer.
-  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(3);
 
   // This first pan will move the APZC by 50 pixels, and dispatch a paint
   // request. Since this paint request is in the queue to Gecko,
@@ -319,7 +319,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
             transformToGecko.TransformPoint(ParentLayerPoint(12.5, 75)));
 
   // This second pan will move the APZC by another 50 pixels.
-  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(3);
   Pan(apzcroot, 100, 50, PanOptions::NoFling);
 
   // Hit where layers[3] used to be. It should now hit the root.

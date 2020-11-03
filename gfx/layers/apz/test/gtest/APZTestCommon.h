@@ -615,6 +615,15 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
+  const int numSteps = 3;
+  auto stepVector = (aTouchEnd - aTouchStart) / numSteps;
+  for (int k = 1; k < numSteps; k++) {
+    auto stepPoint = aTouchStart + stepVector * k;
+    Unused << TouchMove(aTarget, stepPoint, mcc->Time());
+
+    mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+  }
+
   result.mStatus = TouchMove(aTarget, aTouchEnd, mcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = result.mStatus;
