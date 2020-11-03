@@ -7,7 +7,6 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_theme"
-        app:allowDividerBelow="true"
         app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:defaultValue="@bool/underAPI28"
@@ -35,7 +34,6 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_toolbar"
-        app:allowDividerAbove="true"
         app:iconSpaceReserved="false">
         <org.mozilla.fenix.settings.RadioButtonPreference
             android:key="@string/pref_key_toolbar_top"
@@ -48,7 +46,6 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_home"
-        app:allowDividerAbove="true"
         app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_enable_top_frecent_sites"
@@ -58,7 +55,6 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_gestures"
-        app:allowDividerAbove="true"
         app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_website_pull_to_refresh"

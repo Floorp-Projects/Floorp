@@ -26,6 +26,7 @@
     <attr name="scrimEnd" format="reference"/>
     <attr name="toolbarDivider" format="reference"/>
     <attr name="menuCategoryText" format="reference"/>
+    <attr name="preferenceSectionHeader" format="reference"/>
 
     <!-- Misc -->
     <attr name="homeBackground" format="reference"/>

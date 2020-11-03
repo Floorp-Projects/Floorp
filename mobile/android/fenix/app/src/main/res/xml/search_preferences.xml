@@ -22,7 +22,6 @@
         android:title="@string/preferences_search_address_bar"
         android:selectable="false"
         app:iconSpaceReserved="false"
-        app:allowDividerAbove="true"
         android:layout="@layout/preference_cat_style">
         <SwitchPreference
             android:defaultValue="true"

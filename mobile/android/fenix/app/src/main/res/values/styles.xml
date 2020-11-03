@@ -81,6 +81,7 @@
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
         <item name="selectLoginHeaderTextColor">@color/select_login_header_normal_theme</item>
+        <item name="preferenceSectionHeader">@color/preference_section_header_normal_theme</item>
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/primary_text_normal_theme</item>
         <item name="mozac_caption_text_color">@color/caption_text_normal_theme</item>
@@ -228,6 +229,7 @@
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_dark_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_dark_theme</item>
         <item name="selectLoginHeaderTextColor">@color/accent_high_contrast_private_theme</item>
+        <item name="preferenceSectionHeader">@color/preference_section_header_dark_theme</item>
 
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/primary_text_private_theme</item>
@@ -555,6 +557,11 @@
     <style name="AboutHeaderContentText" parent="TextAppearance.MaterialComponents.Subtitle1">
         <item name="android:textColor">?primaryText</item>
         <item name="android:lineSpacingExtra">@dimen/about_header_text_line_spacing_extra</item>
+    </style>
+
+    <style name="PreferenceSectionHeader" parent="@android:style/Widget.ListView">
+        <item name="android:textColor">?preferenceSectionHeader</item>
+        <item name="fontFamily">@font/metropolis_semibold</item>
     </style>
 
     <style name="EngineTextField" parent="TextAppearance.AppCompat">

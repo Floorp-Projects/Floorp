@@ -60,6 +60,7 @@
     <color name="readermode_end_gradient_normal_theme">#FF0250bb</color>
     <color name="search_suggestion_indicator_icon_color_light_theme">#008787</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_light_theme">#0060df</color>
+    <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
 
     <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
@@ -129,6 +130,7 @@
     <color name="prompt_login_edit_text_cursor_color_dark_theme">#9059ff</color>
     <color name="search_suggestion_indicator_icon_color_dark_theme">#2ac3a2</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_dark_theme">#0090ed</color>
+    <color name="preference_section_header_dark_theme">@color/accent_high_contrast_dark_theme</color>
 
     <color name="mozac_widget_favicon_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>
