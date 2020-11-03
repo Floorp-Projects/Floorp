@@ -139,13 +139,16 @@ const clearHistory = options => {
   return Sanitizer.items.history.clear(makeRange(options));
 };
 
-const clearIndexedDB = async function(options) {
+// Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
+// but this API exposes an ability to wipe data at a much finger granularity
+// than those APIs. (See also Bug 1531276)
+async function clearQuotaManager(options, dataType) {
   let promises = [];
 
   await new Promise((resolve, reject) => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
-        reject({ message: "Clear indexedDB failed" });
+        reject({ message: `Clear ${dataType} failed` });
         return;
       }
 
@@ -153,30 +156,43 @@ const clearIndexedDB = async function(options) {
         let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           item.origin
         );
-        if (
-          principal.schemeIs("http") ||
-          principal.schemeIs("https") ||
-          principal.schemeIs("file")
-        ) {
-          let host = principal.hostPort;
-          if (!options.hostnames || options.hostnames.includes(host)) {
-            promises.push(
-              new Promise((resolve, reject) => {
-                let clearRequest = quotaManagerService.clearStoragesForPrincipal(
+
+        // Consistently to removeIndexedDB and the API documentation for
+        // removeLocalStorage, we should only clear the data stored by
+        // regular websites, on the contrary we shouldn't clear data stored
+        // by browser components (like about:newtab) or other extensions.
+        if (!["http", "https", "file"].includes(principal.scheme)) {
+          continue;
+        }
+
+        let host = principal.hostPort;
+        if (!options.hostnames || options.hostnames.includes(host)) {
+          promises.push(
+            new Promise((resolve, reject) => {
+              let clearRequest;
+              if (dataType === "indexedDB") {
+                clearRequest = quotaManagerService.clearStoragesForPrincipal(
                   principal,
                   null,
                   "idb"
                 );
-                clearRequest.callback = () => {
-                  if (clearRequest.resultCode == Cr.NS_OK) {
-                    resolve();
-                  } else {
-                    reject({ message: "Clear indexedDB failed" });
-                  }
-                };
-              })
-            );
-          }
+              } else {
+                clearRequest = quotaManagerService.clearStoragesForPrincipal(
+                  principal,
+                  "default",
+                  "ls"
+                );
+              }
+
+              clearRequest.callback = () => {
+                if (clearRequest.resultCode == Cr.NS_OK) {
+                  resolve();
+                } else {
+                  reject({ message: `Clear ${dataType} failed` });
+                }
+              };
+            })
+          );
         }
       }
 
@@ -185,6 +201,10 @@ const clearIndexedDB = async function(options) {
   });
 
   return Promise.all(promises);
+}
+
+const clearIndexedDB = async function(options) {
+  return clearQuotaManager(options, "indexedDB");
 };
 
 const clearLocalStorage = async function(options) {
@@ -197,6 +217,7 @@ const clearLocalStorage = async function(options) {
   // The legacy LocalStorage implementation that will eventually be removed
   // depends on this observer notification.  Some other subsystems like
   // Reporting headers depend on this too.
+  // When NextGenLocalStorage is enabled these notifications are ignored.
   if (options.hostnames) {
     for (let hostname of options.hostnames) {
       Services.obs.notifyObservers(
@@ -209,62 +230,7 @@ const clearLocalStorage = async function(options) {
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
   }
 
-  if (Services.domStorageManager.nextGenLocalStorageEnabled) {
-    // Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
-    // but this API exposes an ability to wipe data at a much finger granularity
-    // than those APIs.  So custom logic is used here to wipe only the QM
-    // localStorage client (when in use).
-
-    let promises = [];
-
-    await new Promise((resolve, reject) => {
-      quotaManagerService.getUsage(request => {
-        if (request.resultCode != Cr.NS_OK) {
-          reject({ message: "Clear localStorage failed" });
-          return;
-        }
-
-        for (let item of request.result) {
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            item.origin
-          );
-          // Consistently to removeIndexedDB and the API documentation for
-          // removeLocalStorage, we should only clear the data stored by
-          // regular websites, on the contrary we shouldn't clear data stored
-          // by browser components (like about:newtab) or other extensions.
-          if (
-            principal.schemeIs("http") ||
-            principal.schemeIs("https") ||
-            principal.schemeIs("file")
-          ) {
-            let host = principal.hostPort;
-            if (!options.hostnames || options.hostnames.includes(host)) {
-              promises.push(
-                new Promise((resolve, reject) => {
-                  let clearRequest = quotaManagerService.clearStoragesForPrincipal(
-                    principal,
-                    "default",
-                    "ls"
-                  );
-                  clearRequest.callback = () => {
-                    if (clearRequest.resultCode == Cr.NS_OK) {
-                      resolve();
-                    } else {
-                      reject({ message: "Clear localStorage failed" });
-                    }
-                  };
-                })
-              );
-            }
-          }
-        }
-
-        resolve();
-      });
-    });
-
-    return Promise.all(promises);
-  }
+  return clearQuotaManager(options, "localStorage");
 };
 
 const clearPasswords = async function(options) {
