@@ -23,6 +23,8 @@ pub mod private;
 pub mod dispatcher;
 pub mod ipc;
 
+#[cfg(test)]
+mod common_test;
 mod ffi;
 
 /// Run a closure with a mutable reference to the locked global Glean object.
