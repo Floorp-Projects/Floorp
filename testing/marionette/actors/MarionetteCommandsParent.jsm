@@ -5,8 +5,8 @@
 ("use strict");
 
 const EXPORTED_SYMBOLS = [
-  "getMarionetteFrameActorProxy",
-  "MarionetteFrameParent",
+  "getMarionetteCommandsActorProxy",
+  "MarionetteCommandsParent",
 ];
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "elementIdCache", () => {
   return new element.ReferenceStore();
 });
 
-class MarionetteFrameParent extends JSWindowActorParent {
+class MarionetteCommandsParent extends JSWindowActorParent {
   constructor() {
     super();
 
@@ -64,10 +64,10 @@ class MarionetteFrameParent extends JSWindowActorParent {
     let rv;
 
     switch (name) {
-      case "MarionetteFrameChild:PageLoadEvent":
+      case "MarionetteCommandsChild:PageLoadEvent":
         this.emit("page-load-event", data);
         break;
-      case "MarionetteFrameChild:ElementIdCacheAdd":
+      case "MarionetteCommandsChild:ElementIdCacheAdd":
         rv = elementIdCache.add(data).toJSON();
     }
 
@@ -100,20 +100,20 @@ class MarionetteFrameParent extends JSWindowActorParent {
   // TODO: Maybe using a proxy class instead similar to proxy.js
 
   clearElement(webEl) {
-    return this.sendQuery("MarionetteFrameParent:clearElement", {
+    return this.sendQuery("MarionetteCommandsParent:clearElement", {
       elem: webEl,
     });
   }
 
   clickElement(webEl, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:clickElement", {
+    return this.sendQuery("MarionetteCommandsParent:clickElement", {
       elem: webEl,
       capabilities,
     });
   }
 
   async executeScript(script, args, opts) {
-    return this.sendQuery("MarionetteFrameParent:executeScript", {
+    return this.sendQuery("MarionetteCommandsParent:executeScript", {
       script,
       args,
       opts,
@@ -121,7 +121,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   findElement(strategy, selector, opts) {
-    return this.sendQuery("MarionetteFrameParent:findElement", {
+    return this.sendQuery("MarionetteCommandsParent:findElement", {
       strategy,
       selector,
       opts,
@@ -129,7 +129,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   findElements(strategy, selector, opts) {
-    return this.sendQuery("MarionetteFrameParent:findElements", {
+    return this.sendQuery("MarionetteCommandsParent:findElements", {
       strategy,
       selector,
       opts,
@@ -137,48 +137,48 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   async getActiveElement() {
-    return this.sendQuery("MarionetteFrameParent:getActiveElement");
+    return this.sendQuery("MarionetteCommandsParent:getActiveElement");
   }
 
   async getCurrentUrl() {
-    return this.sendQuery("MarionetteFrameParent:getCurrentUrl");
+    return this.sendQuery("MarionetteCommandsParent:getCurrentUrl");
   }
 
   async getElementAttribute(webEl, name) {
-    return this.sendQuery("MarionetteFrameParent:getElementAttribute", {
+    return this.sendQuery("MarionetteCommandsParent:getElementAttribute", {
       elem: webEl,
       name,
     });
   }
 
   async getElementProperty(webEl, name) {
-    return this.sendQuery("MarionetteFrameParent:getElementProperty", {
+    return this.sendQuery("MarionetteCommandsParent:getElementProperty", {
       elem: webEl,
       name,
     });
   }
 
   async getElementRect(webEl) {
-    return this.sendQuery("MarionetteFrameParent:getElementRect", {
+    return this.sendQuery("MarionetteCommandsParent:getElementRect", {
       elem: webEl,
     });
   }
 
   async getElementTagName(webEl) {
-    return this.sendQuery("MarionetteFrameParent:getElementTagName", {
+    return this.sendQuery("MarionetteCommandsParent:getElementTagName", {
       elem: webEl,
     });
   }
 
   async getElementText(webEl) {
-    return this.sendQuery("MarionetteFrameParent:getElementText", {
+    return this.sendQuery("MarionetteCommandsParent:getElementText", {
       elem: webEl,
     });
   }
 
   async getElementValueOfCssProperty(webEl, name) {
     return this.sendQuery(
-      "MarionetteFrameParent:getElementValueOfCssProperty",
+      "MarionetteCommandsParent:getElementValueOfCssProperty",
       {
         elem: webEl,
         name,
@@ -187,32 +187,32 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   async getPageSource() {
-    return this.sendQuery("MarionetteFrameParent:getPageSource");
+    return this.sendQuery("MarionetteCommandsParent:getPageSource");
   }
 
   async isElementDisplayed(webEl, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:isElementDisplayed", {
+    return this.sendQuery("MarionetteCommandsParent:isElementDisplayed", {
       capabilities,
       elem: webEl,
     });
   }
 
   async isElementEnabled(webEl, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:isElementEnabled", {
+    return this.sendQuery("MarionetteCommandsParent:isElementEnabled", {
       capabilities,
       elem: webEl,
     });
   }
 
   async isElementSelected(webEl, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:isElementSelected", {
+    return this.sendQuery("MarionetteCommandsParent:isElementSelected", {
       capabilities,
       elem: webEl,
     });
   }
 
   async sendKeysToElement(webEl, text, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:sendKeysToElement", {
+    return this.sendQuery("MarionetteCommandsParent:sendKeysToElement", {
       capabilities,
       elem: webEl,
       text,
@@ -220,18 +220,18 @@ class MarionetteFrameParent extends JSWindowActorParent {
   }
 
   async performActions(actions, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:performActions", {
+    return this.sendQuery("MarionetteCommandsParent:performActions", {
       actions,
       capabilities,
     });
   }
 
   async releaseActions() {
-    return this.sendQuery("MarionetteFrameParent:releaseActions");
+    return this.sendQuery("MarionetteCommandsParent:releaseActions");
   }
 
   async singleTap(webEl, x, y, capabilities) {
-    return this.sendQuery("MarionetteFrameParent:singleTap", {
+    return this.sendQuery("MarionetteCommandsParent:singleTap", {
       capabilities,
       elem: webEl,
       x,
@@ -242,7 +242,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
   async switchToFrame(id) {
     const {
       browsingContextId,
-    } = await this.sendQuery("MarionetteFrameParent:switchToFrame", { id });
+    } = await this.sendQuery("MarionetteCommandsParent:switchToFrame", { id });
 
     return {
       browsingContext: BrowsingContext.get(browsingContextId),
@@ -251,7 +251,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
 
   async switchToParentFrame() {
     const { browsingContextId } = await this.sendQuery(
-      "MarionetteFrameParent:switchToParentFrame"
+      "MarionetteCommandsParent:switchToParentFrame"
     );
 
     return {
@@ -261,7 +261,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
 
   async takeScreenshot(webEl, format, full, scroll) {
     const rect = await this.sendQuery(
-      "MarionetteFrameParent:getScreenshotRect",
+      "MarionetteCommandsParent:getScreenshotRect",
       {
         elem: webEl,
         full,
@@ -298,7 +298,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
 }
 
 /**
- * Proxy that will dynamically create MarionetteFrame actors for a dynamically
+ * Proxy that will dynamically create MarionetteCommands actors for a dynamically
  * provided browsing context until the method can be fully executed by the
  * JSWindowActor pair.
  *
@@ -306,7 +306,7 @@ class MarionetteFrameParent extends JSWindowActorParent {
  *     A function that returns the reference to the browsing context for which
  *     the query should run.
  */
-function getMarionetteFrameActorProxy(browsingContextFn) {
+function getMarionetteCommandsActorProxy(browsingContextFn) {
   const MAX_ATTEMPTS = 10;
 
   /**
@@ -333,7 +333,7 @@ function getMarionetteFrameActorProxy(browsingContextFn) {
               // TODO: Scenarios where the window/tab got closed and
               // currentWindowGlobal is null will be handled in Bug 1662808.
               const actor = browsingContextFn().currentWindowGlobal.getActor(
-                "MarionetteFrame"
+                "MarionetteCommands"
               );
               const result = await actor[methodName](...args);
               return result;
