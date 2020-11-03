@@ -109,7 +109,7 @@ class BackgroundServices(
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
 
-    val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig) }
+    val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig, crashReporter) }
 
     val syncedTabsStorage by lazy {
         SyncedTabsStorage(accountManager, context.components.core.store, remoteTabsStorage.value)
@@ -120,7 +120,8 @@ class BackgroundServices(
         context: Context,
         serverConfig: ServerConfig,
         deviceConfig: DeviceConfig,
-        syncConfig: SyncConfig?
+        syncConfig: SyncConfig?,
+        crashReporter: CrashReporter?
     ) = FxaAccountManager(
         context,
         serverConfig,
@@ -136,7 +137,8 @@ class BackgroundServices(
             // Necessary to enable "Manage Account" functionality and ability to generate OAuth
             // codes for certain scopes.
             SCOPE_SESSION
-        )
+        ),
+        crashReporter
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
         context.settings().fxaHasSyncedItems = accountManager.authenticatedAccount()?.let {
