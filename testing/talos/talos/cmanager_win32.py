@@ -5,7 +5,16 @@ from __future__ import absolute_import
 
 import six
 import struct
-from ctypes import byref, create_string_buffer, memmove, Union, c_double, c_longlong
+from ctypes import (
+    byref,
+    create_string_buffer,
+    memmove,
+    Union,
+    c_double,
+    c_longlong,
+    pointer,
+    Structure,
+)
 from ctypes import windll
 from ctypes.wintypes import (
     DWORD,
@@ -13,8 +22,6 @@ from ctypes.wintypes import (
     LPSTR,
     LPCSTR,
     LPCWSTR,
-    Structure,
-    pointer,
     LONG,
 )
 
