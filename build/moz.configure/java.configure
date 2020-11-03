@@ -14,29 +14,18 @@ option(
 )
 
 
-@depends(host, "--with-java-bin-path")
-@imports(_from="os", _import="environ")
-def java_search_paths(host, path):
+@depends("--with-java-bin-path")
+@imports(_from="mozboot.util", _import="locate_java_bin_path")
+@imports(_from="mozboot.util", _import="JavaLocationFailedException")
+def java_search_paths(path):
     if path:
         # Look for javac and jar in the specified path.
         return path
-    # With no path specified, look for javac and jar in $JAVA_HOME (if set),
-    # JDK registery on Windows, and $PATH.
-    if "JAVA_HOME" in environ:
-        return [os.path.join(environ["JAVA_HOME"], "bin")]
-    if host.os == "WINNT":
-        for x in get_registry_values(
-            r"HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Development Kit\1.8\JavaHome",
-            get_32_and_64_bit=True,
-        ):
-            return [os.path.join(x[0], "bin")]
-    if host.os == "OSX":
-        home = check_cmd_output(
-            "/usr/libexec/java_home", "-v", "1.8", onerror=lambda: ""
-        ).rstrip()
-        if home:
-            return [os.path.join(home, "bin")]
-    return [environ.get("PATH")]
+
+    try:
+        return [locate_java_bin_path()]
+    except JavaLocationFailedException as e:
+        die(str(e))
 
 
 # Finds the given java tool, failing with a custom error message if we can't
