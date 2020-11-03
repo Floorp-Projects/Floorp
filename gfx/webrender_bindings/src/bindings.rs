@@ -1085,7 +1085,8 @@ pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
             wr_register_thread_local_arena();
             let name = format!("WRWorker{}#{}", priority_tag, idx);
             register_thread_with_profiler(name.clone());
-            gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
+            let name = CString::new(name).unwrap();
+            gecko_profiler_register_thread(name.as_ptr());
         })
         .exit_handler(|_idx| unsafe {
             gecko_profiler_unregister_thread();
@@ -3770,10 +3771,12 @@ pub extern "C" fn wr_dump_display_list(
 
     #[cfg(target_os = "android")]
     unsafe {
+        let gecko = CString::new("Gecko").unwrap();
+        let sink = CString::new(sink.into_inner()).unwrap();
         __android_log_write(
             4, /* info */
-            CString::new("Gecko").unwrap().as_ptr(),
-            CString::new(sink.into_inner()).unwrap().as_ptr(),
+            gecko.as_ptr(),
+            sink.as_ptr(),
         );
     }
 
