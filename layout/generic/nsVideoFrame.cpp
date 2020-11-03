@@ -648,8 +648,7 @@ AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
     }
   }
 
-  return AspectRatio::FromSize(REPLACED_ELEM_FALLBACK_PX_WIDTH,
-                               REPLACED_ELEM_FALLBACK_PX_HEIGHT);
+  return AspectRatio::FromSize(kFallbackIntrinsicSizeInPixels);
 }
 
 bool nsVideoFrame::ShouldDisplayPoster() const {
@@ -692,8 +691,7 @@ nsSize nsVideoFrame::GetVideoIntrinsicSize(gfxContext* aRenderingContext) {
     }
   }
 
-  return CSSPixel::ToAppUnits(CSSIntSize(REPLACED_ELEM_FALLBACK_PX_WIDTH,
-                                         REPLACED_ELEM_FALLBACK_PX_HEIGHT));
+  return CSSPixel::ToAppUnits(kFallbackIntrinsicSizeInPixels);
 }
 
 void nsVideoFrame::UpdatePosterSource(bool aNotify) {
