@@ -5,7 +5,7 @@
 package mozilla.components.feature.pwa.intent
 
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
@@ -56,7 +56,7 @@ class WebAppIntentProcessor(
                 loadUrlUseCase(targetUrl, session, EngineSession.LoadUrlFlags.external())
             }
 
-            intent.flags = FLAG_ACTIVITY_CLEAR_TOP
+            intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
             intent.putSessionId(session.id)
             intent.putWebAppManifest(webAppManifest)
 
