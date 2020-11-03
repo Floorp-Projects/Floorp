@@ -116,7 +116,8 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
   // Begin the span for the ruby frame
   WritingMode frameWM = aReflowInput.GetWritingMode();
   WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
-  LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding();
+  LogicalMargin borderPadding =
+      aReflowInput.ComputedLogicalBorderPadding(frameWM);
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
                                          lineWM, frameWM);
 

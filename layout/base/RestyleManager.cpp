@@ -842,11 +842,10 @@ static bool RecomputePosition(nsIFrame* aFrame) {
                           availSize, Some(lcbSize));
   nscoord computedISize = reflowInput.ComputedISize();
   nscoord computedBSize = reflowInput.ComputedBSize();
-  computedISize +=
-      reflowInput.ComputedLogicalBorderPadding().IStartEnd(frameWM);
+  const auto frameBP = reflowInput.ComputedLogicalBorderPadding(frameWM);
+  computedISize += frameBP.IStartEnd(frameWM);
   if (computedBSize != NS_UNCONSTRAINEDSIZE) {
-    computedBSize +=
-        reflowInput.ComputedLogicalBorderPadding().BStartEnd(frameWM);
+    computedBSize += frameBP.BStartEnd(frameWM);
   }
   LogicalSize logicalSize = aFrame->GetLogicalSize(frameWM);
   nsSize size = aFrame->GetSize();

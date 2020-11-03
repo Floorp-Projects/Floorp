@@ -91,13 +91,11 @@ nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
     const LogicalSize cbSize = aCBSize - aBorderPadding - aMargin;
     SizeComputationInput offsetState(childFrame, aRenderingContext, aWM,
                                      availableISize);
+    const auto bpSize = offsetState.ComputedLogicalBorderPadding(aWM).Size(aWM);
     auto size = childFrame->ComputeSize(
         aRenderingContext, aWM, cbSize, availableISize,
-        offsetState.ComputedLogicalMargin(aWM).Size(aWM),
-        offsetState.ComputedLogicalBorderPadding().Size(aWM), aFlags);
-    return {size.mLogicalSize +
-                offsetState.ComputedLogicalBorderPadding().Size(aWM),
-            size.mAspectRatioUsage};
+        offsetState.ComputedLogicalMargin(aWM).Size(aWM), bpSize, aFlags);
+    return {size.mLogicalSize + bpSize, size.mAspectRatioUsage};
   }
   return {LogicalSize(aWM), AspectRatioUsage::None};
 }

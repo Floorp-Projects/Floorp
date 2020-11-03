@@ -363,15 +363,10 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
     nscoord* aMarginResult) const {
   AutoMaybeDisableFontInflation an(aChildFrame);
 
-  // For the caption frame, child's WM may differ from the table's main WM.
-  WritingMode childWM = aChildFrame->GetWritingMode();
-
   SizeComputationInput offsets(aChildFrame, aRenderingContext, aWM,
                                aCBSize.ISize(aWM));
   LogicalSize marginSize = offsets.ComputedLogicalMargin(aWM).Size(aWM);
-  LogicalSize bpSize =
-      offsets.ComputedLogicalBorderPadding().Size(childWM).ConvertTo(aWM,
-                                                                     childWM);
+  LogicalSize bpSize = offsets.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
   // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
   ComputeSizeFlags flags(ComputeSizeFlag::ShrinkWrap);

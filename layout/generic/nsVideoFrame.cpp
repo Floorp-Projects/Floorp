@@ -267,16 +267,14 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   const WritingMode myWM = aReflowInput.GetWritingMode();
   nscoord contentBoxBSize = aReflowInput.ComputedBSize();
+  const auto logicalBP = aReflowInput.ComputedLogicalBorderPadding(myWM);
   const nscoord borderBoxISize =
-      aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(myWM);
+      aReflowInput.ComputedISize() + logicalBP.IStartEnd(myWM);
   const bool isBSizeShrinkWrapping = (contentBoxBSize == NS_UNCONSTRAINEDSIZE);
 
   nscoord borderBoxBSize;
   if (!isBSizeShrinkWrapping) {
-    borderBoxBSize =
-        contentBoxBSize +
-        aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
+    borderBoxBSize = contentBoxBSize + logicalBP.BStartEnd(myWM);
   }
 
   nsMargin borderPadding = aReflowInput.ComputedPhysicalBorderPadding();
@@ -378,9 +376,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     contentBoxBSize =
         NS_CSS_MINMAX(contentBoxBSize, aReflowInput.ComputedMinBSize(),
                       aReflowInput.ComputedMaxBSize());
-    borderBoxBSize =
-        contentBoxBSize +
-        aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
+    borderBoxBSize = contentBoxBSize + logicalBP.BStartEnd(myWM);
   }
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);

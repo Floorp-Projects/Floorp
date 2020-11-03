@@ -1205,8 +1205,10 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
              "The column container should have relevant column styles!");
   MOZ_ASSERT(aReflowInput.mParentReflowInput->mFrame->IsColumnSetWrapperFrame(),
              "The column container should be ColumnSetWrapperFrame!");
-  MOZ_ASSERT(aReflowInput.ComputedLogicalBorderPadding().IsAllZero(),
-             "Only the column container can have border and padding!");
+  MOZ_ASSERT(
+      aReflowInput.ComputedLogicalBorderPadding(aReflowInput.GetWritingMode())
+          .IsAllZero(),
+      "Only the column container can have border and padding!");
   MOZ_ASSERT(GetChildList(kOverflowContainersList).IsEmpty() &&
                  GetChildList(kExcessOverflowContainersList).IsEmpty(),
              "ColumnSetFrame should store overflow containers in principal "

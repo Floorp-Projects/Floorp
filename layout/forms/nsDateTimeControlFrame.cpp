@@ -99,23 +99,20 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
   // Figure out our border-box sizes as well (by adding borderPadding to
   // content-box sizes):
+  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(myWM);
   const nscoord borderBoxISize =
-      contentBoxISize +
-      aReflowInput.ComputedLogicalBorderPadding().IStartEnd(myWM);
+      contentBoxISize + borderPadding.IStartEnd(myWM);
 
   nscoord borderBoxBSize;
   if (contentBoxBSize != NS_UNCONSTRAINEDSIZE) {
-    borderBoxBSize =
-        contentBoxBSize +
-        aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
+    borderBoxBSize = contentBoxBSize + borderPadding.BStartEnd(myWM);
   }  // else, we'll figure out borderBoxBSize after we resolve contentBoxBSize.
 
   nsIFrame* inputAreaFrame = mFrames.FirstChild();
   if (!inputAreaFrame) {  // display:none?
     if (contentBoxBSize == NS_UNCONSTRAINEDSIZE) {
       contentBoxBSize = 0;
-      borderBoxBSize =
-          aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
+      borderBoxBSize = borderPadding.BStartEnd(myWM);
     }
   } else {
     ReflowOutput childDesiredSize(aReflowInput);
@@ -132,11 +129,8 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
     // offsets of input area frame within this frame:
     LogicalPoint childOffset(
-        myWM,
-        aReflowInput.ComputedLogicalBorderPadding().IStart(myWM) +
-            childMargin.IStart(myWM),
-        aReflowInput.ComputedLogicalBorderPadding().BStart(myWM) +
-            childMargin.BStart(myWM));
+        myWM, borderPadding.IStart(myWM) + childMargin.IStart(myWM),
+        borderPadding.BStart(myWM) + childMargin.BStart(myWM));
 
     nsReflowStatus childStatus;
     // We initially reflow the child with a dummy containerSize; positioning
@@ -166,9 +160,7 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
           NS_CSS_MINMAX(contentBoxBSize, aReflowInput.ComputedMinBSize(),
                         aReflowInput.ComputedMaxBSize());
 
-      borderBoxBSize =
-          contentBoxBSize +
-          aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
+      borderBoxBSize = contentBoxBSize + borderPadding.BStartEnd(myWM);
     }
 
     // Center child in block axis

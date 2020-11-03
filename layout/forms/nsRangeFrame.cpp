@@ -167,12 +167,10 @@ void nsRangeFrame::Reflow(nsPresContext* aPresContext,
   if (computedBSize == NS_UNCONSTRAINEDSIZE) {
     computedBSize = 0;
   }
+  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
   LogicalSize finalSize(
-      wm,
-      aReflowInput.ComputedISize() +
-          aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm),
-      computedBSize +
-          aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm));
+      wm, aReflowInput.ComputedISize() + borderPadding.IStartEnd(wm),
+      computedBSize + borderPadding.BStartEnd(wm));
   aDesiredSize.SetSize(wm, finalSize);
 
   ReflowAnonymousContent(aPresContext, aDesiredSize, aReflowInput);
