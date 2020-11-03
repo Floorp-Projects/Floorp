@@ -15,10 +15,8 @@ kind-dependencies:
 
 only-for-build-platforms:
     - win32-devedition/opt
-    - win32-pgo/opt
     - win32-shippable/opt
     - win64-devedition/opt
-    - win64-pgo/opt
     - win64-shippable/opt
     - win64-aarch64-shippable/opt
     - win64-aarch64-devedition/opt

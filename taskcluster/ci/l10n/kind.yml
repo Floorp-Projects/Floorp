@@ -85,17 +85,14 @@ job-template:
         platform:
             by-build-platform:
                 linux64: linux64/opt
-                linux64-pgo: linux64-pgo/opt
                 linux64-shippable: linux64-shippable/opt
                 linux: linux32/opt
                 linux-shippable: linux32-shippable/opt
                 macosx64: osx-cross/opt
                 macosx64-shippable: osx-shippable/opt
                 win32: windows2012-32/opt
-                win32-pgo: windows2012-32-pgo/opt
                 win32-shippable: windows2012-32-shippable/opt
                 win64: windows2012-64/opt
-                win64-pgo: windows2012-64-pgo/opt
                 win64-shippable: windows2012-64-shippable/opt
     env:
         by-build-platform:

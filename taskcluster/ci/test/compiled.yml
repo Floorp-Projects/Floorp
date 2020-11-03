@@ -50,7 +50,6 @@ gtest:
     run-on-projects:
         by-test-platform:
             windows.*-shippable/.*: []  # permafails on shippable
-            windows.*-pgo/.*: []  # permafails on pgo too
             windows.*-nightly/.*: []  # permafails on nightly too
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
@@ -61,9 +60,7 @@ gtest:
     tier:
         by-test-platform:
             windows7-32-shippable.*: 3
-            windows7-32-pgo.*: 3
             windows10-64-shippable.*: 3
-            windows10-64-pgo.*: 3
             windows10-64-asan.*: 3
             linux.*64-ccov.*/opt: 3
             default: default

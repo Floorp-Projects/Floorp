@@ -146,15 +146,6 @@ def filter_by_uncommon_try_tasks(task, optional_filters=None):
 def filter_release_tasks(task, parameters):
     platform = task.attributes.get("build_platform")
     if platform in (
-        # On beta, Nightly builds are already PGOs
-        "linux-pgo",
-        "linux64-pgo",
-        "win32-pgo",
-        "win64-pgo",
-    ):
-        return False
-
-    if platform in (
         "linux",
         "linux64",
         "macosx64",
