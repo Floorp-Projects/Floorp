@@ -68,7 +68,7 @@ static bool IsRemoteAcceleratedCompositor(const SupportDecoderParams& aParams) {
   TextureFactoryIdentifier ident =
       aParams.mKnowsCompositor->GetTextureFactoryIdentifier();
   return ident.mParentBackend != LayersBackend::LAYERS_BASIC &&
-         !ident.mUsingSoftwareWebRender &&
+         !aParams.mKnowsCompositor->UsingSoftwareWebRender() &&
          ident.mParentProcessType == GeckoProcessType_GPU;
 }
 

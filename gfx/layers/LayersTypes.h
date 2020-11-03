@@ -175,6 +175,16 @@ enum class LayersBackend : int8_t {
   LAYERS_LAST
 };
 
+enum class WebRenderBackend : int8_t { HARDWARE = 0, SOFTWARE, LAST };
+
+enum class WebRenderCompositor : int8_t {
+  DRAW = 0,
+  DIRECT_COMPOSITION,
+  CORE_ANIMATION,
+  SOFTWARE,
+  LAST
+};
+
 const char* GetLayersBackendName(LayersBackend aBackend);
 
 enum class TextureType : int8_t {

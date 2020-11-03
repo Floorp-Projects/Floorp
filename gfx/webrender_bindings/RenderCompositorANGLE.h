@@ -58,6 +58,13 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool UseTripleBuffering() const override { return mUseTripleBuffering; }
 
+  layers::WebRenderCompositor CompositorType() const override {
+    if (UseDComp()) {
+      return layers::WebRenderCompositor::DIRECT_COMPOSITION;
+    }
+    return layers::WebRenderCompositor::DRAW;
+  }
+
   LayoutDeviceIntSize GetBufferSize() override;
 
   bool IsContextLost() override;

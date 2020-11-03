@@ -119,7 +119,9 @@ class KnowsCompositor {
   }
 
   bool UsingSoftwareWebRender() const {
-    return mTextureFactoryIdentifier.mUsingSoftwareWebRender;
+    return GetCompositorBackendType() == layers::LayersBackend::LAYERS_WR &&
+           mTextureFactoryIdentifier.mWebRenderBackend ==
+               WebRenderBackend::SOFTWARE;
   }
 
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const {

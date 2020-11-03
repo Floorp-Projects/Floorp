@@ -178,6 +178,8 @@ typedef uintptr_t SyncHandle;
  */
 struct TextureFactoryIdentifier {
   LayersBackend mParentBackend;
+  WebRenderBackend mWebRenderBackend;
+  WebRenderCompositor mWebRenderCompositor;
   GeckoProcessType mParentProcessType;
   int32_t mMaxTextureSize;
   bool mSupportsTextureDirectMapping;
@@ -188,7 +190,6 @@ struct TextureFactoryIdentifier {
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
   bool mUsingAdvancedLayers;
-  bool mUsingSoftwareWebRender;
   SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(
@@ -201,6 +202,8 @@ struct TextureFactoryIdentifier {
       bool aSupportsPartialUploads = false, bool aSupportsComponentAlpha = true,
       SyncHandle aSyncHandle = 0)
       : mParentBackend(aLayersBackend),
+        mWebRenderBackend(WebRenderBackend::HARDWARE),
+        mWebRenderCompositor(WebRenderCompositor::DRAW),
         mParentProcessType(aParentProcessType),
         mMaxTextureSize(aMaxTextureSize),
         mSupportsTextureDirectMapping(aSupportsTextureDirectMapping),
@@ -211,11 +214,37 @@ struct TextureFactoryIdentifier {
         mSupportsPartialUploads(aSupportsPartialUploads),
         mSupportsComponentAlpha(aSupportsComponentAlpha),
         mUsingAdvancedLayers(false),
-        mUsingSoftwareWebRender(false),
+        mSyncHandle(aSyncHandle) {}
+
+  explicit TextureFactoryIdentifier(
+      WebRenderBackend aWebRenderBackend,
+      WebRenderCompositor aWebRenderCompositor,
+      GeckoProcessType aParentProcessType = GeckoProcessType_Default,
+      int32_t aMaxTextureSize = 4096,
+      bool aSupportsTextureDirectMapping = false,
+      bool aCompositorUseANGLE = false, bool aCompositorUseDComp = false,
+      bool aUseCompositorWnd = false, bool aSupportsTextureBlitting = false,
+      bool aSupportsPartialUploads = false, bool aSupportsComponentAlpha = true,
+      SyncHandle aSyncHandle = 0)
+      : mParentBackend(LayersBackend::LAYERS_WR),
+        mWebRenderBackend(aWebRenderBackend),
+        mWebRenderCompositor(aWebRenderCompositor),
+        mParentProcessType(aParentProcessType),
+        mMaxTextureSize(aMaxTextureSize),
+        mSupportsTextureDirectMapping(aSupportsTextureDirectMapping),
+        mCompositorUseANGLE(aCompositorUseANGLE),
+        mCompositorUseDComp(aCompositorUseDComp),
+        mUseCompositorWnd(aUseCompositorWnd),
+        mSupportsTextureBlitting(aSupportsTextureBlitting),
+        mSupportsPartialUploads(aSupportsPartialUploads),
+        mSupportsComponentAlpha(aSupportsComponentAlpha),
+        mUsingAdvancedLayers(false),
         mSyncHandle(aSyncHandle) {}
 
   bool operator==(const TextureFactoryIdentifier& aOther) const {
     return mParentBackend == aOther.mParentBackend &&
+           mWebRenderBackend == aOther.mWebRenderBackend &&
+           mWebRenderCompositor == aOther.mWebRenderCompositor &&
            mParentProcessType == aOther.mParentProcessType &&
            mMaxTextureSize == aOther.mMaxTextureSize &&
            mSupportsTextureDirectMapping ==
@@ -227,7 +256,6 @@ struct TextureFactoryIdentifier {
            mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
            mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&
            mUsingAdvancedLayers == aOther.mUsingAdvancedLayers &&
-           mUsingSoftwareWebRender == aOther.mUsingSoftwareWebRender &&
            mSyncHandle == aOther.mSyncHandle;
   }
 };

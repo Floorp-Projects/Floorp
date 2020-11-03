@@ -270,6 +270,8 @@ class WebRenderAPI final {
   void AccumulateMemoryReport(wr::MemoryReport*);
 
   wr::WrIdNamespace GetNamespace();
+  layers::WebRenderBackend GetBackendType() { return mBackend; }
+  layers::WebRenderCompositor GetCompositorType() { return mCompositor; }
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
   bool GetUseDComp() const { return mUseDComp; }
@@ -308,6 +310,8 @@ class WebRenderAPI final {
 
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
+               layers::WebRenderBackend aBackend,
+               layers::WebRenderCompositor aCompositor,
                uint32_t aMaxTextureSize, bool aUseANGLE, bool aUseDComp,
                bool aUseTripleBuffering, bool aSupportsExternalBufferTextures,
                layers::SyncHandle aSyncHandle);
@@ -320,6 +324,8 @@ class WebRenderAPI final {
 
   wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
+  layers::WebRenderBackend mBackend;
+  layers::WebRenderCompositor mCompositor;
   int32_t mMaxTextureSize;
   bool mUseANGLE;
   bool mUseDComp;
