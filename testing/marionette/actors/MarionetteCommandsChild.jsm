@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["MarionetteFrameChild"];
+const EXPORTED_SYMBOLS = ["MarionetteCommandsChild"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
-class MarionetteFrameChild extends JSWindowActorChild {
+class MarionetteCommandsChild extends JSWindowActorChild {
   constructor() {
     super();
 
@@ -79,7 +79,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
       case "pagehide":
       case "DOMContentLoaded":
       case "pageshow":
-        this.sendAsyncMessage("MarionetteFrameChild:PageLoadEvent", {
+        this.sendAsyncMessage("MarionetteCommandsChild:PageLoadEvent", {
           browsingContext: this.browsingContext,
           innerWindowId: this.innerWindowId,
           type: event.type,
@@ -96,76 +96,76 @@ class MarionetteFrameChild extends JSWindowActorChild {
       const data = evaluate.fromJSON(serializedData, null, this.contentWindow);
 
       switch (name) {
-        case "MarionetteFrameParent:clearElement":
+        case "MarionetteCommandsParent:clearElement":
           this.clearElement(data);
           break;
-        case "MarionetteFrameParent:clickElement":
+        case "MarionetteCommandsParent:clickElement":
           result = await this.clickElement(data);
           break;
-        case "MarionetteFrameParent:executeScript":
+        case "MarionetteCommandsParent:executeScript":
           result = await this.executeScript(data);
           break;
-        case "MarionetteFrameParent:findElement":
+        case "MarionetteCommandsParent:findElement":
           result = await this.findElement(data);
           break;
-        case "MarionetteFrameParent:findElements":
+        case "MarionetteCommandsParent:findElements":
           result = await this.findElements(data);
           break;
-        case "MarionetteFrameParent:getCurrentUrl":
+        case "MarionetteCommandsParent:getCurrentUrl":
           result = await this.getCurrentUrl();
           break;
-        case "MarionetteFrameParent:getActiveElement":
+        case "MarionetteCommandsParent:getActiveElement":
           result = await this.getActiveElement();
           break;
-        case "MarionetteFrameParent:getElementAttribute":
+        case "MarionetteCommandsParent:getElementAttribute":
           result = await this.getElementAttribute(data);
           break;
-        case "MarionetteFrameParent:getElementProperty":
+        case "MarionetteCommandsParent:getElementProperty":
           result = await this.getElementProperty(data);
           break;
-        case "MarionetteFrameParent:getElementRect":
+        case "MarionetteCommandsParent:getElementRect":
           result = await this.getElementRect(data);
           break;
-        case "MarionetteFrameParent:getElementTagName":
+        case "MarionetteCommandsParent:getElementTagName":
           result = await this.getElementTagName(data);
           break;
-        case "MarionetteFrameParent:getElementText":
+        case "MarionetteCommandsParent:getElementText":
           result = await this.getElementText(data);
           break;
-        case "MarionetteFrameParent:getElementValueOfCssProperty":
+        case "MarionetteCommandsParent:getElementValueOfCssProperty":
           result = await this.getElementValueOfCssProperty(data);
           break;
-        case "MarionetteFrameParent:getPageSource":
+        case "MarionetteCommandsParent:getPageSource":
           result = await this.getPageSource();
           break;
-        case "MarionetteFrameParent:getScreenshotRect":
+        case "MarionetteCommandsParent:getScreenshotRect":
           result = await this.getScreenshotRect(data);
           break;
-        case "MarionetteFrameParent:isElementDisplayed":
+        case "MarionetteCommandsParent:isElementDisplayed":
           result = await this.isElementDisplayed(data);
           break;
-        case "MarionetteFrameParent:isElementEnabled":
+        case "MarionetteCommandsParent:isElementEnabled":
           result = await this.isElementEnabled(data);
           break;
-        case "MarionetteFrameParent:isElementSelected":
+        case "MarionetteCommandsParent:isElementSelected":
           result = await this.isElementSelected(data);
           break;
-        case "MarionetteFrameParent:performActions":
+        case "MarionetteCommandsParent:performActions":
           result = await this.performActions(data);
           break;
-        case "MarionetteFrameParent:releaseActions":
+        case "MarionetteCommandsParent:releaseActions":
           result = await this.releaseActions();
           break;
-        case "MarionetteFrameParent:sendKeysToElement":
+        case "MarionetteCommandsParent:sendKeysToElement":
           result = await this.sendKeysToElement(data);
           break;
-        case "MarionetteFrameParent:singleTap":
+        case "MarionetteCommandsParent:singleTap":
           result = await this.singleTap(data);
           break;
-        case "MarionetteFrameParent:switchToFrame":
+        case "MarionetteCommandsParent:switchToFrame":
           result = await this.switchToFrame(data);
           break;
-        case "MarionetteFrameParent:switchToParentFrame":
+        case "MarionetteCommandsParent:switchToParentFrame":
           result = await this.switchToParentFrame();
           break;
       }
