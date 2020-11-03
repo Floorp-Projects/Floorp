@@ -6,12 +6,9 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
-use super::CommonMetricData;
+use super::{CommonMetricData, MetricId};
 
-use crate::{
-    dispatcher,
-    ipc::{need_ipc, MetricId},
-};
+use crate::{dispatcher, ipc::need_ipc};
 
 /// A UUID metric.
 ///
@@ -25,15 +22,23 @@ pub enum UuidMetric {
 #[derive(Clone, Debug)]
 pub struct UuidMetricImpl(pub(crate) glean_core::metrics::UuidMetric);
 #[derive(Debug)]
-pub struct UuidMetricIpc(MetricId);
+pub struct UuidMetricIpc;
 
 impl UuidMetric {
     /// Create a new UUID metric.
-    pub fn new(meta: CommonMetricData) -> Self {
+    pub fn new(_id: MetricId, meta: CommonMetricData) -> Self {
         if need_ipc() {
-            UuidMetric::Child(UuidMetricIpc(MetricId::new(meta)))
+            UuidMetric::Child(UuidMetricIpc)
         } else {
             UuidMetric::Parent(Arc::new(UuidMetricImpl::new(meta)))
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_metric(&self) -> Self {
+        match self {
+            UuidMetric::Parent(_) => UuidMetric::Child(UuidMetricIpc),
+            UuidMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
 
@@ -118,5 +123,56 @@ impl UuidMetricImpl {
 
     fn test_get_value(&self, storage_name: &str) -> Option<String> {
         crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn sets_uuid_value() {
+        let _lock = lock_test();
+
+        let metric = &metrics::test_only_ipc::a_uuid;
+        let expected = Uuid::new_v4();
+        metric.set(expected.clone());
+
+        assert_eq!(expected, metric.test_get_value("store1").unwrap());
+    }
+
+    #[test]
+    fn uuid_ipc() {
+        // UuidMetric doesn't support IPC.
+        let _lock = lock_test();
+
+        let parent_metric = &metrics::test_only_ipc::a_uuid;
+        let expected = Uuid::new_v4();
+        parent_metric.set(expected.clone());
+
+        {
+            let child_metric = parent_metric.child_metric();
+
+            // Instrumentation calls do not panic.
+            child_metric.set(Uuid::new_v4());
+
+            // (They also shouldn't do anything,
+            // but that's not something we can inspect in this test)
+
+            // Need to catch the panic so that our RAIIs drop nicely.
+            let result = std::panic::catch_unwind(move || {
+                child_metric.test_get_value("store1");
+            });
+            assert!(result.is_err());
+        }
+
+        assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
+
+        assert_eq!(
+            expected,
+            parent_metric.test_get_value("store1").unwrap(),
+            "UUID metrics should only work in the parent process"
+        );
     }
 }
