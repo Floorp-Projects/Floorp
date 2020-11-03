@@ -252,12 +252,18 @@ NS_IMETHODIMP ServiceWorkerShutdownBlocker::Notify(nsITimer*) {
   return NS_OK;
 }
 
-void ServiceWorkerShutdownBlocker::MaybeInitUnblockShutdownTimer() {
 #ifdef RELEASE_OR_BETA
-  AssertIsOnMainThread();
-  MOZ_ASSERT(!mTimer);
+#  define SW_UNBLOCK_SHUTDOWN_TIMER_DURATION 10s
+#else
+// In Nightly, we do want a shutdown hang to be reported so we pick a value
+// notably longer than the 60s of the RunWatchDog timeout.
+#  define SW_UNBLOCK_SHUTDOWN_TIMER_DURATION 200s
+#endif
 
-  if (!mShutdownClient || IsAcceptingPromises()) {
+void ServiceWorkerShutdownBlocker::MaybeInitUnblockShutdownTimer() {
+  AssertIsOnMainThread();
+
+  if (mTimer || !mShutdownClient || IsAcceptingPromises()) {
     return;
   }
 
@@ -267,12 +273,12 @@ void ServiceWorkerShutdownBlocker::MaybeInitUnblockShutdownTimer() {
   using namespace std::chrono_literals;
 
   static constexpr auto delay =
-      std::chrono::duration_cast<std::chrono::milliseconds>(10s);
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          SW_UNBLOCK_SHUTDOWN_TIMER_DURATION);
 
   mTimer = NS_NewTimer();
 
   mTimer->InitWithCallback(this, delay.count(), nsITimer::TYPE_ONE_SHOT);
-#endif
 }
 
 }  // namespace dom
