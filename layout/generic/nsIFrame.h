@@ -468,6 +468,9 @@ struct IntrinsicSize {
   IntrinsicSize(nscoord aWidth, nscoord aHeight)
       : width(Some(aWidth)), height(Some(aHeight)) {}
 
+  explicit IntrinsicSize(const nsSize& aSize)
+      : IntrinsicSize(aSize.Width(), aSize.Height()) {}
+
   mozilla::Maybe<nsSize> ToSize() const {
     return width && height ? Some(nsSize(*width, *height)) : Nothing();
   }

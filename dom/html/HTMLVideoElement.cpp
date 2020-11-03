@@ -106,31 +106,32 @@ void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize) {
   }
 }
 
-nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size) {
+Maybe<CSSIntSize> HTMLVideoElement::GetVideoSize() const {
   if (!mMediaInfo.HasVideo()) {
-    return NS_ERROR_FAILURE;
+    return Nothing();
   }
 
   if (mDisableVideo) {
-    return NS_ERROR_FAILURE;
+    return Nothing();
   }
 
+  CSSIntSize size;
   switch (mMediaInfo.mVideo.mRotation) {
     case VideoInfo::Rotation::kDegree_90:
     case VideoInfo::Rotation::kDegree_270: {
-      size->width = mMediaInfo.mVideo.mDisplay.height;
-      size->height = mMediaInfo.mVideo.mDisplay.width;
+      size.width = mMediaInfo.mVideo.mDisplay.height;
+      size.height = mMediaInfo.mVideo.mDisplay.width;
       break;
     }
     case VideoInfo::Rotation::kDegree_0:
     case VideoInfo::Rotation::kDegree_180:
     default: {
-      size->height = mMediaInfo.mVideo.mDisplay.height;
-      size->width = mMediaInfo.mVideo.mDisplay.width;
+      size.height = mMediaInfo.mVideo.mDisplay.height;
+      size.width = mMediaInfo.mVideo.mDisplay.width;
       break;
     }
   }
-  return NS_OK;
+  return Some(size);
 }
 
 void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
