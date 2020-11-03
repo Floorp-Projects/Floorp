@@ -77,7 +77,7 @@ impl CounterMetric {
                     if let Some(v) = payload.counters.get_mut(&c.0) {
                         *v += amount;
                     } else {
-                        payload.counters.insert(c.0.clone(), amount);
+                        payload.counters.insert(c.0, amount);
                     }
                 });
             }

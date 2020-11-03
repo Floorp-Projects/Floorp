@@ -19,12 +19,14 @@ use {
 
 use super::metrics::__glean_metric_maps;
 
+type EventRecord = (Instant, Option<HashMap<i32, String>>);
+
 /// Contains all the information necessary to update the metrics on the main
 /// process.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
-    pub events: HashMap<MetricId, Vec<(Instant, Option<HashMap<i32, String>>)>>,
+    pub events: HashMap<MetricId, Vec<EventRecord>>,
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
     pub timing_samples: HashMap<MetricId, Vec<u128>>,
