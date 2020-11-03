@@ -24,4 +24,5 @@ DevToolsModules(
     "rulers.js",
     "selector.js",
     "shapes.js",
+    "tabbing-order.js",
 )
