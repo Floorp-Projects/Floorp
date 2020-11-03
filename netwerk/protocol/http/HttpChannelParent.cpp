@@ -128,8 +128,8 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.priority(), a.classOfService(), a.redirectionLimit(), a.allowSTS(),
           a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
           a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
-          a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
-          a.cacheKey(), a.requestContextID(), a.preflightArgs(),
+          a.allowHttp3(), a.allowAltSvc(), a.beConservative(), a.tlsFlags(),
+          a.loadInfo(), a.cacheKey(), a.requestContextID(), a.preflightArgs(),
           a.initialRwin(), a.blockAuthPrompt(), a.allowStaleCacheContent(),
           a.preferCacheLoadOverBypass(), a.contentTypeHint(), a.corsMode(),
           a.redirectMode(), a.channelId(), a.integrityMetadata(),
@@ -371,9 +371,10 @@ bool HttpChannelParent::DoAsyncOpen(
     const uint32_t& thirdPartyFlags, const bool& doResumeAt,
     const uint64_t& startPos, const nsCString& entityID,
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
-    const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
-    const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-    const uint32_t& aCacheKey, const uint64_t& aRequestContextID,
+    const bool& allowSpdy, const bool& allowHttp3, const bool& allowAltSvc,
+    const bool& beConservative, const uint32_t& tlsFlags,
+    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const uint32_t& aCacheKey,
+    const uint64_t& aRequestContextID,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
     const bool& aAllowStaleCacheContent, const bool& aPreferCacheLoadOverBypass,
@@ -553,6 +554,7 @@ bool HttpChannelParent::DoAsyncOpen(
   httpChannel->SetAllowSTS(allowSTS);
   httpChannel->SetThirdPartyFlags(thirdPartyFlags);
   httpChannel->SetAllowSpdy(allowSpdy);
+  httpChannel->SetAllowHttp3(allowHttp3);
   httpChannel->SetAllowAltSvc(allowAltSvc);
   httpChannel->SetBeConservative(beConservative);
   httpChannel->SetTlsFlags(tlsFlags);

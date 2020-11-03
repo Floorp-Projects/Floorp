@@ -56,7 +56,7 @@ bool ConnectionEntry::AvailableForDispatchNow() {
     return true;
   }
 
-  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false) ? true
+  return gHttpHandler->ConnMgr()->GetH2orH3ActiveConn(this, false, false) ? true
                                                                    : false;
 }
 
@@ -613,7 +613,7 @@ bool ConnectionEntry::MakeFirstActiveSpdyConnDontReuse() {
 
 // Return an active h2 or h3 connection
 // that can be directly activated or null.
-HttpConnectionBase* ConnectionEntry::GetH2orH3ActiveConn(bool aNoHttp3) {
+HttpConnectionBase* ConnectionEntry::GetH2orH3ActiveConn() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   HttpConnectionBase* experienced = nullptr;

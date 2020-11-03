@@ -446,6 +446,16 @@ ClassifierDummyChannel::SetAllowSpdy(bool aAllowSpdy) {
 }
 
 NS_IMETHODIMP
+ClassifierDummyChannel::GetAllowHttp3(bool* aAllowHttp3) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ClassifierDummyChannel::SetAllowHttp3(bool aAllowHttp3) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ClassifierDummyChannel::GetResponseTimeoutEnabled(
     bool* aResponseTimeoutEnabled) {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -65,7 +65,7 @@ class ConnectionEntry {
   void CloseActiveConnections();
   void CloseAllActiveConnsWithNullTransactcion(nsresult aCloseCode);
 
-  HttpConnectionBase* GetH2orH3ActiveConn(bool aNoHttp3);
+  HttpConnectionBase* GetH2orH3ActiveConn();
   // Make an active spdy connection DontReuse.
   // TODO: this is a helper function and should nbe improved.
   bool MakeFirstActiveSpdyConnDontReuse();
@@ -139,6 +139,7 @@ class ConnectionEntry {
 
   bool mDoNotDestroy : 1;
 
+  bool IsHttp3() const { return mConnInfo->IsHttp3(); }
   bool AllowHttp2() const { return mCanUseSpdy; }
   void DisallowHttp2();
   void DontReuseHttp3Conn();

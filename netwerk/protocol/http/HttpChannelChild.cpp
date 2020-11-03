@@ -2163,6 +2163,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.chooseApplicationCache() = mChooseApplicationCache;
   openArgs.appCacheClientID() = appCacheClientId;
   openArgs.allowSpdy() = mAllowSpdy;
+  openArgs.allowHttp3() = mAllowHttp3;
   openArgs.allowAltSvc() = mAllowAltSvc;
   openArgs.beConservative() = mBeConservative;
   openArgs.tlsFlags() = mTlsFlags;
