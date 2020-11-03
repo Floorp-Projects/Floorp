@@ -44,7 +44,7 @@ class SandboxTarget {
   }
 
   template <typename CallbackT>
-  void RegisterSandboxStartCallback(CallbackT aCallback) {
+  void RegisterSandboxStartCallback(CallbackT&& aCallback) {
     mStartObservers.push_back(std::forward<CallbackT>(aCallback));
   }
 
