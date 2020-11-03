@@ -1133,14 +1133,6 @@ class BaseMarionetteTestRunner(object):
             manifest.read(filepath)
 
             json_path = update_mozinfo(filepath)
-            mozinfo.update(
-                {
-                    "appname": self.appName,
-                    "manage_instance": self.marionette.instance is not None,
-                    "headless": self.headless,
-                    "webrender": self.enable_webrender,
-                }
-            )
             self.logger.info("mozinfo updated from: {}".format(json_path))
             self.logger.info("mozinfo is: {}".format(mozinfo.info))
 
@@ -1148,8 +1140,15 @@ class BaseMarionetteTestRunner(object):
             if self.test_tags:
                 filters.append(tags(self.test_tags))
 
+            values = {
+                "appname": self.appName,
+                "manage_instance": self.marionette.instance is not None,
+                "headless": self.headless,
+            }
+            values.update(mozinfo.info)
+
             manifest_tests = manifest.active_tests(
-                exists=False, disabled=True, filters=filters, **mozinfo.info
+                exists=False, disabled=True, filters=filters, **values
             )
             if len(manifest_tests) == 0:
                 self.logger.error(

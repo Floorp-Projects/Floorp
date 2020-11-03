@@ -145,16 +145,9 @@ raptor-tp6:
     limit-platforms:
         by-app:
             chrome:
-                # Run on non-QR shippable, but test-platforms.yml doesn't have
-                # any more non-QR macosx shippable things. So for macosx we want
-                # to run it on shippable-qr, otherwise there's nothing running
-                # this on macosx at all.
                 - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
             chromium:
-                # Ditto as for chrome
                 - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
             default: []
     treeherder-symbol: Rap(tp6)
     max-run-time: 4000
@@ -639,7 +632,7 @@ raptor-youtube-playback-av1-sfr-firefox:
             default: ['mozilla-central']
     limit-platforms:
         - windows10-64-ref-hw-2017/opt
-        - macosx1014-64-shippable-qr/opt
+        - macosx1014-64-shippable/opt
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600

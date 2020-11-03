@@ -369,29 +369,19 @@ windows7-32-mingwclang/opt:
 ##
 # MacOS X platforms (matching /macosx.*/)
 
-macosx1014-64/debug:
-    build-platform: macosx64/debug
-    test-sets:
-        - macosx1014-64-tests
-
-macosx1014-64-devedition/opt:
-    build-platform: macosx64-devedition/opt
-    test-sets:
-        - macosx1014-64-tests
-
-macosx1014-64-qr/opt:
+macosx1014-64/opt:
     build-platform: macosx64/opt
     test-sets:
-        - macosx1014-64-qr-tests
+        - macosx1014-64-tests
         - desktop-screenshot-capture
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
 
-macosx1014-64-shippable-qr/opt:
+macosx1014-64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
-        - macosx1014-64-qr-tests
+        - macosx1014-64-tests
         - macosx64-talos
         - desktop-screenshot-capture
         - awsy
@@ -406,22 +396,38 @@ macosx1014-64-shippable-qr/opt:
         - web-platform-tests-wdspec-headless
         - talos-profiling
 
-macosx1014-64-devedition-qr/opt:
+macosx1014-64/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - macosx1014-64-tests
+        - web-platform-tests
+
+macosx1014-64-devedition/opt:
     build-platform: macosx64-devedition/opt
     test-sets:
-        - macosx1014-64-qr-tests
+        - macosx1014-64-tests
         - web-platform-tests
+
+macosx1014-64-qr/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx1014-64-qr-tests
+
+macosx1014-64-shippable-qr/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx1014-64-qr-tests
+        - macosx64-talos
 
 macosx1014-64-qr/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx1014-64-qr-tests
-        - web-platform-tests
 
-macosx1014-64-ccov-qr/opt:
+macosx1014-64-ccov/opt:
     build-platform: macosx64-ccov/opt
     test-sets:
-        - macosx1014-64-qr-tests
+        - macosx1014-64-tests
 
 ##
 # Android platforms (matching /android-em.*/)
