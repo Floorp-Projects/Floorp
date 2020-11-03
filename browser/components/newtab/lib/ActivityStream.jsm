@@ -228,14 +228,6 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "hideTopSitesTitle",
-    {
-      title:
-        "Hide the top sites section's title, including the section and collapse icons",
-      value: false,
-    },
-  ],
-  [
     "showSponsored",
     {
       title:
