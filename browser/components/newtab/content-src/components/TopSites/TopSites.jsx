@@ -153,8 +153,7 @@ export class _TopSites extends React.PureComponent {
           className="top-sites"
           icon="topsites"
           id="topsites"
-          title={props.title || { id: "newtab-section-header-topsites" }}
-          hideTitle={props.Prefs.values.hideTopSitesTitle}
+          title={this.props.title || { id: "newtab-section-header-topsites" }}
           extraMenuOptions={extraMenuOptions}
           showPrefName="feeds.topsites"
           eventSource={TOP_SITES_SOURCE}
