@@ -395,26 +395,28 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
 // For XDR we should only need to intern user strings so skip checks for tiny
 // and well-known atoms. As well, the atoms are unique already.
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1ForXDR(
-    JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
+    JSContext* cx, const Latin1Char* latin1Ptr, HashNumber hash,
+    uint32_t length) {
   InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
-  SpecificParserAtomLookup<Latin1Char> lookup(seq);
+  SpecificParserAtomLookup<Latin1Char> lookup(seq, hash);
 
   MOZ_ASSERT(wellKnownTable_.lookupTiny(latin1Ptr, length) == nullptr);
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
 
-  return internChar16Seq<Latin1Char>(cx, lookup.hash(), seq, length);
+  return internChar16Seq<Latin1Char>(cx, hash, seq, length);
 }
 
 // Similar to internLatin1ForXDR, but char16_t is needed to represent.
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16ForXDR(
-    JSContext* cx, LittleEndianChars twoByteLE, uint32_t length) {
+    JSContext* cx, LittleEndianChars twoByteLE, HashNumber hash,
+    uint32_t length) {
   InflatedChar16Sequence<LittleEndianChars> seq(twoByteLE, length);
-  SpecificParserAtomLookup<LittleEndianChars> lookup(seq);
+  SpecificParserAtomLookup<LittleEndianChars> lookup(seq, hash);
 
   MOZ_ASSERT(wellKnownTable_.lookupTiny(twoByteLE, length) == nullptr);
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
 
-  return internChar16Seq<char16_t>(cx, lookup.hash(), seq, length);
+  return internChar16Seq<char16_t>(cx, hash, seq, length);
 }
 
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internUtf8(
@@ -808,6 +810,7 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
   static_assert(JSString::MAX_LENGTH <= INT32_MAX,
                 "String length must fit in 31 bits");
 
+  uint32_t hash = 0;
   bool latin1 = false;
   uint32_t length = 0;
   uint32_t lengthAndEncoding = 0;
@@ -815,11 +818,13 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
   /* Encode/decode the length and string-data encoding (Latin1 or TwoByte). */
 
   if (mode == XDR_ENCODE) {
+    hash = (*atomp)->hash();
     latin1 = (*atomp)->hasLatin1Chars();
     length = (*atomp)->length();
     lengthAndEncoding = (length << 1) | uint32_t(latin1);
   }
 
+  MOZ_TRY(xdr->codeUint32(&hash));
   MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
 
   if (mode == XDR_DECODE) {
@@ -848,14 +853,15 @@ XDRResult XDRParserAtomData(XDRState<mode>* xdr, const ParserAtom** atomp) {
       MOZ_TRY(xdr->peekData(&ptr, length * sizeof(Latin1Char)));
       chars = reinterpret_cast<const Latin1Char*>(ptr);
     }
-    mbAtom = xdr->frontendAtoms().internLatin1ForXDR(cx, chars, length);
+    mbAtom = xdr->frontendAtoms().internLatin1ForXDR(cx, chars, hash, length);
   } else {
     const uint8_t* twoByteCharsLE = nullptr;
     if (length) {
       MOZ_TRY(xdr->peekData(&twoByteCharsLE, length * sizeof(char16_t)));
     }
     LittleEndianChars leTwoByte(twoByteCharsLE);
-    mbAtom = xdr->frontendAtoms().internChar16ForXDR(cx, leTwoByte, length);
+    mbAtom =
+        xdr->frontendAtoms().internChar16ForXDR(cx, leTwoByte, hash, length);
   }
 
   const ParserAtom* atom = mbAtom.unwrapOr(nullptr);
