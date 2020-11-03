@@ -124,7 +124,7 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
                               CSSRect(0, 0, 100, parentHeight));
     SetScrollableFrameMetrics(layers[1],
                               ScrollableLayerGuid::START_SCROLL_ID + 1,
-                              CSSRect(0, 0, 100, 200));
+                              CSSRect(0, 0, 100, 800));
     SetScrollHandoff(layers[1], root);
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
                                                            root, mcc);
@@ -570,8 +570,6 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   TestFlingAcceleration();
 }
 
-#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
-#  if 0  // Fails because it goes so fast that it hits overscroll
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", true);
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
@@ -579,8 +577,6 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
   TestFlingAcceleration();
 }
-#  endif
-#endif
 
 TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
   SCOPED_GFX_PREF_BOOL("apz.allow_immediate_handoff", false);
