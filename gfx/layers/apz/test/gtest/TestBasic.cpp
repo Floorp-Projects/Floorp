@@ -162,7 +162,6 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   childApzc->Destroy();
 }
 
-#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, Fling) {
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   int touchStart = 50;
@@ -180,7 +179,6 @@ TEST_F(APZCBasicTester, Fling) {
     lastPoint = pointOut;
   }
 }
-#endif
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCBasicTester, FlingIntoOverscroll) {
