@@ -22,7 +22,8 @@ async function run() {
       printer.QueryInterface(Ci.nsIPrinter);
       info(printer.name);
 
-      const settings = await printer.createDefaultSettings();
+      const printerInfo = await printer.printerInfo;
+      const settings = printerInfo.defaultSettings;
       settings.QueryInterface(Ci.nsIPrintSettings);
 
       is(typeof settings.printerName, "string", "Printer name should be a string.");
