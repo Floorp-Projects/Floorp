@@ -17,7 +17,7 @@ import jinja2
 from perfecthash import PerfectHash
 from string_table import StringTable
 
-from util import generate_metric_ids
+from util import generate_metric_ids, is_implemented_metric_type
 from glean_parser import util
 
 """
@@ -95,7 +95,11 @@ def output_js(objs, output_fd, options={}):
     template_filename = "js.jinja2"
 
     template = util.get_jinja2_template(
-        template_filename, filters=(("type_name", type_name),)
+        template_filename,
+        filters=(
+            ("type_name", type_name),
+            ("is_implemented_type", is_implemented_metric_type),
+        ),
     )
 
     assert (

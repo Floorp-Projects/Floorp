@@ -19,6 +19,7 @@ namespace glean {
 {% for category_name, objs in all_objs.items() %}
 namespace {{ category_name|snake_case }} {
     {% for obj in objs.values() %}
+    {% if obj.type|is_implemented_type %}
     /**
      * generated from {{ category_name }}.{{ obj.name }}
      *
@@ -26,6 +27,7 @@ namespace {{ category_name|snake_case }} {
      */
     constexpr impl::{{ obj|type_name }} {{obj.name|snake_case }}({{obj|metric_id}});
 
+    {% endif %}
     {% endfor %}
 }
 {% endfor %}

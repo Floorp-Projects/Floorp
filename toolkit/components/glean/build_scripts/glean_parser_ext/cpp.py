@@ -10,7 +10,7 @@ Outputter to generate C++ code for metrics.
 
 import jinja2
 
-from util import generate_metric_ids
+from util import generate_metric_ids, is_implemented_metric_type
 from glean_parser import util
 
 
@@ -56,6 +56,7 @@ def output_cpp(objs, output_fd, options={}):
             ("snake_case", util.snake_case),
             ("type_name", type_name),
             ("metric_id", get_metric_id),
+            ("is_implemented_type", is_implemented_metric_type),
         ),
     )
 
