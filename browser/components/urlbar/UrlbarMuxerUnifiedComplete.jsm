@@ -292,6 +292,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
+    // HeuristicFallback may add non-heuristic results in some cases, but those
+    // should be retained only if the heuristic result comes from it.
+    if (
+      !result.heuristic &&
+      result.providerName == "HeuristicFallback" &&
+      state.context.heuristicResult?.providerName != "HeuristicFallback"
+    ) {
+      return false;
+    }
+
     if (result.providerName == "TabToSearch") {
       // Discard tab-to-search results if we're not autofilling a URL or
       // a tab-to-search result was added already.
