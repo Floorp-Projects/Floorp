@@ -20,9 +20,6 @@
 namespace mozilla {
 namespace net {
 
-static const char kRolloutURIPref[] = "doh-rollout.uri";
-static const char kRolloutModePref[] = "doh-rollout.mode";
-
 static const char* gTRRUriCallbackPrefs[] = {
     "network.trr.uri", "network.trr.mode", kRolloutURIPref, kRolloutModePref,
     nullptr,
