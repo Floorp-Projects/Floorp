@@ -163,10 +163,10 @@ browser-screenshots:
     test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
         by-test-platform:
-            windows7-32(?:-pgo|-shippable)(?:-qr)?/opt: ['mozilla-central']
-            windows10-64(?:-pgo|-shippable)(?:-qr)?/opt: ['mozilla-central']
+            windows7-32(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
+            windows10-64(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
             (?:windows10-64|windows7-32|linux1804-64|macosx1014-64)(?:-qr)?/opt: ['integration']
-            linux1804-64-(?:pgo|shippable)(?:-qr)?/opt: ['mozilla-central']
+            linux1804-64-(?:shippable)(?:-qr)?/opt: ['mozilla-central']
             macosx.*64-shippable/opt: ['mozilla-central']
             default: []
     fission-run-on-projects: []
@@ -308,7 +308,7 @@ mochitest-media:
     run-on-projects:
         by-test-platform:
             android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
-            android-hw-.*-api-16(-qr)?/(?:debug|pgo)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+            android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
             android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
             windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects

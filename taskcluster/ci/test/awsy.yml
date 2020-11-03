@@ -8,7 +8,7 @@ job-defaults:
     instance-size: xlarge
     virtualization:
         by-test-platform:
-            windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
+            windows10-64(?:-shippable)?-qr/.*: virtual-with-gpu
             windows10-64/.*: virtual-with-gpu
             default: virtual
     allow-software-gl-layers: false
