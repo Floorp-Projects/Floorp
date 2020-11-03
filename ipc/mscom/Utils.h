@@ -24,6 +24,9 @@ bool IsCOMInitializedOnCurrentThread();
 bool IsCurrentThreadMTA();
 bool IsCurrentThreadExplicitMTA();
 bool IsCurrentThreadImplicitMTA();
+#if defined(MOZILLA_INTERNAL_API)
+bool IsCurrentThreadNonMainMTA();
+#endif  // defined(MOZILLA_INTERNAL_API)
 bool IsProxy(IUnknown* aUnknown);
 bool IsValidGUID(REFGUID aCheckGuid);
 uintptr_t GetContainingModuleHandle();
