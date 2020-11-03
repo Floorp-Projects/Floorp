@@ -534,18 +534,24 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
 
         let mut out_device_r: f32 = lut_interp_linear(
             linear as f64,
-            (*transform).output_gamma_lut_r,
-            (*transform).output_gamma_lut_r_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_r,
+                (*transform).output_gamma_lut_r_length,
+            ),
         );
         let mut out_device_g: f32 = lut_interp_linear(
             linear as f64,
-            (*transform).output_gamma_lut_g,
-            (*transform).output_gamma_lut_g_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_g,
+                (*transform).output_gamma_lut_g_length,
+            ),
         );
         let mut out_device_b: f32 = lut_interp_linear(
             linear as f64,
-            (*transform).output_gamma_lut_b,
-            (*transform).output_gamma_lut_b_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_b,
+                (*transform).output_gamma_lut_b_length,
+            ),
         );
         *dest.offset(F::kRIndex as isize) = clamp_u8(out_device_r * 255f32);
         *dest.offset(F::kGIndex as isize) = clamp_u8(out_device_g * 255f32);
@@ -1058,18 +1064,24 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
 
         let mut out_device_r: f32 = lut_interp_linear(
             out_linear_r as f64,
-            (*transform).output_gamma_lut_r,
-            (*transform).output_gamma_lut_r_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_r,
+                (*transform).output_gamma_lut_r_length,
+            ),
         );
         let mut out_device_g: f32 = lut_interp_linear(
             out_linear_g as f64,
-            (*transform).output_gamma_lut_g,
-            (*transform).output_gamma_lut_g_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_g,
+                (*transform).output_gamma_lut_g_length,
+            ),
         );
         let mut out_device_b: f32 = lut_interp_linear(
             out_linear_b as f64,
-            (*transform).output_gamma_lut_b,
-            (*transform).output_gamma_lut_b_length as i32,
+            std::slice::from_raw_parts(
+                (*transform).output_gamma_lut_b,
+                (*transform).output_gamma_lut_b_length,
+            ),
         );
         *dest.offset(F::kRIndex as isize) = clamp_u8(out_device_r * 255f32);
         *dest.offset(F::kGIndex as isize) = clamp_u8(out_device_g * 255f32);
