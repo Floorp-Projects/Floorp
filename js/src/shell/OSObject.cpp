@@ -200,7 +200,7 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
       }
       JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.get());
     } else {
-      if (len > ArrayBufferObject::MaxBufferByteLength) {
+      if (len > ArrayBufferObject::maxBufferByteLength()) {
         JS_ReportErrorUTF8(cx, "file %s is too large for a Uint8Array",
                            pathname.get());
         return nullptr;

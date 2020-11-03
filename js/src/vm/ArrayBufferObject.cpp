@@ -136,7 +136,7 @@ int32_t js::LiveMappedBufferCount() { return liveBufferCount; }
 static MOZ_MUST_USE bool CheckArrayBufferTooLarge(JSContext* cx,
                                                   uint64_t nbytes) {
   // Refuse to allocate too large buffers.
-  if (MOZ_UNLIKELY(nbytes > ArrayBufferObject::MaxBufferByteLength)) {
+  if (MOZ_UNLIKELY(nbytes > ArrayBufferObject::maxBufferByteLength())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
@@ -829,7 +829,8 @@ bool js::CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
                           MutableHandleArrayBufferObjectMaybeShared buffer) {
   MOZ_ASSERT(memory.initial % wasm::PageSize == 0);
   MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
-  MOZ_RELEASE_ASSERT(memory.initial <= ArrayBufferObject::MaxBufferByteLength);
+  MOZ_RELEASE_ASSERT(memory.initial <=
+                     ArrayBufferObject::maxBufferByteLength());
 
   if (memory.shared == wasm::Shareable::True) {
     if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
@@ -983,7 +984,7 @@ inline size_t ArrayBufferObject::associatedBytes() const {
 }
 
 void ArrayBufferObject::setByteLength(BufferSize length) {
-  MOZ_ASSERT(length.get() <= MaxBufferByteLength);
+  MOZ_ASSERT(length.get() <= maxBufferByteLength());
   setFixedSlot(BYTE_LENGTH_SLOT, PrivateValue(length.get()));
 }
 
@@ -1041,7 +1042,7 @@ bool ArrayBufferObject::wasmGrowToSizeInPlace(
   // last fallible operation.
 
   // Note, caller must guard on limit appropriate for the memory type
-  if (newSize.get() > ArrayBufferObject::MaxBufferByteLength) {
+  if (newSize.get() > ArrayBufferObject::maxBufferByteLength()) {
     return false;
   }
 
@@ -1084,7 +1085,7 @@ bool ArrayBufferObject::wasmMovingGrowToSize(
   // unmodified and valid.
 
   // Note, caller must guard on the limit appropriate to the memory type
-  if (newSize.get() > ArrayBufferObject::MaxBufferByteLength) {
+  if (newSize.get() > ArrayBufferObject::maxBufferByteLength()) {
     return false;
   }
 
@@ -1206,7 +1207,7 @@ template <ArrayBufferObject::FillContents FillType>
 ArrayBufferObject::createBufferAndData(
     JSContext* cx, BufferSize nbytes, AutoSetNewObjectMetadata&,
     JS::Handle<JSObject*> proto /* = nullptr */) {
-  MOZ_ASSERT(nbytes.get() <= ArrayBufferObject::MaxBufferByteLength,
+  MOZ_ASSERT(nbytes.get() <= ArrayBufferObject::maxBufferByteLength(),
              "caller must validate the byte count it passes");
 
   // Try fitting the data inline with the object by repurposing fixed-slot
