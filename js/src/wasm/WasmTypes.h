@@ -50,8 +50,8 @@ namespace js {
 namespace jit {
 class JitScript;
 enum class RoundingMode;
-template <class VecT>
-class ABIArgIter;
+template <class VecT, class ABIArgGeneratorT>
+class ABIArgIterBase;
 }  // namespace jit
 
 // This is a widespread header, so lets keep out the core wasm impl types.
@@ -1311,13 +1311,13 @@ class ArgTypeVector {
   const ValTypeVector& args_;
   bool hasStackResults_;
 
-  // To allow ABIArgIter<ArgTypeVector>, we define a private length()
-  // method.  To prevent accidental errors, other users need to be
+  // To allow ABIArgIterBase<VecT, ABIArgGeneratorT>, we define a private
+  // length() method.  To prevent accidental errors, other users need to be
   // explicit and call lengthWithStackResults() or
   // lengthWithoutStackResults().
   size_t length() const { return args_.length() + size_t(hasStackResults_); }
-  friend jit::ABIArgIter<ArgTypeVector>;
-  friend jit::ABIArgIter<const ArgTypeVector>;
+  template <class VecT, class ABIArgGeneratorT>
+  friend class jit::ABIArgIterBase;
 
  public:
   ArgTypeVector(const ValTypeVector& args, StackResults stackResults)
@@ -3302,6 +3302,19 @@ class Frame {
 };
 
 static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
+
+class FrameWithTls : public Frame {
+ public:
+  TlsData* calleeTls_;
+  TlsData* callerTls_;
+
+  constexpr static uint32_t sizeWithoutFrame() {
+    return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
+  }
+};
+
+static_assert(FrameWithTls::sizeWithoutFrame() == 2 * sizeof(void*),
+              "There are only two additional slots");
 
 #if defined(JS_CODEGEN_ARM64)
 static_assert(sizeof(Frame) % 16 == 0, "frame is aligned");
