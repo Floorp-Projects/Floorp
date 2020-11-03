@@ -250,8 +250,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.7.232';
-const pdfjsBuild = '3e52098e2';
+const pdfjsVersion = '2.7.168';
+const pdfjsBuild = '8cf27494b';
 ;
 
 /***/ }),
@@ -777,8 +777,6 @@ exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.objectSize = objectSize;
-exports.objectFromEntries = objectFromEntries;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -1352,14 +1350,6 @@ function string32(value) {
   return String.fromCharCode(value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff);
 }
 
-function objectSize(obj) {
-  return Object.keys(obj).length;
-}
-
-function objectFromEntries(iterable) {
-  return Object.assign(Object.create(null), Object.fromEntries(iterable));
-}
-
 function isLittleEndian() {
   const buffer8 = new Uint8Array(4);
   buffer8[0] = 1;
@@ -1391,11 +1381,14 @@ const IsEvalSupportedCached = {
 
 };
 exports.IsEvalSupportedCached = IsEvalSupportedCached;
-const hexNumbers = [...Array(256).keys()].map(n => n.toString(16).padStart(2, "0"));
+const rgbBuf = ["rgb(", 0, ",", 0, ",", 0, ")"];
 
 class Util {
-  static makeHexColor(r, g, b) {
-    return `#${hexNumbers[r]}${hexNumbers[g]}${hexNumbers[b]}`;
+  static makeCssRgb(r, g, b) {
+    rgbBuf[1] = r;
+    rgbBuf[3] = g;
+    rgbBuf[5] = b;
+    return rgbBuf.join("");
   }
 
   static transform(m1, m2) {
@@ -1911,7 +1904,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.232',
+    apiVersion: '2.7.168',
     source: {
       data: source.data,
       url: source.url,
@@ -2124,10 +2117,6 @@ class PDFDocumentProxy {
     return this._transport.getMetadata();
   }
 
-  getMarkInfo() {
-    return this._transport.getMarkInfo();
-  }
-
   getData() {
     return this._transport.getData();
   }
@@ -2296,7 +2285,7 @@ class PDFPageProxy {
         pageIndex: this._pageIndex,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true,
-        annotationStorage: annotationStorage?.getAll() || null
+        annotationStorage: annotationStorage && annotationStorage.getAll() || null
       });
     }
 
@@ -3499,7 +3488,7 @@ class WorkerTransport {
   saveDocument(annotationStorage) {
     return this.messageHandler.sendWithPromise("SaveDocument", {
       numPages: this._numPages,
-      annotationStorage: annotationStorage?.getAll() || null,
+      annotationStorage: annotationStorage && annotationStorage.getAll() || null,
       filename: this._fullReader ? this._fullReader.filename : null
     }).finally(() => {
       if (annotationStorage) {
@@ -3580,10 +3569,6 @@ class WorkerTransport {
         contentDispositionFilename: this._fullReader ? this._fullReader.filename : null
       };
     });
-  }
-
-  getMarkInfo() {
-    return this.messageHandler.sendWithPromise("GetMarkInfo", null);
   }
 
   getStats() {
@@ -3860,9 +3845,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.232';
+const version = '2.7.168';
 exports.version = version;
-const build = '3e52098e2';
+const build = '8cf27494b';
 exports.build = build;
 
 /***/ }),
@@ -4153,7 +4138,7 @@ exports.NodeCMapReaderFactory = NodeCMapReaderFactory;
 
 /***/ }),
 /* 8 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 
@@ -4161,8 +4146,6 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.AnnotationStorage = void 0;
-
-var _util = __w_pdfjs_require__(2);
 
 class AnnotationStorage {
   constructor() {
@@ -4195,7 +4178,7 @@ class AnnotationStorage {
       return null;
     }
 
-    return (0, _util.objectFromEntries)(this._storage);
+    return Object.fromEntries(this._storage);
   }
 
   get size() {
@@ -5911,13 +5894,13 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
       this.current.patternFill = true;
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
-      const color = _util.Util.makeHexColor(r, g, b);
+      const color = _util.Util.makeCssRgb(r, g, b);
 
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
     setFillRGBColor: function CanvasGraphics_setFillRGBColor(r, g, b) {
-      const color = _util.Util.makeHexColor(r, g, b);
+      const color = _util.Util.makeCssRgb(r, g, b);
 
       this.ctx.fillStyle = color;
       this.current.fillColor = color;
@@ -6910,7 +6893,7 @@ const TilingPattern = function TilingPatternClosure() {
           break;
 
         case PaintType.UNCOLORED:
-          const cssColor = _util.Util.makeHexColor(color[0], color[1], color[2]);
+          const cssColor = _util.Util.makeCssRgb(color[0], color[1], color[2]);
 
           context.fillStyle = cssColor;
           context.strokeStyle = cssColor;
@@ -7560,7 +7543,7 @@ class Metadata {
   }
 
   getAll() {
-    return (0, _util.objectFromEntries)(this._metadataMap);
+    return Object.fromEntries(this._metadataMap);
   }
 
   has(name) {
@@ -7995,7 +7978,7 @@ class SimpleDOMNode {
 
     if (this.attributes) {
       for (const attribute of this.attributes) {
-        buffer.push(` ${attribute.name}="${(0, _util.encodeToXmlString)(attribute.value)}"`);
+        buffer.push(` ${attribute.name}=\"${(0, _util.encodeToXmlString)(attribute.value)}\"`);
       }
     }
 
@@ -8270,7 +8253,7 @@ class OptionalContentConfig {
       return null;
     }
 
-    return (0, _util.objectFromEntries)(this._groups);
+    return Object.fromEntries(this._groups);
   }
 
   getGroup(id) {
@@ -9255,7 +9238,7 @@ class AnnotationElement {
       }
 
       if (data.color) {
-        container.style.borderColor = _util.Util.makeHexColor(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
+        container.style.borderColor = _util.Util.makeCssRgb(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
       } else {
         container.style.borderWidth = 0;
       }
@@ -9340,7 +9323,7 @@ class LinkAnnotationElement extends AnnotationElement {
       return false;
     };
 
-    if (destination || destination === "") {
+    if (destination) {
       link.className = "internalLink";
     }
   }
@@ -9422,44 +9405,12 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         element.setAttribute("value", textContent);
       }
 
-      element.setAttribute("id", id);
       element.addEventListener("input", function (event) {
         storage.setValue(id, event.target.value);
       });
       element.addEventListener("blur", function (event) {
         event.target.setSelectionRange(0, 0);
       });
-
-      if (this.data.actions) {
-        element.addEventListener("updateFromSandbox", function (event) {
-          const data = event.detail;
-
-          if ("value" in data) {
-            event.target.value = event.detail.value;
-          } else if ("focus" in data) {
-            event.target.focus({
-              preventScroll: false
-            });
-          }
-        });
-
-        for (const eventType of Object.keys(this.data.actions)) {
-          switch (eventType) {
-            case "Format":
-              element.addEventListener("blur", function (event) {
-                window.dispatchEvent(new CustomEvent("dispatchEventInSandbox", {
-                  detail: {
-                    id,
-                    name: "Format",
-                    value: event.target.value
-                  }
-                }));
-              });
-              break;
-          }
-        }
-      }
-
       element.disabled = this.data.readOnly;
       element.name = this.data.fieldName;
 
@@ -9610,7 +9561,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = "choiceWidgetAnnotation";
     const storage = this.annotationStorage;
     const id = this.data.id;
-    storage.getOrCreateValue(id, this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : undefined);
+    storage.getOrCreateValue(id, this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : null);
     const selectElement = document.createElement("select");
     selectElement.disabled = this.data.readOnly;
     selectElement.name = this.data.fieldName;
@@ -9713,7 +9664,7 @@ class PopupElement {
       const r = BACKGROUND_ENLIGHT * (255 - color[0]) + color[0];
       const g = BACKGROUND_ENLIGHT * (255 - color[1]) + color[1];
       const b = BACKGROUND_ENLIGHT * (255 - color[2]) + color[2];
-      popup.style.backgroundColor = _util.Util.makeHexColor(r | 0, g | 0, b | 0);
+      popup.style.backgroundColor = _util.Util.makeCssRgb(r | 0, g | 0, b | 0);
     }
 
     const title = document.createElement("h1");
