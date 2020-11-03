@@ -1671,6 +1671,17 @@
     "description": "Decoder of AVIF image",
     "bug_numbers": [1670827]
   },
+  "AVIF_YUV_COLOR_SPACE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": ["BT601", "BT709", "BT2020", "identity", "unknown"],
+    "description": "YUV color space of AVIF image",
+    "bug_numbers": [1670827]
+  },
   "KEYPRESS_PRESENT_LATENCY": {
     "record_in_processes": [ "all" ],
     "products": ["firefox", "fennec", "geckoview_streaming"],
