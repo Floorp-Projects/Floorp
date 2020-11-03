@@ -22,11 +22,17 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace image {
 
+using Telemetry::LABELS_AVIF_BIT_DEPTH;
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
 using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
+
+static const LABELS_AVIF_BIT_DEPTH gColorDepthLabel[] = {
+    LABELS_AVIF_BIT_DEPTH::color_8, LABELS_AVIF_BIT_DEPTH::color_10,
+    LABELS_AVIF_BIT_DEPTH::color_12, LABELS_AVIF_BIT_DEPTH::color_16,
+    LABELS_AVIF_BIT_DEPTH::unknown};
 
 static const LABELS_AVIF_YUV_COLOR_SPACE gColorSpaceLabel[static_cast<size_t>(
     gfx::YUVColorSpace::_NUM_COLORSPACE)] = {
@@ -526,8 +532,12 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     return AsVariant(NonDecoderResult::MetadataOk);
   }
 
+  // These data must be recorded after metadata has been decoded
+  // (IsMetadataDecode()=false) or else they would be double-counted.
   AccumulateCategorical(
       gColorSpaceLabel[static_cast<size_t>(decodedData.mYUVColorSpace)]);
+  AccumulateCategorical(
+      gColorDepthLabel[static_cast<size_t>(decodedData.mColorDepth)]);
 
   gfx::SurfaceFormat format =
       hasAlpha ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
