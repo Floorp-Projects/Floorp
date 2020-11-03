@@ -222,110 +222,93 @@ add_task(async function test_getAllBranches_Failure() {
  * #on
  * #off
  */
-add_task(async function test_event_updates_content() {
+add_task(async function test_addExperiment_eventEmit_add() {
   const sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  const expected = ExperimentFakes.experiment("foo");
-  const updateEventCbStub = sandbox.stub();
+  const slugStub = sandbox.stub();
+  const featureStub = sandbox.stub();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const store = ExperimentFakes.store();
+  sandbox.stub(ExperimentAPI, "_store").get(() => store);
 
-  // Setup ExperimentManager and child store for ExperimentAPI
-  await manager.onStartup();
-  sandbox.stub(ExperimentAPI, "_store").get(() => ExperimentFakes.childStore());
+  await store.init();
+  await ExperimentAPI.ready();
 
-  // Set update cb
-  ExperimentAPI.on("child-store-update:foo", updateEventCbStub);
+  ExperimentAPI.on("update", { slug: "foo" }, slugStub);
+  ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
 
-  // Add some data
-  manager.store.addExperiment(expected);
+  store.addExperiment(experiment);
 
-  // Wait to sync
-  await TestUtils.waitForCondition(
-    () => ExperimentAPI.getExperiment({ slug: "foo" }),
-    "Wait for child to sync"
-  );
-
-  let baselineCallCount = updateEventCbStub.callCount;
-
-  // Trigger an update
-  manager.store.updateExperiment("foo", { active: false });
-
-  // Wait for update to child store
-  await TestUtils.waitForCondition(
-    () => updateEventCbStub.callCount === baselineCallCount + 1,
-    "An `update` event was not sent"
-  );
-
-  // Remove the update listener
-  ExperimentAPI.off("child-store-update:foo", updateEventCbStub);
-  // Trigger another change
-  manager.store.updateExperiment("foo", { active: true });
-
-  const [, cbExperimentValue] = updateEventCbStub.firstCall.args;
-
-  Assert.deepEqual(
-    expected.slug,
-    cbExperimentValue.slug,
-    "should return the updated experiment"
-  );
-
-  Assert.equal(
-    updateEventCbStub.callCount,
-    baselineCallCount + 1,
-    "Should only have seen 1 update"
-  );
-
-  sandbox.restore();
+  Assert.equal(slugStub.callCount, 1);
+  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(featureStub.callCount, 1);
+  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
 });
 
-/**
- * #on
- * #off
- */
-add_task(async function test_event_updates_main() {
+add_task(async function test_updateExperiment_eventEmit_add_and_update() {
   const sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  const expected = ExperimentFakes.experiment("foo");
-  const updateEventCbStub = sandbox.stub();
+  const slugStub = sandbox.stub();
+  const featureStub = sandbox.stub();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const store = ExperimentFakes.store();
+  sandbox.stub(ExperimentAPI, "_store").get(() => store);
 
-  // Setup ExperimentManager and child store for ExperimentAPI
-  await manager.onStartup();
-  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  await store.init();
+  await ExperimentAPI.ready();
 
-  // Set update cb
-  ExperimentAPI.on("parent-store-update:foo", updateEventCbStub);
+  store.addExperiment(experiment);
 
-  // Add some data
-  manager.store.addExperiment(expected);
+  ExperimentAPI.on("update", { slug: "foo" }, slugStub);
+  ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
 
-  let baselineCallCount = updateEventCbStub.callCount;
+  store.updateExperiment(experiment.slug, experiment);
 
-  // Trigger an update
-  manager.store.updateExperiment("foo", { active: false });
-
-  // Wait for update to child store
   await TestUtils.waitForCondition(
-    () => updateEventCbStub.callCount === baselineCallCount + 1,
-    "An `update` event was not sent"
+    () => slugStub.callCount == 2,
+    "Wait for `on` method to notify callback about the `add` event."
   );
+  // Called twice, once when attaching the event listener (because there is an
+  // existing experiment with that name) and 2nd time for the update event
+  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(featureStub.callCount, 2, "Called twice for feature");
+  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
+});
 
-  // Remove the update listener
-  ExperimentAPI.off("parent-store-update:foo", updateEventCbStub);
-  // Trigger another change
-  manager.store.updateExperiment("foo", { active: true });
+add_task(async function test_updateExperiment_eventEmit_off() {
+  const sandbox = sinon.createSandbox();
+  const slugStub = sandbox.stub();
+  const featureStub = sandbox.stub();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+  const store = ExperimentFakes.store();
+  sandbox.stub(ExperimentAPI, "_store").get(() => store);
 
-  const [, cbExperimentValue] = updateEventCbStub.firstCall.args;
+  await store.init();
+  await ExperimentAPI.ready();
 
-  Assert.deepEqual(
-    expected.slug,
-    cbExperimentValue.slug,
-    "should return the updated experiment"
-  );
+  ExperimentAPI.on("update", { slug: "foo" }, slugStub);
+  ExperimentAPI.on("update", { featureId: "purple" }, featureStub);
 
-  Assert.equal(
-    updateEventCbStub.callCount,
-    baselineCallCount + 1,
-    "Should only have seen 1 update"
-  );
+  store.addExperiment(experiment);
 
-  sandbox.restore();
+  ExperimentAPI.off("update:foo", slugStub);
+  ExperimentAPI.off("update:purple", featureStub);
+
+  store.updateExperiment(experiment.slug, experiment);
+
+  Assert.equal(slugStub.callCount, 1, "Called only once before `off`");
+  Assert.equal(featureStub.callCount, 1, "Called only once before `off`");
 });

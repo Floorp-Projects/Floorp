@@ -25,54 +25,49 @@ add_task(async function test_usageBeforeInitialization() {
   );
 });
 
-add_task(async function test_addExperiment_eventEmit() {
+add_task(async function test_event_add_experiment() {
+  const sandbox = sinon.createSandbox();
   const store = ExperimentFakes.store();
-  const slugStub = sinon.stub();
-  const featureStub = sinon.stub();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "purple", enabled: true },
-    },
-  });
+  const expected = ExperimentFakes.experiment("foo");
+  const updateEventCbStub = sandbox.stub();
 
+  // Setup ExperimentManager and child store for ExperimentAPI
   await store.init();
 
-  store.on("update:foo", slugStub);
-  store.on("update:purple", featureStub);
+  // Set update cb
+  store.on("update:foo", updateEventCbStub);
 
-  store.addExperiment(experiment);
+  // Add some data
+  store.addExperiment(expected);
 
-  Assert.equal(slugStub.callCount, 1);
-  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
-  Assert.equal(featureStub.callCount, 1);
-  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(updateEventCbStub.callCount, 1, "Called once for add");
 });
 
-add_task(async function test_updateExperiment_eventEmit() {
+add_task(async function test_event_updates_main() {
+  const sandbox = sinon.createSandbox();
   const store = ExperimentFakes.store();
-  const slugStub = sinon.stub();
-  const featureStub = sinon.stub();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "purple", enabled: true },
-    },
-  });
+  const experiment = ExperimentFakes.experiment("foo");
+  const updateEventCbStub = sandbox.stub();
 
+  // Setup ExperimentManager and child store for ExperimentAPI
   await store.init();
 
+  // Set update cb
+  store.on("update:aboutwelcome", updateEventCbStub);
+
   store.addExperiment(experiment);
+  store.updateExperiment("foo", { active: false });
 
-  store.on("update:foo", slugStub);
-  store.on("update:purple", featureStub);
-
-  store.updateExperiment(experiment.slug, experiment);
-
-  Assert.equal(slugStub.callCount, 1);
-  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
-  Assert.equal(featureStub.callCount, 1);
-  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(
+    updateEventCbStub.callCount,
+    2,
+    "Should be called twice: add, update"
+  );
+  Assert.equal(
+    updateEventCbStub.secondCall.args[1].active,
+    false,
+    "Should be called with updated experiment status"
+  );
 });
 
 add_task(async function test_getExperimentForGroup() {

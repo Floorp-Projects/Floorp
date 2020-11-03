@@ -62,12 +62,12 @@ const ExperimentFakes = {
   store() {
     return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
   },
-  waitForExperimentUpdate(ExperimentAPI, slug) {
-    if (!slug) {
+  waitForExperimentUpdate(ExperimentAPI, options) {
+    if (!options) {
       throw new Error("Must specify an expected recipe update");
     }
 
-    return new Promise(resolve => ExperimentAPI.on(`update:${slug}`, resolve));
+    return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
   },
   childStore() {
     return new ExperimentStore("FakeStore", { isParent: false });
