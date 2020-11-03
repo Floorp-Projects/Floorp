@@ -1170,6 +1170,8 @@
     <string name="sign_in_with_camera">Connectatz-vos amb la camèra</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Utilizar una adreça electronica allòc</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Cap de compte ? <u>Creatz-ne un</u> per sincronizar Firefox entre periferics.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox quitarà de sincronizar vòstre compte mas escafarà pas las donadas de navegacion d’aqueste periferic.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->

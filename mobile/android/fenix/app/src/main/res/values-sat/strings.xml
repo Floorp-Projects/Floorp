@@ -213,6 +213,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">ᱱᱟᱶᱟ Firefox ᱴᱮᱵ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮᱸ</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ᱥᱮᱸᱫᱽᱨᱟ</string>
     <!-- Text preview for larger sized widgets -->
@@ -625,6 +627,8 @@
     <string name="collection_rename">ᱛᱩᱢᱟᱹᱞ ᱫᱚᱦᱲᱟ ᱧᱩᱛᱩᱢ ᱢᱮ</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ᱡᱷᱤᱜ ᱴᱮᱵ ᱠᱚ</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">ᱛᱩᱢᱟᱹᱞ ᱧᱩᱛᱩᱢ</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">ᱚᱪᱚᱜ ᱢᱮ</string>
     <!-- Text for the menu button to delete a top site from history -->
@@ -840,6 +844,8 @@
     <string name="collections_header">ᱛᱩᱢᱟᱹᱞ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱱᱭᱩ</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">ᱡᱤᱱᱤᱥ ᱠᱚ ᱡᱟᱣᱨᱟᱭ ᱢᱮ ᱚᱠᱟ ᱟᱢ ᱞᱟᱹᱜᱤᱫ ᱴᱷᱤᱠ ᱟ ᱾ \nᱞᱚᱜᱚᱱ ᱧᱟᱢ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱥᱮᱸᱫᱽᱨᱟ, ᱥᱟᱭᱤᱴ ᱟᱨ ᱴᱮᱵ ᱠᱚ ᱫᱳᱞ ᱠᱟᱜ ᱢᱮ ᱾</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ᱴᱮᱵ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -982,6 +988,8 @@
     <string name="full_screen_notification">ᱯᱩᱨᱟᱹ ᱠᱨᱤᱱ ᱢᱳᱰ ᱵᱚᱞᱚᱱ ᱠᱟᱱᱟᱢ</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL ᱱᱚᱠᱚᱞ ᱮᱱᱟ</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">ᱱᱚᱶᱟ ᱫᱚ ᱡᱮᱢᱚᱱ ᱟᱲᱟ ᱠᱟᱱᱟ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱥᱟᱡᱟᱣ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱠᱟᱱᱟ ᱚᱠᱟᱞᱠᱟᱛᱮ ᱟᱲᱟ ᱞᱚ ᱢᱟᱨᱟᱝ ᱟᱨ ᱵᱟᱝ ᱠᱟᱹᱴᱤᱡ ᱞᱮᱠᱷᱟᱱ ᱚᱠᱟᱞᱠᱟ ᱧᱮᱞᱚᱜᱼᱟ ᱾</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">ᱣᱮᱵᱥᱟᱭᱤᱴ ᱨᱮ ᱚᱱᱚᱞ ᱠᱚ ᱢᱟᱨᱟᱝ ᱵᱟᱝᱠᱷᱟᱱ ᱦᱩᱰᱤᱧ ᱠᱚᱨᱟᱣ ᱢᱮ</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1413,6 +1421,8 @@
     <string name="logins_biometric_prompt_message_pin">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">ᱥᱟᱱᱟᱢ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱨᱮ ᱦᱩᱰᱩᱧ ᱢᱮ</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">ᱯᱤᱸᱪ ᱟᱨ ᱡᱩᱻᱢ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮᱸ, ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱜᱮᱥᱪᱚᱨ ᱢᱟᱱᱟ ᱨᱮᱦᱚᱸ ᱱᱚᱶᱟ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮᱸ᱾</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">ᱧᱩᱛᱩᱢ (A-Z)</string>
 
@@ -1575,6 +1585,9 @@
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s ᱠᱷᱚᱱ ᱡᱟᱹᱥᱛᱤ ᱡᱤᱱᱤᱥ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">ᱟᱨᱦᱚᱸ ᱵᱤᱵᱨᱚᱬ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱰᱮ ᱚᱛᱟᱭ ᱢᱮᱸ</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">ᱚᱱᱟ ᱡᱤᱱᱤᱥ ᱠᱚ ᱡᱟᱨᱣᱟᱭ ᱢᱮ ᱡᱟ ᱟᱢ ᱢᱮᱴᱚᱨ ᱢᱤᱭᱟ</string>

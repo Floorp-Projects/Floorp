@@ -351,6 +351,20 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notifications</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Collection de modules personnalisée</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">OK</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Annuler</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Nom de la collection</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Propriétaire de la collection (identifiant utilisateur)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Collection de modules complémentaires modifiée. Fermeture de l’application pour appliquer les modifications…</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchroniser maintenant</string>
@@ -541,6 +555,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Onglets</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Affichage des onglets</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Liste</string>
     <!-- Option for a grid tab view -->
@@ -663,6 +679,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Supprimer %1$d éléments</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Aujourd’hui</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Hier</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Dernières 24 heures</string>
     <!-- Text for the header that groups the history the past 7 days -->
