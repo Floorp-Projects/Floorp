@@ -489,6 +489,7 @@ struct TilePreUpdateContext {
     /// The fractional position of the picture cache, which may
     /// require invalidation of all tiles.
     fract_offset: PictureVector2D,
+    device_fract_offset: DeviceVector2D,
 
     /// The optional background color of the picture cache instance
     background_color: Option<ColorF>,
@@ -796,8 +797,8 @@ pub enum PrimitiveCompareResultDetail {
 pub enum InvalidationReason {
     /// The fractional offset changed
     FractionalOffset {
-        old: PictureVector2D,
-        new: PictureVector2D,
+        old: DeviceVector2D,
+        new: DeviceVector2D,
     },
     /// The background color changed
     BackgroundColor {
@@ -837,7 +838,7 @@ pub enum InvalidationReason {
 pub struct TileSerializer {
     pub rect: PictureRect,
     pub current_descriptor: TileDescriptor,
-    pub fract_offset: PictureVector2D,
+    pub device_fract_offset: DeviceVector2D,
     pub id: TileId,
     pub root: TileNode,
     pub background_color: Option<ColorF>,
@@ -889,7 +890,7 @@ pub struct Tile {
     /// The current fractional offset of the cache transform root. If this changes,
     /// all tiles need to be invalidated and redrawn, since snapping differences are
     /// likely to occur.
-    fract_offset: PictureVector2D,
+    device_fract_offset: DeviceVector2D,
     /// The tile id is stable between display lists and / or frames,
     /// if the tile is retained. Useful for debugging tile evictions.
     pub id: TileId,
@@ -935,7 +936,7 @@ impl Tile {
             prev_descriptor: TileDescriptor::new(),
             is_valid: false,
             is_visible: false,
-            fract_offset: PictureVector2D::zero(),
+            device_fract_offset: DeviceVector2D::zero(),
             id,
             is_opaque: false,
             root: TileNode::new_leaf(Vec::new()),
@@ -953,7 +954,7 @@ impl Tile {
     fn print(&self, pt: &mut dyn PrintTreePrinter) {
         pt.new_level(format!("Tile {:?}", self.id));
         pt.add_item(format!("local_tile_rect: {:?}", self.local_tile_rect));
-        pt.add_item(format!("fract_offset: {:?}", self.fract_offset));
+        pt.add_item(format!("device_fract_offset: {:?}", self.device_fract_offset));
         pt.add_item(format!("background_color: {:?}", self.background_color));
         pt.add_item(format!("invalidation_reason: {:?}", self.invalidation_reason));
         self.current_descriptor.print(pt);
@@ -1090,15 +1091,16 @@ impl Tile {
             return;
         }
 
-        // Determine if the fractional offset of the transform is different this frame
-        // from the currently cached tile set.
-        let fract_changed = (self.fract_offset.x - ctx.fract_offset.x).abs() > 0.01 ||
-                            (self.fract_offset.y - ctx.fract_offset.y).abs() > 0.01;
+        // We may need to rerender if glyph subpixel positions have changed. Note
+        // that we update the tile fract offset itself after we have completed
+        // invalidation. This allows for other whole tile invalidation cases to
+        // update the fract offset appropriately.
+        let fract_delta = self.device_fract_offset - ctx.device_fract_offset;
+        let fract_changed = fract_delta.x.abs() > 0.01 || fract_delta.y.abs() > 0.01;
         if fract_changed {
             self.invalidate(None, InvalidationReason::FractionalOffset {
-                                    old: self.fract_offset,
-                                    new: ctx.fract_offset });
-            self.fract_offset = ctx.fract_offset;
+                                    old: self.device_fract_offset,
+                                    new: ctx.device_fract_offset });
         }
 
         if ctx.background_color != self.background_color {
@@ -2308,6 +2310,8 @@ pub struct TileCacheInstance {
     frames_until_size_eval: usize,
     /// The current fractional offset of the cached picture
     fract_offset: PictureVector2D,
+    /// The current device fractional offset of the cached picture
+    device_fract_offset: DeviceVector2D,
     /// For DirectComposition, virtual surfaces don't support negative coordinates. However,
     /// picture cache tile coordinates can be negative. To handle this, we apply an offset
     /// to each tile in DirectComposition. We want to change this as little as possible,
@@ -2383,6 +2387,7 @@ impl TileCacheInstance {
             current_tile_size: DeviceIntSize::zero(),
             frames_until_size_eval: 0,
             fract_offset: PictureVector2D::zero(),
+            device_fract_offset: DeviceVector2D::zero(),
             // Default to centering the virtual offset in the middle of the DC virtual surface
             virtual_offset: DeviceIntPoint::new(
                 params.virtual_surface_size / 2,
@@ -2632,6 +2637,7 @@ impl TileCacheInstance {
         let device_origin = world_origin * frame_context.global_device_pixel_scale;
         let desired_device_origin = device_origin.round();
         self.device_position = desired_device_origin;
+        self.device_fract_offset = desired_device_origin - device_origin;
 
         // Unmap from device space to world space rect
         let ref_world_rect = WorldRect::new(
@@ -2639,17 +2645,13 @@ impl TileCacheInstance {
             WorldSize::new(1.0, 1.0),
         );
 
-        // Unmap from world space to picture space
-        let ref_point = pic_to_world_mapper
+        // Unmap from world space to picture space; this should be the fractional offset
+        // required in picture space to align in device space
+        self.fract_offset = pic_to_world_mapper
             .unmap(&ref_world_rect)
             .expect("bug: unable to unmap ref world rect")
-            .origin;
-
-        // Extract the fractional offset required in picture space to align in device space
-        self.fract_offset = PictureVector2D::new(
-            ref_point.x.fract(),
-            ref_point.y.fract(),
-        );
+            .origin
+            .to_vector();
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -2825,6 +2827,7 @@ impl TileCacheInstance {
         let ctx = TilePreUpdateContext {
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
+            device_fract_offset: self.device_fract_offset,
             background_color: self.background_color,
             global_screen_world_rect: frame_context.global_screen_world_rect,
             tile_size: self.tile_size,
@@ -5460,6 +5463,12 @@ impl PicturePrimitive {
                                 );
                             }
 
+                            // If the entire tile valid region is dirty, we can update the fract offset
+                            // at which the tile was rendered.
+                            if tile.device_dirty_rect.contains_rect(&tile.device_valid_rect) {
+                                tile.device_fract_offset = tile_cache.device_fract_offset;
+                            }
+
                             // Now that the tile is valid, reset the dirty rect.
                             tile.local_dirty_rect = PictureRect::zero();
                             tile.is_valid = true;
@@ -5597,7 +5606,7 @@ impl PicturePrimitive {
                             tile_cache_tiny.tiles.insert(*key, TileSerializer {
                                 rect: tile.local_tile_rect,
                                 current_descriptor: tile.current_descriptor.clone(),
-                                fract_offset: tile.fract_offset,
+                                device_fract_offset: tile.device_fract_offset,
                                 id: tile.id,
                                 root: tile.root.clone(),
                                 background_color: tile.background_color,
