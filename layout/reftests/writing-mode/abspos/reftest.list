@@ -22,3 +22,6 @@ fails == 1183431-orthogonal-modes-6a.html 1183431-orthogonal-modes-6-ref.html # 
 == 1183431-orthogonal-modes-8a.html 1183431-orthogonal-modes-8-ref.html
 == 1183431-orthogonal-modes-8b.html 1183431-orthogonal-modes-8-ref.html
 == 1183431-orthogonal-modes-8c.html 1183431-orthogonal-modes-8-ref.html
+== 1183431-orthogonal-modes-9a.html 1183431-orthogonal-modes-9-ref.html
+== 1183431-orthogonal-modes-9b.html 1183431-orthogonal-modes-9-ref.html
+== 1183431-orthogonal-modes-9c.html 1183431-orthogonal-modes-9-ref.html
