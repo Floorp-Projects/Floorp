@@ -231,8 +231,9 @@ nscoord SizeComputationInput::ComputeISizeValue(
     nscoord aContainingBlockISize, StyleBoxSizing aBoxSizing,
     const SizeOrMaxSize& aSize) const {
   WritingMode wm = GetWritingMode();
-  nscoord inside = 0, outside = ComputedLogicalBorderPadding().IStartEnd(wm) +
-                                ComputedLogicalMargin().IStartEnd(wm);
+  nscoord inside = 0;
+  nscoord outside = ComputedLogicalBorderPadding().IStartEnd(wm) +
+                    ComputedLogicalMargin(wm).IStartEnd(wm);
   if (aBoxSizing == StyleBoxSizing::Border) {
     inside = ComputedLogicalBorderPadding().IStartEnd(wm);
   }
@@ -1618,7 +1619,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     sizeResult = mFrame->ComputeSize(
         mRenderingContext, wm, cbSize.ConvertTo(wm, cbwm),
         cbSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
-        ComputedLogicalMargin().Size(wm) + ComputedLogicalOffsets().Size(wm),
+        ComputedLogicalMargin(wm).Size(wm) + ComputedLogicalOffsets().Size(wm),
         ComputedLogicalBorderPadding().Size(wm), mComputeSizeFlags);
     ComputedISize() = sizeResult.mLogicalSize.ISize(wm);
     ComputedBSize() = sizeResult.mLogicalSize.BSize(wm);
@@ -1637,7 +1638,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   // XXX Now that we have ComputeSize, can we condense many of the
   // branches off of widthIsAuto?
 
-  LogicalMargin margin = ComputedLogicalMargin().ConvertTo(cbwm, wm);
+  LogicalMargin margin = ComputedLogicalMargin(cbwm);
   const LogicalMargin borderPadding =
       ComputedLogicalBorderPadding().ConvertTo(cbwm, wm);
 
@@ -2339,7 +2340,7 @@ void ReflowInput::InitConstraints(
 
       auto size = mFrame->ComputeSize(
           mRenderingContext, wm, cbSize, AvailableISize(),
-          ComputedLogicalMargin().Size(wm),
+          ComputedLogicalMargin(wm).Size(wm),
           ComputedLogicalBorderPadding().Size(wm), mComputeSizeFlags);
 
       ComputedISize() = size.mLogicalSize.ISize(wm);
@@ -2545,7 +2546,7 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
                        "result from very large sizes, not attempts at "
                        "intrinsic inline-size calculation");
 
-  LogicalMargin margin = ComputedLogicalMargin().ConvertTo(cbWM, mWritingMode);
+  LogicalMargin margin = ComputedLogicalMargin(cbWM);
   LogicalMargin borderPadding =
       ComputedLogicalBorderPadding().ConvertTo(cbWM, mWritingMode);
   nscoord sum = margin.IStartEnd(cbWM) + borderPadding.IStartEnd(cbWM) +
@@ -2784,7 +2785,7 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
   nscoord marginAdjustment = FontSizeInflationListMarginAdjustment(mFrame);
 
   if (marginAdjustment > 0) {
-    LogicalMargin m = ComputedLogicalMargin();
+    LogicalMargin m = ComputedLogicalMargin(mWritingMode);
     m.IStart(mWritingMode) += marginAdjustment;
     SetComputedLogicalMargin(mWritingMode, m);
   }

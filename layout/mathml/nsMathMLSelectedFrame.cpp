@@ -93,7 +93,7 @@ nsIFrame::SizeComputationResult nsMathMLSelectedFrame::ComputeSize(
                                      availableISize);
     auto size = childFrame->ComputeSize(
         aRenderingContext, aWM, cbSize, availableISize,
-        offsetState.ComputedLogicalMargin().Size(aWM),
+        offsetState.ComputedLogicalMargin(aWM).Size(aWM),
         offsetState.ComputedLogicalBorderPadding().Size(aWM), aFlags);
     return {size.mLogicalSize +
                 offsetState.ComputedLogicalBorderPadding().Size(aWM),
