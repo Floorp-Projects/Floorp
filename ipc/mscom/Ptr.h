@@ -37,6 +37,7 @@ struct MainThreadRelease {
     if (!aPtr) {
       return;
     }
+
     if (NS_IsMainThread()) {
       aPtr->Release();
       return;
@@ -56,7 +57,8 @@ struct MTADelete {
       return;
     }
 
-    EnsureMTA::AsyncOperation([aPtr]() -> void { delete aPtr; });
+    EnsureMTA::AsyncOperation(
+        [ptr = std::move(aPtr)]() -> void { delete ptr; });
   }
 };
 
@@ -67,11 +69,8 @@ struct MTARelease {
       return;
     }
 
-    // Static analysis doesn't recognize that, even though aPtr escapes the
-    // current scope, we are in effect moving our strong ref into the lambda.
-    void* ptr = aPtr;
     EnsureMTA::AsyncOperation(
-        [ptr]() -> void { reinterpret_cast<T*>(ptr)->Release(); });
+        [ptr = std::move(aPtr)]() -> void { ptr->Release(); });
   }
 };
 
@@ -88,11 +87,8 @@ struct MTAReleaseInChildProcess {
       return;
     }
 
-    // Static analysis doesn't recognize that, even though aPtr escapes the
-    // current scope, we are in effect moving our strong ref into the lambda.
-    void* ptr = aPtr;
     EnsureMTA::AsyncOperation(
-        [ptr]() -> void { reinterpret_cast<T*>(ptr)->Release(); });
+        [ptr = std::move(aPtr)]() -> void { ptr->Release(); });
   }
 };
 
@@ -108,14 +104,10 @@ struct PreservedStreamDeleter {
       return;
     }
 
-    // Static analysis doesn't recognize that, even though aPtr escapes the
-    // current scope, we are in effect moving our strong ref into the lambda.
-    void* ptr = aPtr;
-    auto cleanup = [ptr]() -> void {
-      DebugOnly<HRESULT> hr =
-          ::CoReleaseMarshalData(reinterpret_cast<LPSTREAM>(ptr));
+    auto cleanup = [ptr = std::move(aPtr)]() -> void {
+      DebugOnly<HRESULT> hr = ::CoReleaseMarshalData(ptr);
       MOZ_ASSERT(SUCCEEDED(hr));
-      reinterpret_cast<LPSTREAM>(ptr)->Release();
+      ptr->Release();
     };
 
     if (XRE_IsParentProcess()) {
@@ -124,7 +116,7 @@ struct PreservedStreamDeleter {
       return;
     }
 
-    EnsureMTA::AsyncOperation(cleanup);
+    EnsureMTA::AsyncOperation(std::move(cleanup));
   }
 };
 
@@ -192,6 +184,7 @@ inline STAUniquePtr<T> ToSTAUniquePtr(T* aRawPtr) {
   if (aRawPtr) {
     aRawPtr->AddRef();
   }
+
   return STAUniquePtr<T>(aRawPtr);
 }
 
@@ -219,6 +212,7 @@ inline MTAUniquePtr<T> ToMTAUniquePtr(T* aRawPtr) {
   if (aRawPtr) {
     aRawPtr->AddRef();
   }
+
   return MTAUniquePtr<T>(aRawPtr);
 }
 
@@ -245,6 +239,7 @@ inline ProxyUniquePtr<T> ToProxyUniquePtr(T* aRawPtr) {
   if (aRawPtr) {
     aRawPtr->AddRef();
   }
+
   return ProxyUniquePtr<T>(aRawPtr);
 }
 
