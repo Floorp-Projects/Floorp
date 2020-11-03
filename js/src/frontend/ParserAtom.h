@@ -146,9 +146,9 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   ParserAtomEntry(ParserAtomEntry&& other) = delete;
 
   template <typename CharT, typename SeqCharT>
-  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocate(
-      JSContext* cx, InflatedChar16Sequence<SeqCharT> seq, uint32_t length,
-      HashNumber hash);
+  static JS::Result<ParserAtomEntry*, OOM> allocate(
+      JSContext* cx, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
+      uint32_t length, HashNumber hash);
 
   ParserAtom* asAtom() { return reinterpret_cast<ParserAtom*>(this); }
   const ParserAtom* asAtom() const {
@@ -349,9 +349,8 @@ struct ParserAtomLookupHasher {
   using Lookup = ParserAtomLookup;
 
   static inline HashNumber hash(const Lookup& l) { return l.hash(); }
-  static inline bool match(const UniquePtr<ParserAtomEntry>& entry,
-                           const Lookup& l) {
-    return l.equalsEntry(entry.get());
+  static inline bool match(const ParserAtomEntry* entry, const Lookup& l) {
+    return l.equalsEntry(entry);
   }
 };
 
@@ -466,10 +465,14 @@ class WellKnownParserAtoms {
   // generated into constexpr tables.
   static constexpr WellKnownParserAtoms_ROM rom_ = {};
 
+  // This holds the entries of known atoms.
+  // NOTE: These should be migrated to the ROM instead.
+  LifoAlloc alloc_;
+
   // Common property and prototype names are tracked in a hash table. This table
   // is does not key for any items already in a direct-indexing table above.
-  using EntrySet = HashSet<UniquePtr<ParserAtomEntry>, ParserAtomLookupHasher,
-                           js::SystemAllocPolicy>;
+  using EntrySet =
+      HashSet<ParserAtomEntry*, ParserAtomLookupHasher, js::SystemAllocPolicy>;
   EntrySet wellKnownSet_;
 
   bool initTinyStringAlias(JSContext* cx, const ParserName** name,
@@ -478,7 +481,7 @@ class WellKnownParserAtoms {
                   WellKnownAtomId atomId);
 
  public:
-  WellKnownParserAtoms() = default;
+  WellKnownParserAtoms() : alloc_(512) {}
 
   bool init(JSContext* cx);
 
@@ -501,20 +504,27 @@ class WellKnownParserAtoms {
  */
 class ParserAtomsTable {
  private:
-  using EntrySet = HashSet<UniquePtr<ParserAtomEntry>, ParserAtomLookupHasher,
-                           js::SystemAllocPolicy>;
-  EntrySet entrySet_;
   const WellKnownParserAtoms& wellKnownTable_;
 
+  LifoAlloc* alloc_;
+
+  // The ParserAtomEntry are owned by the LifoAlloc.
+  using EntrySet =
+      HashSet<ParserAtomEntry*, ParserAtomLookupHasher, js::SystemAllocPolicy>;
+  EntrySet entrySet_;
+
  public:
-  explicit ParserAtomsTable(JSRuntime* rt);
+  explicit ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc);
+  ParserAtomsTable(ParserAtomsTable&&) = default;
+
+  void updateLifoAlloc(LifoAlloc& alloc) { alloc_ = &alloc; }
 
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
   JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
                                               EntrySet::AddPtr& addPtr,
-                                              UniquePtr<ParserAtomEntry> entry);
+                                              ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
       JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
