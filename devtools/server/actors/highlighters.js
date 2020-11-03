@@ -351,6 +351,7 @@ HighlighterEnvironment.prototype = {
   },
 };
 
+register("AccessibleHighlighter", "accessible");
 register("BoxModelHighlighter", "box-model");
 register("CssGridHighlighter", "css-grid");
 register("CssTransformHighlighter", "css-transform");
@@ -363,3 +364,4 @@ register("PausedDebuggerOverlay", "paused-debugger");
 register("RulersHighlighter", "rulers");
 register("SelectorHighlighter", "selector");
 register("ShapesHighlighter", "shapes");
+register("TabbingOrderHighlighter", "tabbing-order");

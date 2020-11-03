@@ -427,6 +427,87 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
 
     return audit;
   }
+
+  /**
+   * A helper wrapper function to show tabbing order overlay for a given target.
+   * The only additional work done is resolving domnode front from a
+   * ContentDOMReference received from a remote target.
+   *
+   * @param  {Object} startElm
+   *         domnode front to be used as the starting point for generating the
+   *         tabbing order.
+   * @param  {Number} startIndex
+   *         Starting index for the tabbing order.
+   */
+  async _showTabbingOrder(startElm, startIndex) {
+    const { contentDOMReference, index } = await super.showTabbingOrder(
+      startElm,
+      startIndex
+    );
+    let elm;
+    if (contentDOMReference) {
+      const inspectorFront = await this.targetFront.getFront("inspector");
+      elm = await inspectorFront.getNodeActorFromContentDomReference(
+        contentDOMReference
+      );
+    }
+
+    return { elm, index };
+  }
+
+  /**
+   * Show tabbing order overlay for a given target.
+   *
+   * @param  {Object} startElm
+   *         domnode front to be used as the starting point for generating the
+   *         tabbing order.
+   * @param  {Number} startIndex
+   *         Starting index for the tabbing order.
+   *
+   * @return {JSON}
+   *         Tabbing order information for the last element in the tabbing
+   *         order. It includes a domnode front and a tabbing index. If we are
+   *         at the end of the tabbing order for the top level content document,
+   *         the domnode front will be null. If focus manager discovered a
+   *         remote IFRAME, then the domnode front is for the IFRAME itself.
+   */
+  async showTabbingOrder(startElm, startIndex) {
+    let { elm: currentElm, index: currentIndex } = await this._showTabbingOrder(
+      startElm,
+      startIndex
+    );
+
+    // If no remote frames were found, currentElm will be null.
+    while (currentElm) {
+      // Safety check to ensure that the currentElm is a remote frame.
+      if (currentElm.remoteFrame) {
+        const {
+          walker: domWalkerFront,
+        } = await currentElm.targetFront.getFront("inspector");
+        const {
+          nodes: [childDocumentNodeFront],
+        } = await domWalkerFront.children(currentElm);
+        const {
+          accessibleWalkerFront,
+        } = await childDocumentNodeFront.targetFront.getFront("accessibility");
+        // Show tabbing order in the remote target, while updating the tabbing
+        // index.
+        ({ index: currentIndex } = await accessibleWalkerFront.showTabbingOrder(
+          childDocumentNodeFront,
+          currentIndex
+        ));
+      }
+
+      // Finished with the remote frame, continue in tabbing order, from the
+      // remote frame.
+      ({ elm: currentElm, index: currentIndex } = await this._showTabbingOrder(
+        currentElm,
+        currentIndex
+      ));
+    }
+
+    return { elm: currentElm, index: currentIndex };
+  }
 }
 
 class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {

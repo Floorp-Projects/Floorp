@@ -153,6 +153,17 @@ add_task(async function() {
 
   await a11yWalker.cancelPick();
 
+  info("Checking tabbing order highlighter");
+  let { elm, index } = await a11yWalker.showTabbingOrder(rootNode, 0);
+  isnot(!!elm, "No current element when at the end of the tab order");
+  is(index, 3, "Current index is correct");
+  await a11yWalker.hideTabbingOrder();
+
+  ({ elm, index } = await a11yWalker.showTabbingOrder(buttonNode, 0));
+  isnot(!!elm, "No current element when at the end of the tab order");
+  is(index, 2, "Current index is correct");
+  await a11yWalker.hideTabbingOrder();
+
   info(
     "Checking document-ready event fired by walker when top level accessible " +
       "document is recreated."
