@@ -3187,11 +3187,11 @@ CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust, /* callFromWasm = */ true);
 
-  // The TLS register is used in builtin thunks and must be set, by ABI.
+  // The TLS register is used in builtin thunks and must be set.
   if (tlsOffset) {
     loadPtr(Address(getStackPointer(), *tlsOffset + stackAdjust), WasmTlsReg);
   } else {
-    MOZ_CRASH("This can be only for an unsupported architecture.");
+    MOZ_CRASH("tlsOffset is Nothing only for unsupported abi calls.");
   }
   CodeOffset raOffset = call(
       wasm::CallSiteDesc(bytecode.offset(), wasm::CallSite::Symbolic), imm);
@@ -4109,11 +4109,6 @@ void MacroAssembler::memoryBarrierBefore(const Synchronization& sync) {
 
 void MacroAssembler::memoryBarrierAfter(const Synchronization& sync) {
   memoryBarrier(sync.barrierAfter);
-}
-
-void MacroAssembler::loadWasmTlsRegFromFrame(Register dest) {
-  loadPtr(Address(getStackPointer(), framePushed() + wasm::Frame::tlsOffset()),
-          dest);
 }
 
 void MacroAssembler::BranchGCPtr::emit(MacroAssembler& masm) {
