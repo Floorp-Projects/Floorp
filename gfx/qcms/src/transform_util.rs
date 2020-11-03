@@ -70,19 +70,13 @@ pub fn clamp_float(mut a: f32) -> f32 {
 /* value must be a value between 0 and 1 */
 //XXX: is the above a good restriction to have?
 // the output range of this functions is 0..1
-#[no_mangle]
-pub unsafe extern "C" fn lut_interp_linear(
-    mut input_value: f64,
-    mut table: *const u16,
-    mut length: i32,
-) -> f32 {
-    input_value = input_value * (length - 1) as f64;
+pub fn lut_interp_linear(mut input_value: f64, mut table: &[u16]) -> f32 {
+    input_value = input_value * (table.len() - 1) as f64;
 
     let mut upper: i32 = input_value.ceil() as i32;
     let mut lower: i32 = input_value.floor() as i32;
-    let mut value: f32 = (*table.offset(upper as isize) as i32 as f64
-        * (1.0f64 - (upper as f64 - input_value))
-        + *table.offset(lower as isize) as i32 as f64 * (upper as f64 - input_value))
+    let mut value: f32 = ((table[upper as usize] as f64) * (1. - (upper as f64 - input_value))
+        + (table[lower as usize] as f64 * (upper as f64 - input_value)))
         as f32;
     /* scale the value */
     return value * (1.0 / 65535.0);
@@ -154,11 +148,7 @@ fn compute_curve_gamma_table_type1(mut gamma_table: &mut Vec<f32>, mut gamma: u1
 #[no_mangle]
 pub unsafe fn compute_curve_gamma_table_type2(mut gamma_table: &mut Vec<f32>, mut table: &[u16]) {
     for i in 0..256 {
-        gamma_table.push(lut_interp_linear(
-            i as f64 / 255.0f64,
-            table.as_ptr(),
-            table.len() as i32,
-        ));
+        gamma_table.push(lut_interp_linear(i as f64 / 255.0f64, table));
     }
 }
 #[no_mangle]
