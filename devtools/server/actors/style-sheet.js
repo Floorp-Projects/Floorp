@@ -9,7 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { MediaRuleActor } = require("devtools/server/actors/media-rule");
 const { fetch } = require("devtools/shared/DevToolsUtils");
-const { styleSheetSpec } = require("devtools/shared/specs/stylesheets");
+const { styleSheetSpec } = require("devtools/shared/specs/style-sheet");
 const InspectorUtils = require("InspectorUtils");
 const {
   getSourcemapBaseURL,

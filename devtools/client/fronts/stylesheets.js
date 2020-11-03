@@ -8,11 +8,9 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const {
-  mediaRuleSpec,
-  styleSheetSpec,
-  styleSheetsSpec,
-} = require("devtools/shared/specs/stylesheets");
+const { mediaRuleSpec } = require("devtools/shared/specs/media-rule");
+const { styleSheetSpec } = require("devtools/shared/specs/style-sheet");
+const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
 const promise = require("promise");
 
 loader.lazyRequireGetter(
