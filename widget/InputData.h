@@ -149,6 +149,28 @@ class SingleTouchData {
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
 
+  // Historical data of this touch, which  was coalesced into this event.
+  // Touch event coalescing can happen at the system level when the touch
+  // screen's sampling frequency is higher than the vsync rate, or when the
+  // UI thread is busy. When multiple "samples" of touch data are coalesced into
+  // one touch event, the touch event's regular position information is the
+  // information from the last sample. And the previous, "coalesced-away"
+  // samples are stored in mHistoricalData.
+
+  struct HistoricalTouchData {
+    // The timestamp at which the information in this "sample" was originally
+    // sampled.
+    TimeStamp mTimeStamp;
+
+    // The touch data of this historical sample.
+    ScreenIntPoint mScreenPoint;
+    ParentLayerPoint mLocalScreenPoint;
+    ScreenSize mRadius;
+    float mRotationAngle = 0.0f;
+    float mForce = 0.0f;
+  };
+  CopyableTArray<HistoricalTouchData> mHistoricalData;
+
   // A unique number assigned to each SingleTouchData within a MultiTouchInput
   // so that they can be easily distinguished when handling a touch
   // start/move/end.
