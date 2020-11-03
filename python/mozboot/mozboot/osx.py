@@ -26,7 +26,6 @@ XCODE_LEGACY = (
     "https://developer.apple.com/downloads/download.action?path=Developer_Tools/"
     "xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg"
 )
-JAVA_PATH = "/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin"
 
 MACPORTS_URL = {
     "14": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.14-Mojave.pkg",
@@ -411,9 +410,9 @@ class OSXBootstrapper(BaseBootstrapper):
             )
 
         # 2. Android pieces.
-        # Prefer homebrew's java binary by putting it on the path first.
-        os.environ["PATH"] = "{}{}{}".format(JAVA_PATH, os.pathsep, os.environ["PATH"])
-        self.ensure_java(mozconfig_builder)
+        java_path = self.ensure_java(mozconfig_builder)
+        # Prefer our validated java binary by putting it on the path first.
+        os.environ["PATH"] = "{}{}{}".format(java_path, os.pathsep, os.environ["PATH"])
         from mozboot import android
 
         android.ensure_android(
