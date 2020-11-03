@@ -73,6 +73,7 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
     void ClearFrameCallback();
 
     Mutex mEnabledLock;
+    bool mIsShutdown;
     bool mVsyncEnabled;
     bool mMonitorEnabled;
     struct wl_display* mDisplay;
