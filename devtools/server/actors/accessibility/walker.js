@@ -20,7 +20,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["CustomHighlighterActor", "isTypeRegistered", "register"],
+  ["CustomHighlighterActor"],
   "devtools/server/actors/highlighters",
   true
 );
@@ -250,14 +250,13 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.onHovered = this.onHovered.bind(this);
     this._preventContentEvent = this._preventContentEvent.bind(this);
     this.onKey = this.onKey.bind(this);
+    this.onFocusIn = this.onFocusIn.bind(this);
+    this.onFocusOut = this.onFocusOut.bind(this);
     this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
   },
 
   get highlighter() {
     if (!this._highlighter) {
-      if (!isTypeRegistered("AccessibleHighlighter")) {
-        register("AccessibleHighlighter", "accessible");
-      }
       this._highlighter = CustomHighlighterActor(this, "AccessibleHighlighter");
 
       this.manage(this._highlighter);
@@ -265,6 +264,19 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     return this._highlighter;
+  },
+
+  get tabbingOrderHighlighter() {
+    if (!this._tabbingOrderHighlighter) {
+      this._tabbingOrderHighlighter = CustomHighlighterActor(
+        this,
+        "TabbingOrderHighlighter"
+      );
+
+      this.manage(this._tabbingOrderHighlighter);
+    }
+
+    return this._tabbingOrderHighlighter;
   },
 
   setA11yServiceGetter() {
@@ -339,6 +351,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     if (this._highlighter) {
       this._highlighter.off("highlighter-event", this.onHighlighterEvent);
       this._highlighter = null;
+    }
+
+    if (this._tabbingOrderHighlighter) {
+      this._tabbingOrderHighlighter = null;
     }
 
     this.targetActor = null;
@@ -1174,6 +1190,122 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       this._unsetPickerEnvironment();
       this._isPicking = false;
       this._currentAccessible = null;
+    }
+  },
+
+  /**
+   * Indicates that the tabbing order current active element (focused) is being
+   * tracked.
+   */
+  _isTrackingTabbingOrderFocus: false,
+
+  /**
+   * Current focused element in the tabbing order.
+   */
+  _currentFocusedTabbingOrder: null,
+
+  /**
+   * Focusin event handler for when interacting with tabbing order overlay.
+   *
+   * @param  {Object} event
+   *         Most recent focusin event.
+   */
+  async onFocusIn(event) {
+    if (!this._isTrackingTabbingOrderFocus) {
+      return;
+    }
+
+    const target = event.originalTarget || event.target;
+    if (target === this._currentFocusedTabbingOrder) {
+      return;
+    }
+
+    this._currentFocusedTabbingOrder = target;
+    this.tabbingOrderHighlighter._highlighter.updateFocus({
+      node: target,
+      focused: true,
+    });
+  },
+
+  /**
+   * Focusout event handler for when interacting with tabbing order overlay.
+   *
+   * @param  {Object} event
+   *         Most recent focusout event.
+   */
+  async onFocusOut(event) {
+    if (
+      !this._isTrackingTabbingOrderFocus ||
+      !this._currentFocusedTabbingOrder
+    ) {
+      return;
+    }
+
+    const target = event.originalTarget || event.target;
+    // Sanity check.
+    if (target !== this._currentFocusedTabbingOrder) {
+      console.warn(
+        `focusout target: ${target} does not match current focused element in tabbing order: ${this._currentFocusedTabbingOrder}`
+      );
+    }
+
+    this.tabbingOrderHighlighter._highlighter.updateFocus({
+      node: this._currentFocusedTabbingOrder,
+      focused: false,
+    });
+    this._currentFocusedTabbingOrder = null;
+  },
+
+  /**
+   * Show tabbing order overlay for a given target.
+   *
+   * @param  {Object} elm
+   *         domnode actor to be used as the starting point for generating the
+   *         tabbing order.
+   * @param  {Number} index
+   *         Starting index for the tabbing order.
+   *
+   * @return {JSON}
+   *         Tabbing order information for the last element in the tabbing
+   *         order. It includes a ContentDOMReference for the node and a tabbing
+   *         index. If we are at the end of the tabbing order for the top level
+   *         content document, the ContentDOMReference will be null. If focus
+   *         manager discovered a remote IFRAME, then the ContentDOMReference
+   *         references the IFRAME itself.
+   */
+  showTabbingOrder(elm, index) {
+    // Start track focus related events (only once). `showTabbingOrder` will be
+    // called multiple times for a given target if it contains other remote
+    // targets.
+    if (!this._isTrackingTabbingOrderFocus) {
+      this._isTrackingTabbingOrderFocus = true;
+      const target = this.targetActor.chromeEventHandler;
+      target.addEventListener("focusin", this.onFocusIn, true);
+      target.addEventListener("focusout", this.onFocusOut, true);
+    }
+
+    return this.tabbingOrderHighlighter.show(elm, { index });
+  },
+
+  /**
+   * Hide tabbing order overlay for a given target.
+   */
+  hideTabbingOrder() {
+    if (!this._tabbingOrderHighlighter) {
+      return;
+    }
+
+    this.tabbingOrderHighlighter.hide();
+    if (!this._isTrackingTabbingOrderFocus) {
+      return;
+    }
+
+    this._isTrackingTabbingOrderFocus = false;
+    this._currentFocusedTabbingOrder = null;
+    const target = this.targetActor.chromeEventHandler;
+    if (target) {
+      target.removeEventListener("focusin", this.onFocusIn, true);
+      target.removeEventListener("focusout", this.onFocusOut, true);
     }
   },
 });
