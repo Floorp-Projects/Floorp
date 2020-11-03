@@ -147,7 +147,6 @@ if not CONFIG["JS_CODEGEN_NONE"]:
         "testJitRangeAnalysis.cpp",
         "testJitRegisterSet.cpp",
         "testJitRValueAlloc.cpp",
-        "testsJit.cpp",
     ]
 
 if CONFIG["NIGHTLY_BUILD"]:
