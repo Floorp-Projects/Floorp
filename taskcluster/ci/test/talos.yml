@@ -42,6 +42,7 @@ job-defaults:
             default:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
+                    macosx1014-64-shippable-qr/opt: ['mozilla-central']
                     default: ['mozilla-beta', 'trunk']
     fission-run-on-projects:
         by-test-platform:
@@ -122,6 +123,7 @@ talos-damp:
     run-on-projects:
         by-test-platform:
             windows7-32-shippable/.*: []
+            macosx1014-64-shippable-qr/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
     fission-run-on-projects:
@@ -264,6 +266,7 @@ talos-g4:
     run-on-projects:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
+            macosx1014-64-shippable-qr/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
     max-run-time:
@@ -558,6 +561,7 @@ talos-webgl:
     run-on-projects:
         by-test-platform:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
+            macosx1014-64-shippable-qr/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
     max-run-time: 1800
