@@ -137,7 +137,7 @@ mochitest-browser-chrome:
             linux.*64-ccov.*/.*: 9000
             windows7-32/debug: 5400
             windows10-64/debug: 5400
-            macosx.*64/debug: 5400
+            macosx.*64(-qr)?/debug: 5400
             windows10-64-ccov.*/.*: 10800
             macosx.*64-ccov.*/.*: 10800
             linux.*/debug: 5400
@@ -184,8 +184,7 @@ mochitest-chrome:
     tier: default
     chunks:
         by-test-platform:
-            .*-ccov.*/.*: 3
-            .*-qr/.*: 3
+            .*(-ccov|-qr).*/.*: 3
             windows10-64-ccov-qr/opt: 3
             .*-asan/opt: 3
             .*-tsan/opt: 6
