@@ -6,7 +6,11 @@ from __future__ import absolute_import
 
 import abc
 import re
-from os.path import expanduser
+from os.path import (
+    abspath,
+    expanduser,
+    join,
+)
 
 import sentry_sdk
 from mozboot.util import get_state_dir
@@ -14,6 +18,7 @@ from mach.telemetry import is_telemetry_enabled
 from mozversioncontrol import (
     get_repository_object,
     InvalidRepoPath,
+    MissingUpstreamRepo,
     MissingVCSTool,
 )
 from six import string_types
@@ -59,13 +64,11 @@ def register_sentry(argv, settings, topsrcdir=None):
         return NoopErrorReporter()
 
     if topsrcdir:
-        try:
-            repo = get_repository_object(topsrcdir)
+        repo = _get_repository_object(topsrcdir)
+        if repo is not None:
             email = repo.get_user_email()
             if email in _DEVELOPER_BLOCKLIST:
                 return NoopErrorReporter()
-        except (InvalidRepoPath, MissingVCSTool):
-            pass
 
     sentry_sdk.init(
         _SENTRY_DSN, before_send=lambda event, _: _process_event(event, topsrcdir)
@@ -75,6 +78,10 @@ def register_sentry(argv, settings, topsrcdir=None):
 
 
 def _process_event(sentry_event, topsrcdir):
+    if _any_modified_files_matching_event(sentry_event, topsrcdir):
+        # Returning None causes the event to be dropped:
+        # https://docs.sentry.io/platforms/python/configuration/filtering/#using-beforesend
+        return None
     for map_fn in (_settle_mach_module_id, _patch_absolute_paths, _delete_server_name):
         sentry_event = map_fn(sentry_event, topsrcdir)
     return sentry_event
@@ -144,3 +151,32 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
 def _delete_server_name(sentry_event, _):
     sentry_event.pop("server_name")
     return sentry_event
+
+
+def _get_repository_object(topsrcdir):
+    try:
+        return get_repository_object(topsrcdir)
+    except (InvalidRepoPath, MissingVCSTool):
+        return None
+
+
+def _any_modified_files_matching_event(sentry_event, topsrcdir):
+    repo = _get_repository_object(topsrcdir)
+    if repo is None:
+        return False  # Conservatively assume the tree is clean.
+
+    try:
+        files = set(repo.get_outgoing_files()) | set(repo.get_changed_files())
+    except MissingUpstreamRepo:
+        return False
+
+    files = set(abspath(join(topsrcdir, s)) for s in files)
+
+    # Return True iff the abs_path in any of the stack traces match the set of
+    # changed files locally. Be careful not to crash if something's missing from
+    # the dictionary.
+    for exception in sentry_event.get("exception", {}).get("values", []):
+        for frame in exception.get("stacktrace", {}).get("frames", []):
+            if frame.get("abs_path", None) in files:
+                return True
+    return False
