@@ -24,8 +24,15 @@ namespace image {
 
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
+using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
+
+static const LABELS_AVIF_YUV_COLOR_SPACE gColorSpaceLabel[static_cast<size_t>(
+    gfx::YUVColorSpace::_NUM_COLORSPACE)] = {
+    LABELS_AVIF_YUV_COLOR_SPACE::BT601, LABELS_AVIF_YUV_COLOR_SPACE::BT709,
+    LABELS_AVIF_YUV_COLOR_SPACE::BT2020, LABELS_AVIF_YUV_COLOR_SPACE::identity,
+    LABELS_AVIF_YUV_COLOR_SPACE::unknown};
 
 // Wrapper to allow rust to call our read adaptor.
 intptr_t nsAVIFDecoder::ReadSource(uint8_t* aDestBuf, uintptr_t aDestBufSize,
@@ -518,6 +525,9 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   if (IsMetadataDecode()) {
     return AsVariant(NonDecoderResult::MetadataOk);
   }
+
+  AccumulateCategorical(
+      gColorSpaceLabel[static_cast<size_t>(decodedData.mYUVColorSpace)]);
 
   gfx::SurfaceFormat format =
       hasAlpha ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
