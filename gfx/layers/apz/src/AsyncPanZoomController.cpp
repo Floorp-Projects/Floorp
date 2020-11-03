@@ -3153,7 +3153,19 @@ nsEventStatus AsyncPanZoomController::StartPanning(
 
 void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(
     const MultiTouchInput& aEvent) {
-  ParentLayerPoint point = GetFirstTouchPoint(aEvent);
+  const SingleTouchData& touchData = aEvent.mTouches[0];
+  // Take historical touch data into account in order to improve the accuracy
+  // of the velocity estimate. On many Android devices, the touch screen samples
+  // at a higher rate than vsync (e.g. 100Hz vs 60Hz), and the historical data
+  // lets us take advantage of those high-rate samples.
+  for (const auto& historicalData : touchData.mHistoricalData) {
+    ParentLayerPoint historicalPoint = historicalData.mLocalScreenPoint;
+    mX.UpdateWithTouchAtDevicePoint(historicalPoint.x,
+                                    historicalData.mTimeStamp);
+    mY.UpdateWithTouchAtDevicePoint(historicalPoint.y,
+                                    historicalData.mTimeStamp);
+  }
+  ParentLayerPoint point = touchData.mLocalScreenPoint;
   mX.UpdateWithTouchAtDevicePoint(point.x, aEvent.mTimeStamp);
   mY.UpdateWithTouchAtDevicePoint(point.y, aEvent.mTimeStamp);
 }
