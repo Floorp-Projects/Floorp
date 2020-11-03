@@ -369,6 +369,22 @@ class Test(MachCommandBase):
         the harness for each relevant type/flavor will be invoked. e.g. if
         you specify a directory with xpcshell and browser chrome mochitests,
         both harnesses will be invoked.
+
+        Warning: `mach test` does not automatically re-build.
+        Please remember to run `mach build` when necessary.
+
+        EXAMPLES
+
+        Run all test files in the devtools/client/shared/redux/middleware/xpcshell/
+        directory:
+
+        `./mach test devtools/client/shared/redux/middleware/xpcshell/`
+
+        The below command prints a short summary of results instead of
+        the default more verbose output.
+        Do not forget the - (minus sign) after --log-grouped!
+
+        `./mach test --log-grouped - devtools/client/shared/redux/middleware/xpcshell/`
         """
         from mozlog.commandline import setup_logging
         from mozlog.handlers import StreamHandler
