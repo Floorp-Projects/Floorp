@@ -961,7 +961,7 @@ void nsBulletFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
   WritingMode wm = aReflowInput.GetWritingMode();
-  const LogicalMargin& bp = aReflowInput.ComputedLogicalBorderPadding();
+  const auto bp = aReflowInput.ComputedLogicalBorderPadding(wm);
   mPadding.BStart(wm) += NSToCoordRound(bp.BStart(wm) * inflation);
   mPadding.IEnd(wm) += NSToCoordRound(bp.IEnd(wm) * inflation);
   mPadding.BEnd(wm) += NSToCoordRound(bp.BEnd(wm) * inflation);

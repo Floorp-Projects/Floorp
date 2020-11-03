@@ -613,7 +613,7 @@ void nsTextControlFrame::ComputeBaseline(const ReflowInput& aReflowInput,
       nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
   mFirstBaseline = nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
                                                           wm.IsLineInverted()) +
-                   aReflowInput.ComputedLogicalBorderPadding().BStart(wm);
+                   aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm);
   aDesiredSize.SetBlockStartAscent(mFirstBaseline);
 }
 
@@ -633,13 +633,7 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
 
   // set values of reflow's out parameters
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize finalSize(
-      wm,
-      aReflowInput.ComputedISize() +
-          aReflowInput.ComputedLogicalBorderPadding().IStartEnd(wm),
-      aReflowInput.ComputedBSize() +
-          aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm));
-  aDesiredSize.SetSize(wm, finalSize);
+  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   ComputeBaseline(aReflowInput, aDesiredSize);
 

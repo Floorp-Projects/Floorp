@@ -559,7 +559,7 @@ void nsListControlFrame::ReflowAsDropdown(nsPresContext* aPresContext,
       mNumDisplayRows = 1;
       mDropdownCanGrow = GetNumberOfRows() > 1;
     } else {
-      nscoord bp = aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm);
+      nscoord bp = aReflowInput.ComputedLogicalBorderPadding(wm).BStartEnd(wm);
       nscoord availableBSize = std::max(before, after) - bp;
       nscoord newBSize;
       uint32_t rows;

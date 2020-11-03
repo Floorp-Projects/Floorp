@@ -53,7 +53,7 @@ void TableCellReflowInput::FixUp(const LogicalSize& aAvailSpace) {
   if (NS_UNCONSTRAINEDSIZE != ComputedISize()) {
     nscoord computedISize =
         aAvailSpace.ISize(mWritingMode) -
-        ComputedLogicalBorderPadding().IStartEnd(mWritingMode);
+        ComputedLogicalBorderPadding(mWritingMode).IStartEnd(mWritingMode);
     computedISize = std::max(0, computedISize);
     SetComputedISize(computedISize);
   }
@@ -61,7 +61,7 @@ void TableCellReflowInput::FixUp(const LogicalSize& aAvailSpace) {
       NS_UNCONSTRAINEDSIZE != aAvailSpace.BSize(mWritingMode)) {
     nscoord computedBSize =
         aAvailSpace.BSize(mWritingMode) -
-        ComputedLogicalBorderPadding().BStartEnd(mWritingMode);
+        ComputedLogicalBorderPadding(mWritingMode).BStartEnd(mWritingMode);
     computedBSize = std::max(0, computedBSize);
     SetComputedBSize(computedBSize);
   }

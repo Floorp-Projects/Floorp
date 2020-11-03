@@ -130,8 +130,8 @@ struct SizeComputationInput {
   LogicalMargin ComputedLogicalMargin(mozilla::WritingMode aWM) const {
     return mComputedMargin.ConvertTo(aWM, mWritingMode);
   }
-  LogicalMargin ComputedLogicalBorderPadding() const {
-    return mComputedBorderPadding;
+  LogicalMargin ComputedLogicalBorderPadding(mozilla::WritingMode aWM) const {
+    return mComputedBorderPadding.ConvertTo(aWM, mWritingMode);
   }
   LogicalMargin ComputedLogicalPadding() const { return mComputedPadding; }
 
@@ -412,8 +412,8 @@ struct ReflowInput : public SizeComputationInput {
   mozilla::LogicalSize ComputedSizeWithBorderPadding() const {
     mozilla::WritingMode wm = GetWritingMode();
     return mozilla::LogicalSize(
-        wm, ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm),
-        ComputedBSize() + ComputedLogicalBorderPadding().BStartEnd(wm));
+        wm, ComputedISize() + ComputedLogicalBorderPadding(wm).IStartEnd(wm),
+        ComputedBSize() + ComputedLogicalBorderPadding(wm).BStartEnd(wm));
   }
 
   mozilla::LogicalSize ComputedSizeWithBorderPadding(
@@ -426,9 +426,9 @@ struct ReflowInput : public SizeComputationInput {
     return mozilla::LogicalSize(
         wm,
         ComputedISize() + ComputedLogicalMargin(wm).IStartEnd(wm) +
-            ComputedLogicalBorderPadding().IStartEnd(wm),
+            ComputedLogicalBorderPadding(wm).IStartEnd(wm),
         ComputedBSize() + ComputedLogicalMargin(wm).BStartEnd(wm) +
-            ComputedLogicalBorderPadding().BStartEnd(wm));
+            ComputedLogicalBorderPadding(wm).BStartEnd(wm));
   }
 
   mozilla::LogicalSize ComputedSizeWithMarginBorderPadding(

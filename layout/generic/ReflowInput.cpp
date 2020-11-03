@@ -231,11 +231,12 @@ nscoord SizeComputationInput::ComputeISizeValue(
     nscoord aContainingBlockISize, StyleBoxSizing aBoxSizing,
     const SizeOrMaxSize& aSize) const {
   WritingMode wm = GetWritingMode();
+  const auto borderPadding = ComputedLogicalBorderPadding(wm);
   nscoord inside = 0;
-  nscoord outside = ComputedLogicalBorderPadding().IStartEnd(wm) +
-                    ComputedLogicalMargin(wm).IStartEnd(wm);
+  nscoord outside =
+      borderPadding.IStartEnd(wm) + ComputedLogicalMargin(wm).IStartEnd(wm);
   if (aBoxSizing == StyleBoxSizing::Border) {
-    inside = ComputedLogicalBorderPadding().IStartEnd(wm);
+    inside = borderPadding.IStartEnd(wm);
   }
   outside -= inside;
 
@@ -248,7 +249,7 @@ nscoord SizeComputationInput::ComputeBSizeValue(
   WritingMode wm = GetWritingMode();
   nscoord inside = 0;
   if (aBoxSizing == StyleBoxSizing::Border) {
-    inside = ComputedLogicalBorderPadding().BStartEnd(wm);
+    inside = ComputedLogicalBorderPadding(wm).BStartEnd(wm);
   }
   return nsLayoutUtils::ComputeBSizeValue(aContainingBlockBSize, inside, aSize);
 }
@@ -518,7 +519,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
   bool isIResize =
       // is the border-box resizing?
       mFrame->ISize(wm) !=
-          ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm) ||
+          ComputedISize() + ComputedLogicalBorderPadding(wm).IStartEnd(wm) ||
       // or is the content-box resizing?  (see comment above)
       (mStylePosition->mBoxSizing != StyleBoxSizing::Content &&
        mStylePadding->IsWidthDependent());
@@ -661,7 +662,8 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // We have a non-'auto' block-size, i.e., a length.  Set the BResize
     // flag to whether the size is actually different.
     SetBResize(mFrame->BSize(wm) !=
-               ComputedBSize() + ComputedLogicalBorderPadding().BStartEnd(wm));
+               ComputedBSize() +
+                   ComputedLogicalBorderPadding(wm).BStartEnd(wm));
   }
 
   bool dependsOnCBBSize =
@@ -1036,7 +1038,7 @@ nsIFrame* ReflowInput::GetHypotheticalBoxContainer(nsIFrame* aFrame,
   if (reflowInput) {
     WritingMode wm = reflowInput->GetWritingMode();
     NS_ASSERTION(wm == aFrame->GetWritingMode(), "unexpected writing mode");
-    aCBIStartEdge = reflowInput->ComputedLogicalBorderPadding().IStart(wm);
+    aCBIStartEdge = reflowInput->ComputedLogicalBorderPadding(wm).IStart(wm);
     aCBSize = reflowInput->ComputedSize(wm);
   } else {
     /* Didn't find a reflow reflowInput for aFrame.  Just compute the
@@ -1395,7 +1397,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // The specified offsets are relative to the absolute containing block's
   // padding edge and our current values are relative to the border edge, so
   // translate.
-  LogicalMargin border = aCBReflowInput->ComputedLogicalBorderPadding() -
+  LogicalMargin border = aCBReflowInput->ComputedLogicalBorderPadding(cbwm) -
                          aCBReflowInput->ComputedLogicalPadding();
   border = border.ConvertTo(wm, aCBReflowInput->GetWritingMode());
   aHypotheticalPos.mIStart -= border.IStart(wm);
@@ -1620,7 +1622,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
         mRenderingContext, wm, cbSize.ConvertTo(wm, cbwm),
         cbSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
         ComputedLogicalMargin(wm).Size(wm) + ComputedLogicalOffsets().Size(wm),
-        ComputedLogicalBorderPadding().Size(wm), mComputeSizeFlags);
+        ComputedLogicalBorderPadding(wm).Size(wm), mComputeSizeFlags);
     ComputedISize() = sizeResult.mLogicalSize.ISize(wm);
     ComputedBSize() = sizeResult.mLogicalSize.BSize(wm);
     NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
@@ -1639,8 +1641,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   // branches off of widthIsAuto?
 
   LogicalMargin margin = ComputedLogicalMargin(cbwm);
-  const LogicalMargin borderPadding =
-      ComputedLogicalBorderPadding().ConvertTo(cbwm, wm);
+  const LogicalMargin borderPadding = ComputedLogicalBorderPadding(cbwm);
 
   bool iSizeIsAuto = mStylePosition->ISize(cbwm).IsAuto();
   bool marginIStartIsAuto = false;
@@ -2001,7 +2002,7 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
       // that's very hard.
 
       LogicalMargin computedBorder =
-          aContainingBlockRI->ComputedLogicalBorderPadding() -
+          aContainingBlockRI->ComputedLogicalBorderPadding(wm) -
           aContainingBlockRI->ComputedLogicalPadding();
       cbSize.ISize(wm) =
           aContainingBlockRI->mFrame->ISize(wm) - computedBorder.IStartEnd(wm);
@@ -2093,14 +2094,13 @@ void ReflowInput::InitConstraints(
     SetComputedLogicalMargin(wm, LogicalMargin(wm));
     ComputedPhysicalOffsets().SizeTo(0, 0, 0, 0);
 
-    ComputedISize() =
-        AvailableISize() - ComputedLogicalBorderPadding().IStartEnd(wm);
+    const auto borderPadding = ComputedLogicalBorderPadding(wm);
+    ComputedISize() = AvailableISize() - borderPadding.IStartEnd(wm);
     if (ComputedISize() < 0) {
       ComputedISize() = 0;
     }
     if (AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
-      ComputedBSize() =
-          AvailableBSize() - ComputedLogicalBorderPadding().BStartEnd(wm);
+      ComputedBSize() = AvailableBSize() - borderPadding.BStartEnd(wm);
       if (ComputedBSize() < 0) {
         ComputedBSize() = 0;
       }
@@ -2235,7 +2235,7 @@ void ReflowInput::InitConstraints(
         if ((ComputedISize() != NS_UNCONSTRAINEDSIZE) && !rowOrRowGroup) {
           // Internal table elements don't have margins. Only tables and
           // cells have border and padding
-          ComputedISize() -= ComputedLogicalBorderPadding().IStartEnd(wm);
+          ComputedISize() -= ComputedLogicalBorderPadding(wm).IStartEnd(wm);
           if (ComputedISize() < 0) ComputedISize() = 0;
         }
         NS_ASSERTION(ComputedISize() >= 0, "Bogus computed isize");
@@ -2341,7 +2341,7 @@ void ReflowInput::InitConstraints(
       auto size = mFrame->ComputeSize(
           mRenderingContext, wm, cbSize, AvailableISize(),
           ComputedLogicalMargin(wm).Size(wm),
-          ComputedLogicalBorderPadding().Size(wm), mComputeSizeFlags);
+          ComputedLogicalBorderPadding(wm).Size(wm), mComputeSizeFlags);
 
       ComputedISize() = size.mLogicalSize.ISize(wm);
       ComputedBSize() = size.mLogicalSize.BSize(wm);
@@ -2547,8 +2547,7 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
                        "intrinsic inline-size calculation");
 
   LogicalMargin margin = ComputedLogicalMargin(cbWM);
-  LogicalMargin borderPadding =
-      ComputedLogicalBorderPadding().ConvertTo(cbWM, mWritingMode);
+  LogicalMargin borderPadding = ComputedLogicalBorderPadding(cbWM);
   nscoord sum = margin.IStartEnd(cbWM) + borderPadding.IStartEnd(cbWM) +
                 computedISizeCBWM;
   if (sum == availISizeCBWM) {

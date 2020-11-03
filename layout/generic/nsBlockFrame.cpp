@@ -1264,7 +1264,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE &&
       (ShouldApplyOverflowClipping(aReflowInput.mStyleDisplay) &
        physicalBlockAxis)) {
-    LogicalMargin blockDirExtras = aReflowInput.ComputedLogicalBorderPadding();
+    LogicalMargin blockDirExtras =
+        aReflowInput.ComputedLogicalBorderPadding(wm);
     if (GetLogicalSkipSides().BStart()) {
       blockDirExtras.BStart(wm) = 0;
     } else {
@@ -1443,7 +1444,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         nsLayoutUtils::GetFirstLinePosition(wm, this, &position);
     nscoord lineBStart =
         havePosition ? position.mBStart
-                     : reflowInput->ComputedLogicalBorderPadding().BStart(wm);
+                     : reflowInput->ComputedLogicalBorderPadding(wm).BStart(wm);
     nsIFrame* marker = GetOutsideMarker();
     ReflowOutsideMarker(marker, state, reflowOutput, lineBStart);
     NS_ASSERTION(!MarkerIsEmpty() || reflowOutput.BSize(wm) == 0,
@@ -1957,7 +1958,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
                      borderPadding.BStart(wm);
       // Note that |borderPadding| has GetSkipSides applied, so we ask
       // aReflowInput for the actual value we'd use on a last fragment here:
-      bEnd += aReflowInput.ComputedLogicalBorderPadding().BEnd(wm);
+      bEnd += aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
       if (bEnd <= aReflowInput.AvailableBSize()) {
         // We actually fit after applying `max-size` so we should be
         // Overflow-Incomplete instead.
@@ -2268,7 +2269,7 @@ void nsBlockFrame::PrepareResizeReflow(BlockReflowInput& aState) {
   if (tryAndSkipLines) {
     WritingMode wm = aState.mReflowInput.GetWritingMode();
     nscoord newAvailISize =
-        aState.mReflowInput.ComputedLogicalBorderPadding().IStart(wm) +
+        aState.mReflowInput.ComputedLogicalBorderPadding(wm).IStart(wm) +
         aState.mReflowInput.ComputedISize();
 
 #ifdef DEBUG
@@ -7446,7 +7447,7 @@ void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
   // combine it with other logical values here.
   LogicalMargin markerMargin = reflowInput.ComputedLogicalMargin(wm);
   nscoord iStart = floatAvailSpace.IStart(wm) -
-                   ri.ComputedLogicalBorderPadding().IStart(wm) -
+                   ri.ComputedLogicalBorderPadding(wm).IStart(wm) -
                    markerMargin.IEnd(wm) - aMetrics.ISize(wm);
 
   // Approximate the ::marker's position; vertical alignment will provide

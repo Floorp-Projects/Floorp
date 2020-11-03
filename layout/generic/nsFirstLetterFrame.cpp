@@ -159,7 +159,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
   // Setup reflow input for our child
   WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize availSize = aReflowInput.AvailableSize();
-  const LogicalMargin& bp = aReflowInput.ComputedLogicalBorderPadding();
+  const auto bp = aReflowInput.ComputedLogicalBorderPadding(wm);
   NS_ASSERTION(availSize.ISize(wm) != NS_UNCONSTRAINEDSIZE,
                "should no longer use unconstrained inline size");
   availSize.ISize(wm) -= bp.IStartEnd(wm);
