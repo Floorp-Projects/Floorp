@@ -4657,19 +4657,22 @@ void AutoGenericRegisterScope<RegisterType>::reacquire() {
 template void AutoGenericRegisterScope<Register>::reacquire();
 template void AutoGenericRegisterScope<FloatRegister>::reacquire();
 
-wasm::TlsData* ExtractCallerTlsFromFrameWithTls(wasm::Frame* fp) {
-  return *reinterpret_cast<wasm::TlsData**>(
-      reinterpret_cast<uint8_t*>(fp) + sizeof(wasm::Frame) + ShadowStackSpace +
-      wasm::FrameWithTls::callerTLSOffset());
-}
-
-wasm::TlsData* ExtractCalleeTlsFromFrameWithTls(wasm::Frame* fp) {
-  return *reinterpret_cast<wasm::TlsData**>(
-      reinterpret_cast<uint8_t*>(fp) + sizeof(wasm::Frame) + ShadowStackSpace +
-      wasm::FrameWithTls::calleeTLSOffset());
-}
-
 #endif  // DEBUG
 
 }  // namespace jit
+
+namespace wasm {
+TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
+  return *reinterpret_cast<TlsData**>(reinterpret_cast<uint8_t*>(fp) +
+                                      sizeof(Frame) + ShadowStackSpace +
+                                      FrameWithTls::callerTLSOffset());
+}
+
+TlsData* ExtractCalleeTlsFromFrameWithTls(Frame* fp) {
+  return *reinterpret_cast<TlsData**>(reinterpret_cast<uint8_t*>(fp) +
+                                      sizeof(Frame) + ShadowStackSpace +
+                                      FrameWithTls::calleeTLSOffset());
+}
+}  // namespace wasm
+
 }  // namespace js
