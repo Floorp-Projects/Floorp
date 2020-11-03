@@ -768,8 +768,13 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       csp->GetPolicyCount(&count);
       for (uint32_t i = 0; i < count; ++i) {
         csp->GetPolicyString(i, parsedPolicyStr);
-        MOZ_LOG(sCSMLog, LogLevel::Debug,
-                ("    - %s\n", NS_ConvertUTF16toUTF8(parsedPolicyStr).get()));
+        // we need to add quotation marks, as otherwise yaml parsers may fail
+        // with CSP directives
+        // no need to escape quote marks in the parsed policy string, as URLs in
+        // there are already encoded
+        MOZ_LOG(
+            sCSMLog, LogLevel::Debug,
+            ("    - \"%s\"\n", NS_ConvertUTF16toUTF8(parsedPolicyStr).get()));
       }
     }
 
