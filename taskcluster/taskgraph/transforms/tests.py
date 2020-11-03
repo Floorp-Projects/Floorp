@@ -903,6 +903,7 @@ def set_tier(config, tasks):
                 "linux1804-64/opt",
                 "linux1804-64/debug",
                 "linux1804-64-shippable/opt",
+                "linux1804-64-devedition/opt",
                 "linux1804-64-qr/opt",
                 "linux1804-64-qr/debug",
                 "linux1804-64-shippable-qr/opt",
