@@ -750,7 +750,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
     WritingMode kidWM = kidReflowInput.GetWritingMode();
     nsSize containerSize = aReflowInput.ComputedPhysicalSize();
 
-    LogicalMargin margin = kidReflowInput.ComputedLogicalMargin();
+    LogicalMargin margin = kidReflowInput.ComputedLogicalMargin(kidWM);
     LogicalPoint kidPt(kidWM, margin.IStart(kidWM), margin.BStart(kidWM));
 
     // Reflow the frame
@@ -805,7 +805,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
     if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
       finalSize.BSize(wm) =
           kidFrame->GetLogicalSize(wm).BSize(wm) +
-          kidReflowInput.ComputedLogicalMargin().BStartEnd(wm);
+          kidReflowInput.ComputedLogicalMargin(wm).BStartEnd(wm);
     } else {
       finalSize.BSize(wm) = aReflowInput.ComputedBSize();
     }

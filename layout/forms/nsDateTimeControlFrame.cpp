@@ -128,8 +128,7 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
                                  availSize);
 
     // Convert input area margin into my own writing-mode (in case it differs):
-    LogicalMargin childMargin =
-        childReflowOuput.ComputedLogicalMargin().ConvertTo(myWM, wm);
+    LogicalMargin childMargin = childReflowOuput.ComputedLogicalMargin(myWM);
 
     // offsets of input area frame within this frame:
     LogicalPoint childOffset(

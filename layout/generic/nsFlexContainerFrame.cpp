@@ -1625,7 +1625,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
         const auto sizeInItemWM = aFlexItem.Frame()->ComputeSize(
             aItemReflowInput.mRenderingContext, itemWM,
             aItemReflowInput.mContainingBlockSize, availISize,
-            aItemReflowInput.ComputedLogicalMargin().Size(itemWM),
+            aItemReflowInput.ComputedLogicalMargin(itemWM).Size(itemWM),
             aItemReflowInput.ComputedLogicalBorderPadding().Size(itemWM),
             {ComputeSizeFlag::UseAutoISize, ComputeSizeFlag::ShrinkWrap});
 
@@ -2008,8 +2008,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mBorderPadding(
           aFlexItemReflowInput.ComputedLogicalBorderPadding().ConvertTo(mCBWM,
                                                                         mWM)),
-      mMargin(
-          aFlexItemReflowInput.ComputedLogicalMargin().ConvertTo(mCBWM, mWM)),
+      mMargin(aFlexItemReflowInput.ComputedLogicalMargin(mCBWM)),
       mMainMinSize(aMainMinSize),
       mMainMaxSize(aMainMaxSize),
       mCrossMinSize(aCrossMinSize),
