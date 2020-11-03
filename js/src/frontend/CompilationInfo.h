@@ -256,7 +256,7 @@ struct CompilationStencil {
   static constexpr size_t LifoAllocChunkSize = 512;
 
   explicit CompilationStencil(JSRuntime* rt)
-      : alloc(LifoAllocChunkSize), parserAtoms(rt) {}
+      : alloc(LifoAllocChunkSize), parserAtoms(rt, alloc) {}
 
   // We need a move-constructor to work with Rooted, but must be explicit in
   // order to steal the LifoAlloc data.
@@ -273,6 +273,7 @@ struct CompilationStencil {
     // Steal the data from the LifoAlloc. Anything that holds a reference to
     // this will need to be updated.
     alloc.steal(&other.alloc);
+    parserAtoms.updateLifoAlloc(alloc);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
