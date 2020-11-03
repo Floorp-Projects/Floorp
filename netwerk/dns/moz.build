@@ -72,7 +72,6 @@ UNIFIED_SOURCES += [
     "nsIDNService.cpp",
     "punycode.c",
     "TRR.cpp",
-    "TRRQuery.cpp",
     "TRRService.cpp",
     "TRRServiceBase.cpp",
     "TRRServiceChild.cpp",
