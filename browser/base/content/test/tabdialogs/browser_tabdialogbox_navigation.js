@@ -133,7 +133,10 @@ add_task(async function test_tabdialogbox_hide() {
     info("Waiting for dialogs to open.");
     await Promise.all(dialogs.map(dialog => dialog._dialogReady));
 
-    is(dialogBoxManager._dialogStack.hidden, false, "Dialog stack is showing");
+    ok(
+      !BrowserTestUtils.is_hidden(dialogBoxManager._dialogStack),
+      "Dialog stack is showing"
+    );
 
     dialogBoxManager.hideDialog(browser);
 
@@ -143,7 +146,10 @@ add_task(async function test_tabdialogbox_hide() {
       "Dialog manager still has two dialogs."
     );
 
-    is(dialogBoxManager._dialogStack.hidden, true, "Dialog stack is hidden");
+    ok(
+      BrowserTestUtils.is_hidden(dialogBoxManager._dialogStack),
+      "Dialog stack is hidden"
+    );
 
     // Navigate to a different page
     BrowserTestUtils.loadURI(browser, "https://example.org");

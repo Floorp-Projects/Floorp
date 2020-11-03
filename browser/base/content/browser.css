@@ -1450,6 +1450,12 @@ toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabsto
   z-index: 2;
 }
 
+.dialogStack.temporarilyHidden {
+  /* For some printing use cases we need to visually hide the dialog before
+   * actually closing it / make it disappear from the frame tree. */
+  visibility: hidden;
+}
+
 .dialogOverlay {
   visibility: hidden;
 }
