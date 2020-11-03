@@ -185,7 +185,7 @@ fuzzy(0-53,0-6391) fuzzy-if(gtkWidget&&webrender,18-19,5502-5568) fails-if(/^Win
 
 # Non-transparent and transparent ICO images
 fuzzy(0-1,0-3) == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.png
-fuzzy(0-3,0-32) fuzzy-if(webrender&&swgl,3-3,33-33) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
+fuzzy(0-3,0-32) fuzzy-if(gtkWidget&&webrender&&swgl,3-3,33-33) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 
 # Upside-down (negative height) BMP
 == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
