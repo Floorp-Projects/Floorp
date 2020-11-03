@@ -343,14 +343,28 @@ impl FontContext {
             return;
         }
 
-        // there's no way great way to go from a CGFont to a CTFontDescriptor
-        // so we use the postscript name. Ideally NativeFontHandle would
-        // just use a CTFontDescriptor
-        let name = native_font_handle.0.postscript_name();
-        let font = core_text::font_descriptor::new_from_postscript_name(&name);
+        // There's no way great way to go from a CGFont to a CTFontDescriptor
+        // We could use the postscript name but that doesn't work for the
+        // system UI fonts on newer macOS versions. Instead we create a CTFont
+        // and use the descriptor for that. Normally we'd try to avoid new_from_CGFont
+        // because that adds the CGFont to the descriptor cache which can keep the CGFont
+        // around for a long time, but that should be ok for non-web (native) fonts.
+        let font = core_text::font::new_from_CGFont(&native_font_handle.0, 0.);
+        // copy_descriptor isn't upstream yet
+        fn copy_descriptor(font: CTFont) -> CTFontDescriptor {
+            use core_text::font_descriptor::CTFontDescriptorRef;
+            extern {
+                fn CTFontCopyFontDescriptor(font: CTFontRef) -> CTFontDescriptorRef;
+            }
+            unsafe {
+                let desc = CTFontCopyFontDescriptor(font.as_concrete_TypeRef());
+                CTFontDescriptor::wrap_under_create_rule(desc)
+            }
+        }
+        let desc = copy_descriptor(font);
 
         self.ct_font_descs
-            .insert(*font_key, font);
+            .insert(*font_key, desc);
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
