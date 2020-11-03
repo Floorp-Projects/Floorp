@@ -6,6 +6,7 @@
 
 #include "jsapi-tests/testsJit.h"
 
+#include "jit/JitCommon.h"
 #include "jit/Linker.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -55,6 +56,6 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
 
   JS::AutoSuppressGCAnalysis suppress;
   EnterTest test = code->as<EnterTest>();
-  test();
+  CALL_GENERATED_0(test);
   return true;
 }
