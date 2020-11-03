@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["MarionetteReftestFrameChild"];
+const EXPORTED_SYMBOLS = ["MarionetteReftestChild"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 /**
  * Child JSWindowActor to handle navigation for reftests relying on marionette.
  */
-class MarionetteReftestFrameChild extends JSWindowActorChild {
+class MarionetteReftestChild extends JSWindowActorChild {
   constructor() {
     super();
 
@@ -52,7 +52,7 @@ class MarionetteReftestFrameChild extends JSWindowActorChild {
 
     let result;
     switch (name) {
-      case "MarionetteReftestFrameParent:reftestWait":
+      case "MarionetteReftestParent:reftestWait":
         result = await this.reftestWait(data);
         break;
     }
