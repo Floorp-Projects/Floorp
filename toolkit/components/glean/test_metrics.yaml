@@ -84,3 +84,22 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+  a_date:
+    type: datetime
+    time_unit: second
+    description: |
+      This is a test-only metric.
+      Just putting things on the calendar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+    no_lint:
+      - COMMON_PREFIX
