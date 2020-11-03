@@ -6,8 +6,6 @@
 
 #include "frontend/StencilXdr.h"  // StencilXDR
 
-#include <type_traits>
-
 #include "vm/JSScript.h"      // js::CheckCompileOptionsMatch
 #include "vm/StencilEnums.h"  // js::ImmutableScriptFlagsEnum
 
@@ -129,60 +127,47 @@ static XDRResult XDRScriptThingVariant(XDRState<mode>* xdr,
 }
 
 template <XDRMode mode>
-/* static */ XDRResult StencilXDR::Script(XDRState<mode>* xdr,
-                                          ScriptStencil& stencil) {
+static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
   enum class XdrFlags : uint8_t {
     HasMemberInitializers = 0,
-    HasSharedData,
-    HasFunctionAtom,
     HasScopeIndex,
     IsStandaloneFunction,
     WasFunctionEmitted,
     IsSingletonFunction,
+    HasSharedData,
     AllowRelazify,
   };
 
-  struct XdrFields {
-    uint32_t immutableFlags;
-    uint32_t numMemberInitializers;
-    uint32_t numGcThings;
-    uint16_t functionFlags;
-    uint16_t nargs;
-    uint32_t scopeIndex;
-  };
-
   uint8_t xdrFlags = 0;
-  XdrFields xdrFields = {};
+  uint32_t immutableFlags;
+  uint32_t numMemberInitializers;
+  uint32_t numGcThings;
+  uint16_t functionFlags;
+  uint32_t scopeIndex;
 
   if (mode == XDR_ENCODE) {
-    xdrFields.immutableFlags = stencil.immutableFlags;
+    immutableFlags = stencil.immutableFlags;
 
     if (stencil.memberInitializers.isSome()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasMemberInitializers);
     }
-    xdrFields.numMemberInitializers =
+    numMemberInitializers =
         stencil.memberInitializers
             .map([](auto i) { return i.numMemberInitializers; })
             .valueOr(0);
 
-    xdrFields.numGcThings = stencil.gcThings.length();
+    numGcThings = stencil.gcThings.length();
 
     if (stencil.sharedData) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
     }
 
-    if (stencil.functionAtom) {
-      xdrFlags |= 1 << uint8_t(XdrFlags::HasFunctionAtom);
-    }
-
-    xdrFields.functionFlags = stencil.functionFlags.toRaw();
-    xdrFields.nargs = stencil.nargs;
+    functionFlags = stencil.functionFlags.toRaw();
 
     if (stencil.lazyFunctionEnclosingScopeIndex_.isSome()) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasScopeIndex);
     }
-    xdrFields.scopeIndex =
-        stencil.lazyFunctionEnclosingScopeIndex_.valueOr(ScopeIndex());
+    scopeIndex = stencil.lazyFunctionEnclosingScopeIndex_.valueOr(ScopeIndex());
 
     if (stencil.isStandaloneFunction) {
       xdrFlags |= 1 << uint8_t(XdrFlags::IsStandaloneFunction);
@@ -198,47 +183,44 @@ template <XDRMode mode>
     }
   }
 
-  // We check endianess before decoding so if structures are fully packed, we
-  // may transcode them directly as raw bytes.
-  static_assert(std::has_unique_object_representations<XdrFields>(),
-                "XdrFields structure must be fully packed");
-  static_assert(std::has_unique_object_representations<SourceExtent>(),
-                "XdrFields structure must be fully packed");
-
   MOZ_TRY(xdr->codeUint8(&xdrFlags));
-  MOZ_TRY(xdr->codeBytes(&xdrFields, sizeof(XdrFields)));
-  MOZ_TRY(xdr->codeBytes(&stencil.extent, sizeof(SourceExtent)));
+  MOZ_TRY(xdr->codeUint32(&immutableFlags));
+  MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
+  MOZ_TRY(xdr->codeUint32(&numGcThings));
+  MOZ_TRY(xdr->codeUint16(&functionFlags));
+  MOZ_TRY(xdr->codeUint32(&scopeIndex));
+  MOZ_TRY(xdr->codeUint16(&stencil.nargs));
 
   if (mode == XDR_DECODE) {
     MOZ_ASSERT(xdr->hasOptions());
 
-    if (!(xdrFields.immutableFlags &
-          uint32_t(ImmutableScriptFlagsEnum::IsFunction))) {
+    if (!(immutableFlags & uint32_t(ImmutableScriptFlagsEnum::IsFunction))) {
       MOZ_ASSERT(!xdr->isMultiDecode());
-      if (!js::CheckCompileOptionsMatch(
-              xdr->options(), ImmutableScriptFlags(xdrFields.immutableFlags),
-              xdr->isMultiDecode())) {
+      if (!js::CheckCompileOptionsMatch(xdr->options(),
+                                        ImmutableScriptFlags(immutableFlags),
+                                        xdr->isMultiDecode())) {
         return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
       }
     }
 
-    stencil.immutableFlags = xdrFields.immutableFlags;
+    stencil.immutableFlags = immutableFlags;
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasMemberInitializers))) {
-      stencil.memberInitializers.emplace(xdrFields.numMemberInitializers);
+      stencil.memberInitializers.emplace(numMemberInitializers);
     }
 
     if (!stencil.gcThings.appendN(mozilla::AsVariant(NullScriptThing()),
-                                  xdrFields.numGcThings)) {
+                                  numGcThings)) {
       ReportOutOfMemory(xdr->cx());
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
-    stencil.functionFlags = FunctionFlags(xdrFields.functionFlags);
-    stencil.nargs = xdrFields.nargs;
+    stencil.functionFlags = FunctionFlags(functionFlags);
 
+    MOZ_ASSERT_IF((xdrFlags & (1 << uint8_t(XdrFlags::HasScopeIndex))) == 0,
+                  scopeIndex == 0);
     if (xdrFlags & (1 << uint8_t(XdrFlags::HasScopeIndex))) {
-      stencil.lazyFunctionEnclosingScopeIndex_.emplace(xdrFields.scopeIndex);
+      stencil.lazyFunctionEnclosingScopeIndex_.emplace(scopeIndex);
     }
 
     if (xdrFlags & (1 << uint8_t(XdrFlags::IsStandaloneFunction))) {
@@ -255,17 +237,17 @@ template <XDRMode mode>
     }
   }
 
-  for (ScriptThingVariant& thing : stencil.gcThings) {
-    MOZ_TRY(XDRScriptThingVariant(xdr, thing));
-  }
+  MOZ_TRY(XDRSourceExtent(xdr, &stencil.extent));
 
   if (xdrFlags & (1 << uint8_t(XdrFlags::HasSharedData))) {
     MOZ_TRY(StencilXDR::SharedData<mode>(xdr, stencil.sharedData));
   }
 
-  if (xdrFlags & (1 << uint8_t(XdrFlags::HasFunctionAtom))) {
-    MOZ_TRY(XDRParserAtom(xdr, &stencil.functionAtom));
+  for (ScriptThingVariant& thing : stencil.gcThings) {
+    MOZ_TRY(XDRScriptThingVariant(xdr, thing));
   }
+
+  MOZ_TRY(XDRParserAtomOrNull(xdr, &stencil.functionAtom));
 
   return Ok();
 };
@@ -993,7 +975,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
 
   MOZ_TRY(XDRVector(xdr, stencil.scriptData));
   for (auto& entry : stencil.scriptData) {
-    MOZ_TRY(StencilXDR::Script(xdr, entry));
+    MOZ_TRY(XDRScriptStencil(xdr, entry));
   }
 
   if (stencil.scriptData[CompilationInfo::TopLevelIndex].isModule()) {
