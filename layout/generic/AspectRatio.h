@@ -10,6 +10,7 @@
 /* The aspect ratio of a box, in a "width / height" format. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/BaseSize.h"
 #include "nsCoord.h"
 #include <algorithm>
 #include <limits>
@@ -29,6 +30,11 @@ struct AspectRatio {
       return AspectRatio();
     }
     return AspectRatio(aWidth / aHeight);
+  }
+
+  template <typename T, typename Sub>
+  static AspectRatio FromSize(const gfx::BaseSize<T, Sub>& aSize) {
+    return FromSize(aSize.Width(), aSize.Height());
   }
 
   explicit operator bool() const { return mRatio != 0.0f; }
