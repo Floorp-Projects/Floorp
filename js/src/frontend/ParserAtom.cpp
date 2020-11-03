@@ -330,19 +330,6 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
   return entryPtr->asAtom();
 }
 
-JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1Seq(
-    JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
-    const Latin1Char* latin1Ptr, uint32_t length) {
-  MOZ_ASSERT(!addPtr);
-
-  InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
-
-  UniquePtr<ParserAtomEntry> entry;
-  MOZ_TRY_VAR(entry,
-              ParserAtomEntry::allocate<Latin1Char>(cx, seq, length, hash));
-  return addEntry(cx, addPtr, std::move(entry));
-}
-
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
     JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
@@ -384,7 +371,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
     return (*addPtr)->asAtom();
   }
 
-  return internLatin1Seq(cx, addPtr, lookup.hash(), latin1Ptr, length);
+  return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
 }
 
 // For XDR we should only need to intern user strings so skip checks for tiny
@@ -400,7 +387,7 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1ForXDR(
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
   MOZ_ASSERT(!addPtr);
 
-  return internLatin1Seq(cx, addPtr, lookup.hash(), latin1Ptr, length);
+  return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
 }
 
 // For XDR
