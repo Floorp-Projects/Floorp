@@ -6289,6 +6289,14 @@ class CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.Pu
       };
     }
 
+    let titleStyle;
+
+    if (this.props.hideTitle) {
+      titleStyle = {
+        visibility: "hidden"
+      };
+    }
+
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("section", {
       className: `collapsible-section ${this.props.className}${enableAnimation ? " animation-enabled" : ""}${collapsed ? " collapsed" : ""}${active ? " active" : ""}`,
       "aria-expanded": !collapsed // Note: data-section-id is used for web extension api tests in mozilla central
@@ -6297,7 +6305,8 @@ class CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.Pu
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "section-top-bar"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h3", {
-      className: "section-title"
+      className: "section-title",
+      style: titleStyle
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", {
       className: "click-target-container"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", {
@@ -8962,9 +8971,10 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       className: "top-sites",
       icon: "topsites",
       id: "topsites",
-      title: this.props.title || {
+      title: props.title || {
         id: "newtab-section-header-topsites"
       },
+      hideTitle: props.Prefs.values.hideTopSitesTitle,
       extraMenuOptions: extraMenuOptions,
       showPrefName: "feeds.topsites",
       eventSource: _TopSitesConstants__WEBPACK_IMPORTED_MODULE_1__["TOP_SITES_SOURCE"],
