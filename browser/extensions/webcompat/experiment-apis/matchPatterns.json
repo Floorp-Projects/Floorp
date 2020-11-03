@@ -10,7 +10,7 @@
         "parameters": [
           {
             "name": "patterns",
-            "description": "Array of string URL patterns to whitelist",
+            "description": "Array of string URL patterns to match",
             "type": "array",
             "items": {
               "type": "string"
