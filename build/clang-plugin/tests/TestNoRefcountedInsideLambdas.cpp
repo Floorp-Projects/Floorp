@@ -4,9 +4,7 @@
 
 // Ensure that warnings about returning stack addresses of local variables are
 // errors, so our `expected-error` annotations below work correctly.
-#if __cplusplus >= 201703L
 #pragma GCC diagnostic error "-Wreturn-stack-address"
-#endif
 
 struct RefCountedBase {
   void AddRef();
@@ -400,11 +398,7 @@ void e() {
   auto e1 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
-#else
-    return ([&](R* argptr) {
-#endif
       R* localptr;
       ptr->method();
       argptr->method();
@@ -414,11 +408,7 @@ void e() {
   auto e2 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
-#else
-    return ([&](SmartPtr<R> argsp) {
-#endif
       SmartPtr<R> localsp;
       sp->method();
       argsp->method();
@@ -428,11 +418,7 @@ void e() {
   auto e3 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
-#else
-    return ([&](R* argptr) {
-#endif
       R* localptr;
       take(ptr);
       take(argptr);
@@ -442,11 +428,7 @@ void e() {
   auto e4 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
-#else
-    return ([&](SmartPtr<R> argsp) {
-#endif
       SmartPtr<R> localsp;
       take(sp);
       take(argsp);
@@ -536,11 +518,7 @@ void e() {
   auto e14 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
-#else
-    return ([&ptr](R* argptr) {
-#endif
       R* localptr;
       ptr->method();
       argptr->method();
@@ -550,11 +528,7 @@ void e() {
   auto e15 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
-#else
-    return ([&sp](SmartPtr<R> argsp) {
-#endif
       SmartPtr<R> localsp;
       sp->method();
       argsp->method();
@@ -564,11 +538,7 @@ void e() {
   auto e16 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&ptr](R* argptr) { // expected-error{{address of stack memory associated with local variable 'ptr' returned}}
-#else
-    return ([&ptr](R* argptr) {
-#endif
       R* localptr;
       take(ptr);
       take(argptr);
@@ -578,11 +548,7 @@ void e() {
   auto e17 = []() {
     R* ptr;
     SmartPtr<R> sp;
-#if __cplusplus >= 201703L
     return ([&sp](SmartPtr<R> argsp) { // expected-error{{address of stack memory associated with local variable 'sp' returned}}
-#else
-    return ([&sp](SmartPtr<R> argsp) {
-#endif
       SmartPtr<R> localsp;
       take(sp);
       take(argsp);
