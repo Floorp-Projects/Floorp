@@ -33,6 +33,13 @@ class RenderCompositorSWGL : public RenderCompositor {
   void Pause() override;
   bool Resume() override;
 
+  layers::WebRenderBackend BackendType() const override {
+    return layers::WebRenderBackend::SOFTWARE;
+  }
+  layers::WebRenderCompositor CompositorType() const override {
+    return layers::WebRenderCompositor::SOFTWARE;
+  }
+
   bool SurfaceOriginIsTopLeft() override { return true; }
 
   LayoutDeviceIntSize GetBufferSize() override;

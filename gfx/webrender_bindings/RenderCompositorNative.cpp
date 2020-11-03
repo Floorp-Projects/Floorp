@@ -1,3 +1,5 @@
+#include "RenderCompositorNative.h"
+#include "RenderCompositorNative.h"
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -119,6 +121,14 @@ RenderedFrameId RenderCompositorNative::EndFrame(
 void RenderCompositorNative::Pause() {}
 
 bool RenderCompositorNative::Resume() { return true; }
+
+inline layers::WebRenderCompositor RenderCompositorNative::CompositorType()
+    const {
+  if (gfx::gfxVars::UseWebRenderCompositor()) {
+    return layers::WebRenderCompositor::CORE_ANIMATION;
+  }
+  return layers::WebRenderCompositor::DRAW;
+}
 
 LayoutDeviceIntSize RenderCompositorNative::GetBufferSize() {
   return mWidget->GetClientSize();

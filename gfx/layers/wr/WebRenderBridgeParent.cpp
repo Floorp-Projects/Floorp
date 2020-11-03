@@ -641,7 +641,7 @@ bool WebRenderBridgeParent::UpdateResources(
   if (scheduleRelease) {
     // When software WR is enabled, shared surfaces are read during rendering
     // rather than copied to the texture cache.
-    wr::Checkpoint when = gfx::gfxVars::UseSoftwareWebRender()
+    wr::Checkpoint when = mApi->GetBackendType() == WebRenderBackend::SOFTWARE
                               ? wr::Checkpoint::FrameRendered
                               : wr::Checkpoint::FrameTexturesUpdated;
     aUpdates.Notify(when, std::move(scheduleRelease));
@@ -708,7 +708,7 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
   mSharedSurfaceIds.insert(std::make_pair(key, aExtId));
 
   auto imageType =
-      gfx::gfxVars::UseSoftwareWebRender()
+      mApi->GetBackendType() == WebRenderBackend::SOFTWARE
           ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default)
           : wr::ExternalImageType::Buffer();
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
@@ -822,7 +822,7 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
   }
 
   auto imageType =
-      gfx::gfxVars::UseSoftwareWebRender()
+      mApi->GetBackendType() == WebRenderBackend::SOFTWARE
           ? wr::ExternalImageType::TextureHandle(wr::TextureTarget::Default)
           : wr::ExternalImageType::Buffer();
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
@@ -2488,12 +2488,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvReleaseCompositable(
 TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
   MOZ_ASSERT(mApi);
 
-  TextureFactoryIdentifier ident(LayersBackend::LAYERS_WR, XRE_GetProcessType(),
-                                 mApi->GetMaxTextureSize(), false,
-                                 mApi->GetUseANGLE(), mApi->GetUseDComp(),
-                                 mAsyncImageManager->UseCompositorWnd(), false,
-                                 false, false, mApi->GetSyncHandle());
-  ident.mUsingSoftwareWebRender = gfx::gfxVars::UseSoftwareWebRender();
+  TextureFactoryIdentifier ident(
+      mApi->GetBackendType(), mApi->GetCompositorType(), XRE_GetProcessType(),
+      mApi->GetMaxTextureSize(), false, mApi->GetUseANGLE(),
+      mApi->GetUseDComp(), mAsyncImageManager->UseCompositorWnd(), false, false,
+      false, mApi->GetSyncHandle());
   return ident;
 }
 
