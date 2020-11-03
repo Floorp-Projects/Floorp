@@ -15,14 +15,14 @@
 namespace mozilla {
 namespace mscom {
 
-class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
+class MOZ_NON_TEMPORARY_CLASS ApartmentRegion {
  public:
   /**
    * This constructor is to be used when we want to instantiate the object but
    * we do not yet know which type of apartment we want. Call Init() to
    * complete initialization.
    */
-  constexpr ApartmentRegion() : mInitResult(CO_E_NOTINITIALIZED) {}
+  ApartmentRegion() : mInitResult(CO_E_NOTINITIALIZED) {}
 
   explicit ApartmentRegion(COINIT aAptType)
       : mInitResult(::CoInitializeEx(nullptr, aAptType)) {
@@ -62,7 +62,7 @@ class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
 };
 
 template <COINIT T>
-class MOZ_NON_TEMPORARY_CLASS ApartmentRegionT final {
+class MOZ_NON_TEMPORARY_CLASS ApartmentRegionT {
  public:
   ApartmentRegionT() : mAptRgn(T) {}
 
