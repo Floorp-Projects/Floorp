@@ -131,8 +131,27 @@ add_task(async function testNoSoundIndicatorForMediaWithoutAudioTrack() {
   await initMediaPlaybackDocument(tab, "noaudio.webm", { createVideo: true });
 
   info(`no sound indicator should show for playing media without audio track`);
-  await playMedia(tab, { resolveOnEnded: true });
+  await playMedia(tab, { resolveOnTimeupdate: true });
   ok(!tab.observer.hasEverUpdated(), "didn't ever update sound indicator");
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testSoundIndicatorWhenChangingMediaMuted() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab({ needObserver: true });
+  await initMediaPlaybackDocument(tab, "audio.ogg", { muted: true });
+
+  info(`no sound indicator should show for playing muted media`);
+  await playMedia(tab, { resolveOnTimeupdate: true });
+  ok(!tab.observer.hasEverUpdated(), "didn't ever update sound indicator");
+
+  info(`unmuted media should make sound indicator appear`);
+  await Promise.all([
+    waitForTabSoundIndicatorAppears(tab),
+    updateMedia(tab, { muted: false }),
+  ]);
 
   info("remove tab");
   BrowserTestUtils.removeTab(tab);
@@ -144,12 +163,12 @@ add_task(async function testNoSoundIndicatorForMediaWithoutAudioTrack() {
 function initMediaPlaybackDocument(
   tab,
   fileName,
-  { preload, createVideo } = {}
+  { preload, createVideo, muted = false } = {}
 ) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
-    [fileName, preload, createVideo],
-    async (fileName, preload, createVideo) => {
+    [fileName, preload, createVideo, muted],
+    async (fileName, preload, createVideo, muted) => {
       if (createVideo) {
         content.media = content.document.createElement("video");
       } else {
@@ -158,6 +177,7 @@ function initMediaPlaybackDocument(
       if (preload) {
         content.media.preload = preload;
       }
+      content.media.muted = muted;
       content.media.src = fileName;
     }
   );
@@ -170,14 +190,14 @@ function initMediaStreamPlaybackDocument(tab) {
   });
 }
 
-function playMedia(tab, { resolveOnEnded } = {}) {
+function playMedia(tab, { resolveOnTimeupdate } = {}) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
-    [resolveOnEnded],
-    async resolveOnEnded => {
+    [resolveOnTimeupdate],
+    async resolveOnTimeupdate => {
       await content.media.play();
-      if (resolveOnEnded) {
-        await new Promise(r => (content.media.onended = r));
+      if (resolveOnTimeupdate) {
+        await new Promise(r => (content.media.ontimeupdate = r));
       }
     }
   );
@@ -195,4 +215,19 @@ function assignNewSourceForAudio(tab, fileName) {
     content.media.removeAttribute("src");
     content.media.src = fileName;
   });
+}
+
+function updateMedia(tab, { muted, volume } = {}) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [muted, volume],
+    (muted, volume) => {
+      if (muted != undefined) {
+        content.media.muted = muted;
+      }
+      if (volume != undefined) {
+        content.media.volume = volume;
+      }
+    }
+  );
 }
