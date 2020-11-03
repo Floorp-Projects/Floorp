@@ -12,6 +12,7 @@ const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
 const kExtraDragSpacePref = "browser.tabs.extraDragSpace";
+const kBookmarksToolbarPref = "browser.toolbars.bookmarks.visibility";
 const kKeepBroadcastAttributes = "keepbroadcastattributeswhencustomizing";
 
 const kPanelItemContextMenu = "customizationPanelItemContextMenu";
@@ -177,6 +178,12 @@ function CustomizeMode(aWindow) {
     this.$("customization-titlebar-visibility-checkbox").hidden = true;
     this.$("customization-extra-drag-space-checkbox").hidden = true;
   }
+
+  // Observe pref changes to the bookmarks toolbar visibility,
+  // since we won't get a toolbarvisibilitychange event if the
+  // toolbar is changing from 'newtab' to 'always' in Customize mode
+  // since the toolbar is shown with the 'newtab' setting.
+  Services.prefs.addObserver(kBookmarksToolbarPref, this);
 
   this.window.addEventListener("unload", this);
 }
