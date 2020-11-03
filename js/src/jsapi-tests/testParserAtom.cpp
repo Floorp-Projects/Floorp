@@ -35,6 +35,7 @@ BEGIN_TEST(testParserAtom_empty) {
   CHECK(atomTable.internLatin1(cx, latin1, 0).unwrap() == ref);
   CHECK(atomTable.internUtf8(cx, utf8, 0).unwrap() == ref);
   CHECK(atomTable.internChar16(cx, char16, 0).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 0).unwrap() == ref);
 
   // Check concatenation works on empty atoms.
   const ParserAtom* concat[] = {
@@ -70,6 +71,7 @@ BEGIN_TEST(testParserAtom_tiny1) {
   CHECK(atomTable.internLatin1(cx, latin1, 1).unwrap() == ref);
   CHECK(atomTable.internUtf8(cx, utf8, 1).unwrap() == ref);
   CHECK(atomTable.internChar16(cx, char16, 1).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 1).unwrap() == ref);
 
   const ParserAtom* concat[] = {
       ref,
@@ -109,6 +111,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   CHECK(atomTable.internLatin1(cx, latin1, 2).unwrap() == ref);
   CHECK(atomTable.internUtf8(cx, utf8, 2).unwrap() == ref);
   CHECK(atomTable.internChar16(cx, char16, 2).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 2).unwrap() == ref);
 
   const ParserAtom* concat[] = {
       cx->parserNames().lookupTiny(ascii + 0, 1),

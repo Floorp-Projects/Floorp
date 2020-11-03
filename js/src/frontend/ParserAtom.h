@@ -515,14 +515,13 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
                                               EntrySet::AddPtr& addPtr,
                                               UniquePtr<ParserAtomEntry> entry);
+  JS::Result<const ParserAtom*, OOM> internLatin1Seq(
+      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+      const Latin1Char* latin1Ptr, uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
       JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
       InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
-  template <typename AtomCharT, typename SeqCharT>
-  JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, HashNumber hash, InflatedChar16Sequence<SeqCharT> seq,
-      uint32_t length);
 
  public:
   bool empty() const { return entrySet_.empty(); }
@@ -542,8 +541,7 @@ class ParserAtomsTable {
       JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internLatin1ForXDR(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
-      uint32_t length);
+      JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internUtf8(
       JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
@@ -552,9 +550,10 @@ class ParserAtomsTable {
                                                   const char16_t* char16Ptr,
                                                   uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internChar16ForXDR(
-      JSContext* cx, LittleEndianChars twoByteLE, HashNumber hash,
-      uint32_t length);
+  // This only exists for XDR support.
+  JS::Result<const ParserAtom*, OOM> internChar16LE(JSContext* cx,
+                                                    LittleEndianChars twoByteLE,
+                                                    uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
