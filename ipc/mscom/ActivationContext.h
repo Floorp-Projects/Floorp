@@ -23,15 +23,10 @@ namespace mscom {
 
 class ActivationContext final {
  public:
-  // This is the default resource ID that the Windows dynamic linker searches
-  // for when seeking a manifest while loading a DLL.
-  static constexpr WORD kDllManifestDefaultResourceId = 2;
-
   ActivationContext() : mActCtx(INVALID_HANDLE_VALUE) {}
 
   explicit ActivationContext(WORD aResourceId);
-  explicit ActivationContext(HMODULE aLoadFromModule,
-                             WORD aResourceId = kDllManifestDefaultResourceId);
+  explicit ActivationContext(HMODULE aLoadFromModule, WORD aResourceId = 2);
 
   ActivationContext(ActivationContext&& aOther);
   ActivationContext& operator=(ActivationContext&& aOther);
