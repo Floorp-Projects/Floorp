@@ -109,18 +109,16 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
         match self {
             EventMetric::Parent { inner, .. } => {
                 let metric = Arc::clone(&inner);
-                let extra = extra.into().clone();
+                let extra = extra.into();
                 let now = Instant::now();
                 dispatcher::launch(move || metric.record(now, extra));
             }
             EventMetric::Child(c) => {
-                let extra = extra.into().and_then(|hash_map| {
-                    Some(
-                        hash_map
-                            .iter()
-                            .map(|(k, v)| (k.index(), v.clone()))
-                            .collect(),
-                    )
+                let extra = extra.into().map(|hash_map| {
+                    hash_map
+                        .iter()
+                        .map(|(k, v)| (k.index(), v.clone()))
+                        .collect()
                 });
                 let now = Instant::now();
                 with_ipc_payload(move |payload| {
@@ -129,7 +127,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
                     } else {
                         let mut v = vec![];
                         v.push((now, extra));
-                        payload.events.insert(c.0.clone(), v);
+                        payload.events.insert(c.0, v);
                     }
                 });
             }

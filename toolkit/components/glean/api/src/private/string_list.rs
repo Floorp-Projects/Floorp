@@ -73,7 +73,7 @@ impl StringListMetric {
                     } else {
                         let mut v = vec![];
                         v.push(value.into());
-                        payload.string_lists.insert(c.0.clone(), v);
+                        payload.string_lists.insert(c.0, v);
                     }
                 });
             }

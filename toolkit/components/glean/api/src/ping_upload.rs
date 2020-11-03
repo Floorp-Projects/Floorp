@@ -38,21 +38,16 @@ pub fn check_for_uploads() {
         return;
     }
     thread::spawn(move || {
-        loop {
-            if let Some(mutex) = UPLOADER.get() {
-                let uploader = &mut *mutex.lock().unwrap();
-                if let Upload(request) = crate::with_glean(|glean| glean.get_upload_task()) {
-                    let response = (*uploader)(&request);
-                    crate::with_glean(|glean| {
-                        glean.process_ping_upload_response(&request.document_id, response)
-                    });
-                } else {
-                    // For now, don't bother distinguishing between Wait and Done.
-                    // Either mean there's no task to execute right now.
-                    break;
-                }
+        while let Some(mutex) = UPLOADER.get() {
+            let uploader = &mut *mutex.lock().unwrap();
+            if let Upload(request) = crate::with_glean(|glean| glean.get_upload_task()) {
+                let response = (*uploader)(&request);
+                crate::with_glean(|glean| {
+                    glean.process_ping_upload_response(&request.document_id, response)
+                });
             } else {
-                // No uploader? Weird.
+                // For now, don't bother distinguishing between Wait and Done.
+                // Either mean there's no task to execute right now.
                 break;
             }
         }
