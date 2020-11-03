@@ -140,6 +140,10 @@ class PrintHelper {
   assertDialogHidden() {
     is(this._dialogs.length, 1, "There is one print dialog");
     ok(BrowserTestUtils.is_hidden(this.dialog._box), "The dialog is hidden");
+    ok(
+      this.dialog._box.getBoundingClientRect().width > 0,
+      "The dialog should still have boxes"
+    );
   }
 
   async assertPrintToFile(file, testFn) {
