@@ -404,16 +404,9 @@ struct ReflowInput : public SizeComputationInput {
     return ComputedSize(aWM) + ComputedLogicalPadding(aWM).Size(aWM);
   }
 
-  mozilla::LogicalSize ComputedSizeWithBorderPadding() const {
-    mozilla::WritingMode wm = GetWritingMode();
-    return mozilla::LogicalSize(
-        wm, ComputedISize() + ComputedLogicalBorderPadding(wm).IStartEnd(wm),
-        ComputedBSize() + ComputedLogicalBorderPadding(wm).BStartEnd(wm));
-  }
-
   mozilla::LogicalSize ComputedSizeWithBorderPadding(
       mozilla::WritingMode aWM) const {
-    return ComputedSizeWithBorderPadding().ConvertTo(aWM, GetWritingMode());
+    return ComputedSize(aWM) + ComputedLogicalBorderPadding(aWM).Size(aWM);
   }
 
   mozilla::LogicalSize ComputedSizeWithMarginBorderPadding() const {

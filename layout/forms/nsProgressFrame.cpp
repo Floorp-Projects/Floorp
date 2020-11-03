@@ -102,8 +102,8 @@ void nsProgressFrame::Reflow(nsPresContext* aPresContext,
     nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
   }
 
-  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
-                       aReflowInput.ComputedSizeWithBorderPadding());
+  const auto wm = aReflowInput.GetWritingMode();
+  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   for (auto childFrame : PrincipalChildList()) {
