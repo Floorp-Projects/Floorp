@@ -144,7 +144,7 @@ bool nsPrinterWin::SupportsCollation() const {
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLLATE, nullptr,
                                nullptr) == 1;
 }
- 
+
 nsPrinterBase::PrinterInfo nsPrinterWin::CreatePrinterInfo() const {
   return PrinterInfo{PaperList(), DefaultSettings()};
 }
