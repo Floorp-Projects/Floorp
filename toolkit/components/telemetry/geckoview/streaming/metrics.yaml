@@ -835,6 +835,36 @@ avif:
       - jbauman@mozilla.com
     expires: never
 
+  aom_decode_error:
+    type: quantity
+    unit: error code
+    gecko_datapoint: avif.aom_decode_error
+    description: >
+      Image-decode Error from AOM decoder
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
+  dav1d_decode_error:
+    type: quantity
+    unit: error code
+    gecko_datapoint: avif.dav1d_decode_error
+    description: >
+      Image-decode Error from dav1d decoder
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
+    expires: never
+
   yuv_color_space:
     type: labeled_counter
     labels:
