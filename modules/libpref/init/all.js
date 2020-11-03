@@ -183,7 +183,11 @@ pref("security.pki.distrust_ca_policy", 2);
 // 0: Disable CRLite entirely
 // 1: Enable and check revocations via CRLite, but only collect telemetry
 // 2: Enable and enforce revocations via CRLite
+#if defined(NIGHTLY_BUILD)
+pref("security.pki.crlite_mode", 2);
+#else
 pref("security.pki.crlite_mode", 1);
+#endif
 
 // Represents the expected certificate transparency log merge delay (including
 // the time to generate a CRLite filter). Currently 28 hours in seconds.
