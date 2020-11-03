@@ -573,7 +573,7 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
   }
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
-      TimeDuration::FromMilliseconds(50);
+      TimeDuration::FromMilliseconds(20);
 
   // Even if the caller doesn't care about the block id, we need it to set the
   // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
