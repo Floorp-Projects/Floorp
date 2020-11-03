@@ -430,3 +430,74 @@
 .pkt_ext_signup_overflow.pkt_ext_signup_ru .signup-btn-firefox .logo {
     display: none;
 }
+
+/* Signup variants */
+/* TODO: Delete post-experiment */
+
+.los_variant {
+    background-color: #fff;
+    padding: 0;
+    text-align: start;
+}
+
+.los_variant_top {
+    padding: 24px;
+}
+
+.los_variant_bottom {
+    text-align: center;
+    padding: 26px 22px;
+}
+
+.los_variant_bottom .los_variant_button {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    color: #FFFFFF;
+    border-radius: 4px;
+    background: #0060DF;
+    display: block;
+    padding: 8px 16px;
+    margin-bottom: 16px
+}
+
+.los_variant_bottom .los_variant_sub {
+    font-style: normal;
+    font-weight: normal;
+    font-size: 13px;
+    line-height: 16px;
+    color: #737373;
+}
+
+.los_variant_bottom .los_variant_sub a {
+    color: #0060DF;
+}
+
+.los_variant_a .los_variant_top {
+    background-color: #e8f7f6;
+}
+
+.los_variant_b .los_variant_top {
+    background-color: #DCEAFF;
+}
+
+.los_variant_c .los_variant_top {
+    background-color: #ffffff;
+}
+
+.los_variant h1 {
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 20px;
+    color: #0C0C0D;
+}
+
+.los_variant p {
+    font-style: normal;
+    font-weight: normal;
+    font-size: 15px;
+    line-height: 18px;
+    color: #0C0C0D;
+}
