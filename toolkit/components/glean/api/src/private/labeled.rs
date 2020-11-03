@@ -6,7 +6,7 @@ use std::sync::RwLock;
 
 use glean_core::metrics::MetricType;
 
-use super::{BooleanMetric, CommonMetricData, CounterMetric, ErrorType, StringMetric};
+use super::{BooleanMetric, CommonMetricData, CounterMetric, ErrorType, MetricId, StringMetric};
 use crate::dispatcher;
 use crate::ipc::need_ipc;
 
@@ -14,7 +14,7 @@ use crate::ipc::need_ipc;
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use super::{BooleanMetric, CommonMetricData, CounterMetric, StringMetric};
+    use super::{BooleanMetric, CommonMetricData, CounterMetric, MetricId, StringMetric};
     use crate::ipc::need_ipc;
     use std::sync::Arc;
 
@@ -26,7 +26,7 @@ mod private {
         type Inner: glean_core::metrics::MetricType + Clone;
 
         /// Create a new metric object from the inner type.
-        fn from_inner(metric: Self::Inner) -> Self;
+        fn from_inner(id: MetricId, metric: Self::Inner) -> Self;
 
         /// Create a new `glean_core `metric of the inner type.
         fn new_inner(meta: CommonMetricData) -> Self::Inner;
@@ -38,7 +38,7 @@ mod private {
     impl Sealed for BooleanMetric {
         type Inner = glean_core::metrics::BooleanMetric;
 
-        fn from_inner(metric: Self::Inner) -> Self {
+        fn from_inner(_id: MetricId, metric: Self::Inner) -> Self {
             assert!(
                 !need_ipc(),
                 "Labeled Boolean metrics are not supported in non-main processes"
@@ -57,7 +57,7 @@ mod private {
     impl Sealed for StringMetric {
         type Inner = glean_core::metrics::StringMetric;
 
-        fn from_inner(metric: Self::Inner) -> Self {
+        fn from_inner(_id: MetricId, metric: Self::Inner) -> Self {
             assert!(
                 !need_ipc(),
                 "Labeled String metrics are not supported in non-main processes"
@@ -76,9 +76,12 @@ mod private {
     impl Sealed for CounterMetric {
         type Inner = glean_core::metrics::CounterMetric;
 
-        fn from_inner(metric: Self::Inner) -> Self {
+        fn from_inner(id: MetricId, metric: Self::Inner) -> Self {
             assert!(!need_ipc());
-            CounterMetric::Parent(Arc::new(crate::private::counter::CounterMetricImpl(metric)))
+            CounterMetric::Parent {
+                id,
+                inner: Arc::new(crate::private::counter::CounterMetricImpl(metric)),
+            }
         }
 
         fn new_inner(meta: CommonMetricData) -> Self::Inner {
@@ -126,6 +129,9 @@ impl<T> AllowLabeled for T where T: private::Sealed {}
 /// ```
 #[derive(Debug)]
 pub struct LabeledMetric<T: AllowLabeled> {
+    /// The metric ID of the underlying metric.
+    id: MetricId,
+
     /// Wrapping the underlying core metric.
     ///
     /// We delegate all functionality to this and wrap it up again in our own metric type.
@@ -141,11 +147,16 @@ where
     /// Create a new labeled metric from the given metric instance and optional list of labels.
     ///
     /// See [`get`](#method.get) for information on how static or dynamic labels are handled.
-    pub fn new(meta: CommonMetricData, labels: Option<Vec<String>>) -> LabeledMetric<T> {
+    pub fn new(
+        id: MetricId,
+        meta: CommonMetricData,
+        labels: Option<Vec<String>>,
+    ) -> LabeledMetric<T> {
         let submetric = T::new_inner(meta);
         let core = glean_core::metrics::LabeledMetric::new(submetric, labels);
 
         LabeledMetric {
+            id,
             core: RwLock::new(core),
         }
     }
@@ -172,7 +183,7 @@ where
                 .write()
                 .expect("lock of wrapped metric was poisoned");
             let inner = core.get(label);
-            T::from_inner(inner)
+            T::from_inner(self.id, inner)
         }
     }
 
@@ -207,5 +218,175 @@ where
                 storage_name,
             )
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use once_cell::sync::Lazy;
+
+    use super::*;
+    use crate::common_test::*;
+
+    // Smoke test for what should be the generated code.
+    static GLOBAL_METRIC: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
+        LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "global".into(),
+                category: "metric".into(),
+                send_in_pings: vec!["ping".into()],
+                disabled: false,
+                ..Default::default()
+            },
+            None,
+        )
+    });
+
+    #[test]
+    fn smoke_test_global_metric() {
+        let _lock = lock_test();
+
+        GLOBAL_METRIC.get("a_value").set(true);
+        assert_eq!(
+            true,
+            GLOBAL_METRIC.get("a_value").test_get_value("ping").unwrap()
+        );
+    }
+
+    #[test]
+    fn sets_labeled_bool_metrics() {
+        let _lock = lock_test();
+        let store_names: Vec<String> = vec!["store1".into()];
+
+        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "bool".into(),
+                category: "labeled".into(),
+                send_in_pings: store_names,
+                disabled: false,
+                ..Default::default()
+            },
+            None,
+        );
+
+        metric.get("upload").set(true);
+
+        assert!(metric.get("upload").test_get_value("store1").unwrap());
+        assert_eq!(None, metric.get("download").test_get_value("store1"));
+    }
+
+    #[test]
+    fn sets_labeled_string_metrics() {
+        let _lock = lock_test();
+        let store_names: Vec<String> = vec!["store1".into()];
+
+        let metric: LabeledMetric<StringMetric> = LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "string".into(),
+                category: "labeled".into(),
+                send_in_pings: store_names,
+                disabled: false,
+                ..Default::default()
+            },
+            None,
+        );
+
+        metric.get("upload").set("Glean");
+
+        assert_eq!(
+            "Glean",
+            metric.get("upload").test_get_value("store1").unwrap()
+        );
+        assert_eq!(None, metric.get("download").test_get_value("store1"));
+    }
+
+    #[test]
+    fn sets_labeled_counter_metrics() {
+        let _lock = lock_test();
+        let store_names: Vec<String> = vec!["store1".into()];
+
+        let metric: LabeledMetric<CounterMetric> = LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "counter".into(),
+                category: "labeled".into(),
+                send_in_pings: store_names,
+                disabled: false,
+                ..Default::default()
+            },
+            None,
+        );
+
+        metric.get("upload").add(10);
+
+        assert_eq!(10, metric.get("upload").test_get_value("store1").unwrap());
+        assert_eq!(None, metric.get("download").test_get_value("store1"));
+    }
+
+    #[test]
+    fn records_errors() {
+        let _lock = lock_test();
+        let store_names: Vec<String> = vec!["store1".into()];
+
+        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "bool".into(),
+                category: "labeled".into(),
+                send_in_pings: store_names,
+                disabled: false,
+                ..Default::default()
+            },
+            None,
+        );
+
+        metric
+            .get("this_string_has_more_than_thirty_characters")
+            .set(true);
+
+        assert_eq!(
+            Ok(1),
+            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
+        );
+    }
+
+    #[test]
+    fn predefined_labels() {
+        let _lock = lock_test();
+        let store_names: Vec<String> = vec!["store1".into()];
+
+        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+            0.into(),
+            CommonMetricData {
+                name: "bool".into(),
+                category: "labeled".into(),
+                send_in_pings: store_names,
+                disabled: false,
+                ..Default::default()
+            },
+            Some(vec!["label1".into(), "label2".into()]),
+        );
+
+        metric.get("label1").set(true);
+        metric.get("label2").set(false);
+        metric.get("not_a_label").set(true);
+
+        assert_eq!(true, metric.get("label1").test_get_value("store1").unwrap());
+        assert_eq!(
+            false,
+            metric.get("label2").test_get_value("store1").unwrap()
+        );
+        // The label not in the predefined set is recorded to the `other` bucket.
+        assert_eq!(
+            true,
+            metric.get("__other__").test_get_value("store1").unwrap()
+        );
+
+        assert!(metric
+            .test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
+            .is_err());
     }
 }
