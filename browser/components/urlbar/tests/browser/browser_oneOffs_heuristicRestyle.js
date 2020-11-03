@@ -189,7 +189,6 @@ add_task(async function basic() {
     fireInputEvent: true,
   });
   await rebuildPromise;
-  let originalResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   await assertState(0, -1, `${typedValue}g/`);
 
   // Alt+Down to the first one-off.  Now the first result and the first one-off
@@ -207,12 +206,6 @@ add_task(async function basic() {
 
   info("Select the second result and observe the heuristic is restored.");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(
-    result.image,
-    originalResult.image,
-    "The original heuristic icon was restored."
-  );
   EventUtils.synthesizeKey("KEY_ArrowUp");
   await assertState(0, -1, `${typedValue}g/`);
 
