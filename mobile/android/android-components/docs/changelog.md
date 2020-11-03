@@ -25,6 +25,10 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #8967](https://github.com/mozilla-mobile/android-components/issues/8967) Crash when trying to upload a file see [fenix#16537](https://github.com/mozilla-mobile/fenix/issues/16537), for more information.
   * 🚒 Bug fixed [issue #8953](https://github.com/mozilla-mobile/android-components/issues/8953) - Scroll to selected prompt choice if one exists.
 
+* **feature-accounts-push**
+  * ⚠️ `FxaPushSupportFeature` now re-subscribes to push instead of triggering the registration renewal process - this is a temporary workaround and will be removed in the future, see [#7143](https://github.com/mozilla-mobile/android-components/issues/7143).
+  * `FxaPushSupportFeature` now takes an optional crash reporter in the constructor.
+
 # 66.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v65.0.0...v66.0.0)

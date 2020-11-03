@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("LongParameterList")
+
 package mozilla.components.feature.accounts.push
 
 import android.content.Context
@@ -11,7 +13,8 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import mozilla.components.concept.push.PushProcessor
+import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -42,6 +45,7 @@ internal const val PREF_FXA_SCOPE = "fxa_push_scope"
  * @param context The application Android context.
  * @param accountManager The FxaAccountManager.
  * @param pushFeature The [AutoPushFeature] if that is setup for observing push events.
+ * @param crashReporter Instance of `CrashReporting` to record unexpected caught exceptions.
  * @param owner the lifecycle owner for the observer. Defaults to [ProcessLifecycleOwner].
  * @param autoPause whether to stop notifying the observer during onPause lifecycle events.
  * Defaults to false so that observers are always notified.
@@ -50,6 +54,7 @@ class FxaPushSupportFeature(
     private val context: Context,
     accountManager: FxaAccountManager,
     pushFeature: AutoPushFeature,
+    private val crashReporter: CrashReporting? = null,
     owner: LifecycleOwner = ProcessLifecycleOwner.get(),
     autoPause: Boolean = false
 ) {
@@ -85,6 +90,7 @@ class FxaPushSupportFeature(
             context,
             pushFeature,
             fxaPushScope,
+            crashReporter,
             owner,
             autoPause
         )
@@ -107,25 +113,42 @@ internal class AccountObserver(
     private val context: Context,
     private val push: AutoPushFeature,
     private val fxaPushScope: String,
+    private val crashReporter: CrashReporting?,
     private val lifecycleOwner: LifecycleOwner,
     private val autoPause: Boolean
 ) : SyncAccountObserver {
 
     private val logger = Logger(AccountObserver::class.java.simpleName)
     private val verificationDelegate = VerificationDelegate(context, push.config.disableRateLimit)
-    private val constellationObserver = ConstellationObserver(push, verificationDelegate)
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+
+        val constellationObserver = ConstellationObserver(
+            context = context,
+            push = push,
+            scope = fxaPushScope,
+            account = account,
+            verifier = verificationDelegate,
+            crashReporter = crashReporter
+        )
+
         // We need a new subscription only when we have a new account.
         // The subscription is removed when an account logs out.
         if (authType != AuthType.Existing && authType != AuthType.Recovered) {
             logger.debug("Subscribing for FxaPushScope ($fxaPushScope) events.")
 
-            push.subscribe(fxaPushScope) { subscription ->
-                CoroutineScope(Dispatchers.Main).launch {
-                    account.deviceConstellation().setDevicePushSubscription(subscription.into())
-                }
-            }
+            push.subscribe(
+                scope = fxaPushScope,
+                onSubscribeError = { e ->
+                    crashReporter?.recordCrashBreadcrumb(Breadcrumb("Subscribing to FxA push failed at login."))
+                    logger.info("Subscribing to FxA push failed at login.", e)
+                },
+                onSubscribe = { subscription ->
+                    logger.info("Created a new subscription: $subscription")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        account.deviceConstellation().setDevicePushSubscription(subscription.into())
+                    }
+                })
         }
 
         // NB: can we just expose registerDeviceObserver on account manager?
@@ -152,8 +175,12 @@ internal class AccountObserver(
  * when notified by the FxA server. See [Device.subscriptionExpired].
  */
 internal class ConstellationObserver(
-    private val push: PushProcessor,
-    private val verifier: VerificationDelegate
+    context: Context,
+    private val push: AutoPushFeature,
+    private val scope: String,
+    private val account: OAuthAccount,
+    private val verifier: VerificationDelegate = VerificationDelegate(context),
+    private val crashReporter: CrashReporting?
 ) : DeviceConstellationObserver {
 
     private val logger = Logger(ConstellationObserver::class.java.simpleName)
@@ -166,20 +193,58 @@ internal class ConstellationObserver(
         // If our last check was recent (see: PERIODIC_INTERVAL_MILLISECONDS), we do nothing.
         val allowedToRenew = verifier.allowedToRenew()
         if (!updateSubscription || !allowedToRenew) {
-            logger.info("Short-circuiting onDevicesUpdate: " +
-                "updateSubscription($updateSubscription), allowedToRenew($allowedToRenew)")
+            logger.info(
+                "Short-circuiting onDevicesUpdate: " +
+                    "updateSubscription($updateSubscription), allowedToRenew($allowedToRenew)"
+            )
             return
         } else {
             logger.info("Proceeding to renew registration")
         }
 
-        logger.info("Renewing registration")
-        push.renewRegistration()
+        logger.info("We have been notified that our push subscription has expired; re-subscribing.")
+        push.subscribe(
+            scope = scope,
+            onSubscribeError = ::onSubscribeError,
+            onSubscribe = { onSubscribe(constellation, it) }
+        )
 
         logger.info("Incrementing verifier")
         logger.info("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
         verifier.increment()
         logger.info("Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
+    }
+
+    internal fun onSubscribe(constellation: ConstellationState, subscription: AutoPushSubscription) {
+
+        logger.info("Created a new subscription: $subscription")
+
+        val oldEndpoint = constellation.currentDevice?.subscription?.endpoint
+        if (subscription.endpoint == oldEndpoint) {
+            val exception = IllegalStateException(
+                "New push endpoint matches existing one",
+                Throwable("New endpoint: ${subscription.endpoint}\nOld endpoint: $oldEndpoint")
+            )
+
+            crashReporter?.submitCaughtException(exception)
+
+            logger.warn("Push endpoints match!", exception)
+        }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            account.deviceConstellation().setDevicePushSubscription(subscription.into())
+        }
+    }
+
+    internal fun onSubscribeError(e: Exception) {
+        fun Exception.toBreadcrumb() = Breadcrumb(
+            message = "Re-subscribing to FxA push failed after subscriptionExpired",
+            data = mapOf(
+                "exception" to javaClass.name,
+                "message" to message.orEmpty()
+            )
+        )
+        crashReporter?.recordCrashBreadcrumb(e.toBreadcrumb())
     }
 }
 
@@ -261,6 +326,7 @@ internal class VerificationDelegate(
 
     @VisibleForTesting
     internal var innerCount: Int = 0
+
     @VisibleForTesting
     internal var innerTimestamp: Long = System.currentTimeMillis()
 

@@ -7,6 +7,7 @@ package mozilla.components.feature.accounts.push
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
@@ -42,6 +43,7 @@ class AccountObserverTest {
     private val account: OAuthAccount = mock()
     private val constellation: DeviceConstellation = mock()
     private val config: PushConfig = mock()
+    private val crashReporter: CrashReporting = mock()
 
     @Before
     fun setup() {
@@ -58,6 +60,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             lifecycleOwner,
             false
         )
@@ -81,6 +84,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -104,6 +108,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -123,6 +128,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -140,6 +146,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -161,6 +168,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -174,11 +182,31 @@ class AccountObserverTest {
     }
 
     @Test
+    fun `notify crash reporter on subscription error`() = runBlocking {
+        val observer = AccountObserver(
+            testContext,
+            pushFeature,
+            pushScope,
+            crashReporter,
+            mock(),
+            false
+        )
+
+        whenSubscribeError()
+
+        observer.onAuthenticated(account, AuthType.Signin)
+
+        verify(crashReporter).recordCrashBreadcrumb(any())
+        Unit
+    }
+
+    @Test
     fun `feature and service invoked on logout`() {
         val observer = AccountObserver(
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -194,6 +222,7 @@ class AccountObserverTest {
             testContext,
             pushFeature,
             pushScope,
+            crashReporter,
             mock(),
             false
         )
@@ -218,6 +247,17 @@ class AccountObserverTest {
                     authKey = "auth",
                     appServerKey = null
                 )
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun whenSubscribeError(): OngoingStubbing<Unit>? {
+        return `when`(pushFeature.subscribe(any(), nullable(), any(), any())).thenAnswer {
+
+            // Invoke the `onSubscribe` lambda with a fake subscription.
+            (it.arguments[2] as ((Exception) -> Unit)).invoke(
+                IllegalStateException("test")
             )
         }
     }
