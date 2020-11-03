@@ -36,6 +36,8 @@ class RenderCompositorNative : public RenderCompositor {
   void Pause() override;
   bool Resume() override;
 
+  layers::WebRenderCompositor CompositorType() const override;
+
   LayoutDeviceIntSize GetBufferSize() override;
 
   bool ShouldUseNativeCompositor() override;
@@ -188,6 +190,10 @@ class RenderCompositorNativeSWGL : public RenderCompositorNative {
   bool MakeCurrent() override;
 
   void CancelFrame() override;
+
+  layers::WebRenderBackend BackendType() const override {
+    return layers::WebRenderBackend::SOFTWARE;
+  }
 
   // Maps an underlying layer and sets aData to the top left pixel of
   // aValidRect.  The row stride is set to aStride, note this doesn't

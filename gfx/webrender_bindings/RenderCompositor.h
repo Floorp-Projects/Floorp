@@ -78,6 +78,13 @@ class RenderCompositor {
 
   virtual bool UseTripleBuffering() const { return false; }
 
+  virtual layers::WebRenderBackend BackendType() const {
+    return layers::WebRenderBackend::HARDWARE;
+  }
+  virtual layers::WebRenderCompositor CompositorType() const {
+    return layers::WebRenderCompositor::DRAW;
+  }
+
   // True if AttachExternalImage supports being used with an external
   // image that maps to a RenderBufferTextureHost
   virtual bool SupportsExternalBufferTextures() const { return false; }

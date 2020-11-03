@@ -25,6 +25,8 @@
 // clang-format on
 
 namespace mozilla {
+using namespace layers;
+
 namespace wr {
 
 MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderMallocSizeOf)
@@ -57,13 +59,16 @@ static uint16_t SideBitsToHitInfoBits(SideBits aSideBits) {
 class NewRenderer : public RendererEvent {
  public:
   NewRenderer(wr::DocumentHandle** aDocHandle,
-              layers::CompositorBridgeParent* aBridge, int32_t* aMaxTextureSize,
-              bool* aUseANGLE, bool* aUseDComp, bool* aUseTripleBuffering,
-              bool* aSupportsExternalBufferTextures,
+              layers::CompositorBridgeParent* aBridge,
+              WebRenderBackend* aBackend, WebRenderCompositor* aCompositor,
+              int32_t* aMaxTextureSize, bool* aUseANGLE, bool* aUseDComp,
+              bool* aUseTripleBuffering, bool* aSupportsExternalBufferTextures,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask, LayoutDeviceIntSize aSize,
               layers::SyncHandle* aHandle, nsACString* aError)
       : mDocHandle(aDocHandle),
+        mBackend(aBackend),
+        mCompositor(aCompositor),
         mMaxTextureSize(aMaxTextureSize),
         mUseANGLE(aUseANGLE),
         mUseDComp(aUseDComp),
@@ -92,6 +97,8 @@ class NewRenderer : public RendererEvent {
       return;
     }
 
+    *mBackend = compositor->BackendType();
+    *mCompositor = compositor->CompositorType();
     *mUseANGLE = compositor->UseANGLE();
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
@@ -176,6 +183,8 @@ class NewRenderer : public RendererEvent {
 
  private:
   wr::DocumentHandle** mDocHandle;
+  WebRenderBackend* mBackend;
+  WebRenderCompositor* mCompositor;
   int32_t* mMaxTextureSize;
   bool* mUseANGLE;
   bool* mUseDComp;
@@ -343,6 +352,8 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
       "The FFI bindings assume size_t is the same size as uintptr_t!");
 
   wr::DocumentHandle* docHandle = nullptr;
+  WebRenderBackend backend = WebRenderBackend::HARDWARE;
+  WebRenderCompositor compositor = WebRenderCompositor::DRAW;
   int32_t maxTextureSize = 0;
   bool useANGLE = false;
   bool useDComp = false;
@@ -355,9 +366,9 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
   // task until the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(
-      &docHandle, aBridge, &maxTextureSize, &useANGLE, &useDComp,
-      &useTripleBuffering, &supportsExternalBufferTextures, std::move(aWidget),
-      &task, aSize, &syncHandle, &aError);
+      &docHandle, aBridge, &backend, &compositor, &maxTextureSize, &useANGLE,
+      &useDComp, &useTripleBuffering, &supportsExternalBufferTextures,
+      std::move(aWidget), &task, aSize, &syncHandle, &aError);
   RenderThread::Get()->RunEvent(aWindowId, std::move(event));
 
   task.Wait();
@@ -367,8 +378,9 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
   }
 
   return RefPtr<WebRenderAPI>(
-             new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE,
-                              useDComp, useTripleBuffering,
+             new WebRenderAPI(docHandle, aWindowId, backend, compositor,
+                              maxTextureSize, useANGLE, useDComp,
+                              useTripleBuffering,
                               supportsExternalBufferTextures, syncHandle))
       .forget();
 }
@@ -377,9 +389,10 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
   wr::DocumentHandle* docHandle = nullptr;
   wr_api_clone(mDocHandle, &docHandle);
 
-  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(
-      docHandle, mId, mMaxTextureSize, mUseANGLE, mUseDComp,
-      mUseTripleBuffering, mSupportsExternalBufferTextures, mSyncHandle);
+  RefPtr<WebRenderAPI> renderApi =
+      new WebRenderAPI(docHandle, mId, mBackend, mCompositor, mMaxTextureSize,
+                       mUseANGLE, mUseDComp, mUseTripleBuffering,
+                       mSupportsExternalBufferTextures, mSyncHandle);
   renderApi->mRootApi = this;  // Hold root api
   renderApi->mRootDocumentApi = this;
 
@@ -391,12 +404,16 @@ wr::WrIdNamespace WebRenderAPI::GetNamespace() {
 }
 
 WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
+                           WebRenderBackend aBackend,
+                           WebRenderCompositor aCompositor,
                            uint32_t aMaxTextureSize, bool aUseANGLE,
                            bool aUseDComp, bool aUseTripleBuffering,
                            bool aSupportsExternalBufferTextures,
                            layers::SyncHandle aSyncHandle)
     : mDocHandle(aHandle),
       mId(aId),
+      mBackend(aBackend),
+      mCompositor(aCompositor),
       mMaxTextureSize(aMaxTextureSize),
       mUseANGLE(aUseANGLE),
       mUseDComp(aUseDComp),
