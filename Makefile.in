@@ -120,7 +120,7 @@ recurse_artifact:
 ifdef MOZ_EME_WIN32_ARTIFACT
 recurse_win32-artifact:
 	rm -rf $(DIST)/i686
-	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install --job $(if $(MOZ_PGO),win32-pgo,win32-opt) --no-tests --distdir $(DIST)/i686 $(verbose_flag)
+	$(PYTHON3) $(topsrcdir)/mach --log-no-times artifact install --job win32-opt --no-tests --distdir $(DIST)/i686 $(verbose_flag)
 	mv $(DIST)/i686/bin/* $(DIST)/i686
 endif
 
