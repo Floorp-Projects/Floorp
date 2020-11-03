@@ -251,6 +251,8 @@ var pktUI = (function() {
       showPanel(
         "about:pocket-signup?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
+          "&loggedOutVariant=" +
+          Services.prefs.getCharPref("extensions.pocket.loggedOutVariant") +
           "&fxasignedin=" +
           fxasignedin +
           "&variant=" +
