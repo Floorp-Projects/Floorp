@@ -215,6 +215,10 @@ struct MOZ_RAII CompilationState {
 
 // The top level struct of stencil.
 struct CompilationStencil {
+  // This holds allocations that do not require destructors to be run but are
+  // live until the stencil is released.
+  LifoAlloc alloc;
+
   // Hold onto the RegExpStencil, BigIntStencil, and ObjLiteralStencil that are
   // allocated during parse to ensure correct destruction.
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
@@ -248,7 +252,28 @@ struct CompilationStencil {
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
-  explicit CompilationStencil(JSRuntime* rt) : parserAtoms(rt) {}
+  // Parameterized chunk size to use for LifoAlloc.
+  static constexpr size_t LifoAllocChunkSize = 512;
+
+  explicit CompilationStencil(JSRuntime* rt)
+      : alloc(LifoAllocChunkSize), parserAtoms(rt) {}
+
+  // We need a move-constructor to work with Rooted, but must be explicit in
+  // order to steal the LifoAlloc data.
+  CompilationStencil(CompilationStencil&& other) noexcept
+      : alloc(LifoAllocChunkSize),
+        regExpData(std::move(other.regExpData)),
+        bigIntData(std::move(other.bigIntData)),
+        objLiteralData(std::move(other.objLiteralData)),
+        scriptData(std::move(other.scriptData)),
+        scopeData(std::move(other.scopeData)),
+        moduleMetadata(std::move(other.moduleMetadata)),
+        asmJS(std::move(other.asmJS)),
+        parserAtoms(std::move(other.parserAtoms)) {
+    // Steal the data from the LifoAlloc. Anything that holds a reference to
+    // this will need to be updated.
+    alloc.steal(&other.alloc);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

@@ -56,7 +56,7 @@
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"  // js::CheckSystemRecursionLimit
+#include "js/friend/StackLimits.h"    // js::CheckSystemRecursionLimit
 #include "js/Initialization.h"
 #include "js/JSON.h"
 #include "js/LocaleSensitive.h"
@@ -5736,8 +5736,7 @@ static JS::TranscodeResult DecodeStencil(
     JSContext* cx, JS::TranscodeBuffer& buffer,
     frontend::CompilationInfoVector& compilationInfos, size_t cursorIndex) {
   XDRStencilDecoder decoder(cx, &compilationInfos.initial.input.options, buffer,
-                            cursorIndex,
-                            compilationInfos.initial.stencil.parserAtoms);
+                            cursorIndex);
 
   if (!compilationInfos.initial.input.initForGlobal(cx)) {
     return JS::TranscodeResult_Throw;

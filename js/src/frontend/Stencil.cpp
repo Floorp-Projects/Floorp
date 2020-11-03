@@ -891,8 +891,7 @@ bool CompilationInfoVector::deserializeStencils(JSContext* cx,
     *succeededOut = false;
   }
   MOZ_ASSERT(initial.stencil.parserAtoms.empty());
-  XDRStencilDecoder decoder(cx, &initial.input.options, range,
-                            initial.stencil.parserAtoms);
+  XDRStencilDecoder decoder(cx, &initial.input.options, range);
 
   XDRResult res = decoder.codeStencils(*this);
   if (res.isErr()) {
