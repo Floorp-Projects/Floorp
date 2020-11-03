@@ -1640,7 +1640,7 @@ import android.view.inputmethod.EditorInfo;
         } else if (typeHint.equalsIgnoreCase("number") ||
                 typeHint.equalsIgnoreCase("range")) {
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
-                                 InputType.TYPE_NUMBER_VARIATION_NORMAL;
+                                 InputType.TYPE_NUMBER_VARIATION_NORMAL | InputType.TYPE_NUMBER_FLAG_DECIMAL;
         } else {
             // We look at modeHint
             if (modeHint.equals("tel")) {
