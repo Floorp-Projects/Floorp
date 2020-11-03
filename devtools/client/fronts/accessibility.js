@@ -527,6 +527,18 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
     this.simulatorFront = await super.getSimulator();
     const { enabled } = await super.bootstrap();
     this.enabled = enabled;
+
+    try {
+      this._traits = await this.getTraits();
+    } catch (e) {
+      // Backward compatibility: can be removed when FF84 is on the release
+      // channel.
+      this._traits = {};
+    }
+  }
+
+  get traits() {
+    return this._traits;
   }
 
   init() {

@@ -70,6 +70,7 @@ exports.AUDIT = "AUDIT";
 exports.AUDITING = "AUDITING";
 exports.AUDIT_PROGRESS = "AUDIT_PROGRESS";
 exports.SIMULATE = "SIMULATE";
+exports.UPDATE_DISPLAY_TABBING_ORDER = "UPDATE_DISPLAY_TABBING_ORDER";
 
 // List of filters for accessibility checks.
 exports.FILTERS = {
