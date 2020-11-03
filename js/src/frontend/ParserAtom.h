@@ -515,9 +515,6 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
                                               EntrySet::AddPtr& addPtr,
                                               UniquePtr<ParserAtomEntry> entry);
-  JS::Result<const ParserAtom*, OOM> internLatin1Seq(
-      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
-      const Latin1Char* latin1Ptr, uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
       JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
