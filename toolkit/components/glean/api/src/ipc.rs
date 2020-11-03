@@ -17,6 +17,8 @@ use {
     xpcom::interfaces::nsIXULRuntime,
 };
 
+use super::metrics::__glean_metric_maps;
+
 /// Contains all the information necessary to update the metrics on the main
 /// process.
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -113,8 +115,11 @@ pub fn take_buf() -> Option<Vec<u8>> {
 
 pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
-    for (id, value) in ipc_payload.counters.iter() {
+    for (id, value) in ipc_payload.counters.into_iter() {
         log::info!("Asked to replay {:?}, {:?}", id, value);
+        if let Some(metric) = __glean_metric_maps::COUNTER_MAP.get(&id) {
+            metric.add(value);
+        }
     }
     Ok(())
 }
