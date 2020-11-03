@@ -110,10 +110,7 @@ add_task(async function test_tabdialogbox_tab_switch_hidden() {
   // Hide the top dialog
   dialogBoxManager.hideDialog(browser);
 
-  ok(
-    BrowserTestUtils.is_hidden(dialogBoxManager._dialogStack),
-    "Dialog stack is hidden"
-  );
+  is(dialogBoxManager._dialogStack.hidden, true, "Dialog stack is hidden");
 
   // Switch to first tab
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
