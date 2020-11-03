@@ -22,7 +22,7 @@ private val logger = Logger("LazyComponent")
  * val useCases by lazy { UseCases(...) }
  * val search by lazy { Search(useCases) }
  * ```
- * When `search` is used, it will initialized and, somewhat unintuitively, **so will `useCases`**.
+ * When `search` is referenced, it will initialized and **so will `useCases`**.
  * This is a problem if there are many dependencies or they are expensive. [LazyComponent]
  * addresses this issue by allowing the class to be referenced without being initialized. To apply
  * this to the example above:
@@ -67,12 +67,12 @@ class LazyComponent<T>(initializer: () -> T) {
     companion object {
         /**
          * The number of [LazyComponent]s initialized. This is intended to be checked during testing.
-         * For example, you can run a test scenario that starts the app and, if the [initCount]
-         * increases from master, you can fail the test to alert that a new component is initialized.
-         * This can help you catch cases where you didn't mean to initialize new components or add
+         * For example, a team can run a test scenario that starts the app and, if the [initCount]
+         * increases from master, the team can fail the test to alert that a new component is initialized.
+         * This can help the team catch cases where they didn't mean to initialize new components or add
          * new code on start up, keeping it performant.
          *
-         * This class assumes you will not have 4 billion+ components so we don't handle overflow.
+         * This class assumes the app will not have 4 billion+ components so we don't handle overflow.
          */
         @VisibleForTesting(otherwise = PRIVATE)
         val initCount = AtomicInteger(0)
