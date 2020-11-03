@@ -45,7 +45,7 @@ pub mod {{ category_name|snake_case }} {
     ///
     /// {{ obj.description|wordwrap() | replace('\n', '\n    /// ') }}
     pub static {{ obj.name|snake_case }}: Lazy<{{ obj|type_name }}> = Lazy::new(|| {
-        {{ obj|ctor }}(CommonMetricData {
+        {{ obj|ctor }}({{obj|metric_id}}.into(), CommonMetricData {
             {% for arg_name in common_metric_data_args if obj[arg_name] is defined %}
             {{ arg_name }}: {{ obj[arg_name]|rust }},
             {% endfor %}
@@ -77,10 +77,10 @@ pub(crate) mod __glean_metric_maps {
     use once_cell::sync::Lazy;
 
 {% for typ, metrics in metric_by_type.items() %}
-    pub static {{typ.0}}: Lazy<HashMap<u32, &Lazy<{{typ.1}}>>> = Lazy::new(|| {
+    pub static {{typ.0}}: Lazy<HashMap<MetricId, &Lazy<{{typ.1}}>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity({{metrics|length}});
         {% for metric in metrics %}
-        map.insert({{metric.0}}, &super::{{metric.1}});
+        map.insert({{metric.0}}.into(), &super::{{metric.1}});
         {% endfor %}
         map
     });
