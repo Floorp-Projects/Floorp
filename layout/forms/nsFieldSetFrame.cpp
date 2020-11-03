@@ -544,7 +544,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
       (LogicalSize(wm, 0, mLegendSpace) + border.Size(wm)).GetPhysicalSize(wm);
   if (reflowInner) {
     LogicalSize innerAvailSize = availSize;
-    innerAvailSize.ISize(wm) = aReflowInput.ComputedSizeWithPadding().ISize(wm);
+    innerAvailSize.ISize(wm) =
+        aReflowInput.ComputedSizeWithPadding(wm).ISize(wm);
     nscoord remainingComputedBSize = aReflowInput.ComputedBSize();
     if (prevInFlow && remainingComputedBSize != NS_UNCONSTRAINEDSIZE) {
       // Subtract the consumed BSize associated with the legend.
