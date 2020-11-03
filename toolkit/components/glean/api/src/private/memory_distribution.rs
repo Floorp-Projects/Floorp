@@ -75,7 +75,7 @@ impl MemoryDistributionMetric {
                     if let Some(v) = payload.memory_samples.get_mut(&c.0) {
                         v.push(sample);
                     } else {
-                        payload.memory_samples.insert(c.0.clone(), vec![sample]);
+                        payload.memory_samples.insert(c.0, vec![sample]);
                     }
                 });
             }
