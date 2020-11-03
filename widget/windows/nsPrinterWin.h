@@ -14,12 +14,11 @@ class nsPrinterWin final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
   NS_IMETHOD GetSystemName(nsAString& aName) override;
-  PrintSettingsInitializer DefaultSettings() const final;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
   bool SupportsMonochrome() const final;
   bool SupportsCollation() const final;
-  nsTArray<mozilla::PaperInfo> PaperList() const final;
+  PrinterInfo CreatePrinterInfo() const final;
   MarginDouble GetMarginsForPaper(nsString aPaperId) const final;
 
   nsPrinterWin() = delete;
@@ -33,6 +32,8 @@ class nsPrinterWin final : public nsPrinterBase {
   ~nsPrinterWin() = default;
 
   nsTArray<uint8_t> CopyDefaultDevmodeW() const;
+  nsTArray<mozilla::PaperInfo> PaperList() const;
+  PrintSettingsInitializer DefaultSettings() const;
 
   const nsString mName;
   mutable mozilla::DataMutex<nsTArray<uint8_t>> mDefaultDevmodeWStorage;

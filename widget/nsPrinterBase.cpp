@@ -199,10 +199,6 @@ nsPrinterBase::nsPrinterBase(const CommonPaperInfoArray* aPaperInfoArray)
 }
 nsPrinterBase::~nsPrinterBase() = default;
 
-nsPrinterBase::PrinterInfo nsPrinterBase::CreatePrinterInfo() const {
-  return PrinterInfo{PaperList(), DefaultSettings()};
-}
-
 const PaperInfo* nsPrinterBase::FindCommonPaperSize(
     const gfx::SizeDouble& aSize) const {
   for (const PaperInfo& paper : *mCommonPaperInfo) {

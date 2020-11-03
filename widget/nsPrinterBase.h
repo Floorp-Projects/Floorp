@@ -90,14 +90,12 @@ class nsPrinterBase : public nsIPrinter {
 
   // Implementation-specific methods. These must not make assumptions about
   // which thread they run on.
-  virtual PrintSettingsInitializer DefaultSettings() const = 0;
   virtual bool SupportsDuplex() const = 0;
   virtual bool SupportsColor() const = 0;
   virtual bool SupportsMonochrome() const = 0;
   virtual bool SupportsCollation() const = 0;
-  virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
   virtual MarginDouble GetMarginsForPaper(nsString aPaperId) const = 0;
-  virtual PrinterInfo CreatePrinterInfo() const;
+  virtual PrinterInfo CreatePrinterInfo() const = 0;
   // Searches our built-in list of commonly used PWG paper sizes for a matching,
   // localized PaperInfo. Returns null if there is no matching size.
   const mozilla::PaperInfo* FindCommonPaperSize(
