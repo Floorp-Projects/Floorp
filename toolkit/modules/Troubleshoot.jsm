@@ -104,6 +104,9 @@ const PREFS_WHITELIST = [
   "ui.osk.require_tablet_mode",
   "ui.osk.debug.keyboardDisplayReason",
   "webgl.",
+  "widget.dmabuf",
+  "widget.use-xdg-desktop-portal",
+  "widget.wayland",
 ];
 
 // The blacklist, unlike the whitelist, is a list of regular expressions.
