@@ -18,7 +18,8 @@ BEGIN_TEST(testParserAtom_empty) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
 
-  ParserAtomsTable atomTable(cx->runtime());
+  js::LifoAlloc alloc(512);
+  ParserAtomsTable atomTable(cx->runtime(), alloc);
 
   const char ascii[] = {};
   const JS::Latin1Char latin1[] = {};
@@ -53,7 +54,8 @@ BEGIN_TEST(testParserAtom_tiny1) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
 
-  ParserAtomsTable atomTable(cx->runtime());
+  js::LifoAlloc alloc(512);
+  ParserAtomsTable atomTable(cx->runtime(), alloc);
 
   char16_t a = 'a';
   const char ascii[] = {'a'};
@@ -92,7 +94,8 @@ BEGIN_TEST(testParserAtom_tiny2) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
 
-  ParserAtomsTable atomTable(cx->runtime());
+  js::LifoAlloc alloc(512);
+  ParserAtomsTable atomTable(cx->runtime(), alloc);
 
   const char ascii[] = {'a', '0'};
   JS::Latin1Char latin1[] = {'a', '0'};
@@ -130,7 +133,8 @@ BEGIN_TEST(testParserAtom_concat) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
 
-  ParserAtomsTable atomTable(cx->runtime());
+  js::LifoAlloc alloc(512);
+  ParserAtomsTable atomTable(cx->runtime(), alloc);
 
   auto CheckConcat = [&](const char16_t* exp,
                          std::initializer_list<const char16_t*> args) -> bool {
