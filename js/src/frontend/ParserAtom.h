@@ -542,7 +542,8 @@ class ParserAtomsTable {
       JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internLatin1ForXDR(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
+      JSContext* cx, const JS::Latin1Char* latin1Ptr, HashNumber hash,
+      uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internUtf8(
       JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
@@ -552,7 +553,8 @@ class ParserAtomsTable {
                                                   uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internChar16ForXDR(
-      JSContext* cx, LittleEndianChars twoByteLE, uint32_t length);
+      JSContext* cx, LittleEndianChars twoByteLE, HashNumber hash,
+      uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
