@@ -704,8 +704,8 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
   NS_ASSERTION(mContent->GetPrimaryFrame() == this, "Shouldn't happen");
 
   // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
-                       aReflowInput.ComputedSizeWithBorderPadding());
+  const auto wm = aReflowInput.GetWritingMode();
+  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
