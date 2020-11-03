@@ -4,22 +4,12 @@
 
 ("use strict");
 
-const EXPORTED_SYMBOLS = ["MarionetteReftestFrameParent"];
-
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "chrome://marionette/content/log.js",
-});
-
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+const EXPORTED_SYMBOLS = ["MarionetteReftestParent"];
 
 /**
  * Parent JSWindowActor to handle navigation for reftests relying on marionette.
  */
-class MarionetteReftestFrameParent extends JSWindowActorParent {
+class MarionetteReftestParent extends JSWindowActorParent {
   actorCreated() {
     logger.trace(`[${this.browsingContext.id}] Reftest Parent actor created`);
   }
@@ -37,7 +27,7 @@ class MarionetteReftestFrameParent extends JSWindowActorParent {
   async reftestWait(url, useRemote) {
     try {
       const isCorrectUrl = await this.sendQuery(
-        "MarionetteReftestFrameParent:reftestWait",
+        "MarionetteReftestParent:reftestWait",
         {
           url,
           useRemote,
