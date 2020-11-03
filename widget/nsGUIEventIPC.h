@@ -1125,10 +1125,35 @@ struct ParamTraits<mozilla::InputData> {
 };
 
 template <>
+struct ParamTraits<mozilla::SingleTouchData::HistoricalTouchData> {
+  typedef mozilla::SingleTouchData::HistoricalTouchData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mTimeStamp);
+    WriteParam(aMsg, aParam.mScreenPoint);
+    WriteParam(aMsg, aParam.mLocalScreenPoint);
+    WriteParam(aMsg, aParam.mRadius);
+    WriteParam(aMsg, aParam.mRotationAngle);
+    WriteParam(aMsg, aParam.mForce);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
+            ReadParam(aMsg, aIter, &aResult->mScreenPoint) &&
+            ReadParam(aMsg, aIter, &aResult->mLocalScreenPoint) &&
+            ReadParam(aMsg, aIter, &aResult->mRadius) &&
+            ReadParam(aMsg, aIter, &aResult->mRotationAngle) &&
+            ReadParam(aMsg, aIter, &aResult->mForce));
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::SingleTouchData> {
   typedef mozilla::SingleTouchData paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mHistoricalData);
     WriteParam(aMsg, aParam.mIdentifier);
     WriteParam(aMsg, aParam.mScreenPoint);
     WriteParam(aMsg, aParam.mLocalScreenPoint);
@@ -1139,7 +1164,8 @@ struct ParamTraits<mozilla::SingleTouchData> {
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mIdentifier) &&
+    return (ReadParam(aMsg, aIter, &aResult->mHistoricalData) &&
+            ReadParam(aMsg, aIter, &aResult->mIdentifier) &&
             ReadParam(aMsg, aIter, &aResult->mScreenPoint) &&
             ReadParam(aMsg, aIter, &aResult->mLocalScreenPoint) &&
             ReadParam(aMsg, aIter, &aResult->mRadius) &&
