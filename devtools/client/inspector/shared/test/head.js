@@ -40,24 +40,23 @@ registerCleanupFunction(() => {
  *
  * All tests should follow the following pattern:
  *
- * add_task(function*() {
- *   yield addTab(TEST_URI);
- *   let {toolbox, inspector} = yield openInspector();
- *   inspector.sidebar.select(viewId);
+ * add_task(async function() {
+ *   await addTab(TEST_URI);
+ *   let {toolbox, inspector} = await openInspector();
+ *   await inspector.sidebar.select(viewId);
  *   let view = inspector.getPanel(viewId).view;
- *   yield selectNode("#test", inspector);
- *   yield someAsyncTestFunction(view);
+ *   await selectNode("#test", inspector);
+ *   await someAsyncTestFunction(view);
  * });
  *
  * add_task is the way to define the testcase in the test file. It accepts
- * a single generator-function argument.
- * The generator function should yield any async call.
+ * a single argument: a function returning a promise (usually async function).
  *
  * There is no need to clean tabs up at the end of a test as this is done
  * automatically.
  *
  * It is advised not to store any references on the global scope. There
- * shouldn't be a need to anyway. Thanks to add_task, test steps, even
+ * shouldn't be a need to anyway. Thanks to async functions, test steps, even
  * though asynchronous, can be described in a nice flat way, and
  * if/for/while/... control flow can be used as in sync code, making it
  * possible to write the outline of the test case all in add_task, and delegate
