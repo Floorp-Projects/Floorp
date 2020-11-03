@@ -875,10 +875,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   background-color: unset;
 }
 
-#ContentSelectDropdown > menupopup > menucaption {
-  background-color: buttonface;
-}
-
 #ContentSelectDropdown > menupopup > menucaption[disabled="true"] {
   color: GrayText;
 }
