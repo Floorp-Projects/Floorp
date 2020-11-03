@@ -1,8 +1,43 @@
 Change log
 ==========
 
-All notable changes to this program is documented in this file.
+All notable changes to this program are documented in this file.
 
+0.28.0  (2020-11-02)
+--------------------
+
+### Known problems
+
+- _macOS 10.15 (Catalina):_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
+
+### Added
+
+- The command line flag `--android-storage` has been added, to allow geckodriver
+to also control Firefox on root-less Android devices. See the [documentation][Flags]
+for available values.
+
+### Fixed
+
+- Firefox can be started again via a shell script that is located outside of the
+  Firefox directory on Linux.
+
+- If Firefox cannot be started by geckodriver the real underlying error message is
+  now being reported.
+
+- Version numbers for minor and extended support releases of Firefox are now parsed correctly.
+
+### Removed
+
+- Since Firefox 72 extension commands for finding an element’s anonymous children
+  and querying its attributes are no longer needed, and have been removed.
 
 0.27.0  (2020-07-27, `7b8c4f32cdde`)
 --------------------
@@ -1338,6 +1373,7 @@ and greater.
 [Firefox Preview]: https://play.google.com/store/apps/details?id=org.mozilla.fenix
 [Firefox Reality]: https://play.google.com/store/apps/details?id=org.mozilla.vrbrowser
 [Capabilities]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html
+[Flags]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
 [macOS notarization]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Notarization.html
 

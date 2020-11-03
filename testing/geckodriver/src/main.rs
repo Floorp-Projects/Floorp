@@ -326,6 +326,7 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .long("android-storage")
                 .possible_values(&["auto", "app", "internal", "sdcard"])
                 .default_value("auto")
+                .value_name("ANDROID_STORAGE")
                 .help("Selects storage location to be used for test data."),
         )
 }
