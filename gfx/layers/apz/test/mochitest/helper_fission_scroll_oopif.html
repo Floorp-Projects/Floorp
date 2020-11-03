@@ -40,14 +40,47 @@ async function clickOnIframe(x, y) {
   return iframeResponse.data;
 }
 
-function failsafe() {
-  // Catch and fail faster on the case where the click ends up not going to
+let oopif_scroll_pos = function() {
+  dump(`OOPIF scroll position is y=${window.scrollY}\n`);
+  let result = { y: window.scrollY };
+  FissionTestHelper.fireEventInEmbedder("OOPIF:ScrollPos", result);
+  return true;
+};
+
+async function getIframeScrollY() {
+  let iframeElement = document.getElementById("testframe");
+  let iframePromise = promiseOneEvent(window, "OOPIF:ScrollPos", null);
+  ok(await FissionTestHelper.sendToOopif(iframeElement, `(${oopif_scroll_pos})()`), "Sent scrollY request");
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response for scrollPos: " + JSON.stringify(iframeResponse.data) + "\n");
+  return iframeResponse.data.y;
+}
+
+let make_oopif_scrollable = function() {
+  // ensure the oopif is scrollable, and wait for the paint so that the
+  // compositor also knows it's scrollable.
+  document.body.style.height = "200vh";
+  promiseApzFlushedRepaints().then(() => {
+    let result = { y: window.scrollMaxY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Scrollable", result);
+  });
+  // Also register a scroll listener for when it actually gets scrolled.
+  window.addEventListener("scroll", function(e) {
+    dump(`OOPIF got scroll event, now at ${window.scrollY}\n`);
+    let result = { y: window.scrollY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Scrolled", result);
+  }, {once: true});
+  return true;
+};
+
+function failsafe(eventType) {
+  // Catch and fail faster on the case where the event ends up not going to
   // the iframe like it should. Otherwise the test hangs until timeout which
   // is more painful.
-  document.addEventListener("click", function(e) {
-    dump(`${location.href} got click at ${e.clientX},${e.clientY}\n`);
-    ok(false, "The OOPIF hosting page should not have gotten the click");
-    setTimeout(FissionTestHelper.subtestDone, 0);
+  document.addEventListener(eventType, function(e) {
+    dump(`${location.href} got ${e.type} at ${e.clientX},${e.clientY}\n`);
+    ok(false, `The OOPIF hosting page should not have gotten the ${eventType}`);
+    setTimeout(FissionTestHelper.subtestFailed, 0);
   }, {once: true});
 }
 
@@ -91,11 +124,33 @@ async function* test() {
 
   is(newClickPoint.x, oldClickPoint.x, "x-coord of old and new match");
   is(newClickPoint.y, oldClickPoint.y, "y-coord of old and new match");
+
+  // Also check that we can send scroll events to the OOPIF. Any wheel events
+  // delivered to this page after this point should result in a failure.
+  failsafe("wheel");
+
+  let iframeY = await getIframeScrollY();
+  is(iframeY, 0, "scrollY of iframe should be 0 initially");
+
+  // Ensure the OOPIF is scrollable.
+  let scrollablePromise = promiseOneEvent(window, "OOPIF:Scrollable", null);
+  ok(await FissionTestHelper.sendToOopif(iframeElement, `(${make_oopif_scrollable})()`), "Made OOPIF scrollable");
+  let oopifScrollMaxY = (await scrollablePromise).data.y;
+  ok(oopifScrollMaxY > 0, "Confirmed that oopif is scrollable");
+
+  // Now scroll over the OOP-iframe (we know it must be under the 50,250 point
+  // because we just checked that above). Note that listening for wheel/scroll
+  // events is trickier because they will fire in the OOPIF, so we can't just
+  // use promiseMoveMouseAndScrollWheelOver directly.
+  let scrolledPromise = promiseOneEvent(window, "OOPIF:Scrolled", null);
+  synthesizeNativeWheel(document.body, 50, 250, 0, -10);
+  iframeY = (await scrolledPromise).data.y;
+  ok(iframeY > 0, "scrollY of iframe should be >0 after scrolling");
 }
 
   </script>
 </head>
-<body onload="failsafe()">
+<body onload="failsafe('click')">
 <iframe style="margin-top: 200px" id="testframe"></iframe>
 <div style="height: 5000px">tall div to make the page scrollable</div>
 </body>
