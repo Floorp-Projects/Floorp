@@ -3683,8 +3683,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (mWillBuildScrollableLayer) {
       couldBuildLayer = true;
     } else {
-      couldBuildLayer =
-          nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll();
+      couldBuildLayer = mOuter->StyleVisibility()->IsVisible() &&
+                        nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
+                        WantAsyncScroll();
     }
   }
 
