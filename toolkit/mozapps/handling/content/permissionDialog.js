@@ -157,9 +157,9 @@ let dialog = {
       }
     });
 
-    await document.l10n.translateElements(pendingElements);
     document.l10n.resumeObserving();
 
+    await document.l10n.translateElements(pendingElements);
     return document.l10n.ready;
   },
 
