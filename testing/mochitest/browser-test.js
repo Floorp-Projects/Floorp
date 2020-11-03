@@ -1562,7 +1562,7 @@ testScope.prototype = {
    * Example usage:
    *
    * add_task(async function test() {
-   *   let result = yield Promise.resolve(true);
+   *   let result = await Promise.resolve(true);
    *
    *   ok(result);
    *
