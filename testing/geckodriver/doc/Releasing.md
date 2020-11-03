@@ -124,10 +124,10 @@ repository, the changeset id for the release has to be added to the
 change log. Therefore add a final place-holder commit to the patch
 series, to already get review for.
 
-Once all previous revisions of the patch series have been reviewed and
-landed, it's known which commit id the version bump commit has, finalize the
-change log, and land that remaining revision.
-
+Once all previous revisions of the patch series have been landed, and got merged
+to `mozilla-central`, the changeset id from the merge commit has to picked for
+finalizing the change log. This specific id is needed because Taskcluster creates
+the final signed builds based on that merge.
 
 Release new in-tree dependency crates
 -------------------------------------
