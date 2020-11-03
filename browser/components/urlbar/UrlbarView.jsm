@@ -2046,7 +2046,11 @@ class UrlbarView {
 
       // Update result favicons.
       let iconOverride = source?.icon || engine?.iconURI?.spec;
-      if (!iconOverride && result.type == UrlbarUtils.RESULT_TYPE.URL) {
+      if (
+        !iconOverride &&
+        (source || engine) &&
+        result.type == UrlbarUtils.RESULT_TYPE.URL
+      ) {
         // For one-offs without an icon, do not allow restyled URL results to
         // use their own icons.
         iconOverride = UrlbarUtils.ICON.SEARCH_GLASS;
