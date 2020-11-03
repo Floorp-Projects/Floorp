@@ -337,6 +337,15 @@ class BrowsertimeRunner(NodeRunner):
             self._test_script["filename"],
         ]
 
+        # Set *all* prefs found in browser_prefs because
+        # browsertime will override the ones found in firefox.profileTemplate
+        # with its own defaults at `firefoxPreferences.js`
+        # Using `--firefox.preference` ensures we override them.
+        # see https://github.com/sitespeedio/browsertime/issues/1427
+        browser_prefs = metadata.get_options("browser_prefs")
+        for key, value in browser_prefs.items():
+            args += ["--firefox.preference", f"{key}:{value}"]
+
         if self.get_arg("verbose"):
             args += ["-vvv"]
 
@@ -368,6 +377,7 @@ class BrowsertimeRunner(NodeRunner):
         extra = self.extra_default_args(args=args)
         command = [str(self.browsertime_js)] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
+
         exit_code = self.node(command)
         if exit_code != 0:
             raise NodeException(exit_code)
