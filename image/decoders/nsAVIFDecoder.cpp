@@ -26,6 +26,7 @@ using Telemetry::LABELS_AVIF_BIT_DEPTH;
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
 using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
+using Telemetry::ScalarID;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
 
@@ -165,6 +166,14 @@ nsAVIFDecoder::Dav1dResult nsAVIFDecoder::DecodeWithDav1d(
   MOZ_LOG(sAVIFLog, res == 0 ? LogLevel::Debug : LogLevel::Error,
           ("[this=%p] dav1d_get_picture -> %d", this, res));
 
+  // Discard the value outside of the range of uint32
+  if (!IsMetadataDecode() && std::numeric_limits<int>::digits <= 31) {
+    // De-negate POSIX error code returned from DAV1D. This must be sync with
+    // DAV1D_ERR macro.
+    uint32_t value = res < 0 ? -res : res;
+    ScalarSet(ScalarID::AVIF_DAV1D_DECODE_ERROR, value);
+  }
+
   if (res != 0) {
     return res;
   }
@@ -289,6 +298,11 @@ nsAVIFDecoder::AOMResult nsAVIFDecoder::DecodeWithAOM(
 
   MOZ_LOG(sAVIFLog, res == AOM_CODEC_OK ? LogLevel::Verbose : LogLevel::Error,
           ("[this=%p] aom_codec_decode -> %d", this, res));
+
+  if (!IsMetadataDecode()) {
+    uint32_t value = static_cast<uint32_t>(res);
+    ScalarSet(ScalarID::AVIF_AOM_DECODE_ERROR, value);
+  }
 
   if (res != AOM_CODEC_OK) {
     return AsVariant(res);
