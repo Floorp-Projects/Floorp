@@ -13,8 +13,8 @@ class APZCPanningTester : public APZCBasicTester {
   void DoPanTest(bool aShouldTriggerScroll, bool aShouldBeConsumed,
                  uint32_t aBehavior) {
     if (aShouldTriggerScroll) {
-      // One repaint request for each pan.
-      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(2);
+      // Three repaint request for each pan.
+      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(6);
     } else {
       EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
     }

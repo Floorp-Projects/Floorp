@@ -463,7 +463,6 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
 }
 #endif
 
-#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 // Test that flinging in a direction where one component of the fling goes into
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the
@@ -491,7 +490,6 @@ TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
   child->AssertStateIsFling();
   parent->AssertStateIsFling();
 }
-#endif
 
 // Here we test that if two flings are happening simultaneously, overscroll
 // is handed off correctly for each.
