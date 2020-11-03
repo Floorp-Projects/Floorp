@@ -31,7 +31,8 @@ class RootAccessibleWrap;
  */
 class LazyInstantiator final : public IAccessible, public IServiceProvider {
  public:
-  static already_AddRefed<IAccessible> GetRootAccessible(HWND aHwnd);
+  [[nodiscard]] static already_AddRefed<IAccessible> GetRootAccessible(
+      HWND aHwnd);
   static void EnableBlindAggregation(HWND aHwnd);
 
   // IUnknown
