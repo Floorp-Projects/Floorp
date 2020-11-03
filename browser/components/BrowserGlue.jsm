@@ -3317,7 +3317,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 101;
+    const UI_VERSION = 103;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3943,9 +3943,21 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
     }
 
-    // Set a pref if the bookmarks toolbar was already visible,
-    // so we can keep it visible when navigating away from newtab
-    if (currentUIVersion < 100) {
+    if (currentUIVersion < 102) {
+      // In Firefox 83, we moved to a dynamic button, so it needs to be removed
+      // from default placement. This is done early enough that it doesn't
+      // impact adding new managed bookmarks.
+      const { CustomizableUI } = ChromeUtils.import(
+        "resource:///modules/CustomizableUI.jsm"
+      );
+      CustomizableUI.removeWidgetFromArea("managed-bookmarks");
+    }
+
+    // We have to rerun these because we had to use 102 on beta.
+    // They were 101 and 102 before.
+    if (currentUIVersion < 103) {
+      // Set a pref if the bookmarks toolbar was already visible,
+      // so we can keep it visible when navigating away from newtab
       let bookmarksToolbarWasVisible =
         Services.xulStore.getValue(
           BROWSER_DOCURL,
@@ -3965,9 +3977,7 @@ BrowserGlue.prototype = {
         "PersonalToolbar",
         "collapsed"
       );
-    }
 
-    if (currentUIVersion < 101) {
       Services.prefs.clearUserPref(
         "browser.livebookmarks.migrationAttemptsLeft"
       );
