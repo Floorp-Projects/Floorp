@@ -83,10 +83,10 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   MOZ_ASSERT_IF(!buffer, byteOffset.get() == 0);
   MOZ_ASSERT_IF(buffer, !buffer->isDetached());
 
-  MOZ_ASSERT(byteOffset.get() <= ArrayBufferObject::MaxBufferByteLength);
-  MOZ_ASSERT(length.get() <= ArrayBufferObject::MaxBufferByteLength);
+  MOZ_ASSERT(byteOffset.get() <= ArrayBufferObject::maxBufferByteLength());
+  MOZ_ASSERT(length.get() <= ArrayBufferObject::maxBufferByteLength());
   MOZ_ASSERT(byteOffset.get() + length.get() <=
-             ArrayBufferObject::MaxBufferByteLength);
+             ArrayBufferObject::maxBufferByteLength());
 
   MOZ_ASSERT_IF(
       is<TypedArrayObject>(),

@@ -4968,8 +4968,8 @@ static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
                                     Register obj, Register offset,
                                     Register scratch, Label* fail) {
   // Ensure both offset < length and offset + (byteSize - 1) < length.
-  static_assert(ArrayBufferObject::MaxBufferByteLength <= INT32_MAX,
-                "Code assumes DataView length fits in int32");
+  MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() <= INT32_MAX,
+             "Code assumes DataView length fits in int32");
   masm.loadArrayBufferViewLengthInt32(obj, scratch);
   if (byteSize == 1) {
     masm.spectreBoundsCheck32(offset, scratch, InvalidReg, fail);
