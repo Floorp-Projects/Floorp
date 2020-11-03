@@ -229,6 +229,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:Clamp_S32_D32_nofilter_trans_shaderproc\n"
          "race:SkSpriteBlitter_Memcpy\n"
 
+         // Bug 1601632
+         "race:ScriptPreloader::MaybeFinishOffThreadDecode\n"
+         "race:ScriptPreloader::DoFinishOffThreadDecode\n"
+
          // Bug 1606651
          "race:nsPluginTag::nsPluginTag\n"
          "race:nsFakePluginTag\n"
@@ -250,6 +254,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1607449
          "race:fill_CERTCertificateFields\n"
          "race:CERT_DestroyCertificate\n"
+
+         // Bug 1608068
+         "race:makeOwnBaseShape\n"
+         "race:numDynamicSlots\n"
 
          // Bug 1608462
          "deadlock:ScriptPreloader::OffThreadDecodeCallback\n"
