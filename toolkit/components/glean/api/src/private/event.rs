@@ -7,10 +7,10 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use super::{CommonMetricData, Instant, RecordedEvent};
+use super::{CommonMetricData, Instant, MetricId, RecordedEvent};
 
 use crate::dispatcher;
-use crate::ipc::{need_ipc, with_ipc_payload, MetricId};
+use crate::ipc::{need_ipc, with_ipc_payload};
 
 /// Extra keys for events.
 ///
@@ -61,7 +61,13 @@ impl ExtraKeys for NoExtraKeys {
 /// records a timestamp, the event's name and a set of custom values.
 #[derive(Debug)]
 pub enum EventMetric<K> {
-    Parent(Arc<EventMetricImpl<K>>),
+    Parent {
+        /// The metric's ID.
+        ///
+        /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
+        id: MetricId,
+        inner: Arc<EventMetricImpl<K>>,
+    },
     Child(EventMetricIpc),
 }
 #[derive(Clone, Debug)]
@@ -72,13 +78,22 @@ pub struct EventMetricImpl<K> {
 #[derive(Debug)]
 pub struct EventMetricIpc(MetricId);
 
-impl<K: 'static + ExtraKeys + std::fmt::Debug + Send + Sync> EventMetric<K> {
+impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
     /// Create a new event metric.
-    pub fn new(meta: CommonMetricData) -> Self {
+    pub fn new(id: MetricId, meta: CommonMetricData) -> Self {
         if need_ipc() {
-            EventMetric::Child(EventMetricIpc(MetricId::new(meta)))
+            EventMetric::Child(EventMetricIpc(id))
         } else {
-            EventMetric::Parent(Arc::new(EventMetricImpl::new(meta)))
+            let inner = Arc::new(EventMetricImpl::new(meta));
+            EventMetric::Parent { id, inner }
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn child_metric(&self) -> Self {
+        match self {
+            EventMetric::Parent { id, .. } => EventMetric::Child(EventMetricIpc(*id)),
+            EventMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
 
@@ -92,8 +107,8 @@ impl<K: 'static + ExtraKeys + std::fmt::Debug + Send + Sync> EventMetric<K> {
     /// * `extra` - An (optional) map of (key, value) pairs.
     pub fn record<M: Into<Option<HashMap<K, String>>> + Send + Sync>(&self, extra: M) {
         match self {
-            EventMetric::Parent(p) => {
-                let metric = Arc::clone(&p);
+            EventMetric::Parent { inner, .. } => {
+                let metric = Arc::clone(&inner);
                 let extra = extra.into().clone();
                 let now = Instant::now();
                 dispatcher::launch(move || metric.record(now, extra));
@@ -142,14 +157,13 @@ impl<K: 'static + ExtraKeys + std::fmt::Debug + Send + Sync> EventMetric<K> {
     /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<Vec<RecordedEvent>> {
         match self {
-            EventMetric::Parent(p) => {
+            EventMetric::Parent { inner, .. } => {
                 dispatcher::block_on_queue();
-                p.test_get_value(storage_name)
+                inner.test_get_value(storage_name)
             }
-            EventMetric::Child(_) => panic!(
-                "Cannot get test value for {:?} in non-parent process!",
-                self
-            ),
+            EventMetric::Child(_) => {
+                panic!("Cannot get test value for event metric in non-parent process!",)
+            }
         }
     }
 }
@@ -176,5 +190,127 @@ impl<K: ExtraKeys> EventMetricImpl<K> {
 
     pub fn test_get_value(&self, storage_name: &str) -> Option<Vec<RecordedEvent>> {
         crate::with_glean(|glean| self.inner.test_get_value(glean, storage_name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{common_test::*, ipc, metrics};
+
+    #[test]
+    fn smoke_test_event() {
+        let _lock = lock_test();
+
+        let metric = EventMetric::<NoExtraKeys>::new(
+            0.into(),
+            CommonMetricData {
+                name: "event_metric".into(),
+                category: "telemetry".into(),
+                send_in_pings: vec!["store1".into()],
+                disabled: false,
+                ..Default::default()
+            },
+        );
+
+        // No extra keys
+        metric.record(None);
+
+        let recorded = metric.test_get_value("store1").unwrap();
+
+        assert!(recorded.iter().any(|e| e.name == "event_metric"));
+    }
+
+    #[test]
+    fn smoke_test_event_with_extra() {
+        let _lock = lock_test();
+
+        #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+        enum TestKeys {
+            Extra1,
+        }
+
+        impl ExtraKeys for TestKeys {
+            const ALLOWED_KEYS: &'static [&'static str] = &["extra1"];
+
+            fn index(self) -> i32 {
+                self as i32
+            }
+        }
+
+        let metric = EventMetric::<TestKeys>::new(
+            0.into(),
+            CommonMetricData {
+                name: "event_metric_with_extra".into(),
+                category: "telemetry".into(),
+                send_in_pings: vec!["store1".into()],
+                disabled: false,
+                ..Default::default()
+            },
+        );
+
+        // No extra keys
+        metric.record(None);
+
+        // A valid extra key
+        let mut map = HashMap::new();
+        map.insert(TestKeys::Extra1, "a-valid-value".into());
+        metric.record(map);
+
+        let recorded = metric.test_get_value("store1").unwrap();
+
+        let events: Vec<&RecordedEvent> = recorded
+            .iter()
+            .filter(|&e| e.category == "telemetry" && e.name == "event_metric_with_extra")
+            .collect();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].extra, None);
+        assert!(events[1].extra.as_ref().unwrap().get("extra1").unwrap() == "a-valid-value");
+    }
+
+    #[test]
+    fn event_ipc() {
+        use metrics::test_only_ipc::AnEventKeys;
+
+        let _lock = lock_test();
+
+        let parent_metric = &metrics::test_only_ipc::an_event;
+
+        // No extra keys
+        parent_metric.record(None);
+
+        {
+            let child_metric = parent_metric.child_metric();
+
+            // scope for need_ipc RAII.
+            let _raii = ipc::test_set_need_ipc(true);
+
+            child_metric.record(None);
+
+            let mut map = HashMap::new();
+            map.insert(AnEventKeys::Extra1, "a-child-value".into());
+            child_metric.record(map);
+        }
+
+        // Record in the parent after the child.
+        let mut map = HashMap::new();
+        map.insert(AnEventKeys::Extra1, "a-valid-value".into());
+        parent_metric.record(map);
+
+        let recorded = parent_metric.test_get_value("store1").unwrap();
+
+        let events: Vec<&RecordedEvent> = recorded
+            .iter()
+            .filter(|&e| e.category == "test_only.ipc" && e.name == "an_event")
+            .collect();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].extra, None);
+
+        assert!(events[1].extra.as_ref().unwrap().get("extra1").unwrap() == "a-valid-value");
+        // TODO: implement replay. See bug 1646165. Then change and add asserts for a-child-value.
+        // Ensure the replay values apply without error, at least.
+        let buf = ipc::take_buf().unwrap();
+        assert!(buf.len() > 0);
+        assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
     }
 }
