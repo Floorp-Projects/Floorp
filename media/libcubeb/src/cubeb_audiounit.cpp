@@ -1513,6 +1513,7 @@ audiounit_set_channel_layout(AudioUnit unit,
     return CUBEB_OK;
   }
 
+
   OSStatus r;
   uint32_t nb_channels = cubeb_channel_layout_nb_channels(layout);
 
@@ -2069,6 +2070,7 @@ audiounit_create_unit(AudioUnit * unit, device_info * device)
     return CUBEB_OK;
   }
 
+
   if (device->flags & DEV_INPUT) {
     r = audiounit_enable_unit_scope(unit, io_side::INPUT, ENABLE);
     if (r != CUBEB_OK) {
@@ -2215,6 +2217,7 @@ buffer_size_changed_callback(void * inClientData,
   }
 
   switch (inPropertyID) {
+
     case kAudioDevicePropertyBufferFrameSize: {
       if (inScope != au_scope) {
         break;
@@ -2728,6 +2731,7 @@ audiounit_setup_stream(cubeb_stream * stm)
     LOG("(%p) Could not install all device change callback.", stm);
   }
 
+
   return CUBEB_OK;
 }
 
@@ -3208,6 +3212,7 @@ audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope
   } else {
     *min = *max = 0;
   }
+
 }
 
 static UInt32

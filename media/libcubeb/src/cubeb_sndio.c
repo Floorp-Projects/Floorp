@@ -220,6 +220,7 @@ sndio_mainloop(void *arg)
 
       /* was this last call-back invocation (aka end-of-stream) ? */
       if (nfr < s->nfr) {
+
         if (!(s->mode & SIO_PLAY) || nfr == 0) {
           state = CUBEB_STATE_DRAINED;
           break;

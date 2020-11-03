@@ -138,17 +138,6 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   , user_ptr(ptr)
 {
   if (input_processor && output_processor) {
-    // Add some delay on the processor that has the lowest delay so that the
-    // streams are synchronized.
-    uint32_t in_latency = input_processor->latency();
-    uint32_t out_latency = output_processor->latency();
-    if (in_latency > out_latency) {
-      uint32_t latency_diff = in_latency - out_latency;
-      output_processor->add_latency(latency_diff);
-    } else if (in_latency < out_latency) {
-      uint32_t latency_diff = out_latency - in_latency;
-      input_processor->add_latency(latency_diff);
-    }
     fill_internal = &cubeb_resampler_speex::fill_internal_duplex;
   }  else if (input_processor) {
     fill_internal = &cubeb_resampler_speex::fill_internal_input;
