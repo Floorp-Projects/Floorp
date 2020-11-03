@@ -179,28 +179,26 @@ class PrintHelper {
     };
   }
 
-  addMockPrinter(name = "Mock Printer") {
+  addMockPrinter(name = "Mock Printer", paperList = []) {
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
     );
-    let defaultSettings = {
-      printerName: name,
-      toFileName: "",
-      outputFormat: Ci.nsIPrintSettings.kOutputFormatNative,
-      printToFile: false,
-    };
+
+    let defaultSettings = PSSVC.newPrintSettings;
+    defaultSettings.printerName = name;
+    defaultSettings.toFileName = "";
+    defaultSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
+    defaultSettings.printToFile = false;
+
     let printer = {
       name,
       supportsColor: Promise.resolve(true),
       supportsMonochrome: Promise.resolve(true),
-      paperList: Promise.resolve([]),
-      createDefaultSettings: () => {
-        let settings = PSSVC.newPrintSettings;
-        for (let [key, value] of Object.entries(defaultSettings)) {
-          settings[key] = value;
-        }
-        return settings;
-      },
+      printerInfo: Promise.resolve({
+        paperList,
+        defaultSettings,
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIPrinterInfo]),
+      }),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIPrinter]),
     };
 
