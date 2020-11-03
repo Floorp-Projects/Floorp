@@ -6,7 +6,7 @@
 
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
-const { styleSheetsSpec } = require("devtools/shared/specs/stylesheets");
+const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
 const InspectorUtils = require("InspectorUtils");
 
 const {
