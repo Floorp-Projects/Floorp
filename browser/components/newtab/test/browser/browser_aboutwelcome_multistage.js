@@ -186,10 +186,9 @@ async function onButtonClick(browser, elementId) {
  */
 add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
   await setAboutWelcomePref(true);
-  let updatePromise = ExperimentFakes.waitForExperimentUpdate(
-    ExperimentAPI,
-    "mochitest-1-aboutwelcome"
-  );
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: "mochitest-1-aboutwelcome",
+  });
   ExperimentAPI._store.addExperiment({
     slug: "mochitest-1-aboutwelcome",
     branch: {
@@ -236,10 +235,9 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await setAboutWelcomePref(true);
   await setAboutWelcomeMultiStage({});
-  let updatePromise = ExperimentFakes.waitForExperimentUpdate(
-    ExperimentAPI,
-    "mochitest-aboutwelcome"
-  );
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: "mochitest-aboutwelcome",
+  });
   ExperimentAPI._store.addExperiment({
     slug: "mochitest-aboutwelcome",
     branch: {

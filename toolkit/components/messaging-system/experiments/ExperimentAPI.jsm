@@ -82,11 +82,31 @@ const ExperimentAPI = {
    * `update` - an experiment is updated, for example it is no longer active
    *
    * @param {string} eventName must follow the pattern `event:slug-name`
+   * @param {{slug?: string, featureId: string?}} options
    * @param {function} callback
+
    * @returns {void}
    */
-  on(eventName, callback) {
-    this._store.on(eventName, callback);
+  on(eventName, options, callback) {
+    if (!options) {
+      throw new Error("Please include an experiment slug or featureId");
+    }
+    let fullEventName = `${eventName}:${options.slug || options.featureId}`;
+
+    // The update event will always fire after the event listener is added, either
+    // immediately if it is already ready, or on ready
+    this._store.ready().then(() => {
+      let experiment = this.getExperiment(options);
+      // Only if we have an experiment that matches what the caller requested
+      if (experiment) {
+        // If the store already has the experiment in the store then we should
+        // notify. This covers the startup scenario or cases where listeners
+        // are attached later than the `update` events.
+        callback(fullEventName, experiment);
+      }
+    });
+
+    this._store.on(fullEventName, callback);
   },
 
   /**

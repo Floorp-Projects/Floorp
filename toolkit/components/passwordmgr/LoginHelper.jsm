@@ -67,10 +67,9 @@ this.LoginHelper = {
     }
     if (ExperimentAPI) {
       const slug = "password-autocomplete-wizardless";
-      ExperimentAPI.ready().then(() =>
-        setImportRecording(ExperimentAPI.getExperiment({ slug }))
+      ExperimentAPI.on("update", { slug }, (event, experiment) =>
+        setImportRecording(experiment)
       );
-      ExperimentAPI.on(`update:${slug}`, (ev, exp) => setImportRecording(exp));
     } else {
       setImportRecording();
     }
