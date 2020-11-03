@@ -567,12 +567,9 @@ nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
                                          aBorderPadding, aFlags);
   }
 
-  nsSize size = GetVideoIntrinsicSize(aRenderingContext);
-  IntrinsicSize intrinsicSize(size.width, size.height);
-
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWM, intrinsicSize, GetAspectRatio(), aCBSize,
-              aMargin, aBorderPadding, aFlags),
+              aRenderingContext, aWM, GetIntrinsicSize(), GetAspectRatio(),
+              aCBSize, aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
 
@@ -581,7 +578,7 @@ nscoord nsVideoFrame::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
   if (HasVideoElement()) {
-    nsSize size = GetVideoIntrinsicSize(aRenderingContext);
+    nsSize size = GetVideoIntrinsicSize();
     result = GetWritingMode().IsVertical() ? size.height : size.width;
   } else {
     // We expect last and only child of audio elements to be control if
@@ -603,7 +600,7 @@ nscoord nsVideoFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_PREF_INLINE_SIZE(this, result);
 
   if (HasVideoElement()) {
-    nsSize size = GetVideoIntrinsicSize(aRenderingContext);
+    nsSize size = GetVideoIntrinsicSize();
     result = GetWritingMode().IsVertical() ? size.height : size.width;
   } else {
     // We expect last and only child of audio elements to be control if
@@ -674,7 +671,7 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
   return true;
 }
 
-nsSize nsVideoFrame::GetVideoIntrinsicSize(gfxContext* aRenderingContext) {
+nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
   // 'contain:size' replaced elements have intrinsic size 0,0.
   if (StyleDisplay()->IsContainSize()) {
     return nsSize(0, 0);
@@ -692,6 +689,10 @@ nsSize nsVideoFrame::GetVideoIntrinsicSize(gfxContext* aRenderingContext) {
   }
 
   return CSSPixel::ToAppUnits(kFallbackIntrinsicSizeInPixels);
+}
+
+IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
+  return IntrinsicSize(GetVideoIntrinsicSize());
 }
 
 void nsVideoFrame::UpdatePosterSource(bool aNotify) {
