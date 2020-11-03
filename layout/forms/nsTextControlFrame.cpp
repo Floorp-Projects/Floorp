@@ -668,8 +668,7 @@ void nsTextControlFrame::ReflowTextControlChild(
   // Override padding with our computed padding in case we got it from theming
   // or percentage.
   kidReflowInput.Init(aPresContext, Nothing(), Nothing(),
-                      Some(aReflowInput.ComputedLogicalPadding().ConvertTo(
-                          wm, aReflowInput.GetWritingMode())));
+                      Some(aReflowInput.ComputedLogicalPadding(wm)));
 
   // Set computed width and computed height for the child
   kidReflowInput.SetComputedWidth(aReflowInput.ComputedWidth());

@@ -660,7 +660,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
 
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
   // be OK
-  LogicalMargin padding = aState->mReflowInput.ComputedLogicalPadding();
+  LogicalMargin padding = aState->mReflowInput.ComputedLogicalPadding(wm);
   nscoord availISize =
       aState->mReflowInput.ComputedISize() + padding.IStartEnd(wm);
 

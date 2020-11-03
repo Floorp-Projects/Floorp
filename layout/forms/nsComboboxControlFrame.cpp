@@ -843,7 +843,7 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   mDisplayISize = aReflowInput.ComputedISize() - buttonISize;
 
   mMaxDisplayISize =
-      mDisplayISize + aReflowInput.ComputedLogicalPadding().IEnd(wm);
+      mDisplayISize + aReflowInput.ComputedLogicalPadding(wm).IEnd(wm);
 
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
@@ -852,9 +852,9 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerSize);
   const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
 
-  buttonRect.IStart(wm) =
-      borderPadding.IStartEnd(wm) + mDisplayISize -
-      (borderPadding.IEnd(wm) - aReflowInput.ComputedLogicalPadding().IEnd(wm));
+  buttonRect.IStart(wm) = borderPadding.IStartEnd(wm) + mDisplayISize -
+                          (borderPadding.IEnd(wm) -
+                           aReflowInput.ComputedLogicalPadding(wm).IEnd(wm));
   buttonRect.ISize(wm) = buttonISize;
 
   buttonRect.BStart(wm) = this->GetLogicalUsedBorder(wm).BStart(wm);
