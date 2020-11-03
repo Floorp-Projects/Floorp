@@ -38,6 +38,8 @@ If the crate you're testing has no Gecko symbols you can write standard
 This supports both unit tests
 (inline in the file under test) and integration tests
 (in the `tests/` folder in the crate root).
+Metric type tests are currently written as unit tests inline in the file,
+as they require access to the metric ID, which should only be exposed in tests.
 
 To run FOG's `rusttests` suite use `mach rusttests`
 

@@ -40,8 +40,11 @@ we split the metric into three pieces:
         * If on the parent process, dispatching API calls to the core.
 2. The `MetricTypeImpl` is the parent-process implementation.
     * It talks to the core and supports test APIs too.
+    * For testing, it stores the `MetricId` that identifies this particular metric in a cross-process fashion.
+    * For testing, it exposes a `child_metric()` function to create its `Child` equivalent.
+    * For testing and if it supports operations in a non-parent-process, it exposes a `metric_id()` function to access the stored `MetricId`.
 3. The `MetricTypeIpc` is the ipc-aware non-parent-process implementation.
-    * It stores the `MetricId` that identifies this particular metric in a cross-process fashion.
+    * If it does support operations in non-parent processes it stores the `MetricId` that identifies this particular metric in a cross-process fashion.
 
 **Note:** This will change once the Rust Language Binding is moved into
 [mozilla/glean](https://github.com/mozilla/glean/)
