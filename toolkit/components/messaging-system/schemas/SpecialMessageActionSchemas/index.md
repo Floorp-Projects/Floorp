@@ -235,3 +235,9 @@ Action for configuring the user homepage and restoring defaults.
   }
 }
 ```
+
+### `SET_DEFAULT_BROWSER`
+
+Action for configuring the default browser to Firefox on the user's system.
+
+* args: (none)
