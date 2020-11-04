@@ -542,6 +542,8 @@ async function _selectDoorhanger(text, inputSelector, dropmarkerSelector) {
     autocompletePopup,
     "popupshown"
   );
+  // the dropmarker gets un-hidden async when looking up username suggestions
+  await TestUtils.waitForCondition(() => !dropmarker.hidden);
 
   EventUtils.synthesizeMouseAtCenter(dropmarker, {});
 
