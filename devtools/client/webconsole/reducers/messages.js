@@ -592,7 +592,7 @@ function messages(
         }
         newState.networkMessagesUpdateById[id] = {
           ...request,
-          ...processNetworkUpdates(data, request),
+          ...processNetworkUpdates(data),
         };
       }
       return newState;
