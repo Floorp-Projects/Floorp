@@ -109,7 +109,8 @@ struct TargetConfirmationFlags final {
       : mTargetConfirmed(aTargetConfirmed),
         mRequiresTargetConfirmation(false),
         mHitScrollbar(false),
-        mHitScrollThumb(false) {}
+        mHitScrollThumb(false),
+        mDispatchToContent(false) {}
 
   explicit TargetConfirmationFlags(
       const gfx::CompositorHitTestInfo& aHitTestInfo)
@@ -121,12 +122,16 @@ struct TargetConfirmationFlags final {
         mHitScrollbar(
             aHitTestInfo.contains(gfx::CompositorHitTestFlags::eScrollbar)),
         mHitScrollThumb(aHitTestInfo.contains(
-            gfx::CompositorHitTestFlags::eScrollbarThumb)) {}
+            gfx::CompositorHitTestFlags::eScrollbarThumb)),
+        mDispatchToContent(
+            !(aHitTestInfo & gfx::CompositorHitTestDispatchToContent)
+                 .isEmpty()) {}
 
   bool mTargetConfirmed : 1;
   bool mRequiresTargetConfirmation : 1;
   bool mHitScrollbar : 1;
   bool mHitScrollThumb : 1;
+  bool mDispatchToContent : 1;
 };
 
 enum class AsyncTransformComponent { eLayout, eVisual };

@@ -36,7 +36,7 @@ class PanZoomControllerTest : BaseSessionTest() {
         setupDocument(SCROLL_TEST_PATH)
     }
 
-    private fun waitForScroll(offset: Double, timeout: Double, param: String) {
+    private fun waitForVisualScroll(offset: Double, timeout: Double, param: String) {
         mainSession.evaluateJS("""
            new Promise((resolve, reject) => {
              const start = Date.now();
@@ -55,11 +55,11 @@ class PanZoomControllerTest : BaseSessionTest() {
     }
 
     private fun waitForHorizontalScroll(offset: Double, timeout: Double) {
-        waitForScroll(offset, timeout, "pageLeft")
+        waitForVisualScroll(offset, timeout, "pageLeft")
     }
 
     private fun waitForVerticalScroll(offset: Double, timeout: Double) {
-        waitForScroll(offset, timeout, "pageTop")
+        waitForVisualScroll(offset, timeout, "pageTop")
     }
 
 
@@ -294,13 +294,14 @@ class PanZoomControllerTest : BaseSessionTest() {
         setupDocument(documentPath + if (withEventHandler) "?event" else "")
     }
 
-    private fun waitForScrollInIframe(timeout: Double) {
+    private fun waitForScroll(timeout: Double) {
         mainSession.evaluateJS("""
-           const iframe = document.querySelector('iframe');
+           const targetWindow = document.querySelector('iframe') ?
+               document.querySelector('iframe').contentWindow : window;
            new Promise((resolve, reject) => {
              const start = Date.now();
              function step() {
-               if (iframe.contentWindow.scrollY == iframe.contentWindow.scrollMaxY) {
+               if (targetWindow.scrollY == targetWindow.scrollMaxY) {
                  resolve();
                } else if ($timeout < (Date.now() - start)) {
                  reject();
@@ -346,7 +347,7 @@ class PanZoomControllerTest : BaseSessionTest() {
             behavior: 'instant'
           });
         """.trimIndent())
-        waitForScrollInIframe(scrollWaitTimeout)
+        waitForScroll(scrollWaitTimeout)
         mainSession.flushApzRepaints()
 
         value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
@@ -380,25 +381,22 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("The input result should be HANDLED_CONTENT initially in iframe_98vh_scrollable.html",
                    value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
 
-        // The following test doesn't work either with/without event handlers.
-        if (false) {
-            // Scroll to the bottom of the iframe
-            mainSession.evaluateJS("""
-              const iframe = document.querySelector('iframe');
-              iframe.contentWindow.scrollTo({
-                left: 0,
-                top: iframe.contentWindow.scrollMaxY,
-                behavior: 'instant'
-              });
-            """.trimIndent())
-            waitForScrollInIframe(scrollWaitTimeout)
-            mainSession.flushApzRepaints()
+        // Scroll to the bottom of the iframe
+        mainSession.evaluateJS("""
+          const iframe = document.querySelector('iframe');
+          iframe.contentWindow.scrollTo({
+            left: 0,
+            top: iframe.contentWindow.scrollMaxY,
+            behavior: 'instant'
+          });
+        """.trimIndent())
+        waitForScroll(scrollWaitTimeout)
+        mainSession.flushApzRepaints()
 
-            value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-            // Now the input result should be handled in the root APZC.
-            assertThat("The input result should be HANDLED in iframe_98vh_scrollable.html",
-                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
-        }
+        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        // Now the input result should be handled in the root APZC.
+        assertThat("The input result should be HANDLED in iframe_98vh_scrollable.html",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
     }
 
     @WithDisplay(width = 100, height = 100)
@@ -430,6 +428,23 @@ class PanZoomControllerTest : BaseSessionTest() {
         for (file in files) {
           setupDocument(file + "?event-prevent")
           var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+          assertThat("The input result should be HANDLED_CONTENT in " + file,
+                      value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+
+          // Scroll to the bottom edge if it's possible.
+          mainSession.evaluateJS("""
+            const targetWindow = document.querySelector('iframe') ?
+                document.querySelector('iframe').contentWindow : window;
+            targetWindow.scrollTo({
+              left: 0,
+              top: targetWindow.scrollMaxY,
+              behavior: 'instant'
+            });
+          """.trimIndent())
+          waitForScroll(scrollWaitTimeout)
+          mainSession.flushApzRepaints()
+
+          value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
           assertThat("The input result should be HANDLED_CONTENT in " + file,
                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
         }
