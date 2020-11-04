@@ -90,3 +90,4 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "IPC: MSCOM")
+    SCHEDULES.exclusive = ["windows"]
