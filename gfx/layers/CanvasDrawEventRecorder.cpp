@@ -66,10 +66,16 @@ bool CanvasEventRingBuffer::InitWriter(
       CrossProcessSemaphore::Create("SharedMemoryStreamParent", 0));
   *aReaderSem = mReaderSemaphore->ShareToProcess(aOtherPid);
   mReaderSemaphore->CloseHandle();
+  if (!IsHandleValid(*aReaderSem)) {
+    return false;
+  }
   mWriterSemaphore.reset(
       CrossProcessSemaphore::Create("SharedMemoryStreamChild", 0));
   *aWriterSem = mWriterSemaphore->ShareToProcess(aOtherPid);
   mWriterSemaphore->CloseHandle();
+  if (!IsHandleValid(*aWriterSem)) {
+    return false;
+  }
 
   mWriterServices = std::move(aWriterServices);
 
