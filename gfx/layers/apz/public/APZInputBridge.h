@@ -20,6 +20,18 @@ namespace layers {
 class APZInputBridgeParent;
 struct ScrollableLayerGuid;
 
+enum class APZHandledResult : uint8_t {
+  Unhandled = 0,         // we know for sure that the event will not be handled
+                         // by either the root APZC or others
+  HandledByRoot = 1,     // we know for sure that the event will be handled
+                         // by the root content APZC
+  HandledByContent = 2,  // we know for sure it will be handled by a non-root
+                         // APZC or by an event listener using preventDefault()
+                         // in a document
+  Invalid = 3,
+  Last = Invalid
+};
+
 /**
  * Represents the outcome of APZ receiving and processing an input event.
  * This is returned from APZInputBridge::ReceiveInputEvent() and related APIs.
@@ -65,6 +77,7 @@ struct APZEventResult {
    *    by the root content APZC;
    *  - set to false if we know for sure it will not be;
    *  - left empty if we are unsure.
+   * FIXME: Bug 1674694 - We should use APZHandledResult here.
    */
   Maybe<bool> mHandledByRootApzc;
   /**
@@ -144,6 +157,9 @@ class APZInputBridge {
 
   virtual ~APZInputBridge() = default;
 };
+
+std::ostream& operator<<(std::ostream& aOut,
+                         const APZHandledResult& aHandledResult);
 
 }  // namespace layers
 }  // namespace mozilla

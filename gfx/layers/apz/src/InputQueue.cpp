@@ -10,6 +10,7 @@
 
 #include "GestureEventListener.h"
 #include "InputBlockState.h"
+#include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/ToString.h"
 #include "OverscrollHandoffState.h"
@@ -854,6 +855,25 @@ void InputQueue::SetAllowedTouchBehavior(
   }
 }
 
+static APZHandledResult GetHandledResultFor(
+    const AsyncPanZoomController* aApzc,
+    const InputBlockState& aCurrentInputBlock) {
+  if (aCurrentInputBlock.ShouldDropEvents()) {
+    return APZHandledResult::HandledByContent;
+  }
+
+  if (aApzc && aApzc->IsRootContent()) {
+    return aApzc->CanScrollDownwardsWithDynamicToolbar()
+               ? APZHandledResult::HandledByRoot
+               : APZHandledResult::Unhandled;
+  }
+
+  // FIXME: We need to return `HandledByRoot` if scroll positions in all
+  // relevant APZCs are at the bottom edge and if there are contents covered by
+  // the dynamic toolbar.
+  return APZHandledResult::HandledByContent;
+}
+
 void InputQueue::ProcessQueue() {
   APZThreadUtils::AssertOnControllerThread();
 
@@ -875,9 +895,8 @@ void InputQueue::ProcessQueue() {
     // input block, invoke it.
     auto it = mInputBlockCallbacks.find(curBlock->GetBlockId());
     if (it != mInputBlockCallbacks.end()) {
-      bool handledByRootApzc =
-          !curBlock->ShouldDropEvents() && target && target->IsRootContent();
-      it->second(curBlock->GetBlockId(), handledByRootApzc);
+      APZHandledResult handledResult = GetHandledResultFor(target, *curBlock);
+      it->second(curBlock->GetBlockId(), handledResult);
       // The callback is one-shot; discard it after calling it.
       mInputBlockCallbacks.erase(it);
     }

@@ -427,6 +427,22 @@ class NPZCSupport final
     return result;
   }
 
+  static int32_t ConvertAPZHandledResult(APZHandledResult aHandledResult) {
+    switch (aHandledResult) {
+      case APZHandledResult::Unhandled:
+        return INPUT_RESULT_UNHANDLED;
+      case APZHandledResult::HandledByRoot:
+        return INPUT_RESULT_HANDLED;
+      case APZHandledResult::HandledByContent:
+        return INPUT_RESULT_HANDLED_CONTENT;
+      case APZHandledResult::Invalid:
+        MOZ_ASSERT_UNREACHABLE("The handled result should NOT be Invalid");
+        return INPUT_RESULT_UNHANDLED;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unknown handled result");
+    return INPUT_RESULT_UNHANDLED;
+  }
+
  public:
   int32_t HandleMouseEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
                            float aX, float aY, int buttons) {
@@ -733,10 +749,9 @@ class NPZCSupport final
     controller->AddInputBlockCallback(
         result.mInputBlockId,
         [returnResult = java::GeckoResult::GlobalRef(returnResult)](
-            uint64_t aInputBlockId, bool aHandledByRootApzc) {
+            uint64_t aInputBlockId, APZHandledResult aHandledResult) {
           returnResult->Complete(java::sdk::Integer::ValueOf(
-              aHandledByRootApzc ? INPUT_RESULT_HANDLED
-                                 : INPUT_RESULT_HANDLED_CONTENT));
+              ConvertAPZHandledResult(aHandledResult)));
         });
   }
 };

@@ -37,6 +37,7 @@ class PinchGestureBlockState;
 class KeyboardBlockState;
 class AsyncDragMetrics;
 class QueuedInput;
+enum class APZHandledResult : uint8_t;
 
 /**
  * This class stores incoming input events, associated with "input blocks",
@@ -146,8 +147,8 @@ class InputQueue {
 
   InputBlockState* GetBlockForId(uint64_t aInputBlockId);
 
-  using InputBlockCallback =
-      std::function<void(uint64_t aInputBlockId, bool aHandledByRootApzc)>;
+  using InputBlockCallback = std::function<void(
+      uint64_t aInputBlockId, APZHandledResult aHandledResult)>;
   void AddInputBlockCallback(uint64_t aInputBlockId,
                              InputBlockCallback&& aCallback);
 
