@@ -460,35 +460,6 @@ var PrintEventHandler = {
     // Always write paper details back to settings
     settingsToUpdate.paperId = matchedPaper.id;
 
-    // See if we need to change the custom margin values
-
-    let paperHeightInInches = matchedPaper.paper.height * INCHES_PER_POINT;
-    let paperWidthInInches = matchedPaper.paper.width * INCHES_PER_POINT;
-
-    if (
-      parseFloat(this.viewSettings.customMargins.marginTop) +
-        parseFloat(this.viewSettings.customMargins.marginBottom) >
-        paperHeightInInches ||
-      this.viewSettings.customMargins.marginTop < 0 ||
-      this.viewSettings.customMargins.marginBottom < 0
-    ) {
-      let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginTop = settingsToUpdate.customMarginTop = marginTop;
-      settingsToUpdate.marginBottom = settingsToUpdate.customMarginTop = marginBottom;
-    }
-
-    if (
-      parseFloat(this.viewSettings.customMargins.marginRight) +
-        parseFloat(this.viewSettings.customMargins.marginLeft) >
-        paperWidthInInches ||
-      this.viewSettings.customMargins.marginLeft < 0 ||
-      this.viewSettings.customMargins.marginRight < 0
-    ) {
-      let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
-      settingsToUpdate.marginLeft = settingsToUpdate.customMarginLeft = marginLeft;
-      settingsToUpdate.marginRight = settingsToUpdate.customMarginRight = marginRight;
-    }
-
     return settingsToUpdate;
   },
 
@@ -541,9 +512,42 @@ var PrintEventHandler = {
       // The paper's margin properties are async,
       // so resolve those now before we update the settings
       try {
-        await PrintSettingsViewProxy.fetchPaperMargins(
+        let paperWrapper = await PrintSettingsViewProxy.fetchPaperMargins(
           changedSettings.paperId || this.viewSettings.paperId
         );
+
+        // See if we also need to change the custom margin values
+
+        let paperHeightInInches = paperWrapper.paper.height * INCHES_PER_POINT;
+        let paperWidthInInches = paperWrapper.paper.width * INCHES_PER_POINT;
+
+        if (
+          parseFloat(this.viewSettings.customMargins.marginTop) +
+            parseFloat(this.viewSettings.customMargins.marginBottom) >
+            paperHeightInInches -
+              paperWrapper.unwriteableMarginTop -
+              paperWrapper.unwriteableMarginBottom ||
+          this.viewSettings.customMargins.marginTop < 0 ||
+          this.viewSettings.customMargins.marginBottom < 0
+        ) {
+          let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
+          changedSettings.marginTop = changedSettings.customMarginTop = marginTop;
+          changedSettings.marginBottom = changedSettings.customMarginBottom = marginBottom;
+        }
+
+        if (
+          parseFloat(this.viewSettings.customMargins.marginRight) +
+            parseFloat(this.viewSettings.customMargins.marginLeft) >
+            paperWidthInInches -
+              paperWrapper.unwriteableMarginRight -
+              paperWrapper.unwriteableMarginLeft ||
+          this.viewSettings.customMargins.marginLeft < 0 ||
+          this.viewSettings.customMargins.marginRight < 0
+        ) {
+          let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
+          changedSettings.marginLeft = changedSettings.customMarginLeft = marginLeft;
+          changedSettings.marginRight = changedSettings.customMarginRight = marginRight;
+        }
       } catch (e) {
         this.reportPrintingError("PAPER_MARGINS");
         throw e;
@@ -950,7 +954,7 @@ var PrintSettingsViewProxy = {
     }
     if (paperWrapper._resolved) {
       // We've already resolved and calculated these values
-      return;
+      return paperWrapper;
     }
     let margins;
     try {
@@ -968,6 +972,7 @@ var PrintSettingsViewProxy = {
     paperWrapper.unwriteableMarginLeft = margins.left * INCHES_PER_POINT;
     // No need to re-resolve static properties
     paperWrapper._resolved = true;
+    return paperWrapper;
   },
 
   async resolvePropertiesForPrinter(printerName) {
