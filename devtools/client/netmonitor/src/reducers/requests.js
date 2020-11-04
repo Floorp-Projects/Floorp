@@ -191,7 +191,7 @@ function updateRequest(state, action) {
 
   const nextRequest = {
     ...request,
-    ...processNetworkUpdates(action.data, request),
+    ...processNetworkUpdates(action.data),
   };
   const requestEndTime =
     nextRequest.startedMs +

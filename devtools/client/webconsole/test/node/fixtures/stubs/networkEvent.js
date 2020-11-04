@@ -72,7 +72,8 @@ rawPackets.set(`GET request`, {
     "securityInfo"
   ],
   "totalTime": 2,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`GET request update`, {
@@ -129,7 +130,8 @@ rawPackets.set(`GET request update`, {
     "securityInfo"
   ],
   "totalTime": 3,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR GET request`, {
@@ -186,7 +188,8 @@ rawPackets.set(`XHR GET request`, {
     "securityInfo"
   ],
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR GET request update`, {
@@ -242,7 +245,8 @@ rawPackets.set(`XHR GET request update`, {
     "securityInfo"
   ],
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR POST request`, {
@@ -299,7 +303,8 @@ rawPackets.set(`XHR POST request`, {
     "securityInfo"
   ],
   "totalTime": 1,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 rawPackets.set(`XHR POST request update`, {
@@ -355,7 +360,8 @@ rawPackets.set(`XHR POST request update`, {
     "securityInfo"
   ],
   "totalTime": 2,
-  "securityState": "insecure"
+  "securityState": "insecure",
+  "isRacing": false
 });
 
 
