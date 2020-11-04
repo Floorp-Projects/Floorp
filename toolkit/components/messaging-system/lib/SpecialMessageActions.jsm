@@ -80,6 +80,15 @@ const SpecialMessageActions = {
   },
 
   /**
+   *  Set browser as the operating system default browser.
+   *
+   *  @param {Window} window Reference to a window object
+   */
+  setDefaultBrowser(window) {
+    window.getShellService().setAsDefault();
+  },
+
+  /**
    * Reset browser homepage and newtab to default with a certain section configuration
    *
    * @param {"default"|null} home Value to set for browser homepage
@@ -218,6 +227,9 @@ const SpecialMessageActions = {
           action.data.url,
           action.data.telemetrySource
         );
+        break;
+      case "SET_DEFAULT_BROWSER":
+        this.setDefaultBrowser(window);
         break;
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;

@@ -314,6 +314,18 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["SET_DEFAULT_BROWSER"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Message action to set Firefox as default browser"
+        },
+        {
+          "type": "object",
+          "properties": {
             "data": {
               "type": "object",
               "properties": {
