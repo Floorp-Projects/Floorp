@@ -27,53 +27,6 @@ class Module {
   static void Lock() { ++sRefCount; }
   static void Unlock() { --sRefCount; }
 
-  enum class ThreadingModel {
-    DedicatedUiThreadOnly,
-    MultiThreadedApartmentOnly,
-    DedicatedUiThreadXorMultiThreadedApartment,
-    AllThreadsAllApartments,
-  };
-
-  enum class ClassType {
-    InprocServer,
-    InprocHandler,
-  };
-
-  static HRESULT Register(REFCLSID aClsid, const ThreadingModel aThreadingModel,
-                          const ClassType aClassType = ClassType::InprocServer,
-                          const GUID* const aAppId = nullptr) {
-    const CLSID* clsidArray[] = {&aClsid};
-    return Register(clsidArray, aThreadingModel, aClassType, aAppId);
-  }
-
-  template <size_t N>
-  static HRESULT Register(const CLSID* (&aClsids)[N],
-                          const ThreadingModel aThreadingModel,
-                          const ClassType aClassType = ClassType::InprocServer,
-                          const GUID* const aAppId = nullptr) {
-    return Register(aClsids, N, aThreadingModel, aClassType, aAppId);
-  }
-
-  static HRESULT Deregister(REFCLSID aClsid,
-                            const GUID* const aAppId = nullptr) {
-    const CLSID* clsidArray[] = {&aClsid};
-    return Deregister(clsidArray, aAppId);
-  }
-
-  template <size_t N>
-  static HRESULT Deregister(const CLSID* (&aClsids)[N],
-                            const GUID* const aAppId = nullptr) {
-    return Deregister(aClsids, N, aAppId);
-  }
-
- private:
-  static HRESULT Register(const CLSID* const* aClsids, const size_t aNumClsids,
-                          const ThreadingModel aThreadingModel,
-                          const ClassType aClassType, const GUID* const aAppId);
-
-  static HRESULT Deregister(const CLSID* const* aClsids,
-                            const size_t aNumClsids, const GUID* const aAppId);
-
  private:
   static ULONG sRefCount;
 };
