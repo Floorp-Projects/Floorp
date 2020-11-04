@@ -102,8 +102,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
         .browsingContext.id,
       resourceId: this._channelId,
       actor: this.actorID,
-      discardRequestBody: true,
-      discardResponseBody: true,
       startedDateTime: this._startedDateTime,
       timeStamp: Date.parse(this._startedDateTime),
       request: {
@@ -340,7 +338,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
 
     this._onEventUpdate("requestPostData", {
       dataSize,
-      discardRequestBody: this._discardRequestBody,
     });
   },
 
@@ -467,7 +464,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       contentSize: content.size,
       encoding: content.encoding,
       transferredSize: content.transferredSize,
-      discardResponseBody,
       blockedReason,
       blockingExtension,
     });

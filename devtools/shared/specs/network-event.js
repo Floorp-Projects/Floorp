@@ -122,7 +122,6 @@ const networkEventSpec = generateActorSpec({
       updateType: Arg(0, "string"),
 
       dataSize: Option(1, "number"),
-      discardRequestBody: Option(1, "boolean"),
     },
 
     "network-event-update:response-start": {
@@ -148,7 +147,6 @@ const networkEventSpec = generateActorSpec({
       contentSize: Option(1, "number"),
       encoding: Option(1, "string"),
       transferredSize: Option(1, "number"),
-      discardResponseBody: Option(1, "boolean"),
       blockedReason: Option(1, "number"),
       blockingExtension: Option(1, "string"),
     },

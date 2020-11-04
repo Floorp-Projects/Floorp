@@ -81,7 +81,6 @@ function onNetworkEventUpdate(aState, aPacket)
       break;
     case "requestPostData":
       ok(aPacket.dataSize > 0, "dataSize > 0");
-      ok(!aPacket.discardRequestBody, "discardRequestBody");
       break;
     case "responseStart":
       expectedPacket = {
@@ -90,7 +89,6 @@ function onNetworkEventUpdate(aState, aPacket)
           status: "200",
           statusText: "OK",
           headersSize: /^\d+$/,
-          discardResponseBody: false,
         },
       };
       break;
@@ -108,7 +106,6 @@ function onNetworkEventUpdate(aState, aPacket)
       expectedPacket = {
         mimeType: "application/json",
         contentSize: /^\d+$/,
-        discardResponseBody: false,
       };
       break;
     case "eventTimings":

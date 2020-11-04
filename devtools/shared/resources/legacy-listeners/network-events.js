@@ -41,8 +41,6 @@ module.exports = async function({
       resourceType: ResourceWatcher.TYPES.NETWORK_EVENT,
       timeStamp: actor.timeStamp,
       actor: actor.actor,
-      discardRequestBody: true,
-      discardResponseBody: true,
       startedDateTime: actor.startedDateTime,
       request: {
         url: actor.url,
@@ -94,7 +92,6 @@ module.exports = async function({
         });
         break;
       case "requestPostData":
-        resourceUpdates.discardRequestBody = packet.discardRequestBody;
         resourceUpdates.request = Object.assign({}, resource.request, {
           bodySize: packet.dataSize,
         });
@@ -112,11 +109,8 @@ module.exports = async function({
           },
           waitingTime: packet.response.waitingTime,
         });
-        resourceUpdates.discardResponseBody =
-          packet.response.discardResponseBody;
         break;
       case "responseContent":
-        resourceUpdates.discardResponseBody = packet.discardResponseBody;
         resourceUpdates.response = Object.assign({}, resource.response, {
           bodySize: packet.contentSize,
           transferredSize: packet.transferredSize,
