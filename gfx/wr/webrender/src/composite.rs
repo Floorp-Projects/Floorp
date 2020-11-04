@@ -1011,10 +1011,6 @@ pub trait Compositor {
 /// TODO: Use the Compositor trait for native and non-native compositors, and integrate
 /// this functionality there.
 pub trait PartialPresentCompositor {
-    /// Returns the age of the current backbuffer. This should be used, if
-    /// draw_previous_partial_present_regions is true, to determine the
-    /// region which must be rendered in addition to the current frame's dirty rect.
-    fn get_buffer_age(&self) -> usize;
     /// Allows webrender to specify the total region that will be rendered to this frame,
     /// ie the frame's dirty region and some previous frames' dirty regions, if applicable
     /// (calculated using the buffer age). Must be called before anything has been rendered
