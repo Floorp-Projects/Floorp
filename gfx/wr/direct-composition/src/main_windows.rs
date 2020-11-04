@@ -174,7 +174,7 @@ impl Rectangle {
         rx.recv().unwrap();
         let renderer = self.renderer.as_mut().unwrap();
         renderer.update();
-        renderer.render(self.size, 0).unwrap();
+        renderer.render(self.size).unwrap();
         let _ = renderer.flush_pipeline_info();
         self.visual.present();
     }
