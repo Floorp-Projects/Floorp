@@ -10,10 +10,6 @@ const EXPORTED_SYMBOLS = ["MarionetteReftestParent"];
  * Parent JSWindowActor to handle navigation for reftests relying on marionette.
  */
 class MarionetteReftestParent extends JSWindowActorParent {
-  actorCreated() {
-    logger.trace(`[${this.browsingContext.id}] Reftest Parent actor created`);
-  }
-
   /**
    * Wait for the expected URL to be loaded.
    *
