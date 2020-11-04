@@ -38,6 +38,7 @@
 #include "Geolocation.h"
 #include "GfxInfoBase.h"
 #include "MMPrinter.h"
+#include "PDMFactory.h"
 #include "PreallocatedProcessManager.h"
 #include "ProcessPriorityManager.h"
 #include "SandboxHal.h"
@@ -2760,6 +2761,10 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
   // Send the dynamic scalar definitions to the new process.
   TelemetryIPC::GetDynamicScalarDefinitions(xpcomInit.dynamicScalarDefs());
+
+  // Pre-calculate the various PlatformDecoderModule (PDM) supported on this
+  // machine.
+  xpcomInit.codecsSupported() = PDMFactory::Supported();
 
   // Must send screen info before send initialData
   ScreenManager& screenManager = ScreenManager::GetSingleton();

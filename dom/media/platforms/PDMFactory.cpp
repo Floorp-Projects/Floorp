@@ -53,6 +53,10 @@
 
 namespace mozilla {
 
+// Set on the main thread, in content processes before any PDMFactory will ever
+// be created; never modified after.
+static Maybe<PDMFactory::MediaCodecsSupported> sSupported;
+
 extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
 class PDMFactoryImpl final {
@@ -62,7 +66,14 @@ class PDMFactoryImpl final {
       InitGpuPDMs();
     } else if (XRE_IsRDDProcess()) {
       InitRddPDMs();
+    } else if (XRE_IsContentProcess()) {
+      MOZ_DIAGNOSTIC_ASSERT(sSupported.isSome(),
+                            "PDMFactory accessed while not initialized");
+      InitContentPDMs();
     } else {
+      MOZ_DIAGNOSTIC_ASSERT(
+          XRE_IsParentProcess(),
+          "PDMFactory is only usable in the Parent/GPU/RDD/Content process");
       InitDefaultPDMs();
     }
   }
@@ -95,6 +106,27 @@ class PDMFactoryImpl final {
 #endif
   }
 
+  void InitContentPDMs() {
+#ifdef XP_WIN
+    if (!IsWin7AndPre2000Compatible()) {
+      WMFDecoderModule::Init();
+    }
+#endif
+#ifdef MOZ_APPLEMEDIA
+    AppleDecoderModule::Init();
+#endif
+#ifdef MOZ_OMX
+    OmxDecoderModule::Init();
+#endif
+#ifdef MOZ_FFVPX
+    FFVPXRuntimeLinker::Init();
+#endif
+#ifdef MOZ_FFMPEG
+    FFmpegRuntimeLinker::Init();
+#endif
+    RemoteDecoderManagerChild::Init();
+  }
+
   void InitDefaultPDMs() {
 #ifdef XP_WIN
     if (!IsWin7AndPre2000Compatible()) {
@@ -113,9 +145,6 @@ class PDMFactoryImpl final {
 #ifdef MOZ_FFMPEG
     FFmpegRuntimeLinker::Init();
 #endif
-    if (XRE_IsContentProcess()) {
-      RemoteDecoderManagerChild::Init();
-    }
   }
 };
 
@@ -197,6 +226,31 @@ PDMFactory::PDMFactory() {
   EnsureInit();
   CreatePDMs();
   CreateNullPDM();
+}
+
+PDMFactory::PDMFactory(const RemoteDecodeIn& aProcess) {
+  switch (aProcess) {
+    case RemoteDecodeIn::RddProcess:
+      CreateRddPDMs();
+      break;
+    case RemoteDecodeIn::GpuProcess:
+      CreateGpuPDMs();
+      break;
+    default:
+      MOZ_CRASH("Not to be used for any other process");
+  }
+}
+
+/* static */
+already_AddRefed<PDMFactory> PDMFactory::PDMFactoryForRdd() {
+  RefPtr<PDMFactory> pdm = new PDMFactory(RemoteDecodeIn::RddProcess);
+  return pdm.forget();
+}
+
+/* static */
+already_AddRefed<PDMFactory> PDMFactory::PDMFactoryForGpu() {
+  RefPtr<PDMFactory> pdm = new PDMFactory(RemoteDecodeIn::GpuProcess);
+  return pdm.forget();
 }
 
 /* static */
@@ -383,13 +437,17 @@ void PDMFactory::CreatePDMs() {
     CreateGpuPDMs();
   } else if (XRE_IsRDDProcess()) {
     CreateRddPDMs();
+  } else if (XRE_IsContentProcess()) {
+    CreateContentPDMs();
   } else {
+    MOZ_DIAGNOSTIC_ASSERT(
+        XRE_IsParentProcess(),
+        "PDMFactory is only usable in the Parent/GPU/RDD/Content process");
     CreateDefaultPDMs();
   }
 }
 
 void PDMFactory::CreateGpuPDMs() {
-  MOZ_ASSERT(XRE_IsGPUProcess());
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
     CreateAndStartupPDM<WMFDecoderModule>();
@@ -398,7 +456,6 @@ void PDMFactory::CreateGpuPDMs() {
 }
 
 void PDMFactory::CreateRddPDMs() {
-  MOZ_ASSERT(XRE_IsRDDProcess());
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() &&
       StaticPrefs::media_rdd_wmf_enabled()) {
@@ -428,17 +485,61 @@ void PDMFactory::CreateRddPDMs() {
   CreateAndStartupPDM<AgnosticDecoderModule>();
 }
 
-void PDMFactory::CreateDefaultPDMs() {
-  MOZ_ASSERT(!XRE_IsGPUProcess() && !XRE_IsRDDProcess());
+void PDMFactory::CreateContentPDMs() {
   if (StaticPrefs::media_gpu_process_decoder()) {
     CreateAndStartupPDM<RemoteDecoderModule>(RemoteDecodeIn::GpuProcess);
   }
 
-  if (StaticPrefs::media_rdd_process_enabled() &&
-      BrowserTabsRemoteAutostart()) {
+  if (StaticPrefs::media_rdd_process_enabled()) {
     CreateAndStartupPDM<RemoteDecoderModule>(RemoteDecodeIn::RddProcess);
   }
 
+#ifdef XP_WIN
+  if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
+    RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
+    if (!StartupPDM(m.forget())) {
+      mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+    }
+  } else if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
+  }
+#endif
+
+#ifdef MOZ_APPLEMEDIA
+  CreateAndStartupPDM<AppleDecoderModule>();
+#endif
+#ifdef MOZ_OMX
+  if (StaticPrefs::media_omx_enabled()) {
+    CreateAndStartupPDM<OmxDecoderModule>();
+  }
+#endif
+#ifdef MOZ_FFVPX
+  if (StaticPrefs::media_ffvpx_enabled()) {
+    CreateAndStartupPDM<FFVPXRuntimeLinker>();
+  }
+#endif
+#ifdef MOZ_FFMPEG
+  if (StaticPrefs::media_ffmpeg_enabled() &&
+      !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
+  }
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+  if (StaticPrefs::media_android_media_codec_enabled()) {
+    StartupPDM(AndroidDecoderModule::Create(),
+               StaticPrefs::media_android_media_codec_preferred());
+  }
+#endif
+
+  CreateAndStartupPDM<AgnosticDecoderModule>();
+
+  if (StaticPrefs::media_gmp_decoder_enabled() &&
+      !CreateAndStartupPDM<GMPDecoderModule>()) {
+    mFailureFlags += DecoderDoctorDiagnostics::Flags::GMPPDMFailedToStartup;
+  }
+}
+
+void PDMFactory::CreateDefaultPDMs() {
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
     RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
@@ -533,6 +634,58 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
 #endif
   auto m = MakeRefPtr<PDMFactory>();
   mEMEPDM = MakeRefPtr<EMEDecoderModule>(aProxy, m);
+}
+
+/* static */
+PDMFactory::MediaCodecsSupported PDMFactory::Supported() {
+  if (XRE_IsContentProcess()) {
+    return *sSupported;
+  }
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  static MediaCodecsSupported supported = []() {
+    auto pdm = MakeRefPtr<PDMFactory>();
+    MediaCodecsSupported supported;
+    // H264 and AAC depends on external framework that must be dynamically
+    // loaded.
+    // We currently only ship a single PDM per platform able to decode AAC or
+    // H264. As such we can assert that being able to create a H264 or AAC
+    // decoder indicates that with WMF on Windows or FFmpeg on Unixes is
+    // available.
+    // This logic will have to be revisited if a PDM supporting either codec
+    // will be added in addition to the WMF and FFmpeg PDM (such as OpenH264)
+    if (pdm->SupportsMimeType("video/avc"_ns, nullptr)) {
+      supported += MediaCodecs::H264;
+    }
+    if (pdm->SupportsMimeType("audio/mp4a-latm"_ns, nullptr)) {
+      supported += MediaCodecs::AAC;
+    }
+    // MP3 can be either decoded by ffvpx or WMF/FFmpeg
+    if (pdm->SupportsMimeType("audio/mpeg"_ns, nullptr)) {
+      supported += MediaCodecs::MP3;
+    }
+    // The codecs below are potentially always supported as we ship native
+    // support for them. If they are disabled through pref, it will be handled
+    // in MediaDecoder class that could use those.
+    supported += MediaCodecs::VP9;
+    supported += MediaCodecs::VP8;
+    supported += MediaCodecs::AV1;
+    supported += MediaCodecs::Theora;
+    supported += MediaCodecs::Opus;
+    supported += MediaCodecs::Vorbis;
+    supported += MediaCodecs::Flac;
+    supported += MediaCodecs::Wave;
+
+    return supported;
+  }();
+  return supported;
+}
+
+/* static */
+void PDMFactory::SetSupported(const MediaCodecsSupported& aSupported) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  sSupported = Some(aSupported);
 }
 
 }  // namespace mozilla

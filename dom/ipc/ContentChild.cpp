@@ -1306,6 +1306,7 @@ void ContentChild::InitXPCOM(
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
 
+  PDMFactory::SetSupported(aXPCOMInit.codecsSupported());
   // Initialize the RemoteDecoderManager thread and its associated PBackground
   // channel.
   RemoteDecoderManagerChild::Init();

@@ -64,13 +64,6 @@ ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 StaticRefPtr<ShutdownObserver> sObserver;
 
-static Maybe<layers::TextureFactoryIdentifier> MaybeTextureFactoryIdentifier(
-    const SupportDecoderParams& aParams) {
-  return aParams.mKnowsCompositor
-             ? Some(aParams.mKnowsCompositor->GetTextureFactoryIdentifier())
-             : Nothing();
-}
-
 /* static */
 void RemoteDecoderManagerChild::Init() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -186,41 +179,18 @@ nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
 bool RemoteDecoderManagerChild::Supports(
     RemoteDecodeIn aLocation, const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) {
-  bool supports = false;
-  DecoderDoctorDiagnostics diagnostics;
-
-  nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
-  if (managerThread) {
-    RefPtr<Runnable> task =
-        NS_NewRunnableFunction("RemoteDecoderManager::Supports", [&]() {
-          auto* rdm = GetSingleton(aLocation);
-          if (!rdm) {
-            // The RDD process failed to launch. Fail for now.
-            // Creation will be attempted again later.
-            return;
-          }
-          const auto& trackInfo = aParams.mConfig;
-          if (trackInfo.GetAsVideoInfo()) {
-            VideoDecoderInfoIPDL info(*trackInfo.GetAsVideoInfo(),
-                                      aParams.mRate.mValue);
-            Unused << rdm->SendSupports(info,
-                                        MaybeTextureFactoryIdentifier(aParams),
-                                        &supports, &diagnostics);
-          } else if (trackInfo.GetAsAudioInfo()) {
-            Unused << rdm->SendSupports(*trackInfo.GetAsAudioInfo(), Nothing(),
-                                        &supports, &diagnostics);
-          }
-        });
-    // If we've already got shutdown, the dispatch will fail and SyncRunnable
-    // will immediately return.
-    SyncRunnable::DispatchToThread(managerThread, task);
+  RefPtr<PDMFactory> pdm;
+  switch (aLocation) {
+    case RemoteDecodeIn::RddProcess:
+      pdm = PDMFactory::PDMFactoryForRdd();
+      break;
+    case RemoteDecodeIn::GpuProcess:
+      pdm = PDMFactory::PDMFactoryForGpu();
+      break;
+    default:
+      return false;
   }
-
-  if (aDiagnostics) {
-    *aDiagnostics = diagnostics;
-  }
-
-  return supports;
+  return pdm->Supports(aParams, aDiagnostics);
 }
 
 /* static */

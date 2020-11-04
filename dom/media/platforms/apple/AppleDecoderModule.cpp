@@ -54,6 +54,9 @@ nsresult AppleDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
+  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+    return nullptr;
+  }
   RefPtr<MediaDataDecoder> decoder;
   if (IsVideoSupported(aParams.VideoConfig(), aParams.mOptions)) {
     decoder = new AppleVTDecoder(aParams.VideoConfig(), aParams.mImageContainer,
@@ -64,6 +67,9 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
+  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+    return nullptr;
+  }
   RefPtr<MediaDataDecoder> decoder = new AppleATDecoder(aParams.AudioConfig());
   return decoder.forget();
 }
