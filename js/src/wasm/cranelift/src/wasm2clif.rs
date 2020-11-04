@@ -662,8 +662,8 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
         built_arguments.push(instance, &mut pos.func.dfg.value_lists);
         built_arguments.extend(arguments.iter().cloned(), &mut pos.func.dfg.value_lists);
         built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);
-        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);  // callee_tls
-        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists);  // caller_tls
+        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists); // callee_tls
+        built_arguments.push(vmctx, &mut pos.func.dfg.value_lists); // caller_tls
         pos.func.dfg[call_ins].put_value_list(built_arguments);
 
         self.switch_to_wasm_tls_realm(pos);

@@ -137,9 +137,9 @@ mod wasm2clif;
 
 use log::{self, error};
 use std::ffi::CString;
+use std::fmt::Display;
 use std::os::raw::c_char;
 use std::ptr;
-use std::fmt::Display;
 
 use crate::bindings::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
 use crate::compile::BatchCompiler;
@@ -260,7 +260,7 @@ pub unsafe extern "C" fn cranelift_compile_function(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cranelift_compiler_free_error(s: *mut c_char)  {
+pub unsafe extern "C" fn cranelift_compiler_free_error(s: *mut c_char) {
     // Convert back into a `CString` and then let it drop.
     let _cstr = CString::from_raw(s);
 }
