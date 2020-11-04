@@ -64,6 +64,11 @@ public class Camera1Enumerator implements CameraEnumerator {
   }
 
   @Override
+  public boolean isInfrared(String deviceName) {
+    return false;
+  }
+
+  @Override
   public List<CaptureFormat> getSupportedFormats(String deviceName) {
     return getSupportedFormats(getCameraIndex(deviceName));
   }
