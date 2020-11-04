@@ -178,7 +178,10 @@ function promiseSettingsDialogClose() {
           dialogWin.document.documentURI ===
           "chrome://browser/content/preferences/dialogs/siteDataSettings.xhtml"
         ) {
-          is_element_hidden(dialogOverlay, "The Settings dialog should be hidden");
+          is_element_hidden(
+            dialogOverlay,
+            "The Settings dialog should be hidden"
+          );
           resolve();
         }
       },
