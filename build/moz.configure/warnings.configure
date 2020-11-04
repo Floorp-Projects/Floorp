@@ -224,8 +224,8 @@ with only_when(depends(target)(lambda t: t.kernel == "WINNT")):
 # We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
 check_and_add_gcc_warning("-Wno-gnu-zero-variadic-macro-arguments")
 
-# Make it an error to be missing function declarations.
-check_and_add_gcc_warning("-Werror=implicit-function-declaration")
+# Make it an error to be missing function declarations for C code.
+check_and_add_gcc_warning("-Werror=implicit-function-declaration", c_compiler)
 
 # New in clang 11. We can't really do anything about this warning.
 check_and_add_gcc_warning("-Wno-psabi")
