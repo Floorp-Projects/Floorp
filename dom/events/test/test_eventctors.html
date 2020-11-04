@@ -199,7 +199,16 @@ try {
 ok(ex, "First parameter is required!");
 ex = false;
 
-e = new BlobEvent("hello");
+try {
+  e = new BlobEvent("hello");
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "data attribute is required in init dict");
+ex = false;
+
+var blob = new Blob();
+e = new BlobEvent("hello", {data: blob});
 is(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
 try {
@@ -216,7 +225,6 @@ ok(!e.cancelable, "Event shouldn't be cancelable!");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
-var blob = new Blob();
 e = new BlobEvent("hello", { bubbles: true, cancelable: true, data: blob });
 is(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
@@ -226,7 +234,6 @@ is(e.data, blob , "Wrong event.data!");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
-
 e = new BlobEvent("hello", {data: blob});
 is(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
@@ -234,11 +241,15 @@ ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event should be cancelable1!");
 is(e.data, blob , "Wrong event.data!");
 
-e = new BlobEvent("hello", { data: null });
-is(e.data, null, "Wrong event.data!");
-ok(!e.bubbles, "Event shouldn't bubble!");
-ok(!e.cancelable, "Event shouldn't be cancelable!");
+try {
+  e = new BlobEvent("hello", { data: null });
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "data attribute cannot be null");
+ex = false;
 blob = null;
+
 // CloseEvent
 
 try {
