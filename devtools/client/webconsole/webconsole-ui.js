@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { gDevTools } = require("devtools/client/framework/devtools");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const {
@@ -490,13 +489,11 @@ class WebConsoleUI {
       return;
     }
 
-    // Allow frame, but only in content toolbox, when the fission/content toolbox pref is
-    // set. i.e. still ignore them in the content of the browser toolbox as we inspect
-    // messages via the process targets
+    // Allow frame, but only in content toolbox, i.e. still ignore them in
+    // the context of the browser toolbox as we inspect messages via the process
+    // targets
     // Also ignore workers as they are not supported yet. (see bug 1592584)
-    const isContentToolbox = this.hud.targetList.targetFront.isLocalTab;
-    const listenForFrames =
-      isContentToolbox && gDevTools.isFissionContentToolboxEnabled();
+    const listenForFrames = this.hud.targetList.targetFront.isLocalTab;
     if (
       targetFront.targetType != this.hud.targetList.TYPES.PROCESS &&
       (targetFront.targetType != this.hud.targetList.TYPES.FRAME ||

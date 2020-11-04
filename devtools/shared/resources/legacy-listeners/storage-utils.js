@@ -30,7 +30,6 @@ function makeStorageLegacyListener(storageKey, storageType) {
     targetList,
     targetType,
     targetFront,
-    isFissionEnabledOnContentToolbox,
     onAvailable,
     onUpdated,
     onDestroyed,

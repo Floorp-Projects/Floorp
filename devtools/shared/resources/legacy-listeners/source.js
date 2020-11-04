@@ -25,12 +25,7 @@ const {
  * - isBlackBoxed {Boolean}: Specifying whether the source actor's 'black-boxed' flag is set.
  * - extensionName {null|String}: If the source comes from an add-on, the add-on name.
  */
-module.exports = async function({
-  targetList,
-  targetFront,
-  isFissionEnabledOnContentToolbox,
-  onAvailable,
-}) {
+module.exports = async function({ targetList, targetFront, onAvailable }) {
   const isBrowserToolbox = targetList.targetFront.isParentProcess;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
