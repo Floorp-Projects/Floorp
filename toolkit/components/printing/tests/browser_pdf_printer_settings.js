@@ -45,7 +45,15 @@ add_task(async function testPDFCancel() {
     await helper.startPrint();
     helper.mockFilePickerCancel();
     let form = helper.doc.querySelector("#print");
-    let getDisabledStates = () => [...form.elements].map(el => el.disabled);
+
+    // retrieve all elements other than cancel button
+    let elements = [];
+    for (let element of form.elements) {
+      if (element.name != "cancel") {
+        elements.push(element);
+      }
+    }
+    let getDisabledStates = () => elements.map(el => el.disabled);
     let initialDisabledStates = getDisabledStates();
 
     ok(
@@ -64,6 +72,8 @@ add_task(async function testPDFCancel() {
       shownDisabledStates.every(disabled => disabled),
       "All elements were disabled when showing picker"
     );
+    let cancelButton = helper.doc.querySelector(`button[name="cancel"]`);
+    ok(!cancelButton.disabled, "Cancel button is still enabled");
 
     let saveButton = form.querySelector("#print-button");
     await BrowserTestUtils.waitForAttributeRemoval("disabled", saveButton);
