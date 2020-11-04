@@ -620,7 +620,7 @@ impl Wrench {
         self.renderer.update();
         let _ = self.renderer.flush_pipeline_info();
         self.renderer
-            .render(self.window_size)
+            .render(self.window_size, 0)
             .expect("errors encountered during render!")
     }
 
