@@ -4,12 +4,12 @@ First, commit your changes. For example:
 
 ```bash
 hg add /path/to/file/changed
-hg commit -m "Bug 1234567 - Implement feature XYZ. r=name,name2!"
+hg commit -m "Bug 1234567 - [devtools] Implement feature XYZ. r=name,name2!"
 ```
 
  The commit message explained in detail:
  - `Bug 1234567` - The number of the bug in bugzilla.
- - `- Implement feature XYZ.` - The commit message.
+ - `- [devtools] Implement feature XYZ.` - The commit message, with a "devtools" prefix to quickly identify DevTools changesets.
  - `r=name` - The short form to request a review. Enter the name you found using the
  instructions in the [previous step](./code-reviews-find-reviewer.md).
  - `,name2!` - You can have more than one reviewer. The `!` makes the review a *blocking* review (Patch can not land without accepted review).
