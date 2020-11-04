@@ -12,7 +12,6 @@ const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-chi
 // the context is set to the top one if the destroyed target was selected).
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.fission", true);
   await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [

@@ -12,8 +12,6 @@ const TEST_ORG_URI =
   ORG_URL_ROOT + "doc_inspector_fission_frame_navigation.html";
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.fission", true);
-
   const { inspector } = await openInspectorForURL(TEST_ORG_URI);
   const tree = `
     id="root"
@@ -67,8 +65,6 @@ add_task(async function navigateFrameNotExpandedInMarkupView() {
     // root-node resource will not be emitted for a frame navigation.
     return;
   }
-
-  await pushPref("devtools.contenttoolbox.fission", true);
 
   const { inspector } = await openInspectorForURL(TEST_ORG_URI);
   const resourceWatcher = inspector.toolbox.resourceWatcher;

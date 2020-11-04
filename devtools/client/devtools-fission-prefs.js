@@ -27,12 +27,6 @@ const PREFERENCES = [
       "processes at the same time as resources from the parent process",
   ],
   [
-    "devtools.contenttoolbox.fission",
-    "Enable fission support in the regular Toolbox. Allows to see and debug " +
-      "resources from remote frames. Should only be used when " +
-      "`fission.autostart` is enabled",
-  ],
-  [
     "devtools.target-switching.enabled",
     "If you navigate between two distinct process, the toolbox won’t close " +
       "and will instead switch to the new target. This impacts the regular " +
