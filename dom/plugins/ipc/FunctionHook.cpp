@@ -16,8 +16,7 @@
 #  include "PluginModuleChild.h"
 #endif
 
-namespace mozilla {
-namespace plugins {
+namespace mozilla::plugins {
 
 StaticAutoPtr<FunctionHookArray> FunctionHook::sFunctionHooks;
 
@@ -357,5 +356,4 @@ void FunctionHook::AddFunctionHooks(FunctionHookArray& aHooks) {
 
 #undef FUN_HOOK
 
-}  // namespace plugins
-}  // namespace mozilla
+}  // namespace mozilla::plugins

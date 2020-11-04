@@ -12,8 +12,7 @@
 #include "mozilla/dom/GridArea.h"
 #include "nsGridContainerFrame.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GridLines, mParent, mLines)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GridLines)
@@ -369,5 +368,4 @@ uint32_t GridLines::AppendRemovedAutoFits(
   return linesAdded;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

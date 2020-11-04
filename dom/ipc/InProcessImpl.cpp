@@ -15,8 +15,7 @@ using namespace mozilla::ipc;
 // This file contains the implementation of core InProcess lifecycle management
 // facilities.
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 StaticRefPtr<InProcessParent> InProcessParent::sSingleton;
 StaticRefPtr<InProcessChild> InProcessChild::sSingleton;
@@ -302,5 +301,4 @@ IProtocol* InProcessChild::ParentActorFor(IProtocol* aActor) {
 NS_IMPL_ISUPPORTS(InProcessParent, nsIDOMProcessParent, nsIObserver)
 NS_IMPL_ISUPPORTS(InProcessChild, nsIDOMProcessChild)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

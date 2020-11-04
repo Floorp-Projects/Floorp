@@ -31,8 +31,7 @@
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 LinkStyle::SheetInfo::SheetInfo(
     const Document& aDocument, nsIContent* aContent,
@@ -321,5 +320,4 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
   return resultOrError;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

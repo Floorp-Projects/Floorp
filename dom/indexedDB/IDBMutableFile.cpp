@@ -27,8 +27,7 @@
 #include "nsError.h"
 #include "ReportInternalError.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
@@ -198,5 +197,4 @@ JSObject* IDBMutableFile::WrapObject(JSContext* aCx,
   return IDBMutableFile_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

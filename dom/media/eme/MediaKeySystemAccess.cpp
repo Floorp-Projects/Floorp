@@ -36,8 +36,7 @@
 #  include "mozilla/java/MediaDrmProxyWrappers.h"
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeySystemAccess, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeySystemAccess)
@@ -1250,5 +1249,4 @@ nsCString MediaKeySystemAccess::ToCString(
   return mozilla::dom::ToCString(aConfig);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

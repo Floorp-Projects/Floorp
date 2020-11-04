@@ -9,8 +9,7 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MessagePortChild::MessagePortChild() : mPort(nullptr) {}
 
@@ -44,5 +43,4 @@ void MessagePortChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

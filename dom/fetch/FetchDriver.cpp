@@ -47,8 +47,7 @@
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1598,5 +1597,4 @@ void FetchDriver::RunAbortAlgorithm() {
   mAborted = true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

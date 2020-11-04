@@ -48,8 +48,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1539,5 +1538,4 @@ template void FetchBody<Request>::RunAbortAlgorithm();
 
 template void FetchBody<Response>::RunAbortAlgorithm();
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -9,8 +9,7 @@
 #include "nsIInputStream.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MutableBlobStreamListener::MutableBlobStreamListener(
     MutableBlobStorage::MutableBlobStorageType aStorageType,
@@ -100,5 +99,4 @@ nsresult MutableBlobStreamListener::WriteSegmentFun(
 NS_IMETHODIMP
 MutableBlobStreamListener::CheckListenerChain() { return NS_OK; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

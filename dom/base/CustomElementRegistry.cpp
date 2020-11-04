@@ -26,8 +26,7 @@
 #include "xpcprivate.h"
 #include "nsGlobalWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //-----------------------------------------------------
 // CustomElementUpgradeReaction
@@ -1505,5 +1504,4 @@ CustomElementDefinition::CustomElementDefinition(
       mDisableInternals(aDisableInternals),
       mDisableShadow(aDisableShadow) {}
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -121,8 +121,7 @@ struct nsSpeechDispatcherDynamicFunction {
   nsSpeechDispatcherFunc* function;
 };
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 StaticRefPtr<SpeechDispatcherService> SpeechDispatcherService::sSingleton;
 
@@ -553,5 +552,4 @@ void SpeechDispatcherService::EventNotify(uint32_t aMsgId, uint32_t aState) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

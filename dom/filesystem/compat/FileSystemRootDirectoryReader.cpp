@@ -10,8 +10,7 @@
 #include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -91,5 +90,4 @@ void FileSystemRootDirectoryReader::ReadEntries(
   aRv = FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

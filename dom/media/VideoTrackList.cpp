@@ -7,8 +7,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/VideoTrackListBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* VideoTrackList::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -78,5 +77,4 @@ VideoTrack* VideoTrackList::GetTrackById(const nsAString& aId) {
   return track ? track->AsVideoTrack() : nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

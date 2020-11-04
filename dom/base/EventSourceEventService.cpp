@@ -13,8 +13,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -314,5 +313,4 @@ void EventSourceEventService::GetListeners(
   aListeners.AppendElements(listener->mListeners);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

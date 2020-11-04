@@ -11,8 +11,7 @@
 #include "MediaControlService.h"
 #include "mozilla/Logging.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // avoid redefined macro in unified build
 #undef LOG_SOURCE
@@ -120,5 +119,4 @@ MediaSessionPlaybackState MediaControlKeySource::GetPlaybackState() const {
   return mPlaybackState;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

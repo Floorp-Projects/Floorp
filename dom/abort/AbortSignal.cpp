@@ -10,8 +10,7 @@
 #include "mozilla/dom/AbortSignalBinding.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // AbortSignalImpl
 // ----------------------------------------------------------------------------
@@ -141,5 +140,4 @@ bool AbortFollower::IsFollowing() const { return !!mFollowingSignal; }
                               "mFollowingSignal", 0);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

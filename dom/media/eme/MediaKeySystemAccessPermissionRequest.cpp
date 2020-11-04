@@ -8,8 +8,7 @@
 
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaKeySystemAccessPermissionRequest,
                                    ContentPermissionRequestBase)
@@ -89,5 +88,4 @@ MediaKeySystemAccessPermissionRequest::Cancel() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -15,8 +15,7 @@
 #include "PaymentRequestUtils.h"
 #include "mozilla/EventStateManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentResponse)
 
@@ -452,5 +451,4 @@ nsresult PaymentResponse::DispatchUpdateEvent(const nsAString& aType) {
   return rv.StealNSResult();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

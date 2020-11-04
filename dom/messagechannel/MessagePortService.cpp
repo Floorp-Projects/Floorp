@@ -16,8 +16,7 @@
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -35,8 +34,7 @@ struct MessagePortService::NextParent {
   CheckedUnsafePtr<MessagePortParent> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // Need to call CheckedUnsafePtr's copy constructor and destructor when
 // resizing dynamic arrays containing NextParent (by calling NextParent's
@@ -44,8 +42,7 @@ struct MessagePortService::NextParent {
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::dom::MessagePortService::NextParent);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MessagePortService::MessagePortServiceData final {
  public:
@@ -410,5 +407,4 @@ bool MessagePortService::ForceClose(const nsID& aUUID,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

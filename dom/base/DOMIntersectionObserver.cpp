@@ -21,8 +21,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "Units.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMIntersectionObserverEntry)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -738,5 +737,4 @@ void DOMIntersectionObserver::Notify() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

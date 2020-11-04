@@ -23,8 +23,7 @@
           ("MediaController=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
            ##__VA_ARGS__))
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaController, DOMEventTargetHelper)
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(MediaController,
@@ -550,5 +549,4 @@ void MediaController::Unselect() const {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

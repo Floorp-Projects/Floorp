@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/ClientIPCTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ClientWindowState::ClientWindowState(
     mozilla::dom::VisibilityState aVisibilityState,
@@ -165,5 +164,4 @@ const IPCClientState ClientState::ToIPC() const {
   return IPCClientState(AsWorkerState().ToIPC());
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

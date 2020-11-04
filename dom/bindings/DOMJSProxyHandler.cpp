@@ -18,8 +18,7 @@
 
 using namespace JS;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 jsid s_length_id = JSID_VOID;
 
@@ -327,5 +326,4 @@ void ShadowingDOMProxyHandler::trace(JSTracer* trc, JSObject* proxy) const {
                 "Shadowing DOM proxy expando");
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

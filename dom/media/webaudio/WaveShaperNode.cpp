@@ -12,8 +12,7 @@
 #include "AudioNodeTrack.h"
 #include "mozilla/PodOperations.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WaveShaperNode)
 
@@ -385,5 +384,4 @@ void WaveShaperNode::SetOversample(OverSampleType aType) {
                             static_cast<int32_t>(aType));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

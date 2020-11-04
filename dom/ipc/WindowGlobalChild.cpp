@@ -41,8 +41,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 typedef nsRefPtrHashtable<nsUint64HashKey, WindowGlobalChild> WGCByIdMap;
 static StaticAutoPtr<WGCByIdMap> gWindowGlobalChildById;
@@ -690,5 +689,4 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WindowGlobalChild)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WindowGlobalChild)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

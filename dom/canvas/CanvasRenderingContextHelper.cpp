@@ -19,8 +19,7 @@
 #include "nsJSUtils.h"
 #include "ClientWebGLContext.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 CanvasRenderingContextHelper::CanvasRenderingContextHelper()
     : mCurrentContextType(CanvasContextType::NoContext) {}
@@ -283,5 +282,4 @@ nsresult CanvasRenderingContextHelper::ParseParams(
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

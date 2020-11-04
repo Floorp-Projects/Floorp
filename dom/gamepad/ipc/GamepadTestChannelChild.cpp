@@ -6,8 +6,7 @@
 
 #include "GamepadTestChannelChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 already_AddRefed<GamepadTestChannelChild> GamepadTestChannelChild::Create() {
   return RefPtr<GamepadTestChannelChild>(new GamepadTestChannelChild())
@@ -32,5 +31,4 @@ mozilla::ipc::IPCResult GamepadTestChannelChild::RecvReplyGamepadIndex(
   return IPC_OK();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

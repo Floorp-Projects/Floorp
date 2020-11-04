@@ -45,8 +45,7 @@
 #  undef GetMessage
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #define PREFERENCE_DEFAULT_RECOGNITION_SERVICE "media.webspeech.service.default"
 #define DEFAULT_RECOGNITION_SERVICE "online"
@@ -1149,5 +1148,4 @@ SpeechEvent::Run() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

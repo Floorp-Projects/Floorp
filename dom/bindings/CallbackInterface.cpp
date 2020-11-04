@@ -10,8 +10,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool CallbackInterface::GetCallableProperty(
     BindingCallContext& cx, JS::Handle<jsid> aPropId,
@@ -31,5 +30,4 @@ bool CallbackInterface::GetCallableProperty(
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

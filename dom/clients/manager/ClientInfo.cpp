@@ -9,8 +9,7 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
@@ -129,5 +128,4 @@ void ClientInfo::SetPreloadCspInfo(
   mData->preloadCspInfo() = Some(aPreloadCSPInfo);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

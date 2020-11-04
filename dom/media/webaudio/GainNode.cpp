@@ -12,8 +12,7 @@
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(GainNode, AudioNode, mGain)
 
@@ -145,5 +144,4 @@ JSObject* GainNode::WrapObject(JSContext* aCx,
   return GainNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

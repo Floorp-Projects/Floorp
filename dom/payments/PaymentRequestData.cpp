@@ -13,9 +13,7 @@
 #include "PaymentRequestData.h"
 #include "PaymentRequestUtils.h"
 
-namespace mozilla {
-namespace dom {
-namespace payments {
+namespace mozilla::dom::payments {
 
 /* PaymentMethodData */
 
@@ -806,6 +804,4 @@ PaymentAddress::GetPhone(nsAString& aPhone) {
   return NS_OK;
 }
 
-}  // namespace payments
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom::payments

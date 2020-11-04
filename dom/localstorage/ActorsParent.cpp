@@ -150,8 +150,7 @@
 #  define LS_MOBILE
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace mozilla::dom::quota;
 using namespace mozilla::dom::StorageUtils;
@@ -9860,5 +9859,4 @@ nsresult AutoWriteTransaction::DetachShadowDatabaseAndUnlock() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

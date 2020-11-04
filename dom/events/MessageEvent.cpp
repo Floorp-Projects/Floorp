@@ -14,8 +14,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(MessageEvent)
 
@@ -163,5 +162,4 @@ void MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts) {
   aPorts = mPorts.Clone();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -10,8 +10,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "nsNetUtil.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaMetadata, mParent)
@@ -151,5 +150,4 @@ void MediaMetadata::SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
   mArtwork = std::move(artwork);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

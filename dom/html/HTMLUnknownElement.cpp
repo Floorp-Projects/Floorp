@@ -11,8 +11,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLUnknownElement, nsGenericHTMLElement,
                             HTMLUnknownElement)
@@ -24,5 +23,4 @@ JSObject* HTMLUnknownElement::WrapNode(JSContext* aCx,
 
 NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

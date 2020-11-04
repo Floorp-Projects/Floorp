@@ -26,8 +26,7 @@
 #  include "windows.h"
 #endif
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 class PassThroughGMPAdapter : public GMPAdapter {
  public:
   ~PassThroughGMPAdapter() override {
@@ -187,5 +186,4 @@ GMPLoader::GMPLoader() : mSandboxStarter(MakeSandboxStarter()) {}
 
 bool GMPLoader::CanSandbox() const { return !!mSandboxStarter; }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp

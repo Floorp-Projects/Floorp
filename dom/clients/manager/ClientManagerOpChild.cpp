@@ -9,8 +9,7 @@
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void ClientManagerOpChild::ActorDestroy(ActorDestroyReason aReason) {
   mClientManager = nullptr;
@@ -48,5 +47,4 @@ ClientManagerOpChild::~ClientManagerOpChild() {
   MOZ_DIAGNOSTIC_ASSERT(!mPromise);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
