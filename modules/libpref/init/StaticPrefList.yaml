@@ -397,6 +397,11 @@
   value: 1.5f
   mirror: always
 
+- name: apz.fling_accel_max_pause_interval_ms
+  type: RelaxedAtomicInt32
+  value: 65
+  mirror: always
+
 - name: apz.fling_curve_function_x1
   type: float
   value: 0.0f
