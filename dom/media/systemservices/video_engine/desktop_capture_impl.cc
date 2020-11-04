@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string>
 
-#include "common_types.h"
 #include "api/video/i420_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "libyuv.h"  // NOLINT
@@ -21,11 +20,11 @@
 #include "modules/video_capture/video_capture_config.h"
 #include "system_wrappers/include/clock.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "video_engine/desktop_capture_impl.h"
 #include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/desktop_device_info.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/video_capture/video_capture.h"
 
@@ -345,11 +344,10 @@ int32_t DesktopCaptureImpl::Init() {
     DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pScreenCapturer->SelectSource(sourceId);
 
-    MouseCursorMonitor* pMouseCursorMonitor =
-        MouseCursorMonitor::CreateForScreen(options, sourceId);
+    DesktopCaptureOptions options;
     desktop_capturer_cursor_composer_ =
-        std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
-            pScreenCapturer.release(), pMouseCursorMonitor));
+        std::unique_ptr<DesktopAndCursorComposer>(
+            new DesktopAndCursorComposer(std::move(pScreenCapturer), options));
   } else if (_deviceType == CaptureDeviceType::Window) {
     std::unique_ptr<DesktopCapturer> pWindowCapturer =
         DesktopCapturer::CreateWindowCapturer(options);
@@ -360,12 +358,10 @@ int32_t DesktopCaptureImpl::Init() {
     DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
     pWindowCapturer->SelectSource(sourceId);
 
-    MouseCursorMonitor* pMouseCursorMonitor =
-        MouseCursorMonitor::CreateForWindow(
-            webrtc::DesktopCaptureOptions::CreateDefault(), sourceId);
+    DesktopCaptureOptions options;
     desktop_capturer_cursor_composer_ =
-        std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
-            pWindowCapturer.release(), pMouseCursorMonitor));
+        std::unique_ptr<DesktopAndCursorComposer>(
+            new DesktopAndCursorComposer(std::move(pWindowCapturer), options));
   } else if (_deviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
@@ -410,7 +406,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
-  _requestedCapability.videoType = kI420;
+  _requestedCapability.videoType = VideoType::kI420;
   _maxFPSNeeded = 1000 / _requestedCapability.maxFPS;
   memset(_incomingFrameTimesNanos, 0, sizeof(_incomingFrameTimesNanos));
 }
@@ -424,13 +420,13 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
-  rtc::CritScope lock(&_apiCs);
+  MutexLock lock(&_apiMutex);
   _dataCallBacks.insert(dataCallback);
 }
 
 void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
-  rtc::CritScope lock(&_apiCs);
+  MutexLock lock(&_apiMutex);
   auto it = _dataCallBacks.find(dataCallback);
   if (it != _dataCallBacks.end()) {
     _dataCallBacks.erase(it);
@@ -473,9 +469,9 @@ int32_t DesktopCaptureImpl::DeliverCapturedFrame(
 // Copied from VideoCaptureImpl::IncomingFrame. See Bug 1038324
 int32_t DesktopCaptureImpl::IncomingFrame(
     uint8_t* videoFrame, size_t videoFrameLength,
-    const VideoCaptureCapability& frameInfo, int64_t captureTime /*=0*/) {
+    const VideoCaptureCapability& frameInfo, int64_t captureTime) {
   int64_t startProcessTime = rtc::TimeNanos();
-  rtc::CritScope cs(&_apiCs);
+  MutexLock cs(&_apiMutex);
 
   const int32_t width = frameInfo.width;
   const int32_t height = frameInfo.height;
@@ -529,7 +525,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(
 }
 
 int32_t DesktopCaptureImpl::SetCaptureRotation(VideoRotation rotation) {
-  rtc::CritScope lock(&_apiCs);
+  MutexLock lock(&_apiMutex);
   _rotateFrame = rotation;
   return 0;
 }
@@ -575,7 +571,7 @@ uint32_t DesktopCaptureImpl::CalculateFrameRate(int64_t now_ns) {
 
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
-  rtc::CritScope lock(&_apiCs);
+  MutexLock lock(&_apiMutex);
 
   _requestedCapability = capability;
   _maxFPSNeeded = _requestedCapability.maxFPS > 0
@@ -603,7 +599,6 @@ int32_t DesktopCaptureImpl::StartCapture(
 
   desktop_capturer_cursor_composer_->Start(this);
   capturer_thread_->Start();
-  capturer_thread_->SetPriority(rtc::kHighPriority);
   started_ = true;
 
   return 0;
@@ -620,10 +615,10 @@ bool DesktopCaptureImpl::FocusOnSelectedSource() {
 
 int32_t DesktopCaptureImpl::StopCapture() {
   if (started_) {
+    started_ = false;
     capturer_thread_
         ->Stop();  // thread is guaranteed stopped before this returns
     desktop_capturer_cursor_composer_.reset();
-    started_ = false;
     return 0;
   }
   return -1;
@@ -650,24 +645,34 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result result,
 }
 
 void DesktopCaptureImpl::process() {
-  DesktopRect desktop_rect;
-  DesktopRegion desktop_region;
-
+  // We should deliver at least one frame before stopping
+  do {
 #if !defined(_WIN32)
-  int64_t startProcessTime = rtc::TimeNanos();
+    int64_t startProcessTime = rtc::TimeNanos();
 #endif
 
-  desktop_capturer_cursor_composer_->CaptureFrame();
+    desktop_capturer_cursor_composer_->CaptureFrame();
 
 #if !defined(_WIN32)
-  const uint32_t processTime =
-      ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
-      rtc::kNumNanosecsPerMillisec;
-  // Use at most x% CPU or limit framerate
-  const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
-  const uint32_t sleepTime = sleepTimeFactor * processTime;
-  time_event_->Wait(std::max<uint32_t>(_maxFPSNeeded, sleepTime));
+    const uint32_t processTime =
+        ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
+        rtc::kNumNanosecsPerMillisec;
+    // Use at most x% CPU or limit framerate
+    const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
+    const uint32_t sleepTime = sleepTimeFactor * processTime;
+    time_event_->Wait(std::max<uint32_t>(_maxFPSNeeded, sleepTime));
 #endif
+
+#if defined(WEBRTC_WIN)
+    // Alertable sleep to permit RaiseFlag to run and update |stop_|.
+    SleepEx(0, true);
+#elif defined(WEBRTC_MAC)
+    sched_yield();
+#else
+    static const struct timespec ts_null = {0};
+    nanosleep(&ts_null, nullptr);
+#endif
+  } while (started_);
 }
 
 }  // namespace webrtc
