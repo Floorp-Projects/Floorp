@@ -10,8 +10,8 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jspubtd.h"      // JSProto_ReadableStream
+#include "jsapi.h"    // JS_ReportErrorNumberASCII
+#include "jspubtd.h"  // JSProto_ReadableStream
 
 #include "builtin/Array.h"                   // js::NewDenseFullyAllocatedArray
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
@@ -24,7 +24,7 @@
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
-#include "js/Conversions.h"  // JS::ToBoolean
+#include "js/Conversions.h"           // JS::ToBoolean
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_FN, JS_PSG, JS_{FS,PS}_END
 #include "js/RootingAPI.h"        // JS::Handle, JS::Rooted, js::CanGC

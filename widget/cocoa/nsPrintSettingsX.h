@@ -9,12 +9,14 @@
 #include "nsPrintSettingsImpl.h"
 #import <Cocoa/Cocoa.h>
 
+// clang-format off
 #define NS_PRINTSETTINGSX_IID                        \
   {                                                  \
     0x0DF2FDBD, 0x906D, 0x4726, {                    \
       0x9E, 0x4D, 0xCF, 0xE0, 0x87, 0x8D, 0x70, 0x7C \
     }                                                \
   }
+// clang-format on
 
 class nsPrintSettingsX : public nsPrintSettings {
  public:
@@ -31,9 +33,7 @@ class nsPrintSettingsX : public nsPrintSettings {
   void SetDestination(uint16_t aDestination) { mDestination = aDestination; }
   void GetDestination(uint16_t* aDestination) { *aDestination = mDestination; }
 
-  void SetDisposition(const nsString& aDisposition) {
-    mDisposition = aDisposition;
-  }
+  void SetDisposition(const nsString& aDisposition) { mDisposition = aDisposition; }
   void GetDisposition(nsString& aDisposition) { aDisposition = mDisposition; }
 
   // Get a Cocoa NSPrintInfo that is configured with our current settings.
@@ -78,13 +78,11 @@ class nsPrintSettingsX : public nsPrintSettings {
   int GetCocoaUnit(int16_t aGeckoUnit);
 
   double PaperSizeFromCocoaPoints(double aPointsValue) {
-    return aPointsValue *
-           (mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0);
+    return aPointsValue * (mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0);
   }
 
   double CocoaPointsFromPaperSize(double aSizeUnitValue) {
-    return aSizeUnitValue *
-           (mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4);
+    return aSizeUnitValue * (mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4);
   }
 
   // Needed to correctly track the various job dispositions (spool, preview,

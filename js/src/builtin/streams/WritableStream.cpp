@@ -11,8 +11,8 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
-#include "jspubtd.h"      // JSProto_WritableStream
+#include "jsapi.h"    // JS_ReportErrorNumberASCII
+#include "jspubtd.h"  // JSProto_WritableStream
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::MakeSizeAlgorithmFromSizeFunction, js::ReturnPromiseRejectedWithPendingError, js::ValidateAndNormalizeHighWaterMark
@@ -22,14 +22,14 @@
 #include "js/CallArgs.h"                               // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RealmOptions.h"      // JS::RealmCreationOptions
-#include "js/RootingAPI.h"        // JS::Handle, JS::Rooted
-#include "js/Value.h"             // JS::{,Object}Value
-#include "vm/JSContext.h"         // JSContext
-#include "vm/JSObject.h"          // js::GetPrototypeFromBuiltinConstructor
-#include "vm/ObjectOperations.h"  // js::GetProperty
-#include "vm/PlainObject.h"       // js::PlainObject
-#include "vm/Realm.h"             // JS::Realm
+#include "js/RealmOptions.h"          // JS::RealmCreationOptions
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
+#include "js/Value.h"                 // JS::{,Object}Value
+#include "vm/JSContext.h"             // JSContext
+#include "vm/JSObject.h"              // js::GetPrototypeFromBuiltinConstructor
+#include "vm/ObjectOperations.h"      // js::GetProperty
+#include "vm/PlainObject.h"           // js::PlainObject
+#include "vm/Realm.h"                 // JS::Realm
 
 #include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheckThis
 #include "vm/JSContext-inl.h"     // JSContext::check

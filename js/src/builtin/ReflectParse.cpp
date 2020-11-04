@@ -22,7 +22,7 @@
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
+#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
 #include "js/StableStringChars.h"
 #include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags

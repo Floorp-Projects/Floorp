@@ -13,8 +13,8 @@
 #include "jsfriendapi.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printf.h"    // JS_vsmprintf
-#include "js/Warnings.h"  // JS::WarningReporter
+#include "js/Printf.h"                // JS_vsmprintf
+#include "js/Warnings.h"              // JS::WarningReporter
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 

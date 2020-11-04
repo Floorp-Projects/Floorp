@@ -14,9 +14,9 @@
 #include "gfxPlatform.h"              // for gfxPlatform
 #include "gfxRect.h"                  // for gfxRect
 #include "mozilla/MathAlgorithms.h"   // for Abs
-#include "mozilla/gfx/Point.h"  // for IntSize
-#include "mozilla/gfx/Rect.h"   // for Rect
-#include "mozilla/gfx/Tools.h"  // for BytesPerPixel
+#include "mozilla/gfx/Point.h"        // for IntSize
+#include "mozilla/gfx/Rect.h"         // for Rect
+#include "mozilla/gfx/Tools.h"        // for BytesPerPixel
 #include "mozilla/layers/APZUtils.h"  // for AboutToCheckerboard
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"  // for CompositorBridgeChild
@@ -27,7 +27,7 @@
 #include "nsISupportsImpl.h"      // for gfxContext::AddRef, etc
 #include "nsExpirationTracker.h"  // for nsExpirationTracker
 #include "nsMathUtils.h"          // for NS_lroundf
-#include "UnitTransforms.h"  // for TransformTo
+#include "UnitTransforms.h"       // for TransformTo
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"
 

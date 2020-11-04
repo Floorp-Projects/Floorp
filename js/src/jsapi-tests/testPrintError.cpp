@@ -113,11 +113,12 @@ BEGIN_TEST(testPrintError_UTF16CodePoints) {
   CHECK(builder.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
   JS::PrintError(cx, buf.stream(), builder, false);
 
-  CHECK(buf.contains(
-      "testPrintError_UTF16CodePoints.js:3:4 SyntaxError: illegal character U+1F32F:\n"
-      "testPrintError_UTF16CodePoints.js:3:4 " BURRITO "`; " BURRITO
-      "; } f();\n"
-      "testPrintError_UTF16CodePoints.js:3:4 .....^\n"));
+  CHECK(
+      buf.contains("testPrintError_UTF16CodePoints.js:3:4 SyntaxError: illegal "
+                   "character U+1F32F:\n"
+                   "testPrintError_UTF16CodePoints.js:3:4 " BURRITO
+                   "`; " BURRITO "; } f();\n"
+                   "testPrintError_UTF16CodePoints.js:3:4 .....^\n"));
 
   return true;
 }

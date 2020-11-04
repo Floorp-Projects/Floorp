@@ -13,17 +13,17 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"        // JS_ReportErrorASCII
+#include "jsapi.h"  // JS_ReportErrorASCII
 
 #include "builtin/streams/MiscellaneousOperations.h"  // js::PromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController{,Close}, js::WritableStream::controller
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamControllerErrorSteps
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterEnsureReadyPromiseRejected
-#include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
+#include "js/CallArgs.h"              // JS::CallArgs{,FromVp}
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Promise.h"     // JS::{Reject,Resolve}Promise
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Promise.h"               // JS::{Reject,Resolve}Promise
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::Value, JS::ObjecValue, JS::UndefinedHandleValue
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext

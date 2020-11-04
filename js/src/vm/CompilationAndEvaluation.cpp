@@ -14,7 +14,7 @@
 
 #include <utility>  // std::move
 
-#include "jstypes.h"      // JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/CompilationInfo.h"  // for frontened::CompilationInfo, frontened::CompilationGCOutput
@@ -23,8 +23,8 @@
 #include "frontend/Parser.h"            // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RootingAPI.h"         // JS::Rooted
-#include "js/SourceText.h"         // JS::SourceText
+#include "js/RootingAPI.h"            // JS::Rooted
+#include "js/SourceText.h"            // JS::SourceText
 #include "js/TypeDecls.h"          // JS::HandleObject, JS::MutableHandleScript
 #include "js/Utility.h"            // js::MallocArena, JS::UniqueTwoByteChars
 #include "js/Value.h"              // JS::Value

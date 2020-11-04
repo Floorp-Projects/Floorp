@@ -15,15 +15,15 @@
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/streams/StreamController.h"  // js::StreamController
-#include "js/Class.h"         // JSClass, JSCLASS_HAS_RESERVED_SLOTS
-#include "js/Conversions.h"   // JS::ToNumber
+#include "js/Class.h"                 // JSClass, JSCLASS_HAS_RESERVED_SLOTS
+#include "js/Conversions.h"           // JS::ToNumber
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RootingAPI.h"    // JS::Rooted
-#include "js/Value.h"         // JS::Value, JS::{Number,Object}Value
-#include "vm/Compartment.h"   // JSCompartment
-#include "vm/JSContext.h"     // JSContext
-#include "vm/List.h"          // js::ListObject
-#include "vm/NativeObject.h"  // js::NativeObject
+#include "js/RootingAPI.h"            // JS::Rooted
+#include "js/Value.h"                 // JS::Value, JS::{Number,Object}Value
+#include "vm/Compartment.h"           // JSCompartment
+#include "vm/JSContext.h"             // JSContext
+#include "vm/List.h"                  // js::ListObject
+#include "vm/NativeObject.h"          // js::NativeObject
 
 #include "vm/Compartment-inl.h"  // JSCompartment::wrap
 #include "vm/JSContext-inl.h"    // JSContext::check

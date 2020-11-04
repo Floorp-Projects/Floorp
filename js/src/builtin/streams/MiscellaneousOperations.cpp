@@ -12,16 +12,16 @@
 #include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/FloatingPoint.h"  // mozilla::IsNaN
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
+#include "jsapi.h"  // JS_ReportErrorNumberASCII
 
-#include "js/Conversions.h"       // JS::ToNumber
+#include "js/Conversions.h"           // JS::ToNumber
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RootingAPI.h"        // JS::{,Mutable}Handle, JS::Rooted
-#include "vm/Interpreter.h"       // js::{Call,GetAndClearException}
-#include "vm/JSContext.h"         // JSContext
-#include "vm/ObjectOperations.h"  // js::GetProperty
-#include "vm/PromiseObject.h"     // js::PromiseObject
-#include "vm/StringType.h"        // js::PropertyName
+#include "js/RootingAPI.h"            // JS::{,Mutable}Handle, JS::Rooted
+#include "vm/Interpreter.h"           // js::{Call,GetAndClearException}
+#include "vm/JSContext.h"             // JSContext
+#include "vm/ObjectOperations.h"      // js::GetProperty
+#include "vm/PromiseObject.h"         // js::PromiseObject
+#include "vm/StringType.h"            // js::PropertyName
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"   // js::IsCallable
