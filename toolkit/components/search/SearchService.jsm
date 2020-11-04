@@ -112,7 +112,7 @@ SearchService.prototype = {
   _initRV: Cr.NS_OK,
 
   // The boolean indicates that the initialization has started or not.
-  _initStarted: null,
+  _initStarted: false,
 
   // The boolean that indicates if initialization has been completed (successful
   // or not).
@@ -175,6 +175,13 @@ SearchService.prototype = {
    * during init().
    */
   _startupExtensions: new Set(),
+
+  /**
+   * A Set of removed search extensions reported by AddonManager
+   * startup before SearchSevice has started. Will be removed
+   * during init().
+   */
+  _startupRemovedExtensions: new Set(),
 
   // A reference to the handler for the default override allow list.
   _defaultOverrideAllowlist: null,
@@ -277,6 +284,7 @@ SearchService.prototype = {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
       logConsole.error("_init: failure initializing search:", ex.result);
     }
+
     this._initialized = true;
     if (Components.isSuccessCode(this._initRV)) {
       this._initObservers.resolve(this._initRV);
@@ -900,7 +908,7 @@ SearchService.prototype = {
   reset() {
     this._initialized = false;
     this._initObservers = PromiseUtils.defer();
-    this._initStarted = null;
+    this._initStarted = false;
     this._startupExtensions = new Set();
     this._engines.clear();
     this.__sortedEngines = null;
@@ -1285,6 +1293,26 @@ SearchService.prototype = {
         "SearchService initialization failed",
         this._initRV
       );
+    } else if (this._startupRemovedExtensions.size) {
+      Services.tm.dispatchToMainThread(async () => {
+        // Now that init() has successfully finished, we remove any engines
+        // that have had their add-ons removed by the add-on manager.
+        // We do this after init() has complete, as that allows us to use
+        // removeEngine to look after any default engine changes as well.
+        // This could cause a slight flicker on startup, but it should be
+        // a rare action.
+        logConsole.debug("Removing delayed extension engines");
+        for (let id of this._startupRemovedExtensions) {
+          for (let engine of this._getEnginesByExtensionID(id)) {
+            // Only do this for non-application provided engines. We shouldn't
+            // ever get application provided engines removed here, but just in case.
+            if (!engine.isAppProvided) {
+              await this.removeEngine(engine);
+            }
+          }
+        }
+        this._startupRemovedExtensions.clear();
+      });
     }
     return this._initRV;
   },
@@ -1376,6 +1404,10 @@ SearchService.prototype = {
 
   async getEnginesByExtensionID(extensionID) {
     await this.init();
+    return this._getEnginesByExtensionID(extensionID);
+  },
+
+  _getEnginesByExtensionID(extensionID) {
     logConsole.debug("getEngines: getting all engines for", extensionID);
     var engines = this._getSortedEngines(true).filter(function(engine) {
       return engine._extensionID == extensionID;
@@ -1811,8 +1843,14 @@ SearchService.prototype = {
   },
 
   async removeWebExtensionEngine(id) {
+    if (!this.isInitialized) {
+      logConsole.debug("Delaying removing extension engine on startup:", id);
+      this._startupRemovedExtensions.add(id);
+      return;
+    }
+
     logConsole.debug("removeWebExtensionEngine:", id);
-    for (let engine of await this.getEnginesByExtensionID(id)) {
+    for (let engine of this._getEnginesByExtensionID(id)) {
       await this.removeEngine(engine);
     }
   },

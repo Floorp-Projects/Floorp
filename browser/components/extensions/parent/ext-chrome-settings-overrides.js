@@ -229,17 +229,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         ENGINE_ADDED_SETTING_NAME
       );
     }
-    // We can call removeEngine in nsSearchService startup, if so we dont
-    // need to reforward the call, just disable the web extension.
-    if (!Services.search.isInitialized) {
-      return;
-    }
 
     try {
-      let engines = await Services.search.getEnginesByExtensionID(id);
-      if (engines.length) {
-        await Services.search.removeWebExtensionEngine(id);
-      }
+      await Services.search.removeWebExtensionEngine(id);
     } catch (e) {
       Cu.reportError(e);
     }
