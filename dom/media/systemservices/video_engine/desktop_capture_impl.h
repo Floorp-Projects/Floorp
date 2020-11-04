@@ -15,18 +15,19 @@
  * video_capture_impl.h
  */
 
-#include <string>
 #include <memory>
+#include <set>
+#include <string>
 
 #include "api/video/video_frame.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_config.h"
+#include "modules/video_coding/event_wrapper.h"
 #include "modules/desktop_capture/shared_memory.h"
-#include "modules/desktop_capture/desktop_device_info.h"
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
-#include "system_wrappers/include/event_wrapper.h"
-#include <set>
+
+#include "desktop_device_info.h"
 
 using namespace webrtc::videocapturemodule;
 
@@ -154,8 +155,8 @@ class BrowserDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
 // As with video, DesktopCaptureImpl is a proxy for screen sharing
 // and follows the video pipeline design
 class DesktopCaptureImpl : public DesktopCapturer::Callback,
-                           public VideoCaptureModule,
-                           public VideoCaptureExternal {
+                           public VideoCaptureModule {
+  // public VideoCaptureExternal {
  public:
   /* Create a screen capture modules object
    */
@@ -181,7 +182,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // |capture_time| must be specified in the NTP time format in milliseconds.
   int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
                         const VideoCaptureCapability& frameInfo,
-                        int64_t captureTime = 0) override;
+                        int64_t captureTime = 0);
 
   // Platform dependent
   int32_t StartCapture(const VideoCaptureCapability& capability) override;
@@ -212,7 +213,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 
-  rtc::CriticalSection _apiCs;
+  Mutex _apiMutex;
 
   std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
 
@@ -233,9 +234,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
                        std::unique_ptr<DesktopFrame> frame) override;
 
  public:
-  static bool Run(void* obj) {
+  static void Run(void* obj) {
     static_cast<DesktopCaptureImpl*>(obj)->process();
-    return true;
   };
   void process();
 
@@ -251,7 +251,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 #else
   std::unique_ptr<rtc::PlatformThread> capturer_thread_;
 #endif
-  bool started_;
+  std::atomic<bool> started_;
 };
 
 }  // namespace webrtc
