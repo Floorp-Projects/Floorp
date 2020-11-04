@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Role};
 use neqo_common::event::Provider;
+use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Role};
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
