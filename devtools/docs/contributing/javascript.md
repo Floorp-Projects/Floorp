@@ -22,7 +22,7 @@ For quick reference, here are some of the main code style rules:
 * `"use strict";` globally per module,
 * `semicolons; // use them`,
 * no comma-first,
-* consider using Task.jsm (`Task.async`, `Task.spawn`) for nice-looking asynchronous code instead of formatting endless `.then` chains,<!--TODO: shouldn't we advise async/await now?-->
+* consider using async/await for nice-looking asynchronous code instead of formatting endless `.then` chains,
 * use ES6 syntax:
   * `function setBreakpoint({url, line, column}) { ... }`,
   * `(...args) => { }` rest args are awesome, no need for `arguments`,
