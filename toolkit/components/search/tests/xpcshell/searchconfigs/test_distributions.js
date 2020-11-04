@@ -515,6 +515,13 @@ for (const locale of ["en-US", "de"]) {
 }
 
 tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "gmx",
+  test: engines => hasDefault(engines, "GMX Suche"),
+});
+
+tests.push({
   locale: "en-GB",
   distribution: "gmxcouk",
   test: engines =>
@@ -526,6 +533,13 @@ tests.push({
     ) &&
     hasDefault(engines, "GMX Search") &&
     hasEnginesFirst(engines, ["GMX Search"]),
+});
+
+tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "gmxcouk",
+  test: engines => hasDefault(engines, "GMX Search"),
 });
 
 tests.push({
@@ -543,6 +557,13 @@ tests.push({
 });
 
 tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "gmxes",
+  test: engines => hasDefault(engines, "GMX - Búsqueda web"),
+});
+
+tests.push({
   locale: "fr",
   distribution: "gmxfr",
   test: engines =>
@@ -554,6 +575,13 @@ tests.push({
     ) &&
     hasDefault(engines, "GMX Search") &&
     hasEnginesFirst(engines, ["GMX Search"]),
+});
+
+tests.push({
+  locale: "ru",
+  region: "RU",
+  distribution: "gmxfr",
+  test: engines => hasDefault(engines, "GMX - Recherche web"),
 });
 
 tests.push({
