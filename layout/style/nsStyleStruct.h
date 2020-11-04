@@ -963,6 +963,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
            mWhiteSpace == mozilla::StyleWhiteSpace::PreSpace;
   }
 
+  bool WhiteSpaceCanHangOrVisuallyCollapse() const {
+    // This was originally expressed in nsTextFrame in terms of:
+    //   mWhiteSpace != StyleWhiteSpace::BreakSpaces &&
+    //       WhiteSpaceCanWrapStyle() &&
+    //       WhiteSpaceIsSignificant()
+    // which simplifies to:
+    return mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap;
+  }
+
   bool NewlineIsSignificantStyle() const {
     return mWhiteSpace == mozilla::StyleWhiteSpace::Pre ||
            mWhiteSpace == mozilla::StyleWhiteSpace::PreWrap ||
