@@ -22,21 +22,21 @@ const nsCString Locale::AsString() const {
 }
 
 const nsDependentCSubstring Locale::GetLanguage() const {
-  uint32_t len;
-  const uint8_t* chars = unic_langid_get_language(mRaw.get(), &len);
-  return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+  nsDependentCSubstring sub;
+  unic_langid_get_language(mRaw.get(), &sub);
+  return sub;
 }
 
 const nsDependentCSubstring Locale::GetScript() const {
-  uint32_t len;
-  const uint8_t* chars = unic_langid_get_script(mRaw.get(), &len);
-  return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+  nsDependentCSubstring sub;
+  unic_langid_get_script(mRaw.get(), &sub);
+  return sub;
 }
 
 const nsDependentCSubstring Locale::GetRegion() const {
-  uint32_t len;
-  const uint8_t* chars = unic_langid_get_region(mRaw.get(), &len);
-  return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
+  nsDependentCSubstring sub;
+  unic_langid_get_region(mRaw.get(), &sub);
+  return sub;
 }
 
 void Locale::GetVariants(nsTArray<nsCString>& aRetVal) const {
