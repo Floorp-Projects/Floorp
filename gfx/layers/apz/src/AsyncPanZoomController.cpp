@@ -251,13 +251,6 @@ typedef PlatformSpecificStateBase
  * generated displayport's size is beyond that of the scrollable rect on the
  * opposite axis.
  *
- * \li\b apz.fling_accel_interval_ms
- * The time that determines whether a second fling will be treated as
- * accelerated. If two flings are started within this interval, the second one
- * will be accelerated. Setting an interval of 0 means that acceleration will
- * be disabled.\n
- * Units: milliseconds
- *
  * \li\b apz.fling_accel_min_fling_velocity
  * The minimum velocity of the second fling, and the minimum velocity of the
  * previous fling animation at the point of interruption, for the new fling to
