@@ -71,6 +71,14 @@ patterns = [
         "buffer",
     ),
     ("__memcpy_sse2_unaligned", 1, "arena_t::RallocSmallOrLarge", "aPtr", "ret"),
+    ("js::jit::X86Encoding::SetInt32", 0, "js::jit::X86Encoding::SetInt32", "0", "0"),
+    (
+        "js::jit::X86Encoding::SetPointer",
+        0,
+        "js::jit::X86Encoding::SetPointer",
+        "0",
+        "0",
+    ),
 ]
 
 
