@@ -654,6 +654,56 @@ class SearchMiddlewareTest {
             assertEquals("Google", searchEngine.name)
         }
     }
+
+    @Test
+    fun `Adding and restoring custom search engine`() {
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher),
+            metadataStorage = SearchMetadataStorage(testContext)
+        )
+
+        run {
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals(0, store.state.search.customSearchEngines.size)
+
+            store.dispatch(SearchAction.UpdateCustomSearchEngineAction(
+                SearchEngine(
+                    id = UUID.randomUUID().toString(),
+                    name = "Example",
+                    icon = mock(),
+                    type = SearchEngine.Type.CUSTOM,
+                    resultUrls = listOf(
+                        "https://example.org/?q=%s"
+                    )
+                )
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals(1, store.state.search.customSearchEngines.size)
+        }
+
+        run {
+            val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+            store.dispatch(SearchAction.SetRegionAction(
+                RegionState("US", "US")
+            )).joinBlocking()
+
+            wait(store, dispatcher)
+
+            assertEquals(1, store.state.search.customSearchEngines.size)
+        }
+    }
 }
 
 private fun wait(store: BrowserStore, dispatcher: TestCoroutineDispatcher) {
