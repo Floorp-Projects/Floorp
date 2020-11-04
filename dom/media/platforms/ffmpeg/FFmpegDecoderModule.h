@@ -32,6 +32,9 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override {
+    if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+      return nullptr;
+    }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
         mLib, aParams.VideoConfig(), aParams.mKnowsCompositor,
         aParams.mImageContainer,
@@ -43,6 +46,9 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override {
+    if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+      return nullptr;
+    }
     RefPtr<MediaDataDecoder> decoder =
         new FFmpegAudioDecoder<V>(mLib, aParams.AudioConfig());
     return decoder.forget();

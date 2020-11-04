@@ -37,11 +37,7 @@ static bool IsAvailableInDefault(DecoderType type) {
   switch (type) {
 #ifdef MOZ_AV1
     case DecoderType::AV1:
-      // We remove support for decoding AV1 here if RDD is enabled so that
-      // decoding on the content process doesn't accidentally happen in case
-      // something goes wrong with launching the RDD process.
-      return StaticPrefs::media_av1_enabled() &&
-             !StaticPrefs::media_rdd_process_enabled();
+      return StaticPrefs::media_av1_enabled();
 #endif
     case DecoderType::Opus:
     case DecoderType::Theora:
@@ -128,14 +124,21 @@ bool AgnosticDecoderModule::Supports(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
+  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+    return nullptr;
+  }
   RefPtr<MediaDataDecoder> m;
 
   if (VPXDecoder::IsVPX(aParams.mConfig.mMimeType)) {
     m = new VPXDecoder(aParams);
   }
 #ifdef MOZ_AV1
-  // see comment above about AV1 and the RDD process
-  else if (AOMDecoder::IsAV1(aParams.mConfig.mMimeType)) {
+  // We remove support for decoding AV1 here if RDD is enabled so that
+  // decoding on the content process doesn't accidentally happen in case
+  // something goes wrong with launching the RDD process.
+  if (StaticPrefs::media_av1_enabled() &&
+      (!StaticPrefs::media_rdd_process_enabled() || XRE_IsRDDProcess()) &&
+      AOMDecoder::IsAV1(aParams.mConfig.mMimeType)) {
     if (StaticPrefs::media_av1_use_dav1d()) {
       m = new DAV1DDecoder(aParams);
     } else {
@@ -152,6 +155,9 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
+  if (!Supports(SupportDecoderParams(aParams), aParams.mDiagnostics)) {
+    return nullptr;
+  }
   RefPtr<MediaDataDecoder> m;
 
   const TrackInfo& config = aParams.mConfig;

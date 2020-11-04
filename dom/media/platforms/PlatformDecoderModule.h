@@ -298,6 +298,9 @@ class PlatformDecoderModule {
   // Returns nullptr if the decoder can't be created.
   // It is safe to store a reference to aConfig.
   // This is called on the decode task queue.
+  // CreateVideoDecoder may need to make additional checks if the
+  // CreateDecoderParams argument is actually supported and return nullptr if
+  // not to allow for fallback PDMs to be tried.
   virtual already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) = 0;
 
@@ -310,6 +313,9 @@ class PlatformDecoderModule {
   // COINIT_MULTITHREADED.
   // It is safe to store a reference to aConfig.
   // This is called on the decode task queue.
+  // CreateAudioDecoder may need to make additional checks if the
+  // CreateDecoderParams argument is actually supported and return nullptr if
+  // not to allow for fallback PDMs to be tried.
   virtual already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) = 0;
 };

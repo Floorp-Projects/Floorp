@@ -40,8 +40,11 @@ class WMFDecoderModule : public PlatformDecoderModule {
   // H.264/AAC decoders if the "Platform Update Supplement for Windows Vista"
   // is not installed, and Window N and KN variants also require a "Media
   // Feature Pack" to be installed. Windows XP doesn't have WMF.
-  static bool HasAAC();
   static bool HasH264();
+  static bool HasVP8();
+  static bool HasVP9();
+  static bool HasAAC();
+  static bool HasMP3();
 
  private:
   virtual ~WMFDecoderModule();
