@@ -151,19 +151,17 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                              CompilationGCOutput& gcOutput,
                              const ScriptStencil& script,
                              HandleFunction function) {
-  const ScriptThingsVector& gcthings = script.gcThings;
-
   Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
+  size_t ngcthings = script.gcThings.size();
 
   Rooted<BaseScript*> lazy(
-      cx,
-      BaseScript::CreateRawLazy(cx, gcthings.length(), function, sourceObject,
-                                script.extent, script.immutableFlags));
+      cx, BaseScript::CreateRawLazy(cx, ngcthings, function, sourceObject,
+                                    script.extent, script.immutableFlags));
   if (!lazy) {
     return false;
   }
 
-  if (!EmitScriptThingsVector(cx, compilationInfo, gcOutput, gcthings,
+  if (!EmitScriptThingsVector(cx, compilationInfo, gcOutput, script.gcThings,
                               lazy->gcthingsForInit())) {
     return false;
   }
@@ -1572,3 +1570,17 @@ void CompilationStencil::dump(js::JSONPrinter& json) {
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
+
+mozilla::Span<ScriptThingVariant> js::frontend::NewScriptThingSpanUninitialized(
+    JSContext* cx, LifoAlloc& alloc, uint32_t ngcthings) {
+  MOZ_ASSERT(ngcthings > 0);
+
+  ScriptThingVariant* stencilThings =
+      alloc.newArrayUninitialized<ScriptThingVariant>(ngcthings);
+  if (!stencilThings) {
+    js::ReportOutOfMemory(cx);
+    return mozilla::Span<ScriptThingVariant>();
+  }
+
+  return mozilla::Span<ScriptThingVariant>(stencilThings, ngcthings);
+}
