@@ -19,6 +19,17 @@ struct IUnknown;
 
 namespace mozilla {
 namespace mscom {
+namespace detail {
+
+enum class GuidType {
+  CLSID,
+  AppID,
+};
+
+long BuildRegGuidPath(REFGUID aGuid, const GuidType aGuidType, wchar_t* aBuf,
+                      const size_t aBufLen);
+
+}  // namespace detail
 
 bool IsCOMInitializedOnCurrentThread();
 bool IsCurrentThreadMTA();
@@ -30,6 +41,16 @@ bool IsCurrentThreadNonMainMTA();
 bool IsProxy(IUnknown* aUnknown);
 bool IsValidGUID(REFGUID aCheckGuid);
 uintptr_t GetContainingModuleHandle();
+
+template <size_t N>
+inline long BuildAppidPath(REFGUID aAppId, wchar_t (&aPath)[N]) {
+  return detail::BuildRegGuidPath(aAppId, detail::GuidType::AppID, aPath, N);
+}
+
+template <size_t N>
+inline long BuildClsidPath(REFCLSID aClsid, wchar_t (&aPath)[N]) {
+  return detail::BuildRegGuidPath(aClsid, detail::GuidType::CLSID, aPath, N);
+}
 
 /**
  * Given a buffer, create a new IStream object.
@@ -78,6 +99,9 @@ long CopySerializedProxy(IStream* aInStream, IStream** aOutStream);
 bool IsClassThreadAwareInprocServer(REFCLSID aClsid);
 
 void GUIDToString(REFGUID aGuid, nsAString& aOutString);
+#else
+void GUIDToString(REFGUID aGuid,
+                  wchar_t (&aOutBuf)[kGuidRegFormatCharLenInclNul]);
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 #if defined(ACCESSIBILITY)
