@@ -20,5 +20,6 @@ public class CaptureCapabilityAndroid {
     public int minMilliFPS;
     public int maxMilliFPS;
     public boolean frontFacing;
+    public boolean infrared;
     public int orientation;
 }
