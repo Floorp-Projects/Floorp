@@ -152,7 +152,7 @@ var TestRunner = {
       .removeAttribute("remotecontrol");
 
     let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
+    await BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
     await BrowserTestUtils.browserLoaded(selectedBrowser);
 
     for (let i = 0; i < this.combos.length; i++) {

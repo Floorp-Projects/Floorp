@@ -30,6 +30,15 @@ class BrowserTabParent extends JSWindowActorParent {
         browser.ownerGlobal.gBrowserInit._firstContentWindowPaintDeferred.resolve();
         break;
       }
+
+      case "Browser:LoadURI": {
+        if (gBrowser.sessionHistoryInParent) {
+          message.data.historyIndex =
+            browsingContext.sessionHistory.requestedIndex;
+        }
+        gBrowser.ownerGlobal.RedirectLoad(browser, message.data);
+        break;
+      }
     }
   }
 }

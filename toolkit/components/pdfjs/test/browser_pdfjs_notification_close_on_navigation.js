@@ -32,7 +32,7 @@ add_task(async function test_notification_is_removed_upon_navigation() {
         "Notification should be pdfjs-fallback"
       );
 
-      BrowserTestUtils.loadURI(browser, "https://example.com");
+      await BrowserTestUtils.loadURI(browser, "https://example.com");
 
       await TestUtils.waitForCondition(
         () => !notification.parentNode,

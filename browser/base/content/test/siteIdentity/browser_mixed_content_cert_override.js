@@ -52,7 +52,7 @@ add_task(async function() {
   checkIdentityPopup("connection-mixed-active-loaded.svg");
 
   // check that a warning is shown even without mixed content
-  BrowserTestUtils.loadURI(
+  await BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     "https://self-signed.example.com"
   );

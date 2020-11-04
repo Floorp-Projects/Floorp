@@ -65,7 +65,7 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   });
 
   info("Go to .org page, wait for onAvailable to be called");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 0,
@@ -91,7 +91,7 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   });
 
   info("Go back to page 1");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,
@@ -150,7 +150,7 @@ add_task(async function test_NavigationBetweenTwoDomains_WithDestroy() {
   });
 
   info("Go to .org page, wait for onAvailable to be called");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,
@@ -170,7 +170,7 @@ add_task(async function test_NavigationBetweenTwoDomains_WithDestroy() {
   await checkHooks(hooks, { available: 3, destroyed: 3, targets: [] });
 
   info("Go back to page 1, wait for onDestroyed and onAvailable to be called");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
   await checkHooks(hooks, {
     available: 4,
     destroyed: 3,
@@ -241,7 +241,7 @@ async function testNavigationToPageWithExistingWorker({
   await waitForRegistrationReady(tab, COM_PAGE_URL);
 
   info("Navigate to another page");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, ORG_PAGE_URL);
 
   // Avoid TV failures, where target list still starts thinking that the
   // current domain is .com .
@@ -267,7 +267,7 @@ async function testNavigationToPageWithExistingWorker({
   await checkHooks(hooks, { available: 1, destroyed: 1, targets: [] });
 
   info("Go back .com page, wait for onAvailable to be called");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, COM_PAGE_URL);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,

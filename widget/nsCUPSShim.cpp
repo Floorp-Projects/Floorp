@@ -44,21 +44,32 @@ static bool LoadCupsFunc(PRLibrary*& lib, FuncT*& dest,
   return true;
 }
 
-nsCUPSShim::nsCUPSShim() {
-  mCupsLib = PR_LoadLibrary(gCUPSLibraryName);
-  if (!mCupsLib) {
-    return;
+bool nsCUPSShim::Init() {
+  mozilla::OffTheBooksMutexAutoLock lock(mInitMutex);
+  if (mInited) {
+    return true;
   }
 
-  // This is a macro so that it could also load from libcups if we are
-  // configured to use it as a compile-time dependency.
+  mCupsLib = PR_LoadLibrary(gCUPSLibraryName);
+  if (!mCupsLib) {
+    return false;
+  }
+
+// This is a macro so that it could also load from libcups if we are configured
+// to use it as a compile-time dependency.
 #  define CUPS_SHIM_LOAD(NAME) \
-    if (!LoadCupsFunc(mCupsLib, NAME, #NAME)) return;
+    if (!LoadCupsFunc(mCupsLib, NAME, #NAME)) return false;
   CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_LOAD)
 #  undef CUPS_SHIM_LOAD
+  mInited = true;
+  return true;
+}
 
-  // Set mInitOkay only if all cups functions are loaded successfully.
-  mInitOkay = true;
+#else  // CUPS_SHIM_RUNTIME_LINK
+
+bool nsCUPSShim::Init() {
+  mInited = true;
+  return true;
 }
 
 #endif

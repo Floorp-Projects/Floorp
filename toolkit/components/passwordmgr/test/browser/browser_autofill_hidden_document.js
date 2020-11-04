@@ -67,7 +67,7 @@ add_task(async function test_processed_form_fired() {
   is(tab1Visibility, "visible", "The first tab should be foreground");
 
   let formProcessedPromise = listenForTestNotification("FormProcessed");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+  await BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
   await formProcessedPromise;
   gBrowser.removeTab(tab1);
 });
@@ -95,7 +95,7 @@ testUrls.forEach(testUrl => {
     listenForTestNotification("FormProcessed").then(() => {
       formFilled = true;
     });
-    BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
+    await BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
 
     await TestUtils.waitForCondition(() => {
       let windowGlobal = tab1.linkedBrowser.browsingContext.currentWindowGlobal;
@@ -192,7 +192,7 @@ add_task(async function test_immediate_autofill_with_masterpassword() {
   // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
   // to be observed
   let formProcessedPromise = listenForTestNotification("FormProcessed");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
+  await BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
   await Promise.all([formProcessedPromise, dialogObserved]);
 
   let wasProcessed = await formProcessedPromise;

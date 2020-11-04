@@ -28,7 +28,7 @@ add_task(async function bookmarks_toolbar_shown_on_newtab() {
     );
 
     // 2: Test that the toolbar is hidden when the browser is navigated away from newtab
-    BrowserTestUtils.loadURI(newtab.linkedBrowser, "https://example.com");
+    await BrowserTestUtils.loadURI(newtab.linkedBrowser, "https://example.com");
     await BrowserTestUtils.browserLoaded(newtab.linkedBrowser);
     if (featureEnabled) {
       await waitForBookmarksToolbarVisibility({ visible: false });
@@ -39,7 +39,7 @@ add_task(async function bookmarks_toolbar_shown_on_newtab() {
     );
 
     // 3: Re-load about:newtab in the browser for the following tests and confirm toolbar reappears
-    BrowserTestUtils.loadURI(newtab.linkedBrowser, "about:newtab");
+    await BrowserTestUtils.loadURI(newtab.linkedBrowser, "about:newtab");
     await BrowserTestUtils.browserLoaded(newtab.linkedBrowser);
     if (featureEnabled) {
       await waitForBookmarksToolbarVisibility({ visible: true });
@@ -78,7 +78,7 @@ add_task(async function bookmarks_toolbar_shown_on_newtab() {
     );
 
     // 7: Similar to #3 above, loading about:newtab in example should show toolbar
-    BrowserTestUtils.loadURI(example.linkedBrowser, "about:newtab");
+    await BrowserTestUtils.loadURI(example.linkedBrowser, "about:newtab");
     await BrowserTestUtils.browserLoaded(example.linkedBrowser);
     if (featureEnabled) {
       await waitForBookmarksToolbarVisibility({ visible: true });
@@ -109,7 +109,10 @@ add_task(async function bookmarks_toolbar_shown_on_newtab() {
     await BrowserTestUtils.switchTab(gBrowser, newtab);
     await waitForBookmarksToolbarVisibility({ visible: false });
     ok(!isBookmarksToolbarVisible(), "Toolbar should hide with custom newtab");
-    BrowserTestUtils.loadURI(example.linkedBrowser, AboutNewTab.newTabURL);
+    await BrowserTestUtils.loadURI(
+      example.linkedBrowser,
+      AboutNewTab.newTabURL
+    );
     await BrowserTestUtils.browserLoaded(example.linkedBrowser);
     await BrowserTestUtils.switchTab(gBrowser, example);
     if (featureEnabled) {

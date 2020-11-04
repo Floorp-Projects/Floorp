@@ -121,7 +121,7 @@ var TRANSITIONS = [
   // Loads the new page by calling browser.loadURI directly
   async function loadURI(browser, uri) {
     info("Calling browser.loadURI");
-    BrowserTestUtils.loadURI(browser, uri);
+    await BrowserTestUtils.loadURI(browser, uri);
     return true;
   },
 

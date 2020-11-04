@@ -98,7 +98,7 @@ async function waitForPreloaded(browser) {
 // eslint-disable-next-line no-unused-vars
 async function waitForUrlLoad(url) {
   let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, url);
+  await BrowserTestUtils.loadURI(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
 }
 

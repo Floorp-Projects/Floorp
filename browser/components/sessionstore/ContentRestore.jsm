@@ -18,6 +18,11 @@ ChromeUtils.defineModuleGetter(
   "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
 /**
  * This module implements the content side of session restoration. The chrome
  * side is handled by SessionStore.jsm. The functions in this module are called
@@ -249,12 +254,56 @@ ContentRestoreInternal.prototype = {
       if (loadArguments) {
         // If the load was started in another process, and the in-flight channel
         // was redirected into this process, resume that load within our process.
-        //
-        // NOTE: In this case `isRemotenessUpdate` must be true.
-        webNavigation.resumeRedirectedLoad(
-          loadArguments.redirectLoadSwitchId,
-          loadArguments.redirectHistoryIndex
+        if (loadArguments.redirectLoadSwitchId) {
+          webNavigation.resumeRedirectedLoad(
+            loadArguments.redirectLoadSwitchId,
+            loadArguments.redirectHistoryIndex
+          );
+          return true;
+        }
+
+        // A load has been redirected to a new process so get history into the
+        // same state it was before the load started then trigger the load.
+        // Referrer information is now stored as a referrerInfo property. We
+        // should also cope with the old format of passing `referrer` and
+        // `referrerPolicy` separately.
+        let referrerInfo = loadArguments.referrerInfo;
+        if (referrerInfo) {
+          referrerInfo = E10SUtils.deserializeReferrerInfo(referrerInfo);
+        } else {
+          let referrer = loadArguments.referrer
+            ? Services.io.newURI(loadArguments.referrer)
+            : null;
+          let referrerPolicy =
+            "referrerPolicy" in loadArguments
+              ? loadArguments.referrerPolicy
+              : Ci.nsIReferrerInfo.EMPTY;
+          let ReferrerInfo = Components.Constructor(
+            "@mozilla.org/referrer-info;1",
+            "nsIReferrerInfo",
+            "init"
+          );
+          referrerInfo = new ReferrerInfo(referrerPolicy, true, referrer);
+        }
+        let postData = loadArguments.postData
+          ? E10SUtils.makeInputStream(loadArguments.postData)
+          : null;
+        let triggeringPrincipal = E10SUtils.deserializePrincipal(
+          loadArguments.triggeringPrincipal,
+          () => Services.scriptSecurityManager.createNullPrincipal({})
         );
+        let csp = loadArguments.csp
+          ? E10SUtils.deserializeCSP(loadArguments.csp)
+          : null;
+
+        let loadURIOptions = {
+          triggeringPrincipal,
+          loadFlags: loadArguments.flags,
+          referrerInfo,
+          postData,
+          csp,
+        };
+        webNavigation.loadURI(loadArguments.uri, loadURIOptions);
       } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero

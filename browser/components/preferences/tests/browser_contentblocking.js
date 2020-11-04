@@ -868,19 +868,13 @@ add_task(async function testContentBlockingReloadWarning() {
 // if it is the only tab.
 add_task(async function testContentBlockingReloadWarningSingleTab() {
   Services.prefs.setStringPref(CAT_PREF, "standard");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, PRIVACY_PAGE);
-  await BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    PRIVACY_PAGE
-  );
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, PRIVACY_PAGE);
 
   let reloadWarnings = [
     ...gBrowser.contentDocument.querySelectorAll(
       ".content-blocking-warning.reload-tabs"
     ),
   ];
-  ok(reloadWarnings.length, "must have at least one reload warning");
   ok(
     reloadWarnings.every(el => el.hidden),
     "all of the warnings to reload tabs are initially hidden"
@@ -895,8 +889,7 @@ add_task(async function testContentBlockingReloadWarningSingleTab() {
     "all of the warnings to reload tabs are still hidden"
   );
   Services.prefs.setStringPref(CAT_PREF, "standard");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:newtab");
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:newtab");
 });
 
 // Checks that the reload tabs message reloads all tabs except the active tab.

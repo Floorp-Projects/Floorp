@@ -589,7 +589,7 @@ function waitForViewportScroll(ui) {
 
 async function load(browser, url) {
   const loaded = BrowserTestUtils.browserLoaded(browser, false, null, false);
-  BrowserTestUtils.loadURI(browser, url);
+  await BrowserTestUtils.loadURI(browser, url);
   await loaded;
 }
 

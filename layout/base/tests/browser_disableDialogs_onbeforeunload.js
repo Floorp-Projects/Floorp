@@ -57,10 +57,10 @@ async function openPage(enableDialogs) {
         }, "document-element-inserted");
       });
       // Load the page.
-      BrowserTestUtils.loadURI(browser, PAGE_URL);
+      await BrowserTestUtils.loadURI(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
       // And then navigate away.
-      BrowserTestUtils.loadURI(browser, "http://example.com/");
+      await BrowserTestUtils.loadURI(browser, "http://example.com/");
       await BrowserTestUtils.browserLoaded(browser);
     }
   );

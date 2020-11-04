@@ -171,7 +171,7 @@ add_task(async function test_update_reload() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let tabBrowser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(tabBrowser, URL);
+  await BrowserTestUtils.loadURI(tabBrowser, URL);
   await BrowserTestUtils.browserLoaded(tabBrowser, false, URL);
   let tab = win.gBrowser.selectedTab;
 
