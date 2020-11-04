@@ -11,9 +11,7 @@
 #include "mozilla/dom/cache/Manager.h"
 #include "nsIInputStream.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 StreamList::StreamList(SafeRefPtr<Manager> aManager,
                        SafeRefPtr<Context> aContext)
@@ -162,6 +160,4 @@ StreamList::~StreamList() {
   mContext->RemoveActivity(this);
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

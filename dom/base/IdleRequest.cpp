@@ -15,8 +15,7 @@
 #include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 IdleRequest::IdleRequest(IdleRequestCallback* aCallback, uint32_t aHandle)
     : mCallback(aCallback), mHandle(aHandle), mTimeoutHandle(Nothing()) {
@@ -62,5 +61,4 @@ void IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
   callback->Call(*deadline, "requestIdleCallback handler");
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

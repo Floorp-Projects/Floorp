@@ -12,9 +12,7 @@
 #include "mozilla/dom/cache/CacheOpChild.h"
 #include "CacheWorkerRef.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 // Declared in ActorUtils.h
 PCacheChild* AllocPCacheChild() { return new CacheChild(); }
@@ -149,6 +147,4 @@ void CacheChild::Unlock() {
   MaybeFlushDelayedDestroy();
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

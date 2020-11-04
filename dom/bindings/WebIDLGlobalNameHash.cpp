@@ -25,8 +25,7 @@
 #include "nsTHashtable.h"
 #include "WrapperFactory.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static JSObject* FindNamedConstructorForXray(
     JSContext* aCx, JS::Handle<jsid> aId, const WebIDLNameTableEntry* aEntry) {
@@ -269,5 +268,4 @@ bool WebIDLGlobalNameHash::NewEnumerateSystemGlobal(
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

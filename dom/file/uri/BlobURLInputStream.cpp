@@ -13,8 +13,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "nsStreamUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ADDREF(BlobURLInputStream);
 NS_IMPL_RELEASE(BlobURLInputStream);
@@ -550,6 +549,4 @@ void BlobURLInputStream::ReleaseUnderlyingStream(
   mBlobSize = -1;
 }
 
-}  // namespace dom
-
-}  // namespace mozilla
+}  // namespace mozilla::dom

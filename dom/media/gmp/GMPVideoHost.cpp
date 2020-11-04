@@ -8,8 +8,7 @@
 #include "GMPVideoi420FrameImpl.h"
 #include "GMPVideoEncodedFrameImpl.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 GMPVideoHostImpl::GMPVideoHostImpl(GMPSharedMemManager* aSharedMemMgr)
     : mSharedMemMgr(aSharedMemMgr) {}
@@ -92,5 +91,4 @@ void GMPVideoHostImpl::EncodedFrameDestroyed(GMPVideoEncodedFrameImpl* aFrame) {
   MOZ_ALWAYS_TRUE(mEncodedFrames.RemoveElement(aFrame));
 }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp

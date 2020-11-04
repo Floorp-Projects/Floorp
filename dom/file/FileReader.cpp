@@ -30,8 +30,7 @@
 #include "xpcpublic.h"
 #include "nsReadableUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #define ABORT_STR u"abort"
 #define LOAD_STR u"load"
@@ -812,5 +811,4 @@ void FileReader::Shutdown() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

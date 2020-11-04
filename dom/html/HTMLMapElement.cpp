@@ -13,8 +13,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Map)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLMapElement::HTMLMapElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -47,5 +46,4 @@ JSObject* HTMLMapElement::WrapNode(JSContext* aCx,
   return HTMLMapElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

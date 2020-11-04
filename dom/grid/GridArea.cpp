@@ -8,8 +8,7 @@
 #include "mozilla/dom/GridBinding.h"
 #include "Grid.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GridArea, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GridArea)
@@ -49,5 +48,4 @@ uint32_t GridArea::ColumnStart() const { return mColumnStart; }
 
 uint32_t GridArea::ColumnEnd() const { return mColumnEnd; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -10,8 +10,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/Preferences.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Headers)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Headers)
@@ -85,5 +84,4 @@ JSObject* Headers::WrapObject(JSContext* aCx,
 
 Headers::~Headers() = default;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

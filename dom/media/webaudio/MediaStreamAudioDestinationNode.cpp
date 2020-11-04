@@ -13,8 +13,7 @@
 #include "DOMMediaStream.h"
 #include "ForwardedInputTrack.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioDestinationTrackSource final : public MediaStreamTrackSource {
  public:
@@ -145,5 +144,4 @@ JSObject* MediaStreamAudioDestinationNode::WrapObject(
   return MediaStreamAudioDestinationNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

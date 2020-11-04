@@ -23,9 +23,7 @@ namespace mozilla {
 class Runnable;
 }
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 RequestBase::RequestBase() : mResultCode(NS_OK), mHaveResultOrErrorCode(false) {
   AssertIsOnOwningThread();
@@ -287,6 +285,4 @@ void Request::FireCallback() {
   }
 }
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota

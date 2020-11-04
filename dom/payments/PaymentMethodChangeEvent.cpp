@@ -9,8 +9,7 @@
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"
 #include "PaymentRequestUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentMethodChangeEvent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentMethodChangeEvent,
@@ -163,5 +162,4 @@ JSObject* PaymentMethodChangeEvent::WrapObjectInternal(
   return PaymentMethodChangeEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

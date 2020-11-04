@@ -20,8 +20,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::layout;
 using namespace mozilla::hal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 BrowserBridgeParent::BrowserBridgeParent() = default;
 
@@ -241,5 +240,4 @@ IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
 
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) { Destroy(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

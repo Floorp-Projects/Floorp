@@ -12,8 +12,7 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 RemoteDragStartData::~RemoteDragStartData() = default;
 
@@ -82,5 +81,4 @@ void RemoteDragStartData::AddInitialDnDDataTo(DataTransfer* aDataTransfer,
   mPrincipal = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

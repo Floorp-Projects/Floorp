@@ -46,9 +46,7 @@ void CleanupChild(Maybe<CacheReadStream>& aMaybeReadStream,
 
 }  // namespace
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 // --------------------------------------------
 
@@ -511,6 +509,4 @@ void AutoParentOpResult::SerializeReadStream(const nsID& aId,
   MOZ_DIAGNOSTIC_ASSERT(!rv.Failed());
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

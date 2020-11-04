@@ -35,9 +35,7 @@
 #include "nsURLParsers.h"
 #include "js/Object.h"  // JS::GetClass
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 using mozilla::ErrorResult;
 using mozilla::Unused;
@@ -591,6 +589,4 @@ bool CacheStorage::HasStorageAccess() const {
   return access > StorageAccess::ePrivateBrowsing;
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

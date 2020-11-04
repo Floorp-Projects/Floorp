@@ -36,8 +36,7 @@
 #include "nsString.h"
 #include "ThreadLocal.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::ipc;
@@ -464,5 +463,4 @@ JSObject* IDBOpenDBRequest::WrapObject(JSContext* aCx,
   return IDBOpenDBRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

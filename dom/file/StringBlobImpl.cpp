@@ -7,8 +7,7 @@
 #include "StringBlobImpl.h"
 #include "nsStringStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS_INHERITED(StringBlobImpl, BlobImpl, nsIMemoryReporter)
 
@@ -49,5 +48,4 @@ StringBlobImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

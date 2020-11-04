@@ -12,8 +12,7 @@
 #include "WebAudioUtils.h"
 #include "blink/PeriodicWave.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OscillatorNode, AudioScheduledSourceNode,
                                    mPeriodicWave, mFrequency, mDetune)
@@ -538,5 +537,4 @@ void OscillatorNode::NotifyMainThreadTrackEnded() {
   MarkInactive();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

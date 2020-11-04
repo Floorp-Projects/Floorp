@@ -60,8 +60,7 @@ using namespace mozilla::dom::ipc;
 
 extern mozilla::LazyLogModule gUseCountersLog;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 WindowGlobalParent::WindowGlobalParent(
     CanonicalBrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
@@ -1299,5 +1298,4 @@ NS_INTERFACE_MAP_END_INHERITING(WindowContext)
 NS_IMPL_ADDREF_INHERITED(WindowGlobalParent, WindowContext)
 NS_IMPL_RELEASE_INHERITED(WindowGlobalParent, WindowContext)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -9,8 +9,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(PlacesWeakCallbackWrapper,
                                                mParent, mCallback)
@@ -42,5 +41,4 @@ JSObject* PlacesWeakCallbackWrapper::WrapObject(
   return PlacesWeakCallbackWrapper_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

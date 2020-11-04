@@ -6,8 +6,7 @@
 
 #include "MediaControlUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #undef LOG
 #define LOG(msg, ...)                        \
@@ -152,5 +151,4 @@ bool MediaPlaybackStatus::IsContextOwningAudioFocus(uint64_t aContextId) const {
                                     : false;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

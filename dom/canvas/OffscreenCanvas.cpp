@@ -19,8 +19,7 @@
 #include "GLScreenBuffer.h"
 #include "ImageBitmap.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
     layers::CanvasRenderer* aRenderer, uint32_t aWidth, uint32_t aHeight,
@@ -321,5 +320,4 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(OffscreenCanvas)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

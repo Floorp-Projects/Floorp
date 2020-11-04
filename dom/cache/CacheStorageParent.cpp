@@ -13,9 +13,7 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::QuotaManager;
 using mozilla::ipc::PBackgroundParent;
@@ -123,6 +121,4 @@ void CacheStorageParent::OnPrincipalVerified(
   mVerifier = nullptr;
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

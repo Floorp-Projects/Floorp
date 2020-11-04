@@ -33,8 +33,7 @@ mozilla::LazyLogModule gMediaParentLog("MediaParent");
 #define ORIGINKEYS_FILE u"enumerate_devices.txt"
 #define ORIGINKEYS_VERSION "1"
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 StaticMutex sOriginKeyStoreMutex;
 static OriginKeyStore* sOriginKeyStore = nullptr;
@@ -533,8 +532,7 @@ bool DeallocPMediaParent(media::PMediaParent* aActor) {
   return true;
 }
 
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 // Instantiate templates to satisfy linker
 template class mozilla::media::Parent<mozilla::media::NonE10s>;

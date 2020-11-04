@@ -22,14 +22,12 @@
 #include "nsXPCOMPrivate.h"
 #include "runnable_utils.h"
 
-namespace mozilla {
+namespace mozilla::gmp {
 
 #ifdef __CLASS__
 #  undef __CLASS__
 #endif
 #define __CLASS__ "GMPServiceChild"
-
-namespace gmp {
 
 already_AddRefed<GeckoMediaPluginServiceChild>
 GeckoMediaPluginServiceChild::GetSingleton() {
@@ -616,7 +614,6 @@ bool GMPServiceChild::HaveContentParents() const {
   return mContentParents.Count() > 0;
 }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #undef __CLASS__

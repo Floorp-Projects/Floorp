@@ -21,8 +21,7 @@
 #include "nsLayoutUtils.h"
 #include "nsWindowSizes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 DocumentOrShadowRoot::DocumentOrShadowRoot(ShadowRoot* aShadowRoot)
     : mAsNode(aShadowRoot), mKind(Kind::ShadowRoot) {
@@ -848,5 +847,4 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   tmp->mRadioGroups.Clear();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

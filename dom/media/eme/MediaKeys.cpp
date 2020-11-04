@@ -31,9 +31,7 @@
 #include "nsPrintfCString.h"
 #include "ChromiumCDMProxy.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 // We don't use NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE because we need to
 // unregister our MediaKeys from mDocument's activity listeners. If we don't do
@@ -676,5 +674,4 @@ void MediaKeys::ResolvePromiseWithKeyStatus(PromiseId aId,
   promise->MaybeResolve(aMediaKeyStatus);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

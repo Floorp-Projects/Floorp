@@ -9,9 +9,7 @@
 // Global includes
 #include "mozilla/Assertions.h"
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 namespace {
 
@@ -233,6 +231,4 @@ bool Client::TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&) {
   return true;
 }
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota

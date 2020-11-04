@@ -11,8 +11,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/GamepadBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Gamepad)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Gamepad)
@@ -191,5 +190,4 @@ JSObject* Gamepad::WrapObject(JSContext* aCx,
   return Gamepad_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

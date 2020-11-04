@@ -14,8 +14,7 @@
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static bool ShouldExposeChildWindow(const nsString& aNameBeingResolved,
                                     BrowsingContext* aChild) {
@@ -273,5 +272,4 @@ JSObject* WindowNamedPropertiesHandler::Create(JSContext* aCx,
   return gsp;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

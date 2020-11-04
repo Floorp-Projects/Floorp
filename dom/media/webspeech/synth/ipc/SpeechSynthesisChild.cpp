@@ -5,8 +5,7 @@
 #include "SpeechSynthesisChild.h"
 #include "nsSynthVoiceRegistry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SpeechSynthesisChild::SpeechSynthesisChild() {
   MOZ_COUNT_CTOR(SpeechSynthesisChild);
@@ -167,5 +166,4 @@ void SpeechTaskChild::SetAudioOutputVolume(float aVolume) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -24,8 +24,7 @@ mozilla::LazyLogModule gCamerasChildLog("CamerasChild");
 #define LOG(args) MOZ_LOG(gCamerasChildLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasChildLog, mozilla::LogLevel::Debug)
 
-namespace mozilla {
-namespace camera {
+namespace mozilla::camera {
 
 CamerasSingleton::CamerasSingleton()
     : mCamerasMutex("CamerasSingleton::mCamerasMutex"),
@@ -574,5 +573,4 @@ FrameRelay* CamerasChild::Callback(CaptureEngine aCapEngine, int capture_id) {
   return nullptr;
 }
 
-}  // namespace camera
-}  // namespace mozilla
+}  // namespace mozilla::camera

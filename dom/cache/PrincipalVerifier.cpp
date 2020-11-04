@@ -19,9 +19,7 @@
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::BackgroundParent;
@@ -190,6 +188,4 @@ void PrincipalVerifier::DispatchToInitiatingThread(nsresult aRv) {
   }
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
