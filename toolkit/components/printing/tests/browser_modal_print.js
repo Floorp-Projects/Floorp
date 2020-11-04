@@ -141,10 +141,6 @@ async function testPrintWithEnter(testFn, filename) {
     await testFn(helper);
     await helper.assertPrintToFile(file, () => {
       EventUtils.sendKey("return", helper.win);
-      const cancelButton = helper.doc.querySelector(`button[name="cancel"]`);
-      ok(!cancelButton.disabled, "Cancel button is not disabled");
-      const printButton = helper.doc.querySelector(`button[name="print"]`);
-      ok(printButton.disabled, "Print button is disabled");
     });
   });
 }
