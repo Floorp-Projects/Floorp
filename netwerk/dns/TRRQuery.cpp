@@ -20,14 +20,13 @@ static already_AddRefed<AddrInfo> merge_rrset(AddrInfo* rrto,
   bool isIPv6 = rrfrom->Addresses().Length() > 0 &&
                 rrfrom->Addresses()[0].raw.family == PR_AF_INET6;
 
-  nsTArray<NetAddr> addresses = rrto->Addresses().Clone();
-  for (const auto& addr : rrfrom->Addresses()) {
-    if (isIPv6) {
-      // rrfrom has IPv6 so it should be first
-      addresses.InsertElementAt(0, addr);
-    } else {
-      addresses.AppendElement(addr);
-    }
+  nsTArray<NetAddr> addresses;
+  if (isIPv6) {
+    addresses = rrfrom->Addresses().Clone();
+    addresses.AppendElements(rrto->Addresses());
+  } else {
+    addresses = rrto->Addresses().Clone();
+    addresses.AppendElements(rrfrom->Addresses());
   }
   auto builder = rrto->Build();
   builder.SetAddresses(std::move(addresses));
