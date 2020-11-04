@@ -14,7 +14,7 @@ add_task(async function() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   let browser = win.gBrowser.selectedBrowser;
-  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  BrowserTestUtils.loadURI(browser, "http://example.com/");
 
   await SpecialPowers.spawn(browser, [], () => {
     // eslint-disable-next-line mozilla/balanced-listeners

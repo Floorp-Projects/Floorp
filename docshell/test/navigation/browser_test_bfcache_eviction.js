@@ -85,7 +85,7 @@ add_task(async function() {
     for (var i = 0; i < 4; i++) {
       testPage = `data:text/html,<html id='html1'><body id='body1'>${i}</body></html>`;
       let pagePromise = BrowserTestUtils.browserLoaded(browser);
-      await BrowserTestUtils.loadURI(browser, testPage);
+      BrowserTestUtils.loadURI(browser, testPage);
       await pagePromise;
     }
     // 7. Wait for 'content viewer evicted' event to go off

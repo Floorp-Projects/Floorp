@@ -46,7 +46,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     // Try deprecated versions
-    await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_0);
+    BrowserTestUtils.loadURI(browser, HTTPS_TLS1_0);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "broken");
     is(
@@ -56,7 +56,7 @@ add_task(async function() {
     );
     await checkConnectionState("not-secure");
 
-    await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
+    BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "broken");
     is(
@@ -67,14 +67,14 @@ add_task(async function() {
     await checkConnectionState("not-secure");
 
     // Transition to secure
-    await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_2);
+    BrowserTestUtils.loadURI(browser, HTTPS_TLS1_2);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "secure");
     is(getIdentityMode(), "verifiedDomain", "Identity should be verified");
     await checkConnectionState("secure");
 
     // Transition back to broken
-    await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
+    BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "broken");
     is(
@@ -85,7 +85,7 @@ add_task(async function() {
     await checkConnectionState("not-secure");
 
     // TLS1.3 for completeness
-    await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_3);
+    BrowserTestUtils.loadURI(browser, HTTPS_TLS1_3);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "secure");
     is(getIdentityMode(), "verifiedDomain", "Identity should be verified");

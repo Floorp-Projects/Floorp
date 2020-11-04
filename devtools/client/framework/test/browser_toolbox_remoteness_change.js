@@ -49,7 +49,7 @@ async function navigateBetweenProcesses(enableTargetSwitching) {
     // So, fallback to BrowserTestUtils helpers in this test when
     // the target-switching preference is turned off.
     const onBrowserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.loadURI(tab.linkedBrowser, URL_2);
+    BrowserTestUtils.loadURI(tab.linkedBrowser, URL_2);
     await onBrowserLoaded;
   }
 

@@ -67,7 +67,7 @@ add_task(async function() {
   await injectBeforeUnload(browser);
   // Navigate to a chrome page.
   let dialogShown1 = awaitAndCloseBeforeUnloadDialog(false);
-  await BrowserTestUtils.loadURI(browser, "about:support");
+  BrowserTestUtils.loadURI(browser, "about:support");
   await Promise.all([dialogShown1, BrowserTestUtils.browserLoaded(browser)]);
 
   is(beforeUnloadCount, 1, "Should have received one beforeunload event.");
@@ -122,7 +122,7 @@ add_task(async function() {
 
   // Navigate to a content page.
   let dialogShown1 = awaitAndCloseBeforeUnloadDialog(false);
-  await BrowserTestUtils.loadURI(browser, TEST_URL);
+  BrowserTestUtils.loadURI(browser, TEST_URL);
   await Promise.all([dialogShown1, BrowserTestUtils.browserLoaded(browser)]);
   is(beforeUnloadCount, 1, "Should have received one beforeunload event.");
   ok(browser.isRemoteBrowser, "Browser should be remote.");
