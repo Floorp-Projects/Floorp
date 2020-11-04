@@ -729,3 +729,12 @@ CSSSize MobileViewportManager::GetIntrinsicCompositionSize() const {
 
   return ScreenSize(compositionSize) / intrinsicScale;
 }
+
+ParentLayerSize MobileViewportManager::GetCompositionSizeWithoutDynamicToolbar()
+    const {
+  ScreenIntSize displaySize = ViewAs<ScreenPixel>(
+      mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  return ViewAs<ParentLayerPixel>(
+      ScreenSize(GetCompositionSize(displaySize)),
+      PixelCastJustification::ScreenIsParentLayerForRoot);
+}

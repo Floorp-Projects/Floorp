@@ -99,6 +99,7 @@ struct FrameMetrics {
         mPaintRequestTime(),
         mVisualDestination(0, 0),
         mVisualScrollUpdateType(eNone),
+        mCompositionSizeWithoutDynamicToolbar(),
         mIsRootContent(false),
         mIsScrollInfoLayer(false) {}
 
@@ -126,7 +127,9 @@ struct FrameMetrics {
            mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer &&
-           mFixedLayerMargins == aOther.mFixedLayerMargins;
+           mFixedLayerMargins == aOther.mFixedLayerMargins &&
+           mCompositionSizeWithoutDynamicToolbar ==
+               aOther.mCompositionSizeWithoutDynamicToolbar;
   }
 
   bool operator!=(const FrameMetrics& aOther) const {
@@ -435,6 +438,15 @@ struct FrameMetrics {
     return mFixedLayerMargins;
   }
 
+  void SetCompositionSizeWithoutDynamicToolbar(const ParentLayerSize& aSize) {
+    MOZ_ASSERT(mIsRootContent);
+    mCompositionSizeWithoutDynamicToolbar = aSize;
+  }
+  const ParentLayerSize& GetCompositionSizeWithoutDynamicToolbar() const {
+    MOZ_ASSERT(mIsRootContent);
+    return mCompositionSizeWithoutDynamicToolbar;
+  }
+
   // Helper function for RecalculateViewportOffset(). Exposed so that
   // APZC can perform the operation on other copies of the layout
   // and visual viewport rects (e.g. the "effective" ones used to implement
@@ -593,6 +605,12 @@ struct FrameMetrics {
   // 'fixed layer margins' on the main-thread. This is only used for the
   // root-content scroll frame.
   ScreenMargin mFixedLayerMargins;
+
+  // Similar to mCompositionBounds.Size() but not including the dynamic toolbar
+  // height.
+  // If we are not using a dynamic toolbar, this has the same value as
+  // mCompositionBounds.Size().
+  ParentLayerSize mCompositionSizeWithoutDynamicToolbar;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;

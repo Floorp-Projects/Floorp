@@ -132,6 +132,8 @@ class MobileViewportManager final : public nsIDOMEventListener,
    */
   mozilla::CSSSize GetIntrinsicCompositionSize() const;
 
+  mozilla::ParentLayerSize GetCompositionSizeWithoutDynamicToolbar() const;
+
  private:
   ~MobileViewportManager();
 
