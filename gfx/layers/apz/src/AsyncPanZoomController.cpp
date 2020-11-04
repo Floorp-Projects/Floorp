@@ -259,8 +259,9 @@ typedef PlatformSpecificStateBase
  * Units: milliseconds
  *
  * \li\b apz.fling_accel_min_velocity
- * The minimum velocity of the second fling for it to be considered for fling
- * acceleration.
+ * The minimum velocity of the second fling, and the minimum velocity of the
+ * previous fling animation at the point of interruption, for the new fling to
+ * be considered for fling acceleration.
  * Units: screen pixels per milliseconds
  *
  * \li\b apz.fling_accel_base_mult
