@@ -47,18 +47,6 @@ test_only:
     send_in_pings:
       - test-ping
 
-  what_id_it: # Using a different metrics yaml style for fun.
-    type: uuid
-    description: |
-      Just a UUID.
-      This is a test-only metric.
-    bugs: [ "https://bugzilla.mozilla.org/show_bug.cgi?id=1673664" ]
-    data_reviews: [ "https://bugzilla.mozilla.org/show_bug.cgi?id=1673664#c1" ]
-    data_sensitivity: [ "technical" ]
-    notification_emails: [ "glean-team@mozilla.com" ]
-    expires: never
-    send_in_pings: [ "test-ping" ]
-
 test_only.ipc:
   a_counter:
     type: counter
