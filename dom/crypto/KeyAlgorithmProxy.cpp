@@ -8,8 +8,7 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool KeyAlgorithmProxy::WriteStructuredClone(
     JSStructuredCloneWriter* aWriter) const {
@@ -233,5 +232,4 @@ KeyAlgorithmProxy::GetMechanism(const HmacKeyAlgorithm& aAlgorithm) {
   return UNKNOWN_CK_MECHANISM;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

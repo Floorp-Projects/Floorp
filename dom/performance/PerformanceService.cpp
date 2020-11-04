@@ -11,8 +11,7 @@
 #include "mozilla/StaticPtr.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static StaticRefPtr<PerformanceService> gPerformanceService;
 static StaticMutex gPerformanceServiceMutex;
@@ -40,5 +39,4 @@ PerformanceService::PerformanceService() {
   mCreationEpochTime = PR_Now();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

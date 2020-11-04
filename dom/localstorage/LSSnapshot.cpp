@@ -46,8 +46,7 @@
 #include "nsTStringRepr.h"
 #include "nscore.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1020,5 +1019,4 @@ LSSnapshot::Run() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

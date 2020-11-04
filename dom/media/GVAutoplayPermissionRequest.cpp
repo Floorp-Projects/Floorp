@@ -11,8 +11,7 @@
 
 mozilla::LazyLogModule gGVAutoplayRequestLog("GVAutoplay");
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using RType = GVAutoplayRequestType;
 using RStatus = GVAutoplayRequestStatus;
@@ -234,5 +233,4 @@ void GVAutoplayPermissionRequestor::CreateAsyncRequest(
   GVAutoplayPermissionRequest::CreateRequest(innerWindow, aContext, aType);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

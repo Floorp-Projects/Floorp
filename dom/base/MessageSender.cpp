@@ -7,8 +7,7 @@
 #include "mozilla/dom/MessageSender.h"
 #include "mozilla/dom/MessageBroadcaster.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void MessageSender::InitWithCallback(ipc::MessageManagerCallback* aCallback) {
   if (mCallback) {
@@ -29,5 +28,4 @@ void MessageSender::InitWithCallback(ipc::MessageManagerCallback* aCallback) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

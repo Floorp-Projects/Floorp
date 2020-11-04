@@ -11,8 +11,7 @@
 #include "mozilla/dom/GridBinding.h"
 #include "nsGridContainerFrame.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GridTracks, mParent, mTracks)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GridTracks)
@@ -106,5 +105,4 @@ void GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo) {
   AppendRemovedAutoFits();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

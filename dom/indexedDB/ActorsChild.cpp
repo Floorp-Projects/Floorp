@@ -75,9 +75,7 @@ namespace mozilla {
 
 using ipc::PrincipalInfo;
 
-namespace dom {
-
-namespace indexedDB {
+namespace dom::indexedDB {
 
 namespace {
 
@@ -3807,6 +3805,5 @@ void BackgroundUtilsChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-}  // namespace indexedDB
-}  // namespace dom
+}  // namespace dom::indexedDB
 }  // namespace mozilla

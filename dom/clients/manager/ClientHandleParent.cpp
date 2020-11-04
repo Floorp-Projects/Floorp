@@ -13,8 +13,7 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -106,5 +105,4 @@ void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

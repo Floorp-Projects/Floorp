@@ -11,9 +11,7 @@
 #include "ThreeDPoint.h"
 #include "WebAudioUtils.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 bool ThreeDPoint::FuzzyEqual(const ThreeDPoint& other) {
   return WebAudioUtils::FuzzyEqual(x, other.x) &&
@@ -37,5 +35,4 @@ bool operator==(const ThreeDPoint& lhs, const ThreeDPoint& rhs) {
   return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

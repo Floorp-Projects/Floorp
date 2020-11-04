@@ -8,8 +8,7 @@
 #include "mozilla/gmp/GMPTypes.h"
 #include "GMPSharedMemManager.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost)
     : mEncodedWidth(0),
@@ -226,5 +225,4 @@ void GMPVideoEncodedFrameImpl::SetBufferType(GMPBufferType aBufferType) {
   mBufferType = aBufferType;
 }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp

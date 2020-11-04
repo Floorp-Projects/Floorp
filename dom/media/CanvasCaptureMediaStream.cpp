@@ -19,8 +19,7 @@
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 OutputStreamDriver::OutputStreamDriver(SourceMediaTrack* aSourceStream,
                                        const PrincipalHandle& aPrincipalHandle)
@@ -206,5 +205,4 @@ SourceMediaTrack* CanvasCaptureMediaStream::GetSourceStream() const {
   return mOutputStreamDriver->mSourceStream;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

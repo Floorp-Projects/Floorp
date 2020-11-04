@@ -22,8 +22,7 @@
 
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
 static nsILoadInfo::CrossOriginEmbedderPolicy InheritedPolicy(
@@ -165,5 +164,4 @@ already_AddRefed<JSActorProtocol> WindowGlobalActor::MatchingJSActorProtocol(
   return proto.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

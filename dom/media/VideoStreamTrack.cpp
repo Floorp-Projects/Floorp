@@ -11,8 +11,7 @@
 #include "nsGlobalWindowInner.h"
 #include "VideoOutput.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 VideoStreamTrack::VideoStreamTrack(nsPIDOMWindowInner* aWindow,
                                    mozilla::MediaTrack* aInputTrack,
@@ -86,5 +85,4 @@ already_AddRefed<MediaStreamTrack> VideoStreamTrack::CloneInternal() {
                                         ReadyState(), Muted(), mConstraints));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

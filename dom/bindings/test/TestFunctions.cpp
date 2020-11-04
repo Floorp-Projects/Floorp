@@ -14,8 +14,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 TestFunctions* TestFunctions::Constructor(GlobalObject& aGlobal) {
@@ -312,5 +311,4 @@ bool TestFunctions::WrapObject(JSContext* aCx,
   return TestFunctions_Binding::Wrap(aCx, this, aGivenProto, aWrapper);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

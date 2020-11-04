@@ -26,8 +26,7 @@
 
 #define MEDIA_CONTROL_PREF "media.hardwaremediakeys.enabled"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool MediaControlKeyManager::IsOpened() const {
   return mEventSource && mEventSource->IsOpened();
@@ -224,5 +223,4 @@ MediaControlKeyManager::Observer::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -11,8 +11,7 @@
 #include "mozilla/dom/FlexBinding.h"
 #include "nsFlexContainerFrame.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Flex, mParent, mLines)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Flex)
@@ -65,5 +64,4 @@ FlexPhysicalDirection Flex::CrossAxisDirection() const {
   return mCrossAxisDirection;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -171,8 +171,7 @@ BrowserParent* BrowserParent::sPointerLockedRemoteTarget = nullptr;
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 BrowserParent::LayerToBrowserParentTable*
     BrowserParent::sLayerToBrowserParentTable = nullptr;
@@ -4169,5 +4168,4 @@ mozilla::ipc::IPCResult BrowserParent::RecvReleasePointerCapture(
   return IPC_OK();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

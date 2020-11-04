@@ -35,8 +35,7 @@ extern mozilla::LazyLogModule gAudioChannelLog;
 #define AUDIO_CHANNEL_LOG(msg, ...) \
   MOZ_LOG(gAudioChannelLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 class OnCompleteTask final : public Runnable {
@@ -670,5 +669,4 @@ bool AudioDestinationNode::IsAudible() const {
          mAudioChannelVolume != 0.0;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

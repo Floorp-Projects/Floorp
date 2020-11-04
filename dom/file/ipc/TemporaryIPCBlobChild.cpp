@@ -9,8 +9,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include <private/pprio.h>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 TemporaryIPCBlobChild::TemporaryIPCBlobChild(MutableBlobStorage* aStorage)
     : mMutableBlobStorage(aStorage), mActive(true) {
@@ -82,5 +81,4 @@ void TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
   SendOperationDone(nsCString(aContentType), fdd);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

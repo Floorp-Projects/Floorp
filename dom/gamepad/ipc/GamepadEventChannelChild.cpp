@@ -7,8 +7,7 @@
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Promise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -61,5 +60,4 @@ mozilla::ipc::IPCResult GamepadEventChannelChild::RecvReplyGamepadPromise(
   return IPC_OK();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

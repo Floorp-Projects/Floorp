@@ -9,8 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ValidityState, mConstraintValidation)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ValidityState)
@@ -29,5 +28,4 @@ JSObject* ValidityState::WrapObject(JSContext* aCx,
   return ValidityState_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

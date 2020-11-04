@@ -10,8 +10,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Mod)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLModElement::HTMLModElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -26,5 +25,4 @@ JSObject* HTMLModElement::WrapNode(JSContext* aCx,
   return HTMLModElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

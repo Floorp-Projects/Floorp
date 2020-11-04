@@ -5,8 +5,7 @@
 #include "SpeechSynthesisParent.h"
 #include "nsSynthVoiceRegistry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SpeechSynthesisParent::SpeechSynthesisParent() {
   MOZ_COUNT_CTOR(SpeechSynthesisParent);
@@ -195,5 +194,4 @@ nsresult SpeechTaskParent::DispatchMarkImpl(const nsAString& aName,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

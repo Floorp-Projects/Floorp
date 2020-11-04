@@ -8,8 +8,7 @@
 #include "MediaTrackGraph.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void AudioStreamTrack::AddAudioOutput(void* aKey) {
   if (Ended()) {
@@ -103,5 +102,4 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
   return crossGraphPtr->EnsureConnected();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

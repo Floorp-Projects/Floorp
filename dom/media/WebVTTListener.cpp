@@ -20,8 +20,7 @@ extern mozilla::LazyLogModule gTextTrackLog;
 #define LOG_WIHTOUT_ADDRESS(msg, ...) \
   MOZ_LOG(gTextTrackLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(WebVTTListener, mElement, mParserWrapper)
 
@@ -209,5 +208,4 @@ void WebVTTListener::Cancel() {
   mElement = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

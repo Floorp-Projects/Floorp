@@ -11,8 +11,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDataHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 namespace {
 bool IsValidNetwork(const nsAString& aNetwork) {
   return aNetwork.Equals(u"amex"_ns) || aNetwork.Equals(u"cartebancaire"_ns) ||
@@ -120,5 +119,4 @@ void BasicCardService::CheckForValidBasicCardErrors(JSContext* aCx,
     aRv.NoteJSContextException(aCx);
   }
 }
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom

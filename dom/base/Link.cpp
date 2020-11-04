@@ -26,8 +26,7 @@
 #include "nsAttrValueInlines.h"
 #include "HTMLLinkElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 Link::Link(Element* aElement)
     : mElement(aElement),
@@ -587,5 +586,4 @@ size_t Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const {
   return n;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

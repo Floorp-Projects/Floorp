@@ -18,8 +18,7 @@
 using namespace IPC;
 using namespace mozilla::dom;
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 void IPDLParamTraits<nsIVariant*>::Write(Message* aMsg, IProtocol* aActor,
                                          nsIVariant* aParam) {
@@ -259,5 +258,4 @@ bool IPDLParamTraits<nsIPropertyBag2*>::Read(const Message* aMsg,
   return true;
 }
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc

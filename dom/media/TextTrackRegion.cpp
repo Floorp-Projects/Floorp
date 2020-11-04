@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/TextTrackRegion.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TextTrackRegion, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextTrackRegion)
@@ -56,5 +55,4 @@ void TextTrackRegion::CopyValues(TextTrackRegion& aRegion) {
   mScroll = aRegion.Scroll();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

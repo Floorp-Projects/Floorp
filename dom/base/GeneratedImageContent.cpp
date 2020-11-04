@@ -13,8 +13,7 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ELEMENT_CLONE(GeneratedImageContent);
 
@@ -36,5 +35,4 @@ JSObject* GeneratedImageContent::WrapNode(JSContext* aCx,
   return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
