@@ -91,7 +91,7 @@ nsresult CookieCommons::GetBaseDomain(nsIEffectiveTLDService* aTLDService,
     // aHostURI is either an IP address, an alias such as 'localhost', an eTLD
     // such as 'co.uk', or the empty string. use the host as a key in such
     // cases.
-    rv = aHostURI->GetAsciiHost(aBaseDomain);
+    rv = nsContentUtils::GetHostOrIPv6WithBrackets(aHostURI, aBaseDomain);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -114,7 +114,7 @@ nsresult CookieCommons::GetBaseDomain(nsIPrincipal* aPrincipal,
 
   // for historical reasons we use ascii host for file:// URLs.
   if (aPrincipal->SchemeIs("file")) {
-    return aPrincipal->GetAsciiHost(aBaseDomain);
+    return nsContentUtils::GetHostOrIPv6WithBrackets(aPrincipal, aBaseDomain);
   }
 
   return aPrincipal->GetBaseDomain(aBaseDomain);
