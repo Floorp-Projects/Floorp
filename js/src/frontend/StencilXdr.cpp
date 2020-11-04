@@ -6,6 +6,7 @@
 
 #include "frontend/StencilXdr.h"  // StencilXDR
 
+#include <memory>
 #include <type_traits>
 
 #include "vm/JSScript.h"      // js::CheckCompileOptionsMatch
@@ -165,7 +166,7 @@ template <XDRMode mode>
             .map([](auto i) { return i.numMemberInitializers; })
             .valueOr(0);
 
-    xdrFields.numGcThings = stencil.gcThings.length();
+    xdrFields.numGcThings = stencil.gcThings.size();
 
     if (stencil.sharedData) {
       xdrFlags |= 1 << uint8_t(XdrFlags::HasSharedData);
@@ -230,10 +231,18 @@ template <XDRMode mode>
       stencil.memberInitializers.emplace(xdrFields.numMemberInitializers);
     }
 
-    if (!stencil.gcThings.appendN(mozilla::AsVariant(NullScriptThing()),
-                                  xdrFields.numGcThings)) {
-      ReportOutOfMemory(xdr->cx());
-      return xdr->fail(JS::TranscodeResult_Throw);
+    MOZ_ASSERT(stencil.gcThings.empty());
+    if (xdrFields.numGcThings > 0) {
+      // Allocated ScriptThingVariant array and initialize to safe value.
+      mozilla::Span<ScriptThingVariant> stencilThings =
+          NewScriptThingSpanUninitialized(xdr->cx(), xdr->stencilAlloc(),
+                                          xdrFields.numGcThings);
+      if (stencilThings.empty()) {
+        return xdr->fail(JS::TranscodeResult_Throw);
+      }
+      std::uninitialized_fill(stencilThings.begin(), stencilThings.end(),
+                              NullScriptThing());
+      stencil.gcThings = stencilThings;
     }
 
     stencil.functionFlags = FunctionFlags(xdrFields.functionFlags);
