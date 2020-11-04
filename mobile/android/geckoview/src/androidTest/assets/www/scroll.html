@@ -17,19 +17,19 @@ body {
 #one {
    background-color: red;
    width: 200vw;
-   height: 100vh;
+   height: 50vh;
 }
 
 #two {
    background-color: green;
    width: 200vw;
-   height: 100vh;
+   height: 50vh;
 }
 
 #three {
    background-color: blue;
    width: 200vw;
-   height: 100vh;
+   height: 200vh;
 }
     </style>
   </head>
@@ -37,5 +37,10 @@ body {
     <div id="one"></div>
     <div id="two"></div>
     <div id="three"></div>
+    <script>
+      document.getElementById('two').addEventListener('touchstart', e => {
+        console.log('not preventing default');
+      });
+    </script>
   </body>
 </html>

@@ -277,11 +277,18 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         // Touch handler without preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+        // Nothing should have done in the event handler and the content is not scrollable,
+        // thus the input result should be UNHANDLED, i.e. the dynamic toolbar should NOT
+        // move in response to the event.
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
 
         // No touch handlers, with scrolling
         setupScroll()
-        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        value = sessionRule.waitForResult(sendDownEvent(50f, 25f))
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+
+        // Touch handler with scrolling
+        value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
         assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
     }
 }
