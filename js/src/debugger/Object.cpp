@@ -16,7 +16,7 @@
 #include <type_traits>  // for remove_reference<>::type
 #include <utility>      // for move
 
-#include "jsapi.h"        // for CallArgs, RootedObject, Rooted
+#include "jsapi.h"  // for CallArgs, RootedObject, Rooted
 
 #include "builtin/Array.h"       // for NewDenseCopiedArray
 #include "builtin/Promise.h"     // for PromiseReactionRecordBuilder

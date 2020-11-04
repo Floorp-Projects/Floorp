@@ -32,7 +32,7 @@
 #include "js/Exception.h"               // JS::ExceptionStack
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
-#include "js/Object.h"                  // JS::GetBuiltinClass
+#include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"

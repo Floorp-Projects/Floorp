@@ -21,7 +21,7 @@
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::CreateReadableStreamDefaultReader, js::ReadableStreamReaderGeneric{Cancel,Initialize,Release}, js::ReadableStreamDefaultReaderRead
 #include "js/ArrayBuffer.h"                        // JS::NewArrayBuffer
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewData, JS_NewUint8Array{,WithBuffer}
-#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"

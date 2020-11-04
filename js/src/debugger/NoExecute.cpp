@@ -10,7 +10,7 @@
 
 #include <stdio.h>  // for fprintf, stdout
 
-#include "jsapi.h"        // for Handle
+#include "jsapi.h"  // for Handle
 
 #include "debugger/Debugger.h"        // for Debugger
 #include "js/friend/DumpFunctions.h"  // for DumpBacktrace

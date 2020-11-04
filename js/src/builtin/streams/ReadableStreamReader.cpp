@@ -18,11 +18,11 @@
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{Cancel,CreateReadResult}
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RootingAPI.h"                            // JS::Handle, JS::Rooted
-#include "js/Value.h"        // JS::Value, JS::UndefinedHandleValue
-#include "vm/Interpreter.h"  // js::GetAndClearException
-#include "vm/JSContext.h"    // JSContext
-#include "vm/PlainObject.h"  // js::PlainObject
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
+#include "js/Value.h"                 // JS::Value, JS::UndefinedHandleValue
+#include "vm/Interpreter.h"           // js::GetAndClearException
+#include "vm/JSContext.h"             // JSContext
+#include "vm/PlainObject.h"           // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Runtime.h"        // JSRuntime
 

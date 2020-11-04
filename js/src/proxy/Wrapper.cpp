@@ -9,8 +9,8 @@
 #include "jsexn.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/WindowProxy.h"  // js::IsWindowProxy
-#include "js/Object.h"              // JS::GetBuiltinClass
+#include "js/friend/WindowProxy.h"    // js::IsWindowProxy
+#include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/Proxy.h"
 #include "vm/ErrorObject.h"
 #include "vm/JSContext.h"

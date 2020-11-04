@@ -266,7 +266,8 @@ nsHyphenator::nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized)
           return;
         }
       } else {
-        UniquePtr<base::SharedMemory> shm = GetHyphDictFromParent(aURI, &length);
+        UniquePtr<base::SharedMemory> shm =
+            GetHyphDictFromParent(aURI, &length);
         if (shm) {
           // We don't need to validate mDict because the parent process
           // will have done so.

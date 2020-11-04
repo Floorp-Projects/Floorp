@@ -9,8 +9,8 @@
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
-#include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
+#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
+#include "js/friend/WindowProxy.h"    // js::IsWindow, js::IsWindowProxy
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
@@ -2459,9 +2459,9 @@ ArrayObject* DebugEnvironmentProxy::maybeSnapshot() const {
 
 void DebugEnvironmentProxy::initSnapshot(ArrayObject& o) {
   MOZ_ASSERT_IF(
-    maybeSnapshot() != nullptr,
-    environment().is<CallObject>() &&
-    environment().as<CallObject>().callee().isGeneratorOrAsync());
+      maybeSnapshot() != nullptr,
+      environment().is<CallObject>() &&
+          environment().as<CallObject>().callee().isGeneratorOrAsync());
   setReservedSlot(SNAPSHOT_SLOT, ObjectValue(o));
 }
 

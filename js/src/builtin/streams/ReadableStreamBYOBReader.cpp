@@ -14,7 +14,7 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
+#include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamBYOBReader, js::ForAuthorCodeBool

@@ -85,8 +85,7 @@ already_AddRefed<DrawTarget> PrintTargetRecording::MakeDrawTarget(
   return dt.forget();
 }
 
-already_AddRefed<DrawTarget>
-PrintTargetRecording::CreateRecordingDrawTarget(
+already_AddRefed<DrawTarget> PrintTargetRecording::CreateRecordingDrawTarget(
     DrawEventRecorder* aRecorder, DrawTarget* aDrawTarget) {
   MOZ_ASSERT(aRecorder);
   MOZ_ASSERT(aDrawTarget);

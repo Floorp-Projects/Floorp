@@ -45,7 +45,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/WindowProxy.h"  // js::ToWindowProxyIfWindow
+#include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
 #include "js/ProtoKey.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

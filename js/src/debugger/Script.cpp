@@ -28,22 +28,22 @@
 #include "gc/Zone.h"           // for Zone
 #include "gc/ZoneAllocator.h"  // for AddCellMemory
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
-#include "js/HeapAPI.h"        // for GCCellPtr
-#include "js/Wrapper.h"        // for UncheckedUnwrap
-#include "vm/ArrayObject.h"    // for ArrayObject
-#include "vm/BytecodeUtil.h"   // for GET_JUMP_OFFSET
-#include "vm/GlobalObject.h"   // for GlobalObject
-#include "vm/JSContext.h"      // for JSContext, ReportValueError
-#include "vm/JSFunction.h"     // for JSFunction
-#include "vm/JSObject.h"       // for RequireObject, JSObject
-#include "vm/ObjectOperations.h"  // for DefineDataProperty, HasOwnProperty
-#include "vm/PlainObject.h"       // for js::PlainObject
-#include "vm/Realm.h"             // for AutoRealm
-#include "vm/Runtime.h"           // for JSAtomState, JSRuntime
-#include "vm/StringType.h"        // for NameToId, PropertyName, JSAtom
-#include "wasm/WasmDebug.h"       // for ExprLoc, DebugState
-#include "wasm/WasmInstance.h"    // for Instance
-#include "wasm/WasmTypes.h"       // for Bytes
+#include "js/HeapAPI.h"               // for GCCellPtr
+#include "js/Wrapper.h"               // for UncheckedUnwrap
+#include "vm/ArrayObject.h"           // for ArrayObject
+#include "vm/BytecodeUtil.h"          // for GET_JUMP_OFFSET
+#include "vm/GlobalObject.h"          // for GlobalObject
+#include "vm/JSContext.h"             // for JSContext, ReportValueError
+#include "vm/JSFunction.h"            // for JSFunction
+#include "vm/JSObject.h"              // for RequireObject, JSObject
+#include "vm/ObjectOperations.h"      // for DefineDataProperty, HasOwnProperty
+#include "vm/PlainObject.h"           // for js::PlainObject
+#include "vm/Realm.h"                 // for AutoRealm
+#include "vm/Runtime.h"               // for JSAtomState, JSRuntime
+#include "vm/StringType.h"            // for NameToId, PropertyName, JSAtom
+#include "wasm/WasmDebug.h"           // for ExprLoc, DebugState
+#include "wasm/WasmInstance.h"        // for Instance
+#include "wasm/WasmTypes.h"           // for Bytes
 
 #include "vm/BytecodeUtil-inl.h"  // for BytecodeRangeWithPosition
 #include "vm/JSAtom-inl.h"        // for ValueToId

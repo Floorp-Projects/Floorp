@@ -111,7 +111,6 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
 
   gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) override;
 
-
   // pattern for a single face of a family
   RefPtr<FcPattern> mFontPattern;
 

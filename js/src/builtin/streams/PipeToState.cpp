@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Nothing, mozilla::Some
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
+#include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"        // js::ReadableStream
@@ -21,11 +21,11 @@
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter, js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Release,Write}
-#include "js/CallArgs.h"    // JS::CallArgsFromVp, JS::CallArgs
-#include "js/Class.h"       // JSClass, JSCLASS_HAS_RESERVED_SLOTS
+#include "js/CallArgs.h"              // JS::CallArgsFromVp, JS::CallArgs
+#include "js/Class.h"                 // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Promise.h"     // JS::AddPromiseReactions
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Promise.h"               // JS::AddPromiseReactions
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue
 #include "vm/JSContext.h"      // JSContext
 #include "vm/PromiseObject.h"  // js::PromiseObject

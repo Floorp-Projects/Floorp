@@ -21,8 +21,8 @@
 #include <string.h>  // for strlen
 #include <utility>   // for std::move
 
-#include "jsapi.h"        // for CallArgs, Handle
-#include "jsnum.h"        // for Int32ToString
+#include "jsapi.h"  // for CallArgs, Handle
+#include "jsnum.h"  // for Int32ToString
 
 #include "builtin/Array.h"      // for NewDenseCopiedArray
 #include "debugger/Debugger.h"  // for Completion, Debugger

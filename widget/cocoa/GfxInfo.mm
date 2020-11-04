@@ -131,14 +131,12 @@ void GfxInfo::GetDeviceInfo() {
   CFMutableDictionaryRef agx_dev_dict = IOServiceMatching("AGXAccelerator");
   if (IOServiceGetMatchingServices(kIOMasterPortDefault, agx_dev_dict, &io_iter) ==
       kIOReturnSuccess) {
-
     io_registry_entry_t entry = IO_OBJECT_NULL;
     while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
-
       CFTypeRef vendor_id_ref = SearchPortForProperty(entry, CFSTR("vendor-id"));
       if (vendor_id_ref) {
-        mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
-            "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
+        mAdapterVendorID[mNumGPUsDetected].AppendPrintf("0x%04x",
+                                                        IntValueOfCFData((CFDataRef)vendor_id_ref));
         CFRelease(vendor_id_ref);
         ++mNumGPUsDetected;
       }
