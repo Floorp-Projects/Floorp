@@ -87,4 +87,12 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Ffer inekcam isumar</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Inekcam yettwasumren</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Ales tuzna n yisefka ɣer usmel-a?</string>
+    <string name="mozac_feature_prompt_repost_message">Asmiren n usebter-a yezmer ad d-yerr tigawin n melmi kan, am tuzna n lexlaṣ neɣ asuffeɣ n uwennit snat tikkal.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Ales tuzna n yisefka</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Sefsex</string>
 </resources>

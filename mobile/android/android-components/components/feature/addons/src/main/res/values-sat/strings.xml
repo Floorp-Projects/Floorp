@@ -109,11 +109,11 @@
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">ᱚᱪᱚᱜ ᱢᱮ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_permissions_dialog_title">%1$s ᱥᱮᱞᱮᱫ ᱟᱢ?</string>
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ᱱᱚᱶᱟ ᱨᱮ ᱟᱢᱟᱜ ᱚᱱᱩᱢᱚᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱟ:</string>
     <!-- This is a button to add (install) an add-on . -->
-    <string name="mozac_feature_addons_permissions_dialog_add">ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="mozac_feature_addons_permissions_dialog_add">ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -127,7 +127,7 @@
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
-    <string name="mozac_feature_addons_addons_manager">ᱥᱮᱞᱮᱫ ᱮᱦᱚᱵᱽ ᱵᱮᱵᱚᱥᱛᱷᱟ</string>
+    <string name="mozac_feature_addons_addons_manager">ᱥᱮᱞᱮᱫᱽ ᱮᱦᱚᱵᱽ ᱵᱮᱵᱚᱥᱛᱷᱟ</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -147,11 +147,11 @@
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">ᱱᱟᱶᱟ ᱮᱰ-ᱚᱱᱥ ᱠᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
-    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s ᱨᱮ %1$s ᱥᱮᱞᱮᱫ ᱢᱮ </string>
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s ᱨᱮ %1$s ᱥᱮᱞᱮᱫᱽ ᱢᱮ </string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
-    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ᱟᱨ %2$s %3$s ᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ᱟᱨ %2$s %3$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
-    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">%1$s ᱨᱮ ᱥᱮᱞᱮᱫ ᱠᱚᱢ</string>
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">%1$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱠᱚᱢ</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox ᱮᱰᱼᱚᱱ ᱴᱮᱠᱱᱚᱞᱚᱡᱭ ᱫᱚ ᱢᱚᱰᱮᱱᱚᱜ ᱠᱟᱱᱟ ᱾ ᱱᱚᱣᱟ ᱮᱰᱼᱚᱱ ᱯᱷᱨᱮᱢᱣᱟᱨᱠ ᱠᱚ ᱵᱮᱵᱷᱟᱨᱟᱭ ᱚᱠᱟ ᱫᱚ Firefox 75 ᱟᱨ ᱚᱱᱟ ᱞᱟᱛᱟᱨ ᱵᱷᱟᱹᱥᱚᱱ ᱥᱟᱞᱟᱜ ᱵᱟᱭ ᱠᱟᱹᱢᱤ ᱟᱭ ᱾ </string>
     <!-- This is the caption for not yet supported screen caption -->
@@ -203,7 +203,7 @@
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">ᱫᱚᱥᱟ:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
-    <string name="mozac_feature_addons_installed_dialog_title">%1$s %2$s ᱨᱮ ᱥᱮᱞᱮᱫ ᱦᱚᱭ ᱱᱟ</string>
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s %2$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱦᱚᱭ ᱱᱟ</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">ᱢᱮᱱᱩ ᱨᱮ ᱡᱷᱤᱡ ᱢᱮ</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->

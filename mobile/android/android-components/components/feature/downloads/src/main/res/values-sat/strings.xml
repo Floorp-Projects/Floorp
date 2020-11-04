@@ -30,7 +30,7 @@
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">ᱛᱷᱩᱠᱩᱢ ᱢᱮ</string>
     <!-- Button that resumes the download when pressed -->
-    <string name="mozac_feature_downloads_button_resume">ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ</string>
+    <string name="mozac_feature_downloads_button_resume">ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵᱽ</string>
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Button that opens the downloaded file when pressed -->
