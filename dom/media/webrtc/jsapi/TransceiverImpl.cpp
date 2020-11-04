@@ -844,17 +844,17 @@ nsresult TransceiverImpl::ConfigureVideoCodecMode(
   }
 
   dom::MediaSourceEnum source = videotrack->GetSource().GetMediaSource();
-  webrtc::VideoCodecMode mode = webrtc::kRealtimeVideo;
+  webrtc::VideoCodecMode mode = webrtc::VideoCodecMode::kRealtimeVideo;
   switch (source) {
     case dom::MediaSourceEnum::Browser:
     case dom::MediaSourceEnum::Screen:
     case dom::MediaSourceEnum::Window:
-      mode = webrtc::kScreensharing;
+      mode = webrtc::VideoCodecMode::kScreensharing;
       break;
 
     case dom::MediaSourceEnum::Camera:
     default:
-      mode = webrtc::kRealtimeVideo;
+      mode = webrtc::VideoCodecMode::kRealtimeVideo;
       break;
   }
 
