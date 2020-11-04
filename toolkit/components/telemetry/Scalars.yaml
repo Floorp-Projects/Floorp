@@ -4717,22 +4717,6 @@ browser.search:
     release_channel_collection: opt-out
 
 browser.searchinit:
-  engines_cache_corrupted:
-    bug_numbers:
-      - 1578807
-      - 1621610
-    description: >-
-          Whether the list of engines in the search cache was found to be corrupt during initialization.
-    expires: "85"
-    kind: boolean
-    notification_emails:
-      - fx-search@mozilla.com
-      - mbanner@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   init_result_status_code:
     bug_numbers:
       - 1651194

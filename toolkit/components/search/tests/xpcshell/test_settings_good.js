@@ -16,11 +16,6 @@ const enginesSettings = {
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
-  visibleDefaultEngines: ["engine1", "engine2"],
-  builtInEngineList: [
-    { id: "engine1@search.mozilla.org", locale: "default" },
-    { id: "engine2@search.mozilla.org", locale: "default" },
-  ],
   metaData: {
     searchDefault: "Test search engine",
     searchDefaultHash: "TBD",
@@ -89,14 +84,6 @@ add_task(async function test_cached_engine_properties() {
   Assert.ok(
     Components.isSuccessCode(initResult),
     "Should have successfully created the search service"
-  );
-
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-    .parent;
-  Assert.equal(
-    scalars["browser.searchinit.engines_cache_corrupted"],
-    false,
-    "Should have recorded the engine settings as not corrupted"
   );
 
   const engines = await Services.search.getEngines();
