@@ -227,10 +227,9 @@ class TabTrayViewHolder(
             .take(MAX_URI_LENGTH)
     }
 
-    @VisibleForTesting
-    internal fun updateSelectedTabIndicator(isSelected: Boolean) {
+    override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
         if (itemView.context.settings().gridTabView) {
-            itemView.tab_tray_grid_item.background = if (isSelected) {
+            itemView.tab_tray_grid_item.background = if (showAsSelected) {
                 AppCompatResources.getDrawable(itemView.context, R.drawable.tab_tray_grid_item_selected_border)
             } else {
                 null
@@ -238,7 +237,7 @@ class TabTrayViewHolder(
             return
         }
 
-        val color = if (isSelected) {
+        val color = if (showAsSelected) {
             R.color.tab_tray_item_selected_background_normal_theme
         } else {
             R.color.tab_tray_item_background_normal_theme

@@ -59,11 +59,20 @@ class FenixTabsAdapter(
     override fun onBindViewHolder(
         holder: TabViewHolder,
         position: Int,
-        payloads: MutableList<Any>
+        payloads: List<Any>
     ) {
         if (payloads.isNullOrEmpty()) {
             onBindViewHolder(holder, position)
             return
+        }
+
+        // Having non-empty payloads means we have to make a partial update.
+        // This currently only happens when changing between the Normal and MultiSelect modes
+        // when we want to either show the last opened tab as selected (default) or hide this ui decorator.
+        if (mode is TabTrayDialogFragmentState.Mode.Normal) {
+            super.onBindViewHolder(holder, position, listOf(PAYLOAD_HIGHLIGHT_SELECTED_ITEM))
+        } else {
+            super.onBindViewHolder(holder, position, listOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))
         }
 
         holder.tab?.let { showCheckedIfSelected(it, holder.itemView) }
@@ -131,6 +140,11 @@ class FenixTabsAdapter(
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         tabsList = recyclerView
+    }
+
+    override fun isTabSelected(tabs: Tabs, position: Int): Boolean {
+        return mode is TabTrayDialogFragmentState.Mode.Normal &&
+                tabs.selectedIndex == position
     }
 
     private fun showCheckedIfSelected(tab: Tab, view: View) {
