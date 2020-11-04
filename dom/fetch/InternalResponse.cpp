@@ -18,8 +18,7 @@
 #include "nsIRandomGenerator.h"
 #include "nsStreamUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -359,5 +358,4 @@ already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
   return copy.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -18,8 +18,7 @@
 #include "nsINetAddr.h"
 #include "nsStringStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(UDPSocket::ListenerProxy, nsIUDPSocketListener,
                   nsIUDPSocketInternal)
@@ -717,5 +716,4 @@ UDPSocket::CallListenerClosed() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

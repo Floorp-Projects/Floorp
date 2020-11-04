@@ -15,8 +15,7 @@
 
 using mozilla::net::gNeckoChild;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(TCPServerSocketChildBase, mServerSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPServerSocketChildBase)
@@ -75,5 +74,4 @@ mozilla::ipc::IPCResult TCPServerSocketChild::RecvCallbackAccept(
 
 void TCPServerSocketChild::Close() { SendClose(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

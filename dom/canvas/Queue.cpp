@@ -5,11 +5,9 @@
 
 #include "ProducerConsumerQueue.h"
 
-namespace mozilla {
-namespace webgl {
+namespace mozilla::webgl {
 
 mozilla::LazyLogModule gPCQLog("pcq");
 mozilla::LazyLogModule gIpdlQueueLog("ipdlqueue");
 
-}  // namespace webgl
-}  // namespace mozilla
+}  // namespace mozilla::webgl

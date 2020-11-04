@@ -6,8 +6,7 @@
 
 #include "AudioScheduledSourceNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 AudioScheduledSourceNode::AudioScheduledSourceNode(
     AudioContext* aContext, uint32_t aChannelCount,
@@ -15,5 +14,4 @@ AudioScheduledSourceNode::AudioScheduledSourceNode(
     ChannelInterpretation aChannelInterpretation)
     : AudioNode(aContext, aChannelCount, aChannelCountMode,
                 aChannelInterpretation) {}
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

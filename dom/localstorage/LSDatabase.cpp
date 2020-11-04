@@ -33,8 +33,7 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -427,5 +426,4 @@ LSDatabase::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

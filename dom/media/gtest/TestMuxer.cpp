@@ -66,8 +66,7 @@ static RefPtr<EncodedFrame> CreateFrame(EncodedFrame::FrameType aType,
       aType, std::move(data));
 }
 
-namespace testing {
-namespace internal {
+namespace testing::internal {
 // This makes the googletest framework treat nsTArray as an std::vector, so all
 // the regular Matchers (like ElementsAre) work for it.
 template <typename Element>
@@ -84,8 +83,7 @@ class StlContainerView<nsTArray<Element>> {
     return type(aContainer.begin(), aContainer.end());
   }
 };
-}  // namespace internal
-}  // namespace testing
+}  // namespace testing::internal
 
 class MockContainerWriter : public ContainerWriter {
  public:

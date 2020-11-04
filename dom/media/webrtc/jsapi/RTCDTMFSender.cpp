@@ -12,9 +12,7 @@
 #include <algorithm>
 #include <bitset>
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(RTCDTMFSender, DOMEventTargetHelper,
                                    mTransceiver, mSendTimer)
@@ -147,7 +145,6 @@ void RTCDTMFSender::GetToneBuffer(nsAString& aOutToneBuffer) {
   aOutToneBuffer = mToneBuffer;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #undef LOGTAG

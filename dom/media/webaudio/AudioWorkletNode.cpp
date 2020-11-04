@@ -28,8 +28,7 @@
 #include "nsPrintfCString.h"
 #include "Tracing.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioWorkletNode, AudioNode, mPort,
@@ -884,5 +883,4 @@ size_t AudioWorkletNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

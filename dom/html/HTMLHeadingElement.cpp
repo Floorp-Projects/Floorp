@@ -16,8 +16,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Heading)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLHeadingElement::~HTMLHeadingElement() = default;
 
@@ -60,5 +59,4 @@ nsMapRuleToAttributesFunc HTMLHeadingElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

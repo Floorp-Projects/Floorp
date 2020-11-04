@@ -15,8 +15,7 @@
 #include "mozilla/UniquePtr.h"
 #include "xpcpublic.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 StructuredCloneBlob::StructuredCloneBlob() {
   mHolder.emplace(Holder::CloningSupported, Holder::TransferringNotSupported,
@@ -218,5 +217,4 @@ StructuredCloneBlob::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(StructuredCloneBlob, nsIMemoryReporter)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

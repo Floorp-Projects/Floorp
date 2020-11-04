@@ -9,8 +9,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MultipartBlobImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 FileCreatorParent::FileCreatorParent()
     : mBackgroundEventTarget(GetCurrentEventTarget()), mIPCActive(true) {}
@@ -134,5 +133,4 @@ nsresult FileCreatorParent::CreateBlobImpl(
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

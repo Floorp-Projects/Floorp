@@ -16,8 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -564,5 +563,4 @@ already_AddRefed<GetFilesHelperParent> GetFilesHelperParent::Create(
   return helper.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

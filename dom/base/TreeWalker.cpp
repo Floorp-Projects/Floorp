@@ -17,8 +17,7 @@
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/TreeWalkerBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /*
  * Factories, constructors and destructors
@@ -327,5 +326,4 @@ bool TreeWalker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
   return TreeWalker_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

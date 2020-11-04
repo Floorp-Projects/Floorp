@@ -9,8 +9,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsStringStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ADDREF_INHERITED(EmptyBody, FetchBody<EmptyBody>)
 NS_IMPL_RELEASE_INHERITED(EmptyBody, FetchBody<EmptyBody>)
@@ -80,5 +79,4 @@ void EmptyBody::GetBody(nsIInputStream** aStream, int64_t* aBodyLength) {
   bodyStream.forget(aStream);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -16,8 +16,7 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -162,5 +161,4 @@ JSObject* ConsoleUtils::GetOrCreateSandbox(JSContext* aCx) {
   return mSandbox->GetJSObject();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

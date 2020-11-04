@@ -7,8 +7,7 @@
 #include "EmptyBlobImpl.h"
 #include "nsStringStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 already_AddRefed<BlobImpl> EmptyBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
@@ -32,5 +31,4 @@ void EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

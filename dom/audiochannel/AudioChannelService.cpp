@@ -82,8 +82,7 @@ class AudioPlaybackRunnable final : public Runnable {
 
 }  // anonymous namespace
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 const char* SuspendTypeToStr(const nsSuspendedTypes& aSuspend) {
   MOZ_ASSERT(aSuspend == nsISuspendedTypes::NONE_SUSPENDED ||
@@ -623,5 +622,4 @@ void AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

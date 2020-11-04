@@ -21,8 +21,7 @@
 
 using namespace mozilla::gl;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static constexpr float XR_FRAMEBUFFER_MIN_SCALE = 0.2f;
 
@@ -275,5 +274,4 @@ HTMLCanvasElement* XRWebGLLayer::GetCanvas() {
 
 void XRWebGLLayer::SessionEnded() { DeleteFramebuffer(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

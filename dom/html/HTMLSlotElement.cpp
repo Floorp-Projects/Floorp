@@ -20,8 +20,7 @@ nsGenericHTMLElement* NS_NewHTMLSlotElement(
   return new (nim) mozilla::dom::HTMLSlotElement(nodeInfo.forget());
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLSlotElement::HTMLSlotElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -218,5 +217,4 @@ JSObject* HTMLSlotElement::WrapNode(JSContext* aCx,
   return HTMLSlotElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

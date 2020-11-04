@@ -14,8 +14,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(MenuItem)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // First bits are needed for the menuitem type.
 #define NS_CHECKED_IS_TOGGLED (1 << 2)
@@ -427,7 +426,6 @@ JSObject* HTMLMenuItemElement::WrapNode(JSContext* aCx,
   return HTMLMenuItemElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #undef NS_ORIGINAL_CHECKED_VALUE

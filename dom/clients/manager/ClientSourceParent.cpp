@@ -19,8 +19,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::BackgroundParent;
@@ -295,5 +294,4 @@ RefPtr<ClientOpPromise> ClientSourceParent::StartOp(
   return promise;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

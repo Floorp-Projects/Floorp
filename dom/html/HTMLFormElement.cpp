@@ -81,8 +81,7 @@
 // construction, destruction
 NS_IMPL_NS_NEW_HTML_ELEMENT(Form)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static const uint8_t NS_FORM_AUTOCOMPLETE_ON = 1;
 static const uint8_t NS_FORM_AUTOCOMPLETE_OFF = 0;
@@ -2428,5 +2427,4 @@ bool HTMLFormElement::IsSubmitting() const {
   return loading;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

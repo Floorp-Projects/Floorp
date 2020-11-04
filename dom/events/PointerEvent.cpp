@@ -13,8 +13,7 @@
 #include "nsContentUtils.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 PointerEvent::PointerEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                            WidgetPointerEvent* aEvent)
@@ -271,8 +270,7 @@ bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   return doc && !nsContentUtils::IsChromeDoc(doc);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 using namespace mozilla;
 using namespace mozilla::dom;

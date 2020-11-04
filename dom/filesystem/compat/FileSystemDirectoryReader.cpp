@@ -17,8 +17,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -178,5 +177,4 @@ void FileSystemDirectoryReader::ReadEntries(
   promise->AppendNativeHandler(handler);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

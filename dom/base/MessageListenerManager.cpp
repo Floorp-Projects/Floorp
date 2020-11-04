@@ -7,8 +7,7 @@
 #include "mozilla/dom/MessageListenerManager.h"
 #include "mozilla/dom/MessageBroadcaster.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MessageListenerManager::MessageListenerManager(
     ipc::MessageManagerCallback* aCallback, MessageBroadcaster* aParentManager,
@@ -46,5 +45,4 @@ void MessageListenerManager::ClearParentManager(bool aRemove) {
   mParentManager = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

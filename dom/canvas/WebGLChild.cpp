@@ -9,8 +9,7 @@
 #include "mozilla/StaticPrefs_webgl.h"
 #include "WebGLMethodDispatcher.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 WebGLChild::WebGLChild(ClientWebGLContext& context)
     : mContext(&context),
@@ -89,5 +88,4 @@ mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
   return IPC_OK();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -14,8 +14,7 @@
 #include "nsDataHashtable.h"
 #include "nsGlobalWindowOuter.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #undef LOG
 #define LOG(msg, ...)                        \
@@ -378,5 +377,4 @@ void ContentMediaController::PauseOrStopMedia() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

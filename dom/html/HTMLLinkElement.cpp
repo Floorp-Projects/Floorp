@@ -58,8 +58,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLLinkElement::HTMLLinkElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -854,5 +853,4 @@ bool HTMLLinkElement::IsCSSMimeTypeAttributeForLinkElement(
   return mimeType.IsEmpty() || mimeType.LowerCaseEqualsLiteral("text/css");
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

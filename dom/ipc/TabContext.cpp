@@ -14,8 +14,7 @@
 using namespace mozilla::dom::ipc;
 using namespace mozilla::layout;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 TabContext::TabContext()
     : mInitialized(false),
@@ -152,5 +151,4 @@ const TabContext& MaybeInvalidTabContext::GetTabContext() {
   return mTabContext;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
