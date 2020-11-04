@@ -3017,6 +3017,7 @@ impl Renderer {
                                 document_id,
                                 &mut prev_doc,
                                 None,
+                                0,
                             ).ok();
                         }
                     }
@@ -3092,6 +3093,7 @@ impl Renderer {
                                     doc_id,
                                     &mut doc,
                                     None,
+                                    0,
                                 ).ok();
                             }
                         }
@@ -3436,9 +3438,12 @@ impl Renderer {
     /// Renders the current frame.
     ///
     /// A Frame is supplied by calling [`generate_frame()`][webrender_api::Transaction::generate_frame].
+    /// buffer_age is the age of the current backbuffer. It is only relevant if partial present
+    /// is active, otherwise 0 should be passed here.
     pub fn render(
         &mut self,
         device_size: DeviceIntSize,
+        buffer_age: usize,
     ) -> Result<RenderResults, Vec<RendererError>> {
         self.device_size = Some(device_size);
 
@@ -3461,6 +3466,7 @@ impl Renderer {
                     doc_id,
                     &mut doc,
                     Some(device_size),
+                    buffer_age,
                 );
 
                 self.active_documents.insert(doc_id, doc);
@@ -3603,6 +3609,7 @@ impl Renderer {
         doc_id: DocumentId,
         active_doc: &mut RenderedDocument,
         device_size: Option<DeviceIntSize>,
+        buffer_age: usize,
     ) -> Result<RenderResults, Vec<RendererError>> {
         profile_scope!("render");
         let mut results = RenderResults::default();
@@ -3707,6 +3714,7 @@ impl Renderer {
                 self.draw_frame(
                     frame,
                     device_size,
+                    buffer_age,
                     &mut results,
                 );
 
@@ -5136,6 +5144,7 @@ impl Renderer {
         draw_target: DrawTarget,
         projection: &default::Transform3D<f32>,
         results: &mut RenderResults,
+        buffer_age: usize,
         max_partial_present_rects: usize,
         draw_previous_partial_present_regions: bool,
     ) {
@@ -5151,9 +5160,9 @@ impl Renderer {
         let mut partial_present_mode = None;
 
         if max_partial_present_rects > 0 {
-            let prev_frames_damage_rect = if let Some(partial_present) = self.compositor_config.partial_present() {
+            let prev_frames_damage_rect = if let Some(..) = self.compositor_config.partial_present() {
                 self.buffer_damage_tracker
-                    .get_damage_rect(partial_present.get_buffer_age())
+                    .get_damage_rect(buffer_age)
                     .or_else(|| Some(DeviceRect::from_size(draw_target.dimensions().to_f32())))
             } else {
                 None
@@ -6081,6 +6090,7 @@ impl Renderer {
         &mut self,
         frame: &mut Frame,
         device_size: Option<DeviceIntSize>,
+        buffer_age: usize,
         results: &mut RenderResults,
     ) {
         profile_scope!("draw_frame");
@@ -6211,6 +6221,7 @@ impl Renderer {
                                     draw_target,
                                     &projection,
                                     results,
+                                    buffer_age,
                                     max_partial_present_rects,
                                     draw_previous_partial_present_regions,
                                 );

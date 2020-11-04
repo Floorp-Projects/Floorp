@@ -289,7 +289,7 @@ impl Window {
         api.send_transaction(self.document_id, txn);
 
         renderer.update();
-        renderer.render(device_size).unwrap();
+        renderer.render(device_size, 0).unwrap();
         context.swap_buffers().ok();
 
         self.context = Some(unsafe { context.make_not_current().unwrap() });
