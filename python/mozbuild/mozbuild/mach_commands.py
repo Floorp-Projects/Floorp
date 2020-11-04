@@ -1115,6 +1115,9 @@ def _get_desktop_run_parser():
     )
     group.add_argument("--packaged", action="store_true", help="Run a packaged build.")
     group.add_argument(
+        "--app", help="Path to executable to run (default: output of ./mach build)"
+    )
+    group.add_argument(
         "--remote",
         "-r",
         action="store_true",
@@ -1418,6 +1421,7 @@ class RunProgram(MachCommandBase):
         self,
         params,
         packaged,
+        app,
         remote,
         background,
         noprofile,
@@ -1441,7 +1445,7 @@ class RunProgram(MachCommandBase):
             if packaged:
                 binpath = self.get_binary_path(where="staged-package")
             else:
-                binpath = self.get_binary_path("app")
+                binpath = app or self.get_binary_path("app")
         except BinaryNotFoundException as e:
             self.log(logging.ERROR, "run", {"error": str(e)}, "ERROR: {error}")
             if packaged:
