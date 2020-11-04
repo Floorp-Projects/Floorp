@@ -171,6 +171,46 @@ add_task(async function testOnlyShowOtherFolderInBookmarksToolbar() {
   testIsOtherBookmarksHidden(false);
 });
 
+// Test that the menu popup updates when menu items are deleted from it while
+// it's open.
+add_task(async function testDeletingMenuItems() {
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [[BOOKMARKS_H2_2020_PREF, true]],
+  });
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: bookmarksInfo,
+  });
+
+  await openMenuPopup("#OtherBookmarksPopup", "#OtherBookmarks");
+  testNumberOfMenuPopupChildren("#OtherBookmarksPopup", 3);
+
+  info("Open context menu for popup.");
+  let placesContext = document.getElementById("placesContext");
+  let popupEventPromise = BrowserTestUtils.waitForPopupEvent(
+    placesContext,
+    "shown"
+  );
+  let menuitem = document.querySelector("#OtherBookmarksPopup menuitem");
+  EventUtils.synthesizeMouseAtCenter(menuitem, { type: "contextmenu" });
+  await popupEventPromise;
+
+  info("Delete bookmark menu item from popup.");
+  let deleteMenuItem = document.getElementById("placesContext_delete");
+  EventUtils.synthesizeMouseAtCenter(deleteMenuItem, {});
+
+  await TestUtils.waitForCondition(() => {
+    let popup = document.querySelector("#OtherBookmarksPopup");
+    let items = popup.querySelectorAll("menuitem");
+    return items.length === 2;
+  }, "Failed to delete bookmark menuitem. Expected 2 menu items after deletion.");
+  ok(true, "Menu item was removed from the popup.");
+  await closeMenuPopup("#OtherBookmarksPopup");
+});
+
 /**
  * Tests whether or not the "Other Bookmarks" folder is visible.
  */
