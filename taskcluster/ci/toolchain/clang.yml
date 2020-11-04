@@ -90,7 +90,7 @@ linux64-clang-11-mingw-x86:
             - mingw-w64
             - libunwind
             - llvm-mingw
-            - gcc-9.1.0
+            - gcc-9.3.0
         toolchain:
             - linux64-gcc-7
             - linux64-binutils
@@ -115,7 +115,7 @@ linux64-clang-11-mingw-x64:
             - mingw-w64
             - libunwind
             - llvm-mingw
-            - gcc-9.1.0
+            - gcc-9.3.0
         toolchain:
             - linux64-gcc-7
             - linux64-binutils
