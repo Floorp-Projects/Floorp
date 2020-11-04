@@ -63,6 +63,5 @@ class SessionFeature(
         // Once we fully migrated to BrowserStore we may be able to get rid of the need for cleanup().
         // See https://github.com/mozilla-mobile/android-components/issues/7657
         presenter.stop()
-        engineView.release()
     }
 }

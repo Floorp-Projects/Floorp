@@ -51,6 +51,7 @@ internal class EngineViewPresenter(
      */
     fun stop() {
         scope?.cancel()
+        engineView.release()
     }
 
     private fun onTabToRender(tab: SessionState?) {

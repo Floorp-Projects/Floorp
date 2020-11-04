@@ -327,6 +327,30 @@ class SessionFeatureTest {
         }
     }
 
+    @Test
+    fun `stop releases engine view`() {
+        val store = prepareStore()
+
+        val actualView: View = mock()
+        val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
+        val engineSession: EngineSession = mock()
+        store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
+
+        val feature = SessionFeature(store, mock(), view, tabId = "D")
+        verify(view, never()).render(any())
+        feature.start()
+
+        testDispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(view).render(engineSession)
+
+        feature.stop()
+        verify(view).release()
+    }
+
     private fun prepareStore(): BrowserStore = BrowserStore(
         BrowserState(
             tabs = listOf(
