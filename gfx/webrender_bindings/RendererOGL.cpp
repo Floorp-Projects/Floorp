@@ -174,7 +174,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   auto size = mCompositor->GetBufferSize();
-  auto bufferAge = mCompositor->GetBufferAge();
 
   wr_renderer_update(mRenderer);
 
@@ -189,8 +188,8 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   nsTArray<DeviceIntRect> dirtyRects;
-  if (!wr_renderer_render(mRenderer, size.width, size.height, bufferAge,
-                          aOutStats, &dirtyRects)) {
+  if (!wr_renderer_render(mRenderer, size.width, size.height, aOutStats,
+                          &dirtyRects)) {
     mCompositor->CancelFrame();
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);

@@ -125,6 +125,12 @@ void wr_compositor_unmap_tile(void* aCompositor) {
   compositor->UnmapTile();
 }
 
+size_t wr_partial_present_compositor_get_buffer_age(const void* aCompositor) {
+  const RenderCompositor* compositor =
+      static_cast<const RenderCompositor*>(aCompositor);
+  return compositor->GetBufferAge();
+}
+
 void wr_partial_present_compositor_set_buffer_damage_region(
     void* aCompositor, const wr::DeviceIntRect* aRects, size_t aNumRects) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
