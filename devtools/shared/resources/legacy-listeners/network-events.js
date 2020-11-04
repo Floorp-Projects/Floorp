@@ -128,6 +128,7 @@ module.exports = async function({
         break;
       case "securityInfo":
         resourceUpdates.securityState = packet.state;
+        resourceUpdates.isRacing = packet.isRacing;
         break;
       case "responseCache":
         resourceUpdates.response = Object.assign({}, resource.response, {
