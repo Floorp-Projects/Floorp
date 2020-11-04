@@ -18,12 +18,6 @@ class LazyMonitoredTest {
     }
 
     @Test
-    fun `WHEN using the convenience function THEN it returns a lazy monitored`() {
-        val actual = lazyMonitored { }
-        assertEquals(LazyMonitored::class, actual::class)
-    }
-
-    @Test
     fun `WHEN accessing a lazy monitored THEN it returns the initializer value`() {
         val actual by lazyMonitored { 4 }
         assertEquals(4, actual)

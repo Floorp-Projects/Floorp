@@ -20,14 +20,14 @@ object ComponentInitCount {
  * A convenience function for setting the [LazyMonitored] property delegate, which wraps
  * [lazy] to add performance monitoring.
  */
-fun <T> lazyMonitored(initializer: () -> T) = LazyMonitored(initializer)
+fun <T> lazyMonitored(initializer: () -> T): Lazy<T> = LazyMonitored(initializer)
 
 /**
  * A wrapper around the [lazy] property delegate to monitor for performance related issues.
  * For example, we can count the number of components initialized to see how the number of
  * components initialized on start up impacts start up time.
  */
-class LazyMonitored<T>(initializer: () -> T) : Lazy<T> {
+private class LazyMonitored<T>(initializer: () -> T) : Lazy<T> {
     // Lazy is thread safe.
     private val lazyValue = lazy {
         // We're unlikely to have 4 billion components so we don't handle overflow.
