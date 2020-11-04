@@ -676,7 +676,6 @@ input[type="file"] {
 input[type="file"] > label {
   display: inline-block;
   min-inline-size: 12em;
-  padding-inline-start: 5px;
   text-align: match-parent;
 
   color: unset;
@@ -692,6 +691,7 @@ input[type="file"] > label {
   font-size: unset;
   letter-spacing: unset;
   cursor: unset;
+  margin-inline-end: 5px;
 }
 
  /*
