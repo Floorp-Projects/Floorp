@@ -10,9 +10,8 @@ const { TargetList } = require("devtools/shared/resources/target-list");
 const FISSION_TEST_URL = URL_ROOT_SSL + "/fission_document.html";
 
 add_task(async function() {
-  // Enabled fission's prefs as the TargetList is almost disabled without it
+  // Enabled fission prefs
   await pushPref("devtools.browsertoolbox.fission", true);
-  await pushPref("devtools.contenttoolbox.fission", true);
   // Disable the preloaded process as it gets created lazily and may interfere
   // with process count assertions
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

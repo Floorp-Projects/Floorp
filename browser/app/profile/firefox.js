@@ -2090,13 +2090,6 @@ pref("devtools.browsertoolbox.fission", true);
 pref("devtools.browsertoolbox.fission", false);
 #endif
 
-// The fission pref for enabling Fission frame debugging directly from the
-// regular web/content toolbox.
-// When set to true, the toolbox will start showing content from remote frames
-// if (and only if) fission.autostart is also set to true.
-// When set to false, the toolbox should not show content from remote frames.
-pref("devtools.contenttoolbox.fission", true);
-
 // This pref is also related to fission, but not only. It allows the toolbox
 // to stay open even if the debugged tab switches to another process.
 // It can happen between two documents, one running in the parent process like
