@@ -354,34 +354,31 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("The input result should be HANDLED_CONTENT in iframe_100_percent_height_scrollable.html",
                    value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
 
-        // Below cases don't work yet without event handlers
-        if (withEventHandler) {
-            // The content height is greater than "screen height - the dynamic toolbar height".
-            setupTouchEventDocument(ROOT_98VH_HTML_PATH, withEventHandler)
-            value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-            assertThat("The input result should be HANDLED in root_98vh.html",
-                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+        // The content height is greater than "screen height - the dynamic toolbar height".
+        setupTouchEventDocument(ROOT_98VH_HTML_PATH, withEventHandler)
+        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        assertThat("The input result should be HANDLED in root_98vh.html",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
 
-            // The content height is equal to "screen height".
-            setupTouchEventDocument(ROOT_100VH_HTML_PATH, withEventHandler)
-            value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-            assertThat("The input result should be HANDLED in root_100vh.html",
-                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+        // The content height is equal to "screen height".
+        setupTouchEventDocument(ROOT_100VH_HTML_PATH, withEventHandler)
+        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        assertThat("The input result should be HANDLED in root_100vh.html",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
 
-            // There is a 98vh iframe which is not scrollable.
-            setupTouchEventDocument(IFRAME_98VH_NO_SCROLLABLE_HTML_PATH, withEventHandler)
-            value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-            // The input result should NOT be handled in the iframe content.
-            assertThat("The input result should be HANDLED in iframe_98vh_no_scrollable.html",
-                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
+        // There is a 98vh iframe which is not scrollable.
+        setupTouchEventDocument(IFRAME_98VH_NO_SCROLLABLE_HTML_PATH, withEventHandler)
+        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        // The input result should NOT be handled in the iframe content.
+        assertThat("The input result should be HANDLED in iframe_98vh_no_scrollable.html",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
 
-            // There is a 98vh iframe which is scrollable.
-            setupTouchEventDocument(IFRAME_98VH_SCROLLABLE_HTML_PATH, withEventHandler)
-            value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-            // The input result should be handled in the iframe content initially.
-            assertThat("The input result should be HANDLED_CONTENT initially in iframe_98vh_scrollable.html",
-                       value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
-        }
+        // There is a 98vh iframe which is scrollable.
+        setupTouchEventDocument(IFRAME_98VH_SCROLLABLE_HTML_PATH, withEventHandler)
+        value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        // The input result should be handled in the iframe content initially.
+        assertThat("The input result should be HANDLED_CONTENT initially in iframe_98vh_scrollable.html",
+                   value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
 
         // The following test doesn't work either with/without event handlers.
         if (false) {

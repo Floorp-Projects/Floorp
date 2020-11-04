@@ -178,6 +178,11 @@ nsEventStatus InputQueue::ReceiveTouchInput(
       INPQ_LOG("dropping event due to block %p being in slop\n", block);
       result = nsEventStatus_eConsumeNoDefault;
     } else {
+      // FIXME: Even if the event is consumed in a non-root APZC, if scroll
+      // positions in all relevant APZCs are at the bottom edge and if there are
+      // contents covered by the dynamic toolbar, we need to handle the event as
+      // if it's consumed in the root APZC so that GeckoView can tel the
+      // dynamic toolbar needs to move.
       result = nsEventStatus_eConsumeDoDefault;
     }
   } else if (block->UpdateSlopState(aEvent, false)) {
