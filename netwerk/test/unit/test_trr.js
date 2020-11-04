@@ -556,6 +556,19 @@ add_task(async function test7() {
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=::ffff:192.168.0.1`
+  );
+  [, , inStatus] = await new DNSListener(
+    "rfc1918-ipv6.example.com",
+    undefined,
+    false
+  );
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
 });
 
 // verify RFC1918 address from the server is fine when told so
@@ -568,6 +581,11 @@ add_task(async function test8() {
   );
   Services.prefs.setBoolPref("network.trr.allow-rfc1918", true);
   await new DNSListener("rfc1918.example.com", "192.168.0.1");
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=::ffff:192.168.0.1`
+  );
+  await new DNSListener("rfc1918-ipv6.example.com", "::ffff:192.168.0.1");
 });
 
 // use GET and disable ECS (makes a larger request)
