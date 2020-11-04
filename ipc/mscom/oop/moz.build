@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
 ]
 
 OS_LIBS += [
+    "ktmw32",
     "ole32",
     "oleaut32",
     "shlwapi",
