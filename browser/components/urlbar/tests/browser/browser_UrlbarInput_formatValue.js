@@ -73,8 +73,8 @@ add_task(function() {
   testVal("<user:pass@sub1.sub2.sub3.>mozilla.org");
   testVal("<user:pass@>mozilla.org");
 
-  testVal("<https://>mozilla.org<   >");
-  testVal("mozilla.org<   >");
+  testVal("https://mozilla.org   ", "<https://>mozilla.org");
+  testVal("mozilla.org   ", "mozilla.org");
 
   testVal("<https://>mozilla.org</file.ext>");
   testVal("<https://>mozilla.org</sub/file.ext>");
@@ -82,19 +82,19 @@ add_task(function() {
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar>");
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
-  testVal("foo.bar<?q=test>");
-  testVal("foo.bar<#mozilla.org>");
-  testVal("foo.bar<?somewhere.mozilla.org>");
-  testVal("foo.bar<?@mozilla.org>");
-  testVal("foo.bar<#x@mozilla.org>");
-  testVal("foo.bar<#@x@mozilla.org>");
-  testVal("foo.bar<?x@mozilla.org>");
-  testVal("foo.bar<?@x@mozilla.org>");
-  testVal("<foo.bar@x@>mozilla.org");
-  testVal("<foo.bar@:baz@>mozilla.org");
-  testVal("<foo.bar:@baz@>mozilla.org");
-  testVal("<foo.bar@:ba:z@>mozilla.org");
-  testVal("<foo.:bar:@baz@>mozilla.org");
+  testVal("foo.bar?q=test", "foo.bar</?q=test>");
+  testVal("foo.bar#mozilla.org", "foo.bar</#mozilla.org>");
+  testVal("foo.bar?somewhere.mozilla.org", "foo.bar</?somewhere.mozilla.org>");
+  testVal("foo.bar?@mozilla.org", "foo.bar</?@mozilla.org>");
+  testVal("foo.bar#x@mozilla.org", "foo.bar</#x@mozilla.org>");
+  testVal("foo.bar#@x@mozilla.org", "foo.bar</#@x@mozilla.org>");
+  testVal("foo.bar?x@mozilla.org", "foo.bar</?x@mozilla.org>");
+  testVal("foo.bar?@x@mozilla.org", "foo.bar</?@x@mozilla.org>");
+  testVal("foo.bar@x@mozilla.org", "<foo.bar%40x@>mozilla.org");
+  testVal("foo.bar@:baz@mozilla.org", "<foo.bar%40:baz@>mozilla.org");
+  testVal("foo.bar:@baz@mozilla.org", "<foo.bar:%40baz@>mozilla.org");
+  testVal("foo.bar@:ba:z@mozilla.org", "<foo.bar%40:ba%3Az@>mozilla.org");
+  testVal("foo.:bar:@baz@mozilla.org", "<foo.:bar%3A%40baz@>mozilla.org");
   testVal(
     "foopy:\\blah@somewhere.com//whatever/",
     "foopy</blah@somewhere.com//whatever/>"
@@ -105,37 +105,48 @@ add_task(function() {
   testVal("localhost<:666/file.ext>");
 
   const IPs = [
-    "192.168.1.1",
-    "[::]",
-    "[::1]",
-    "[1::]",
-    "[::]",
-    "[::1]",
-    "[1::]",
-    "[1:2:3:4:5:6:7::]",
-    "[::1:2:3:4:5:6:7]",
-    "[1:2:a:B:c:D:e:F]",
-    "[1::8]",
-    "[1:2::8]",
-    "[fe80::222:19ff:fe11:8c76]",
-    "[0000:0123:4567:89AB:CDEF:abcd:ef00:0000]",
-    "[::192.168.1.1]",
-    "[1::0.0.0.0]",
-    "[1:2::255.255.255.255]",
-    "[1:2:3::255.255.255.255]",
-    "[1:2:3:4::255.255.255.255]",
-    "[1:2:3:4:5::255.255.255.255]",
-    "[1:2:3:4:5:6:255.255.255.255]",
+    ["192.168.1.1"],
+    ["[::]"],
+    ["[::1]"],
+    ["[1::]"],
+    ["[::]"],
+    ["[::1]"],
+    ["[1::]"],
+    ["[1:2:3:4:5:6:7::]", "[1:2:3:4:5:6:7:0]"],
+    ["[::1:2:3:4:5:6:7]", "[0:1:2:3:4:5:6:7]"],
+    ["[1:2:a:B:c:D:e:F]", "[1:2:a:b:c:d:e:f]"],
+    ["[1::8]"],
+    ["[1:2::8]"],
+    ["[fe80::222:19ff:fe11:8c76]"],
+    [
+      "[0000:0123:4567:89AB:CDEF:abcd:ef00:0000]",
+      "[0:123:4567:89ab:cdef:abcd:ef00:0]",
+    ],
+    ["[::192.168.1.1]", "[::c0a8:101]"],
+    ["[1::0.0.0.0]", "[1::]"],
+    ["[1:2::255.255.255.255]", "[1:2::ffff:ffff]"],
+    ["[1:2:3::255.255.255.255]", "[1:2:3::ffff:ffff]"],
+    ["[1:2:3:4::255.255.255.255]", "[1:2:3:4::ffff:ffff]"],
+    ["[1:2:3:4:5::255.255.255.255]", "[1:2:3:4:5:0:ffff:ffff]"],
+    ["[1:2:3:4:5:6:255.255.255.255]", "[1:2:3:4:5:6:ffff:ffff]"],
   ];
-  IPs.forEach(function(IP) {
-    testVal(IP);
-    testVal(IP + "</file.ext>");
-    testVal(IP + "<:666/file.ext>");
-    testVal("<https://>" + IP);
-    testVal(`<https://>${IP}</file.ext>`);
-    testVal(`<https://user:pass@>${IP}<:666/file.ext>`);
-    testVal(`<user:pass@>${IP}<:666/file.ext>`);
-    testVal(`user:\\pass@${IP}/`, `user</pass@${IP}/>`);
+  IPs.forEach(function(IPMap) {
+    const input = IPMap[0];
+    const expected = IPMap.length == 2 ? IPMap[1] : input;
+    testVal(input, expected);
+    testVal(input + "/file.ext", expected + "</file.ext>");
+    testVal(input + ":666/file.ext", expected + "<:666/file.ext>");
+    testVal("https://" + input, "<https://>" + expected);
+    testVal(`https://${input}/file.ext`, `<https://>${expected}</file.ext>`);
+    testVal(
+      `https://user:pass@${input}:666/file.ext`,
+      `<https://user:pass@>${expected}<:666/file.ext>`
+    );
+    testVal(
+      `user:pass@${input}:666/file.ext`,
+      `<user:pass@>${expected}<:666/file.ext>`
+    );
+    testVal(`user</pass@${input}/>`);
   });
 
   testVal("mailto:admin@mozilla.org");
