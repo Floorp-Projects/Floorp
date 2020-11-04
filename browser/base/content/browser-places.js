@@ -1606,6 +1606,14 @@ var BookmarkingUI = {
       menuItem.dataset.visibilityEnum = visibilityEnum;
       menuItem.addEventListener("command", onViewToolbarCommand);
     });
+    let menuItemForNextStateFromKbShortcut =
+      gBookmarksToolbarVisibility == "never"
+        ? alwaysShowMenuItem
+        : alwaysHideMenuItem;
+    menuItemForNextStateFromKbShortcut.setAttribute(
+      "key",
+      "viewBookmarksToolbarKb"
+    );
 
     return menu;
   },

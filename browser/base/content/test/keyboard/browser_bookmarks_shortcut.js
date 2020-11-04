@@ -131,6 +131,18 @@ async function testIsBookmarksMenuItemStateChecked(expected) {
     `checked menuitem should be ${expected}`
   );
 
+  for (let menuitem of menuitems) {
+    if (menuitem.dataset.visibilityEnum == expected) {
+      ok(!menuitem.hasAttribute("key"), "dont show shortcut on current state");
+    } else {
+      is(
+        menuitem.hasAttribute("key"),
+        menuitem.dataset.visibilityEnum != "newtab",
+        "shortcut is on the menuitem opposite of the current state excluding newtab"
+      );
+    }
+  }
+
   await closeContextMenu(contextMenu);
 }
 
