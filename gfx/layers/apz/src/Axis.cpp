@@ -505,8 +505,19 @@ bool AxisY::CanScrollTo(Side aSide) const {
   }
 }
 
+bool AxisY::CanScrollDownwardsWithDynamicToolbar() const {
+  return GetCompositionLengthWithoutDynamicToolbar() == ParentLayerCoord(0)
+             ? CanScroll()
+             : GetPageLength() - GetCompositionLengthWithoutDynamicToolbar() >
+                   COORDINATE_EPSILON;
+}
+
 OverscrollBehavior AxisY::GetOverscrollBehavior() const {
   return GetScrollMetadata().GetOverscrollBehavior().mBehaviorY;
+}
+
+ParentLayerCoord AxisY::GetCompositionLengthWithoutDynamicToolbar() const {
+  return GetFrameMetrics().GetCompositionSizeWithoutDynamicToolbar().Height();
 }
 
 }  // namespace layers
