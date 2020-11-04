@@ -8573,6 +8573,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       isRootScrollFrame && presContext->IsRootContentDocumentCrossProcess();
   if (isRootContentDocRootScrollFrame) {
     UpdateCompositionBoundsForRCDRSF(frameBounds, presContext);
+    if (RefPtr<MobileViewportManager> MVM =
+            presContext->PresShell()->GetMobileViewportManager()) {
+      metrics.SetCompositionSizeWithoutDynamicToolbar(
+          MVM->GetCompositionSizeWithoutDynamicToolbar());
+    }
   }
 
   nsMargin sizes = ScrollbarAreaToExcludeFromCompositionBoundsFor(aScrollFrame);

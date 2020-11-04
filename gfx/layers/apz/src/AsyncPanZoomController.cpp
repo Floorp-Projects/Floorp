@@ -2202,6 +2202,13 @@ bool AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const {
   return false;
 }
 
+bool AsyncPanZoomController::CanScrollDownwardsWithDynamicToolbar() const {
+  MOZ_ASSERT(IsRootContent());
+
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return mY.CanScrollDownwardsWithDynamicToolbar();
+}
+
 bool AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
     bool aHonoursRoot) const {
   if (aHonoursRoot) {
@@ -4740,6 +4747,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     if (!Metrics().GetCompositionBounds().IsEqualEdges(
             aLayerMetrics.GetCompositionBounds())) {
       Metrics().SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
+      needToReclampScroll = true;
+    }
+
+    if (Metrics().IsRootContent() &&
+        Metrics().GetCompositionSizeWithoutDynamicToolbar() !=
+            aLayerMetrics.GetCompositionSizeWithoutDynamicToolbar()) {
+      Metrics().SetCompositionSizeWithoutDynamicToolbar(
+          aLayerMetrics.GetCompositionSizeWithoutDynamicToolbar());
       needToReclampScroll = true;
     }
     Metrics().SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());

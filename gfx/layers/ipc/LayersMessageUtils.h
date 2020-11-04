@@ -224,6 +224,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mVisualDestination);
     WriteParam(aMsg, aParam.mVisualScrollUpdateType);
     WriteParam(aMsg, aParam.mFixedLayerMargins);
+    WriteParam(aMsg, aParam.mCompositionSizeWithoutDynamicToolbar);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
   }
@@ -250,6 +251,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mVisualDestination) &&
             ReadParam(aMsg, aIter, &aResult->mVisualScrollUpdateType) &&
             ReadParam(aMsg, aIter, &aResult->mFixedLayerMargins) &&
+            ReadParam(aMsg, aIter,
+                      &aResult->mCompositionSizeWithoutDynamicToolbar) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,

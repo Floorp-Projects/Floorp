@@ -366,9 +366,11 @@ class AxisY : public Axis {
   ScreenPoint MakePoint(ScreenCoord aCoord) const override;
   const char* Name() const override;
   bool CanScrollTo(Side aSide) const;
+  bool CanScrollDownwardsWithDynamicToolbar() const;
 
  private:
   OverscrollBehavior GetOverscrollBehavior() const override;
+  ParentLayerCoord GetCompositionLengthWithoutDynamicToolbar() const;
 };
 
 }  // namespace layers
