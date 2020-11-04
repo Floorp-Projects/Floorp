@@ -77,7 +77,7 @@ static MediaDataEncoder::H264Specific GetCodecSpecific(
 
 WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
     : mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
-      mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)),
+      mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
       mFactory(new PEMFactory()),
@@ -101,7 +101,7 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
   if (!CreateEncoder(aCodecSettings)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  LOG("Init decode, mimeType %s, mode %s", mInfo.mMimeType.get(),
+  LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
       GetModeName(mMode));
   return InitEncoder() ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
@@ -140,7 +140,10 @@ bool WebrtcMediaDataEncoder::CreateEncoder(
       mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
       aCodecSettings->maxFramerate);
   mEncoder = mFactory->CreateEncoder(CreateEncoderParams(
-      mInfo, MediaDataEncoder::Usage::Realtime, mTaskQueue,
+      mInfo, MediaDataEncoder::Usage::Realtime,
+      MakeRefPtr<TaskQueue>(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
+          "WebrtcMediaDataEncoder::mEncoder"),
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
       mBitrateAdjuster.GetTargetBitrateBps(),
       GetCodecSpecific(aCodecSettings)));
