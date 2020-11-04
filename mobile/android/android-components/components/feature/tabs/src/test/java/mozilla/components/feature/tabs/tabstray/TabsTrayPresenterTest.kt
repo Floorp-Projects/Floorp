@@ -478,4 +478,6 @@ private class MockedTabsTray : TabsTray {
     override fun pauseObserver(observer: TabsTray.Observer) {}
 
     override fun resumeObserver(observer: TabsTray.Observer) {}
+
+    override fun isTabSelected(tabs: Tabs, position: Int): Boolean = false
 }

@@ -64,6 +64,11 @@ interface TabsTray : Observable<TabsTray.Observer> {
     fun onTabsChanged(position: Int, count: Int)
 
     /**
+     * Called when binding a new item to get if it should be shown as selected or not.
+     */
+    fun isTabSelected(tabs: Tabs, position: Int): Boolean
+
+    /**
      * Convenience method to cast the implementation of this interface to an Android View object.
      */
     fun asView(): View = this as View

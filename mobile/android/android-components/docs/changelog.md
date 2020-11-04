@@ -35,6 +35,12 @@ permalink: /changelog/
 * **browser-thumbnail**
   * Catch `IOException` that may be thrown when deleting thumbnails.
 
+* **browser-tabstray**
+  * ⚠️ **This is a breaking change**: Support temporary hiding if a tab is selected. For this you should use partial bindings with PAYLOAD_(DONT_)HIGHLIGHT_SELECTED_ITEM; override TabsAdapter#isTabSelected for new item bindings; override TabViewHolder#updateSelectedTabIndicator.
+
+* **concept-tabstray**:
+  * ⚠️ **This is a breaking change**: A new method - `isTabSelected` was added that exposes to clients an easy way to change what a "selected" tab means.
+
 # 68.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v67.0.0...v68.0.0)

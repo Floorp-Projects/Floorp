@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.DP
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
@@ -39,6 +40,18 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         styling: TabsTrayStyling,
         observable: Observable<TabsTray.Observer>
     )
+
+    /**
+     * Ask for a partial update of the current tab.
+     * Allows for overriding the current behavior and add or remove the 'selected tab' UI decorator.
+     *
+     * When implementing this do not call super.
+     */
+    open fun updateSelectedTabIndicator(showAsSelected: Boolean) {
+        // Not an abstract fun since not all clients of this library might be interested in this functionality.
+        // But throwing an exception if this is called without an actual implementation in clients.
+        throw UnsupportedOperationException("Method not yet implemented")
+    }
 }
 
 /**
@@ -48,13 +61,18 @@ class DefaultTabViewHolder(
     itemView: View,
     private val thumbnailLoader: ImageLoader? = null
 ) : TabViewHolder(itemView) {
-    private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
-    private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
-    private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
+    @VisibleForTesting
+    internal val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
+    @VisibleForTesting
+    internal val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
+    @VisibleForTesting
+    internal val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
     private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
 
     override var tab: Tab? = null
+    @VisibleForTesting
+    internal var styling: TabsTrayStyling? = null
 
     /**
      * Displays the data of the given session and notifies the given observable about events.
@@ -66,6 +84,7 @@ class DefaultTabViewHolder(
         observable: Observable<TabsTray.Observer>
     ) {
         this.tab = tab
+        this.styling = styling
 
         val title = if (tab.title.isNotEmpty()) {
             tab.title
@@ -84,15 +103,7 @@ class DefaultTabViewHolder(
             observable.notifyObservers { onTabClosed(tab) }
         }
 
-        if (isSelected) {
-            titleView.setTextColor(styling.selectedItemTextColor)
-            itemView.setBackgroundColor(styling.selectedItemBackgroundColor)
-            closeView.imageTintList = ColorStateList.valueOf(styling.selectedItemTextColor)
-        } else {
-            titleView.setTextColor(styling.itemTextColor)
-            itemView.setBackgroundColor(styling.itemBackgroundColor)
-            closeView.imageTintList = ColorStateList.valueOf(styling.itemTextColor)
-        }
+        updateSelectedTabIndicator(isSelected)
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
         if (thumbnailLoader != null && tab.thumbnail == null) {
@@ -106,6 +117,32 @@ class DefaultTabViewHolder(
         }
 
         iconView?.setImageBitmap(tab.icon)
+    }
+
+    override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
+        if (showAsSelected) {
+            showItemAsSelected()
+        } else {
+            showItemAsNotSelected()
+        }
+    }
+
+    @VisibleForTesting
+    internal fun showItemAsSelected() {
+        styling?.let { styling ->
+            titleView.setTextColor(styling.selectedItemTextColor)
+            itemView.setBackgroundColor(styling.selectedItemBackgroundColor)
+            closeView.imageTintList = ColorStateList.valueOf(styling.selectedItemTextColor)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun showItemAsNotSelected() {
+        styling?.let { styling ->
+            titleView.setTextColor(styling.itemTextColor)
+            itemView.setBackgroundColor(styling.itemBackgroundColor)
+            closeView.imageTintList = ColorStateList.valueOf(styling.itemTextColor)
+        }
     }
 
     companion object {

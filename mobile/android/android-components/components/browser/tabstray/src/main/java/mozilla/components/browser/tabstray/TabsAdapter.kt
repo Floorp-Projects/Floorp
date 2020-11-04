@@ -49,7 +49,28 @@ open class TabsAdapter(
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tabs = tabs ?: return
 
-        holder.bind(tabs.list[position], position == tabs.selectedIndex, styling, this)
+        holder.bind(tabs.list[position], isTabSelected(tabs, position), styling, this)
+    }
+
+    override fun onBindViewHolder(
+        holder: TabViewHolder,
+        position: Int,
+        payloads: List<Any>
+    ) {
+        tabs?.let { tabs ->
+            if (tabs.list.isEmpty()) return
+
+            if (payloads.isEmpty()) {
+                onBindViewHolder(holder, position)
+                return
+            }
+
+            if (payloads.contains(PAYLOAD_HIGHLIGHT_SELECTED_ITEM) && position == tabs.selectedIndex) {
+                holder.updateSelectedTabIndicator(true)
+            } else if (payloads.contains(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM) && position == tabs.selectedIndex) {
+                holder.updateSelectedTabIndicator(false)
+            }
+        }
     }
 
     override fun updateTabs(tabs: Tabs) {
@@ -65,4 +86,22 @@ open class TabsAdapter(
     override fun onTabsMoved(fromPosition: Int, toPosition: Int) = notifyItemMoved(fromPosition, toPosition)
 
     override fun onTabsChanged(position: Int, count: Int) = notifyItemRangeChanged(position, count)
+
+    override fun isTabSelected(tabs: Tabs, position: Int) = tabs.selectedIndex == position
+
+    companion object {
+        /**
+         * Payload used in onBindViewHolder for a partial update of the current view.
+         *
+         * Signals that the currently selected tab should be highlighted. This is the default behavior.
+         */
+        val PAYLOAD_HIGHLIGHT_SELECTED_ITEM: Int = R.id.payload_highlight_selected_item
+
+        /**
+         * Payload used in onBindViewHolder for a partial update of the current view.
+         *
+         * Signals that the currently selected tab should NOT be highlighted. No tabs would appear as highlighted.
+         */
+        val PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM: Int = R.id.payload_dont_highlight_selected_item
+    }
 }
