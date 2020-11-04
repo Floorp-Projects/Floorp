@@ -13,6 +13,8 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 
 trr_test_setup();
 registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.connectivity-service.nat64-prefix");
+  override.clearOverrides();
   trr_clear_prefs();
 });
 
@@ -114,6 +116,4 @@ add_task(async function test_add_nat64_prefix_to_trr() {
   );
 
   await trrServer.stop();
-
-  override.clearOverrides();
 });
