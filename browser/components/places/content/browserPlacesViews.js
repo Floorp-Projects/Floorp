@@ -1129,7 +1129,13 @@ PlacesToolbar.prototype = {
     if (aEvent.target != this._otherBookmarksPopup) {
       return;
     }
-    this._rebuildPopup(this._otherBookmarksPopup);
+
+    if (!this._otherBookmarksPopup._placesView) {
+      this._otherBookmarksPopup._placesView = new PlacesMenu(
+        aEvent,
+        "place:parent=" + PlacesUtils.bookmarks.unfiledGuid
+      );
+    }
   },
 
   handleEvent: function PT_handleEvent(aEvent) {
