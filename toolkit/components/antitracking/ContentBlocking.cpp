@@ -766,7 +766,6 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
   }
 
   BrowsingContext* top = aParentContext->Top();
-  uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(top);
 
   // Propagate the storage permission to same-origin frames in the same tab.
   top->PreOrderWalk([&](BrowsingContext* aContext) {
@@ -775,13 +774,6 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
       nsAutoCString origin;
       Unused << AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
           aContext, nullptr, origin);
-
-      // Permission is only synced to first-level iframes.
-      if ((aParentContext != aContext) &&
-          (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-           !AntiTrackingUtils::IsFirstLevelSubContext(aContext))) {
-        return;
-      }
 
       if (aTrackingOrigin == origin) {
         nsCOMPtr<nsPIDOMWindowInner> inner =
@@ -805,8 +797,6 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
 void ContentBlocking::UpdateAllowAccessOnParentProcess(
     BrowsingContext* aParentContext, const nsACString& aTrackingOrigin) {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aParentContext);
 
   nsAutoCString topKey;
   nsCOMPtr<nsIPrincipal> topPrincipal =
@@ -849,11 +839,6 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
     topContext->PreOrderWalk([&](BrowsingContext* aContext) {
       WindowGlobalParent* wgp = aContext->Canonical()->GetCurrentWindowGlobal();
       if (!wgp) {
-        return;
-      }
-
-      if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-          !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
         return;
       }
 
@@ -1015,16 +1000,6 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
   // Make sure storage access isn't disabled
   if (doc && (doc->StorageAccessSandboxed())) {
     LOG(("Our document is sandboxed"));
-    *aRejectedReason = blockedReason;
-    return false;
-  }
-
-  // We will only allow the storage access for the first-level iframe in cookie
-  // behavior BEHAVIOR_REJECT_TRACKER. We don't need to consider the top window
-  // here since we only get here if the window is not a top.
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-      !AntiTrackingUtils::IsFirstLevelSubContext(
-          aWindow->GetBrowsingContext())) {
     *aRejectedReason = blockedReason;
     return false;
   }
@@ -1211,16 +1186,6 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBC));
   if (!targetBC || NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to get the channel's target browsing context"));
-    return false;
-  }
-
-  // We will only allow the storage access for the channel of the first-level
-  // iframe or top-level sub-resource in cookie behavior
-  // BEHAVIOR_REJECT_TRACKER.
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-      !targetBC->IsTopContent() &&
-      !AntiTrackingUtils::IsFirstLevelSubContext(targetBC)) {
-    *aRejectedReason = blockedReason;
     return false;
   }
 
