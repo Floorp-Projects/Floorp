@@ -7177,20 +7177,24 @@ uint64_t nsContentUtils::GetInnerWindowID(nsILoadGroup* aLoadGroup) {
   return inner ? inner->WindowID() : 0;
 }
 
-nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI,
-                                                   nsCString& aHost) {
-  aHost.Truncate();
-  nsresult rv = aURI->GetHost(aHost);
-  if (NS_FAILED(rv)) {  // Some URIs do not have a host
-    return rv;
-  }
-
+static void MaybeFixIPv6Host(nsACString& aHost) {
   if (aHost.FindChar(':') != -1) {  // Escape IPv6 address
     MOZ_ASSERT(!aHost.Length() ||
                (aHost[0] != '[' && aHost[aHost.Length() - 1] != ']'));
     aHost.Insert('[', 0);
     aHost.Append(']');
   }
+}
+
+nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI,
+                                                   nsACString& aHost) {
+  aHost.Truncate();
+  nsresult rv = aURI->GetHost(aHost);
+  if (NS_FAILED(rv)) {  // Some URIs do not have a host
+    return rv;
+  }
+
+  MaybeFixIPv6Host(aHost);
 
   return NS_OK;
 }
@@ -7203,6 +7207,17 @@ nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI,
     return rv;
   }
   CopyUTF8toUTF16(hostname, aHost);
+  return NS_OK;
+}
+
+nsresult nsContentUtils::GetHostOrIPv6WithBrackets(nsIPrincipal* aPrincipal,
+                                                   nsACString& aHost) {
+  nsresult rv = aPrincipal->GetAsciiHost(aHost);
+  if (NS_FAILED(rv)) {  // Some URIs do not have a host
+    return rv;
+  }
+
+  MaybeFixIPv6Host(aHost);
   return NS_OK;
 }
 

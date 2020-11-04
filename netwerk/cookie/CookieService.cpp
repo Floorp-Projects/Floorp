@@ -301,7 +301,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
   }
 
   nsAutoCString hostFromURI;
-  rv = principal->GetAsciiHost(hostFromURI);
+  rv = nsContentUtils::GetHostOrIPv6WithBrackets(principal, hostFromURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -538,9 +538,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
       CookieCommons::GetCookieJarSettings(aChannel);
 
   nsAutoCString hostFromURI;
-  aHostURI->GetHost(hostFromURI);
-  rv = NormalizeHost(hostFromURI);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  nsContentUtils::GetHostOrIPv6WithBrackets(aHostURI, hostFromURI);
 
   nsAutoCString baseDomainFromURI;
   rv = CookieCommons::GetBaseDomainFromHost(mTLDService, hostFromURI,
@@ -860,7 +858,7 @@ void CookieService::GetCookiesForURI(
   nsresult rv = CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
                                              requireHostMatch);
   if (NS_SUCCEEDED(rv)) {
-    rv = aHostURI->GetAsciiHost(hostFromURI);
+    rv = nsContentUtils::GetHostOrIPv6WithBrackets(aHostURI, hostFromURI);
   }
   if (NS_SUCCEEDED(rv)) {
     rv = aHostURI->GetFilePath(pathFromURI);
@@ -1697,7 +1695,7 @@ bool CookieService::CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
 
   // get host from aHostURI
   nsAutoCString hostFromURI;
-  aHostURI->GetAsciiHost(hostFromURI);
+  nsContentUtils::GetHostOrIPv6WithBrackets(aHostURI, hostFromURI);
 
   // if a domain is given, check the host has permission
   if (!aCookieData.host().IsEmpty()) {

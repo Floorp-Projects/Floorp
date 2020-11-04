@@ -2809,7 +2809,9 @@ class nsContentUtils {
    * otherwise it just outputs the hostname in aHost.
    */
   static nsresult GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost);
-  static nsresult GetHostOrIPv6WithBrackets(nsIURI* aURI, nsCString& aHost);
+  static nsresult GetHostOrIPv6WithBrackets(nsIURI* aURI, nsACString& aHost);
+  static nsresult GetHostOrIPv6WithBrackets(nsIPrincipal* aPrincipal,
+                                            nsACString& aHost);
 
   /*
    * Call the given callback on all remote children of the given top-level
