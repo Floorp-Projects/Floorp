@@ -53,7 +53,7 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let tabBrowser = win.gBrowser.selectedBrowser;
   for (let url of ["about:robots", "about:mozilla", "about:config"]) {
-    BrowserTestUtils.loadURI(tabBrowser, url);
+    await BrowserTestUtils.loadURI(tabBrowser, url);
     await BrowserTestUtils.browserLoaded(tabBrowser, false, url);
   }
 

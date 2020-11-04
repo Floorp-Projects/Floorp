@@ -29,7 +29,7 @@ async function navigateTo(uri, tab, toolbox, extension) {
   const originalTabId = await getCurrentTabId(extension);
 
   const onSwitched = toolbox.targetList.once("switched-target");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
   await onSwitched;
 
   const currentTabId = await getCurrentTabId(extension);

@@ -74,7 +74,10 @@ add_task(async function notification_bar_removes_itself_on_navigation() {
       "Notification should be default browser"
     );
 
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://example.com");
+    await BrowserTestUtils.loadURI(
+      gBrowser.selectedBrowser,
+      "https://example.com"
+    );
 
     let notificationRemoved = await TestUtils.waitForCondition(
       () =>
@@ -105,7 +108,7 @@ add_task(async function notification_appears_on_first_navigation_to_homepage() {
         !gBrowser.getNotificationBox(tab.linkedBrowser).currentNotification,
       "a notification should not be shown on about:robots"
     );
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
+    await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
 
     let notification = await TestUtils.waitForCondition(
       () =>

@@ -403,7 +403,7 @@ add_task(async function refresh_menus_during_navigation() {
   elem = extension.getXULElementByMenuId("item2");
   is(elem, null, "menu item 2 should be hidden");
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE + "?2");
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE + "?2");
   await BrowserTestUtils.browserStopped(tab.linkedBrowser);
 
   await extension.callMenuApi("refresh");

@@ -157,7 +157,7 @@ add_task(async function save_worthy_tabs_nonremote_final() {
   ok(browser.isRemoteBrowser, "browser is remote");
 
   // Replace about:blank with a non-remote entry.
-  BrowserTestUtils.loadURI(browser, "about:robots");
+  await BrowserTestUtils.loadURI(browser, "about:robots");
   ok(!browser.isRemoteBrowser, "browser is not remote anymore");
 
   // Switching remoteness caused a SessionRestore to begin, moving over history

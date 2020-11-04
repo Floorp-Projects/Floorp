@@ -58,6 +58,6 @@ async function testLoadInWindow(options, url) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser
   );
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
   await loadedPromise;
 }

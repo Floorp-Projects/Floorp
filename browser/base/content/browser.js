@@ -1537,31 +1537,32 @@ function _loadURI(browser, uri, params = {}) {
     throw new Error("Cannot load with mismatched userContextId");
   }
 
-  // Attempt to perform URI fixup to see if we can handle this URI in chrome.
-  try {
-    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
-    if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-    }
-    if (loadFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
-      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
-    }
-    if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-    }
-
-    let uriObject = Services.uriFixup.getFixupURIInfo(uri, fixupFlags)
-      .preferredURI;
-    if (uriObject && handleUriInChrome(browser, uriObject)) {
-      // If we've handled the URI in Chrome, then just return here.
-      return;
-    }
-  } catch (e) {
-    // getFixupURIInfo may throw. Gracefully recover and try to load the URI normally.
+  let {
+    uriObject,
+    requiredRemoteType,
+    mustChangeProcess,
+    newFrameloader,
+  } = E10SUtils.shouldLoadURIInBrowser(
+    browser,
+    uri,
+    gMultiProcessBrowser,
+    gFissionBrowser,
+    loadFlags
+  );
+  if (uriObject && handleUriInChrome(browser, uriObject)) {
+    // If we've handled the URI in Chrome then just return here.
+    return;
+  }
+  if (newFrameloader) {
+    // If a new frameloader is needed for process reselection because this used
+    // to be a preloaded browser, clear the preloaded state now.
+    browser.removeAttribute("preloadedState");
   }
 
-  // XXX(nika): Is `browser.isNavigating` necessary anymore?
-  browser.isNavigating = true;
+  // !requiredRemoteType means we're loading in the parent/this process.
+  if (!requiredRemoteType) {
+    browser.isNavigating = true;
+  }
   let loadURIOptions = {
     triggeringPrincipal,
     csp,
@@ -1571,9 +1572,96 @@ function _loadURI(browser, uri, params = {}) {
     hasValidUserGestureActivation,
   };
   try {
-    browser.webNavigation.loadURI(uri, loadURIOptions);
+    if (!mustChangeProcess) {
+      browser.webNavigation.loadURI(uri, loadURIOptions);
+    } else {
+      // Check if the current browser is allowed to unload.
+      let { permitUnload } = browser.permitUnload();
+      if (!permitUnload) {
+        return;
+      }
+
+      if (postData) {
+        postData = serializeInputStream(postData);
+      }
+
+      let loadParams = {
+        uri,
+        triggeringPrincipal: triggeringPrincipal
+          ? E10SUtils.serializePrincipal(triggeringPrincipal)
+          : null,
+        flags: loadFlags,
+        referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
+        remoteType: requiredRemoteType,
+        postData,
+        newFrameloader,
+        csp: csp ? gSerializationHelper.serializeToString(csp) : null,
+      };
+
+      if (userContextId) {
+        loadParams.userContextId = userContextId;
+      }
+
+      if (browser.webNavigation.maybeCancelContentJSExecution) {
+        let cancelContentJSEpoch = browser.webNavigation.maybeCancelContentJSExecution(
+          Ci.nsIRemoteTab.NAVIGATE_URL,
+          { uri: uriObject }
+        );
+        loadParams.cancelContentJSEpoch = cancelContentJSEpoch;
+      }
+      LoadInOtherProcess(browser, loadParams);
+    }
+  } catch (e) {
+    // If anything goes wrong when switching remoteness, just switch remoteness
+    // manually and load the URI.
+    // We might lose history that way but at least the browser loaded a page.
+    // This might be necessary if SessionStore wasn't initialized yet i.e.
+    // when the homepage is a non-remote page.
+    if (mustChangeProcess) {
+      Cu.reportError(e);
+      gBrowser.updateBrowserRemotenessByURL(browser, uri);
+
+      browser.webNavigation.loadURI(uri, loadURIOptions);
+    } else {
+      throw e;
+    }
   } finally {
-    browser.isNavigating = false;
+    if (!requiredRemoteType) {
+      browser.isNavigating = false;
+    }
+  }
+}
+
+// Starts a new load in the browser first switching the browser to the correct
+// process
+function LoadInOtherProcess(browser, loadOptions, historyIndex = -1) {
+  let tab = gBrowser.getTabForBrowser(browser);
+  SessionStore.navigateAndRestore(tab, loadOptions, historyIndex);
+}
+
+// Called when a docshell has attempted to load a page in an incorrect process.
+// This function is responsible for loading the page in the correct process.
+function RedirectLoad(browser, data) {
+  if (browser.getAttribute("preloadedState") === "consumed") {
+    browser.removeAttribute("preloadedState");
+    data.loadOptions.newFrameloader = true;
+  }
+
+  // We should only start the redirection if the browser window has finished
+  // starting up. Otherwise, we should wait until the startup is done.
+  if (gBrowserInit.delayedStartupFinished) {
+    LoadInOtherProcess(browser, data.loadOptions, data.historyIndex);
+  } else {
+    let delayedStartupFinished = (subject, topic) => {
+      if (topic == "browser-delayed-startup-finished" && subject == window) {
+        Services.obs.removeObserver(delayedStartupFinished, topic);
+        LoadInOtherProcess(browser, data.loadOptions, data.historyIndex);
+      }
+    };
+    Services.obs.addObserver(
+      delayedStartupFinished,
+      "browser-delayed-startup-finished"
+    );
   }
 }
 
@@ -5101,6 +5189,50 @@ var XULBrowserWindow = {
     );
   },
 
+  // Check whether this URI should load in the current process
+  shouldLoadURI(
+    aDocShell,
+    aURI,
+    aReferrerInfo,
+    aHasPostData,
+    aTriggeringPrincipal,
+    aCsp
+  ) {
+    if (!gMultiProcessBrowser) {
+      return true;
+    }
+
+    let browser = aDocShell
+      .QueryInterface(Ci.nsIDocShellTreeItem)
+      .sameTypeRootTreeItem.QueryInterface(Ci.nsIDocShell).chromeEventHandler;
+
+    // Ignore loads that aren't in the main tabbrowser
+    if (
+      browser.localName != "browser" ||
+      !browser.getTabBrowser ||
+      browser.getTabBrowser() != gBrowser
+    ) {
+      return true;
+    }
+
+    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
+      // XXX: Do we want to complain if we have post data but are still
+      // redirecting the load? Perhaps a telemetry probe? Theoretically we
+      // shouldn't do this, as it throws out data. See bug 1348018.
+      E10SUtils.redirectLoad(
+        aDocShell,
+        aURI,
+        aReferrerInfo,
+        aTriggeringPrincipal,
+        null,
+        aCsp
+      );
+      return false;
+    }
+
+    return true;
+  },
+
   onProgressChange(
     aWebProgress,
     aRequest,
@@ -6117,9 +6249,9 @@ nsBrowserAccess.prototype = {
         // If we have an opener, that means that the caller is expecting access
         // to the nsIDOMWindow of the opened tab right away. For e10s windows,
         // this means forcing the newly opened browser to be non-remote so that
-        // we can hand back the nsIDOMWindow. DocumentLoadListener will do the
-        // job of shuttling off the newly opened browser to run in the right
-        // process once it starts loading a URI.
+        // we can hand back the nsIDOMWindow. The XULBrowserWindow.shouldLoadURI
+        // will do the job of shuttling off the newly opened browser to run in
+        // the right process once it starts loading a URI.
         let forceNotRemote = aOpenWindowInfo && !aOpenWindowInfo.isRemote;
         let userContextId = aOpenWindowInfo
           ? aOpenWindowInfo.originAttributes.userContextId

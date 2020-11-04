@@ -18,15 +18,10 @@
 
 struct PRLibrary;
 
+/* Note: this class relies on static initialization. */
 class nsCUPSShim {
  public:
-#ifdef CUPS_SHIM_RUNTIME_LINK
-  nsCUPSShim();
-  bool InitOkay() { return mInitOkay; }
-#else
-  nsCUPSShim() = default;
-  bool InitOkay() { return true; }
-#endif
+  bool EnsureInitialized() { return mInited || Init(); }
 
   /**
    * Function pointers for supported functions. These are only
@@ -65,7 +60,7 @@ class nsCUPSShim {
 
 #ifdef CUPS_SHIM_RUNTIME_LINK
   // Define a single field which holds a function pointer.
-#  define CUPS_SHIM_FUNC_DECL(X) decltype(::X)* X = nullptr;
+#  define CUPS_SHIM_FUNC_DECL(X) decltype(::X)* X;
 #else
   // Define a static constexpr function pointer. GCC can sometimes optimize
   // away the pointer fetch for this.
@@ -75,10 +70,25 @@ class nsCUPSShim {
   CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_FUNC_DECL)
 #undef CUPS_SHIM_FUNC_DECL
 
-#ifdef CUPS_SHIM_RUNTIME_LINK
  private:
-  bool mInitOkay = false;
-  PRLibrary* mCupsLib = nullptr;
+  /**
+   * Initialize this object. Attempt to load the CUPS shared
+   * library and find function pointers for the supported
+   * functions (see below).
+   * @return false if the shared library could not be loaded, or if
+   *                  any of the functions could not be found.
+   *         true  for successful initialization.
+   */
+  bool Init();
+
+  // We can try to get initialized from multiple threads at the same time, this
+  // boolean and the mutex below make it safe.
+  //
+  // The boolean can't be Relaxed, because it guards our function pointers.
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> mInited{false};
+#ifdef CUPS_SHIM_RUNTIME_LINK
+  mozilla::OffTheBooksMutex mInitMutex{"nsCUPSShim::mInitMutex"};
+  PRLibrary* mCupsLib;
 #endif
 };
 

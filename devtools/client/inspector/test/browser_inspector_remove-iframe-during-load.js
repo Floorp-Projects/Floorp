@@ -17,7 +17,7 @@ add_task(async function() {
   // See next comments.
   const browser = tab.linkedBrowser;
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(browser);
-  BrowserTestUtils.loadURI(browser, TEST_URL);
+  await BrowserTestUtils.loadURI(browser, TEST_URL);
   await onBrowserLoaded;
 
   // We do not want to wait for the inspector to be fully ready before testing

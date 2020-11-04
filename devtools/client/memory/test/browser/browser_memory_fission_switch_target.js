@@ -19,7 +19,7 @@ add_task(async () => {
   const { gToolbox: toolbox, gStore: store } = panel.panelWin;
 
   info("Open a page running on the content process");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, CONTENT_PROCESS_URI);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, CONTENT_PROCESS_URI);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await takeAndWaitSnapshot(
     panel.panelWin,
@@ -80,7 +80,7 @@ function getNodeNames(snapshot) {
 async function navigateTo(uri, toolbox, tab) {
   const onSwitched = toolbox.targetList.once("switched-target");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
   await onLoaded;
   await onSwitched;
   ok(true, "switched-target event is fired");

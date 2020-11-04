@@ -57,7 +57,7 @@ add_task(async function() {
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     topTab.linkedBrowser
   );
-  BrowserTestUtils.loadURI(topTab.linkedBrowser, TOP_EMPTY_PAGE);
+  await BrowserTestUtils.loadURI(topTab.linkedBrowser, TOP_EMPTY_PAGE);
   await browserLoadedPromise;
 
   // Create Iframe in the top-level page and verify its state.
@@ -93,7 +93,7 @@ add_task(async function() {
 
   info("Loading the SW unregister page: " + SW_REGISTER_PAGE);
   browserLoadedPromise = BrowserTestUtils.browserLoaded(topTab.linkedBrowser);
-  BrowserTestUtils.loadURI(topTab.linkedBrowser, SW_REGISTER_PAGE);
+  await BrowserTestUtils.loadURI(topTab.linkedBrowser, SW_REGISTER_PAGE);
   await browserLoadedPromise;
 
   await SpecialPowers.spawn(topTab.linkedBrowser, [], async function() {

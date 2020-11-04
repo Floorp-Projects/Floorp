@@ -10,13 +10,7 @@
 #include "nsString.h"
 #include "prenv.h"
 
-// Use a local static to initialize the CUPS shim lazily, when it's needed.
-// This is used in order to avoid a global constructor.
-static nsCUPSShim& CupsShim() {
-  static nsCUPSShim sCupsShim;
-  return sCupsShim;
-}
-
+static nsCUPSShim sCupsShim;
 using PrinterInfo = nsPrinterListBase::PrinterInfo;
 
 /**
@@ -29,8 +23,8 @@ static void GetDisplayNameForPrinter(const cups_dest_t& aDest,
 // while GTK clients expect non-prettified names.
 // If you change this, please change NamedPrinter accordingly.
 #ifdef XP_MACOSX
-  const char* displayName = CupsShim().cupsGetOption(
-      "printer-info", aDest.num_options, aDest.options);
+  const char* displayName =
+      sCupsShim.cupsGetOption("printer-info", aDest.num_options, aDest.options);
   if (displayName) {
     CopyUTF8toUTF16(MakeStringSpan(displayName), aName);
   }
@@ -73,7 +67,7 @@ static int CupsDestCallback(void* user_data, unsigned aFlags,
 
   cups_dest_t* ownedDest = nullptr;
   mozilla::DebugOnly<const int> numCopied =
-      CupsShim().cupsCopyDest(aDest, 0, &ownedDest);
+      sCupsShim.cupsCopyDest(aDest, 0, &ownedDest);
   MOZ_ASSERT(numCopied == 1);
 
   nsString name;
@@ -85,12 +79,12 @@ static int CupsDestCallback(void* user_data, unsigned aFlags,
 }
 
 nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
-  if (!CupsShim().InitOkay()) {
+  if (!sCupsShim.EnsureInitialized()) {
     return {};
   }
 
   nsTArray<PrinterInfo> printerInfoList;
-  if (!CupsShim().cupsEnumDests(
+  if (!sCupsShim.cupsEnumDests(
           CUPS_DEST_FLAGS_NONE,
           0 /* timeout, 0 timeout shouldn't be a problem since we are masking
                CUPS_PRINTER_DISCOVERED */
@@ -106,14 +100,14 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
 
 RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
   return mozilla::MakeRefPtr<nsPrinterCUPS>(
-      mCommonPaperInfo, CupsShim(), std::move(aInfo.mName),
+      mCommonPaperInfo, sCupsShim, std::move(aInfo.mName),
       static_cast<cups_dest_t*>(aInfo.mCupsHandle));
 }
 
 Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
     nsString aPrinterName) const {
   Maybe<PrinterInfo> rv;
-  if (!CupsShim().InitOkay()) {
+  if (!sCupsShim.EnsureInitialized()) {
     return rv;
   }
 
@@ -129,26 +123,26 @@ Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
     nsAutoCString printerName;
     CopyUTF16toUTF8(aPrinterName, printerName);
     cups_dest_t* printers = nullptr;
-    const auto numPrinters = CupsShim().cupsGetDests(&printers);
+    const auto numPrinters = sCupsShim.cupsGetDests(&printers);
     for (auto i : mozilla::IntegerRange(0, numPrinters)) {
-      const char* const displayName = CupsShim().cupsGetOption(
+      const char* const displayName = sCupsShim.cupsGetOption(
           "printer-info", printers[i].num_options, printers[i].options);
       if (printerName == displayName) {
-        // The second arg to CupsShim().cupsCopyDest is called num_dests, but
+        // The second arg to sCupsShim.cupsCopyDest is called num_dests, but
         // it actually copies num_dests + 1 elements.
-        CupsShim().cupsCopyDest(printers + i, 0, &printer);
+        sCupsShim.cupsCopyDest(printers + i, 0, &printer);
         break;
       }
     }
-    CupsShim().cupsFreeDests(numPrinters, printers);
+    sCupsShim.cupsFreeDests(numPrinters, printers);
   }
 #else
   // On GTK, we only ever show the CUPS name of printers, so we can use
   // cupsGetNamedDest directly.
   {
     const auto printerName = NS_ConvertUTF16toUTF8(aPrinterName);
-    printer = CupsShim().cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName.get(),
-                                          nullptr);
+    printer = sCupsShim.cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName.get(),
+                                         nullptr);
   }
 #endif
 
@@ -163,12 +157,12 @@ Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
 Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
     nsString aPrinterName) const {
   Maybe<PrinterInfo> rv;
-  if (!CupsShim().InitOkay()) {
+  if (!sCupsShim.EnsureInitialized()) {
     return rv;
   }
 
   const auto printerName = NS_ConvertUTF16toUTF8(aPrinterName);
-  if (cups_dest_t* const printer = CupsShim().cupsGetNamedDest(
+  if (cups_dest_t* const printer = sCupsShim.cupsGetNamedDest(
           CUPS_HTTP_DEFAULT, printerName.get(), nullptr)) {
     rv.emplace(PrinterInfo{std::move(aPrinterName), printer});
   }
@@ -178,14 +172,14 @@ Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
 nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   aName.Truncate();
 
-  if (!CupsShim().InitOkay()) {
+  if (!sCupsShim.EnsureInitialized()) {
     return NS_ERROR_FAILURE;
   }
 
   // Passing in nullptr for the name will return the default, if any.
   cups_dest_t* dest =
-      CupsShim().cupsGetNamedDest(CUPS_HTTP_DEFAULT, /* name */ nullptr,
-                                  /* instance */ nullptr);
+      sCupsShim.cupsGetNamedDest(CUPS_HTTP_DEFAULT, /* name */ nullptr,
+                                 /* instance */ nullptr);
   if (!dest) {
     return NS_OK;
   }
@@ -195,6 +189,6 @@ nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
     CopyUTF8toUTF16(mozilla::MakeStringSpan(dest->name), aName);
   }
 
-  CupsShim().cupsFreeDests(1, dest);
+  sCupsShim.cupsFreeDests(1, dest);
   return NS_OK;
 }

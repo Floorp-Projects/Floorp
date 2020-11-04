@@ -43,6 +43,31 @@ interface nsIXULBrowserWindow : nsISupports
                                 in boolean isAppTab);
 
   /**
+   * Determines whether a load should continue.
+   *
+   * @param aDocShell
+   *        The docshell performing the load.
+   * @param aURI
+   *        The URI being loaded.
+   * @param aReferrerInfo
+   *        The referrerInfo of the load.
+   * @param aHasPostData
+   *        True if the load which is being asked about has associated post data
+   *        which would be discarded if the load was redirected across process
+   *        boundaries.
+   * @param aTriggeringPrincipal
+   *        The principal that initiated the load of aURI.
+   * @param aCsp
+   *        The CSP to be used for that load. That is the CSP that e.g. upgrades
+   *        the load to HTTPS in case upgrade-insecure-requests is set
+   */
+  bool shouldLoadURI(in nsIDocShell              aDocShell,
+                     in nsIURI                   aURI,
+                     in nsIReferrerInfo          aReferrerInfo,
+                     in boolean                  aHasPostData,
+                     in nsIPrincipal             aTriggeringPrincipal,
+                     in nsIContentSecurityPolicy aCsp);
+  /**
    * Show/hide a tooltip (when the user mouses over a link, say).
    */
   void showTooltip(in long x, in long y, in AString tooltip, in AString direction,

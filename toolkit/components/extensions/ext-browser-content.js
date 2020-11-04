@@ -11,6 +11,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -336,7 +337,9 @@ var WebBrowserChrome = {
   },
 
   shouldLoadURIInThisProcess(URI) {
-    return true;
+    let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext)
+      .useRemoteSubframes;
+    return E10SUtils.shouldLoadURIInThisProcess(URI, remoteSubframes);
   },
 };
 

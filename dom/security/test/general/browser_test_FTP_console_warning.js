@@ -37,7 +37,7 @@ add_task(async function() {
 
   Services.console.registerListener(on_new_message);
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, kTestURI);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, kTestURI);
   await BrowserTestUtils.waitForCondition(() => seen_files.length === 0);
   is(seen_files.length, 0, "All FTP subresources should be blocked");
 
