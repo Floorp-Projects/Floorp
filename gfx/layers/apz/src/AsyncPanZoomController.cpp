@@ -264,6 +264,12 @@ typedef PlatformSpecificStateBase
  * be considered for fling acceleration.
  * Units: screen pixels per milliseconds
  *
+ * \li\b apz.fling_accel_max_pause_interval_ms
+ * The maximum time that is allowed to elapse between the touch start event that
+ * interrupts the previous fling, and the touch move that initiates panning for
+ * the current fling, for that fling to be considered for fling acceleration.
+ * Units: milliseconds
+ *
  * \li\b apz.fling_accel_base_mult
  * \li\b apz.fling_accel_supplemental_mult
  * When applying an acceleration on a fling, the new computed velocity is
@@ -524,9 +530,8 @@ static uint32_t sAsyncPanZoomControllerCount = 0;
 AsyncPanZoomAnimation* PlatformSpecificStateBase::CreateFlingAnimation(
     AsyncPanZoomController& aApzc, const FlingHandoffState& aHandoffState,
     float aPLPPI) {
-  return new GenericFlingAnimation<DesktopFlingPhysics>(
-      aApzc, aHandoffState.mChain, aHandoffState.mIsHandoff,
-      aHandoffState.mScrolledApzc, aPLPPI);
+  return new GenericFlingAnimation<DesktopFlingPhysics>(aApzc, aHandoffState,
+                                                        aPLPPI);
 }
 
 UniquePtr<VelocityTracker> PlatformSpecificStateBase::CreateVelocityTracker(
@@ -1258,6 +1263,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
             GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CanBePanned(
                 this));
       }
+      mTouchStartTime = aEvent.mTimeStamp;
       SetState(TOUCHING);
       break;
     }
@@ -1310,11 +1316,11 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
         // ConsumeNoDefault status immediately to trigger cancel event further.
         // It should happen independent of the parent type (whether it is
         // scrolling or not).
-        StartPanning(extPoint);
+        StartPanning(extPoint, aEvent.mTimeStamp);
         return nsEventStatus_eConsumeNoDefault;
       }
 
-      return StartPanning(extPoint);
+      return StartPanning(extPoint, aEvent.mTimeStamp);
     }
 
     case PANNING:
@@ -1715,7 +1721,8 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
     } else {
       // If zooming isn't allowed, StartTouch() was already called
       // in OnScaleBegin().
-      StartPanning(ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint));
+      StartPanning(ToExternalPoint(aEvent.mScreenOffset, aEvent.mFocusPoint),
+                   aEvent.mTimeStamp);
     }
   } else {
     // Otherwise, handle the gesture being completely done.
@@ -1797,7 +1804,8 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     const FlingHandoffState handoffState{
         flingVelocity, GetCurrentInputBlock()->GetOverscrollHandoffChain(),
-        false /* not handoff */, GetCurrentInputBlock()->GetScrolledApzc()};
+        Some(mTouchStartRestingTimeBeforePan), false /* not handoff */,
+        GetCurrentInputBlock()->GetScrolledApzc()};
     treeManagerLocal->DispatchFling(this, handoffState);
   }
   return nsEventStatus_eConsumeNoDefault;
@@ -3137,7 +3145,7 @@ void AsyncPanZoomController::HandlePinchLocking(
 }
 
 nsEventStatus AsyncPanZoomController::StartPanning(
-    const ExternalPoint& aStartPoint) {
+    const ExternalPoint& aStartPoint, const TimeStamp& aEventTime) {
   ParentLayerPoint vector =
       ToParentLayerCoordinates(PanVector(aStartPoint), mStartTouch);
   double angle = atan2(vector.y, vector.x);  // range [-pi, pi]
@@ -3157,6 +3165,7 @@ nsEventStatus AsyncPanZoomController::StartPanning(
   if (IsInPanningState()) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
                                    (uint32_t)ScrollInputMethod::ApzTouch);
+    mTouchStartRestingTimeBeforePan = aEventTime - mTouchStartTime;
 
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
@@ -3479,7 +3488,8 @@ void AsyncPanZoomController::HandleFlingOverscroll(
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
   if (treeManagerLocal) {
     const FlingHandoffState handoffState{aVelocity, aOverscrollHandoffChain,
-                                         true /* handoff */, aScrolledApzc};
+                                         Nothing(), true /* handoff */,
+                                         aScrolledApzc};
     ParentLayerPoint residualVelocity =
         treeManagerLocal->DispatchFling(this, handoffState);
     FLING_LOG("APZC %p left with residual velocity %s\n", this,
