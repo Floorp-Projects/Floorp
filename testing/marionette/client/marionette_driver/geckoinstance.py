@@ -572,8 +572,6 @@ class DesktopInstance(GeckoInstance):
         "browser.startup.homepage_override.mstone": "ignore",
         # Start with a blank page by default
         "browser.startup.page": 0,
-        # Bug 1557457: Disable because modal dialogs might not appear in Firefox
-        "browser.tabs.remote.separatePrivilegedContentProcess": False,
         # Don't unload tabs when available memory is running low
         "browser.tabs.unloadOnLowMemory": False,
         # Do not warn when closing all open tabs
