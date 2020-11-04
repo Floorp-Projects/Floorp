@@ -38,6 +38,10 @@ add_task(
     await unmuteWebAudioByGainNode(tab);
     await waitForTabSoundIndicatorAppears(tab);
 
+    info(`sound indicator should disappear when closing web audio`);
+    await closeWebAudio(tab);
+    await waitForTabSoundIndicatorDisappears(tab);
+
     info("remove tab");
     BrowserTestUtils.removeTab(tab);
   }
@@ -133,6 +137,12 @@ function suspendWebAudio(tab) {
 function resumeWebAudio(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
     await content.ac.resume();
+  });
+}
+
+function closeWebAudio(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
+    await content.ac.close();
   });
 }
 
