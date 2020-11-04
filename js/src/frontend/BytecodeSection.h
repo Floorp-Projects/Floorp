@@ -45,21 +45,23 @@ namespace frontend {
 class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  JSContext* cx;
+  // The BCE accumulates ScriptThingVariant items so use a vector type. We
+  // reserve some stack slots to avoid allocating for most small scripts.
+  using ScriptThingsStackVector = Vector<ScriptThingVariant, 8>;
+
   CompilationInfo& compilationInfo;
-  ScriptThingsVector vector;
+  ScriptThingsStackVector vector;
 
   // Index of the first scope in the vector.
   mozilla::Maybe<GCThingIndex> firstScopeIndex;
 
   explicit GCThingList(JSContext* cx, CompilationInfo& compilationInfo)
-      : cx(cx), compilationInfo(compilationInfo) {}
+      : compilationInfo(compilationInfo), vector(cx) {}
 
   MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     atom->markUsedByStencil();
     if (!vector.append(mozilla::AsVariant(std::move(atom)))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     return true;
@@ -67,7 +69,6 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(ScopeIndex scope, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(scope))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     if (!firstScopeIndex) {
@@ -78,7 +79,6 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(BigIntLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(literal->index()))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     return true;
@@ -86,7 +86,6 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(RegExpLiteral* literal, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(literal->index()))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     return true;
@@ -94,7 +93,6 @@ struct MOZ_STACK_CLASS GCThingList {
   MOZ_MUST_USE bool append(ObjLiteralIndex objlit, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
     if (!vector.append(mozilla::AsVariant(objlit))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     return true;
@@ -105,7 +103,6 @@ struct MOZ_STACK_CLASS GCThingList {
     *index = GCThingIndex(vector.length());
     EmptyGlobalScopeType emptyGlobalScope;
     if (!vector.append(mozilla::AsVariant(emptyGlobalScope))) {
-      js::ReportOutOfMemory(cx);
       return false;
     }
     if (!firstScopeIndex) {
@@ -116,7 +113,7 @@ struct MOZ_STACK_CLASS GCThingList {
 
   uint32_t length() const { return vector.length(); }
 
-  const ScriptThingsVector& objects() { return vector; }
+  const ScriptThingsStackVector& objects() { return vector; }
 
   AbstractScopePtr getScope(size_t index) const;
 
@@ -128,15 +125,13 @@ struct MOZ_STACK_CLASS GCThingList {
     MOZ_ASSERT(firstScopeIndex.isSome());
     return getScope(*firstScopeIndex);
   }
-
-  ScriptThingsVector stealGCThings() { return std::move(vector); }
 };
 
-MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
-                                         CompilationInfo& compilationInfo,
-                                         CompilationGCOutput& gcOutput,
-                                         const ScriptThingsVector& objects,
-                                         mozilla::Span<JS::GCCellPtr> output);
+MOZ_MUST_USE bool EmitScriptThingsVector(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    CompilationGCOutput& gcOutput,
+    mozilla::Span<const ScriptThingVariant> things,
+    mozilla::Span<JS::GCCellPtr> output);
 
 struct CGTryNoteList {
   Vector<TryNote> list;
