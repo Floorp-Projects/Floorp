@@ -74,6 +74,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether telemetry events should be recorded.
   ["eventTelemetry.enabled", false],
 
+  // Used as an override to update2 that is only available in Firefox 83+.
+  // In Firefox 82 we'll set experiment.update2 to false for the holdback
+  // cohort, so that upgrading to Firefox 83 won't enable the update2 feature.
+  // We must do this because experiment rollout begins one week before the 83
+  // release, and we don't want to touch update2 in Firefox 82.
+  ["experiment.update2", true],
+
   // Whether we expand the font size when when the urlbar is
   // focused.
   ["experimental.expandTextOnFocus", false],
@@ -441,6 +448,16 @@ class Preferences {
             this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
         }
         return val;
+      }
+      case "update2": {
+        // The experiment.update2 pref is a partial override to update2. If it
+        // is false, it overrides update2. It was introduced for Firefox 83+ to
+        // run a holdback study on update2 and can be removed when the holdback
+        // study is complete. See bug 1674469.
+        if (!this._readPref("experiment.update2")) {
+          return false;
+        }
+        return this._readPref(pref);
       }
     }
     return this._readPref(pref);
