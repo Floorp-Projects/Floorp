@@ -2214,6 +2214,11 @@ bool AsyncPanZoomController::CanScrollDownwardsWithDynamicToolbar() const {
   return mY.CanScrollDownwardsWithDynamicToolbar();
 }
 
+bool AsyncPanZoomController::CanScrollDownwards() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return mY.CanScrollTo(eSideBottom);
+}
+
 bool AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
     bool aHonoursRoot) const {
   if (aHonoursRoot) {

@@ -156,5 +156,23 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
   return nullptr;
 }
 
+bool OverscrollHandoffChain::ScrollingDownWillMoveDynamicToolbar(
+    const AsyncPanZoomController* aApzc) const {
+  MOZ_ASSERT(aApzc && !aApzc->IsRootContent(),
+             "Should be used for non-root APZC");
+
+  for (uint32_t i = IndexOf(aApzc); i < Length(); i++) {
+    if (mChain[i]->IsRootContent()) {
+      return mChain[i]->CanScrollDownwardsWithDynamicToolbar();
+    }
+
+    if (mChain[i]->CanScrollDownwards()) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace layers
 }  // namespace mozilla
