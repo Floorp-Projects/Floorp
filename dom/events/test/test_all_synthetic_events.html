@@ -45,7 +45,9 @@ const kEventConstructors = {
                                                        },
                                              },
   BlobEvent:                                 { create (aName, aProps) {
-                                                         return new BlobEvent(aName, aProps);
+                                                         return new BlobEvent(aName, {
+                                                           data: new Blob([]),
+                                                         });
                                                        },
                                              },
   CallEvent:                                 { create (aName, aProps) {
