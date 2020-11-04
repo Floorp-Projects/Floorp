@@ -6247,21 +6247,23 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       aspectRatioUsage == AspectRatioUsage::ToComputeISize;
   const bool isFlexItemInlineAxisMainAxis =
       isFlexItem && flexMainAxis == eLogicalAxisInline;
+  const auto& minBSizeCoord = stylePos->MinBSize(aWM);
+  const auto& maxBSizeCoord = stylePos->MaxBSize(aWM);
+  const bool isAutoMinBSize =
+      nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM));
+  const bool isAutoMaxBSize =
+      nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM));
   if (stylePos->mAspectRatio.HasFiniteRatio() && !isDefiniteISize &&
       !isFlexItemInlineAxisMainAxis) {
-    const auto& minBSizeCoord = stylePos->MinBSize(aWM);
-    const auto& maxBSizeCoord = stylePos->MaxBSize(aWM);
     const MinMaxSize minMaxBSize{
-        nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM))
-            ? 0
-            : nsLayoutUtils::ComputeBSizeValue(
-                  aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-                  minBSizeCoord.AsLengthPercentage()),
-        nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM))
-            ? NS_UNCONSTRAINEDSIZE
-            : nsLayoutUtils::ComputeBSizeValue(
-                  aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-                  maxBSizeCoord.AsLengthPercentage())};
+        isAutoMinBSize ? 0
+                       : nsLayoutUtils::ComputeBSizeValue(
+                             aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+                             minBSizeCoord.AsLengthPercentage()),
+        isAutoMaxBSize ? NS_UNCONSTRAINEDSIZE
+                       : nsLayoutUtils::ComputeBSizeValue(
+                             aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+                             maxBSizeCoord.AsLengthPercentage())};
     MinMaxSize transferredMinMaxISize = ComputeTransferredMinMaxInlineSize(
         aWM, stylePos->mAspectRatio, minMaxBSize, boxSizingAdjust);
 
@@ -6372,21 +6374,17 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     }
   }
 
-  const auto& maxBSizeCoord = stylePos->MaxBSize(aWM);
-
   if (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
-    if (!nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
-        !(isFlexItem && flexMainAxis == eLogicalAxisBlock)) {
+    const bool isFlexItemBlockAxisMainAxis =
+        isFlexItem && flexMainAxis == eLogicalAxisBlock;
+    if (!isAutoMaxBSize && !isFlexItemBlockAxisMainAxis) {
       nscoord maxBSize = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           maxBSizeCoord.AsLengthPercentage());
       result.BSize(aWM) = std::min(maxBSize, result.BSize(aWM));
     }
 
-    const auto& minBSizeCoord = stylePos->MinBSize(aWM);
-
-    if (!nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
-        !(isFlexItem && flexMainAxis == eLogicalAxisBlock)) {
+    if (!isAutoMinBSize && !isFlexItemBlockAxisMainAxis) {
       nscoord minBSize = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           minBSizeCoord.AsLengthPercentage());
