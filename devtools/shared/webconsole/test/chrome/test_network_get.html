@@ -88,7 +88,6 @@ function onNetworkEventUpdate(aState, aPacket)
           status: "200",
           statusText: "OK",
           headersSize: /^\d+$/,
-          discardResponseBody: false,
         },
       };
       break;
@@ -106,7 +105,6 @@ function onNetworkEventUpdate(aState, aPacket)
       expectedPacket = {
         mimeType: "application/json",
         contentSize: 1070,
-        discardResponseBody: false,
       };
       break;
     case "eventTimings":
