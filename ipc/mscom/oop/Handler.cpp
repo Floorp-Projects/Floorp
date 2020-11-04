@@ -267,116 +267,13 @@ Handler::DisconnectObject(DWORD dwReserved) {
   return mUnmarshal->DisconnectObject(dwReserved);
 }
 
-template <size_t N>
-static HRESULT BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid) {
-  const wchar_t kSubkey[] = L"SOFTWARE\\Classes\\CLSID\\";
-
-  // We exclude kSubkey's null terminator in the length because we include
-  // the stringified GUID's null terminator.
-  constexpr uint32_t kSubkeyLen = mozilla::ArrayLength(kSubkey) - 1;
-
-  const size_t kReqdGuidLen = 39;
-  static_assert(N >= kReqdGuidLen + kSubkeyLen, "aPath array is too short");
-  if (wcsncpy_s(aPath, kSubkey, kSubkeyLen)) {
-    return E_INVALIDARG;
-  }
-
-  int guidConversionResult =
-      StringFromGUID2(aClsid, &aPath[kSubkeyLen], N - kSubkeyLen);
-  if (!guidConversionResult) {
-    return E_INVALIDARG;
-  }
-
-  return S_OK;
-}
-
 HRESULT
-Handler::Unregister(REFCLSID aClsid) {
-  wchar_t path[256] = {};
-  HRESULT hr = BuildClsidPath(path, aClsid);
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  hr = HRESULT_FROM_WIN32(SHDeleteKey(HKEY_LOCAL_MACHINE, path));
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  return S_OK;
-}
+Handler::Unregister(REFCLSID aClsid) { return Module::Deregister(aClsid); }
 
 HRESULT
 Handler::Register(REFCLSID aClsid) {
-  wchar_t path[256] = {};
-  HRESULT hr = BuildClsidPath(path, aClsid);
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  HKEY rawClsidKey;
-  DWORD disposition;
-  LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
-                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr,
-                               &rawClsidKey, &disposition);
-  if (result != ERROR_SUCCESS) {
-    return HRESULT_FROM_WIN32(result);
-  }
-  nsAutoRegKey clsidKey(rawClsidKey);
-
-  if (wcscat_s(path, L"\\InprocHandler32")) {
-    return E_UNEXPECTED;
-  }
-
-  HKEY rawInprocHandlerKey;
-  result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
-                          REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nullptr,
-                          &rawInprocHandlerKey, &disposition);
-  if (result != ERROR_SUCCESS) {
-    Unregister(aClsid);
-    return HRESULT_FROM_WIN32(result);
-  }
-  nsAutoRegKey inprocHandlerKey(rawInprocHandlerKey);
-
-  wchar_t absLibPath[MAX_PATH + 1] = {};
-  HMODULE thisModule;
-  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                         reinterpret_cast<LPCTSTR>(&Handler::Register),
-                         &thisModule)) {
-    return HRESULT_FROM_WIN32(GetLastError());
-  }
-
-  DWORD size = GetModuleFileName(thisModule, absLibPath,
-                                 mozilla::ArrayLength(absLibPath));
-  if (!size || (size == mozilla::ArrayLength(absLibPath) &&
-                GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
-    DWORD lastError = GetLastError();
-    Unregister(aClsid);
-    return HRESULT_FROM_WIN32(lastError);
-  }
-
-  // The result of GetModuleFileName excludes the null terminator
-  DWORD valueSizeWithNullInBytes = (size + 1) * sizeof(wchar_t);
-
-  result = RegSetValueEx(inprocHandlerKey, L"", 0, REG_EXPAND_SZ,
-                         reinterpret_cast<const BYTE*>(absLibPath),
-                         valueSizeWithNullInBytes);
-  if (result != ERROR_SUCCESS) {
-    Unregister(aClsid);
-    return HRESULT_FROM_WIN32(result);
-  }
-
-  const wchar_t kApartment[] = L"Apartment";
-  result = RegSetValueEx(inprocHandlerKey, L"ThreadingModel", 0, REG_SZ,
-                         reinterpret_cast<const BYTE*>(kApartment),
-                         sizeof(kApartment));
-  if (result != ERROR_SUCCESS) {
-    Unregister(aClsid);
-    return HRESULT_FROM_WIN32(result);
-  }
-
-  return S_OK;
+  return Module::Register(aClsid, Module::ThreadingModel::DedicatedUiThreadOnly,
+                          Module::ClassType::InprocHandler);
 }
 
 }  // namespace mscom
