@@ -43,7 +43,8 @@ class MarionetteReftestChild extends JSWindowActorChild {
 
   actorCreated() {
     logger.trace(
-      `[${this.browsingContext.id}] Reftest Child actor created for window id ${this.manager.innerWindowId}`
+      `[${this.browsingContext.id}] Reftest actor created ` +
+        `for window id ${this.manager.innerWindowId}`
     );
   }
 

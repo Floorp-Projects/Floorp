@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   Log: "chrome://marionette/content/log.js",
   modal: "chrome://marionette/content/modal.js",
 });
@@ -29,12 +28,6 @@ XPCOMUtils.defineLazyGetter(this, "elementIdCache", () => {
 });
 
 class MarionetteCommandsParent extends JSWindowActorParent {
-  constructor() {
-    super();
-
-    EventEmitter.decorate(this);
-  }
-
   actorCreated() {
     this._resolveDialogOpened = null;
 
@@ -48,8 +41,6 @@ class MarionetteCommandsParent extends JSWindowActorParent {
         this._resolveDialogOpened({ data: null });
       }
     });
-
-    logger.trace(`[${this.browsingContext.id}] Parent actor created`);
   }
 
   dialogOpenedPromise() {
@@ -64,11 +55,9 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     let rv;
 
     switch (name) {
-      case "MarionetteCommandsChild:PageLoadEvent":
-        this.emit("page-load-event", data);
-        break;
       case "MarionetteCommandsChild:ElementIdCacheAdd":
         rv = elementIdCache.add(data).toJSON();
+        break;
     }
 
     return rv;

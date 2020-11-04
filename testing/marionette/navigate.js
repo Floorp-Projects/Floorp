@@ -13,7 +13,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://marionette/content/error.js",
+  EventDispatcher:
+    "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Log: "chrome://marionette/content/log.js",
+  MarionettePrefs: "chrome://marionette/content/prefs.js",
   modal: "chrome://marionette/content/modal.js",
   PageLoadStrategy: "chrome://marionette/content/capabilities.js",
   TimedPromise: "chrome://marionette/content/sync.js",
@@ -253,16 +256,23 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
-  const onNavigation = ({ json }) => {
-    if (json.browsingContext.browserId != browsingContext.browserId) {
+  const onNavigation = ({ json }, message) => {
+    let data = MarionettePrefs.useActors ? message : json;
+
+    if (MarionettePrefs.useActors) {
+      // Only care about navigation events from the actor of the current frame.
+      // Bug 1674329: Always use the currently active browsing context,
+      // and not the original one to not cause hangs for remoteness changes.
+      if (data.browsingContext != driver.getBrowsingContext()) {
+        return;
+      }
+    } else if (data.browsingContext.browserId != browsingContext.browserId) {
       return;
     }
 
-    logger.trace(
-      truncate`Received message ${json.type} for ${json.documentURI}`
-    );
+    logger.trace(truncate`Received event ${data.type} for ${data.documentURI}`);
 
-    switch (json.type) {
+    switch (data.type) {
       case "beforeunload":
         seenBeforeUnload = true;
         seenUnload = false;
@@ -282,7 +292,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
         if (!seenUnload) {
           return;
         }
-        const result = checkReadyState(pageLoadStrategy, json);
+        const result = checkReadyState(pageLoadStrategy, data);
         checkDone(result);
         break;
     }
@@ -317,11 +327,41 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     onBrowsingContextDiscarded,
     "browsing-context-discarded"
   );
-  driver.mm.addMessageListener(
-    "Marionette:NavigationEvent",
-    onNavigation,
-    true
-  );
+
+  if (MarionettePrefs.useActors) {
+    // Register the JSWindowActor pair for events as used by Marionette
+    ChromeUtils.registerWindowActor("MarionetteEvents", {
+      kind: "JSWindowActor",
+      parent: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+      },
+      child: {
+        moduleURI:
+          "chrome://marionette/content/actors/MarionetteEventsChild.jsm",
+        events: {
+          beforeunload: { capture: true },
+          DOMContentLoaded: { mozSystemGroup: true },
+          hashchange: { mozSystemGroup: true },
+          pagehide: { mozSystemGroup: true },
+          pageshow: { mozSystemGroup: true },
+          // popstate doesn't bubble, as such use capturing phase
+          popstate: { capture: true, mozSystemGroup: true },
+        },
+      },
+
+      allFrames: true,
+      includeChrome: true,
+    });
+
+    EventDispatcher.on("page-load", onNavigation);
+  } else {
+    driver.mm.addMessageListener(
+      "Marionette:NavigationEvent",
+      onNavigation,
+      true
+    );
+  }
 
   return new TimedPromise(
     async (resolve, reject) => {
@@ -362,11 +402,17 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     chromeWindow.removeEventListener("TabClose", onUnload);
     chromeWindow.removeEventListener("unload", onUnload);
     driver.dialogObserver.remove(onDialogOpened);
-    driver.mm.removeMessageListener(
-      "Marionette:NavigationEvent",
-      onNavigation,
-      true
-    );
     unloadTimer?.cancel();
+
+    if (MarionettePrefs.useActors) {
+      EventDispatcher.off("page-load", onNavigation);
+      ChromeUtils.unregisterWindowActor("MarionetteEvents");
+    } else {
+      driver.mm.removeMessageListener(
+        "Marionette:NavigationEvent",
+        onNavigation,
+        true
+      );
+    }
   });
 };

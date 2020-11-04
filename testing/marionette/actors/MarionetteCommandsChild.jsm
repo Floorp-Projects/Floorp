@@ -53,7 +53,8 @@ class MarionetteCommandsChild extends JSWindowActorChild {
 
   actorCreated() {
     logger.trace(
-      `[${this.browsingContext.id}] Child actor created for window id ${this.innerWindowId}`
+      `[${this.browsingContext.id}] MarionetteCommands actor created ` +
+        `for window id ${this.innerWindowId}`
     );
 
     // Listen for click event to indicate one click has happened, so actions
@@ -71,21 +72,6 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       event.DoubleClickTracker.resetClick,
       true
     );
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "beforeunload":
-      case "pagehide":
-      case "DOMContentLoaded":
-      case "pageshow":
-        this.sendAsyncMessage("MarionetteCommandsChild:PageLoadEvent", {
-          browsingContext: this.browsingContext,
-          innerWindowId: this.innerWindowId,
-          type: event.type,
-        });
-        break;
-    }
   }
 
   async receiveMessage(msg) {
