@@ -107,10 +107,36 @@ static bool RegisterPSClsids(const ProxyFileInfo** aProxyInfo,
   return true;
 }
 
+#if !defined(MOZILLA_INTERNAL_API)
+using GetProxyDllInfoFnT = decltype(&GetProxyDllInfo);
+
+static GetProxyDllInfoFnT ResolveGetProxyDllInfo() {
+  HMODULE thisModule = reinterpret_cast<HMODULE>(GetContainingModuleHandle());
+  if (!thisModule) {
+    return nullptr;
+  }
+
+  return reinterpret_cast<GetProxyDllInfoFnT>(
+      GetProcAddress(thisModule, "GetProxyDllInfo"));
+}
+#endif  // !defined(MOZILLA_INTERNAL_API)
+
 UniquePtr<RegisteredProxy> RegisterProxy() {
+#if !defined(MOZILLA_INTERNAL_API)
+  GetProxyDllInfoFnT GetProxyDllInfoFn = ResolveGetProxyDllInfo();
+  MOZ_ASSERT(!!GetProxyDllInfoFn);
+  if (!GetProxyDllInfoFn) {
+    return nullptr;
+  }
+#endif  // !defined(MOZILLA_INTERNAL_API)
+
   const ProxyFileInfo** proxyInfo = nullptr;
   const CLSID* proxyClsid = nullptr;
+#if defined(MOZILLA_INTERNAL_API)
   GetProxyDllInfo(&proxyInfo, &proxyClsid);
+#else
+  GetProxyDllInfoFn(&proxyInfo, &proxyClsid);
+#endif  // defined(MOZILLA_INTERNAL_API)
   if (!proxyInfo || !proxyClsid) {
     return nullptr;
   }
