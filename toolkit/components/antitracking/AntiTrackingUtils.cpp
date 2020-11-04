@@ -277,9 +277,6 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 
   int32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
 
-  bool rejectForeignWithExceptions =
-      net::CookieJarSettings::IsRejectThirdPartyWithExceptions(cookieBehavior);
-
   // We only need to check the storage permission if the cookie behavior is
   // BEHAVIOR_REJECT_TRACKER, BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN or
   // BEHAVIOR_REJECT_FOREIGN with exceptions. Because ContentBlocking wouldn't
@@ -295,11 +292,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
     return false;
   }
 
-  uint64_t targetWindowId =
-      (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-       rejectForeignWithExceptions)
-          ? GetTopLevelStorageAreaWindowId(bc)
-          : GetTopLevelAntiTrackingWindowId(bc);
+  uint64_t targetWindowId = GetTopLevelAntiTrackingWindowId(bc);
   nsCOMPtr<nsIPrincipal> targetPrincipal;
 
   if (targetWindowId) {
