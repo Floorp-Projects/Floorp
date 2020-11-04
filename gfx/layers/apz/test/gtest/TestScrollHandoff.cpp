@@ -567,6 +567,12 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   SCOPED_GFX_PREF_FLOAT("apz.fling_min_velocity_threshold", 0.0f);
   SCOPED_GFX_VAR(UseWebRender, bool, false);
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
+
+  // Note: Usually, fling acceleration does not work across handoff, because our
+  // fling acceleration code does not propagate the "fling cancel velocity"
+  // across handoff. However, this test sets apz.fling_min_velocity_threshold to
+  // zero, so the "fling cancel velocity" is allowed to be zero, and fling
+  // acceleration succeeds, almost by accident.
   TestFlingAcceleration();
 }
 

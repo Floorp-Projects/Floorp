@@ -183,6 +183,10 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     return true;
   }
 
+  void Cancel(CancelAnimationFlags aFlags) override {
+    mApzc.mFlingAccelerator.ObserveFlingCanceled(mApzc.GetVelocityVector());
+  }
+
   virtual bool HandleScrollOffsetUpdate(
       const Maybe<CSSPoint>& aRelativeDelta) override {
     return true;

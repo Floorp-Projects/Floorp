@@ -16,6 +16,7 @@ namespace layers {
 void FlingAccelerator::Reset() {
   mPreviousFlingStartTime = SampleTime{};
   mPreviousFlingStartingVelocity = ParentLayerPoint{};
+  mPreviousFlingCancelVelocity = ParentLayerPoint{};
 }
 
 static bool SameDirection(float aVelocity1, float aVelocity2) {
@@ -53,6 +54,8 @@ ParentLayerPoint FlingAccelerator::GetFlingStartingVelocity(
     }
   }
 
+  Reset();
+
   mPreviousFlingStartTime = aNow;
   mPreviousFlingStartingVelocity = velocity;
 
@@ -78,6 +81,15 @@ bool FlingAccelerator::ShouldAccelerate(
   if (aVelocity.Length() < StaticPrefs::apz_fling_accel_min_velocity()) {
     FLING_LOG("%p Fling velocity too low (%f), not accelerating.\n", this,
               float(aVelocity.Length()));
+    return false;
+  }
+
+  if (mPreviousFlingCancelVelocity.Length() <
+      StaticPrefs::apz_fling_accel_min_velocity()) {
+    FLING_LOG(
+        "%p The previous fling animation had slowed down too much when it was "
+        "interrupted (%f), not accelerating.\n",
+        this, float(mPreviousFlingCancelVelocity.Length()));
     return false;
   }
 

@@ -32,6 +32,10 @@ class FlingAccelerator final {
   ParentLayerPoint GetFlingStartingVelocity(const SampleTime& aNow,
                                             const ParentLayerPoint& aVelocity);
 
+  void ObserveFlingCanceled(const ParentLayerPoint& aVelocity) {
+    mPreviousFlingCancelVelocity = aVelocity;
+  }
+
  protected:
   bool ShouldAccelerate(const SampleTime& aNow,
                         const ParentLayerPoint& aVelocity) const;
@@ -41,6 +45,9 @@ class FlingAccelerator final {
   // The time at which the most recent fling started. This is the time when the
   // finger is lifted at the end of the gesture, as the fling animation starts.
   SampleTime mPreviousFlingStartTime;
+  // The velocity that the previous fling animation had at the point it was
+  // interrupted.
+  ParentLayerPoint mPreviousFlingCancelVelocity;
 };
 
 }  // namespace layers
