@@ -662,8 +662,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
       await customizationReady;
     } else {
       info("Navigate the about:addons tab to about:blank");
-      BrowserTestUtils.loadURI(browser, "about:blank");
-      await BrowserTestUtils.browserLoaded(browser);
+      await BrowserTestUtils.loadURI(browser, "about:blank");
     }
 
     return menu;

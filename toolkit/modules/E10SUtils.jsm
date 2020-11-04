@@ -11,6 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "useSeparateFileUriProcess",
@@ -115,6 +121,17 @@ const kSafeSchemes = [
   "wtai",
   "xmpp",
 ];
+
+const kDocumentChannelDeniedSchemes = ["javascript"];
+const kDocumentChannelDeniedURIs = ["about:crashcontent", "about:printpreview"];
+
+// Changes here should also be made in URIUsesDocChannel in DocumentChannel.cpp.
+function documentChannelPermittedForURI(aURI) {
+  return (
+    !kDocumentChannelDeniedSchemes.includes(aURI.scheme) &&
+    !kDocumentChannelDeniedURIs.includes(aURI.spec)
+  );
+}
 
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
@@ -795,6 +812,247 @@ var E10SUtils = {
       return null;
     }
     return fallbackPrincipalCallback();
+  },
+
+  /**
+   * Returns whether or not a URI is supposed to load in a particular
+   * browser given its current remote type.
+   *
+   * @param browser (<xul:browser>)
+   *   The browser to check.
+   * @param uri (String)
+   *   The URI that will be checked to see if it can load in the
+   *   browser.
+   * @param multiProcess (boolean, optional)
+   *   Whether or not multi-process tabs are enabled. Defaults to true.
+   * @param remoteSubframes (boolean, optional)
+   *   Whether or not multi-process subframes are enabled. Defaults to
+   *   false.
+   * @param flags (Number, optional)
+   *   nsIWebNavigation flags used to clean up the URL in the event that
+   *   it needs fixing ia the URI fixup service. Defaults to
+   *   nsIWebNavigation.LOAD_FLAGS_NONE.
+   *
+   * @return (Object)
+   *   An object with the following properties:
+   *
+   *   uriObject (nsIURI)
+   *     The fixed-up URI that was generated for the check.
+   *
+   *   requiredRemoteType (String)
+   *     The remoteType that was computed for the browser that
+   *     is required to load the URI.
+   *
+   *   mustChangeProcess (boolean)
+   *     Whether or not the front-end will be required to flip
+   *     the process in order to view the URI.
+   *
+   *     NOTE:
+   *       mustChangeProcess might be false even if a process
+   *       flip will occur. In this case, DocumentChannel is taking
+   *       care of the process flip for us rather than the front-end
+   *       code.
+   *
+   *   newFrameloader (boolean)
+   *     Whether or not a new frameloader will need to be created
+   *     in order to browse to this URI. For non-Fission, this is
+   *     important if we're transition from a web content process
+   *     to another web content process, but want to force the
+   *     creation of a _new_ web content process.
+   */
+  shouldLoadURIInBrowser(
+    browser,
+    uri,
+    multiProcess = true,
+    remoteSubframes = false,
+    flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE
+  ) {
+    let currentRemoteType = browser.remoteType;
+    let requiredRemoteType;
+    let uriObject;
+    try {
+      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+      if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      }
+      if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+      }
+      if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
+
+      uriObject = Services.uriFixup.getFixupURIInfo(uri, fixupFlags)
+        .preferredURI;
+      // Note that I had thought that we could set uri = uriObject.spec here, to
+      // save on fixup later on, but that changes behavior and breaks tests.
+      requiredRemoteType = this.getRemoteTypeForURIObject(
+        uriObject,
+        multiProcess,
+        remoteSubframes,
+        currentRemoteType,
+        browser.currentURI
+      );
+    } catch (e) {
+      // createFixupURI throws if it can't create a URI. If that's the case then
+      // we still need to pass down the uri because docshell handles this case.
+      requiredRemoteType = multiProcess ? DEFAULT_REMOTE_TYPE : NOT_REMOTE;
+    }
+
+    let mustChangeProcess = requiredRemoteType != currentRemoteType;
+
+    let newFrameloader = false;
+    if (
+      browser.getAttribute("preloadedState") === "consumed" &&
+      uri != "about:newtab"
+    ) {
+      // Leaving about:newtab from a used to be preloaded browser should run the process
+      // selecting algorithm again.
+      mustChangeProcess = true;
+      newFrameloader = true;
+    }
+
+    // If we already have a content process, and the load will be
+    // handled using DocumentChannel, then we can skip switching
+    // for now, and let DocumentChannel do it during the response.
+    if (uriObject && documentChannelPermittedForURI(uriObject)) {
+      mustChangeProcess = false;
+      newFrameloader = false;
+    }
+
+    return {
+      uriObject,
+      requiredRemoteType,
+      mustChangeProcess,
+      newFrameloader,
+    };
+  },
+
+  shouldLoadURIInThisProcess(aURI, aRemoteSubframes) {
+    let remoteType = Services.appinfo.remoteType;
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      /* remote */ true,
+      aRemoteSubframes,
+      remoteType
+    );
+    this.log().info(
+      `shouldLoadURIInThisProcess: have ${remoteType} want ${wantRemoteType}`
+    );
+
+    if (documentChannelPermittedForURI(aURI)) {
+      // We can switch later with documentchannel.
+      return true;
+    }
+
+    return remoteType == wantRemoteType;
+  },
+
+  shouldLoadURI(aDocShell, aURI, aHasPostData) {
+    let { useRemoteSubframes } = aDocShell;
+    this.log().debug(`shouldLoadURI(${this._uriStr(aURI)})`);
+
+    let remoteType = Services.appinfo.remoteType;
+
+    if (aDocShell.browsingContext.parent) {
+      return true;
+    }
+
+    let webNav = aDocShell.QueryInterface(Ci.nsIWebNavigation);
+    let sessionHistory = webNav.sessionHistory;
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      true,
+      useRemoteSubframes,
+      remoteType,
+      webNav.currentURI
+    );
+
+    // If we are using DocumentChannel or remote subframes (fission), we
+    // can start the load in the current process, and then perform the
+    // switch later-on using the DocumentLoadListener mechanism.
+    if (documentChannelPermittedForURI(aURI)) {
+      return true;
+    }
+
+    if (
+      !aHasPostData &&
+      remoteType == WEB_REMOTE_TYPE &&
+      sessionHistory.count == 1 &&
+      webNav.currentURI.spec == "about:newtab"
+    ) {
+      // This is possibly a preloaded browser and we're about to navigate away for
+      // the first time. On the child side there is no way to tell for sure if that
+      // is the case, so let's redirect this request to the parent to decide if a new
+      // process is needed. But we don't currently properly handle POST data in
+      // redirects (bug 1457520), so if there is POST data, don't return false here.
+      return false;
+    }
+
+    // Allow history load if loaded in this process before.
+    if (!Services.appinfo.sessionHistoryInParent) {
+      let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
+      if (requestedIndex >= 0) {
+        this.log().debug("Checking history case\n");
+        if (
+          sessionHistory.legacySHistory.getEntryAtIndex(requestedIndex)
+            .loadedInThisProcess
+        ) {
+          this.log().info("History entry loaded in this process");
+          return true;
+        }
+
+        // If not originally loaded in this process allow it if the URI would
+        // normally be allowed to load in this process by default.
+        this.log().debug(
+          `Checking remote type, got: ${remoteType} want: ${wantRemoteType}\n`
+        );
+        return remoteType == wantRemoteType;
+      }
+    }
+
+    // If the URI can be loaded in the current process then continue
+    return remoteType == wantRemoteType;
+  },
+
+  redirectLoad(
+    aDocShell,
+    aURI,
+    aReferrerInfo,
+    aTriggeringPrincipal,
+    aFlags,
+    aCsp
+  ) {
+    const actor = aDocShell.domWindow.windowGlobalChild.getActor("BrowserTab");
+
+    let loadOptions = {
+      uri: aURI.spec,
+      flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+      referrerInfo: this.serializeReferrerInfo(aReferrerInfo),
+      triggeringPrincipal: this.serializePrincipal(
+        aTriggeringPrincipal ||
+          Services.scriptSecurityManager.createNullPrincipal({})
+      ),
+      csp: aCsp ? this.serializeCSP(aCsp) : null,
+    };
+    // Retarget the load to the correct process
+    if (!Services.appinfo.sessionHistoryInParent) {
+      let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
+        .sessionHistory;
+      actor.sendAsyncMessage("Browser:LoadURI", {
+        loadOptions,
+        historyIndex: sessionHistory.legacySHistory.requestedIndex,
+      });
+    } else {
+      // If we can't access legacySHistory, session history in the
+      // parent is enabled. Browser:LoadURI knows about this and will
+      // act accordingly.
+      actor.sendAsyncMessage("Browser:LoadURI", {
+        loadOptions,
+      });
+    }
+
+    return false;
   },
 
   wrapHandlingUserInput(aWindow, aIsHandling, aCallback) {

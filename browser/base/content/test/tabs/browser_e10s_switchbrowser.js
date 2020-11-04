@@ -356,7 +356,18 @@ add_task(async function test_synchronous() {
   info("2");
   // Load another page
   info("Loading about:robots");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    false,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
+
   await BrowserTestUtils.browserStopped(gBrowser);
   is(
     gBrowser.selectedBrowser.isRemoteBrowser,
@@ -372,10 +383,21 @@ add_task(async function test_synchronous() {
   info("3");
   // Load the remote page again
   info("Loading http://example.org/" + DUMMY_PATH);
-  BrowserTestUtils.loadURI(
+  await BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     "http://example.org/" + DUMMY_PATH
   );
+  is(
+    gBrowser.selectedBrowser.isRemoteBrowser,
+    expectedRemote,
+    "Remote attribute should be correct"
+  );
+  is(
+    gBrowser.selectedBrowser.permanentKey,
+    permanentKey,
+    "browser.permanentKey is still the same"
+  );
+
   await BrowserTestUtils.browserStopped(gBrowser);
   is(
     gBrowser.selectedBrowser.isRemoteBrowser,

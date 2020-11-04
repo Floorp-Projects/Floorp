@@ -88,7 +88,7 @@ add_task(async function test_history_no_search_terms() {
         // A page other than TEST_URL must be loaded, or the first Top Site
         // result will be a switch-to-tab result and page won't be reloaded when
         // the result is selected.
-        BrowserTestUtils.loadURI(selectedBrowser, "http://example.org/");
+        await BrowserTestUtils.loadURI(selectedBrowser, "http://example.org/");
         await BrowserTestUtils.browserLoaded(selectedBrowser);
         gURLBar.blur();
         EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});

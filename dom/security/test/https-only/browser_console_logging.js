@@ -87,7 +87,7 @@ add_task(async function() {
   });
   Services.console.registerListener(on_new_message);
   // 1. Upgrade page to https://
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, kTestURISuccess);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, kTestURISuccess);
   // 2. Make an exempt http:// request
   let xhr = new XMLHttpRequest();
   xhr.open("GET", kTestURIExempt, true);

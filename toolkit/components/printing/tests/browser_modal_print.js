@@ -183,7 +183,7 @@ add_task(async function testPrintOnNewWindowDoesntClose() {
   });
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, PrintHelper.defaultTestPageUrl);
+  await BrowserTestUtils.loadURI(browser, PrintHelper.defaultTestPageUrl);
   await BrowserTestUtils.browserLoaded(
     browser,
     true,

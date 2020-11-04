@@ -181,7 +181,7 @@ async function testHelper(
 
   let win = await BrowserTestUtils.openNewBrowserWindow(options);
 
-  BrowserTestUtils.loadURI(
+  await BrowserTestUtils.loadURI(
     win.gBrowser.selectedBrowser,
     "https://requireclientcert.example.com:443"
   );

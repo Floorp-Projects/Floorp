@@ -219,7 +219,7 @@ async function promiseTabLoadEvent(tab, url) {
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
   if (url) {
-    BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
   }
 
   return loaded;

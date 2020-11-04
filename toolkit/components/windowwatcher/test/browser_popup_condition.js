@@ -205,7 +205,7 @@ add_task(async function test_popup_conditions() {
           },
           async function(browser) {
             const newWinPromise = BrowserTestUtils.waitForNewWindow();
-            BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
+            await BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
 
             const win = await newWinPromise;
             const parentChromeFlags = getParentChromeFlags(win);
@@ -242,7 +242,7 @@ add_task(async function test_popup_conditions() {
               gBrowser,
               OPEN_PAGE
             );
-            BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
+            await BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
 
             let tab = await newTabPromise;
             BrowserTestUtils.removeTab(tab);
@@ -262,7 +262,7 @@ add_task(async function test_popup_conditions() {
               false,
               OPEN_PAGE
             );
-            BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
+            await BrowserTestUtils.loadURI(gBrowser, SCRIPT_PAGE);
 
             await pagePromise;
           }

@@ -177,7 +177,7 @@ add_task(async function() {
   const onBrowserLoaded = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser
   );
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URL2);
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URL2);
   await onBrowserLoaded;
 
   // Wait for all events to be received

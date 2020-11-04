@@ -199,7 +199,7 @@ add_task(async function test_navigate_between_webpage_and_aboutaddons() {
   ok(!gBrowser.canGoBack, "Should not be able to go back");
   ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:addons");
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:addons");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let manager = await wait_for_manager_load(gBrowser.contentWindow);

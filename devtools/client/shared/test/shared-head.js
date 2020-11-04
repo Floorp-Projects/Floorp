@@ -485,7 +485,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
     null,
     isErrorPage
   );
-  BrowserTestUtils.loadURI(browser, uri);
+  await BrowserTestUtils.loadURI(browser, uri);
 
   info(`Waiting for page to be loaded…`);
   await onBrowserLoaded;

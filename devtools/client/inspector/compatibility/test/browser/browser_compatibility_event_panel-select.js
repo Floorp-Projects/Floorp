@@ -104,7 +104,10 @@ add_task(async function() {
   await _selectSidebarPanel(inspector, "changesview");
 
   info("Navigate to another page");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, _toDataURL(TEST_ANOTHER_URI));
+  await BrowserTestUtils.loadURI(
+    tab.linkedBrowser,
+    _toDataURL(TEST_ANOTHER_URI)
+  );
 
   info("Select the compatibility panel again");
   const onSelectedNodePaneUpdated = waitForUpdateSelectedNodeAction(

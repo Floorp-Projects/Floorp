@@ -131,6 +131,11 @@ var waitForLoad = async function(uri) {
 
 // Tests referrerInfo when navigating from a page in the remote process to main
 // process and vice versa.
+// The changing process code flow is (cpp) docshell.shouldLoadURI
+// -> (JS) browser.shouldLoadURI -> E10sUtils.redirectLoad
+// -> ContentRestore.restoreTabContent.
+// Finally, docshell will do the load in correct process with the input
+// referrerInfo and store an entry to SessionHistory
 add_task(async function test_navigation() {
   // Navigate from non remote to remote
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
