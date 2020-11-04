@@ -120,7 +120,6 @@ TEST_F(APZCFlingAccelerationTester, TwoNormalFlingsShouldAccelerate) {
 }
 
 TEST_F(APZCFlingAccelerationTester, TwoFastFlingsShouldAccelerate) {
-  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
   ExecutePanGesture100Hz(ScreenIntPoint{764, 714},
                          {9, 30, 49, 60, 64, 64, 62, 59, 51});
   CHECK_VELOCITY(Up, 5.0, 7.5);
@@ -149,8 +148,6 @@ TEST_F(APZCFlingAccelerationTester,
 
 TEST_F(APZCFlingAccelerationTester,
        ShouldNotAccelerateWhenPreviousFlingHasSlowedDown) {
-  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
-
   ExecutePanGesture100Hz(ScreenIntPoint{748, 1046},
                          {0, 9, 15, 23, 31, 30, 0, 34, 31, 29, 28, 24, 24, 11});
   CHECK_VELOCITY(Up, 2.2, 3.0);
@@ -162,8 +159,6 @@ TEST_F(APZCFlingAccelerationTester,
 }
 
 TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedAtStartOfPan) {
-  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
-
   ExecutePanGesture100Hz(
       ScreenIntPoint{711, 1468},
       {0, 0, 0, 0, -8, 0, -18, -32, -50, -57, -66, -68, -63, -60});
@@ -180,8 +175,6 @@ TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedAtStartOfPan) {
 }
 
 TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedDuringPan) {
-  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
-
   ExecutePanGesture100Hz(
       ScreenIntPoint{732, 1423},
       {0, 0, 0, -5, 0, -15, -41, -71, -90, -93, -85, -64, -44});
@@ -200,8 +193,6 @@ TEST_F(APZCFlingAccelerationTester, ShouldNotAccelerateWhenPausedDuringPan) {
 
 TEST_F(APZCFlingAccelerationTester,
        ShouldNotAccelerateWhenOppositeDirectionDuringPan) {
-  SCOPED_GFX_PREF_INT("apz.fling_accel_interval_ms", 750);
-
   ExecutePanGesture100Hz(ScreenIntPoint{663, 1371},
                          {0, 0, 0, -5, -18, -31, -49, -56, -61, -54, -55});
   CHECK_VELOCITY(Down, 5.4, 7.0);
@@ -215,4 +206,23 @@ TEST_F(APZCFlingAccelerationTester,
        33, 32,  25,  23,  23,  18,  13,  9,   5,   3,  1,  0,
        -7, -19, -38, -53, -68, -79, -85, -73, -64, -54});
   CHECK_VELOCITY(Down, 7.0, 10.0);
+}
+
+TEST_F(APZCFlingAccelerationTester,
+       ShouldAccelerateAfterLongWaitIfVelocityStillHigh) {
+  // Reduce friction with the "Desktop" fling physics a little, so that it
+  // behaves more similarly to the Android fling physics, and has enough
+  // velocity after the wait time to allow for acceleration.
+  SCOPED_GFX_PREF_FLOAT("apz.fling_friction", 0.0012);
+
+  ExecutePanGesture100Hz(ScreenIntPoint{739, 1424},
+                         {0, 0, -5, -10, -20, 0, -110, -86, 0, -102, -105});
+  CHECK_VELOCITY(Down, 6.3, 9.4);
+
+  ExecuteWait(TimeDuration::FromMilliseconds(1117));
+  CHECK_VELOCITY(Down, 1.6, 3.3);
+
+  ExecutePanGesture100Hz(ScreenIntPoint{726, 1380},
+                         {0, -8, 0, -30, -60, -87, -104, -111});
+  CHECK_VELOCITY(Down, 13.0, 23.0);
 }
