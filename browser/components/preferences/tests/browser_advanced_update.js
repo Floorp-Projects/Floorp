@@ -105,13 +105,19 @@ add_task(async function() {
   mockUpdateManager.register();
 
   // Test the dialog window opens
-  is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
+  ok(
+    BrowserTestUtils.is_hidden(dialogOverlay),
+    "The dialog should be invisible"
+  );
   let promiseSubDialogLoaded = promiseLoadSubDialog(
     "chrome://mozapps/content/update/history.xhtml"
   );
   showBtn.doCommand();
   await promiseSubDialogLoaded;
-  is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
+  ok(
+    !BrowserTestUtils.is_hidden(dialogOverlay),
+    "The dialog should be visible"
+  );
 
   let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
@@ -174,7 +180,10 @@ add_task(async function() {
   // Test the dialog window closes
   let closeBtn = dialogOverlay.querySelector(".dialogClose");
   closeBtn.doCommand();
-  is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
+  ok(
+    BrowserTestUtils.is_hidden(dialogOverlay),
+    "The dialog should be invisible"
+  );
 
   mockUpdateManager.unregister();
   gBrowser.removeCurrentTab();
