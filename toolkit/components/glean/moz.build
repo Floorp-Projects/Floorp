@@ -24,7 +24,6 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/MetricTypes.h",
         "bindings/private/Counter.h",
         "bindings/private/Timespan.h",
-        "bindings/private/Uuid.h",
     ]
 
     UNIFIED_SOURCES += [
@@ -32,7 +31,6 @@ if CONFIG["MOZ_GLEAN"]:
         "bindings/Glean.cpp",
         "bindings/private/Counter.cpp",
         "bindings/private/Timespan.cpp",
-        "bindings/private/Uuid.cpp",
         "ipc/FOGIPC.cpp",
     ]
 

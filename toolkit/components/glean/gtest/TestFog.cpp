@@ -9,7 +9,6 @@
 #include "nsString.h"
 
 using mozilla::Preferences;
-using namespace mozilla::glean;
 
 #define DATA_PREF "datareporting.healthreport.uploadEnabled"
 
@@ -69,19 +68,4 @@ TEST(FOG, TestCppTimespanWorks)
       mozilla::glean::test_only::can_we_time_it.TestHasValue("test-ping"));
   ASSERT_TRUE(
       mozilla::glean::test_only::can_we_time_it.TestGetValue("test-ping") > 0);
-}
-
-TEST(FOG, TestCppUuidWorks)
-{
-  nsCString kTestUuid("decafdec-afde-cafd-ecaf-decafdecafde");
-  test_only::what_id_it.Set(kTestUuid);
-  ASSERT_TRUE(test_only::what_id_it.TestHasValue("test-ping"));
-  ASSERT_STREQ(kTestUuid.get(),
-               test_only::what_id_it.TestGetValue("test-ping").get());
-
-  test_only::what_id_it.GenerateAndSet();
-  // Since we generate v4 UUIDs, and the first character of the third group
-  // isn't 4, this won't ever collide with kTestUuid.
-  ASSERT_STRNE(kTestUuid.get(),
-               test_only::what_id_it.TestGetValue("test-ping").get());
 }
