@@ -1404,13 +1404,10 @@ char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
 bool nsLookAndFeel::GetEchoPasswordImpl() { return false; }
 
 bool nsLookAndFeel::WidgetUsesImage(WidgetNodeType aNodeType) {
-  static constexpr GtkStateFlags sFlagsToCheck[] {
-    GTK_STATE_FLAG_NORMAL,
-    GTK_STATE_FLAG_PRELIGHT,
-    GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
-    GTK_STATE_FLAG_BACKDROP,
-    GTK_STATE_FLAG_INSENSITIVE
-  };
+  static constexpr GtkStateFlags sFlagsToCheck[]{
+      GTK_STATE_FLAG_NORMAL, GTK_STATE_FLAG_PRELIGHT,
+      GtkStateFlags(GTK_STATE_FLAG_PRELIGHT | GTK_STATE_FLAG_ACTIVE),
+      GTK_STATE_FLAG_BACKDROP, GTK_STATE_FLAG_INSENSITIVE};
 
   GtkStyleContext* style = GetStyleContext(aNodeType);
 

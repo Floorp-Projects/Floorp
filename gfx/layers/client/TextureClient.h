@@ -896,7 +896,7 @@ class MOZ_RAII DualTextureClientAutoLock {
 
   bool Succeeded() const { return !!mTarget; }
 
-  operator gfx::DrawTarget *() const { return mTarget; }
+  operator gfx::DrawTarget*() const { return mTarget; }
   gfx::DrawTarget* operator->() const { return mTarget; }
 
   RefPtr<gfx::DrawTarget> mTarget;

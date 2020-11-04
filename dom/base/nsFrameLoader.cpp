@@ -1863,7 +1863,8 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   if (mOwnerContent) {
     doc = mOwnerContent->OwnerDoc();
     dynamicSubframeRemoval = !aForProcessSwitch &&
-        mPendingBrowsingContext->IsFrame() && !doc->InUnlinkOrDeletion();
+                             mPendingBrowsingContext->IsFrame() &&
+                             !doc->InUnlinkOrDeletion();
     doc->SetSubDocumentFor(mOwnerContent, nullptr);
     MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
     SetOwnerContent(nullptr);

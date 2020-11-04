@@ -666,7 +666,7 @@ int main(int argc, const char* argv[]) {
   Replay replay;
 
   for (int i = 1; i < argc; i++) {
-    const char *option = argv[i];
+    const char* option = argv[i];
     if (strcmp(option, "-s") == 0) {
       replay.enableSlopCalculation();
     } else {

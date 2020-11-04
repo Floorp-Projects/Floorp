@@ -23,9 +23,9 @@
 #include "js/experimental/CodeCoverage.h"
 #include "js/experimental/Intl.h"  // JS::Add{,Moz}DisplayNamesConstructor, JS::AddMozDateTimeFormatConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"  // JS_STACK_GROWTH_DIRECTION
-#include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
-#include "js/Object.h"              // JS::GetClass
+#include "js/friend/StackLimits.h"    // JS_STACK_GROWTH_DIRECTION
+#include "js/friend/WindowProxy.h"    // js::ToWindowIfWindowProxy
+#include "js/Object.h"                // JS::GetClass
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/shadow/Object.h"  // JS::shadow::Object

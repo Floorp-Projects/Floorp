@@ -10,7 +10,7 @@
 #include <stdio.h>     // FILE, fileno, fopen, getc, getc_unlocked, _getc_nolock
 #include <sys/stat.h>  // stat, fstat
 
-#include "jsapi.h"        // JS_ReportErrorNumberLatin1
+#include "jsapi.h"  // JS_ReportErrorNumberLatin1
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_CANT_OPEN
 
