@@ -78,6 +78,18 @@ public class Camera2Enumerator implements CameraEnumerator {
         == CameraMetadata.LENS_FACING_BACK;
   }
 
+  @Override
+  public boolean isInfrared(String deviceName) {
+    CameraCharacteristics characteristics = getCameraCharacteristics(deviceName);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      Integer colors = characteristics.get(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT);
+      return colors != null && colors.equals(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_NIR);
+    }
+
+    return false;
+  }
+
   @Nullable
   @Override
   public List<CaptureFormat> getSupportedFormats(String deviceName) {

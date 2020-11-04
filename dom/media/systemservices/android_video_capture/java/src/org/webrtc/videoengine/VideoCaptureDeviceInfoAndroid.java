@@ -47,6 +47,7 @@ public class VideoCaptureDeviceInfoAndroid {
   private static CaptureCapabilityAndroid[] createDeviceList(CameraEnumerator enumerator) {
 
       ArrayList<CaptureCapabilityAndroid> allDevices = new ArrayList<CaptureCapabilityAndroid>();
+      ArrayList<CaptureCapabilityAndroid> IRDevices = new ArrayList<CaptureCapabilityAndroid>();
 
       for (String camera: enumerator.getDeviceNames()) {
           List<CaptureFormat> formats = enumerator.getSupportedFormats(camera);
@@ -66,6 +67,13 @@ public class VideoCaptureDeviceInfoAndroid {
           // camera facing in VideoCaptureCapability and none of this would be
           // necessary.
           device.name = "Facing " + (enumerator.isFrontFacing(camera) ? "front" : "back") + ":" + camera;
+
+
+          boolean ir = enumerator.isInfrared(camera);
+          device.infrared = ir;
+          if (ir) {
+            device.name += "(infrared)";
+          }
 
           // This isn't part of the new API, but we don't call
           // GetDeviceOrientation() anywhere, so this value is unused.
@@ -88,12 +96,25 @@ public class VideoCaptureDeviceInfoAndroid {
               i++;
           }
           device.frontFacing = enumerator.isFrontFacing(camera);
-          if (device.frontFacing) {
-            allDevices.add(0, device);
+          // Infrared devices always last (but front facing ones before
+          // non-front-facing ones), front-facing non IR first, other in
+          // the middle.
+          if (!device.infrared) {
+            if (device.frontFacing) {
+              allDevices.add(0, device);
+            } else {
+              allDevices.add(device);
+            }
           } else {
-            allDevices.add(device);
+            if (device.frontFacing) {
+              IRDevices.add(0, device);
+            } else {
+              IRDevices.add(device);
+            }
           }
       }
+
+      allDevices.addAll(IRDevices);
 
       return allDevices.toArray(new CaptureCapabilityAndroid[0]);
   }
