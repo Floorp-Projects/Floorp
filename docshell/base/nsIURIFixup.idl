@@ -123,7 +123,7 @@ interface nsIURIFixup : nsISupports
 
     /**
      * Convert load flags from nsIWebNavigation to URI fixup flags for use in
-     * createFixupURI or getFixupURIInfo.
+     * getFixupURIInfo.
      *
      * @param aURIText       Candidate URI; used for determining whether to
      *                       allow keyword lookups.
