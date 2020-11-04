@@ -144,8 +144,11 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
     SharedMemoryBasic::Handle handle;
     CrossProcessSemaphoreHandle readerSem;
     CrossProcessSemaphoreHandle writerSem;
-    mRecorder->Init(OtherPid(), &handle, &readerSem, &writerSem,
-                    MakeUnique<RingBufferWriterServices>(this));
+    if (!mRecorder->Init(OtherPid(), &handle, &readerSem, &writerSem,
+                         MakeUnique<RingBufferWriterServices>(this))) {
+      mRecorder = nullptr;
+      return;
+    }
 
     if (CanSend()) {
       Unused << SendInitTranslator(mTextureType, handle, readerSem, writerSem);
