@@ -22,7 +22,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLLabelElement::~HTMLLabelElement() = default;
 
@@ -246,4 +247,5 @@ nsGenericHTMLElement* HTMLLabelElement::GetFirstLabelableDescendant() const {
   return nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

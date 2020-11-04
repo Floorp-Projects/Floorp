@@ -10,7 +10,8 @@
 #include "nsContentUtils.h"
 #include "prtime.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 DragEvent::DragEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      WidgetDragEvent* aEvent)
@@ -86,7 +87,8 @@ already_AddRefed<DragEvent> DragEvent::Constructor(
   return e.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

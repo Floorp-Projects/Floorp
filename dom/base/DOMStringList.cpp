@@ -8,7 +8,8 @@
 #include "mozilla/dom/DOMStringListBinding.h"
 #include "nsContentUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(DOMStringList)
 
@@ -26,4 +27,5 @@ JSObject* DOMStringList::WrapObject(JSContext* aCx,
   return DOMStringList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

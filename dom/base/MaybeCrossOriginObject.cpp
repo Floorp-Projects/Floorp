@@ -25,7 +25,8 @@ static bool IsLocation(JSObject* obj) {
 }
 #endif  // DEBUG
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /* static */
 bool MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(JSContext* cx,
@@ -511,4 +512,5 @@ bool MaybeCrossOriginObject<Base>::hasInstance(JSContext* cx,
 template class MaybeCrossOriginObject<js::Wrapper>;
 template class MaybeCrossOriginObject<DOMProxyHandler>;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

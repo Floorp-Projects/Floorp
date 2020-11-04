@@ -12,7 +12,8 @@
 
 #include "jsapi.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageData)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ImageData)
@@ -128,4 +129,5 @@ bool ImageData::WriteStructuredClone(JSContext* aCx,
          JS_WriteTypedArray(aWriter, arrayValue);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

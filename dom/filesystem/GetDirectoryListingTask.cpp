@@ -19,7 +19,8 @@
 #include "nsIFile.h"
 #include "nsString.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /**
  * GetDirectoryListingTaskChild
@@ -363,4 +364,5 @@ nsresult GetDirectoryListingTaskParent::GetTargetPath(nsAString& aPath) const {
   return mTargetPath->GetPath(aPath);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

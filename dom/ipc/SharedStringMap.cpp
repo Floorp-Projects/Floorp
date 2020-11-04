@@ -18,7 +18,8 @@ namespace mozilla {
 
 using namespace ipc;
 
-namespace dom::ipc {
+namespace dom {
+namespace ipc {
 
 static constexpr uint32_t kSharedStringMapMagic = 0x9e3779b9;
 
@@ -139,5 +140,6 @@ Result<Ok, nsresult> SharedStringMapBuilder::Finalize(
   return mem.Finalize(aMap);
 }
 
-}  // namespace dom::ipc
+}  // namespace ipc
+}  // namespace dom
 }  // namespace mozilla

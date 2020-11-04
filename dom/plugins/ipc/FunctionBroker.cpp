@@ -18,7 +18,8 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 using namespace mozilla::plugins;
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 template <int QuirkFlag>
 static bool CheckQuirks(int aQuirks) {
@@ -1426,4 +1427,5 @@ void AddBrokeredFunctionHooks(FunctionHookArray& aHooks) {
 
 #undef FUN_HOOK
 
-}  // namespace mozilla::plugins
+}  // namespace plugins
+}  // namespace mozilla

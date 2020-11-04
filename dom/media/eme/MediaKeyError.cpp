@@ -8,7 +8,8 @@
 #include "mozilla/dom/MediaKeyErrorBinding.h"
 #include "nsContentUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaKeyError::MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode)
     : Event(aOwner, nullptr, nullptr), mSystemCode(aSystemCode) {
@@ -24,4 +25,5 @@ JSObject* MediaKeyError::WrapObjectInternal(JSContext* aCx,
   return MediaKeyError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

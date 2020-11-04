@@ -7,7 +7,8 @@
 #include "FetchObserver.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FetchObserver)
 
@@ -77,4 +78,5 @@ void FetchObserver::SetState(FetchState aState) {
   DispatchEvent(*event);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

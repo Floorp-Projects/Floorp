@@ -69,7 +69,8 @@
 
 using namespace mozilla::dom::exceptions;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 struct ConsoleStructuredCloneData {
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -2947,4 +2948,5 @@ bool Console::ArgumentData::PopulateArgumentsSequence(
   return true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -14,7 +14,8 @@
 
 #include "nsGkAtoms.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class IIRFilterNodeEngine final : public AudioNodeEngine {
  public:
@@ -253,4 +254,5 @@ void IIRFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
                               aMagResponse.Data(), aPhaseResponse.Data());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -10,7 +10,8 @@
 #include "mozilla/dom/PaintRequestListBinding.h"
 #include "mozilla/dom/DOMRect.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 /******************************************************************************
  * mozilla::dom::PaintRequest
@@ -57,4 +58,5 @@ JSObject* PaintRequestList::WrapObject(JSContext* aCx,
   return PaintRequestList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

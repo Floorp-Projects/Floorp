@@ -9,7 +9,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 StunAddrsRequestChild::StunAddrsRequestChild(
     StunAddrsListener* listener, nsISerialEventTarget* mainThreadEventTarget)
@@ -47,4 +48,5 @@ NS_IMPL_RELEASE(StunAddrsRequestChild)
 NS_IMPL_ADDREF(StunAddrsListener)
 NS_IMPL_RELEASE(StunAddrsListener)
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

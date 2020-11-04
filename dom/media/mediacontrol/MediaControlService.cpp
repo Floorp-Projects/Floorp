@@ -31,7 +31,8 @@ using mozilla::intl::Localization;
 #define LOG_MAINCONTROLLER_INFO(msg, ...) \
   MOZ_LOG(gMediaControlLog, LogLevel::Info, (msg, ##__VA_ARGS__))
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 StaticRefPtr<MediaControlService> gMediaControlService;
 static bool sIsXPCOMShutdown = false;
@@ -530,4 +531,5 @@ bool MediaControlService::ControllerManager::Contains(
   return mControllers.contains(aController);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

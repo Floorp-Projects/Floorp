@@ -15,7 +15,8 @@
 #include "AudioParamTimeline.h"
 #include "AudioParam.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(StereoPannerNode, AudioNode, mPan)
 
@@ -191,4 +192,5 @@ JSObject* StereoPannerNode::WrapObject(JSContext* aCx,
   return StereoPannerNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

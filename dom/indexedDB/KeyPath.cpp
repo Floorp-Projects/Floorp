@@ -22,7 +22,9 @@
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 namespace {
 
@@ -556,4 +558,6 @@ bool KeyPath::IsAllowedForObjectStore(bool aAutoIncrement) const {
   return true;
 }
 
-}  // namespace mozilla::dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

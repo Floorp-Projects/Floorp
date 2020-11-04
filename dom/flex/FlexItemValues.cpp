@@ -11,7 +11,8 @@
 #include "mozilla/dom/FlexLineValues.h"
 #include "nsFlexContainerFrame.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexItemValues, mParent, mNode,
                                       mFrameRect)
@@ -93,4 +94,5 @@ double FlexItemValues::CrossMaxSize() const { return mCrossMaxSize; }
 
 FlexItemClampState FlexItemValues::ClampState() const { return mClampState; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

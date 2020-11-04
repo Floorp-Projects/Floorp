@@ -11,7 +11,8 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/PClientManagerParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ClientSourceParent* ClientHandleOpParent::GetSource() const {
   auto handle = static_cast<ClientHandleParent*>(Manager());
@@ -87,4 +88,5 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
       ->Track(mSourcePromiseRequestHolder);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

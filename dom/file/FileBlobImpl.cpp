@@ -16,7 +16,8 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
     : mMutex("FileBlobImpl::mMutex"),
@@ -291,4 +292,5 @@ bool FileBlobImpl::IsDirectory() const {
   return isDirectory;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -12,7 +12,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLDivElement::~HTMLDivElement() = default;
 
@@ -52,4 +53,5 @@ nsMapRuleToAttributesFunc HTMLDivElement::GetAttributeMappingFunction() const {
   return &MapAttributesIntoRule;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

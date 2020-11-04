@@ -9,7 +9,8 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Pose.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Pose)
 
@@ -84,4 +85,5 @@ void Pose::SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
   aRetVal.set(aObj);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

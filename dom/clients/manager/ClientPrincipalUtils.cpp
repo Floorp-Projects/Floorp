@@ -8,7 +8,8 @@
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::ContentPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
@@ -45,4 +46,5 @@ bool ClientMatchPrincipalInfo(const PrincipalInfo& aLeft,
   MOZ_CRASH("unexpected principal type!");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

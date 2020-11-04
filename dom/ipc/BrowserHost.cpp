@@ -13,7 +13,8 @@
 
 #include "nsIObserverService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserHost)
   NS_INTERFACE_MAP_ENTRY(nsIRemoteTab)
@@ -282,4 +283,5 @@ BrowserHost::MaybeCancelContentJSExecutionFromScript(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

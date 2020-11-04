@@ -8,7 +8,8 @@
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentRequestManager.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PaymentRequestChild::PaymentRequestChild(PaymentRequest* aRequest)
     : mRequest(aRequest) {
@@ -137,4 +138,5 @@ void PaymentRequestChild::DetachFromRequest(bool aCanBeInManager) {
   mRequest = nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // end of namespace dom
+}  // end of namespace mozilla

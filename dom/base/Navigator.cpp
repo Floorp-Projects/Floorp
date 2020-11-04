@@ -112,7 +112,8 @@
 
 #include "mozilla/intl/LocaleService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 static const nsLiteralCString kVibrationPermissionType = "vibration"_ns;
 
@@ -2161,4 +2162,5 @@ bool Navigator::Webdriver() {
   return Preferences::GetBool("marionette.enabled", false);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

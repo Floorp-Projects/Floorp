@@ -18,7 +18,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLSharedListElement::~HTMLSharedListElement() = default;
 
@@ -163,4 +164,5 @@ JSObject* HTMLSharedListElement::WrapNode(JSContext* aCx,
   return HTMLUListElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

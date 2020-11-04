@@ -9,7 +9,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Frame)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLFrameElement::HTMLFrameElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -51,4 +52,5 @@ JSObject* HTMLFrameElement::WrapNode(JSContext* aCx,
   return HTMLFrameElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

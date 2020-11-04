@@ -20,7 +20,8 @@
 #include "mozilla/dom/WebCryptoTask.h"
 #include "transport/dtlsidentity.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 #define RTCCERTIFICATE_SC_VERSION 0x00000001
 
@@ -392,4 +393,5 @@ already_AddRefed<RTCCertificate> RTCCertificate::ReadStructuredClone(
   return cert.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

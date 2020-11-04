@@ -19,7 +19,8 @@
 #include "nsThreadUtils.h"
 #include "nscore.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 SDBRequest::SDBRequest(SDBConnection* aConnection)
     : mConnection(aConnection),
@@ -122,4 +123,5 @@ SDBRequest::SetCallback(nsISDBCallback* aCallback) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -15,7 +15,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLPreElement::~HTMLPreElement() = default;
 
@@ -79,4 +80,5 @@ JSObject* HTMLPreElement::WrapNode(JSContext* aCx,
   return HTMLPreElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

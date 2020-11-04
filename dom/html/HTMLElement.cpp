@@ -8,7 +8,8 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "nsContentUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class HTMLElement final : public nsGenericHTMLElement {
  public:
@@ -38,7 +39,8 @@ JSObject* HTMLElement::WrapNode(JSContext* aCx,
   return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 // Here, we expand 'NS_IMPL_NS_NEW_HTML_ELEMENT()' by hand.
 // (Calling the macro directly (with no args) produces compiler warnings.)

@@ -15,7 +15,8 @@
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
 
@@ -186,4 +187,5 @@ RefPtr<GenericPromise> ClientHandle::OnDetach() {
   return mDetachPromise;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

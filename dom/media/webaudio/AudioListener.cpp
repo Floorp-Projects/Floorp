@@ -9,7 +9,8 @@
 #include "mozilla/dom/AudioListenerBinding.h"
 #include "MediaTrackGraphImpl.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioListener, mContext)
 
@@ -134,4 +135,5 @@ size_t AudioListener::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

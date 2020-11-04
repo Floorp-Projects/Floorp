@@ -10,7 +10,8 @@
 #include "AudioNodeTrack.h"
 #include "AudioContext.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioParam)
 
@@ -171,4 +172,5 @@ float AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const {
   return audioNodeInputValue;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

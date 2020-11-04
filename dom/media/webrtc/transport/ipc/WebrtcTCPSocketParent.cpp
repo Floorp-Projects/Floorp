@@ -14,7 +14,8 @@
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 mozilla::ipc::IPCResult WebrtcTCPSocketParent::RecvAsyncOpen(
     const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
@@ -115,4 +116,5 @@ void WebrtcTCPSocketParent::CleanupChannel() {
   }
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

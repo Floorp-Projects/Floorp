@@ -47,7 +47,8 @@ nsGenericHTMLElement* NS_NewHTMLTrackElement(
   return new (nim) mozilla::dom::HTMLTrackElement(nodeInfo.forget());
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Map html attribute string values to TextTrackKind enums.
 static constexpr nsAttrValue::EnumTable kKindTable[] = {
@@ -510,4 +511,5 @@ void HTMLTrackElement::DispatchTestEvent(const nsAString& aName) {
   DispatchTrustedEvent(aName);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

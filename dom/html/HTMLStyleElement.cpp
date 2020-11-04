@@ -15,7 +15,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLStyleElement::HTMLStyleElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -198,4 +199,5 @@ JSObject* HTMLStyleElement::WrapNode(JSContext* aCx,
   return HTMLStyleElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -14,7 +14,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLTableCaptionElement::~HTMLTableCaptionElement() = default;
 
@@ -72,4 +73,5 @@ nsMapRuleToAttributesFunc HTMLTableCaptionElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

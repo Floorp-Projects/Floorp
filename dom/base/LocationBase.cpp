@@ -18,7 +18,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowContext.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
     nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
@@ -246,4 +247,5 @@ nsIURI* LocationBase::GetSourceBaseURL() {
   return doc ? doc->GetBaseURI() : nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

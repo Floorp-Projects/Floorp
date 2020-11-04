@@ -16,7 +16,9 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PBackgroundParent;
@@ -313,4 +315,6 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
   }
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

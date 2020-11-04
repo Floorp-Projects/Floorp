@@ -10,7 +10,8 @@
 #include "mozilla/dom/SharedMessageBody.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MessagePortParent::MessagePortParent(const nsID& aUUID)
     : mService(MessagePortService::GetOrCreate()),
@@ -157,4 +158,5 @@ bool MessagePortParent::ForceClose(const nsID& aUUID,
   return service->ForceClose(aUUID, aDestinationUUID, aSequenceID);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

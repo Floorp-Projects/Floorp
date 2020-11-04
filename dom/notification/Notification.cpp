@@ -59,7 +59,8 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 struct NotificationStrings {
   const nsString mID;
@@ -2283,4 +2284,5 @@ nsresult Notification::DispatchToMainThread(
                               nsIEventTarget::DISPATCH_NORMAL);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

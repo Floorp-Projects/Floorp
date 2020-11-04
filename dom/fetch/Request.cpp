@@ -20,7 +20,8 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ADDREF_INHERITED(Request, FetchBody<Request>)
 NS_IMPL_RELEASE_INHERITED(Request, FetchBody<Request>)
@@ -661,4 +662,5 @@ AbortSignal* Request::GetOrCreateSignal() {
 
 AbortSignalImpl* Request::GetSignalImpl() const { return mSignal; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

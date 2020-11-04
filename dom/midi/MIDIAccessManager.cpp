@@ -18,7 +18,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 // Singleton object for MIDIAccessManager
@@ -145,4 +146,5 @@ void MIDIAccessManager::Update(const MIDIPortList& aPortList) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

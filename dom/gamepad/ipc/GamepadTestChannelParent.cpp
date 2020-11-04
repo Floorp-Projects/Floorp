@@ -10,7 +10,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 already_AddRefed<GamepadTestChannelParent> GamepadTestChannelParent::Create() {
   return RefPtr<GamepadTestChannelParent>(new GamepadTestChannelParent())
@@ -125,4 +126,5 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
   return IPC_FAIL_NO_REASON(this);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

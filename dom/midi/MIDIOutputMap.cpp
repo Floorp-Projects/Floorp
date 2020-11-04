@@ -7,7 +7,8 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MIDIOutputMap, mParent)
 
@@ -26,4 +27,5 @@ JSObject* MIDIOutputMap::WrapObject(JSContext* aCx,
   return MIDIOutputMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

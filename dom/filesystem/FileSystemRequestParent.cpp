@@ -21,7 +21,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 FileSystemRequestParent::FileSystemRequestParent() : mDestroyed(false) {
   AssertIsOnBackgroundThread();
@@ -178,4 +179,5 @@ void FileSystemRequestParent::ActorDestroy(ActorDestroyReason aWhy) {
   mDestroyed = true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

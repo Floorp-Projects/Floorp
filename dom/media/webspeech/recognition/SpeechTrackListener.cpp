@@ -9,7 +9,8 @@
 #include "SpeechRecognition.h"
 #include "nsProxyRelease.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
     : mRecognition(aRecognition),
@@ -87,4 +88,5 @@ void SpeechTrackListener::NotifyRemoved(MediaTrackGraph* aGraph) {
   mRemovedHolder.ResolveIfExists(true, __func__);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

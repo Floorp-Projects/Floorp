@@ -33,7 +33,8 @@ using mozilla::ipc::GeckoChildProcessHost;
 
 static const int kInvalidFd = -1;
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 bool GMPProcessParent::sLaunchWithMacSandbox = true;
@@ -262,4 +263,5 @@ nsresult GMPProcessParent::NormalizePath(const char* aPath,
 }
 #endif
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

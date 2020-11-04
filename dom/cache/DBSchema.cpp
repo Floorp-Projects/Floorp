@@ -33,7 +33,10 @@
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 
-namespace mozilla::dom::cache::db {
+namespace mozilla {
+namespace dom {
+namespace cache {
+namespace db {
 const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
 // ## Firefox 57 Cache API v25/v26/v27 Schema Hack Info
@@ -3535,4 +3538,7 @@ nsresult MigrateFrom26To27(mozIStorageConnection& aConn, bool& aRewriteSchema) {
 }
 
 }  // anonymous namespace
-}  // namespace mozilla::dom::cache::db
+}  // namespace db
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

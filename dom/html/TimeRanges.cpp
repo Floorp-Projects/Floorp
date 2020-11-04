@@ -10,7 +10,8 @@
 #include "TimeUnits.h"
 #include "nsError.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TimeRanges, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeRanges)
@@ -166,4 +167,5 @@ void TimeRanges::Shift(double aOffset) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

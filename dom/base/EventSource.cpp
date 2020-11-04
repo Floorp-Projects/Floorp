@@ -49,7 +49,8 @@
 #include "mozilla/Encoding.h"
 #include "ReferrerInfo.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 static LazyLogModule gEventSourceLog("EventSource");
 
@@ -2049,4 +2050,5 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(EventSource, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(EventSource, DOMEventTargetHelper)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

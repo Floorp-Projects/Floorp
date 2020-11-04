@@ -36,7 +36,8 @@
 
 #include "mozilla/ipc/BackgroundUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
 using mozilla::ipc::CSPInfo;
@@ -762,4 +763,5 @@ bool ClientSource::CalledRegisterForServiceWorkerScope(
   return mRegisteringScopeList.Contains(aScope);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

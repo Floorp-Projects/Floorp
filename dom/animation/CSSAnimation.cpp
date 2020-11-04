@@ -12,7 +12,8 @@
 #include "mozilla/TimeStamp.h"
 #include "nsPresContext.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using AnimationPhase = ComputedTiming::AnimationPhase;
 
@@ -362,4 +363,5 @@ void CSSAnimationKeyframeEffect::MaybeFlushUnanimatedStyle() const {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

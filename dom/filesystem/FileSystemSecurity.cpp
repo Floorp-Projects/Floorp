@@ -10,7 +10,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPtr.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -104,4 +105,5 @@ bool FileSystemSecurity::ContentProcessHasAccessTo(ContentParentId aId,
   return false;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -17,7 +17,10 @@
  */
 #define CHANGE_EVENT_NAME u"typechange"_ns
 
-namespace mozilla::dom::network {
+namespace mozilla {
+namespace dom {
+
+namespace network {
 
 // Don't use |Connection| alone, since that confuses nsTraceRefcnt since
 // we're not the only class with that name.
@@ -83,4 +86,6 @@ already_AddRefed<Connection> Connection::CreateForWorker(
   return ConnectionWorker::Create(aWorkerPrivate, aRv);
 }
 
-}  // namespace mozilla::dom::network
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla

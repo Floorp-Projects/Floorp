@@ -9,7 +9,8 @@
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -88,4 +89,5 @@ nsresult FileSystemUtils::DispatchRunnable(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

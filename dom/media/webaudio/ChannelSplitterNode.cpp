@@ -9,7 +9,8 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class ChannelSplitterNodeEngine final : public AudioNodeEngine {
  public:
@@ -100,4 +101,5 @@ JSObject* ChannelSplitterNode::WrapObject(JSContext* aCx,
   return ChannelSplitterNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

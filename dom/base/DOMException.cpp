@@ -137,7 +137,8 @@ nsresult NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Exception)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -405,4 +406,5 @@ already_AddRefed<DOMException> DOMException::Create(
   return inst.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

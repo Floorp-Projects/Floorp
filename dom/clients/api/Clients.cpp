@@ -21,7 +21,8 @@
 #include "nsIGlobalObject.h"
 #include "nsString.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::CSPInfo;
 using mozilla::ipc::PrincipalInfo;
@@ -284,4 +285,5 @@ already_AddRefed<Promise> Clients::Claim(ErrorResult& aRv) {
   return outerPromise.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

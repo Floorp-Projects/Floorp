@@ -16,7 +16,9 @@
 #include "Key.h"
 #include "ThreadLocal.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 namespace {
 static const char kQuote = '\"';
@@ -285,4 +287,6 @@ void LoggingHelper(const char* aDetailedFmt, const char* aConciseFmt, ...) {
   }
 }
 
-}  // namespace mozilla::dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

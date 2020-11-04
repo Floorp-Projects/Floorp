@@ -10,7 +10,8 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/StaticMutex.h"
 
-namespace mozilla::webgl {
+namespace mozilla {
+namespace webgl {
 
 const char* ToString(const ComponentType type) {
   switch (type) {
@@ -1233,4 +1234,5 @@ const FormatUsageInfo* FormatUsageAuthority::GetUsage(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}  // namespace mozilla::webgl
+}  // namespace webgl
+}  // namespace mozilla

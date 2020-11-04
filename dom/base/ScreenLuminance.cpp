@@ -7,7 +7,8 @@
 #include "ScreenLuminance.h"
 #include "nsScreen.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScreenLuminance, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScreenLuminance, Release)
@@ -18,4 +19,5 @@ JSObject* ScreenLuminance::WrapObject(JSContext* aCx,
   return ScreenLuminance_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

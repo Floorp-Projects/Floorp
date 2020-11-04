@@ -9,7 +9,8 @@
 
 #include "mozilla/StaticPrefs_browser.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 bool BindContext::AllowsAutoFocus() const {
   if (!StaticPrefs::browser_autofocus()) {
@@ -44,4 +45,5 @@ bool BindContext::IsSameOriginAsTop() const {
   return NS_SUCCEEDED(nsContentUtils::CheckSameOrigin(topLevelDocument, &mDoc));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

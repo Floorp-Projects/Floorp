@@ -15,7 +15,8 @@
 #include "mozilla/dom/Document.h"
 #include "nsITimedChannel.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceTiming, mPerformance)
 
@@ -613,4 +614,5 @@ nsTArray<nsCOMPtr<nsIServerTiming>> PerformanceTimingData::GetServerTiming() {
   return mServerTiming.Clone();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

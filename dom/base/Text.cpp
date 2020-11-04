@@ -8,7 +8,8 @@
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 already_AddRefed<Text> Text::SplitText(uint32_t aOffset, ErrorResult& aRv) {
   nsAutoString cutText;
@@ -154,4 +155,5 @@ bool Text::HasTextForTranslation() {
   return false;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

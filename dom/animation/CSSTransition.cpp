@@ -13,7 +13,8 @@
 #include "mozilla/TimeStamp.h"
 #include "nsPresContext.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSObject* CSSTransition::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -333,4 +334,5 @@ void CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

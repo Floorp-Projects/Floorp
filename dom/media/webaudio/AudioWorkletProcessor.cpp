@@ -13,7 +13,8 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioWorkletProcessor, mParent, mPort)
 
@@ -49,4 +50,5 @@ JSObject* AudioWorkletProcessor::WrapObject(JSContext* aCx,
   return AudioWorkletProcessor_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

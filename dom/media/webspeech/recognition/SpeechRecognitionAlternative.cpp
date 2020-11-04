@@ -10,7 +10,8 @@
 
 #include "SpeechRecognition.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionAlternative, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechRecognitionAlternative)
@@ -41,4 +42,5 @@ void SpeechRecognitionAlternative::GetTranscript(nsString& aRetVal) const {
 
 float SpeechRecognitionAlternative::Confidence() const { return mConfidence; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

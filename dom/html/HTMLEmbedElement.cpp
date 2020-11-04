@@ -24,7 +24,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Embed)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLEmbedElement::HTMLEmbedElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -292,4 +293,5 @@ nsContentPolicyType HTMLEmbedElement::GetContentPolicyType() const {
   return nsIContentPolicy::TYPE_INTERNAL_EMBED;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

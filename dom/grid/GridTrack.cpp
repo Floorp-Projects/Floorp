@@ -9,7 +9,8 @@
 #include "GridTracks.h"
 #include "mozilla/dom/GridBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GridTrack, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GridTrack)
@@ -51,4 +52,5 @@ void GridTrack::SetTrackValues(double aStart, double aBreadth,
   mState = aState;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

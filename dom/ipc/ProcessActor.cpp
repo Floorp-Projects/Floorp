@@ -15,7 +15,8 @@
 #include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/JSProcessActorProtocol.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 already_AddRefed<JSActorProtocol> ProcessActor::MatchingJSActorProtocol(
     JSActorService* aActorSvc, const nsACString& aName, ErrorResult& aRv) {
@@ -34,4 +35,5 @@ already_AddRefed<JSActorProtocol> ProcessActor::MatchingJSActorProtocol(
   return proto.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

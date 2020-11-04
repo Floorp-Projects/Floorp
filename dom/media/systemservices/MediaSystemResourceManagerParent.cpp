@@ -8,7 +8,8 @@
 
 #include "MediaSystemResourceManagerParent.h"
 
-namespace mozilla::media {
+namespace mozilla {
+namespace media {
 
 using namespace ipc;
 
@@ -71,4 +72,5 @@ void MediaSystemResourceManagerParent::ActorDestroy(
   mDestroyed = true;
 }
 
-}  // namespace mozilla::media
+}  // namespace media
+}  // namespace mozilla

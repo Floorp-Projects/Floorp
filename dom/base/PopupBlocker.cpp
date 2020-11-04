@@ -15,7 +15,8 @@
 #include "nsXULPopupManager.h"
 #include "nsIPermissionManager.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -469,7 +470,8 @@ void PopupBlocker::UnregisterOpenPopupSpam() {
 /* static */
 uint32_t PopupBlocker::GetOpenPopupSpamCount() { return sOpenPopupSpamCount; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 AutoPopupStatePusherInternal::AutoPopupStatePusherInternal(
     mozilla::dom::PopupBlocker::PopupControlState aState, bool aForce)

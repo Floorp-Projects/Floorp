@@ -14,7 +14,8 @@
 #include "PaymentRequestParent.h"
 #include "PaymentRequestService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 PaymentRequestParent::PaymentRequestParent()
     : mActorAlive(true), mRequestId(u""_ns) {}
@@ -465,4 +466,5 @@ nsresult PaymentRequestParent::SerializeResponseData(
   }
   return NS_OK;
 }
-}  // namespace mozilla::dom
+}  // end of namespace dom
+}  // end of namespace mozilla

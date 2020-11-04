@@ -9477,7 +9477,8 @@ void nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode) {
   }
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   nsINode* adoptedNode = &aAdoptedNode;
@@ -17111,4 +17112,5 @@ void Document::DisableChildElementInPictureInPictureMode() {
   MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

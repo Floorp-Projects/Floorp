@@ -8,7 +8,8 @@
 
 #include "ClientSourceParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -54,4 +55,5 @@ ClientSourceOpParent::~ClientSourceOpParent() {
   MOZ_DIAGNOSTIC_ASSERT(!mPromise);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

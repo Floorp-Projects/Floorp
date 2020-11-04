@@ -9,7 +9,8 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TestInterfaceSetlike, mParent)
 
@@ -48,4 +49,5 @@ nsPIDOMWindowInner* TestInterfaceSetlike::GetParentObject() const {
   return mParent;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -16,7 +16,8 @@
 using namespace mozilla;
 using namespace dom;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 Comment::~Comment() = default;
 
@@ -66,4 +67,5 @@ JSObject* Comment::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Comment_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

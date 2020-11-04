@@ -31,7 +31,8 @@
 #  undef CreateFile
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -810,4 +811,5 @@ void BodyConsumer::RunAbortAlgorithm() {
 
 NS_IMPL_ISUPPORTS(BodyConsumer, nsIObserver, nsISupportsWeakReference)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

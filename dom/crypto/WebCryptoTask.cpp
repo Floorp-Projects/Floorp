@@ -34,7 +34,8 @@ const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
         0,
     }};
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Pre-defined identifiers for telemetry histograms
 
@@ -3235,4 +3236,5 @@ WebCryptoTask::WebCryptoTask()
 
 WebCryptoTask::~WebCryptoTask() = default;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

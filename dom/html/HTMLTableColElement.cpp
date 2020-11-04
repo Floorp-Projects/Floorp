@@ -12,7 +12,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // use the same protection as ancient code did
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
@@ -100,4 +101,5 @@ nsMapRuleToAttributesFunc HTMLTableColElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

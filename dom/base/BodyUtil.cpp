@@ -29,7 +29,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URLSearchParams.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -498,4 +499,5 @@ void BodyUtil::ConsumeJson(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
   aValue.set(json);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

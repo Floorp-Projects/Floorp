@@ -9,7 +9,8 @@
 #include "mozilla/dom/MIDIPortParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMETHODIMP
 MIDIBackgroundRunnable::Run() {
@@ -46,4 +47,5 @@ void SendPortListRunnable::RunInternal() {
   MIDIPlatformService::Get()->SendPortList();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

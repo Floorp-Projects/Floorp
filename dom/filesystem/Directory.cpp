@@ -17,7 +17,8 @@
 #include "mozilla/dom/OSFileSystem.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Directory)
 
@@ -196,4 +197,5 @@ FileSystemBase* Directory::GetFileSystem(ErrorResult& aRv) {
   return mFileSystem;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

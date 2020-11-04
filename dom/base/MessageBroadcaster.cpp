@@ -7,7 +7,8 @@
 #include "mozilla/dom/MessageBroadcaster.h"
 #include "mozilla/dom/ContentParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MessageBroadcaster::MessageBroadcaster(MessageBroadcaster* aParentManager,
                                        MessageManagerFlags aFlags)
@@ -35,4 +36,5 @@ void MessageBroadcaster::RemoveChildManager(MessageListenerManager* aManager) {
   mChildManagers.RemoveElement(aManager);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -22,7 +22,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::ipc;
@@ -744,4 +745,5 @@ JSObject* IDBFileHandle::WrapObject(JSContext* aCx,
   return IDBFileHandle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

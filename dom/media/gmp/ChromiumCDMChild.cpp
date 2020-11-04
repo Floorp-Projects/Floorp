@@ -19,7 +19,8 @@
 
 #include <type_traits>
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 ChromiumCDMChild::ChromiumCDMChild(GMPContentChild* aPlugin)
     : mPlugin(aPlugin) {
@@ -833,4 +834,5 @@ void ChromiumCDMChild::GiveBuffer(ipc::Shmem&& aBuffer) {
       sz, ToString(mBuffers).get(), mDecoderInitialized);
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

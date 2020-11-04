@@ -9,7 +9,8 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsReadableUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          const nsACString& aUtf8String,
@@ -48,4 +49,5 @@ void TextEncoder::GetEncoding(nsACString& aEncoding) {
   aEncoding.AssignLiteral("utf-8");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

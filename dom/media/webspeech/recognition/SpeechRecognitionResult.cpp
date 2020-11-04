@@ -9,7 +9,8 @@
 
 #include "SpeechRecognition.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionResult, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechRecognitionResult)
@@ -56,4 +57,5 @@ bool SpeechRecognitionResult::IsFinal() const {
   return true;  // TODO
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

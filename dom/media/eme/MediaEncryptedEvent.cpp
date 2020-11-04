@@ -12,7 +12,8 @@
 #include "nsINode.h"
 #include "mozilla/dom/MediaKeys.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaEncryptedEvent)
 
@@ -108,4 +109,5 @@ void MediaEncryptedEvent::GetInitData(JSContext* cx,
   aData.set(mInitData);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

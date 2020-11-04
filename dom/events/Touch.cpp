@@ -12,7 +12,8 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // static
 already_AddRefed<Touch> Touch::Constructor(const GlobalObject& aGlobal,
@@ -198,4 +199,5 @@ nsIGlobalObject* Touch::GetParentObject() {
   return mOriginalTarget->GetOwnerGlobal();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

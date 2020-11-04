@@ -12,7 +12,8 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSWindowActorParent::~JSWindowActorParent() { MOZ_ASSERT(!mManager); }
 
@@ -118,4 +119,5 @@ NS_INTERFACE_MAP_END_INHERITING(JSActor)
 NS_IMPL_ADDREF_INHERITED(JSWindowActorParent, JSActor)
 NS_IMPL_RELEASE_INHERITED(JSWindowActorParent, JSActor)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

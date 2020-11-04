@@ -39,7 +39,9 @@ class NullAction final : public Action {
 
 }  // namespace
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::OpenDirectoryListener;
@@ -1042,4 +1044,6 @@ void Context::DoomTargetData() {
   MOZ_DIAGNOSTIC_ASSERT(!mData);
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

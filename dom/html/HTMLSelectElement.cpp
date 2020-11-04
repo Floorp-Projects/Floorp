@@ -38,7 +38,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 //----------------------------------------------------------------------
 //
@@ -1626,4 +1627,5 @@ JSObject* HTMLSelectElement::WrapNode(JSContext* aCx,
   return HTMLSelectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

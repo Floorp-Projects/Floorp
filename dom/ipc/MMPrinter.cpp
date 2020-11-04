@@ -15,7 +15,8 @@
 #include "mozilla/ErrorResult.h"
 #include "nsFrameMessageManager.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 LazyLogModule MMPrinter::sMMLog("MessageManager");
 
@@ -77,4 +78,5 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
           ("   %s", NS_ConvertUTF16toUTF8(srcString).get()));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

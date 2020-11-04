@@ -27,7 +27,9 @@
 #include "nsThreadUtils.h"
 #include "nsVariant.h"
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+namespace dom {
+namespace quota {
 
 /*******************************************************************************
  * QuotaChild
@@ -375,4 +377,6 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom::quota
+}  // namespace quota
+}  // namespace dom
+}  // namespace mozilla

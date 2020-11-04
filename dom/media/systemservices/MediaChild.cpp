@@ -17,7 +17,8 @@
 mozilla::LazyLogModule gMediaChildLog("MediaChild");
 #define LOG(args) MOZ_LOG(gMediaChildLog, mozilla::LogLevel::Debug, args)
 
-namespace mozilla::media {
+namespace mozilla {
+namespace media {
 
 RefPtr<PrincipalKeyPromise> GetPrincipalKey(
     const ipc::PrincipalInfo& aPrincipalInfo, bool aPersist) {
@@ -92,4 +93,5 @@ bool DeallocPMediaChild(media::PMediaChild* aActor) {
   return true;
 }
 
-}  // namespace mozilla::media
+}  // namespace media
+}  // namespace mozilla

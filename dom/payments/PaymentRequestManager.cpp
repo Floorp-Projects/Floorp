@@ -15,7 +15,8 @@
 #include "PaymentRequestUtils.h"
 #include "PaymentResponse.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 namespace {
 
 /*
@@ -749,4 +750,5 @@ nsresult PaymentRequestManager::ChangePaymentMethod(
   return aRequest->UpdatePaymentMethod(aMethodName, methodDetails);
 }
 
-}  // namespace mozilla::dom
+}  // end of namespace dom
+}  // end of namespace mozilla

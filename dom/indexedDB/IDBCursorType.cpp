@@ -6,7 +6,8 @@
 
 #include "IDBCursorType.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 CommonCursorDataBase::CommonCursorDataBase(Key aKey) : mKey{std::move(aKey)} {}
 
 IndexCursorDataBase::IndexCursorDataBase(Key aKey, Key aLocaleAwareKey,
@@ -31,4 +32,5 @@ CursorData<IDBCursorType::Index>::CursorData(
                           std::move(aObjectStoreKey)},
       ValueCursorDataBase{std::move(aCloneInfo)} {}
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -9,7 +9,8 @@
 #include "js/SavedFrameAPI.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 SerializedStackHolder::SerializedStackHolder()
     : mHolder(StructuredCloneHolder::CloningSupported,
@@ -149,4 +150,5 @@ void NotifyNetworkMonitorAlternateStack(nsISupports* aChannel,
                               PromiseFlatString(aStackJSON).get());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

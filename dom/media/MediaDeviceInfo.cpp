@@ -7,7 +7,8 @@
 #include "mozilla/MediaManager.h"
 #include "nsIScriptGlobalObject.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaDeviceInfo::MediaDeviceInfo(const nsAString& aDeviceId,
                                  MediaDeviceKind aKind, const nsAString& aLabel,
@@ -39,4 +40,5 @@ void MediaDeviceInfo::GetLabel(nsString& retval) { retval = mLabel; }
 
 MediaDeviceKind Kind();
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

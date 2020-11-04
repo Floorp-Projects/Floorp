@@ -18,7 +18,9 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::dom::OptionalFileDescriptorSet;
 using mozilla::ipc::AutoIPCStream;
@@ -151,4 +153,6 @@ void CacheStreamControlParent::NotifyCloseAll() {
   CloseAllReadStreams();
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

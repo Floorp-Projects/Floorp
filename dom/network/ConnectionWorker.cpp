@@ -11,7 +11,9 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 
-namespace mozilla::dom::network {
+namespace mozilla {
+namespace dom {
+namespace network {
 
 class ConnectionProxy final : public hal::NetworkObserver {
  public:
@@ -205,4 +207,6 @@ void ConnectionProxy::Shutdown() {
   mWorkerRef = nullptr;
 }
 
-}  // namespace mozilla::dom::network
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla

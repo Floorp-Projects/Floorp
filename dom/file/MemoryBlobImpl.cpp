@@ -13,7 +13,8 @@
 #include "nsStringStream.h"
 #include "prtime.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ADDREF(MemoryBlobImpl::DataOwnerAdapter)
 NS_IMPL_RELEASE(MemoryBlobImpl::DataOwnerAdapter)
@@ -190,4 +191,5 @@ void MemoryBlobImpl::DataOwner::EnsureMemoryReporterRegistered() {
   sMemoryReporterRegistered = true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

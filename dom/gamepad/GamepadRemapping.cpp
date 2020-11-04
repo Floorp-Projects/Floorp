@@ -14,7 +14,8 @@
 #include "mozilla/dom/GamepadRemapping.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // Follow the canonical ordering recommendation for the "Standard Gamepad"
 // from https://www.w3.org/TR/gamepad/#remapping.
@@ -2117,4 +2118,5 @@ already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
   return do_AddRef(defaultRemapper.get());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

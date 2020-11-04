@@ -8,7 +8,8 @@
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/RootedDictionary.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PaymentRequestUpdateEvent, Event, mRequest)
 
@@ -156,4 +157,5 @@ JSObject* PaymentRequestUpdateEvent::WrapObjectInternal(
   return PaymentRequestUpdateEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -16,7 +16,9 @@
 #include "nsIDocShell.h"
 #include "mozilla/WidgetUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+
+namespace dom {
 
 /******************************************************************************
  * TouchList
@@ -331,7 +333,8 @@ bool TouchEvent::CtrlKey() { return mEvent->AsTouchEvent()->IsControl(); }
 
 bool TouchEvent::ShiftKey() { return mEvent->AsTouchEvent()->IsShift(); }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

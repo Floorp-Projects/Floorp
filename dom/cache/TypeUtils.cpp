@@ -31,7 +31,9 @@
 #include "nsString.h"
 #include "nsURLParsers.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::BackgroundChild;
@@ -507,4 +509,6 @@ void TypeUtils::SerializeCacheStream(
   aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla
