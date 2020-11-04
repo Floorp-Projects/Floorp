@@ -11,6 +11,9 @@
 permission-dialog-description =
   Allow this site to open the { $scheme } link?
 
+permission-dialog-description-file =
+  Allow this file to open the { $scheme } link?
+
 permission-dialog-description-host =
   Allow { $host } to open the { $scheme } link?
 
@@ -20,12 +23,19 @@ permission-dialog-description-app =
 permission-dialog-description-host-app =
   Allow { $host } to open the { $scheme } link with { $appName }?
 
+permission-dialog-description-file-app =
+  Allow this file to open the { $scheme } link with { $appName }?
 
-# Please keep the emphasis around the hostname and scheme (ie the
-# `<strong>` HTML tags). Please also keep the hostname as close to the start
-# of the sentence as your language's grammar allows.
+## Please keep the emphasis around the hostname and scheme (ie the
+## `<strong>` HTML tags). Please also keep the hostname as close to the start
+## of the sentence as your language's grammar allows.
 permission-dialog-remember =
   Always allow <strong>{ $host }</strong> to open <strong>{ $scheme }</strong> links
+
+permission-dialog-remember-file =
+  Always allow this file to open <strong>{ $scheme }</strong> links
+
+##
 
 permission-dialog-btn-open-link =
       .label = Open Link
