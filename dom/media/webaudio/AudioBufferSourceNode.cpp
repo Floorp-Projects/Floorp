@@ -19,8 +19,7 @@
 #include <limits>
 #include <algorithm>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioBufferSourceNode,
                                    AudioScheduledSourceNode, mBuffer,
@@ -841,5 +840,4 @@ void AudioBufferSourceNode::SendLoopParametersToTrack() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

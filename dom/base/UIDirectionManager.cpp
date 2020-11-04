@@ -11,8 +11,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/SimpleEnumerator.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 void OnPrefChange(const char* aPrefName, void*) {
@@ -61,5 +60,4 @@ void UIDirectionManager::Shutdown() {
   Preferences::UnregisterCallback(OnPrefChange, "intl.l10n.pseudo");
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

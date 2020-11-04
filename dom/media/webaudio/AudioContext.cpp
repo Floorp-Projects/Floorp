@@ -87,8 +87,7 @@ extern mozilla::LazyLogModule gAutoplayPermissionLog;
 
 using std::move;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // 0 is a special value that MediaTracks use to denote they are not part of a
 // AudioContext.
@@ -1333,5 +1332,4 @@ WebCore::PeriodicWave* BasicWaveFormCache::GetBasicWaveForm(
   return nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

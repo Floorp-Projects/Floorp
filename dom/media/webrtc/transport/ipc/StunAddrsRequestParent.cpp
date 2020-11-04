@@ -19,8 +19,7 @@ extern "C" {
 
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 static void mdns_service_resolved(void* cb, const char* hostname,
                                   const char* addr) {
@@ -260,5 +259,4 @@ void StunAddrsRequestParent::MDNSServiceWrapper::StartIfRequired() {
 NS_IMPL_ADDREF(StunAddrsRequestParent::MDNSServiceWrapper)
 NS_IMPL_RELEASE(StunAddrsRequestParent::MDNSServiceWrapper)
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

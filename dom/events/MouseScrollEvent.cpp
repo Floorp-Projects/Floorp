@@ -9,8 +9,7 @@
 #include "mozilla/MouseEvents.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
@@ -54,8 +53,7 @@ int32_t MouseScrollEvent::Axis() {
              : MouseScrollEvent_Binding::VERTICAL_AXIS;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 using namespace mozilla;
 using namespace dom;

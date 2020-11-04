@@ -14,8 +14,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSWindowActorChild::~JSWindowActorChild() { MOZ_ASSERT(!mManager); }
 
@@ -144,5 +143,4 @@ NS_INTERFACE_MAP_END_INHERITING(JSActor)
 NS_IMPL_ADDREF_INHERITED(JSWindowActorChild, JSActor)
 NS_IMPL_RELEASE_INHERITED(JSWindowActorChild, JSActor)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -17,8 +17,7 @@
 
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActorProtocol)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActorProtocol)
@@ -372,5 +371,4 @@ bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

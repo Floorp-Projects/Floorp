@@ -13,8 +13,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(HR)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLHRElement::HTMLHRElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -190,5 +189,4 @@ JSObject* HTMLHRElement::WrapNode(JSContext* aCx,
   return HTMLHRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

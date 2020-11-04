@@ -20,8 +20,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLIFrameElement)
 
@@ -303,5 +302,4 @@ void HTMLIFrameElement::RefreshFeaturePolicy(bool aParseAllowAttribute) {
   MaybeStoreCrossOriginFeaturePolicy();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

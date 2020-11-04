@@ -14,8 +14,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLSpanElement::~HTMLSpanElement() = default;
 
@@ -26,5 +25,4 @@ JSObject* HTMLSpanElement::WrapNode(JSContext* aCx,
   return HTMLSpanElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

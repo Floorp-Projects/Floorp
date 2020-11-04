@@ -6,8 +6,7 @@
 
 #include "SpeechRecognitionError.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SpeechRecognitionError::SpeechRecognitionError(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
@@ -39,5 +38,4 @@ void SpeechRecognitionError::InitSpeechRecognitionError(
   mMessage = aMessage;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

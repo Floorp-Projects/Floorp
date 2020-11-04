@@ -17,8 +17,7 @@ nsGenericHTMLElement* NS_NewHTMLPictureElement(
   return new (nim) mozilla::dom::HTMLPictureElement(nodeInfo.forget());
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLPictureElement::HTMLPictureElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -85,5 +84,4 @@ JSObject* HTMLPictureElement::WrapNode(JSContext* aCx,
   return HTMLPictureElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -11,8 +11,7 @@
 #include "base/task.h"
 #include "GMPUtils.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 MessageLoop* GMPContentChild::GMPMessageLoop() {
   return mGMPChild->GMPMessageLoop();
@@ -121,5 +120,4 @@ bool GMPContentChild::IsUsed() {
          !ManagedPChromiumCDMChild().IsEmpty();
 }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp

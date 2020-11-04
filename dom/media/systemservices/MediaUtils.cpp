@@ -7,8 +7,7 @@
 #include "MediaUtils.h"
 #include "mozilla/Services.h"
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
   nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
@@ -28,5 +27,4 @@ nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
 
 NS_IMPL_ISUPPORTS(ShutdownBlocker, nsIAsyncShutdownBlocker)
 
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media

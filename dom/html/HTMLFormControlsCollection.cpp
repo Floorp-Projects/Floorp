@@ -17,8 +17,7 @@
 #include "RadioNodeList.h"
 #include "jsfriendapi.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 bool HTMLFormControlsCollection::ShouldBeInElements(
@@ -321,5 +320,4 @@ JSObject* HTMLFormControlsCollection::WrapObject(
   return HTMLFormControlsCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

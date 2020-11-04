@@ -14,9 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::QuotaManager;
 
@@ -59,6 +57,4 @@ ManagerId::~ManagerId() {
   NS_ReleaseOnMainThread("ManagerId::mPrincipal", mPrincipal.forget());
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

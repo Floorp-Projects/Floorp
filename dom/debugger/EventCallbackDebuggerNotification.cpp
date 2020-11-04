@@ -14,8 +14,7 @@
 #include "nsINode.h"
 #include "nsQueryObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(EventCallbackDebuggerNotification,
                                    CallbackDebuggerNotification, mEvent)
@@ -61,5 +60,4 @@ void EventCallbackDebuggerNotificationGuard::DispatchToManager(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

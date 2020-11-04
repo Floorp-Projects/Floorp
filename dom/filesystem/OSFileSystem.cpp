@@ -14,8 +14,7 @@
 #include "nsDebug.h"
 #include "nsIFile.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 OSFileSystem::OSFileSystem(const nsAString& aRootDir) {
   mLocalRootPath = aRootDir;
@@ -86,5 +85,4 @@ OSFileSystemParent::OSFileSystemParent(const nsAString& aRootDir) {
   mLocalRootPath = aRootDir;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

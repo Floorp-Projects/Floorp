@@ -30,9 +30,7 @@
 #include "nsTObserverArray.h"
 #include "QuotaClientImpl.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 namespace {
 
@@ -2061,6 +2059,4 @@ void Manager::MaybeAllowContextToClose() {
   }
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

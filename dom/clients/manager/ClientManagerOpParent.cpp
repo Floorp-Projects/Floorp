@@ -9,8 +9,7 @@
 #include "ClientManagerService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::BackgroundParent;
 
@@ -79,5 +78,4 @@ void ClientManagerOpParent::Init(const ClientOpConstructorArgs& aArgs) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

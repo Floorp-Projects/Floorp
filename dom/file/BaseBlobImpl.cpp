@@ -8,8 +8,7 @@
 #include "nsRFPService.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void BaseBlobImpl::GetName(nsAString& aName) const {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
@@ -74,5 +73,4 @@ void BaseBlobImpl::SetLastModificationDate(bool aCrossOriginIsolated,
   // context mix-in
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

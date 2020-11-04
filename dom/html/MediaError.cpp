@@ -15,8 +15,7 @@
 #include "jsapi.h"
 #include "js/Warnings.h"  // JS::WarnASCII
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaError, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaError)
@@ -82,5 +81,4 @@ JSObject* MediaError::WrapObject(JSContext* aCx,
   return MediaError_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

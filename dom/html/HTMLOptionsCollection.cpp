@@ -27,8 +27,7 @@
 #include "nsStyleConsts.h"
 #include "jsfriendapi.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLOptionsCollection::HTMLOptionsCollection(HTMLSelectElement* aSelect)
     : mSelect(aSelect) {}
@@ -206,5 +205,4 @@ void HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
 
 void HTMLOptionsCollection::Remove(int32_t aIndex) { mSelect->Remove(aIndex); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

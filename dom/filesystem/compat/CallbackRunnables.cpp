@@ -22,8 +22,7 @@
 
 #include "../GetFileOrDirectoryTask.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
                                              FileSystemEntry* aEntry)
@@ -276,5 +275,4 @@ void ErrorCallbackHelper::Call(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

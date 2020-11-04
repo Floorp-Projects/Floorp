@@ -168,8 +168,7 @@
 
 using mozilla::gfx::Matrix4x4;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Verify sizes of nodes. We use a template rather than a direct static
 // assert so that the error message actually displays the sizes.
@@ -209,8 +208,7 @@ ASSERT_NODE_SIZE(Text, 120, 64);
 #undef ASSERT_NODE_SIZE
 #undef EXTRA_DOM_NODE_BYTES
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsAtom* nsIContent::DoGetID() const {
   MOZ_ASSERT(HasID(), "Unexpected call");
@@ -233,8 +231,7 @@ nsIFrame* nsIContent::GetPrimaryFrame(mozilla::FlushType aType) {
   return GetPrimaryFrame();
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 const nsAttrValue* Element::GetSVGAnimatedClass() const {
   MOZ_ASSERT(MayHaveClass() && IsSVGElement(), "Unexpected call");
@@ -293,8 +290,7 @@ void Element::UpdateState(bool aNotify) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 void nsIContent::UpdateEditableState(bool aNotify) {
   if (IsInNativeAnonymousSubtree()) {
@@ -319,8 +315,7 @@ void nsIContent::UpdateEditableState(bool aNotify) {
   SetEditableFlag(parent && parent->HasFlag(NODE_IS_EDITABLE));
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void Element::UpdateEditableState(bool aNotify) {
   nsIContent::UpdateEditableState(aNotify);
@@ -4358,5 +4353,4 @@ nsAtom* Element::GetEventNameForAttr(nsAtom* aAttr) {
   return aAttr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

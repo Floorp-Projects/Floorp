@@ -19,8 +19,7 @@
 using WebCore::HRTFDatabaseLoader;
 using WebCore::HRTFPanner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PannerNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PannerNode, AudioNode)
@@ -686,5 +685,4 @@ double PannerNodeEngine::ComputeDistanceGain(const ThreeDPoint& position) {
   return std::max(0.0f, (this->*mDistanceModelFunction)(distance));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

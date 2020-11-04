@@ -15,8 +15,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(LI)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLLIElement::~HTMLLIElement() = default;
 
@@ -103,5 +102,4 @@ JSObject* HTMLLIElement::WrapNode(JSContext* aCx,
   return HTMLLIElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

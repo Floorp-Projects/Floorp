@@ -26,8 +26,7 @@
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ADDREF_INHERITED(Response, FetchBody<Response>)
 NS_IMPL_RELEASE_INHERITED(Response, FetchBody<Response>)
@@ -496,5 +495,4 @@ Headers* Response::Headers_() {
   return mHeaders;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

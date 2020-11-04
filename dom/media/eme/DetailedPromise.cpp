@@ -8,8 +8,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
                                  const nsACString& aName)
@@ -94,5 +93,4 @@ void DetailedPromise::MaybeReportTelemetry(eStatus aStatus) {
   Telemetry::Accumulate(tid, latency);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

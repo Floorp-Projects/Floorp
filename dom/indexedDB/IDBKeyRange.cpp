@@ -12,8 +12,7 @@
 #include "mozilla/dom/IDBKeyRangeBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace mozilla::dom::indexedDB;
 
@@ -347,5 +346,4 @@ RefPtr<IDBLocaleAwareKeyRange> IDBLocaleAwareKeyRange::Bound(
   return keyRange;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

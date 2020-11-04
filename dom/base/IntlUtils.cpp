@@ -10,8 +10,7 @@
 #include "mozIMozIntl.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(IntlUtils, mWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IntlUtils)
@@ -130,5 +129,4 @@ void IntlUtils::GetLocaleInfo(const Sequence<nsString>& aLocales,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
