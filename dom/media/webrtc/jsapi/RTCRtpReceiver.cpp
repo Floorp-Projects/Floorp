@@ -428,7 +428,7 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
   if (mJsepTransceiver->HasBundleLevel() &&
       (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
        !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
-           webrtc::RtpExtension::kMIdUri))) {
+           webrtc::RtpExtension::kMidUri))) {
     mStsThread->Dispatch(
         NewRunnableMethod("VideoSessionConduit::DisableSsrcChanges", conduit,
                           &VideoSessionConduit::DisableSsrcChanges));
