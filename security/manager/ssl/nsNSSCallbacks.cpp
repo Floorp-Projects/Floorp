@@ -306,7 +306,7 @@ OCSPRequest::Run() {
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
-  // Do not use SPDY for internal security operations. It could result
+  // Do not use SPDY or HTTP3 for internal security operations. It could result
   // in the silent upgrade to ssl, which in turn could require an SSL
   // operation to fulfill something like an OCSP fetch, which is an
   // endless loop.
@@ -315,6 +315,10 @@ OCSPRequest::Run() {
     return NotifyDone(rv, lock);
   }
   rv = internalChannel->SetAllowSpdy(false);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  rv = internalChannel->SetAllowHttp3(false);
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
