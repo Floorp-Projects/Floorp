@@ -36,9 +36,10 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   int32_t Shutdown() override;
 
-  int32_t Encode(const webrtc::VideoFrame& aFrame,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override;
+  int32_t Encode(
+      const webrtc::VideoFrame& aFrame,
+      const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
   int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRtt) override;
 
@@ -51,9 +52,11 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   already_AddRefed<MediaDataEncoder> CreateEncoder(
       const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
-  webrtc::RTPFragmentationHeader GetFragHeader(
-      const webrtc::VideoCodecType aCodecType,
-      const RefPtr<MediaRawData>& aFrame);
+  /*
+    webrtc::RTPFragmentationHeader GetFragHeader(
+        const webrtc::VideoCodecType aCodecType,
+        const RefPtr<MediaRawData>& aFrame);
+  */
 
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;
