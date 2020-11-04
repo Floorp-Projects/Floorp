@@ -223,7 +223,7 @@ pref("security.intermediate_preloading_healer.timer_interval_ms", 300000);
 pref("security.remote_settings.intermediates.bucket", "security-state");
 pref("security.remote_settings.intermediates.collection", "intermediates");
 pref("security.remote_settings.intermediates.checked", 0);
-pref("security.remote_settings.intermediates.downloads_per_poll", 100);
+pref("security.remote_settings.intermediates.downloads_per_poll", 5000);
 pref("security.remote_settings.intermediates.parallel_downloads", 8);
 pref("security.remote_settings.intermediates.signer", "onecrl.content-signature.mozilla.org");
 
