@@ -2239,8 +2239,9 @@ nsresult nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
   nsresult rv =
       nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 
-  if (aAttribute == nsGkAtoms::left || aAttribute == nsGkAtoms::top)
+  if (aAttribute == nsGkAtoms::left || aAttribute == nsGkAtoms::top) {
     MoveToAttributePosition();
+  }
 
   if (aAttribute == nsGkAtoms::remote) {
     // When the remote attribute changes, we need to create a new widget to
@@ -2295,6 +2296,9 @@ void nsMenuPopupFrame::MoveToAttributePosition() {
   mozilla::CSSIntPoint pos(left.ToInteger(&err1), top.ToInteger(&err2));
 
   if (NS_SUCCEEDED(err1) && NS_SUCCEEDED(err2)) MoveTo(pos, false);
+
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
+                                NS_FRAME_IS_DIRTY);
 }
 
 void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
