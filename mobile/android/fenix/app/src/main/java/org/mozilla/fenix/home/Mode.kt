@@ -59,12 +59,10 @@ class CurrentMode(
         if (account != null) {
             Mode.Onboarding(OnboardingState.SignedIn)
         } else {
-            val availableAccounts = accountManager.shareableAccounts(context)
-            if (availableAccounts.isEmpty()) {
-                Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn)
-            } else {
-                Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(availableAccounts[0]))
-            }
+            Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn)
+            // The following other state is effectively disabled - #6521
+            // Code still exists in app for when it will be used again - #15694
+            // Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(accountManager.shareableAccounts(context)[0]))
         }
     }
 
