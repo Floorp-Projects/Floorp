@@ -160,7 +160,11 @@ function openSiteDataSettingsDialog() {
     dialogLoadPromise,
     dialogInitPromise,
   ]).then(() => {
-    is_element_visible(dialogOverlay, "The Settings dialog should be visible");
+    is(
+      dialogOverlay.style.visibility,
+      "visible",
+      "The Settings dialog should be visible"
+    );
   });
   settingsBtn.doCommand();
   return fullyLoadPromise;
@@ -178,8 +182,9 @@ function promiseSettingsDialogClose() {
           dialogWin.document.documentURI ===
           "chrome://browser/content/preferences/dialogs/siteDataSettings.xhtml"
         ) {
-          ok(
-            is_element_hidden(dialogOverlay),
+          isnot(
+            dialogOverlay.style.visibility,
+            "visible",
             "The Settings dialog should be hidden"
           );
           resolve();
