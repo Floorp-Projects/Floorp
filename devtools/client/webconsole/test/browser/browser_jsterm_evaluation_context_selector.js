@@ -11,7 +11,6 @@ const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-chi
 requestLongerTimeout(2);
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.fission", true);
   await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [

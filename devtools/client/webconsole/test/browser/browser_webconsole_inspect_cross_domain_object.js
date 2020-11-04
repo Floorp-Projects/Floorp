@@ -20,7 +20,6 @@ add_task(async function() {
 
   let hud, node;
   if (isFissionEnabled()) {
-    await pushPref("devtools.contenttoolbox.fission", true);
     // When fission is enabled, we might miss the early message emitted while the target
     // is being switched, so here we directly open the "real" test URI. See Bug 1614291.
     hud = await openNewTabAndConsole(TEST_URI);

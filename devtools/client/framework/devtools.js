@@ -51,8 +51,6 @@ const {
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
 
-const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
-
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
  * set of tools and keeps track of open toolboxes in the browser.
@@ -839,36 +837,10 @@ DevTools.prototype = {
 
   /**
    * Check if the content from remote frames should be displayed in the toolbox.
-   * This depends both on enabling the dedicated devtools preference as well as
-   * the fission.autostart preference.
+   * XXX: Temporarily enable fissionContentToolbox by default.
    */
   isFissionContentToolboxEnabled() {
-    if (typeof this._cachedFissionContentToolboxEnabled === "undefined") {
-      const isContentFissionEnabled = Services.prefs.getBoolPref(
-        CONTENT_FISSION_ENABLED_PREF,
-        false
-      );
-
-      // Checking fission.autostart is not used to check if the current target
-      // is a Fission tab, but only to check if the user is currently dogfooding
-      // Fission.
-      const isFissionEnabled = Services.appinfo.fissionAutostart;
-      this._cachedFissionContentToolboxEnabled =
-        isFissionEnabled && isContentFissionEnabled;
-    }
-    return this._cachedFissionContentToolboxEnabled;
-  },
-
-  /**
-   * Clear the _cachedFissionContentToolboxEnabled reference so next call to
-   * isFissionContentToolboxEnabled will read the preferences values again instead of
-   * relying on the cached value.
-   * ⚠️ This should only be used in tests as it could lead to different
-   * isFissionContentToolboxEnabled results if the preferences are changed while
-   * toolboxes are open ⚠️.
-   */
-  clearIsFissionContentToolboxEnabledReferenceForTest() {
-    delete this._cachedFissionContentToolboxEnabled;
+    return true;
   },
 };
 
