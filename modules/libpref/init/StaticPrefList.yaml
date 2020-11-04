@@ -382,11 +382,6 @@
   value: 1.0f
   mirror: always
 
-- name: apz.fling_accel_interval_ms
-  type: RelaxedAtomicInt32
-  value: 500
-  mirror: always
-
 - name: apz.fling_accel_supplemental_mult
   type: AtomicFloat
   value: 1.0f

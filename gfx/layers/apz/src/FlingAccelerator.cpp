@@ -14,9 +14,9 @@ namespace mozilla {
 namespace layers {
 
 void FlingAccelerator::Reset() {
-  mPreviousFlingStartTime = SampleTime{};
   mPreviousFlingStartingVelocity = ParentLayerPoint{};
   mPreviousFlingCancelVelocity = ParentLayerPoint{};
+  mIsTracking = false;
 }
 
 static bool SameDirection(float aVelocity1, float aVelocity2) {
@@ -57,8 +57,8 @@ ParentLayerPoint FlingAccelerator::GetFlingStartingVelocity(
 
   Reset();
 
-  mPreviousFlingStartTime = aNow;
   mPreviousFlingStartingVelocity = velocity;
+  mIsTracking = true;
 
   return velocity;
 }
@@ -66,7 +66,7 @@ ParentLayerPoint FlingAccelerator::GetFlingStartingVelocity(
 bool FlingAccelerator::ShouldAccelerate(
     const SampleTime& aNow, const ParentLayerPoint& aVelocity,
     const FlingHandoffState& aHandoffState) const {
-  if (!IsTracking() || mPreviousFlingStartTime.IsNull()) {
+  if (!IsTracking()) {
     FLING_LOG("%p Fling accelerator was reset, not accelerating.\n", this);
     return false;
   }
@@ -77,17 +77,15 @@ bool FlingAccelerator::ShouldAccelerate(
     return false;
   }
 
-  double msSincePreviousFling =
-      (aNow - mPreviousFlingStartTime).ToMilliseconds();
   double msBetweenTouchStartAndPanStart =
       aHandoffState.mTouchStartRestingTime->ToMilliseconds();
   FLING_LOG(
       "%p ShouldAccelerate with pan velocity %f pixels/ms, min pan velocity %f "
-      "pixels/ms, previous fling "
-      "cancel velocity %f pixels/ms, time elapsed since starting previous "
-      "fling %fms, time between touch start and pan start %fms.\n",
+      "pixels/ms, previous fling cancel velocity %f pixels/ms, time elapsed "
+      "since starting previous time between touch start and pan "
+      "start %fms.\n",
       this, float(aVelocity.Length()), float(aHandoffState.mMinPanVelocity),
-      float(mPreviousFlingCancelVelocity.Length()), float(msSincePreviousFling),
+      float(mPreviousFlingCancelVelocity.Length()),
       float(msBetweenTouchStartAndPanStart));
 
   if (aVelocity.Length() < StaticPrefs::apz_fling_accel_min_fling_velocity()) {
@@ -111,14 +109,6 @@ bool FlingAccelerator::ShouldAccelerate(
         "%p The previous fling animation had slowed down too much when it was "
         "interrupted (%f), not accelerating.\n",
         this, float(mPreviousFlingCancelVelocity.Length()));
-    return false;
-  }
-
-  if (msSincePreviousFling >= StaticPrefs::apz_fling_accel_interval_ms()) {
-    FLING_LOG(
-        "%p Too much time (%fms) elapsed since previous fling, not "
-        "accelerating.\n",
-        this, msSincePreviousFling);
     return false;
   }
 

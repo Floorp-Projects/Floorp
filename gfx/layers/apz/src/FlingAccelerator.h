@@ -27,7 +27,7 @@ class FlingAccelerator final {
   void Reset();
 
   // Returns false after a reset or before the first fling.
-  bool IsTracking() const { return !mPreviousFlingStartTime.IsNull(); }
+  bool IsTracking() const { return mIsTracking; }
 
   // Starts a new fling, and returns the (potentially accelerated) velocity that
   // should be used for that fling.
@@ -46,12 +46,11 @@ class FlingAccelerator final {
 
   // The initial velocity of the most recent fling.
   ParentLayerPoint mPreviousFlingStartingVelocity;
-  // The time at which the most recent fling started. This is the time when the
-  // finger is lifted at the end of the gesture, as the fling animation starts.
-  SampleTime mPreviousFlingStartTime;
   // The velocity that the previous fling animation had at the point it was
   // interrupted.
   ParentLayerPoint mPreviousFlingCancelVelocity;
+  // Whether the upcoming fling is eligible for acceleration.
+  bool mIsTracking = false;
 };
 
 }  // namespace layers
