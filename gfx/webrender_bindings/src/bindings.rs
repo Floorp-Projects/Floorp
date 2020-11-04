@@ -607,10 +607,11 @@ pub extern "C" fn wr_renderer_render(
     renderer: &mut Renderer,
     width: i32,
     height: i32,
+    buffer_age: usize,
     out_stats: &mut RendererStats,
     out_dirty_rects: &mut ThinVec<DeviceIntRect>,
 ) -> bool {
-    match renderer.render(DeviceIntSize::new(width, height)) {
+    match renderer.render(DeviceIntSize::new(width, height), buffer_age) {
         Ok(results) => {
             *out_stats = results.stats;
             out_dirty_rects.extend(results.dirty_rects);
@@ -1249,7 +1250,6 @@ extern "C" {
     );
     fn wr_compositor_unmap_tile(compositor: *mut c_void);
 
-    fn wr_partial_present_compositor_get_buffer_age(compositor: *const c_void) -> usize;
     fn wr_partial_present_compositor_set_buffer_damage_region(
         compositor: *mut c_void,
         rects: *const DeviceIntRect,
@@ -1372,10 +1372,6 @@ impl Compositor for WrCompositor {
 pub struct WrPartialPresentCompositor(*mut c_void);
 
 impl PartialPresentCompositor for WrPartialPresentCompositor {
-    fn get_buffer_age(&self) -> usize {
-        unsafe { wr_partial_present_compositor_get_buffer_age(self.0) }
-    }
-
     fn set_buffer_damage_region(&mut self, rects: &[DeviceIntRect]) {
         unsafe {
             wr_partial_present_compositor_set_buffer_damage_region(self.0, rects.as_ptr(), rects.len());
