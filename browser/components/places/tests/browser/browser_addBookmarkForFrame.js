@@ -51,7 +51,10 @@ add_task(async function test_open_add_bookmark_for_frame() {
     Assert.ok(!namepicker.readOnly, "Name field is writable");
     Assert.equal(namepicker.value, "Left frame", "Name field is correct.");
 
-    let expectedFolderName = PlacesUtils.getString("BookmarksMenuFolderTitle");
+    let expectedFolder = gBookmarksToolbar2h2020
+      ? "BookmarksToolbarFolderTitle"
+      : "OtherBookmarksFolderTitle";
+    let expectedFolderName = PlacesUtils.getString(expectedFolder);
 
     let folderPicker = dialogWin.document.getElementById(
       "editBMPanel_folderMenuList"
@@ -71,11 +74,13 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
     "Test moving a bookmark whilst the add bookmark for frame dialog is open."
   );
   await withAddBookmarkForFrame(async dialogWin => {
+    let expectedGuid = await PlacesUIUtils.defaultParentGuid;
+    let expectedFolder = gBookmarksToolbar2h2020
+      ? "BookmarksToolbarFolderTitle"
+      : "OtherBookmarksFolderTitle";
+    let expectedFolderName = PlacesUtils.getString(expectedFolder);
     let bookmarksMenuFolderName = PlacesUtils.getString(
       "BookmarksMenuFolderTitle"
-    );
-    let toolbarFolderName = PlacesUtils.getString(
-      "BookmarksToolbarFolderTitle"
     );
 
     let url = makeURI(LEFT_URL);
@@ -85,7 +90,7 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
 
     // Check the initial state of the folder picker.
     await BrowserTestUtils.waitForCondition(
-      () => folderPicker.selectedItem.label == bookmarksMenuFolderName,
+      () => folderPicker.selectedItem.label == expectedFolderName,
       "The folder is the expected one."
     );
 
@@ -94,18 +99,18 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
 
     Assert.equal(
       bookmark.parentGuid,
-      PlacesUtils.bookmarks.menuGuid,
-      "The bookmark should be in the menuGuid folder."
+      expectedGuid,
+      "The bookmark should be in the expected folder."
     );
 
     // Now move the bookmark and check the folder picker is updated correctly.
-    bookmark.parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+    bookmark.parentGuid = PlacesUtils.bookmarks.menuGuid;
     bookmark.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
 
     await PlacesUtils.bookmarks.update(bookmark);
 
     await BrowserTestUtils.waitForCondition(
-      () => folderPicker.selectedItem.label == toolbarFolderName,
+      () => folderPicker.selectedItem.label == bookmarksMenuFolderName,
       "The folder picker has changed to the new folder"
     );
   });
