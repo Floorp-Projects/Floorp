@@ -42,3 +42,18 @@ add_task(async function test_fog_timespan_works() {
   Assert.ok(Glean.test_only.can_we_time_it.testHasValue("test-ping"));
   Assert.ok(Glean.test_only.can_we_time_it.testGetValue("test-ping") > 0);
 });
+
+add_task(async function test_fog_uuid_works() {
+  const kTestUuid = "decafdec-afde-cafd-ecaf-decafdecafde";
+  Glean.test_only.what_id_it.set(kTestUuid);
+  Assert.ok(Glean.test_only.what_id_it.testHasValue("test-ping"));
+  Assert.equal(kTestUuid, Glean.test_only.what_id_it.testGetValue("test-ping"));
+
+  Glean.test_only.what_id_it.generateAndSet();
+  // Since we generate v4 UUIDs, and the first character of the third group
+  // isn't 4, this won't ever collide with kTestUuid.
+  Assert.notEqual(
+    kTestUuid,
+    Glean.test_only.what_id_it.testGetValue("test-ping")
+  );
+});
