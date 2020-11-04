@@ -532,6 +532,9 @@ class AsyncPanZoomController {
   // NOTE: This function should be used only for the root content APZC.
   bool CanScrollDownwardsWithDynamicToolbar() const;
 
+  // Return true if there is room to scroll downwards.
+  bool CanScrollDownwards() const;
+
   /**
    * Convert a point on the scrollbar from this APZC's ParentLayer coordinates
    * to CSS coordinates relative to the beginning of the scroll track.

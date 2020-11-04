@@ -98,6 +98,13 @@ class OverscrollHandoffChain {
       const InputData& aInput,
       ScrollDirections* aOutAllowedScrollDirections) const;
 
+  // Return true if all non-root APZCs in this handoff chain starting from
+  // |aApzc| are not able to scroll downwards (i.e. there is no room to scroll
+  // downwards in each APZC respectively) and there is any contents covered by
+  // the dynamic toolbar.
+  bool ScrollingDownWillMoveDynamicToolbar(
+      const AsyncPanZoomController* aApzc) const;
+
  private:
   std::vector<RefPtr<AsyncPanZoomController>> mChain;
 

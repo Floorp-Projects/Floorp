@@ -32,7 +32,7 @@ InputQueue::~InputQueue() { mQueuedInputs.Clear(); }
 nsEventStatus InputQueue::ReceiveInputEvent(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags, const InputData& aEvent,
-    uint64_t* aOutInputBlockId,
+    uint64_t* aOutInputBlockId, Maybe<bool>* aOutputHandledByRootApzc,
     const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors) {
   APZThreadUtils::AssertOnControllerThread();
 
@@ -42,7 +42,7 @@ nsEventStatus InputQueue::ReceiveInputEvent(
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& event = aEvent.AsMultiTouchInput();
       return ReceiveTouchInput(aTarget, aFlags, event, aOutInputBlockId,
-                               aTouchBehaviors);
+                               aOutputHandledByRootApzc, aTouchBehaviors);
     }
 
     case SCROLLWHEEL_INPUT: {
@@ -86,7 +86,7 @@ nsEventStatus InputQueue::ReceiveInputEvent(
 nsEventStatus InputQueue::ReceiveTouchInput(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags, const MultiTouchInput& aEvent,
-    uint64_t* aOutInputBlockId,
+    uint64_t* aOutInputBlockId, Maybe<bool>* aOutputHandledByRootApzc,
     const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors) {
   TouchBlockState* block = nullptr;
   bool waitingForContentResponse = false;
@@ -178,11 +178,26 @@ nsEventStatus InputQueue::ReceiveTouchInput(
       INPQ_LOG("dropping event due to block %p being in slop\n", block);
       result = nsEventStatus_eConsumeNoDefault;
     } else {
-      // FIXME: Even if the event is consumed in a non-root APZC, if scroll
-      // positions in all relevant APZCs are at the bottom edge and if there are
-      // contents covered by the dynamic toolbar, we need to handle the event as
-      // if it's consumed in the root APZC so that GeckoView can tel the
-      // dynamic toolbar needs to move.
+      if (aOutputHandledByRootApzc &&
+          *aOutputHandledByRootApzc == Some(false) &&
+          !target->IsRootContent() &&
+          block->GetOverscrollHandoffChain()
+              ->ScrollingDownWillMoveDynamicToolbar(target)) {
+        // The event is actually consumed by a non-root APZC but scroll
+        // positions in all relevant APZCs are at the bottom edge, so if there's
+        // still contents covered by the dynamic toolbar we need to move the
+        // dynamic toolbar to make the covered contents visible, thus we need
+        // to tell it to GeckoView so we handle it as if it's consumed in the
+        // root APZC.
+        // IMPORTANT NOTE: If the incoming TargetConfirmationFlags has
+        // mDispatchToContent, we need to change it to Nothing() so that
+        // GeckoView can properly wait for results from the content on the
+        // main-thread.
+        INPQ_LOG("changing handledByRootApzc from Some(false) to %s\n",
+                 aFlags.mDispatchToContent ? "Nothing()" : "Some(true)");
+        *aOutputHandledByRootApzc =
+            aFlags.mDispatchToContent ? Nothing() : Some(true);
+      }
       result = nsEventStatus_eConsumeDoDefault;
     }
   } else if (block->UpdateSlopState(aEvent, false)) {
@@ -873,10 +888,12 @@ static APZHandledResult GetHandledResultFor(
                : APZHandledResult::Unhandled;
   }
 
-  // FIXME: We need to return `HandledByRoot` if scroll positions in all
-  // relevant APZCs are at the bottom edge and if there are contents covered by
-  // the dynamic toolbar.
-  return APZHandledResult::HandledByContent;
+  // Return `HandledByRoot` if scroll positions in all relevant APZC are at the
+  // bottom edge and if there are contents covered by the dynamic toolbar.
+  return aApzc && aCurrentInputBlock.GetOverscrollHandoffChain()
+                      ->ScrollingDownWillMoveDynamicToolbar(aApzc)
+             ? APZHandledResult::HandledByRoot
+             : APZHandledResult::HandledByContent;
 }
 
 void InputQueue::ProcessQueue() {

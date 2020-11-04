@@ -59,6 +59,7 @@ class InputQueue {
       const RefPtr<AsyncPanZoomController>& aTarget,
       TargetConfirmationFlags aFlags, const InputData& aEvent,
       uint64_t* aOutInputBlockId,
+      Maybe<bool>* aOutputHandledByRootApzc = nullptr,
       const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors = Nothing());
   /**
    * This function should be invoked to notify the InputQueue when web content
@@ -188,7 +189,7 @@ class InputQueue {
   nsEventStatus ReceiveTouchInput(
       const RefPtr<AsyncPanZoomController>& aTarget,
       TargetConfirmationFlags aFlags, const MultiTouchInput& aEvent,
-      uint64_t* aOutInputBlockId,
+      uint64_t* aOutInputBlockId, Maybe<bool>* aOutputHandledByRootApzc,
       const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors);
   nsEventStatus ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                   TargetConfirmationFlags aFlags,
