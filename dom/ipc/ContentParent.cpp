@@ -2096,8 +2096,12 @@ bool ContentParent::ShouldKeepProcessAlive() {
     return true;
   }
 
+  if (IsLaunching()) {
+    return true;
+  }
+
   // If we have already been marked as dead, don't prevent shutdown.
-  if (!IsAlive()) {
+  if (IsDead()) {
     return false;
   }
 
