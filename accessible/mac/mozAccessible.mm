@@ -941,9 +941,6 @@ struct RoleDescrComparator {
                 NSAccessibilitySelectedChildrenChangedNotification];
       break;
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
-      if (![self stateWithMask:states::SELECTABLE_TEXT]) {
-        break;
-      }
       // We consider any caret move event to be a selected text change event.
       // So dispatching an event for EVENT_TEXT_SELECTION_CHANGED would be
       // reduntant.
