@@ -112,6 +112,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-align-last-justify-
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
+== white-space-3.html white-space-3-ref.html
 == wordbreak-1.html wordbreak-1-ref.html
 == wordbreak-2.html wordbreak-2-ref.html
 == wordbreak-3.html wordbreak-3-ref.html
