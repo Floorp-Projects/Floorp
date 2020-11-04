@@ -9,7 +9,7 @@
 -ion-brand-short-name = Ion
 ion = { -ion-brand-short-name }
 ion-document-title = Put your data to work for a better internet
-ion-summary = { -ion-brand-short-name } puts your data to work to address some of today’s most pressing technology concerns, like misinformation, data privacy, and ethical AI. The data you agree to share with Mozilla (the makers of Firefox) helps create tools for better internet transparency and design products that give control back to the people who use them. As a { -ion-brand-short-name } participant, you’ll also have the option to contribute your data to studies sponsored by research institutions and other organizations.
+ion-summary = { -ion-brand-short-name } puts your data to work to address some of today’s most pressing technology concerns, like misinformation, data privacy, and ethical AI. The data you agree to share with Mozilla (the makers of Firefox) helps create tools for better internet transparency and design products that give control back to the people who use them. As an { -ion-brand-short-name } participant, you’ll also have the option to contribute your data to studies sponsored by research institutions and other organizations.
 ion-study-prompt = Join to enroll
 ion-join-study = Join Study
 ion-leave-study = Leave Study
