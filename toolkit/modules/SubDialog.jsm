@@ -377,8 +377,7 @@ SubDialog.prototype = {
     // XXX: Hack to make focus during the dialog's load functions work. Make the element visible
     // sooner in DOMContentLoaded but mostly invisible instead of changing visibility just before
     // the dialog's load event.
-    // Note that this needs to inherit so that hideDialog() works as expected.
-    this._overlay.style.visibility = "inherit";
+    this._overlay.style.visibility = "visible";
     this._overlay.style.opacity = "0.01";
 
     // Ensure the document gets an a11y role of dialog.
@@ -451,7 +450,7 @@ SubDialog.prototype = {
         detail: { dialog: this },
       })
     );
-    this._overlay.style.visibility = "inherit";
+    this._overlay.style.visibility = "visible";
     this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
 
     if (this._box.getAttribute("resizable") == "true") {
@@ -886,7 +885,6 @@ class SubDialogManager {
     if (!this._dialogs.length) {
       // When opening the first dialog, show the dialog stack.
       this._dialogStack.hidden = false;
-      this._dialogStack.classList.remove("temporarilyHidden");
       this._topLevelPrevActiveElement = doc.activeElement;
 
       // Mark the top dialog according to the array insertion order.
@@ -926,14 +924,12 @@ class SubDialogManager {
   }
 
   /**
-   * Hides the dialog stack for a specific browser, without actually destroying
-   * frames for stuff within it.
-   *
+   * Hides the dialog stack for a specific browser.
    * @param aBrowser - The browser associated with the tab dialog.
    */
   hideDialog(aBrowser) {
     aBrowser.removeAttribute("tabDialogShowing");
-    this._dialogStack.classList.add("temporarilyHidden");
+    this._dialogStack.hidden = true;
   }
 
   /**
@@ -1008,7 +1004,6 @@ class SubDialogManager {
       this._topDialog._overlay.setAttribute("topmost", true);
       this._topDialog._addDialogEventListeners(false);
       this._dialogStack.hidden = false;
-      this._dialogStack.classList.remove("temporarilyHidden");
     } else {
       // We have closed the last dialog, do cleanup.
       this._topLevelPrevActiveElement.focus();
