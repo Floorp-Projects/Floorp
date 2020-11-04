@@ -74,6 +74,50 @@ let dialog = {
     return this._principal.equals(topContentPrincipal);
   },
 
+  /**
+   * Determines the l10n ID to use for the dialog description, depending on
+   * the triggering principal and the preferred application handler.
+   */
+  get l10nDescriptionId() {
+    if (this._principal?.schemeIs("file")) {
+      if (this._preferredHandlerName) {
+        return "permission-dialog-description-file-app";
+      }
+      return "permission-dialog-description-file";
+    }
+
+    // We only show the website address if the request didn't come from the top
+    // level frame.
+    if (this._principal?.exposablePrePath && !this.triggeringPrincipalIsTop()) {
+      if (this._preferredHandlerName) {
+        return "permission-dialog-description-host-app";
+      }
+      return "permission-dialog-description-host";
+    }
+
+    if (this._preferredHandlerName) {
+      return "permission-dialog-description-app";
+    }
+
+    return "permission-dialog-description";
+  },
+
+  /**
+   * Determines the l10n ID to use for the "remember permission" checkbox,
+   * depending on the triggering principal and the preferred application
+   * handler.
+   */
+  get l10nCheckboxId() {
+    if (!this._principal) {
+      return null;
+    }
+
+    if (this._principal.schemeIs("file")) {
+      return "permission-dialog-remember-file";
+    }
+    return "permission-dialog-remember";
+  },
+
   async initL10n() {
     // The UI labels depend on whether we will show the application chooser next
     // or directly open the assigned protocol handler.
@@ -89,55 +133,23 @@ let dialog = {
       descriptionExtra.hidden = false;
     }
 
-    // Set description depending on if we have a hostname and/or an already
-    // assigned application.
-    let host = this._principal?.exposablePrePath;
-    let scheme = this._handlerInfo.type;
     let description = document.getElementById("description");
 
     document.l10n.pauseObserving();
     let pendingElements = [description];
 
-    // We only show the website address if the request didn't come from the top
-    // level frame.
-    if (host && !this.triggeringPrincipalIsTop()) {
-      if (this._preferredHandlerName) {
-        document.l10n.setAttributes(
-          description,
-          "permission-dialog-description-host-app",
-          {
-            host,
-            scheme,
-            appName: this._preferredHandlerName,
-          }
-        );
-      } else {
-        document.l10n.setAttributes(
-          description,
-          "permission-dialog-description-host",
-          {
-            host,
-            scheme,
-          }
-        );
-      }
-    } else if (this._preferredHandlerName) {
-      document.l10n.setAttributes(
-        description,
-        "permission-dialog-description-app",
-        { scheme, appName: this._preferredHandlerName }
-      );
-    } else {
-      document.l10n.setAttributes(
-        description,
-        "permission-dialog-description",
-        { scheme }
-      );
-    }
+    let host = this._principal?.exposablePrePath;
+    let scheme = this._handlerInfo.type;
+
+    document.l10n.setAttributes(description, this.l10nDescriptionId, {
+      host,
+      scheme,
+      appName: this._preferredHandlerName,
+    });
 
     if (!this._checkRememberContainer.hidden) {
       let checkboxLabel = document.getElementById("remember-label");
-      document.l10n.setAttributes(checkboxLabel, "permission-dialog-remember", {
+      document.l10n.setAttributes(checkboxLabel, this.l10nCheckboxId, {
         host,
         scheme,
       });
