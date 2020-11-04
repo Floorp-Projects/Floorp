@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * Test simple text selection
+ * Test rotor with heading
  */
 addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
   let macDoc = accDoc.nativeInterface.QueryInterface(
@@ -47,62 +47,3 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
   range = macDoc.getAttributeValue("AXSelectedTextMarkerRange");
   is(stringForRange(macDoc, range), "Hello");
 });
-
-/**
- * Test text selection events caused by focus change
- */
-addAccessibleTask(`<p>
-  Hello <a href="#" id="link">World</a>,
-  I <a href="#" style="user-select: none;" id="unselectable_link">love</a>
-  <button id="button">you</button></p>`,
-  async (browser, accDoc) => {
-    // Set up an AXSelectedTextChanged listener here. It will get resolved
-    // on the first non-root event it encounters, so if we test its data at the end
-    // of this test it will show us the first text-selectable object that was focused,
-    // which is "link".
-    let selTextChanged = waitForMacEvent(
-      "AXSelectedTextChanged",
-      e => e.getAttributeValue("AXDOMIdentifier") != "body"
-    );
-
-    let focusChanged = waitForMacEvent("AXFocusedUIElementChanged");
-    await SpecialPowers.spawn(browser, [], () => {
-      content.document.getElementById("unselectable_link").focus();
-    });
-    let focusChangedTarget = await focusChanged;
-    is(
-      focusChangedTarget.getAttributeValue("AXDOMIdentifier"),
-      "unselectable_link",
-      "Correct event target"
-    );
-
-    focusChanged = waitForMacEvent("AXFocusedUIElementChanged");
-    await SpecialPowers.spawn(browser, [], () => {
-      content.document.getElementById("button").focus();
-    });
-    focusChangedTarget = await focusChanged;
-    is(
-      focusChangedTarget.getAttributeValue("AXDOMIdentifier"),
-      "button",
-      "Correct event target"
-    );
-
-    focusChanged = waitForMacEvent("AXFocusedUIElementChanged");
-    await SpecialPowers.spawn(browser, [], () => {
-      content.document.getElementById("link").focus();
-    });
-    focusChangedTarget = await focusChanged;
-    is(
-      focusChangedTarget.getAttributeValue("AXDOMIdentifier"),
-      "link",
-      "Correct event target"
-    );
-
-    let selTextChangedTarget = await selTextChanged;
-    is(
-      selTextChangedTarget.getAttributeValue("AXDOMIdentifier"),
-      "link",
-      "Correct event target"
-    );
-  }
-);
