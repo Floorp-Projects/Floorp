@@ -19,3 +19,4 @@ include = ["unic-langid", "unic-langid-impl"]
 
 [export.rename]
 "ThinVec" = "nsTArray"
+"nsCStr" = "nsDependentCSubstring"
