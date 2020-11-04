@@ -19,7 +19,13 @@ pref("privacy.trackingprotection.pbmode.enabled", false);
 
 pref("browser.tabs.remote.autostart", true);
 pref("dom.ipc.keepProcessesAlive.web", 1);
-pref("dom.ipc.processCount", 1);
+
+#ifdef RELEASE_OR_BETA
+  pref("dom.ipc.processCount", 1);
+#else
+  pref("dom.ipc.processCount", 3);
+#endif
+
 pref("dom.ipc.processPrelaunch.enabled", false);
 
 // Don't create the hidden window during startup.
