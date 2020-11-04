@@ -138,7 +138,8 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     // whether acceleration occured.
     const float kAcceleration = 100.0f;
     SCOPED_GFX_PREF_FLOAT("apz.fling_accel_base_mult", kAcceleration);
-    SCOPED_GFX_PREF_FLOAT("apz.fling_accel_min_velocity", 0.0);
+    SCOPED_GFX_PREF_FLOAT("apz.fling_accel_min_fling_velocity", 0.0);
+    SCOPED_GFX_PREF_FLOAT("apz.fling_accel_min_pan_velocity", 0.0);
 
     RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
 
