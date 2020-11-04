@@ -43,6 +43,26 @@ add_task(
   }
 );
 
+add_task(async function testSoundIndicatorShouldDisappearAfterTabNavigation() {
+  info("create a tab loading media document");
+  const tab = await createBlankForegroundTab();
+
+  info(`sound indicator should appear when audible web audio starts playing`);
+  await Promise.all([
+    initWebAudioDocument(tab),
+    waitForTabSoundIndicatorAppears(tab),
+  ]);
+
+  info(`sound indicator should disappear after navigating tab to blank page`);
+  await Promise.all([
+    BrowserTestUtils.loadURI(tab.linkedBrowser, "about:blank"),
+    waitForTabSoundIndicatorDisappears(tab),
+  ]);
+
+  info("remove tab");
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
