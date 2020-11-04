@@ -8,6 +8,8 @@ marionette.jar:
   content/action.js (action.js)
   content/actors/MarionetteCommandsChild.jsm (actors/MarionetteCommandsChild.jsm)
   content/actors/MarionetteCommandsParent.jsm (actors/MarionetteCommandsParent.jsm)
+  content/actors/MarionetteEventsChild.jsm (actors/MarionetteEventsChild.jsm)
+  content/actors/MarionetteEventsParent.jsm (actors/MarionetteEventsParent.jsm)
   content/actors/MarionetteReftestChild.jsm (actors/MarionetteReftestChild.jsm)
   content/actors/MarionetteReftestParent.jsm (actors/MarionetteReftestParent.jsm)
   content/addon.js (addon.js)

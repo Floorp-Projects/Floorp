@@ -380,8 +380,8 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
  *     The parent actor.
  */
 GeckoDriver.prototype.getActor = function(options = {}) {
-  return getMarionetteCommandsActorProxy(
-    () => this.getBrowsingContext(options)
+  return getMarionetteCommandsActorProxy(() =>
+    this.getBrowsingContext(options)
   );
 };
 
@@ -873,12 +873,6 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       child: {
         moduleURI:
           "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
-        events: {
-          beforeunload: { capture: true },
-          DOMContentLoaded: { mozSystemGroup: true },
-          pagehide: { mozSystemGroup: true },
-          pageshow: { mozSystemGroup: true },
-        },
       },
 
       allFrames: true,
@@ -3030,6 +3024,7 @@ GeckoDriver.prototype.deleteSession = function() {
         }
       }
     }
+
     ChromeUtils.unregisterWindowActor("MarionetteCommands");
   }
 
