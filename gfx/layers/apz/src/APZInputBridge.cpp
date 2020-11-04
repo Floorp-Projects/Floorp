@@ -189,5 +189,27 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
   return result;
 }
 
+std::ostream& operator<<(std::ostream& aOut,
+                         const APZHandledResult& aHandledResult) {
+  switch (aHandledResult) {
+    case APZHandledResult::Unhandled:
+      aOut << "unhandled";
+      break;
+    case APZHandledResult::HandledByRoot: {
+      aOut << "handled-by-root";
+      break;
+    }
+    case APZHandledResult::HandledByContent: {
+      aOut << "handled-by-content";
+      break;
+    }
+    case APZHandledResult::Invalid: {
+      aOut << "INVALID";
+      break;
+    }
+  }
+  return aOut;
+}
+
 }  // namespace layers
 }  // namespace mozilla

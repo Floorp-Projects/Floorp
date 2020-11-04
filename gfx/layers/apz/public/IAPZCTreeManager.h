@@ -39,6 +39,7 @@ enum ZoomToRectBehavior : uint32_t {
 };
 
 class AsyncDragMetrics;
+enum class APZHandledResult : uint8_t;
 
 class IAPZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING(IAPZCTreeManager)
@@ -147,8 +148,8 @@ class IAPZCTreeManager {
    * This is only implemented when the caller is in the same process as
    * the APZCTreeManager.
    */
-  using InputBlockCallback =
-      std::function<void(uint64_t aInputBlockId, bool aHandledByRootApzc)>;
+  using InputBlockCallback = std::function<void(
+      uint64_t aInputBlockId, APZHandledResult aHandledResult)>;
   virtual void AddInputBlockCallback(uint64_t aInputBlockId,
                                      InputBlockCallback&& aCallback) = 0;
 
