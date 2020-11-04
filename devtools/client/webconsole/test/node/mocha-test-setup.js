@@ -150,9 +150,7 @@ requireHacker.global_hook("default", (path, module) => {
     "devtools/shared/layout/utils": () => "{getCurrentZoom = () => {}}",
     "resource://gre/modules/AppConstants.jsm": () => "module.exports = {};",
     "devtools/client/framework/devtools": () => `module.exports = {
-      gDevTools: {
-        isFissionContentToolboxEnabled: () => false,
-      }
+      gDevTools: {}
     };`,
     "devtools/shared/async-storage": () =>
       getModule("devtools/client/webconsole/test/node/fixtures/async-storage"),

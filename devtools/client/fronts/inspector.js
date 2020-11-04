@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {
   FrontClassWithSpec,
@@ -180,10 +179,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   async getNodeFrontFromNodeGrip(grip) {
     const gripHasContentDomReference = "contentDomReference" in grip;
 
-    if (
-      !gDevTools.isFissionContentToolboxEnabled() ||
-      !gripHasContentDomReference
-    ) {
+    if (!gripHasContentDomReference) {
       // Backward compatibility ( < Firefox 71):
       // If the grip does not have a contentDomReference, we can't know in which browsing
       // context id the node lives. We fall back on gripToNodeFront that might retrieve
@@ -198,10 +194,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     const { browsingContextId } = contentDomReference;
     // If the contentDomReference lives in the same browsing context id than the
     // current one, we can directly use the current walker.
-    if (
-      this.targetFront.browsingContextID === browsingContextId ||
-      !gDevTools.isFissionContentToolboxEnabled()
-    ) {
+    if (this.targetFront.browsingContextID === browsingContextId) {
       return this.walker.getNodeActorFromContentDomReference(
         contentDomReference
       );

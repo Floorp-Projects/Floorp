@@ -11,17 +11,15 @@ const {
 module.exports = async function({
   targetList,
   targetFront,
-  isFissionEnabledOnContentToolbox,
   onAvailable,
   onUpdated,
 }) {
   // Allow the top level target unconditionnally.
-  // Also allow frame, but only in content toolbox, when the fission/content toolbox pref is
-  // set. i.e. still ignore them in the content of the browser toolbox as we inspect
-  // messages via the process targets
+  // Also allow frame, but only in content toolbox, i.e. still ignore them in
+  // the context of the browser toolbox as we inspect messages via the process
+  // targets
   // Also ignore workers as they are not supported yet. (see bug 1592584)
-  const isContentToolbox = targetList.targetFront.isLocalTab;
-  const listenForFrames = isContentToolbox && isFissionEnabledOnContentToolbox;
+  const listenForFrames = targetList.targetFront.isLocalTab;
   const isAllowed =
     targetFront.isTopLevel ||
     targetFront.targetType === targetList.TYPES.PROCESS ||

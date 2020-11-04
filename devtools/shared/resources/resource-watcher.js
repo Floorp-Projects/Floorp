@@ -4,8 +4,6 @@
 
 "use strict";
 
-// eslint-disable-next-line mozilla/reject-some-requires
-const { gDevTools } = require("devtools/client/framework/devtools");
 const { throttle } = require("devtools/shared/throttle");
 
 class ResourceWatcher {
@@ -372,7 +370,6 @@ class ResourceWatcher {
           resource,
           targetList: this.targetList,
           targetFront,
-          isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
           watcher: this.watcher,
         });
       }
@@ -691,7 +688,6 @@ class ResourceWatcher {
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
-      isFissionEnabledOnContentToolbox: gDevTools.isFissionContentToolboxEnabled(),
       onAvailable,
       onDestroyed,
       onUpdated,

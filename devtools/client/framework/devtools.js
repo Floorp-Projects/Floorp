@@ -834,14 +834,6 @@ DevTools.prototype = {
   getToolboxes() {
     return Array.from(this._toolboxes.values());
   },
-
-  /**
-   * Check if the content from remote frames should be displayed in the toolbox.
-   * XXX: Temporarily enable fissionContentToolbox by default.
-   */
-  isFissionContentToolboxEnabled() {
-    return true;
-  },
 };
 
 const gDevTools = (exports.gDevTools = new DevTools());
