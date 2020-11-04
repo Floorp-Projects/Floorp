@@ -18,12 +18,18 @@ namespace mozilla {
 class PDMFactoryImpl;
 template <class T>
 class StaticAutoPtr;
+enum class RemoteDecodeIn;
 
 class PDMFactory final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDMFactory)
 
   PDMFactory();
+
+  // To be called in the content process only, used to determine which PDMs are
+  // usable in their respective process.
+  static already_AddRefed<PDMFactory> PDMFactoryForRdd();
+  static already_AddRefed<PDMFactory> PDMFactoryForGpu();
 
   // Factory method that creates the appropriate PlatformDecoderModule for
   // the platform we're running on. Caller is responsible for deleting this
@@ -50,13 +56,42 @@ class PDMFactory final {
   static constexpr int kYUV422 = 2;
   static constexpr int kYUV444 = 3;
 
+  /*
+   * All the codecs we support
+   */
+  enum class MediaCodecs {
+    H264,
+    VP9,
+    VP8,
+    AV1,
+    Theora,
+    AAC,
+    MP3,
+    Opus,
+    Vorbis,
+    Flac,
+    Wave,
+
+    SENTINEL,
+  };
+
+  using MediaCodecsSupported = EnumSet<MediaCodecs>;
+
+  static MediaCodecsSupported Supported();
+  static void SetSupported(const MediaCodecsSupported& aSupported);
+
  private:
   virtual ~PDMFactory() = default;
+  // Will set PDM list for the required process.
+  // This is used to determine which PDMs are available on the given process
+  // from the content process.
+  explicit PDMFactory(const RemoteDecodeIn& aProcess);
 
   void CreatePDMs();
   void CreateNullPDM();
   void CreateGpuPDMs();
   void CreateRddPDMs();
+  void CreateContentPDMs();
   void CreateDefaultPDMs();
 
   template <typename DECODER_MODULE, typename... ARGS>
@@ -87,6 +122,14 @@ class PDMFactory final {
   friend class StaticAutoPtr;
   static StaticAutoPtr<PDMFactoryImpl> sInstance;
   static StaticMutex sMonitor;
+};
+
+// Used for IPDL serialization.
+// The 'value' have to be the biggest enum from MediaCodecs.
+template <>
+struct MaxEnumValue<PDMFactory::MediaCodecs> {
+  static constexpr unsigned int value =
+      static_cast<unsigned int>(PDMFactory::MediaCodecs::SENTINEL);
 };
 
 }  // namespace mozilla

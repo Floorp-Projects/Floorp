@@ -33,11 +33,6 @@ sync protocol PRemoteDecoderManager
   manages PRemoteDecoder;
 
 parent:
-  sync Supports(RemoteDecoderInfoIPDL info,
-                TextureFactoryIdentifier? identifier)
-         returns (bool success,
-                  DecoderDoctorDiagnostics diagnostics);
-
   sync PRemoteDecoder(RemoteDecoderInfoIPDL info,
                       OptionSet options,
                       TextureFactoryIdentifier? identifier)
