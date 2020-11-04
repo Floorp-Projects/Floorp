@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+div { font: 24px monospace; width: 0; }
+b { font-weight: normal; background: yellow; }
+.cell { display: table-cell; border: 1px solid green; background: red; }
+.nowrap { white-space: nowrap; }
+.prewrap { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<p>There should be no red:</p>
+
+<div><span class="cell"><b>Hiya<span class="prewrap"> </span><span class="nowrap"> </span>Kitty</b></span></div>
+
+</body>
+</html>

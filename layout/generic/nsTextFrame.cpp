@@ -8450,7 +8450,13 @@ void nsTextFrame::AddInlineMinISizeForFlow(gfxContext* aRenderingContext,
       } else {
         aData->OptionallyBreak();
       }
-      wordStart = i;
+      if (aData->mSkipWhitespace) {
+        iter.SetSkippedOffset(i);
+        wordStart = FindStartAfterSkippingWhitespace(
+            &provider, aData, textStyle, &iter, flowEndInTextRun);
+      } else {
+        wordStart = i;
+      }
     }
   }
 
