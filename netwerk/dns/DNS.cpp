@@ -207,27 +207,37 @@ bool NetAddr::IsIPAddrV4Mapped() const {
   return false;
 }
 
+static bool isLocalIPv4(uint32_t networkEndianIP) {
+  uint32_t addr32 = ntohl(networkEndianIP);
+  if (addr32 >> 24 == 0x0A ||    // 10/8 prefix (RFC 1918).
+      addr32 >> 20 == 0xAC1 ||   // 172.16/12 prefix (RFC 1918).
+      addr32 >> 16 == 0xC0A8 ||  // 192.168/16 prefix (RFC 1918).
+      addr32 >> 16 == 0xA9FE) {  // 169.254/16 prefix (Link Local).
+    return true;
+  }
+  return false;
+}
+
 bool NetAddr::IsIPAddrLocal() const {
   const NetAddr* addr = this;
 
   // IPv4 RFC1918 and Link Local Addresses.
   if (addr->raw.family == AF_INET) {
-    uint32_t addr32 = ntohl(addr->inet.ip);
-    if (addr32 >> 24 == 0x0A ||    // 10/8 prefix (RFC 1918).
-        addr32 >> 20 == 0xAC1 ||   // 172.16/12 prefix (RFC 1918).
-        addr32 >> 16 == 0xC0A8 ||  // 192.168/16 prefix (RFC 1918).
-        addr32 >> 16 == 0xA9FE) {  // 169.254/16 prefix (Link Local).
-      return true;
-    }
+    return isLocalIPv4(addr->inet.ip);
   }
   // IPv6 Unique and Link Local Addresses.
+  // or mapped IPv4 addresses
   if (addr->raw.family == AF_INET6) {
     uint16_t addr16 = ntohs(addr->inet6.ip.u16[0]);
     if (addr16 >> 9 == 0xfc >> 1 ||    // fc00::/7 Unique Local Address.
         addr16 >> 6 == 0xfe80 >> 6) {  // fe80::/10 Link Local Address.
       return true;
     }
+    if (IPv6ADDR_IS_V4MAPPED(&addr->inet6.ip)) {
+      return isLocalIPv4(IPv6ADDR_V4MAPPED_TO_IPADDR(&addr->inet6.ip));
+    }
   }
+
   // Not an IPv4/6 local address.
   return false;
 }
