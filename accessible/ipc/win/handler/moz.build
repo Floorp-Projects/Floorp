@@ -121,3 +121,8 @@ LIBRARY_DEFINES["UNICODE"] = True
 LIBRARY_DEFINES["_UNICODE"] = True
 LIBRARY_DEFINES["MOZ_NO_MOZALLOC"] = True
 DisableStlWrapping()
+
+DELAYLOAD_DLLS += [
+    "advapi32.dll",
+    "ktmw32.dll",
+]
