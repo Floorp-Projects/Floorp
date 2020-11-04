@@ -81,7 +81,7 @@ var StarUI = {
       case "popuphidden": {
         clearTimeout(this._autoCloseTimer);
         if (aEvent.originalTarget == this.panel) {
-          let selectedFolderGuid = gEditItemOverlay.selectedFolderGuid;
+          let { selectedFolderGuid, didChangeFolder } = gEditItemOverlay;
           gEditItemOverlay.uninitPanel(true);
 
           this._anchorElement.removeAttribute("open");
@@ -111,9 +111,10 @@ var StarUI = {
           }
 
           if (!removeBookmarksOnPopupHidden) {
-            this._storeRecentlyUsedFolder(selectedFolderGuid).catch(
-              console.error
-            );
+            this._storeRecentlyUsedFolder(
+              selectedFolderGuid,
+              didChangeFolder
+            ).catch(console.error);
           }
         }
         break;
@@ -382,12 +383,21 @@ var StarUI = {
     this._batching = false;
   },
 
-  async _storeRecentlyUsedFolder(selectedFolderGuid) {
-    // These are displayed by default, so don't save the folder for them.
-    if (
-      !selectedFolderGuid ||
-      PlacesUtils.bookmarks.userContentRoots.includes(selectedFolderGuid)
-    ) {
+  async _storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder) {
+    if (!selectedFolderGuid) {
+      return;
+    }
+
+    // If we're changing where a bookmark gets saved, persist that location.
+    if (didChangeFolder) {
+      Services.prefs.setCharPref(
+        "browser.bookmarks.defaultLocation",
+        selectedFolderGuid
+      );
+    }
+
+    // Don't store folders that are always displayed in "Recent Folders".
+    if (PlacesUtils.bookmarks.userContentRoots.includes(selectedFolderGuid)) {
       return;
     }
 

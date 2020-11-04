@@ -482,3 +482,7 @@ async function hideBookmarksPanel(win = window) {
   win.document.getElementById("editBookmarkPanelDoneButton").click();
   await hiddenPromise;
 }
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");
+});
