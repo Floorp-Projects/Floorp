@@ -19,8 +19,7 @@
 #include "mozilla/storage/Variant.h"
 #include "mozilla/dom/DataTransferItemListBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItemList, mDataTransfer,
                                       mItems, mIndexedItems, mFiles)
@@ -612,5 +611,4 @@ void DataTransferItemList::GenerateFiles(FileList* aFiles,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

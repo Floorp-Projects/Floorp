@@ -8,8 +8,7 @@
 #include "mozilla/TextEvents.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 CompositionEvent::CompositionEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
@@ -96,8 +95,7 @@ void CompositionEvent::GetRanges(TextClauseArray& aRanges) {
   aRanges = mRanges.Clone();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 using namespace mozilla;
 using namespace mozilla::dom;

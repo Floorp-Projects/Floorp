@@ -14,8 +14,7 @@
 #include "nsIPermissionManager.h"
 #include "PermissionUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Permissions)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -165,5 +164,4 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
   return promise.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

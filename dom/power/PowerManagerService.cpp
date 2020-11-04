@@ -21,9 +21,7 @@
 #  include <unistd.h>
 #endif
 
-namespace mozilla {
-namespace dom {
-namespace power {
+namespace mozilla::dom::power {
 
 using namespace hal;
 
@@ -145,9 +143,7 @@ already_AddRefed<WakeLock> PowerManagerService::NewWakeLockOnBehalfOfProcess(
   return wakelock.forget();
 }
 
-}  // namespace power
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::power
 
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 

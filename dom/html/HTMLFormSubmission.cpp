@@ -36,8 +36,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/RandomNum.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -875,5 +874,4 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

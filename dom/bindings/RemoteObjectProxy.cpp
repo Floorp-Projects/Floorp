@@ -10,8 +10,7 @@
 #include "js/Object.h"  // JS::GetClass
 #include "xpcprivate.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool RemoteObjectProxyBase::getOwnPropertyDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
@@ -180,5 +179,4 @@ void RemoteObjectProxyBase::GetOrCreateProxyObject(
 
 const char RemoteObjectProxyBase::sCrossOriginProxyFamily = 0;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -10,8 +10,7 @@
 #include "ClientHandleOpChild.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -68,5 +67,4 @@ void ClientHandleChild::MaybeStartTeardown() {
   Unused << SendTeardown();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

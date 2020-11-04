@@ -8,8 +8,7 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 StaticMutex sRefMessageBodyServiceMutex;
 
@@ -148,5 +147,4 @@ bool RefMessageBody::TakeTransferredPortsAsSequence(
   return mCloneData->TakeTransferredPortsAsSequence(aPorts);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

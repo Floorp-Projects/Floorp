@@ -10,8 +10,7 @@
 #include "nsIGlobalObject.h"
 #include "WrapperFactory.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DebuggerNotificationObserver,
                                       mOwnerGlobal, mEventListenerCallbacks)
@@ -145,5 +144,4 @@ void DebuggerNotificationObserver::NotifyListeners(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

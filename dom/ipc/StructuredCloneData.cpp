@@ -22,9 +22,7 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace dom {
-namespace ipc {
+namespace mozilla::dom::ipc {
 
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::IPCStream;
@@ -425,6 +423,4 @@ already_AddRefed<SharedJSAllocatedData> StructuredCloneData::TakeSharedData() {
   return mSharedData.forget();
 }
 
-}  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::ipc

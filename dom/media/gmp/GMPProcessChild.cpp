@@ -12,8 +12,7 @@
 
 using mozilla::ipc::IOThreadChild;
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 GMPProcessChild::GMPProcessChild(ProcessId aParentPid)
     : ProcessChild(aParentPid) {}
@@ -48,5 +47,4 @@ bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
 
 void GMPProcessChild::CleanUp() { BackgroundHangMonitor::Shutdown(); }
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp

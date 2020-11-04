@@ -10,8 +10,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Details)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLDetailsElement::~HTMLDetailsElement() = default;
 
@@ -70,5 +69,4 @@ JSObject* HTMLDetailsElement::WrapNode(JSContext* aCx,
   return HTMLDetailsElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

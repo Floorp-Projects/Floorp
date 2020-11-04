@@ -9,9 +9,7 @@
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozStorageHelper.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 using mozilla::dom::quota::QuotaObject;
 
@@ -253,6 +251,4 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   return mBase->GetQuotaObjects(aDatabaseQuotaObject, aJournalQuotaObject);
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

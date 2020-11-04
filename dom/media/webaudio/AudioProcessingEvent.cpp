@@ -9,8 +9,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "AudioContext.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent, Event, mInputBuffer,
                                    mOutputBuffer, mNode)
@@ -42,5 +41,4 @@ already_AddRefed<AudioBuffer> AudioProcessingEvent::LazilyCreateBuffer(
   return buffer.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

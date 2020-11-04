@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/Timeout.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */ TimeoutBudgetManager& TimeoutBudgetManager::Get() {
   static TimeoutBudgetManager gTimeoutBudgetManager;
@@ -33,5 +32,4 @@ TimeDuration TimeoutBudgetManager::RecordExecution(const TimeStamp& aNow,
   return aNow - mStart;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -118,8 +118,7 @@ NS_IMETHODIMP LabellingEventTarget::HaveDirectTasks(bool* aValue) {
 NS_IMPL_ISUPPORTS(LabellingEventTarget, nsIEventTarget, nsISerialEventTarget,
                   nsIDirectTaskDispatcher)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 AutoTArray<RefPtr<DocGroup>, 2>* DocGroup::sPendingDocGroups = nullptr;
 
@@ -400,5 +399,4 @@ bool DocGroup::IsActive() const {
   return false;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

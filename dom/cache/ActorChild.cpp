@@ -9,9 +9,7 @@
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 void ActorChild::SetWorkerRef(SafeRefPtr<CacheWorkerRef> aWorkerRef) {
   // Some of the Cache actors can have multiple DOM objects associated with
@@ -52,6 +50,4 @@ ActorChild::ActorChild() = default;
 
 ActorChild::~ActorChild() { MOZ_DIAGNOSTIC_ASSERT(!mWorkerRef); }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache

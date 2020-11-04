@@ -34,8 +34,7 @@
 
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Performance)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -644,5 +643,4 @@ size_t Performance::SizeOfResourceEntries(
   return resourceEntries;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -16,8 +16,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* ------------------------- TableRowsCollection --------------------------- */
 /**
@@ -1025,5 +1024,4 @@ nsresult HTMLTableElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

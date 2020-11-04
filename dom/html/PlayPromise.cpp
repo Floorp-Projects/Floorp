@@ -13,8 +13,7 @@ extern mozilla::LazyLogModule gMediaElementLog;
 #define PLAY_PROMISE_LOG(msg, ...) \
   MOZ_LOG(gMediaElementLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 PlayPromise::PlayPromise(nsIGlobalObject* aGlobal) : Promise(aGlobal) {}
 
@@ -66,5 +65,4 @@ void PlayPromise::MaybeReject(nsresult aReason) {
   Promise::MaybeReject(aReason);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -12,8 +12,7 @@
 #include "jsapi.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
                                                    const nsACString& aName,
@@ -222,5 +221,4 @@ void JSActorManager::JSActorUnregister(const nsACString& aName) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

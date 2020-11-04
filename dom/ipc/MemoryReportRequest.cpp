@@ -11,8 +11,7 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MemoryReportRequestHost::MemoryReportRequestHost(uint32_t aGeneration)
     : mGeneration(aGeneration), mSuccess(false) {
@@ -168,5 +167,4 @@ NS_IMETHODIMP MemoryReportRequestClient::Run() {
   return rv;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -31,8 +31,7 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Option)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 HTMLOptionElement::HTMLOptionElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -368,5 +367,4 @@ JSObject* HTMLOptionElement::WrapNode(JSContext* aCx,
   return HTMLOptionElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

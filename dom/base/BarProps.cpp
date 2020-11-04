@@ -11,8 +11,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIWebBrowserChrome.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //
 //  Basic (virtual) BarProp class implementation
@@ -205,5 +204,4 @@ void ScrollbarsProp::SetVisible(bool aVisible, CallerType, ErrorResult&) {
   /* Do nothing */
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

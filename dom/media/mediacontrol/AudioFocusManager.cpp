@@ -16,8 +16,7 @@
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("AudioFocusManager=%p, " msg, this, ##__VA_ARGS__))
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void AudioFocusManager::RequestAudioFocus(IMediaController* aController) {
   MOZ_ASSERT(aController);
@@ -57,5 +56,4 @@ uint32_t AudioFocusManager::GetAudioFocusNums() const {
   return mOwningFocusControllers.Length();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -6,8 +6,7 @@
 
 #include "nsIURI.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(RemoteWebProgressRequest, nsIRequest, nsIChannel,
                   nsIClassifiedChannel)
@@ -254,5 +253,4 @@ RemoteWebProgressRequest::GetThirdPartyClassificationFlags(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

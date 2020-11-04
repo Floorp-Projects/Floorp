@@ -67,8 +67,7 @@ static bool IsPreviousSibling(nsINode* aSubject, nsINode* aNode) {
 }
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Calls LoadSelectedImage on host element unless it has been superseded or
 // canceled -- this is the synchronous section of "update the image data".
@@ -1289,5 +1288,4 @@ void HTMLImageElement::StopLazyLoadingAndStartLoadIfNeeded() {
   StartLoadingIfNeeded();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
