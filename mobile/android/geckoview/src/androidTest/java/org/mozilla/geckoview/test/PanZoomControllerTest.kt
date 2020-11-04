@@ -264,7 +264,7 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     @WithDisplay(width = 100, height = 100)
     @Test
-    fun touchEventForResult() {
+    fun touchEventForResultWithStaticToolbar() {
         setupTouch()
 
         // No touch handlers, without scrolling
