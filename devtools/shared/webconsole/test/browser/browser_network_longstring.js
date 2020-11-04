@@ -116,7 +116,6 @@ function assertNetworkEventUpdate(netActor, packet) {
       break;
     case "requestPostData":
       ok(packet.dataSize > 0, "dataSize > 0");
-      ok(!packet.discardRequestBody, "discardRequestBody");
       break;
     case "responseStart":
       expectedPacket = {
@@ -125,7 +124,6 @@ function assertNetworkEventUpdate(netActor, packet) {
           status: "200",
           statusText: "OK",
           headersSize: /^\d+$/,
-          discardResponseBody: false,
         },
       };
       break;
@@ -143,7 +141,6 @@ function assertNetworkEventUpdate(netActor, packet) {
       expectedPacket = {
         mimeType: "application/json",
         contentSize: /^\d+$/,
-        discardResponseBody: false,
       };
       break;
     case "eventTimings":
