@@ -23,6 +23,8 @@ XPIDL_SOURCES += [
     "nsIAutoplay.idl",
 ]
 
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
