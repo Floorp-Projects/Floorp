@@ -90,13 +90,19 @@ class WebExtensionBrowserMenu internal constructor(
                     }
 
                     extension.pageAction?.let { pageAction ->
-                        addOrUpdateAction(
-                            extension = extension,
-                            globalAction = pageAction,
-                            tabAction = tab?.extensionState?.get(extension.id)?.pageAction,
-                            menuItems = menuItems,
-                            isPageAction = true
-                        )
+                        val tabPageAction = tab?.extensionState?.get(extension.id)?.pageAction
+
+                        // Unlike browser actions, page actions are not displayed by default (only if enabled):
+                        // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/page_action
+                        if (pageAction.copyWithOverride(tabPageAction).enabled == true) {
+                            addOrUpdateAction(
+                                extension = extension,
+                                globalAction = pageAction,
+                                tabAction = tabPageAction,
+                                menuItems = menuItems,
+                                isPageAction = true
+                            )
+                        }
                     }
                 }
 

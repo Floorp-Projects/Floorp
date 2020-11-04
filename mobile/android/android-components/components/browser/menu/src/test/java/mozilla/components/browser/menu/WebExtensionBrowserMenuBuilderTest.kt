@@ -54,8 +54,8 @@ class WebExtensionBrowserMenuBuilderTest {
 
     @Test
     fun `web extension sub menu add-ons manager sub menu item invokes onAddonsManagerTapped when clicked`() {
-        val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
-        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
+        val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
             "id" to WebExtensionState(
@@ -100,8 +100,8 @@ class WebExtensionBrowserMenuBuilderTest {
 
     @Test
     fun `web extension submenu is added at the start when appendExtensionSubMenuAtStart is true`() {
-        val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
-        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
+        val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
             "id" to WebExtensionState(
@@ -152,8 +152,8 @@ class WebExtensionBrowserMenuBuilderTest {
 
     @Test
     fun `web extension submenu is added at the end when appendExtensionSubMenuAtStart is false`() {
-        val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
-        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
+        val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
             "id" to WebExtensionState(
@@ -208,8 +208,8 @@ class WebExtensionBrowserMenuBuilderTest {
         val promotableWebExtensionId = "promotable extension id"
         val promotableWebExtensionTitle = "promotable extension action title"
 
-        val pageAction = WebExtensionBrowserAction("page_action", false, mock(), "", 0, 0) {}
-        val pageActionPromotableWebExtension = WebExtensionBrowserAction(promotableWebExtensionTitle, false, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
+        val pageActionPromotableWebExtension = WebExtensionBrowserAction(promotableWebExtensionTitle, true, mock(), "", 0, 0) {}
 
         // just 2 extensions in the extension menu
         val extensions = mapOf(

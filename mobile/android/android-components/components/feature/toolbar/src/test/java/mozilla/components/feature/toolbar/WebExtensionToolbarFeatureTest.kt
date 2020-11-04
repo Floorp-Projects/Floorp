@@ -47,13 +47,13 @@ class WebExtensionToolbarFeatureTest {
     @Test
     fun `render web extension actions from browser state`() {
         val defaultPageAction =
-            WebExtensionPageAction("default_page_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("default_page_action_title", true, mock(), "", 0, 0) {}
         val overriddenPageAction =
-            WebExtensionPageAction("overridden_page_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("overridden_page_action_title", true, mock(), "", 0, 0) {}
         val defaultBrowserAction =
-            WebExtensionBrowserAction("default_browser_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("default_browser_action_title", true, mock(), "", 0, 0) {}
         val overriddenBrowserAction =
-            WebExtensionBrowserAction("overridden_browser_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("overridden_browser_action_title", true, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions: Map<String, WebExtensionState> = mapOf(
             "id" to WebExtensionState("id", "url", "name", true, browserAction = defaultBrowserAction, pageAction = defaultPageAction)
@@ -90,13 +90,13 @@ class WebExtensionToolbarFeatureTest {
     }
 
     @Test
-    fun `does not render actions from disabled extensions `() {
+    fun `does not render actions from disabled extensions`() {
         val enablePageAction =
-            WebExtensionPageAction("enable_page_action", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("enable_page_action", true, mock(), "", 0, 0) {}
         val disablePageAction =
-            WebExtensionPageAction("disable_page_action", false, mock(), "", 0, 0) {}
-        val enabledAction = WebExtensionBrowserAction("enable_browser_action", false, mock(), "", 0, 0) {}
-        val disabledAction = WebExtensionBrowserAction("disable_browser_action", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("disable_page_action", true, mock(), "", 0, 0) {}
+        val enabledAction = WebExtensionBrowserAction("enable_browser_action", true, mock(), "", 0, 0) {}
+        val disabledAction = WebExtensionBrowserAction("disable_browser_action", true, mock(), "", 0, 0) {}
         val toolbar: Toolbar = mock()
         val extensions = mapOf(
             "enabled" to WebExtensionState(
@@ -156,7 +156,7 @@ class WebExtensionToolbarFeatureTest {
         val pageActionOverride = Action(
             title = "updatedTitle",
             loadIcon = null,
-            enabled = false,
+            enabled = true,
             badgeText = "updatedText",
             badgeTextColor = Color.RED,
             badgeBackgroundColor = Color.GREEN
@@ -230,7 +230,7 @@ class WebExtensionToolbarFeatureTest {
         // verifying session-specific page action
         assertEquals(1, webExtToolbarFeature.webExtensionPageActions.size)
         updatedExt1 = webExtToolbarFeature.webExtensionPageActions["1"]!!
-        assertFalse(updatedExt1.action.enabled!!)
+        assertTrue(updatedExt1.action.enabled!!)
         assertEquals("updatedText", updatedExt1.action.badgeText!!)
         assertEquals("updatedTitle", updatedExt1.action.title!!)
         assertEquals(loadIcon, updatedExt1.action.loadIcon!!)
@@ -369,6 +369,48 @@ class WebExtensionToolbarFeatureTest {
         webExtToolbarFeature.renderWebExtensionActions(browserStateAllowedInPrivateBrowsing, tabSessionState)
         verify(toolbar, times(1)).addBrowserAction(browserActionCaptor.capture())
         assertEquals(actionExt1, browserActionCaptor.value.action)
+    }
+
+    @Test
+    fun `disabled page actions are not rendered`() {
+        val enablePageAction =
+            WebExtensionPageAction("enable_page_action", true, mock(), "", 0, 0) {}
+        val disablePageAction =
+            WebExtensionPageAction("disable_page_action", false, mock(), "", 0, 0) {}
+        val toolbar: Toolbar = mock()
+        val extensions = mapOf(
+            "ext1" to WebExtensionState(
+                "ext1",
+                "url",
+                "name",
+                true,
+                pageAction = enablePageAction
+            ),
+            "ext2" to WebExtensionState(
+                "ext2",
+                "url",
+                "name",
+                true,
+                pageAction = disablePageAction
+            )
+        )
+
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    extensions = extensions
+                )
+            )
+        )
+        val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
+        testDispatcher.advanceUntilIdle()
+
+        verify(store).observeManually(any())
+        verify(webExtToolbarFeature).renderWebExtensionActions(any(), any())
+
+        val pageActionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar, times(1)).addPageAction(pageActionCaptor.capture())
+        assertEquals("enable_page_action", pageActionCaptor.value.action.title)
     }
 
     private fun getWebExtensionToolbarFeature(

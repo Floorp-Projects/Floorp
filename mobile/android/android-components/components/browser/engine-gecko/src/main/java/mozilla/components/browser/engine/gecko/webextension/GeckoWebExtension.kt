@@ -179,12 +179,7 @@ class GeckoWebExtension(
                 session: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                // Page action API doesn't support enable/disable so we enable by default.
-                actionHandler.onPageAction(
-                    this@GeckoWebExtension,
-                    null,
-                    action.convert().copy(enabled = true)
-                )
+                actionHandler.onPageAction(this@GeckoWebExtension, null, action.convert())
             }
 
             override fun onTogglePopup(
@@ -224,12 +219,7 @@ class GeckoWebExtension(
                 geckoSession: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                // Page action API doesn't support enable/disable so we enable by default.
-                actionHandler.onPageAction(
-                    this@GeckoWebExtension,
-                    session,
-                    action.convert().copy(enabled = true)
-                )
+                actionHandler.onPageAction(this@GeckoWebExtension, session, action.convert())
             }
         }
 

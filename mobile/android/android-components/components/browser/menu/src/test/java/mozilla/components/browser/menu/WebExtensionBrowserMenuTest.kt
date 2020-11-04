@@ -59,8 +59,8 @@ class WebExtensionBrowserMenuTest {
     @Test
     fun `actions are only updated when the menu is shown`() {
         webExtensionBrowserActions.clear()
-        val browserAction = WebExtensionBrowserAction("browser_action", false, mock(), "", 0, 0) {}
-        val pageAction = WebExtensionPageAction("browser_action", false, mock(), "", 0, 0) {}
+        val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
+        val pageAction = WebExtensionPageAction("browser_action", true, mock(), "", 0, 0) {}
         val extensions = mapOf(
             "browser_action" to WebExtensionState(
                 "browser_action",
@@ -94,9 +94,9 @@ class WebExtensionBrowserMenuTest {
         assertNotNull(popup)
 
         val defaultBrowserAction =
-            WebExtensionBrowserAction("default_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("default_title", true, mock(), "", 0, 0) {}
         val defaultPageAction =
-            WebExtensionPageAction("default_title", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("default_title", true, mock(), "", 0, 0) {}
         val defaultExtensions: Map<String, WebExtensionState> = mapOf(
             "id" to WebExtensionState(
                 "id",
@@ -117,9 +117,9 @@ class WebExtensionBrowserMenuTest {
 
         menu.dismiss()
         val anotherBrowserAction =
-            WebExtensionBrowserAction("another_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("another_title", true, mock(), "", 0, 0) {}
         val anotherPageAction =
-            WebExtensionBrowserAction("another_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("another_title", true, mock(), "", 0, 0) {}
         val anotherExtension: Map<String, WebExtensionState> = mapOf(
             "id2" to WebExtensionState(
                 "id2",
@@ -142,13 +142,13 @@ class WebExtensionBrowserMenuTest {
     @Test
     fun `render web extension actions from browser state`() {
         val defaultBrowserAction =
-            WebExtensionBrowserAction("default_browser_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("default_browser_action_title", true, mock(), "", 0, 0) {}
         val defaultPageAction =
-            WebExtensionPageAction("default_page_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("default_page_action_title", true, mock(), "", 0, 0) {}
         val overriddenBrowserAction =
-            WebExtensionBrowserAction("overridden_browser_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("overridden_browser_action_title", true, mock(), "", 0, 0) {}
         val overriddenPageAction =
-            WebExtensionBrowserAction("overridden_page_action_title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("overridden_page_action_title", true, mock(), "", 0, 0) {}
 
         val extensions: Map<String, WebExtensionState> = mapOf(
             "id" to WebExtensionState(
@@ -203,13 +203,13 @@ class WebExtensionBrowserMenuTest {
     @Test
     fun `getOrUpdateWebExtensionMenuItems does not include actions from disabled extensions`() {
         val enabledPageAction =
-            WebExtensionBrowserAction("enabled_page_action", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("enabled_page_action", true, mock(), "", 0, 0) {}
         val disabledPageAction =
-            WebExtensionBrowserAction("disabled_page_action", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("disabled_page_action", true, mock(), "", 0, 0) {}
         val enabledBrowserAction =
-            WebExtensionBrowserAction("enabled_browser_action", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("enabled_browser_action", true, mock(), "", 0, 0) {}
         val disabledBrowserAction =
-            WebExtensionBrowserAction("disabled_browser_action", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("disabled_browser_action", true, mock(), "", 0, 0) {}
 
         val extensions = mapOf(
             "enabled" to WebExtensionState(
@@ -409,9 +409,9 @@ class WebExtensionBrowserMenuTest {
         whenever(view.context).thenReturn(mock())
 
         val browserAction =
-            WebExtensionBrowserAction("title", false, mock(), "", 0, 0) {}
+            WebExtensionBrowserAction("title", true, mock(), "", 0, 0) {}
         val pageAction =
-            WebExtensionPageAction("title", false, mock(), "", 0, 0) {}
+            WebExtensionPageAction("title", true, mock(), "", 0, 0) {}
         val extensions: Map<String, WebExtensionState> = mapOf(
             "some_example_id" to WebExtensionState(
                 "some_example_id",
@@ -482,5 +482,46 @@ class WebExtensionBrowserMenuTest {
         val actionItemsAllowedInPrivateBrowsing = getOrUpdateWebExtensionMenuItems(browserStateAllowedInPrivateBrowsing, tabSessionState)
         assertEquals(1, actionItemsAllowedInPrivateBrowsing.size)
         assertEquals(actionExt1, actionItemsAllowedInPrivateBrowsing[0].action)
+    }
+
+    @Test
+    fun `does not include menu item for disabled paged actions`() {
+        val enabledPageAction =
+            WebExtensionBrowserAction("enabled_page_action", true, mock(), "", 0, 0) {}
+        val disabledPageAction =
+            WebExtensionBrowserAction("disabled_page_action", false, mock(), "", 0, 0) {}
+
+        val extensions = mapOf(
+            "ext1" to WebExtensionState(
+                "ext1",
+                "url",
+                "name",
+                true,
+                pageAction = enabledPageAction
+            ),
+            "ext2" to WebExtensionState(
+                "ext2",
+                "url",
+                "name",
+                true,
+                pageAction = disabledPageAction
+            )
+        )
+
+        val store =
+            BrowserStore(
+                BrowserState(
+                    extensions = extensions
+                )
+            )
+
+        val browserMenuItems = getOrUpdateWebExtensionMenuItems(store.state)
+        assertEquals(1, browserMenuItems.size)
+
+        var menuAction = browserMenuItems[0]
+        assertEquals(
+            "enabled_page_action",
+            menuAction.action.title
+        )
     }
 }
