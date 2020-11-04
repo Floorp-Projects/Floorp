@@ -44,7 +44,8 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DataTransfer)
 
@@ -1539,4 +1540,5 @@ void DataTransfer::SetMode(DataTransfer::Mode aMode) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

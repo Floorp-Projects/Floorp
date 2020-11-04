@@ -13,7 +13,8 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TCPServerSocketEvent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION(TCPServerSocketParent, mServerSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPServerSocketParent)
@@ -114,4 +115,5 @@ void TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event) {
   SendCallbackAccept(socketParent);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

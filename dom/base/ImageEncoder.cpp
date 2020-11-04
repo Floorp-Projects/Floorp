@@ -23,7 +23,8 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // This class should be placed inside GetBRGADataSourceSurfaceSync(). However,
 // due to B2G ICS uses old complier (C++98/03) which forbids local class as
@@ -443,4 +444,5 @@ already_AddRefed<imgIEncoder> ImageEncoder::GetImageEncoder(nsAString& aType) {
   return encoder.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

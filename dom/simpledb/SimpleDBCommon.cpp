@@ -6,8 +6,10 @@
 
 #include "SimpleDBCommon.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 const char* kPrefSimpleDBEnabled = "dom.simpleDB.enabled";
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

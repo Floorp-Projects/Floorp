@@ -23,7 +23,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSObject* HTMLScriptElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -228,4 +229,5 @@ bool HTMLScriptElement::HasScriptContent() {
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

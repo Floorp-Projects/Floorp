@@ -9,7 +9,8 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TestInterfaceIterableSingle, mParent)
 
@@ -69,4 +70,5 @@ int32_t TestInterfaceIterableSingle::IndexedGetter(uint32_t aIndex,
   return mValues[aIndex];
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

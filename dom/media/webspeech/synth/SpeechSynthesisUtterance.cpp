@@ -15,7 +15,8 @@
 
 #include <stdlib.h>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechSynthesisUtterance,
                                    DOMEventTargetHelper, mVoice);
@@ -131,4 +132,5 @@ void SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(
   DispatchTrustedEvent(event);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

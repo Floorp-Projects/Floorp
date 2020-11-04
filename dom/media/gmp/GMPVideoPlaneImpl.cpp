@@ -8,7 +8,8 @@
 #include "GMPVideoHost.h"
 #include "GMPSharedMemManager.h"
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 GMPPlaneImpl::GMPPlaneImpl(GMPVideoHostImpl* aHost)
     : mSize(0), mStride(0), mHost(aHost) {
@@ -177,4 +178,5 @@ uint8_t* GMPPlaneImpl::Buffer() { return mBuffer.get<uint8_t>(); }
 
 void GMPPlaneImpl::Destroy() { delete this; }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

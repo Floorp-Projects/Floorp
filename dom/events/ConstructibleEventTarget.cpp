@@ -7,11 +7,13 @@
 #include "mozilla/dom/ConstructibleEventTarget.h"
 #include "mozilla/dom/EventTargetBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSObject* ConstructibleEventTarget::WrapObject(
     JSContext* cx, JS::Handle<JSObject*> aGivenProto) {
   return EventTarget_Binding::Wrap(cx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

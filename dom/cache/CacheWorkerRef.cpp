@@ -10,7 +10,9 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 namespace {
 // XXX Move this to mfbt, or do we already have something like this? Or remove
@@ -149,4 +151,6 @@ CacheWorkerRef::~CacheWorkerRef() {
   MOZ_DIAGNOSTIC_ASSERT(mActorList.IsEmpty());
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

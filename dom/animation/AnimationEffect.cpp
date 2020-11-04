@@ -14,7 +14,8 @@
 #include "mozilla/FloatingPoint.h"
 #include "nsDOMMutationObserver.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffect)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffect)
@@ -339,4 +340,5 @@ Nullable<TimeDuration> AnimationEffect::GetLocalTime() const {
   return result;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

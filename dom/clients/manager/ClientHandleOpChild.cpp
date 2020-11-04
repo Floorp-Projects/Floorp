@@ -8,7 +8,8 @@
 
 #include "ClientHandle.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void ClientHandleOpChild::ActorDestroy(ActorDestroyReason aReason) {
   mClientHandle = nullptr;
@@ -41,4 +42,5 @@ ClientHandleOpChild::ClientHandleOpChild(
   MOZ_DIAGNOSTIC_ASSERT(mRejectCallback);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

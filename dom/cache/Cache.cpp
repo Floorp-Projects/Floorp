@@ -23,7 +23,9 @@
 #include "mozilla/Unused.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::ipc::PBackgroundChild;
 
@@ -612,4 +614,6 @@ OpenMode Cache::GetOpenMode() const {
   return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

@@ -11,7 +11,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ClientSource* ClientSourceOpChild::GetSource() const {
   auto actor = static_cast<ClientSourceChild*>(Manager());
@@ -129,4 +130,5 @@ void ClientSourceOpChild::Cleanup() {
   mPromiseRequestHolder.DisconnectIfExists();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

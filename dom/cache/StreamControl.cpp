@@ -6,7 +6,9 @@
 
 #include "mozilla/dom/cache/StreamControl.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 void StreamControl::AddReadStream(
     SafeRefPtr<ReadStream::Controllable> aReadStream) {
@@ -65,4 +67,6 @@ bool StreamControl::HasEverBeenRead() const {
   });
 }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

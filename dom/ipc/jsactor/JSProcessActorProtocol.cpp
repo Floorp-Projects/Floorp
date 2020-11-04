@@ -14,7 +14,8 @@
 #include "mozilla/dom/PContent.h"
 #include "nsContentUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSProcessActorProtocol)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSProcessActorProtocol)
@@ -160,4 +161,5 @@ bool JSProcessActorProtocol::Matches(const nsACString& aRemoteType) {
   return true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

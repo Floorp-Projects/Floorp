@@ -9,7 +9,8 @@
 #include "mozilla/TouchEvents.h"
 #include "prtime.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
                                        nsPresContext* aPresContext,
@@ -73,7 +74,8 @@ void SimpleGestureEvent::InitSimpleGestureEvent(
   simpleGestureEvent->mClickCount = aClickCountArg;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

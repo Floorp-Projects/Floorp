@@ -11,7 +11,8 @@
 #include "mozilla/dom/MIDIMessageEventBinding.h"
 #include "nsDOMNavigationTiming.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MIDIInput::MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
     : MIDIPort(aWindow, aMIDIAccessParent) {}
@@ -59,4 +60,5 @@ void MIDIInput::SetOnmidimessage(EventHandlerNonNull* aCallback) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

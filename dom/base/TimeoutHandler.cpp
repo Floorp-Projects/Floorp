@@ -9,7 +9,8 @@
 #include "mozilla/Assertions.h"
 #include "nsJSUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 //-----------------------------------------------------------------------------
 // TimeoutHandler
@@ -174,4 +175,5 @@ void CallbackTimeoutHandler::GetDescription(nsACString& aOutString) {
   mFunction->GetDescription(aOutString);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

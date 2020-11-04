@@ -18,7 +18,8 @@
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("ContentPlaybackController=%p, " msg, this, ##__VA_ARGS__))
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ContentPlaybackController::ContentPlaybackController(
     BrowsingContext* aContext) {
@@ -215,4 +216,5 @@ void ContentMediaControlKeyHandler::HandleMediaControlAction(
   };
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

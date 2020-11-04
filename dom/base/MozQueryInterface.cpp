@@ -14,7 +14,8 @@
 
 #include "xpcpublic.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 constexpr size_t IID_SIZE = sizeof(nsIID);
 
@@ -89,4 +90,5 @@ bool MozQueryInterface::WrapObject(JSContext* aCx,
   return MozQueryInterface_Binding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -26,7 +26,8 @@
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaKeySystemAccessManager::PendingRequest::PendingRequest(
     DetailedPromise* aPromise, const nsAString& aKeySystem,
@@ -667,6 +668,7 @@ void MediaKeySystemAccessManager::Shutdown() {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #undef MKSAM_LOG_DEBUG

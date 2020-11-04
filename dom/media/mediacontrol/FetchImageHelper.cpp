@@ -17,7 +17,8 @@ mozilla::LazyLogModule gFetchImageLog("FetchImageHelper");
 
 using namespace mozilla::gfx;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 FetchImageHelper::FetchImageHelper(const MediaImage& aImage)
     : mSrc(aImage.mSrc) {}
@@ -158,4 +159,5 @@ NS_IMETHODIMP FetchImageHelper::ImageFetchListener::OnImageReady(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

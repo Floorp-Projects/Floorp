@@ -8,7 +8,9 @@
 #include "mozilla/Hal.h"
 #include "ConnectionMainThread.h"
 
-namespace mozilla::dom::network {
+namespace mozilla {
+namespace dom {
+namespace network {
 
 ConnectionMainThread::ConnectionMainThread(nsPIDOMWindowInner* aWindow)
     : Connection(aWindow) {
@@ -36,4 +38,6 @@ void ConnectionMainThread::Notify(const hal::NetworkInformation& aNetworkInfo) {
   UpdateFromNetworkInfo(aNetworkInfo, true);
 }
 
-}  // namespace mozilla::dom::network
+}  // namespace network
+}  // namespace dom
+}  // namespace mozilla

@@ -12,7 +12,8 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsDOMTokenList.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 const double DateTimeInputTypeBase::kMinimumYear = 1;
 const double DateTimeInputTypeBase::kMaximumYear = 275760;
@@ -496,4 +497,5 @@ bool DateTimeLocalInputType::ConvertNumberToString(
   return true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

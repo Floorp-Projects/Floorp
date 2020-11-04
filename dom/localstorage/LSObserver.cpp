@@ -15,7 +15,8 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -67,4 +68,5 @@ void LSObserver::SetActor(LSObserverChild* aActor) {
   mActor = aActor;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

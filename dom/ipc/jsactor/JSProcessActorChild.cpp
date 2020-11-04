@@ -10,7 +10,8 @@
 #include "mozilla/dom/InProcessChild.h"
 #include "mozilla/dom/InProcessParent.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(JSProcessActorChild, JSActor, mManager)
 
@@ -102,4 +103,5 @@ void JSProcessActorChild::Init(const nsACString& aName,
 
 void JSProcessActorChild::ClearManager() { mManager = nullptr; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

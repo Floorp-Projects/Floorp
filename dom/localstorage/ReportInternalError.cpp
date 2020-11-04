@@ -11,7 +11,9 @@
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
-namespace mozilla::dom::localstorage {
+namespace mozilla {
+namespace dom {
+namespace localstorage {
 
 void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   // Get leaf of file path
@@ -27,4 +29,6 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
       "localstorage", false, true /* Internal errors are chrome context only*/);
 }
 
-}  // namespace mozilla::dom::localstorage
+}  // namespace localstorage
+}  // namespace dom
+}  // namespace mozilla

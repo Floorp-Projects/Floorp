@@ -37,7 +37,8 @@ static mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
 #define LOG(msg, ...) \
   DDMOZ_LOG(sMediaCapabilitiesLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 static nsCString VideoConfigurationToStr(const VideoConfiguration* aConfig) {
   if (!aConfig) {
@@ -610,4 +611,5 @@ bool MediaCapabilitiesInfo::WrapObject(
                                              aReflector);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

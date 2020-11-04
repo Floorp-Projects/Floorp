@@ -21,7 +21,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 JSObject* DocumentFragment::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -121,4 +122,5 @@ NS_IMPL_RELEASE_INHERITED(DocumentFragment, FragmentOrElement)
 
 NS_IMPL_ELEMENT_CLONE(DocumentFragment)
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

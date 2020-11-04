@@ -15,7 +15,8 @@
 #include "mozilla/dom/Promise.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 File::File(nsIGlobalObject* aGlobal, BlobImpl* aImpl) : Blob(aGlobal, aImpl) {
   MOZ_ASSERT(aImpl->IsFile());
@@ -198,4 +199,5 @@ already_AddRefed<Promise> File::CreateFromFileName(
   return promise.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

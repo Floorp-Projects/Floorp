@@ -16,7 +16,8 @@
 #include "mozilla/ErrorResult.h"
 #include "AudioParamTimeline.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(BiquadFilterNode, AudioNode, mFrequency,
                                    mDetune, mQ, mGain)
@@ -344,4 +345,5 @@ void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
                               aMagResponse.Data(), aPhaseResponse.Data());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

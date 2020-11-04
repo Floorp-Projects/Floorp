@@ -7,7 +7,8 @@
 #include "MIDIMessageQueue.h"
 #include "mozilla/dom/MIDITypes.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MIDIMessageQueue::MIDIMessageQueue() : mMutex("MIDIMessageQueue::mMutex") {}
 
@@ -70,4 +71,5 @@ void MIDIMessageQueue::ClearAfterNow() {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -41,7 +41,14 @@
 
 using mozilla::ipc::Transport;
 
-namespace mozilla::gmp {
+namespace mozilla {
+
+#ifdef __CLASS__
+#  undef __CLASS__
+#endif
+#define __CLASS__ "GMPServiceParent"
+
+namespace gmp {
 
 static const uint32_t NodeIdSaltLength = 32;
 
@@ -1733,6 +1740,7 @@ bool GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService) {
   return true;
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla
 
 #undef __CLASS__

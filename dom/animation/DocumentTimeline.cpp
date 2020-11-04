@@ -15,7 +15,8 @@
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentTimeline)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocumentTimeline,
@@ -287,4 +288,5 @@ void DocumentTimeline::UnregisterFromRefreshDriver() {
   DisconnectRefreshDriver(refreshDriver);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

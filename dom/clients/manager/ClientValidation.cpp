@@ -10,7 +10,8 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/net/MozURL.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::ContentPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
@@ -145,4 +146,5 @@ bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
   return false;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

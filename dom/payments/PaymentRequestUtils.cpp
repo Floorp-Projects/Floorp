@@ -10,7 +10,8 @@
 #include "nsTString.h"
 #include "PaymentRequestUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 nsresult SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject,
                                nsAString& aSerializedObject) {
@@ -58,4 +59,5 @@ nsresult DeserializeToJSValue(const nsAString& aSerializedObject,
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // end of namespace dom
+}  // end of namespace mozilla

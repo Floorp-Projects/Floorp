@@ -6,7 +6,9 @@
 
 #include "mozilla/dom/cache/Action.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 void Action::CancelOnInitiatingThread() {
   NS_ASSERT_OWNINGTHREAD(Action);
@@ -22,4 +24,6 @@ Action::~Action() = default;
 
 bool Action::IsCanceled() const { return mCanceled; }
 
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

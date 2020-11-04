@@ -14,7 +14,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableSection)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
@@ -178,4 +179,5 @@ nsMapRuleToAttributesFunc HTMLTableSectionElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

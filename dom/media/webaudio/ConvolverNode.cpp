@@ -12,7 +12,8 @@
 #include "blink/Reverb.h"
 #include "PlayingRefChangeHandler.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ConvolverNode, AudioNode, mBuffer)
 
@@ -474,4 +475,5 @@ void ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer,
 
 void ConvolverNode::SetNormalize(bool aNormalize) { mNormalize = aNormalize; }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

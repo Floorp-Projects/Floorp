@@ -55,7 +55,8 @@ using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class RequestedFrameRefreshObserver : public nsARefreshObserver {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestedFrameRefreshObserver, override)
@@ -1330,4 +1331,5 @@ webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
   return static_cast<webgpu::CanvasContext*>(GetCurrentContext());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

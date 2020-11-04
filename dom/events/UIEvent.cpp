@@ -22,7 +22,8 @@
 #include "nsLayoutUtils.h"
 #include "prtime.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 UIEvent::UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                  WidgetGUIEvent* aEvent)
@@ -320,7 +321,8 @@ void UIEvent::InitModifiers(const EventModifierInit& aParam) {
 #undef SET_MODIFIER
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;

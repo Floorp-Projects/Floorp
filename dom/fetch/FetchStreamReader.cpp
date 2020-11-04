@@ -20,7 +20,8 @@
 #include "nsPIDOMWindow.h"
 #include "jsapi.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FetchStreamReader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FetchStreamReader)
@@ -379,4 +380,5 @@ void FetchStreamReader::ReportErrorToConsole(JSContext* aCx,
   workerPrivate->DispatchToMainThread(r.forget());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

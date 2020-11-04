@@ -27,7 +27,8 @@
 
 using mozilla::intl::LocaleService;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentRequest)
 
@@ -1238,4 +1239,5 @@ JSObject* PaymentRequest::WrapObject(JSContext* aCx,
   return PaymentRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

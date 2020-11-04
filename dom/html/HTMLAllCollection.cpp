@@ -13,7 +13,8 @@
 #include "nsContentList.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLAllCollection::HTMLAllCollection(mozilla::dom::Document* aDocument)
     : mDocument(aDocument) {
@@ -188,4 +189,5 @@ JSObject* HTMLAllCollection::WrapObject(JSContext* aCx,
   return HTMLAllCollection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

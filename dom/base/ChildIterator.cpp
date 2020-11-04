@@ -14,7 +14,8 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsLayoutUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
                                              bool aStartAtBeginning)
@@ -370,4 +371,5 @@ nsIContent* AllChildrenIterator::GetPreviousChild() {
   return nullptr;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

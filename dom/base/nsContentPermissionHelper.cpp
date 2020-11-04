@@ -113,7 +113,8 @@ VisibilityChangeListener::GetCallback() {
   return callback.forget();
 }
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class ContentPermissionRequestParent : public PContentPermissionRequestParent {
  public:
@@ -785,7 +786,8 @@ nsresult TranslateChoices(
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 NS_IMPL_ISUPPORTS(
     nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy,

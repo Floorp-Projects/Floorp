@@ -21,7 +21,8 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 SDBResult::SDBResult(const nsACString& aData) : mData(aData) {}
 
@@ -52,4 +53,5 @@ SDBResult::GetAsArrayBuffer(JSContext* aCx, JS::MutableHandleValue _retval) {
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

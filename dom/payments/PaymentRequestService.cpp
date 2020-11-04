@@ -15,7 +15,8 @@
 #include "nsSimpleEnumerator.h"
 #include "PaymentRequestService.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 StaticRefPtr<PaymentRequestService> gPaymentService;
 
@@ -602,4 +603,5 @@ bool PaymentRequestService::IsBasicCardPayment(const nsAString& aRequestId) {
   return false;
 }
 
-}  // namespace mozilla::dom
+}  // end of namespace dom
+}  // end of namespace mozilla

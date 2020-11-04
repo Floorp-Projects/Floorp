@@ -24,7 +24,8 @@
 #include "WebrtcTCPSocketCallback.h"
 #include "WebrtcTCPSocketLog.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 class WebrtcTCPData {
  public:
@@ -730,4 +731,5 @@ size_t WebrtcTCPSocket::CountUnwrittenBytes() const {
   return count;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

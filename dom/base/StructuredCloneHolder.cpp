@@ -44,7 +44,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -1336,4 +1337,5 @@ void StructuredCloneHolder::SameProcessScopeRequired(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

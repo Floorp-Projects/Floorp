@@ -15,7 +15,8 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Performance.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MIDIMessageEvent)
 
@@ -102,4 +103,5 @@ void MIDIMessageEvent::GetData(JSContext* cx,
   aData.set(mData);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

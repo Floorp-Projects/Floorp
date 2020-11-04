@@ -13,7 +13,8 @@
 #include "mozilla/dom/TrackEvent.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 MediaTrackList::MediaTrackList(nsIGlobalObject* aOwnerObject,
                                HTMLMediaElement* aMediaElement)
@@ -132,4 +133,5 @@ void MediaTrackList::CreateAndDispatchTrackEventRunner(
   asyncDispatcher->PostDOMEvent();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

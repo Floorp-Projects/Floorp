@@ -15,7 +15,8 @@
 #include "mozilla/Unused.h"
 #include "base/task.h"
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 static const char* GetBoolString(bool aBool) {
   return aBool ? "true" : "false";
@@ -197,4 +198,5 @@ nsresult GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE) {
   return NS_OK;
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

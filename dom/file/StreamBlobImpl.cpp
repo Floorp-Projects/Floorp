@@ -12,7 +12,8 @@
 #include "nsStringStream.h"
 #include "nsICloneableInputStream.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ISUPPORTS_INHERITED(StreamBlobImpl, BlobImpl, nsIMemoryReporter)
 
@@ -164,4 +165,5 @@ void StreamBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
   aBlobImplType.AppendLiteral("]");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

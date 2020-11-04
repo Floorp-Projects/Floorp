@@ -8,7 +8,8 @@
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Promise.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GamepadLightIndicator)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(GamepadLightIndicator)
@@ -64,4 +65,5 @@ void GamepadLightIndicator::Set(const GamepadLightIndicator* aOther) {
   mIndex = aOther->mIndex;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

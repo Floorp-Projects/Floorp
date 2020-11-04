@@ -11,7 +11,8 @@
 #include "GMPVideoi420FrameImpl.h"
 #include "runnable_utils.h"
 
-namespace mozilla::gmp {
+namespace mozilla {
+namespace gmp {
 
 GMPVideoEncoderChild::GMPVideoEncoderChild(GMPContentChild* aPlugin)
     : GMPSharedMemManager(aPlugin),
@@ -205,4 +206,5 @@ void GMPVideoEncoderChild::Dealloc(Shmem&& aMem) {
 #endif
 }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla

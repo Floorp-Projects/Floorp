@@ -16,7 +16,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsStringFwd.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 static Element* LookupElement(DocumentOrShadowRoot& aDocOrShadow,
                               const nsAString& aRef, bool aReferenceImage) {
@@ -223,4 +224,5 @@ IDTracker::DocumentLoadNotification::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

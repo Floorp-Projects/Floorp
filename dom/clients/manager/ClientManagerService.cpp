@@ -25,7 +25,8 @@
 #include "nsIXULRuntime.h"
 #include "nsProxyRelease.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::ipc::PrincipalInfo;
@@ -609,4 +610,5 @@ bool ClientManagerService::HasWindow(
   return true;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

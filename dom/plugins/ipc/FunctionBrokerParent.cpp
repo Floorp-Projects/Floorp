@@ -8,7 +8,8 @@
 #include "FunctionBroker.h"
 #include "FunctionBrokerThread.h"
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 #if defined(XP_WIN)
 UlongPairToIdMap sPairToIdMap;
@@ -134,4 +135,5 @@ void FunctionBrokerParent::RemovePermissionsForProcess(
 
 #endif  // defined(XP_WIN) && defined(MOZ_SANDBOX)
 
-}  // namespace mozilla::plugins
+}  // namespace plugins
+}  // namespace mozilla

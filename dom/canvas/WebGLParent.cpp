@@ -13,7 +13,9 @@
 #include "HostWebGLContext.h"
 #include "WebGLMethodDispatcher.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+
+namespace dom {
 
 mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
     const webgl::InitContextDesc& desc,
@@ -306,4 +308,5 @@ IPCResult WebGLParent::RecvValidateProgram(ObjectId id, bool* const ret) {
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

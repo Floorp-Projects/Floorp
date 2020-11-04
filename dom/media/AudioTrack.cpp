@@ -10,7 +10,8 @@
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 AudioTrack::AudioTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
                        const nsAString& aKind, const nsAString& aLabel,
@@ -67,4 +68,5 @@ void AudioTrack::SetEnabledInternal(bool aEnabled, int aFlags) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

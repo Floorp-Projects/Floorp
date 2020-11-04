@@ -9,7 +9,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLDataListElement::~HTMLDataListElement() = default;
 
@@ -32,4 +33,5 @@ bool HTMLDataListElement::MatchOptions(Element* aElement, int32_t aNamespaceID,
          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

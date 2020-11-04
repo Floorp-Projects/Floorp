@@ -77,7 +77,8 @@
 #  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
@@ -1793,4 +1794,5 @@ void QuotaClient::ShutdownWorkThreads() {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

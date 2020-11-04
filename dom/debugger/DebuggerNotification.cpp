@@ -8,7 +8,8 @@
 
 #include "DebuggerNotificationManager.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DebuggerNotification, mDebuggeeGlobal,
                                       mOwnerGlobal)
@@ -33,4 +34,5 @@ already_AddRefed<DebuggerNotification> DebuggerNotification::CloneInto(
   return notification.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

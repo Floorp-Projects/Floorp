@@ -17,7 +17,8 @@ extern mozilla::LazyLogModule gTextTrackLog;
   MOZ_LOG(gTextTrackLog, LogLevel::Debug, \
           ("TextTrackCue=%p, " msg, this, ##__VA_ARGS__))
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(TextTrackCue, DOMEventTargetHelper,
                                    mDocument, mTrack, mTrackElement,
@@ -253,4 +254,5 @@ void TextTrackCue::SetActive(bool aActive) {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

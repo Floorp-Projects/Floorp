@@ -9,7 +9,8 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TestInterfaceIterableDouble, mParent)
 
@@ -68,4 +69,5 @@ nsAString& TestInterfaceIterableDouble::GetValueAtIndex(uint32_t aIndex) {
   return mValues.ElementAt(aIndex).second;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

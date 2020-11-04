@@ -9,7 +9,8 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include <cstdlib>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(StorageAccessPermissionRequest,
                                    ContentPermissionRequestBase)
@@ -125,4 +126,5 @@ unsigned StorageAccessPermissionRequest::CalculateSimulatedDelay() {
   return kMin + random % (kMax - kMin);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

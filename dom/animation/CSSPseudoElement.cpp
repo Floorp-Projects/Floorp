@@ -10,7 +10,8 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/AnimationComparator.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CSSPseudoElement, mOriginatingElement)
 
@@ -92,4 +93,5 @@ nsAtom* CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

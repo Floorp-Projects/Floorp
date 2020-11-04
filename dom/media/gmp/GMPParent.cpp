@@ -42,7 +42,17 @@ using mozilla::ipc::GeckoChildProcessHost;
 using CrashReporter::AnnotationTable;
 using CrashReporter::GetIDFromMinidump;
 
-namespace mozilla::gmp {
+namespace mozilla {
+
+#define GMP_PARENT_LOG_DEBUG(x, ...) \
+  GMP_LOG_DEBUG("GMPParent[%p|childPid=%d] " x, this, mChildPid, ##__VA_ARGS__)
+
+#ifdef __CLASS__
+#  undef __CLASS__
+#endif
+#define __CLASS__ "GMPParent"
+
+namespace gmp {
 
 GMPParent::GMPParent()
     : mState(GMPStateNotLoaded),
@@ -904,7 +914,8 @@ void GMPParent::IncrementGMPContentChildCount() { ++mGMPContentChildCount; }
 
 nsString GMPParent::GetPluginBaseName() const { return u"gmp-"_ns + mName; }
 
-}  // namespace mozilla::gmp
+}  // namespace gmp
+}  // namespace mozilla
 
 #undef GMP_PARENT_LOG_DEBUG
 #undef __CLASS__

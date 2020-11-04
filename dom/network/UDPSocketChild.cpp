@@ -18,7 +18,8 @@
 
 using mozilla::net::gNeckoChild;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_ISUPPORTS(UDPSocketChildBase, nsISupports)
 
@@ -233,4 +234,5 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackError(
   return IPC_OK();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

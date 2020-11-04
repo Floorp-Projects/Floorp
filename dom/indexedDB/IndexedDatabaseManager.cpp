@@ -55,7 +55,8 @@
 
 #define IDB_STR "indexedDB"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 namespace indexedDB {
 
 using namespace mozilla::dom::quota;
@@ -933,4 +934,5 @@ nsTArray<SafeRefPtr<FileManager> >& FileManagerInfo::GetArray(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

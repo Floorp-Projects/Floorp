@@ -9,7 +9,8 @@
 #include "mozilla/ScopeExit.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION(DebuggerNotificationManager, mDebuggeeGlobal,
                          mNotificationObservers)
@@ -57,4 +58,5 @@ void DebuggerNotificationManager::NotifyListeners(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -8,7 +8,8 @@
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Promise.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(GamepadTouch)
 
@@ -82,4 +83,5 @@ void GamepadTouch::Set(const GamepadTouch* aOther) {
   mTouchState = aOther->mTouchState;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

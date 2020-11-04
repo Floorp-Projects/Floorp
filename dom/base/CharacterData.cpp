@@ -41,7 +41,8 @@
 #  include "nsAccessibilityService.h"
 #endif
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 CharacterData::CharacterData(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
     : nsIContent(std::move(aNodeInfo)) {
@@ -585,4 +586,5 @@ void CharacterData::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   *aNodeSize += mText.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

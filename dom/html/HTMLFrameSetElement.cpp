@@ -13,7 +13,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 
@@ -316,4 +317,5 @@ bool HTMLFrameSetElement::IsEventAttributeNameInternal(nsAtom* aName) {
 #undef WINDOW_EVENT_HELPER
 #undef EVENT
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

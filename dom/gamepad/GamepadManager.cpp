@@ -33,7 +33,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -695,4 +696,5 @@ already_AddRefed<Promise> GamepadManager::SetLightIndicatorColor(
   ++mPromiseID;
   return promise.forget();
 }
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

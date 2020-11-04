@@ -27,7 +27,8 @@
 
 using mozilla::ipc::IOThreadChild;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 static void SetTmpEnvironmentVariable(nsIFile* aValue) {
@@ -201,4 +202,5 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
 // in ContentChild::ActorDestroy().
 void ContentProcess::CleanUp() { mXREEmbed.Stop(); }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -42,7 +42,8 @@ using mozilla::ipc::IOThreadChild;
 #  include <algorithm>
 #endif
 
-namespace mozilla::plugins {
+namespace mozilla {
+namespace plugins {
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 static void SetSandboxTempPath(const std::wstring& aFullTmpPath) {
@@ -200,4 +201,5 @@ void PluginProcessChild::CleanUp() {
   mozilla::TaskController::Shutdown();
 }
 
-}  // namespace mozilla::plugins
+}  // namespace plugins
+}  // namespace mozilla

@@ -17,7 +17,8 @@
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
           ("MediaSession=%p, " msg, this, ##__VA_ARGS__))
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // We don't use NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE because we need to
 // unregister MediaSession from document's activity listeners.
@@ -293,4 +294,5 @@ void MediaSession::NotifyPositionStateChanged() {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

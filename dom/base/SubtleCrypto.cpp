@@ -10,7 +10,8 @@
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/WebCryptoTask.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SubtleCrypto, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SubtleCrypto)
@@ -122,4 +123,5 @@ already_AddRefed<Promise> SubtleCrypto::UnwrapKey(
                            unwrappedKeyAlgorithm, extractable, keyUsages)
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

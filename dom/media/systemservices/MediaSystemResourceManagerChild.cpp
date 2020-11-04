@@ -7,7 +7,8 @@
 
 #include "MediaSystemResourceManagerChild.h"
 
-namespace mozilla::media {
+namespace mozilla {
+namespace media {
 
 MediaSystemResourceManagerChild::MediaSystemResourceManagerChild()
     : mDestroyed(false), mManager(nullptr) {}
@@ -39,4 +40,5 @@ void MediaSystemResourceManagerChild::Destroy() {
   // WARNING: |this| is dead, hands off
 }
 
-}  // namespace mozilla::media
+}  // namespace media
+}  // namespace mozilla

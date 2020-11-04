@@ -12,7 +12,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Time)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLTimeElement::HTMLTimeElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -27,4 +28,5 @@ JSObject* HTMLTimeElement::WrapNode(JSContext* cx,
   return HTMLTimeElement_Binding::Wrap(cx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

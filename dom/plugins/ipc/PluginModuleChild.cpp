@@ -774,7 +774,9 @@ const char* PluginModuleChild::GetUserAgent() {
 //-----------------------------------------------------------------------------
 // FIXME/cjones: just getting this out of the way for the moment ...
 
-namespace mozilla::plugins::child {
+namespace mozilla {
+namespace plugins {
+namespace child {
 
 static NPError _requestread(NPStream* pstream, NPByteRange* rangeList);
 
@@ -885,7 +887,9 @@ static NPError _finalizeasyncsurface(NPP instance, NPAsyncSurface* surface);
 static void _setcurrentasyncsurface(NPP instance, NPAsyncSurface* surface,
                                     NPRect* changed);
 
-}  // namespace mozilla::plugins::child
+} /* namespace child */
+} /* namespace plugins */
+} /* namespace mozilla */
 
 const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     sizeof(sBrowserFuncs),
@@ -955,7 +959,9 @@ PluginInstanceChild* InstCast(NPP aNPP) {
   return static_cast<PluginInstanceChild*>(aNPP->ndata);
 }
 
-namespace mozilla::plugins::child {
+namespace mozilla {
+namespace plugins {
+namespace child {
 
 NPError _requestread(NPStream* aStream, NPByteRange* aRangeList) {
   return NPERR_STREAM_NOT_SEEKABLE;
@@ -1505,7 +1511,9 @@ void _setcurrentasyncsurface(NPP instance, NPAsyncSurface* surface,
   InstCast(instance)->NPN_SetCurrentAsyncSurface(surface, changed);
 }
 
-}  // namespace mozilla::plugins::child
+} /* namespace child */
+} /* namespace plugins */
+} /* namespace mozilla */
 
 //-----------------------------------------------------------------------------
 

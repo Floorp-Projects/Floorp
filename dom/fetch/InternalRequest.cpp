@@ -19,7 +19,8 @@
 #include "nsIContentPolicy.h"
 #include "nsStreamUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 // The global is used to extract the principal.
 SafeRefPtr<InternalRequest> InternalRequest::GetRequestConstructorCopy(
     nsIGlobalObject* aGlobal, ErrorResult& aRv) const {
@@ -434,4 +435,5 @@ void InternalRequest::SetPrincipalInfo(
   mPrincipalInfo = std::move(aPrincipalInfo);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

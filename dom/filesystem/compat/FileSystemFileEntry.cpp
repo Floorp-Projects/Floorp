@@ -11,7 +11,8 @@
 #include "mozilla/dom/MultipartBlobImpl.h"
 #include "mozilla/dom/FileSystemFileEntryBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -91,4 +92,5 @@ void FileSystemFileEntry::GetFile(
   FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

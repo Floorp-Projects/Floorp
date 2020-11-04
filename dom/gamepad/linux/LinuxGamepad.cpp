@@ -323,7 +323,8 @@ gboolean LinuxGamepadService::OnUdevMonitor(GIOChannel* source,
 
 }  // namespace
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void StartGamepadMonitoring() {
   if (gService) {
@@ -349,4 +350,5 @@ void SetGamepadLightIndicatorColor(uint32_t aControllerIdx,
   NS_WARNING("Linux doesn't support gamepad light indicator.");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

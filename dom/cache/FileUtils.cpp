@@ -23,7 +23,9 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::dom::cache {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::FileInputStream;
@@ -1027,4 +1029,6 @@ nsresult LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
 
   return rv;
 }
-}  // namespace mozilla::dom::cache
+}  // namespace cache
+}  // namespace dom
+}  // namespace mozilla

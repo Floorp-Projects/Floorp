@@ -19,7 +19,8 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // static
 nsresult FetchUtil::GetValidRequestMethod(const nsACString& aMethod,
@@ -558,4 +559,5 @@ void FetchUtil::ReportJSStreamError(JSContext* aCx, size_t aErrorCode) {
   JS_SetPendingException(aCx, value);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

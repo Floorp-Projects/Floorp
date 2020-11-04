@@ -12,7 +12,8 @@
 #include "nsDebug.h"
 #include "nsError.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 bool LSValue::InitFromString(const nsAString& aBuffer) {
   MOZ_ASSERT(mBuffer.IsVoid());
@@ -83,4 +84,5 @@ const LSValue& VoidLSValue() {
   return sVoidLSValue;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

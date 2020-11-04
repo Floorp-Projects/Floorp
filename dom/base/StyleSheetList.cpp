@@ -9,7 +9,8 @@
 #include "mozilla/dom/StyleSheetListBinding.h"
 #include "nsINode.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(StyleSheetList)
 
@@ -43,4 +44,5 @@ StyleSheetList::~StyleSheetList() {
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

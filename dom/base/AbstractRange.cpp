@@ -18,7 +18,8 @@
 #include "nsRange.h"
 #include "nsTArray.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 template nsresult AbstractRange::SetStartAndEndInternal(
     const RangeBoundary& aStartBoundary, const RangeBoundary& aEndBoundary,
@@ -207,4 +208,5 @@ JSObject* AbstractRange::WrapObject(JSContext* aCx,
   MOZ_CRASH("Must be overridden");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

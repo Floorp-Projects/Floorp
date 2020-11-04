@@ -18,7 +18,8 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MIDIPort, DOMEventTargetHelper,
                                    mOpeningPromise, mClosingPromise)
@@ -194,4 +195,5 @@ void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
   MOZ_CRASH("We should never get here!");
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

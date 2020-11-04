@@ -7,7 +7,8 @@
 #include "mozilla/dom/PaymentAddress.h"
 #include "mozilla/dom/PaymentAddressBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PaymentAddress, mOwner)
 
@@ -84,4 +85,5 @@ JSObject* PaymentAddress::WrapObject(JSContext* aCx,
   return PaymentAddress_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

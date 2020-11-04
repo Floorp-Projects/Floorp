@@ -50,7 +50,9 @@ mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");
 #define DEFAULT_AUDIO_BITRATE_BPS 128e3  // 128kbps
 #define MAX_AUDIO_BITRATE_BPS 512e3      // 512kbps
 
-namespace mozilla::dom {
+namespace mozilla {
+
+namespace dom {
 
 using namespace mozilla::media;
 
@@ -2068,6 +2070,7 @@ RefPtr<MediaRecorder::SizeOfPromise> MediaRecorder::SizeOfExcludingThis(
 
 StaticRefPtr<MediaRecorderReporter> MediaRecorderReporter::sUniqueInstance;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #undef LOG

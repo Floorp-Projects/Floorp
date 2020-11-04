@@ -22,7 +22,8 @@
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 using namespace indexedDB;
 
@@ -868,4 +869,5 @@ template class IDBTypedCursor<IDBCursorType::ObjectStoreKey>;
 template class IDBTypedCursor<IDBCursorType::Index>;
 template class IDBTypedCursor<IDBCursorType::IndexKey>;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

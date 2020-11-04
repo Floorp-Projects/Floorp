@@ -20,7 +20,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION(ResponsiveImageSelector, mOwnerNode)
 
@@ -729,4 +730,5 @@ double ResponsiveImageCandidate::Density(double aMatchingWidth) const {
   return 1.0;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

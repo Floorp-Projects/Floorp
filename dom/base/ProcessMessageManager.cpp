@@ -9,7 +9,8 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "nsContentUtils.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ProcessMessageManager::ProcessMessageManager(
     ipc::MessageManagerCallback* aCallback,
@@ -39,4 +40,5 @@ JSObject* ProcessMessageManager::WrapObject(JSContext* aCx,
   return ProcessMessageManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -39,7 +39,8 @@ FileMimeNameData kFileMimeNameMap[] = {
 
 }  // anonymous namespace
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DataTransferItem, mData, mPrincipal,
                                       mDataTransfer, mCachedFile)
@@ -575,4 +576,5 @@ DataTransferItem::GetGlobalFromDataTransfer() {
   return global.forget();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

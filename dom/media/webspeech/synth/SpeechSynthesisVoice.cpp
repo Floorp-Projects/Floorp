@@ -8,7 +8,8 @@
 #include "nsSynthVoiceRegistry.h"
 #include "mozilla/dom/SpeechSynthesisVoiceBinding.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechSynthesisVoice, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechSynthesisVoice)
@@ -69,4 +70,5 @@ bool SpeechSynthesisVoice::Default() const {
   return isDefault;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

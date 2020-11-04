@@ -12,7 +12,8 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 class PerformanceProxyData {
  public:
@@ -164,4 +165,5 @@ void PerformanceStorageWorker::AddEntryOnWorker(
   performance->InsertResourceEntry(performanceEntry);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

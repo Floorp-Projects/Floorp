@@ -16,7 +16,8 @@
 
 using namespace mozilla::hal;
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_INTERFACE_MAP_BEGIN(WakeLock)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
@@ -244,4 +245,5 @@ nsPIDOMWindowInner* WakeLock::GetParentObject() const {
   return window;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

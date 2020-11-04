@@ -15,7 +15,8 @@
 #include "nsRefreshDriver.h"
 #include <limits>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void ResizeObserverNotificationHelper::WillRefresh(TimeStamp aTime) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner, "Should've de-registered on-time!");
@@ -223,4 +224,5 @@ void ResizeObserverController::AddSizeOfIncludingThis(
   aSizes.mDOMResizeObserverControllerSize += size;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

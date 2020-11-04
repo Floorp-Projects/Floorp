@@ -19,7 +19,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/NullPrincipal.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SimpleGlobalObject)
 
@@ -166,4 +167,5 @@ SimpleGlobalObject::GlobalType SimpleGlobalObject::SimpleGlobalType(
   return globalObject->Type();
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

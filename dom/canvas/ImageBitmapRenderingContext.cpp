@@ -8,7 +8,8 @@
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 ImageBitmapRenderingContext::ImageBitmapRenderingContext()
     : mWidth(0), mHeight(0), mIsCapturedFrameInvalid(false) {}
@@ -309,4 +310,5 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageBitmapRenderingContext)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

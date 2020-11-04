@@ -11,7 +11,8 @@
 #include "nsContentUtils.h"
 #include <stdint.h>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 void TextDecoder::Init(const nsAString& aLabel,
                        const TextDecoderOptions& aOptions, ErrorResult& aRv) {
@@ -123,4 +124,5 @@ void TextDecoder::GetEncoding(nsAString& aEncoding) {
   nsContentUtils::ASCIIToLower(aEncoding);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

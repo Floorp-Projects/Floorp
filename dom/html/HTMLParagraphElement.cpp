@@ -13,7 +13,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLParagraphElement::~HTMLParagraphElement() = default;
 
@@ -58,4 +59,5 @@ JSObject* HTMLParagraphElement::WrapNode(JSContext* aCx,
   return HTMLParagraphElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

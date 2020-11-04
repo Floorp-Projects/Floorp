@@ -16,7 +16,9 @@
 #include "nsIPrincipal.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 using namespace mozilla::services;
 
@@ -217,4 +219,6 @@ PermissionRequestBase::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace mozilla::dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
+}  // namespace mozilla

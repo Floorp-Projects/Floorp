@@ -66,7 +66,8 @@
  */
 #define FAILSAFE_CANCEL_SYNC_OP_MS 50000
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -1380,4 +1381,5 @@ void RequestHelper::OnResponse(const LSRequestResponse& aResponse) {
       mNestedEventTargetWrapper->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

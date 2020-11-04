@@ -12,7 +12,8 @@
 #include "mozilla/dom/FileSystemEntryBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemEntry, mParent, mParentEntry,
                                       mFileSystem)
@@ -77,4 +78,5 @@ void FileSystemEntry::GetParent(
                                       this);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

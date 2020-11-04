@@ -10,7 +10,8 @@
 #include "AudioNodeTrack.h"
 #include "MediaStreamTrack.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaElementAudioSourceNode)
 
@@ -102,4 +103,5 @@ HTMLMediaElement* MediaElementAudioSourceNode::MediaElement() {
   return mElement;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

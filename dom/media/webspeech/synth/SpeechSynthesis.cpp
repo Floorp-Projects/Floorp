@@ -25,7 +25,8 @@ mozilla::LogModule* GetSpeechSynthLog() {
 }
 #define LOG(type, msg) MOZ_LOG(GetSpeechSynthLog(), type, msg)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SpeechSynthesis)
 
@@ -300,4 +301,5 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

@@ -17,7 +17,8 @@
 #include "mozilla/PodOperations.h"
 #include <deque>
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 // The maximum latency, in seconds, that we can live with before dropping
 // buffers.
@@ -535,4 +536,5 @@ void ScriptProcessorNode::UpdateConnectedStatus() {
   engine->GetSharedBuffers()->NotifyNodeIsConnected(isConnected);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

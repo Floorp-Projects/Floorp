@@ -15,7 +15,8 @@
 #  include "mozilla/jni/Utils.h"
 #endif
 
-namespace mozilla::camera {
+namespace mozilla {
+namespace camera {
 
 #undef LOG
 #undef LOG_ENABLED
@@ -259,4 +260,5 @@ VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
   LOG(("%s", __PRETTY_FUNCTION__));
 }
 
-}  // namespace mozilla::camera
+}  // namespace camera
+}  // namespace mozilla

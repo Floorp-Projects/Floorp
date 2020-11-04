@@ -14,7 +14,8 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Template)
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 HTMLTemplateElement::HTMLTemplateElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -61,4 +62,5 @@ JSObject* HTMLTemplateElement::WrapNode(JSContext* aCx,
   return HTMLTemplateElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

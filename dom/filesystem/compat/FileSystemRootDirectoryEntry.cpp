@@ -9,7 +9,8 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "CallbackRunnables.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryEntry,
                                    FileSystemDirectoryEntry, mEntries)
@@ -136,4 +137,5 @@ void FileSystemRootDirectoryEntry::GetInternal(
                               aType);
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
