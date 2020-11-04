@@ -9168,6 +9168,14 @@
   value: 1800   # 30 minutes (in seconds)
   mirror: always
 
+# Enable Anti-tracking testing. When it enables, it will notify the observers
+# when user-interaction permission or storage access permission is added. This
+# is for testing only.
+- name: privacy.antitracking.testing
+  type: bool
+  value: false
+  mirror: always
+
 # Enable the heuristic to allow storage access for recent visited pages
 - name: privacy.restrict3rdpartystorage.heuristic.recently_visited
   type: bool
